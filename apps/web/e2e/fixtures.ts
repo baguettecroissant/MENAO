@@ -74,7 +74,12 @@ export async function mockGeocoding(page: Page) {
 
 const isoDay = (offsetDays: number) =>
   new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
-export const dates = { recent: isoDay(-10), nextYear: isoDay(365) };
+export const dates = {
+  recent: isoDay(-10),
+  yesterday: isoDay(-1),
+  inTwoWeeks: isoDay(14),
+  nextYear: isoDay(365),
+};
 
 /** Fichiers fictifs pour les dépôts. */
 export const files = {
