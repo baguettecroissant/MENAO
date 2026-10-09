@@ -7,7 +7,7 @@
 - **Unitaires** : Vitest sur `packages/*` (règles, schémas, tokens dont le contraste AA).
 - **Base de données** : pgTAP (`supabase test db`) ; chaque fichier est autonome (utilisateurs fictifs créés dans la transaction, puis `rollback`). Un test garde-fou échoue si une table de `public` n'a pas la RLS.
 - **Bout en bout** : Playwright contre l'application buildée et un Supabase local ; les e-mails sont lus dans Mailpit.
-- **CI GitHub Actions sans aucun secret** : Supabase local démarré dans le runner (Docker). Déclenchée à chaque push de branche ; les runs `pull_request` ne servent qu'aux forks pour éviter les doublons.
+- **CI GitHub Actions sans aucun secret** : Supabase local démarré dans le runner (Docker). Déclenchée sur chaque PR et sur `main` après fusion (une branche se teste en ouvrant une PR, éventuellement en brouillon). Pas de jobs « sautés » portant le nom d'un statut requis : GitHub les compterait comme réussis.
 - Les types générés (`packages/db`) sont vérifiés en CI : la PR échoue s'ils divergent du schéma.
 
 ## Conséquences

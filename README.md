@@ -51,7 +51,7 @@ pnpm --filter web dev                 # http://localhost:3000
 
 ## CI
 
-GitHub Actions à chaque push : format, lint, typecheck, tests unitaires ; migrations + tests pgTAP + contrôle des types générés ; build + Playwright (inscription, confirmation e-mail, connexion). Aucun secret requis : Supabase tourne dans le runner.
+GitHub Actions sur chaque PR et sur `main` : format, lint, typecheck, tests unitaires ; migrations + tests pgTAP + contrôle des types générés ; build + Playwright (inscription, confirmation e-mail, connexion). Aucun secret requis : Supabase tourne dans le runner.
 
 ## Environnements
 

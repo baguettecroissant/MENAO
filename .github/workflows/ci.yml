@@ -1,10 +1,10 @@
 name: CI
 
-# Déclenché à chaque push de branche. Les runs « pull_request » ne servent qu'aux PR
-# venant de forks (sinon chaque commit serait testé deux fois).
+# Sur chaque PR, et sur main après fusion. Ouvrir une PR (même en brouillon) pour tester une branche.
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -16,7 +16,6 @@ permissions:
 jobs:
   quality:
     name: Lint, typecheck, tests unitaires
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,7 +33,6 @@ jobs:
 
   database:
     name: Base de données (migrations, RLS pgTAP, types)
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -62,7 +60,6 @@ jobs:
 
   e2e:
     name: Bout en bout (inscription, connexion)
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
