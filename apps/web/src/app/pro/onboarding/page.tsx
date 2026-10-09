@@ -1,5 +1,6 @@
 import { ONBOARDING_STEPS, parisToday } from "@menao/core";
 import type { Route } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -11,7 +12,12 @@ const t = fr.pro.onboarding;
 
 /** Statut du dossier, envoi en vérification, sinon première étape disponible non terminée. */
 export default async function OnboardingIndexPage() {
-  const { artisan, progress, canSubmit, visibility } = await getOnboardingContext();
+  const { supabase, artisan, progress, canSubmit, visibility } = await getOnboardingContext();
+  const { count: pendingRequests } = await supabase
+    .from("requests")
+    .select("id", { count: "exact", head: true })
+    .eq("artisan_id", artisan.id)
+    .eq("status", "envoyee");
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
 
   if (editable && !canSubmit) {
@@ -43,6 +49,14 @@ export default async function OnboardingIndexPage() {
             </>
           )}
         </Card>
+      )}
+      {artisan.status === "valide" && (
+        <Link
+          href="/pro/demandes"
+          className="inline-flex min-h-touch items-center justify-center rounded-button bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover"
+        >
+          {t.requests.link(pendingRequests ?? 0)}
+        </Link>
       )}
       {(artisan.status === "valide" || artisan.status === "suspendu") && (
         <Card>

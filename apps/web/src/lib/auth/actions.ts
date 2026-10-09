@@ -22,6 +22,7 @@ import { z } from "zod";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { createClient } from "@/lib/supabase/server";
+import { confirmUrlFor } from "./confirm-url";
 import { authErrorMessage } from "./errors";
 import { checkbox, text, type FormState } from "./form";
 
@@ -50,7 +51,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     email: input.email,
     password: input.password,
     options: {
-      emailRedirectTo: confirmUrl,
+      emailRedirectTo: confirmUrlFor("/mon-espace"),
       // Lu par le trigger app.after_auth_user_insert (profil + acceptations), puis retiré.
       // Jamais de rôle ici : le rôle vit dans app_metadata, fixé côté base.
       data: {
@@ -95,7 +96,7 @@ export async function signUpArtisan(_prev: FormState, formData: FormData): Promi
     email: input.email,
     password: input.password,
     options: {
-      emailRedirectTo: confirmUrl,
+      emailRedirectTo: confirmUrlFor("/mon-espace"),
       // « account_type » n'est qu'une intention : le trigger SQL ne peut en déduire que
       // artisan_en_attente (jamais artisan ni admin). ADR 0006.
       data: {
