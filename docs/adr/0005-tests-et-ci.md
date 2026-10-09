@@ -12,4 +12,4 @@
 
 ## Conséquences
 - La CI est la référence pour les tests SQL et e2e, y compris pour un poste sans Docker.
-- Statuts requis pour protéger `main` : « Lint, typecheck, tests unitaires », « Base de données (migrations, RLS pgTAP, types) », « Bout en bout (inscription, connexion) ».
+- Statuts requis pour protéger `main` : « Lint, typecheck, tests unitaires », « Base de données (migrations, RLS pgTAP, types) », « Bout en bout (Playwright) ».
