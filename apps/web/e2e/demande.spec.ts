@@ -61,7 +61,7 @@ test("demande à 2 artisans, compte créé en chemin, acceptation par l'artisan"
 
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/envoyee$`));
   await expect(
-    page.getByRole("heading", { name: "Votre demande est envoyée à Noé et Inès !" }),
+    page.getByRole("heading", { name: "Votre demande est envoyée à Inès et Noé !" }),
   ).toBeVisible();
   await expect(page.getByText("Vous serez rappelé entre 09 h 00 et 12 h 00.")).toBeVisible();
   await page.getByRole("link", { name: "Suivre ma demande depuis mon espace" }).click();
