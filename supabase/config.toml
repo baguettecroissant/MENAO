@@ -255,6 +255,10 @@ content_path = "./supabase/templates/confirmation.html"
 subject = "Votre lien de connexion MENAO"
 content_path = "./supabase/templates/magic_link.html"
 
+[auth.email.template.recovery]
+subject = "Réinitialisation de votre mot de passe MENAO"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
 # enabled = true

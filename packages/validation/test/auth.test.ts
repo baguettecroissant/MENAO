@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { magicLinkSchema, normalizePhone, signInSchema, signUpSchema } from "../src/auth";
+import {
+  magicLinkSchema,
+  newPasswordSchema,
+  normalizePhone,
+  signInSchema,
+  signUpSchema,
+} from "../src/auth";
 import { messages } from "../src/messages";
 
 // Données fictives uniquement : domaine réservé .test, numéros des tranches fiction ARCEP (06 39 98) et Ofcom (07700 900).
@@ -87,5 +93,12 @@ describe("signInSchema et magicLinkSchema", () => {
 
   it("le lien magique ne demande qu'un e-mail", () => {
     expect(magicLinkSchema.parse({ email: " A@Example.test " }).email).toBe("a@example.test");
+  });
+});
+
+describe("newPasswordSchema", () => {
+  it("applique les mêmes règles que l'inscription", () => {
+    expect(newPasswordSchema.safeParse({ password: "court" }).success).toBe(false);
+    expect(newPasswordSchema.safeParse({ password: "un-mot-de-passe-long" }).success).toBe(true);
   });
 });
