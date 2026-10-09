@@ -642,7 +642,7 @@ Le web est livré et utilisable avant l'app (phases 0 à 5), conformément à la
 | D9 | Fournisseur de transcription vocale | À choisir, derrière une interface |
 | D10 | Catalogue d'articles avec prix fournisseurs | Catalogue personnel de l'artisan seulement |
 | D11 | Notation du client par l'artisan : visibilité et base légale | Visible des artisans validés uniquement, après avis juridique |
-| D12 | Type de compte Stripe Connect (Express ou Standard) | Selon la recommandation Stripe pour les charges directes (voir D5) |
+| D12 | Type de compte Stripe Connect (Express ou Standard) | **Tranché (ADR 0011)** : tableau de bord Stripe complet (type Standard), frais payés par l'artisan, pertes portées par Stripe |
 | D13 | Plateforme agréée pour la facture électronique | Choix en V1.1 |
 
 ---
