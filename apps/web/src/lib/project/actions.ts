@@ -2,10 +2,11 @@
 
 import { parisToday } from "@menao/core";
 import type { Database } from "@menao/db";
-import { projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
+import { messages, projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,6 +46,8 @@ export async function saveProjectCriteria(
     p_ville_code_insee: c.ville?.code ?? null,
     p_ville_nom: c.ville?.nom ?? null,
     p_code_postal: c.ville?.codePostal ?? null,
+    p_ville_lon: c.ville?.lon ?? null,
+    p_ville_lat: c.ville?.lat ?? null,
     p_adresse: c.adresse?.label ?? null,
     p_lon: c.adresse?.lon ?? null,
     p_lat: c.adresse?.lat ?? null,
@@ -84,4 +87,26 @@ export async function deleteProjectPhoto(
   await supabase.storage.from("project-photos").remove([photo.storage_path]);
   revalidatePath(`/recherche/${projectId}`);
   return { ok: true };
+}
+
+export type TicketState = { error?: string; success?: string };
+
+/** « Envoyer mon dossier à MENAO » (F-09, F-56) : e-mail obligatoire pour une session anonyme. */
+export async function sendProjectToMenao(
+  projectId: string,
+  _prev: TicketState,
+  formData: FormData,
+): Promise<TicketState> {
+  if (!UUID.test(projectId)) return { error: fr.errors.generic };
+  const message = String(formData.get("message") ?? "").slice(0, 2000);
+  const email = String(formData.get("email") ?? "").trim();
+  if (email && !z.email().safeParse(email).success) return { error: messages.emailInvalid };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("send_project_to_menao", {
+    p_project_id: projectId,
+    p_message: message,
+    p_contact_email: email,
+  });
+  if (error) return { error: error.code === "22023" ? messages.emailInvalid : fr.errors.generic };
+  return { success: fr.search.results.ticket.sent };
 }

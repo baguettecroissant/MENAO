@@ -97,9 +97,17 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
   await photos.getByRole("button", { name: /Supprimer/ }).click();
   await expect(photos.getByText("Aucune photo.")).toBeVisible();
 
+  // Carreleur : aucun artisan dans le jeu de données → état vide et dossier envoyé à MENAO.
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
-  await expect(page.getByRole("heading", { name: "Vos critères sont enregistrés" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Aucun artisan disponible pour l'instant" }),
+  ).toBeVisible();
+  const ticket = page.getByRole("region", { name: "Vous ne trouvez pas votre artisan idéal ?" });
+  await ticket.getByLabel("Votre message (facultatif)").fill("Carrelage de cuisine, environ 8 m².");
+  await ticket.getByLabel("Votre adresse e-mail").fill("visiteur@example.test");
+  await ticket.getByRole("button", { name: "Envoyer mon dossier à MENAO" }).click();
+  await expect(ticket.getByText("Votre dossier est transmis à l'équipe MENAO")).toBeVisible();
 });
 
 test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si elle échoue", async ({

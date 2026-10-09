@@ -21,7 +21,13 @@ const featureCollection = z.object({
 });
 
 export type AddressSuggestion = { label: string; citycode: string; lon: number; lat: number };
-export type CommuneSuggestion = { code: string; nom: string; postcode?: string };
+export type CommuneSuggestion = {
+  code: string;
+  nom: string;
+  postcode?: string;
+  lon: number;
+  lat: number;
+};
 
 async function search(params: Record<string, string>, signal?: AbortSignal) {
   const url = `${BASE_URL}?${new URLSearchParams({ autocomplete: "1", limit: "6", ...params })}`;
@@ -55,5 +61,7 @@ export async function searchCommunes(
     code: f.properties.citycode,
     nom: f.properties.city,
     postcode: f.properties.postcode,
+    lon: f.geometry.coordinates[0],
+    lat: f.geometry.coordinates[1],
   }));
 }

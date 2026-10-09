@@ -62,6 +62,9 @@ insert into public.projects (id, user_id, description, trade_code, ville_code_in
    'SRID=4326;POINT(7.262 43.71)', array['sanitaires']),
   ('c4000000-0000-4000-8000-000000000002', 'c1000000-0000-4000-8000-000000000001', 'Projet sans ville', 'plombier', null, null, null, '{}');
 
+-- Isolement : les artisans du seed (visibles à Nice) sont mis en pause le temps du test.
+update public.artisans set paused = true where id::text not like 'c3000000-%';
+
 -- ---------- Particulier (session anonyme) ----------
 select pg_temp.connecter('c1000000-0000-4000-8000-000000000001', 'particulier');
 set local role authenticated;

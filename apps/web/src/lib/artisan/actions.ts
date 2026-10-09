@@ -380,3 +380,19 @@ export async function startConnectOnboarding(): Promise<FormState> {
   }
   return { error: t.connect.errors[status === "ok" ? "unavailable" : status] };
 }
+
+/** Disponibilité (F-09) : pause ou congés, date de disponibilité. */
+export async function saveAvailability(_prev: FormState, formData: FormData): Promise<FormState> {
+  const from = text(formData, "availableFrom");
+  if (from && !/^\d{4}-\d{2}-\d{2}$/.test(from)) {
+    return { fieldErrors: { availableFrom: [messages.dateInvalid] } };
+  }
+  const { supabase } = await getOnboardingContext();
+  const { error } = await supabase.rpc("set_artisan_availability", {
+    p_paused: formData.get("paused") === "on",
+    p_available_from: from ?? undefined,
+  });
+  if (error) return { error: fr.errors.generic };
+  refresh();
+  return { success: t.availability.saved };
+}

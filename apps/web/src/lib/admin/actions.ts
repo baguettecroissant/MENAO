@@ -61,3 +61,13 @@ export async function decideArtisan(_prev: FormState, formData: FormData): Promi
   refresh(id.data);
   return { success: t.decisions[decision.data] };
 }
+
+/** Dossier envoyé par un particulier (F-09, F-56) : en cours, résolu ou rouvert. */
+export async function setTicketStatus(formData: FormData): Promise<void> {
+  const id = z.uuid().safeParse(text(formData, "ticketId"));
+  const status = z.enum(["ouvert", "en_cours", "resolu"]).safeParse(text(formData, "status"));
+  if (!id.success || !status.success) return;
+  const { supabase } = await requireAdmin();
+  await supabase.rpc("staff_set_ticket_status", { p_ticket_id: id.data, p_status: status.data });
+  revalidatePath("/admin/tickets");
+}

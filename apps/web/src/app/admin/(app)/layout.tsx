@@ -23,6 +23,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <Link href="/admin/surveillance" className="font-medium text-primary">
             {fr.admin.nav.watch}
           </Link>
+          <Link href="/admin/tickets" className="font-medium text-primary">
+            {fr.admin.nav.tickets}
+          </Link>
           <form action={signOut}>
             <button
               type="submit"
