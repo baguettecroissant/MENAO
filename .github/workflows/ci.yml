@@ -86,7 +86,7 @@ jobs:
         env:
           INSEE_API_BASE_URL: http://host.docker.internal:54399
           INSEE_API_KEY: cle-factice-ci
-          STRIPE_SECRET_KEY: sk_test_menao_ci
+          STRIPE_SECRET_KEY: sk_test_menaoci
           STRIPE_WEBHOOK_SECRET: whsec_menao_ci
           STRIPE_TAX_RATE_ID: txr_menao_ci
           STRIPE_API_HOST: host.docker.internal
