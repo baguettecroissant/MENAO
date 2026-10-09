@@ -359,3 +359,24 @@ export async function openBillingPortal(): Promise<FormState> {
   if ("url" in result && result.url) redirect(result.url as Route);
   return { error: result.error };
 }
+
+type ConnectStatus = keyof typeof t.connect.errors | "ok";
+
+/** Ouvre l'inscription Stripe Connect (création du compte si besoin). */
+export async function startConnectOnboarding(): Promise<FormState> {
+  const { supabase } = await getOnboardingContext();
+  const { data, error } = await supabase.functions.invoke<{ status: ConnectStatus; url?: string }>(
+    "connect-onboarding",
+    { method: "POST", body: { action: "link", origin: env.NEXT_PUBLIC_SITE_URL } },
+  );
+  if (data?.status === "ok" && data.url) redirect(data.url as Route);
+  let status: ConnectStatus = data?.status ?? "unavailable";
+  if (error instanceof FunctionsHttpError) {
+    const parsed = (await error.context.json().catch(() => null)) as { status?: string } | null;
+    status =
+      parsed?.status && parsed.status in t.connect.errors
+        ? (parsed.status as ConnectStatus)
+        : "unavailable";
+  }
+  return { error: t.connect.errors[status === "ok" ? "unavailable" : status] };
+}

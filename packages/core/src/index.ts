@@ -6,3 +6,4 @@ export * from "./onboarding";
 export * from "./files";
 export * from "./expiry";
 export * from "./billing";
+export * from "./connect";

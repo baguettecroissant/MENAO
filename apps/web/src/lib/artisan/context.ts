@@ -1,5 +1,6 @@
 import "server-only";
 import {
+  artisanVisibility,
   canSubmitOnboarding,
   subscriptionGrantsAccess,
   type SubscriptionStatus,
@@ -99,6 +100,7 @@ export const getOnboardingContext = cache(async () => {
     documents: documentSnapshots,
     presentationLength: artisan.presentation?.trim().length ?? 0,
     hasAvatar: avatarPath !== null,
+    connectChargesEnabled: artisan.connect_charges_enabled,
     subscriptionActive: subscriptionGrantsAccess(
       (subscription?.status as SubscriptionStatus | undefined) ?? null,
     ),
@@ -113,6 +115,11 @@ export const getOnboardingContext = cache(async () => {
     documents: documentList,
     photos: photos.data ?? [],
     canSubmit: canSubmitOnboarding(snapshot),
+    visibility: artisanVisibility({
+      status: artisan.status,
+      subscriptionActive: snapshot.subscriptionActive,
+      connectChargesEnabled: snapshot.connectChargesEnabled,
+    }),
     tradeCodes,
     workTypeCodes: (workTypes.data ?? []).map((w) => w.work_type_code),
     zones: zoneList,

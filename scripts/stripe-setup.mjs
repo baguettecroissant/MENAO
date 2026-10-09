@@ -2,7 +2,7 @@
 // Mise en place Stripe de MENAO (F-15), idempotente. Aucune dépendance.
 // Lit les formules dans Supabase (table plans), puis crée ou met à jour dans Stripe :
 // produits + prix mensuels HT (lookup_key), taux de TVA 20 %, configuration du portail client,
-// adresse de webhook. Écrit les identifiants dans le fichier d'environnement donné, sans
+// webhooks (abonnements et Connect). Écrit les identifiants dans le fichier d'environnement donné, sans
 // jamais afficher le secret du webhook.
 //
 // Usage :
@@ -176,24 +176,45 @@ portal = portal
   : await stripe("POST", "billing_portal/configurations", portalParams);
 console.log("Portail client configuré");
 
-// 4. Webhook (le secret n'est lisible qu'à la création)
-const hasSecret = /^STRIPE_WEBHOOK_SECRET=whsec_/m.test(readFileSync(envFile, "utf8"));
-const endpoints = await stripe("GET", "webhook_endpoints", { limit: 100 });
-let endpoint = endpoints.data.find((e) => e.url === webhookUrl);
+// 4. Webhooks (le secret n'est lisible qu'à la création) : compte de la plateforme (abonnements)
+// et comptes connectés (Connect, ADR 0011).
+const envText = readFileSync(envFile, "utf8");
 const updates = { STRIPE_TAX_RATE_ID: taxRate.id, STRIPE_PORTAL_CONFIGURATION_ID: portal.id };
-if (endpoint && hasSecret) {
-  await stripe("POST", `webhook_endpoints/${endpoint.id}`, { enabled_events: WEBHOOK_EVENTS });
-  console.log("Webhook déjà en place (événements synchronisés)");
-} else {
+const endpoints = await stripe("GET", "webhook_endpoints", { limit: 100 });
+
+async function ensureEndpoint({ connect, events, envKey, description }) {
+  const hasSecret = new RegExp(`^${envKey}=whsec_`, "m").test(envText);
+  let endpoint = endpoints.data.find(
+    (e) => e.url === webhookUrl && Boolean(e.application) === connect,
+  );
+  if (endpoint && hasSecret) {
+    await stripe("POST", `webhook_endpoints/${endpoint.id}`, { enabled_events: events });
+    console.log(`${description} : déjà en place (événements synchronisés)`);
+    return;
+  }
   if (endpoint) await stripe("DELETE", `webhook_endpoints/${endpoint.id}`);
   endpoint = await stripe("POST", "webhook_endpoints", {
     url: webhookUrl,
-    enabled_events: WEBHOOK_EVENTS,
+    enabled_events: events,
     api_version: API_VERSION,
-    description: "MENAO — abonnements (stripe-webhook)",
+    description: `MENAO — ${description}`,
+    ...(connect ? { connect: true } : {}),
   });
-  updates.STRIPE_WEBHOOK_SECRET = endpoint.secret;
-  console.log("Webhook créé (secret écrit dans le fichier d'environnement)");
+  updates[envKey] = endpoint.secret;
+  console.log(`${description} : créé (secret écrit dans le fichier d'environnement)`);
 }
+
+await ensureEndpoint({
+  connect: false,
+  events: WEBHOOK_EVENTS,
+  envKey: "STRIPE_WEBHOOK_SECRET",
+  description: "Webhook abonnements",
+});
+await ensureEndpoint({
+  connect: true,
+  events: ["account.updated"],
+  envKey: "STRIPE_CONNECT_WEBHOOK_SECRET",
+  description: "Webhook Connect",
+});
 setEnv(updates);
 console.log(`Terminé : ${Object.keys(updates).join(", ")} → ${envFile}`);

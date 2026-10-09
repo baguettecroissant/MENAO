@@ -1,4 +1,10 @@
-import { REQUIRED_DOCUMENT_TYPES, documentIsValid } from "@menao/core";
+import {
+  REQUIRED_DOCUMENT_TYPES,
+  artisanVisibility,
+  documentIsValid,
+  subscriptionGrantsAccess,
+  type SubscriptionStatus,
+} from "@menao/core";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -300,6 +306,28 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
             </ul>
           )}
         </div>
+      </Section>
+
+      <Section title={t.visibility}>
+        {(() => {
+          const v = artisanVisibility({
+            status: artisan.status,
+            subscriptionActive: subscriptionGrantsAccess(
+              (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+            ),
+            connectChargesEnabled: artisan.connect_charges_enabled,
+          });
+          return (
+            <>
+              <p className={v.visible ? "font-medium text-success" : "font-medium"}>
+                {v.visible ? t.visible : t.hiddenBecause(v.missing.join(", "))}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t.connect(artisan.connect_charges_enabled, artisan.connect_payouts_enabled)}
+              </p>
+            </>
+          );
+        })()}
       </Section>
 
       <Section title={t.subscription}>

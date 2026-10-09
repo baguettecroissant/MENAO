@@ -320,6 +320,10 @@ export type Database = {
           base_code_insee: string | null;
           base_label: string | null;
           base_location: unknown;
+          connect_charges_enabled: boolean;
+          connect_details_submitted: boolean;
+          connect_payouts_enabled: boolean;
+          connect_updated_at: string | null;
           created_at: string;
           experience_years: number | null;
           forme_juridique_code: string | null;
@@ -335,6 +339,7 @@ export type Database = {
           sirene_partial: boolean;
           siret: string | null;
           status: Database["public"]["Enums"]["artisan_status"];
+          stripe_account_id: string | null;
           stripe_customer_id: string | null;
           submitted_at: string | null;
           suspension_reason: string | null;
@@ -355,6 +360,10 @@ export type Database = {
           base_code_insee?: string | null;
           base_label?: string | null;
           base_location?: unknown;
+          connect_charges_enabled?: boolean;
+          connect_details_submitted?: boolean;
+          connect_payouts_enabled?: boolean;
+          connect_updated_at?: string | null;
           created_at?: string;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
@@ -370,6 +379,7 @@ export type Database = {
           sirene_partial?: boolean;
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
+          stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           submitted_at?: string | null;
           suspension_reason?: string | null;
@@ -389,6 +399,10 @@ export type Database = {
           base_code_insee?: string | null;
           base_label?: string | null;
           base_location?: unknown;
+          connect_charges_enabled?: boolean;
+          connect_details_submitted?: boolean;
+          connect_payouts_enabled?: boolean;
+          connect_updated_at?: string | null;
           created_at?: string;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
@@ -404,6 +418,7 @@ export type Database = {
           sirene_partial?: boolean;
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
+          stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           submitted_at?: string | null;
           suspension_reason?: string | null;

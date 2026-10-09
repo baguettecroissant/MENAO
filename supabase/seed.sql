@@ -34,6 +34,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000008'::uuid, 'admin2@example.test', 'admin', 'Sam', 'Admin', null),
   -- Artisan validé sans abonnement (test e2e de l'abonnement, F-15).
   ('a0000000-0000-4000-8000-000000000009'::uuid, 'abonnement@example.test', 'artisan', 'Alix', 'Abonne', null),
+  -- Artisan validé et abonné, compte Stripe Connect à finaliser (test e2e de la visibilité).
+  ('a0000000-0000-4000-8000-000000000010'::uuid, 'paiement@example.test', 'artisan', 'Eden', 'Paiement', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -97,3 +99,11 @@ where a.user_id = 'a0000000-0000-4000-8000-000000000007';
 insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva, zone_mode, submitted_at)
 values ('b0000000-0000-4000-8000-000000000009', 'a0000000-0000-4000-8000-000000000009', 'valide', 'ABONNEMENT EXEMPLE',
   now(), true, true, 'communes', now());
+
+-- Artisan validé, en période d'essai, compte Connect créé mais pas encore actif.
+insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva, zone_mode,
+  submitted_at, stripe_customer_id, stripe_account_id)
+values ('b0000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-000000000010', 'valide', 'PAIEMENT EXEMPLE',
+  now(), true, true, 'communes', now(), 'cus_seed_paiement', 'acct_seed_paiement');
+insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end)
+values ('b0000000-0000-4000-8000-000000000010', 'base', 'cus_seed_paiement', 'sub_seed_paiement', 'trialing', now() + interval '90 days');

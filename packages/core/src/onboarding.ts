@@ -1,4 +1,4 @@
-/** Onboarding artisan en étapes (F-14). L'étape 6 (paiements, Stripe Connect) arrive ensuite. */
+/** Onboarding artisan en étapes (F-14). */
 
 export const ONBOARDING_STEPS = [
   { key: "entreprise", available: true },
@@ -6,7 +6,7 @@ export const ONBOARDING_STEPS = [
   { key: "zone", available: true },
   { key: "documents", available: true },
   { key: "profil", available: true },
-  { key: "paiements", available: false },
+  { key: "paiements", available: true },
   { key: "formule", available: true },
 ] as const;
 
@@ -43,6 +43,8 @@ export type ArtisanOnboardingSnapshot = {
   hasAvatar: boolean;
   /** Abonnement donnant accès au service (voir subscriptionGrantsAccess). */
   subscriptionActive: boolean;
+  /** Compte Stripe Connect capable d'encaisser (charges_enabled). */
+  connectChargesEnabled: boolean;
 };
 
 function isoDay(date: Date): string {
@@ -90,7 +92,7 @@ export function onboardingProgress(
     zone,
     documents: REQUIRED_DOCUMENT_TYPES.every((t) => documentIsValid(t, a.documents[t], today)),
     profil: a.hasAvatar && a.presentationLength >= PRESENTATION_MIN_LENGTH,
-    paiements: false,
+    paiements: a.connectChargesEnabled,
     formule: a.subscriptionActive,
   };
 }
