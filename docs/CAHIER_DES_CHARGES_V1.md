@@ -418,7 +418,9 @@ Les maquettes demandent l'avis **avant** le PV. **Ordre retenu pour la V1 : 1. S
 
 ## 11. Paiements
 
-### F-30 Principes : MENAO ne prend pas d'argent
+### F-30 Principes
+
+> ⚠️ **Décision du 9 octobre 2026 : [ADR 0011](adr/0011-paiements-directs-artisan.md).** Paiements directs sur le compte Stripe Connect de l'artisan (*direct charges*), aucune détention de fonds par MENAO. Les mécanismes ci-dessous de fonds conservés (transfert à J-2, solde suspendu, reprise de transfert) sont remplacés et seront revus en phase 4. : MENAO ne prend pas d'argent
 - **MENAO n'encaisse, ne détient et ne prélève jamais d'argent sur les chantiers.** Aucune commission, aucun frais de service, aucun IBAN MENAO. Le seul argent encaissé par MENAO est l'**abonnement des artisans** (Stripe Billing, F-15).
 - Les paiements des chantiers passent **exclusivement par Stripe Connect** : le client paie **directement l'artisan**, via le compte Stripe connecté de l'artisan. L'artisan est le commerçant (marchand de référence) : son nom apparaît sur le relevé du client, les fonds arrivent sur **son** solde Stripe.
 - Mise en œuvre : **charges directes** sur le compte connecté de l'artisan, **sans `application_fee`**. Les fonds ne transitent jamais par le solde de la plateforme MENAO. Le choix exact (charges directes, type de compte Express/Standard, contrôle des versements) est à confirmer avec Stripe pendant la phase 1 **[À VALIDER avec Stripe]** — le principe « l'argent ne passe pas par MENAO » est, lui, non négociable.
