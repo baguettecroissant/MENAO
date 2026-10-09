@@ -2,7 +2,7 @@ import { homePathForRole, roleFromAppMetadata } from "@menao/core";
 import type { Route } from "next";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Button, PageShell } from "@/components/ui";
+import { MyRequests } from "@/components/project/my-requests";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
@@ -26,14 +26,23 @@ export default async function MySpacePage() {
     .maybeSingle();
 
   return (
-    <PageShell title={fr.mySpace.greeting(profile?.first_name ?? null)}>
-      <dl className="mb-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">{fr.mySpace.greeting(profile?.first_name ?? null)}</h1>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="min-h-touch font-medium underline-offset-2 hover:underline"
+          >
+            {fr.mySpace.signOut}
+          </button>
+        </form>
+      </div>
+      <dl>
         <dt className="text-sm text-muted-foreground">{fr.mySpace.role}</dt>
         <dd className="font-medium">{fr.roles[role]}</dd>
       </dl>
-      <form action={signOut}>
-        <Button type="submit">{fr.mySpace.signOut}</Button>
-      </form>
-    </PageShell>
+      <MyRequests supabase={supabase} />
+    </main>
   );
 }

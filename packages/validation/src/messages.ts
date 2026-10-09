@@ -21,6 +21,12 @@ export const messages = {
   dateInFuture: "Cette date ne peut pas être dans le futur.",
   dateInPast: "La date de début ne peut pas être passée.",
   addressOutsideCity: "Choisissez une adresse située dans la ville indiquée.",
+  selectArtisan: "Sélectionnez au moins un artisan.",
+  tooManyArtisans: "Vous pouvez contacter 3 artisans au plus.",
+  phoneRequiredRequest: "Indiquez un numéro de téléphone pour que l'artisan puisse vous rappeler.",
+  timeInvalid: "Heure invalide.",
+  timeRange: "L'heure de fin doit être après l'heure de début.",
+  refusalReasonRequired: "Choisissez un motif de refus.",
   presentationTooShort: "Présentez-vous en au moins 100 caractères.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",

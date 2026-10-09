@@ -5,12 +5,21 @@ import { useActionState } from "react";
 import { Alert, Button, Field, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { signUp } from "@/lib/auth/actions";
-import { initialFormState } from "@/lib/auth/form";
+import { initialFormState, type FormState } from "@/lib/auth/form";
 
-export function SignUpForm() {
-  const [state, action, pending] = useActionState(signUp, initialFormState);
+/** Inscription particulier (F-08). Réutilisé à l'envoi d'une demande, avec sa propre action. */
+export function SignUpForm({
+  action: submit = signUp,
+  submitLabel,
+}: {
+  action?: (prev: FormState, formData: FormData) => Promise<FormState>;
+  submitLabel?: string;
+} = {}) {
+  const [state, action, pending] = useActionState(submit, initialFormState);
   const errors = state.fieldErrors ?? {};
   const t = fr.signUp;
+
+  if (state.success) return <Alert tone="success">{state.success}</Alert>;
 
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
@@ -96,7 +105,7 @@ export function SignUpForm() {
       </label>
 
       <Button type="submit" disabled={pending}>
-        {t.submit}
+        {submitLabel ?? t.submit}
       </Button>
     </form>
   );

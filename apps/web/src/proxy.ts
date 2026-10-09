@@ -3,7 +3,13 @@ import { safeRedirectPath } from "@menao/validation";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const PROTECTED_PREFIXES = ["/mon-espace", "/pro/onboarding", "/nouveau-mot-de-passe", "/admin"];
+const PROTECTED_PREFIXES = [
+  "/mon-espace",
+  "/pro/onboarding",
+  "/pro/demandes",
+  "/nouveau-mot-de-passe",
+  "/admin",
+];
 // Recherche (F-05 à F-07) : accessible avec une session anonyme (ADR 0012).
 const SEARCH_PREFIX = "/recherche";
 const GUEST_ONLY = ["/connexion", "/inscription", "/pro/inscription"];
@@ -58,6 +64,7 @@ export const config = {
     "/auth/:path*",
     "/pro/inscription",
     "/pro/onboarding/:path*",
+    "/pro/demandes/:path*",
     "/nouveau-mot-de-passe",
     "/admin/:path*",
     "/recherche/:path*",

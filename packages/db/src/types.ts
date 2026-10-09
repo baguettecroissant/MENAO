@@ -715,6 +715,45 @@ export type Database = {
           },
         ];
       };
+      project_transfers: {
+        Row: {
+          created_at: string;
+          expires_at: string;
+          from_user_id: string;
+          id: string;
+          project_id: string;
+          token_hash: string;
+          used_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          expires_at?: string;
+          from_user_id: string;
+          id?: string;
+          project_id: string;
+          token_hash: string;
+          used_at?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          expires_at?: string;
+          from_user_id?: string;
+          id?: string;
+          project_id?: string;
+          token_hash?: string;
+          used_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_transfers_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       projects: {
         Row: {
           adresse: string | null;
@@ -838,6 +877,79 @@ export type Database = {
           window_start?: string;
         };
         Relationships: [];
+      };
+      requests: {
+        Row: {
+          artisan_id: string;
+          callback_from: string | null;
+          callback_mode: Database["public"]["Enums"]["callback_mode"];
+          callback_to: string | null;
+          contact_phone: string;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          message: string | null;
+          particulier_id: string;
+          project_id: string;
+          refusal_detail: string | null;
+          refusal_reason: Database["public"]["Enums"]["refusal_reason"] | null;
+          responded_at: string | null;
+          status: Database["public"]["Enums"]["request_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          callback_from?: string | null;
+          callback_mode?: Database["public"]["Enums"]["callback_mode"];
+          callback_to?: string | null;
+          contact_phone: string;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          message?: string | null;
+          particulier_id: string;
+          project_id: string;
+          refusal_detail?: string | null;
+          refusal_reason?: Database["public"]["Enums"]["refusal_reason"] | null;
+          responded_at?: string | null;
+          status?: Database["public"]["Enums"]["request_status"];
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          callback_from?: string | null;
+          callback_mode?: Database["public"]["Enums"]["callback_mode"];
+          callback_to?: string | null;
+          contact_phone?: string;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          message?: string | null;
+          particulier_id?: string;
+          project_id?: string;
+          refusal_detail?: string | null;
+          refusal_reason?: Database["public"]["Enums"]["refusal_reason"] | null;
+          responded_at?: string | null;
+          status?: Database["public"]["Enums"]["request_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "requests_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "requests_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       rooms: {
         Row: {
@@ -1111,11 +1223,41 @@ export type Database = {
         Args: { p_certification_id: string; p_verified: boolean };
         Returns: undefined;
       };
+      artisan_inbox: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          client_first_name: string;
+          code_postal: string;
+          created_at: string;
+          date_mode: Database["public"]["Enums"]["project_date_mode"];
+          date_souhaitee: string;
+          expires_at: string;
+          photo_path: string;
+          request_id: string;
+          status: Database["public"]["Enums"]["request_status"];
+          summary: string;
+          trade_label: string;
+          urgence: boolean;
+          ville_nom: string;
+        }[];
+      };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
+      artisan_request_detail: { Args: { p_request_id: string }; Returns: Json };
+      artisan_respond_request: {
+        Args: {
+          p_accept: boolean;
+          p_detail?: string;
+          p_reason?: Database["public"]["Enums"]["refusal_reason"];
+          p_request_id: string;
+        };
+        Returns: undefined;
+      };
+      claim_project: { Args: { p_token: string }; Returns: string };
       consume_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number };
         Returns: boolean;
       };
+      create_project_transfer: { Args: { p_project_id: string }; Returns: string };
       match_artisans: {
         Args: { p_limit?: number; p_project_id: string };
         Returns: {
@@ -1131,6 +1273,25 @@ export type Database = {
           zone_communes: string[];
           zone_mode: Database["public"]["Enums"]["zone_mode"];
           zone_radius_km: number;
+        }[];
+      };
+      particulier_requests: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_avatar_path: string;
+          artisan_email: string;
+          artisan_id: string;
+          artisan_name: string;
+          artisan_phone: string;
+          created_at: string;
+          expires_at: string;
+          project_id: string;
+          refusal_reason: Database["public"]["Enums"]["refusal_reason"];
+          request_id: string;
+          status: Database["public"]["Enums"]["request_status"];
+          summary: string;
+          trade_label: string;
+          ville_nom: string;
         }[];
       };
       record_sirene_result: {
@@ -1157,6 +1318,18 @@ export type Database = {
           p_work_type_codes: string[];
         };
         Returns: undefined;
+      };
+      send_project_requests: {
+        Args: {
+          p_artisan_ids: string[];
+          p_callback_from: string;
+          p_callback_mode: Database["public"]["Enums"]["callback_mode"];
+          p_callback_to: string;
+          p_message: string;
+          p_phone: string;
+          p_project_id: string;
+        };
+        Returns: number;
       };
       send_project_to_menao: {
         Args: { p_contact_email: string; p_message: string; p_project_id: string };
@@ -1192,6 +1365,7 @@ export type Database = {
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
       artisan_status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu";
+      callback_mode: "des_que_possible" | "plage";
       certification_type:
         | "rge"
         | "qualifelec"
@@ -1206,8 +1380,10 @@ export type Database = {
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
-      project_status: "brouillon" | "criteres_valides";
+      project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
       project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
+      refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
+      request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
       ticket_status: "ouvert" | "en_cours" | "resolu";
       ticket_type: "dossier_recherche";
@@ -1328,6 +1504,7 @@ export const Constants = {
     Enums: {
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
       artisan_status: ["brouillon", "en_verification", "valide", "refuse", "suspendu"],
+      callback_mode: ["des_que_possible", "plage"],
       certification_type: [
         "rge",
         "qualifelec",
@@ -1343,8 +1520,10 @@ export const Constants = {
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       project_date_mode: ["des_que_possible", "date", "inconnue"],
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
-      project_status: ["brouillon", "criteres_valides"],
+      project_status: ["brouillon", "criteres_valides", "demande_envoyee"],
       project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
+      refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
+      request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
       ticket_type: ["dossier_recherche"],

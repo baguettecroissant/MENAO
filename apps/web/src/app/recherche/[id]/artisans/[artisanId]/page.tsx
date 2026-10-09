@@ -4,9 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArtisanAvatar, AvailabilityBadge } from "@/components/project/artisan-avatar";
-import { Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getArtisanProfile, publicUrl } from "@/lib/project/artisans";
+import { sendPagePath } from "@/lib/project/paths";
 import { createClient } from "@/lib/supabase/server";
 import { PhotoGallery } from "./photo-gallery";
 
@@ -97,12 +97,12 @@ export default async function ArtisanProfilePage({
             <span>{zone}</span>
           </div>
         </div>
-        <div className="flex w-full flex-col gap-1 sm:w-auto">
-          <Button type="button" disabled className="sm:w-auto">
-            {t.request}
-          </Button>
-          <p className="text-sm text-muted-foreground">{t.requestSoon}</p>
-        </div>
+        <Link
+          href={sendPagePath(id, [profile.id]) as Route}
+          className="inline-flex min-h-touch w-full items-center justify-center rounded-button bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover sm:w-auto"
+        >
+          {t.request}
+        </Link>
       </header>
 
       {profile.presentation && (
