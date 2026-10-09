@@ -25,3 +25,14 @@ export function returnOrigin(requested: unknown): string {
   const origin = typeof requested === "string" ? requested.replace(/\/$/, "") : "";
   return allowed.includes(origin) ? origin : (allowed[0] ?? "");
 }
+
+/** Journalise une erreur Stripe (type, code, paramètre en cause), sans donnée personnelle. */
+export function logStripeError(context: string, error: unknown) {
+  if (error instanceof Stripe.errors.StripeError) {
+    console.error(
+      `${context} : Stripe ${error.type} ${error.code ?? ""} ${error.param ?? ""} — ${error.message}`,
+    );
+  } else {
+    console.error(`${context} : erreur`, error instanceof Error ? error.name : "");
+  }
+}

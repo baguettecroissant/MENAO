@@ -2,7 +2,7 @@
 // en fin de période, moyen de paiement, factures).
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
-import { returnOrigin, stripeClient } from "../_shared/stripe.ts";
+import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     });
     return json({ status: "ok", url: session.url });
   } catch (error) {
-    console.error("billing-portal : erreur Stripe", error instanceof Error ? error.name : "");
+    logStripeError("billing-portal", error);
     return json({ status: "unavailable" }, 503);
   }
 });

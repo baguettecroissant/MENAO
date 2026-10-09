@@ -110,6 +110,9 @@ jobs:
         run: pnpm --filter web build
       - name: Tests Playwright
         run: pnpm --filter web test:e2e
+      - name: Journaux des Edge Functions
+        if: failure()
+        run: docker logs $(docker ps -aq --filter name=supabase_edge_runtime) 2>&1 | tail -150
       - name: Rapport Playwright
         if: failure()
         uses: actions/upload-artifact@v4
