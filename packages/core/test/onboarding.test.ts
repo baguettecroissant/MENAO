@@ -23,6 +23,7 @@ const vide: ArtisanOnboardingSnapshot = {
   documents: {},
   presentationLength: 0,
   hasAvatar: false,
+  subscriptionActive: false,
 };
 
 const entrepriseOk = {
@@ -34,14 +35,8 @@ const entrepriseOk = {
 };
 
 describe("étapes d'onboarding (F-14)", () => {
-  it("étapes 1 à 5 disponibles, paiements et formule à venir", () => {
-    expect(ONBOARDING_STEPS.filter((s) => s.available).map((s) => s.key)).toEqual([
-      "entreprise",
-      "metiers",
-      "zone",
-      "documents",
-      "profil",
-    ]);
+  it("toutes les étapes disponibles sauf « paiements » (Stripe Connect, à venir)", () => {
+    expect(ONBOARDING_STEPS.filter((s) => !s.available).map((s) => s.key)).toEqual(["paiements"]);
   });
 
   it("liste les 7 étapes de la spec, dans l'ordre", () => {
@@ -172,5 +167,10 @@ describe("profil public et envoi en vérification", () => {
     expect(canSubmitOnboarding(complet, today)).toBe(true);
     expect(canSubmitOnboarding({ ...complet, tradeCount: 0 }, today)).toBe(false);
     expect(firstIncompleteStep(complet, today)).toBe("paiements");
+  });
+
+  it("étape « formule » terminée avec un abonnement actif", () => {
+    expect(onboardingProgress(complet, today).formule).toBe(false);
+    expect(onboardingProgress({ ...complet, subscriptionActive: true }, today).formule).toBe(true);
   });
 });
