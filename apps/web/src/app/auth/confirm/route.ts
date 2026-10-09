@@ -10,6 +10,9 @@ const ALLOWED_TYPES: readonly EmailOtpType[] = ["email", "signup", "magiclink", 
 /**
  * Lien reçu par e-mail (confirmation d'inscription, lien magique, réinitialisation du mot de passe) :
  * vérifie le jeton et ouvre la session.
+ * - `token_hash` : modèles d'e-mails MENAO (supabase/templates), fonctionne sur tout appareil ;
+ * - `code` : modèles par défaut de Supabase (flux PKCE), même navigateur uniquement. Utilisé tant
+ *   que les modèles ne peuvent pas être personnalisés (offre gratuite sans SMTP dédié).
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -18,9 +21,15 @@ export async function GET(request: NextRequest) {
   const next =
     type === "recovery" ? "/nouveau-mot-de-passe" : safeRedirectPath(searchParams.get("next"));
 
+  const code = searchParams.get("code");
+
   if (tokenHash && type && ALLOWED_TYPES.includes(type)) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+    if (!error) redirect(next as Route);
+  } else if (code) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) redirect(next as Route);
   }
 

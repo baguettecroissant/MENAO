@@ -160,7 +160,9 @@ export async function requestPasswordReset(
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: confirmUrl,
+    // Utilisé par le modèle d'e-mail par défaut de Supabase (flux « code ») ; le modèle MENAO
+    // (token_hash, type=recovery) mène de toute façon à /nouveau-mot-de-passe.
+    redirectTo: `${confirmUrl}?next=/nouveau-mot-de-passe`,
   });
   // Réponse identique que le compte existe ou non (pas d'énumération des comptes).
   if (
