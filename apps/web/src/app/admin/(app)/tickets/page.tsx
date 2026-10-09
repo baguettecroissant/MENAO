@@ -14,7 +14,7 @@ export default async function TicketsPage() {
   const { data } = await supabase
     .from("tickets")
     .select(
-      "id, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label))",
+      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label))",
     )
     .order("due_at", { ascending: true })
     .limit(100);
@@ -48,9 +48,11 @@ export default async function TicketsPage() {
                       {late ? t.late : t.due(day.format(new Date(ticket.due_at)))}
                     </span>
                   </p>
+                  <p className="text-sm text-muted-foreground">{t.types[ticket.type]}</p>
                   <p>
                     {t.contact} : {ticket.contact_email}
                   </p>
+                  {ticket.subject && <p className="font-medium">{ticket.subject}</p>}
                   {project && (
                     <p>
                       {t.project} :{" "}

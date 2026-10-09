@@ -49,8 +49,9 @@ select results_eq(
   $$ values ('Agathe'::text) $$, 'Cagnes-sur-Mer : dans le rayon de 20 km');
 select is_empty($$ select * from public.public_artisans_for_commune('peintre', '06069') $$, 'Grasse : hors rayon');
 select results_eq(
-  $$ select display_name from public.public_artisans_for_commune('peintre', '06004') $$,
-  $$ values ('Bruno'::text) $$, 'Antibes : artisan par communes, sans l''artisan non abonné');
+  $$ select display_name from public.public_artisans_for_commune('peintre', '06004') order by 1 $$,
+  $$ values ('Agathe'::text), ('Bruno'::text) $$,
+  'Antibes (18 km de Nice) : rayon et communes, sans l''artisan non abonné');
 select is_empty($$ select * from public.public_artisans_for_commune('plombier', '06004') $$, 'autre métier : aucun');
 select ok((public.public_stats() ->> 'artisans')::int >= 2, 'chiffres réels lisibles sans session');
 
