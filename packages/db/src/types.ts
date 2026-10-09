@@ -23,6 +23,57 @@ export type Database = {
   };
   public: {
     Tables: {
+      ai_runs: {
+        Row: {
+          audio_seconds: number | null;
+          confidence: number | null;
+          created_at: string;
+          function_name: string;
+          id: string;
+          input_tokens: number | null;
+          latency_ms: number;
+          model: string;
+          outcome: string;
+          output_tokens: number | null;
+          project_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          audio_seconds?: number | null;
+          confidence?: number | null;
+          created_at?: string;
+          function_name: string;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms: number;
+          model: string;
+          outcome: string;
+          output_tokens?: number | null;
+          project_id?: string | null;
+        };
+        Update: {
+          audio_seconds?: number | null;
+          confidence?: number | null;
+          created_at?: string;
+          function_name?: string;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number;
+          model?: string;
+          outcome?: string;
+          output_tokens?: number | null;
+          project_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_runs_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ape_codes_btp: {
         Row: {
           code_prefix: string;
@@ -625,6 +676,132 @@ export type Database = {
         };
         Relationships: [];
       };
+      project_photos: {
+        Row: {
+          created_at: string;
+          id: string;
+          project_id: string;
+          sort_order: number;
+          storage_path: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          project_id: string;
+          sort_order?: number;
+          storage_path: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          project_id?: string;
+          sort_order?: number;
+          storage_path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_photos_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      projects: {
+        Row: {
+          adresse: string | null;
+          ai_analysis: Json | null;
+          ai_confidence: number | null;
+          ai_model: string | null;
+          analyzed_at: string | null;
+          code_postal: string | null;
+          created_at: string;
+          criteria_validated_at: string | null;
+          date_mode: Database["public"]["Enums"]["project_date_mode"];
+          date_souhaitee: string | null;
+          description: string;
+          id: string;
+          lieu_type: Database["public"]["Enums"]["project_lieu_type"] | null;
+          location: unknown;
+          room_codes: string[];
+          status: Database["public"]["Enums"]["project_status"];
+          summary: string | null;
+          surface: Database["public"]["Enums"]["project_surface"] | null;
+          trade_code: string | null;
+          updated_at: string;
+          urgence: boolean;
+          user_id: string;
+          ville_code_insee: string | null;
+          ville_nom: string | null;
+          work_type_codes: string[];
+        };
+        ComputedFields: never;
+        Insert: {
+          adresse?: string | null;
+          ai_analysis?: Json | null;
+          ai_confidence?: number | null;
+          ai_model?: string | null;
+          analyzed_at?: string | null;
+          code_postal?: string | null;
+          created_at?: string;
+          criteria_validated_at?: string | null;
+          date_mode?: Database["public"]["Enums"]["project_date_mode"];
+          date_souhaitee?: string | null;
+          description: string;
+          id?: string;
+          lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
+          location?: unknown;
+          room_codes?: string[];
+          status?: Database["public"]["Enums"]["project_status"];
+          summary?: string | null;
+          surface?: Database["public"]["Enums"]["project_surface"] | null;
+          trade_code?: string | null;
+          updated_at?: string;
+          urgence?: boolean;
+          user_id: string;
+          ville_code_insee?: string | null;
+          ville_nom?: string | null;
+          work_type_codes?: string[];
+        };
+        Update: {
+          adresse?: string | null;
+          ai_analysis?: Json | null;
+          ai_confidence?: number | null;
+          ai_model?: string | null;
+          analyzed_at?: string | null;
+          code_postal?: string | null;
+          created_at?: string;
+          criteria_validated_at?: string | null;
+          date_mode?: Database["public"]["Enums"]["project_date_mode"];
+          date_souhaitee?: string | null;
+          description?: string;
+          id?: string;
+          lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
+          location?: unknown;
+          room_codes?: string[];
+          status?: Database["public"]["Enums"]["project_status"];
+          summary?: string | null;
+          surface?: Database["public"]["Enums"]["project_surface"] | null;
+          trade_code?: string | null;
+          updated_at?: string;
+          urgence?: boolean;
+          user_id?: string;
+          ville_code_insee?: string | null;
+          ville_nom?: string | null;
+          work_type_codes?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "projects_trade_code_fkey";
+            columns: ["trade_code"];
+            isOneToOne: false;
+            referencedRelation: "trades";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       rate_limits: {
         Row: {
           created_at: string;
@@ -650,6 +827,37 @@ export type Database = {
           key?: string;
           updated_at?: string;
           window_start?: string;
+        };
+        Relationships: [];
+      };
+      rooms: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          id: string;
+          label: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          id?: string;
+          label: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          sort_order?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -848,6 +1056,25 @@ export type Database = {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
       };
+      save_project_criteria: {
+        Args: {
+          p_adresse: string;
+          p_code_postal: string;
+          p_date_mode: Database["public"]["Enums"]["project_date_mode"];
+          p_date_souhaitee: string;
+          p_lat: number;
+          p_lieu_type: Database["public"]["Enums"]["project_lieu_type"];
+          p_lon: number;
+          p_project_id: string;
+          p_room_codes: string[];
+          p_surface: Database["public"]["Enums"]["project_surface"];
+          p_trade_code: string;
+          p_ville_code_insee: string;
+          p_ville_nom: string;
+          p_work_type_codes: string[];
+        };
+        Returns: undefined;
+      };
       set_artisan_trades: {
         Args: { p_experience_years: number; p_trade_codes: string[]; p_work_type_codes: string[] };
         Returns: undefined;
@@ -865,6 +1092,7 @@ export type Database = {
         Returns: undefined;
       };
       submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
+      validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
     };
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
@@ -881,6 +1109,10 @@ export type Database = {
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
+      project_date_mode: "des_que_possible" | "date" | "inconnue";
+      project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
+      project_status: "brouillon" | "criteres_valides";
+      project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
       review_decision: "valide" | "refuse" | "complement";
       zone_mode: "rayon" | "communes";
     };
@@ -1012,6 +1244,10 @@ export const Constants = {
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
+      project_date_mode: ["des_que_possible", "date", "inconnue"],
+      project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
+      project_status: ["brouillon", "criteres_valides"],
+      project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
       review_decision: ["valide", "refuse", "complement"],
       zone_mode: ["rayon", "communes"],
     },

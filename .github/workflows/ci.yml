@@ -81,8 +81,8 @@ jobs:
       - name: Démarrer stripe-mock (faux Stripe officiel)
         run: docker run -d --name stripe-mock -p 12111:12111 stripe/stripe-mock:v0.206.0
       - name: Démarrer Supabase local (Postgres, Auth, API, Storage, Edge Functions, Mailpit)
-        # Les Edge Functions appellent le faux serveur Sirene (lancé par Playwright) et stripe-mock,
-        # tous deux sur l'hôte.
+        # Les Edge Functions appellent les faux serveurs Sirene et IA (lancés par Playwright) et
+        # stripe-mock, tous sur l'hôte.
         env:
           INSEE_API_BASE_URL: http://host.docker.internal:54399
           INSEE_API_KEY: cle-factice-ci
@@ -94,6 +94,9 @@ jobs:
           STRIPE_API_PORT: "12111"
           STRIPE_API_PROTOCOL: http
           SITE_URLS: http://localhost:3000
+          OPENROUTER_API_KEY: cle-factice-ci
+          OPENROUTER_BASE_URL: http://host.docker.internal:54398
+          GEOCODING_BASE_URL: http://host.docker.internal:54398
         run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,postgres-meta
       - name: Variables d'environnement de l'application
         run: |

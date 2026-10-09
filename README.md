@@ -63,6 +63,10 @@ SUPABASE_URL=https://izwdfxynzegntubminth.supabase.co SUPABASE_PUBLISHABLE_KEY=<
 
 Le script crée les produits, prix, TVA, portail et webhook, et écrit `STRIPE_WEBHOOK_SECRET`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION_ID` dans le fichier. Secrets des Edge Functions : `STRIPE_SECRET_KEY`, ces trois valeurs et `SITE_URLS` (origines autorisées pour le retour depuis Stripe). Ouvrir une formule : `ouverte = true` dans `plans`, puis relancer le script.
 
+## Recherche IA (F-05 à F-07)
+
+Analyse du besoin (`analyze-need`, Claude Haiku 5.5, repli Sonnet 5.5) et dictée (`transcribe`, Voxtral). Secrets des Edge Functions : `OPENROUTER_API_KEY` (tests et staging) ou, en production, `ANTHROPIC_API_KEY` et `MISTRAL_API_KEY` (prioritaires). Facultatifs : `AI_ANALYZE_MODEL`, `AI_ANALYZE_FALLBACK_MODEL`, `AI_TRANSCRIBE_MODEL`. Les sessions anonymes doivent être activées dans Auth (`enable_anonymous_sign_ins`). En e2e, `OPENROUTER_BASE_URL` et `GEOCODING_BASE_URL` pointent sur le faux serveur `apps/web/e2e/mock-ai.mjs` (port 54398). Voir l'ADR 0012.
+
 ## Créer un administrateur
 
 Le rôle se trouve dans `app_metadata`, jamais modifiable depuis l'application. Dans l'éditeur SQL du projet Supabase (après inscription normale de la personne) :

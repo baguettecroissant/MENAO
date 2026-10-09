@@ -12,7 +12,8 @@ export const metadata: Metadata = { title: `${fr.nav.mySpace} — MENAO` };
 export default async function MySpacePage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (!data) redirect("/connexion?next=/mon-espace");
+  // Une session anonyme (recherche en cours, ADR 0012) ne donne pas accès à l'espace client.
+  if (!data || data.claims.is_anonymous) redirect("/connexion?next=/mon-espace");
 
   const role = roleFromAppMetadata(data.claims.app_metadata);
   const home = homePathForRole(role);

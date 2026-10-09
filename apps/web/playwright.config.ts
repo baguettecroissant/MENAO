@@ -19,6 +19,12 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
+      // Faux OpenRouter et faux géocodage, appelés par analyze-need et transcribe (Docker → hôte).
+      command: "node e2e/mock-ai.mjs",
+      url: "http://127.0.0.1:54398/",
+      reuseExistingServer: !process.env.CI,
+    },
+    {
       command: "pnpm start",
       url: baseURL,
       reuseExistingServer: !process.env.CI,

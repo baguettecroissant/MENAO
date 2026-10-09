@@ -7,3 +7,5 @@ export * from "./files";
 export * from "./expiry";
 export * from "./billing";
 export * from "./connect";
+export * from "./project";
+export * from "./audio";
