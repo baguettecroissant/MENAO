@@ -60,7 +60,7 @@ select throws_ok(
 
 select lives_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', 'appartement',
-       array['cuisine', 'cuisine'], array['recherche-fuite'], 'moins_10', '06088', 'Nice', '06000',
+       array['cuisine', 'cuisine'], array['recherche-fuite'], 'moins_10', '06088', 'Nice', '06000', null, null,
        '1 Rue de l''Exemple 06000 Nice', 7.26, 43.70, 'date', current_date + 7) $$,
   'enregistrement de critères valides');
 select results_eq(
@@ -71,7 +71,7 @@ select results_eq(
 
 select lives_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', 'appartement',
-       array['cuisine'], array['recherche-fuite'], 'moins_10', '06088', 'Nice', '06000',
+       array['cuisine'], array['recherche-fuite'], 'moins_10', '06088', 'Nice', '06000', null, null,
        '1 Rue de l''Exemple 06000 Nice', null, null, 'date', current_date + 7) $$,
   'adresse inchangée : enregistrement sans nouvelles coordonnées');
 select ok((select location is not null from public.projects where id = 'f1f1f1f1-0000-4000-8000-000000000001'),
@@ -79,27 +79,27 @@ select ok((select location is not null from public.projects where id = 'f1f1f1f1
 
 select throws_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'astronaute', null,
-       null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,
+       null, null, null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,
   '22023', 'Métier inconnu', 'métier hors référentiel refusé');
 select throws_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', null,
-       null, array['carrelage-sol'], null, null, null, null, null, null, null, 'inconnue', null) $$,
+       null, array['carrelage-sol'], null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,
   '22023', 'Travaux incompatibles avec le métier', 'travaux d''un autre métier refusés');
 select throws_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', null,
-       array['donjon'], null, null, null, null, null, null, null, null, 'inconnue', null) $$,
+       array['donjon'], null, null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,
   '22023', 'Pièce inconnue', 'pièce hors référentiel refusée');
 select throws_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', null,
-       null, null, null, null, null, null, null, null, null, 'date', current_date - 1) $$,
+       null, null, null, null, null, null, null, null, null, null, null, 'date', current_date - 1) $$,
   '22023', 'La date de début ne peut pas être passée', 'date passée refusée');
 select throws_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', null,
-       null, null, null, '06088', 'Nice', '06000', '1 Rue de l''Exemple', null, null, 'inconnue', null) $$,
+       null, null, null, '06088', 'Nice', '06000', null, null, '1 Rue de l''Exemple', null, null, 'inconnue', null) $$,
   '22023', 'Adresse non géocodée', 'adresse sans coordonnées refusée');
 select throws_ok(
   $$ select public.save_project_criteria('f2f2f2f2-0000-4000-8000-000000000002', 'peintre', null,
-       null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,
+       null, null, null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,
   '42501', null, 'projet d''un autre utilisateur non modifiable');
 
 select lives_ok($$ select public.validate_project_criteria('f1f1f1f1-0000-4000-8000-000000000001') $$,
@@ -108,7 +108,7 @@ select is((select status::text from public.projects where id = 'f1f1f1f1-0000-40
   'criteres_valides', 'projet prêt pour la recherche');
 select lives_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', null,
-       null, null, null, null, null, null, null, null, null, 'des_que_possible', null) $$,
+       null, null, null, null, null, null, null, null, null, null, null, 'des_que_possible', null) $$,
   'critères encore modifiables');
 select is((select status::text from public.projects where id = 'f1f1f1f1-0000-4000-8000-000000000001'),
   'brouillon', 'une modification demande une nouvelle validation');

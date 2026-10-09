@@ -1,9 +1,10 @@
-import { ONBOARDING_STEPS } from "@menao/core";
+import { ONBOARDING_STEPS, parisToday } from "@menao/core";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { AvailabilityForm } from "./availability-form";
 import { SubmitOnboarding } from "./submit-onboarding";
 
 const t = fr.pro.onboarding;
@@ -41,6 +42,17 @@ export default async function OnboardingIndexPage() {
               </ul>
             </>
           )}
+        </Card>
+      )}
+      {(artisan.status === "valide" || artisan.status === "suspendu") && (
+        <Card>
+          <h2 className="mb-2 text-lg font-semibold">{t.availability.title}</h2>
+          <p className="mb-4 text-muted-foreground">{t.availability.intro}</p>
+          <AvailabilityForm
+            paused={artisan.paused}
+            availableFrom={artisan.available_from}
+            today={parisToday()}
+          />
         </Card>
       )}
       {artisan.status === "suspendu" && artisan.suspension_reason !== "documents_expires" && (

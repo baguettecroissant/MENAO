@@ -8,7 +8,7 @@ const base = {
   roomCodes: ["cuisine"],
   workTypeCodes: ["recherche-fuite"],
   surface: "moins_10",
-  ville: { code: "06088", nom: "Nice", codePostal: "06000" },
+  ville: { code: "06088", nom: "Nice", codePostal: "06000", lon: 7.26, lat: 43.7 },
   adresse: { label: "1 Rue de l'Exemple 06000 Nice", citycode: "06088", lon: 7.26, lat: 43.7 },
   dateMode: "date",
   dateSouhaitee: "2026-10-20",

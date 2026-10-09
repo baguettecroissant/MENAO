@@ -428,7 +428,13 @@ function AddressEditor({
         onSelect={(c) =>
           setDraft((d) => ({
             ...d,
-            ville: { code: c.code, nom: c.nom, codePostal: c.postcode ?? null },
+            ville: {
+              code: c.code,
+              nom: c.nom,
+              codePostal: c.postcode ?? null,
+              lon: c.lon,
+              lat: c.lat,
+            },
             adresse: d.ville?.code === c.code ? d.adresse : null,
           }))
         }

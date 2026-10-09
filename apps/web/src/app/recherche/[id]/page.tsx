@@ -63,6 +63,8 @@ export default async function ProjectReviewPage({
           code: project.ville_code_insee,
           nom: project.ville_nom ?? project.ville_code_insee,
           codePostal: project.code_postal,
+          lon: null,
+          lat: null,
         }
       : null,
     // Adresse déjà géocodée : les coordonnées restent en base tant qu'elle ne change pas.

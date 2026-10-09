@@ -368,6 +368,7 @@ export type Database = {
           ape_code: string | null;
           ape_eligible: boolean | null;
           assujetti_tva: boolean | null;
+          available_from: string | null;
           base_code_insee: string | null;
           base_label: string | null;
           base_location: unknown;
@@ -380,6 +381,7 @@ export type Database = {
           forme_juridique_code: string | null;
           id: string;
           nom_commercial: string | null;
+          paused: boolean;
           presentation: string | null;
           radius_km: number | null;
           raison_sociale: string | null;
@@ -408,6 +410,7 @@ export type Database = {
           ape_code?: string | null;
           ape_eligible?: boolean | null;
           assujetti_tva?: boolean | null;
+          available_from?: string | null;
           base_code_insee?: string | null;
           base_label?: string | null;
           base_location?: unknown;
@@ -420,6 +423,7 @@ export type Database = {
           forme_juridique_code?: string | null;
           id?: string;
           nom_commercial?: string | null;
+          paused?: boolean;
           presentation?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
@@ -447,6 +451,7 @@ export type Database = {
           ape_code?: string | null;
           ape_eligible?: boolean | null;
           assujetti_tva?: boolean | null;
+          available_from?: string | null;
           base_code_insee?: string | null;
           base_label?: string | null;
           base_location?: unknown;
@@ -459,6 +464,7 @@ export type Database = {
           forme_juridique_code?: string | null;
           id?: string;
           nom_commercial?: string | null;
+          paused?: boolean;
           presentation?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
@@ -734,6 +740,7 @@ export type Database = {
           urgence: boolean;
           user_id: string;
           ville_code_insee: string | null;
+          ville_location: unknown;
           ville_nom: string | null;
           work_type_codes: string[];
         };
@@ -762,6 +769,7 @@ export type Database = {
           urgence?: boolean;
           user_id: string;
           ville_code_insee?: string | null;
+          ville_location?: unknown;
           ville_nom?: string | null;
           work_type_codes?: string[];
         };
@@ -789,6 +797,7 @@ export type Database = {
           urgence?: boolean;
           user_id?: string;
           ville_code_insee?: string | null;
+          ville_location?: unknown;
           ville_nom?: string | null;
           work_type_codes?: string[];
         };
@@ -916,6 +925,60 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "plans";
             referencedColumns: ["code"];
+          },
+        ];
+      };
+      tickets: {
+        Row: {
+          contact_email: string;
+          created_at: string;
+          due_at: string;
+          handled_by: string | null;
+          id: string;
+          message: string | null;
+          project_id: string | null;
+          resolved_at: string | null;
+          status: Database["public"]["Enums"]["ticket_status"];
+          type: Database["public"]["Enums"]["ticket_type"];
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          contact_email: string;
+          created_at?: string;
+          due_at?: string;
+          handled_by?: string | null;
+          id?: string;
+          message?: string | null;
+          project_id?: string | null;
+          resolved_at?: string | null;
+          status?: Database["public"]["Enums"]["ticket_status"];
+          type: Database["public"]["Enums"]["ticket_type"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          contact_email?: string;
+          created_at?: string;
+          due_at?: string;
+          handled_by?: string | null;
+          id?: string;
+          message?: string | null;
+          project_id?: string | null;
+          resolved_at?: string | null;
+          status?: Database["public"]["Enums"]["ticket_status"];
+          type?: Database["public"]["Enums"]["ticket_type"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tickets_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1048,9 +1111,27 @@ export type Database = {
         Args: { p_certification_id: string; p_verified: boolean };
         Returns: undefined;
       };
+      artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
       consume_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number };
         Returns: boolean;
+      };
+      match_artisans: {
+        Args: { p_limit?: number; p_project_id: string };
+        Returns: {
+          artisan_id: string;
+          available_from: string;
+          available_now: boolean;
+          avatar_path: string;
+          display_name: string;
+          distance_km: number;
+          experience_years: number;
+          specialties: Json;
+          zone_city: string;
+          zone_communes: string[];
+          zone_mode: Database["public"]["Enums"]["zone_mode"];
+          zone_radius_km: number;
+        }[];
       };
       record_sirene_result: {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
@@ -1070,9 +1151,19 @@ export type Database = {
           p_surface: Database["public"]["Enums"]["project_surface"];
           p_trade_code: string;
           p_ville_code_insee: string;
+          p_ville_lat: number;
+          p_ville_lon: number;
           p_ville_nom: string;
           p_work_type_codes: string[];
         };
+        Returns: undefined;
+      };
+      send_project_to_menao: {
+        Args: { p_contact_email: string; p_message: string; p_project_id: string };
+        Returns: string;
+      };
+      set_artisan_availability: {
+        Args: { p_available_from: string; p_paused: boolean };
         Returns: undefined;
       };
       set_artisan_trades: {
@@ -1089,6 +1180,10 @@ export type Database = {
           p_mode: Database["public"]["Enums"]["zone_mode"];
           p_radius_km?: number;
         };
+        Returns: undefined;
+      };
+      staff_set_ticket_status: {
+        Args: { p_status: Database["public"]["Enums"]["ticket_status"]; p_ticket_id: string };
         Returns: undefined;
       };
       submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
@@ -1114,6 +1209,8 @@ export type Database = {
       project_status: "brouillon" | "criteres_valides";
       project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
       review_decision: "valide" | "refuse" | "complement";
+      ticket_status: "ouvert" | "en_cours" | "resolu";
+      ticket_type: "dossier_recherche";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -1249,6 +1346,8 @@ export const Constants = {
       project_status: ["brouillon", "criteres_valides"],
       project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
       review_decision: ["valide", "refuse", "complement"],
+      ticket_status: ["ouvert", "en_cours", "resolu"],
+      ticket_type: ["dossier_recherche"],
       zone_mode: ["rayon", "communes"],
     },
   },

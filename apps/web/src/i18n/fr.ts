@@ -141,9 +141,66 @@ export const fr = {
       plus_50: "Plus de 50 m²",
     },
     results: {
-      title: "Vos critères sont enregistrés",
-      body: "La liste des artisans vérifiés correspondant à votre projet arrive très bientôt sur MENAO.",
-      back: "Revenir à mes critères",
+      title: "Sélectionnez votre artisan idéal",
+      found: (n: number) =>
+        n === 1
+          ? "Nous avons trouvé 1 artisan vérifié qui correspond à votre projet."
+          : `Nous avons trouvé ${n} artisans vérifiés qui correspondent à votre projet.`,
+      noneTitle: "Aucun artisan disponible pour l'instant",
+      none: "Aucun artisan vérifié ne couvre encore votre secteur pour ce métier. Envoyez-nous votre dossier : nous cherchons pour vous.",
+      summary: "Votre projet",
+      edit: "Modifier",
+      ranking: "Comment les artisans sont-ils classés ?",
+      viewProfile: (name: string) => `Voir le profil de ${name}`,
+      viewProfileShort: "Voir le profil",
+      experience: (years: number) =>
+        years <= 1 ? `${years} an d'expérience` : `${years} ans d'expérience`,
+      zoneRadius: (km: number, city: string | null) =>
+        city ? `${km} km autour de ${city}` : `Rayon de ${km} km`,
+      zoneCommunes: (communes: string[]) =>
+        communes.length > 3
+          ? `${communes.slice(0, 3).join(", ")} et ${communes.length - 3} autres`
+          : communes.join(", "),
+      distance: (km: number) => `à ${km.toLocaleString("fr-FR")} km`,
+      availableNow: "Dispo immédiate",
+      availableFrom: (date: string) => `Disponible à partir du ${date}`,
+      paused: "Indisponible pour le moment",
+      more: (n: number) => `+${n}`,
+      date: { des_que_possible: "Dès que possible", inconnue: "Date inconnue" },
+      ticket: {
+        title: "Vous ne trouvez pas votre artisan idéal ?",
+        intro: "Envoyez votre dossier à l'équipe MENAO : nous vous répondons sous 7 jours.",
+        message: "Votre message (facultatif)",
+        email: "Votre adresse e-mail",
+        emailHint: "Pour que l'équipe MENAO puisse vous répondre.",
+        submit: "Envoyer mon dossier à MENAO",
+        sent: "Votre dossier est transmis à l'équipe MENAO. Nous vous répondons sous 7 jours.",
+      },
+    },
+    profile: {
+      breadcrumb: { criteria: "Vérification des critères", selection: "Sélection d'artisan" },
+      request: "Envoyer une demande",
+      requestSoon: "L'envoi de demande arrive très bientôt.",
+      about: "À propos",
+      expertise: "Expertises",
+      guarantees: "Garanties et assurances",
+      decennale: (date: string, insurer: string | null) =>
+        `Assurance décennale vérifiée par MENAO, valable jusqu'au ${date}${insurer ? ` (${insurer})` : ""}`,
+      noDecennale: "Assurance décennale vérifiée par MENAO.",
+      certification: (label: string, numero: string, date: string) =>
+        `${label} n° ${numero}, valable jusqu'au ${date}`,
+      score: "Score MENAO",
+      scoreEmpty: "Pas encore de score : cet artisan vient de rejoindre MENAO.",
+      recent: "Chantiers récents",
+      recentEmpty: "Aucune photo de chantier pour l'instant.",
+      reviews: "Derniers avis",
+      reviewsEmpty: "Pas encore d'avis vérifié.",
+      photoAlt: (index: number, name: string) => `Chantier ${index} réalisé par ${name}`,
+      close: "Fermer",
+      previous: "Photo précédente",
+      next: "Photo suivante",
+      zone: "Zone d'intervention",
+      company: "Entreprise",
     },
     upload: {
       ok: "Photo ajoutée.",
@@ -373,6 +430,16 @@ export const fr = {
           forbidden: "Cette action est réservée aux comptes professionnels.",
         },
       },
+      availability: {
+        title: "Disponibilité",
+        intro:
+          "Indiquez quand vous pouvez démarrer un nouveau chantier : elle apparaît sur votre profil et dans les résultats de recherche.",
+        paused: "Je suis en pause ou en congés (je n'apparais plus dans les résultats)",
+        from: "Disponible à partir du (facultatif)",
+        fromHint: "Laissez vide si vous êtes disponible tout de suite.",
+        save: "Enregistrer ma disponibilité",
+        saved: "Disponibilité enregistrée.",
+      },
       visibility: {
         visible:
           "Votre profil est visible des particuliers : vous pouvez recevoir des demandes de chantier.",
@@ -526,9 +593,57 @@ export const fr = {
       },
     },
   },
+  ranking: {
+    title: "Critères de classement des artisans",
+    intro:
+      "MENAO présente au particulier les artisans vérifiés qui peuvent réaliser son projet. Voici comment ils sont sélectionnés et classés.",
+    selectionTitle: "Quels artisans sont proposés ?",
+    selection: [
+      "Artisans dont MENAO a vérifié l'entreprise (SIRET actif), l'identité et les assurances (décennale et responsabilité civile professionnelle en cours de validité).",
+      "Artisans abonnés à MENAO et en mesure de recevoir des paiements.",
+      "Artisans qui exercent le métier recherché et dont la zone d'intervention couvre l'adresse du chantier.",
+      "Artisans qui ne se sont pas déclarés en pause ou en congés.",
+    ],
+    orderTitle: "Dans quel ordre ?",
+    order: [
+      "D'abord les artisans disponibles immédiatement, puis selon leur date de disponibilité.",
+      "Ensuite, les artisans les plus proches du chantier.",
+      "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
+      "Le score MENAO (avis vérifiés des clients) sera pris en compte dès que les premiers avis seront publiés.",
+    ],
+    paidTitle: "Mise en avant payante",
+    paid: "Aucune. Le classement ne dépend ni de la formule d'abonnement ni d'un paiement de l'artisan. Si cela devait changer, les artisans concernés seraient signalés par la mention « Mis en avant ».",
+    limit: "Nous présentons au plus 5 artisans par recherche.",
+    reviewsTitle: "Avis",
+    reviews:
+      "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO pourront laisser un avis (« Avis vérifié »).",
+    updated:
+      "Dernière mise à jour : 9 octobre 2026 (version provisoire, en cours de validation juridique).",
+  },
   admin: {
     title: "Back-office MENAO",
-    nav: { artisans: "Dossiers artisans", watch: "À surveiller", signOut: "Me déconnecter" },
+    nav: {
+      artisans: "Dossiers artisans",
+      watch: "À surveiller",
+      tickets: "Dossiers particuliers",
+      signOut: "Me déconnecter",
+    },
+    tickets: {
+      title: "Dossiers envoyés par les particuliers",
+      empty: "Aucun dossier.",
+      open: "À traiter",
+      closed: "Résolus",
+      due: (date: string) => `Réponse attendue le ${date}`,
+      late: "En retard",
+      contact: "Contact",
+      project: "Projet",
+      message: "Message",
+      noMessage: "Pas de message.",
+      status: { ouvert: "Ouvert", en_cours: "En cours", resolu: "Résolu" },
+      markInProgress: "Passer en cours",
+      markResolved: "Marquer résolu",
+      reopen: "Rouvrir",
+    },
     watch: {
       title: "À surveiller",
       renewals: "Renouvellements à vérifier",
