@@ -97,11 +97,19 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
       .getByRole("link", { name: /Formule.*terminée/ }),
   ).toBeVisible();
 
-  await page.route("https://billing.stripe.com/**", (route) =>
-    route.fulfill({ contentType: "text/html", body: "<h1>Portail Stripe (simulé)</h1>" }),
+  // URL du portail fournie par Stripe (stripe-mock en CI) : toute navigation externe est simulée.
+  const external: string[] = [];
+  await page.route(
+    (url) => url.hostname !== "localhost",
+    (route) => {
+      external.push(route.request().url());
+      return route.fulfill({ contentType: "text/html", body: "<h1>Portail Stripe (simulé)</h1>" });
+    },
   );
   await page.getByRole("button", { name: "Gérer mon abonnement" }).click();
-  await expect(page).toHaveURL(/^https:\/\/billing\.stripe\.com\//);
+  await expect
+    .poll(() => external.some((u) => new URL(u).hostname.endsWith("stripe.com")))
+    .toBe(true);
 });
 
 test("abonnement indisponible tant que le dossier n'est pas validé", async ({ page }) => {
