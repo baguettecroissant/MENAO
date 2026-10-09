@@ -1,6 +1,7 @@
 "use client";
 
 import { MAX_ARTISANS_PER_REQUEST } from "@menao/core";
+import { Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -39,12 +40,19 @@ export function SelectionBar({ formId, slots }: { formId: string; slots: number 
   }, [formId, max]);
 
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-card sm:border">
+    <div className="sticky bottom-4 z-20 flex flex-col items-center justify-between gap-3 rounded-card border border-border bg-surface/95 p-4 shadow-raised backdrop-blur sm:flex-row">
       <p className="text-sm text-muted-foreground" aria-live="polite">
         {count >= max ? t.limit : t.hint}
       </p>
-      <Button type="submit" form={formId} disabled={count === 0}>
+      <Button
+        type="submit"
+        form={formId}
+        disabled={count === 0}
+        block={false}
+        className="w-full sm:w-auto"
+      >
         {t.submit(count)}
+        <Send aria-hidden="true" className="size-4" />
       </Button>
     </div>
   );
