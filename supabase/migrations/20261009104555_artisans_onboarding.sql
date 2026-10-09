@@ -451,16 +451,27 @@ begin
   delete from public.artisan_zones where artisan_id = v_artisan;
 
   if p_mode = 'rayon' then
-    if p_lon is null or p_lat is null or p_radius_km is null or p_base_label is null then
-      raise exception 'Adresse de base et rayon requis.' using errcode = '22023';
+    if p_radius_km is null then
+      raise exception 'Rayon requis.' using errcode = '22023';
     end if;
-    update public.artisans set
-      zone_mode = 'rayon',
-      base_label = p_base_label,
-      base_code_insee = p_base_code_insee,
-      base_location = extensions.st_setsrid(extensions.st_makepoint(p_lon, p_lat), 4326)::extensions.geography,
-      radius_km = p_radius_km
-    where id = v_artisan;
+    if p_lon is null or p_lat is null then
+      -- Changement du rayon seul : l'adresse de base existante est conservée.
+      if not exists (select 1 from public.artisans where id = v_artisan and base_location is not null) then
+        raise exception 'Adresse de base requise.' using errcode = '22023';
+      end if;
+      update public.artisans set zone_mode = 'rayon', radius_km = p_radius_km where id = v_artisan;
+    else
+      if p_base_label is null then
+        raise exception 'Adresse de base requise.' using errcode = '22023';
+      end if;
+      update public.artisans set
+        zone_mode = 'rayon',
+        base_label = p_base_label,
+        base_code_insee = p_base_code_insee,
+        base_location = extensions.st_setsrid(extensions.st_makepoint(p_lon, p_lat), 4326)::extensions.geography,
+        radius_km = p_radius_km
+      where id = v_artisan;
+    end if;
   else
     if jsonb_typeof(p_communes) is distinct from 'array' or jsonb_array_length(p_communes) = 0 then
       raise exception 'Au moins une commune est requise.' using errcode = '22023';

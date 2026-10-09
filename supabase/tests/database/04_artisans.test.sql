@@ -149,6 +149,13 @@ select results_eq(
   $$ values ('rayon'::text, 30, true) $$, 'zone en rayon enregistrée avec un point PostGIS');
 
 select lives_ok(
+  $$ select public.set_artisan_zone('rayon', p_radius_km => 50) $$,
+  'étape 3 : changement du rayon seul');
+select results_eq(
+  $$ select radius_km::int, base_label from public.artisans $$,
+  $$ values (50, 'Promenade des Anglais 06200 Nice'::text) $$, 'rayon modifié, adresse de base conservée');
+
+select lives_ok(
   $$ select public.set_artisan_zone('communes', p_communes => '[{"code":"06088","nom":"Nice"},{"code":"06004","nom":"Antibes"}]') $$,
   'étape 3 : zone en communes');
 select results_eq(
@@ -156,6 +163,9 @@ select results_eq(
   $$ values ('communes'::text, true, 2) $$, 'zone en communes : rayon effacé, 2 communes');
 select throws_ok(
   $$ select public.set_artisan_zone('communes', p_communes => '[]') $$, '22023', null, 'au moins une commune');
+select throws_ok(
+  $$ select public.set_artisan_zone('rayon', p_radius_km => 30) $$, '22023', null,
+  'rayon sans adresse de base (zone en communes) refusé');
 
 select throws_ok(
   $$ insert into public.artisan_zones (artisan_id, code_insee, nom)
