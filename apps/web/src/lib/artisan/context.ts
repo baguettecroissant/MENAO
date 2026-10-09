@@ -1,0 +1,73 @@
+import "server-only";
+import {
+  homePathForRole,
+  onboardingProgress,
+  roleFromAppMetadata,
+  type ArtisanOnboardingSnapshot,
+} from "@menao/core";
+import type { Route } from "next";
+import { redirect } from "next/navigation";
+import { cache } from "react";
+import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Données de l'onboarding de l'artisan connecté (mises en cache pour la durée de la requête,
+ * partagées entre le layout et la page). Redirige si l'utilisateur n'est pas artisan.
+ */
+export const getOnboardingContext = cache(async () => {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  if (!auth) redirect("/connexion?next=/pro/onboarding");
+
+  const role = roleFromAppMetadata(auth.claims.app_metadata);
+  if (role !== "artisan" && role !== "artisan_en_attente") redirect(homePathForRole(role) as Route);
+
+  const { data: artisan, error } = await supabase
+    .from("artisans")
+    .select("*")
+    .eq("user_id", auth.claims.sub)
+    .single();
+  if (error) throw new Error("Fiche artisan introuvable");
+
+  const [trades, workTypes, zones, certifications] = await Promise.all([
+    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
+    supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", artisan.id),
+    supabase
+      .from("artisan_zones")
+      .select("code_insee, nom")
+      .eq("artisan_id", artisan.id)
+      .order("nom"),
+    supabase
+      .from("certifications")
+      .select("id, type, numero, date_fin, verified_at")
+      .eq("artisan_id", artisan.id)
+      .order("date_fin"),
+  ]);
+
+  const tradeCodes = (trades.data ?? []).map((t) => t.trade_code);
+  const zoneList = zones.data ?? [];
+  const snapshot: ArtisanOnboardingSnapshot = {
+    siretVerified: artisan.sirene_checked_at !== null,
+    sireneActive: artisan.sirene_active === true,
+    raisonSociale: artisan.raison_sociale,
+    assujettiTva: artisan.assujetti_tva,
+    tradeCount: tradeCodes.length,
+    zoneMode: artisan.zone_mode,
+    radiusKm: artisan.radius_km,
+    hasBaseLocation: artisan.base_location !== null,
+    communeCount: zoneList.length,
+  };
+
+  return {
+    supabase,
+    artisan,
+    tradeCodes,
+    workTypeCodes: (workTypes.data ?? []).map((w) => w.work_type_code),
+    zones: zoneList,
+    certifications: certifications.data ?? [],
+    snapshot,
+    progress: onboardingProgress(snapshot),
+  };
+});
+
+export type OnboardingContext = Awaited<ReturnType<typeof getOnboardingContext>>;

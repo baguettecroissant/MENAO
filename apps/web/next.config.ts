@@ -11,7 +11,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseUrl}`,
   "font-src 'self'",
-  `connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace(/^http/, "ws")} https://*.ingest.de.sentry.io https://*.ingest.sentry.io`,
+  `connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace(/^http/, "ws")} https://data.geopf.fr https://*.ingest.de.sentry.io https://*.ingest.sentry.io`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

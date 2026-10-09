@@ -225,7 +225,12 @@ export const fr = {
     "5720": "SASU",
     "6540": "SCI",
   } as Record<string, string>,
+  zoneErrors: {
+    addressRequired: "Choisissez une adresse dans la liste proposée.",
+  },
   errors: {
+    siretTaken:
+      "Ce SIRET est déjà associé à un compte MENAO. Contactez-nous si vous pensez qu'il s'agit d'une erreur.",
     generic: "Une erreur est survenue. Réessayez dans quelques instants.",
     invalidCredentials: "Adresse e-mail ou mot de passe incorrect.",
     emailNotConfirmed: "Confirmez d'abord votre adresse e-mail grâce au lien reçu par e-mail.",
