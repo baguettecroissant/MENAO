@@ -90,6 +90,7 @@ export async function sendMagicLink(_prev: FormState, formData: FormData): Promi
 
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // Session courante uniquement : ne déconnecte pas les autres appareils (app mobile).
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/");
 }
