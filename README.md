@@ -51,6 +51,18 @@ pnpm --filter web dev                 # http://localhost:3000
 | `pnpm functions:check` | Vérifie les Edge Functions (Deno) |
 | `pnpm --filter web build && pnpm --filter web test:e2e` | Tests de bout en bout (Supabase local requis ; faux serveur Sirene lancé automatiquement, Supabase démarré avec `INSEE_API_BASE_URL=http://host.docker.internal:54399`) |
 
+## Stripe (abonnements, F-15)
+
+Clé de test dans `.env.staging` (`STRIPE_SECRET_KEY=sk_test_…`), puis, après application des migrations :
+
+```bash
+set -a; . ./.env.staging; set +a
+SUPABASE_URL=https://izwdfxynzegntubminth.supabase.co SUPABASE_PUBLISHABLE_KEY=<clé publishable> \
+  pnpm stripe:setup --env-file .env.staging --webhook-url https://izwdfxynzegntubminth.supabase.co/functions/v1/stripe-webhook
+```
+
+Le script crée les produits, prix, TVA, portail et webhook, et écrit `STRIPE_WEBHOOK_SECRET`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION_ID` dans le fichier. Secrets des Edge Functions : `STRIPE_SECRET_KEY`, ces trois valeurs et `SITE_URLS` (origines autorisées pour le retour depuis Stripe). Ouvrir une formule : `ouverte = true` dans `plans`, puis relancer le script.
+
 ## Créer un administrateur
 
 Le rôle se trouve dans `app_metadata`, jamais modifiable depuis l'application. Dans l'éditeur SQL du projet Supabase (après inscription normale de la personne) :

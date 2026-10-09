@@ -32,6 +32,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000007'::uuid, 'valide@example.test', 'artisan', 'Lou', 'Valide', null),
   -- Second admin, réservé au test e2e du renouvellement.
   ('a0000000-0000-4000-8000-000000000008'::uuid, 'admin2@example.test', 'admin', 'Sam', 'Admin', null),
+  -- Artisan validé sans abonnement (test e2e de l'abonnement, F-15).
+  ('a0000000-0000-4000-8000-000000000009'::uuid, 'abonnement@example.test', 'artisan', 'Alix', 'Abonne', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -90,3 +92,8 @@ from public.artisans a,
           ('rc_pro', null, current_date + 300, 'Assurances Exemple', 'RC-1111', null),
           ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
 where a.user_id = 'a0000000-0000-4000-8000-000000000007';
+
+-- Artisan validé sans abonnement (identifiant de fiche fixe, utilisé par le test e2e du webhook).
+insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva, zone_mode, submitted_at)
+values ('b0000000-0000-4000-8000-000000000009', 'a0000000-0000-4000-8000-000000000009', 'valide', 'ABONNEMENT EXEMPLE',
+  now(), true, true, 'communes', now());

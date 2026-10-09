@@ -335,6 +335,7 @@ export type Database = {
           sirene_partial: boolean;
           siret: string | null;
           status: Database["public"]["Enums"]["artisan_status"];
+          stripe_customer_id: string | null;
           submitted_at: string | null;
           suspension_reason: string | null;
           tva_intracom: string | null;
@@ -369,6 +370,7 @@ export type Database = {
           sirene_partial?: boolean;
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
+          stripe_customer_id?: string | null;
           submitted_at?: string | null;
           suspension_reason?: string | null;
           tva_intracom?: never;
@@ -402,6 +404,7 @@ export type Database = {
           sirene_partial?: boolean;
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
+          stripe_customer_id?: string | null;
           submitted_at?: string | null;
           suspension_reason?: string | null;
           tva_intracom?: never;
@@ -521,6 +524,49 @@ export type Database = {
         };
         Relationships: [];
       };
+      plans: {
+        Row: {
+          avantages: NonNullable<Json>;
+          code: string;
+          created_at: string;
+          id: string;
+          limites: NonNullable<Json>;
+          nom: string;
+          ordre: number;
+          ouverte: boolean;
+          prix_mensuel_ht_centimes: number;
+          stripe_lookup_key: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          avantages?: NonNullable<Json>;
+          code: string;
+          created_at?: string;
+          id?: string;
+          limites?: NonNullable<Json>;
+          nom: string;
+          ordre?: number;
+          ouverte?: boolean;
+          prix_mensuel_ht_centimes: number;
+          stripe_lookup_key: string;
+          updated_at?: string;
+        };
+        Update: {
+          avantages?: NonNullable<Json>;
+          code?: string;
+          created_at?: string;
+          id?: string;
+          limites?: NonNullable<Json>;
+          nom?: string;
+          ordre?: number;
+          ouverte?: boolean;
+          prix_mensuel_ht_centimes?: number;
+          stripe_lookup_key?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_path: string | null;
@@ -592,6 +638,64 @@ export type Database = {
         };
         Relationships: [];
       };
+      subscriptions: {
+        Row: {
+          artisan_id: string;
+          cancel_at_period_end: boolean;
+          created_at: string;
+          current_period_end: string | null;
+          id: string;
+          plan_code: string | null;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          trial_end: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          current_period_end?: string | null;
+          id?: string;
+          plan_code?: string | null;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          trial_end?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          current_period_end?: string | null;
+          id?: string;
+          plan_code?: string | null;
+          status?: string;
+          stripe_customer_id?: string;
+          stripe_subscription_id?: string;
+          trial_end?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscriptions_plan_code_fkey";
+            columns: ["plan_code"];
+            isOneToOne: false;
+            referencedRelation: "plans";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       trades: {
         Row: {
           active: boolean;
@@ -619,6 +723,37 @@ export type Database = {
           id?: string;
           label?: string;
           sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      webhook_events: {
+        Row: {
+          created_at: string;
+          id: string;
+          processed_at: string | null;
+          received_at: string;
+          source: string;
+          type: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id: string;
+          processed_at?: string | null;
+          received_at?: string;
+          source?: string;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          processed_at?: string | null;
+          received_at?: string;
+          source?: string;
+          type?: string;
           updated_at?: string;
         };
         Relationships: [];

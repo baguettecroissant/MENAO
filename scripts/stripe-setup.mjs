@@ -1,0 +1,199 @@
+#!/usr/bin/env node
+// Mise en place Stripe de MENAO (F-15), idempotente. Aucune dépendance.
+// Lit les formules dans Supabase (table plans), puis crée ou met à jour dans Stripe :
+// produits + prix mensuels HT (lookup_key), taux de TVA 20 %, configuration du portail client,
+// adresse de webhook. Écrit les identifiants dans le fichier d'environnement donné, sans
+// jamais afficher le secret du webhook.
+//
+// Usage :
+//   set -a; . ./.env.staging; set +a
+//   SUPABASE_URL=… SUPABASE_PUBLISHABLE_KEY=… node scripts/stripe-setup.mjs \
+//     --env-file .env.staging --webhook-url https://<ref>.supabase.co/functions/v1/stripe-webhook
+import { readFileSync, writeFileSync } from "node:fs";
+
+const args = Object.fromEntries(
+  process.argv
+    .slice(2)
+    .reduce(
+      (acc, cur, i, all) => (cur.startsWith("--") ? [...acc, [cur.slice(2), all[i + 1]]] : acc),
+      [],
+    ),
+);
+const { STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = process.env;
+if (!STRIPE_SECRET_KEY?.startsWith("sk_")) throw new Error("STRIPE_SECRET_KEY manquante");
+if (!STRIPE_SECRET_KEY.startsWith("sk_test_") && args.live !== "oui") {
+  throw new Error("Clé de production : relancer avec --live oui après vérification");
+}
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY)
+  throw new Error("SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY manquantes");
+const envFile = args["env-file"];
+const webhookUrl = args["webhook-url"];
+if (!envFile || !webhookUrl) throw new Error("--env-file et --webhook-url requis");
+
+const API_VERSION = "2026-09-30.endive";
+const WEBHOOK_EVENTS = [
+  "checkout.session.completed",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "customer.subscription.paused",
+  "customer.subscription.resumed",
+];
+
+function encode(params, prefix = "") {
+  return Object.entries(params).flatMap(([key, value]) => {
+    const name = prefix ? `${prefix}[${key}]` : key;
+    if (value === undefined) return [];
+    if (Array.isArray(value)) {
+      return value.flatMap((v, i) =>
+        typeof v === "object" ? encode(v, `${name}[${i}]`) : [[`${name}[]`, String(v)]],
+      );
+    }
+    if (typeof value === "object") return encode(value, name);
+    return [[name, String(value)]];
+  });
+}
+
+async function stripe(method, path, params = {}) {
+  const body = new URLSearchParams(encode(params));
+  const url = `https://api.stripe.com/v1/${path}${method === "GET" && body.size ? `?${body}` : ""}`;
+  const res = await fetch(url, {
+    method,
+    headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}`, "Stripe-Version": API_VERSION },
+    body: method === "GET" ? undefined : body,
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`Stripe ${method} ${path} : ${json.error?.message ?? res.status}`);
+  return json;
+}
+
+function setEnv(updates) {
+  let text = readFileSync(envFile, "utf8");
+  for (const [key, value] of Object.entries(updates)) {
+    const line = `${key}=${value}`;
+    text = new RegExp(`^${key}=.*$`, "m").test(text)
+      ? text.replace(new RegExp(`^${key}=.*$`, "m"), line)
+      : `${text.replace(/\n?$/, "\n")}${line}\n`;
+  }
+  writeFileSync(envFile, text);
+}
+
+// 1. Formules (source : base de données)
+const res = await fetch(
+  `${SUPABASE_URL}/rest/v1/plans?select=code,nom,prix_mensuel_ht_centimes,stripe_lookup_key,ouverte&order=ordre`,
+  {
+    headers: { apikey: SUPABASE_PUBLISHABLE_KEY },
+  },
+);
+const plans = await res.json();
+if (!Array.isArray(plans) || plans.length === 0)
+  throw new Error("Aucune formule lue dans Supabase");
+
+const prices = {};
+for (const plan of plans) {
+  const existing = await stripe("GET", "prices", {
+    lookup_keys: [plan.stripe_lookup_key],
+    active: true,
+    limit: 1,
+  });
+  let price = existing.data[0];
+  if (price && price.unit_amount !== plan.prix_mensuel_ht_centimes) {
+    // Prix modifié en base : nouveau prix, la lookup_key lui est transférée.
+    price = await stripe("POST", "prices", {
+      product: price.product,
+      currency: "eur",
+      unit_amount: plan.prix_mensuel_ht_centimes,
+      recurring: { interval: "month" },
+      tax_behavior: "exclusive",
+      lookup_key: plan.stripe_lookup_key,
+      transfer_lookup_key: true,
+      nickname: `${plan.nom} mensuel HT`,
+    });
+    console.log(`Prix mis à jour : ${plan.code}`);
+  } else if (!price) {
+    const product = await stripe("POST", "products", {
+      name: `MENAO ${plan.nom}`,
+      metadata: { menao_plan: plan.code },
+    });
+    price = await stripe("POST", "prices", {
+      product: product.id,
+      currency: "eur",
+      unit_amount: plan.prix_mensuel_ht_centimes,
+      recurring: { interval: "month" },
+      tax_behavior: "exclusive",
+      lookup_key: plan.stripe_lookup_key,
+      nickname: `${plan.nom} mensuel HT`,
+    });
+    console.log(`Formule créée : ${plan.code}`);
+  } else {
+    console.log(`Formule déjà en place : ${plan.code}`);
+  }
+  prices[plan.code] = { price: price.id, product: price.product, ouverte: plan.ouverte };
+}
+
+// 2. TVA 20 % (TODO(legal) : à valider par l'expert-comptable)
+const taxRates = await stripe("GET", "tax_rates", { active: true, limit: 100 });
+let taxRate = taxRates.data.find((t) => t.metadata?.menao === "tva_20");
+if (!taxRate) {
+  taxRate = await stripe("POST", "tax_rates", {
+    display_name: "TVA",
+    description: "TVA 20 % France",
+    percentage: 20,
+    inclusive: false,
+    country: "FR",
+    jurisdiction: "FR",
+    tax_type: "vat",
+    metadata: { menao: "tva_20" },
+  });
+  console.log("Taux de TVA créé");
+}
+
+// 3. Portail client
+const open = Object.values(prices).filter((p) => p.ouverte);
+const portalParams = {
+  business_profile: { headline: "MENAO — gestion de votre abonnement" },
+  features: {
+    invoice_history: { enabled: true },
+    payment_method_update: { enabled: true },
+    customer_update: { enabled: true, allowed_updates: ["email", "address", "tax_id"] },
+    subscription_cancel: { enabled: true, mode: "at_period_end" },
+    subscription_update:
+      open.length > 1
+        ? {
+            enabled: true,
+            default_allowed_updates: ["price"],
+            proration_behavior: "create_prorations",
+            products: open.map((p) => ({ product: p.product, prices: [p.price] })),
+          }
+        : { enabled: false },
+  },
+  metadata: { menao: "portail" },
+};
+const portals = await stripe("GET", "billing_portal/configurations", { active: true, limit: 100 });
+let portal = portals.data.find((p) => p.metadata?.menao === "portail");
+portal = portal
+  ? await stripe("POST", `billing_portal/configurations/${portal.id}`, portalParams)
+  : await stripe("POST", "billing_portal/configurations", portalParams);
+console.log("Portail client configuré");
+
+// 4. Webhook (le secret n'est lisible qu'à la création)
+const hasSecret = /^STRIPE_WEBHOOK_SECRET=whsec_/m.test(readFileSync(envFile, "utf8"));
+const endpoints = await stripe("GET", "webhook_endpoints", { limit: 100 });
+let endpoint = endpoints.data.find((e) => e.url === webhookUrl);
+const updates = { STRIPE_TAX_RATE_ID: taxRate.id, STRIPE_PORTAL_CONFIGURATION_ID: portal.id };
+if (endpoint && hasSecret) {
+  await stripe("POST", `webhook_endpoints/${endpoint.id}`, { enabled_events: WEBHOOK_EVENTS });
+  console.log("Webhook déjà en place (événements synchronisés)");
+} else {
+  if (endpoint) await stripe("DELETE", `webhook_endpoints/${endpoint.id}`);
+  endpoint = await stripe("POST", "webhook_endpoints", {
+    url: webhookUrl,
+    enabled_events: WEBHOOK_EVENTS,
+    api_version: API_VERSION,
+    description: "MENAO — abonnements (stripe-webhook)",
+  });
+  updates.STRIPE_WEBHOOK_SECRET = endpoint.secret;
+  console.log("Webhook créé (secret écrit dans le fichier d'environnement)");
+}
+setEnv(updates);
+console.log(`Terminé : ${Object.keys(updates).join(", ")} → ${envFile}`);

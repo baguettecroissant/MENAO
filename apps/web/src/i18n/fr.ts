@@ -207,6 +207,47 @@ export const fr = {
         certValidUntil: (date: string) => `valable jusqu'au ${date}`,
         noCertification: "Aucune certification ajoutée.",
       },
+      plans: {
+        intro:
+          "Choisissez votre formule. Les 3 premiers mois sont offerts : aucun prélèvement avant la fin de la période d'essai, résiliable à tout moment.",
+        notValidated:
+          "Le choix de la formule sera disponible dès que l'équipe MENAO aura validé votre dossier.",
+        perMonth: "HT / mois",
+        priceHt: (euros: string) => `${euros} €`,
+        trialBadge: "3 mois offerts",
+        choose: (nom: string) => `Choisir la formule ${nom}`,
+        soon: "Bientôt disponible",
+        current: "Votre abonnement",
+        manage: "Gérer mon abonnement",
+        manageHint:
+          "Changer de moyen de paiement, télécharger vos factures ou résilier (fin de période).",
+        processing:
+          "Merci ! Votre abonnement est en cours d'activation : cette page se met à jour dans quelques instants.",
+        status: {
+          trialing: (date: string) => `Période d'essai jusqu'au ${date}`,
+          active: (date: string) => `Actif — prochain prélèvement le ${date}`,
+          past_due:
+            "Paiement en échec : Stripe va réessayer. Mettez à jour votre moyen de paiement.",
+          unpaid:
+            "Abonnement impayé : votre compte n'est plus visible. Mettez à jour votre moyen de paiement.",
+          canceled: "Abonnement résilié.",
+          incomplete: "Abonnement incomplet : finalisez le paiement.",
+          incomplete_expired: "Abonnement expiré avant finalisation.",
+          paused: "Abonnement en pause.",
+        },
+        cancelAtPeriodEnd: (date: string) => `Résiliation programmée le ${date}.`,
+        vatNote: "Prix hors taxes ; TVA de 20 % appliquée sur la facture.",
+        errors: {
+          not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
+          plan_unavailable: "Cette formule n'est pas encore disponible.",
+          already_subscribed: "Vous avez déjà un abonnement : gérez-le depuis le portail.",
+          no_customer: "Aucun abonnement à gérer pour le moment.",
+          rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
+          unavailable:
+            "Le service de paiement est momentanément indisponible. Réessayez dans quelques minutes.",
+          forbidden: "Cette action est réservée aux comptes professionnels.",
+        },
+      },
       upload: {
         file: "Fichier",
         fileHintDocument: "PDF, JPEG ou PNG, 10 Mo maximum.",
@@ -388,6 +429,8 @@ export const fr = {
       docRefuse: "Refuser le document",
       docReason: "Motif du refus",
       profile: "Profil public",
+      subscription: "Abonnement",
+      noSubscription: "Aucun abonnement.",
       history: "Historique des décisions",
       noHistory: "Aucune décision pour le moment.",
       decision: "Décision sur le dossier",

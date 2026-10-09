@@ -5,3 +5,4 @@ export * from "./sirene";
 export * from "./onboarding";
 export * from "./files";
 export * from "./expiry";
+export * from "./billing";

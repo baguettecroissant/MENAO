@@ -14,7 +14,8 @@ const contentSecurityPolicy = [
   `connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace(/^http/, "ws")} https://data.geopf.fr https://*.ingest.de.sentry.io https://*.ingest.sentry.io`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  // Redirections vers Stripe Checkout et le portail client après une Server Action.
+  "form-action 'self' https://checkout.stripe.com https://billing.stripe.com",
   "object-src 'none'",
 ].join("; ");
 
