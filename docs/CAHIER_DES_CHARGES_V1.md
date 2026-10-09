@@ -94,7 +94,9 @@ Le rôle est stocké dans `auth.users.app_metadata.role` (modifiable uniquement 
 | Validation | **Zod** (schémas partagés web/app/serveur) | |
 | Paiements | **Stripe** : Billing (abonnements artisans) + **Connect** (paiements chantiers) | Voir F-30 à F-34 |
 | Signature | **Universign** (comme maquettes) ou Yousign | Derrière une interface `SignatureProvider` |
-| E-mails / SMS | **Brevo** (transactionnels) | Derrière `NotificationProvider` |
+| E-mails transactionnels | **Resend** + React Email | Connexion, devis, RDV, paiements… Aussi SMTP des e-mails d'authentification Supabase. Derrière `NotificationProvider` |
+| SMS et marketing | **Brevo** | SMS de notification, campagnes et prospection artisans, newsletters. Derrière `NotificationProvider` |
+| DNS / domaine | **Cloudflare** (offre gratuite) | Prépare une éventuelle migration de l'hébergement |
 | Push | **Expo Notifications** | |
 | IA texte | API LLM (Claude, Anthropic) via Edge Function | Sortie JSON validée par Zod |
 | Transcription voix | Fournisseur speech-to-text à choisir **[À VALIDER]** | Derrière `TranscriptionProvider` |
@@ -122,6 +124,18 @@ Le rôle est stocké dans `auth.users.app_metadata.role` (modifiable uniquement 
 - Branche `main` protégée : PR obligatoire, CI verte obligatoire.
 - Intégration GitHub ↔ Supabase (branches de preview) à activer quand le plan le permet.
 - Intégration GitHub ↔ Vercel (preview par PR).
+
+### 4.4 Hébergement web : règles de maîtrise des coûts et de portabilité
+
+Décision : **Next.js sur Vercel** pour la V1 (voir `docs/adr/0001-hebergement-vercel.md`). Pour garder la facture faible et pouvoir migrer vers Cloudflare (Next.js via OpenNext) sans réécriture :
+
+1. **Plafond de dépenses Vercel** configuré dès la création du projet (50–100 $ en phase pilote), avec alertes et **pause automatique** à 100 %.
+2. **Pas d'optimisation d'images Vercel** (`next/image` en mode `unoptimized` ou loader personnalisé) : les images sont redimensionnées à l'upload et servies depuis Supabase Storage (ou Cloudflare R2 plus tard).
+3. **Pages publiques et SEO pré-générées et mises en cache** (génération statique / revalidation périodique) ; pas de rendu serveur à chaque visite pour ces pages.
+4. **Aucun service propriétaire Vercel** (Blob, KV, Edge Config, Cron, Postgres) : fichiers dans Supabase Storage, tâches planifiées dans `pg_cron` / Edge Functions, données dans Supabase.
+5. Logique serveur lourde (IA, PDF, Stripe, webhooks) dans les **Supabase Edge Functions**, pas dans les fonctions Vercel.
+6. Fonctions Vercel en **région UE** (Paris ou Francfort).
+7. Domaine et DNS chez **Cloudflare**.
 
 ### 4.3 Structure du dépôt
 
@@ -471,9 +485,10 @@ Les maquettes demandent l'avis **avant** le PV. **Ordre retenu pour la V1 : 1. S
 | Document expirant (assurance) J-30, J-7 | Artisan + admin | ✓ | ✓ | |
 | Échec de paiement abonnement | Artisan | ✓ | ✓ | |
 
-- OTP de signature par SMS (Brevo).
+- OTP de signature par SMS : envoyé en priorité par le prestataire de signature (Universign/Yousign) ; sinon par Brevo.
 - Préférences de notification par utilisateur (sauf notifications transactionnelles obligatoires).
-- Modèles d'e-mails dans `packages/emails`, en français, avec lien vers l'espace concerné.
+- Modèles d'e-mails dans `packages/emails` (React Email, envoyés par Resend), en français, avec lien vers l'espace concerné. SMS envoyés par Brevo.
+- Domaine d'envoi dédié (ex. `notifications.menao.fr`) avec SPF, DKIM et DMARC configurés ; vérifier dans les accords de traitement (DPA) de Resend et Brevo la localisation des données.
 
 ### F-42 Signaler un problème / litige
 - Depuis la vue chantier : catégorie (retard, malfaçon, comportement, paiement, autre), description, photos.
@@ -578,7 +593,7 @@ Durées indicatives pour un développeur avec Claude Code ; à ajuster après la
 
 | Phase | Contenu | Critères d'acceptation |
 |---|---|---|
-| **0. Fondations** (1–2 sem.) | Monorepo, CI GitHub Actions (lint, typecheck, tests), Vercel, projet Supabase staging, migrations de base, auth, rôles, RLS de base + tests pgTAP, design tokens, Sentry | Un utilisateur peut s'inscrire et se connecter sur le web ; tests RLS verts ; CI verte |
+| **0. Fondations** (1–2 sem.) | Monorepo, CI GitHub Actions (lint, typecheck, tests), Vercel avec plafond de dépenses (règles 4.4), DNS Cloudflare, Resend (domaine d'envoi + SMTP Supabase), projet Supabase staging, migrations de base, auth, rôles, RLS de base + tests pgTAP, design tokens, Sentry | Un utilisateur peut s'inscrire et se connecter sur le web ; tests RLS verts ; CI verte |
 | **1. Artisan : inscription et abonnement** (3–4 sem.) | F-14, F-15, back-office F-50/F-51, Stripe Billing, Stripe Connect onboarding | Un artisan s'inscrit, dépose ses documents, est validé par un admin, paie son abonnement et devient visible |
 | **2. Recherche et demande** (3–4 sem.) | F-01 à F-11, IA, BAN, correspondance PostGIS, pages SEO | Un particulier décrit son besoin, voit des artisans du 06, envoie une demande reçue par l'artisan |
 | **3. Devis et signature** (3–4 sem.) | F-16 à F-21, PDF, signature, F-13 | L'artisan fixe un RDV, crée un devis (manuel + dictée), le client le signe avec OTP |
