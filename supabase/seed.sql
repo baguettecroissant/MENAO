@@ -1,6 +1,6 @@
 -- Données FICTIVES de développement local (jamais de données réelles, jamais appliqué en production).
 -- Comptes : particulier, support, admin, artisan (en onboarding), artisan (dossier envoyé),
--- particulier réservé au test de réinitialisation du mot de passe.
+-- particulier réservé au test de réinitialisation du mot de passe, artisans visibles (recherche).
 -- Mot de passe commun des comptes : « menao-local-dev-only » (local uniquement).
 
 insert into auth.users (
@@ -36,6 +36,9 @@ from (values
   ('a0000000-0000-4000-8000-000000000009'::uuid, 'abonnement@example.test', 'artisan', 'Alix', 'Abonne', null),
   -- Artisan validé et abonné, compte Stripe Connect à finaliser (test e2e de la visibilité).
   ('a0000000-0000-4000-8000-000000000010'::uuid, 'paiement@example.test', 'artisan', 'Eden', 'Paiement', null),
+  -- Artisans visibles (validés, en essai, paiements actifs) : résultats de recherche (F-09).
+  ('a0000000-0000-4000-8000-000000000011'::uuid, 'plombier-nice@example.test', 'artisan', 'Noé', 'Exemple', null),
+  ('a0000000-0000-4000-8000-000000000012'::uuid, 'plombier-dispo@example.test', 'artisan', 'Inès', 'Exemple', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -107,3 +110,43 @@ values ('b0000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-0000000
   now(), true, true, 'communes', now(), 'cus_seed_paiement', 'acct_seed_paiement');
 insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end)
 values ('b0000000-0000-4000-8000-000000000010', 'base', 'cus_seed_paiement', 'sub_seed_paiement', 'trialing', now() + interval '90 days');
+
+-- Artisans visibles pour la recherche (F-09) : plombier dans un rayon de 25 km autour de Nice,
+-- disponible tout de suite ; plombier à Nice et Antibes, disponible dans deux semaines.
+insert into public.artisans (id, user_id, status, raison_sociale, nom_commercial, sirene_checked_at, sirene_active,
+  assujetti_tva, experience_years, zone_mode, base_label, base_code_insee, base_location, radius_km, presentation,
+  submitted_at, stripe_customer_id, stripe_account_id, connect_charges_enabled, connect_payouts_enabled,
+  connect_details_submitted, available_from)
+values
+  ('b0000000-0000-4000-8000-000000000011', 'a0000000-0000-4000-8000-000000000011', 'valide', 'PLOMBERIE NICE EXEMPLE',
+   'Noé Plomberie', now(), true, true, 14, 'rayon', '1 Rue de l''Exemple 06000 Nice', '06088',
+   'SRID=4326;POINT(7.26 43.70)', 25,
+   'Plombier chauffagiste depuis quatorze ans : recherche de fuite, salles de bain, chauffe-eau. Intervention rapide sur Nice et alentours.',
+   now(), 'cus_seed_nice', 'acct_seed_nice', true, true, true, null),
+  ('b0000000-0000-4000-8000-000000000012', 'a0000000-0000-4000-8000-000000000012', 'valide', 'PLOMBERIE DISPO EXEMPLE',
+   null, now(), true, true, 4, 'communes', null, null, null, null,
+   'Plombière à Nice et Antibes : sanitaires et petites réparations.',
+   now(), 'cus_seed_dispo', 'acct_seed_dispo', true, true, true, current_date + 14);
+insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end) values
+  ('b0000000-0000-4000-8000-000000000011', 'base', 'cus_seed_nice', 'sub_seed_nice', 'trialing', now() + interval '90 days'),
+  ('b0000000-0000-4000-8000-000000000012', 'base', 'cus_seed_dispo', 'sub_seed_dispo', 'trialing', now() + interval '90 days');
+insert into public.artisan_trades (artisan_id, trade_code) values
+  ('b0000000-0000-4000-8000-000000000011', 'plombier'), ('b0000000-0000-4000-8000-000000000011', 'chauffagiste'),
+  ('b0000000-0000-4000-8000-000000000012', 'plombier');
+insert into public.artisan_work_types (artisan_id, work_type_code) values
+  ('b0000000-0000-4000-8000-000000000011', 'recherche-fuite'), ('b0000000-0000-4000-8000-000000000011', 'sanitaires'),
+  ('b0000000-0000-4000-8000-000000000011', 'chauffe-eau'), ('b0000000-0000-4000-8000-000000000012', 'sanitaires');
+insert into public.artisan_zones (artisan_id, code_insee, nom) values
+  ('b0000000-0000-4000-8000-000000000012', '06088', 'Nice'), ('b0000000-0000-4000-8000-000000000012', '06004', 'Antibes');
+insert into public.certifications (artisan_id, type, numero, date_fin, verified_at) values
+  ('b0000000-0000-4000-8000-000000000011', 'qualibat', 'Q-11111', current_date + 400, now());
+insert into public.artisan_documents (artisan_id, type, storage_path, mime_type, size_bytes, date_emission, date_fin,
+  assureur, numero, couverture, status, verified_at)
+select a.id, d.type::public.document_type, a.id || '/seed-' || d.type || '.pdf', 'application/pdf', 1000, d.emission, d.fin,
+  d.assureur, d.numero, d.couverture, 'valide', now()
+from public.artisans a,
+  (values ('kbis', current_date - 30, null::date, null, null, null),
+          ('decennale', null, current_date + 250, 'Assurances Exemple', 'DEC-2222', 'France métropolitaine'),
+          ('rc_pro', null, current_date + 250, 'Assurances Exemple', 'RC-2222', null),
+          ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
+where a.id in ('b0000000-0000-4000-8000-000000000011', 'b0000000-0000-4000-8000-000000000012');

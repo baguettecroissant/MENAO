@@ -9,3 +9,4 @@ export * from "./billing";
 export * from "./connect";
 export * from "./project";
 export * from "./audio";
+export * from "./matching";

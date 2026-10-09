@@ -28,7 +28,13 @@ async function search(params: Record<string, string>): Promise<Feature[]> {
   }
 }
 
-export type Commune = { code: string; nom: string; postcode: string | null };
+export type Commune = {
+  code: string;
+  nom: string;
+  postcode: string | null;
+  lon: number | null;
+  lat: number | null;
+};
 
 export async function geocodeCommune(
   ville: string,
@@ -45,6 +51,8 @@ export async function geocodeCommune(
     code: p.citycode,
     nom: p.city,
     postcode: p.postcode && /^\d{5}$/.test(p.postcode) ? p.postcode : null,
+    lon: f?.geometry?.coordinates?.[0] ?? null,
+    lat: f?.geometry?.coordinates?.[1] ?? null,
   };
 }
 

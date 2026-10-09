@@ -40,6 +40,9 @@ export function projectCriteriaSchema(today: string) {
             .string()
             .regex(/^\d{5}$/)
             .nullable(),
+          // null : ville déjà enregistrée, point de la commune conservé côté base.
+          lon: z.number().min(-180).max(180).nullable(),
+          lat: z.number().min(-90).max(90).nullable(),
         })
         .nullable(),
       adresse: z

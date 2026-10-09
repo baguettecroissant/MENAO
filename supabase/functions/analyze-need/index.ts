@@ -263,6 +263,10 @@ Deno.serve(
           ville_code_insee: commune?.code ?? null,
           ville_nom: commune?.nom ?? null,
           code_postal: commune?.postcode ?? null,
+          ville_location:
+            commune?.lon != null && commune.lat != null
+              ? `SRID=4326;POINT(${commune.lon} ${commune.lat})`
+              : null,
           adresse: address?.label ?? null,
           location: address ? `SRID=4326;POINT(${address.lon} ${address.lat})` : null,
           date_mode: c?.dateMode ?? "inconnue",
