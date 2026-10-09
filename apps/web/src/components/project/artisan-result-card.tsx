@@ -12,7 +12,7 @@ const t = fr.search.results;
  * expérience, zone, disponibilité, spécialités, puis sélection pour la demande (F-11).
  */
 export function ArtisanResultCard({
-  href,
+  href = null,
   artisanId,
   name,
   photoUrl,
@@ -24,8 +24,10 @@ export function ArtisanResultCard({
   specialties,
   moreSpecialties,
   selection,
+  headingLevel = 2,
 }: {
-  href: string;
+  /** Fiche de l'artisan ; sans lien sur les pages publiques. */
+  href?: string | null;
   artisanId: string;
   name: string;
   photoUrl: string | null;
@@ -38,21 +40,27 @@ export function ArtisanResultCard({
   specialties: string[];
   moreSpecialties: number;
   selection: "selectable" | "sent" | "none";
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   return (
     <li className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/30">
       <ArtisanPhoto url={photoUrl} name={name} className="aspect-[16/10] w-full" />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-medium">
-            <Link
-              href={href as Route}
-              aria-label={t.viewProfile(name)}
-              className="after:absolute after:inset-0 focus-visible:outline-none"
-            >
-              {name}
-            </Link>
-          </h2>
+          <Heading className="text-lg font-medium">
+            {href ? (
+              <Link
+                href={href as Route}
+                aria-label={t.viewProfile(name)}
+                className="after:absolute after:inset-0 focus-visible:outline-none"
+              >
+                {name}
+              </Link>
+            ) : (
+              name
+            )}
+          </Heading>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Briefcase aria-hidden="true" className="size-3.5 shrink-0" />
             {tradeLabel}

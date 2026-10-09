@@ -2,7 +2,11 @@ import { parisToday } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PublicArtisanCard, type PublicArtisan } from "@/components/project/public-artisan-card";
+import { ArtisanResultCard } from "@/components/project/artisan-result-card";
+import { TRADE_VISUALS, DEFAULT_TRADE_VISUAL } from "@/components/site/trade-visuals";
+import { ButtonLink } from "@/components/ui";
+import { ArrowRight } from "lucide-react";
+import { availability, specialtiesPreview } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { absoluteUrl } from "@/lib/site/seo";
@@ -55,13 +59,13 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
     p_code_insee: commune.code_insee,
     p_limit: 12,
   });
-  const artisans: PublicArtisan[] = (rows ?? []).map((r) => ({
+  const artisans = (rows ?? []).map((r) => ({
     ...r,
     avatarUrl: r.avatar_path
       ? supabase.storage.from("avatars").getPublicUrl(r.avatar_path).data.publicUrl
       : null,
     specialties: Array.isArray(r.specialties)
-      ? (r.specialties as PublicArtisan["specialties"])
+      ? (r.specialties as { code: string; label: string }[])
       : [],
   }));
   const today = parisToday();
@@ -114,99 +118,147 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
     ],
   };
 
+  const visual = TRADE_VISUALS[trade.code] ?? DEFAULT_TRADE_VISUAL;
+  const TradeIcon = visual.icon;
+  const dayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
+    <main className="bg-background">
       <script
         type="application/ld+json"
         // JSON sérialisé côté serveur à partir de données contrôlées ; « < » échappé.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <nav aria-label="Fil d'Ariane" className="text-sm text-muted-foreground">
-        <ol className="flex flex-wrap gap-1">
-          <li>
-            <Link href="/" className="text-primary hover:underline">
-              {t.breadcrumbHome}
-            </Link>{" "}
-            ›
-          </li>
-          <li>
-            <Link href={`/${trade.code}` as Route} className="text-primary hover:underline">
-              {trade.label}
-            </Link>{" "}
-            ›
-          </li>
-          <li aria-current="page">{commune.nom}</li>
-        </ol>
-      </nav>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
+        <nav aria-label="Fil d'Ariane" className="text-xs text-muted-foreground">
+          <ol className="flex flex-wrap gap-1.5">
+            <li>
+              <Link href="/" className="hover:text-foreground">
+                {t.breadcrumbHome}
+              </Link>{" "}
+              ›
+            </li>
+            <li>
+              <Link href={`/${trade.code}` as Route} className="hover:text-foreground">
+                {trade.label}
+              </Link>{" "}
+              ›
+            </li>
+            <li aria-current="page" className="text-foreground">
+              {commune.nom}
+            </li>
+          </ol>
+        </nav>
 
-      <div className="flex flex-col gap-3">
-        <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
-        <p className="text-lg text-muted-foreground">{t.cityIntro(trade.label, commune.nom)}</p>
-      </div>
-
-      <div className="flex flex-col items-start gap-2 rounded-card bg-primary-soft p-5">
-        <Link
-          href="/"
-          className="inline-flex min-h-touch items-center justify-center rounded-button bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover"
+        <div
+          className={`relative overflow-hidden rounded-hero bg-gradient-to-br px-6 py-10 sm:px-10 sm:py-14 ${visual.gradient}`}
         >
-          {t.cta}
-        </Link>
-        <p className="text-sm">{t.ctaHint}</p>
-      </div>
+          <TradeIcon
+            aria-hidden="true"
+            strokeWidth={1.1}
+            className="absolute -right-8 -bottom-10 size-72 text-white/15"
+          />
+          <div className="relative flex max-w-2xl flex-col gap-4 text-white">
+            <h1 className="text-[2.25rem] leading-tight font-medium tracking-tight sm:text-[3rem]">
+              {title}
+            </h1>
+            <p className="text-white/90">{t.cityIntro(trade.label, commune.nom)}</p>
+            <div className="flex flex-col items-start gap-2 pt-2">
+              <ButtonLink
+                href={`/recherche?metier=${trade.code}` as Route}
+                variant="secondary"
+                size="lg"
+                className="border-white"
+              >
+                {t.cta}
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </ButtonLink>
+              <p className="text-xs text-white/80">{t.ctaHint}</p>
+            </div>
+          </div>
+        </div>
 
-      <section aria-label={title} className="flex flex-col gap-4">
-        <p className="font-medium">
-          {artisans.length ? t.found(artisans.length) : t.none(trade.label, commune.nom)}
-        </p>
-        {artisans.length > 0 && (
-          <>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {artisans.map((a) => (
-                <li key={a.artisan_id}>
-                  <PublicArtisanCard artisan={a} tradeLabel={trade.label} today={today} />
-                </li>
-              ))}
+        <section aria-label={title} className="flex flex-col gap-5">
+          <p className="text-lg font-medium">
+            {artisans.length ? t.found(artisans.length) : t.none(trade.label, commune.nom)}
+          </p>
+          {artisans.length > 0 && (
+            <>
+              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {artisans.map((a) => {
+                  const avail = availability(
+                    { paused: false, availableFrom: a.available_from },
+                    today,
+                  );
+                  const specs = specialtiesPreview(a.specialties, []);
+                  return (
+                    <ArtisanResultCard
+                      key={a.artisan_id}
+                      artisanId={a.artisan_id}
+                      name={a.display_name}
+                      photoUrl={a.avatarUrl}
+                      tradeLabel={trade.label}
+                      experienceYears={a.experience_years}
+                      zone={
+                        a.zone_mode === "rayon" && a.zone_radius_km
+                          ? fr.search.results.zoneRadius(a.zone_radius_km, a.zone_city)
+                          : fr.search.results.zoneCommunes(a.zone_communes)
+                      }
+                      distanceKm={null}
+                      availableFrom={
+                        avail.kind === "from"
+                          ? dayFormat.format(new Date(`${avail.date}T00:00:00Z`))
+                          : null
+                      }
+                      specialties={specs.shown}
+                      moreSpecialties={specs.more}
+                      selection="none"
+                      headingLevel={3}
+                    />
+                  );
+                })}
+              </ul>
+              <p className="text-sm text-muted-foreground">{t.noContact}</p>
+            </>
+          )}
+        </section>
+
+        <div className="grid gap-8 sm:grid-cols-2">
+          <nav aria-label={t.otherCities(trade.label)} className="flex flex-col gap-2">
+            <h2 className="text-lg font-medium">{t.otherCities(trade.label)}</h2>
+            <ul className="flex flex-wrap gap-2">
+              {communes
+                .filter((c) => c.slug !== commune.slug)
+                .map((c) => (
+                  <li key={c.slug}>
+                    <Link
+                      href={`/${trade.code}/${c.slug}` as Route}
+                      className="text-primary hover:underline"
+                    >
+                      {c.nom}
+                    </Link>
+                  </li>
+                ))}
             </ul>
-            <p className="text-sm text-muted-foreground">{t.noContact}</p>
-          </>
-        )}
-      </section>
-
-      <div className="grid gap-8 sm:grid-cols-2">
-        <nav aria-label={t.otherCities(trade.label)} className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">{t.otherCities(trade.label)}</h2>
-          <ul className="flex flex-wrap gap-2">
-            {communes
-              .filter((c) => c.slug !== commune.slug)
-              .map((c) => (
-                <li key={c.slug}>
-                  <Link
-                    href={`/${trade.code}/${c.slug}` as Route}
-                    className="text-primary hover:underline"
-                  >
-                    {c.nom}
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </nav>
-        <nav aria-label={t.otherTrades(commune.nom)} className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">{t.otherTrades(commune.nom)}</h2>
-          <ul className="flex flex-wrap gap-2">
-            {trades
-              .filter((tr) => tr.code !== trade.code)
-              .map((tr) => (
-                <li key={tr.code}>
-                  <Link
-                    href={`/${tr.code}/${commune.slug}` as Route}
-                    className="text-primary hover:underline"
-                  >
-                    {tr.label}
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </nav>
+          </nav>
+          <nav aria-label={t.otherTrades(commune.nom)} className="flex flex-col gap-2">
+            <h2 className="text-lg font-medium">{t.otherTrades(commune.nom)}</h2>
+            <ul className="flex flex-wrap gap-2">
+              {trades
+                .filter((tr) => tr.code !== trade.code)
+                .map((tr) => (
+                  <li key={tr.code}>
+                    <Link
+                      href={`/${tr.code}/${commune.slug}` as Route}
+                      className="text-primary hover:underline"
+                    >
+                      {tr.label}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </nav>
+        </div>
       </div>
     </main>
   );

@@ -25,13 +25,13 @@ export default async function TicketsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t.title}</h1>
+      <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
       {[
         { title: t.open, rows: open },
         { title: t.closed, rows: closed },
       ].map((group) => (
         <section key={group.title} aria-label={group.title} className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-medium">
             {group.title} ({group.rows.length})
           </h2>
           {group.rows.length === 0 && <p className="text-muted-foreground">{t.empty}</p>}

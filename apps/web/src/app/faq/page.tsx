@@ -28,7 +28,7 @@ export default function FaqPage() {
       <div className="flex flex-col gap-3">
         {t.items.map((item) => (
           <details key={item.q} className="rounded-card border border-border bg-surface p-4">
-            <summary className="cursor-pointer font-semibold">{item.q}</summary>
+            <summary className="cursor-pointer font-medium">{item.q}</summary>
             <p className="mt-2 text-muted-foreground">{item.a}</p>
           </details>
         ))}

@@ -19,7 +19,7 @@ export default async function CompanyStepPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <h2 className="mb-4 text-lg font-semibold">{t.siretLabel}</h2>
+        <h2 className="mb-4 text-lg font-medium">{t.siretLabel}</h2>
         <SiretForm siret={artisan.siret} editable={editable} verified={verified} />
         {verified && artisan.sirene_checked_at && (
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">

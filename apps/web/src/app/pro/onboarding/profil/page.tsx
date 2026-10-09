@@ -18,7 +18,7 @@ export default async function ProfileStepPage() {
     <div className="flex flex-col gap-6">
       <Card>
         <section aria-labelledby="avatar-title" className="flex flex-col gap-4">
-          <h2 id="avatar-title" className="text-lg font-semibold">
+          <h2 id="avatar-title" className="text-lg font-medium">
             {t.avatar}
           </h2>
           <p className="text-sm text-muted-foreground">{t.avatarHint}</p>
@@ -48,7 +48,7 @@ export default async function ProfileStepPage() {
 
       <Card>
         <section aria-labelledby="portfolio-title" className="flex flex-col gap-4">
-          <h2 id="portfolio-title" className="text-lg font-semibold">
+          <h2 id="portfolio-title" className="text-lg font-medium">
             {t.portfolio}
           </h2>
           <p className="text-sm text-muted-foreground">{t.portfolioHint}</p>

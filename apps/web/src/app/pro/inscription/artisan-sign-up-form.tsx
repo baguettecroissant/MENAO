@@ -3,6 +3,7 @@
 import { PASSWORD_MIN_LENGTH } from "@menao/validation";
 import { useActionState } from "react";
 import { Alert, Button, CheckboxField, Field, TextLink } from "@/components/ui";
+import { PasswordField } from "@/components/form-fields";
 import { fr } from "@/i18n/fr";
 import { signUpArtisan } from "@/lib/auth/actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -63,10 +64,9 @@ export function ArtisanSignUpForm() {
         defaultValue={state.values?.email}
         errors={errors.email}
       />
-      <Field
+      <PasswordField
         label={t.password}
         name="password"
-        type="password"
         autoComplete="new-password"
         required
         minLength={PASSWORD_MIN_LENGTH}

@@ -21,7 +21,7 @@ export default async function ArtisanRequestsPage() {
       <Link href="/pro/onboarding" className="font-medium text-primary hover:underline">
         ← {t.back}
       </Link>
-      <h1 className="text-2xl font-bold">{t.title}</h1>
+      <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
       {rows.length === 0 && <p className="text-muted-foreground">{t.empty}</p>}
       <ul className="flex flex-col gap-3">
         {rows.map((r) => {
@@ -33,7 +33,7 @@ export default async function ArtisanRequestsPage() {
                 className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 hover:border-primary"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold">
+                  <span className="font-medium">
                     {[r.trade_label, r.ville_nom].filter(Boolean).join(" · ")}
                   </span>
                   {r.urgence && (

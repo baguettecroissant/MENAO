@@ -53,14 +53,14 @@ export default async function OnboardingIndexPage() {
       {artisan.status === "valide" && (
         <Link
           href="/pro/demandes"
-          className="inline-flex min-h-touch items-center justify-center rounded-button bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover"
+          className="inline-flex min-h-touch items-center justify-center rounded-button bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover"
         >
           {t.requests.link(pendingRequests ?? 0)}
         </Link>
       )}
       {(artisan.status === "valide" || artisan.status === "suspendu") && (
         <Card>
-          <h2 className="mb-2 text-lg font-semibold">{t.availability.title}</h2>
+          <h2 className="mb-2 text-lg font-medium">{t.availability.title}</h2>
           <p className="mb-4 text-muted-foreground">{t.availability.intro}</p>
           <AvailabilityForm
             paused={artisan.paused}
@@ -74,7 +74,7 @@ export default async function OnboardingIndexPage() {
       )}
       {editable && canSubmit && (
         <Card>
-          <h2 className="mb-2 text-lg font-semibold">{t.submit.title}</h2>
+          <h2 className="mb-2 text-lg font-medium">{t.submit.title}</h2>
           <p className="mb-4">{t.submit.intro}</p>
           <SubmitOnboarding />
         </Card>

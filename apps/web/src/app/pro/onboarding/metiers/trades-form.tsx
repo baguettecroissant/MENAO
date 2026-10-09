@@ -36,7 +36,7 @@ export function TradesForm(props: {
         className="flex flex-col gap-3"
         aria-describedby={errors.tradeCodes ? "trades-error" : undefined}
       >
-        <legend className="text-lg font-semibold">{t.legend}</legend>
+        <legend className="text-lg font-medium">{t.legend}</legend>
         <p className="text-sm text-muted-foreground">{t.hint}</p>
         <div className="grid gap-3 sm:grid-cols-2">
           {props.trades.map((trade) => (

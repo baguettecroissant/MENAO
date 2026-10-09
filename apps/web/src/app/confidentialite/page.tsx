@@ -5,7 +5,7 @@ import { fr } from "@/i18n/fr";
 export default function Page() {
   return (
     <PageShell title={fr.legal.privacy}>
-      <h2 className="mb-2 font-semibold">{fr.legal.draftTitle}</h2>
+      <h2 className="mb-2 font-medium">{fr.legal.draftTitle}</h2>
       <p>{fr.legal.draftBody}</p>
     </PageShell>
   );

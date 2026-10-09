@@ -3,6 +3,7 @@
 import { PASSWORD_MIN_LENGTH } from "@menao/validation";
 import { useActionState } from "react";
 import { Alert, Button, Field } from "@/components/ui";
+import { PasswordField } from "@/components/form-fields";
 import { fr } from "@/i18n/fr";
 import { updatePassword } from "@/lib/auth/actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -13,10 +14,9 @@ export function NewPasswordForm() {
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       {state.error && <Alert tone="error">{state.error}</Alert>}
-      <Field
+      <PasswordField
         label={fr.resetPassword.password}
         name="password"
-        type="password"
         autoComplete="new-password"
         required
         minLength={PASSWORD_MIN_LENGTH}

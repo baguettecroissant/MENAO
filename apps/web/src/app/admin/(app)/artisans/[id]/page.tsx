@@ -119,7 +119,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
         ← {t.back}
       </Link>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">{name}</h1>
+        <h1 className="text-2xl font-medium tracking-tight">{name}</h1>
         <span className="rounded-chip bg-primary-soft px-3 py-1 text-sm text-primary">
           {fr.admin.statuses[artisan.status]}
           {artisan.suspension_reason &&
@@ -375,7 +375,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card>
       <section aria-label={title} className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-lg font-medium">{title}</h2>
         {children}
       </section>
     </Card>

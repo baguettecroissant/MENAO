@@ -71,16 +71,16 @@ export default async function WatchPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">{t.title}</h1>
+      <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
       <Card>
         <section aria-label={t.renewals} className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t.renewals}</h2>
+          <h2 className="text-lg font-medium">{t.renewals}</h2>
           <RowsTable rows={renewalRows} empty={t.noRenewals} />
         </section>
       </Card>
       <Card>
         <section aria-label={t.expiring} className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t.expiring}</h2>
+          <h2 className="text-lg font-medium">{t.expiring}</h2>
           <RowsTable
             rows={expiringRows}
             empty={t.noExpiring}

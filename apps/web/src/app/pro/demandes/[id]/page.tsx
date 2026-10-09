@@ -35,7 +35,9 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
         ← {t.backToList}
       </Link>
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">{[r.trade, r.ville_nom].filter(Boolean).join(" · ")}</h1>
+        <h1 className="text-2xl font-medium tracking-tight">
+          {[r.trade, r.ville_nom].filter(Boolean).join(" · ")}
+        </h1>
         <p className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-background px-3 py-0.5 text-sm">
             {t.status[r.status]}
@@ -159,7 +161,7 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
       aria-label={title}
       className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5"
     >
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="text-lg font-medium">{title}</h2>
       {children}
     </section>
   );

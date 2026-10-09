@@ -19,7 +19,7 @@ export function PresentationForm({ presentation }: { presentation: string | null
     <form action={action} className="flex flex-col gap-2" noValidate>
       {state.error && <Alert tone="error">{state.error}</Alert>}
       {state.success && <Alert tone="success">{state.success}</Alert>}
-      <label htmlFor="presentation" className="text-lg font-semibold">
+      <label htmlFor="presentation" className="text-lg font-medium">
         {t.presentation}
       </label>
       <p id="presentation-hint" className="text-sm text-muted-foreground">

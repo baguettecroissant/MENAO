@@ -35,7 +35,7 @@ export default async function PaymentsStepPage({
   return (
     <Card>
       <section aria-labelledby="paiements" className="flex flex-col gap-4">
-        <h2 id="paiements" className="text-lg font-semibold">
+        <h2 id="paiements" className="text-lg font-medium">
           {fr.pro.onboarding.steps.paiements}
         </h2>
         {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}

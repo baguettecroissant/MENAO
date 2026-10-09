@@ -18,7 +18,7 @@ export default function HowItWorksPage() {
         <BulletList items={t.client} ordered />
         <Link
           href="/"
-          className="inline-flex min-h-touch items-center justify-center self-start rounded-button bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover"
+          className="inline-flex min-h-touch items-center justify-center self-start rounded-button bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover"
         >
           {t.cta}
         </Link>
@@ -27,7 +27,7 @@ export default function HowItWorksPage() {
         <BulletList items={t.pro} ordered />
         <Link
           href="/pro"
-          className="inline-flex min-h-touch items-center justify-center self-start rounded-button border border-border bg-surface px-6 font-semibold"
+          className="inline-flex min-h-touch items-center justify-center self-start rounded-button border border-border bg-surface px-6 font-medium"
         >
           {t.ctaPro}
         </Link>
