@@ -1,4 +1,5 @@
 -- Données FICTIVES de développement local (jamais de données réelles, jamais appliqué en production).
+-- Comptes : particulier, support, admin, artisan (en onboarding).
 -- Mot de passe commun des comptes : « menao-local-dev-only » (local uniquement).
 
 insert into auth.users (
@@ -12,15 +13,19 @@ select
   extensions.crypt('menao-local-dev-only', extensions.gen_salt('bf')), now(),
   jsonb_build_object('provider', 'email', 'providers', array['email'], 'role', u.role),
   jsonb_build_object(
-    'first_name', u.first_name, 'last_name', u.last_name,
-    'legal', jsonb_build_object('cgu', '2026-10-09-brouillon', 'confidentialite', '2026-10-09-brouillon')
+    'first_name', u.first_name, 'last_name', u.last_name, 'siret', u.siret,
+    'legal', jsonb_build_object(
+      'cgu', '2026-10-09-brouillon', 'confidentialite', '2026-10-09-brouillon', 'cgv_artisan', '2026-10-09-brouillon'
+    )
   ),
   now(), now(), '', '', '', '', '', '', '', ''
 from (values
-  ('a0000000-0000-4000-8000-000000000001'::uuid, 'particulier@example.test', 'particulier', 'Camille', 'Exemple'),
-  ('a0000000-0000-4000-8000-000000000002'::uuid, 'support@example.test', 'support', 'Sacha', 'Support'),
-  ('a0000000-0000-4000-8000-000000000003'::uuid, 'admin@example.test', 'admin', 'Alex', 'Admin')
-) as u (id, email, role, first_name, last_name);
+  ('a0000000-0000-4000-8000-000000000001'::uuid, 'particulier@example.test', 'particulier', 'Camille', 'Exemple', null),
+  ('a0000000-0000-4000-8000-000000000002'::uuid, 'support@example.test', 'support', 'Sacha', 'Support', null),
+  ('a0000000-0000-4000-8000-000000000003'::uuid, 'admin@example.test', 'admin', 'Alex', 'Admin', null),
+  -- Artisan en cours d'onboarding (SIRET fictif, inexistant dans Sirene (vérifié : 404)).
+  ('a0000000-0000-4000-8000-000000000004'::uuid, 'artisan@example.test', 'artisan_en_attente', 'Dominique', 'Artisan', '00000003400017')
+) as u (id, email, role, first_name, last_name, siret);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
 select gen_random_uuid(), u.id, u.id::text, 'email',

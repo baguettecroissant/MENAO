@@ -33,3 +33,16 @@ export function roleFromAppMetadata(appMetadata: unknown): Role {
   const role = (appMetadata as { role?: unknown }).role;
   return isRole(role) ? role : "visiteur";
 }
+
+/** Page d'accueil après connexion selon le rôle. */
+export function homePathForRole(role: Role): string {
+  switch (role) {
+    case "artisan":
+    case "artisan_en_attente":
+      return "/pro/onboarding";
+    case "visiteur":
+      return "/connexion";
+    default:
+      return "/mon-espace";
+  }
+}

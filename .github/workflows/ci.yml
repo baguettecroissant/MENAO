@@ -30,6 +30,11 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.7
+      - name: Vérifier les Edge Functions (Deno)
+        run: pnpm functions:check
 
   database:
     name: Base de données (migrations, RLS pgTAP, types)
@@ -59,7 +64,7 @@ jobs:
           path: packages/db/src/types.ts
 
   e2e:
-    name: Bout en bout (inscription, connexion)
+    name: Bout en bout (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -70,8 +75,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Démarrer Supabase local (Postgres, Auth, API, Mailpit)
-        run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+      - name: Démarrer Supabase local (Postgres, Auth, API, Edge Functions, Mailpit)
+        # Les Edge Functions appellent le faux serveur Sirene lancé par Playwright sur l'hôte.
+        env:
+          INSEE_API_BASE_URL: http://host.docker.internal:54399
+          INSEE_API_KEY: cle-factice-ci
+        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,storage-api,postgres-meta
       - name: Variables d'environnement de l'application
         run: |
           STATUS=$(pnpm exec supabase status -o json)

@@ -1,6 +1,7 @@
 name: Migrations → staging
 
-# Déclenchement manuel : applique les migrations versionnées au projet Supabase menao-staging.
+# Déclenchement manuel : applique les migrations versionnées et déploie les Edge Functions
+# sur le projet Supabase menao-staging. Secrets des fonctions (INSEE_API_KEY…) : tableau de bord.
 # Secrets requis (Settings → Secrets and variables → Actions) :
 #   SUPABASE_ACCESS_TOKEN, SUPABASE_STAGING_PROJECT_REF, SUPABASE_STAGING_DB_PASSWORD
 on:
@@ -34,3 +35,5 @@ jobs:
         run: pnpm exec supabase migration list
       - name: Appliquer les migrations (sans seed)
         run: pnpm exec supabase db push
+      - name: Déployer les Edge Functions
+        run: pnpm exec supabase functions deploy --use-api --project-ref "${{ secrets.SUPABASE_STAGING_PROJECT_REF }}"

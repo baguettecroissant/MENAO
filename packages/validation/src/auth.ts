@@ -44,15 +44,17 @@ const optionalPhone = z
     return phone;
   });
 
+export const passwordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, { error: messages.passwordTooShort })
+  .max(PASSWORD_MAX_LENGTH, { error: messages.passwordTooLong });
+
 export const signUpSchema = z.object({
   firstName: name,
   lastName: name,
   phone: optionalPhone,
   email,
-  password: z
-    .string()
-    .min(PASSWORD_MIN_LENGTH, { error: messages.passwordTooShort })
-    .max(PASSWORD_MAX_LENGTH, { error: messages.passwordTooLong }),
+  password: passwordSchema,
   acceptTerms: z.literal(true, { error: messages.termsRequired }),
   marketingOptIn: z.boolean().default(false),
 });
@@ -66,4 +68,9 @@ export const signInSchema = z.object({
 export type SignIn = z.output<typeof signInSchema>;
 
 export const magicLinkSchema = z.object({ email });
+
+/** Demande de réinitialisation : même forme que le lien magique (e-mail seul). */
+export const passwordResetRequestSchema = magicLinkSchema;
+
+export const newPasswordSchema = z.object({ password: passwordSchema });
 export type MagicLink = z.output<typeof magicLinkSchema>;

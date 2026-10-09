@@ -35,7 +35,8 @@ pnpm --filter web dev                 # http://localhost:3000
 ```
 
 - E-mails envoyés en local (confirmation, lien magique) : Mailpit sur http://127.0.0.1:54324
-- Comptes fictifs du seed : `particulier@example.test`, `support@example.test`, `admin@example.test`, mot de passe `menao-local-dev-only` (local uniquement)
+- Comptes fictifs du seed : `particulier@example.test`, `support@example.test`, `admin@example.test`, `artisan@example.test` (en onboarding), mot de passe `menao-local-dev-only` (local uniquement)
+- Edge Functions : secrets lus dans l'environnement au démarrage de Supabase. Copier les valeurs dans `supabase/functions/.env` (ignoré par Git), puis `set -a; . supabase/functions/.env; set +a` avant `pnpm db:start`. Variables : `INSEE_API_BASE_URL` (`https://api.insee.fr/api-sirene/3.11`) et `INSEE_API_KEY` (portail-api.insee.fr, API Sirene, plan « Accès public »).
 
 ## Commandes
 
@@ -47,7 +48,8 @@ pnpm --filter web dev                 # http://localhost:3000
 | `pnpm db:test` | Tests RLS pgTAP |
 | `pnpm db:types` | Régénère `packages/db/src/types.ts` |
 | `pnpm exec supabase migration new <nom>` | Nouvelle migration |
-| `pnpm --filter web build && pnpm --filter web test:e2e` | Tests de bout en bout (Supabase local requis) |
+| `pnpm functions:check` | Vérifie les Edge Functions (Deno) |
+| `pnpm --filter web build && pnpm --filter web test:e2e` | Tests de bout en bout (Supabase local requis ; faux serveur Sirene lancé automatiquement, Supabase démarré avec `INSEE_API_BASE_URL=http://host.docker.internal:54399`) |
 
 ## CI
 
@@ -56,7 +58,8 @@ GitHub Actions sur chaque PR et sur `main` : format, lint, typecheck, tests unit
 ## Environnements
 
 ### Supabase staging (`menao-staging`)
-1. Secrets GitHub (environnement `staging`) : `SUPABASE_ACCESS_TOKEN`, `SUPABASE_STAGING_PROJECT_REF`, `SUPABASE_STAGING_DB_PASSWORD`, puis lancer le workflow **Migrations → staging**.
+1. Secrets GitHub (environnement `staging`) : `SUPABASE_ACCESS_TOKEN`, `SUPABASE_STAGING_PROJECT_REF`, `SUPABASE_STAGING_DB_PASSWORD`, puis lancer le workflow **Migrations → staging** (migrations + Edge Functions).
+   Secrets des Edge Functions (tableau de bord → Edge Functions → Secrets) : `INSEE_API_KEY` (et `INSEE_API_BASE_URL` si différente de la valeur par défaut).
 2. Auth → URL Configuration : Site URL = URL Vercel de staging ; Redirect URLs = `https://<domaine>/**` et `https://*-<équipe>.vercel.app/**` (previews).
 3. Auth → Providers → Email : confirmation obligatoire, mot de passe ≥ 12 caractères.
 4. Auth → Email Templates : reprendre `supabase/templates/*.html` (liens `/auth/confirm?token_hash=…`).

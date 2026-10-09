@@ -89,3 +89,113 @@ export function PageShell({ title, children }: { title: string; children: ReactN
     </main>
   );
 }
+
+type CheckboxFieldProps = Omit<ComponentProps<"input">, "type" | "children"> & {
+  name: string;
+  children: ReactNode;
+  errors?: readonly string[] | undefined;
+};
+
+export function CheckboxField({ name, children, errors, id, ...input }: CheckboxFieldProps) {
+  const inputId = id ?? name;
+  const errorId = errors?.length ? `${inputId}-error` : undefined;
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          id={inputId}
+          name={name}
+          className="mt-1 size-5 shrink-0 accent-primary"
+          aria-invalid={errors?.length ? true : undefined}
+          aria-describedby={errorId}
+          {...input}
+        />
+        <span>{children}</span>
+      </label>
+      {errorId && (
+        <p id={errorId} className="text-sm text-danger">
+          {errors?.[0]}
+        </p>
+      )}
+    </div>
+  );
+}
+
+type SelectFieldProps = ComponentProps<"select"> & {
+  label: string;
+  name: string;
+  errors?: readonly string[] | undefined;
+};
+
+export function SelectField({ label, name, errors, children, ...select }: SelectFieldProps) {
+  const errorId = errors?.length ? `${name}-error` : undefined;
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={name} className="font-medium">
+        {label}
+      </label>
+      <select
+        id={name}
+        name={name}
+        aria-invalid={errors?.length ? true : undefined}
+        aria-describedby={errorId}
+        className={`min-h-touch rounded-button border border-border bg-surface px-3 aria-invalid:border-danger ${focusRing}`}
+        {...select}
+      >
+        {children}
+      </select>
+      {errorId && (
+        <p id={errorId} className="text-sm text-danger">
+          {errors?.[0]}
+        </p>
+      )}
+    </div>
+  );
+}
+
+type RadioGroupProps = {
+  legend: string;
+  name: string;
+  options: readonly { value: string; label: string }[];
+  value?: string | undefined;
+  defaultValue?: string | undefined;
+  onChange?: (value: string) => void;
+  errors?: readonly string[] | undefined;
+};
+
+export function RadioGroup({
+  legend,
+  name,
+  options,
+  value,
+  defaultValue,
+  onChange,
+  errors,
+}: RadioGroupProps) {
+  const errorId = errors?.length ? `${name}-error` : undefined;
+  return (
+    <fieldset className="flex flex-col gap-2" aria-describedby={errorId}>
+      <legend className="mb-1 font-medium">{legend}</legend>
+      {options.map((option) => (
+        <label key={option.value} className="flex min-h-touch items-center gap-3">
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            className="size-5 accent-primary"
+            {...(value !== undefined
+              ? { checked: value === option.value, onChange: () => onChange?.(option.value) }
+              : { defaultChecked: defaultValue === option.value })}
+          />
+          <span>{option.label}</span>
+        </label>
+      ))}
+      {errorId && (
+        <p id={errorId} className="text-sm text-danger">
+          {errors?.[0]}
+        </p>
+      )}
+    </fieldset>
+  );
+}

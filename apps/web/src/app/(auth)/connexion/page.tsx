@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: `${fr.signIn.title} — MENAO` };
 
 export default async function SignInPage({ searchParams }: PageProps<"/connexion">) {
   const params = await searchParams;
-  const next = safeRedirectPath(params.next);
+  // Sans ?next=, la page d'accueil dépend du rôle (choisie après connexion).
+  const next = params.next ? safeRedirectPath(params.next) : "";
   return (
     <PageShell title={fr.signIn.title}>
       {params.erreur === "lien-invalide" && (
@@ -19,6 +20,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
       <SignInForm next={next} />
       <div className="mt-6 flex flex-col items-center gap-2 text-center">
         <TextLink href="/connexion/lien-magique">{fr.signIn.magicLinkLink}</TextLink>
+        <TextLink href="/mot-de-passe-oublie">{fr.signIn.forgotPassword}</TextLink>
         <p>
           {fr.signIn.noAccount} <TextLink href="/inscription">{fr.signIn.signUpLink}</TextLink>
         </p>

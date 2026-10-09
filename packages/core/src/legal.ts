@@ -5,6 +5,7 @@
 export const LEGAL_DOCUMENT_VERSIONS = {
   cgu: "2026-10-09-brouillon",
   confidentialite: "2026-10-09-brouillon",
+  cgv_artisan: "2026-10-09-brouillon",
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_DOCUMENT_VERSIONS;
@@ -12,4 +13,9 @@ export type LegalDocument = keyof typeof LEGAL_DOCUMENT_VERSIONS;
 export const SIGNUP_REQUIRED_DOCUMENTS = [
   "cgu",
   "confidentialite",
+] as const satisfies readonly LegalDocument[];
+
+export const ARTISAN_SIGNUP_REQUIRED_DOCUMENTS = [
+  ...SIGNUP_REQUIRED_DOCUMENTS,
+  "cgv_artisan",
 ] as const satisfies readonly LegalDocument[];
