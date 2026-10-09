@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      mineures-et-correctifs:
+        update-types: [minor, patch]
+    ignore:
+      # typescript-eslint ne supporte pas encore TypeScript 7 (voir ADR 0003).
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # Plugins de eslint-config-next pas encore compatibles ESLint 10 (voir ADR 0003).
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
+      - dependency-name: "@eslint/js"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Paris

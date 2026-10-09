@@ -1,0 +1,98 @@
+name: CI
+
+# Sur chaque PR, et sur main après fusion. Ouvrir une PR (même en brouillon) pour tester une branche.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, typecheck, tests unitaires
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  database:
+    name: Base de données (migrations, RLS pgTAP, types)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Démarrer Postgres (migrations + seed)
+        run: pnpm exec supabase db start
+      - name: Tests pgTAP
+        run: pnpm exec supabase test db
+      - name: Vérifier que les types générés sont à jour
+        run: |
+          pnpm db:types
+          git diff --exit-code packages/db/src/types.ts
+      - name: Publier les types générés (en cas d'écart)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: packages/db/src/types.ts
+
+  e2e:
+    name: Bout en bout (inscription, connexion)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Démarrer Supabase local (Postgres, Auth, API, Mailpit)
+        run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+      - name: Variables d'environnement de l'application
+        run: |
+          STATUS=$(pnpm exec supabase status -o json)
+          {
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r '.API_URL' <<<"$STATUS")"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r '.PUBLISHABLE_KEY // .ANON_KEY' <<<"$STATUS")"
+            echo "MAILPIT_URL=$(jq -r '.MAILPIT_URL // .INBUCKET_URL // "http://127.0.0.1:54324"' <<<"$STATUS")"
+          } >> "$GITHUB_ENV"
+      - name: Installer Chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
+      - name: Build
+        run: pnpm --filter web build
+      - name: Tests Playwright
+        run: pnpm --filter web test:e2e
+      - name: Rapport Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7

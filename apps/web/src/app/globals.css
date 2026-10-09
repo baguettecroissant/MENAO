@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@menao/ui-tokens/theme.css";
+
+@layer base {
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}

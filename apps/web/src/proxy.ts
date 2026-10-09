@@ -1,0 +1,45 @@
+import { safeRedirectPath } from "@menao/validation";
+import { NextResponse, type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
+
+const PROTECTED_PREFIXES = ["/mon-espace"];
+const GUEST_ONLY = ["/connexion", "/inscription"];
+
+export async function proxy(request: NextRequest) {
+  const { response, claims } = await updateSession(request);
+  const { pathname, search } = request.nextUrl;
+
+  const isProtected = PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+  if (isProtected && !claims) {
+    const url = new URL("/connexion", request.url);
+    url.searchParams.set("next", safeRedirectPath(pathname + search));
+    return redirectWithSession(url, response);
+  }
+
+  if (claims && GUEST_ONLY.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return redirectWithSession(new URL("/mon-espace", request.url), response);
+  }
+
+  return response;
+}
+
+/**
+ * Redirige en conservant les cookies de session éventuellement rafraîchis par
+ * updateSession : sans eux, le refresh token déjà utilisé serait rejoué et la
+ * session révoquée.
+ */
+function redirectWithSession(url: URL, sessionResponse: NextResponse) {
+  const redirect = NextResponse.redirect(url);
+  for (const cookie of sessionResponse.cookies.getAll()) redirect.cookies.set(cookie);
+  const cacheControl = sessionResponse.headers.get("cache-control");
+  if (cacheControl) redirect.headers.set("cache-control", cacheControl);
+  return redirect;
+}
+
+// Limité aux routes qui ont besoin de la session : les pages publiques restent
+// statiques et ne déclenchent aucune fonction (maîtrise des coûts, spec §4.4).
+export const config = {
+  matcher: ["/mon-espace/:path*", "/connexion/:path*", "/inscription/:path*", "/auth/:path*"],
+};
