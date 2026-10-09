@@ -137,7 +137,24 @@ export const fr = {
       saveAndContinue: "Enregistrer et continuer",
       saved: "Enregistré.",
       nextStepsSoon:
-        "Les étapes suivantes (documents, profil public, paiements, formule) arrivent très bientôt. Vos informations sont enregistrées.",
+        "Les étapes « Paiements » et « Formule » arrivent très bientôt. Vos informations sont enregistrées.",
+      submit: {
+        title: "Envoyer mon dossier",
+        intro:
+          "Votre dossier est complet. Envoyez-le à l'équipe MENAO : nous vérifions vos documents (Kbis, assurances, identité) avant d'activer votre compte.",
+        button: "Envoyer mon dossier en vérification",
+        incomplete: "Terminez les étapes 1 à 5 pour envoyer votre dossier.",
+        error: "Votre dossier est incomplet. Vérifiez chaque étape puis réessayez.",
+      },
+      status: {
+        brouillon: null,
+        en_verification:
+          "Votre dossier est en cours de vérification par l'équipe MENAO. Vous serez prévenu par e-mail.",
+        valide: "Votre dossier est validé.",
+        refuse: (motif: string | null) =>
+          `Votre dossier a été refusé${motif ? ` : ${motif}` : ""}. Corrigez les éléments concernés puis renvoyez-le.`,
+        suspendu: "Votre compte est suspendu. Contactez l'équipe MENAO.",
+      },
       company: {
         siretLabel: "Numéro SIRET",
         siretChange: "Modifier le SIRET",
@@ -186,6 +203,79 @@ export const fr = {
         certDelete: "Supprimer",
         certValidUntil: (date: string) => `valable jusqu'au ${date}`,
         noCertification: "Aucune certification ajoutée.",
+      },
+      upload: {
+        file: "Fichier",
+        fileHintDocument: "PDF, JPEG ou PNG, 10 Mo maximum.",
+        fileHintPhoto: "JPEG ou PNG.",
+        sending: "Envoi en cours…",
+        fileRequired: "Choisissez un fichier.",
+        fileTooLarge: "Ce fichier dépasse 10 Mo.",
+        uploadFailed: "L'envoi du fichier a échoué. Réessayez.",
+        status: {
+          ok: "Fichier enregistré.",
+          invalid: "Envoi invalide. Réessayez.",
+          invalid_type:
+            "Ce type de fichier n'est pas accepté (le contenu ne correspond pas à un PDF, JPEG ou PNG).",
+          too_large: "Ce fichier dépasse 10 Mo.",
+          not_found: "Le fichier n'a pas été reçu. Réessayez.",
+          locked:
+            "Vos documents ne peuvent pas être modifiés pendant la vérification de votre dossier.",
+          limit: "Vous avez atteint le nombre maximum de photos (12).",
+          forbidden: "Cette action est réservée aux comptes professionnels.",
+          rate_limited: "Trop d'envois en peu de temps. Réessayez plus tard.",
+          unavailable:
+            "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+        },
+      },
+      documents: {
+        intro:
+          "Déposez les 4 justificatifs ci-dessous. Ils restent privés : seule l'équipe MENAO peut les consulter pour vérifier votre entreprise.",
+        types: {
+          kbis: "Kbis ou extrait INSEE/RNE de moins de 3 mois",
+          decennale: "Attestation d'assurance décennale",
+          rc_pro: "Attestation de responsabilité civile professionnelle",
+          identite: "Pièce d'identité du dirigeant",
+        },
+        missing: "À déposer",
+        statuses: {
+          en_attente: "Déposé, en attente de vérification",
+          valide: "Vérifié",
+          refuse: "Refusé",
+        },
+        invalidNow: "Ce document n'est plus valable (date dépassée) : déposez-en un nouveau.",
+        view: "Voir le document",
+        replace: "Remplacer le document",
+        send: "Déposer le document",
+        dateEmission: "Date d'émission",
+        dateFin: "Date de fin de validité",
+        dateFinIdentite: "Date d'expiration (optionnel)",
+        assureur: "Assureur",
+        numero: "Numéro de contrat",
+        couverture: "Couverture géographique",
+        couverturePlaceholder: "France métropolitaine",
+        refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
+        validUntil: (date: string) => `valable jusqu'au ${date}`,
+        issuedOn: (date: string) => `émis le ${date}`,
+      },
+      profile: {
+        avatar: "Photo de profil",
+        avatarHint: "Votre portrait ou votre logo. Elle apparaît sur votre fiche publique.",
+        avatarAlt: "Photo de profil",
+        avatarChange: "Changer la photo",
+        avatarSend: "Envoyer la photo",
+        presentation: "Présentation",
+        presentationHint:
+          "Votre parcours, votre savoir-faire, ce qui vous distingue (100 caractères minimum).",
+        presentationCount: (n: number) => `${n} caractère${n > 1 ? "s" : ""}`,
+        presentationSave: "Enregistrer la présentation",
+        portfolio: "Photos de réalisations",
+        portfolioHint:
+          "Jusqu'à 12 photos de chantiers terminés (sans personne ni adresse visible).",
+        portfolioAlt: (n: number) => `Réalisation ${n}`,
+        portfolioAdd: "Ajouter la photo",
+        portfolioDelete: "Supprimer",
+        portfolioEmpty: "Aucune photo pour le moment.",
       },
       zone: {
         legend: "Comment définir votre zone ?",

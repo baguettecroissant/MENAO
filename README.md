@@ -65,5 +65,9 @@ GitHub Actions sur chaque PR et sur `main` : format, lint, typecheck, tests unit
 4. Auth → Email Templates : reprendre `supabase/templates/*.html` (liens `/auth/confirm?token_hash=…`).
 5. Auth → SMTP : Resend (ADR 0002).
 
+État au 9 octobre 2026 : migrations de `main` appliquées, Edge Function `sirene-check` déployée (`--use-api`, import de `packages/core` vérifié), secret `INSEE_API_KEY` défini, Site URL `http://localhost:3000`. À faire : SMTP Resend (requis pour personnaliser les modèles d'e-mails sur l'offre gratuite), mot de passe minimum 12 et liste des URL de redirection dans Auth.
+
+Aperçu local branché sur staging : `apps/web/.env.local` avec l'URL et la clé « publishable » de `menao-staging`. Sur l'offre gratuite sans SMTP, Supabase n'envoie les e-mails d'authentification qu'aux membres de l'équipe du projet (environ 2 par heure).
+
 ### Vercel
 Projet lié au dépôt, **Root Directory = `apps/web`**, plafond de dépenses activé (spec §4.4). Variables : `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, et pour Sentry `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`. Aucune clé secrète Supabase en phase 0.

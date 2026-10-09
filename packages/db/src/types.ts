@@ -48,6 +48,111 @@ export type Database = {
         };
         Relationships: [];
       };
+      artisan_documents: {
+        Row: {
+          artisan_id: string;
+          assureur: string | null;
+          couverture: string | null;
+          created_at: string;
+          date_emission: string | null;
+          date_fin: string | null;
+          id: string;
+          mime_type: string;
+          numero: string | null;
+          refusal_reason: string | null;
+          size_bytes: number;
+          status: Database["public"]["Enums"]["document_status"];
+          storage_path: string;
+          type: Database["public"]["Enums"]["document_type"];
+          updated_at: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          assureur?: string | null;
+          couverture?: string | null;
+          created_at?: string;
+          date_emission?: string | null;
+          date_fin?: string | null;
+          id?: string;
+          mime_type: string;
+          numero?: string | null;
+          refusal_reason?: string | null;
+          size_bytes: number;
+          status?: Database["public"]["Enums"]["document_status"];
+          storage_path: string;
+          type: Database["public"]["Enums"]["document_type"];
+          updated_at?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          artisan_id?: string;
+          assureur?: string | null;
+          couverture?: string | null;
+          created_at?: string;
+          date_emission?: string | null;
+          date_fin?: string | null;
+          id?: string;
+          mime_type?: string;
+          numero?: string | null;
+          refusal_reason?: string | null;
+          size_bytes?: number;
+          status?: Database["public"]["Enums"]["document_status"];
+          storage_path?: string;
+          type?: Database["public"]["Enums"]["document_type"];
+          updated_at?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_documents_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      artisan_photos: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          id: string;
+          sort_order: number;
+          storage_path: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          id?: string;
+          sort_order?: number;
+          storage_path: string;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          id?: string;
+          sort_order?: number;
+          storage_path?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_photos_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_trades: {
         Row: {
           artisan_id: string;
@@ -181,6 +286,7 @@ export type Database = {
           forme_juridique_code: string | null;
           id: string;
           nom_commercial: string | null;
+          presentation: string | null;
           radius_km: number | null;
           raison_sociale: string | null;
           refusal_reason: string | null;
@@ -190,6 +296,7 @@ export type Database = {
           sirene_partial: boolean;
           siret: string | null;
           status: Database["public"]["Enums"]["artisan_status"];
+          submitted_at: string | null;
           tva_intracom: string | null;
           updated_at: string;
           user_id: string;
@@ -212,6 +319,7 @@ export type Database = {
           forme_juridique_code?: string | null;
           id?: string;
           nom_commercial?: string | null;
+          presentation?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
@@ -221,6 +329,7 @@ export type Database = {
           sirene_partial?: boolean;
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
+          submitted_at?: string | null;
           tva_intracom?: never;
           updated_at?: string;
           user_id: string;
@@ -242,6 +351,7 @@ export type Database = {
           forme_juridique_code?: string | null;
           id?: string;
           nom_commercial?: string | null;
+          presentation?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
@@ -251,6 +361,7 @@ export type Database = {
           sirene_partial?: boolean;
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
+          submitted_at?: string | null;
           tva_intracom?: never;
           updated_at?: string;
           user_id?: string;
@@ -507,6 +618,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
     };
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
@@ -520,6 +632,8 @@ export type Database = {
         | "qualisol"
         | "qualibois"
         | "autre";
+      document_status: "en_attente" | "valide" | "refuse";
+      document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       zone_mode: "rayon" | "communes";
     };
@@ -648,6 +762,8 @@ export const Constants = {
         "qualibois",
         "autre",
       ],
+      document_status: ["en_attente", "valide", "refuse"],
+      document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       zone_mode: ["rayon", "communes"],
     },

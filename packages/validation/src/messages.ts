@@ -17,6 +17,9 @@ export const messages = {
   radiusInvalid: "Choisissez un rayon dans la liste.",
   communesRequired: "Ajoutez au moins une commune.",
   tooMany: "Trop d'éléments sélectionnés.",
+  kbisTooOld: "Le Kbis (ou l'extrait INSEE/RNE) doit dater de moins de 3 mois.",
+  dateInFuture: "Cette date ne peut pas être dans le futur.",
+  presentationTooShort: "Présentez-vous en au moins 100 caractères.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

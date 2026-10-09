@@ -71,3 +71,31 @@ export async function mockGeocoding(page: Page) {
     });
   });
 }
+
+const isoDay = (offsetDays: number) =>
+  new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
+export const dates = { recent: isoDay(-10), nextYear: isoDay(365) };
+
+/** Fichiers fictifs pour les dépôts. */
+export const files = {
+  pdf: {
+    name: "document.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\n1 0 obj <<>> endobj\ntrailer <<>>\n%%EOF\n"),
+  },
+  /** PNG 1 × 1 valide (décodable par le navigateur pour le redimensionnement). */
+  png: {
+    name: "photo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "base64",
+    ),
+  },
+  /** Page HTML déguisée en PDF : refusée par le contrôle du type réel. */
+  fakePdf: {
+    name: "facture.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("<html><body>x</body></html>"),
+  },
+};

@@ -1,9 +1,12 @@
 import "server-only";
 import {
+  canSubmitOnboarding,
   homePathForRole,
   onboardingProgress,
   roleFromAppMetadata,
   type ArtisanOnboardingSnapshot,
+  type DocumentSnapshot,
+  type RequiredDocumentType,
 } from "@menao/core";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
@@ -29,7 +32,7 @@ export const getOnboardingContext = cache(async () => {
     .single();
   if (error) throw new Error("Fiche artisan introuvable");
 
-  const [trades, workTypes, zones, certifications] = await Promise.all([
+  const [trades, workTypes, zones, certifications, documents, photos, profile] = await Promise.all([
     supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
     supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", artisan.id),
     supabase
@@ -42,7 +45,29 @@ export const getOnboardingContext = cache(async () => {
       .select("id, type, numero, date_fin, verified_at")
       .eq("artisan_id", artisan.id)
       .order("date_fin"),
+    supabase
+      .from("artisan_documents")
+      .select(
+        "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
+      )
+      .eq("artisan_id", artisan.id),
+    supabase
+      .from("artisan_photos")
+      .select("id, storage_path")
+      .eq("artisan_id", artisan.id)
+      .order("sort_order"),
+    supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
   ]);
+
+  const documentList = documents.data ?? [];
+  const documentSnapshots: Partial<Record<RequiredDocumentType, DocumentSnapshot>> =
+    Object.fromEntries(
+      documentList.map((d) => [
+        d.type,
+        { status: d.status, dateEmission: d.date_emission, dateFin: d.date_fin },
+      ]),
+    );
+  const avatarPath = profile.data?.avatar_path ?? null;
 
   const tradeCodes = (trades.data ?? []).map((t) => t.trade_code);
   const zoneList = zones.data ?? [];
@@ -56,11 +81,19 @@ export const getOnboardingContext = cache(async () => {
     radiusKm: artisan.radius_km,
     hasBaseLocation: artisan.base_location !== null,
     communeCount: zoneList.length,
+    documents: documentSnapshots,
+    presentationLength: artisan.presentation?.trim().length ?? 0,
+    hasAvatar: avatarPath !== null,
   };
 
   return {
     supabase,
+    userId: auth.claims.sub,
     artisan,
+    avatarPath,
+    documents: documentList,
+    photos: photos.data ?? [],
+    canSubmit: canSubmitOnboarding(snapshot),
     tradeCodes,
     workTypeCodes: (workTypes.data ?? []).map((w) => w.work_type_code),
     zones: zoneList,

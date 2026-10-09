@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { fakeSiret, mockGeocoding } from "./fixtures";
+import { dates, fakeSiret, files, mockGeocoding } from "./fixtures";
 import { authLinkFor } from "./mailpit";
 
 // Données fictives uniquement (domaine .test, tranche ARCEP fiction, SIRET du faux serveur Sirene).
@@ -9,10 +9,11 @@ test.beforeEach(async ({ page }) => {
   await mockGeocoding(page);
 });
 
-test("inscription artisan puis onboarding : entreprise, métiers, zone", async ({
+test("inscription artisan, onboarding complet et envoi en vérification", async ({
   page,
   request,
 }) => {
+  test.setTimeout(120_000);
   const email = `e2e-pro-${Date.now()}@example.test`;
   const nextYear = `${new Date().getFullYear() + 1}-06-30`;
 
@@ -58,14 +59,12 @@ test("inscription artisan puis onboarding : entreprise, métiers, zone", async (
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/zone$/);
 
-  // Étape 3 — zone en rayon
+  // Étape 3 — zone en rayon, puis en communes
   await page.getByRole("combobox", { name: "Adresse de départ" }).fill("1 rue de l'exemple");
   await page.getByRole("option", { name: "1 Rue de l'Exemple 06000 Nice" }).click();
   await page.getByLabel("Rayon d'intervention").selectOption("30");
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
-
-  await expect(page).toHaveURL(/\/pro\/onboarding$/);
-  await expect(page.getByRole("main").getByRole("status")).toContainText("arrivent très bientôt");
+  await expect(page).toHaveURL(/\/pro\/onboarding\/documents$/);
   const stepper = page.getByRole("navigation", { name: "Étapes de l'inscription" });
   for (const step of ["Entreprise", "Métiers", "Zone d'intervention"]) {
     await expect(
@@ -73,7 +72,6 @@ test("inscription artisan puis onboarding : entreprise, métiers, zone", async (
     ).toBeVisible();
   }
 
-  // Zone en communes, puis retour au rayon conservé côté serveur
   await page.goto("/pro/onboarding/zone");
   await page.getByLabel("Une liste de communes").check();
   await page.getByRole("combobox", { name: "Ajouter une commune" }).fill("nic");
@@ -83,7 +81,75 @@ test("inscription artisan puis onboarding : entreprise, métiers, zone", async (
   await expect(page.getByRole("list", { name: "Communes" }).getByRole("listitem")).toHaveCount(2);
   await page.getByRole("button", { name: "Retirer Nice" }).click();
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await expect(page).toHaveURL(/\/pro\/onboarding\/documents$/);
+
+  // Étape 4 — documents (un faux PDF est refusé d'après son contenu réel)
+  const kbis = page.getByRole("region", { name: "Kbis ou extrait INSEE/RNE de moins de 3 mois" });
+  await kbis.getByLabel("Date d'émission").fill(dates.recent);
+  await kbis.getByLabel("Fichier").setInputFiles(files.fakePdf);
+  await kbis.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(kbis.getByRole("alert")).toContainText("n'est pas accepté");
+  await kbis.getByLabel("Date d'émission").fill(dates.recent);
+  await kbis.getByLabel("Fichier").setInputFiles(files.pdf);
+  await kbis.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(kbis.getByText("Déposé, en attente de vérification")).toBeVisible();
+
+  const decennale = page.getByRole("region", { name: "Attestation d'assurance décennale" });
+  await decennale.getByLabel("Assureur").fill("Assurances Exemple");
+  await decennale.getByLabel("Numéro de contrat").fill("DEC-0001");
+  await decennale.getByLabel("Date de fin de validité").fill(dates.nextYear);
+  await decennale.getByLabel("Couverture géographique").fill("France métropolitaine");
+  await decennale.getByLabel("Fichier").setInputFiles(files.pdf);
+  await decennale.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(decennale.getByText("Déposé, en attente de vérification")).toBeVisible();
+
+  const rcPro = page.getByRole("region", {
+    name: "Attestation de responsabilité civile professionnelle",
+  });
+  await rcPro.getByLabel("Assureur").fill("Assurances Exemple");
+  await rcPro.getByLabel("Numéro de contrat").fill("RC-0001");
+  await rcPro.getByLabel("Date de fin de validité").fill(dates.nextYear);
+  await rcPro.getByLabel("Fichier").setInputFiles(files.png);
+  await rcPro.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(rcPro.getByText("Déposé, en attente de vérification")).toBeVisible();
+
+  const identite = page.getByRole("region", { name: "Pièce d'identité du dirigeant" });
+  await identite.getByLabel("Fichier").setInputFiles(files.pdf);
+  await identite.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(identite.getByText("Déposé, en attente de vérification")).toBeVisible();
+  await expect(kbis.getByRole("link", { name: "Voir le document" })).toHaveAttribute(
+    "href",
+    /token=/,
+  );
+
+  // Étape 5 — profil public
+  await page.goto("/pro/onboarding/profil");
+  const avatar = page.getByRole("region", { name: "Photo de profil" });
+  await avatar.getByLabel("Fichier").setInputFiles(files.png);
+  await avatar.getByRole("button", { name: "Envoyer la photo" }).click();
+  await expect(page.getByRole("img", { name: "Photo de profil" })).toBeVisible();
+
+  await page
+    .getByLabel("Présentation")
+    .fill(
+      "Menuisier depuis huit ans dans les Alpes-Maritimes, je pose fenêtres, portes et placards sur mesure avec soin.",
+    );
+  await page.getByRole("button", { name: "Enregistrer la présentation" }).click();
+  await expect(page.getByText("Enregistré.")).toBeVisible();
+
+  const portfolio = page.getByRole("region", { name: "Photos de réalisations" });
+  await portfolio.getByLabel("Fichier").setInputFiles(files.png);
+  await portfolio.getByRole("button", { name: "Ajouter la photo" }).click();
+  await expect(page.getByRole("img", { name: "Réalisation 1" })).toBeVisible();
+
+  // Envoi du dossier : ensuite, documents figés
+  await page.goto("/pro/onboarding");
+  await page.getByRole("button", { name: "Envoyer mon dossier en vérification" }).click();
+  await expect(page.getByRole("main").getByRole("status").first()).toContainText(
+    "en cours de vérification",
+  );
+  await page.goto("/pro/onboarding/documents");
+  await expect(page.getByRole("button", { name: /Déposer|Remplacer/ })).toHaveCount(0);
 });
 
 test("SIRET inconnu ou entreprise fermée : message clair (compte artisan du seed)", async ({

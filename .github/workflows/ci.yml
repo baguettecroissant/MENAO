@@ -49,10 +49,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Démarrer Postgres (migrations + seed)
+        id: db
         run: pnpm exec supabase db start
       - name: Tests pgTAP
         run: pnpm exec supabase test db
       - name: Vérifier que les types générés sont à jour
+        # Même si des tests pgTAP échouent : les types restent utiles pour avancer.
+        if: ${{ !cancelled() && steps.db.outcome == 'success' }}
         run: |
           pnpm db:types
           git diff --exit-code packages/db/src/types.ts
@@ -75,12 +78,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Démarrer Supabase local (Postgres, Auth, API, Edge Functions, Mailpit)
+      - name: Démarrer Supabase local (Postgres, Auth, API, Storage, Edge Functions, Mailpit)
         # Les Edge Functions appellent le faux serveur Sirene lancé par Playwright sur l'hôte.
         env:
           INSEE_API_BASE_URL: http://host.docker.internal:54399
           INSEE_API_KEY: cle-factice-ci
-        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,postgres-meta
       - name: Variables d'environnement de l'application
         run: |
           STATUS=$(pnpm exec supabase status -o json)
