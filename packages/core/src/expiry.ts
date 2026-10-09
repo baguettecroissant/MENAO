@@ -26,3 +26,8 @@ export function expiryStatus(dateFin: string | null, today: Date = new Date()): 
   if (days <= EXPIRY_WARNING_DAYS) return "bientot";
   return "ok";
 }
+
+/** Date limite (AAAA-MM-JJ) des échéances à surveiller : aujourd'hui + 30 jours. */
+export function expiryWatchLimit(today: Date = new Date()): string {
+  return new Date(today.getTime() + EXPIRY_WARNING_DAYS * DAY_MS).toISOString().slice(0, 10);
+}

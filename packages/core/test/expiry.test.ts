@@ -5,6 +5,7 @@ import {
   MONITORED_DOCUMENT_TYPES,
   daysUntil,
   expiryStatus,
+  expiryWatchLimit,
 } from "../src/expiry";
 
 const today = new Date("2026-10-09T12:00:00Z");
@@ -34,5 +35,9 @@ describe("suivi des échéances (F-51)", () => {
     ["2026-10-08", "expire"],
   ] as const)("date de fin %s → %s", (dateFin, status) => {
     expect(expiryStatus(dateFin, today)).toBe(status);
+  });
+
+  it("date limite de surveillance : aujourd'hui + 30 jours", () => {
+    expect(expiryWatchLimit(today)).toBe("2026-11-08");
   });
 });
