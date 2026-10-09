@@ -11,7 +11,8 @@ type SentryOptions = NonNullable<Parameters<typeof init>[0]>;
 export const sentryOptions = {
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   enabled: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
-  environment: process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV,
+  // « production » ou « preview » sur Vercel ; « local » sur un poste de développement.
+  environment: process.env.NEXT_PUBLIC_VERCEL_ENV ?? "local",
   tracesSampleRate: 0.1,
   dataCollection: {
     userInfo: false,
