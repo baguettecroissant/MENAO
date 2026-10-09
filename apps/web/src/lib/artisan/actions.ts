@@ -3,9 +3,12 @@
 import { onboardingProgress } from "@menao/core";
 import {
   RADIUS_OPTIONS_KM,
+  UPLOAD_PURPOSES,
   certificationSchema,
   companyStepSchema,
+  documentMetadataSchema,
   messages,
+  presentationSchema,
   siretSchema,
   tradesStepSchema,
   zoneStepSchema,
@@ -226,4 +229,91 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
 
   refresh();
   redirect("/pro/onboarding" as Route);
+}
+
+type UploadStatus = keyof typeof t.upload.status;
+
+/**
+ * Fait vérifier et ranger par l'Edge Function process-upload un fichier déjà déposé par le
+ * navigateur dans « uploads ». Les métadonnées d'un document sont validées ici (Zod).
+ */
+export async function processUpload(_prev: FormState, formData: FormData): Promise<FormState> {
+  const purpose = UPLOAD_PURPOSES.find((p) => p === text(formData, "purpose"));
+  const path = text(formData, "path");
+  if (!purpose || !path) return { error: t.upload.status.invalid };
+
+  let document: unknown;
+  if (purpose === "document") {
+    const parsed = documentMetadataSchema().safeParse({
+      type: text(formData, "documentType"),
+      dateEmission: text(formData, "dateEmission"),
+      dateFin: text(formData, "dateFin"),
+      assureur: text(formData, "assureur"),
+      numero: text(formData, "numero"),
+      couverture: text(formData, "couverture"),
+    });
+    if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+    document = parsed.data;
+  }
+
+  const { supabase } = await getOnboardingContext();
+  const { data, error } = await supabase.functions.invoke<{ status: UploadStatus }>(
+    "process-upload",
+    {
+      method: "POST",
+      body: { purpose, path, document },
+    },
+  );
+  let status: UploadStatus = data?.status ?? "unavailable";
+  if (error instanceof FunctionsHttpError) {
+    const body = (await error.context.json().catch(() => null)) as { status?: string } | null;
+    status =
+      body?.status && body.status in t.upload.status
+        ? (body.status as UploadStatus)
+        : "unavailable";
+  } else if (error) {
+    status = "unavailable";
+  }
+  if (status !== "ok") return { error: t.upload.status[status] };
+
+  refresh();
+  return { success: t.upload.status.ok };
+}
+
+export async function savePresentation(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = { presentation: text(formData, "presentation") ?? "" };
+  const parsed = presentationSchema.safeParse(values.presentation);
+  if (!parsed.success) {
+    return { fieldErrors: { presentation: [parsed.error.issues[0]?.message ?? ""] }, values };
+  }
+  const { supabase, artisan } = await getOnboardingContext();
+  const { error } = await supabase
+    .from("artisans")
+    .update({ presentation: parsed.data })
+    .eq("id", artisan.id);
+  if (error) return { error: fr.errors.generic, values };
+  refresh();
+  return { success: t.saved };
+}
+
+export async function deletePortfolioPhoto(formData: FormData): Promise<void> {
+  const id = z.uuid().safeParse(text(formData, "id"));
+  if (!id.success) return;
+  const { supabase } = await getOnboardingContext();
+  const { data: photo } = await supabase
+    .from("artisan_photos")
+    .select("storage_path")
+    .eq("id", id.data)
+    .single();
+  if (!photo) return;
+  await supabase.storage.from("portfolio").remove([photo.storage_path]);
+  await supabase.from("artisan_photos").delete().eq("id", id.data);
+  refresh();
+}
+
+export async function submitOnboarding(): Promise<FormState> {
+  const { supabase } = await getOnboardingContext();
+  const { error } = await supabase.rpc("submit_artisan_onboarding");
+  refresh();
+  return error ? { error: t.submit.error } : {};
 }

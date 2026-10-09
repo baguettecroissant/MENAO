@@ -39,16 +39,17 @@ type FieldProps = ComponentProps<"input"> & {
   errors?: readonly string[] | undefined;
 };
 
-export function Field({ label, name, hint, errors, ...input }: FieldProps) {
-  const hintId = hint ? `${name}-hint` : undefined;
-  const errorId = errors?.length ? `${name}-error` : undefined;
+export function Field({ label, name, hint, errors, id, ...input }: FieldProps) {
+  const inputId = id ?? name;
+  const hintId = hint ? `${inputId}-hint` : undefined;
+  const errorId = errors?.length ? `${inputId}-error` : undefined;
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="font-medium">
+      <label htmlFor={inputId} className="font-medium">
         {label}
       </label>
       <input
-        id={name}
+        id={inputId}
         name={name}
         aria-invalid={errors?.length ? true : undefined}
         aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}
