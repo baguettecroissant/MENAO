@@ -155,6 +155,8 @@ export const fr = {
         refuse: (motif: string | null) =>
           `Votre dossier a été refusé${motif ? ` : ${motif}` : ""}. Corrigez les éléments concernés puis renvoyez-le.`,
         suspendu: "Votre compte est suspendu. Contactez l'équipe MENAO.",
+        suspenduDocuments:
+          "Votre compte est suspendu : une assurance obligatoire a expiré. Déposez l'attestation à jour dans « Documents » ; le compte sera réactivé dès sa validation.",
       },
       company: {
         siretLabel: "Numéro SIRET",
@@ -257,6 +259,18 @@ export const fr = {
         couverturePlaceholder: "France métropolitaine",
         refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
         validUntil: (date: string) => `valable jusqu'au ${date}`,
+        renew: "Déposer le document à jour",
+        current: "Document en cours",
+        renewal: "Renouvellement",
+        expiry: {
+          ok: null,
+          bientot: (days: number) => `Expire dans ${days} jours`,
+          urgent: (days: number) =>
+            days === 0 ? "Expire aujourd'hui" : `Expire dans ${days} jour${days > 1 ? "s" : ""}`,
+          expire: "Expiré",
+        },
+        expiringBanner: (docs: string) =>
+          `Pensez à renouveler : ${docs}. Déposez les documents à jour dans « Documents ».`,
         issuedOn: (date: string) => `émis le ${date}`,
       },
       profile: {
@@ -297,7 +311,21 @@ export const fr = {
   },
   admin: {
     title: "Back-office MENAO",
-    nav: { artisans: "Dossiers artisans", signOut: "Me déconnecter" },
+    nav: { artisans: "Dossiers artisans", watch: "À surveiller", signOut: "Me déconnecter" },
+    watch: {
+      title: "À surveiller",
+      renewals: "Renouvellements à vérifier",
+      noRenewals: "Aucun renouvellement en attente.",
+      expiring: "Documents et certifications arrivant à échéance (30 jours) ou expirés",
+      noExpiring: "Aucune échéance proche.",
+      columns: {
+        artisan: "Artisan",
+        document: "Document",
+        date: "Fin de validité",
+        status: "Échéance",
+      },
+      certification: (type: string) => `Certification ${type}`,
+    },
     mfa: {
       enrollTitle: "Activer la double authentification",
       enrollIntro:
@@ -335,6 +363,10 @@ export const fr = {
     },
     detail: {
       back: "Retour aux dossiers",
+      suspensionReasons: {
+        documents_expires: "suspendu automatiquement : assurance expirée",
+        decision_admin: "suspendu par décision MENAO",
+      },
       company: "Entreprise",
       contact: "Dirigeant",
       phone: "Téléphone",

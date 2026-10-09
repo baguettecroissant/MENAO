@@ -10,11 +10,11 @@ const t = fr.pro.onboarding.documents;
 export function DocumentUpload({
   type,
   userId,
-  replace,
+  label,
 }: {
   type: RequiredDocumentType;
   userId: string;
-  replace: boolean;
+  label: string;
 }) {
   const id = (name: string) => `${type}-${name}`;
   return (
@@ -24,7 +24,7 @@ export function DocumentUpload({
       userId={userId}
       accept="application/pdf,image/jpeg,image/png"
       hint={fr.pro.onboarding.upload.fileHintDocument}
-      submitLabel={replace ? t.replace : t.send}
+      submitLabel={label}
     >
       {(errors) => (
         <>

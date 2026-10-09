@@ -27,7 +27,9 @@ export default async function OnboardingIndexPage() {
         <Alert tone="success">{t.status.en_verification}</Alert>
       )}
       {artisan.status === "valide" && <Alert tone="success">{t.status.valide}</Alert>}
-      {artisan.status === "suspendu" && <Alert tone="error">{t.status.suspendu}</Alert>}
+      {artisan.status === "suspendu" && artisan.suspension_reason !== "documents_expires" && (
+        <Alert tone="error">{t.status.suspendu}</Alert>
+      )}
       {editable && canSubmit && (
         <Card>
           <h2 className="mb-2 text-lg font-semibold">{t.submit.title}</h2>
