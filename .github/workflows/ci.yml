@@ -78,11 +78,21 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Démarrer stripe-mock (faux Stripe officiel)
+        run: docker run -d --name stripe-mock -p 12111:12111 stripe/stripe-mock:v0.206.0
       - name: Démarrer Supabase local (Postgres, Auth, API, Storage, Edge Functions, Mailpit)
-        # Les Edge Functions appellent le faux serveur Sirene lancé par Playwright sur l'hôte.
+        # Les Edge Functions appellent le faux serveur Sirene (lancé par Playwright) et stripe-mock,
+        # tous deux sur l'hôte.
         env:
           INSEE_API_BASE_URL: http://host.docker.internal:54399
           INSEE_API_KEY: cle-factice-ci
+          STRIPE_SECRET_KEY: sk_test_menao_ci
+          STRIPE_WEBHOOK_SECRET: whsec_menao_ci
+          STRIPE_TAX_RATE_ID: txr_menao_ci
+          STRIPE_API_HOST: host.docker.internal
+          STRIPE_API_PORT: "12111"
+          STRIPE_API_PROTOCOL: http
+          SITE_URLS: http://localhost:3000
         run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,postgres-meta
       - name: Variables d'environnement de l'application
         run: |
@@ -92,6 +102,7 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r '.API_URL' <<<"$STATUS")"
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r '.PUBLISHABLE_KEY // .ANON_KEY' <<<"$STATUS")"
             echo "MAILPIT_URL=$(jq -r '.MAILPIT_URL // .INBUCKET_URL // "http://127.0.0.1:54324"' <<<"$STATUS")"
+            echo "STRIPE_WEBHOOK_SECRET=whsec_menao_ci"
           } >> "$GITHUB_ENV"
       - name: Installer Chromium
         run: pnpm --filter web exec playwright install --with-deps chromium
