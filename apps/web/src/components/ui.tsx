@@ -89,3 +89,35 @@ export function PageShell({ title, children }: { title: string; children: ReactN
     </main>
   );
 }
+
+type CheckboxFieldProps = Omit<ComponentProps<"input">, "type" | "children"> & {
+  name: string;
+  children: ReactNode;
+  errors?: readonly string[] | undefined;
+};
+
+export function CheckboxField({ name, children, errors, id, ...input }: CheckboxFieldProps) {
+  const inputId = id ?? name;
+  const errorId = errors?.length ? `${inputId}-error` : undefined;
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          id={inputId}
+          name={name}
+          className="mt-1 size-5 shrink-0 accent-primary"
+          aria-invalid={errors?.length ? true : undefined}
+          aria-describedby={errorId}
+          {...input}
+        />
+        <span>{children}</span>
+      </label>
+      {errorId && (
+        <p id={errorId} className="text-sm text-danger">
+          {errors?.[0]}
+        </p>
+      )}
+    </div>
+  );
+}

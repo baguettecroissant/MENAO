@@ -1,4 +1,5 @@
-import { roleFromAppMetadata } from "@menao/core";
+import { homePathForRole, roleFromAppMetadata } from "@menao/core";
+import type { Route } from "next";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Button, PageShell } from "@/components/ui";
@@ -13,12 +14,15 @@ export default async function MySpacePage() {
   const { data } = await supabase.auth.getClaims();
   if (!data) redirect("/connexion?next=/mon-espace");
 
+  const role = roleFromAppMetadata(data.claims.app_metadata);
+  const home = homePathForRole(role);
+  if (home !== "/mon-espace") redirect(home as Route);
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("first_name")
     .eq("user_id", data.claims.sub)
     .maybeSingle();
-  const role = roleFromAppMetadata(data.claims.app_metadata);
 
   return (
     <PageShell title={fr.mySpace.greeting(profile?.first_name ?? null)}>

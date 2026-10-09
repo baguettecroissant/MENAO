@@ -1,9 +1,10 @@
+import { homePathForRole, roleFromAppMetadata } from "@menao/core";
 import { safeRedirectPath } from "@menao/validation";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const PROTECTED_PREFIXES = ["/mon-espace"];
-const GUEST_ONLY = ["/connexion", "/inscription"];
+const PROTECTED_PREFIXES = ["/mon-espace", "/pro/onboarding", "/nouveau-mot-de-passe"];
+const GUEST_ONLY = ["/connexion", "/inscription", "/pro/inscription"];
 
 export async function proxy(request: NextRequest) {
   const { response, claims } = await updateSession(request);
@@ -19,7 +20,8 @@ export async function proxy(request: NextRequest) {
   }
 
   if (claims && GUEST_ONLY.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return redirectWithSession(new URL("/mon-espace", request.url), response);
+    const home = homePathForRole(roleFromAppMetadata(claims.app_metadata));
+    return redirectWithSession(new URL(home, request.url), response);
   }
 
   return response;
@@ -41,5 +43,13 @@ function redirectWithSession(url: URL, sessionResponse: NextResponse) {
 // Limité aux routes qui ont besoin de la session : les pages publiques restent
 // statiques et ne déclenchent aucune fonction (maîtrise des coûts, spec §4.4).
 export const config = {
-  matcher: ["/mon-espace/:path*", "/connexion/:path*", "/inscription/:path*", "/auth/:path*"],
+  matcher: [
+    "/mon-espace/:path*",
+    "/connexion/:path*",
+    "/inscription/:path*",
+    "/auth/:path*",
+    "/pro/inscription",
+    "/pro/onboarding/:path*",
+    "/nouveau-mot-de-passe",
+  ],
 };
