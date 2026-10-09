@@ -30,6 +30,11 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.7
+      - name: Vérifier les Edge Functions (Deno)
+        run: pnpm functions:check
 
   database:
     name: Base de données (migrations, RLS pgTAP, types)

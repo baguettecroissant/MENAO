@@ -389,8 +389,15 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# [edge_runtime.secrets]
-# secret_key = "env(SECRET_VALUE)"
+# Secrets des Edge Functions en local, lus dans l'environnement (ou supabase/functions/.env,
+# ignoré par Git). En staging/production : `supabase secrets set` ou tableau de bord.
+[edge_runtime.secrets]
+INSEE_API_BASE_URL = "env(INSEE_API_BASE_URL)"
+INSEE_API_KEY = "env(INSEE_API_KEY)"
+
+# Vérification Sirene (F-14) : réservée aux utilisateurs connectés.
+[functions.sirene-check]
+verify_jwt = true
 
 [analytics]
 enabled = true
