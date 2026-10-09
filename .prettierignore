@@ -5,4 +5,4 @@ coverage/
 playwright-report/
 test-results/
 supabase/.temp/
-docs/CAHIER_DES_CHARGES_V1.md
+*.md
