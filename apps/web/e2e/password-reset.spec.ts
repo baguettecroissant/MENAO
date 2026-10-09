@@ -5,7 +5,7 @@ test("mot de passe oublié : lien e-mail, nouveau mot de passe, reconnexion", as
   page,
   request,
 }) => {
-  const email = "admin@example.test";
+  const email = "motdepasse@example.test";
   const newPassword = `nouveau-mot-de-passe-${Date.now()}`;
 
   await page.goto("/connexion");
