@@ -207,6 +207,40 @@ export const fr = {
         certValidUntil: (date: string) => `valable jusqu'au ${date}`,
         noCertification: "Aucune certification ajoutée.",
       },
+      connect: {
+        intro:
+          "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
+        fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
+        notValidated:
+          "La configuration des paiements sera disponible dès que l'équipe MENAO aura validé votre dossier.",
+        start: "Configurer mes paiements avec Stripe",
+        resume: "Reprendre la configuration Stripe",
+        pending:
+          "Stripe vérifie vos informations. Cela peut prendre quelques minutes ; revenez sur cette page ou reprenez la configuration si des éléments manquent.",
+        active:
+          "Votre compte de paiement est actif : vous pouvez recevoir les paiements de vos clients.",
+        payoutsPending:
+          "Les virements vers votre compte bancaire seront activés dès que Stripe aura terminé ses vérifications.",
+        dashboard: "Ouvrir mon tableau de bord Stripe",
+        linkExpired: "Le lien Stripe a expiré : reprenez la configuration.",
+        errors: {
+          not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
+          no_account: "Aucun compte de paiement pour le moment.",
+          rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
+          unavailable: "Stripe est momentanément indisponible. Réessayez dans quelques minutes.",
+          forbidden: "Cette action est réservée aux comptes professionnels.",
+        },
+      },
+      visibility: {
+        visible:
+          "Votre profil est visible des particuliers : vous pouvez recevoir des demandes de chantier.",
+        hidden: "Votre profil n'est pas encore visible des particuliers. Il reste :",
+        missing: {
+          validation: "la validation de votre dossier par l'équipe MENAO",
+          abonnement: "un abonnement actif (étape « Formule »)",
+          paiements: "un compte de paiement actif (étape « Paiements »)",
+        },
+      },
       plans: {
         intro:
           "Choisissez votre formule. Les 3 premiers mois sont offerts : aucun prélèvement avant la fin de la période d'essai, résiliable à tout moment.",
@@ -429,6 +463,11 @@ export const fr = {
       docRefuse: "Refuser le document",
       docReason: "Motif du refus",
       profile: "Profil public",
+      visibility: "Visibilité",
+      visible: "Visible des particuliers",
+      hiddenBecause: (missing: string) => `Invisible — manque : ${missing}`,
+      connect: (charges: boolean, payouts: boolean) =>
+        `Stripe Connect : encaissements ${charges ? "actifs" : "inactifs"}, virements ${payouts ? "actifs" : "inactifs"}`,
       subscription: "Abonnement",
       noSubscription: "Aucun abonnement.",
       history: "Historique des décisions",

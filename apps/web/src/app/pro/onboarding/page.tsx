@@ -10,7 +10,7 @@ const t = fr.pro.onboarding;
 
 /** Statut du dossier, envoi en vérification, sinon première étape disponible non terminée. */
 export default async function OnboardingIndexPage() {
-  const { artisan, progress, canSubmit } = await getOnboardingContext();
+  const { artisan, progress, canSubmit, visibility } = await getOnboardingContext();
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
 
   if (editable && !canSubmit) {
@@ -27,6 +27,22 @@ export default async function OnboardingIndexPage() {
         <Alert tone="success">{t.status.en_verification}</Alert>
       )}
       {artisan.status === "valide" && <Alert tone="success">{t.status.valide}</Alert>}
+      {(artisan.status === "valide" || artisan.status === "suspendu") && (
+        <Card>
+          {visibility.visible ? (
+            <p className="font-medium text-success">{t.visibility.visible}</p>
+          ) : (
+            <>
+              <p className="font-medium">{t.visibility.hidden}</p>
+              <ul className="mt-2 list-disc pl-6">
+                {visibility.missing.map((m) => (
+                  <li key={m}>{t.visibility.missing[m]}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </Card>
+      )}
       {artisan.status === "suspendu" && artisan.suspension_reason !== "documents_expires" && (
         <Alert tone="error">{t.status.suspendu}</Alert>
       )}
