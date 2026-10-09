@@ -28,6 +28,10 @@ from (values
   ('a0000000-0000-4000-8000-000000000004'::uuid, 'artisan@example.test', 'artisan_en_attente', 'Dominique', 'Artisan', '00000003400017'),
   -- Artisan dont le dossier complet attend la validation d'un admin.
   ('a0000000-0000-4000-8000-000000000005'::uuid, 'dossier@example.test', 'artisan_en_attente', 'Claude', 'Dossier', '00000006700017'),
+  -- Artisan validé dont la décennale expire bientôt (renouvellement, F-51).
+  ('a0000000-0000-4000-8000-000000000007'::uuid, 'valide@example.test', 'artisan', 'Lou', 'Valide', null),
+  -- Second admin, réservé au test e2e du renouvellement.
+  ('a0000000-0000-4000-8000-000000000008'::uuid, 'admin2@example.test', 'admin', 'Sam', 'Admin', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -66,3 +70,23 @@ from public.artisans a,
 where a.user_id = 'a0000000-0000-4000-8000-000000000005';
 update public.profiles set avatar_path = 'a0000000-0000-4000-8000-000000000005/seed.jpg'
 where user_id = 'a0000000-0000-4000-8000-000000000005';
+
+-- Artisan validé (rôle « artisan » : fiche créée ici), décennale à renouveler dans 10 jours.
+insert into public.artisans (user_id, status, siret, raison_sociale, sirene_checked_at, sirene_active, ape_code, ape_eligible,
+  assujetti_tva, experience_years, zone_mode, presentation, submitted_at)
+values ('a0000000-0000-4000-8000-000000000007', 'valide', '00000007500010', 'VALIDE EXEMPLE', now(), true, '43.21A', true,
+  true, 9, 'communes', 'Électricien validé du jeu de données de développement, interventions à Nice et alentours.', now());
+insert into public.artisan_trades (artisan_id, trade_code)
+  select id, 'electricien' from public.artisans where user_id = 'a0000000-0000-4000-8000-000000000007';
+insert into public.artisan_zones (artisan_id, code_insee, nom)
+  select id, '06088', 'Nice' from public.artisans where user_id = 'a0000000-0000-4000-8000-000000000007';
+insert into public.artisan_documents (artisan_id, type, storage_path, mime_type, size_bytes, date_emission, date_fin,
+  assureur, numero, couverture, status, verified_at)
+select a.id, d.type::public.document_type, a.id || '/seed-' || d.type || '.pdf', 'application/pdf', 1000, d.emission, d.fin,
+  d.assureur, d.numero, d.couverture, 'valide', now()
+from public.artisans a,
+  (values ('kbis', current_date - 40, null::date, null, null, null),
+          ('decennale', null, current_date + 10, 'Assurances Exemple', 'DEC-1111', 'France métropolitaine'),
+          ('rc_pro', null, current_date + 300, 'Assurances Exemple', 'RC-1111', null),
+          ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
+where a.user_id = 'a0000000-0000-4000-8000-000000000007';

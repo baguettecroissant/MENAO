@@ -4,6 +4,7 @@ import { MONITORED_DOCUMENT_TYPES, expiryStatus } from "@menao/core";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { signOut } from "@/lib/auth/actions";
 import { Stepper } from "./stepper";
 
 export const metadata: Metadata = { title: `${fr.pro.onboarding.title} — MENAO` };
@@ -22,7 +23,17 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">{fr.pro.onboarding.title}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-2xl font-bold">{fr.pro.onboarding.title}</h1>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="min-h-touch font-medium underline-offset-2 hover:underline"
+            >
+              {fr.mySpace.signOut}
+            </button>
+          </form>
+        </div>
         <p className="text-muted-foreground">{fr.pro.onboarding.intro}</p>
       </div>
       {artisan.status === "brouillon" && artisan.refusal_reason && (
