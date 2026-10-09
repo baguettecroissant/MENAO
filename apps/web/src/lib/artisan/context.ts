@@ -1,6 +1,8 @@
 import "server-only";
 import {
   canSubmitOnboarding,
+  subscriptionGrantsAccess,
+  type SubscriptionStatus,
   homePathForRole,
   onboardingProgress,
   roleFromAppMetadata,
@@ -32,32 +34,39 @@ export const getOnboardingContext = cache(async () => {
     .single();
   if (error) throw new Error("Fiche artisan introuvable");
 
-  const [trades, workTypes, zones, certifications, documents, photos, profile] = await Promise.all([
-    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
-    supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", artisan.id),
-    supabase
-      .from("artisan_zones")
-      .select("code_insee, nom")
-      .eq("artisan_id", artisan.id)
-      .order("nom"),
-    supabase
-      .from("certifications")
-      .select("id, type, numero, date_fin, verified_at")
-      .eq("artisan_id", artisan.id)
-      .order("date_fin"),
-    supabase
-      .from("artisan_documents")
-      .select(
-        "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
-      )
-      .eq("artisan_id", artisan.id),
-    supabase
-      .from("artisan_photos")
-      .select("id, storage_path")
-      .eq("artisan_id", artisan.id)
-      .order("sort_order"),
-    supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
-  ]);
+  const [trades, workTypes, zones, certifications, documents, photos, profile, subscriptionRow] =
+    await Promise.all([
+      supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
+      supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", artisan.id),
+      supabase
+        .from("artisan_zones")
+        .select("code_insee, nom")
+        .eq("artisan_id", artisan.id)
+        .order("nom"),
+      supabase
+        .from("certifications")
+        .select("id, type, numero, date_fin, verified_at")
+        .eq("artisan_id", artisan.id)
+        .order("date_fin"),
+      supabase
+        .from("artisan_documents")
+        .select(
+          "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
+        )
+        .eq("artisan_id", artisan.id),
+      supabase
+        .from("artisan_photos")
+        .select("id, storage_path")
+        .eq("artisan_id", artisan.id)
+        .order("sort_order"),
+      supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
+      supabase
+        .from("subscriptions")
+        .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end")
+        .eq("artisan_id", artisan.id)
+        .maybeSingle(),
+    ]);
+  const subscription = subscriptionRow.data;
 
   // Les documents archivés (« remplace ») ne comptent plus. Par type : le document validé en
   // cours s'il existe, sinon celui en cours d'examen.
@@ -90,6 +99,9 @@ export const getOnboardingContext = cache(async () => {
     documents: documentSnapshots,
     presentationLength: artisan.presentation?.trim().length ?? 0,
     hasAvatar: avatarPath !== null,
+    subscriptionActive: subscriptionGrantsAccess(
+      (subscription?.status as SubscriptionStatus | undefined) ?? null,
+    ),
   };
 
   return {
@@ -97,6 +109,7 @@ export const getOnboardingContext = cache(async () => {
     userId: auth.claims.sub,
     artisan,
     avatarPath,
+    subscription,
     documents: documentList,
     photos: photos.data ?? [],
     canSubmit: canSubmitOnboarding(snapshot),

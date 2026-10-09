@@ -36,6 +36,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
     reviews,
     tradeRef,
     workTypeRef,
+    subscription,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -67,6 +68,11 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       .order("created_at", { ascending: false }),
     supabase.from("trades").select("code, label"),
     supabase.from("work_types").select("code, label"),
+    supabase
+      .from("subscriptions")
+      .select("plan_code, status, trial_end, current_period_end")
+      .eq("artisan_id", id)
+      .maybeSingle(),
   ]);
 
   const docs = documents.data ?? [];
@@ -294,6 +300,18 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
             </ul>
           )}
         </div>
+      </Section>
+
+      <Section title={t.subscription}>
+        {subscription.data ? (
+          <p>
+            {subscription.data.plan_code ?? "—"} · {subscription.data.status}
+            {subscription.data.trial_end &&
+              ` · essai jusqu'au ${day.format(new Date(subscription.data.trial_end))}`}
+          </p>
+        ) : (
+          <p className="text-muted-foreground">{t.noSubscription}</p>
+        )}
       </Section>
 
       <Section title={t.decision}>

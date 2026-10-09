@@ -18,6 +18,7 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import { getOnboardingContext } from "./context";
@@ -316,4 +317,45 @@ export async function submitOnboarding(): Promise<FormState> {
   const { error } = await supabase.rpc("submit_artisan_onboarding");
   refresh();
   return error ? { error: t.submit.error } : {};
+}
+
+type BillingStatus = keyof typeof t.plans.errors | "ok";
+
+async function invokeBilling(
+  fn: "billing-checkout" | "billing-portal",
+  body: Record<string, unknown>,
+) {
+  const { supabase } = await getOnboardingContext();
+  const { data, error } = await supabase.functions.invoke<{ status: BillingStatus; url?: string }>(
+    fn,
+    {
+      method: "POST",
+      body: { ...body, origin: env.NEXT_PUBLIC_SITE_URL },
+    },
+  );
+  if (data?.status === "ok" && data.url) return { url: data.url };
+  let status: BillingStatus = data?.status ?? "unavailable";
+  if (error instanceof FunctionsHttpError) {
+    const parsed = (await error.context.json().catch(() => null)) as { status?: string } | null;
+    status =
+      parsed?.status && parsed.status in t.plans.errors
+        ? (parsed.status as BillingStatus)
+        : "unavailable";
+  }
+  return { error: t.plans.errors[status === "ok" ? "unavailable" : status] };
+}
+
+/** Ouvre Stripe Checkout pour la formule choisie (web uniquement, CLAUDE.md règle 10). */
+export async function startCheckout(_prev: FormState, formData: FormData): Promise<FormState> {
+  const plan = z.enum(["base", "premium", "entreprise"]).safeParse(text(formData, "plan"));
+  if (!plan.success) return { error: t.plans.errors.plan_unavailable };
+  const result = await invokeBilling("billing-checkout", { plan: plan.data });
+  if ("url" in result && result.url) redirect(result.url as Route);
+  return { error: result.error };
+}
+
+export async function openBillingPortal(): Promise<FormState> {
+  const result = await invokeBilling("billing-portal", {});
+  if ("url" in result && result.url) redirect(result.url as Route);
+  return { error: result.error };
 }
