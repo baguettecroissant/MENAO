@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ROLES, isAdmin, isRole, isStaff, roleFromAppMetadata } from "../src/roles";
+import {
+  ROLES,
+  homePathForRole,
+  isAdmin,
+  isRole,
+  isStaff,
+  roleFromAppMetadata,
+} from "../src/roles";
 
 describe("rôles", () => {
   it("liste les six rôles de la spécification (§3)", () => {
@@ -42,5 +49,15 @@ describe("roleFromAppMetadata", () => {
     expect(roleFromAppMetadata(undefined)).toBe("visiteur");
     expect(roleFromAppMetadata({})).toBe("visiteur");
     expect(roleFromAppMetadata({ role: "root" })).toBe("visiteur");
+  });
+});
+
+describe("homePathForRole", () => {
+  it("envoie les artisans vers leur onboarding, les autres vers leur espace", () => {
+    expect(homePathForRole("artisan_en_attente")).toBe("/pro/onboarding");
+    expect(homePathForRole("artisan")).toBe("/pro/onboarding");
+    expect(homePathForRole("particulier")).toBe("/mon-espace");
+    expect(homePathForRole("admin")).toBe("/mon-espace");
+    expect(homePathForRole("visiteur")).toBe("/connexion");
   });
 });
