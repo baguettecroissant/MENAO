@@ -25,7 +25,7 @@ test("inscription, confirmation de l'e-mail, déconnexion puis connexion", async
   await page.getByLabel("Adresse e-mail").fill(email);
   await page.getByLabel("Mot de passe").fill(password);
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page.getByRole("alert")).toContainText("Confirmez d'abord votre adresse e-mail");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("Confirmez d'abord votre adresse e-mail");
 
   await page.goto(await authLinkFor(request, email));
   await expect(page).toHaveURL(/\/mon-espace$/);
@@ -47,7 +47,7 @@ test("connexion par lien magique d'un compte existant (seed)", async ({ page, re
   await page.goto("/connexion/lien-magique");
   await page.getByLabel("Adresse e-mail").fill("support@example.test");
   await page.getByRole("button", { name: "Recevoir mon lien" }).click();
-  await expect(page.getByRole("status")).toContainText("Si un compte existe");
+  await expect(page.getByRole("main").getByRole("status")).toContainText("Si un compte existe");
 
   await page.goto(await authLinkFor(request, "support@example.test"));
   await expect(page).toHaveURL(/\/mon-espace$/);
@@ -58,7 +58,7 @@ test("le lien magique ne crée pas de compte et ne révèle rien", async ({ page
   await page.goto("/connexion/lien-magique");
   await page.getByLabel("Adresse e-mail").fill(`inconnu-${Date.now()}@example.test`);
   await page.getByRole("button", { name: "Recevoir mon lien" }).click();
-  await expect(page.getByRole("status")).toContainText("Si un compte existe");
+  await expect(page.getByRole("main").getByRole("status")).toContainText("Si un compte existe");
 });
 
 test("connexion du compte particulier du seed et retour vers la page demandée", async ({
@@ -79,7 +79,7 @@ test("mauvais mot de passe : message générique", async ({ page }) => {
   await page.getByLabel("Adresse e-mail").fill("particulier@example.test");
   await page.getByLabel("Mot de passe").fill("pas-le-bon-mot-de-passe");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page.getByRole("alert")).toHaveText("Adresse e-mail ou mot de passe incorrect.");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText("Adresse e-mail ou mot de passe incorrect.");
 });
 
 test("redirection ouverte refusée après connexion", async ({ page }) => {
