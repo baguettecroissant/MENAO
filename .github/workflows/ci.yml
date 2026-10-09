@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, typecheck, tests unitaires
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  database:
+    name: Base de données (migrations, RLS pgTAP, types)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Démarrer Postgres (migrations + seed)
+        run: pnpm exec supabase db start
+      - name: Tests pgTAP
+        run: pnpm exec supabase test db
+      - name: Vérifier que les types générés sont à jour
+        run: |
+          pnpm db:types
+          git diff --exit-code packages/db/src/types.ts
+      - name: Publier les types générés (en cas d'écart)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: packages/db/src/types.ts
