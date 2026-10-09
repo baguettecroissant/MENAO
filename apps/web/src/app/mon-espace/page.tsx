@@ -38,6 +38,10 @@ export default async function MySpacePage() {
           </button>
         </form>
       </div>
+      <dl>
+        <dt className="text-sm text-muted-foreground">{fr.mySpace.role}</dt>
+        <dd className="font-medium">{fr.roles[role]}</dd>
+      </dl>
       <MyRequests supabase={supabase} />
     </main>
   );

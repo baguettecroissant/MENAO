@@ -18,16 +18,24 @@ export function SelectionBar({ formId, slots }: { formId: string; slots: number 
   useEffect(() => {
     const form = document.getElementById(formId) as HTMLFormElement | null;
     if (!form) return;
+    // Les cases sont rattachées par l'attribut `form` (hors de l'arbre du formulaire) :
+    // form.elements les inclut, et leurs événements remontent jusqu'au document.
     const boxes = () =>
-      Array.from(form.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name="artisan"]'));
+      Array.from(form.elements).filter(
+        (el): el is HTMLInputElement =>
+          el instanceof HTMLInputElement && el.type === "checkbox" && el.name === "artisan",
+      );
     const update = () => {
       const checked = boxes().filter((b) => b.checked).length;
       setCount(checked);
       for (const box of boxes()) box.disabled = !box.checked && checked >= max;
     };
+    const onChange = (e: Event) => {
+      if (e.target instanceof HTMLInputElement && e.target.form === form) update();
+    };
     update();
-    form.addEventListener("change", update);
-    return () => form.removeEventListener("change", update);
+    document.addEventListener("change", onChange);
+    return () => document.removeEventListener("change", onChange);
   }, [formId, max]);
 
   return (
