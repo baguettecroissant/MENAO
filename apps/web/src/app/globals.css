@@ -4,5 +4,42 @@
 @layer base {
   body {
     @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "ss01";
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  ::selection {
+    @apply bg-primary-soft text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Fond crème des pages de parcours (maquettes). */
+  .bg-cream {
+    background-color: var(--color-background);
+  }
+  @keyframes menao-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.06);
+      opacity: 0.85;
+    }
+  }
+  .animate-menao-pulse {
+    animation: menao-pulse 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-menao-pulse,
+    .animate-spin,
+    .animate-pulse {
+      animation: none;
+    }
   }
 }
