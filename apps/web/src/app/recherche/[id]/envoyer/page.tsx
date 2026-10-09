@@ -1,12 +1,16 @@
 import { roleFromAppMetadata } from "@menao/core";
 import { artisanSelectionSchema } from "@menao/validation";
+import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArtisanAvatar } from "@/components/project/artisan-avatar";
+import { ProjectSummaryCard } from "@/components/project/project-summary-card";
+import { SelectedArtisansCard } from "@/components/project/selected-artisans-card";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { matchArtisans, publicUrl } from "@/lib/project/artisans";
 import { joinNames } from "@/lib/project/names";
+import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
 import { AccountStep } from "./account-step";
 import { RequestForm } from "./request-form";
@@ -71,13 +75,7 @@ export default async function SendRequestPage({
 
   let form;
   if (anonymous) {
-    form = (
-      <>
-        <h2 className="text-xl font-semibold">{t.accountTitle}</h2>
-        <p className="text-muted-foreground">{t.accountIntro}</p>
-        <AccountStep context={context} />
-      </>
-    );
+    form = <AccountStep context={context} />;
   } else if (roleFromAppMetadata(auth.claims.app_metadata) !== "particulier") {
     form = <Alert tone="error">{t.notParticulier}</Alert>;
   } else {
@@ -89,44 +87,54 @@ export default async function SendRequestPage({
     form = (
       <RequestForm
         context={context}
+        names={names}
         email={auth.claims.email ?? ""}
         phone={profile?.phone ?? null}
       />
     );
   }
 
+  const summary = await getProjectSummary(supabase, id);
+  const r = fr.search.results;
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 lg:flex-row lg:items-start">
-      <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:w-80 lg:shrink-0">
-        <section
-          aria-label={t.selected}
-          className="rounded-card border border-border bg-surface p-4"
-        >
-          <h2 className="mb-3 font-semibold">{t.selected}</h2>
-          <ul className="flex flex-col gap-3">
-            {chosen.map((a) => (
-              <li key={a.artisan_id} className="flex items-center gap-3">
-                <ArtisanAvatar
-                  url={a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null}
-                  name={a.display_name}
-                />
-                <span className="font-medium">{a.display_name}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section
-          aria-label={t.project}
-          className="rounded-card border border-border bg-surface p-4"
-        >
-          <h2 className="mb-2 font-semibold">{t.project}</h2>
-          <p className="text-muted-foreground">{project.summary ?? project.description}</p>
-          {project.ville_nom && <p className="mt-2 text-sm">{project.ville_nom}</p>}
-        </section>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col gap-4 rounded-card border border-border bg-surface p-5 sm:p-8">
-        <h1 className="text-2xl font-bold">{t.title(names)}</h1>
-        {form}
+    <main className="bg-background">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[17.5rem_1fr]">
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
+          <SelectedArtisansCard
+            editHref={`/recherche/${id}/artisans`}
+            artisans={chosen.map((a) => ({
+              id: a.artisan_id,
+              name: a.display_name,
+              photoUrl: a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null,
+              trade: summary?.trade
+                ? `${summary.trade}${a.experience_years !== null ? ` · ${r.experience(a.experience_years)}` : ""}`
+                : null,
+              zone:
+                a.zone_mode === "rayon" && a.zone_radius_km
+                  ? r.zoneRadius(a.zone_radius_km, a.zone_city)
+                  : r.zoneCommunes(a.zone_communes),
+              availableNow: a.available_now,
+            }))}
+          />
+          {summary && <ProjectSummaryCard summary={summary} />}
+        </aside>
+        <div className="flex min-w-0 flex-col gap-6">
+          <Link
+            href={`/recherche/${id}/artisans` as Route}
+            className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            {t.back}
+          </Link>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+              {anonymous ? t.accountTitle : t.title(names)}
+            </h1>
+            <p className="text-sm text-muted-foreground">{anonymous ? t.accountIntro : t.intro}</p>
+          </div>
+          {form}
+        </div>
       </div>
     </main>
   );

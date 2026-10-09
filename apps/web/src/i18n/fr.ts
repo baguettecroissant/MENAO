@@ -20,6 +20,11 @@ export const fr = {
     menu: "Menu",
     main: "Navigation principale",
   },
+  form: {
+    // Sans « mot de passe » : le libellé du champ doit rester unique (accessibilité, tests).
+    showPassword: "Afficher la saisie",
+    hidePassword: "Masquer la saisie",
+  },
   footer: {
     tagline: "Les artisans du bâtiment vérifiés, du premier contact à la réception du chantier.",
     trades: "Artisans à Nice",
@@ -473,25 +478,50 @@ export const fr = {
     },
     request: {
       title: (names: string) => `Envoyez votre demande de chantier à ${names}`,
+      intro:
+        "Assurez-vous que toutes les informations relatives à votre chantier sont correctes, et ajoutez un message personnalisé si vous le souhaitez.",
+      back: "Retour",
       accountTitle: "Dernière étape avant d'envoyer votre demande",
       accountIntro:
-        "Créez votre compte MENAO (ou connectez-vous) : vous suivrez vos demandes et vos chantiers depuis votre espace.",
-      tabSignUp: "Créer mon compte",
-      tabSignIn: "J'ai déjà un compte",
-      signUpSubmit: "Créer mon compte et continuer",
+        "Créez votre espace Menao pour envoyer votre demande. Vous pourrez ensuite suivre l'intégralité de vos travaux depuis votre tableau de bord : réponses des artisans, devis, planning et échanges.",
+      personalTitle: "Informations personnelles",
+      personalIntro:
+        "Menao a besoin d'en savoir un peu plus sur vous avant de vous mettre en relation avec un artisan.",
+      phoneHint: "Recommandé pour être rappelé rapidement par l'artisan.",
+      spaceTitle: "Créer mon espace client Menao",
+      spaceIntro:
+        "Votre espace client Menao vous permettra de rechercher des artisans, d'échanger avec eux, de suivre vos chantiers et de recevoir vos devis.",
+      passwordHint: "Doit contenir au moins 12 caractères.",
+      free: "La création d'espace client Menao et la mise en relation avec un artisan sont 100 % gratuites.",
+      signUpSubmit: "Créer mon espace et continuer",
+      haveAccountTitle: "Vous avez déjà un espace Menao ?",
+      haveAccountText: "Connectez-vous et accédez à vos demandes et à vos chantiers.",
+      haveAccountButton: "Me connecter à mon espace",
+      signInTitle: "Me connecter à mon espace",
       signInSubmit: "Me connecter et continuer",
+      backToSignUp: "Créer un espace client",
       checkEmail:
         "Nous venons de vous envoyer un e-mail de confirmation. Cliquez sur le lien qu'il contient : vous reviendrez ici pour envoyer votre demande.",
-      selected: "Artisans sélectionnés",
+      selected: "Artisan sélectionné",
+      selectedMany: "Artisans sélectionnés",
+      changeSelection: "Modifier",
       project: "Votre projet",
-      message: "Votre message (facultatif)",
-      messageHint:
-        "Précisez ce qui vous semble utile : accès, contraintes, questions… (10 000 caractères au plus).",
-      contact: "Vos coordonnées",
-      contactHint: "Elles ne seront communiquées qu'aux artisans qui acceptent votre demande.",
-      email: "Adresse e-mail",
+      messageTitle: "Ajouter un message personnalisé",
+      messageIntro: (names: string) =>
+        `Ajoutez un message personnalisé à votre demande : cela pourrait aider ${names} pour le chantier et la réalisation du devis.`,
+      messageAdd: "Ajouter un message personnalisé",
+      messageRemove: "Ne pas ajouter de message personnalisé",
+      message: "Votre message",
+      messageCount: (n: number) => `${n.toLocaleString("fr-FR")} / 10 000 caractères max.`,
+      contactTitle: "Vérifiez vos coordonnées",
+      contactIntro:
+        "Vous suivrez l'évolution du projet dans votre espace Menao ; l'artisan pourra aussi vous contacter par téléphone ou par e-mail. Vérifiez qu'elles sont exactes : elles ne sont transmises qu'aux artisans qui acceptent votre demande.",
+      email: "E-mail",
       phone: "Téléphone",
-      callback: "Quand préférez-vous être rappelé ?",
+      callbackTitle: "Quand souhaitez-vous être recontacté ?",
+      callbackIntro: (names: string) =>
+        `Indiquez votre préférence afin de permettre à ${names} de vous recontacter quand vous le souhaitez.`,
+      callback: "Préférence de rappel",
       callbackAsap: "Dès que possible",
       callbackRange: "Indiquer une plage horaire",
       from: "À partir de",
@@ -503,10 +533,15 @@ export const fr = {
         "Nous n'avons pas pu rattacher votre projet à votre compte. Recommencez votre recherche depuis l'accueil.",
       notParticulier: "Connectez-vous avec un compte particulier pour envoyer une demande.",
       sentTitle: (names: string) => `Votre demande est envoyée à ${names} !`,
-      sentCallbackAsap: "Vous serez rappelé dès que possible.",
-      sentCallbackRange: (from: string, to: string) => `Vous serez rappelé entre ${from} et ${to}.`,
-      sentNext:
-        "Chaque artisan a 48 heures pour accepter. Vous recevrez ses coordonnées dès qu'il accepte.",
+      sentText: (names: string, many: boolean) =>
+        many
+          ? `${names} ont bien reçu votre demande dans leur espace Menao. Chacun a 48 heures pour l'accepter.`
+          : `${names} a bien reçu votre demande dans son espace Menao. Il a 48 heures pour l'accepter.`,
+      reminder: "Rappel",
+      sentCallbackAsap: "Vous avez demandé à être rappelé dès que possible.",
+      sentCallbackRange: (from: string, to: string) =>
+        `Vous avez indiqué être joignable par téléphone entre ${from} et ${to}.`,
+      sentNext: "Vous recevrez les coordonnées de chaque artisan dès qu'il accepte votre demande.",
       follow: "Suivre ma demande depuis mon espace",
     },
     profile: {
@@ -565,6 +600,7 @@ export const fr = {
     firstName: "Prénom",
     lastName: "Nom",
     phone: "Téléphone (optionnel)",
+    optional: "(optionnel)",
     phoneHint: "Indicatif +33 par défaut.",
     email: "Adresse e-mail",
     password: "Mot de passe",
@@ -619,8 +655,14 @@ export const fr = {
   },
   myRequests: {
     title: "Mes demandes",
+    inProgress: "Mes projets en cours",
+    closed: "Demandes terminées",
     empty: "Vous n'avez pas encore envoyé de demande.",
-    newSearch: "Décrire un nouveau projet",
+    emptyHint:
+      "Décrivez votre projet : nous vous proposons des artisans vérifiés près de chez vous.",
+    newSearch: "Démarrer un projet",
+    countActive: (n: number) => (n <= 1 ? `${n} demande en cours` : `${n} demandes en cours`),
+    countAccepted: (n: number) => (n <= 1 ? `${n} artisan a accepté` : `${n} artisans ont accepté`),
     status: {
       envoyee: "En attente de réponse",
       acceptee: "Acceptée",
@@ -630,11 +672,15 @@ export const fr = {
     },
     timeLeft: (h: number, m: number) =>
       `Réponse attendue sous ${h} h ${String(m).padStart(2, "0")}`,
+    yourArtisans: "Vos artisans",
     contact: "Coordonnées de l'artisan",
+    call: "Appeler",
     chooseAnother: "Choisir un autre artisan",
+    seeArtisans: "Voir les artisans",
   },
   mySpace: {
     greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName}` : "Bonjour"),
+    subtitle: "Suivez vos demandes et vos chantiers Menao, en toute simplicité.",
     role: "Type de compte",
     signOut: "Me déconnecter",
   },
