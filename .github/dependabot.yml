@@ -19,6 +19,9 @@ updates:
         update-types: [version-update:semver-major]
       - dependency-name: "@eslint/js"
         update-types: [version-update:semver-major]
+      # Les types Node suivent la version de Node du projet (.nvmrc : 22).
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
