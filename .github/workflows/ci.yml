@@ -49,10 +49,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Démarrer Postgres (migrations + seed)
+        id: db
         run: pnpm exec supabase db start
       - name: Tests pgTAP
         run: pnpm exec supabase test db
       - name: Vérifier que les types générés sont à jour
+        # Même si des tests pgTAP échouent : les types restent utiles pour avancer.
+        if: ${{ !cancelled() && steps.db.outcome == 'success' }}
         run: |
           pnpm db:types
           git diff --exit-code packages/db/src/types.ts

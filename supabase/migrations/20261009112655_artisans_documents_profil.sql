@@ -130,14 +130,14 @@ begin
 
   if not (a.sirene_checked_at is not null and a.sirene_active and a.raison_sociale is not null
           and a.assujetti_tva is not null) then
-    v_missing := v_missing || 'entreprise';
+    v_missing := array_append(v_missing, 'entreprise');
   end if;
   if not exists (select 1 from public.artisan_trades t where t.artisan_id = a.id) then
-    v_missing := v_missing || 'metiers';
+    v_missing := array_append(v_missing, 'metiers');
   end if;
   if not ((a.zone_mode = 'rayon' and a.base_location is not null and a.radius_km is not null)
           or (a.zone_mode = 'communes' and exists (select 1 from public.artisan_zones z where z.artisan_id = a.id))) then
-    v_missing := v_missing || 'zone';
+    v_missing := array_append(v_missing, 'zone');
   end if;
   if (
     select count(*) from public.artisan_documents d
@@ -147,11 +147,11 @@ begin
       or (d.type = 'identite' and (d.date_fin is null or d.date_fin >= current_date))
     )
   ) < 4 then
-    v_missing := v_missing || 'documents';
+    v_missing := array_append(v_missing, 'documents');
   end if;
   if not (char_length(coalesce(a.presentation, '')) >= 100
           and exists (select 1 from public.profiles p where p.user_id = a.user_id and p.avatar_path is not null)) then
-    v_missing := v_missing || 'profil';
+    v_missing := array_append(v_missing, 'profil');
   end if;
 
   if cardinality(v_missing) > 0 then
