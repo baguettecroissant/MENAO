@@ -1,7 +1,7 @@
 -- RLS de profiles et legal_acceptances, avec un utilisateur de chaque rôle (CLAUDE.md).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(21);
 
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'rls.a@example.test', '{}',
@@ -13,10 +13,10 @@ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'rls.admin@example.test', '{"role":"admin"}', '{}');
 
 -- Simule un utilisateur connecté (claims identiques à ceux d'un JWT Supabase).
-create function pg_temp.connecter(uid uuid, app_role text, user_meta jsonb default '{}')
+create function pg_temp.connecter(uid uuid, app_role text, user_meta jsonb default '{}', aal text default 'aal1')
 returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
-    'sub', uid, 'role', 'authenticated',
+    'sub', uid, 'role', 'authenticated', 'aal', aal,
     'app_metadata', jsonb_build_object('role', app_role),
     'user_metadata', user_meta
   )::text, true);
@@ -144,9 +144,20 @@ select is_empty(
   'support : ne peut pas modifier le profil d''un utilisateur'
 );
 
--- ---------- Admin ----------
+-- ---------- Admin sans double authentification (aal1) : aucun droit admin ----------
 reset role;
 select pg_temp.connecter('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'admin');
+set local role authenticated;
+
+select results_eq(
+  'select user_id from public.profiles',
+  $$ values ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid) $$,
+  'admin sans double authentification : ne voit que son profil'
+);
+
+-- ---------- Admin (aal2) ----------
+reset role;
+select pg_temp.connecter('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'admin', '{}', 'aal2');
 set local role authenticated;
 
 select is(
