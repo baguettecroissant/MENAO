@@ -390,7 +390,8 @@ export async function saveAvailability(_prev: FormState, formData: FormData): Pr
   const { supabase } = await getOnboardingContext();
   const { error } = await supabase.rpc("set_artisan_availability", {
     p_paused: formData.get("paused") === "on",
-    p_available_from: from ?? undefined,
+    // null : disponible tout de suite (les types générés ne marquent pas le paramètre nullable).
+    p_available_from: (from ?? null) as string,
   });
   if (error) return { error: fr.errors.generic };
   refresh();

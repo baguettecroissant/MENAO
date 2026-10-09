@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import type { createClient } from "@/lib/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
