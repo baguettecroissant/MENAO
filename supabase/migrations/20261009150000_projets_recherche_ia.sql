@@ -213,13 +213,17 @@ declare
   v_today date := (now() at time zone 'Europe/Paris')::date;
   v_rooms text[] := coalesce(p_room_codes, '{}');
   v_works text[] := coalesce(p_work_type_codes, '{}');
+  v_current public.projects;
+  v_keep_location boolean;
 begin
-  if not exists (
-    select 1 from public.projects
-    where id = p_project_id and user_id = auth.uid() and status in ('brouillon', 'criteres_valides')
-  ) then
+  select * into v_current from public.projects
+  where id = p_project_id and user_id = auth.uid() and status in ('brouillon', 'criteres_valides');
+  if not found then
     raise exception 'Projet introuvable ou non modifiable' using errcode = '42501';
   end if;
+  -- Adresse inchangée : les coordonnées déjà enregistrées sont conservées.
+  v_keep_location := p_lon is null and p_adresse is not null
+    and p_adresse = v_current.adresse and p_ville_code_insee = v_current.ville_code_insee;
 
   if p_trade_code is not null
     and not exists (select 1 from public.trades where code = p_trade_code and active) then
@@ -242,7 +246,8 @@ begin
     raise exception 'Travaux incompatibles avec le métier' using errcode = '22023';
   end if;
 
-  if p_adresse is not null and (p_ville_code_insee is null or p_lon is null or p_lat is null) then
+  if p_adresse is not null and not v_keep_location
+    and (p_ville_code_insee is null or p_lon is null or p_lat is null) then
     raise exception 'Adresse non géocodée' using errcode = '22023';
   end if;
   if p_lon is not null and (p_lon not between -180 and 180 or p_lat not between -90 and 90) then
@@ -265,7 +270,8 @@ begin
     code_postal = case when p_ville_code_insee is not null then p_code_postal end,
     adresse = nullif(btrim(p_adresse), ''),
     location = case
-      when p_lon is not null and p_lat is not null
+      when v_keep_location then v_current.location
+      when p_adresse is not null and p_lon is not null and p_lat is not null
         then extensions.st_setsrid(extensions.st_makepoint(p_lon, p_lat), 4326)::extensions.geography
     end,
     date_mode = coalesce(p_date_mode, 'inconnue'),

@@ -9,6 +9,7 @@ import {
   needAnalysisJsonSchema,
   needHelpLevel,
   normalizeNeedAnalysis,
+  parisToday,
   scrubPersonalData,
 } from "../src/project";
 
@@ -128,5 +129,12 @@ describe("normalisation de l'analyse IA (F-06)", () => {
     expect(schema.properties.metier).toEqual({
       anyOf: [{ type: "string", enum: ref.trades }, { type: "null" }],
     });
+  });
+});
+
+describe("date du jour à Paris", () => {
+  it("bascule à minuit heure de Paris, pas UTC", () => {
+    expect(parisToday(new Date("2026-10-09T21:30:00Z"))).toBe("2026-10-09");
+    expect(parisToday(new Date("2026-10-09T22:30:00Z"))).toBe("2026-10-10");
   });
 });

@@ -10,6 +10,11 @@ export type SurfaceTranche = (typeof SURFACE_TRANCHES)[number];
 export const DATE_SOUHAIT_MODES = ["des_que_possible", "date", "inconnue"] as const;
 export type DateSouhaitMode = (typeof DATE_SOUHAIT_MODES)[number];
 
+/** Date du jour à Paris, au format AAAA-MM-JJ (dates de début de chantier). */
+export function parisToday(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(now);
+}
+
 export const PROJECT_TEXT_MAX_LENGTH = 5000;
 export const MAX_PROJECT_PHOTOS = 10;
 /** Durée maximale d'une dictée (F-05 côté particulier ; F-19 : 2 min côté artisan). */

@@ -69,6 +69,14 @@ select results_eq(
   $$ values (array['cuisine'], array['recherche-fuite'], 'Nice'::text, 'date'::text, true) $$,
   'critères enregistrés, pièces dédoublonnées, adresse géocodée');
 
+select lives_ok(
+  $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'plombier', 'appartement',
+       array['cuisine'], array['recherche-fuite'], 'moins_10', '06088', 'Nice', '06000',
+       '1 Rue de l''Exemple 06000 Nice', null, null, 'date', current_date + 7) $$,
+  'adresse inchangée : enregistrement sans nouvelles coordonnées');
+select ok((select location is not null from public.projects where id = 'f1f1f1f1-0000-4000-8000-000000000001'),
+  'coordonnées de l''adresse conservées');
+
 select throws_ok(
   $$ select public.save_project_criteria('f1f1f1f1-0000-4000-8000-000000000001', 'astronaute', null,
        null, null, null, null, null, null, null, null, null, 'inconnue', null) $$,

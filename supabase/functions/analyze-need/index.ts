@@ -10,6 +10,7 @@ import {
   analysisNeedsFallback,
   needAnalysisJsonSchema,
   normalizeNeedAnalysis,
+  parisToday,
   scrubPersonalData,
   type NeedCriteria,
   type NeedReferentials,
@@ -42,10 +43,6 @@ type Referentials = NeedReferentials & {
   workTypeLabels: (Labeled & { trade: string })[];
   roomLabels: Labeled[];
 };
-
-function parisToday(): string {
-  return new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date());
-}
 
 function systemPrompt(ref: Referentials): string {
   const lines = (items: Labeled[]) => items.map((i) => `- ${i.code} : ${i.label}`).join("\n");

@@ -19,6 +19,8 @@ export const messages = {
   tooMany: "Trop d'éléments sélectionnés.",
   kbisTooOld: "Le Kbis (ou l'extrait INSEE/RNE) doit dater de moins de 3 mois.",
   dateInFuture: "Cette date ne peut pas être dans le futur.",
+  dateInPast: "La date de début ne peut pas être passée.",
+  addressOutsideCity: "Choisissez une adresse située dans la ville indiquée.",
   presentationTooShort: "Présentez-vous en au moins 100 caractères.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",

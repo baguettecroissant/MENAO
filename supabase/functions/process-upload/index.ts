@@ -1,8 +1,9 @@
-// Edge Function process-upload (F-14, F-43) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-43) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { MAX_PROJECT_PHOTOS } from "../../../packages/core/src/project.ts";
 import {
   MAX_UPLOAD_BYTES,
   MIME_TYPES,
@@ -21,10 +22,11 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   document: ["pdf", "jpeg", "png"],
   avatar: ["jpeg", "png"],
   portfolio: ["jpeg", "png"],
+  project_photo: ["jpeg", "png"],
 };
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
-type Purpose = "document" | "avatar" | "portfolio";
+type Purpose = "document" | "avatar" | "portfolio" | "project_photo";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -73,6 +75,7 @@ Deno.serve(async (req) => {
     purpose?: string;
     path?: string;
     document?: DocumentInput;
+    projectId?: string;
   } | null;
   const purpose = body?.purpose as Purpose | undefined;
   const path = body?.path ?? "";
@@ -108,6 +111,9 @@ Deno.serve(async (req) => {
     const file = { bytes, type, name: `${crypto.randomUUID()}.${EXTENSIONS[type]}` };
 
     if (purpose === "avatar") return await saveAvatar(admin, user.id, file);
+    if (purpose === "project_photo") {
+      return await saveProjectPhoto(admin, user.id, body?.projectId, file);
+    }
 
     const { data: artisan } = await admin
       .from("artisans")
@@ -150,6 +156,41 @@ async function saveAvatar(admin: SupabaseClient, userId: string, file: CleanFile
     .eq("user_id", userId);
   if (error) throw error;
   if (previous?.avatar_path) await admin.storage.from("avatars").remove([previous.avatar_path]);
+  return respond("ok");
+}
+
+// Photos du projet d'un particulier (F-05, F-07), session anonyme comprise.
+async function saveProjectPhoto(
+  admin: SupabaseClient,
+  userId: string,
+  projectId: string | undefined,
+  file: CleanFile,
+) {
+  if (!projectId || !new RegExp(`^${UUID}$`).test(projectId)) return respond("invalid", 400);
+  const { data: project } = await admin
+    .from("projects")
+    .select("id, status")
+    .eq("id", projectId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!project) return respond("forbidden", 403);
+  if (project.status !== "brouillon" && project.status !== "criteres_valides") {
+    return respond("locked", 409);
+  }
+  const { count } = await admin
+    .from("project_photos")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", projectId);
+  if ((count ?? 0) >= MAX_PROJECT_PHOTOS) return respond("limit", 409);
+  const path = `${projectId}/${file.name}`;
+  await store(admin, "project-photos", path, file);
+  const { error } = await admin
+    .from("project_photos")
+    .insert({ project_id: projectId, storage_path: path, sort_order: count ?? 0 });
+  if (error) {
+    await admin.storage.from("project-photos").remove([path]);
+    throw error;
+  }
   return respond("ok");
 }
 
