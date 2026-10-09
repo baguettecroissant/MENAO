@@ -82,8 +82,10 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
   const label = (ref: { code: string; label: string }[] | null, code: string) =>
     ref?.find((r) => r.code === code)?.label ?? code;
   const pending = artisan.status === "en_verification";
+  // Documents examinables : dossier en vérification, ou renouvellement d'un artisan validé/suspendu.
+  const reviewable = pending || artisan.status === "valide" || artisan.status === "suspendu";
   const allDocsValid = REQUIRED_DOCUMENT_TYPES.every((type) => {
-    const d = docs.find((x) => x.type === type);
+    const d = docs.find((x) => x.type === type && x.status === "valide");
     return (
       d?.status === "valide" &&
       documentIsValid(type, {
@@ -108,6 +110,8 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
         <h1 className="text-2xl font-bold">{name}</h1>
         <span className="rounded-chip bg-primary-soft px-3 py-1 text-sm text-primary">
           {fr.admin.statuses[artisan.status]}
+          {artisan.suspension_reason &&
+            ` — ${t.suspensionReasons[artisan.suspension_reason as keyof typeof t.suspensionReasons]}`}
         </span>
       </div>
 
@@ -201,49 +205,61 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       <Section title={t.documents}>
         <ul className="flex flex-col gap-4">
           {REQUIRED_DOCUMENT_TYPES.map((type) => {
-            const d = docs.find((x) => x.type === type);
-            const url = d ? urlByPath.get(d.storage_path) : undefined;
+            const rows = docs.filter((x) => x.type === type && x.status !== "remplace");
             return (
               <li
                 key={type}
                 aria-label={docT.types[type]}
-                className="flex flex-col gap-2 rounded-button border border-border p-3"
+                className="flex flex-col gap-3 rounded-button border border-border p-3"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium">{docT.types[type]}</span>
-                  <span className="text-sm">{d ? docT.statuses[d.status] : t.docMissing}</span>
-                </div>
-                {d && (
-                  <p className="text-sm text-muted-foreground">
-                    {[
-                      d.assureur,
-                      d.numero,
-                      d.couverture,
-                      d.date_emission && docT.issuedOn(day.format(new Date(d.date_emission))),
-                      d.date_fin && docT.validUntil(day.format(new Date(d.date_fin))),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                    {url && (
-                      <>
-                        {" "}
-                        ·{" "}
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-medium text-primary underline"
-                        >
-                          {docT.view}
-                        </a>
-                      </>
-                    )}
-                  </p>
-                )}
-                {d?.refusal_reason && (
-                  <p className="text-sm text-danger">{docT.refusedBecause(d.refusal_reason)}</p>
-                )}
-                {d && pending && <DocumentReview documentId={d.id} artisanId={artisan.id} />}
+                <span className="font-medium">{docT.types[type]}</span>
+                {rows.length === 0 && <span className="text-sm">{t.docMissing}</span>}
+                {rows.map((d) => {
+                  const url = urlByPath.get(d.storage_path);
+                  return (
+                    <div key={d.id} className="flex flex-col gap-2">
+                      <p className="text-sm">
+                        <span className="font-medium">
+                          {docT.statuses[d.status as keyof typeof docT.statuses]}
+                        </span>
+                        {" · "}
+                        <span className="text-muted-foreground">
+                          {[
+                            d.assureur,
+                            d.numero,
+                            d.couverture,
+                            d.date_emission && docT.issuedOn(day.format(new Date(d.date_emission))),
+                            d.date_fin && docT.validUntil(day.format(new Date(d.date_fin))),
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                        {url && (
+                          <>
+                            {" "}
+                            ·{" "}
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-primary underline"
+                            >
+                              {docT.view}
+                            </a>
+                          </>
+                        )}
+                      </p>
+                      {d.refusal_reason && (
+                        <p className="text-sm text-danger">
+                          {docT.refusedBecause(d.refusal_reason)}
+                        </p>
+                      )}
+                      {reviewable && d.status === "en_attente" && (
+                        <DocumentReview documentId={d.id} artisanId={artisan.id} />
+                      )}
+                    </div>
+                  );
+                })}
               </li>
             );
           })}

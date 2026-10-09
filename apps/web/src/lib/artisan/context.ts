@@ -59,14 +59,20 @@ export const getOnboardingContext = cache(async () => {
     supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
   ]);
 
-  const documentList = documents.data ?? [];
-  const documentSnapshots: Partial<Record<RequiredDocumentType, DocumentSnapshot>> =
-    Object.fromEntries(
-      documentList.map((d) => [
-        d.type,
-        { status: d.status, dateEmission: d.date_emission, dateFin: d.date_fin },
-      ]),
-    );
+  // Les documents archivés (« remplace ») ne comptent plus. Par type : le document validé en
+  // cours s'il existe, sinon celui en cours d'examen.
+  const documentList = (documents.data ?? []).filter(
+    (d): d is typeof d & { status: DocumentSnapshot["status"] } => d.status !== "remplace",
+  );
+  const rank = (status: string) => (status === "valide" ? 0 : status === "en_attente" ? 1 : 2);
+  const documentSnapshots: Partial<Record<RequiredDocumentType, DocumentSnapshot>> = {};
+  for (const d of [...documentList].sort((a, b) => rank(b.status) - rank(a.status))) {
+    documentSnapshots[d.type] = {
+      status: d.status,
+      dateEmission: d.date_emission,
+      dateFin: d.date_fin,
+    };
+  }
   const avatarPath = profile.data?.avatar_path ?? null;
 
   const tradeCodes = (trades.data ?? []).map((t) => t.trade_code);

@@ -336,6 +336,7 @@ export type Database = {
           siret: string | null;
           status: Database["public"]["Enums"]["artisan_status"];
           submitted_at: string | null;
+          suspension_reason: string | null;
           tva_intracom: string | null;
           updated_at: string;
           user_id: string;
@@ -369,6 +370,7 @@ export type Database = {
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
           submitted_at?: string | null;
+          suspension_reason?: string | null;
           tva_intracom?: never;
           updated_at?: string;
           user_id: string;
@@ -401,6 +403,7 @@ export type Database = {
           siret?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
           submitted_at?: string | null;
+          suspension_reason?: string | null;
           tva_intracom?: never;
           updated_at?: string;
           user_id?: string;
@@ -725,7 +728,7 @@ export type Database = {
         | "qualisol"
         | "qualibois"
         | "autre";
-      document_status: "en_attente" | "valide" | "refuse";
+      document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       review_decision: "valide" | "refuse" | "complement";
@@ -856,7 +859,7 @@ export const Constants = {
         "qualibois",
         "autre",
       ],
-      document_status: ["en_attente", "valide", "refuse"],
+      document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       review_decision: ["valide", "refuse", "complement"],

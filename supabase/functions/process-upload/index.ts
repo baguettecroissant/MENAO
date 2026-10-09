@@ -174,8 +174,12 @@ async function saveDocument(
   file: CleanFile,
   doc: DocumentInput | undefined,
 ) {
-  // Documents figés pendant la vérification ; renouvellements gérés avec le back-office (F-51).
-  if (artisan.status !== "brouillon" && artisan.status !== "refuse") return respond("locked", 409);
+  // Brouillon ou refus : le dépôt remplace le document du même type. Artisan validé ou suspendu :
+  // c'est un renouvellement (F-51), le document validé en cours est conservé jusqu'à la
+  // validation du nouveau. Pendant la vérification du dossier, les documents sont figés.
+  const onboarding = artisan.status === "brouillon" || artisan.status === "refuse";
+  const renewal = artisan.status === "valide" || artisan.status === "suspendu";
+  if (!onboarding && !renewal) return respond("locked", 409);
   if (!doc || !DOCUMENT_TYPES.has(doc.type)) return respond("invalid", 400);
 
   const path = `${artisan.id}/${doc.type}-${file.name}`;
@@ -186,8 +190,16 @@ async function saveDocument(
     .select("id, storage_path")
     .eq("artisan_id", artisan.id)
     .eq("type", doc.type)
-    .maybeSingle();
-  if (previous) await admin.from("artisan_documents").delete().eq("id", previous.id);
+    .in("status", onboarding ? ["en_attente", "refuse", "valide"] : ["en_attente", "refuse"]);
+  if (previous?.length) {
+    await admin
+      .from("artisan_documents")
+      .delete()
+      .in(
+        "id",
+        previous.map((p) => p.id),
+      );
+  }
 
   const { error } = await admin.from("artisan_documents").insert({
     artisan_id: artisan.id,
@@ -205,6 +217,8 @@ async function saveDocument(
     await admin.storage.from("artisan-documents").remove([path]);
     throw error;
   }
-  if (previous) await admin.storage.from("artisan-documents").remove([previous.storage_path]);
+  if (previous?.length) {
+    await admin.storage.from("artisan-documents").remove(previous.map((p) => p.storage_path));
+  }
   return respond("ok");
 }
