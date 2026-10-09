@@ -24,6 +24,7 @@ const vide: ArtisanOnboardingSnapshot = {
   presentationLength: 0,
   hasAvatar: false,
   subscriptionActive: false,
+  connectChargesEnabled: false,
 };
 
 const entrepriseOk = {
@@ -35,8 +36,8 @@ const entrepriseOk = {
 };
 
 describe("étapes d'onboarding (F-14)", () => {
-  it("toutes les étapes disponibles sauf « paiements » (Stripe Connect, à venir)", () => {
-    expect(ONBOARDING_STEPS.filter((s) => !s.available).map((s) => s.key)).toEqual(["paiements"]);
+  it("les 7 étapes sont disponibles", () => {
+    expect(ONBOARDING_STEPS.every((s) => s.available)).toBe(true);
   });
 
   it("liste les 7 étapes de la spec, dans l'ordre", () => {
@@ -167,6 +168,12 @@ describe("profil public et envoi en vérification", () => {
     expect(canSubmitOnboarding(complet, today)).toBe(true);
     expect(canSubmitOnboarding({ ...complet, tradeCount: 0 }, today)).toBe(false);
     expect(firstIncompleteStep(complet, today)).toBe("paiements");
+  });
+
+  it("étape « paiements » terminée quand le compte Stripe peut encaisser", () => {
+    expect(onboardingProgress({ ...complet, connectChargesEnabled: true }, today).paiements).toBe(
+      true,
+    );
   });
 
   it("étape « formule » terminée avec un abonnement actif", () => {
