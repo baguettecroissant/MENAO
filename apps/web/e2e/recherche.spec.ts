@@ -21,7 +21,7 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
 }) => {
   test.setTimeout(90_000);
   await mockGeocoding(page);
-  await page.goto("/");
+  await page.goto("/recherche");
 
   const submit = page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" });
   await expect(submit).toBeDisabled();
@@ -39,7 +39,7 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
     "Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement. Rappelez-moi au 06 00 00 00 00.",
   );
   await expect(page.getByText("nous avons de quoi trouver votre artisan idéal")).toBeVisible();
-  await page.getByLabel("Ajouter des photos").setInputFiles(files.png);
+  await page.getByLabel("Joindre des photos").setInputFiles(files.png);
   await expect(page.getByRole("button", { name: "Retirer la photo 1" })).toBeVisible();
 
   await submit.click();
@@ -49,11 +49,11 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
   ).toBeVisible();
 
   const trade = page.getByRole("region", { name: "Artisan recherché" });
-  await expect(trade.getByText("Plombier")).toBeVisible();
+  await expect(trade.getByLabel("Métier")).toHaveValue("plombier");
   const site = page.getByRole("region", { name: "Informations sur le chantier" });
-  await expect(
-    site.getByText(/Appartement · Cuisine · Recherche et réparation de fuite/),
-  ).toBeVisible();
+  for (const tag of ["En appartement", "Recherche et réparation de fuite", "Cuisine", "< 10 m²"]) {
+    await expect(site.getByText(tag, { exact: true })).toBeVisible();
+  }
   const address = page.getByRole("region", { name: "Adresse" });
   await expect(address.getByText("Nice (06000)")).toBeVisible();
   const photos = page.getByRole("region", { name: "Photos supplémentaires" });
@@ -61,30 +61,27 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
 
   // Adresse exacte, proposée parmi les adresses de la ville choisie.
   await address.getByRole("button", { name: "Modifier : Adresse" }).click();
-  await address
-    .getByRole("combobox", { name: "Adresse exacte (facultatif)" })
-    .fill("1 rue de l'Exemple");
+  await address.getByRole("combobox", { name: "Adresse exacte" }).fill("1 rue de l'Exemple");
   await address.getByRole("option", { name: "1 Rue de l'Exemple 06000 Nice" }).click();
   await address.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(address.getByText("Nice (06000) — 1 Rue de l'Exemple 06000 Nice")).toBeVisible();
+  await expect(address.getByText("1 Rue de l'Exemple 06000 Nice")).toBeVisible();
 
   // Date : passée refusée, future acceptée.
   const date = page.getByRole("region", { name: "Date de début souhaitée" });
   await expect(date.getByText("Dès que possible")).toBeVisible(); // urgence détectée
   await date.getByRole("button", { name: "Modifier : Date de début souhaitée" }).click();
   await date.getByLabel("Préciser une date").check();
-  await date.getByLabel("Date de début").fill(dates.yesterday);
+  await date.getByLabel("Date de début", { exact: true }).fill(dates.yesterday);
   await date.getByRole("button", { name: "Enregistrer" }).click();
   await expect(date.getByText("La date de début ne peut pas être passée.")).toBeVisible();
-  await date.getByLabel("Date de début").fill(dates.inTwoWeeks);
+  await date.getByLabel("Date de début", { exact: true }).fill(dates.inTwoWeeks);
   await date.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Critères enregistrés.")).toBeVisible();
 
-  // Le changement de métier retire les travaux d'un autre métier.
-  await trade.getByRole("button", { name: "Modifier : Artisan recherché" }).click();
+  // Le métier est enregistré dès qu'il change ; les travaux d'un autre métier sont retirés.
   await trade.getByLabel("Métier").selectOption("carreleur");
-  await trade.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(site.getByText("Appartement · Cuisine · Moins de 10 m²")).toBeVisible();
+  await expect(site.getByText("Recherche et réparation de fuite")).toHaveCount(0);
+  await expect(site.getByText("Cuisine", { exact: true })).toBeVisible();
 
   // Un autre visiteur ne voit pas ce projet.
   const projectUrl = page.url();
@@ -94,7 +91,10 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
   await expect(otherPage).toHaveURL(/\/$/);
   await other.close();
 
+  await photos.getByRole("button", { name: "Modifier : Photos supplémentaires" }).click();
   await photos.getByRole("button", { name: /Supprimer/ }).click();
+  await expect(photos.getByRole("img")).toHaveCount(0);
+  await photos.getByRole("button", { name: "Terminer" }).click();
   await expect(photos.getByText("Aucune photo.")).toBeVisible();
 
   // Carreleur : aucun artisan dans le jeu de données → état vide et dossier envoyé à MENAO.
@@ -104,6 +104,7 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
     page.getByRole("heading", { name: "Aucun artisan disponible pour l'instant" }),
   ).toBeVisible();
   const ticket = page.getByRole("region", { name: "Vous ne trouvez pas votre artisan idéal ?" });
+  await ticket.getByRole("button", { name: "Envoyer mon dossier à MENAO" }).click();
   await ticket.getByLabel("Votre message (facultatif)").fill("Carrelage de cuisine, environ 8 m².");
   await ticket.getByLabel("Votre adresse e-mail").fill("visiteur@example.test");
   await ticket.getByRole("button", { name: "Envoyer mon dossier à MENAO" }).click();
@@ -114,32 +115,32 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
   page,
 }) => {
   test.setTimeout(60_000);
-  await page.goto("/");
+  await page.goto("/recherche");
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Je suis hésitant, il faudrait rafraîchir le salon.");
   await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await expect(
-    page.getByRole("region", { name: "Artisan recherché" }).getByText("Peintre"),
-  ).toBeVisible();
+    page.getByRole("region", { name: "Artisan recherché" }).getByLabel("Métier"),
+  ).toHaveValue("peintre");
   // Ville inconnue : la recherche ne peut pas encore être lancée.
   await expect(page.getByRole("button", { name: "Trouver l'artisan idéal" })).toBeDisabled();
 
-  await page.goto("/");
+  await page.goto("/recherche");
   await page.getByLabel("Décrivez votre projet").fill("Panne de chaudière.");
-  await page.getByRole("button", { name: "Plombier", exact: true }).click();
+  await page.getByRole("button", { name: "Plomberie" }).click();
   await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await expect(page.getByText("Nous n'avons pas pu analyser votre description")).toBeVisible();
   // Le métier choisi avec les puces est conservé.
   await expect(
-    page.getByRole("region", { name: "Artisan recherché" }).getByText("Plombier"),
-  ).toBeVisible();
+    page.getByRole("region", { name: "Artisan recherché" }).getByLabel("Métier"),
+  ).toHaveValue("plombier");
 });
 
 test("une session anonyme n'ouvre pas l'espace client", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/recherche");
   await page.getByLabel("Décrivez votre projet").fill("Fuite dans la cuisine à Nice.");
   await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
