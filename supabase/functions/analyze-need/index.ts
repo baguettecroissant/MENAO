@@ -19,6 +19,7 @@ import {
 import { llmConfig, logAiRuns, withinHourlyLimits, type AiRun } from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { geocodeAddress, geocodeCommune } from "../_shared/geocoding.ts";
+import { withCors } from "../_shared/cors.ts";
 
 const MAX_PER_HOUR = 20;
 
@@ -169,115 +170,117 @@ async function analyze(
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method !== "POST") return new Response(null, { status: 405 });
+Deno.serve(
+  withCors(async (req) => {
+    if (req.method !== "POST") return new Response(null, { status: 405 });
 
-  const admin = adminClient();
-  const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  const { data: userData } = token ? await admin.auth.getUser(token) : { data: null };
-  const user = userData?.user;
-  if (!user) return json({ status: "forbidden" }, 401);
+    const admin = adminClient();
+    const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+    const { data: userData } = token ? await admin.auth.getUser(token) : { data: null };
+    const user = userData?.user;
+    if (!user) return json({ status: "forbidden" }, 401);
 
-  const body = (await req.json().catch(() => null)) as {
-    description?: unknown;
-    tradeHint?: unknown;
-  } | null;
-  const description = typeof body?.description === "string" ? body.description.trim() : "";
-  if (description.length === 0 || description.length > PROJECT_TEXT_MAX_LENGTH) {
-    return json({ status: "invalid" }, 400);
-  }
-
-  if (
-    !(await withinHourlyLimits(admin, "analyze-need", user.id, req, MAX_PER_HOUR, MAX_PER_HOUR))
-  ) {
-    return json({ status: "rate_limited" }, 429);
-  }
-
-  try {
-    const ref = await loadReferentials(admin);
-    const tradeHint =
-      typeof body?.tradeHint === "string" && ref.trades.includes(body.tradeHint)
-        ? body.tradeHint
-        : null;
-    const today = parisToday();
-
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("first_name, last_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const clean = scrub(description, [profile?.first_name ?? null, profile?.last_name ?? null]);
-    const userContent = [
-      `Date du jour : ${today}.`,
-      tradeHint ? `Métier choisi par le particulier : ${tradeHint}.` : null,
-      `<description>\n${clean}\n</description>`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    const runs: AiRun[] = [];
-    let best: Attempt = null;
-    const llm = llmConfig();
-    if (llm) {
-      const system = systemPrompt(ref);
-      const schema = needAnalysisJsonSchema(ref);
-      const call = (model: string) =>
-        analyze(llm.client, model, system, schema, userContent, ref, today, tradeHint, runs);
-      best = await call(llm.primary);
-      if (!best || analysisNeedsFallback(best.criteria)) {
-        const second = await call(llm.fallback);
-        if (
-          second &&
-          (!best ||
-            (second.criteria.tradeCode !== null && best.criteria.tradeCode === null) ||
-            second.criteria.confiance > best.criteria.confiance)
-        ) {
-          best = second;
-        }
-      }
-    } else {
-      console.error("analyze-need : aucune clé de modèle configurée");
+    const body = (await req.json().catch(() => null)) as {
+      description?: unknown;
+      tradeHint?: unknown;
+    } | null;
+    const description = typeof body?.description === "string" ? body.description.trim() : "";
+    if (description.length === 0 || description.length > PROJECT_TEXT_MAX_LENGTH) {
+      return json({ status: "invalid" }, 400);
     }
 
-    const c = best?.criteria;
-    const commune = c?.ville ? await geocodeCommune(c.ville, c.codePostal) : null;
-    const address = commune && c?.adresse ? await geocodeAddress(c.adresse, commune.code) : null;
+    if (
+      !(await withinHourlyLimits(admin, "analyze-need", user.id, req, MAX_PER_HOUR, MAX_PER_HOUR))
+    ) {
+      return json({ status: "rate_limited" }, 429);
+    }
 
-    const { data: project, error } = await admin
-      .from("projects")
-      .insert({
-        user_id: user.id,
-        description,
-        ai_analysis: best?.raw ?? null,
-        ai_model: best?.model ?? null,
-        ai_confidence: c ? Math.round(c.confiance * 100) / 100 : null,
-        analyzed_at: best ? new Date().toISOString() : null,
-        summary: c?.summary ?? null,
-        trade_code: c?.tradeCode ?? tradeHint,
-        lieu_type: c?.lieuType ?? null,
-        room_codes: c?.roomCodes ?? [],
-        work_type_codes: c?.workTypeCodes ?? [],
-        surface: c?.surface ?? null,
-        ville_code_insee: commune?.code ?? null,
-        ville_nom: commune?.nom ?? null,
-        code_postal: commune?.postcode ?? null,
-        adresse: address?.label ?? null,
-        location: address ? `SRID=4326;POINT(${address.lon} ${address.lat})` : null,
-        date_mode: c?.dateMode ?? "inconnue",
-        date_souhaitee: c?.dateSouhaitee ?? null,
-        urgence: c?.urgence ?? false,
-      })
-      .select("id")
-      .single();
-    if (error || !project) throw error ?? new Error("projet non créé");
+    try {
+      const ref = await loadReferentials(admin);
+      const tradeHint =
+        typeof body?.tradeHint === "string" && ref.trades.includes(body.tradeHint)
+          ? body.tradeHint
+          : null;
+      const today = parisToday();
 
-    await logAiRuns(
-      admin,
-      runs.map((r) => ({ ...r, project_id: project.id as string })),
-    );
-    return json({ status: "ok", projectId: project.id, analysed: best !== null });
-  } catch (error) {
-    console.error("analyze-need : erreur", error instanceof Error ? error.name : "");
-    return json({ status: "unavailable" }, 503);
-  }
-});
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const clean = scrub(description, [profile?.first_name ?? null, profile?.last_name ?? null]);
+      const userContent = [
+        `Date du jour : ${today}.`,
+        tradeHint ? `Métier choisi par le particulier : ${tradeHint}.` : null,
+        `<description>\n${clean}\n</description>`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const runs: AiRun[] = [];
+      let best: Attempt = null;
+      const llm = llmConfig();
+      if (llm) {
+        const system = systemPrompt(ref);
+        const schema = needAnalysisJsonSchema(ref);
+        const call = (model: string) =>
+          analyze(llm.client, model, system, schema, userContent, ref, today, tradeHint, runs);
+        best = await call(llm.primary);
+        if (!best || analysisNeedsFallback(best.criteria)) {
+          const second = await call(llm.fallback);
+          if (
+            second &&
+            (!best ||
+              (second.criteria.tradeCode !== null && best.criteria.tradeCode === null) ||
+              second.criteria.confiance > best.criteria.confiance)
+          ) {
+            best = second;
+          }
+        }
+      } else {
+        console.error("analyze-need : aucune clé de modèle configurée");
+      }
+
+      const c = best?.criteria;
+      const commune = c?.ville ? await geocodeCommune(c.ville, c.codePostal) : null;
+      const address = commune && c?.adresse ? await geocodeAddress(c.adresse, commune.code) : null;
+
+      const { data: project, error } = await admin
+        .from("projects")
+        .insert({
+          user_id: user.id,
+          description,
+          ai_analysis: best?.raw ?? null,
+          ai_model: best?.model ?? null,
+          ai_confidence: c ? Math.round(c.confiance * 100) / 100 : null,
+          analyzed_at: best ? new Date().toISOString() : null,
+          summary: c?.summary ?? null,
+          trade_code: c?.tradeCode ?? tradeHint,
+          lieu_type: c?.lieuType ?? null,
+          room_codes: c?.roomCodes ?? [],
+          work_type_codes: c?.workTypeCodes ?? [],
+          surface: c?.surface ?? null,
+          ville_code_insee: commune?.code ?? null,
+          ville_nom: commune?.nom ?? null,
+          code_postal: commune?.postcode ?? null,
+          adresse: address?.label ?? null,
+          location: address ? `SRID=4326;POINT(${address.lon} ${address.lat})` : null,
+          date_mode: c?.dateMode ?? "inconnue",
+          date_souhaitee: c?.dateSouhaitee ?? null,
+          urgence: c?.urgence ?? false,
+        })
+        .select("id")
+        .single();
+      if (error || !project) throw error ?? new Error("projet non créé");
+
+      await logAiRuns(
+        admin,
+        runs.map((r) => ({ ...r, project_id: project.id as string })),
+      );
+      return json({ status: "ok", projectId: project.id, analysed: best !== null });
+    } catch (error) {
+      console.error("analyze-need : erreur", error instanceof Error ? error.name : "");
+      return json({ status: "unavailable" }, 503);
+    }
+  }),
+);

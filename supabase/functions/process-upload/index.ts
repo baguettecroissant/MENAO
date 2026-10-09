@@ -11,6 +11,7 @@ import {
   stripImageMetadata,
   type DetectedFileType,
 } from "../../../packages/core/src/files.ts";
+import { withCors } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -61,77 +62,81 @@ const isoDate = (v: unknown): string | null =>
 const shortText = (v: unknown, max: number): string | null =>
   typeof v === "string" && v.trim() !== "" ? v.trim().slice(0, max) : null;
 
-Deno.serve(async (req) => {
-  if (req.method !== "POST") return new Response(null, { status: 405 });
+Deno.serve(
+  withCors(async (req) => {
+    if (req.method !== "POST") return new Response(null, { status: 405 });
 
-  const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  if (!token) return respond("forbidden", 401);
-  const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const { data: userData } = await admin.auth.getUser(token);
-  const user = userData?.user;
-  if (!user) return respond("forbidden", 403);
+    const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+    if (!token) return respond("forbidden", 401);
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+    const { data: userData } = await admin.auth.getUser(token);
+    const user = userData?.user;
+    if (!user) return respond("forbidden", 403);
 
-  const body = (await req.json().catch(() => null)) as {
-    purpose?: string;
-    path?: string;
-    document?: DocumentInput;
-    projectId?: string;
-  } | null;
-  const purpose = body?.purpose as Purpose | undefined;
-  const path = body?.path ?? "";
-  if (!purpose || !(purpose in ALLOWED) || !new RegExp(`^${user.id}/${UUID}$`).test(path)) {
-    return respond("invalid", 400);
-  }
+    const body = (await req.json().catch(() => null)) as {
+      purpose?: string;
+      path?: string;
+      document?: DocumentInput;
+      projectId?: string;
+    } | null;
+    const purpose = body?.purpose as Purpose | undefined;
+    const path = body?.path ?? "";
+    if (!purpose || !(purpose in ALLOWED) || !new RegExp(`^${user.id}/${UUID}$`).test(path)) {
+      return respond("invalid", 400);
+    }
 
-  const { data: allowed } = await admin.rpc("consume_rate_limit", {
-    p_key: `process-upload:${user.id}`,
-    p_max: MAX_UPLOADS_PER_HOUR,
-    p_window_seconds: 3600,
-  });
-  if (allowed !== true) {
-    await admin.storage.from("uploads").remove([path]);
-    return respond("rate_limited", 429);
-  }
+    const { data: allowed } = await admin.rpc("consume_rate_limit", {
+      p_key: `process-upload:${user.id}`,
+      p_max: MAX_UPLOADS_PER_HOUR,
+      p_window_seconds: 3600,
+    });
+    if (allowed !== true) {
+      await admin.storage.from("uploads").remove([path]);
+      return respond("rate_limited", 429);
+    }
 
-  try {
-    const { data: blob, error: downloadError } = await admin.storage.from("uploads").download(path);
-    if (downloadError || !blob) return respond("not_found", 404);
-    if (blob.size > MAX_UPLOAD_BYTES) return respond("too_large", 413);
+    try {
+      const { data: blob, error: downloadError } = await admin.storage
+        .from("uploads")
+        .download(path);
+      if (downloadError || !blob) return respond("not_found", 404);
+      if (blob.size > MAX_UPLOAD_BYTES) return respond("too_large", 413);
 
-    let bytes: Uint8Array = new Uint8Array(await blob.arrayBuffer());
-    const type = detectFileType(bytes);
-    if (!type || !ALLOWED[purpose].includes(type)) return respond("invalid_type", 415);
-    if (type !== "pdf") {
-      try {
-        bytes = stripImageMetadata(bytes, type);
-      } catch {
-        return respond("invalid_type", 415);
+      let bytes: Uint8Array = new Uint8Array(await blob.arrayBuffer());
+      const type = detectFileType(bytes);
+      if (!type || !ALLOWED[purpose].includes(type)) return respond("invalid_type", 415);
+      if (type !== "pdf") {
+        try {
+          bytes = stripImageMetadata(bytes, type);
+        } catch {
+          return respond("invalid_type", 415);
+        }
       }
+      const file = { bytes, type, name: `${crypto.randomUUID()}.${EXTENSIONS[type]}` };
+
+      if (purpose === "avatar") return await saveAvatar(admin, user.id, file);
+      if (purpose === "project_photo") {
+        return await saveProjectPhoto(admin, user.id, body?.projectId, file);
+      }
+
+      const { data: artisan } = await admin
+        .from("artisans")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!artisan) return respond("forbidden", 403);
+
+      return purpose === "portfolio"
+        ? await savePortfolioPhoto(admin, artisan.id, file)
+        : await saveDocument(admin, artisan, file, body?.document);
+    } catch (error) {
+      console.error("process-upload : erreur", error instanceof Error ? error.name : "");
+      return respond("unavailable", 503);
+    } finally {
+      await admin.storage.from("uploads").remove([path]);
     }
-    const file = { bytes, type, name: `${crypto.randomUUID()}.${EXTENSIONS[type]}` };
-
-    if (purpose === "avatar") return await saveAvatar(admin, user.id, file);
-    if (purpose === "project_photo") {
-      return await saveProjectPhoto(admin, user.id, body?.projectId, file);
-    }
-
-    const { data: artisan } = await admin
-      .from("artisans")
-      .select("id, status")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!artisan) return respond("forbidden", 403);
-
-    return purpose === "portfolio"
-      ? await savePortfolioPhoto(admin, artisan.id, file)
-      : await saveDocument(admin, artisan, file, body?.document);
-  } catch (error) {
-    console.error("process-upload : erreur", error instanceof Error ? error.name : "");
-    return respond("unavailable", 503);
-  } finally {
-    await admin.storage.from("uploads").remove([path]);
-  }
-});
+  }),
+);
 
 type CleanFile = { bytes: Uint8Array; type: DetectedFileType; name: string };
 
