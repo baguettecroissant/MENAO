@@ -59,3 +59,43 @@ jobs:
         with:
           name: database-types
           path: packages/db/src/types.ts
+
+  e2e:
+    name: Bout en bout (inscription, connexion)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Démarrer Supabase local (Postgres, Auth, API, Mailpit)
+        run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+      - name: Variables d'environnement de l'application
+        run: |
+          STATUS=$(pnpm exec supabase status -o json)
+          {
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r '.API_URL' <<<"$STATUS")"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r '.PUBLISHABLE_KEY // .ANON_KEY' <<<"$STATUS")"
+            echo "MAILPIT_URL=$(jq -r '.MAILPIT_URL // .INBUCKET_URL // "http://127.0.0.1:54324"' <<<"$STATUS")"
+          } >> "$GITHUB_ENV"
+      - name: Installer Chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
+      - name: Build
+        run: pnpm --filter web build
+      - name: Tests Playwright
+        run: pnpm --filter web test:e2e
+      - name: Rapport Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7
