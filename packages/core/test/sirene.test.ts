@@ -8,8 +8,8 @@ function reponse(
   return {
     header: { statut: 200, message: "ok" },
     etablissement: {
-      siren: "999000011",
-      siret: "99900001100018",
+      siren: "000000018",
+      siret: "00000001800010",
       statutDiffusionEtablissement: "O",
       etablissementSiege: true,
       uniteLegale: {
@@ -49,8 +49,8 @@ function reponse(
 describe("parseSireneEtablissement", () => {
   it("lit une entreprise active et diffusible", () => {
     expect(parseSireneEtablissement(reponse())).toEqual({
-      siret: "99900001100018",
-      siren: "999000011",
+      siret: "00000001800010",
+      siren: "000000018",
       active: true,
       partialDiffusion: false,
       raisonSociale: "ELECTRICITE EXEMPLE",

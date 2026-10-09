@@ -9,14 +9,14 @@ import {
 } from "../src/artisan";
 import { messages } from "../src/messages";
 
-// Données fictives : SIRET préfixe 999, domaine .test, numéro ARCEP fiction.
+// Données fictives : SIRET inexistant dans Sirene (vérifié : 404), domaine .test, numéro ARCEP fiction.
 const signup = {
   firstName: "Camille",
   lastName: "Exemple",
   phone: "06 39 98 00 02",
   email: "pro@example.test",
   password: "correct-horse-battery",
-  siret: "999 000 011 00018",
+  siret: "000 000 018 00010",
   acceptTerms: true,
   acceptCgv: true,
   marketingOptIn: false,
@@ -25,7 +25,7 @@ const signup = {
 describe("artisanSignUpSchema", () => {
   it("accepte une inscription valide et normalise SIRET et téléphone", () => {
     const r = artisanSignUpSchema.parse(signup);
-    expect(r.siret).toBe("99900001100018");
+    expect(r.siret).toBe("00000001800010");
     expect(r.phone).toBe("+33639980002");
   });
 
@@ -35,7 +35,7 @@ describe("artisanSignUpSchema", () => {
   });
 
   it("SIRET avec mauvaise clé refusé", () => {
-    const r = artisanSignUpSchema.safeParse({ ...signup, siret: "99900001100019" });
+    const r = artisanSignUpSchema.safeParse({ ...signup, siret: "00000001800011" });
     expect(r.error?.issues[0]?.message).toBe(messages.siretInvalid);
   });
 

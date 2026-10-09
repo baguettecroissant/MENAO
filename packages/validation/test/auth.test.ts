@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { magicLinkSchema, normalizePhone, signInSchema, signUpSchema } from "../src/auth";
 import { messages } from "../src/messages";
 
-// Données fictives uniquement : domaine réservé .test, numéro de la tranche ARCEP fiction (06 39 98).
+// Données fictives uniquement : domaine réservé .test, numéros des tranches fiction ARCEP (06 39 98) et Ofcom (07700 900).
 const valid = {
   firstName: "  Camille ",
   lastName: "Exemple",
@@ -64,7 +64,7 @@ describe("normalizePhone", () => {
     ["06.39.98.00.01", "+33639980001"],
     ["+33 6 39 98 00 01", "+33639980001"],
     ["0033639980001", "+33639980001"],
-    ["+377 99 99 00 00", "+37799990000"],
+    ["+44 7700 900123", "+447700900123"],
   ])("%s → %s", (input, expected) => {
     expect(normalizePhone(input)).toBe(expected);
   });

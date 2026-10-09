@@ -23,8 +23,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000001'::uuid, 'particulier@example.test', 'particulier', 'Camille', 'Exemple', null),
   ('a0000000-0000-4000-8000-000000000002'::uuid, 'support@example.test', 'support', 'Sacha', 'Support', null),
   ('a0000000-0000-4000-8000-000000000003'::uuid, 'admin@example.test', 'admin', 'Alex', 'Admin', null),
-  -- Artisan en cours d'onboarding (SIRET fictif, préfixe 999).
-  ('a0000000-0000-4000-8000-000000000004'::uuid, 'artisan@example.test', 'artisan_en_attente', 'Dominique', 'Artisan', '99900003700013')
+  -- Artisan en cours d'onboarding (SIRET fictif, inexistant dans Sirene (vérifié : 404)).
+  ('a0000000-0000-4000-8000-000000000004'::uuid, 'artisan@example.test', 'artisan_en_attente', 'Dominique', 'Artisan', '00000003400017')
 ) as u (id, email, role, first_name, last_name, siret);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)

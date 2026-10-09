@@ -1,5 +1,5 @@
 -- F-14 : inscription artisan, fiche artisan, référentiels, étapes 1 à 3, Sirene, limitation de débit.
--- SIRET fictifs (préfixe 999) ; La Poste : identifiant public.
+-- SIRET fictifs (inexistants dans Sirene, vérifié via l'API : 404) ; La Poste : identifiant public.
 begin;
 create extension if not exists pgtap with schema extensions;
 select * from no_plan();
@@ -7,12 +7,12 @@ select * from no_plan();
 -- Utilisateurs fictifs
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('a1a1a1a1-0000-4000-8000-000000000001', 'art.a1@example.test', '{}',
-   '{"account_type":"artisan","siret":"99900001100018","phone":"+33639980002",
+   '{"account_type":"artisan","siret":"00000001800010","phone":"+33639980002",
      "legal":{"cgu":"v1","confidentialite":"v1","cgv_artisan":"v1"}}'),
   ('a2a2a2a2-0000-4000-8000-000000000002', 'art.a2@example.test', '{}',
-   '{"account_type":"artisan","siret":"99900002900010"}'),
+   '{"account_type":"artisan","siret":"00000002600013"}'),
   ('a3a3a3a3-0000-4000-8000-000000000003', 'art.a3@example.test', '{}',
-   '{"account_type":"artisan","siret":"99900001100018"}'),
+   '{"account_type":"artisan","siret":"00000001800010"}'),
   ('a4a4a4a4-0000-4000-8000-000000000004', 'art.a4@example.test', '{}',
    '{"account_type":"artisan","siret":"12345678901234"}'),
   ('b0b0b0b0-0000-4000-8000-000000000005', 'part.p@example.test', '{}',
@@ -34,7 +34,7 @@ select is(
   'particulier', 'account_type « admin » → particulier (seules deux issues possibles)');
 select results_eq(
   $$ select siret, status::text from public.artisans where user_id = 'a1a1a1a1-0000-4000-8000-000000000001' $$,
-  $$ values ('99900001100018'::text, 'brouillon'::text) $$,
+  $$ values ('00000001800010'::text, 'brouillon'::text) $$,
   'fiche artisan créée en brouillon avec le SIRET saisi');
 select is(
   (select siret from public.artisans where user_id = 'a3a3a3a3-0000-4000-8000-000000000003'),
@@ -55,11 +55,11 @@ select is(
 
 -- ---------- Fonctions utilitaires ----------
 select ok(
-  app.is_valid_siret('99900001100018') and app.is_valid_siret('35600000000048')
-    and app.is_valid_siret('35600000049837') and not app.is_valid_siret('99900001100019')
+  app.is_valid_siret('00000001800010') and app.is_valid_siret('35600000000048')
+    and app.is_valid_siret('35600000049837') and not app.is_valid_siret('00000001800011')
     and not app.is_valid_siret('123') and not app.is_valid_siret(null),
   'is_valid_siret : Luhn, exception La Poste, formats invalides');
-select is(app.french_vat_number('999000011'), 'FR66999000011', 'TVA intracommunautaire déduite du SIREN');
+select is(app.french_vat_number('000000018'), 'FR66000000018', 'TVA intracommunautaire déduite du SIREN');
 
 -- Données de départ pour A2 (écrites directement, hors RLS).
 insert into public.artisan_trades (artisan_id, trade_code)
@@ -69,7 +69,7 @@ insert into public.artisan_trades (artisan_id, trade_code)
 set local role service_role;
 
 select public.record_sirene_result(
-  (select id from public.artisans where user_id = 'a1a1a1a1-0000-4000-8000-000000000001'), '99900001100018',
+  (select id from public.artisans where user_id = 'a1a1a1a1-0000-4000-8000-000000000001'), '00000001800010',
   '{"active":true,"partialDiffusion":false,"raisonSociale":"ELECTRICITE EXEMPLE","formeJuridiqueCode":"5499",
     "apeCode":"43.21A","adresse":{"ligne":"12 AV DES EXEMPLES","codePostal":"06000","commune":"NICE","codeInsee":"06088"}}');
 select results_eq(
@@ -79,14 +79,14 @@ select results_eq(
   'résultat Sirene enregistré, APE 43.21A reconnu bâtiment');
 
 select public.record_sirene_result(
-  (select id from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'), '99900002900010',
+  (select id from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'), '00000002600013',
   '{"active":true,"partialDiffusion":false,"raisonSociale":"CONSEIL EXEMPLE","apeCode":"62.01Z","adresse":{}}');
 select is(
   (select ape_eligible from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'),
   false, 'APE 62.01Z hors bâtiment : signalé (pas de refus)');
 
 select public.record_sirene_result(
-  (select id from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'), '99900099900099',
+  (select id from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'), '00000009999999',
   '{"active":false,"raisonSociale":"AUTRE"}');
 select is(
   (select raison_sociale from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'),
@@ -118,13 +118,13 @@ select throws_ok($$ update public.artisans set sirene_active = true $$, '42501',
 select throws_ok($$ update public.artisans set raison_sociale = 'Autre nom' $$, '42501', null,
   'artisan : raison sociale Sirene non modifiable (diffusion complète)');
 
-update public.artisans set siret = '99900004500016', assujetti_tva = true;
+update public.artisans set siret = '00000004200010', assujetti_tva = true;
 select results_eq(
   $$ select siret, raison_sociale, sirene_checked_at, tva_intracom from public.artisans $$,
-  $$ values ('99900004500016'::text, null::text, null::timestamptz, 'FR71999000045'::text) $$,
+  $$ values ('00000004200010'::text, null::text, null::timestamptz, 'FR41000000042'::text) $$,
   'nouveau SIRET en brouillon : données Sirene effacées, TVA recalculée');
 
-select throws_ok($$ update public.artisans set siret = '99900001100019' $$, '23514', null,
+select throws_ok($$ update public.artisans set siret = '00000001800011' $$, '23514', null,
   'SIRET invalide refusé par la base');
 
 select lives_ok(
@@ -190,13 +190,13 @@ reset role;
 update public.artisans set status = 'en_verification' where user_id = 'a2a2a2a2-0000-4000-8000-000000000002';
 select pg_temp.connecter('a2a2a2a2-0000-4000-8000-000000000002', 'artisan_en_attente');
 set local role authenticated;
-select throws_ok($$ update public.artisans set siret = '99900005200012' $$, '42501', null,
+select throws_ok($$ update public.artisans set siret = '00000005900014' $$, '42501', null,
   'SIRET non modifiable après envoi en vérification');
 reset role;
 
 set local role service_role;
 select public.record_sirene_result(
-  (select id from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'), '99900002900010',
+  (select id from public.artisans where user_id = 'a2a2a2a2-0000-4000-8000-000000000002'), '00000002600013',
   '{"active":true,"partialDiffusion":true,"raisonSociale":null,"apeCode":"43.34Z","adresse":{"commune":"NICE"}}');
 reset role;
 select pg_temp.connecter('a2a2a2a2-0000-4000-8000-000000000002', 'artisan_en_attente');
