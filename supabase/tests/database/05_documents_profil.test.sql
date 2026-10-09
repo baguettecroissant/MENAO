@@ -9,9 +9,9 @@ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('d3d3d3d3-0000-4000-8000-000000000003', 'doc.sup@example.test', '{"role":"support"}', '{}'),
   ('d4d4d4d4-0000-4000-8000-000000000004', 'doc.adm@example.test', '{"role":"admin"}', '{}');
 
-create function pg_temp.connecter(uid uuid, app_role text) returns void language sql as $$
+create function pg_temp.connecter(uid uuid, app_role text, aal text default 'aal1') returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
-    'sub', uid, 'role', 'authenticated', 'app_metadata', jsonb_build_object('role', app_role)
+    'sub', uid, 'role', 'authenticated', 'aal', aal, 'app_metadata', jsonb_build_object('role', app_role)
   )::text, true);
 $$;
 
@@ -118,7 +118,7 @@ select is_empty(
 reset role;
 
 -- ---------- Admin ----------
-select pg_temp.connecter('d4d4d4d4-0000-4000-8000-000000000004', 'admin');
+select pg_temp.connecter('d4d4d4d4-0000-4000-8000-000000000004', 'admin', 'aal2');
 set local role authenticated;
 select ok((select count(*) from public.artisan_documents where artisan_id in (
   select id from public.artisans where user_id in ('d1d1d1d1-0000-4000-8000-000000000001', 'd2d2d2d2-0000-4000-8000-000000000002'))) = 5,

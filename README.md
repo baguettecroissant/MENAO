@@ -51,6 +51,17 @@ pnpm --filter web dev                 # http://localhost:3000
 | `pnpm functions:check` | Vérifie les Edge Functions (Deno) |
 | `pnpm --filter web build && pnpm --filter web test:e2e` | Tests de bout en bout (Supabase local requis ; faux serveur Sirene lancé automatiquement, Supabase démarré avec `INSEE_API_BASE_URL=http://host.docker.internal:54399`) |
 
+## Créer un administrateur
+
+Le rôle se trouve dans `app_metadata`, jamais modifiable depuis l'application. Dans l'éditeur SQL du projet Supabase (après inscription normale de la personne) :
+
+```sql
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}'
+where email = 'adresse@exemple.fr';
+```
+
+À la connexion suivante, le back-office (`/admin`) impose l'activation de la double authentification (TOTP). Sans elle, la base refuse tout droit admin (ADR 0008).
+
 ## CI
 
 GitHub Actions sur chaque PR et sur `main` : format, lint, typecheck, tests unitaires ; migrations + tests pgTAP + contrôle des types générés ; build + Playwright (inscription, confirmation e-mail, connexion). Aucun secret requis : Supabase tourne dans le runner.

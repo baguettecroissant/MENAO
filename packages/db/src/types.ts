@@ -153,6 +153,45 @@ export type Database = {
           },
         ];
       };
+      artisan_reviews: {
+        Row: {
+          admin_id: string | null;
+          artisan_id: string;
+          created_at: string;
+          decision: Database["public"]["Enums"]["review_decision"];
+          id: string;
+          message: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          admin_id?: string | null;
+          artisan_id: string;
+          created_at?: string;
+          decision: Database["public"]["Enums"]["review_decision"];
+          id?: string;
+          message?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          admin_id?: string | null;
+          artisan_id?: string;
+          created_at?: string;
+          decision?: Database["public"]["Enums"]["review_decision"];
+          id?: string;
+          message?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_reviews_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_trades: {
         Row: {
           artisan_id: string;
@@ -366,6 +405,40 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           zone_mode?: Database["public"]["Enums"]["zone_mode"] | null;
+        };
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          created_at: string;
+          data: NonNullable<Json>;
+          id: string;
+          target_id: string | null;
+          target_type: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          created_at?: string;
+          data?: NonNullable<Json>;
+          id?: string;
+          target_id?: string | null;
+          target_type: string;
+          updated_at?: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string;
+          data?: NonNullable<Json>;
+          id?: string;
+          target_id?: string | null;
+          target_type?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -594,6 +667,26 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_decide_artisan: {
+        Args: {
+          p_artisan_id: string;
+          p_decision: Database["public"]["Enums"]["review_decision"];
+          p_message?: string;
+        };
+        Returns: undefined;
+      };
+      admin_review_document: {
+        Args: {
+          p_document_id: string;
+          p_reason?: string;
+          p_status: Database["public"]["Enums"]["document_status"];
+        };
+        Returns: undefined;
+      };
+      admin_verify_certification: {
+        Args: { p_certification_id: string; p_verified: boolean };
+        Returns: undefined;
+      };
       consume_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number };
         Returns: boolean;
@@ -635,6 +728,7 @@ export type Database = {
       document_status: "en_attente" | "valide" | "refuse";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
+      review_decision: "valide" | "refuse" | "complement";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -765,6 +859,7 @@ export const Constants = {
       document_status: ["en_attente", "valide", "refuse"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
+      review_decision: ["valide", "refuse", "complement"],
       zone_mode: ["rayon", "communes"],
     },
   },

@@ -40,6 +40,8 @@ export function homePathForRole(role: Role): string {
     case "artisan":
     case "artisan_en_attente":
       return "/pro/onboarding";
+    case "admin":
+      return "/admin";
     case "visiteur":
       return "/connexion";
     default:

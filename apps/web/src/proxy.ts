@@ -3,7 +3,7 @@ import { safeRedirectPath } from "@menao/validation";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const PROTECTED_PREFIXES = ["/mon-espace", "/pro/onboarding", "/nouveau-mot-de-passe"];
+const PROTECTED_PREFIXES = ["/mon-espace", "/pro/onboarding", "/nouveau-mot-de-passe", "/admin"];
 const GUEST_ONLY = ["/connexion", "/inscription", "/pro/inscription"];
 
 export async function proxy(request: NextRequest) {
@@ -51,5 +51,6 @@ export const config = {
     "/pro/inscription",
     "/pro/onboarding/:path*",
     "/nouveau-mot-de-passe",
+    "/admin/:path*",
   ],
 };

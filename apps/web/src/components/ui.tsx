@@ -14,10 +14,20 @@ export function Card({ children }: { children: ReactNode }) {
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-export function Button({ className = "", ...props }: ComponentProps<"button">) {
+const buttonVariants = {
+  primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
+  secondary: "border border-border bg-surface text-foreground hover:bg-background",
+  danger: "bg-danger text-primary-foreground hover:opacity-90",
+} as const;
+
+export function Button({
+  className = "",
+  variant = "primary",
+  ...props
+}: ComponentProps<"button"> & { variant?: keyof typeof buttonVariants }) {
   return (
     <button
-      className={`inline-flex min-h-touch w-full items-center justify-center rounded-button bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-60 ${focusRing} ${className}`}
+      className={`inline-flex min-h-touch w-full items-center justify-center rounded-button px-4 font-semibold disabled:opacity-60 ${buttonVariants[variant]} ${focusRing} ${className}`}
       {...props}
     />
   );

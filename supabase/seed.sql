@@ -1,5 +1,6 @@
 -- Données FICTIVES de développement local (jamais de données réelles, jamais appliqué en production).
--- Comptes : particulier, support, admin, artisan (en onboarding).
+-- Comptes : particulier, support, admin, artisan (en onboarding), artisan (dossier envoyé),
+-- particulier réservé au test de réinitialisation du mot de passe.
 -- Mot de passe commun des comptes : « menao-local-dev-only » (local uniquement).
 
 insert into auth.users (
@@ -24,7 +25,11 @@ from (values
   ('a0000000-0000-4000-8000-000000000002'::uuid, 'support@example.test', 'support', 'Sacha', 'Support', null),
   ('a0000000-0000-4000-8000-000000000003'::uuid, 'admin@example.test', 'admin', 'Alex', 'Admin', null),
   -- Artisan en cours d'onboarding (SIRET fictif, inexistant dans Sirene (vérifié : 404)).
-  ('a0000000-0000-4000-8000-000000000004'::uuid, 'artisan@example.test', 'artisan_en_attente', 'Dominique', 'Artisan', '00000003400017')
+  ('a0000000-0000-4000-8000-000000000004'::uuid, 'artisan@example.test', 'artisan_en_attente', 'Dominique', 'Artisan', '00000003400017'),
+  -- Artisan dont le dossier complet attend la validation d'un admin.
+  ('a0000000-0000-4000-8000-000000000005'::uuid, 'dossier@example.test', 'artisan_en_attente', 'Claude', 'Dossier', '00000006700017'),
+  -- Compte réservé au test e2e « mot de passe oublié ».
+  ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
@@ -33,3 +38,31 @@ select gen_random_uuid(), u.id, u.id::text, 'email',
   now(), now(), now()
 from auth.users as u
 where u.email like '%@example.test';
+
+-- Dossier complet envoyé en vérification (SIRET inexistant dans Sirene, documents fictifs sans fichier).
+update public.artisans set
+  status = 'en_verification', submitted_at = now(),
+  sirene_checked_at = now(), sirene_active = true, sirene_partial = false,
+  raison_sociale = 'PEINTURE DOSSIER EXEMPLE', forme_juridique_code = '5499', ape_code = '43.34Z', ape_eligible = true,
+  adresse_ligne = '1 RUE DE L''EXEMPLE', adresse_code_postal = '06000', adresse_commune = 'NICE', adresse_code_insee = '06088',
+  assujetti_tva = true, experience_years = 12, zone_mode = 'communes',
+  presentation = 'Peintre en bâtiment depuis douze ans à Nice : peinture intérieure et extérieure, enduits, finitions soignées.'
+where user_id = 'a0000000-0000-4000-8000-000000000005';
+
+insert into public.artisan_trades (artisan_id, trade_code)
+  select id, 'peintre' from public.artisans where user_id = 'a0000000-0000-4000-8000-000000000005';
+insert into public.artisan_zones (artisan_id, code_insee, nom)
+  select id, z.code, z.nom from public.artisans, (values ('06088', 'Nice'), ('06004', 'Antibes')) as z (code, nom)
+  where user_id = 'a0000000-0000-4000-8000-000000000005';
+insert into public.certifications (artisan_id, type, numero, date_fin)
+  select id, 'qualibat', 'Q-00000', current_date + 400 from public.artisans where user_id = 'a0000000-0000-4000-8000-000000000005';
+insert into public.artisan_documents (artisan_id, type, storage_path, mime_type, size_bytes, date_emission, date_fin, assureur, numero, couverture)
+select a.id, d.type::public.document_type, a.id || '/seed-' || d.type || '.pdf', 'application/pdf', 1000, d.emission, d.fin, d.assureur, d.numero, d.couverture
+from public.artisans a,
+  (values ('kbis', current_date - 20, null::date, null, null, null),
+          ('decennale', null, current_date + 300, 'Assurances Exemple', 'DEC-0000', 'France métropolitaine'),
+          ('rc_pro', null, current_date + 300, 'Assurances Exemple', 'RC-0000', null),
+          ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
+where a.user_id = 'a0000000-0000-4000-8000-000000000005';
+update public.profiles set avatar_path = 'a0000000-0000-4000-8000-000000000005/seed.jpg'
+where user_id = 'a0000000-0000-4000-8000-000000000005';
