@@ -108,7 +108,8 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   );
   await page.getByRole("button", { name: "Gérer mon abonnement" }).click();
   await expect
-    .poll(() => external.some((u) => new URL(u).hostname.endsWith("stripe.com")))
+    // Vrai Stripe : billing.stripe.com ; stripe-mock : *.stripe.me.
+    .poll(() => external.some((u) => /(^|\.)stripe\.(com|me)$/.test(new URL(u).hostname)))
     .toBe(true);
 });
 
