@@ -25,7 +25,9 @@ test("inscription, confirmation de l'e-mail, déconnexion puis connexion", async
   await page.getByLabel("Adresse e-mail").fill(email);
   await page.getByLabel("Mot de passe").fill(password);
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("Confirmez d'abord votre adresse e-mail");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Confirmez d'abord votre adresse e-mail",
+  );
 
   await page.goto(await authLinkFor(request, email));
   await expect(page).toHaveURL(/\/mon-espace$/);
@@ -79,7 +81,9 @@ test("mauvais mot de passe : message générique", async ({ page }) => {
   await page.getByLabel("Adresse e-mail").fill("particulier@example.test");
   await page.getByLabel("Mot de passe").fill("pas-le-bon-mot-de-passe");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page.getByRole("main").getByRole("alert")).toHaveText("Adresse e-mail ou mot de passe incorrect.");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+    "Adresse e-mail ou mot de passe incorrect.",
+  );
 });
 
 test("redirection ouverte refusée après connexion", async ({ page }) => {
