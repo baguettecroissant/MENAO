@@ -400,6 +400,7 @@ INSEE_API_BASE_URL = "env(INSEE_API_BASE_URL)"
 INSEE_API_KEY = "env(INSEE_API_KEY)"
 STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
+STRIPE_CONNECT_WEBHOOK_SECRET = "env(STRIPE_CONNECT_WEBHOOK_SECRET)"
 STRIPE_TAX_RATE_ID = "env(STRIPE_TAX_RATE_ID)"
 STRIPE_PORTAL_CONFIGURATION_ID = "env(STRIPE_PORTAL_CONFIGURATION_ID)"
 # Origines autorisées pour le retour depuis Stripe (séparées par des virgules).
@@ -418,6 +419,9 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.billing-portal]
+verify_jwt = true
+
+[functions.connect-onboarding]
 verify_jwt = true
 
 [functions.stripe-webhook]

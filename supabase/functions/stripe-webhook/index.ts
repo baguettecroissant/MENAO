@@ -2,6 +2,7 @@
 // traitement idempotent (table webhook_events), CLAUDE.md règle 9. Aucune donnée personnelle
 // journalisée.
 import Stripe from "stripe";
+import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
 import {
   subscriptionFromStripe,
   subscriptionGrantsAccess,
@@ -9,6 +10,7 @@ import {
   type SubscriptionStatus,
 } from "../../../packages/core/src/billing.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
+import { saveConnectAccount } from "../_shared/connect.ts";
 import { env } from "../_shared/env.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -27,18 +29,26 @@ Deno.serve(async (req) => {
   const payload = await req.text();
   const stripe = stripeClient();
 
-  let event: Stripe.Event;
-  try {
-    event = await stripe.webhooks.constructEventAsync(
-      payload,
-      signature ?? "",
-      env("STRIPE_WEBHOOK_SECRET"),
-      undefined,
-      Stripe.createSubtleCryptoProvider(),
-    );
-  } catch {
-    return json({ error: "signature invalide" }, 400);
+  // Deux points de terminaison Stripe : compte de la plateforme (abonnements) et comptes
+  // connectés (Connect), chacun avec son secret de signature.
+  let event: Stripe.Event | null = null;
+  for (const secret of [env("STRIPE_WEBHOOK_SECRET"), env("STRIPE_CONNECT_WEBHOOK_SECRET")].filter(
+    Boolean,
+  )) {
+    try {
+      event = await stripe.webhooks.constructEventAsync(
+        payload,
+        signature ?? "",
+        secret,
+        undefined,
+        Stripe.createSubtleCryptoProvider(),
+      );
+      break;
+    } catch {
+      // secret suivant
+    }
   }
+  if (!event) return json({ error: "signature invalide" }, 400);
 
   const admin = adminClient();
   const { error: insertError } = await admin
@@ -66,6 +76,12 @@ Deno.serve(async (req) => {
     if (subscription) {
       const snapshot = subscriptionFromStripe(subscription);
       if (snapshot) await saveSubscription(admin, snapshot);
+    }
+    if (event.type === "account.updated") {
+      const account = connectAccountFromStripe(event.data.object);
+      if (account && !(await saveConnectAccount(admin, account))) {
+        console.error("stripe-webhook : compte connecté sans artisan correspondant");
+      }
     }
     await admin
       .from("webhook_events")
