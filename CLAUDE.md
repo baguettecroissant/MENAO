@@ -9,6 +9,7 @@ Plateforme de mise en relation particuliers ↔ artisans du bâtiment, avec outi
 - `packages/core` : logique métier pure (machine à états chantier, calculs devis/TVA/échéancier). Aucune dépendance UI ni réseau.
 - `packages/validation` : schémas Zod partagés. `packages/db` : types Supabase générés.
 - `supabase/` : migrations SQL, Edge Functions (Deno), tests pgTAP, seed.
+- `packages/emails` : modèles React Email (envoi Resend). SMS et marketing : Brevo. DNS : Cloudflare.
 - Supabase prod : `https://ffidtbwxiyqybyfdqmkj.supabase.co` (eu-west-1). Staging : projet séparé.
 
 ## Commandes
@@ -29,7 +30,9 @@ Plateforme de mise en relation particuliers ↔ artisans du bâtiment, avec outi
 10. **App native** : aucun bouton ni lien d'achat d'abonnement artisan (paiement sur le web uniquement).
 11. **Pas de données personnelles** dans les logs, PostHog, prompts IA, seeds ou tests.
 12. **MENAO ne prend jamais d'argent sur les chantiers** : paiements exclusivement via Stripe Connect, directement sur le compte de l'artisan, sans commission ni `application_fee`. Seul l'abonnement artisan est encaissé par MENAO.
-13. Les décisions marquées [À VALIDER] dans la spec ne se tranchent pas seul : option de configuration ou question.
+13. **Hébergement Vercel maîtrisé** (spec §4.4) : pas d'optimisation d'images Vercel, pages publiques pré-générées et en cache, aucun service propriétaire Vercel (Blob, KV, Edge Config, Cron, Postgres) ; logique serveur lourde dans les Supabase Edge Functions. Le code doit rester déployable sur Cloudflare via OpenNext.
+14. **E-mails via Resend** (React Email, `packages/emails`), **SMS et marketing via Brevo**, toujours derrière `NotificationProvider`.
+15. Les décisions marquées [À VALIDER] dans la spec ne se tranchent pas seul : option de configuration ou question.
 
 ## Conventions
 - Branches : `feat/F-xx-description`, `fix/...`. Commits conventionnels citant la fonctionnalité : `feat(F-19): dictée intelligente du devis`.
