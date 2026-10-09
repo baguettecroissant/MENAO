@@ -101,13 +101,14 @@ export function ArtisanResultCard({
             </p>
           )}
           {selection === "selectable" && (
-            <label className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-button border border-primary text-sm font-medium text-primary-strong transition-colors hover:bg-primary-softer has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/25">
+            <label className="relative inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-button border border-primary text-sm font-medium text-primary-strong transition-colors hover:bg-primary-softer has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/25">
               <input
                 type="checkbox"
                 name="artisan"
                 value={artisanId}
                 form="selection"
-                className="peer sr-only"
+                // Case invisible couvrant tout le bouton : cible tactile complète, toujours accessible.
+                className="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-button opacity-0 disabled:cursor-not-allowed"
               />
               <Check aria-hidden="true" className="hidden size-4 peer-checked:block" />
               <span className="peer-checked:hidden">

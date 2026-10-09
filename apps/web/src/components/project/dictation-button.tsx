@@ -111,25 +111,34 @@ export function DictationButton({
           {state === "transcribing" ? t.transcribing : t.listening(seconds)}
         </span>
       )}
-      <button
-        type="button"
-        onClick={listening ? stop : start}
-        disabled={state === "transcribing"}
-        aria-pressed={listening}
-        aria-label={label}
-        title={label}
-        className={`inline-flex size-10 items-center justify-center rounded-full text-primary-foreground transition-colors focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none disabled:opacity-70 ${
-          listening ? "animate-menao-pulse bg-primary-hover" : "bg-primary hover:bg-primary-hover"
-        }`}
-      >
-        {state === "transcribing" ? (
-          <LoaderCircle aria-hidden="true" className="size-5 animate-spin" />
-        ) : listening ? (
-          <AudioLines aria-hidden="true" className="size-5" />
-        ) : (
-          <Mic aria-hidden="true" className="size-5" />
+      <span className="relative inline-flex">
+        {/* Halo animé derrière le bouton : le bouton lui-même reste immobile (clic, lecteurs d'écran). */}
+        {listening && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-primary/40 motion-reduce:hidden"
+          />
         )}
-      </button>
+        <button
+          type="button"
+          onClick={listening ? stop : start}
+          disabled={state === "transcribing"}
+          aria-pressed={listening}
+          aria-label={label}
+          title={label}
+          className={`inline-flex size-10 items-center justify-center rounded-full text-primary-foreground transition-colors focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none disabled:opacity-70 ${
+            listening ? "bg-primary-hover" : "bg-primary hover:bg-primary-hover"
+          }`}
+        >
+          {state === "transcribing" ? (
+            <LoaderCircle aria-hidden="true" className="size-5 animate-spin" />
+          ) : listening ? (
+            <AudioLines aria-hidden="true" className="size-5" />
+          ) : (
+            <Mic aria-hidden="true" className="size-5" />
+          )}
+        </button>
+      </span>
     </div>
   );
 }
