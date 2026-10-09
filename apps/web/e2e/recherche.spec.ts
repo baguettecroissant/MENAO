@@ -61,7 +61,9 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
 
   // Adresse exacte, proposée parmi les adresses de la ville choisie.
   await address.getByRole("button", { name: "Modifier : Adresse" }).click();
-  await address.getByLabel("Adresse exacte (facultatif)").fill("1 rue de l'Exemple");
+  await address
+    .getByRole("combobox", { name: "Adresse exacte (facultatif)" })
+    .fill("1 rue de l'Exemple");
   await address.getByRole("option", { name: "1 Rue de l'Exemple 06000 Nice" }).click();
   await address.getByRole("button", { name: "Enregistrer" }).click();
   await expect(address.getByText("Nice (06000) — 1 Rue de l'Exemple 06000 Nice")).toBeVisible();
