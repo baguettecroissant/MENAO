@@ -4,11 +4,19 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
 const PROTECTED_PREFIXES = ["/mon-espace", "/pro/onboarding", "/nouveau-mot-de-passe", "/admin"];
+// Recherche (F-05 à F-07) : accessible avec une session anonyme (ADR 0012).
+const SEARCH_PREFIX = "/recherche";
 const GUEST_ONLY = ["/connexion", "/inscription", "/pro/inscription"];
 
 export async function proxy(request: NextRequest) {
-  const { response, claims } = await updateSession(request);
+  const { response, claims: sessionClaims } = await updateSession(request);
   const { pathname, search } = request.nextUrl;
+  // Une session anonyme ne vaut pas compte : espaces protégés fermés, pages invité ouvertes.
+  const claims = sessionClaims?.is_anonymous ? null : sessionClaims;
+
+  if (pathname.startsWith(`${SEARCH_PREFIX}/`) && !sessionClaims) {
+    return redirectWithSession(new URL("/", request.url), response);
+  }
 
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
@@ -52,5 +60,6 @@ export const config = {
     "/pro/onboarding/:path*",
     "/nouveau-mot-de-passe",
     "/admin/:path*",
+    "/recherche/:path*",
   ],
 };

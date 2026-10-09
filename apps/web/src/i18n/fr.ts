@@ -34,12 +34,14 @@ export const fr = {
     privacy:
       "Votre description est analysée par une intelligence artificielle pour pré-remplir votre recherche. Ne saisissez ni nom, ni téléphone, ni e-mail : ils sont de toute façon retirés avant l'analyse.",
     errors: {
-      rate_limited: "Vous avez lancé beaucoup d'analyses en peu de temps. Réessayez dans une heure.",
+      rate_limited:
+        "Vous avez lancé beaucoup d'analyses en peu de temps. Réessayez dans une heure.",
       invalid: "Décrivez votre projet en 5 000 caractères au plus.",
       unavailable: "L'analyse est momentanément indisponible. Réessayez dans quelques instants.",
       session:
         "Impossible de démarrer votre recherche. Vérifiez votre connexion et réessayez dans quelques instants.",
-      photos: "Certaines photos n'ont pas pu être ajoutées. Vous pourrez les ajouter à l'étape suivante.",
+      photos:
+        "Certaines photos n'ont pas pu être ajoutées. Vous pourrez les ajouter à l'étape suivante.",
     },
     dictation: {
       start: "Dicter mon projet",
@@ -70,7 +72,8 @@ export const fr = {
         "Nous avons pré-rempli votre recherche à partir de votre description. Vérifiez et complétez chaque rubrique.",
       noAnalysis:
         "Nous n'avons pas pu analyser votre description automatiquement. Complétez les rubriques ci-dessous.",
-      lowConfidence: "Vérifiez bien ces critères : votre description laissait plusieurs interprétations possibles.",
+      lowConfidence:
+        "Vérifiez bien ces critères : votre description laissait plusieurs interprétations possibles.",
       yourText: "Votre description",
       edit: "Modifier",
       editLabel: (section: string) => `Modifier : ${section}`,
@@ -103,8 +106,10 @@ export const fr = {
         city: "Ville",
         cityHint: "Tapez le nom de la ville puis choisissez-la dans la liste.",
         street: "Adresse exacte (facultatif)",
-        streetHint: "Proposée parmi les adresses de la ville choisie. Elle ne sera communiquée qu'aux artisans que vous contacterez.",
+        streetHint:
+          "Proposée parmi les adresses de la ville choisie. Elle ne sera communiquée qu'aux artisans que vous contacterez.",
         streetNeedCity: "Choisissez d'abord la ville.",
+        clear: "Retirer l'adresse exacte",
       },
       date: {
         title: "Date de début souhaitée",

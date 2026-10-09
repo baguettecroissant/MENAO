@@ -31,11 +31,13 @@ async function search(params: Record<string, string>, signal?: AbortSignal) {
   return parsed.success ? parsed.data.features : [];
 }
 
+/** citycode : limite les propositions à une commune (ville et adresse cohérentes, F-07). */
 export async function searchAddresses(
   q: string,
   signal?: AbortSignal,
+  citycode?: string,
 ): Promise<AddressSuggestion[]> {
-  const features = await search({ q }, signal);
+  const features = await search(citycode ? { q, citycode } : { q }, signal);
   return features.map((f) => ({
     label: f.properties.label,
     citycode: f.properties.citycode,
