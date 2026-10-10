@@ -712,6 +712,7 @@ export const fr = {
     signedNotice: (date: string) => `Vous avez signé ce devis le ${date}.`,
     payDeposit: (amount: string) => `Payer l'acompte (${amount})`,
     depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
+    depositInvoice: (numero: string) => `Facture d'acompte ${numero} (PDF)`,
     depositInProgress:
       "Votre paiement de l'acompte est en cours de confirmation par Stripe (virement ou prélèvement en attente).",
     paymentReturned:
@@ -1008,6 +1009,7 @@ export const fr = {
         refused: (reason: string) => `Le client a refusé le devis : ${reason}.`,
         signed: (date: string) => `Le client a signé le devis le ${date}.`,
         depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
+        depositInvoice: (numero: string) => `Facture d'acompte ${numero} (PDF)`,
         depositInProgress: "Paiement de l'acompte en cours (virement ou prélèvement en attente).",
         depositWaiting: "En attente du paiement de l'acompte par le client.",
         viewSigned: "Voir le devis signé",
@@ -1088,6 +1090,32 @@ export const fr = {
         },
         sentNotice: (client: string | null) =>
           client ? `Votre devis a bien été envoyé à ${client}.` : "Votre devis a bien été envoyé.",
+      },
+    },
+    invoices: {
+      title: "Factures",
+      subtitle:
+        "Factures émises en votre nom à chaque paiement reçu, numérotées sans interruption.",
+      link: "Mes factures",
+      empty: "Aucune facture pour le moment : elles sont émises à chaque paiement reçu.",
+      export: "Exporter pour le comptable (CSV)",
+      kinds: { acompte: "Acompte", solde: "Solde" },
+      line: (kind: string, date: string, client: string | null) =>
+        [kind, date, client].filter(Boolean).join(" · "),
+      view: (numero: string) => `Voir la facture ${numero} (PDF)`,
+      csv: {
+        filename: "factures-menao.csv",
+        headers: [
+          "Numéro",
+          "Date",
+          "Type",
+          "Client",
+          "Chantier",
+          "Devis",
+          "Total HT",
+          "TVA",
+          "Total TTC",
+        ],
       },
     },
     expertise: {

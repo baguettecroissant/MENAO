@@ -2,17 +2,10 @@
  * PDF du devis (F-20) : A4, polices standard (Helvetica), tableau paginé. Le contenu vient de
  * quoteDocumentModel (quote-model.ts) ; seul ce module dépend de pdf-lib.
  */
-import {
-  PDFDocument,
-  StandardFonts,
-  degrees,
-  rgb,
-  type PDFFont,
-  type PDFPage,
-  type RGB,
-} from "pdf-lib";
+import { PDFDocument, degrees, rgb } from "pdf-lib";
 import { SIGNER_ROLE } from "../../core/src/signature.ts";
 import { winAnsi } from "./format.ts";
+import { CONTENT, COLOR, Canvas, PAGE, embedFonts, wrap } from "./pdf-layout.ts";
 import { QUOTE_TEXTS as T, quoteDocumentModel, type QuotePdfData } from "./quote-model.ts";
 
 /**
@@ -29,15 +22,6 @@ export const SIGNATURE_TAGS = {
 // Dessin (A4, Helvetica)
 // ---------------------------------------------------------------------------
 
-const PAGE = { width: 595.28, height: 841.89, margin: 40, footer: 36 };
-const CONTENT = PAGE.width - PAGE.margin * 2;
-const COLOR = {
-  text: rgb(0.067, 0.09, 0.157),
-  muted: rgb(0.39, 0.42, 0.47),
-  primary: rgb(0.282, 0.412, 0.965),
-  line: rgb(0.9, 0.91, 0.94),
-  soft: rgb(0.945, 0.957, 0.996),
-};
 // Tableau : désignation, puis colonnes de valeurs alignées à droite (somme = largeur utile).
 const DESIGNATION_WIDTH = 235;
 const VALUE_COLUMNS = [
@@ -47,99 +31,6 @@ const VALUE_COLUMNS = [
   { key: "vat", width: 45 },
   { key: "total", width: 75 },
 ] as const;
-
-type Fonts = { regular: PDFFont; bold: PDFFont };
-
-/** Découpe un texte en lignes tenant dans la largeur (coupe aussi les mots trop longs). */
-function wrap(text: string, font: PDFFont, size: number, width: number): string[] {
-  const out: string[] = [];
-  for (const paragraph of text.split(/\r?\n/)) {
-    let current = "";
-    for (const word of paragraph.split(/\s+/).filter(Boolean)) {
-      const candidate = current ? `${current} ${word}` : word;
-      if (font.widthOfTextAtSize(candidate, size) <= width) {
-        current = candidate;
-        continue;
-      }
-      if (current) out.push(current);
-      current = "";
-      let rest = word;
-      while (font.widthOfTextAtSize(rest, size) > width) {
-        let cut = rest.length - 1;
-        while (cut > 1 && font.widthOfTextAtSize(rest.slice(0, cut), size) > width) cut--;
-        out.push(rest.slice(0, cut));
-        rest = rest.slice(cut);
-      }
-      current = rest;
-    }
-    out.push(current);
-  }
-  return out;
-}
-
-class Canvas {
-  page: PDFPage;
-  y: number;
-
-  constructor(
-    readonly doc: PDFDocument,
-    readonly fonts: Fonts,
-  ) {
-    this.page = this.addPage();
-    this.y = PAGE.height - PAGE.margin;
-  }
-
-  addPage(): PDFPage {
-    const page = this.doc.addPage([PAGE.width, PAGE.height]);
-    this.page = page;
-    this.y = PAGE.height - PAGE.margin;
-    return page;
-  }
-
-  /** Nouvelle page si la hauteur demandée ne tient pas au-dessus du pied de page. */
-  ensure(height: number): boolean {
-    if (this.y - height >= PAGE.margin + PAGE.footer) return false;
-    this.addPage();
-    return true;
-  }
-
-  text(
-    value: string,
-    x: number,
-    y: number,
-    size: number,
-    options: { bold?: boolean; color?: RGB; align?: "left" | "right"; width?: number } = {},
-  ) {
-    const font = options.bold ? this.fonts.bold : this.fonts.regular;
-    const textWidth = font.widthOfTextAtSize(value, size);
-    const left = options.align === "right" && options.width ? x + options.width - textWidth : x;
-    this.page.drawText(value, { x: left, y, size, font, color: options.color ?? COLOR.text });
-  }
-
-  /** Paragraphe enveloppé ; renvoie la hauteur utilisée. */
-  paragraph(
-    value: string,
-    size: number,
-    options: { bold?: boolean; color?: RGB; width?: number } = {},
-  ) {
-    const font = options.bold ? this.fonts.bold : this.fonts.regular;
-    const lines = wrap(value, font, size, options.width ?? CONTENT);
-    for (const line of lines) {
-      this.ensure(size + 3);
-      this.y -= size + 3;
-      this.text(line, PAGE.margin, this.y, size, options);
-    }
-  }
-
-  rule() {
-    this.page.drawLine({
-      start: { x: PAGE.margin, y: this.y },
-      end: { x: PAGE.width - PAGE.margin, y: this.y },
-      thickness: 0.6,
-      color: COLOR.line,
-    });
-  }
-}
 
 function tableHeader(c: Canvas) {
   c.ensure(22);
@@ -177,10 +68,7 @@ export async function renderQuotePdf(data: QuotePdfData): Promise<Uint8Array> {
   doc.setCreator("MENAO");
   doc.setProducer("MENAO");
   doc.setLanguage("fr-FR");
-  const fonts: Fonts = {
-    regular: await doc.embedFont(StandardFonts.Helvetica),
-    bold: await doc.embedFont(StandardFonts.HelveticaBold),
-  };
+  const fonts = await embedFonts(doc);
   const c = new Canvas(doc, fonts);
   const right = PAGE.width - PAGE.margin;
 

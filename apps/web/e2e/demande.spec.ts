@@ -357,5 +357,21 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByRole("link", { name: /Payer l'acompte/ })).toHaveCount(0);
   await proPage.goto(chantierUrl);
   await expect(proPage.getByText(/Acompte de 27,55\s€ payé le/)).toBeVisible();
+
+  // Facture d'acompte (F-35) : émise à l'encaissement au nom de l'artisan, numéro FAC-AAAA-0001.
+  const invoiceLink = page.getByRole("link", { name: /Facture d'acompte FAC-\d{4}-0001 \(PDF\)/ });
+  const invoiceHref = (await invoiceLink.getAttribute("href")) ?? "";
+  expect(invoiceHref).toMatch(new RegExp(`^/factures/${UUID}/pdf$`));
+  const invoicePdf = await page.request.get(invoiceHref);
+  expect(invoicePdf.status()).toBe(200);
+  expect(invoicePdf.headers()["content-disposition"]).toMatch(/FAC-\d{4}-0001\.pdf/);
+  expect((await invoicePdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  await proPage.goto("/pro/factures");
+  await expect(proPage.getByRole("link", { name: /Voir la facture FAC-\d{4}-0001/ })).toBeVisible();
+  const csv = await (await proPage.request.get("/pro/factures/export")).text();
+  expect(csv).toContain('"Acompte"');
+  expect(csv).toContain('"Dominique Test"');
+  // 27,55 € TTC à 10 % : 25,05 € HT et 2,50 € de TVA.
+  expect(csv).toContain('"25,05";"2,50";"27,55"');
   await pro.close();
 });

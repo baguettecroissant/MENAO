@@ -135,10 +135,35 @@ export const QUOTE_TEXTS = {
 };
 const T = QUOTE_TEXTS;
 
+export type Issuer = QuotePdfData["issuer"];
+
+/** Identité de l'artisan (raison sociale à part) : en-tête des devis et des factures. */
+export function issuerLines(issuer: Issuer): string[] {
+  return [
+    ...(issuer.tradeName && issuer.tradeName !== issuer.name ? [issuer.tradeName] : []),
+    ...issuer.addressLines,
+    ...(issuer.legalForm ? [issuer.legalForm] : []),
+    ...(issuer.siret ? [T.siret(issuer.siret)] : []),
+    issuer.vatExempt ? T.vatExempt : issuer.vatNumber ? T.vatNumber(issuer.vatNumber) : "",
+    [issuer.email, issuer.phone && phoneNumber(issuer.phone)].filter(Boolean).join(" · "),
+  ]
+    .filter(Boolean)
+    .map(winAnsi);
+}
+
+/** Assurance décennale (obligatoire sur les devis et les factures du bâtiment). */
+export function insuranceLine(issuer: Issuer): string {
+  const ins = issuer.insurance;
+  return winAnsi(
+    ins?.insurer && ins.policy && ins.coverage
+      ? T.insurance(ins.insurer, ins.policy, ins.coverage)
+      : T.insuranceMissing,
+  );
+}
+
 /** Contenu du devis (textes et montants mis en forme), indépendant du dessin. */
 export function quoteDocumentModel(d: QuotePdfData): QuoteDocumentModel {
   const issuer = d.issuer;
-  const ins = issuer.insurance;
   const reduced = d.lines.some((l) => l.vatRateBp === 550 || l.vatRateBp === 1000);
   return {
     title: T.title,
@@ -150,24 +175,11 @@ export function quoteDocumentModel(d: QuotePdfData): QuoteDocumentModel {
         : T.validUntil(dateLong(d.validUntil)),
     issuerName: winAnsi(issuer.name),
     vatExempt: issuer.vatExempt,
-    issuerLines: [
-      ...(issuer.tradeName && issuer.tradeName !== issuer.name ? [issuer.tradeName] : []),
-      ...issuer.addressLines,
-      ...(issuer.legalForm ? [issuer.legalForm] : []),
-      ...(issuer.siret ? [T.siret(issuer.siret)] : []),
-      issuer.vatExempt ? T.vatExempt : issuer.vatNumber ? T.vatNumber(issuer.vatNumber) : "",
-      [issuer.email, issuer.phone && phoneNumber(issuer.phone)].filter(Boolean).join(" · "),
-    ]
-      .filter(Boolean)
-      .map(winAnsi),
+    issuerLines: issuerLines(issuer),
     clientLines: [d.client.name, ...d.client.addressLines].filter(Boolean).map(winAnsi),
     siteLines: d.site.addressLines.map(winAnsi),
     subjectLine: winAnsi(T.subject(d.site.title)),
-    insuranceLine: winAnsi(
-      ins?.insurer && ins.policy && ins.coverage
-        ? T.insurance(ins.insurer, ins.policy, ins.coverage)
-        : T.insuranceMissing,
-    ),
+    insuranceLine: insuranceLine(issuer),
     datesLine: winAnsi(
       !d.preview && d.startDate && d.duration
         ? T.dates(dateLong(d.startDate), d.duration)

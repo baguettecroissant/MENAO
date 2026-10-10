@@ -89,51 +89,63 @@ export function addressLines(
   return city ? [city] : [];
 }
 
+/** Artisan d'après les données de la base ; attestation décennale échue à la date donnée : non reprise. */
+export function issuerData(
+  issuer: QuoteDocument["issuer"],
+  onDate: string,
+): QuotePdfData["issuer"] {
+  const decennale = issuer.decennale;
+  const insured = decennale && (!decennale.date_fin || decennale.date_fin >= onDate);
+  return {
+    name: issuer.raison_sociale ?? issuer.nom_commercial ?? "",
+    tradeName: issuer.nom_commercial,
+    addressLines: [
+      issuer.adresse_ligne ?? "",
+      [issuer.code_postal, issuer.commune].filter(Boolean).join(" "),
+    ].filter(Boolean),
+    siret: issuer.siret,
+    legalForm: issuer.forme_juridique_code
+      ? (FORMES_JURIDIQUES[issuer.forme_juridique_code] ?? null)
+      : null,
+    vatNumber: issuer.tva_intracom,
+    vatExempt: issuer.assujetti_tva === false,
+    email: issuer.email,
+    phone: issuer.phone,
+    insurance: insured
+      ? { insurer: decennale.assureur, policy: decennale.numero, coverage: decennale.couverture }
+      : null,
+  };
+}
+
+/** Client et chantier. TODO(legal) : le particulier n'a pas encore d'adresse propre ; celle du chantier. */
+export function partiesData(
+  client: QuoteDocument["client"],
+  chantier: QuoteDocument["chantier"],
+): Pick<QuotePdfData, "client" | "site"> {
+  const site = addressLines(chantier.adresse, chantier.code_postal, chantier.ville_nom);
+  return {
+    client: {
+      name: [client.first_name, client.last_name].filter(Boolean).join(" "),
+      addressLines: site,
+    },
+    site: { title: chantier.title, addressLines: site },
+  };
+}
+
 /**
  * Brouillon : aperçu (numéro, échéance de validité, dates et échéancier fixés à l'envoi, F-21).
- * Devis envoyé : données figées à l'envoi. Une attestation décennale échue à la date du devis
- * n'est pas reprise.
+ * Devis envoyé : données figées à l'envoi.
  */
 export function quotePdfData(doc: QuoteDocument): QuotePdfData {
-  const { quote, issuer, client, chantier, terms } = doc;
-  const decennale = issuer.decennale;
-  const insured = decennale && (!decennale.date_fin || decennale.date_fin >= quote.issued_on);
-  const site = addressLines(chantier.adresse, chantier.code_postal, chantier.ville_nom);
+  const { quote, terms } = doc;
   return {
     preview: quote.status === "brouillon",
     numero: quote.numero,
     issuedOn: quote.issued_on,
     validUntil: terms?.valid_until ?? null,
     validityDays: QUOTE_VALIDITY_DAYS,
-    issuer: {
-      name: issuer.raison_sociale ?? issuer.nom_commercial ?? "",
-      tradeName: issuer.nom_commercial,
-      addressLines: [
-        issuer.adresse_ligne ?? "",
-        [issuer.code_postal, issuer.commune].filter(Boolean).join(" "),
-      ].filter(Boolean),
-      siret: issuer.siret,
-      legalForm: issuer.forme_juridique_code
-        ? (FORMES_JURIDIQUES[issuer.forme_juridique_code] ?? null)
-        : null,
-      vatNumber: issuer.tva_intracom,
-      vatExempt: issuer.assujetti_tva === false,
-      email: issuer.email,
-      phone: issuer.phone,
-      insurance: insured
-        ? {
-            insurer: decennale.assureur,
-            policy: decennale.numero,
-            coverage: decennale.couverture,
-          }
-        : null,
-    },
-    // TODO(legal) : le particulier n'a pas encore d'adresse postale propre ; celle du chantier.
-    client: {
-      name: [client.first_name, client.last_name].filter(Boolean).join(" "),
-      addressLines: site,
-    },
-    site: { title: chantier.title, addressLines: site },
+    issuer: issuerData(doc.issuer, quote.issued_on),
+    ...partiesData(doc.client, doc.chantier),
     startDate: terms?.start_date ?? null,
     duration: terms ? days(terms.duration_days) : null,
     schedule: (terms?.schedule ?? []).map((t) => ({
