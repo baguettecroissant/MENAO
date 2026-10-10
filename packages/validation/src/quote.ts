@@ -148,3 +148,13 @@ export const quoteRevisionSchema = z.object({
     .min(QUOTE_REVISION_MESSAGE_LIMITS.min, { error: messages.revisionMessageTooShort })
     .max(QUOTE_REVISION_MESSAGE_LIMITS.max, { error: messages.tooLong }),
 });
+
+const consent = z.literal(true, { error: messages.signatureConsentRequired });
+
+/** F-13 : cases à cocher avant de signer le devis, toutes obligatoires. */
+export const signatureConsentsSchema = z.object({
+  document: consent,
+  cgu_prestataire: consent,
+  cgu_menao: consent,
+  echeancier: consent,
+});
