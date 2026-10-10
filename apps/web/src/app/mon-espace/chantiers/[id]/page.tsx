@@ -3,6 +3,7 @@ import {
   clientChantierAction,
   journalSummary,
   paymentProgress,
+  reviewInvited,
   type ChantierStatus,
 } from "@menao/core";
 import { CircleCheck } from "lucide-react";
@@ -26,6 +27,7 @@ import { ChantierStepper } from "@/components/chantier/chantier-stepper";
 import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
 import { ConfirmLiftActions, ReceptionActions } from "@/components/chantier/reception-actions";
+import { ReviewInvite } from "@/components/review/review-invite";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
@@ -75,6 +77,7 @@ export default async function ClientChantierPage({
     { data: payments },
     { data: invoices },
     { data: reception },
+    { data: review },
   ] = await Promise.all([
     supabase
       .from("chantier_updates")
@@ -99,6 +102,8 @@ export default async function ClientChantierPage({
       .select("id, numero, status, reserves, signed_at, lift_signaled_at, lift_message")
       .eq("chantier_id", id)
       .maybeSingle(),
+    // F-28 : avis déjà laissé sur ce chantier.
+    supabase.from("reviews").select("id").eq("chantier_id", id).maybeSingle(),
   ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
@@ -195,6 +200,9 @@ export default async function ClientChantierPage({
             photoUrl={avatarUrl(supabase, c.artisan_avatar_path)}
             phone={c.artisan_phone}
           />
+          {reviewInvited(status, review !== null) && (
+            <ReviewInvite chantierId={id} artisanName={c.artisan_name} />
+          )}
           {step !== null && (
             <div className="flex flex-col gap-3">
               <ChantierStepper current={step} />

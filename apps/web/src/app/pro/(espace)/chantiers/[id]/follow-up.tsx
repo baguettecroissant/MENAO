@@ -30,6 +30,7 @@ import {
 } from "@/components/pro/chantier-journal-forms";
 import { StickyActions } from "@/components/pro/detail";
 import { RequestBlocks } from "@/components/pro/request-blocks";
+import { ReviewSection } from "@/components/pro/review-section";
 import { Alert, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
@@ -82,6 +83,7 @@ export async function ArtisanFollowUp({
     { data: finished },
     { data: reception },
     { data: received },
+    { data: review },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -125,6 +127,14 @@ export async function ArtisanFollowUp({
       .eq("to_status", "receptionne")
       .order("created_at", { ascending: false })
       .limit(1)
+      .maybeSingle(),
+    // F-28 : avis du client sur ce chantier.
+    supabase
+      .from("reviews")
+      .select(
+        "id, score, quality, delays, communication, value_for_money, comment, status, moderation_reason, reply",
+      )
+      .eq("chantier_id", id)
       .maybeSingle(),
   ]);
   const journal = journalSummary(
@@ -262,6 +272,11 @@ export async function ArtisanFollowUp({
                 euros.format(balancePayment.amount_cents / 100),
               )}
             </Alert>
+          )}
+          {review ? (
+            <ReviewSection review={review} chantierId={id} clientFirstName={clientFirstName} />
+          ) : (
+            status === "cloture" && <Alert tone="info">{tf.reviewPending(clientFirstName)}</Alert>
           )}
           <ChantierTabs base={`/pro/chantiers/${id}`} active={tab} />
           {tab === "suivi" ? (

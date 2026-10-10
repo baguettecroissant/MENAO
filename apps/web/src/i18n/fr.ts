@@ -576,6 +576,29 @@ export const fr = {
       recentEmpty: "Aucune photo de chantier pour l'instant.",
       reviews: "Derniers avis clients",
       reviewsEmpty: "Pas encore d'avis vérifié.",
+      scoreRows: {
+        quality: "Qualité des prestations",
+        delays: "Respect des délais",
+        communication: "Communication",
+        value_for_money: "Rapport qualité/prix",
+      },
+      scoreGlobal: "Score global",
+      scoreBasis: (n: number) =>
+        n <= 1 ? "Calculé sur 1 avis vérifié" : `Calculé sur ${n} avis vérifiés`,
+      verified: "Avis vérifié",
+      stars: (score: number, stars: number) => `Note : ${score}\u00a0% (${stars} sur 5)`,
+      receivedOn: (date: string) => `Chantier réceptionné le ${date}`,
+      replyFrom: (name: string) => `Réponse de ${name}`,
+      showAllReviews: (n: number) => `Afficher les ${n} avis`,
+      report: "Signaler cet avis",
+      reportTitle: "Signaler cet avis à l'équipe MENAO",
+      reportLabel: "Motif du signalement",
+      reportHint:
+        "Propos injurieux, données personnelles, faux avis… L'équipe MENAO examinera l'avis.",
+      reportSubmit: "Envoyer le signalement",
+      reportCancel: "Annuler",
+      reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
+      reportSignIn: "Signaler un contenu (page Contact)",
       photoAlt: (index: number, name: string) => `Chantier ${index} réalisé par ${name}`,
       photoCounter: (index: number, total: number) => `${index} / ${total}`,
       close: "Fermer",
@@ -822,6 +845,12 @@ export const fr = {
         "Paiement reçu : sa confirmation est en cours. Actualisez la page dans quelques instants.",
       closed: (date: string) => `Vous avez finalisé le paiement de ce chantier le ${date}`,
     },
+    reviewInvite: {
+      title: (artisan: string) => `Noter ${artisan} pour son chantier`,
+      text: (artisan: string) =>
+        `Vous avez fait confiance à ${artisan} pour votre chantier. D'autres personnes pourraient faire appel à ses services : prenez un court instant pour noter son intervention et aider la communauté MENAO à choisir les meilleurs artisans.`,
+      cta: (artisan: string) => `Noter ${artisan}`,
+    },
     report: "Signaler un problème lié au chantier",
     chooseAnother: "Choisir un autre artisan",
   },
@@ -829,7 +858,12 @@ export const fr = {
     title: "Réception des travaux",
     back: "Retour au chantier",
     stepsLabel: "Étapes de la réception",
-    steps: { reserves: "Ajout des réserves", pv: "Signature du PV", solde: "Paiement du solde" },
+    steps: {
+      reserves: "Ajout des réserves",
+      pv: "Signature du PV",
+      solde: "Paiement du solde",
+      avis: "Votre avis",
+    },
     reservesTitle: "Ajouter des réserves",
     reservesHelp: (artisan: string) =>
       `Décrivez ici les points que ${artisan} doit corriger pour finaliser votre projet. Ces réserves seront inscrites sur votre PV de réception et ${artisan} en sera immédiatement informé.`,
@@ -873,6 +907,53 @@ export const fr = {
     submitting: "Ouverture du paiement…",
     unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
     inProgress: "Votre paiement du solde est en cours de confirmation.",
+  },
+  review: {
+    pageTitle: "Votre avis",
+    back: "Retour au chantier",
+    title: (artisan: string) => `Comment s'est passée votre expérience avec ${artisan} ?`,
+    intro:
+      "Partagez votre expérience pour aider la communauté MENAO à faire le bon choix pour leurs chantiers.",
+    yourArtisan: "Votre artisan",
+    criteria: {
+      quality: "Qualité des prestations",
+      delays: "Respect des délais",
+      communication: "Communication",
+    },
+    unset: "--\u00a0%",
+    percent: (value: number) => `${value}\u00a0%`,
+    dragToRate: "Faites glisser pour noter",
+    bands: {
+      quality: ["Inacceptable", "Décevant", "Correct", "Très soigné", "Irréprochable"],
+      delays: ["Inacceptable", "Retard important", "Quelques retards", "Léger retard", "À l'heure"],
+      communication: [
+        "Inacceptable",
+        "Peu réactif",
+        "Échanges corrects",
+        "Très réactif",
+        "Irréprochable",
+      ],
+    },
+    valueTitle: "Rapport qualité/prix",
+    values: {
+      excellent: "Excellent rapport qualité/prix",
+      convenable: "Prix convenable",
+      trop_cher: "Trop cher pour la qualité fournie",
+    },
+    commentTitle: "Votre avis fait la qualité MENAO",
+    commentHelp:
+      "Votre retour est essentiel pour nous aider à proposer les meilleurs artisans à la communauté.",
+    commentLabel: "Votre commentaire",
+    commentPlaceholder: (artisan: string) =>
+      `Qu'avez-vous particulièrement apprécié ? Le soin de ${artisan}, ses conseils techniques, sa ponctualité ? Dites-nous tout…`,
+    commentCount: (n: number) => `${n}/50 caractères minimum`,
+    submit: "Publier mon avis",
+    visibility: (artisan: string) =>
+      `Votre avis sera visible par la communauté MENAO et aidera ${artisan} à améliorer ses services.`,
+    thanksTitle: "Merci d'avoir fait confiance à MENAO",
+    thanksText:
+      "MENAO vous remercie : votre retour aide la communauté à maintenir le meilleur niveau de qualité.",
+    seeProfile: (artisan: string) => `Voir la fiche de ${artisan}`,
   },
   clientQuote: {
     back: "Mon espace",
@@ -1166,6 +1247,15 @@ export const fr = {
       liftSent: "Levée des réserves signalée à votre client.",
       closed: (date: string, amount: string) =>
         `Chantier clôturé le ${date} : solde de ${amount} reçu, facture de solde émise.`,
+      reviewTitle: (client: string) => `Avis de ${client}`,
+      reviewPending: (client: string) =>
+        `${client} a été invité à donner son avis sur votre intervention. Il sera publié sur votre fiche MENAO.`,
+      reviewHidden: (reason: string) => `Avis masqué par l'équipe MENAO : ${reason}`,
+      replyLabel: "Votre réponse publique",
+      replyHint: "Une seule réponse possible, visible sur votre fiche MENAO sous l'avis.",
+      replySubmit: "Publier ma réponse",
+      replySent: "Réponse publiée sur votre fiche.",
+      yourReply: "Votre réponse",
       yourClientFallback: "votre client",
     },
     quote: {
@@ -1761,19 +1851,19 @@ export const fr = {
     ],
     orderTitle: "Dans quel ordre ?",
     order: [
-      "D'abord les artisans disponibles immédiatement, puis selon leur date de disponibilité.",
+      "D'abord le score MENAO : moyenne des avis vérifiés des clients (qualité des prestations, respect des délais, communication, rapport qualité/prix). Les artisans sans avis viennent ensuite.",
+      "Puis les artisans disponibles immédiatement, puis selon leur date de disponibilité.",
       "Ensuite, les artisans les plus proches du chantier.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
-      "Le score MENAO (avis vérifiés des clients) sera pris en compte dès que les premiers avis seront publiés.",
     ],
     paidTitle: "Mise en avant payante",
     paid: "Aucune. Le classement ne dépend ni de la formule d'abonnement ni d'un paiement de l'artisan. Si cela devait changer, les artisans concernés seraient signalés par la mention « Mis en avant ».",
     limit: "Nous présentons au plus 5 artisans par recherche.",
     reviewsTitle: "Avis",
     reviews:
-      "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO pourront laisser un avis (« Avis vérifié »).",
+      "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 9 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 10 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",
@@ -1790,6 +1880,16 @@ export const fr = {
         contact: "Message de la page Contact",
         expertise: "Expertise d'un autre corps de métier (signalée par un artisan)",
         reserves: "Levée des réserves non confirmée (30 jours après le signalement)",
+        avis: "Avis signalé",
+      },
+      review: {
+        title: "Avis concerné",
+        meta: (author: string, score: number) => `${author} · ${score}\u00a0%`,
+        hidden: (reason: string) => `Masqué : ${reason}`,
+        reasonLabel: "Motif du masquage (communiqué en interne)",
+        hide: "Masquer l'avis",
+        republish: "Republier l'avis",
+        rule: "Un avis n'est jamais masqué pour la seule raison qu'il est négatif.",
       },
       empty: "Aucun dossier.",
       open: "À traiter",

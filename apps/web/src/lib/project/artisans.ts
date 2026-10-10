@@ -31,6 +31,18 @@ const profileSchema = z.object({
     z.object({ type: z.string(), numero: z.string(), valid_until: z.string() }),
   ),
   photos: z.array(z.string()),
+  // Score MENAO (F-28) : moyennes des avis publiés ; null tant qu'aucun avis n'est publié.
+  score: z
+    .object({
+      review_count: z.number(),
+      quality: z.number(),
+      delays: z.number(),
+      communication: z.number(),
+      value_for_money: z.number(),
+      global: z.number(),
+    })
+    .nullable()
+    .catch(null),
 });
 export type ArtisanProfile = z.infer<typeof profileSchema>;
 
@@ -38,6 +50,15 @@ export async function getArtisanProfile(supabase: Client, artisanId: string) {
   const { data } = await supabase.rpc("artisan_public_profile", { p_artisan_id: artisanId });
   const parsed = profileSchema.safeParse(data);
   return parsed.success ? parsed.data : null;
+}
+
+/** Derniers avis publiés d'un artisan visible, du plus récent au plus ancien (F-28). */
+export async function getArtisanReviews(supabase: Client, artisanId: string) {
+  const { data } = await supabase.rpc("artisan_public_reviews", {
+    p_artisan_id: artisanId,
+    p_limit: 20,
+  });
+  return data ?? [];
 }
 
 const specialtiesSchema = z.array(labeled);
