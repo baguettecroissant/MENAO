@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
     upsert: false,
   });
   // Deux premières lectures simultanées : le fichier existe déjà, contenu identique.
-  if (uploadError) console.error("generate-pdf : conservation du PDF en échec", uploadError.message);
+  if (uploadError)
+    console.error("generate-pdf : conservation du PDF en échec", uploadError.message);
   return pdfResponse(pdf, filename);
 });

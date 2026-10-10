@@ -123,7 +123,7 @@ set local role authenticated;
 select is((public.quote_document(current_setting('test.v1')::uuid) #>> '{quote,numero}'),
   format('DEVIS-%s-0001', current_setting('test.annee')), 'particulier : devis envoyé lisible');
 select is((select count(*)::int from public.quote_number_counters), 0, 'particulier : compteurs non lisibles');
-select throws_ok(format('select public.particulier_request_quote_revision(%L, %L)', current_setting('test.v1'), 'Trop court'),
+select throws_ok(format('select public.particulier_request_quote_revision(%L, %L)', current_setting('test.v1'), 'Court'),
   '22023', 'Décrivez la modification souhaitée (10 à 1 000 caractères)', 'demande de modification trop courte');
 select set_config('test.v2', public.particulier_request_quote_revision(current_setting('test.v1')::uuid,
   'Pouvez-vous ajouter une prise dans le couloir ?')::text, true);
