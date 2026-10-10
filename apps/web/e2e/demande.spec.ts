@@ -186,11 +186,29 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(pdf.headers()["content-disposition"]).toContain("devis-apercu.pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
 
+  // Le brouillon de devis reste privé à l'artisan.
+  expect((await page.request.get(pdfHref ?? "")).status()).toBe(404);
+
   // Le tableau de bord affiche le rendez-vous à venir.
+  const previewUrl = proPage.url();
   await proPage.goto("/pro/tableau-de-bord");
   const upcoming = proPage.getByRole("region", { name: "Prochains rendez-vous" });
   await expect(upcoming.getByText("16h30").first()).toBeVisible();
-  await pro.close();
+
+  // « Envoi du devis » (F-21) : échéancier par défaut, dates des travaux, numéro attribué.
+  await proPage.goto(previewUrl);
+  await proPage.getByRole("link", { name: "Suivant" }).click();
+  await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis/envoi$`));
+  const sending = proPage.getByRole("main");
+  await expect(sending.getByRole("button", { name: "Envoyer le devis" })).toBeDisabled();
+  await sending.getByRole("radio", { name: /Mon échéancier par défaut/ }).check();
+  await expect(sending.getByText(/30 % à la signature du devis, soit 27,55/)).toBeVisible();
+  await sending.getByLabel("Date de début prévisionnelle").fill(day(10));
+  await sending.getByLabel("Durée estimée (en jours)").fill("2");
+  await sending.getByRole("button", { name: "Envoyer le devis" }).click();
+  await expect(proPage).toHaveURL(/\/pro\/devis\?onglet=envoyes/);
+  await expect(proPage.getByText("Votre devis a bien été envoyé à Dominique Test.")).toBeVisible();
+  await expect(proPage.getByText(/N° DEVIS-\d{4}-0001/)).toBeVisible();
 
   // Le particulier voit le rendez-vous, les coordonnées de l'artisan et le fichier agenda.
   await page.reload();
@@ -204,6 +222,36 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(ics.headers()["content-type"]).toContain("text/calendar");
   expect(await ics.text()).toContain("BEGIN:VEVENT");
   expect(await ics.text()).not.toContain("Code portail");
-  // Le brouillon de devis reste privé à l'artisan.
-  expect((await page.request.get(pdfHref ?? "")).status()).toBe(404);
+
+  // Devis reçu (F-21) : contenu figé, PDF numéroté, demande de modification.
+  await expect(page.getByText(/Devis reçu : 91,85\s€ TTC · À consulter/)).toBeVisible();
+  await page.getByRole("link", { name: "Voir le devis" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}$`));
+  await expect(page.getByRole("heading", { name: "Devis de Noé Plomberie" })).toBeVisible();
+  await expect(page.getByText(/N° DEVIS-\d{4}-0001/)).toBeVisible();
+  await expect(page.getByText("Siphon PVC 40 mm")).toBeVisible();
+  await expect(page.getByText(/70 % à la réception des travaux, soit 64,30/)).toBeVisible();
+  const quotePdf = await page.request.get(
+    `${new URL(page.url()).pathname.replace("/mon-espace", "")}/pdf`,
+  );
+  expect(quotePdf.status()).toBe(200);
+  expect(quotePdf.headers()["content-disposition"]).toMatch(/DEVIS-\d{4}-0001\.pdf/);
+  await page.getByRole("button", { name: "Demander une modification" }).click();
+  const revision = page.getByRole("dialog", { name: "Demander une modification" });
+  await revision
+    .getByLabel("Modification souhaitée")
+    .fill("Pouvez-vous ajouter un robinet d'arrêt ?");
+  await revision.getByRole("button", { name: "Envoyer la demande" }).click();
+  await expect(page.getByText("Vous avez demandé une modification.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refuser le devis" })).toHaveCount(0);
+
+  // L'artisan voit la demande et retrouve ses lignes dans une nouvelle version.
+  await proPage.goto(previewUrl.replace(/\/devis\/apercu$/, ""));
+  const chantier = proPage.getByRole("main");
+  await expect(chantier.getByText("Le client demande une modification :")).toBeVisible();
+  await expect(chantier.getByText("Pouvez-vous ajouter un robinet d'arrêt ?")).toBeVisible();
+  await chantier.getByRole("link", { name: "Modifier le devis" }).click();
+  await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis$`));
+  await expect(proPage.getByText("Siphon PVC 40 mm")).toBeVisible();
+  await pro.close();
 });

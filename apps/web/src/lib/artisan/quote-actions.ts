@@ -1,9 +1,13 @@
 "use server";
 
-import { quoteLinesSchema } from "@menao/validation";
+import { parisToday, quoteStartDateError } from "@menao/core";
+import { messages, quoteLinesSchema, sendQuoteSchema } from "@menao/validation";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
+import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { requireArtisan } from "./requests";
 
 export type SaveQuoteResult = { ok: true } | { ok: false; error: string };
@@ -68,4 +72,50 @@ export async function deleteDictation(chantierId: string): Promise<void> {
   if (!z.uuid().safeParse(chantierId).success) return;
   const { supabase } = await requireArtisan();
   await supabase.rpc("artisan_delete_dictation", { p_chantier_id: chantierId });
+}
+
+const START_DATE_ERRORS = {
+  invalide: messages.startDateRequired,
+  passee: messages.startDatePast,
+  trop_loin: messages.startDateTooFar,
+} as const;
+
+/**
+ * F-21 « Envoyer le devis » : modalités contrôlées (Zod, @menao/core), puis la base attribue le
+ * numéro et fige le devis. Le PDF envoyé est produit aussitôt, pour être conservé tel quel.
+ */
+export async function sendQuote(
+  quoteId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(quoteId).success) return { error: fr.errors.generic };
+  const values = {
+    schedule: text(formData, "schedule") ?? "",
+    depositPercent: text(formData, "depositPercent") ?? "",
+    startDate: text(formData, "startDate") ?? "",
+    durationDays: text(formData, "durationDays") ?? "",
+  };
+  const parsed = sendQuoteSchema.safeParse({
+    ...values,
+    saveDefault: checkbox(formData, "saveDefault"),
+  });
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const dateError = quoteStartDateError(parsed.data.startDate, parisToday());
+  if (dateError) return { fieldErrors: { startDate: [START_DATE_ERRORS[dateError]] }, values };
+
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_send_quote", {
+    p_quote_id: quoteId,
+    p_deposit_percent: parsed.data.depositPercent,
+    p_start_date: parsed.data.startDate,
+    p_duration_days: parsed.data.durationDays,
+    p_save_default: parsed.data.saveDefault,
+  });
+  if (error) {
+    return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  }
+  await supabase.functions.invoke("generate-pdf", { body: { quoteId } });
+  revalidatePath("/pro", "layout");
+  redirect(`/pro/devis?onglet=envoyes&envoye=${quoteId}` as Route);
 }

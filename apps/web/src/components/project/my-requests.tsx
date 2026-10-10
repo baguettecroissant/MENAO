@@ -1,6 +1,6 @@
 import { timeLeft } from "@menao/core";
 import type { Database } from "@menao/db";
-import { CalendarDays, CalendarPlus, Mail, MapPin, Phone, Wrench } from "lucide-react";
+import { CalendarDays, CalendarPlus, FileText, Mail, MapPin, Phone, Wrench } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
@@ -12,6 +12,11 @@ import type { createClient } from "@/lib/supabase/server";
 const t = fr.myRequests;
 type Client = Awaited<ReturnType<typeof createClient>>;
 type Row = Database["public"]["Functions"]["particulier_requests"]["Returns"];
+type Quote = Pick<
+  Database["public"]["Tables"]["quotes"]["Row"],
+  "id" | "chantier_id" | "status" | "total_ttc_cents"
+>;
+const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
 const tone = {
   envoyee: "primary",
@@ -44,6 +49,18 @@ export async function MyRequests({ supabase }: { supabase: Client }) {
     const path = firstPhoto.get(projectId);
     return signed?.find((s) => s.path === path)?.signedUrl ?? null;
   };
+  // F-21 : dernière version envoyée du devis de chaque chantier (les brouillons restent privés).
+  const chantierIds = [...new Set(rows.flatMap((r) => (r.chantier_id ? [r.chantier_id] : [])))];
+  const { data: quoteRows } = chantierIds.length
+    ? await supabase
+        .from("quotes")
+        .select("id, chantier_id, status, total_ttc_cents")
+        .in("chantier_id", chantierIds)
+        .neq("status", "brouillon")
+        .order("version", { ascending: false })
+    : { data: [] };
+  const quotes = new Map<string, Quote>();
+  for (const q of quoteRows ?? []) if (!quotes.has(q.chantier_id)) quotes.set(q.chantier_id, q);
   const now = new Date();
   const active = rows.filter((r) => r.status === "envoyee" || r.status === "acceptee");
 
@@ -81,6 +98,7 @@ export async function MyRequests({ supabase }: { supabase: Client }) {
             items={items}
             head={head}
             photo={photoUrl(projectId)}
+            quotes={quotes}
             supabase={supabase}
             now={now}
           />
@@ -94,12 +112,14 @@ function ProjectCard({
   items,
   head,
   photo,
+  quotes,
   supabase,
   now,
 }: {
   items: Row;
   head: Row[number];
   photo: string | null;
+  quotes: Map<string, Quote>;
   supabase: Client;
   now: Date;
 }) {
@@ -144,6 +164,7 @@ function ProjectCard({
         <ul className="flex flex-col gap-3">
           {items.map((r) => {
             const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), now) : null;
+            const quote = r.chantier_id ? quotes.get(r.chantier_id) : undefined;
             return (
               <li
                 key={r.request_id}
@@ -191,6 +212,21 @@ function ProjectCard({
                       <CalendarPlus aria-hidden="true" className="size-3.5" />
                       {t.addToCalendar}
                     </a>
+                  </div>
+                )}
+                {quote && (
+                  <div className="flex flex-col gap-1.5 rounded-input bg-success-soft px-3 py-2 text-xs text-success">
+                    <p className="inline-flex items-center gap-1.5 font-medium">
+                      <FileText aria-hidden="true" className="size-3.5" />
+                      {t.quote(euros.format(quote.total_ttc_cents / 100))} ·{" "}
+                      {fr.clientQuote.statuses[quote.status]}
+                    </p>
+                    <Link
+                      href={`/mon-espace/devis/${quote.id}` as Route}
+                      className="self-start font-medium underline-offset-2 hover:underline"
+                    >
+                      {t.viewQuote}
+                    </Link>
                   </div>
                 )}
                 {r.status === "annulee" && r.chantier_status === "annule" && (

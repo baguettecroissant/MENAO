@@ -1,6 +1,6 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { StatusBadge } from "@/components/ui";
+import { Alert, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { formatDay, formatTime } from "@/lib/format";
@@ -15,15 +15,26 @@ const dayShort = new Intl.DateTimeFormat("fr-FR", {
 
 export const metadata: Metadata = { title: `${t.list.title} — MENAO` };
 
+const statusTone = {
+  brouillon: "neutral",
+  envoye: "success",
+  signe: "success",
+  refuse: "danger",
+  revision_demandee: "warning",
+  remplace: "neutral",
+} as const;
+
 /** Devis de l'artisan (maquettes « Devis – Aucun » et « Devis envoyés »). */
 export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis">) {
-  const { onglet } = await searchParams;
+  const { onglet, envoye } = await searchParams;
   const tab = onglet === "envoyes" ? "envoyes" : "a-envoyer";
   const { supabase } = await requireProSpace();
   const { data } = await supabase.rpc("artisan_quotes");
   const rows = (data ?? []).filter((q) =>
     tab === "a-envoyer" ? q.status === "brouillon" : q.status !== "brouillon",
   );
+  // Retour de « Envoyer le devis » (maquette « Devis envoyé »).
+  const justSent = (data ?? []).find((q) => q.quote_id === envoye && q.status === "envoye");
 
   return (
     <main className="flex-1">
@@ -32,6 +43,7 @@ export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.list.title}</h1>
           <p className="text-sm text-muted-foreground">{t.list.subtitle}</p>
         </div>
+        {justSent && <Alert tone="success">{t.list.sentNotice(justSent.client_name)}</Alert>}
         <nav
           aria-label={t.list.title}
           className="flex gap-1 rounded-pill bg-surface p-1 shadow-card"
@@ -68,7 +80,11 @@ export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis
               {rows.map((q) => (
                 <li key={q.quote_id}>
                   <Link
-                    href={`/pro/chantiers/${q.chantier_id}/devis` as Route}
+                    href={
+                      (q.status === "brouillon"
+                        ? `/pro/chantiers/${q.chantier_id}/devis`
+                        : `/pro/chantiers/${q.chantier_id}`) as Route
+                    }
                     className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -81,6 +97,7 @@ export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {[
+                        q.numero && `N° ${q.numero}`,
                         q.client_name,
                         q.appointment_at
                           ? t.list.visit(
@@ -93,12 +110,28 @@ export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis
                         .join(" · ")}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge tone="neutral">
-                        {t.statusDraft} · {t.lineCount(q.line_count)}
-                      </StatusBadge>
-                      <span className="text-xs text-muted-foreground">
-                        {t.list.updated(formatDay(q.updated_at))}
-                      </span>
+                      {q.status === "brouillon" ? (
+                        <>
+                          <StatusBadge tone="neutral">
+                            {t.statusDraft} · {t.lineCount(q.line_count)}
+                          </StatusBadge>
+                          {q.version > 1 && (
+                            <StatusBadge tone="primary">{t.list.version(q.version)}</StatusBadge>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {t.list.updated(formatDay(q.updated_at))}
+                          </span>
+                        </>
+                      ) : (
+                        <StatusBadge tone={statusTone[q.status]}>
+                          {q.status === "envoye" && q.sent_at
+                            ? t.list.sentOn(
+                                dayShort.format(new Date(q.sent_at)),
+                                formatTime(q.sent_at),
+                              )
+                            : t.list.statuses[q.status]}
+                        </StatusBadge>
+                      )}
                     </div>
                   </Link>
                 </li>

@@ -3,15 +3,27 @@ import { QUOTE_TEXTS, type QuoteDocumentModel } from "@menao/documents";
 const t = QUOTE_TEXTS;
 
 /**
- * Miniature du devis (maquette « Aperçu du devis ») : le contenu du PDF, issu du même modèle,
- * en HTML et coupé en bas ; le document complet s'ouvre avec « Voir le PDF ».
+ * Le devis en HTML, issu du même modèle que le PDF. Miniature (maquette « Aperçu du devis ») :
+ * coupée en bas, le document complet s'ouvre avec « Voir le PDF ». Sinon, en entier.
  */
-export function QuotePaper({ model, label }: { model: QuoteDocumentModel; label: string }) {
+export function QuotePaper({
+  model,
+  label,
+  clipped = true,
+}: {
+  model: QuoteDocumentModel;
+  label: string;
+  clipped?: boolean;
+}) {
   const last = model.totals.length - 1;
   return (
-    <figure className="relative w-full max-w-md overflow-hidden rounded-chip border border-border bg-surface shadow-card">
+    <figure
+      className={`relative w-full overflow-hidden rounded-chip border border-border bg-surface shadow-card ${clipped ? "max-w-md" : "max-w-2xl"}`}
+    >
       <figcaption className="sr-only">{label}</figcaption>
-      <div className="@container flex max-h-[38rem] flex-col gap-3 overflow-hidden p-5 text-[0.6875rem] leading-snug">
+      <div
+        className={`@container flex flex-col gap-3 p-5 leading-snug ${clipped ? "max-h-[38rem] overflow-hidden text-[0.6875rem]" : "text-xs sm:p-8 sm:text-[0.8125rem]"}`}
+      >
         {/* Étroit : titre et références au-dessus de l'artisan ; sinon côte à côte, comme le PDF. */}
         <div className="flex flex-col gap-2 @sm:flex-row @sm:items-start @sm:justify-between @sm:gap-4">
           <div className="min-w-0">
@@ -108,10 +120,12 @@ export function QuotePaper({ model, label }: { model: QuoteDocumentModel; label:
           ))}
         </div>
       </div>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent"
-      />
+      {clipped && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent"
+        />
+      )}
     </figure>
   );
 }
