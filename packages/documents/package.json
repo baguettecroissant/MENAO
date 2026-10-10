@@ -6,7 +6,8 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./pdf": "./src/quote-pdf.ts"
+    "./pdf": "./src/quote-pdf.ts",
+    "./invoice-pdf": "./src/invoice-pdf.ts"
   },
   "scripts": {
     "lint": "eslint .",
