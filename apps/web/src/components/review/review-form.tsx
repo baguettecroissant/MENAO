@@ -86,12 +86,7 @@ export function ReviewForm({
           <legend className="pb-3 text-sm font-medium">{t.valueTitle}</legend>
           {VALUE_FOR_MONEY.map((value) => (
             <label key={value} className="relative">
-              <input
-                type="radio"
-                name="value_for_money"
-                value={value}
-                className="peer sr-only"
-              />
+              <input type="radio" name="value_for_money" value={value} className="peer sr-only" />
               <span className="flex min-h-12 cursor-pointer items-center justify-center rounded-input border border-border bg-surface px-4 text-center text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:bg-background">
                 {t.values[value]}
               </span>
