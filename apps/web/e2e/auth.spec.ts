@@ -32,8 +32,9 @@ test("inscription, confirmation de l'e-mail, déconnexion puis connexion", async
   await page.goto(await authLinkFor(request, email));
   await expect(page).toHaveURL(/\/mon-espace$/);
   await expect(page.getByRole("heading", { level: 1, name: "Mes chantiers" })).toBeVisible();
+  // Coque de l'application (ADR 0034) : rôle et déconnexion dans le menu du compte.
+  await page.getByRole("button", { name: "Mon compte" }).click();
   await expect(page.getByText("Particulier", { exact: true })).toBeVisible();
-
   await page.getByRole("button", { name: "Me déconnecter" }).click();
   await expect(page).toHaveURL("/");
 

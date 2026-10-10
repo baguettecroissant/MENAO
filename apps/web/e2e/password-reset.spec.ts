@@ -22,6 +22,7 @@ test("mot de passe oublié : lien e-mail, nouveau mot de passe, reconnexion", as
   await page.getByRole("button", { name: "Enregistrer mon mot de passe" }).click();
   await expect(page).toHaveURL(/\/mon-espace$/);
 
+  await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("button", { name: "Me déconnecter" }).click();
   await expect(page).toHaveURL("/");
   await page.goto("/connexion");
