@@ -6,6 +6,7 @@ import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
 import { reportProblem } from "@/lib/disputes/actions";
+import { useFieldErrors } from "@/lib/use-field-errors";
 
 const t = fr.dispute;
 
@@ -15,9 +16,10 @@ export function ProblemReportForm({ chantierId }: { chantierId: string }) {
     reportProblem.bind(null, chantierId),
     initialFormState,
   );
-  const errors = state.fieldErrors ?? {};
-  const categoryError = errors.category?.[0];
-  const descriptionError = errors.description?.[0];
+  // Erreur effacée dès que le champ est corrigé.
+  const { errorOf, markEdited } = useFieldErrors(state);
+  const categoryError = errorOf("category");
+  const descriptionError = errorOf("description");
   return (
     <form action={formAction} noValidate className="flex flex-col gap-5">
       {state.error && <Alert tone="error">{state.error}</Alert>}
@@ -34,6 +36,7 @@ export function ProblemReportForm({ chantierId }: { chantierId: string }) {
                 name="category"
                 value={category}
                 defaultChecked={state.values?.category === category}
+                onChange={() => markEdited("category")}
                 className="peer sr-only"
               />
               <span className="flex min-h-12 cursor-pointer items-center justify-center rounded-input border border-border bg-surface px-3 text-center text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:bg-background">
@@ -54,6 +57,7 @@ export function ProblemReportForm({ chantierId }: { chantierId: string }) {
           rows={6}
           maxLength={DISPUTE_DESCRIPTION_LIMITS.max}
           defaultValue={state.values?.description}
+          onChange={() => markEdited("description")}
           aria-invalid={descriptionError ? true : undefined}
           aria-describedby={`problem-hint${descriptionError ? " problem-error" : ""}`}
           className={`${inputClasses} min-h-36 py-3`}
