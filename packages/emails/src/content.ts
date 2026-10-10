@@ -27,6 +27,7 @@ export const NOTIFICATION_TYPES = [
   "solde_paye",
   "avis_recu",
   "avis_relance",
+  "nouveaux_messages",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -565,6 +566,27 @@ export function notificationContent(
         quote: null,
         cta: reviewCta,
       };
+    case "nouveaux_messages": {
+      // F-40 : messages non lus, regroupés par fenêtre de 10 minutes ; le contenu n'est pas repris.
+      const forArtisan = text(data, "destinataire") === "artisan";
+      const auteur = text(data, "auteur") ?? (forArtisan ? "Votre client" : "L'artisan");
+      const n = count(data, "messages") || 1;
+      const base = forArtisan ? "/pro/messages" : "/mon-espace/messages";
+      return {
+        subject: n > 1 ? `${n} nouveaux messages de ${auteur}` : `Nouveau message de ${auteur}`,
+        preview: `À propos de ${quoted(titre)}.`,
+        title: n > 1 ? `${n} nouveaux messages` : "Nouveau message",
+        paragraphs: [
+          hello(ctx.firstName),
+          n > 1
+            ? `${auteur} vous a envoyé ${n} messages à propos du chantier ${quoted(titre)}.`
+            : `${auteur} vous a envoyé un message à propos du chantier ${quoted(titre)}.`,
+          "Lisez-le et répondez depuis la messagerie de votre espace MENAO.",
+        ],
+        quote: null,
+        cta: { label: "Lire les messages", url: link(chantierId ? `${base}/${chantierId}` : base) },
+      };
+    }
   }
 }
 
