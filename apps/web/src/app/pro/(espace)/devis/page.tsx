@@ -1,6 +1,6 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { Alert, StatusBadge } from "@/components/ui";
+import { Alert, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { formatDay, formatTime } from "@/lib/format";
@@ -42,6 +42,9 @@ export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis
         <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.list.title}</h1>
           <p className="text-sm text-muted-foreground">{t.list.subtitle}</p>
+          <TextLink href={"/pro/factures" as Route} className="self-start text-sm">
+            {fr.pro.invoices.link}
+          </TextLink>
         </div>
         {justSent && <Alert tone="success">{t.list.sentNotice(justSent.client_name)}</Alert>}
         <nav

@@ -40,21 +40,28 @@ export default async function ClientQuotePage({
   if (!auth || auth.claims.is_anonymous)
     redirect(`/connexion?next=/mon-espace/devis/${id}` as Route);
 
-  const [{ data: document }, { data: quote }, { data: deposit }] = await Promise.all([
-    supabase.rpc("quote_document", { p_quote_id: id }),
-    supabase
-      .from("quotes")
-      .select("id, status, valid_until, client_message, signed_at")
-      .eq("id", id)
-      .maybeSingle(),
-    supabase
-      .from("payments")
-      .select("status, amount_cents, paid_at")
-      .eq("quote_id", id)
-      .eq("kind", "acompte")
-      .in("status", ["en_attente", "en_cours", "paye"])
-      .maybeSingle(),
-  ]);
+  const [{ data: document }, { data: quote }, { data: deposit }, { data: invoice }] =
+    await Promise.all([
+      supabase.rpc("quote_document", { p_quote_id: id }),
+      supabase
+        .from("quotes")
+        .select("id, status, valid_until, client_message, signed_at")
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("payments")
+        .select("status, amount_cents, paid_at")
+        .eq("quote_id", id)
+        .eq("kind", "acompte")
+        .in("status", ["en_attente", "en_cours", "paye"])
+        .maybeSingle(),
+      supabase
+        .from("invoices")
+        .select("id, numero")
+        .eq("quote_id", id)
+        .eq("kind", "acompte")
+        .maybeSingle(),
+    ]);
   if (!document || !quote || quote.status === "brouillon") notFound();
   const data = quotePdfData(document as unknown as QuoteDocument);
   const { data: newer } =
@@ -99,7 +106,17 @@ export default async function ClientQuotePage({
         )}
         {deposit?.status === "paye" && deposit.paid_at ? (
           <Alert tone="success">
-            {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}
+            {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}{" "}
+            {invoice && (
+              <a
+                href={`/factures/${invoice.id}/pdf`}
+                target="_blank"
+                rel="noopener"
+                className="font-medium underline-offset-2 hover:underline"
+              >
+                {t.depositInvoice(invoice.numero)}
+              </a>
+            )}
           </Alert>
         ) : deposit?.status === "en_cours" ? (
           <Alert tone="info">{t.depositInProgress}</Alert>

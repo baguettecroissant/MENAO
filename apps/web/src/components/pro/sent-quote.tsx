@@ -32,9 +32,11 @@ export type DepositPayment = Pick<
 export function SentQuoteBlock({
   quote,
   deposit,
+  invoice,
 }: {
   quote: SentQuote;
   deposit: DepositPayment | null;
+  invoice: { id: string; numero: string } | null;
 }) {
   return (
     <DetailBlock
@@ -69,7 +71,17 @@ export function SentQuoteBlock({
       {quote.status === "signe" &&
         (deposit?.status === "paye" && deposit.paid_at ? (
           <p className="text-sm font-medium text-success">
-            {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}
+            {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}{" "}
+            {invoice && (
+              <a
+                href={`/factures/${invoice.id}/pdf`}
+                target="_blank"
+                rel="noopener"
+                className="text-primary-strong underline-offset-2 hover:underline"
+              >
+                {t.depositInvoice(invoice.numero)}
+              </a>
+            )}
           </p>
         ) : (
           <p className="text-sm">
