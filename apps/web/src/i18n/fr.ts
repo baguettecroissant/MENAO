@@ -1647,6 +1647,9 @@ export const fr = {
           "Votre dossier est complet. Envoyez-le à l'équipe MENAO : nous vérifions vos documents (Kbis, assurances, identité) avant d'activer votre compte.",
         button: "Envoyer mon dossier en vérification",
         incomplete: "Terminez les étapes 1 à 5 pour envoyer votre dossier.",
+        ready:
+          "Votre dossier est complet : envoyez-le à l'équipe MENAO pour vérification. Les étapes « Paiements » et « Formule » peuvent être finalisées pendant ce temps.",
+        readyCta: "Envoyer mon dossier",
         error: "Votre dossier est incomplet. Vérifiez chaque étape puis réessayez.",
       },
       status: {
