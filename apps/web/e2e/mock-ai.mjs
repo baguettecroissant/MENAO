@@ -4,6 +4,7 @@
 //
 // Analyse : « fuite » → plombier à Nice, sûr ; « hésitant » → peu sûr au premier modèle, sûr au
 // modèle de secours (vérifie le repli) ; « panne » → réponse invalide (vérifie le formulaire vide).
+// Dictée de devis (balise <dictee>, F-19) : deux lignes fixes, dont une sans prix dicté.
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.MOCK_AI_PORT ?? 54398);
@@ -40,6 +41,31 @@ function analysis(description, model) {
     urgence: false,
     resume: "Travaux de peinture.",
     confiance: fallback ? 0.8 : 0.3,
+  });
+}
+
+function quoteLines() {
+  return JSON.stringify({
+    lignes: [
+      {
+        type: "materiel",
+        designation: "Siphon PVC 40 mm",
+        description: null,
+        quantite: 1,
+        unite: "u",
+        prix_unitaire_ht: 12.5,
+        tva: 10,
+      },
+      {
+        type: "main_oeuvre",
+        designation: "Recherche de fuite",
+        description: "Contrôle des raccords",
+        quantite: 1.5,
+        unite: "h",
+        prix_unitaire_ht: null,
+        tva: null,
+      },
+    ],
   });
 }
 
@@ -98,7 +124,12 @@ createServer(async (req, res) => {
       type: "message",
       role: "assistant",
       model: body?.model ?? "mock",
-      content: [{ type: "text", text: analysis(text, body?.model ?? "") }],
+      content: [
+        {
+          type: "text",
+          text: text.includes("<dictee>") ? quoteLines() : analysis(text, body?.model ?? ""),
+        },
+      ],
       stop_reason: "end_turn",
       stop_sequence: null,
       usage: { input_tokens: 120, output_tokens: 80 },

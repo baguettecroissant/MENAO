@@ -1110,6 +1110,49 @@ export type Database = {
           },
         ];
       };
+      quote_dictations: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at: string;
+          id: string;
+          transcript: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at?: string;
+          id?: string;
+          transcript: string;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          id?: string;
+          transcript?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_dictations_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quote_dictations_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: true;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       quote_lines: {
         Row: {
           created_at: string;
@@ -1626,6 +1669,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      artisan_delete_dictation: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_fix_appointment: {
         Args: { p_date: string; p_request_id: string; p_time: string };
         Returns: string;
@@ -1696,6 +1740,10 @@ export type Database = {
       };
       artisan_save_appointment_notes: {
         Args: { p_chantier_id: string; p_notes: string };
+        Returns: undefined;
+      };
+      artisan_save_dictation: {
+        Args: { p_chantier_id: string; p_transcript: string };
         Returns: undefined;
       };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
