@@ -86,7 +86,10 @@ export function ReceptionPaper({ model, label }: { model: ReceptionDocumentModel
                       : "border-b border-border"
                   }
                 >
-                  <th scope="row" className="px-2 py-1.5 text-left font-[inherit]">
+                  <th
+                    scope="row"
+                    className={`px-2 py-1.5 text-left ${i === last ? "font-semibold" : "font-normal"}`}
+                  >
                     {labelText}
                   </th>
                   <td className="px-2 py-1.5 text-right whitespace-nowrap">{value}</td>
