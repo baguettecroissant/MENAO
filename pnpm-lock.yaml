@@ -184,6 +184,9 @@ importers:
       '@menao/config':
         specifier: workspace:^
         version: link:../config
+      '@menao/db':
+        specifier: workspace:^
+        version: link:../db
       '@types/node':
         specifier: 22.20.5
         version: 22.20.5

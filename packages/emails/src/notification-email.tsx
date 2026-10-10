@@ -9,7 +9,7 @@ import { Preview } from "@react-email/preview";
 import { Section } from "@react-email/section";
 import { Text } from "@react-email/text";
 import { colors } from "@menao/ui-tokens";
-import { EMAIL_FOOTER, type EmailContent } from "./content.ts";
+import { EMAIL_FOOTER, quoted, type EmailContent } from "./content.ts";
 
 // Polices système : les messageries ignorent le plus souvent les polices web.
 const font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -79,7 +79,7 @@ export function NotificationEmail({ content }: { content: EmailContent }) {
                   padding: "10px 14px",
                 }}
               >
-                « {content.quote} »
+                {quoted(content.quote)}
               </Text>
             )}
             <Button

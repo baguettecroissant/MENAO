@@ -421,6 +421,11 @@ GEOCODING_BASE_URL = "env(GEOCODING_BASE_URL)"
 AI_ANALYZE_MODEL = "env(AI_ANALYZE_MODEL)"
 AI_ANALYZE_FALLBACK_MODEL = "env(AI_ANALYZE_FALLBACK_MODEL)"
 AI_TRANSCRIBE_MODEL = "env(AI_TRANSCRIBE_MODEL)"
+# Notifications (F-41, ADR 0017) : Resend, expéditeur (défaut : onboarding@resend.dev tant que le
+# domaine n'est pas vérifié) et secret partagé avec la base (Vault : menao_notify_secret).
+RESEND_API_KEY = "env(RESEND_API_KEY)"
+EMAIL_FROM = "env(EMAIL_FROM)"
+NOTIFY_SECRET = "env(NOTIFY_SECRET)"
 
 # Vérification Sirene (F-14) : réservée aux utilisateurs connectés.
 [functions.sirene-check]
@@ -445,6 +450,10 @@ verify_jwt = true
 
 [functions.transcribe]
 verify_jwt = true
+
+# Envoi des notifications (F-41) : appelée par la base avec un secret partagé, sans jeton.
+[functions.notify]
+verify_jwt = false
 
 [analytics]
 enabled = true

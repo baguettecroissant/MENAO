@@ -69,6 +69,9 @@ function moment(iso: string | null): { day: string; time: string } | null {
 
 const hello = (firstName: string | null) => (firstName ? `Bonjour ${firstName},` : "Bonjour,");
 
+/** Guillemets français avec espaces insécables (jamais de « » » seul en début de ligne). */
+export const quoted = (value: string) => `«\u00a0${value}\u00a0»`;
+
 export function notificationContent(
   type: NotificationType,
   data: Record<string, unknown>,
@@ -88,11 +91,11 @@ export function notificationContent(
       const requestId = uuid(data, "request_id");
       return {
         subject: `Nouvelle demande de chantier${ville ? ` à ${ville}` : ""}`,
-        preview: `${client} vous a choisi pour « ${titre} ».`,
+        preview: `${client} vous a choisi pour ${quoted(titre)}.`,
         title: "Nouvelle demande de chantier",
         paragraphs: [
           hello(ctx.firstName),
-          `${client} vous a choisi pour son projet « ${titre} »${ville ? ` à ${ville}` : ""}.`,
+          `${client} vous a choisi pour son projet ${quoted(titre)}${ville ? ` à ${ville}` : ""}.`,
           ...(data.urgence === true ? ["Le client indique que les travaux sont urgents."] : []),
           deadline
             ? `Répondez avant le ${deadline.day} à ${deadline.time} : fixez un rendez-vous ou refusez la demande.`
@@ -108,13 +111,13 @@ export function notificationContent(
     case "rdv_fixe":
       return {
         subject: rdv ? `Rendez-vous fixé le ${rdv.day} à ${rdv.time}` : "Rendez-vous fixé",
-        preview: `${artisan} vient voir votre projet « ${titre} ».`,
+        preview: `${artisan} vient voir votre projet ${quoted(titre)}.`,
         title: "Votre rendez-vous est fixé",
         paragraphs: [
           hello(ctx.firstName),
           rdv
-            ? `${artisan} a fixé un rendez-vous pour votre projet « ${titre} » : le ${rdv.day} à ${rdv.time}.`
-            : `${artisan} a fixé un rendez-vous pour votre projet « ${titre} ».`,
+            ? `${artisan} a fixé un rendez-vous pour votre projet ${quoted(titre)} : le ${rdv.day} à ${rdv.time}.`
+            : `${artisan} a fixé un rendez-vous pour votre projet ${quoted(titre)}.`,
           "Ses coordonnées sont maintenant disponibles dans votre espace, si vous devez le joindre.",
         ],
         quote: null,
@@ -130,8 +133,8 @@ export function notificationContent(
         paragraphs: [
           hello(ctx.firstName),
           rdv
-            ? `${artisan} a déplacé le rendez-vous pour votre projet « ${titre} » au ${rdv.day} à ${rdv.time}.`
-            : `${artisan} a déplacé le rendez-vous pour votre projet « ${titre} ».`,
+            ? `${artisan} a déplacé le rendez-vous pour votre projet ${quoted(titre)} au ${rdv.day} à ${rdv.time}.`
+            : `${artisan} a déplacé le rendez-vous pour votre projet ${quoted(titre)}.`,
         ],
         quote: null,
         cta: { label: "Voir mon espace", url: link("/mon-espace") },
@@ -143,15 +146,15 @@ export function notificationContent(
       const when = rdv ? `demain, ${rdv.day} à ${rdv.time}` : "demain";
       return {
         subject: rdv ? `Rappel : rendez-vous demain à ${rdv.time}` : "Rappel : rendez-vous demain",
-        preview: `Rendez-vous ${when} pour « ${titre} ».`,
+        preview: `Rendez-vous ${when} pour ${quoted(titre)}.`,
         title: "Rendez-vous demain",
         paragraphs: forArtisan
           ? [
               hello(ctx.firstName),
-              `Vous avez rendez-vous ${when}${client ? ` chez ${client}` : ""} pour « ${titre} ».`,
+              `Vous avez rendez-vous ${when}${client ? ` chez ${client}` : ""} pour ${quoted(titre)}.`,
               ...(adresse ? [`Adresse : ${adresse}.`] : []),
             ]
-          : [hello(ctx.firstName), `${artisan} vient ${when} pour votre projet « ${titre} ».`],
+          : [hello(ctx.firstName), `${artisan} vient ${when} pour votre projet ${quoted(titre)}.`],
         quote: null,
         cta: forArtisan
           ? {
@@ -164,11 +167,11 @@ export function notificationContent(
     case "chantier_annule":
       return {
         subject: `${artisan} a annulé le rendez-vous`,
-        preview: `Votre projet « ${titre} » : vous pouvez choisir un autre artisan.`,
+        preview: `Votre projet ${quoted(titre)} : vous pouvez choisir un autre artisan.`,
         title: "Rendez-vous annulé",
         paragraphs: [
           hello(ctx.firstName),
-          `${artisan} a annulé le rendez-vous prévu pour votre projet « ${titre} ».`,
+          `${artisan} a annulé le rendez-vous prévu pour votre projet ${quoted(titre)}.`,
           "Vous pouvez choisir un autre artisan depuis votre espace.",
         ],
         quote: text(data, "motif"),
@@ -183,7 +186,7 @@ export function plainText(content: EmailContent): string {
     content.title,
     "",
     ...content.paragraphs.flatMap((p) => [p, ""]),
-    ...(content.quote ? [`« ${content.quote} »`, ""] : []),
+    ...(content.quote ? [quoted(content.quote), ""] : []),
     `${content.cta.label} : ${content.cta.url}`,
     "",
     "—",

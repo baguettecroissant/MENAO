@@ -807,6 +807,55 @@ export type Database = {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          attempts: number;
+          channel: Database["public"]["Enums"]["notification_channel"];
+          created_at: string;
+          data: NonNullable<Json>;
+          id: string;
+          last_error: string | null;
+          locked_at: string | null;
+          read_at: string | null;
+          sent_at: string | null;
+          status: Database["public"]["Enums"]["notification_status"];
+          type: Database["public"]["Enums"]["notification_type"];
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attempts?: number;
+          channel?: Database["public"]["Enums"]["notification_channel"];
+          created_at?: string;
+          data?: NonNullable<Json>;
+          id?: string;
+          last_error?: string | null;
+          locked_at?: string | null;
+          read_at?: string | null;
+          sent_at?: string | null;
+          status?: Database["public"]["Enums"]["notification_status"];
+          type: Database["public"]["Enums"]["notification_type"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          attempts?: number;
+          channel?: Database["public"]["Enums"]["notification_channel"];
+          created_at?: string;
+          data?: NonNullable<Json>;
+          id?: string;
+          last_error?: string | null;
+          locked_at?: string | null;
+          read_at?: string | null;
+          sent_at?: string | null;
+          status?: Database["public"]["Enums"]["notification_status"];
+          type?: Database["public"]["Enums"]["notification_type"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       plans: {
         Row: {
           avantages: NonNullable<Json>;
@@ -1516,7 +1565,22 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      claim_notifications: {
+        Args: { p_limit?: number };
+        Returns: {
+          data: Json;
+          email: string;
+          first_name: string;
+          id: string;
+          type: Database["public"]["Enums"]["notification_type"];
+          user_id: string;
+        }[];
+      };
       claim_project: { Args: { p_token: string }; Returns: string };
+      complete_notification: {
+        Args: { p_error?: string; p_id: string; p_retry?: boolean; p_sent: boolean };
+        Returns: undefined;
+      };
       consume_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number };
         Returns: boolean;
@@ -1709,6 +1773,10 @@ export type Database = {
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
+      notification_channel: "email" | "sms" | "push";
+      notification_status: "a_envoyer" | "en_cours" | "envoyee" | "echec";
+      notification_type:
+        "nouvelle_demande" | "rdv_fixe" | "rdv_modifie" | "rdv_rappel" | "chantier_annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
@@ -1886,6 +1954,15 @@ export const Constants = {
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
+      notification_channel: ["email", "sms", "push"],
+      notification_status: ["a_envoyer", "en_cours", "envoyee", "echec"],
+      notification_type: [
+        "nouvelle_demande",
+        "rdv_fixe",
+        "rdv_modifie",
+        "rdv_rappel",
+        "chantier_annule",
+      ],
       project_date_mode: ["des_que_possible", "date", "inconnue"],
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],

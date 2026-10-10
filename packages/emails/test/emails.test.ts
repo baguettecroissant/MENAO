@@ -1,3 +1,4 @@
+import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import { NOTIFICATION_TYPES, notificationContent, plainText } from "../src/content.ts";
 import { renderNotification } from "../src/render.tsx";
@@ -25,7 +26,7 @@ describe("contenu des notifications (F-41)", () => {
     expect(c.subject).toBe("Nouvelle demande de chantier à Nice");
     expect(c.paragraphs).toEqual([
       "Bonjour Noé,",
-      "Dominique vous a choisi pour son projet « Réparer une fuite » à Nice.",
+      "Dominique vous a choisi pour son projet «\u00a0Réparer une fuite\u00a0» à Nice.",
       "Le client indique que les travaux sont urgents.",
       "Répondez avant le lundi 12 octobre à 10h00 : fixez un rendez-vous ou refusez la demande.",
     ]);
@@ -43,7 +44,7 @@ describe("contenu des notifications (F-41)", () => {
     );
     expect(fixe.subject).toBe("Rendez-vous fixé le vendredi 20 février à 16h30");
     expect(fixe.paragraphs[1]).toBe(
-      "Xavier a fixé un rendez-vous pour votre projet « Prises » : le vendredi 20 février à 16h30.",
+      "Xavier a fixé un rendez-vous pour votre projet «\u00a0Prises\u00a0» : le vendredi 20 février à 16h30.",
     );
     expect(fixe.cta.url).toBe("https://menao.example/mon-espace");
     const modifie = notificationContent(
@@ -66,11 +67,11 @@ describe("contenu des notifications (F-41)", () => {
     const client = notificationContent("rdv_rappel", { ...data, destinataire: "particulier" }, ctx);
     expect(client.subject).toBe("Rappel : rendez-vous demain à 16h30");
     expect(client.paragraphs[1]).toBe(
-      "Xavier vient demain, vendredi 20 février à 16h30 pour votre projet « Prises ».",
+      "Xavier vient demain, vendredi 20 février à 16h30 pour votre projet «\u00a0Prises\u00a0».",
     );
     const artisan = notificationContent("rdv_rappel", { ...data, destinataire: "artisan" }, ctx);
     expect(artisan.paragraphs.slice(1)).toEqual([
-      "Vous avez rendez-vous demain, vendredi 20 février à 16h30 chez Camille Exemple pour « Prises ».",
+      "Vous avez rendez-vous demain, vendredi 20 février à 16h30 chez Camille Exemple pour «\u00a0Prises\u00a0».",
       "Adresse : 1 Rue de l'Exemple 06000 Nice.",
     ]);
     expect(artisan.cta.url).toBe(
@@ -89,7 +90,7 @@ describe("contenu des notifications (F-41)", () => {
     expect(c.cta.label).toBe("Choisir un autre artisan");
   });
 
-  it("données manquantes ou invalides : textes génériques, jamais « undefined »", () => {
+  it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
     for (const type of NOTIFICATION_TYPES) {
       const c = notificationContent(
         type,
@@ -142,6 +143,14 @@ describe("rendu HTML et texte", () => {
     expect(email.html).not.toContain("<script>");
     expect(email.html).not.toContain("<img src=x>");
     expect(email.html).toContain("&lt;script&gt;");
-    expect(email.text).toContain("« <script>alert(1)</script> »");
+    expect(email.text).toContain("«\u00a0<script>alert(1)</script>\u00a0»");
+  });
+});
+
+describe("cohérence avec la base", () => {
+  it("les types de notification correspondent exactement à l'enum public.notification_type", () => {
+    expect([...Constants.public.Enums.notification_type].sort()).toEqual(
+      [...NOTIFICATION_TYPES].sort(),
+    );
   });
 });
