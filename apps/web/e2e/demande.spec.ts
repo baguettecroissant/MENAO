@@ -186,8 +186,11 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(pdf.headers()["content-disposition"]).toContain("devis-apercu.pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
 
-  // Le brouillon de devis reste privé à l'artisan.
+  // Le brouillon de devis reste privé à l'artisan ; sans session, redirection vers la connexion.
   expect((await page.request.get(pdfHref ?? "")).status()).toBe(404);
+  const anonymous = await request.get(pdfHref ?? "", { maxRedirects: 0 });
+  expect(anonymous.status()).toBe(307);
+  expect(anonymous.headers().location).toContain("/connexion?next=");
 
   // Le tableau de bord affiche le rendez-vous à venir.
   const previewUrl = proPage.url();
