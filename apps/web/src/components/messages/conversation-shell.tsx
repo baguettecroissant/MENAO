@@ -49,12 +49,10 @@ export function ConversationShell({
               <h1 id="conversation-title" className="truncate font-medium">
                 {otherName}
               </h1>
-              <p className="truncate text-xs text-muted-foreground">
-                {title} ·{" "}
-                <TextLink href={chantierHref as Route} className="text-xs">
-                  {t.seeChantier}
-                </TextLink>
-              </p>
+              <p className="truncate text-xs text-muted-foreground">{title}</p>
+              <TextLink href={chantierHref as Route} className="text-xs">
+                {t.seeChantier}
+              </TextLink>
             </div>
           </header>
           {children}

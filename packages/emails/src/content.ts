@@ -28,6 +28,9 @@ export const NOTIFICATION_TYPES = [
   "avis_recu",
   "avis_relance",
   "nouveaux_messages",
+  "litige_ouvert",
+  "litige_clos",
+  "reponse_support",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -67,6 +70,15 @@ const timeFormat = new Intl.DateTimeFormat("fr-FR", {
 });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+
+/** Nature d'un problème signalé (enum public.dispute_category). */
+const DISPUTE_CATEGORIES: Record<string, string> = {
+  retard: "retard",
+  malfacon: "malfaçon",
+  comportement: "comportement",
+  paiement: "paiement",
+  autre: "autre",
+};
 
 /** Motifs de refus d'un devis par le client (enum public.quote_refusal_reason), vus par l'artisan. */
 const REFUSAL_REASONS: Record<string, string> = {
@@ -585,6 +597,75 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Lire les messages", url: link(chantierId ? `${base}/${chantierId}` : base) },
+      };
+    }
+    case "litige_ouvert": {
+      // F-42 : l'autre partie est informée du signalement (sans sa description).
+      const forArtisan = text(data, "destinataire") === "artisan";
+      const categorie = DISPUTE_CATEGORIES[text(data, "categorie") ?? ""] ?? null;
+      const who = forArtisan ? "Votre client" : artisan;
+      return {
+        subject: `Problème signalé sur ${quoted(titre)}`,
+        preview: `${who} a signalé un problème${categorie ? ` (${categorie})` : ""}.`,
+        title: "Un problème a été signalé",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${who} a signalé un problème${categorie ? ` (${categorie})` : ""} sur le chantier ${quoted(titre)}.`,
+          "L'équipe MENAO examine la situation et vous contactera si nécessaire. Les étapes d'un chantier en cours sont suspendues jusqu'à sa décision.",
+        ],
+        quote: null,
+        cta: forArtisan
+          ? {
+              label: "Voir le chantier",
+              url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+            }
+          : myChantier("Voir mon chantier"),
+      };
+    }
+    case "litige_clos": {
+      // F-42 : décision de l'équipe, aux deux parties ; lien vers le ticket pour le déclarant.
+      const forArtisan = text(data, "destinataire") === "artisan";
+      const ticketId = uuid(data, "ticket_id");
+      const cancelled = text(data, "decision") === "annulation";
+      return {
+        subject: `Litige clos : ${quoted(titre)}`,
+        preview: cancelled ? "Le chantier est annulé." : "Le chantier reprend.",
+        title: "Litige clos",
+        paragraphs: [
+          hello(ctx.firstName),
+          cancelled
+            ? `L'équipe MENAO a clos le litige du chantier ${quoted(titre)} : le chantier est annulé.`
+            : `L'équipe MENAO a clos le litige du chantier ${quoted(titre)} : le chantier reprend là où il en était.`,
+          "Le détail de la décision est disponible dans votre espace MENAO.",
+        ],
+        quote: null,
+        cta: ticketId
+          ? { label: "Voir la décision", url: link(`/signalements/${ticketId}`) }
+          : forArtisan
+            ? {
+                label: "Voir le chantier",
+                url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+              }
+            : myChantier("Voir mon chantier"),
+      };
+    }
+    case "reponse_support": {
+      // F-42 : réponse de l'équipe dans le ticket du déclarant.
+      const ticketId = uuid(data, "ticket_id");
+      return {
+        subject: "Réponse de l'équipe MENAO à votre signalement",
+        preview: `À propos de ${quoted(titre)}.`,
+        title: "L'équipe MENAO vous a répondu",
+        paragraphs: [
+          hello(ctx.firstName),
+          `L'équipe MENAO a répondu à votre signalement ${quoted(titre)}.`,
+          "Vous pouvez lui répondre depuis la page du signalement.",
+        ],
+        quote: null,
+        cta: {
+          label: "Lire la réponse",
+          url: link(ticketId ? `/signalements/${ticketId}` : "/mon-espace"),
+        },
       };
     }
   }

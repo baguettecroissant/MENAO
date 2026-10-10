@@ -3,6 +3,7 @@ import { CalendarDays, CalendarPlus, Clock, MessageCircle } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ReportProblemLink } from "@/components/chantier/chantier-parts";
 import { DetailHeader, StickyActions } from "@/components/pro/detail";
 import { ExpertiseButton } from "@/components/pro/expertise-button";
 import { RequestBlocks } from "@/components/pro/request-blocks";
@@ -27,6 +28,7 @@ const FOLLOW_UP: readonly ChantierStatus[] = [
   "reserves_a_lever",
   "receptionne",
   "cloture",
+  "en_litige",
 ];
 
 export const metadata: Metadata = { title: `${t.title} — MENAO` };
@@ -168,6 +170,9 @@ export default async function ChantierPage({
           variant="rendez-vous"
         />
         {c.appointment && <NotesBlock chantierId={c.chantier.id} notes={c.appointment.notes} />}
+        {status !== "annule" && (
+          <ReportProblemLink href={`/pro/chantiers/${c.chantier.id}/signaler`} />
+        )}
       </div>
 
       {(awaitingQuote || cancellable.includes(status)) && (

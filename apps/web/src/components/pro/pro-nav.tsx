@@ -59,7 +59,7 @@ export function ProBottomNav() {
             <Link
               href={href as Route}
               aria-current={active(pathname, href) ? "page" : undefined}
-              className="flex min-h-16 flex-col items-center justify-center gap-1 text-[0.6875rem] text-muted-foreground aria-[current=page]:text-primary"
+              className="flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-center text-[0.6875rem] leading-tight text-muted-foreground aria-[current=page]:text-primary"
             >
               <Icon aria-hidden="true" className="size-5" />
               {label}

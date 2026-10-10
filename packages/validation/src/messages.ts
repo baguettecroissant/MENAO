@@ -67,6 +67,11 @@ export const messages = {
   moderationReasonRequired: "Indiquez le motif en 10 caractères au moins.",
   messageRequired: "Écrivez votre message.",
   messageTooLong: "Votre message dépasse 2 000 caractères.",
+  disputeCategoryRequired: "Choisissez la nature du problème.",
+  disputeDescriptionTooShort: "Décrivez le problème en 20 caractères au moins.",
+  disputeDescriptionTooLong: "Votre description dépasse 2 000 caractères.",
+  disputeOutcomeRequired: "Choisissez la décision : reprise ou annulation du chantier.",
+  disputeDecisionTooShort: "Expliquez la décision en 10 caractères au moins.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

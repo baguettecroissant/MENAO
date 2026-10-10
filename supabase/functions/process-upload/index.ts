@@ -1,4 +1,4 @@
-// Edge Function process-upload (F-05, F-14, F-22, F-40, F-43) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-22, F-40, F-42, F-43) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
@@ -27,11 +27,18 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   project_photo: ["jpeg", "png"],
   chantier_photo: ["jpeg", "png"],
   message_attachment: ["pdf", "jpeg", "png"],
+  ticket_photo: ["jpeg", "png"],
 };
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
 type Purpose =
-  "document" | "avatar" | "portfolio" | "project_photo" | "chantier_photo" | "message_attachment";
+  | "document"
+  | "avatar"
+  | "portfolio"
+  | "project_photo"
+  | "chantier_photo"
+  | "message_attachment"
+  | "ticket_photo";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -83,6 +90,7 @@ Deno.serve(
       document?: DocumentInput;
       projectId?: string;
       chantierId?: string;
+      ticketId?: string;
     } | null;
     const purpose = body?.purpose as Purpose | undefined;
     const path = body?.path ?? "";
@@ -128,6 +136,9 @@ Deno.serve(
       }
       if (purpose === "message_attachment") {
         return await saveMessageAttachment(admin, user.id, body?.chantierId, file);
+      }
+      if (purpose === "ticket_photo") {
+        return await saveTicketPhoto(admin, user.id, body?.ticketId, file);
       }
 
       const { data: artisan } = await admin
@@ -254,6 +265,31 @@ async function saveMessageAttachment(
   });
   if (error || status !== "ok") {
     await admin.storage.from("message-attachments").remove([path]);
+    if (error) throw error;
+    return status === "locked" || status === "limit"
+      ? respond(status, 409)
+      : respond("forbidden", 403);
+  }
+  return respond("ok");
+}
+
+// Photo d'un signalement (F-42), par son déclarant.
+async function saveTicketPhoto(
+  admin: SupabaseClient,
+  userId: string,
+  ticketId: string | undefined,
+  file: CleanFile,
+) {
+  if (!ticketId || !new RegExp(`^${UUID}$`).test(ticketId)) return respond("invalid", 400);
+  const path = `${ticketId}/${file.name}`;
+  await store(admin, "ticket-photos", path, file);
+  const { data: status, error } = await admin.rpc("record_ticket_photo", {
+    p_ticket_id: ticketId,
+    p_user_id: userId,
+    p_storage_path: path,
+  });
+  if (error || status !== "ok") {
+    await admin.storage.from("ticket-photos").remove([path]);
     if (error) throw error;
     return status === "locked" || status === "limit"
       ? respond(status, 409)

@@ -1,7 +1,11 @@
+import { TicketReplyForm } from "@/components/dispute/ticket-reply-form";
+import { TicketThread } from "@/components/dispute/ticket-thread";
 import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { setTicketStatus } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
+import { signedUrlMap } from "@/lib/chantier/storage";
+import { DisputeDecision } from "./dispute-decision";
 import { ModerateMessage } from "./moderate-message";
 import { ModerateReview } from "./moderate-review";
 
@@ -19,11 +23,17 @@ export default async function TicketsPage() {
   const { data } = await supabase
     .from("tickets")
     .select(
-      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label)), reviews(id, author_name, score, comment, status, moderation_reason), messages(id, kind, body, hidden_at, moderation_reason)",
+      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label)), reviews(id, author_name, score, comment, status, moderation_reason), messages(id, kind, body, hidden_at, moderation_reason), category, chantiers(title, status), ticket_messages(id, from_staff, body, storage_path, created_at)",
     )
     .order("due_at", { ascending: true })
     .limit(100);
   const tickets = data ?? [];
+  // Photos des litiges (F-42), servies par URL signées à l'équipe.
+  const photos = await signedUrlMap(
+    supabase,
+    "ticket-photos",
+    tickets.flatMap((x) => x.ticket_messages.map((m) => m.storage_path)),
+  );
   const now = new Date();
   const open = tickets.filter((x) => x.status !== "resolu");
   const closed = tickets.filter((x) => x.status === "resolu");
@@ -45,6 +55,7 @@ export default async function TicketsPage() {
             const project = ticket.projects;
             const review = ticket.reviews;
             const reported = ticket.messages;
+            const dispute = ticket.type === "litige" ? ticket.chantiers : null;
             return (
               <Card key={ticket.id}>
                 <div className="flex flex-col gap-2">
@@ -86,6 +97,42 @@ export default async function TicketsPage() {
                       <ModerateReview reviewId={review.id} status={review.status} />
                     </div>
                   )}
+                  {dispute && (
+                    <div className="flex flex-col gap-3 rounded-input bg-background p-3">
+                      <p className="text-sm">
+                        {t.dispute.chantier(dispute.title, fr.pro.chantiers.status[dispute.status])}
+                      </p>
+                      {ticket.category && (
+                        <p className="text-sm">
+                          {t.dispute.category(fr.dispute.categories[ticket.category])}
+                        </p>
+                      )}
+                      <p className="text-sm font-medium">{t.dispute.thread}</p>
+                      <TicketThread
+                        entries={[...ticket.ticket_messages]
+                          .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                          .map((m) => ({
+                            id: m.id,
+                            fromStaff: m.from_staff,
+                            body: m.body,
+                            photoUrl: m.storage_path ? (photos.get(m.storage_path) ?? null) : null,
+                            createdAt: m.created_at,
+                          }))}
+                        labels={{ staff: t.dispute.support, reporter: t.dispute.reporter }}
+                        emptyText={t.noMessage}
+                      />
+                      {ticket.status !== "resolu" && (
+                        <>
+                          <TicketReplyForm
+                            ticketId={ticket.id}
+                            label={t.dispute.replyLabel}
+                            submit={t.dispute.replySubmit}
+                          />
+                          <DisputeDecision ticketId={ticket.id} />
+                        </>
+                      )}
+                    </div>
+                  )}
                   {reported && (
                     <div className="flex flex-col gap-2 rounded-input bg-background p-3">
                       <p className="text-sm font-medium">{t.reportedMessage.title}</p>
@@ -103,28 +150,30 @@ export default async function TicketsPage() {
                       />
                     </div>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {(ticket.status === "resolu"
-                      ? [{ status: "ouvert", label: t.reopen }]
-                      : [
-                          ...(ticket.status === "ouvert"
-                            ? [{ status: "en_cours", label: t.markInProgress }]
-                            : []),
-                          { status: "resolu", label: t.markResolved },
-                        ]
-                    ).map((action) => (
-                      <form key={action.status} action={setTicketStatus}>
-                        <input type="hidden" name="ticketId" value={ticket.id} />
-                        <input type="hidden" name="status" value={action.status} />
-                        <button
-                          type="submit"
-                          className="min-h-touch rounded-button border border-border px-4 font-medium hover:bg-background"
-                        >
-                          {action.label}
-                        </button>
-                      </form>
-                    ))}
-                  </div>
+                  {!dispute && (
+                    <div className="flex flex-wrap gap-2">
+                      {(ticket.status === "resolu"
+                        ? [{ status: "ouvert", label: t.reopen }]
+                        : [
+                            ...(ticket.status === "ouvert"
+                              ? [{ status: "en_cours", label: t.markInProgress }]
+                              : []),
+                            { status: "resolu", label: t.markResolved },
+                          ]
+                      ).map((action) => (
+                        <form key={action.status} action={setTicketStatus}>
+                          <input type="hidden" name="ticketId" value={ticket.id} />
+                          <input type="hidden" name="status" value={action.status} />
+                          <button
+                            type="submit"
+                            className="min-h-touch rounded-button border border-border px-4 font-medium hover:bg-background"
+                          >
+                            {action.label}
+                          </button>
+                        </form>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Card>
             );

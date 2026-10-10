@@ -24,3 +24,4 @@ export * from "./chantier-progress";
 export * from "./reception";
 export * from "./review";
 export * from "./messaging";
+export * from "./dispute";

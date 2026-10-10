@@ -179,7 +179,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     "Fuite sous l'évier de la cuisine à Nice.",
   );
   await dictation.getByRole("button", { name: "Sauvegarder cet enregistrement" }).click();
-  await expect(dictation.getByText("Enregistrement sauvegardé.")).toBeVisible();
+  await expect(dictation.getByText("Enregistrement sauvegardé.", { exact: true })).toBeVisible();
   await dictation.getByRole("button", { name: "Générer les lignes" }).click();
   await expect(editor.getByText("2 lignes ajoutées : vérifiez-les.")).toBeVisible();
   await expect(editor.getByText("Siphon PVC 40 mm")).toBeVisible();
@@ -729,5 +729,37 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.reload();
   await expect(thread.getByText("Bonjour Dominique, je vous la dépose demain.")).toBeVisible();
   await expect(thread.getByText(/ · Lu$/)).toBeVisible();
+
+  // Signalement d'un problème (F-42) : chantier clôturé, donc ticket seul (le passage en litige
+  // d'un chantier actif et la décision de l'équipe sont couverts par pgTAP) ; suivi et échanges.
+  await page.goto(`/mon-espace/chantiers/${chantierId}`);
+  await page.getByRole("link", { name: "Signaler un problème lié au chantier" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}/signaler$`));
+  await expect(page.getByText(/Le chantier n'étant plus en cours/)).toBeVisible();
+  await page.getByRole("button", { name: "Envoyer le signalement" }).click();
+  await expect(page.getByText("Choisissez la nature du problème.")).toBeVisible();
+  await page.getByText("Malfaçon").click();
+  await page
+    .getByLabel("Description du problème")
+    .fill("Le joint du siphon fuit de nouveau depuis hier soir.");
+  await capture(page, "client-signalement");
+  await page.getByRole("button", { name: "Envoyer le signalement" }).click();
+  await expect(page).toHaveURL(new RegExp(`/signalements/${UUID}$`));
+  await expect(page.getByRole("heading", { name: "Votre signalement" })).toBeVisible();
+  await expect(page.getByText("Envoyé à l'équipe")).toBeVisible();
+  await expect(
+    page.getByText("Le joint du siphon fuit de nouveau depuis hier soir."),
+  ).toBeVisible();
+  await page
+    .getByLabel("Votre message à l'équipe MENAO")
+    .fill("Je reste disponible demain matin pour un passage.");
+  await page.getByRole("button", { name: "Envoyer", exact: true }).click();
+  await expect(
+    page.getByRole("list").getByText("Je reste disponible demain matin pour un passage."),
+  ).toBeVisible();
+  await capture(page, "client-suivi-signalement");
+  await page.goto(`/mon-espace/chantiers/${chantierId}`);
+  await expect(page.getByText(/Votre signalement est en cours de traitement/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Suivre mon signalement" })).toBeVisible();
   await pro.close();
 });
