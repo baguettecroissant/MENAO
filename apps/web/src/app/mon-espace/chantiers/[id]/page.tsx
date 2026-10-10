@@ -8,6 +8,7 @@ import {
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ChantierActionBlock } from "@/components/chantier/chantier-action";
+import { addressOf } from "@/components/chantier/chantier-card";
 import {
   ChantierDocuments,
   PaymentSchedule,
@@ -146,7 +147,7 @@ export default async function ClientChantierPage({
           photoUrl={c.photo_path ? (cover.get(c.photo_path) ?? null) : null}
           backHref="/mon-espace"
           title={c.title}
-          address={c.adresse}
+          address={addressOf(c)}
           tags={
             <ChantierStatusTag
               tag={chantierTag({
@@ -193,7 +194,7 @@ export default async function ClientChantierPage({
                   chantierId={id}
                   next={next}
                   title={c.title}
-                  location={c.adresse}
+                  location={addressOf(c)}
                   artisanName={c.artisan_name}
                   clientName={null}
                 />

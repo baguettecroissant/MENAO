@@ -26,7 +26,7 @@ export function AddToCalendar({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={buttonClasses({ variant: "outline" })}
+        className={`${buttonClasses({ variant: "outline" })} whitespace-nowrap`}
       >
         {t.addToCalendar}
         <CalendarPlus aria-hidden="true" className="size-4" />

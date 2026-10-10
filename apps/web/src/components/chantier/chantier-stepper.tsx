@@ -29,7 +29,7 @@ export function ChantierStepper({ current }: { current: number }) {
             )}
             <span
               aria-hidden="true"
-              className={`relative flex size-7 items-center justify-center rounded-full border-[1.5px] ${
+              className={`relative z-10 flex size-7 items-center justify-center rounded-full border-[1.5px] ${
                 state === "done"
                   ? "border-primary bg-primary-soft text-primary-strong"
                   : state === "current"
@@ -46,7 +46,7 @@ export function ChantierStepper({ current }: { current: number }) {
               )}
             </span>
             <span
-              className={`max-w-full truncate text-[0.6875rem] ${
+              className={`text-[0.625rem] whitespace-nowrap sm:text-[0.6875rem] ${
                 state === "current" ? "font-medium text-primary-strong" : "text-muted-foreground"
               }`}
             >

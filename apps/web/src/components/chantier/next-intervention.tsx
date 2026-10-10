@@ -16,6 +16,7 @@ export function NextIntervention({
   location,
   artisanName,
   clientName,
+  centered = false,
   children,
 }: {
   chantierId: string;
@@ -24,6 +25,8 @@ export function NextIntervention({
   location: string | null;
   artisanName: string | null;
   clientName: string | null;
+  /** Contenu centré (carte de « Mes chantiers », maquette bureau). */
+  centered?: boolean;
   /** Action supplémentaire (artisan : modifier la date de démarrage). */
   children?: ReactNode;
 }) {
@@ -39,9 +42,9 @@ export function NextIntervention({
   return (
     <section
       aria-label={t.title}
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card sm:p-5"
+      className={`flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card sm:p-5 ${centered ? "items-stretch text-center" : ""}`}
     >
-      <p className="flex items-center gap-2 text-sm">
+      <p className={`flex items-center gap-2 text-sm ${centered ? "justify-center" : ""}`}>
         <CalendarDays aria-hidden="true" className="size-4 text-primary" />
         {t.title}
       </p>
