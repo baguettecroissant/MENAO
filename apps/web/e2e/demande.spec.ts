@@ -179,7 +179,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     "Fuite sous l'évier de la cuisine à Nice.",
   );
   await dictation.getByRole("button", { name: "Sauvegarder cet enregistrement" }).click();
-  await expect(dictation.getByText("Enregistrement sauvegardé.")).toBeVisible();
+  await expect(dictation.getByText("Enregistrement sauvegardé.", { exact: true })).toBeVisible();
   await dictation.getByRole("button", { name: "Générer les lignes" }).click();
   await expect(editor.getByText("2 lignes ajoutées : vérifiez-les.")).toBeVisible();
   await expect(editor.getByText("Siphon PVC 40 mm")).toBeVisible();
