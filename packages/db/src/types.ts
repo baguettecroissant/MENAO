@@ -562,6 +562,43 @@ export type Database = {
           },
         ];
       };
+      communes: {
+        Row: {
+          code_insee: string;
+          created_at: string;
+          departement: string;
+          location: unknown;
+          nom: string;
+          ordre: number;
+          pilote: boolean;
+          slug: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code_insee: string;
+          created_at?: string;
+          departement: string;
+          location: unknown;
+          nom: string;
+          ordre?: number;
+          pilote?: boolean;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          code_insee?: string;
+          created_at?: string;
+          departement?: string;
+          location?: unknown;
+          nom?: string;
+          ordre?: number;
+          pilote?: boolean;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       legal_acceptances: {
         Row: {
           accepted_at: string;
@@ -1051,9 +1088,10 @@ export type Database = {
           project_id: string | null;
           resolved_at: string | null;
           status: Database["public"]["Enums"]["ticket_status"];
+          subject: string | null;
           type: Database["public"]["Enums"]["ticket_type"];
           updated_at: string;
-          user_id: string;
+          user_id: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -1066,9 +1104,10 @@ export type Database = {
           project_id?: string | null;
           resolved_at?: string | null;
           status?: Database["public"]["Enums"]["ticket_status"];
+          subject?: string | null;
           type: Database["public"]["Enums"]["ticket_type"];
           updated_at?: string;
-          user_id: string;
+          user_id?: string | null;
         };
         Update: {
           contact_email?: string;
@@ -1080,9 +1119,10 @@ export type Database = {
           project_id?: string | null;
           resolved_at?: string | null;
           status?: Database["public"]["Enums"]["ticket_status"];
+          subject?: string | null;
           type?: Database["public"]["Enums"]["ticket_type"];
           updated_at?: string;
-          user_id?: string;
+          user_id?: string | null;
         };
         Relationships: [
           {
@@ -1294,6 +1334,23 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      public_artisans_for_commune: {
+        Args: { p_code_insee: string; p_limit?: number; p_trade_code: string };
+        Returns: {
+          artisan_id: string;
+          available_from: string;
+          available_now: boolean;
+          avatar_path: string;
+          display_name: string;
+          experience_years: number;
+          specialties: Json;
+          zone_city: string;
+          zone_communes: string[];
+          zone_mode: Database["public"]["Enums"]["zone_mode"];
+          zone_radius_km: number;
+        }[];
+      };
+      public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       record_sirene_result: {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
@@ -1317,6 +1374,10 @@ export type Database = {
           p_ville_nom: string;
           p_work_type_codes: string[];
         };
+        Returns: undefined;
+      };
+      send_contact_message: {
+        Args: { p_email: string; p_message: string; p_subject: string };
         Returns: undefined;
       };
       send_project_requests: {
@@ -1386,7 +1447,7 @@ export type Database = {
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
       ticket_status: "ouvert" | "en_cours" | "resolu";
-      ticket_type: "dossier_recherche";
+      ticket_type: "dossier_recherche" | "contact";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -1526,7 +1587,7 @@ export const Constants = {
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
-      ticket_type: ["dossier_recherche"],
+      ticket_type: ["dossier_recherche", "contact"],
       zone_mode: ["rayon", "communes"],
     },
   },

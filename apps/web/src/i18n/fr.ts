@@ -11,12 +11,209 @@ export const fr = {
     signUp: "Créer un compte",
     mySpace: "Mon espace",
     pro: "Espace Pro",
+    howItWorks: "Comment ça marche ?",
+    guarantees: "Garanties & Confiance",
+    myClientSpace: "Mon espace client",
+    findArtisan: "Trouver un artisan",
+    menu: "Menu",
+    main: "Navigation principale",
+  },
+  footer: {
+    tagline: "Les artisans du bâtiment vérifiés, du premier contact à la réception du chantier.",
+    trades: "Artisans à Nice",
+    company: "MENAO",
+    legal: "Informations légales",
+    faq: "Questions fréquentes",
+    contact: "Contact",
+    legalNotice: "Mentions légales",
+    terms: "Conditions générales d'utilisation",
+    termsPro: "CGV artisans",
+    privacy: "Politique de confidentialité",
+    cookies: "Politique cookies",
+    ranking: "Critères de classement",
   },
   home: {
     title: "Trouvez l'artisan pro du BTP dont vous avez besoin",
     subtitle: "Décrivez votre projet : nous trouvons les artisans vérifiés qu'il vous faut.",
     pro: "Vous êtes artisan ?",
     proLink: "Rejoindre MENAO",
+    tradesTitle: "Trouvez un artisan par métier",
+    stats: (artisans: number, trades: number) =>
+      `${artisans} artisan${artisans > 1 ? "s" : ""} vérifié${artisans > 1 ? "s" : ""} dans ${trades} métier${trades > 1 ? "s" : ""}`,
+    stepsTitle: "Comment ça marche ?",
+    steps: [
+      {
+        title: "Décrivez votre projet",
+        body: "Avec vos mots, à l'écrit ou à la voix, photos à l'appui.",
+      },
+      {
+        title: "Vérifiez vos critères",
+        body: "Notre assistant pré-remplit la recherche : métier, travaux, lieu, date.",
+      },
+      {
+        title: "Choisissez vos artisans",
+        body: "Jusqu'à 3 artisans vérifiés reçoivent votre demande et ont 48 h pour répondre.",
+      },
+    ],
+    moreSteps: "En savoir plus",
+  },
+  seo: {
+    tradeTitle: (trade: string) => `${trade} dans les Alpes-Maritimes`,
+    tradeIntro: (trade: string) =>
+      `Trouvez un artisan ${trade.toLowerCase()} vérifié par MENAO près de chez vous : choisissez votre ville.`,
+    cityTitle: (trade: string, city: string) => `${trade} à ${city}`,
+    cityMetaTitle: (trade: string, city: string, dep: string) =>
+      `${trade} à ${city} (${dep}) : artisans vérifiés — MENAO`,
+    cityDescription: (trade: string, city: string) =>
+      `Artisans ${trade.toLowerCase()} vérifiés par MENAO à ${city} : entreprise, assurance décennale et RC Pro contrôlées. Décrivez votre projet, jusqu'à 3 artisans vous répondent sous 48 h.`,
+    cityIntro: (trade: string, city: string) =>
+      `MENAO vérifie chaque artisan avant de le proposer : entreprise en activité, identité du dirigeant, assurance décennale et responsabilité civile professionnelle. Voici les artisans ${trade.toLowerCase()} qui interviennent à ${city}.`,
+    found: (n: number) =>
+      n === 1
+        ? "1 artisan vérifié intervient dans cette ville."
+        : `${n} artisans vérifiés interviennent dans cette ville.`,
+    none: (trade: string, city: string) =>
+      `Aucun artisan ${trade.toLowerCase()} vérifié n'intervient encore à ${city} sur MENAO. Décrivez votre projet : nous vous mettrons en relation dès qu'un artisan sera disponible, ou nous chercherons pour vous.`,
+    cta: "Décrire mon projet",
+    ctaHint: "Gratuit et sans engagement pour les particuliers.",
+    otherCities: (trade: string) => `${trade} dans d'autres villes`,
+    otherTrades: (city: string) => `Autres artisans à ${city}`,
+    breadcrumbHome: "Accueil",
+    noContact: "Les coordonnées des artisans sont communiquées quand ils acceptent votre demande.",
+  },
+  pages: {
+    howItWorks: {
+      title: "Comment ça marche ?",
+      intro:
+        "MENAO accompagne particuliers et artisans du bâtiment, de la première demande jusqu'à la réception du chantier.",
+      clientTitle: "Vous avez un projet de travaux",
+      client: [
+        "Décrivez votre projet avec vos mots, à l'écrit ou en dictant, et ajoutez des photos.",
+        "Notre assistant d'intelligence artificielle en déduit le métier, les travaux, le lieu et la date ; vous vérifiez et corrigez.",
+        "Nous vous proposons jusqu'à 5 artisans vérifiés qui interviennent chez vous ; vous en choisissez jusqu'à 3.",
+        "Chaque artisan a 48 heures pour accepter votre demande. Dès qu'il accepte, vous échangez vos coordonnées.",
+        "Bientôt sur MENAO : rendez-vous, devis et signature en ligne, paiement directement à l'artisan, suivi du chantier et avis vérifiés.",
+      ],
+      proTitle: "Vous êtes artisan du bâtiment",
+      pro: [
+        "Inscrivez-vous avec votre SIRET, déposez vos documents (Kbis, décennale, RC Pro, pièce d'identité).",
+        "L'équipe MENAO vérifie votre dossier avant de vous rendre visible.",
+        "Recevez des demandes de chantier structurées dans votre zone d'intervention et répondez sous 48 heures.",
+        "Abonnement mensuel, sans commission sur vos chantiers.",
+      ],
+      cta: "Décrire mon projet",
+      ctaPro: "Découvrir l'Espace Pro",
+    },
+    guarantees: {
+      title: "Garanties & Confiance",
+      intro: "Ce que MENAO vérifie, et ce que MENAO ne fait pas.",
+      sections: [
+        {
+          title: "Des artisans vérifiés",
+          items: [
+            "Entreprise en activité, contrôlée dans le répertoire Sirene de l'INSEE, avec une activité du bâtiment.",
+            "Kbis ou extrait INSEE/RNE de moins de 3 mois, pièce d'identité du dirigeant.",
+            "Assurance décennale et responsabilité civile professionnelle en cours de validité, vérifiées par l'équipe MENAO.",
+            "Suivi des échéances : un artisan dont l'assurance expire sans être renouvelée n'est plus proposé.",
+          ],
+        },
+        {
+          title: "Vos données protégées",
+          items: [
+            "Vos coordonnées ne sont transmises qu'aux artisans qui acceptent votre demande.",
+            "Votre description est analysée par une intelligence artificielle ; e-mails, téléphones et noms en sont retirés avant l'analyse.",
+            "Vos photos de chantier sont privées : seuls vous et les artisans que vous contactez y ont accès.",
+          ],
+        },
+        {
+          title: "Paiements",
+          items: [
+            "MENAO ne prend aucune commission sur vos chantiers et ne détient jamais votre argent.",
+            "Les paiements en ligne (bientôt disponibles) seront versés directement sur le compte de l'artisan par Stripe, prestataire de paiement agréé.",
+            "En cas de désaccord sur un paiement, il se règle avec l'artisan, qui est votre interlocuteur et le bénéficiaire du paiement.",
+          ],
+        },
+        {
+          title: "Classement transparent",
+          items: [
+            "Aucun artisan ne paie pour être mieux classé.",
+            "Les avis seront réservés aux clients ayant réalisé un chantier via MENAO.",
+          ],
+        },
+      ],
+      rankingLink: "Lire les critères de classement",
+    },
+    faq: {
+      title: "Questions fréquentes",
+      items: [
+        {
+          q: "MENAO est-il payant pour les particuliers ?",
+          a: "Non. Décrire votre projet et contacter des artisans est gratuit et sans engagement.",
+        },
+        {
+          q: "Combien d'artisans puis-je contacter ?",
+          a: "Jusqu'à 3 artisans par projet. Si l'un d'eux refuse ou ne répond pas sous 48 heures, vous pouvez en choisir un autre.",
+        },
+        {
+          q: "Comment les artisans sont-ils vérifiés ?",
+          a: "Nous contrôlons l'entreprise (SIRET actif), l'identité du dirigeant, l'assurance décennale et la responsabilité civile professionnelle avant de rendre un artisan visible, puis nous suivons les échéances de ses assurances.",
+        },
+        {
+          q: "Quand l'artisan reçoit-il mes coordonnées ?",
+          a: "Seulement s'il accepte votre demande. Avant, il voit votre projet, votre prénom et votre ville.",
+        },
+        {
+          q: "MENAO prend-il une commission ?",
+          a: "Non. Les artisans paient un abonnement mensuel. MENAO ne prend aucune commission et ne détient jamais l'argent des chantiers.",
+        },
+        {
+          q: "Dans quelles villes MENAO est-il disponible ?",
+          a: "MENAO démarre dans les Alpes-Maritimes.",
+        },
+        {
+          q: "Je suis artisan : comment rejoindre MENAO ?",
+          a: "Créez votre compte depuis l'Espace Pro avec votre SIRET, complétez votre profil et vos documents : l'équipe MENAO vérifie votre dossier.",
+        },
+      ],
+    },
+    contact: {
+      title: "Contact",
+      intro:
+        "Une question, une suggestion ? Écrivez-nous : l'équipe MENAO vous répond sous 7 jours.",
+      projectHint:
+        "Vous ne trouvez pas d'artisan pour votre projet ? Décrivez-le depuis l'accueil puis utilisez « Envoyer mon dossier à MENAO » : nous aurons tous les détails.",
+      email: "Votre adresse e-mail",
+      subject: "Sujet (facultatif)",
+      message: "Votre message",
+      submit: "Envoyer",
+      sent: "Votre message est envoyé. L'équipe MENAO vous répond sous 7 jours.",
+      privacy: "Votre adresse e-mail sert uniquement à vous répondre.",
+    },
+    legalNotice: {
+      title: "Mentions légales",
+      editorTitle: "Éditeur du site",
+      editor:
+        "[À compléter : dénomination sociale, forme juridique, capital, siège social, RCS, numéro de TVA, téléphone, adresse e-mail.]",
+      directorTitle: "Directeur de la publication",
+      director: "[À compléter.]",
+      hostTitle: "Hébergement",
+      host: [
+        "Site web : Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis (fonctions exécutées dans l'Union européenne).",
+        "Données : Supabase Inc., hébergement des bases de données dans l'Union européenne.",
+      ],
+      draft: "Version provisoire, en cours de validation juridique.",
+    },
+    cookies: {
+      title: "Politique cookies",
+      intro: "MENAO utilise uniquement les cookies nécessaires au fonctionnement du site.",
+      items: [
+        "Cookies de session (Supabase) : ils maintiennent votre connexion et votre recherche en cours. Indispensables, ils ne nécessitent pas votre consentement.",
+        "Aucun cookie publicitaire ni de mesure d'audience n'est déposé à ce jour. Si nous en utilisions, votre consentement serait demandé au préalable, et le refus serait aussi simple que l'acceptation.",
+      ],
+      monitoring:
+        "Suivi des erreurs : en cas de plantage, des informations techniques (navigateur, page, message d'erreur) sont transmises à notre outil de suivi Sentry, sans donnée personnelle ni cookie.",
+      draft: "Version provisoire, en cours de validation juridique.",
+    },
   },
   search: {
     label: "Décrivez votre projet",
@@ -368,6 +565,12 @@ export const fr = {
       ],
       signUp: "Créer mon compte pro",
       signIn: "J'ai déjà un compte",
+      plansTitle: "Nos formules",
+      perMonth: "HT / mois",
+      trial: "3 mois offerts",
+      open: "Disponible",
+      soon: "Bientôt disponible",
+      noCommission: "Sans engagement de durée, sans commission sur vos chantiers.",
     },
     signUp: {
       title: "Créer mon compte professionnel",
@@ -738,11 +941,12 @@ export const fr = {
     nav: {
       artisans: "Dossiers artisans",
       watch: "À surveiller",
-      tickets: "Dossiers particuliers",
+      tickets: "Dossiers et messages",
       signOut: "Me déconnecter",
     },
     tickets: {
-      title: "Dossiers envoyés par les particuliers",
+      title: "Dossiers et messages",
+      types: { dossier_recherche: "Dossier de recherche", contact: "Message de la page Contact" },
       empty: "Aucun dossier.",
       open: "À traiter",
       closed: "Résolus",
