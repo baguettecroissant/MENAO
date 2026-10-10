@@ -4,6 +4,7 @@ import {
   DEFAULT_DEPOSIT_PERCENT,
   DEFAULT_UNIT,
   QUOTE_LINE_TYPES,
+  QUOTE_REFUSAL_REASONS,
   QUOTE_UNITS,
   allowedVatRates,
   formatQuantity,
@@ -257,7 +258,8 @@ describe("envoi du devis : échéancier et dates (F-20, F-21)", () => {
   it("pourcentage d'acompte entier entre 1 et 99", () => {
     expect(isValidDepositPercent(1)).toBe(true);
     expect(isValidDepositPercent(99)).toBe(true);
-    for (const value of [0, 100, 30.5, Number.NaN]) expect(isValidDepositPercent(value)).toBe(false);
+    for (const value of [0, 100, 30.5, Number.NaN])
+      expect(isValidDepositPercent(value)).toBe(false);
   });
 
   it("date de début : après aujourd'hui (heure de Paris), dans l'année", () => {
@@ -267,6 +269,10 @@ describe("envoi du devis : échéancier et dates (F-20, F-21)", () => {
     expect(quoteStartDateError("2027-10-11", "2026-10-10")).toBe("trop_loin");
     expect(quoteStartDateError("2027-02-30", "2026-10-10")).toBe("invalide");
     expect(quoteStartDateError("demain", "2026-10-10")).toBe("invalide");
+  });
+
+  it("motifs de refus identiques à l'enum de la base", () => {
+    expect([...QUOTE_REFUSAL_REASONS]).toEqual(Constants.public.Enums.quote_refusal_reason);
   });
 
   it("durée estimée en jours, entre 1 et 365", () => {

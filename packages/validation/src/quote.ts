@@ -1,6 +1,9 @@
 import {
+  QUOTE_DURATION_MAX_DAYS,
   QUOTE_LIMITS,
   QUOTE_LINE_TYPES,
+  QUOTE_REFUSAL_REASONS,
+  QUOTE_REVISION_MESSAGE_LIMITS,
   QUOTE_UNITS,
   VAT_EXEMPT_BP,
   VAT_RATES_BP,
@@ -111,3 +114,37 @@ export const quoteLineFormSchema = z
       ctx.addIssue({ code: "custom", path: ["unitPrice"], message: messages.lineAmountTooHigh });
     }
   });
+
+const integerField = (min: number, max: number, error: string) =>
+  z
+    .string()
+    .trim()
+    .regex(/^\d{1,4}$/, { error })
+    .transform(Number)
+    .pipe(z.number().int().min(min, { error }).max(max, { error }));
+
+/**
+ * F-21 « Envoyer le devis » : acompte (le solde va à la réception), date de début (AAAA-MM-JJ,
+ * à venir : contrôlée par @menao/core) et durée estimée en jours.
+ */
+export const sendQuoteSchema = z.object({
+  depositPercent: integerField(1, 99, messages.depositInvalid),
+  saveDefault: z.boolean(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: messages.startDateRequired }),
+  durationDays: integerField(1, QUOTE_DURATION_MAX_DAYS, messages.durationInvalid),
+});
+
+/** F-21 : refus du devis par le client, avec un commentaire facultatif pour l'artisan. */
+export const refuseQuoteSchema = z.object({
+  reason: z.enum(QUOTE_REFUSAL_REASONS, { error: messages.quoteRefusalReasonRequired }),
+  comment: z.string().trim().max(500, { error: messages.tooLong }),
+});
+
+/** F-21 : demande de modification du devis par le client. */
+export const quoteRevisionSchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(QUOTE_REVISION_MESSAGE_LIMITS.min, { error: messages.revisionMessageTooShort })
+    .max(QUOTE_REVISION_MESSAGE_LIMITS.max, { error: messages.tooLong }),
+});

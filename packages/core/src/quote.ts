@@ -52,6 +52,16 @@ export const PAYMENT_TRIGGERS = ["signature", "reception"] as const;
 export type PaymentTrigger = (typeof PAYMENT_TRIGGERS)[number];
 export type PaymentTranche = { percent: number; trigger: PaymentTrigger; amountCents: number };
 
+/** Motifs de refus d'un devis par le client (enum public.quote_refusal_reason). */
+export const QUOTE_REFUSAL_REASONS = [
+  "trop_cher",
+  "autre_artisan",
+  "projet_reporte",
+  "autre",
+] as const;
+export type QuoteRefusalReason = (typeof QUOTE_REFUSAL_REASONS)[number];
+export const QUOTE_REVISION_MESSAGE_LIMITS = { min: 10, max: 1000 } as const;
+
 /** « Mon échéancier par défaut » proposé (maquette : 30 % à la signature, 70 % à la réception). */
 export const DEFAULT_DEPOSIT_PERCENT = 30;
 export const QUOTE_START_MAX_DAYS = 365;

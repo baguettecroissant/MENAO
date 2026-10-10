@@ -40,6 +40,13 @@ export const messages = {
   lineAmountTooHigh: "Montant trop élevé pour une seule ligne.",
   vatRateInvalid: "Taux de TVA invalide.",
   tooManyLines: "Un devis compte 200 lignes au plus.",
+  depositInvalid: "Indiquez un acompte entier entre 1 et 99 %.",
+  startDateRequired: "Choisissez la date de début prévisionnelle.",
+  startDatePast: "La date de début doit être postérieure à aujourd'hui.",
+  startDateTooFar: "La date de début doit se situer dans l'année à venir.",
+  durationInvalid: "Indiquez une durée entière entre 1 et 365 jours.",
+  quoteRefusalReasonRequired: "Choisissez la raison de votre refus.",
+  revisionMessageTooShort: "Décrivez la modification souhaitée en 10 caractères au moins.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;
