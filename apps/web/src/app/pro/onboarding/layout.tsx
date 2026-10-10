@@ -6,11 +6,12 @@ import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { signOut } from "@/lib/auth/actions";
 import { Stepper } from "./stepper";
+import { SubmitReminder } from "./submit-reminder";
 
 export const metadata: Metadata = { title: `${fr.pro.onboarding.title} — MENAO` };
 
 export default async function OnboardingLayout({ children }: { children: ReactNode }) {
-  const { progress, artisan, documents } = await getOnboardingContext();
+  const { progress, artisan, documents, canSubmit } = await getOnboardingContext();
   // F-51 : documents surveillés arrivant à échéance (ou expirés) sans renouvellement déposé.
   const toRenew =
     artisan.status === "valide" || artisan.status === "suspendu"
@@ -48,6 +49,9 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
             toRenew.map((type) => fr.pro.onboarding.documents.types[type]).join(", "),
           )}
         </Alert>
+      )}
+      {(artisan.status === "brouillon" || artisan.status === "refuse") && canSubmit && (
+        <SubmitReminder />
       )}
       <Stepper progress={progress} />
       {children}
