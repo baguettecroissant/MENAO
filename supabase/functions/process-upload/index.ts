@@ -1,4 +1,4 @@
-// Edge Function process-upload (F-05, F-14, F-43) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-22, F-43) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
@@ -24,10 +24,11 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   avatar: ["jpeg", "png"],
   portfolio: ["jpeg", "png"],
   project_photo: ["jpeg", "png"],
+  chantier_photo: ["jpeg", "png"],
 };
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
-type Purpose = "document" | "avatar" | "portfolio" | "project_photo";
+type Purpose = "document" | "avatar" | "portfolio" | "project_photo" | "chantier_photo";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -78,6 +79,7 @@ Deno.serve(
       path?: string;
       document?: DocumentInput;
       projectId?: string;
+      chantierId?: string;
     } | null;
     const purpose = body?.purpose as Purpose | undefined;
     const path = body?.path ?? "";
@@ -117,6 +119,9 @@ Deno.serve(
       if (purpose === "avatar") return await saveAvatar(admin, user.id, file);
       if (purpose === "project_photo") {
         return await saveProjectPhoto(admin, user.id, body?.projectId, file);
+      }
+      if (purpose === "chantier_photo") {
+        return await saveChantierPhoto(admin, user.id, body?.chantierId, file);
       }
 
       const { data: artisan } = await admin
@@ -195,6 +200,32 @@ async function saveProjectPhoto(
   if (error) {
     await admin.storage.from("project-photos").remove([path]);
     throw error;
+  }
+  return respond("ok");
+}
+
+// Photos du journal de chantier (F-22). Les règles (artisan du chantier, journal ouvert, 100 photos
+// au plus) sont vérifiées par record_chantier_photo ; le fichier est retiré si l'ajout est refusé.
+async function saveChantierPhoto(
+  admin: SupabaseClient,
+  userId: string,
+  chantierId: string | undefined,
+  file: CleanFile,
+) {
+  if (!chantierId || !new RegExp(`^${UUID}$`).test(chantierId)) return respond("invalid", 400);
+  const path = `${chantierId}/${file.name}`;
+  await store(admin, "chantier-photos", path, file);
+  const { data: status, error } = await admin.rpc("record_chantier_photo", {
+    p_chantier_id: chantierId,
+    p_user_id: userId,
+    p_storage_path: path,
+  });
+  if (error || status !== "ok") {
+    await admin.storage.from("chantier-photos").remove([path]);
+    if (error) throw error;
+    return status === "locked" || status === "limit"
+      ? respond(status, 409)
+      : respond("forbidden", 403);
   }
   return respond("ok");
 }
