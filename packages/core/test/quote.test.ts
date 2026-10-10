@@ -8,9 +8,12 @@ import {
   formatQuantity,
   lineTotalHtCents,
   lineTtcCents,
+  normalizeVoiceLines,
   parseEuros,
   parseQuantity,
+  quoteFromVoiceJsonSchema,
   quoteTotals,
+  type RawVoiceLine,
 } from "../src/quote";
 
 // Lignes de la maquette « Vue d'une génération de devis » : 300,00 € HT, 330,00 € TTC.
@@ -117,5 +120,116 @@ describe("cohérence avec la base", () => {
       [...QUOTE_LINE_TYPES].sort(),
     );
     expect([...Constants.public.Enums.quote_unit].sort()).toEqual([...QUOTE_UNITS].sort());
+  });
+});
+
+describe("dictée intelligente : lignes proposées par l'IA (F-19)", () => {
+  const raw = (over: Partial<RawVoiceLine> = {}): RawVoiceLine => ({
+    type: "materiel",
+    designation: " Prise de courant Legrand Céliane ",
+    description: null,
+    quantite: 4,
+    unite: "u",
+    prix_unitaire_ht: 22.5,
+    tva: null,
+    ...over,
+  });
+  const assujetti = { assujettiTva: true, defaultVatBp: 1000 };
+
+  it("convertit quantités et prix en millièmes et centimes, taux dicté ou proposé", () => {
+    expect(
+      normalizeVoiceLines(
+        [
+          raw(),
+          raw({
+            type: "main_oeuvre",
+            designation: "Pose",
+            quantite: 2.5,
+            unite: "h",
+            prix_unitaire_ht: 55,
+            tva: 20,
+          }),
+          raw({
+            type: "autre",
+            designation: "Déplacement",
+            quantite: 1,
+            unite: "forfait",
+            prix_unitaire_ht: 0.29,
+            tva: 5.5,
+          }),
+        ],
+        assujetti,
+      ),
+    ).toEqual([
+      {
+        type: "materiel",
+        designation: "Prise de courant Legrand Céliane",
+        description: "",
+        quantityMilli: 4000,
+        unit: "u",
+        unitPriceHtCents: 2250,
+        vatRateBp: 1000,
+      },
+      {
+        type: "main_oeuvre",
+        designation: "Pose",
+        description: "",
+        quantityMilli: 2500,
+        unit: "h",
+        unitPriceHtCents: 5500,
+        vatRateBp: 2000,
+      },
+      {
+        type: "autre",
+        designation: "Déplacement",
+        description: "",
+        quantityMilli: 1000,
+        unit: "forfait",
+        unitPriceHtCents: 29,
+        vatRateBp: 550,
+      },
+    ]);
+  });
+
+  it("prix non dicté : 0 € à compléter ; unité inconnue : unité du type ; franchise en base : 0 %", () => {
+    const [line] = normalizeVoiceLines(
+      [raw({ prix_unitaire_ht: null, unite: "palette", tva: 10 })],
+      {
+        assujettiTva: false,
+        defaultVatBp: 0,
+      },
+    );
+    expect(line).toMatchObject({ unitPriceHtCents: 0, unit: "u", vatRateBp: 0 });
+  });
+
+  it("écarte les lignes inutilisables et limite à 50 lignes", () => {
+    expect(
+      normalizeVoiceLines(
+        [
+          raw({ type: "inconnu" }),
+          raw({ designation: "   " }),
+          raw({ quantite: 0 }),
+          raw({ quantite: -2 }),
+          raw({ prix_unitaire_ht: -5 }),
+          raw({ quantite: 100, prix_unitaire_ht: 200_000 }),
+          raw({ quantite: Number.NaN }),
+        ],
+        assujetti,
+      ),
+    ).toEqual([]);
+    expect(
+      normalizeVoiceLines(
+        Array.from({ length: 60 }, () => raw()),
+        assujetti,
+      ),
+    ).toHaveLength(50);
+  });
+
+  it("schéma de sortie structurée : types et unités de la base", () => {
+    const schema = quoteFromVoiceJsonSchema();
+    const item = schema.properties.lignes.items;
+    expect(item.properties.type.enum).toEqual([...QUOTE_LINE_TYPES]);
+    expect(item.properties.unite.enum).toEqual([...QUOTE_UNITS]);
+    expect(item.required).toEqual(Object.keys(item.properties));
   });
 });

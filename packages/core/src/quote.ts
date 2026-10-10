@@ -117,3 +117,112 @@ const quantityFormat = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3
 export function formatQuantity(quantityMilli: number): string {
   return quantityFormat.format(quantityMilli / 1000);
 }
+
+// ---------------------------------------------------------------------------
+// Dictée intelligente (F-19) : lignes proposées par l'IA (Edge Function quote-from-voice).
+// Ce fichier n'importe rien : la fonction Deno l'importe directement.
+// ---------------------------------------------------------------------------
+
+export const VOICE_MAX_LINES = 50;
+
+/** Ligne telle que décrite par quoteFromVoiceJsonSchema (prix en euros, TVA en %). */
+export type RawVoiceLine = {
+  type: string;
+  designation: string;
+  description: string | null;
+  quantite: number;
+  unite: string;
+  prix_unitaire_ht: number | null;
+  tva: number | null;
+};
+
+export type VoiceLine = {
+  type: QuoteLineType;
+  designation: string;
+  description: string;
+  quantityMilli: number;
+  unit: QuoteUnit;
+  unitPriceHtCents: number;
+  vatRateBp: number;
+};
+
+const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: "null" }] });
+
+/** Schéma JSON de la sortie structurée du modèle. */
+export function quoteFromVoiceJsonSchema() {
+  const properties = {
+    type: { type: "string", enum: [...QUOTE_LINE_TYPES] },
+    designation: { type: "string" },
+    description: nullable({ type: "string" }),
+    quantite: { type: "number" },
+    unite: { type: "string", enum: [...QUOTE_UNITS] },
+    prix_unitaire_ht: nullable({ type: "number" }),
+    tva: nullable({ type: "number" }),
+  };
+  return {
+    type: "object" as const,
+    properties: {
+      lignes: {
+        type: "array" as const,
+        items: {
+          type: "object" as const,
+          properties,
+          required: Object.keys(properties),
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["lignes"],
+    additionalProperties: false,
+  };
+}
+
+const VAT_FROM_PERCENT: Record<string, number> = { "5.5": 550, "10": 1000, "20": 2000 };
+
+/**
+ * Lignes prêtes pour l'éditeur : quantités et prix en entiers, unité et taux contrôlés.
+ * Un prix non dicté devient 0 € (à compléter) ; les lignes inutilisables sont écartées.
+ * L'artisan vérifie toujours les lignes avant d'enregistrer.
+ */
+export function normalizeVoiceLines(
+  raw: readonly RawVoiceLine[],
+  options: { assujettiTva: boolean; defaultVatBp: number },
+): VoiceLine[] {
+  const lines: VoiceLine[] = [];
+  for (const r of raw) {
+    if (lines.length >= VOICE_MAX_LINES) break;
+    const type = (QUOTE_LINE_TYPES as readonly string[]).includes(r.type)
+      ? (r.type as QuoteLineType)
+      : null;
+    const designation = r.designation.trim().slice(0, QUOTE_LIMITS.designationMaxLength);
+    if (!type || !designation) continue;
+    const quantityMilli = Math.round(r.quantite * 1000);
+    const unitPriceHtCents = Math.round((r.prix_unitaire_ht ?? 0) * 100);
+    if (
+      !Number.isFinite(quantityMilli) ||
+      quantityMilli <= 0 ||
+      quantityMilli > QUOTE_LIMITS.maxQuantityMilli ||
+      !Number.isFinite(unitPriceHtCents) ||
+      unitPriceHtCents < 0 ||
+      unitPriceHtCents > QUOTE_LIMITS.maxUnitPriceCents ||
+      lineTotalHtCents(quantityMilli, unitPriceHtCents) > QUOTE_LIMITS.maxLineTotalCents
+    ) {
+      continue;
+    }
+    const unit = (QUOTE_UNITS as readonly string[]).includes(r.unite)
+      ? (r.unite as QuoteUnit)
+      : DEFAULT_UNIT[type];
+    lines.push({
+      type,
+      designation,
+      description: (r.description ?? "").trim().slice(0, QUOTE_LIMITS.descriptionMaxLength),
+      quantityMilli,
+      unit,
+      unitPriceHtCents,
+      vatRateBp: options.assujettiTva
+        ? (VAT_FROM_PERCENT[String(r.tva)] ?? options.defaultVatBp)
+        : VAT_EXEMPT_BP,
+    });
+  }
+  return lines;
+}
