@@ -456,6 +456,10 @@ verify_jwt = true
 [functions.quote-from-voice]
 verify_jwt = true
 
+# PDF du devis (F-20) : utilisateur connecté ; l'accès est décidé par quote_document.
+[functions.generate-pdf]
+verify_jwt = true
+
 # Envoi des notifications (F-41) : appelée par la base avec un secret partagé, sans jeton.
 [functions.notify]
 verify_jwt = false
