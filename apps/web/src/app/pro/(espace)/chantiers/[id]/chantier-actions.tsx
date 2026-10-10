@@ -14,6 +14,7 @@ import {
   editChantierStart,
   rescheduleAppointment,
   saveAppointmentNotes,
+  signalReservesLifted,
 } from "@/lib/artisan/chantier-actions";
 import { initialFormState } from "@/lib/auth/form";
 import { useActionSuccess } from "@/lib/use-action-success";
@@ -336,6 +337,61 @@ export function DeclareFinishedButton({
           {state.error && <Alert tone="error">{state.error}</Alert>}
           <Button type="submit" size="lg" disabled={pending}>
             {tf.finish}
+          </Button>
+        </form>
+      </Drawer>
+    </>
+  );
+}
+
+/**
+ * F-26 « Signaler la levée des réserves » : le client est invité à vérifier les reprises et à
+ * confirmer la levée.
+ */
+export function SignalLiftButton({
+  chantierId,
+  clientName,
+}: {
+  chantierId: string;
+  clientName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const [state, formAction, pending] = useActionState(
+    signalReservesLifted.bind(null, chantierId),
+    initialFormState,
+  );
+  useActionSuccess(state, close);
+  const error = state.fieldErrors?.message?.[0];
+  return (
+    <>
+      {state.success && <Alert tone="success">{state.success}</Alert>}
+      <Button type="button" size="lg" onClick={() => setOpen(true)}>
+        {tf.signalLift}
+      </Button>
+      <Drawer open={open} onClose={close} title={tf.liftTitle} backLabel={tf.finishClose}>
+        <form action={formAction} className="flex flex-col gap-4" noValidate>
+          <p className="text-sm text-muted-foreground">{tf.liftText(clientName)}</p>
+          {state.error && <Alert tone="error">{state.error}</Alert>}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="lift-message" className="text-sm font-medium">
+              {tf.liftMessage}{" "}
+              <span className="font-normal text-subtle-foreground">{tf.liftMessageNote}</span>
+            </label>
+            <textarea
+              id="lift-message"
+              name="message"
+              rows={3}
+              maxLength={1000}
+              defaultValue={state.values?.message}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "lift-message-error" : undefined}
+              className={`${inputClasses} min-h-24 py-3`}
+            />
+            {error && <FieldError id="lift-message-error">{error}</FieldError>}
+          </div>
+          <Button type="submit" size="lg" disabled={pending}>
+            {tf.liftSubmit}
           </Button>
         </form>
       </Drawer>

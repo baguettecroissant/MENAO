@@ -7,6 +7,7 @@ import {
   cancelChantierSchema,
   chantierMessageSchema,
   chantierStartSchema,
+  liftMessageSchema,
   expertiseSchema,
   messages,
 } from "@menao/validation";
@@ -222,4 +223,24 @@ export async function declareChantierFinished(chantierId: string): Promise<FormS
   if (error) return rpcError(error);
   revalidatePath("/pro", "layout");
   return { success: tf.finished };
+}
+
+/** F-26 « Signaler la levée des réserves » : le client est invité à confirmer la levée. */
+export async function signalReservesLifted(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const values = { message: text(formData, "message") ?? "" };
+  const parsed = liftMessageSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_signal_reserves_lifted", {
+    p_chantier_id: chantierId,
+    p_message: parsed.data.message,
+  });
+  if (error) return { ...rpcError(error), values };
+  revalidatePath(`/pro/chantiers/${chantierId}`);
+  return { success: tf.liftSent };
 }

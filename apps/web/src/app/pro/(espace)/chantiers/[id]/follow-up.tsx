@@ -48,6 +48,7 @@ import {
   DeclareFinishedButton,
   EditChantierStartButton,
   NotesBlock,
+  SignalLiftButton,
 } from "./chantier-actions";
 
 const t = fr.chantier;
@@ -110,7 +111,7 @@ export async function ArtisanFollowUp({
     // F-25, F-26 : PV de réception et date de réception.
     supabase
       .from("receptions")
-      .select("id, numero, status, reserves, signed_at")
+      .select("id, numero, status, reserves, signed_at, lift_signaled_at")
       .eq("chantier_id", id)
       .maybeSingle(),
     supabase
@@ -232,6 +233,11 @@ export async function ArtisanFollowUp({
               <p className="text-xs text-muted-foreground">{tf.reservesNext}</p>
             </section>
           )}
+          {status === "reserves_a_lever" && reception?.lift_signaled_at && (
+            <Alert tone="info">
+              {tf.liftSignaled(clientFirstName, formatDateNumeric(reception.lift_signaled_at))}
+            </Alert>
+          )}
           {status === "receptionne" && received && (
             <Alert tone="success">
               {tf.received(clientFirstName, formatDateNumeric(received.created_at))}
@@ -317,6 +323,11 @@ export async function ArtisanFollowUp({
       {canDeclareFinished(status) && (
         <StickyActions>
           <DeclareFinishedButton chantierId={id} clientName={clientFirstName} />
+        </StickyActions>
+      )}
+      {status === "reserves_a_lever" && (
+        <StickyActions>
+          <SignalLiftButton chantierId={id} clientName={clientFirstName} />
         </StickyActions>
       )}
     </main>

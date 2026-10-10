@@ -24,7 +24,7 @@ import { ChantierStatusTag } from "@/components/chantier/chantier-status-tag";
 import { ChantierStepper } from "@/components/chantier/chantier-stepper";
 import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
-import { ReceptionActions } from "@/components/chantier/reception-actions";
+import { ConfirmLiftActions, ReceptionActions } from "@/components/chantier/reception-actions";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
@@ -95,7 +95,7 @@ export default async function ClientChantierPage({
     // F-25, F-26 : PV de réception.
     supabase
       .from("receptions")
-      .select("id, numero, status, reserves, signed_at")
+      .select("id, numero, status, reserves, signed_at, lift_signaled_at, lift_message")
       .eq("chantier_id", id)
       .maybeSingle(),
   ]);
@@ -213,6 +213,19 @@ export default async function ClientChantierPage({
               <p className="text-xs text-muted-foreground">{t.reception.reservesNext}</p>
             </section>
           )}
+          {status === "reserves_a_lever" && reception?.lift_signaled_at && (
+            <Alert tone="info">
+              {t.reception.liftSignaled(
+                c.artisan_name,
+                formatDateNumeric(reception.lift_signaled_at),
+              )}
+              {reception.lift_message && (
+                <span className="mt-1 block whitespace-pre-line italic">
+                  « {reception.lift_message} »
+                </span>
+              )}
+            </Alert>
+          )}
           {status === "receptionne" && c.received_at && (
             <Alert tone="success">{t.reception.received(formatDateNumeric(c.received_at))}</Alert>
           )}
@@ -251,6 +264,12 @@ export default async function ClientChantierPage({
           <ReportProblemLink />
         </div>
       </div>
+      {status === "reserves_a_lever" && (
+        <ConfirmLiftActions
+          chantierId={id}
+          balance={euros.format((progress?.remainingCents ?? 0) / 100)}
+        />
+      )}
       {status === "travaux_termines" && (
         <ReceptionActions
           chantierId={id}

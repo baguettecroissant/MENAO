@@ -4,6 +4,7 @@ import { LEGAL_DOCUMENT_VERSIONS, SIGNATURE_CONSENTS } from "@menao/core";
 import { receptionConsentsSchema, reservesSchema } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import type { Route } from "next";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
@@ -66,4 +67,16 @@ export async function startReception(
     return { error: body?.message ?? fr.reception.unavailable, values };
   }
   redirect(data.url as Route);
+}
+
+/** F-26 « Confirmer la levée des réserves » : chantier réceptionné, le solde est demandé ensuite. */
+export async function confirmReservesLifted(chantierId: string): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("particulier_confirm_reserves_lifted", {
+    p_chantier_id: chantierId,
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
+  revalidatePath(`/mon-espace/chantiers/${chantierId}`);
+  return { success: fr.chantier.reception.lifted };
 }
