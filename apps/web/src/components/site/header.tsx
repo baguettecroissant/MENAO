@@ -5,13 +5,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "@/components/brand/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { NAV_LINKS } from "./nav-links";
 
 const t = fr.nav;
 // L'espace pro (tableau de bord, demandes, chantiers) a son propre en-tête.
-const PRO_SPACE = ["/pro/tableau-de-bord", "/pro/demandes", "/pro/chantiers", "/pro/devis"];
+const PRO_SPACE = [
+  "/pro/tableau-de-bord",
+  "/pro/demandes",
+  "/pro/chantiers",
+  "/pro/devis",
+  "/pro/factures",
+  "/pro/messages",
+];
 
 /**
  * En-tête du site (maquettes) : logo, liens, « Mon espace client » et « Trouver un artisan du
@@ -50,7 +58,11 @@ export function SiteHeader() {
             ))}
           </ul>
         </div>
+        <div className="ml-auto flex items-center lg:hidden">
+          <NotificationBell />
+        </div>
         <div className="hidden items-center gap-2 lg:flex">
+          <NotificationBell />
           <ButtonLink href="/mon-espace" variant="outline" size="sm">
             {t.myClientSpace}
           </ButtonLink>
