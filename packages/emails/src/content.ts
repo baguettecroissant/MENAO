@@ -24,6 +24,7 @@ export const NOTIFICATION_TYPES = [
   "levee_signalee",
   "levee_confirmee",
   "levee_relance",
+  "solde_paye",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -488,6 +489,40 @@ export function notificationContent(
         quote: null,
         cta: myChantier("Voir mon chantier"),
       };
+    case "solde_paye": {
+      // F-32 : solde payé, chantier clôturé (artisan et client).
+      const montant = amount(data, "montant");
+      if (text(data, "destinataire") === "artisan") {
+        const client = text(data, "client") ?? "Votre client";
+        return {
+          subject: `Solde reçu pour ${quoted(titre)}`,
+          preview: `${client} a payé le solde${montant ? ` de ${montant}` : ""} : chantier clôturé.`,
+          title: "Chantier clôturé",
+          paragraphs: [
+            hello(ctx.firstName),
+            `${client} a payé le solde${montant ? ` de ${montant}` : ""} pour ${quoted(titre)}, directement sur votre compte Stripe.`,
+            "Le chantier est clôturé : la facture de solde est disponible dans le dossier du chantier.",
+          ],
+          quote: null,
+          cta: {
+            label: "Voir le chantier",
+            url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+          },
+        };
+      }
+      return {
+        subject: "Votre chantier est terminé",
+        preview: `Solde payé pour ${quoted(titre)}.`,
+        title: "Solde payé",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre solde${montant ? ` de ${montant}` : ""} pour ${quoted(titre)} a bien été payé à ${artisan}.`,
+          "Le chantier est clôturé : la facture de solde est disponible dans le dossier du chantier. Merci de votre confiance !",
+        ],
+        quote: null,
+        cta: myChantier("Voir mon chantier"),
+      };
+    }
   }
 }
 
