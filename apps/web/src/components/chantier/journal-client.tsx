@@ -31,7 +31,7 @@ export function PhotoMosaic({ urls }: { urls: string[] }) {
             <img
               src={url}
               alt={t.photoAlt(i + 1, urls.length)}
-              className={`w-full object-cover ${i === 0 ? "aspect-[16/10]" : "aspect-[4/3]"}`}
+              className={`w-full object-cover ${i === 0 ? "aspect-[16/10] max-h-80" : "aspect-[4/3] max-h-48"}`}
             />
           </a>
         ))}

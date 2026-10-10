@@ -30,6 +30,9 @@ const tagOf = (c: ClientChantier) =>
     receivedAt: c.received_at,
   });
 const hrefOf = (c: ClientChantier) => `/mon-espace/chantiers/${c.chantier_id}` as Route;
+/** Adresse du chantier, ou à défaut son code postal et sa ville. */
+export const addressOf = (c: ClientChantier) =>
+  c.adresse || [c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null;
 
 /**
  * Carte d'un chantier en cours (maquette « Mes chantiers ») : photo, état, titre, adresse,
@@ -55,7 +58,7 @@ export function ChantierCard({
   });
   const next = nextIntervention({ status, appointmentAt: c.appointment_at, startAt: c.start_at });
   return (
-    <article className="grid overflow-hidden rounded-card border border-border bg-surface shadow-card lg:grid-cols-[15rem_minmax(0,1fr)_18rem]">
+    <article className="grid overflow-hidden rounded-card border border-border bg-surface shadow-card lg:grid-cols-[14rem_minmax(0,1fr)_20rem]">
       <Link href={hrefOf(c)} tabIndex={-1} aria-hidden="true" className="block">
         <ChantierCover url={photoUrl} className="h-44 w-full lg:h-full" />
       </Link>
@@ -71,10 +74,10 @@ export function ChantierCard({
             {c.title}
           </Link>
         </h3>
-        {c.adresse && (
+        {addressOf(c) && (
           <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
             <MapPin aria-hidden="true" className="mt-px size-3.5 shrink-0" />
-            {c.adresse}
+            {addressOf(c)}
           </p>
         )}
         {c.description && (
@@ -101,9 +104,10 @@ export function ChantierCard({
             chantierId={c.chantier_id}
             next={next}
             title={c.title}
-            location={c.adresse}
+            location={addressOf(c)}
             artisanName={c.artisan_name}
             clientName={null}
+            centered
           />
         ) : null}
       </div>
@@ -132,10 +136,10 @@ export function FinishedChantierCard({
             {c.title}
           </Link>
         </h3>
-        {c.adresse && (
+        {addressOf(c) && (
           <p className="flex items-start gap-1 text-xs text-muted-foreground">
             <MapPin aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
-            {c.adresse}
+            {addressOf(c)}
           </p>
         )}
         <div>
