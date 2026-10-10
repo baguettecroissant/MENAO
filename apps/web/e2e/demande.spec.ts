@@ -656,6 +656,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.keyboard.press("End");
   for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowLeft");
   await expect(page.getByText("Très soigné")).toBeVisible();
+  // L'erreur d'un critère disparaît dès qu'il est noté.
+  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(2);
   for (const name of ["Respect des délais", "Communication"]) {
     await page.getByRole("slider", { name }).focus();
     await page.keyboard.press("End");
