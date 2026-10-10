@@ -7,12 +7,23 @@ const card = "flex flex-col gap-4 rounded-card border border-border bg-surface p
 
 export type ChantierDocument = { href: string; title: string; meta: string };
 
-/** « Documents liés » (maquette « Dossier du chantier ») : devis et factures en PDF. */
-export function ChantierDocuments({ documents }: { documents: ChantierDocument[] }) {
+/**
+ * « Documents liés » (maquette « Dossier du chantier ») : devis et factures en PDF. Dans « Mes
+ * documents », une section par chantier, titrée par le chantier.
+ */
+export function ChantierDocuments({
+  documents,
+  title = t.documents,
+  headingId = "documents-title",
+}: {
+  documents: ChantierDocument[];
+  title?: string;
+  headingId?: string;
+}) {
   return (
-    <section aria-labelledby="documents-title" className={card}>
-      <h2 id="documents-title" className="text-[1.0625rem] font-medium">
-        {t.documents}
+    <section aria-labelledby={headingId} className={card}>
+      <h2 id={headingId} className="text-[1.0625rem] font-medium">
+        {title}
       </h2>
       {documents.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t.noDocuments}</p>
