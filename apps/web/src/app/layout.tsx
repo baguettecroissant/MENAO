@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Google_Sans } from "next/font/google";
 import type { ReactNode } from "react";
-import { SiteFooter } from "@/components/site/footer";
-import { SiteHeader } from "@/components/site/header";
 import { fr } from "@/i18n/fr";
 import { SITE_URL, indexingAllowed } from "@/lib/site/seo";
 import "./globals.css";
@@ -27,11 +25,7 @@ export const viewport: Viewport = { themeColor: "#4869f6" };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr" className={googleSans.variable}>
-      <body className="flex min-h-dvh flex-col">
-        <SiteHeader />
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
-      </body>
+      <body className="flex min-h-dvh flex-col">{children}</body>
     </html>
   );
 }
