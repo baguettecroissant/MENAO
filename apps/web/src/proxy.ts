@@ -11,6 +11,7 @@ const PROTECTED_PREFIXES = [
   "/pro/chantiers",
   "/pro/devis",
   "/agenda",
+  "/devis",
   "/nouveau-mot-de-passe",
   "/admin",
 ];

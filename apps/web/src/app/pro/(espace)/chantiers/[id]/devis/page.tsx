@@ -1,13 +1,11 @@
 import type { QuoteLineInput } from "@menao/validation";
-import { CalendarDays, Clock } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
-import { DetailHeader } from "@/components/pro/detail";
 import { QuoteEditor } from "@/components/pro/quote-editor";
+import { QuoteHeader } from "@/components/pro/quote-header";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
-import { formatDayLong, formatTime } from "@/lib/format";
 
 const t = fr.pro.quote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -52,21 +50,13 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
 
   return (
     <main className="flex flex-1 flex-col">
-      <DetailHeader backHref={`/pro/chantiers/${id}`} backLabel={t.back} title={t.title}>
-        <p className="text-sm text-white/90">{c.chantier.title}</p>
-        {appointment && (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays aria-hidden="true" className="size-4" />
-              {formatDayLong(appointment.starts_at)}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Clock aria-hidden="true" className="size-4" />
-              {formatTime(appointment.starts_at)}
-            </span>
-          </div>
-        )}
-      </DetailHeader>
+      <QuoteHeader
+        backHref={`/pro/chantiers/${id}`}
+        backLabel={t.back}
+        title={t.title}
+        chantierTitle={c.chantier.title}
+        appointmentAt={appointment?.starts_at ?? null}
+      />
       <QuoteEditor
         chantierId={id}
         initialLines={lines}

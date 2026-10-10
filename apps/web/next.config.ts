@@ -32,7 +32,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // Paquets internes du monorepo publiés en TypeScript source.
-  transpilePackages: ["@menao/core", "@menao/validation", "@menao/ui-tokens", "@menao/db"],
+  transpilePackages: [
+    "@menao/core",
+    "@menao/validation",
+    "@menao/ui-tokens",
+    "@menao/db",
+    "@menao/documents",
+  ],
   // Spec §4.4 : pas d'optimisation d'images Vercel (images redimensionnées à l'upload).
   images: { unoptimized: true },
   typedRoutes: true,
