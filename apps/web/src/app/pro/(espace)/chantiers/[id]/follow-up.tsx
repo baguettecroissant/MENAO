@@ -53,6 +53,7 @@ import {
 
 const t = fr.chantier;
 const tf = fr.pro.followUp;
+const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
 /**
  * Vue d'un chantier côté artisan après l'acompte (F-22, maquettes « Vue d'un chantier ») :
@@ -90,7 +91,10 @@ export async function ArtisanFollowUp({
       .order("version", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from("payments").select("quote_id, kind, status, amount_cents").eq("chantier_id", id),
+    supabase
+      .from("payments")
+      .select("quote_id, kind, status, amount_cents, paid_at")
+      .eq("chantier_id", id),
     supabase
       .from("invoices")
       .select("id, numero, kind, issued_on")
@@ -141,6 +145,8 @@ export async function ArtisanFollowUp({
     [c.client.first_name, c.client.last_name].filter(Boolean).join(" ") || tf.yourClientFallback;
   const clientFirstName = c.client.first_name ?? tf.yourClientFallback;
   const depositPaid = (payments ?? []).some((p) => p.kind === "acompte" && p.status === "paye");
+  const balancePayment =
+    (payments ?? []).find((p) => p.kind === "solde" && p.status === "paye") ?? null;
   const documents: ChantierDocument[] = [
     ...(quote?.numero
       ? [
@@ -178,6 +184,8 @@ export async function ArtisanFollowUp({
             .map((p) => ({ status: p.status, amountCents: p.amount_cents })),
         )
       : null;
+  // Solde restant (réceptionné) : total du devis − paiements reçus.
+  const balanceCents = progress?.remainingCents ?? 0;
   const step = chantierStepIndex(status);
   const open = isJournalOpen(status);
   const next = nextIntervention({ status, appointmentAt: null, startAt });
@@ -200,7 +208,7 @@ export async function ArtisanFollowUp({
                   status,
                   startAt,
                   finishedAt: finished?.created_at ?? null,
-                  closedAt: null,
+                  closedAt: status === "cloture" ? (balancePayment?.paid_at ?? null) : null,
                   receivedAt: received?.created_at ?? null,
                 })}
               />
@@ -240,7 +248,19 @@ export async function ArtisanFollowUp({
           )}
           {status === "receptionne" && received && (
             <Alert tone="success">
-              {tf.received(clientFirstName, formatDateNumeric(received.created_at))}
+              {tf.received(
+                clientFirstName,
+                formatDateNumeric(received.created_at),
+                euros.format(balanceCents / 100),
+              )}
+            </Alert>
+          )}
+          {status === "cloture" && balancePayment?.paid_at && (
+            <Alert tone="success">
+              {tf.closed(
+                formatDateNumeric(balancePayment.paid_at),
+                euros.format(balancePayment.amount_cents / 100),
+              )}
             </Alert>
           )}
           <ChantierTabs base={`/pro/chantiers/${id}`} active={tab} />

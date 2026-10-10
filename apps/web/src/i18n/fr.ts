@@ -783,6 +783,7 @@ export const fr = {
       sign: "Voir et signer le devis",
       payTitle: "Vous avez un paiement à effectuer",
       payText: "Effectuez le paiement pour démarrer le chantier",
+      payBalanceText: "Réglez le solde pour clôturer votre chantier",
       payNow: "À payer maintenant",
       total: "Total du chantier",
       pay: "Payer maintenant",
@@ -817,6 +818,9 @@ export const fr = {
       perfectText: (balance: string) =>
         `En confirmant la levée des réserves, vous validez la fin définitive de vos travaux. Le solde de ${balance} vous sera ensuite demandé.`,
       lifted: "Levée des réserves confirmée.",
+      balanceProcessing:
+        "Paiement reçu : sa confirmation est en cours. Actualisez la page dans quelques instants.",
+      closed: (date: string) => `Vous avez finalisé le paiement de ce chantier le ${date}`,
     },
     report: "Signaler un problème lié au chantier",
     chooseAnother: "Choisir un autre artisan",
@@ -854,6 +858,21 @@ export const fr = {
     unavailable:
       "La signature électronique est momentanément indisponible. Réessayez dans un instant.",
     balanceNext: "Le paiement du solde vous sera proposé après la signature.",
+  },
+  balance: {
+    title: "Paiement du solde",
+    back: "Retour au chantier",
+    intro:
+      "Réglez le solde de votre chantier. Le paiement est fait directement à l'entreprise de l'artisan, par Stripe.",
+    paid: "Montant déjà payé",
+    today: "Montant à payer aujourd'hui",
+    total: "Total du chantier",
+    beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+    direct: "Le solde est versé directement à l'entreprise, dès la réception de votre paiement.",
+    submit: (amount: string) => `Payer ${amount}`,
+    submitting: "Ouverture du paiement…",
+    unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
+    inProgress: "Votre paiement du solde est en cours de confirmation.",
   },
   clientQuote: {
     back: "Mon espace",
@@ -1133,8 +1152,8 @@ export const fr = {
       reservesTitle: (client: string) => `Réserves émises par ${client}`,
       reservesNext:
         "Intervenez pour lever ces réserves : votre client confirmera ensuite leur levée, puis réglera le solde.",
-      received: (client: string, date: string) =>
-        `Réception validée par ${client} le ${date}. Prochaine étape : le paiement du solde.`,
+      received: (client: string, date: string, balance: string) =>
+        `Réception validée par ${client} le ${date}. Prochaine étape : le paiement du solde (${balance}).`,
       signalLift: "Signaler la levée des réserves",
       liftTitle: "Les réserves sont-elles levées ?",
       liftText: (client: string) =>
@@ -1145,6 +1164,8 @@ export const fr = {
       liftSignaled: (client: string, date: string) =>
         `Levée signalée le ${date} : en attente de la confirmation de ${client}.`,
       liftSent: "Levée des réserves signalée à votre client.",
+      closed: (date: string, amount: string) =>
+        `Chantier clôturé le ${date} : solde de ${amount} reçu, facture de solde émise.`,
       yourClientFallback: "votre client",
     },
     quote: {
