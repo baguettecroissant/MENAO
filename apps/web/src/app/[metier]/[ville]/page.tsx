@@ -9,6 +9,7 @@ import { ArrowRight } from "lucide-react";
 import { availability, specialtiesPreview } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
+import { TRADE_IMAGES } from "@/lib/site/images";
 import { absoluteUrl } from "@/lib/site/seo";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -120,6 +121,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
 
   const visual = TRADE_VISUALS[trade.code] ?? DEFAULT_TRADE_VISUAL;
   const TradeIcon = visual.icon;
+  const tradeImage = TRADE_IMAGES[trade.code];
   const dayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
 
   return (
@@ -153,11 +155,25 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         <div
           className={`relative overflow-hidden rounded-hero bg-gradient-to-br px-6 py-10 sm:px-10 sm:py-14 ${visual.gradient}`}
         >
-          <TradeIcon
-            aria-hidden="true"
-            strokeWidth={1.1}
-            className="absolute -right-8 -bottom-10 size-72 text-white/15"
-          />
+          {tradeImage ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
+              <img
+                src={tradeImage}
+                alt=""
+                fetchPriority="high"
+                className="absolute inset-0 size-full object-cover object-[center_15%] sm:object-[center_3%]"
+              />
+              <div className="absolute inset-0 bg-[#0b1230]/30" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0b1230]/85 via-[#0b1230]/45 to-transparent" />
+            </>
+          ) : (
+            <TradeIcon
+              aria-hidden="true"
+              strokeWidth={1.1}
+              className="absolute -right-8 -bottom-10 size-72 text-white/15"
+            />
+          )}
           <div className="relative flex max-w-2xl flex-col gap-4 text-white">
             <h1 className="text-[2.25rem] leading-tight font-medium tracking-tight sm:text-[3rem]">
               {title}

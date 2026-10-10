@@ -22,8 +22,14 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
         {HERO_IMAGE ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
-            <img src={HERO_IMAGE} alt="" className="absolute inset-0 size-full object-cover" />
+            <img
+              src={HERO_IMAGE}
+              alt=""
+              fetchPriority="high"
+              className="absolute inset-x-0 top-0 h-[400px] w-full object-cover object-right-top sm:h-full sm:object-[70%_center] lg:object-center"
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b1230]/85 via-[#0b1230]/45 to-transparent" />
+            <div className="absolute inset-x-0 top-48 h-52 bg-gradient-to-b from-transparent to-[#0f1b4d] sm:hidden" />
           </>
         ) : (
           <HeroBackdrop />
@@ -53,7 +59,7 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
             })}
           </ul>
 
-          <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[40rem]">
+          <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[34rem]">
             <h1 className="text-[2.375rem] leading-[1.05] font-medium tracking-tight text-white sm:text-[3.25rem] lg:text-[3.75rem]">
               {t.heroTitleStart} <span className="text-[#aebcff]">{t.heroTitleAccent}</span>
             </h1>
