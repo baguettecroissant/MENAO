@@ -2149,8 +2149,49 @@ export type Database = {
           },
         ];
       };
+      ticket_messages: {
+        Row: {
+          author_id: string | null;
+          body: string | null;
+          created_at: string;
+          from_staff: boolean;
+          id: string;
+          storage_path: string | null;
+          ticket_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          body?: string | null;
+          created_at?: string;
+          from_staff: boolean;
+          id?: string;
+          storage_path?: string | null;
+          ticket_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string | null;
+          created_at?: string;
+          from_staff?: boolean;
+          id?: string;
+          storage_path?: string | null;
+          ticket_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tickets: {
         Row: {
+          category: Database["public"]["Enums"]["dispute_category"] | null;
+          chantier_id: string | null;
           contact_email: string;
           created_at: string;
           due_at: string;
@@ -2169,6 +2210,8 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          category?: Database["public"]["Enums"]["dispute_category"] | null;
+          chantier_id?: string | null;
           contact_email: string;
           created_at?: string;
           due_at?: string;
@@ -2186,6 +2229,8 @@ export type Database = {
           user_id?: string | null;
         };
         Update: {
+          category?: Database["public"]["Enums"]["dispute_category"] | null;
+          chantier_id?: string | null;
           contact_email?: string;
           created_at?: string;
           due_at?: string;
@@ -2203,6 +2248,13 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "tickets_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "tickets_message_id_fkey";
             columns: ["message_id"];
@@ -2335,6 +2387,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_ticket_message: { Args: { p_body: string; p_ticket_id: string }; Returns: string };
+      admin_close_dispute: {
+        Args: { p_message: string; p_outcome: string; p_ticket_id: string };
+        Returns: undefined;
+      };
       admin_decide_artisan: {
         Args: {
           p_artisan_id: string;
@@ -2744,6 +2801,18 @@ export type Database = {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
       };
+      record_ticket_photo: {
+        Args: { p_storage_path: string; p_ticket_id: string; p_user_id: string };
+        Returns: string;
+      };
+      report_chantier_problem: {
+        Args: {
+          p_category: Database["public"]["Enums"]["dispute_category"];
+          p_chantier_id: string;
+          p_description: string;
+        };
+        Returns: string;
+      };
       report_message: { Args: { p_message_id: string; p_reason: string }; Returns: string };
       report_review: { Args: { p_reason: string; p_review_id: string }; Returns: string };
       save_project_criteria: {
@@ -2872,6 +2941,7 @@ export type Database = {
         | "en_litige"
         | "annule";
       chantier_update_kind: "message" | "photo";
+      dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
@@ -2901,7 +2971,10 @@ export type Database = {
         | "solde_paye"
         | "avis_recu"
         | "avis_relance"
-        | "nouveaux_messages";
+        | "nouveaux_messages"
+        | "litige_ouvert"
+        | "litige_clos"
+        | "reponse_support";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2919,7 +2992,8 @@ export type Database = {
       review_status: "publie" | "masque";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
       ticket_status: "ouvert" | "en_cours" | "resolu";
-      ticket_type: "dossier_recherche" | "contact" | "expertise" | "reserves" | "avis" | "message";
+      ticket_type:
+        "dossier_recherche" | "contact" | "expertise" | "reserves" | "avis" | "message" | "litige";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       zone_mode: "rayon" | "communes";
     };
@@ -3087,6 +3161,7 @@ export const Constants = {
         "annule",
       ],
       chantier_update_kind: ["message", "photo"],
+      dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
@@ -3117,6 +3192,9 @@ export const Constants = {
         "avis_recu",
         "avis_relance",
         "nouveaux_messages",
+        "litige_ouvert",
+        "litige_clos",
+        "reponse_support",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
@@ -3135,7 +3213,15 @@ export const Constants = {
       review_status: ["publie", "masque"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
-      ticket_type: ["dossier_recherche", "contact", "expertise", "reserves", "avis", "message"],
+      ticket_type: [
+        "dossier_recherche",
+        "contact",
+        "expertise",
+        "reserves",
+        "avis",
+        "message",
+        "litige",
+      ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       zone_mode: ["rayon", "communes"],
     },
