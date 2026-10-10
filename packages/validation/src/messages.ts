@@ -28,6 +28,11 @@ export const messages = {
   timeRange: "L'heure de fin doit être après l'heure de début.",
   refusalReasonRequired: "Choisissez un motif de refus.",
   presentationTooShort: "Présentez-vous en au moins 100 caractères.",
+  appointmentDate: "Choisissez la date du rendez-vous.",
+  appointmentTime: "Choisissez l'heure d'arrivée estimée.",
+  appointmentPast: "Choisissez une date et une heure à venir.",
+  appointmentTooFar: "Le rendez-vous doit avoir lieu dans les 6 prochains mois.",
+  expertiseTradeRequired: "Choisissez le corps de métier nécessaire.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;
