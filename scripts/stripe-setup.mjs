@@ -212,7 +212,14 @@ await ensureEndpoint({
 });
 await ensureEndpoint({
   connect: true,
-  events: ["account.updated"],
+  // Comptes des artisans (ADR 0011) et paiements des chantiers (F-31, ADR 0023).
+  events: [
+    "account.updated",
+    "checkout.session.completed",
+    "checkout.session.async_payment_succeeded",
+    "checkout.session.async_payment_failed",
+    "checkout.session.expired",
+  ],
   envKey: "STRIPE_CONNECT_WEBHOOK_SECRET",
   description: "Webhook Connect",
 });

@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const t = fr.clientQuote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const tone = {
   brouillon: "neutral",
   envoye: "primary",
@@ -32,19 +33,26 @@ export default async function ClientQuotePage({
   searchParams,
 }: PageProps<"/mon-espace/devis/[id]">) {
   const { id } = await params;
-  const { signature } = await searchParams;
+  const { signature, paiement } = await searchParams;
   if (!UUID.test(id)) notFound();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth || auth.claims.is_anonymous)
     redirect(`/connexion?next=/mon-espace/devis/${id}` as Route);
 
-  const [{ data: document }, { data: quote }] = await Promise.all([
+  const [{ data: document }, { data: quote }, { data: deposit }] = await Promise.all([
     supabase.rpc("quote_document", { p_quote_id: id }),
     supabase
       .from("quotes")
       .select("id, status, valid_until, client_message, signed_at")
       .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("payments")
+      .select("status, amount_cents, paid_at")
+      .eq("quote_id", id)
+      .eq("kind", "acompte")
+      .in("status", ["en_attente", "en_cours", "paye"])
       .maybeSingle(),
   ]);
   if (!document || !quote || quote.status === "brouillon") notFound();
@@ -89,6 +97,16 @@ export default async function ClientQuotePage({
         {quote.status === "signe" && quote.signed_at && (
           <Alert tone="success">{t.signedNotice(formatDay(quote.signed_at))}</Alert>
         )}
+        {deposit?.status === "paye" && deposit.paid_at ? (
+          <Alert tone="success">
+            {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}
+          </Alert>
+        ) : deposit?.status === "en_cours" ? (
+          <Alert tone="info">{t.depositInProgress}</Alert>
+        ) : (
+          quote.status === "signe" &&
+          paiement === "termine" && <Alert tone="info">{t.paymentReturned}</Alert>
+        )}
         {quote.status === "revision_demandee" && (
           <Alert tone="info">
             {t.revisionNotice} {quote.client_message}
@@ -114,6 +132,13 @@ export default async function ClientQuotePage({
           {quote.status === "signe" ? t.downloadSigned : t.viewPdf}
           <span className="sr-only"> {t.newTab}</span>
         </a>
+        {quote.status === "signe" &&
+          deposit?.status !== "paye" &&
+          deposit?.status !== "en_cours" && (
+            <ButtonLink href={`/mon-espace/devis/${id}/acompte` as Route} size="lg" block>
+              {t.payDeposit(euros.format((data.schedule[0]?.amountCents ?? 0) / 100))}
+            </ButtonLink>
+          )}
         {quote.status === "envoye" && (
           <div className="flex flex-col gap-3">
             <ButtonLink href={`/mon-espace/devis/${id}/signature` as Route} size="lg" block>

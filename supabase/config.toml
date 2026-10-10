@@ -466,6 +466,10 @@ verify_jwt = true
 [functions.generate-pdf]
 verify_jwt = true
 
+# Paiement de l'acompte (F-31) : client connecté ; paiement sur le compte Stripe de l'artisan.
+[functions.deposit-checkout]
+verify_jwt = true
+
 # Signature du devis (F-13) : client connecté ; webhook DocuSeal signé en HMAC, sans jeton.
 [functions.signature-create]
 verify_jwt = true

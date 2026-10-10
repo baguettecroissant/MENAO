@@ -710,6 +710,26 @@ export const fr = {
     refuse: "Refuser le devis",
     sign: "Signer le devis",
     signedNotice: (date: string) => `Vous avez signé ce devis le ${date}.`,
+    payDeposit: (amount: string) => `Payer l'acompte (${amount})`,
+    depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
+    depositInProgress:
+      "Votre paiement de l'acompte est en cours de confirmation par Stripe (virement ou prélèvement en attente).",
+    paymentReturned:
+      "Merci ! Votre paiement est en cours de confirmation : actualisez la page dans quelques instants.",
+    deposit: {
+      title: "Paiement de l'acompte",
+      intro:
+        "L'acompte est versé directement à l'artisan, sur son compte Stripe. MENAO ne perçoit aucune commission.",
+      start: (date: string) => `Démarrage prévu le ${date}`,
+      today: "À payer aujourd'hui",
+      later: "À la réception des travaux",
+      beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+      methods: "Carte bancaire, Apple Pay ou Google Pay, selon les moyens acceptés par l'artisan.",
+      secure: "Paiement sécurisé par Stripe",
+      submit: (amount: string) => `Payer ${amount}`,
+      submitting: "Ouverture du paiement…",
+      unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
+    },
     downloadSigned: "Télécharger le devis signé",
     signatureReturned:
       "Merci ! Votre signature est en cours d'enregistrement : actualisez la page dans quelques instants.",
@@ -987,6 +1007,9 @@ export const fr = {
         edit: "Modifier le devis",
         refused: (reason: string) => `Le client a refusé le devis : ${reason}.`,
         signed: (date: string) => `Le client a signé le devis le ${date}.`,
+        depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
+        depositInProgress: "Paiement de l'acompte en cours (virement ou prélèvement en attente).",
+        depositWaiting: "En attente du paiement de l'acompte par le client.",
         viewSigned: "Voir le devis signé",
         viewPdf: "Voir le PDF",
         newTab: "(nouvel onglet)",
