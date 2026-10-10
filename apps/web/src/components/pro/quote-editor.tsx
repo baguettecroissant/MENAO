@@ -15,8 +15,9 @@ import {
   type QuoteUnit,
 } from "@menao/core";
 import { quoteLineFormSchema, type QuoteLineInput } from "@menao/validation";
-import { Euro, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { Euro, Mic, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { Drawer } from "@/components/drawer";
 import { Alert, Button, FieldError, Hint, Select, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import {
@@ -24,6 +25,7 @@ import {
   searchPreviousLines,
   type PreviousLine,
 } from "@/lib/artisan/quote-actions";
+import { QuoteDictation } from "./quote-dictation";
 
 const t = fr.pro.quote;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -32,7 +34,8 @@ const vatLabel = (bp: number) => `${(bp / 100).toLocaleString("fr-FR")} %`;
 const priceInput = (cents: number) =>
   (cents / 100).toLocaleString("fr-FR", { minimumFractionDigits: 2, useGrouping: false });
 
-type Line = QuoteLineInput & { key: string };
+/** `generated` : ligne proposée par la dictée, à vérifier (non enregistré). */
+type Line = QuoteLineInput & { key: string; generated?: boolean };
 
 const withoutKey = (l: Line): QuoteLineInput => ({
   type: l.type,
@@ -54,11 +57,14 @@ export function QuoteEditor({
   initialLines,
   saved,
   assujettiTva,
+  savedDictation,
 }: {
   chantierId: string;
   initialLines: QuoteLineInput[];
   /** Un brouillon existe déjà en base. */
   saved: boolean;
+  /** Dictée sauvegardée pour ce chantier (F-19). */
+  savedDictation: string | null;
   assujettiTva: boolean;
 }) {
   const counter = useRef(initialLines.length);
@@ -69,6 +75,8 @@ export function QuoteEditor({
   const [hasSaved, setHasSaved] = useState(saved);
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [dictating, setDictating] = useState(false);
   const [pending, startTransition] = useTransition();
   // Ligne à remettre sous les yeux après validation (le formulaire se referme).
   const [reveal, setReveal] = useState<{ key: string } | null>(null);
@@ -104,6 +112,18 @@ export function QuoteEditor({
         setError(result.error);
       }
     });
+  }
+
+  function addGenerated(generated: QuoteLineInput[]) {
+    const added = generated.map((line) => ({
+      ...line,
+      key: `l${counter.current++}`,
+      generated: true,
+    }));
+    setLines((current) => [...current, ...added]);
+    setDictating(false);
+    setNotice(t.dictation.generated(added.length));
+    if (added[0]) setReveal({ key: added[0].key });
   }
 
   function upsert(key: string | null, line: QuoteLineInput) {
@@ -155,6 +175,7 @@ export function QuoteEditor({
           <span className="text-xs text-muted-foreground">{t.lineCount(lines.length)}</span>
         </div>
         {error && <Alert tone="error">{error}</Alert>}
+        {notice && <Alert tone="success">{notice}</Alert>}
         {lines.length > 0 && (
           <ul className="flex flex-col gap-3">
             {lines.map((line) => (
@@ -171,6 +192,7 @@ export function QuoteEditor({
                 ) : (
                   <LineCard
                     line={line}
+                    generated={line.generated}
                     assujettiTva={assujettiTva}
                     onEdit={() => setEditing(line.key)}
                     onDelete={() =>
@@ -218,22 +240,44 @@ export function QuoteEditor({
             </div>
           </dl>
           {!assujettiTva && <p className="text-xs text-muted-foreground">{t.vatExempt}</p>}
+          <Button type="button" variant="outline" size="lg" onClick={() => setDictating(true)}>
+            {t.dictation.open}
+            <Mic aria-hidden="true" className="size-4" />
+          </Button>
           <Button type="button" size="lg" onClick={save} disabled={!dirty || pending}>
             {pending ? t.saving : t.saveQuote}
           </Button>
         </div>
       </div>
+
+      <Drawer
+        open={dictating}
+        onClose={() => setDictating(false)}
+        title={t.dictation.title}
+        backLabel={t.dictation.back}
+      >
+        {dictating && (
+          <QuoteDictation
+            chantierId={chantierId}
+            savedTranscript={savedDictation}
+            defaultVatBp={defaultVat}
+            onLines={addGenerated}
+          />
+        )}
+      </Drawer>
     </div>
   );
 }
 
 function LineCard({
   line,
+  generated = false,
   assujettiTva,
   onEdit,
   onDelete,
 }: {
   line: QuoteLineInput;
+  generated?: boolean;
   assujettiTva: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -241,8 +285,15 @@ function LineCard({
   return (
     <article className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card">
       <div className="flex items-start justify-between gap-3">
-        <span className="rounded-chip bg-background px-2 py-1 text-xs text-muted-foreground">
-          {t.types[line.type]}
+        <span className="flex flex-wrap gap-1.5">
+          <span className="rounded-chip bg-background px-2 py-1 text-xs text-muted-foreground">
+            {t.types[line.type]}
+          </span>
+          {generated && (
+            <span className="rounded-chip bg-warning-soft px-2 py-1 text-xs font-medium text-warning">
+              {t.toReview}
+            </span>
+          )}
         </span>
         <div className="-mt-1 -mr-1 flex">
           <button

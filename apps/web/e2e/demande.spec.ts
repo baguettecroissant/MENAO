@@ -3,9 +3,17 @@ import { authLinkFor } from "./mailpit";
 
 // Demande de chantier (F-08, F-11, F-16 à F-18) : sélection de 2 artisans, compte créé au moment
 // de la demande (le projet anonyme est conservé), rendez-vous fixé par l'artisan (coordonnées
-// échangées), notes privées, brouillon de devis (F-19), date du rendez-vous et fichier agenda
-// côté particulier.
+// échangées), notes privées, brouillon de devis et dictée intelligente (F-19), date du
+// rendez-vous et fichier agenda côté particulier.
 const UUID = "[0-9a-f-]{36}";
+
+// Micro simulé par Chromium (son de test) pour la dictée du devis.
+test.use({
+  launchOptions: {
+    args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
+  },
+  permissions: ["microphone"],
+});
 
 test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'artisan", async ({
   page,
@@ -140,6 +148,27 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await proPage.reload();
   await expect(editor.getByText("Remplacement du siphon")).toBeVisible();
   await expect(editor.getByRole("status")).toHaveText("Enregistré et à jour");
+
+  // Dictée intelligente : transcription et lignes du faux serveur d'IA, à vérifier puis enregistrées.
+  await editor.getByRole("button", { name: "Dictée intelligente" }).click();
+  const dictation = proPage.getByRole("dialog", { name: "Dictez votre devis" });
+  await dictation.getByRole("button", { name: "Dicter" }).click();
+  await expect(dictation.getByText("Enregistrement…")).toBeVisible();
+  await proPage.waitForTimeout(1500);
+  await dictation.getByRole("button", { name: "Mettre en pause" }).click();
+  await expect(dictation.getByLabel("Texte de la dictée")).toHaveValue(
+    "Fuite sous l'évier de la cuisine à Nice.",
+  );
+  await dictation.getByRole("button", { name: "Sauvegarder cet enregistrement" }).click();
+  await expect(dictation.getByText("Enregistrement sauvegardé.")).toBeVisible();
+  await dictation.getByRole("button", { name: "Générer les lignes" }).click();
+  await expect(editor.getByText("2 lignes ajoutées : vérifiez-les.")).toBeVisible();
+  await expect(editor.getByText("Siphon PVC 40 mm")).toBeVisible();
+  await expect(editor.getByText("À vérifier")).toHaveCount(2);
+  // 71,00 € (siphon remplacé) + 12,50 € + recherche de fuite sans prix dicté = 83,50 € HT.
+  await expect(editor.getByText(/^91,85\s€$/)).toBeVisible();
+  await editor.getByRole("button", { name: "Enregistrer le devis" }).click();
+  await expect(editor.getByText("Enregistré et à jour")).toBeVisible();
 
   // Le tableau de bord affiche le rendez-vous à venir.
   await proPage.goto("/pro/tableau-de-bord");
