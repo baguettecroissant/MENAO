@@ -7,7 +7,7 @@ import { requireProSpace } from "@/lib/artisan/space";
 export default async function ProSpaceLayout({ children }: { children: ReactNode }) {
   const { firstName, avatarUrl } = await requireProSpace();
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       <ProHeader firstName={firstName} avatarUrl={avatarUrl} />
       <div className="flex flex-1 flex-col">{children}</div>
       <ProBottomNav />

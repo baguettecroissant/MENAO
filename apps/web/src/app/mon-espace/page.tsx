@@ -4,7 +4,7 @@ import {
   roleFromAppMetadata,
   type ChantierStatus,
 } from "@menao/core";
-import { FileText, HardHat, MessageCircle, Search } from "lucide-react";
+import { FileText, HardHat, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
@@ -12,7 +12,6 @@ import { SectionTabs } from "@/components/chantier/section-tabs";
 import { PendingRequests } from "@/components/project/my-requests";
 import { ButtonLink, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { signOut } from "@/lib/auth/actions";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,11 +33,9 @@ export default async function MySpacePage() {
   const home = homePathForRole(role);
   if (home !== "/mon-espace") redirect(home as Route);
 
-  const [{ data: chantierRows }, { data: requestRows }, { data: unread }] = await Promise.all([
+  const [{ data: chantierRows }, { data: requestRows }] = await Promise.all([
     supabase.rpc("particulier_chantiers"),
     supabase.rpc("particulier_requests"),
-    // F-40 : messages non lus de ses conversations.
-    supabase.rpc("my_unread_messages"),
   ]);
   const chantiers = chantierRows ?? [];
   const requests = requestRows ?? [];
@@ -162,22 +159,10 @@ export default async function MySpacePage() {
               </ul>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <ButtonLink href="/mon-espace/messages" size="md" variant="outline">
-              <MessageCircle aria-hidden="true" className="size-4" />
-              {fr.messages.title}
-              {(unread ?? 0) > 0 && (
-                <span className="flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
-                  {unread}
-                  <span className="sr-only"> — {fr.messages.unread(unread ?? 0)}</span>
-                </span>
-              )}
-            </ButtonLink>
-            <ButtonLink href="/recherche" size="md">
-              {t.start}
-              <Search aria-hidden="true" className="size-4" />
-            </ButtonLink>
-          </div>
+          <ButtonLink href="/recherche" size="md">
+            {t.start}
+            <Search aria-hidden="true" className="size-4" />
+          </ButtonLink>
         </div>
         {chantiers.length === 0 && requests.length === 0 ? (
           <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
@@ -193,20 +178,6 @@ export default async function MySpacePage() {
             ]}
           />
         )}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6 text-sm">
-          <p className="text-muted-foreground">
-            {fr.mySpace.role} :{" "}
-            <span className="font-medium text-foreground">{fr.roles[role]}</span>
-          </p>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="min-h-touch font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-            >
-              {fr.mySpace.signOut}
-            </button>
-          </form>
-        </div>
       </div>
     </main>
   );

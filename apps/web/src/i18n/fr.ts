@@ -957,6 +957,32 @@ export const fr = {
     button: "Message",
     writeClient: "Écrire au client",
   },
+  clientApp: {
+    home: "MENAO, mes chantiers",
+    search: "Décrivez votre besoin de travaux…",
+    searchLabel: "Démarrer un chantier : décrivez votre besoin",
+    messages: (n: number) => (n === 0 ? "Messages" : `Messages : ${n} non lu${n > 1 ? "s" : ""}`),
+    account: "Mon compte",
+    nav: "Navigation de mon espace",
+    chantiers: "Mes chantiers",
+    documents: "Mes documents",
+    messagesLink: "Messages",
+    notifications: "Notifications",
+    help: "Aide et contact",
+    signOut: "Me déconnecter",
+    tabs: {
+      chantiers: "Chantiers",
+      documents: "Documents",
+      start: "Démarrer un chantier",
+      messages: "Messages",
+      help: "Aide",
+    },
+  },
+  clientDocuments: {
+    title: "Mes documents",
+    subtitle: "Devis signés, factures et procès-verbaux de vos chantiers.",
+    empty: "Vos documents (devis signés, factures, PV de réception) apparaîtront ici.",
+  },
   notificationCenter: {
     title: "Notifications",
     subtitle: "Les dernières nouvelles de vos demandes et de vos chantiers.",
@@ -1982,6 +2008,7 @@ export const fr = {
   },
   admin: {
     title: "Back-office MENAO",
+    badge: "Back-office",
     nav: {
       artisans: "Dossiers artisans",
       watch: "À surveiller",
