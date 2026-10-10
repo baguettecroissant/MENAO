@@ -2340,6 +2340,8 @@ export type Database = {
           artisan_id: string;
           artisan_name: string;
           artisan_phone: string;
+          balance_cents: number;
+          balance_status: Database["public"]["Enums"]["payment_status"];
           chantier_id: string;
           closed_at: string;
           code_postal: string;
@@ -2397,6 +2399,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_start_balance: { Args: { p_chantier_id: string }; Returns: Json };
       particulier_start_deposit: { Args: { p_quote_id: string }; Returns: Json };
       particulier_start_reception: {
         Args: { p_chantier_id: string; p_consents: Json; p_reserves: string };
@@ -2612,7 +2615,8 @@ export type Database = {
         | "reserves_emises"
         | "levee_signalee"
         | "levee_confirmee"
-        | "levee_relance";
+        | "levee_relance"
+        | "solde_paye";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2821,6 +2825,7 @@ export const Constants = {
         "levee_signalee",
         "levee_confirmee",
         "levee_relance",
+        "solde_paye",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

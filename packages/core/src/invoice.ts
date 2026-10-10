@@ -42,3 +42,21 @@ export function invoiceTotals(vat: readonly VatPart[]) {
   const totalTvaCents = vat.reduce((sum, v) => sum + v.tvaCents, 0);
   return { totalHtCents, totalTvaCents, totalTtcCents: totalHtCents + totalTvaCents };
 }
+
+/**
+ * Facture de solde : ventilation du devis moins celle des factures d'acompte, taux par taux. Le
+ * TTC obtenu vaut le solde payé (total du devis − acomptes, toujours calculé ; CLAUDE.md règle 5).
+ */
+export function balanceInvoiceVat(
+  quoteVat: readonly VatPart[],
+  depositVat: readonly VatPart[],
+): VatPart[] {
+  return quoteVat.map((part) => {
+    const paid = depositVat.filter((d) => d.rateBp === part.rateBp);
+    return {
+      rateBp: part.rateBp,
+      baseHtCents: part.baseHtCents - paid.reduce((sum, d) => sum + d.baseHtCents, 0),
+      tvaCents: part.tvaCents - paid.reduce((sum, d) => sum + d.tvaCents, 0),
+    };
+  });
+}

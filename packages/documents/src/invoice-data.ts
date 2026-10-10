@@ -3,6 +3,7 @@
  * facture. Partagé par l'Edge Function generate-pdf et le web (ADR 0024).
  */
 import type { VatPart } from "../../core/src/invoice.ts";
+import { money, quantity, unit } from "./format.ts";
 import type { InvoiceKind, InvoicePdfData } from "./invoice-model.ts";
 import { issuerData, partiesData, type QuoteDocument } from "./quote-data.ts";
 
@@ -23,6 +24,15 @@ export type InvoiceDocument = {
   issuer: QuoteDocument["issuer"];
   client: QuoteDocument["client"];
   chantier: QuoteDocument["chantier"];
+  /** Facture de solde : lignes et totaux du devis, acomptes déjà facturés. */
+  lines?: QuoteDocument["lines"];
+  quote_totals?: {
+    total_ht_cents: number;
+    total_tva_cents: number;
+    total_ttc_cents: number;
+    vat_breakdown: VatPart[];
+  };
+  deposits?: { numero: string; paid_on: string | null; total_ttc_cents: number }[];
   /** PDF conservé tel qu'émis, s'il a déjà été produit. */
   pdf_path?: string | null;
 };
@@ -47,6 +57,26 @@ export function invoicePdfData(doc: InvoiceDocument): InvoicePdfData {
       totalTvaCents: invoice.total_tva_cents,
       totalTtcCents: invoice.total_ttc_cents,
     },
+    ...(doc.lines && doc.quote_totals
+      ? {
+          lines: doc.lines.map((l) => ({
+            designation: l.designation,
+            detail: `${quantity(l.quantity_milli)} ${unit(l.unit)} × ${money(l.unit_price_ht_cents)} HT`,
+            totalHtCents: l.total_ht_cents,
+          })),
+          quoteTotals: {
+            totalHtCents: doc.quote_totals.total_ht_cents,
+            totalTvaCents: doc.quote_totals.total_tva_cents,
+            totalTtcCents: doc.quote_totals.total_ttc_cents,
+            vat: doc.quote_totals.vat_breakdown,
+          },
+          deposits: (doc.deposits ?? []).map((dep) => ({
+            numero: dep.numero,
+            paidOn: dep.paid_on,
+            totalTtcCents: dep.total_ttc_cents,
+          })),
+        }
+      : {}),
   };
 }
 

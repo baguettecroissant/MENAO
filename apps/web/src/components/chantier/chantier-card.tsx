@@ -55,6 +55,8 @@ export function ChantierCard({
     quoteStatus: c.quote_status,
     depositCents: c.deposit_cents,
     depositStatus: c.deposit_status,
+    balanceCents: c.balance_cents,
+    balanceStatus: c.balance_status,
   });
   const next = nextIntervention({ status, appointmentAt: c.appointment_at, startAt: c.start_at });
   return (
@@ -98,7 +100,11 @@ export function ChantierCard({
           photoUrl={avatarUrl}
         />
         {action ? (
-          <ChantierActionBlock action={action} totalTtcCents={c.quote_total_ttc_cents} />
+          <ChantierActionBlock
+            action={action}
+            totalTtcCents={c.quote_total_ttc_cents}
+            chantierId={c.chantier_id}
+          />
         ) : next ? (
           <NextIntervention
             chantierId={c.chantier_id}

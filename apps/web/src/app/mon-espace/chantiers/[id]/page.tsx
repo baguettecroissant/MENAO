@@ -5,6 +5,7 @@ import {
   paymentProgress,
   type ChantierStatus,
 } from "@menao/core";
+import { CircleCheck } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ChantierActionBlock } from "@/components/chantier/chantier-action";
@@ -55,7 +56,7 @@ export default async function ClientChantierPage({
   searchParams,
 }: PageProps<"/mon-espace/chantiers/[id]">) {
   const { id } = await params;
-  const { onglet, reception: signed } = await searchParams;
+  const { onglet, reception: signed, paiement } = await searchParams;
   if (!UUID.test(id)) notFound();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
@@ -158,6 +159,8 @@ export default async function ClientChantierPage({
     quoteStatus: c.quote_status,
     depositCents: c.deposit_cents,
     depositStatus: c.deposit_status,
+    balanceCents: c.balance_cents,
+    balanceStatus: c.balance_status,
   });
   const next = nextIntervention({ status, appointmentAt: c.appointment_at, startAt: c.start_at });
   const started = STARTED.includes(status);
@@ -192,11 +195,25 @@ export default async function ClientChantierPage({
             photoUrl={avatarUrl(supabase, c.artisan_avatar_path)}
             phone={c.artisan_phone}
           />
-          {step !== null && <ChantierStepper current={step} />}
+          {step !== null && (
+            <div className="flex flex-col gap-3">
+              <ChantierStepper current={step} />
+              {status === "cloture" && c.closed_at && (
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CircleCheck aria-hidden="true" className="size-4 shrink-0 text-success" />
+                  {t.reception.closed(formatDateNumeric(c.closed_at))}
+                </p>
+              )}
+            </div>
+          )}
         </ChantierHero>
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">
           {action && (
-            <ChantierActionBlock action={action} totalTtcCents={c.quote_total_ttc_cents} />
+            <ChantierActionBlock
+              action={action}
+              totalTtcCents={c.quote_total_ttc_cents}
+              chantierId={id}
+            />
           )}
           {status === "travaux_termines" && signed === "signee" && (
             <Alert tone="info">{t.reception.processing}</Alert>
@@ -226,7 +243,10 @@ export default async function ClientChantierPage({
               )}
             </Alert>
           )}
-          {status === "receptionne" && c.received_at && (
+          {status === "receptionne" && paiement === "termine" && (
+            <Alert tone="info">{t.reception.balanceProcessing}</Alert>
+          )}
+          {status === "receptionne" && paiement !== "termine" && c.received_at && (
             <Alert tone="success">{t.reception.received(formatDateNumeric(c.received_at))}</Alert>
           )}
           <ChantierTabs base={`/mon-espace/chantiers/${id}`} active={tab} />

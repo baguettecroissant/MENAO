@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { depositInvoiceVat, invoiceTotals } from "../src/invoice";
+import { balanceInvoiceVat, depositInvoiceVat, invoiceTotals } from "../src/invoice";
 
 describe("facture d'acompte (F-35)", () => {
   it("un seul taux : 30 % de 330 € TTC à 10 %, soit 90 € HT et 9 € de TVA", () => {
@@ -51,5 +51,35 @@ describe("facture d'acompte (F-35)", () => {
     expect(depositInvoiceVat([{ rateBp: 1000, baseHtCents: 100, tvaCents: 10 }], 110, 0)).toEqual(
       [],
     );
+  });
+});
+
+describe("facture de solde (F-35)", () => {
+  it("ventilation du devis moins celle de l'acompte : 330 € − 99 € = 231 € TTC", () => {
+    const vat = balanceInvoiceVat(
+      [{ rateBp: 1000, baseHtCents: 30000, tvaCents: 3000 }],
+      [{ rateBp: 1000, baseHtCents: 9000, tvaCents: 900 }],
+    );
+    expect(vat).toEqual([{ rateBp: 1000, baseHtCents: 21000, tvaCents: 2100 }]);
+    expect(invoiceTotals(vat).totalTtcCents).toBe(23100);
+  });
+
+  it("plusieurs taux : le solde TTC vaut exactement le total du devis moins l'acompte", () => {
+    const quote = [
+      { rateBp: 1000, baseHtCents: 8333, tvaCents: 833 },
+      { rateBp: 2000, baseHtCents: 6, tvaCents: 1 },
+    ];
+    const deposit = depositInvoiceVat(quote, 9173, 2751);
+    const vat = balanceInvoiceVat(quote, deposit);
+    expect(vat).toEqual([
+      { rateBp: 1000, baseHtCents: 5835, tvaCents: 583 },
+      { rateBp: 2000, baseHtCents: 3, tvaCents: 1 },
+    ]);
+    expect(invoiceTotals(vat).totalTtcCents).toBe(9173 - 2751);
+  });
+
+  it("sans acompte : la ventilation du devis entière", () => {
+    const quote = [{ rateBp: 550, baseHtCents: 10000, tvaCents: 550 }];
+    expect(balanceInvoiceVat(quote, [])).toEqual(quote);
   });
 });

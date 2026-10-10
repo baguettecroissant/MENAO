@@ -58,12 +58,17 @@ export function isChantierFinished(status: ChantierStatus): boolean {
 
 export type ClientChantierAction =
   | { kind: "signer_devis"; quoteId: string }
-  | { kind: "payer_acompte"; quoteId: string; amountCents: number };
+  | { kind: "payer_acompte"; quoteId: string; amountCents: number }
+  | { kind: "payer_solde"; quoteId: string; amountCents: number };
+
+/** Paiement à faire : ni payé, ni en cours de confirmation (paiement différé). */
+const payable = (status: PaymentStatus | null | undefined) =>
+  status !== "paye" && status !== "en_cours";
 
 /**
  * Action attendue du client (maquettes « Voir et signer le devis », « Payer maintenant ») :
- * devis envoyé à signer, puis acompte à payer une fois le devis signé. Aucune action pendant la
- * confirmation d'un paiement différé.
+ * devis envoyé à signer, acompte à payer une fois le devis signé, puis solde une fois le chantier
+ * réceptionné (F-32). Aucune action pendant la confirmation d'un paiement différé.
  */
 export function clientChantierAction(input: {
   status: ChantierStatus;
@@ -71,6 +76,8 @@ export function clientChantierAction(input: {
   quoteStatus: string | null;
   depositCents: number | null;
   depositStatus: PaymentStatus | null;
+  balanceCents?: number | null;
+  balanceStatus?: PaymentStatus | null;
 }): ClientChantierAction | null {
   const { status, quoteId, quoteStatus, depositCents, depositStatus } = input;
   if (!quoteId) return null;
@@ -82,10 +89,18 @@ export function clientChantierAction(input: {
     quoteStatus === "signe" &&
     depositCents !== null &&
     depositCents > 0 &&
-    depositStatus !== "paye" &&
-    depositStatus !== "en_cours"
+    payable(depositStatus)
   ) {
     return { kind: "payer_acompte", quoteId, amountCents: depositCents };
+  }
+  if (
+    status === "receptionne" &&
+    quoteStatus === "signe" &&
+    input.balanceCents != null &&
+    input.balanceCents > 0 &&
+    payable(input.balanceStatus)
+  ) {
+    return { kind: "payer_solde", quoteId, amountCents: input.balanceCents };
   }
   return null;
 }

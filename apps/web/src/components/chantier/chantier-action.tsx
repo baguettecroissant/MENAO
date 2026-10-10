@@ -8,17 +8,25 @@ const t = fr.chantier.action;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
 /**
- * Action attendue du client (maquettes « Mes chantiers ») : signer le devis reçu, ou payer
- * l'acompte une fois le devis signé.
+ * Action attendue du client (maquettes « Mes chantiers ») : signer le devis reçu, payer l'acompte
+ * une fois le devis signé, puis le solde une fois le chantier réceptionné (F-32).
  */
 export function ChantierActionBlock({
   action,
   totalTtcCents,
+  chantierId,
 }: {
   action: ClientChantierAction;
   totalTtcCents: number | null;
+  chantierId: string;
 }) {
   const sign = action.kind === "signer_devis";
+  const href =
+    action.kind === "payer_solde"
+      ? `/mon-espace/chantiers/${chantierId}/solde`
+      : action.kind === "payer_acompte"
+        ? `/mon-espace/devis/${action.quoteId}/acompte`
+        : `/mon-espace/devis/${action.quoteId}`;
   return (
     <section
       aria-label={sign ? t.signTitle : t.payTitle}
@@ -33,9 +41,11 @@ export function ChantierActionBlock({
           )}
           {sign ? t.signTitle : t.payTitle}
         </p>
-        <p className="text-xs text-muted-foreground">{sign ? t.signText : t.payText}</p>
+        <p className="text-xs text-muted-foreground">
+          {sign ? t.signText : action.kind === "payer_solde" ? t.payBalanceText : t.payText}
+        </p>
       </div>
-      {action.kind === "payer_acompte" && (
+      {action.kind !== "signer_devis" && (
         <dl className="flex flex-col gap-1 text-sm">
           <div className="flex items-center justify-between gap-3">
             <dt>{t.payNow}</dt>
@@ -49,15 +59,7 @@ export function ChantierActionBlock({
           )}
         </dl>
       )}
-      <ButtonLink
-        href={
-          (action.kind === "payer_acompte"
-            ? `/mon-espace/devis/${action.quoteId}/acompte`
-            : `/mon-espace/devis/${action.quoteId}`) as Route
-        }
-        size="lg"
-        block
-      >
+      <ButtonLink href={href as Route} size="lg" block>
         {sign ? t.sign : t.pay}
       </ButtonLink>
     </section>

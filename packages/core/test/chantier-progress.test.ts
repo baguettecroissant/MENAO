@@ -91,6 +91,38 @@ describe("avancement du chantier (F-12)", () => {
     ).toBeNull();
   });
 
+  it("chantier réceptionné : payer le solde, sauf s'il est payé ou en cours de confirmation", () => {
+    const base = {
+      quoteId: "q1",
+      quoteStatus: "signe",
+      depositCents: 9900,
+      depositStatus: "paye" as const,
+      balanceCents: 23100,
+    };
+    expect(clientChantierAction({ ...base, status: "receptionne", balanceStatus: null })).toEqual({
+      kind: "payer_solde",
+      quoteId: "q1",
+      amountCents: 23100,
+    });
+    expect(
+      clientChantierAction({ ...base, status: "receptionne", balanceStatus: "en_cours" }),
+    ).toBeNull();
+    expect(
+      clientChantierAction({ ...base, status: "receptionne", balanceStatus: "paye" }),
+    ).toBeNull();
+    expect(
+      clientChantierAction({ ...base, status: "reserves_a_lever", balanceStatus: null }),
+    ).toBeNull();
+    expect(
+      clientChantierAction({
+        ...base,
+        status: "receptionne",
+        balanceCents: 0,
+        balanceStatus: null,
+      }),
+    ).toBeNull();
+  });
+
   it("échéancier : déjà payé et restant à payer, toujours calculés", () => {
     expect(paymentProgress(33000, [{ status: "paye", amountCents: 9900 }])).toEqual({
       paidCents: 9900,

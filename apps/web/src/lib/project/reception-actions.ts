@@ -7,6 +7,7 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/server";
@@ -79,4 +80,25 @@ export async function confirmReservesLifted(chantierId: string): Promise<FormSta
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
   revalidatePath(`/mon-espace/chantiers/${chantierId}`);
   return { success: fr.chantier.reception.lifted };
+}
+
+/**
+ * F-32 « Payer le solde » : paiement Stripe Checkout ouvert directement sur le compte de l'artisan
+ * (aucune commission MENAO), où le client est redirigé.
+ */
+export async function payBalance(chantierId: string): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const supabase = await createClient();
+  const { data, error } = await supabase.functions.invoke<{ status: string; url?: string }>(
+    "deposit-checkout",
+    { body: { chantierId, origin: env.NEXT_PUBLIC_SITE_URL } },
+  );
+  if (error || !data?.url) {
+    const body =
+      error instanceof FunctionsHttpError && error.context.status === 409
+        ? ((await error.context.json().catch(() => null)) as { message?: string } | null)
+        : null;
+    return { error: body?.message ?? fr.balance.unavailable };
+  }
+  redirect(data.url as Route);
 }

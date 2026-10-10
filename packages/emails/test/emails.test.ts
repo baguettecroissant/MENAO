@@ -278,6 +278,22 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("solde payé (F-32) : artisan et client, chantier clôturé", () => {
+    const data = { ...ids, titre: "Prises", artisan: "Jean", client: "Camille", montant: 23100 };
+    const artisan = notificationContent(
+      "solde_paye",
+      { ...data, destinataire: "artisan" },
+      { ...ctx, firstName: "Jean" },
+    );
+    expect(artisan.subject).toBe(`Solde reçu pour ${quoted("Prises")}`);
+    expect(artisan.paragraphs[1]).toContain("directement sur votre compte Stripe");
+    expect(artisan.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    const client = notificationContent("solde_paye", { ...data, destinataire: "client" }, ctx);
+    expect(client.subject).toBe("Votre chantier est terminé");
+    expect(client.paragraphs[1]).toContain("a bien été payé à Jean");
+    expect(client.cta.url).toBe(`https://menao.example/mon-espace/chantiers/${ids.chantier_id}`);
+  });
+
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
     for (const type of NOTIFICATION_TYPES) {
       const c = notificationContent(
