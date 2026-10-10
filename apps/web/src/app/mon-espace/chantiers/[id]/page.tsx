@@ -23,6 +23,8 @@ import { ChantierStatusTag } from "@/components/chantier/chantier-status-tag";
 import { ChantierStepper } from "@/components/chantier/chantier-stepper";
 import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
+import { ReceptionActions } from "@/components/chantier/reception-actions";
+import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
 import { chantierTag, nextIntervention } from "@/lib/chantier/view";
@@ -30,6 +32,7 @@ import { formatDateNumeric } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.chantier;
+const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const STARTED: readonly ChantierStatus[] = [
   "en_cours",
@@ -51,7 +54,7 @@ export default async function ClientChantierPage({
   searchParams,
 }: PageProps<"/mon-espace/chantiers/[id]">) {
   const { id } = await params;
-  const { onglet } = await searchParams;
+  const { onglet, reception: signed } = await searchParams;
   if (!UUID.test(id)) notFound();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
@@ -64,26 +67,37 @@ export default async function ClientChantierPage({
   const tab = onglet === "dossier" ? "dossier" : "suivi";
   const status = c.status as ChantierStatus;
 
-  const [{ data: updates }, { data: quotes }, { data: payments }, { data: invoices }] =
-    await Promise.all([
-      supabase
-        .from("chantier_updates")
-        .select("id, kind, message, storage_path, created_at")
-        .eq("chantier_id", id),
-      supabase
-        .from("quotes")
-        .select("id, status, numero, sent_at, signed_at, total_ttc_cents")
-        .eq("chantier_id", id)
-        .neq("status", "brouillon")
-        .order("version", { ascending: false })
-        .limit(1),
-      supabase.from("payments").select("quote_id, status, amount_cents").eq("chantier_id", id),
-      supabase
-        .from("invoices")
-        .select("id, numero, kind, issued_on")
-        .eq("chantier_id", id)
-        .order("issued_on"),
-    ]);
+  const [
+    { data: updates },
+    { data: quotes },
+    { data: payments },
+    { data: invoices },
+    { data: reception },
+  ] = await Promise.all([
+    supabase
+      .from("chantier_updates")
+      .select("id, kind, message, storage_path, created_at")
+      .eq("chantier_id", id),
+    supabase
+      .from("quotes")
+      .select("id, status, numero, sent_at, signed_at, total_ttc_cents")
+      .eq("chantier_id", id)
+      .neq("status", "brouillon")
+      .order("version", { ascending: false })
+      .limit(1),
+    supabase.from("payments").select("quote_id, status, amount_cents").eq("chantier_id", id),
+    supabase
+      .from("invoices")
+      .select("id, numero, kind, issued_on")
+      .eq("chantier_id", id)
+      .order("issued_on"),
+    // F-25, F-26 : PV de réception.
+    supabase
+      .from("receptions")
+      .select("id, numero, status, reserves, signed_at")
+      .eq("chantier_id", id)
+      .maybeSingle(),
+  ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
       id: u.id,
@@ -117,6 +131,15 @@ export default async function ClientChantierPage({
       title: t.dossier.invoice[i.kind],
       meta: t.dossier.meta(i.numero, formatDateNumeric(i.issued_on)),
     })),
+    ...(reception?.status === "signe" && reception.signed_at
+      ? [
+          {
+            href: `/receptions/${reception.id}/pdf`,
+            title: t.reception.pvDocument,
+            meta: t.dossier.meta(reception.numero, formatDateNumeric(reception.signed_at)),
+          },
+        ]
+      : []),
   ];
   const progress =
     quote?.status === "signe"
@@ -154,6 +177,7 @@ export default async function ClientChantierPage({
                 startAt: c.start_at,
                 finishedAt: c.finished_at,
                 closedAt: c.closed_at,
+                receivedAt: c.received_at,
               })}
             />
           }
@@ -172,6 +196,24 @@ export default async function ClientChantierPage({
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">
           {action && (
             <ChantierActionBlock action={action} totalTtcCents={c.quote_total_ttc_cents} />
+          )}
+          {status === "travaux_termines" && signed === "signee" && (
+            <Alert tone="info">{t.reception.processing}</Alert>
+          )}
+          {status === "reserves_a_lever" && reception?.reserves && (
+            <section
+              aria-labelledby="reserves-title"
+              className="flex flex-col gap-2 rounded-card border border-warning/40 bg-surface p-5 shadow-card"
+            >
+              <h2 id="reserves-title" className="text-[1.0625rem] font-medium">
+                {t.reception.yourReserves}
+              </h2>
+              <p className="text-sm whitespace-pre-line">{reception.reserves}</p>
+              <p className="text-xs text-muted-foreground">{t.reception.reservesNext}</p>
+            </section>
+          )}
+          {status === "receptionne" && c.received_at && (
+            <Alert tone="success">{t.reception.received(formatDateNumeric(c.received_at))}</Alert>
           )}
           <ChantierTabs base={`/mon-espace/chantiers/${id}`} active={tab} />
           {tab === "suivi" ? (
@@ -208,6 +250,13 @@ export default async function ClientChantierPage({
           <ReportProblemLink />
         </div>
       </div>
+      {status === "travaux_termines" && (
+        <ReceptionActions
+          chantierId={id}
+          artisanName={c.artisan_name}
+          balance={euros.format((progress?.remainingCents ?? 0) / 100)}
+        />
+      )}
     </main>
   );
 }

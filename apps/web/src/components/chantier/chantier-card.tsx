@@ -27,6 +27,7 @@ const tagOf = (c: ClientChantier) =>
     startAt: c.start_at,
     finishedAt: c.finished_at,
     closedAt: c.closed_at,
+    receivedAt: c.received_at,
   });
 const hrefOf = (c: ClientChantier) => `/mon-espace/chantiers/${c.chantier_id}` as Route;
 

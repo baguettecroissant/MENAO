@@ -56,3 +56,12 @@ export const reservesSchema = z.object({
     .min(RESERVES_LIMITS.min, { error: messages.reservesTooShort })
     .max(RESERVES_LIMITS.max, { error: messages.reservesTooLong }),
 });
+
+/** F-25 : cases cochées avant de signer le PV de réception (mêmes cases que le devis, F-13). */
+const receptionConsent = z.literal(true, { error: messages.receptionConsentRequired });
+export const receptionConsentsSchema = z.object({
+  document: receptionConsent,
+  cgu_prestataire: receptionConsent,
+  cgu_menao: receptionConsent,
+  echeancier: receptionConsent,
+});

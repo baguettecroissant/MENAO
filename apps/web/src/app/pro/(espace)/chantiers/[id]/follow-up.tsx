@@ -30,7 +30,7 @@ import {
 } from "@/components/pro/chantier-journal-forms";
 import { StickyActions } from "@/components/pro/detail";
 import { RequestBlocks } from "@/components/pro/request-blocks";
-import { ButtonLink } from "@/components/ui";
+import { Alert, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
 import { signedUrlMap } from "@/lib/chantier/storage";
@@ -78,6 +78,8 @@ export async function ArtisanFollowUp({
     { data: invoices },
     { data: updates },
     { data: finished },
+    { data: reception },
+    { data: received },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -102,6 +104,20 @@ export async function ArtisanFollowUp({
       .select("created_at")
       .eq("chantier_id", id)
       .eq("event", "fin_declaree")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // F-25, F-26 : PV de réception et date de réception.
+    supabase
+      .from("receptions")
+      .select("id, numero, status, reserves, signed_at")
+      .eq("chantier_id", id)
+      .maybeSingle(),
+    supabase
+      .from("chantier_events")
+      .select("created_at")
+      .eq("chantier_id", id)
+      .eq("to_status", "receptionne")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -142,6 +158,15 @@ export async function ArtisanFollowUp({
       title: t.dossier.invoice[i.kind],
       meta: t.dossier.meta(i.numero, formatDateNumeric(i.issued_on)),
     })),
+    ...(reception?.status === "signe" && reception.signed_at
+      ? [
+          {
+            href: `/receptions/${reception.id}/pdf`,
+            title: t.reception.pvDocument,
+            meta: t.dossier.meta(reception.numero, formatDateNumeric(reception.signed_at)),
+          },
+        ]
+      : []),
   ];
   const progress =
     quote?.status === "signe"
@@ -175,6 +200,7 @@ export async function ArtisanFollowUp({
                   startAt,
                   finishedAt: finished?.created_at ?? null,
                   closedAt: null,
+                  receivedAt: received?.created_at ?? null,
                 })}
               />
               {depositPaid && (
@@ -191,6 +217,26 @@ export async function ArtisanFollowUp({
           {step !== null && <ChantierStepper current={step} />}
         </ChantierHero>
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">
+          {status === "travaux_termines" && (
+            <Alert tone="info">{tf.awaitingReception(clientFirstName)}</Alert>
+          )}
+          {status === "reserves_a_lever" && reception?.reserves && (
+            <section
+              aria-labelledby="reserves-title"
+              className="flex flex-col gap-2 rounded-card border border-warning/40 bg-surface p-5 shadow-card"
+            >
+              <h2 id="reserves-title" className="text-[1.0625rem] font-medium">
+                {tf.reservesTitle(clientFirstName)}
+              </h2>
+              <p className="text-sm whitespace-pre-line">{reception.reserves}</p>
+              <p className="text-xs text-muted-foreground">{tf.reservesNext}</p>
+            </section>
+          )}
+          {status === "receptionne" && received && (
+            <Alert tone="success">
+              {tf.received(clientFirstName, formatDateNumeric(received.created_at))}
+            </Alert>
+          )}
           <ChantierTabs base={`/pro/chantiers/${id}`} active={tab} />
           {tab === "suivi" ? (
             <>

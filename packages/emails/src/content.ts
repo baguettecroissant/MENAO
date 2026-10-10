@@ -19,6 +19,8 @@ export const NOTIFICATION_TYPES = [
   "demarrage_modifie",
   "travaux_termines",
   "chantier_nouveautes",
+  "pv_signe",
+  "reserves_emises",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -365,18 +367,17 @@ export function notificationContent(
       };
     }
     case "travaux_termines":
-      // TODO : lien vers la réception (procès-verbal) et le paiement du solde (F-25, phase 5).
       return {
         subject: `Travaux terminés pour ${quoted(titre)}`,
-        preview: `${artisan} a déclaré les travaux terminés.`,
+        preview: `${artisan} a déclaré les travaux terminés : validez la réception.`,
         title: "Travaux terminés !",
         paragraphs: [
           hello(ctx.firstName),
           `${artisan} a déclaré terminés les travaux de votre chantier ${quoted(titre)}.`,
-          "Prochaine étape : la réception des travaux, que vous validerez depuis votre espace.",
+          "Consultez le suivi du chantier, puis validez la réception des travaux en signant le procès-verbal, avec ou sans réserves.",
         ],
         quote: null,
-        cta: myChantier("Voir mon chantier"),
+        cta: myChantier("Valider la réception"),
       };
     case "chantier_nouveautes": {
       // Nouveautés du journal regroupées (F-12) : « Jean a ajouté 6 nouvelles photos ».
@@ -397,6 +398,44 @@ export function notificationContent(
         ],
         quote: null,
         cta: myChantier("Voir le suivi du chantier"),
+      };
+    }
+    case "pv_signe": {
+      // F-25 : PV signé sans réserves, à l'artisan.
+      const client = text(data, "client") ?? "Votre client";
+      return {
+        subject: `Réception validée pour ${quoted(titre)}`,
+        preview: `${client} a signé le procès-verbal de réception sans réserves.`,
+        title: "Réception validée",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a signé le procès-verbal de réception de ${quoted(titre)}, sans réserves.`,
+          "Prochaine étape : le paiement du solde par votre client.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
+      };
+    }
+    case "reserves_emises": {
+      // F-26 : PV signé avec réserves, à l'artisan.
+      const client = text(data, "client") ?? "Votre client";
+      return {
+        subject: `Réserves émises par ${client}`,
+        preview: `${client} a signé le procès-verbal de réception avec des réserves.`,
+        title: "Réserves émises",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a signé le procès-verbal de réception de ${quoted(titre)} avec les réserves suivantes :`,
+          "Intervenez rapidement pour les lever : votre client confirmera ensuite leur levée, puis réglera le solde.",
+        ],
+        quote: text(data, "reserves"),
+        cta: {
+          label: "Voir les réserves",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
       };
     }
   }

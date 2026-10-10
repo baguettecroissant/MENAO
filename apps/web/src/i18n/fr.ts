@@ -726,6 +726,7 @@ export const fr = {
       annule: "Chantier annulé",
     },
     finishedOn: (date: string) => `Travaux terminés le ${date}`,
+    receivedOn: (date: string) => `Réceptionné le ${date}`,
     closedOn: (date: string) => `Terminé le ${date}`,
     cancelledOn: (date: string) => `Annulé le ${date}`,
     quoteRefused: "Devis refusé",
@@ -786,8 +787,66 @@ export const fr = {
       total: "Total du chantier",
       pay: "Payer maintenant",
     },
+    reception: {
+      validate: "Valider la réception du chantier",
+      addReserves: "Ajouter des réserves sur ce chantier",
+      conformTitle: "Tout est conforme ?",
+      conformText: (artisan: string) =>
+        `En validant la réception, vous confirmez que les travaux de ${artisan} sont terminés et ne présentent aucune malfaçon visible.`,
+      important: "Information importante :",
+      conformNext: (balance: string) =>
+        `vous allez signer le procès-verbal de réception. Le solde de ${balance} vous sera demandé ensuite.`,
+      signPv: "Signer le PV de réception",
+      back: "Retour",
+      close: "Fermer",
+      reservesQuestion: "Un détail vous semble incomplet ou une finition nécessite une retouche ?",
+      reservesText: (artisan: string) =>
+        `En ajoutant des réserves, vous pourrez lister les points que ${artisan} doit corriger pour finaliser parfaitement votre projet. Ces réserves seront inscrites sur votre PV de réception et ${artisan} en sera immédiatement informé pour intervenir.`,
+      addReservesSubmit: "Ajouter des réserves",
+      processing:
+        "Signature reçue : son enregistrement est en cours. Actualisez la page dans quelques instants.",
+      yourReserves: "Vos réserves",
+      reservesNext: "Le paiement du solde vous sera demandé une fois les réserves levées.",
+      received: (date: string) =>
+        `Réception validée le ${date}. Prochaine étape : le paiement du solde.`,
+      pvDocument: "PV de réception",
+    },
     report: "Signaler un problème lié au chantier",
     chooseAnother: "Choisir un autre artisan",
+  },
+  reception: {
+    title: "Réception des travaux",
+    back: "Retour au chantier",
+    stepsLabel: "Étapes de la réception",
+    steps: { reserves: "Ajout des réserves", pv: "Signature du PV", solde: "Paiement du solde" },
+    reservesTitle: "Ajouter des réserves",
+    reservesHelp: (artisan: string) =>
+      `Décrivez ici les points que ${artisan} doit corriger pour finaliser votre projet. Ces réserves seront inscrites sur votre PV de réception et ${artisan} en sera immédiatement informé.`,
+    reservesLabel: "Vos réserves",
+    reservesPlaceholder:
+      "Ex. : peinture à retoucher sur la plinthe, prise de courant mal fixée, nettoyage de fin de chantier à compléter…",
+    reservesTooShort: "Décrivez vos réserves en 10 caractères au moins.",
+    continue: "Continuer",
+    editReserves: "Modifier mes réserves",
+    pvTitle: "Signature du PV de réception",
+    pvIntro:
+      "Relisez attentivement le procès-verbal de réception pour vous assurer que tout est conforme, puis cochez les cases : vous signerez chez notre prestataire de signature électronique, DocuSeal.",
+    pvLabel: "Aperçu du procès-verbal de réception",
+    numberPending: "Numéro attribué à la signature",
+    consents: {
+      document: "J'ai lu et j'accepte le procès-verbal de réception.",
+      cgu_prestataire:
+        "J'accepte les conditions d'utilisation de DocuSeal, prestataire de signature électronique.",
+      cgu_menao:
+        "J'accepte les conditions générales d'utilisation et la politique de confidentialité de MENAO.",
+      echeancier: (balance: string) =>
+        `Je prends note que le solde restant à payer s'élève à ${balance}, selon l'échéancier du devis signé.`,
+    },
+    otp: "Un code à usage unique vous sera demandé pour confirmer votre identité.",
+    submit: "Signer le PV de réception",
+    unavailable:
+      "La signature électronique est momentanément indisponible. Réessayez dans un instant.",
+    balanceNext: "Le paiement du solde vous sera proposé après la signature.",
   },
   clientQuote: {
     back: "Mon espace",
@@ -1062,6 +1121,13 @@ export const fr = {
       finishReminder:
         "Avant de déclarer le chantier comme terminé, assurez-vous d'avoir ajouté des photos du chantier une fois terminé.",
       finished: "Chantier déclaré terminé.",
+      awaitingReception: (client: string) =>
+        `En attente de la réception des travaux par ${client} (signature du procès-verbal).`,
+      reservesTitle: (client: string) => `Réserves émises par ${client}`,
+      reservesNext:
+        "Intervenez pour lever ces réserves : votre client confirmera ensuite leur levée, puis réglera le solde.",
+      received: (client: string, date: string) =>
+        `Réception validée par ${client} le ${date}. Prochaine étape : le paiement du solde.`,
       yourClientFallback: "votre client",
     },
     quote: {

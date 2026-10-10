@@ -14,6 +14,7 @@ const PROTECTED_PREFIXES = [
   "/agenda",
   "/devis",
   "/factures",
+  "/receptions",
   "/nouveau-mot-de-passe",
   "/admin",
 ];
@@ -79,6 +80,7 @@ export const config = {
     "/agenda/:path*",
     "/devis/:path*",
     "/factures/:path*",
+    "/receptions/:path*",
     "/nouveau-mot-de-passe",
     "/admin/:path*",
     "/recherche/:path*",

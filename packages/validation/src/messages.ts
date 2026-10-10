@@ -56,6 +56,7 @@ export const messages = {
   chantierMessageTooLong: "Votre message dépasse 2 000 caractères.",
   reservesTooShort: "Décrivez vos réserves en 10 caractères au moins.",
   reservesTooLong: "Vos réserves dépassent 2 000 caractères.",
+  receptionConsentRequired: "Cochez cette case pour signer le PV de réception.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

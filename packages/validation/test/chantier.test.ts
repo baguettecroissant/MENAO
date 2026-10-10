@@ -6,6 +6,7 @@ import {
   chantierMessageSchema,
   chantierStartSchema,
   expertiseSchema,
+  receptionConsentsSchema,
   reservesSchema,
 } from "../src/chantier";
 import { messages } from "../src/messages";
@@ -83,5 +84,12 @@ describe("réception avec réserves (F-26)", () => {
     expect(reservesSchema.safeParse({ reserves: "x".repeat(2001) }).error?.issues[0]?.message).toBe(
       messages.reservesTooLong,
     );
+  });
+
+  it("cases du PV : toutes obligatoires, message propre au PV", () => {
+    const all = { document: true, cgu_prestataire: true, cgu_menao: true, echeancier: true };
+    expect(receptionConsentsSchema.safeParse(all).success).toBe(true);
+    const missing = receptionConsentsSchema.safeParse({ ...all, echeancier: false });
+    expect(missing.error?.issues[0]?.message).toBe(messages.receptionConsentRequired);
   });
 });
