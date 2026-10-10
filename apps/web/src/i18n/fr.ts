@@ -1619,22 +1619,251 @@ export const fr = {
       sent: "Merci ! L'équipe MENAO a bien reçu votre signalement.",
     },
     landing: {
-      title: "Recevez des demandes de chantier qualifiées",
-      subtitle:
+      // Encart « Espace Pro » de l'accueil.
+      teaser:
         "MENAO met en relation les artisans du bâtiment vérifiés avec des particuliers. Devis, signature, paiement et suivi de chantier dans un seul outil. Abonnement mensuel, zéro commission.",
-      points: [
-        "Des demandes structurées et près de chez vous",
-        "Vos devis créés en quelques minutes, même à la voix",
-        "Paiement sécurisé versé directement sur votre compte",
-      ],
-      signUp: "Créer mon compte pro",
-      signIn: "J'ai déjà un compte",
-      plansTitle: "Nos formules",
+      metaTitle: "Espace Pro : des chantiers près de chez vous, zéro commission",
+      metaDescription:
+        "Recevez les demandes qualifiées des particuliers de votre zone. Devis dictés, signature, acompte et facture dans une seule app. Abonnement fixe, aucune commission, 3 mois offerts.",
+      hero: {
+        eyebrow: "Espace Pro · Alpes-Maritimes",
+        titleLead: "Remplissez votre agenda.",
+        titleAccent: "Gardez 100 % de vos chantiers.",
+        subtitle:
+          "MENAO vous envoie les demandes des particuliers de votre zone, déjà qualifiées. Devis, signature, acompte, suivi et facture tiennent dans une seule app, et chaque paiement arrive directement sur votre compte. Aucune commission, jamais.",
+        signUp: "Créer mon compte pro",
+        plans: "Voir les formules",
+        signIn: "J'ai déjà un compte",
+        proofs: [
+          "0 % de commission",
+          "Paiements versés sur votre compte",
+          "3 mois offerts, sans engagement",
+        ],
+      },
+      preview: {
+        label:
+          "Illustration : une demande de chantier qualifiée, un devis signé et un acompte reçu dans l'application MENAO.",
+        request: "Nouvelle demande",
+        requestTrade: "Plomberie · 06000 Nice",
+        requestSummary: "Fuite sous l'évier de la cuisine, 3 photos jointes",
+        requestQualified: "Qualifiée par l'IA",
+        requestShared: "3 artisans au plus",
+        requestDeadline: "Réponse attendue sous 48 h",
+        quote: "Devis",
+        quoteNumber: "DEVIS-2026-0012",
+        quoteSigned: "Signé en ligne",
+        quoteAmount: "1 240,00 € TTC",
+        payment: "Acompte reçu",
+        paymentAmount: "372,00 €",
+        paymentWhere: "sur votre compte",
+      },
+      pains: {
+        eyebrow: "Le constat",
+        title: "Votre temps vaut mieux que la prospection.",
+        subtitle:
+          "Trois choses pèsent sur les artisans du bâtiment. MENAO les règle pour un abonnement fixe.",
+        solutionLabel: "Avec MENAO",
+        items: [
+          {
+            title: "Chercher des clients",
+            text: "Appels, relances, devis restés sans réponse : chaque heure passée à prospecter est une heure de chantier en moins.",
+            solution: "Les demandes de votre zone viennent à vous, déjà qualifiées.",
+          },
+          {
+            title: "Payer pour travailler",
+            text: "Commission sur chaque chantier, contacts achetés sans garantie : vos marges fondent avant même le premier coup de pinceau.",
+            solution: "Un abonnement fixe. Pas de commission, pas de contact à l'unité.",
+          },
+          {
+            title: "Courir après l'administratif",
+            text: "Devis, signatures, acomptes, factures, relances de paiement : la paperasse déborde sur vos soirées.",
+            solution: "Devis, signature, paiements et factures au même endroit.",
+          },
+        ],
+      },
+      steps: {
+        eyebrow: "Comment ça marche",
+        title: "De l'inscription au premier chantier.",
+        subtitle:
+          "L'équipe MENAO vérifie votre entreprise une fois, puis les demandes de votre zone arrivent dans votre espace.",
+        items: [
+          {
+            title: "Créez votre profil pro",
+            text: "SIRET, assurances, métiers, zone d'intervention et photos de réalisations. Nous vérifions votre entreprise et vos assurances avant de vous rendre visible.",
+          },
+          {
+            title: "Recevez des demandes qualifiées",
+            text: "Chaque projet est précisé avec l'aide de l'IA : besoin, photos, commune, délais. Une demande va à trois artisans au plus, et vous avez 48 h pour l'accepter.",
+          },
+          {
+            title: "Envoyez votre devis en quelques minutes",
+            text: "Fixez le rendez-vous, puis dictez votre devis à la voix : MENAO le met en forme avec les mentions obligatoires. Votre client le signe en ligne.",
+          },
+          {
+            title: "Encaissez, suivez, facturez",
+            text: "Acompte et solde payés directement sur votre compte, suivi du chantier en photos, procès-verbal de réception signé, factures émises automatiquement.",
+          },
+        ],
+      },
+      features: {
+        eyebrow: "Tout-en-un",
+        title: "Tout votre chantier dans une seule app.",
+        subtitle: "Du premier contact à la facture de solde, sans jongler entre cinq outils.",
+        voice: {
+          tag: "Dictée du devis",
+          title: "Vous dictez, MENAO rédige le devis.",
+          text: "Décrivez les travaux à voix haute, sur le chantier ou dans le camion : chaque fourniture et chaque prestation devient une ligne, avec quantité, unité et prix. TVA, totaux et mentions obligatoires suivent. Vous relisez, vous envoyez.",
+          promise: "MENAO n'invente aucun prix : seuls ceux que vous dictez sont repris.",
+          // Illustration (valeurs d'exemple).
+          recording: "Dictée en cours",
+          transcript:
+            "« Mitigeur d'évier, fourniture et pose, 89 euros. Une heure de main-d'œuvre à 55 euros. »",
+          lines: [
+            { label: "Mitigeur d'évier, fourniture et pose", qty: "1 u", amount: "89,00 €" },
+            { label: "Main-d'œuvre", qty: "1 h", amount: "55,00 €" },
+          ],
+          totalLabel: "Total HT",
+          total: "144,00 €",
+        },
+        request: {
+          tag: "Demandes qualifiées",
+          title: "Vous savez tout avant d'accepter.",
+          text: "Le besoin analysé par l'IA, les photos, la commune et les délais souhaités : vous choisissez vos chantiers en connaissance de cause.",
+          checks: ["Besoin analysé", "Photos du chantier", "Commune", "Délais souhaités"],
+        },
+        items: [
+          {
+            title: "Signature électronique",
+            text: "Votre client signe le devis en ligne, sans imprimer ni scanner.",
+          },
+          {
+            title: "Paiements directs",
+            text: "Acompte et solde versés sur votre compte Stripe. MENAO ne touche jamais à votre argent.",
+          },
+          {
+            title: "Suivi, messages et agenda",
+            text: "Photos, échanges et rendez-vous au même endroit : votre client suit l'avancement sans vous appeler.",
+          },
+          {
+            title: "Réception et PV",
+            text: "Procès-verbal signé en ligne, réserves suivies jusqu'à leur levée.",
+          },
+          {
+            title: "Factures automatiques",
+            text: "Factures d'acompte et de solde à votre nom, export prêt pour votre comptable.",
+          },
+          {
+            title: "Avis vérifiés",
+            text: "Seuls vos clients peuvent vous noter, après la réception : votre score MENAO reflète votre vrai travail.",
+          },
+        ],
+      },
+      commission: {
+        eyebrow: "Zéro commission",
+        title: "Le montant de vos chantiers vous revient. En entier.",
+        text: "Sur MENAO, vous payez un abonnement fixe, et rien d'autre. Vos clients vous paient directement, sur votre compte : MENAO ne prélève ni commission, ni marge, et ne détient jamais votre argent.",
+        bullets: [
+          "Aucun pourcentage prélevé sur vos devis",
+          "Aucun contact à acheter à l'unité",
+          "Un prix connu d'avance, chaque mois",
+        ],
+        calculator: {
+          title: "Ce que vous coûterait une commission",
+          revenue: "Chantiers obtenus par une plateforme, par mois",
+          rate: "Taux de commission",
+          commission: "Commission prélevée",
+          menao: "Abonnement MENAO Base",
+          perMonth: "par mois",
+          saving: (monthly: string, yearly: string) =>
+            `Vous gardez ${monthly} de plus chaque mois, soit ${yearly} par an.`,
+          noSaving:
+            "À ce niveau d'activité, une commission coûte moins cher : MENAO est pensé pour les artisans qui veulent développer leur activité.",
+          note: "Simulation indicative, montants hors taxes. Les frais de paiement de Stripe restent à votre charge, comme pour tout encaissement par carte.",
+        },
+      },
+      fairness: {
+        eyebrow: "Un réseau juste",
+        title: "Votre réputation se construit sur vos chantiers.",
+        subtitle:
+          "Pas sur un budget publicitaire : les particuliers découvrent votre fiche vérifiée, vos spécialités et vos disponibilités, classées selon des critères publics.",
+        card: {
+          label:
+            "Illustration : la carte d'un artisan telle que la voient les particuliers dans les résultats de recherche.",
+          name: "Votre prénom",
+          trade: "Plombier · Chauffagiste",
+          zone: "20 km autour de Nice",
+          specialties: ["Recherche de fuite", "Chauffe-eau"],
+          more: "+2",
+          verified: "Vérifié par MENAO",
+          checks: ["Kbis", "Décennale", "RC Pro"],
+          reviews: "Avis vérifiés uniquement",
+        },
+        items: [
+          {
+            title: "Trois artisans au plus par demande",
+            text: "Vous n'êtes jamais un nom parmi dix : chaque particulier reçoit au plus trois propositions.",
+          },
+          {
+            title: "Un classement transparent",
+            text: "Score des avis vérifiés, disponibilité, puis distance : nos critères sont publics, et une mise en avant est toujours signalée comme telle.",
+          },
+          {
+            title: "Des pros vérifiés",
+            text: "Entreprise active, Kbis récent, décennale, RC Pro et identité contrôlés par l'équipe MENAO avant toute mise en ligne.",
+          },
+        ],
+        criteria: "Lire nos critères de classement",
+      },
+      plansEyebrow: "Formules",
+      plansTitle: "Un abonnement fixe, aucune commission.",
+      plansSubtitle: "Commencez avec 3 mois offerts. Sans engagement de durée.",
       perMonth: "HT / mois",
       trial: "3 mois offerts",
       open: "Disponible",
       soon: "Bientôt disponible",
-      noCommission: "Sans engagement de durée, sans commission sur vos chantiers.",
+      start: "Commencer avec 3 mois offerts",
+      plansNote:
+        "Prix hors taxes, par mois. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
+      faqEyebrow: "Questions fréquentes",
+      faqTitle: "Tout ce que vous voulez savoir.",
+      faq: [
+        {
+          q: "Combien coûte MENAO ?",
+          a: "La formule Base coûte 150 € HT par mois, avec 3 mois offerts à l'inscription. Les formules Premium et Entreprise arrivent prochainement.",
+        },
+        {
+          q: "MENAO prend-il une commission sur mes chantiers ?",
+          a: "Non. MENAO ne prend ni commission ni marge sur vos chantiers, et ne détient jamais votre argent : vos clients vous paient directement, sur votre compte Stripe.",
+        },
+        {
+          q: "Comment suis-je payé ?",
+          a: "Pendant l'inscription, vous ouvrez un compte Stripe à votre nom. Vos clients y règlent l'acompte puis le solde en ligne, par carte bancaire, et les fonds sont versés sur votre compte bancaire. Les frais de Stripe s'appliquent comme pour tout paiement par carte.",
+        },
+        {
+          q: "Combien d'artisans reçoivent la même demande ?",
+          a: "Trois au plus. Vous avez 48 h pour l'accepter ou la refuser ; passé ce délai, la demande expire et le particulier peut choisir un autre artisan. L'adresse exacte et les coordonnées du client vous sont transmises dès que vous acceptez.",
+        },
+        {
+          q: "Que faut-il pour m'inscrire ?",
+          a: "Votre numéro SIRET, un Kbis de moins de 3 mois, vos attestations d'assurance décennale et de responsabilité civile professionnelle, une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
+        },
+        {
+          q: "Qui vérifie mon dossier ?",
+          a: "L'équipe MENAO contrôle votre entreprise auprès de l'INSEE, puis vos documents un par un. Vous suivez l'état de votre dossier depuis votre espace pro.",
+        },
+        {
+          q: "Dans quelle zone suis-je visible ?",
+          a: "MENAO ouvre d'abord dans les Alpes-Maritimes. Vous choisissez votre zone : un rayon autour de votre adresse ou une liste de communes.",
+        },
+        {
+          q: "Puis-je arrêter mon abonnement ?",
+          a: "Oui, à tout moment depuis votre espace pro : l'abonnement est sans engagement de durée.",
+        },
+      ],
+      finalTitle: "Votre prochain chantier vous attend.",
+      finalText:
+        "Créez votre profil en quelques minutes : l'équipe MENAO s'occupe de la vérification.",
+      finalReassurance: ["3 mois offerts", "Sans engagement", "Sans commission"],
     },
     signUp: {
       title: "Créer mon compte professionnel",

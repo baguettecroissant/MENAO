@@ -1,17 +1,42 @@
-import { ClipboardList, Mic, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  BadgePercent,
+  CircleCheck,
+  ClipboardCheck,
+  FileStack,
+  MessagesSquare,
+  Mic,
+  PhoneCall,
+  Plus,
+  ReceiptText,
+  Scale,
+  ShieldCheck,
+  Signature,
+  Sparkles,
+  Star,
+  Users,
+  Wallet,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { LogoMark } from "@/components/brand/logo";
-import { ButtonLink, StatusBadge } from "@/components/ui";
+import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
+import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
+import { HeroPreview } from "@/components/pro-landing/hero-preview";
+import { ProfileCardPreview } from "@/components/pro-landing/profile-card-preview";
+import { SectionHeading } from "@/components/pro-landing/section-heading";
+import { ButtonLink, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createPublicClient } from "@/lib/supabase/public";
 
+const t = fr.pro.landing;
+
 export const metadata: Metadata = {
-  title: `${fr.nav.pro} — MENAO`,
-  description: fr.pro.landing.subtitle,
+  title: `${t.metaTitle} — MENAO`,
+  description: t.metaDescription,
   alternates: { canonical: "/pro" },
 };
 
-// Formules lues en base (table plans, F-15), page régénérée toutes les heures.
+// Formules lues en base (table plans, F-15), page régénérée toutes les heures (spec §4.4).
 export const revalidate = 3600;
 
 const euros = new Intl.NumberFormat("fr-FR", {
@@ -19,90 +44,364 @@ const euros = new Intl.NumberFormat("fr-FR", {
   currency: "EUR",
   maximumFractionDigits: 0,
 });
+const PAIN_ICONS = [PhoneCall, BadgePercent, FileStack];
+const FEATURE_ICONS = [Signature, Wallet, MessagesSquare, ClipboardCheck, ReceiptText, Star];
+const FAIRNESS_ICONS = [Users, Scale, ShieldCheck];
+// Montant de l'abonnement Base si la table des formules n'est pas lisible (150 € HT, ADR 0010).
+const BASE_FALLBACK_CENTS = 15000;
 
-const t = fr.pro.landing;
-const POINT_ICONS = [ClipboardList, Mic, Wallet];
+const avantagesOf = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 
-/** Espace Pro (F-03) : page de présentation aux artisans et formules (table plans). */
+/**
+ * Espace Pro (F-03) : présentation aux artisans. Promesses du business plan (abonnement fixe, zéro
+ * commission, paiements directs, trois artisans au plus par demande), fonctionnalités livrées,
+ * simulation de commission, carte artisan, formules (table plans) et questions fréquentes. Aucun
+ * chiffre ni témoignage inventé (F-01) ; les illustrations portent des valeurs d'exemple.
+ */
 export default async function ProLandingPage() {
   const { data: plans } = await createPublicClient()
     .from("plans")
-    .select("code, nom, prix_mensuel_ht_centimes, ouverte")
+    .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte")
     .order("ordre");
+  const base = plans?.find((p) => p.ouverte) ?? plans?.[0];
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: t.faq.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+
   return (
     <main className="bg-background">
-      <section className="px-2 pt-2 sm:px-4 sm:pt-4">
-        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_45%,#4869f6_80%,#8ea4fb_100%)] px-6 py-16 text-white sm:px-12 sm:py-24">
+      {/* Bandeau */}
+      <section aria-labelledby="pro-title" className="px-2 pt-2 sm:px-4 sm:pt-4">
+        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_45%,#4869f6_80%,#8ea4fb_100%)] px-6 py-14 text-white sm:px-12 sm:py-20 lg:py-24">
           <LogoMark
             tone="white"
-            className="absolute top-1/2 right-[4%] hidden size-[22rem] -translate-y-1/2 opacity-10 lg:block"
+            className="absolute -right-16 -bottom-24 hidden size-[30rem] opacity-[0.07] lg:block"
           />
-          <div className="relative flex max-w-2xl flex-col gap-5">
-            <span className="inline-flex self-start rounded-pill border border-white/30 bg-white/15 px-3 py-1 text-sm backdrop-blur">
-              {fr.nav.pro}
-            </span>
-            <h1 className="text-[2.25rem] leading-[1.08] font-medium tracking-tight sm:text-[3.25rem]">
-              {t.title}
-            </h1>
-            <p className="text-lg text-white/85">{t.subtitle}</p>
-            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-              <ButtonLink
-                href="/pro/inscription"
-                variant="secondary"
-                size="lg"
-                className="border-white"
+          <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+            <div className="flex flex-col gap-6">
+              <span className="inline-flex self-start rounded-pill border border-white/30 bg-white/15 px-3 py-1 text-sm backdrop-blur">
+                {t.hero.eyebrow}
+              </span>
+              <h1
+                id="pro-title"
+                className="text-[2.25rem] leading-[1.05] font-medium tracking-tight text-balance sm:text-[3.25rem] lg:text-[3.5rem]"
               >
-                {t.signUp}
-              </ButtonLink>
-              <ButtonLink
+                {t.hero.titleLead}{" "}
+                <span className="bg-[linear-gradient(90deg,#b9c7fc_0%,#e4eafd_100%)] bg-clip-text text-transparent sm:block">
+                  {t.hero.titleAccent}
+                </span>
+              </h1>
+              <p className="max-w-xl text-lg text-pretty text-white/85">{t.hero.subtitle}</p>
+              <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
+                <ButtonLink
+                  href="/pro/inscription"
+                  variant="secondary"
+                  size="lg"
+                  className="border-white"
+                >
+                  {t.hero.signUp}
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </ButtonLink>
+                <ButtonLink
+                  href="/pro#formules"
+                  variant="ghost"
+                  size="lg"
+                  className="border border-white/50 text-white hover:bg-white/10 hover:text-white"
+                >
+                  {t.hero.plans}
+                </ButtonLink>
+              </div>
+              <ul className="flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap sm:gap-x-5">
+                {t.hero.proofs.map((proof) => (
+                  <li key={proof} className="flex items-center gap-2 text-sm text-white/90">
+                    <CircleCheck aria-hidden="true" className="size-4 shrink-0 text-white" />
+                    {proof}
+                  </li>
+                ))}
+              </ul>
+              <TextLink
                 href="/connexion"
-                variant="ghost"
-                size="lg"
-                className="border border-white/50 text-white hover:bg-white/10 hover:text-white"
+                className="self-start text-sm text-white underline decoration-white/40 hover:decoration-white"
               >
-                {t.signIn}
-              </ButtonLink>
+                {t.hero.signIn}
+              </TextLink>
             </div>
+            <HeroPreview />
           </div>
         </div>
       </section>
 
-      <div className="mx-auto flex max-w-5xl flex-col gap-14 px-4 py-14 sm:px-6 sm:py-20">
-        <ul className="grid gap-4 sm:grid-cols-3">
-          {t.points.map((point, i) => {
-            const Icon = POINT_ICONS[i] ?? ClipboardList;
-            return (
-              <li
-                key={point}
-                className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card"
-              >
-                <span className="inline-flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary">
-                  <Icon aria-hidden="true" className="size-5" />
-                </span>
-                <p className="font-medium">{point}</p>
-              </li>
-            );
-          })}
-        </ul>
+      {/* Le constat */}
+      <section aria-labelledby="pro-pains" className="py-16 sm:py-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+          <SectionHeading
+            id="pro-pains"
+            eyebrow={t.pains.eyebrow}
+            title={t.pains.title}
+            subtitle={t.pains.subtitle}
+          />
+          <ul className="grid gap-4 md:grid-cols-3">
+            {t.pains.items.map((item, i) => {
+              const Icon = PAIN_ICONS[i] ?? PhoneCall;
+              return (
+                <li
+                  key={item.title}
+                  className="flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card"
+                >
+                  <div className="flex flex-col gap-3 p-6">
+                    <span className="flex size-11 items-center justify-center rounded-full bg-danger-soft text-danger">
+                      <Icon aria-hidden="true" className="size-5" />
+                    </span>
+                    <h3 className="text-lg font-medium">{item.title}</h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                  </div>
+                  <div className="mt-auto flex gap-3 border-t border-primary-soft bg-primary-softer px-6 py-4">
+                    <CircleCheck
+                      aria-hidden="true"
+                      className="mt-0.5 size-5 shrink-0 text-primary"
+                    />
+                    <p className="flex flex-col gap-0.5 text-sm">
+                      <span className="text-xs font-semibold tracking-[0.12em] text-primary-strong uppercase">
+                        {t.pains.solutionLabel}
+                      </span>
+                      {item.solution}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
 
-        {plans && plans.length > 0 && (
-          <section aria-label={t.plansTitle} className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2 text-center">
-              <h2 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
-                {t.plansTitle}
-              </h2>
-              <p className="text-sm text-muted-foreground">{t.noCommission}</p>
+      {/* Comment ça marche */}
+      <section aria-labelledby="pro-steps" className="bg-surface py-16 sm:py-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+          <SectionHeading
+            id="pro-steps"
+            eyebrow={t.steps.eyebrow}
+            title={t.steps.title}
+            subtitle={t.steps.subtitle}
+          />
+          <ol className="relative grid gap-8 md:grid-cols-4 md:gap-6">
+            <span
+              aria-hidden="true"
+              className="absolute top-6 right-[12.5%] left-[12.5%] hidden h-px bg-border-strong md:block"
+            />
+            {t.steps.items.map((step, i) => (
+              <li
+                key={step.title}
+                className="relative flex gap-4 md:flex-col md:items-center md:text-center"
+              >
+                {i < t.steps.items.length - 1 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-12 -bottom-8 left-6 w-px bg-border-strong md:hidden"
+                  />
+                )}
+                <span className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground shadow-raised">
+                  {i + 1}
+                </span>
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-[1.0625rem] font-medium">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="flex justify-center">
+            <ButtonLink href="/pro/inscription" size="lg">
+              {t.hero.signUp}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </ButtonLink>
+          </div>
+        </div>
+      </section>
+
+      {/* Tout-en-un */}
+      <section aria-labelledby="pro-features" className="py-16 sm:py-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+          <SectionHeading
+            id="pro-features"
+            eyebrow={t.features.eyebrow}
+            title={t.features.title}
+            subtitle={t.features.subtitle}
+          />
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <article
+                aria-labelledby="pro-feature-voice"
+                className="grid grid-cols-1 items-center gap-8 rounded-hero border border-border bg-surface p-6 shadow-card sm:p-8 md:grid-cols-2 lg:col-span-2"
+              >
+                <div className="flex flex-col gap-4">
+                  <Tag className="self-start">
+                    <Mic aria-hidden="true" className="size-3.5" />
+                    {t.features.voice.tag}
+                  </Tag>
+                  <h3
+                    id="pro-feature-voice"
+                    className="text-2xl leading-tight font-medium tracking-tight text-balance"
+                  >
+                    {t.features.voice.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {t.features.voice.text}
+                  </p>
+                  <p className="flex items-start gap-2 text-sm font-medium text-primary-strong">
+                    <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                    {t.features.voice.promise}
+                  </p>
+                </div>
+                <VoiceQuoteVisual />
+              </article>
+              <article
+                aria-labelledby="pro-feature-request"
+                className="flex flex-col gap-4 rounded-hero bg-primary-soft p-6 sm:p-8"
+              >
+                <span className="inline-flex items-center gap-1 self-start rounded-chip bg-surface px-2.5 py-1 text-xs font-medium text-primary-strong">
+                  <Sparkles aria-hidden="true" className="size-3.5" />
+                  {t.features.request.tag}
+                </span>
+                <h3
+                  id="pro-feature-request"
+                  className="text-2xl leading-tight font-medium tracking-tight text-balance"
+                >
+                  {t.features.request.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-foreground/80">
+                  {t.features.request.text}
+                </p>
+                <div className="mt-auto pt-2">
+                  <RequestChecklist />
+                </div>
+              </article>
             </div>
-            <ul className="grid gap-4 sm:grid-cols-3">
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {t.features.items.map((feature, i) => {
+                const Icon = FEATURE_ICONS[i] ?? Signature;
+                return (
+                  <li
+                    key={feature.title}
+                    className="group flex gap-4 rounded-card border border-border bg-surface p-5 shadow-card transition-shadow hover:shadow-raised"
+                  >
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <Icon aria-hidden="true" className="size-5" />
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-medium">{feature.title}</h3>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {feature.text}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Zéro commission */}
+      <section aria-labelledby="pro-commission" className="px-2 sm:px-4">
+        <div className="mx-auto max-w-[1440px] rounded-hero bg-[linear-gradient(150deg,#0b1438_0%,#16236e_60%,#2a3fb8_100%)] px-6 py-16 text-white sm:px-12 sm:py-24">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
+            <div className="flex flex-col gap-6">
+              <SectionHeading
+                id="pro-commission"
+                eyebrow={t.commission.eyebrow}
+                title={t.commission.title}
+                align="left"
+                tone="inverse"
+              />
+              <p className="text-white/80">{t.commission.text}</p>
+              <ul className="flex flex-col gap-3">
+                {t.commission.bullets.map((bullet) => (
+                  <li key={bullet} className="flex items-center gap-3">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/15">
+                      <CircleCheck aria-hidden="true" className="size-4" />
+                    </span>
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <CommissionCalculator
+              subscriptionCents={base?.prix_mensuel_ht_centimes ?? BASE_FALLBACK_CENTS}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Un réseau juste */}
+      <section aria-labelledby="pro-fairness" className="overflow-hidden py-16 sm:py-24">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:gap-20">
+          <div className="flex flex-col gap-8">
+            <SectionHeading
+              id="pro-fairness"
+              eyebrow={t.fairness.eyebrow}
+              title={t.fairness.title}
+              subtitle={t.fairness.subtitle}
+              align="left"
+            />
+            <ul className="flex flex-col gap-5">
+              {t.fairness.items.map((item, i) => {
+                const Icon = FAIRNESS_ICONS[i] ?? Users;
+                return (
+                  <li key={item.title} className="flex gap-4">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-primary shadow-card">
+                      <Icon aria-hidden="true" className="size-5" />
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-medium">{item.title}</h3>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <TextLink href="/criteres-de-classement" className="self-start text-sm">
+              {t.fairness.criteria}
+            </TextLink>
+          </div>
+          <div className="px-6 pb-4 sm:px-16 lg:order-first">
+            <ProfileCardPreview />
+          </div>
+        </div>
+      </section>
+
+      {/* Formules */}
+      {plans && plans.length > 0 && (
+        <section
+          id="formules"
+          aria-labelledby="pro-plans"
+          className="scroll-mt-20 bg-surface py-16 sm:py-24"
+        >
+          <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+            <SectionHeading
+              id="pro-plans"
+              eyebrow={t.plansEyebrow}
+              title={t.plansTitle}
+              subtitle={t.plansSubtitle}
+            />
+            <ul className="grid items-start gap-5 lg:grid-cols-3">
               {plans.map((plan) => (
                 <li
                   key={plan.code}
-                  className={`flex flex-col gap-4 rounded-card border bg-surface p-6 shadow-card ${
-                    plan.ouverte ? "border-primary ring-4 ring-primary/10" : "border-border"
+                  className={`flex flex-col gap-5 rounded-hero border p-6 sm:p-7 ${
+                    plan.ouverte
+                      ? "border-primary bg-surface shadow-raised ring-4 ring-primary/10"
+                      : "border-border bg-background"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-lg font-medium">{plan.nom}</h3>
+                    <h3 className="text-xl font-medium">{plan.nom}</h3>
                     {plan.ouverte ? (
                       <StatusBadge>{t.open}</StatusBadge>
                     ) : (
@@ -110,23 +409,104 @@ export default async function ProLandingPage() {
                     )}
                   </div>
                   <p>
-                    <span className="text-[2.25rem] leading-none font-medium tracking-tight">
+                    <span className="text-[2.75rem] leading-none font-medium tracking-tight">
                       {euros.format(plan.prix_mensuel_ht_centimes / 100)}
                     </span>{" "}
                     <span className="text-sm text-muted-foreground">{t.perMonth}</span>
                   </p>
-                  {plan.ouverte && <p className="text-sm font-medium text-success">{t.trial}</p>}
+                  {plan.ouverte && (
+                    <p className="inline-flex items-center gap-1.5 self-start rounded-pill bg-success-soft px-3 py-1 text-sm font-medium text-success">
+                      <CircleCheck aria-hidden="true" className="size-4" />
+                      {t.trial}
+                    </p>
+                  )}
+                  <ul className="flex flex-col gap-2.5 border-t border-border pt-5">
+                    {avantagesOf(plan.avantages).map((avantage) => (
+                      <li key={avantage} className="flex items-start gap-2.5 text-sm">
+                        <CircleCheck
+                          aria-hidden="true"
+                          className={`mt-0.5 size-4 shrink-0 ${plan.ouverte ? "text-primary" : "text-subtle-foreground"}`}
+                        />
+                        {avantage}
+                      </li>
+                    ))}
+                  </ul>
+                  {plan.ouverte && (
+                    <ButtonLink href="/pro/inscription" size="lg" block>
+                      {t.start}
+                    </ButtonLink>
+                  )}
                 </li>
               ))}
             </ul>
-            <div className="flex justify-center">
-              <ButtonLink href="/pro/inscription" size="lg">
-                {t.signUp}
-              </ButtonLink>
-            </div>
-          </section>
-        )}
-      </div>
+            <p className="mx-auto max-w-3xl text-center text-xs text-muted-foreground">
+              {t.plansNote}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* Questions fréquentes */}
+      <section aria-labelledby="pro-faq" className="py-16 sm:py-24">
+        <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 sm:px-6">
+          <SectionHeading id="pro-faq" eyebrow={t.faqEyebrow} title={t.faqTitle} />
+          <div className="flex flex-col divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
+            {t.faq.map((item) => (
+              <details key={item.q} className="group">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-medium marker:hidden hover:bg-background focus-visible:bg-background focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                  {item.q}
+                  <Plus
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-primary transition-transform group-open:rotate-45"
+                  />
+                </summary>
+                <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+        <script
+          type="application/ld+json"
+          // Données structurées FAQ (texte statique de l'application, sans donnée utilisateur).
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }}
+        />
+      </section>
+
+      {/* Appel final */}
+      <section aria-labelledby="pro-final" className="px-2 pb-2 sm:px-4 sm:pb-4">
+        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[linear-gradient(120deg,#1a2b85_0%,#4869f6_70%,#8ea4fb_100%)] px-6 py-16 text-center text-white sm:px-12 sm:py-20">
+          <LogoMark
+            tone="white"
+            className="absolute -top-20 -left-16 hidden size-[22rem] opacity-[0.08] md:block"
+          />
+          <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-5">
+            <h2
+              id="pro-final"
+              className="text-[1.75rem] leading-[1.15] font-medium tracking-tight text-balance sm:text-[2.5rem]"
+            >
+              {t.finalTitle}
+            </h2>
+            <p className="text-white/85">{t.finalText}</p>
+            <ButtonLink
+              href="/pro/inscription"
+              variant="secondary"
+              size="lg"
+              className="border-white"
+            >
+              {t.hero.signUp}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </ButtonLink>
+            <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-white/85">
+              {t.finalReassurance.map((item) => (
+                <li key={item} className="flex items-center gap-1.5 whitespace-nowrap">
+                  <CircleCheck aria-hidden="true" className="size-4" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

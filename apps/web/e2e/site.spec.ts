@@ -60,11 +60,13 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(page.getByRole("heading", { name: "Questions fréquentes" })).toBeVisible();
 
   await page.goto("/pro");
-  const plans = page.getByRole("region", { name: "Nos formules" });
+  const plans = page.getByRole("region", { name: "Un abonnement fixe, aucune commission." });
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(plans.getByText(/^150\s€$/)).toBeVisible();
-  await expect(plans.getByText(/3 mois offerts/)).toBeVisible();
+  await expect(plans.getByText("3 mois offerts", { exact: true })).toBeVisible();
   await expect(plans.getByText("Bientôt disponible")).toHaveCount(2);
+  // Simulation de commission (F-03) : 15 % de 8 000 € comparés à l'abonnement Base.
+  await expect(page.getByText(/Vous gardez 1\s050\s€ de plus chaque mois/)).toBeVisible();
 
   await page.goto("/contact");
   await page.getByLabel("Votre adresse e-mail").fill(`contact-${Date.now()}@example.test`);

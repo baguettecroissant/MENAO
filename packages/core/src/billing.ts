@@ -68,3 +68,18 @@ export function subscriptionFromStripe(input: unknown): SubscriptionSnapshot | n
     cancelAtPeriodEnd: input.cancel_at_period_end === true,
   };
 }
+
+/**
+ * Simulation de la page Espace Pro : commission qu'une plateforme prélèverait sur un montant
+ * mensuel de chantiers, comparée à l'abonnement MENAO (montants en centimes, taux en points de
+ * base). Indicatif : les frais de paiement Stripe restent à la charge de l'artisan dans les deux cas.
+ */
+export function commissionComparison(input: {
+  monthlyRevenueCents: number;
+  commissionRateBp: number;
+  subscriptionCents: number;
+}): { commissionCents: number; monthlySavingCents: number; yearlySavingCents: number } {
+  const commissionCents = Math.round((input.monthlyRevenueCents * input.commissionRateBp) / 10_000);
+  const monthlySavingCents = commissionCents - input.subscriptionCents;
+  return { commissionCents, monthlySavingCents, yearlySavingCents: monthlySavingCents * 12 };
+}
