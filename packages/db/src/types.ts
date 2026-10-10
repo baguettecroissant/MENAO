@@ -1110,6 +1110,124 @@ export type Database = {
           },
         ];
       };
+      quote_lines: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          designation: string;
+          id: string;
+          position: number;
+          quantity_milli: number;
+          quote_id: string;
+          total_ht_cents: number;
+          type: Database["public"]["Enums"]["quote_line_type"];
+          unit: Database["public"]["Enums"]["quote_unit"];
+          unit_price_ht_cents: number;
+          updated_at: string;
+          vat_rate_bp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          designation: string;
+          id?: string;
+          position: number;
+          quantity_milli: number;
+          quote_id: string;
+          total_ht_cents: number;
+          type: Database["public"]["Enums"]["quote_line_type"];
+          unit: Database["public"]["Enums"]["quote_unit"];
+          unit_price_ht_cents: number;
+          updated_at?: string;
+          vat_rate_bp: number;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          designation?: string;
+          id?: string;
+          position?: number;
+          quantity_milli?: number;
+          quote_id?: string;
+          total_ht_cents?: number;
+          type?: Database["public"]["Enums"]["quote_line_type"];
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          unit_price_ht_cents?: number;
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_lines_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      quotes: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at: string;
+          id: string;
+          numero: string | null;
+          status: Database["public"]["Enums"]["quote_status"];
+          total_ht_cents: number;
+          total_ttc_cents: number;
+          total_tva_cents: number;
+          updated_at: string;
+          vat_breakdown: NonNullable<Json>;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at?: string;
+          id?: string;
+          numero?: string | null;
+          status?: Database["public"]["Enums"]["quote_status"];
+          total_ht_cents?: number;
+          total_ttc_cents?: number;
+          total_tva_cents?: number;
+          updated_at?: string;
+          vat_breakdown?: NonNullable<Json>;
+          version?: number;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          id?: string;
+          numero?: string | null;
+          status?: Database["public"]["Enums"]["quote_status"];
+          total_ht_cents?: number;
+          total_ttc_cents?: number;
+          total_tva_cents?: number;
+          updated_at?: string;
+          vat_breakdown?: NonNullable<Json>;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quotes_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quotes_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       rate_limits: {
         Row: {
           created_at: string;
@@ -1530,7 +1648,34 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      artisan_previous_lines: {
+        Args: { p_query: string };
+        Returns: {
+          description: string;
+          designation: string;
+          type: Database["public"]["Enums"]["quote_line_type"];
+          unit: Database["public"]["Enums"]["quote_unit"];
+          unit_price_ht_cents: number;
+          vat_rate_bp: number;
+        }[];
+      };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
+      artisan_quotes: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          appointment_at: string;
+          chantier_id: string;
+          client_name: string;
+          line_count: number;
+          numero: string;
+          quote_id: string;
+          status: Database["public"]["Enums"]["quote_status"];
+          title: string;
+          total_ttc_cents: number;
+          updated_at: string;
+          version: number;
+        }[];
+      };
       artisan_report_expertise: {
         Args: { p_message: string; p_request_id: string; p_trade_code: string };
         Returns: string;
@@ -1548,6 +1693,10 @@ export type Database = {
           p_request_id: string;
         };
         Returns: undefined;
+      };
+      artisan_save_quote_draft: {
+        Args: { p_chantier_id: string; p_lines: Json };
+        Returns: string;
       };
       artisan_save_appointment_notes: {
         Args: { p_chantier_id: string; p_notes: string };
@@ -1781,6 +1930,9 @@ export type Database = {
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
       project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
+      quote_line_type: "materiel" | "main_oeuvre" | "autre";
+      quote_status: "brouillon" | "envoye" | "signe" | "refuse" | "revision_demandee" | "remplace";
+      quote_unit: "u" | "h" | "jour" | "m" | "ml" | "m2" | "m3" | "kg" | "l" | "forfait";
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
@@ -1967,6 +2119,9 @@ export const Constants = {
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],
       project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
+      quote_line_type: ["materiel", "main_oeuvre", "autre"],
+      quote_status: ["brouillon", "envoye", "signe", "refuse", "revision_demandee", "remplace"],
+      quote_unit: ["u", "h", "jour", "m", "ml", "m2", "m3", "kg", "l", "forfait"],
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
