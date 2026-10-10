@@ -1694,14 +1694,11 @@ export type Database = {
         };
         Returns: undefined;
       };
-      artisan_save_quote_draft: {
-        Args: { p_chantier_id: string; p_lines: Json };
-        Returns: string;
-      };
       artisan_save_appointment_notes: {
         Args: { p_chantier_id: string; p_notes: string };
         Returns: undefined;
       };
+      artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
       chantier_appointment: {
         Args: { p_chantier_id: string };
         Returns: {
