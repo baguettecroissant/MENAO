@@ -776,6 +776,126 @@ export type Database = {
         };
         Relationships: [];
       };
+      invoice_number_counters: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          last_number: number;
+          updated_at: string;
+          year: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          last_number: number;
+          updated_at?: string;
+          year: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          last_number?: number;
+          updated_at?: string;
+          year?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoice_number_counters_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      invoices: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at: string;
+          document: NonNullable<Json>;
+          id: string;
+          issued_on: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          numero: string;
+          payment_id: string;
+          pdf_path: string | null;
+          quote_id: string;
+          total_ht_cents: number;
+          total_ttc_cents: number;
+          total_tva_cents: number;
+          updated_at: string;
+          vat_breakdown: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at?: string;
+          document: NonNullable<Json>;
+          id?: string;
+          issued_on: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          numero: string;
+          payment_id: string;
+          pdf_path?: string | null;
+          quote_id: string;
+          total_ht_cents: number;
+          total_ttc_cents: number;
+          total_tva_cents: number;
+          updated_at?: string;
+          vat_breakdown: NonNullable<Json>;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          document?: NonNullable<Json>;
+          id?: string;
+          issued_on?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          numero?: string;
+          payment_id?: string;
+          pdf_path?: string | null;
+          quote_id?: string;
+          total_ht_cents?: number;
+          total_ttc_cents?: number;
+          total_tva_cents?: number;
+          updated_at?: string;
+          vat_breakdown?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoices_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: true;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       legal_acceptances: {
         Row: {
           accepted_at: string;
@@ -1998,6 +2118,7 @@ export type Database = {
         Returns: boolean;
       };
       create_project_transfer: { Args: { p_project_id: string }; Returns: string };
+      invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       match_artisans: {
         Args: { p_limit?: number; p_project_id: string };
         Returns: {
