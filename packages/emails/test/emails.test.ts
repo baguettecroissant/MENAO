@@ -257,6 +257,27 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("levée des réserves (F-26) : signalée, confirmée, relance", () => {
+    const data = { ...ids, titre: "Prises", artisan: "Jean", client: "Camille" };
+    const signaled = notificationContent(
+      "levee_signalee",
+      { ...data, message: "Plinthe repeinte." },
+      ctx,
+    );
+    expect(signaled.subject).toBe("Jean a levé les réserves : confirmez");
+    expect(signaled.quote).toBe("Plinthe repeinte.");
+    expect(signaled.cta).toEqual({
+      label: "Confirmer la levée",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
+    });
+    const confirmed = notificationContent("levee_confirmee", data, { ...ctx, firstName: "Jean" });
+    expect(confirmed.paragraphs[1]).toContain("Camille a confirmé la levée des réserves");
+    expect(confirmed.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    expect(notificationContent("levee_relance", data, ctx).subject).toBe(
+      "Rappel : confirmez la levée des réserves",
+    );
+  });
+
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
     for (const type of NOTIFICATION_TYPES) {
       const c = notificationContent(

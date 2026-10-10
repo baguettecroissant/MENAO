@@ -18,3 +18,14 @@ export function canStartReception(status: ChantierStatus): boolean {
 export function receptionNumber(year: number, sequence: number): string {
   return `PV-${year}-R${String(sequence).padStart(2, "0")}`;
 }
+
+/** Message facultatif de l'artisan quand il signale la levée des réserves (F-26). */
+export const LIFT_MESSAGE_MAX_LENGTH = 1000;
+/** Sans confirmation du client : relance après 7 jours, puis ticket pour l'équipe après 30 jours. */
+export const RESERVES_REMINDER_DAYS = 7;
+export const RESERVES_ESCALATION_DAYS = 30;
+
+/** Levée des réserves : signalée par l'artisan, confirmée par le client, tant que le chantier y est. */
+export function canLiftReserves(status: ChantierStatus): boolean {
+  return status === "reserves_a_lever";
+}

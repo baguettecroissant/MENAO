@@ -6,6 +6,7 @@ import {
   chantierMessageSchema,
   chantierStartSchema,
   expertiseSchema,
+  liftMessageSchema,
   receptionConsentsSchema,
   reservesSchema,
 } from "../src/chantier";
@@ -91,5 +92,13 @@ describe("réception avec réserves (F-26)", () => {
     expect(receptionConsentsSchema.safeParse(all).success).toBe(true);
     const missing = receptionConsentsSchema.safeParse({ ...all, echeancier: false });
     expect(missing.error?.issues[0]?.message).toBe(messages.receptionConsentRequired);
+  });
+
+  it("levée des réserves : message facultatif, 1 000 caractères au plus", () => {
+    expect(liftMessageSchema.parse({ message: "  Plinthe repeinte.  " })).toEqual({
+      message: "Plinthe repeinte.",
+    });
+    expect(liftMessageSchema.parse({ message: "" })).toEqual({ message: "" });
+    expect(liftMessageSchema.safeParse({ message: "x".repeat(1001) }).success).toBe(false);
   });
 });

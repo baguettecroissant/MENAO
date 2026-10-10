@@ -21,6 +21,9 @@ export const NOTIFICATION_TYPES = [
   "chantier_nouveautes",
   "pv_signe",
   "reserves_emises",
+  "levee_signalee",
+  "levee_confirmee",
+  "levee_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -438,6 +441,53 @@ export function notificationContent(
         },
       };
     }
+    case "levee_signalee":
+      // F-26 : l'artisan signale la levée des réserves, au client.
+      return {
+        subject: `${artisan} a levé les réserves : confirmez`,
+        preview: `Vérifiez les reprises de ${quoted(titre)}, puis confirmez la levée des réserves.`,
+        title: "Réserves levées",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} indique avoir levé les réserves de votre chantier ${quoted(titre)}.`,
+          "Vérifiez les reprises, puis confirmez la levée des réserves depuis votre espace : le solde vous sera ensuite demandé.",
+        ],
+        quote: text(data, "message"),
+        cta: myChantier("Confirmer la levée"),
+      };
+    case "levee_confirmee": {
+      // F-26 : le client confirme la levée des réserves, à l'artisan.
+      const client = text(data, "client") ?? "Votre client";
+      return {
+        subject: `Levée des réserves confirmée pour ${quoted(titre)}`,
+        preview: `${client} a confirmé la levée des réserves : chantier réceptionné.`,
+        title: "Réserves levées",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a confirmé la levée des réserves de ${quoted(titre)} : le chantier est réceptionné.`,
+          "Prochaine étape : le paiement du solde par votre client.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
+      };
+    }
+    case "levee_relance":
+      // F-26 : relance du client 7 jours après le signalement, sans confirmation.
+      return {
+        subject: "Rappel : confirmez la levée des réserves",
+        preview: `${artisan} a signalé la levée des réserves de ${quoted(titre)}.`,
+        title: "Confirmez la levée des réserves",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} a signalé il y a une semaine la levée des réserves de votre chantier ${quoted(titre)}.`,
+          "Si les reprises vous conviennent, confirmez la levée depuis votre espace. Un problème ? Signalez-le depuis la page du chantier.",
+        ],
+        quote: null,
+        cta: myChantier("Voir mon chantier"),
+      };
   }
 }
 
