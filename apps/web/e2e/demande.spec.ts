@@ -637,5 +637,67 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(
     page.getByRole("region", { name: "Mes chantiers terminés" }).getByText(/^Terminé le /),
   ).toBeVisible();
+
+  // Avis du client (F-28) : invitation au chantier clôturé, curseurs, rapport qualité/prix et
+  // commentaire ; avis publié sur la fiche (« Avis vérifié »), score MENAO, réponse de l'artisan.
+  await page.goto(`/mon-espace/chantiers/${chantierId}`);
+  await page
+    .getByRole("region", { name: "Noter Noé pour son chantier" })
+    .getByRole("link", { name: "Noter Noé" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}/avis$`));
+  await expect(
+    page.getByRole("heading", { name: "Comment s'est passée votre expérience avec Noé ?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Publier mon avis" }).click();
+  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(3);
+  await expect(page.getByText("Choisissez le rapport qualité/prix.")).toBeVisible();
+  await page.getByRole("slider", { name: "Qualité des prestations" }).focus();
+  await page.keyboard.press("End");
+  for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowLeft");
+  await expect(page.getByText("Très soigné")).toBeVisible();
+  for (const name of ["Respect des délais", "Communication"]) {
+    await page.getByRole("slider", { name }).focus();
+    await page.keyboard.press("End");
+  }
+  await expect(page.getByText("À l'heure")).toBeVisible();
+  await page.getByText("Excellent rapport qualité/prix").click();
+  await page
+    .getByLabel("Votre commentaire")
+    .fill(
+      "Intervention rapide et soignée : siphon remplacé, joint refait, cuisine laissée propre.",
+    );
+  await expect(page.getByText("87/50 caractères minimum")).toBeVisible();
+  await capture(page, "client-avis");
+  await page.getByRole("button", { name: "Publier mon avis" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Merci d'avoir fait confiance à MENAO" }),
+  ).toBeVisible();
+  await capture(page, "client-avis-merci");
+  await page.getByRole("link", { name: "Voir la fiche de Noé" }).click();
+  // (80 + 100 + 100 + 100) / 4 = 95 %.
+  const menaoScore = page.getByRole("region", { name: "Score Menao" });
+  await expect(menaoScore.getByText(/^95\s%$/)).toBeVisible();
+  await expect(menaoScore.getByText("Calculé sur 1 avis vérifié")).toBeVisible();
+  const latestReviews = page.getByRole("region", { name: "Derniers avis clients" });
+  await expect(latestReviews.getByText("Dominique T.")).toBeVisible();
+  await expect(latestReviews.getByText("Avis vérifié")).toBeVisible();
+  await expect(latestReviews.getByText(/siphon remplacé, joint refait/)).toBeVisible();
+  await capture(page, "fiche-artisan-avis");
+  await proPage.goto(chantierUrl);
+  const clientReview = proPage.getByRole("region", { name: "Avis de Dominique" });
+  await expect(clientReview.getByText(/siphon remplacé, joint refait/)).toBeVisible();
+  await clientReview
+    .getByLabel("Votre réponse publique")
+    .fill("Merci Dominique, ravi que tout soit en ordre !");
+  await clientReview.getByRole("button", { name: "Publier ma réponse" }).click();
+  await expect(
+    clientReview.getByText("Merci Dominique, ravi que tout soit en ordre !"),
+  ).toBeVisible();
+  await page.reload();
+  await expect(latestReviews.getByText("Réponse de Noé")).toBeVisible();
+  await expect(
+    latestReviews.getByText("Merci Dominique, ravi que tout soit en ordre !"),
+  ).toBeVisible();
   await pro.close();
 });

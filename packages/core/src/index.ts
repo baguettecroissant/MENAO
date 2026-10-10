@@ -22,3 +22,4 @@ export * from "./invoice";
 export * from "./chantier-follow-up";
 export * from "./chantier-progress";
 export * from "./reception";
+export * from "./review";

@@ -2,19 +2,23 @@ import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { setTicketStatus } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
+import { ModerateReview } from "./moderate-review";
 
 const t = fr.admin.tickets;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZone: "Europe/Paris" });
 
 type Status = "ouvert" | "en_cours" | "resolu";
 
-/** Dossiers « Envoyer mon dossier à MENAO » : réponse attendue sous 7 jours. */
+/**
+ * Dossiers « Envoyer mon dossier à MENAO », messages, signalements (avis signalés : masquage ou
+ * republication, F-28) : réponse attendue sous 7 jours.
+ */
 export default async function TicketsPage() {
   const { supabase } = await requireAdmin();
   const { data } = await supabase
     .from("tickets")
     .select(
-      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label))",
+      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label)), reviews(id, author_name, score, comment, status, moderation_reason)",
     )
     .order("due_at", { ascending: true })
     .limit(100);
@@ -38,6 +42,7 @@ export default async function TicketsPage() {
           {group.rows.map((ticket) => {
             const late = ticket.status !== "resolu" && new Date(ticket.due_at) < now;
             const project = ticket.projects;
+            const review = ticket.reviews;
             return (
               <Card key={ticket.id}>
                 <div className="flex flex-col gap-2">
@@ -65,6 +70,20 @@ export default async function TicketsPage() {
                   <p>
                     {t.message} : {ticket.message ?? t.noMessage}
                   </p>
+                  {review && (
+                    <div className="flex flex-col gap-2 rounded-input bg-background p-3">
+                      <p className="text-sm font-medium">
+                        {t.review.title} · {t.review.meta(review.author_name, review.score)}
+                      </p>
+                      <p className="text-sm whitespace-pre-line">{review.comment}</p>
+                      {review.status === "masque" && review.moderation_reason && (
+                        <p className="text-sm text-danger">
+                          {t.review.hidden(review.moderation_reason)}
+                        </p>
+                      )}
+                      <ModerateReview reviewId={review.id} status={review.status} />
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {(ticket.status === "resolu"
                       ? [{ status: "ouvert", label: t.reopen }]

@@ -13,9 +13,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
+import { ReviewList, type PublicReview } from "@/components/review/review-list";
 import { ButtonLink, StatusBadge, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { getArtisanProfile, publicUrl } from "@/lib/project/artisans";
+import { getArtisanProfile, getArtisanReviews, publicUrl } from "@/lib/project/artisans";
 import { sendPagePath } from "@/lib/project/paths";
 import { createClient } from "@/lib/supabase/server";
 import { PhotoGallery } from "./photo-gallery";
@@ -26,6 +27,11 @@ const r = fr.search.results;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const dayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
 const formatDay = (iso: string) => dayFormat.format(new Date(`${iso}T00:00:00Z`));
+const publishedFormat = new Intl.DateTimeFormat("fr-FR", {
+  dateStyle: "long",
+  timeZone: "Europe/Paris",
+});
+const SCORE_ROWS = ["quality", "delays", "communication", "value_for_money"] as const;
 
 export const metadata: Metadata = { robots: { index: false } };
 
@@ -36,11 +42,24 @@ export default async function ArtisanProfilePage({
   const { id, artisanId } = await params;
   if (!UUID.test(id) || !UUID.test(artisanId)) notFound();
   const supabase = await createClient();
-  const [{ data: project }, profile] = await Promise.all([
+  const [{ data: project }, profile, reviewRows, { data: auth }] = await Promise.all([
     supabase.from("projects").select("id, trade_code").eq("id", id).maybeSingle(),
     getArtisanProfile(supabase, artisanId),
+    getArtisanReviews(supabase, artisanId),
+    supabase.auth.getClaims(),
   ]);
   if (!project || !profile) notFound();
+  // Signalement d'un avis depuis un compte connecté (pas une session anonyme de recherche).
+  const canReport = Boolean(auth && !auth.claims.is_anonymous);
+  const reviews: PublicReview[] = reviewRows.map((row) => ({
+    id: row.review_id,
+    author: row.author_name,
+    publishedOn: publishedFormat.format(new Date(row.created_at)),
+    receivedOn: formatDay(row.experience_on),
+    score: row.score,
+    comment: row.comment,
+    reply: row.reply,
+  }));
 
   const avail = availability(
     { paused: profile.paused, availableFrom: profile.available_from },
@@ -57,6 +76,7 @@ export default async function ArtisanProfilePage({
   const photos = profile.photos.map((p) => publicUrl(supabase, "portfolio", p));
   const avatar = profile.avatar_path ? publicUrl(supabase, "avatars", profile.avatar_path) : null;
   const title = t.title(profile.display_name, trade);
+  const score = profile.score;
   const requestHref = sendPagePath(id, [profile.id]) as Route;
   const badge =
     avail.kind === "paused" ? (
@@ -175,10 +195,18 @@ export default async function ArtisanProfilePage({
             )}
           </Section>
           <Section title={t.reviews}>
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Star aria-hidden="true" className="size-4" />
-              {t.reviewsEmpty}
-            </p>
+            {reviews.length ? (
+              <ReviewList
+                reviews={reviews}
+                artisanName={profile.display_name}
+                canReport={canReport}
+              />
+            ) : (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Star aria-hidden="true" className="size-4" />
+                {t.reviewsEmpty}
+              </p>
+            )}
           </Section>
         </div>
 
@@ -218,10 +246,40 @@ export default async function ArtisanProfilePage({
             </ul>
           </Section>
           <Section title={t.score}>
-            <p className="flex items-start gap-2 text-sm text-muted-foreground">
-              <BadgeCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-              {t.scoreEmpty}
-            </p>
+            {score ? (
+              <>
+                <dl className="flex flex-col gap-3">
+                  {SCORE_ROWS.map((row) => (
+                    <div key={row} className="flex flex-col gap-1.5">
+                      <div className="flex items-baseline justify-between gap-3 text-xs">
+                        <dt className="text-muted-foreground">{t.scoreRows[row]}</dt>
+                        <dd className="font-medium text-primary-strong">
+                          {fr.review.percent(score[row])}
+                        </dd>
+                      </div>
+                      <div aria-hidden="true" className="h-1.5 rounded-full bg-primary-soft">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${score[row]}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
+                    <dt className="text-sm font-medium">{t.scoreGlobal}</dt>
+                    <dd className="text-2xl font-medium text-primary-strong">
+                      {fr.review.percent(score.global)}
+                    </dd>
+                  </div>
+                </dl>
+                <p className="text-xs text-muted-foreground">{t.scoreBasis(score.review_count)}</p>
+              </>
+            ) : (
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <BadgeCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                {t.scoreEmpty}
+              </p>
+            )}
           </Section>
         </div>
       </div>

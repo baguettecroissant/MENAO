@@ -285,6 +285,48 @@ export type Database = {
           },
         ];
       };
+      artisan_scores: {
+        Row: {
+          artisan_id: string;
+          communication: number;
+          delays: number;
+          global_score: number;
+          quality: number;
+          review_count: number;
+          updated_at: string;
+          value_for_money: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          communication: number;
+          delays: number;
+          global_score: number;
+          quality: number;
+          review_count: number;
+          updated_at?: string;
+          value_for_money: number;
+        };
+        Update: {
+          artisan_id?: string;
+          communication?: number;
+          delays?: number;
+          global_score?: number;
+          quality?: number;
+          review_count?: number;
+          updated_at?: string;
+          value_for_money?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_scores_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_trades: {
         Row: {
           artisan_id: string;
@@ -720,6 +762,7 @@ export type Database = {
           particulier_id: string;
           project_id: string;
           request_id: string;
+          review_reminded_at: string | null;
           start_at: string | null;
           status: Database["public"]["Enums"]["chantier_status"];
           title: string;
@@ -736,6 +779,7 @@ export type Database = {
           particulier_id: string;
           project_id: string;
           request_id: string;
+          review_reminded_at?: string | null;
           start_at?: string | null;
           status?: Database["public"]["Enums"]["chantier_status"];
           title: string;
@@ -751,6 +795,7 @@ export type Database = {
           particulier_id?: string;
           project_id?: string;
           request_id?: string;
+          review_reminded_at?: string | null;
           start_at?: string | null;
           status?: Database["public"]["Enums"]["chantier_status"];
           title?: string;
@@ -1818,6 +1863,91 @@ export type Database = {
           },
         ];
       };
+      reviews: {
+        Row: {
+          artisan_id: string;
+          author_name: string;
+          chantier_id: string;
+          comment: string;
+          communication: number;
+          created_at: string;
+          delays: number;
+          experience_on: string;
+          id: string;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          particulier_id: string;
+          quality: number;
+          replied_at: string | null;
+          reply: string | null;
+          score: number;
+          status: Database["public"]["Enums"]["review_status"];
+          updated_at: string;
+          value_for_money: Database["public"]["Enums"]["value_for_money"];
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          author_name: string;
+          chantier_id: string;
+          comment: string;
+          communication: number;
+          created_at?: string;
+          delays: number;
+          experience_on: string;
+          id?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          particulier_id: string;
+          quality: number;
+          replied_at?: string | null;
+          reply?: string | null;
+          score: number;
+          status?: Database["public"]["Enums"]["review_status"];
+          updated_at?: string;
+          value_for_money: Database["public"]["Enums"]["value_for_money"];
+        };
+        Update: {
+          artisan_id?: string;
+          author_name?: string;
+          chantier_id?: string;
+          comment?: string;
+          communication?: number;
+          created_at?: string;
+          delays?: number;
+          experience_on?: string;
+          id?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          particulier_id?: string;
+          quality?: number;
+          replied_at?: string | null;
+          reply?: string | null;
+          score?: number;
+          status?: Database["public"]["Enums"]["review_status"];
+          updated_at?: string;
+          value_for_money?: Database["public"]["Enums"]["value_for_money"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reviews_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reviews_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: true;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       rooms: {
         Row: {
           active: boolean;
@@ -1978,6 +2108,7 @@ export type Database = {
           message: string | null;
           project_id: string | null;
           resolved_at: string | null;
+          review_id: string | null;
           status: Database["public"]["Enums"]["ticket_status"];
           subject: string | null;
           type: Database["public"]["Enums"]["ticket_type"];
@@ -1994,6 +2125,7 @@ export type Database = {
           message?: string | null;
           project_id?: string | null;
           resolved_at?: string | null;
+          review_id?: string | null;
           status?: Database["public"]["Enums"]["ticket_status"];
           subject?: string | null;
           type: Database["public"]["Enums"]["ticket_type"];
@@ -2009,6 +2141,7 @@ export type Database = {
           message?: string | null;
           project_id?: string | null;
           resolved_at?: string | null;
+          review_id?: string | null;
           status?: Database["public"]["Enums"]["ticket_status"];
           subject?: string | null;
           type?: Database["public"]["Enums"]["ticket_type"];
@@ -2021,6 +2154,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tickets_review_id_fkey";
+            columns: ["review_id"];
+            isOneToOne: false;
+            referencedRelation: "reviews";
             referencedColumns: ["id"];
           },
         ];
@@ -2142,6 +2282,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_moderate_review: {
+        Args: {
+          p_reason: string;
+          p_review_id: string;
+          p_status: Database["public"]["Enums"]["review_status"];
+        };
+        Returns: undefined;
+      };
       admin_review_document: {
         Args: {
           p_document_id: string;
@@ -2221,6 +2369,19 @@ export type Database = {
         }[];
       };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
+      artisan_public_reviews: {
+        Args: { p_artisan_id: string; p_limit?: number };
+        Returns: {
+          author_name: string;
+          comment: string;
+          created_at: string;
+          experience_on: string;
+          replied_at: string;
+          reply: string;
+          review_id: string;
+          score: number;
+        }[];
+      };
       artisan_quotes: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2238,6 +2399,7 @@ export type Database = {
           version: number;
         }[];
       };
+      artisan_reply_review: { Args: { p_reply: string; p_review_id: string }; Returns: undefined };
       artisan_report_expertise: {
         Args: { p_message: string; p_request_id: string; p_trade_code: string };
         Returns: string;
@@ -2409,6 +2571,17 @@ export type Database = {
         Args: { p_consents: Json; p_quote_id: string };
         Returns: Json;
       };
+      particulier_submit_review: {
+        Args: {
+          p_chantier_id: string;
+          p_comment: string;
+          p_communication: number;
+          p_delays: number;
+          p_quality: number;
+          p_value: Database["public"]["Enums"]["value_for_money"];
+        };
+        Returns: string;
+      };
       public_artisans_for_commune: {
         Args: { p_code_insee: string; p_limit?: number; p_trade_code: string };
         Returns: {
@@ -2466,6 +2639,7 @@ export type Database = {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
       };
+      report_review: { Args: { p_reason: string; p_review_id: string }; Returns: string };
       save_project_criteria: {
         Args: {
           p_adresse: string;
@@ -2616,7 +2790,9 @@ export type Database = {
         | "levee_signalee"
         | "levee_confirmee"
         | "levee_relance"
-        | "solde_paye";
+        | "solde_paye"
+        | "avis_recu"
+        | "avis_relance";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2631,9 +2807,11 @@ export type Database = {
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
+      review_status: "publie" | "masque";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
       ticket_status: "ouvert" | "en_cours" | "resolu";
-      ticket_type: "dossier_recherche" | "contact" | "expertise" | "reserves";
+      ticket_type: "dossier_recherche" | "contact" | "expertise" | "reserves" | "avis";
+      value_for_money: "excellent" | "convenable" | "trop_cher";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -2826,6 +3004,8 @@ export const Constants = {
         "levee_confirmee",
         "levee_relance",
         "solde_paye",
+        "avis_recu",
+        "avis_relance",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
@@ -2841,9 +3021,11 @@ export const Constants = {
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
+      review_status: ["publie", "masque"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
-      ticket_type: ["dossier_recherche", "contact", "expertise", "reserves"],
+      ticket_type: ["dossier_recherche", "contact", "expertise", "reserves", "avis"],
+      value_for_money: ["excellent", "convenable", "trop_cher"],
       zone_mode: ["rayon", "communes"],
     },
   },

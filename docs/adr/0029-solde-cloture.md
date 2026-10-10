@@ -40,9 +40,11 @@
   - PDF de la facture de solde, e-mails ;
   - e2e jusqu'à la clôture (facture `FAC-AAAA-0002`, export CSV).
 
+## Décision confirmée
+- Avec réserves, le solde est demandé après leur levée confirmée, au lieu du « versement suspendu » de F-32 (sans détention de fonds, ADR 0011) : confirmé par le porteur du projet le 10 octobre 2026.
+
 ## Points à valider
 - TODO(legal) : mentions de la facture de solde (reprise des lignes du devis, déduction des acomptes) et arrondis de la ventilation, à faire valider par l'expert-comptable.
-- Avec réserves, le solde est demandé après leur levée, au lieu du « versement suspendu » de F-32 (sans détention de fonds, ADR 0011) : à confirmer.
 - TODO(legal) : retenue de garantie (jusqu'à 5 % pendant un an, si le marché la prévoit) non proposée en V1.
 - Aucune relance automatique du solde impayé pour l'instant.
 - Facture non émise (garde-fou) : alerte de l'équipe à prévoir avec le centre de notifications (5f).
