@@ -1620,6 +1620,116 @@ export type Database = {
         };
         Relationships: [];
       };
+      reception_number_counters: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          last_number: number;
+          updated_at: string;
+          year: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          last_number: number;
+          updated_at?: string;
+          year: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          last_number?: number;
+          updated_at?: string;
+          year?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reception_number_counters_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      receptions: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at: string;
+          document: NonNullable<Json>;
+          id: string;
+          issued_on: string;
+          numero: string;
+          quote_id: string;
+          reserves: string | null;
+          signature_proof_path: string | null;
+          signed_at: string | null;
+          signed_pdf_path: string | null;
+          status: Database["public"]["Enums"]["reception_status"];
+          updated_at: string;
+          with_reserves: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at?: string;
+          document: NonNullable<Json>;
+          id?: string;
+          issued_on: string;
+          numero: string;
+          quote_id: string;
+          reserves?: string | null;
+          signature_proof_path?: string | null;
+          signed_at?: string | null;
+          signed_pdf_path?: string | null;
+          status?: Database["public"]["Enums"]["reception_status"];
+          updated_at?: string;
+          with_reserves: boolean;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          document?: NonNullable<Json>;
+          id?: string;
+          issued_on?: string;
+          numero?: string;
+          quote_id?: string;
+          reserves?: string | null;
+          signature_proof_path?: string | null;
+          signed_at?: string | null;
+          signed_pdf_path?: string | null;
+          status?: Database["public"]["Enums"]["reception_status"];
+          updated_at?: string;
+          with_reserves?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "receptions_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "receptions_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: true;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "receptions_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       requests: {
         Row: {
           artisan_id: string;
@@ -1733,7 +1843,8 @@ export type Database = {
           external_submitter_id: string | null;
           id: string;
           provider: string;
-          quote_id: string;
+          quote_id: string | null;
+          reception_id: string | null;
           signing_url: string | null;
           status: Database["public"]["Enums"]["signature_request_status"];
           updated_at: string;
@@ -1747,7 +1858,8 @@ export type Database = {
           external_submitter_id?: string | null;
           id?: string;
           provider?: string;
-          quote_id: string;
+          quote_id?: string | null;
+          reception_id?: string | null;
           signing_url?: string | null;
           status?: Database["public"]["Enums"]["signature_request_status"];
           updated_at?: string;
@@ -1760,7 +1872,8 @@ export type Database = {
           external_submitter_id?: string | null;
           id?: string;
           provider?: string;
-          quote_id?: string;
+          quote_id?: string | null;
+          reception_id?: string | null;
           signing_url?: string | null;
           status?: Database["public"]["Enums"]["signature_request_status"];
           updated_at?: string;
@@ -1771,6 +1884,13 @@ export type Database = {
             columns: ["quote_id"];
             isOneToOne: false;
             referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "signature_requests_reception_id_fkey";
+            columns: ["reception_id"];
+            isOneToOne: false;
+            referencedRelation: "receptions";
             referencedColumns: ["id"];
           },
         ];
@@ -2257,6 +2377,10 @@ export type Database = {
         }[];
       };
       particulier_start_deposit: { Args: { p_quote_id: string }; Returns: Json };
+      particulier_start_reception: {
+        Args: { p_chantier_id: string; p_consents: Json; p_reserves: string };
+        Returns: Json;
+      };
       particulier_start_signature: {
         Args: { p_consents: Json; p_quote_id: string };
         Returns: Json;
@@ -2283,6 +2407,7 @@ export type Database = {
         Args: { p_chantier_id: string; p_storage_path: string; p_user_id: string };
         Returns: string;
       };
+      reception_document: { Args: { p_reception_id: string }; Returns: Json };
       record_payment: {
         Args: {
           p_amount_cents: number;
@@ -2292,6 +2417,15 @@ export type Database = {
           p_session_id: string;
           p_status: Database["public"]["Enums"]["payment_status"];
           p_stripe_account_id: string;
+        };
+        Returns: string;
+      };
+      record_reception_signature: {
+        Args: {
+          p_proof_path: string;
+          p_request_id: string;
+          p_signed_at: string;
+          p_signed_pdf_path: string;
         };
         Returns: string;
       };
@@ -2452,7 +2586,9 @@ export type Database = {
         | "chantier_planifie"
         | "demarrage_modifie"
         | "travaux_termines"
-        | "chantier_nouveautes";
+        | "chantier_nouveautes"
+        | "pv_signe"
+        | "reserves_emises";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2463,6 +2599,7 @@ export type Database = {
       quote_refusal_reason: "trop_cher" | "autre_artisan" | "projet_reporte" | "autre";
       quote_status: "brouillon" | "envoye" | "signe" | "refuse" | "revision_demandee" | "remplace";
       quote_unit: "u" | "h" | "jour" | "m" | "ml" | "m2" | "m3" | "kg" | "l" | "forfait";
+      reception_status: "en_signature" | "signe";
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
@@ -2655,6 +2792,8 @@ export const Constants = {
         "demarrage_modifie",
         "travaux_termines",
         "chantier_nouveautes",
+        "pv_signe",
+        "reserves_emises",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
@@ -2666,6 +2805,7 @@ export const Constants = {
       quote_refusal_reason: ["trop_cher", "autre_artisan", "projet_reporte", "autre"],
       quote_status: ["brouillon", "envoye", "signe", "refuse", "revision_demandee", "remplace"],
       quote_unit: ["u", "h", "jour", "m", "ml", "m2", "m3", "kg", "l", "forfait"],
+      reception_status: ["en_signature", "signe"],
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
