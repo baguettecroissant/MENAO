@@ -1,11 +1,11 @@
 import { ARTISAN_CANCELLABLE_STATUSES, parisToday, type ChantierStatus } from "@menao/core";
 import { CalendarDays, CalendarPlus, Clock } from "lucide-react";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { DetailHeader, StickyActions } from "@/components/pro/detail";
 import { ExpertiseButton } from "@/components/pro/expertise-button";
 import { RequestBlocks } from "@/components/pro/request-blocks";
-import { Alert, StatusBadge } from "@/components/ui";
+import { Alert, ButtonLink, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
@@ -26,13 +26,21 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
   const c = await getChantierDetail(supabase, id);
   if (!c) notFound();
 
-  const [{ data: signed }, { data: trades }] = await Promise.all([
+  const [{ data: signed }, { data: trades }, { data: draft }] = await Promise.all([
     c.photos.length
       ? supabase.storage.from("project-photos").createSignedUrls(c.photos, 3600)
       : Promise.resolve({ data: [] }),
     supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+    supabase
+      .from("quotes")
+      .select("id")
+      .eq("chantier_id", id)
+      .eq("status", "brouillon")
+      .maybeSingle(),
   ]);
   const status = c.chantier.status;
+  // F-19 : devis à créer après le rendez-vous, ou à modifier si le client l'a demandé.
+  const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const planned = status === "rdv_planifie" && appointment !== null;
   const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
@@ -92,9 +100,14 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
         {c.appointment && <NotesBlock chantierId={c.chantier.id} notes={c.appointment.notes} />}
       </div>
 
-      {cancellable.includes(status) && (
+      {(awaitingQuote || cancellable.includes(status)) && (
         <StickyActions>
-          <CancelChantierButton chantierId={c.chantier.id} />
+          {awaitingQuote && (
+            <ButtonLink href={`/pro/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
+              {draft ? fr.pro.quote.resume : fr.pro.quote.create}
+            </ButtonLink>
+          )}
+          {cancellable.includes(status) && <CancelChantierButton chantierId={c.chantier.id} />}
         </StickyActions>
       )}
     </main>

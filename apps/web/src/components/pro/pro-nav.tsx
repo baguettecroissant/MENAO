@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, Inbox, LayoutGrid } from "lucide-react";
+import { ClipboardList, FileText, Inbox, LayoutGrid } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/pro/tableau-de-bord", label: t.dashboard, icon: LayoutGrid },
   { href: "/pro/demandes", label: t.requests, icon: Inbox },
   { href: "/pro/chantiers", label: t.chantiers, icon: ClipboardList },
+  { href: "/pro/devis", label: t.quotes, icon: FileText },
 ] as const;
 
 const active = (pathname: string, href: string) =>
@@ -51,7 +52,7 @@ export function ProBottomNav() {
       aria-label={t.nav}
       className="sticky bottom-0 z-20 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className="mx-auto grid max-w-md grid-cols-4">
         {ITEMS.map(({ href, label, icon: Icon }) => (
           <li key={href}>
             <Link

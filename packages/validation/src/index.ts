@@ -4,5 +4,6 @@ export * from "./chantier";
 export * from "./documents";
 export * from "./messages";
 export * from "./project";
+export * from "./quote";
 export * from "./redirect";
 export * from "./request";

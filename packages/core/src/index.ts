@@ -14,3 +14,4 @@ export * from "./requests";
 export * from "./chantier-state";
 export * from "./appointment";
 export * from "./ics";
+export * from "./quote";

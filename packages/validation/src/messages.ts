@@ -33,6 +33,13 @@ export const messages = {
   appointmentPast: "Choisissez une date et une heure à venir.",
   appointmentTooFar: "Le rendez-vous doit avoir lieu dans les 6 prochains mois.",
   expertiseTradeRequired: "Choisissez le corps de métier nécessaire.",
+  quantityInvalid: "Quantité invalide : nombre positif, 3 décimales au plus.",
+  quantityTooHigh: "Quantité trop élevée.",
+  priceInvalid: "Prix invalide (exemple : 22,50).",
+  priceTooHigh: "Prix trop élevé.",
+  lineAmountTooHigh: "Montant trop élevé pour une seule ligne.",
+  vatRateInvalid: "Taux de TVA invalide.",
+  tooManyLines: "Un devis compte 200 lignes au plus.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

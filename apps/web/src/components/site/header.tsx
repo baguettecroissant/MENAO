@@ -11,7 +11,7 @@ import { NAV_LINKS } from "./nav-links";
 
 const t = fr.nav;
 // L'espace pro (tableau de bord, demandes, chantiers) a son propre en-tête.
-const PRO_SPACE = ["/pro/tableau-de-bord", "/pro/demandes", "/pro/chantiers"];
+const PRO_SPACE = ["/pro/tableau-de-bord", "/pro/demandes", "/pro/chantiers", "/pro/devis"];
 
 /**
  * En-tête du site (maquettes) : logo, liens, « Mon espace client » et « Trouver un artisan du
