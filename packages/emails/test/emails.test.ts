@@ -298,6 +298,41 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("litiges (F-42) : signalement à l'autre partie, décision, réponse du support", () => {
+    const opened = notificationContent(
+      "litige_ouvert",
+      { ...ids, titre: "Prises", destinataire: "artisan", categorie: "malfacon" },
+      ctx,
+    );
+    expect(opened.paragraphs[1]).toBe(
+      `Votre client a signalé un problème (malfaçon) sur le chantier ${quoted("Prises")}.`,
+    );
+    expect(opened.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    const ticket = "8f14e45f-ceea-4e7a-9b1a-3a5d1c2b7e90";
+    const closed = notificationContent(
+      "litige_clos",
+      {
+        ...ids,
+        titre: "Prises",
+        destinataire: "client",
+        decision: "annulation",
+        ticket_id: ticket,
+      },
+      ctx,
+    );
+    expect(closed.paragraphs[1]).toContain("le chantier est annulé");
+    expect(closed.cta.url).toBe(`https://menao.example/signalements/${ticket}`);
+    const reply = notificationContent(
+      "reponse_support",
+      { titre: "Litige : Prises", ticket_id: ticket },
+      ctx,
+    );
+    expect(reply.cta).toEqual({
+      label: "Lire la réponse",
+      url: `https://menao.example/signalements/${ticket}`,
+    });
+  });
+
   it("messagerie (F-40) : messages groupés, lien vers la conversation, sans leur contenu", () => {
     const one = notificationContent(
       "nouveaux_messages",
