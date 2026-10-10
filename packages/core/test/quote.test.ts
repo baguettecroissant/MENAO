@@ -1,17 +1,22 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_DEPOSIT_PERCENT,
   DEFAULT_UNIT,
   QUOTE_LINE_TYPES,
   QUOTE_UNITS,
   allowedVatRates,
   formatQuantity,
+  isValidDepositPercent,
+  isValidDurationDays,
   lineTotalHtCents,
   lineTtcCents,
   normalizeVoiceLines,
   parseEuros,
   parseQuantity,
+  paymentSchedule,
   quoteFromVoiceJsonSchema,
+  quoteStartDateError,
   quoteTotals,
   type RawVoiceLine,
 } from "../src/quote";
@@ -231,5 +236,42 @@ describe("dictée intelligente : lignes proposées par l'IA (F-19)", () => {
     expect(item.properties.type.enum).toEqual([...QUOTE_LINE_TYPES]);
     expect(item.properties.unite.enum).toEqual([...QUOTE_UNITS]);
     expect(item.required).toEqual(Object.keys(item.properties));
+  });
+});
+
+describe("envoi du devis : échéancier et dates (F-20, F-21)", () => {
+  it("acompte arrondi au centime inférieur, solde = TTC − acompte", () => {
+    expect(paymentSchedule(33000, DEFAULT_DEPOSIT_PERCENT)).toEqual([
+      { percent: 30, trigger: "signature", amountCents: 9900 },
+      { percent: 70, trigger: "reception", amountCents: 23100 },
+    ]);
+    // 91,85 € × 30 % = 27,555 € : 27,55 € d'acompte, 64,30 € de solde.
+    expect(paymentSchedule(9185, 30)).toEqual([
+      { percent: 30, trigger: "signature", amountCents: 2755 },
+      { percent: 70, trigger: "reception", amountCents: 6430 },
+    ]);
+    const [deposit, balance] = paymentSchedule(123_456_789, 37);
+    expect((deposit?.amountCents ?? 0) + (balance?.amountCents ?? 0)).toBe(123_456_789);
+  });
+
+  it("pourcentage d'acompte entier entre 1 et 99", () => {
+    expect(isValidDepositPercent(1)).toBe(true);
+    expect(isValidDepositPercent(99)).toBe(true);
+    for (const value of [0, 100, 30.5, Number.NaN]) expect(isValidDepositPercent(value)).toBe(false);
+  });
+
+  it("date de début : après aujourd'hui (heure de Paris), dans l'année", () => {
+    expect(quoteStartDateError("2026-10-11", "2026-10-10")).toBeNull();
+    expect(quoteStartDateError("2027-10-10", "2026-10-10")).toBeNull();
+    expect(quoteStartDateError("2026-10-10", "2026-10-10")).toBe("passee");
+    expect(quoteStartDateError("2027-10-11", "2026-10-10")).toBe("trop_loin");
+    expect(quoteStartDateError("2027-02-30", "2026-10-10")).toBe("invalide");
+    expect(quoteStartDateError("demain", "2026-10-10")).toBe("invalide");
+  });
+
+  it("durée estimée en jours, entre 1 et 365", () => {
+    expect(isValidDurationDays(1)).toBe(true);
+    expect(isValidDurationDays(365)).toBe(true);
+    for (const value of [0, 366, 1.5]) expect(isValidDurationDays(value)).toBe(false);
   });
 });

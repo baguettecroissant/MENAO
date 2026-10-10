@@ -43,6 +43,63 @@ export const QUOTE_LIMITS = {
 /** Durée de validité proposée pour un devis, en jours (maquette : « Devis valable 1 mois »). */
 export const QUOTE_VALIDITY_DAYS = 30;
 
+// ---------------------------------------------------------------------------
+// Envoi du devis (F-20, F-21) : échéancier, date de début et durée estimée. Mêmes règles en base
+// (artisan_send_quote).
+// ---------------------------------------------------------------------------
+
+export const PAYMENT_TRIGGERS = ["signature", "reception"] as const;
+export type PaymentTrigger = (typeof PAYMENT_TRIGGERS)[number];
+export type PaymentTranche = { percent: number; trigger: PaymentTrigger; amountCents: number };
+
+/** « Mon échéancier par défaut » proposé (maquette : 30 % à la signature, 70 % à la réception). */
+export const DEFAULT_DEPOSIT_PERCENT = 30;
+export const QUOTE_START_MAX_DAYS = 365;
+export const QUOTE_DURATION_MAX_DAYS = 365;
+
+export const isValidDepositPercent = (value: number) =>
+  Number.isInteger(value) && value >= 1 && value <= 99;
+
+export const isValidDurationDays = (value: number) =>
+  Number.isInteger(value) && value >= 1 && value <= QUOTE_DURATION_MAX_DAYS;
+
+/**
+ * Acompte à la signature (arrondi au centime inférieur), solde à la réception = TTC − acompte :
+ * le solde est toujours calculé (CLAUDE.md règle 5).
+ */
+export function paymentSchedule(totalTtcCents: number, depositPercent: number): PaymentTranche[] {
+  const deposit = Math.floor((totalTtcCents * depositPercent) / 100);
+  return [
+    { percent: depositPercent, trigger: "signature", amountCents: deposit },
+    { percent: 100 - depositPercent, trigger: "reception", amountCents: totalTtcCents - deposit },
+  ];
+}
+
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Numéro du jour (UTC) d'une date AAAA-MM-JJ réelle, sinon null (31 février…). */
+function dayNumber(date: string): number | null {
+  const m = ISO_DATE.exec(date);
+  if (!m) return null;
+  const [year, month, day] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const value = new Date(Date.UTC(year, month - 1, day));
+  if (value.getUTCMonth() !== month - 1 || value.getUTCDate() !== day) return null;
+  return value.getTime() / 86_400_000;
+}
+
+/** Date de début prévisionnelle : après aujourd'hui (AAAA-MM-JJ, heure de Paris), dans l'année. */
+export function quoteStartDateError(
+  date: string,
+  today: string,
+): "invalide" | "passee" | "trop_loin" | null {
+  const start = dayNumber(date);
+  const now = dayNumber(today);
+  if (start === null || now === null) return "invalide";
+  if (start <= now) return "passee";
+  if (start > now + QUOTE_START_MAX_DAYS) return "trop_loin";
+  return null;
+}
+
 export type QuoteLineAmounts = {
   quantityMilli: number;
   unitPriceHtCents: number;
