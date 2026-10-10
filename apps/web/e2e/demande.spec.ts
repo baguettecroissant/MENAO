@@ -739,6 +739,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.getByRole("button", { name: "Envoyer le signalement" }).click();
   await expect(page.getByText("Choisissez la nature du problème.")).toBeVisible();
   await page.getByText("Malfaçon").click();
+  // L'erreur disparaît dès que le champ est corrigé.
+  await expect(page.getByText("Choisissez la nature du problème.")).toHaveCount(0);
   await page
     .getByLabel("Description du problème")
     .fill("Le joint du siphon fuit de nouveau depuis hier soir.");
