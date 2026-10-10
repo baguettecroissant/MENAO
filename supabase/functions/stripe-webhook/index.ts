@@ -1,8 +1,9 @@
-// Edge Function stripe-webhook (F-15) : seule écriture des abonnements. Signature vérifiée,
-// traitement idempotent (table webhook_events), CLAUDE.md règle 9. Aucune donnée personnelle
-// journalisée.
+// Edge Function stripe-webhook (F-15, F-31) : seule écriture des abonnements et des paiements des
+// chantiers (comptes connectés des artisans). Signature vérifiée, traitement idempotent (table
+// webhook_events), CLAUDE.md règle 9. Aucune donnée personnelle journalisée.
 import Stripe from "stripe";
 import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
+import { paymentStatusFromCheckout } from "../../../packages/core/src/payment.ts";
 import {
   subscriptionFromStripe,
   subscriptionGrantsAccess,
@@ -77,6 +78,15 @@ Deno.serve(async (req) => {
       const snapshot = subscriptionFromStripe(subscription);
       if (snapshot) await saveSubscription(admin, snapshot);
     }
+    // Paiement d'un chantier, sur le compte connecté de l'artisan (ADR 0011, ADR 0023).
+    if (event.account && event.type.startsWith("checkout.session.")) {
+      await savePayment(
+        admin,
+        event.account,
+        event.type,
+        event.data.object as Stripe.Checkout.Session,
+      );
+    }
     if (event.type === "account.updated") {
       const account = connectAccountFromStripe(event.data.object);
       if (account && !(await saveConnectAccount(admin, account))) {
@@ -98,6 +108,39 @@ Deno.serve(async (req) => {
     return json({ error: "traitement impossible" }, 500);
   }
 });
+
+/** Paiement retrouvé par les métadonnées posées à la création (devis, tranche) ; compte et montant vérifiés en base. */
+async function savePayment(
+  admin: SupabaseClient,
+  account: string,
+  type: string,
+  session: Stripe.Checkout.Session,
+) {
+  const quoteId = session.metadata?.menao_quote_id;
+  const kind = session.metadata?.menao_kind;
+  const status = paymentStatusFromCheckout(type, session.payment_status);
+  if (
+    session.mode !== "payment" ||
+    !quoteId ||
+    (kind !== "acompte" && kind !== "solde") ||
+    !status
+  ) {
+    return;
+  }
+  const { data: outcome, error } = await admin.rpc("record_payment", {
+    p_quote_id: quoteId,
+    p_kind: kind,
+    p_stripe_account_id: account,
+    p_session_id: session.id,
+    p_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
+    p_amount_cents: session.amount_total ?? 0,
+    p_status: status,
+  });
+  if (error) throw new Error(error.message);
+  if (outcome === "incoherent" || outcome === "inconnu") {
+    console.error(`stripe-webhook : paiement ${outcome} (${type})`);
+  }
+}
 
 async function saveSubscription(admin: SupabaseClient, s: SubscriptionSnapshot) {
   // Artisan : métadonnée posée à la création (Checkout), sinon client Stripe enregistré.
