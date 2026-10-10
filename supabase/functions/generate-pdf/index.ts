@@ -1,7 +1,7 @@
 // Edge Function generate-pdf (F-20) : PDF du devis, à partir de la fonction SQL quote_document
 // appelée avec le jeton de l'utilisateur (elle seule décide de l'accès). Brouillon : aperçu, non
-// conservé. Devis envoyé : PDF produit une fois depuis les données figées, conservé dans le
-// bucket privé quote-pdfs puis resservi tel quel (F-21). ADR 0020, ADR 0021.
+// conservé. Devis envoyé : PDF conservé tel qu'envoyé (F-21). Devis signé : PDF signé chez le
+// prestataire (F-13). ADR 0020, 0021, 0022.
 import { createClient } from "@supabase/supabase-js";
 import {
   quotePdfData,
@@ -11,9 +11,9 @@ import {
 import { renderQuotePdf } from "../../../packages/documents/src/quote-pdf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
+import { sentQuotePdf } from "../_shared/quote-pdf.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const BUCKET = "quote-pdfs";
 
 function pdfResponse(pdf: Uint8Array<ArrayBuffer>, filename: string): Response {
   return new Response(pdf, {
@@ -49,22 +49,22 @@ Deno.serve(async (req) => {
   const doc = data as QuoteDocument;
   const document = quotePdfData(doc);
   const filename = quotePdfFilename(document);
-  // Copie dans un ArrayBuffer simple, type attendu par Response.
-  const render = async () => new Uint8Array(await renderQuotePdf(document));
-  if (document.preview) return pdfResponse(await render(), filename);
+  if (document.preview) {
+    return pdfResponse(new Uint8Array(await renderQuotePdf(document)), filename);
+  }
 
-  // Devis envoyé : accès vérifié ci-dessus, fichier lu et écrit avec la clé serveur.
-  const storage = adminClient().storage.from(BUCKET);
-  const path = `${doc.quote.artisan_id}/${doc.quote.id}.pdf`;
-  const { data: stored } = await storage.download(path);
-  if (stored) return pdfResponse(new Uint8Array(await stored.arrayBuffer()), filename);
-  const pdf = await render();
-  const { error: uploadError } = await storage.upload(path, pdf, {
-    contentType: "application/pdf",
-    upsert: false,
-  });
-  // Deux premières lectures simultanées : le fichier existe déjà, contenu identique.
-  if (uploadError)
-    console.error("generate-pdf : conservation du PDF en échec", uploadError.message);
-  return pdfResponse(pdf, filename);
+  // Accès vérifié ci-dessus : fichiers lus avec la clé serveur.
+  const admin = adminClient();
+  if (doc.quote.status === "signe" && doc.quote.signed_pdf_path) {
+    const { data: signed } = await admin.storage
+      .from("quote-signatures")
+      .download(doc.quote.signed_pdf_path);
+    if (signed) {
+      return pdfResponse(
+        new Uint8Array(await signed.arrayBuffer()),
+        filename.replace(/\.pdf$/, "-signe.pdf"),
+      );
+    }
+  }
+  return pdfResponse(await sentQuotePdf(admin, doc), filename);
 });

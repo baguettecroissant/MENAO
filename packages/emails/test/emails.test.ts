@@ -152,6 +152,19 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("devis signé : client, numéro, montant et lien vers le chantier", () => {
+    const signe = notificationContent(
+      "devis_signe",
+      { ...ids, titre: "Prises", client: "Camille", numero: "DEVIS-2026-0001", montant_ttc: 33000 },
+      { ...ctx, firstName: "Xavier" },
+    );
+    expect(signe.subject).toBe("Camille a signé votre devis");
+    expect(signe.paragraphs[1]).toContain(
+      `Camille a signé votre devis n° DEVIS-2026-0001 pour ${quoted("Prises")}, d'un montant de 330,00`,
+    );
+    expect(signe.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+  });
+
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
     for (const type of NOTIFICATION_TYPES) {
       const c = notificationContent(

@@ -2,7 +2,7 @@ import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { money, winAnsi } from "../src/format.ts";
 import { quoteDocumentModel, type QuotePdfData } from "../src/quote-model.ts";
-import { renderQuotePdf } from "../src/quote-pdf.ts";
+import { SIGNATURE_TAGS, renderQuotePdf } from "../src/quote-pdf.ts";
 
 const NBSP = "\u00a0";
 
@@ -192,5 +192,12 @@ describe("rendu PDF", () => {
     const pdf = await PDFDocument.load(bytes);
     expect(pdf.getPageCount()).toBeGreaterThan(3);
     expect(pdf.getTitle()).toBe("Devis (aperçu)");
+  });
+
+  it("balises du prestataire de signature : rôle du signataire, signature et date", () => {
+    expect(SIGNATURE_TAGS.signature).toBe(
+      "{{Signature;role=Client;type=signature;width=200;height=34}}",
+    );
+    expect(SIGNATURE_TAGS.date).toBe("{{Date;role=Client;type=date;width=90;height=12}}");
   });
 });

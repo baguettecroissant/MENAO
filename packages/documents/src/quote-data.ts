@@ -25,6 +25,9 @@ export type QuoteDocument = {
     total_tva_cents: number;
     total_ttc_cents: number;
     vat_breakdown: { rateBp: number; baseHtCents: number; tvaCents: number }[];
+    /** Devis signé (F-13) : PDF signé chez le prestataire, conservé. */
+    signed_at?: string | null;
+    signed_pdf_path?: string | null;
   };
   lines: {
     type: QuoteLineType;

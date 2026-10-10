@@ -13,6 +13,7 @@ export const NOTIFICATION_TYPES = [
   "devis_recu",
   "devis_refuse",
   "devis_modification",
+  "devis_signe",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -253,6 +254,26 @@ export function notificationContent(
         cta: {
           label: "Modifier le devis",
           url: link(chantierId ? `/pro/chantiers/${chantierId}/devis` : "/pro/devis"),
+        },
+      };
+    }
+    case "devis_signe": {
+      const client = text(data, "client") ?? "Le client";
+      const numero = text(data, "numero");
+      const montant = amount(data, "montant_ttc");
+      return {
+        subject: `${client} a signé votre devis`,
+        preview: `Votre devis pour ${quoted(titre)} est signé.`,
+        title: "Devis signé",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a signé votre devis${numero ? ` n° ${numero}` : ""} pour ${quoted(titre)}${montant ? `, d'un montant de ${montant} TTC` : ""}.`,
+          "Le devis signé est disponible depuis le chantier, dans votre espace pro.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
         },
       };
     }

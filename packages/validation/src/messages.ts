@@ -47,6 +47,7 @@ export const messages = {
   durationInvalid: "Indiquez une durée entière entre 1 et 365 jours.",
   quoteRefusalReasonRequired: "Choisissez la raison de votre refus.",
   revisionMessageTooShort: "Décrivez la modification souhaitée en 10 caractères au moins.",
+  signatureConsentRequired: "Cochez cette case pour signer le devis.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

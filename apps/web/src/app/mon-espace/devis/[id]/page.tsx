@@ -5,7 +5,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { QuoteResponse } from "@/components/project/quote-response";
 import { QuotePaper } from "@/components/pro/quote-paper";
-import { Alert, StatusBadge, TextLink, buttonClasses } from "@/components/ui";
+import { Alert, ButtonLink, StatusBadge, TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -27,8 +27,12 @@ export const metadata: Metadata = { title: `${t.titleFallback} — MENAO` };
  * Devis reçu par le client (F-21) : contenu figé à l'envoi, PDF, puis demande de modification ou
  * refus. quote_document ne renvoie rien aux autres comptes.
  */
-export default async function ClientQuotePage({ params }: PageProps<"/mon-espace/devis/[id]">) {
+export default async function ClientQuotePage({
+  params,
+  searchParams,
+}: PageProps<"/mon-espace/devis/[id]">) {
   const { id } = await params;
+  const { signature } = await searchParams;
   if (!UUID.test(id)) notFound();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
@@ -39,7 +43,7 @@ export default async function ClientQuotePage({ params }: PageProps<"/mon-espace
     supabase.rpc("quote_document", { p_quote_id: id }),
     supabase
       .from("quotes")
-      .select("id, status, valid_until, client_message")
+      .select("id, status, valid_until, client_message, signed_at")
       .eq("id", id)
       .maybeSingle(),
   ]);
@@ -79,6 +83,12 @@ export default async function ClientQuotePage({ params }: PageProps<"/mon-espace
             )}
           </div>
         </div>
+        {quote.status === "envoye" && signature === "terminee" && (
+          <Alert tone="info">{t.signatureReturned}</Alert>
+        )}
+        {quote.status === "signe" && quote.signed_at && (
+          <Alert tone="success">{t.signedNotice(formatDay(quote.signed_at))}</Alert>
+        )}
         {quote.status === "revision_demandee" && (
           <Alert tone="info">
             {t.revisionNotice} {quote.client_message}
@@ -101,10 +111,17 @@ export default async function ClientQuotePage({ params }: PageProps<"/mon-espace
           className={`${buttonClasses({ variant: "outline", block: false })} self-start`}
         >
           <Eye aria-hidden="true" className="size-4" />
-          {t.viewPdf}
+          {quote.status === "signe" ? t.downloadSigned : t.viewPdf}
           <span className="sr-only"> {t.newTab}</span>
         </a>
-        {quote.status === "envoye" && <QuoteResponse quoteId={id} />}
+        {quote.status === "envoye" && (
+          <div className="flex flex-col gap-3">
+            <ButtonLink href={`/mon-espace/devis/${id}/signature` as Route} size="lg" block>
+              {t.sign}
+            </ButtonLink>
+            <QuoteResponse quoteId={id} />
+          </div>
+        )}
       </div>
     </main>
   );

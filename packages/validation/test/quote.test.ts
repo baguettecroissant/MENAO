@@ -8,6 +8,7 @@ import {
   quoteRevisionSchema,
   refuseQuoteSchema,
   sendQuoteSchema,
+  signatureConsentsSchema,
 } from "../src/quote";
 
 const base = {
@@ -107,5 +108,19 @@ describe("envoi du devis et réponse du client (F-21)", () => {
     expect(quoteRevisionSchema.safeParse({ message: "Trop court" }).success).toBe(true);
     expect(quoteRevisionSchema.safeParse({ message: "   court   " }).success).toBe(false);
     expect(quoteRevisionSchema.safeParse({ message: "x".repeat(1001) }).success).toBe(false);
+  });
+});
+
+describe("signature du devis (F-13)", () => {
+  it("toutes les cases cochées sont obligatoires", () => {
+    const all = { document: true, cgu_prestataire: true, cgu_menao: true, echeancier: true };
+    expect(signatureConsentsSchema.safeParse(all).success).toBe(true);
+    const r = signatureConsentsSchema.safeParse({ ...all, echeancier: false });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(z.flattenError(r.error).fieldErrors.echeancier).toEqual([
+        "Cochez cette case pour signer le devis.",
+      ]);
+    }
   });
 });

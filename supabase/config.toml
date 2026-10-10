@@ -427,6 +427,12 @@ AI_QUOTE_MODEL = "env(AI_QUOTE_MODEL)"
 RESEND_API_KEY = "env(RESEND_API_KEY)"
 EMAIL_FROM = "env(EMAIL_FROM)"
 NOTIFY_SECRET = "env(NOTIFY_SECRET)"
+# Signature électronique (F-13, ADR 0022) : DocuSeal UE, clé API, secret HMAC du webhook, code à
+# usage unique (sms par défaut, email ou aucun). CI : faux DocuSeal (DOCUSEAL_API_URL).
+DOCUSEAL_API_URL = "env(DOCUSEAL_API_URL)"
+DOCUSEAL_API_KEY = "env(DOCUSEAL_API_KEY)"
+DOCUSEAL_WEBHOOK_SECRET = "env(DOCUSEAL_WEBHOOK_SECRET)"
+DOCUSEAL_OTP = "env(DOCUSEAL_OTP)"
 
 # Vérification Sirene (F-14) : réservée aux utilisateurs connectés.
 [functions.sirene-check]
@@ -459,6 +465,13 @@ verify_jwt = true
 # PDF du devis (F-20) : utilisateur connecté ; l'accès est décidé par quote_document.
 [functions.generate-pdf]
 verify_jwt = true
+
+# Signature du devis (F-13) : client connecté ; webhook DocuSeal signé en HMAC, sans jeton.
+[functions.signature-create]
+verify_jwt = true
+
+[functions.signature-webhook]
+verify_jwt = false
 
 # Envoi des notifications (F-41) : appelée par la base avec un secret partagé, sans jeton.
 [functions.notify]

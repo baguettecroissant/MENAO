@@ -16,3 +16,4 @@ export * from "./appointment";
 export * from "./ics";
 export * from "./quote";
 export * from "./legal-forms";
+export * from "./signature";

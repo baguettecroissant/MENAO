@@ -1260,6 +1260,9 @@ export type Database = {
           refusal_reason: Database["public"]["Enums"]["quote_refusal_reason"] | null;
           responded_at: string | null;
           sent_at: string | null;
+          signature_proof_path: string | null;
+          signed_at: string | null;
+          signed_pdf_path: string | null;
           start_date: string | null;
           status: Database["public"]["Enums"]["quote_status"];
           supersedes_id: string | null;
@@ -1285,6 +1288,9 @@ export type Database = {
           refusal_reason?: Database["public"]["Enums"]["quote_refusal_reason"] | null;
           responded_at?: string | null;
           sent_at?: string | null;
+          signature_proof_path?: string | null;
+          signed_at?: string | null;
+          signed_pdf_path?: string | null;
           start_date?: string | null;
           status?: Database["public"]["Enums"]["quote_status"];
           supersedes_id?: string | null;
@@ -1309,6 +1315,9 @@ export type Database = {
           refusal_reason?: Database["public"]["Enums"]["quote_refusal_reason"] | null;
           responded_at?: string | null;
           sent_at?: string | null;
+          signature_proof_path?: string | null;
+          signed_at?: string | null;
+          signed_pdf_path?: string | null;
           start_date?: string | null;
           status?: Database["public"]["Enums"]["quote_status"];
           supersedes_id?: string | null;
@@ -1475,6 +1484,57 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      signature_requests: {
+        Row: {
+          completed_at: string | null;
+          consents: NonNullable<Json>;
+          created_at: string;
+          external_submission_id: string | null;
+          external_submitter_id: string | null;
+          id: string;
+          provider: string;
+          quote_id: string;
+          signing_url: string | null;
+          status: Database["public"]["Enums"]["signature_request_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          completed_at?: string | null;
+          consents: NonNullable<Json>;
+          created_at?: string;
+          external_submission_id?: string | null;
+          external_submitter_id?: string | null;
+          id?: string;
+          provider?: string;
+          quote_id: string;
+          signing_url?: string | null;
+          status?: Database["public"]["Enums"]["signature_request_status"];
+          updated_at?: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          consents?: NonNullable<Json>;
+          created_at?: string;
+          external_submission_id?: string | null;
+          external_submitter_id?: string | null;
+          id?: string;
+          provider?: string;
+          quote_id?: string;
+          signing_url?: string | null;
+          status?: Database["public"]["Enums"]["signature_request_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       subscriptions: {
         Row: {
@@ -1915,6 +1975,10 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_start_signature: {
+        Args: { p_consents: Json; p_quote_id: string };
+        Returns: Json;
+      };
       public_artisans_for_commune: {
         Args: { p_code_insee: string; p_limit?: number; p_trade_code: string };
         Returns: {
@@ -1933,6 +1997,15 @@ export type Database = {
       };
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       quote_document: { Args: { p_quote_id: string }; Returns: Json };
+      record_quote_signature: {
+        Args: {
+          p_proof_path: string;
+          p_request_id: string;
+          p_signed_at: string;
+          p_signed_pdf_path: string;
+        };
+        Returns: string;
+      };
       record_sirene_result: {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
@@ -2074,7 +2147,8 @@ export type Database = {
         | "chantier_annule"
         | "devis_recu"
         | "devis_refuse"
-        | "devis_modification";
+        | "devis_modification"
+        | "devis_signe";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
@@ -2086,6 +2160,7 @@ export type Database = {
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
+      signature_request_status: "en_attente" | "signee" | "abandonnee";
       ticket_status: "ouvert" | "en_cours" | "resolu";
       ticket_type: "dossier_recherche" | "contact" | "expertise";
       zone_mode: "rayon" | "communes";
@@ -2267,6 +2342,7 @@ export const Constants = {
         "devis_recu",
         "devis_refuse",
         "devis_modification",
+        "devis_signe",
       ],
       project_date_mode: ["des_que_possible", "date", "inconnue"],
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
@@ -2279,6 +2355,7 @@ export const Constants = {
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
+      signature_request_status: ["en_attente", "signee", "abandonnee"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
       ticket_type: ["dossier_recherche", "contact", "expertise"],
       zone_mode: ["rayon", "communes"],

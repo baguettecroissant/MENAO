@@ -708,6 +708,43 @@ export const fr = {
     seeNewVersion: "Voir la nouvelle version",
     requestChange: "Demander une modification",
     refuse: "Refuser le devis",
+    sign: "Signer le devis",
+    signedNotice: (date: string) => `Vous avez signé ce devis le ${date}.`,
+    downloadSigned: "Télécharger le devis signé",
+    signatureReturned:
+      "Merci ! Votre signature est en cours d'enregistrement : actualisez la page dans quelques instants.",
+    signature: {
+      title: "Signature du devis",
+      tabs: {
+        label: "Étapes de la signature",
+        sign: "Signature du devis",
+        deposit: "Paiement de l'acompte",
+      },
+      intro:
+        "Vérifiez le devis et cochez les cases ci-dessous : vous signerez ensuite chez notre prestataire de signature électronique, DocuSeal.",
+      summary: (numero: string, amount: string) => `Devis n° ${numero} · ${amount} TTC`,
+      start: (date: string) => `Début prévisionnel des travaux : ${date}`,
+      consents: {
+        document: "J'ai lu et j'accepte le devis.",
+        cgu_prestataire:
+          "J'accepte les conditions d'utilisation de DocuSeal, prestataire de signature électronique.",
+        cgu_menao:
+          "J'accepte les conditions générales d'utilisation et la politique de confidentialité de MENAO.",
+        echeancier: (deposit: string, balance: string) =>
+          `J'accepte l'échéancier : acompte de ${deposit} à la signature, solde de ${balance} à la réception des travaux.`,
+      },
+      links: {
+        provider: "Conditions DocuSeal",
+        terms: "CGU",
+        privacy: "Confidentialité",
+      },
+      otp: "Un code à usage unique vous sera demandé pour confirmer votre identité.",
+      submit: "Signer le devis",
+      submitting: "Ouverture de la signature…",
+      unavailable:
+        "La signature électronique est momentanément indisponible. Réessayez dans un instant.",
+      depositNext: "Le paiement de l'acompte vous sera proposé après la signature.",
+    },
     revision: {
       title: "Demander une modification",
       intro:
@@ -949,6 +986,8 @@ export const fr = {
         revision: "Le client demande une modification :",
         edit: "Modifier le devis",
         refused: (reason: string) => `Le client a refusé le devis : ${reason}.`,
+        signed: (date: string) => `Le client a signé le devis le ${date}.`,
+        viewSigned: "Voir le devis signé",
         viewPdf: "Voir le PDF",
         newTab: "(nouvel onglet)",
       },
