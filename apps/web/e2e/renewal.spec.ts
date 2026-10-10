@@ -15,7 +15,7 @@ test("renouvellement d'une assurance qui expire, validé par un admin", async ({
 
   // Artisan : rappel, échéance, dépôt du document à jour
   await signIn(page, "valide@example.test");
-  await expect(page).toHaveURL(/\/pro\/onboarding/);
+  await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
   await expect(page.getByRole("main").getByRole("alert").first()).toContainText(
     "Pensez à renouveler : Attestation d'assurance décennale",
   );

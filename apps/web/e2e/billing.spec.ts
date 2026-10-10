@@ -11,7 +11,8 @@ async function signIn(page: Page, email: string) {
   await page.getByLabel("Adresse e-mail").fill(email);
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding/);
+  // Artisan validé : tableau de bord ; dossier en cours : inscription.
+  await expect(page).toHaveURL(/\/pro\/(tableau-de-bord|onboarding)/);
 }
 
 test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ page, request }) => {
