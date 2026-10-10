@@ -859,6 +859,80 @@ export type Database = {
         };
         Relationships: [];
       };
+      payments: {
+        Row: {
+          amount_cents: number;
+          artisan_id: string;
+          chantier_id: string;
+          created_at: string;
+          currency: string;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          paid_at: string | null;
+          quote_id: string;
+          status: Database["public"]["Enums"]["payment_status"];
+          stripe_account_id: string;
+          stripe_checkout_session_id: string | null;
+          stripe_payment_intent_id: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          artisan_id: string;
+          chantier_id: string;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          paid_at?: string | null;
+          quote_id: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          stripe_account_id: string;
+          stripe_checkout_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount_cents?: number;
+          artisan_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          paid_at?: string | null;
+          quote_id?: string;
+          status?: Database["public"]["Enums"]["payment_status"];
+          stripe_account_id?: string;
+          stripe_checkout_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       plans: {
         Row: {
           avantages: NonNullable<Json>;
@@ -1975,6 +2049,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_start_deposit: { Args: { p_quote_id: string }; Returns: Json };
       particulier_start_signature: {
         Args: { p_consents: Json; p_quote_id: string };
         Returns: Json;
@@ -1997,6 +2072,18 @@ export type Database = {
       };
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       quote_document: { Args: { p_quote_id: string }; Returns: Json };
+      record_payment: {
+        Args: {
+          p_amount_cents: number;
+          p_kind: Database["public"]["Enums"]["payment_kind"];
+          p_payment_intent_id: string;
+          p_quote_id: string;
+          p_session_id: string;
+          p_status: Database["public"]["Enums"]["payment_status"];
+          p_stripe_account_id: string;
+        };
+        Returns: string;
+      };
       record_quote_signature: {
         Args: {
           p_proof_path: string;
@@ -2148,7 +2235,10 @@ export type Database = {
         | "devis_recu"
         | "devis_refuse"
         | "devis_modification"
-        | "devis_signe";
+        | "devis_signe"
+        | "acompte_paye";
+      payment_kind: "acompte" | "solde";
+      payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
@@ -2343,7 +2433,10 @@ export const Constants = {
         "devis_refuse",
         "devis_modification",
         "devis_signe",
+        "acompte_paye",
       ],
+      payment_kind: ["acompte", "solde"],
+      payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
       project_date_mode: ["des_que_possible", "date", "inconnue"],
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],
