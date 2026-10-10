@@ -1,8 +1,6 @@
 "use client";
 
 import { Calendar, Clock, NotebookPen, Plus } from "lucide-react";
-import type { Route } from "next";
-import { usePathname, useRouter } from "next/navigation";
 import { useActionState, useCallback, useState, type MouseEvent } from "react";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
@@ -13,6 +11,7 @@ import {
   cancelChantier,
   confirmChantierStart,
   declareChantierFinished,
+  editChantierStart,
   rescheduleAppointment,
   saveAppointmentNotes,
 } from "@/lib/artisan/chantier-actions";
@@ -183,8 +182,8 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
 
 /**
  * F-22 « Confirmer la date de démarrage » (maquette « Vue d'un chantier - Date à confirmer ») :
- * panneau en bas de l'écran, date et heure côte à côte. Une fois la date confirmée, la page
- * affiche la confirmation (?demarrage=confirme).
+ * panneau en bas de l'écran, date et heure côte à côte. L'action mène ensuite à la confirmation
+ * (?demarrage=confirme).
  */
 export function ChantierStartPanel({
   chantierId,
@@ -199,17 +198,10 @@ export function ChantierStartPanel({
   time: string;
   hint?: string;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [state, formAction, pending] = useActionState(
     confirmChantierStart.bind(null, chantierId),
     initialFormState,
   );
-  const confirmed = useCallback(
-    () => router.replace(`${pathname}?demarrage=confirme` as Route, { scroll: false }),
-    [router, pathname],
-  );
-  useActionSuccess(state, confirmed);
   const dateError = state.fieldErrors?.date?.[0];
   const timeError = state.fieldErrors?.time?.[0];
   return (
@@ -297,7 +289,7 @@ export function EditChantierStartButton({
       </button>
       <Drawer open={open} onClose={close} title={tf.editTitle} backLabel={t.backToForm}>
         <AppointmentForm
-          action={confirmChantierStart.bind(null, chantierId)}
+          action={editChantierStart.bind(null, chantierId)}
           submitLabel={tf.editSubmit}
           minDate={minDate}
           defaultDate={date}
