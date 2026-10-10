@@ -432,3 +432,85 @@ begin
   return new;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- « Mes chantiers » : date de réception (PV sans réserves ou réserves levées). Le type de retour
+-- change : suppression puis recréation.
+-- ---------------------------------------------------------------------------
+drop function public.particulier_chantiers(uuid);
+create function public.particulier_chantiers(p_chantier_id uuid default null)
+returns table (
+  chantier_id uuid,
+  project_id uuid,
+  status public.chantier_status,
+  title text,
+  description text,
+  adresse text,
+  ville_nom text,
+  code_postal text,
+  photo_path text,
+  artisan_id uuid,
+  artisan_name text,
+  artisan_avatar_path text,
+  artisan_phone text,
+  trade_label text,
+  appointment_at timestamptz,
+  start_at timestamptz,
+  finished_at timestamptz,
+  closed_at timestamptz,
+  received_at timestamptz,
+  quote_id uuid,
+  quote_status public.quote_status,
+  quote_total_ttc_cents bigint,
+  deposit_cents bigint,
+  deposit_status public.payment_status,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select c.id, c.project_id, c.status, c.title, p.description,
+    c.adresse, c.ville_nom, c.code_postal,
+    (select ph.storage_path from public.project_photos ph
+     where ph.project_id = c.project_id order by ph.sort_order, ph.created_at limit 1),
+    a.id, coalesce(pr.first_name, a.nom_commercial, a.raison_sociale), pr.avatar_path,
+    -- Coordonnées de l'artisan tant que la demande est acceptée (F-17).
+    case when r.status = 'acceptee' then pr.phone end,
+    t.label,
+    (select ap.starts_at from public.appointments ap where ap.chantier_id = c.id and ap.status = 'planifie'),
+    c.start_at,
+    (select e.created_at from public.chantier_events e
+     where e.chantier_id = c.id and e.event = 'fin_declaree' order by e.created_at desc limit 1),
+    (select e.created_at from public.chantier_events e
+     where e.chantier_id = c.id and e.to_status in ('cloture', 'annule', 'devis_refuse')
+     order by e.created_at desc limit 1),
+    (select e.created_at from public.chantier_events e
+     where e.chantier_id = c.id and e.to_status = 'receptionne'
+     order by e.created_at desc limit 1),
+    q.id, q.status, q.total_ttc_cents,
+    (select (s ->> 'amount_cents')::bigint from jsonb_array_elements(q.payment_schedule) s
+     where s ->> 'trigger' = 'signature' limit 1),
+    (select pay.status from public.payments pay
+     where pay.quote_id = q.id and pay.kind = 'acompte' and pay.status in ('en_attente', 'en_cours', 'paye')
+     limit 1),
+    c.created_at
+  from public.chantiers c
+  join public.requests r on r.id = c.request_id
+  join public.projects p on p.id = c.project_id
+  join public.artisans a on a.id = c.artisan_id
+  left join public.profiles pr on pr.user_id = a.user_id
+  left join public.trades t on t.code = p.trade_code
+  left join lateral (
+    select q0.id, q0.status, q0.total_ttc_cents, q0.payment_schedule from public.quotes q0
+    where q0.chantier_id = c.id and q0.status <> 'brouillon'
+    order by q0.version desc
+    limit 1
+  ) q on true
+  where c.particulier_id = auth.uid()
+    and (p_chantier_id is null or c.id = p_chantier_id)
+  order by c.created_at desc
+$$;
+revoke execute on function public.particulier_chantiers(uuid) from public, anon;
+grant execute on function public.particulier_chantiers(uuid) to authenticated;

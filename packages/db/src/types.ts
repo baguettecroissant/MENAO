@@ -2334,6 +2334,7 @@ export type Database = {
           quote_id: string;
           quote_status: Database["public"]["Enums"]["quote_status"];
           quote_total_ttc_cents: number;
+          received_at: string;
           start_at: string;
           status: Database["public"]["Enums"]["chantier_status"];
           title: string;
