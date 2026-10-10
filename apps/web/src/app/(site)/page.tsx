@@ -57,7 +57,7 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-6 rounded-hero bg-primary px-6 py-10 text-primary-foreground sm:flex-row sm:items-center sm:px-10">
           <div className="flex flex-col gap-2">
             <p className="text-2xl font-medium">{fr.home.pro}</p>
-            <p className="text-white/85">{fr.pro.landing.subtitle}</p>
+            <p className="text-white/85">{fr.pro.landing.teaser}</p>
           </div>
           <ButtonLink href="/pro" variant="secondary" size="lg" className="shrink-0 border-white">
             {fr.home.proLink}
