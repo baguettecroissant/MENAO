@@ -8,6 +8,7 @@ import {
   paymentProgress,
 } from "@menao/core";
 import { CircleCheck, ShieldCheck } from "lucide-react";
+import type { Route } from "next";
 import {
   ChantierDocuments,
   PaymentSchedule,
@@ -31,7 +32,7 @@ import {
 import { StickyActions } from "@/components/pro/detail";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewSection } from "@/components/pro/review-section";
-import { Alert, ButtonLink } from "@/components/ui";
+import { Alert, ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
 import { signedUrlMap } from "@/lib/chantier/storage";
@@ -84,6 +85,7 @@ export async function ArtisanFollowUp({
     { data: reception },
     { data: received },
     { data: review },
+    { data: openTicket },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -135,6 +137,14 @@ export async function ArtisanFollowUp({
         "id, score, quality, delays, communication, value_for_money, comment, status, moderation_reason, reply",
       )
       .eq("chantier_id", id)
+      .maybeSingle(),
+    // F-42 : signalement de l'artisan en cours sur ce chantier.
+    supabase
+      .from("tickets")
+      .select("id")
+      .eq("chantier_id", id)
+      .eq("type", "litige")
+      .neq("status", "resolu")
       .maybeSingle(),
   ]);
   const journal = journalSummary(
@@ -241,6 +251,19 @@ export async function ArtisanFollowUp({
           {step !== null && <ChantierStepper current={step} />}
         </ChantierHero>
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">
+          {(status === "en_litige" || openTicket) && (
+            <Alert tone="info">
+              {status === "en_litige" ? fr.dispute.ongoing : fr.dispute.pending}
+              {openTicket && (
+                <>
+                  {" "}
+                  <TextLink href={`/signalements/${openTicket.id}` as Route}>
+                    {fr.dispute.follow}
+                  </TextLink>
+                </>
+              )}
+            </Alert>
+          )}
           {status === "travaux_termines" && (
             <Alert tone="info">{tf.awaitingReception(clientFirstName)}</Alert>
           )}
@@ -331,7 +354,7 @@ export async function ArtisanFollowUp({
               {c.appointment && <NotesBlock chantierId={id} notes={c.appointment.notes} />}
             </>
           )}
-          <ReportProblemLink />
+          <ReportProblemLink href={`/pro/chantiers/${id}/signaler`} />
         </div>
       </div>
 

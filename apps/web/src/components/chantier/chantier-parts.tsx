@@ -169,10 +169,11 @@ export function ChantierTabs({ base, active }: { base: string; active: "suivi" |
 }
 
 /** « Signaler un problème lié au chantier » (maquettes), vers le formulaire de contact. */
-export function ReportProblemLink() {
+/** « Signaler un problème lié au chantier » (F-42) : formulaire du client ou de l'artisan. */
+export function ReportProblemLink({ href }: { href: string }) {
   return (
     <Link
-      href="/contact"
+      href={href as Route}
       className="self-center rounded-md px-2 py-1 text-sm font-medium text-danger hover:underline focus-visible:ring-4 focus-visible:ring-danger/20 focus-visible:outline-none"
     >
       {t.report}

@@ -28,7 +28,7 @@ import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
 import { ConfirmLiftActions, ReceptionActions } from "@/components/chantier/reception-actions";
 import { ReviewInvite } from "@/components/review/review-invite";
-import { Alert } from "@/components/ui";
+import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
 import { chantierTag, nextIntervention } from "@/lib/chantier/view";
@@ -78,6 +78,7 @@ export default async function ClientChantierPage({
     { data: invoices },
     { data: reception },
     { data: review },
+    { data: openTicket },
   ] = await Promise.all([
     supabase
       .from("chantier_updates")
@@ -104,6 +105,14 @@ export default async function ClientChantierPage({
       .maybeSingle(),
     // F-28 : avis déjà laissé sur ce chantier.
     supabase.from("reviews").select("id").eq("chantier_id", id).maybeSingle(),
+    // F-42 : signalement du client en cours sur ce chantier.
+    supabase
+      .from("tickets")
+      .select("id")
+      .eq("chantier_id", id)
+      .eq("type", "litige")
+      .neq("status", "resolu")
+      .maybeSingle(),
   ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
@@ -224,6 +233,19 @@ export default async function ClientChantierPage({
               chantierId={id}
             />
           )}
+          {(status === "en_litige" || openTicket) && (
+            <Alert tone="info">
+              {status === "en_litige" ? fr.dispute.ongoing : fr.dispute.pending}
+              {openTicket && (
+                <>
+                  {" "}
+                  <TextLink href={`/signalements/${openTicket.id}` as Route}>
+                    {fr.dispute.follow}
+                  </TextLink>
+                </>
+              )}
+            </Alert>
+          )}
           {status === "travaux_termines" && signed === "signee" && (
             <Alert tone="info">{t.reception.processing}</Alert>
           )}
@@ -290,7 +312,7 @@ export default async function ClientChantierPage({
               <PaymentSchedule progress={progress} />
             </>
           )}
-          <ReportProblemLink />
+          <ReportProblemLink href={`/mon-espace/chantiers/${id}/signaler`} />
         </div>
       </div>
       {status === "reserves_a_lever" && (
