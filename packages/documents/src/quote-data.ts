@@ -3,14 +3,22 @@
  * Partagé par l'Edge Function generate-pdf et l'aperçu web (ADR 0020).
  */
 import { FORMES_JURIDIQUES } from "../../core/src/legal-forms.ts";
-import { QUOTE_VALIDITY_DAYS, type QuoteLineType, type QuoteUnit } from "../../core/src/quote.ts";
+import {
+  QUOTE_VALIDITY_DAYS,
+  type PaymentTrigger,
+  type QuoteLineType,
+  type QuoteUnit,
+} from "../../core/src/quote.ts";
+import { days } from "./format.ts";
 import type { QuotePdfData } from "./quote-model.ts";
 
 export type QuoteDocument = {
   quote: {
     id: string;
+    artisan_id: string;
     status: string;
     numero: string | null;
+    version: number;
     /** AAAA-MM-JJ, heure de Paris. */
     issued_on: string;
     total_ht_cents: number;
@@ -54,6 +62,13 @@ export type QuoteDocument = {
     code_postal: string | null;
     ville_nom: string | null;
   };
+  /** Modalités fixées à l'envoi (F-21) ; null pour un brouillon. */
+  terms: {
+    valid_until: string;
+    start_date: string;
+    duration_days: number;
+    schedule: { percent: number; trigger: PaymentTrigger; amount_cents: number }[];
+  } | null;
 };
 
 /** Adresse « 1 Rue de l'Exemple 06000 Nice » → voie, puis code postal et commune. */
@@ -73,10 +88,11 @@ export function addressLines(
 
 /**
  * Brouillon : aperçu (numéro, échéance de validité, dates et échéancier fixés à l'envoi, F-21).
- * Une attestation décennale échue à la date du devis n'est pas reprise.
+ * Devis envoyé : données figées à l'envoi. Une attestation décennale échue à la date du devis
+ * n'est pas reprise.
  */
 export function quotePdfData(doc: QuoteDocument): QuotePdfData {
-  const { quote, issuer, client, chantier } = doc;
+  const { quote, issuer, client, chantier, terms } = doc;
   const decennale = issuer.decennale;
   const insured = decennale && (!decennale.date_fin || decennale.date_fin >= quote.issued_on);
   const site = addressLines(chantier.adresse, chantier.code_postal, chantier.ville_nom);
@@ -84,7 +100,7 @@ export function quotePdfData(doc: QuoteDocument): QuotePdfData {
     preview: quote.status === "brouillon",
     numero: quote.numero,
     issuedOn: quote.issued_on,
-    validUntil: null,
+    validUntil: terms?.valid_until ?? null,
     validityDays: QUOTE_VALIDITY_DAYS,
     issuer: {
       name: issuer.raison_sociale ?? issuer.nom_commercial ?? "",
@@ -115,9 +131,13 @@ export function quotePdfData(doc: QuoteDocument): QuotePdfData {
       addressLines: site,
     },
     site: { title: chantier.title, addressLines: site },
-    startDate: null,
-    duration: null,
-    schedule: [],
+    startDate: terms?.start_date ?? null,
+    duration: terms ? days(terms.duration_days) : null,
+    schedule: (terms?.schedule ?? []).map((t) => ({
+      percent: t.percent,
+      trigger: t.trigger,
+      amountCents: t.amount_cents,
+    })),
     lines: doc.lines.map((l) => ({
       type: l.type,
       designation: l.designation,

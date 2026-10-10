@@ -35,6 +35,9 @@ export const vatRate = (bp: number) => winAnsi(`${(bp / 100).toLocaleString("fr-
 
 export const quantity = (milli: number) => winAnsi(formatQuantity(milli));
 
+/** 1 → « 1 jour », 3 → « 3 jours ». */
+export const days = (count: number) => (count === 1 ? "1 jour" : `${count} jours`);
+
 /** « +33612345678 » → « 06 12 34 56 78 » ; numéros étrangers inchangés. */
 export function phoneNumber(e164: string): string {
   const m = /^\+33([1-9])(\d{2})(\d{2})(\d{2})(\d{2})$/.exec(e164);
