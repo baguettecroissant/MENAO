@@ -1,7 +1,8 @@
-// Edge Function signature-webhook (F-13) : événements du prestataire de signature, signés en
+// Edge Function signature-webhook (F-13, F-25) : événements du prestataire de signature, signés en
 // HMAC (X-Docuseal-Signature) et traités une seule fois (webhook_events, CLAUDE.md règle 9).
-// Signature terminée : devis signé et fichier de preuve téléchargés aussitôt (liens temporaires),
-// conservés dans le bucket privé quote-signatures, puis devis et chantier mis à jour. ADR 0022.
+// Signature terminée : document signé et fichier de preuve téléchargés aussitôt (liens
+// temporaires), conservés dans un bucket privé (quote-signatures pour les devis,
+// reception-signatures pour les PV), puis document et chantier mis à jour. ADR 0022, 0027.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { verifyDocusealSignature } from "../../../packages/core/src/signature.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
@@ -15,12 +16,17 @@ type WebhookEvent = {
   data?: { id?: number | string; completed_at?: string | null };
 };
 
-async function keep(admin: SupabaseClient, path: string, url: string): Promise<void> {
+async function keep(
+  admin: SupabaseClient,
+  bucket: string,
+  path: string,
+  url: string,
+): Promise<void> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`téléchargement : HTTP ${response.status}`);
   const bytes = new Uint8Array(await response.arrayBuffer());
   const { error } = await admin.storage
-    .from("quote-signatures")
+    .from(bucket)
     .upload(path, bytes, { contentType: "application/pdf", upsert: true });
   if (error) throw new Error(`conservation : ${error.message}`);
 }
@@ -68,7 +74,9 @@ Deno.serve(async (req) => {
 
   const { data: request } = await admin
     .from("signature_requests")
-    .select("id, quote_id, status, external_submission_id, quotes(artisan_id)")
+    .select(
+      "id, quote_id, reception_id, status, external_submission_id, quotes(artisan_id), receptions(artisan_id)",
+    )
     .eq("external_submitter_id", submitterId)
     .maybeSingle();
   if (!request) {
@@ -87,23 +95,31 @@ Deno.serve(async (req) => {
     } else if (request.status === "en_attente") {
       const signed = await docuseal.getCompletedSignature(request.external_submission_id ?? "");
       if (!signed.documentUrl) throw new Error("document signé absent");
-      const artisanId = (request.quotes as unknown as { artisan_id: string } | null)?.artisan_id;
-      const folder = `${artisanId}/${request.quote_id}`;
-      const signedPath = `${folder}/devis-signe.pdf`;
-      await keep(admin, signedPath, signed.documentUrl);
+      // PV de réception (F-25) ou devis (F-13) : même conservation, dossiers distincts.
+      const reception = Boolean(request.reception_id);
+      const owner = (reception ? request.receptions : request.quotes) as unknown as {
+        artisan_id: string;
+      } | null;
+      const bucket = reception ? "reception-signatures" : "quote-signatures";
+      const folder = `${owner?.artisan_id}/${reception ? request.reception_id : request.quote_id}`;
+      const signedPath = `${folder}/${reception ? "pv-signe" : "devis-signe"}.pdf`;
+      await keep(admin, bucket, signedPath, signed.documentUrl);
       const proofPath = signed.auditLogUrl ? `${folder}/preuve-signature.pdf` : null;
-      if (proofPath && signed.auditLogUrl) await keep(admin, proofPath, signed.auditLogUrl);
-      const { data: outcome, error } = await admin.rpc("record_quote_signature", {
-        p_request_id: request.id,
-        p_signed_at: signed.completedAt ?? event.data?.completed_at ?? new Date().toISOString(),
-        p_signed_pdf_path: signedPath,
-        p_proof_path: proofPath,
-      });
+      if (proofPath && signed.auditLogUrl) await keep(admin, bucket, proofPath, signed.auditLogUrl);
+      const { data: outcome, error } = await admin.rpc(
+        reception ? "record_reception_signature" : "record_quote_signature",
+        {
+          p_request_id: request.id,
+          p_signed_at: signed.completedAt ?? event.data?.completed_at ?? new Date().toISOString(),
+          p_signed_pdf_path: signedPath,
+          p_proof_path: proofPath,
+        },
+      );
       if (error) throw new Error(error.message);
-      if (outcome === "non_signable") {
+      if (outcome === "non_signable" || outcome === "remplace") {
         console.warn(
-          "signature-webhook : devis plus signable, signature non enregistrée",
-          request.quote_id,
+          "signature-webhook : document plus signable, signature non enregistrée",
+          request.reception_id ?? request.quote_id,
         );
       }
     }

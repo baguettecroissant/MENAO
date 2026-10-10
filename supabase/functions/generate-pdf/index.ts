@@ -1,8 +1,9 @@
-// Edge Function generate-pdf (F-20, F-35) : PDF des devis et des factures, à partir des fonctions
-// SQL quote_document et invoice_document appelées avec le jeton de l'utilisateur (elles seules
-// décident de l'accès). Devis : aperçu du brouillon non conservé, devis envoyé conservé tel qu'envoyé
-// (F-21), devis signé chez le prestataire (F-13). Facture : produite une fois, conservée telle
-// qu'émise. ADR 0020, 0021, 0022, 0024.
+// Edge Function generate-pdf (F-20, F-35, F-25) : PDF des devis, des factures et des PV de
+// réception, à partir des fonctions SQL quote_document, invoice_document et reception_document
+// appelées avec le jeton de l'utilisateur (elles seules décident de l'accès). Devis : aperçu du
+// brouillon non conservé, devis envoyé conservé tel qu'envoyé (F-21), devis signé chez le
+// prestataire (F-13). Facture : produite une fois, conservée telle qu'émise. PV : signé chez le
+// prestataire, sinon aperçu. ADR 0020, 0021, 0022, 0024, 0027.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   invoicePdfData,
@@ -16,6 +17,12 @@ import {
   type QuoteDocument,
 } from "../../../packages/documents/src/quote-data.ts";
 import { renderQuotePdf } from "../../../packages/documents/src/quote-pdf.ts";
+import {
+  receptionPdfData,
+  receptionPdfFilename,
+  type ReceptionDocument,
+} from "../../../packages/documents/src/reception-data.ts";
+import { renderReceptionPdf } from "../../../packages/documents/src/reception-pdf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { sentQuotePdf } from "../_shared/quote-pdf.ts";
@@ -98,6 +105,35 @@ async function invoicePdf(supabase: SupabaseClient, invoiceId: string): Promise<
   return pdfResponse(pdf, filename);
 }
 
+async function receptionPdf(supabase: SupabaseClient, receptionId: string): Promise<Response> {
+  const { data, error } = await supabase.rpc("reception_document", {
+    p_reception_id: receptionId,
+  });
+  if (error) {
+    console.error("generate-pdf : reception_document en échec", error.code);
+    return json({ status: "error" }, 500);
+  }
+  if (!data) return json({ status: "not_found" }, 404);
+  const doc = data as ReceptionDocument;
+  const filename = receptionPdfFilename(receptionPdfData(doc));
+  if (doc.reception.status === "signe" && doc.reception.signed_pdf_path) {
+    // Accès vérifié ci-dessus : PV signé lu avec la clé serveur.
+    const { data: signed } = await adminClient()
+      .storage.from("reception-signatures")
+      .download(doc.reception.signed_pdf_path);
+    if (signed) {
+      return pdfResponse(
+        new Uint8Array(await signed.arrayBuffer()),
+        filename.replace(/\.pdf$/, "-signe.pdf"),
+      );
+    }
+  }
+  return pdfResponse(
+    new Uint8Array(await renderReceptionPdf(receptionPdfData(doc, true))),
+    filename,
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
   const authorization = req.headers.get("Authorization") ?? "";
@@ -106,15 +142,20 @@ Deno.serve(async (req) => {
   const body = (await req.json().catch(() => null)) as {
     quoteId?: unknown;
     invoiceId?: unknown;
+    receptionId?: unknown;
   } | null;
   const quoteId = typeof body?.quoteId === "string" ? body.quoteId : "";
   const invoiceId = typeof body?.invoiceId === "string" ? body.invoiceId : "";
-  if (!UUID.test(quoteId) && !UUID.test(invoiceId)) return json({ status: "invalid" }, 400);
+  const receptionId = typeof body?.receptionId === "string" ? body.receptionId : "";
+  if (![quoteId, invoiceId, receptionId].some((id) => UUID.test(id))) {
+    return json({ status: "invalid" }, 400);
+  }
 
   // Client au nom de l'utilisateur : auth.uid() et ses droits s'appliquent en base.
   const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  if (UUID.test(receptionId)) return receptionPdf(supabase, receptionId);
   return UUID.test(invoiceId) ? invoicePdf(supabase, invoiceId) : quotePdf(supabase, quoteId);
 });
