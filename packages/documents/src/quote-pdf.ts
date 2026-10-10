@@ -18,7 +18,7 @@ import { QUOTE_TEXTS as T, quoteDocumentModel, type QuotePdfData } from "./quote
 /**
  * Balises lues par le prestataire de signature (F-13) : champs « date » et « signature » du
  * client, dans le cadre « Bon pour accord » du devis envoyé. Écrites en blanc, elles sont
- * retirées du PDF signé. Dimensions en points, à vérifier au premier essai réel (ADR 0022).
+ * retirées du PDF signé. Dimensions en points, vérifiées lors d'un essai réel (ADR 0022).
  */
 export const SIGNATURE_TAGS = {
   date: `{{Date;role=${SIGNER_ROLE};type=date;width=90;height=12}}`,

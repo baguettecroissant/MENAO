@@ -28,7 +28,7 @@
 - **Placement des champs** : des balises texte DocuSeal (`{{Signature;role=Client;type=signature;…}}` et `{{Date;…}}`) sont écrites en blanc dans le cadre « Bon pour accord » de tout devis envoyé. Ce cadre est agrandi pour recevoir la signature.
   - Les balises suivent la mise en page, quelle que soit la longueur du devis.
   - DocuSeal les retire du PDF signé.
-  - Leur position et leurs dimensions sont à vérifier au premier essai réel.
+  - Position et dimensions vérifiées lors de l'essai réel du 10 octobre 2026 : la date suit « Date : », la signature tient sous « Signature du client : ».
 - **Webhook `signature-webhook`** (sans jeton) :
   - signature `X-Docuseal-Signature` vérifiée : HMAC-SHA256 de `<horodatage>.<corps brut>` avec le secret `whsec_…`, écart de 5 minutes au plus, comparaison en temps constant ;
   - traitement unique grâce à `webhook_events` (source `docuseal`) ;
@@ -44,9 +44,14 @@
 1. Créer le compte DocuSeal UE (docuseal.eu). L'offre doit permettre l'API et les codes par SMS, sinon régler `DOCUSEAL_OTP`.
 2. Poser les secrets des fonctions : `DOCUSEAL_API_KEY`, puis `DOCUSEAL_WEBHOOK_SECRET` (onglet HMAC du webhook). `DOCUSEAL_API_URL` vaut par défaut `https://api.docuseal.eu`.
 3. Déclarer le webhook `https://<projet>.supabase.co/functions/v1/signature-webhook` pour les événements `form.completed` et `form.declined`.
-4. Faire un premier essai réel : position des champs, code SMS, PDF signé et journal de preuve.
+4. Essai réel fait le 10 octobre 2026, avec DocuSeal UE en mode test :
+   - la vraie API a accepté la demande construite par `_shared/docuseal.ts` ;
+   - le webhook `form.completed` est arrivé sur staging, signé, et a été traité une seule fois ;
+   - le PDF signé et le journal de preuve ont été produits ;
+   - **le code par SMS demande l'offre Pro de DocuSeal** (20 SMS inclus, puis 0,20 $ le SMS). En attendant, staging utilise le code par e-mail (`DOCUSEAL_OTP=email`).
 
 ## Points à valider
+- **Offre DocuSeal avant la mise en production** : l'offre Pro permet le code par SMS demandé par F-13. Sinon, le code par e-mail est gardé en V1.
 - **TODO(legal), valeur probante** : signature simple et code à usage unique, archivage du devis signé et du journal de preuve.
 - **TODO(legal), rétractation et acompte** : le délai de rétractation et l'interdiction de tout paiement pendant 7 jours hors établissement (ADR 0021) sont à intégrer avant le paiement de l'acompte (phase 4).
 - **Accord de traitement des données** (DPA) avec DocuSeal et hébergement UE à confirmer à la souscription.
