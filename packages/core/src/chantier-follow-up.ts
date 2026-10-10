@@ -23,9 +23,11 @@ export const START_DATE_STATUSES = [
   "planifie",
 ] as const satisfies readonly ChantierStatus[];
 
-/** Journal ouvert de la planification à la réception. */
+/**
+ * Journal ouvert pendant les travaux et jusqu'à la réception (F-22 : « pendant les travaux » ;
+ * maquette : « une fois celui-ci en cours »).
+ */
 export const CHANTIER_JOURNAL_STATUSES = [
-  "planifie",
   "en_cours",
   "travaux_termines",
   "reserves_a_lever",

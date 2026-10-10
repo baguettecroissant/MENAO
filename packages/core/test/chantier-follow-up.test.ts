@@ -35,14 +35,10 @@ describe("suivi du chantier (F-22)", () => {
     expect(chantierStartInputError("2026-10-12", "8h", now)).toBe("invalide");
   });
 
-  it("journal ouvert de la planification à la réception ; fin déclarée pendant les travaux", () => {
-    expect(CHANTIER_JOURNAL_STATUSES).toEqual([
-      "planifie",
-      "en_cours",
-      "travaux_termines",
-      "reserves_a_lever",
-    ]);
+  it("journal ouvert des travaux à la réception ; fin déclarée pendant les travaux", () => {
+    expect(CHANTIER_JOURNAL_STATUSES).toEqual(["en_cours", "travaux_termines", "reserves_a_lever"]);
     expect(isJournalOpen("acompte_paye")).toBe(false);
+    expect(isJournalOpen("planifie")).toBe(false);
     expect(isJournalOpen("en_cours")).toBe(true);
     expect(isJournalOpen("receptionne")).toBe(false);
     expect(canDeclareFinished("en_cours")).toBe(true);
