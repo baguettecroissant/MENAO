@@ -198,6 +198,19 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   const upcoming = proPage.getByRole("region", { name: "Prochains rendez-vous" });
   await expect(upcoming.getByText("16h30").first()).toBeVisible();
 
+  // Le particulier voit le rendez-vous, les coordonnées de l'artisan et le fichier agenda.
+  await page.reload();
+  await expect(page.getByText("Acceptée").first()).toBeVisible();
+  await expect(page.getByText(/Rendez-vous le .+ à 16h30/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "plombier-nice@example.test" })).toBeVisible();
+  const agenda = page.getByRole("link", { name: "Ajouter à mon agenda" });
+  const href = await agenda.getAttribute("href");
+  expect(href).toMatch(new RegExp(`^/agenda/${UUID}$`));
+  const ics = await page.request.get(href ?? "");
+  expect(ics.headers()["content-type"]).toContain("text/calendar");
+  expect(await ics.text()).toContain("BEGIN:VEVENT");
+  expect(await ics.text()).not.toContain("Code portail");
+
   // « Envoi du devis » (F-21) : échéancier par défaut, dates des travaux, numéro attribué.
   await proPage.goto(previewUrl);
   await proPage.getByRole("link", { name: "Suivant" }).click();
@@ -213,20 +226,9 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(proPage.getByText("Votre devis a bien été envoyé à Dominique Test.")).toBeVisible();
   await expect(proPage.getByText(/N° DEVIS-\d{4}-0001/)).toBeVisible();
 
-  // Le particulier voit le rendez-vous, les coordonnées de l'artisan et le fichier agenda.
-  await page.reload();
-  await expect(page.getByText("Acceptée").first()).toBeVisible();
-  await expect(page.getByText(/Rendez-vous le .+ à 16h30/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "plombier-nice@example.test" })).toBeVisible();
-  const agenda = page.getByRole("link", { name: "Ajouter à mon agenda" });
-  const href = await agenda.getAttribute("href");
-  expect(href).toMatch(new RegExp(`^/agenda/${UUID}$`));
-  const ics = await page.request.get(href ?? "");
-  expect(ics.headers()["content-type"]).toContain("text/calendar");
-  expect(await ics.text()).toContain("BEGIN:VEVENT");
-  expect(await ics.text()).not.toContain("Code portail");
-
   // Devis reçu (F-21) : contenu figé, PDF numéroté, demande de modification.
+  await page.reload();
+  await expect(page.getByRole("link", { name: "Ajouter à mon agenda" })).toHaveCount(0);
   await expect(page.getByText(/Devis reçu : 91,85\s€ TTC · À consulter/)).toBeVisible();
   await page.getByRole("link", { name: "Voir le devis" }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}$`));

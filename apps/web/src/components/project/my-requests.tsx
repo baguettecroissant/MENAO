@@ -205,13 +205,16 @@ function ProjectCard({
                         formatTime(r.appointment_at),
                       )}
                     </p>
-                    <a
-                      href={`/agenda/${r.chantier_id}`}
-                      className="inline-flex items-center gap-1.5 self-start font-medium underline-offset-2 hover:underline"
-                    >
-                      <CalendarPlus aria-hidden="true" className="size-3.5" />
-                      {t.addToCalendar}
-                    </a>
+                    {/* Fichier agenda tant que le rendez-vous est à venir (même règle côté artisan). */}
+                    {r.chantier_status === "rdv_planifie" && (
+                      <a
+                        href={`/agenda/${r.chantier_id}`}
+                        className="inline-flex items-center gap-1.5 self-start font-medium underline-offset-2 hover:underline"
+                      >
+                        <CalendarPlus aria-hidden="true" className="size-3.5" />
+                        {t.addToCalendar}
+                      </a>
+                    )}
                   </div>
                 )}
                 {quote && (
