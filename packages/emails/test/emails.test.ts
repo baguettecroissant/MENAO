@@ -298,6 +298,24 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("messagerie (F-40) : messages groupés, lien vers la conversation, sans leur contenu", () => {
+    const one = notificationContent(
+      "nouveaux_messages",
+      { ...ids, titre: "Prises", auteur: "Camille", destinataire: "artisan", messages: 1 },
+      { ...ctx, firstName: "Jean" },
+    );
+    expect(one.subject).toBe("Nouveau message de Camille");
+    expect(one.cta.url).toBe(`https://menao.example/pro/messages/${ids.chantier_id}`);
+    const many = notificationContent(
+      "nouveaux_messages",
+      { ...ids, titre: "Prises", auteur: "Jean", destinataire: "client", messages: 3 },
+      ctx,
+    );
+    expect(many.subject).toBe("3 nouveaux messages de Jean");
+    expect(many.paragraphs[1]).toContain(`3 messages à propos du chantier ${quoted("Prises")}`);
+    expect(many.cta.url).toBe(`https://menao.example/mon-espace/messages/${ids.chantier_id}`);
+  });
+
   it("avis (F-28) : avis reçu par l'artisan, relance du client", () => {
     const data = { ...ids, titre: "Prises", artisan: "Jean", client: "Camille", score: 95 };
     const received = notificationContent("avis_recu", data, { ...ctx, firstName: "Jean" });

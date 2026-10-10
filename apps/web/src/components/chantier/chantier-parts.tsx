@@ -1,4 +1,4 @@
-import { ArrowLeft, BadgeCheck, MapPin, Phone, Wrench } from "lucide-react";
+import { ArrowLeft, BadgeCheck, MapPin, MessageCircle, Phone, Wrench } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -89,6 +89,7 @@ export function PersonCard({
   verified = false,
   photoUrl = null,
   phone = null,
+  messageHref = null,
 }: {
   label: string;
   name: string;
@@ -96,6 +97,8 @@ export function PersonCard({
   verified?: boolean;
   photoUrl?: string | null;
   phone?: string | null;
+  /** Conversation du chantier (F-40) : bouton « Message » à côté de « Appeler » (maquette). */
+  messageHref?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -122,11 +125,21 @@ export function PersonCard({
           )}
         </div>
       </div>
-      {phone && (
-        <a href={`tel:${phone}`} className={buttonClasses({ variant: "outline" })}>
-          {t.call}
-          <Phone aria-hidden="true" className="size-4" />
-        </a>
+      {(phone || messageHref) && (
+        <div className={`grid gap-2 ${phone && messageHref ? "grid-cols-2" : ""}`}>
+          {messageHref && (
+            <Link href={messageHref as Route} className={buttonClasses()}>
+              {fr.messages.button}
+              <MessageCircle aria-hidden="true" className="size-4" />
+            </Link>
+          )}
+          {phone && (
+            <a href={`tel:${phone}`} className={buttonClasses({ variant: "outline" })}>
+              {t.call}
+              <Phone aria-hidden="true" className="size-4" />
+            </a>
+          )}
+        </div>
       )}
     </div>
   );

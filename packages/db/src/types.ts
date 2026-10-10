@@ -1017,6 +1017,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      messages: {
+        Row: {
+          author_id: string | null;
+          body: string | null;
+          chantier_id: string;
+          created_at: string;
+          hidden_at: string | null;
+          id: string;
+          kind: Database["public"]["Enums"]["message_kind"];
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          read_at: string | null;
+          storage_path: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          body?: string | null;
+          chantier_id: string;
+          created_at?: string;
+          hidden_at?: string | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["message_kind"];
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          read_at?: string | null;
+          storage_path?: string | null;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string | null;
+          chantier_id?: string;
+          created_at?: string;
+          hidden_at?: string | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["message_kind"];
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          read_at?: string | null;
+          storage_path?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           attempts: number;
@@ -2106,6 +2157,7 @@ export type Database = {
           handled_by: string | null;
           id: string;
           message: string | null;
+          message_id: string | null;
           project_id: string | null;
           resolved_at: string | null;
           review_id: string | null;
@@ -2123,6 +2175,7 @@ export type Database = {
           handled_by?: string | null;
           id?: string;
           message?: string | null;
+          message_id?: string | null;
           project_id?: string | null;
           resolved_at?: string | null;
           review_id?: string | null;
@@ -2139,6 +2192,7 @@ export type Database = {
           handled_by?: string | null;
           id?: string;
           message?: string | null;
+          message_id?: string | null;
           project_id?: string | null;
           resolved_at?: string | null;
           review_id?: string | null;
@@ -2149,6 +2203,13 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "tickets_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "messages";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "tickets_project_id_fkey";
             columns: ["project_id"];
@@ -2280,6 +2341,10 @@ export type Database = {
           p_decision: Database["public"]["Enums"]["review_decision"];
           p_message?: string;
         };
+        Returns: undefined;
+      };
+      admin_moderate_message: {
+        Args: { p_hide: boolean; p_message_id: string; p_reason: string };
         Returns: undefined;
       };
       admin_moderate_review: {
@@ -2454,6 +2519,19 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      chantier_messages: {
+        Args: { p_chantier_id: string };
+        Returns: {
+          body: string;
+          created_at: string;
+          hidden: boolean;
+          kind: Database["public"]["Enums"]["message_kind"];
+          message_id: string;
+          mine: boolean;
+          read_at: string;
+          storage_path: string;
+        }[];
+      };
       claim_notifications: {
         Args: { p_limit?: number };
         Returns: {
@@ -2476,6 +2554,7 @@ export type Database = {
       };
       create_project_transfer: { Args: { p_project_id: string }; Returns: string };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
+      mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
       match_artisans: {
         Args: { p_limit?: number; p_project_id: string };
         Returns: {
@@ -2493,6 +2572,23 @@ export type Database = {
           zone_radius_km: number;
         }[];
       };
+      my_conversations: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chantier_id: string;
+          closed: boolean;
+          last_at: string;
+          last_body: string;
+          last_hidden: boolean;
+          last_kind: Database["public"]["Enums"]["message_kind"];
+          last_mine: boolean;
+          other_avatar_path: string;
+          other_name: string;
+          title: string;
+          unread: number;
+        }[];
+      };
+      my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       particulier_chantiers: {
         Args: { p_chantier_id?: string };
         Returns: {
@@ -2605,6 +2701,15 @@ export type Database = {
         Args: { p_chantier_id: string; p_storage_path: string; p_user_id: string };
         Returns: string;
       };
+      record_message_attachment: {
+        Args: {
+          p_chantier_id: string;
+          p_kind: Database["public"]["Enums"]["message_kind"];
+          p_storage_path: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
       record_payment: {
         Args: {
           p_amount_cents: number;
@@ -2639,6 +2744,7 @@ export type Database = {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
       };
+      report_message: { Args: { p_message_id: string; p_reason: string }; Returns: string };
       report_review: { Args: { p_reason: string; p_review_id: string }; Returns: string };
       save_project_criteria: {
         Args: {
@@ -2665,6 +2771,7 @@ export type Database = {
         Args: { p_email: string; p_message: string; p_subject: string };
         Returns: undefined;
       };
+      send_message: { Args: { p_body: string; p_chantier_id: string }; Returns: string };
       send_project_requests: {
         Args: {
           p_artisan_ids: string[];
@@ -2768,6 +2875,7 @@ export type Database = {
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
+      message_kind: "texte" | "photo" | "fichier";
       notification_channel: "email" | "sms" | "push";
       notification_status: "a_envoyer" | "en_cours" | "envoyee" | "echec";
       notification_type:
@@ -2792,7 +2900,8 @@ export type Database = {
         | "levee_relance"
         | "solde_paye"
         | "avis_recu"
-        | "avis_relance";
+        | "avis_relance"
+        | "nouveaux_messages";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2810,7 +2919,7 @@ export type Database = {
       review_status: "publie" | "masque";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
       ticket_status: "ouvert" | "en_cours" | "resolu";
-      ticket_type: "dossier_recherche" | "contact" | "expertise" | "reserves" | "avis";
+      ticket_type: "dossier_recherche" | "contact" | "expertise" | "reserves" | "avis" | "message";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       zone_mode: "rayon" | "communes";
     };
@@ -2981,6 +3090,7 @@ export const Constants = {
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
+      message_kind: ["texte", "photo", "fichier"],
       notification_channel: ["email", "sms", "push"],
       notification_status: ["a_envoyer", "en_cours", "envoyee", "echec"],
       notification_type: [
@@ -3006,6 +3116,7 @@ export const Constants = {
         "solde_paye",
         "avis_recu",
         "avis_relance",
+        "nouveaux_messages",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
@@ -3024,7 +3135,7 @@ export const Constants = {
       review_status: ["publie", "masque"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
-      ticket_type: ["dossier_recherche", "contact", "expertise", "reserves", "avis"],
+      ticket_type: ["dossier_recherche", "contact", "expertise", "reserves", "avis", "message"],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       zone_mode: ["rayon", "communes"],
     },

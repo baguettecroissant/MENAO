@@ -232,7 +232,12 @@ export async function ArtisanFollowUp({
           }
           description={c.description}
         >
-          <PersonCard label={t.yourClient} name={clientName} phone={c.client.phone} />
+          <PersonCard
+            label={t.yourClient}
+            name={clientName}
+            phone={c.client.phone}
+            messageHref={`/pro/messages/${id}`}
+          />
           {step !== null && <ChantierStepper current={step} />}
         </ChantierHero>
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">

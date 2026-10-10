@@ -656,6 +656,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.keyboard.press("End");
   for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowLeft");
   await expect(page.getByText("Très soigné")).toBeVisible();
+  // L'erreur d'un critère disparaît dès qu'il est noté.
+  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(2);
   for (const name of ["Respect des délais", "Communication"]) {
     await page.getByRole("slider", { name }).focus();
     await page.keyboard.press("End");
@@ -699,5 +701,33 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(
     latestReviews.getByText("Merci Dominique, ravi que tout soit en ordre !"),
   ).toBeVisible();
+
+  // Messagerie (F-40) : le client écrit depuis la vue du chantier (« Message »), l'artisan voit le
+  // message non lu dans « Messages », le lit et répond ; le client voit la réponse et « Lu ».
+  await page.goto(`/mon-espace/chantiers/${chantierId}`);
+  await page.getByRole("link", { name: "Message", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/messages/${UUID}$`));
+  await expect(page.getByRole("heading", { name: "Noé" })).toBeVisible();
+  await page
+    .getByLabel("Votre message")
+    .fill("Bonjour Noé, pouvez-vous m'envoyer la notice du siphon ?");
+  await page.getByRole("button", { name: "Envoyer" }).click();
+  const thread = page.getByRole("list", { name: "Conversation avec Noé" });
+  await expect(thread.getByText(/pouvez-vous m'envoyer la notice du siphon/)).toBeVisible();
+  await expect(page.getByLabel("Votre message")).toHaveValue("");
+  await capture(page, "client-conversation");
+  await proPage.goto("/pro/messages");
+  const inbox = proPage.getByRole("link", { name: /Dominique Test/ });
+  await expect(inbox.getByText("1 message non lu")).toBeVisible();
+  await capture(proPage, "artisan-messages");
+  await inbox.click();
+  const proThread = proPage.getByRole("list", { name: "Conversation avec Dominique Test" });
+  await expect(proThread.getByText(/notice du siphon/)).toBeVisible();
+  await proPage.getByLabel("Votre message").fill("Bonjour Dominique, je vous la dépose demain.");
+  await proPage.keyboard.press("Enter");
+  await expect(proThread.getByText("Bonjour Dominique, je vous la dépose demain.")).toBeVisible();
+  await page.reload();
+  await expect(thread.getByText("Bonjour Dominique, je vous la dépose demain.")).toBeVisible();
+  await expect(thread.getByText(/ · Lu$/)).toBeVisible();
   await pro.close();
 });

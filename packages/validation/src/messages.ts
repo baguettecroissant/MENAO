@@ -65,6 +65,8 @@ export const messages = {
   reviewReplyTooLong: "Votre réponse dépasse 2 000 caractères.",
   reviewReportTooShort: "Décrivez le problème en 10 caractères au moins.",
   moderationReasonRequired: "Indiquez le motif en 10 caractères au moins.",
+  messageRequired: "Écrivez votre message.",
+  messageTooLong: "Votre message dépasse 2 000 caractères.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

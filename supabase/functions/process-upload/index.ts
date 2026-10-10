@@ -1,8 +1,9 @@
-// Edge Function process-upload (F-05, F-14, F-22, F-43) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-22, F-40, F-43) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { messageAttachmentKind } from "../../../packages/core/src/messaging.ts";
 import { MAX_PROJECT_PHOTOS } from "../../../packages/core/src/project.ts";
 import {
   MAX_UPLOAD_BYTES,
@@ -25,10 +26,12 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   portfolio: ["jpeg", "png"],
   project_photo: ["jpeg", "png"],
   chantier_photo: ["jpeg", "png"],
+  message_attachment: ["pdf", "jpeg", "png"],
 };
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
-type Purpose = "document" | "avatar" | "portfolio" | "project_photo" | "chantier_photo";
+type Purpose =
+  "document" | "avatar" | "portfolio" | "project_photo" | "chantier_photo" | "message_attachment";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -122,6 +125,9 @@ Deno.serve(
       }
       if (purpose === "chantier_photo") {
         return await saveChantierPhoto(admin, user.id, body?.chantierId, file);
+      }
+      if (purpose === "message_attachment") {
+        return await saveMessageAttachment(admin, user.id, body?.chantierId, file);
       }
 
       const { data: artisan } = await admin
@@ -222,6 +228,32 @@ async function saveChantierPhoto(
   });
   if (error || status !== "ok") {
     await admin.storage.from("chantier-photos").remove([path]);
+    if (error) throw error;
+    return status === "locked" || status === "limit"
+      ? respond(status, 409)
+      : respond("forbidden", 403);
+  }
+  return respond("ok");
+}
+
+// Pièce jointe de la conversation d'un chantier (F-40) : photo ou document PDF, par une partie.
+async function saveMessageAttachment(
+  admin: SupabaseClient,
+  userId: string,
+  chantierId: string | undefined,
+  file: CleanFile,
+) {
+  if (!chantierId || !new RegExp(`^${UUID}$`).test(chantierId)) return respond("invalid", 400);
+  const path = `${chantierId}/${file.name}`;
+  await store(admin, "message-attachments", path, file);
+  const { data: status, error } = await admin.rpc("record_message_attachment", {
+    p_chantier_id: chantierId,
+    p_user_id: userId,
+    p_kind: messageAttachmentKind(file.type),
+    p_storage_path: path,
+  });
+  if (error || status !== "ok") {
+    await admin.storage.from("message-attachments").remove([path]);
     if (error) throw error;
     return status === "locked" || status === "limit"
       ? respond(status, 409)

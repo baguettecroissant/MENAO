@@ -2,6 +2,7 @@ import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { setTicketStatus } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
+import { ModerateMessage } from "./moderate-message";
 import { ModerateReview } from "./moderate-review";
 
 const t = fr.admin.tickets;
@@ -18,7 +19,7 @@ export default async function TicketsPage() {
   const { data } = await supabase
     .from("tickets")
     .select(
-      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label)), reviews(id, author_name, score, comment, status, moderation_reason)",
+      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label)), reviews(id, author_name, score, comment, status, moderation_reason), messages(id, kind, body, hidden_at, moderation_reason)",
     )
     .order("due_at", { ascending: true })
     .limit(100);
@@ -43,6 +44,7 @@ export default async function TicketsPage() {
             const late = ticket.status !== "resolu" && new Date(ticket.due_at) < now;
             const project = ticket.projects;
             const review = ticket.reviews;
+            const reported = ticket.messages;
             return (
               <Card key={ticket.id}>
                 <div className="flex flex-col gap-2">
@@ -82,6 +84,23 @@ export default async function TicketsPage() {
                         </p>
                       )}
                       <ModerateReview reviewId={review.id} status={review.status} />
+                    </div>
+                  )}
+                  {reported && (
+                    <div className="flex flex-col gap-2 rounded-input bg-background p-3">
+                      <p className="text-sm font-medium">{t.reportedMessage.title}</p>
+                      <p className="text-sm whitespace-pre-line">
+                        {reported.body ?? t.reportedMessage.attachment}
+                      </p>
+                      {reported.hidden_at && reported.moderation_reason && (
+                        <p className="text-sm text-danger">
+                          {t.reportedMessage.hidden(reported.moderation_reason)}
+                        </p>
+                      )}
+                      <ModerateMessage
+                        messageId={reported.id}
+                        hidden={reported.hidden_at !== null}
+                      />
                     </div>
                   )}
                   <div className="flex flex-wrap gap-2">

@@ -67,7 +67,7 @@ export default async function ReviewPage({ params }: PageProps<"/mon-espace/chan
           ].map((step) => (
             <span
               key={step.label}
-              className={`inline-flex flex-1 items-center justify-center gap-1.5 pb-3 text-center text-sm ${
+              className={`inline-flex flex-1 items-center justify-center gap-1 pb-3 text-center text-xs sm:gap-1.5 sm:text-sm ${
                 step.done ? "text-success" : "text-subtle-foreground"
               }`}
             >
@@ -77,7 +77,7 @@ export default async function ReviewPage({ params }: PageProps<"/mon-espace/chan
           ))}
           <span
             aria-current="step"
-            className="flex-1 border-b-2 border-primary pb-3 text-center text-sm font-medium text-primary-strong"
+            className="flex-1 border-b-2 border-primary pb-3 text-center text-xs font-medium text-primary-strong sm:text-sm"
           >
             {fr.reception.steps.avis}
           </span>

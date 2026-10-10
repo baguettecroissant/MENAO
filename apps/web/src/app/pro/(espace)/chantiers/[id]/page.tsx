@@ -1,6 +1,7 @@
 import { ARTISAN_CANCELLABLE_STATUSES, parisToday, type ChantierStatus } from "@menao/core";
-import { CalendarDays, CalendarPlus, Clock } from "lucide-react";
+import { CalendarDays, CalendarPlus, Clock, MessageCircle } from "lucide-react";
 import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DetailHeader, StickyActions } from "@/components/pro/detail";
 import { ExpertiseButton } from "@/components/pro/expertise-button";
@@ -138,6 +139,14 @@ export default async function ChantierPage({
             {t.addToCalendar}
           </a>
         )}
+        {/* F-40 : conversation du chantier avec le client. */}
+        <Link
+          href={`/pro/messages/${c.chantier.id}` as Route}
+          className="inline-flex min-h-9 items-center gap-1.5 self-start rounded-pill border border-white/60 px-3.5 text-sm font-medium text-white hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none"
+        >
+          <MessageCircle aria-hidden="true" className="size-4" />
+          {fr.messages.writeClient}
+        </Link>
       </DetailHeader>
       {active && <ExpertiseButton requestId={c.id} trades={trades ?? []} />}
 
