@@ -99,6 +99,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      appointments: {
+        Row: {
+          artisan_notes: string | null;
+          chantier_id: string;
+          created_at: string;
+          id: string;
+          reminder_sent_at: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_notes?: string | null;
+          chantier_id: string;
+          created_at?: string;
+          id?: string;
+          reminder_sent_at?: string | null;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          updated_at?: string;
+        };
+        Update: {
+          artisan_notes?: string | null;
+          chantier_id?: string;
+          created_at?: string;
+          id?: string;
+          reminder_sent_at?: string | null;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointments_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_documents: {
         Row: {
           artisan_id: string;
@@ -558,6 +600,138 @@ export type Database = {
             columns: ["artisan_id"];
             isOneToOne: false;
             referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      chantier_events: {
+        Row: {
+          actor_id: string | null;
+          actor_role: string;
+          chantier_id: string;
+          created_at: string;
+          details: NonNullable<Json>;
+          event: Database["public"]["Enums"]["chantier_event"];
+          from_status: Database["public"]["Enums"]["chantier_status"];
+          id: string;
+          to_status: Database["public"]["Enums"]["chantier_status"];
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id?: string | null;
+          actor_role: string;
+          chantier_id: string;
+          created_at?: string;
+          details?: NonNullable<Json>;
+          event: Database["public"]["Enums"]["chantier_event"];
+          from_status: Database["public"]["Enums"]["chantier_status"];
+          id?: string;
+          to_status: Database["public"]["Enums"]["chantier_status"];
+        };
+        Update: {
+          actor_id?: string | null;
+          actor_role?: string;
+          chantier_id?: string;
+          created_at?: string;
+          details?: NonNullable<Json>;
+          event?: Database["public"]["Enums"]["chantier_event"];
+          from_status?: Database["public"]["Enums"]["chantier_status"];
+          id?: string;
+          to_status?: Database["public"]["Enums"]["chantier_status"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chantier_events_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      chantier_transitions: {
+        Row: {
+          event: Database["public"]["Enums"]["chantier_event"];
+          from_status: Database["public"]["Enums"]["chantier_status"];
+          to_status: Database["public"]["Enums"]["chantier_status"];
+        };
+        ComputedFields: never;
+        Insert: {
+          event: Database["public"]["Enums"]["chantier_event"];
+          from_status: Database["public"]["Enums"]["chantier_status"];
+          to_status: Database["public"]["Enums"]["chantier_status"];
+        };
+        Update: {
+          event?: Database["public"]["Enums"]["chantier_event"];
+          from_status?: Database["public"]["Enums"]["chantier_status"];
+          to_status?: Database["public"]["Enums"]["chantier_status"];
+        };
+        Relationships: [];
+      };
+      chantiers: {
+        Row: {
+          adresse: string | null;
+          artisan_id: string;
+          code_postal: string | null;
+          created_at: string;
+          id: string;
+          particulier_id: string;
+          project_id: string;
+          request_id: string;
+          status: Database["public"]["Enums"]["chantier_status"];
+          title: string;
+          updated_at: string;
+          ville_nom: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          adresse?: string | null;
+          artisan_id: string;
+          code_postal?: string | null;
+          created_at?: string;
+          id?: string;
+          particulier_id: string;
+          project_id: string;
+          request_id: string;
+          status?: Database["public"]["Enums"]["chantier_status"];
+          title: string;
+          updated_at?: string;
+          ville_nom?: string | null;
+        };
+        Update: {
+          adresse?: string | null;
+          artisan_id?: string;
+          code_postal?: string | null;
+          created_at?: string;
+          id?: string;
+          particulier_id?: string;
+          project_id?: string;
+          request_id?: string;
+          status?: Database["public"]["Enums"]["chantier_status"];
+          title?: string;
+          updated_at?: string;
+          ville_nom?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chantiers_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chantiers_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chantiers_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: true;
+            referencedRelation: "requests";
             referencedColumns: ["id"];
           },
         ];
@@ -1263,6 +1437,32 @@ export type Database = {
         Args: { p_certification_id: string; p_verified: boolean };
         Returns: undefined;
       };
+      artisan_cancel_chantier: {
+        Args: { p_chantier_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      artisan_chantier_detail: { Args: { p_chantier_id: string }; Returns: Json };
+      artisan_chantiers: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          adresse: string;
+          appointment_at: string;
+          chantier_id: string;
+          client_first_name: string;
+          client_last_name: string;
+          code_postal: string;
+          created_at: string;
+          particulier_id: string;
+          request_id: string;
+          status: Database["public"]["Enums"]["chantier_status"];
+          title: string;
+          ville_nom: string;
+        }[];
+      };
+      artisan_fix_appointment: {
+        Args: { p_date: string; p_request_id: string; p_time: string };
+        Returns: string;
+      };
       artisan_inbox: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1282,7 +1482,15 @@ export type Database = {
         }[];
       };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
+      artisan_report_expertise: {
+        Args: { p_message: string; p_request_id: string; p_trade_code: string };
+        Returns: string;
+      };
       artisan_request_detail: { Args: { p_request_id: string }; Returns: Json };
+      artisan_reschedule_appointment: {
+        Args: { p_chantier_id: string; p_date: string; p_time: string };
+        Returns: undefined;
+      };
       artisan_respond_request: {
         Args: {
           p_accept: boolean;
@@ -1291,6 +1499,22 @@ export type Database = {
           p_request_id: string;
         };
         Returns: undefined;
+      };
+      artisan_save_appointment_notes: {
+        Args: { p_chantier_id: string; p_notes: string };
+        Returns: undefined;
+      };
+      chantier_appointment: {
+        Args: { p_chantier_id: string };
+        Returns: {
+          adresse: string;
+          artisan_name: string;
+          client_name: string;
+          code_postal: string;
+          starts_at: string;
+          title: string;
+          ville_nom: string;
+        }[];
       };
       claim_project: { Args: { p_token: string }; Returns: string };
       consume_rate_limit: {
@@ -1318,11 +1542,14 @@ export type Database = {
       particulier_requests: {
         Args: Record<PropertyKey, never>;
         Returns: {
+          appointment_at: string;
           artisan_avatar_path: string;
           artisan_email: string;
           artisan_id: string;
           artisan_name: string;
           artisan_phone: string;
+          chantier_id: string;
+          chantier_status: Database["public"]["Enums"]["chantier_status"];
           created_at: string;
           expires_at: string;
           project_id: string;
@@ -1421,10 +1648,19 @@ export type Database = {
         Returns: undefined;
       };
       submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
+      transition_chantier: {
+        Args: {
+          p_chantier_id: string;
+          p_details?: Json;
+          p_event: Database["public"]["Enums"]["chantier_event"];
+        };
+        Returns: Database["public"]["Enums"]["chantier_status"];
+      };
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
     };
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
+      appointment_status: "planifie" | "annule";
       artisan_status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu";
       callback_mode: "des_que_possible" | "plage";
       certification_type:
@@ -1436,6 +1672,40 @@ export type Database = {
         | "qualisol"
         | "qualibois"
         | "autre";
+      chantier_event:
+        | "rdv_fixe"
+        | "devis_envoye"
+        | "revision_demandee"
+        | "devis_refuse"
+        | "devis_signe"
+        | "acompte_paye"
+        | "date_confirmee"
+        | "demarrage"
+        | "fin_declaree"
+        | "pv_sans_reserves"
+        | "pv_avec_reserves"
+        | "reserves_levees"
+        | "solde_paye"
+        | "litige_ouvert"
+        | "litige_resolu"
+        | "litige_annule"
+        | "annulation";
+      chantier_status:
+        | "demande_envoyee"
+        | "rdv_planifie"
+        | "devis_envoye"
+        | "devis_en_revision"
+        | "devis_refuse"
+        | "devis_signe"
+        | "acompte_paye"
+        | "planifie"
+        | "en_cours"
+        | "travaux_termines"
+        | "reserves_a_lever"
+        | "receptionne"
+        | "cloture"
+        | "en_litige"
+        | "annule";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
@@ -1447,7 +1717,7 @@ export type Database = {
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
       ticket_status: "ouvert" | "en_cours" | "resolu";
-      ticket_type: "dossier_recherche" | "contact";
+      ticket_type: "dossier_recherche" | "contact" | "expertise";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -1564,6 +1834,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
+      appointment_status: ["planifie", "annule"],
       artisan_status: ["brouillon", "en_verification", "valide", "refuse", "suspendu"],
       callback_mode: ["des_que_possible", "plage"],
       certification_type: [
@@ -1576,6 +1847,42 @@ export const Constants = {
         "qualibois",
         "autre",
       ],
+      chantier_event: [
+        "rdv_fixe",
+        "devis_envoye",
+        "revision_demandee",
+        "devis_refuse",
+        "devis_signe",
+        "acompte_paye",
+        "date_confirmee",
+        "demarrage",
+        "fin_declaree",
+        "pv_sans_reserves",
+        "pv_avec_reserves",
+        "reserves_levees",
+        "solde_paye",
+        "litige_ouvert",
+        "litige_resolu",
+        "litige_annule",
+        "annulation",
+      ],
+      chantier_status: [
+        "demande_envoyee",
+        "rdv_planifie",
+        "devis_envoye",
+        "devis_en_revision",
+        "devis_refuse",
+        "devis_signe",
+        "acompte_paye",
+        "planifie",
+        "en_cours",
+        "travaux_termines",
+        "reserves_a_lever",
+        "receptionne",
+        "cloture",
+        "en_litige",
+        "annule",
+      ],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
@@ -1587,7 +1894,7 @@ export const Constants = {
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
-      ticket_type: ["dossier_recherche", "contact"],
+      ticket_type: ["dossier_recherche", "contact", "expertise"],
       zone_mode: ["rayon", "communes"],
     },
   },

@@ -14,10 +14,11 @@ test("paiements Stripe Connect : configuration, compte actif, artisan visible", 
   await page.getByLabel("Adresse e-mail").fill("paiement@example.test");
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
   await expect(
     page.getByText("Votre profil n'est pas encore visible des particuliers"),
   ).toBeVisible();
+  await page.goto("/pro/onboarding");
   await expect(page.getByText("un compte de paiement actif")).toBeVisible();
   await expect(page.getByText("un abonnement actif")).toHaveCount(0);
 

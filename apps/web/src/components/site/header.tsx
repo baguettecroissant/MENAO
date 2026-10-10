@@ -10,17 +10,21 @@ import { fr } from "@/i18n/fr";
 import { NAV_LINKS } from "./nav-links";
 
 const t = fr.nav;
+// L'espace pro (tableau de bord, demandes, chantiers) a son propre en-tête.
+const PRO_SPACE = ["/pro/tableau-de-bord", "/pro/demandes", "/pro/chantiers"];
 
 /**
  * En-tête du site (maquettes) : logo, liens, « Mon espace client » et « Trouver un artisan du
- * BTP ». Masqué sur l'accueil, dont le bandeau intègre sa propre navigation.
+ * BTP ». Masqué sur l'accueil, dont le bandeau intègre sa propre navigation, et dans l'espace pro.
  */
 export function SiteHeader() {
   const pathname = usePathname();
   // Le menu mobile reste ouvert pour la page où il a été ouvert : il se referme en naviguant.
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
-  if (pathname === "/") return null;
+  if (pathname === "/" || PRO_SPACE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-primary/10 bg-surface/95 backdrop-blur">

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
-/** Espace « Mes demandes » : artisans validés uniquement (les demandes sont filtrées en base). */
+/** Actions de l'espace pro : artisan connecté (demandes et chantiers filtrés en base). */
 export async function requireArtisan() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -15,7 +15,7 @@ export async function requireArtisan() {
   return { supabase };
 }
 
-const detailSchema = z.object({
+export const requestDetailSchema = z.object({
   id: z.string(),
   status: z.enum(["envoyee", "acceptee", "refusee", "expiree", "annulee"]),
   created_at: z.string(),
@@ -47,14 +47,15 @@ const detailSchema = z.object({
     phone: z.string().nullable(),
     email: z.string().nullable(),
   }),
+  chantier_id: z.string().nullable(),
 });
-export type RequestDetail = z.infer<typeof detailSchema>;
+export type RequestDetail = z.infer<typeof requestDetailSchema>;
 
 export async function getRequestDetail(
   supabase: Awaited<ReturnType<typeof createClient>>,
   requestId: string,
 ): Promise<RequestDetail | null> {
   const { data } = await supabase.rpc("artisan_request_detail", { p_request_id: requestId });
-  const parsed = detailSchema.safeParse(data);
+  const parsed = requestDetailSchema.safeParse(data);
   return parsed.success ? parsed.data : null;
 }

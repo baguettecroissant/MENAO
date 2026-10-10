@@ -38,6 +38,7 @@ export function roleFromAppMetadata(appMetadata: unknown): Role {
 export function homePathForRole(role: Role): string {
   switch (role) {
     case "artisan":
+      return "/pro/tableau-de-bord";
     case "artisan_en_attente":
       return "/pro/onboarding";
     case "admin":

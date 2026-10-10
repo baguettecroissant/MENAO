@@ -12,12 +12,7 @@ const t = fr.pro.onboarding;
 
 /** Statut du dossier, envoi en vérification, sinon première étape disponible non terminée. */
 export default async function OnboardingIndexPage() {
-  const { supabase, artisan, progress, canSubmit, visibility } = await getOnboardingContext();
-  const { count: pendingRequests } = await supabase
-    .from("requests")
-    .select("id", { count: "exact", head: true })
-    .eq("artisan_id", artisan.id)
-    .eq("status", "envoyee");
+  const { artisan, progress, canSubmit, visibility } = await getOnboardingContext();
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
 
   if (editable && !canSubmit) {
@@ -50,12 +45,12 @@ export default async function OnboardingIndexPage() {
           )}
         </Card>
       )}
-      {artisan.status === "valide" && (
+      {(artisan.status === "valide" || artisan.status === "suspendu") && (
         <Link
-          href="/pro/demandes"
+          href="/pro/tableau-de-bord"
           className="inline-flex min-h-touch items-center justify-center rounded-button bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover"
         >
-          {t.requests.link(pendingRequests ?? 0)}
+          {fr.pro.space.dashboard}
         </Link>
       )}
       {(artisan.status === "valide" || artisan.status === "suspendu") && (

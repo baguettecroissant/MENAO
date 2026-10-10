@@ -1,0 +1,70 @@
+"use client";
+
+import { ClipboardList, Inbox, LayoutGrid } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { fr } from "@/i18n/fr";
+
+const t = fr.pro.space;
+
+const ITEMS = [
+  { href: "/pro/tableau-de-bord", label: t.dashboard, icon: LayoutGrid },
+  { href: "/pro/demandes", label: t.requests, icon: Inbox },
+  { href: "/pro/chantiers", label: t.chantiers, icon: ClipboardList },
+] as const;
+
+const active = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
+/** Liens de l'espace pro dans l'en-tête (ordinateur). */
+export function ProHeaderNav() {
+  const pathname = usePathname();
+  return (
+    <nav aria-label={t.nav} className="hidden lg:block">
+      <ul className="flex items-center gap-6 text-sm text-foreground/80">
+        {ITEMS.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href as Route}
+              aria-current={active(pathname, item.href) ? "page" : undefined}
+              className="hover:text-primary-strong aria-[current=page]:font-medium aria-[current=page]:text-primary-strong"
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+/**
+ * Barre de navigation mobile des maquettes (Dashboard, Chantiers…), sur les écrans principaux
+ * seulement : les fiches (opportunité, rendez-vous) ont leur propre barre d'actions.
+ */
+export function ProBottomNav() {
+  const pathname = usePathname();
+  if (!ITEMS.some((item) => item.href === pathname)) return null;
+  return (
+    <nav
+      aria-label={t.nav}
+      className="sticky bottom-0 z-20 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+    >
+      <ul className="mx-auto grid max-w-md grid-cols-3">
+        {ITEMS.map(({ href, label, icon: Icon }) => (
+          <li key={href}>
+            <Link
+              href={href as Route}
+              aria-current={active(pathname, href) ? "page" : undefined}
+              className="flex min-h-16 flex-col items-center justify-center gap-1 text-[0.6875rem] text-muted-foreground aria-[current=page]:text-primary"
+            >
+              <Icon aria-hidden="true" className="size-5" />
+              {label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}

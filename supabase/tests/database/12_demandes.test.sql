@@ -121,7 +121,11 @@ select is((select count(*)::int from storage.objects where bucket_id = 'project-
 select throws_ok(
   $$ select public.artisan_respond_request(current_setting('test.demande')::uuid, false) $$,
   '22023', 'Motif de refus obligatoire', 'refus sans motif impossible');
-select lives_ok($$ select public.artisan_respond_request(current_setting('test.demande')::uuid, true) $$, 'demande acceptée');
+select throws_ok($$ select public.artisan_respond_request(current_setting('test.demande')::uuid, true) $$,
+  '22023', 'Fixez un rendez-vous pour accepter la demande', 'acceptation par rendez-vous seulement (F-17)');
+select lives_ok(
+  $$ select public.artisan_fix_appointment(current_setting('test.demande')::uuid, current_date + 2, '10:00') $$,
+  'rendez-vous fixé : demande acceptée');
 select results_eq(
   $$ select d #>> '{client,phone}', d #>> '{client,email}', d #>> '{client,last_name}', d ->> 'adresse'
      from public.artisan_request_detail(current_setting('test.demande')::uuid) d $$,

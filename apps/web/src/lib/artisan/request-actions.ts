@@ -9,35 +9,20 @@ import { requireArtisan } from "./requests";
 
 const t = fr.pro.onboarding.requests;
 
-function refresh(requestId: string) {
-  revalidatePath("/pro/demandes");
-  revalidatePath(`/pro/demandes/${requestId}`);
+function refresh() {
+  revalidatePath("/pro", "layout");
 }
 
-/** F-17 : acceptation (le rendez-vous viendra en phase 3). Règles : artisan_respond_request. */
-export async function acceptRequest(requestId: string, _prev: FormState): Promise<FormState> {
-  if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
-  const { supabase } = await requireArtisan();
-  const { error } = await supabase.rpc("artisan_respond_request", {
-    p_request_id: requestId,
-    p_accept: true,
-  });
-  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
-  refresh(requestId);
-  return { success: t.accepted };
-}
-
+/** F-17 : refus avec motif. L'acceptation passe par le rendez-vous (chantier-actions.ts). */
 export async function refuseRequest(
   requestId: string,
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
-  const parsed = refusalSchema.safeParse({
-    reason: text(formData, "reason") ?? "",
-    detail: text(formData, "detail") ?? "",
-  });
-  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const values = { reason: text(formData, "reason") ?? "", detail: text(formData, "detail") ?? "" };
+  const parsed = refusalSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
   const { supabase } = await requireArtisan();
   const { error } = await supabase.rpc("artisan_respond_request", {
     p_request_id: requestId,
@@ -45,7 +30,9 @@ export async function refuseRequest(
     p_reason: parsed.data.reason,
     p_detail: parsed.data.detail,
   });
-  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
-  refresh(requestId);
+  if (error) {
+    return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  }
+  refresh();
   return { success: t.refused };
 }

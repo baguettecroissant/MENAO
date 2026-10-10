@@ -1,11 +1,12 @@
 import { timeLeft } from "@menao/core";
 import type { Database } from "@menao/db";
-import { Mail, MapPin, Phone, Wrench } from "lucide-react";
+import { CalendarDays, CalendarPlus, Mail, MapPin, Phone, Wrench } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { formatDayInline, formatTime } from "@/lib/format";
 import type { createClient } from "@/lib/supabase/server";
 
 const t = fr.myRequests;
@@ -102,7 +103,9 @@ function ProjectCard({
   supabase: Client;
   now: Date;
 }) {
-  const canChoose = items.some((r) => r.status === "refusee" || r.status === "expiree");
+  const canChoose = items.some(
+    (r) => r.status === "refusee" || r.status === "expiree" || r.status === "annulee",
+  );
   const lead = items.find((r) => r.status === "acceptee") ?? items[0];
   return (
     <article className="grid overflow-hidden rounded-card border border-border bg-surface shadow-card md:grid-cols-[14rem_1fr_17rem]">
@@ -171,6 +174,27 @@ function ProjectCard({
                   <p className="text-xs text-muted-foreground">
                     {t.timeLeft(left.hours, left.minutes)}
                   </p>
+                )}
+                {r.status === "acceptee" && r.appointment_at && r.chantier_id && (
+                  <div className="flex flex-col gap-1.5 rounded-input bg-primary-softer px-3 py-2 text-xs text-primary-strong">
+                    <p className="inline-flex items-center gap-1.5 font-medium">
+                      <CalendarDays aria-hidden="true" className="size-3.5" />
+                      {t.appointment(
+                        formatDayInline(r.appointment_at),
+                        formatTime(r.appointment_at),
+                      )}
+                    </p>
+                    <a
+                      href={`/agenda/${r.chantier_id}`}
+                      className="inline-flex items-center gap-1.5 self-start font-medium underline-offset-2 hover:underline"
+                    >
+                      <CalendarPlus aria-hidden="true" className="size-3.5" />
+                      {t.addToCalendar}
+                    </a>
+                  </div>
+                )}
+                {r.status === "annulee" && r.chantier_status === "annule" && (
+                  <p className="text-xs text-muted-foreground">{t.cancelledByArtisan}</p>
                 )}
                 {r.status === "acceptee" && (r.artisan_phone || r.artisan_email) && (
                   <div className="flex flex-col gap-1 text-xs">
