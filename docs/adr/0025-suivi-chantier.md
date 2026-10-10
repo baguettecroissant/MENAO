@@ -1,6 +1,6 @@
 # ADR 0025 — Suivi du chantier : date de démarrage, démarrage automatique, journal de l'artisan
 
-- Statut : accepté
+- Statut : accepté, révisé par l'ADR 0026 (journal ouvert au début des travaux ; vue d'un chantier des maquettes côté artisan)
 - Date : 10 octobre 2026
 
 ## Contexte
