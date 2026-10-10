@@ -2404,11 +2404,11 @@ export type Database = {
       };
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       quote_document: { Args: { p_quote_id: string }; Returns: Json };
+      reception_document: { Args: { p_reception_id: string }; Returns: Json };
       record_chantier_photo: {
         Args: { p_chantier_id: string; p_storage_path: string; p_user_id: string };
         Returns: string;
       };
-      reception_document: { Args: { p_reception_id: string }; Returns: Json };
       record_payment: {
         Args: {
           p_amount_cents: number;
@@ -2421,7 +2421,7 @@ export type Database = {
         };
         Returns: string;
       };
-      record_reception_signature: {
+      record_quote_signature: {
         Args: {
           p_proof_path: string;
           p_request_id: string;
@@ -2430,7 +2430,7 @@ export type Database = {
         };
         Returns: string;
       };
-      record_quote_signature: {
+      record_reception_signature: {
         Args: {
           p_proof_path: string;
           p_request_id: string;
