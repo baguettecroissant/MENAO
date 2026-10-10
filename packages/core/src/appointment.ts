@@ -48,17 +48,27 @@ export function parisLocalToDate(date: string, time: string): Date {
 
 export type AppointmentInputError = "invalide" | "passe" | "trop_loin";
 
+/** Date et heure saisies à Paris : valides, à venir et au plus `maxDaysAhead` jours plus tard. */
+export function futureParisInputError(
+  date: string,
+  time: string,
+  now: Date,
+  maxDaysAhead: number,
+): AppointmentInputError | null {
+  if (!isValidDate(date) || !TIME.test(time)) return "invalide";
+  const start = parisLocalToDate(date, time).getTime();
+  if (start <= now.getTime()) return "passe";
+  if (start > now.getTime() + maxDaysAhead * 86_400_000) return "trop_loin";
+  return null;
+}
+
 /** Contrôle de la saisie (la base refait les mêmes contrôles). */
 export function appointmentInputError(
   date: string,
   time: string,
   now: Date,
 ): AppointmentInputError | null {
-  if (!isValidDate(date) || !TIME.test(time)) return "invalide";
-  const start = parisLocalToDate(date, time).getTime();
-  if (start <= now.getTime()) return "passe";
-  if (start > now.getTime() + APPOINTMENT_MAX_DAYS_AHEAD * 86_400_000) return "trop_loin";
-  return null;
+  return futureParisInputError(date, time, now, APPOINTMENT_MAX_DAYS_AHEAD);
 }
 
 /** Prochains rendez-vous (F-16) : chantiers au rendez-vous planifié, du plus proche au plus lointain. */
