@@ -419,6 +419,7 @@ export type Database = {
           connect_payouts_enabled: boolean;
           connect_updated_at: string | null;
           created_at: string;
+          default_deposit_percent: number;
           experience_years: number | null;
           forme_juridique_code: string | null;
           id: string;
@@ -461,6 +462,7 @@ export type Database = {
           connect_payouts_enabled?: boolean;
           connect_updated_at?: string | null;
           created_at?: string;
+          default_deposit_percent?: number;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
@@ -502,6 +504,7 @@ export type Database = {
           connect_payouts_enabled?: boolean;
           connect_updated_at?: string | null;
           created_at?: string;
+          default_deposit_percent?: number;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
@@ -1210,18 +1213,61 @@ export type Database = {
           },
         ];
       };
+      quote_number_counters: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          last_number: number;
+          updated_at: string;
+          year: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          last_number: number;
+          updated_at?: string;
+          year: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          last_number?: number;
+          updated_at?: string;
+          year?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_number_counters_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       quotes: {
         Row: {
           artisan_id: string;
           chantier_id: string;
+          client_message: string | null;
           created_at: string;
+          document: Json | null;
+          duration_days: number | null;
           id: string;
           numero: string | null;
+          payment_schedule: Json | null;
+          refusal_reason: Database["public"]["Enums"]["quote_refusal_reason"] | null;
+          responded_at: string | null;
+          sent_at: string | null;
+          start_date: string | null;
           status: Database["public"]["Enums"]["quote_status"];
+          supersedes_id: string | null;
           total_ht_cents: number;
           total_ttc_cents: number;
           total_tva_cents: number;
           updated_at: string;
+          valid_until: string | null;
           vat_breakdown: NonNullable<Json>;
           version: number;
         };
@@ -1229,28 +1275,48 @@ export type Database = {
         Insert: {
           artisan_id: string;
           chantier_id: string;
+          client_message?: string | null;
           created_at?: string;
+          document?: Json | null;
+          duration_days?: number | null;
           id?: string;
           numero?: string | null;
+          payment_schedule?: Json | null;
+          refusal_reason?: Database["public"]["Enums"]["quote_refusal_reason"] | null;
+          responded_at?: string | null;
+          sent_at?: string | null;
+          start_date?: string | null;
           status?: Database["public"]["Enums"]["quote_status"];
+          supersedes_id?: string | null;
           total_ht_cents?: number;
           total_ttc_cents?: number;
           total_tva_cents?: number;
           updated_at?: string;
+          valid_until?: string | null;
           vat_breakdown?: NonNullable<Json>;
           version?: number;
         };
         Update: {
           artisan_id?: string;
           chantier_id?: string;
+          client_message?: string | null;
           created_at?: string;
+          document?: Json | null;
+          duration_days?: number | null;
           id?: string;
           numero?: string | null;
+          payment_schedule?: Json | null;
+          refusal_reason?: Database["public"]["Enums"]["quote_refusal_reason"] | null;
+          responded_at?: string | null;
+          sent_at?: string | null;
+          start_date?: string | null;
           status?: Database["public"]["Enums"]["quote_status"];
+          supersedes_id?: string | null;
           total_ht_cents?: number;
           total_ttc_cents?: number;
           total_tva_cents?: number;
           updated_at?: string;
+          valid_until?: string | null;
           vat_breakdown?: NonNullable<Json>;
           version?: number;
         };
@@ -1267,6 +1333,13 @@ export type Database = {
             columns: ["chantier_id"];
             isOneToOne: false;
             referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quotes_supersedes_id_fkey";
+            columns: ["supersedes_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
             referencedColumns: ["id"];
           },
         ];
@@ -1713,6 +1786,7 @@ export type Database = {
           line_count: number;
           numero: string;
           quote_id: string;
+          sent_at: string;
           status: Database["public"]["Enums"]["quote_status"];
           title: string;
           total_ttc_cents: number;
@@ -1747,6 +1821,16 @@ export type Database = {
         Returns: undefined;
       };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
+      artisan_send_quote: {
+        Args: {
+          p_deposit_percent: number;
+          p_duration_days: number;
+          p_quote_id: string;
+          p_save_default?: boolean;
+          p_start_date: string;
+        };
+        Returns: string;
+      };
       chantier_appointment: {
         Args: { p_chantier_id: string };
         Returns: {
@@ -1796,6 +1880,18 @@ export type Database = {
           zone_mode: Database["public"]["Enums"]["zone_mode"];
           zone_radius_km: number;
         }[];
+      };
+      particulier_refuse_quote: {
+        Args: {
+          p_comment?: string;
+          p_quote_id: string;
+          p_reason: Database["public"]["Enums"]["quote_refusal_reason"];
+        };
+        Returns: undefined;
+      };
+      particulier_request_quote_revision: {
+        Args: { p_message: string; p_quote_id: string };
+        Returns: string;
       };
       particulier_requests: {
         Args: Record<PropertyKey, never>;
@@ -1971,12 +2067,20 @@ export type Database = {
       notification_channel: "email" | "sms" | "push";
       notification_status: "a_envoyer" | "en_cours" | "envoyee" | "echec";
       notification_type:
-        "nouvelle_demande" | "rdv_fixe" | "rdv_modifie" | "rdv_rappel" | "chantier_annule";
+        | "nouvelle_demande"
+        | "rdv_fixe"
+        | "rdv_modifie"
+        | "rdv_rappel"
+        | "chantier_annule"
+        | "devis_recu"
+        | "devis_refuse"
+        | "devis_modification";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
       project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
       quote_line_type: "materiel" | "main_oeuvre" | "autre";
+      quote_refusal_reason: "trop_cher" | "autre_artisan" | "projet_reporte" | "autre";
       quote_status: "brouillon" | "envoye" | "signe" | "refuse" | "revision_demandee" | "remplace";
       quote_unit: "u" | "h" | "jour" | "m" | "ml" | "m2" | "m3" | "kg" | "l" | "forfait";
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
@@ -2160,12 +2264,16 @@ export const Constants = {
         "rdv_modifie",
         "rdv_rappel",
         "chantier_annule",
+        "devis_recu",
+        "devis_refuse",
+        "devis_modification",
       ],
       project_date_mode: ["des_que_possible", "date", "inconnue"],
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],
       project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
       quote_line_type: ["materiel", "main_oeuvre", "autre"],
+      quote_refusal_reason: ["trop_cher", "autre_artisan", "projet_reporte", "autre"],
       quote_status: ["brouillon", "envoye", "signe", "refuse", "revision_demandee", "remplace"],
       quote_unit: ["u", "h", "jour", "m", "ml", "m2", "m3", "kg", "l", "forfait"],
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],

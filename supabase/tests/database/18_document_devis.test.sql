@@ -1,5 +1,5 @@
 -- F-20 : données du PDF du devis (quote_document) ; brouillon lisible par son artisan seulement,
--- testé avec chaque rôle (CLAUDE.md).
+-- testé avec chaque rôle (CLAUDE.md). Devis envoyé : 19_envoi_devis.
 begin;
 create extension if not exists pgtap with schema extensions;
 select * from no_plan();
@@ -56,7 +56,8 @@ select set_config('test.document', public.quote_document(current_setting('test.d
 
 select is(current_setting('test.document')::jsonb -> 'quote',
   jsonb_build_object(
-    'id', current_setting('test.devis')::uuid, 'status', 'brouillon', 'numero', null,
+    'id', current_setting('test.devis')::uuid, 'artisan_id', 'a8400000-0000-4000-8000-000000000001',
+    'status', 'brouillon', 'numero', null, 'version', 1,
     'issued_on', (now() at time zone 'Europe/Paris')::date,
     'total_ht_cents', 30000, 'total_tva_cents', 3000, 'total_ttc_cents', 33000,
     'vat_breakdown', '[{"rateBp":1000,"baseHtCents":30000,"tvaCents":3000}]'::jsonb),
@@ -82,6 +83,7 @@ select is(current_setting('test.document')::jsonb -> 'client',
 select is(current_setting('test.document')::jsonb -> 'chantier',
   '{"title":"Installation de prises","adresse":"1 Rue de l''Exemple 06000 Nice","code_postal":"06000","ville_nom":"Nice"}'::jsonb,
   'chantier : intitulé et adresse');
+select is(current_setting('test.document')::jsonb -> 'terms', 'null'::jsonb, 'brouillon : modalités fixées à l''envoi');
 select is(public.quote_document('a8000000-0000-4000-8000-000000000000'), null, 'devis inconnu : rien');
 
 -- ---------- Artisan X2 : devis d'autrui, assurance refusée ----------
@@ -114,13 +116,6 @@ select set_config('request.jwt.claims', '{"role":"anon"}', true);
 set local role anon;
 select throws_ok(format('select public.quote_document(%L)', current_setting('test.devis')),
   '42501', null, 'visiteur : fonction inaccessible');
-reset role;
-
--- Devis envoyé : hors étape 3e (données figées à l'envoi, F-21).
-update public.quotes set status = 'envoye' where id = current_setting('test.devis')::uuid;
-select pg_temp.connecter('a8200000-0000-4000-8000-000000000001', 'artisan');
-set local role authenticated;
-select is(public.quote_document(current_setting('test.devis')::uuid), null, 'devis envoyé : pas de rendu depuis les données vivantes');
 reset role;
 
 select * from finish();
