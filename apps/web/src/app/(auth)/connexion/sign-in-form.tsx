@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Alert, Button, Field } from "@/components/ui";
+import { PasswordField } from "@/components/form-fields";
 import { fr } from "@/i18n/fr";
 import { signIn } from "@/lib/auth/actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -23,10 +24,9 @@ export function SignInForm({ next }: { next: string }) {
         defaultValue={state.values?.email}
         errors={errors.email}
       />
-      <Field
+      <PasswordField
         label={fr.signIn.password}
         name="password"
-        type="password"
         autoComplete="current-password"
         required
         errors={errors.password}

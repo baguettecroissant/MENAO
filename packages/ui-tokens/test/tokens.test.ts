@@ -1,13 +1,22 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { colors, contrastPairs, contrastRatio, fontFamily, minTouchTarget, radius } from "../src";
+import {
+  colors,
+  contrastPairs,
+  contrastRatio,
+  fontFamily,
+  minTouchTarget,
+  radius,
+  shadow,
+} from "../src";
 
 const css = readFileSync(new URL("../src/theme.css", import.meta.url), "utf8");
 
 function cssVariables(): Record<string, string> {
   const vars: Record<string, string> = {};
   for (const [, name, value] of css.matchAll(/--([\w-]+):\s*([^;]+);/g)) {
-    if (name && value) vars[name] = value.trim();
+    // Prettier peut répartir une valeur longue sur plusieurs lignes.
+    if (name && value) vars[name] = value.replace(/\s+/g, " ").trim();
   }
   return vars;
 }
@@ -32,6 +41,7 @@ describe("theme.css reste aligné sur tokens.ts", () => {
   const expected: Record<string, string> = {
     ...Object.fromEntries(Object.entries(colors).map(([k, v]) => [`color-${k}`, v])),
     ...Object.fromEntries(Object.entries(radius).map(([k, v]) => [`radius-${k}`, v])),
+    ...Object.fromEntries(Object.entries(shadow).map(([k, v]) => [`shadow-${k}`, v])),
     "font-sans": fontFamily.sans,
     "spacing-touch": minTouchTarget,
   };

@@ -13,7 +13,7 @@ test("demande à 2 artisans, compte créé en chemin, acceptation par l'artisan"
   test.setTimeout(120_000);
   const email = `demande-${Date.now()}@example.test`;
 
-  await page.goto("/");
+  await page.goto("/recherche");
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement.");
@@ -35,14 +35,14 @@ test("demande à 2 artisans, compte créé en chemin, acceptation par l'artisan"
   // Compte au moment de la demande.
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/envoyer\\?`));
   await expect(
-    page.getByRole("heading", { name: "Envoyez votre demande de chantier à Noé et Inès" }),
+    page.getByRole("heading", { name: "Dernière étape avant d'envoyer votre demande" }),
   ).toBeVisible();
   await page.getByLabel("Prénom").fill("Dominique");
   await page.getByLabel("Nom", { exact: true }).fill("Test");
   await page.getByLabel("Adresse e-mail").fill(email);
   await page.getByLabel("Mot de passe").fill("mot-de-passe-de-test-e2e");
   await page.getByLabel(/J'accepte les conditions générales/).check();
-  await page.getByRole("button", { name: "Créer mon compte et continuer" }).click();
+  await page.getByRole("button", { name: "Créer mon espace et continuer" }).click();
   await expect(
     page.getByText("Nous venons de vous envoyer un e-mail de confirmation"),
   ).toBeVisible();
@@ -50,9 +50,11 @@ test("demande à 2 artisans, compte créé en chemin, acceptation par l'artisan"
   // Le lien de confirmation ramène à la demande, projet rattaché au nouveau compte.
   await page.goto(await authLinkFor(request, email));
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/envoyer\\?`));
-  await page
-    .getByLabel("Votre message (facultatif)")
-    .fill("Merci de me rappeler au 06 99 99 99 99.");
+  await expect(
+    page.getByRole("heading", { name: "Envoyez votre demande de chantier à Noé et Inès" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Ajouter un message personnalisé" }).click();
+  await page.getByLabel("Votre message").fill("Merci de me rappeler au 06 99 99 99 99.");
   await page.getByLabel("Téléphone").fill("06 12 34 56 78");
   await page.getByLabel("Indiquer une plage horaire").check();
   await page.getByLabel("À partir de").fill("09:00");
@@ -63,10 +65,12 @@ test("demande à 2 artisans, compte créé en chemin, acceptation par l'artisan"
   await expect(
     page.getByRole("heading", { name: "Votre demande est envoyée à Inès et Noé !" }),
   ).toBeVisible();
-  await expect(page.getByText("Vous serez rappelé entre 09 h 00 et 12 h 00.")).toBeVisible();
+  await expect(
+    page.getByText("Vous avez indiqué être joignable par téléphone entre 09 h 00 et 12 h 00."),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Suivre ma demande depuis mon espace" }).click();
   await expect(page).toHaveURL(/\/mon-espace$/);
-  await expect(page.getByText("En attente de réponse")).toHaveCount(2);
+  await expect(page.getByText(/Réponse attendue sous/)).toHaveCount(2);
 
   // L'artisan reçoit la demande : coordonnées masquées jusqu'à l'acceptation.
   const pro = await browser.newContext();
@@ -98,6 +102,6 @@ test("demande à 2 artisans, compte créé en chemin, acceptation par l'artisan"
 
   // Le particulier voit l'acceptation et les coordonnées de l'artisan.
   await page.reload();
-  await expect(page.getByText("Acceptée")).toBeVisible();
+  await expect(page.getByText("Acceptée").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "plombier-nice@example.test" })).toBeVisible();
 });

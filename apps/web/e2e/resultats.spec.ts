@@ -8,7 +8,7 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
   page,
 }) => {
   test.setTimeout(60_000);
-  await page.goto("/");
+  await page.goto("/recherche");
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement.");
@@ -36,10 +36,8 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
 
   await page.getByRole("link", { name: "Voir le profil de Noé" }).click();
   await expect(page.getByRole("heading", { name: "Noé", level: 1 })).toBeVisible();
-  await expect(
-    page.getByText(/Assurance décennale vérifiée par MENAO, valable jusqu'au/),
-  ).toBeVisible();
-  await expect(page.getByText(/Qualibat n° Q-11111/)).toBeVisible();
+  await expect(page.getByText(/Valable jusqu'au .* · Assurances Exemple/)).toBeVisible();
+  await expect(page.getByText(/N° Q-11111/)).toBeVisible();
   await expect(page.getByText("25 km autour de Nice")).toBeVisible();
   // Ni téléphone, ni e-mail, ni SIRET, ni adresse de base.
   const body = await page.getByRole("main").innerText();

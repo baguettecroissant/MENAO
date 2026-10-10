@@ -1,14 +1,25 @@
 import { availability, parisToday } from "@menao/core";
+import {
+  BadgeCheck,
+  Briefcase,
+  ChevronRight,
+  CircleCheck,
+  MapPin,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { ArtisanAvatar, AvailabilityBadge } from "@/components/project/artisan-avatar";
+import { ArtisanPhoto } from "@/components/project/artisan-photo";
+import { ButtonLink, StatusBadge, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getArtisanProfile, publicUrl } from "@/lib/project/artisans";
 import { sendPagePath } from "@/lib/project/paths";
 import { createClient } from "@/lib/supabase/server";
 import { PhotoGallery } from "./photo-gallery";
+import { StickyProfileBar } from "./sticky-bar";
 
 const t = fr.search.profile;
 const r = fr.search.results;
@@ -18,7 +29,7 @@ const formatDay = (iso: string) => dayFormat.format(new Date(`${iso}T00:00:00Z`)
 
 export const metadata: Metadata = { robots: { index: false } };
 
-/** Fiche artisan dans le contexte d'une recherche (F-10). Jamais de téléphone ni d'e-mail. */
+/** Fiche artisan (F-10), maquette « Fiche artisan ». Jamais de téléphone ni d'e-mail. */
 export default async function ArtisanProfilePage({
   params,
 }: PageProps<"/recherche/[id]/artisans/[artisanId]">) {
@@ -31,10 +42,9 @@ export default async function ArtisanProfilePage({
   ]);
   if (!project || !profile) notFound();
 
-  const today = parisToday();
   const avail = availability(
     { paused: profile.paused, availableFrom: profile.available_from },
-    today,
+    parisToday(),
   );
   const trade =
     profile.trades.find((tr) => tr.code === project.trade_code)?.label ??
@@ -45,129 +55,197 @@ export default async function ArtisanProfilePage({
       ? r.zoneRadius(profile.zone.radius_km, profile.zone.city)
       : r.zoneCommunes(profile.zone.communes);
   const photos = profile.photos.map((p) => publicUrl(supabase, "portfolio", p));
+  const avatar = profile.avatar_path ? publicUrl(supabase, "avatars", profile.avatar_path) : null;
+  const title = t.title(profile.display_name, trade);
+  const requestHref = sendPagePath(id, [profile.id]) as Route;
+  const badge =
+    avail.kind === "paused" ? (
+      <StatusBadge tone="neutral">{t.unavailable}</StatusBadge>
+    ) : avail.kind === "from" ? (
+      <StatusBadge tone="neutral">{r.availableFrom(formatDay(avail.date))}</StatusBadge>
+    ) : (
+      <StatusBadge>{r.availableNow}</StatusBadge>
+    );
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
-      <nav aria-label="Fil d'Ariane" className="text-sm">
-        <ol className="flex flex-wrap gap-1 text-muted-foreground">
-          <li>
-            <Link href={`/recherche/${id}` as Route} className="text-primary hover:underline">
-              {t.breadcrumb.criteria}
-            </Link>{" "}
-            ›
-          </li>
-          <li>
-            <Link
-              href={`/recherche/${id}/artisans` as Route}
-              className="text-primary hover:underline"
-            >
-              {t.breadcrumb.selection}
-            </Link>{" "}
-            ›
-          </li>
-          <li aria-current="page">{profile.display_name}</li>
-        </ol>
-      </nav>
+    <main className="bg-background">
+      <StickyProfileBar
+        bar={
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <ArtisanPhoto
+                url={avatar}
+                name={profile.display_name}
+                className="size-10 shrink-0 rounded-lg"
+                initialsClassName="text-sm"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-medium">{title}</p>
+                <div className="hidden sm:block">{badge}</div>
+              </div>
+            </div>
+            <ButtonLink href={requestHref} size="sm">
+              {t.request}
+            </ButtonLink>
+          </div>
+        }
+      >
+        <div className="border-b border-border bg-surface">
+          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+            <nav aria-label={t.breadcrumb.label} className="text-xs text-muted-foreground">
+              <ol className="flex flex-wrap items-center gap-1.5">
+                <li className="inline-flex items-center gap-1.5">
+                  <Link href={`/recherche/${id}` as Route} className="hover:text-foreground">
+                    {t.breadcrumb.criteria}
+                  </Link>
+                  <ChevronRight aria-hidden="true" className="size-3.5" />
+                </li>
+                <li className="inline-flex items-center gap-1.5">
+                  <Link
+                    href={`/recherche/${id}/artisans` as Route}
+                    className="hover:text-foreground"
+                  >
+                    {t.breadcrumb.selection}
+                  </Link>
+                  <ChevronRight aria-hidden="true" className="size-3.5" />
+                </li>
+                <li aria-current="page" className="text-foreground">
+                  {title}
+                </li>
+              </ol>
+            </nav>
 
-      <header className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center gap-4 border-b border-border bg-background/95 px-4 py-4 backdrop-blur">
-        <ArtisanAvatar
-          url={profile.avatar_path ? publicUrl(supabase, "avatars", profile.avatar_path) : null}
-          name={profile.display_name}
-          size="lg"
-        />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-          <p className="text-muted-foreground">
-            {trade}
-            {profile.experience_years !== null
-              ? ` · ${r.experience(profile.experience_years)}`
-              : ""}
-          </p>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <AvailabilityBadge
-              label={
-                avail.kind === "paused"
-                  ? r.paused
-                  : avail.kind === "from"
-                    ? r.availableFrom(formatDay(avail.date))
-                    : r.availableNow
-              }
-              tone={avail.kind === "immediate" ? "success" : "muted"}
-            />
-            <span>{zone}</span>
+            <div className="grid gap-6 md:grid-cols-[17.5rem_1fr] md:items-center">
+              <ArtisanPhoto
+                url={avatar}
+                name={profile.display_name}
+                className="aspect-[4/3] w-full rounded-card"
+              />
+              <div className="flex min-w-0 flex-col gap-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{title}</h1>
+                  {badge}
+                </div>
+                <dl className="grid grid-cols-1 divide-y divide-border rounded-input border border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                  <InfoBox icon={<Briefcase />} label={t.experience}>
+                    {profile.experience_years !== null
+                      ? t.experienceValue(profile.experience_years)
+                      : "—"}
+                  </InfoBox>
+                  <InfoBox icon={<MapPin />} label={t.zone}>
+                    {zone}
+                  </InfoBox>
+                  <InfoBox icon={<ShieldCheck />} label={t.insurance}>
+                    {t.insuranceValue}
+                  </InfoBox>
+                </dl>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <ButtonLink href={requestHref} size="lg" className="sm:w-auto">
+                    {t.request}
+                  </ButtonLink>
+                  <p className="rounded-input bg-primary-softer px-3 py-2 text-xs text-primary-strong">
+                    {t.requestHint}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <Link
-          href={sendPagePath(id, [profile.id]) as Route}
-          className="inline-flex min-h-touch w-full items-center justify-center rounded-button bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover sm:w-auto"
-        >
-          {t.request}
-        </Link>
-      </header>
+      </StickyProfileBar>
 
-      {profile.presentation && (
-        <Section title={t.about}>
-          <p className="whitespace-pre-line">{profile.presentation}</p>
-          {profile.company_name && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t.company} : {profile.company_name}
-            </p>
-          )}
-        </Section>
-      )}
-
-      {profile.work_types.length > 0 && (
-        <Section title={t.expertise}>
-          <ul className="flex flex-wrap gap-2">
-            {profile.work_types.map((w) => (
-              <li
-                key={w.code}
-                className="rounded-full bg-primary-soft px-3 py-1 text-sm text-primary"
-              >
-                {w.label}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title={t.guarantees}>
-        <ul className="flex flex-col gap-2">
-          <li>
-            ✓{" "}
-            {profile.decennale?.valid_until
-              ? t.decennale(formatDay(profile.decennale.valid_until), profile.decennale.insurer)
-              : t.noDecennale}
-          </li>
-          {profile.certifications.map((c) => (
-            <li key={`${c.type}-${c.numero}`}>
-              ✓{" "}
-              {t.certification(
-                fr.certificationTypes[c.type as keyof typeof fr.certificationTypes] ?? c.type,
-                c.numero,
-                formatDay(c.valid_until),
+      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_20rem]">
+        <div className="flex min-w-0 flex-col gap-5">
+          {profile.presentation && (
+            <Section title={t.about(profile.display_name)}>
+              <p className="text-sm leading-relaxed whitespace-pre-line text-foreground/90">
+                {profile.presentation}
+              </p>
+              {profile.company_name && (
+                <p className="text-xs text-muted-foreground">
+                  {t.company} : {profile.company_name}
+                </p>
               )}
-            </li>
-          ))}
-        </ul>
-      </Section>
+            </Section>
+          )}
+          <Section title={t.recent}>
+            {photos.length ? (
+              <PhotoGallery urls={photos} name={profile.display_name} />
+            ) : (
+              <p className="text-sm text-muted-foreground">{t.recentEmpty}</p>
+            )}
+          </Section>
+          <Section title={t.reviews}>
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Star aria-hidden="true" className="size-4" />
+              {t.reviewsEmpty}
+            </p>
+          </Section>
+        </div>
 
-      <Section title={t.score}>
-        <p className="text-muted-foreground">{t.scoreEmpty}</p>
-      </Section>
-
-      <Section title={t.recent}>
-        {photos.length ? (
-          <PhotoGallery urls={photos} name={profile.display_name} />
-        ) : (
-          <p className="text-muted-foreground">{t.recentEmpty}</p>
-        )}
-      </Section>
-
-      <Section title={t.reviews}>
-        <p className="text-muted-foreground">{t.reviewsEmpty}</p>
-      </Section>
+        <div className="flex flex-col gap-5">
+          {profile.work_types.length > 0 && (
+            <Section title={t.expertise}>
+              <ul className="flex flex-wrap gap-1.5">
+                {profile.work_types.map((w) => (
+                  <li key={w.code}>
+                    <Tag tone="neutral">{w.label}</Tag>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+          <Section title={t.guarantees}>
+            <ul className="flex flex-col gap-4">
+              <Guarantee icon={<ShieldCheck />} title={t.decennaleTitle}>
+                {profile.decennale?.valid_until
+                  ? t.decennaleUntil(
+                      formatDay(profile.decennale.valid_until),
+                      profile.decennale.insurer,
+                    )
+                  : null}
+              </Guarantee>
+              {profile.certifications.map((c) => (
+                <Guarantee
+                  key={`${c.type}-${c.numero}`}
+                  icon={<CircleCheck />}
+                  title={t.certificationTitle(
+                    fr.certificationTypes[c.type as keyof typeof fr.certificationTypes] ?? c.type,
+                  )}
+                >
+                  {t.certificationDetail(c.numero, formatDay(c.valid_until))}
+                </Guarantee>
+              ))}
+            </ul>
+          </Section>
+          <Section title={t.score}>
+            <p className="flex items-start gap-2 text-sm text-muted-foreground">
+              <BadgeCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              {t.scoreEmpty}
+            </p>
+          </Section>
+        </div>
+      </div>
     </main>
+  );
+}
+
+function InfoBox({
+  icon,
+  label,
+  children,
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1 px-4 py-3">
+      <dt className="flex items-center gap-1.5 text-xs text-muted-foreground [&>svg]:size-3.5">
+        {icon}
+        {label}
+      </dt>
+      <dd className="text-sm font-medium">{children}</dd>
+    </div>
   );
 }
 
@@ -175,10 +253,32 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section
       aria-label={title}
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5"
+      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card"
     >
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="text-[1.0625rem] font-medium">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function Guarantee({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <li className="flex gap-3">
+      <span aria-hidden="true" className="mt-0.5 text-success [&>svg]:size-[1.125rem]">
+        {icon}
+      </span>
+      <div className="flex flex-col">
+        <span className="text-sm font-medium">{title}</span>
+        {children && <span className="text-xs text-muted-foreground">{children}</span>}
+      </div>
+    </li>
   );
 }

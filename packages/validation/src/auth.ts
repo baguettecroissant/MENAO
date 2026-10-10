@@ -7,13 +7,16 @@ export const PASSWORD_MAX_LENGTH = 72;
 
 /**
  * Normalise un numéro au format E.164. Sans indicatif, un numéro à 10 chiffres
- * commençant par 0 est considéré comme français (+33, spec F-08).
+ * commençant par 0 (ou à 9 chiffres, saisi après l'indicatif +33 affiché) est considéré
+ * comme français (+33, spec F-08).
  * Retourne `null` si le numéro est invalide.
  */
 export function normalizePhone(input: string): string | null {
   const compact = input.replace(/[\s.\-()]/g, "");
   let e164: string;
   if (/^0[1-9]\d{8}$/.test(compact)) e164 = `+33${compact.slice(1)}`;
+  // Champ précédé de l'indicatif « +33 » affiché (maquettes) : 9 chiffres sans le 0.
+  else if (/^[1-9]\d{8}$/.test(compact)) e164 = `+33${compact}`;
   else if (compact.startsWith("00")) e164 = `+${compact.slice(2)}`;
   else e164 = compact;
   return /^\+[1-9]\d{7,14}$/.test(e164) ? e164 : null;

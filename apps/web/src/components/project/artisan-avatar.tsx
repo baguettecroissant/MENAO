@@ -21,7 +21,7 @@ export function ArtisanAvatar({
   return (
     <span
       aria-hidden="true"
-      className={`${dims} inline-flex shrink-0 items-center justify-center rounded-full bg-primary-soft font-semibold text-primary`}
+      className={`${dims} inline-flex shrink-0 items-center justify-center rounded-full bg-primary-soft font-medium text-primary`}
     >
       {initials}
     </span>

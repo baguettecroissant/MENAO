@@ -1,6 +1,7 @@
 "use client";
 
 import { MAX_DICTATION_SECONDS } from "@menao/core";
+import { AudioLines, LoaderCircle, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { fr } from "@/i18n/fr";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
@@ -8,20 +9,27 @@ import { dictationSupported, recordingToWavBase64 } from "@/lib/project/dictatio
 
 const t = fr.search.dictation;
 
-type State = "idle" | "listening" | "transcribing";
+export type DictationState = "idle" | "listening" | "transcribing";
 
-/** Dictée (F-05) : autorisation du micro, « Écoute… », puis texte inséré dans le champ. */
+/** Dictée (F-05) : bouton micro rond des maquettes ; « Écoute… » puis texte inséré. */
 export function DictationButton({
   onText,
   onError,
+  onStateChange,
 }: {
   onText: (text: string) => void;
   onError: (message: string | null) => void;
+  onStateChange?: (state: DictationState) => void;
 }) {
-  const [state, setState] = useState<State>("idle");
+  const [state, setStateRaw] = useState<DictationState>("idle");
   const [seconds, setSeconds] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const setState = (next: DictationState) => {
+    setStateRaw(next);
+    onStateChange?.(next);
+  };
 
   useEffect(
     () => () => {
@@ -57,6 +65,10 @@ export function DictationButton({
     timer.current = setInterval(() => setSeconds((s) => s + 1), 1000);
   }
 
+  function stop() {
+    if (recorder.current?.state === "recording") recorder.current.stop();
+  }
+
   // Dictée limitée à 2 minutes.
   useEffect(() => {
     if (state === "listening" && seconds >= MAX_DICTATION_SECONDS) {
@@ -64,10 +76,6 @@ export function DictationButton({
       stop();
     }
   }, [state, seconds, onError]);
-
-  function stop() {
-    if (recorder.current?.state === "recording") recorder.current.stop();
-  }
 
   async function transcribe(recording: Blob) {
     setState("transcribing");
@@ -90,39 +98,47 @@ export function DictationButton({
   }
 
   const listening = state === "listening";
+  const label =
+    state === "transcribing"
+      ? t.transcribing
+      : listening
+        ? `${t.listening(seconds)} — ${t.stop}`
+        : t.start;
   return (
-    <button
-      type="button"
-      onClick={listening ? stop : start}
-      disabled={state === "transcribing"}
-      aria-pressed={listening}
-      className={`inline-flex min-h-touch items-center gap-2 rounded-button border px-4 font-medium disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-        listening
-          ? "border-danger bg-danger-soft text-danger"
-          : "border-border bg-surface text-foreground hover:bg-background"
-      }`}
-    >
-      <MicIcon />
-      <span aria-live="polite">
-        {state === "transcribing" ? t.transcribing : listening ? t.listening(seconds) : t.start}
+    <div className="flex items-center gap-2">
+      {state !== "idle" && (
+        <span aria-live="polite" className="text-xs font-medium text-primary-strong">
+          {state === "transcribing" ? t.transcribing : t.listening(seconds)}
+        </span>
+      )}
+      <span className="relative inline-flex">
+        {/* Halo animé derrière le bouton : le bouton lui-même reste immobile (clic, lecteurs d'écran). */}
+        {listening && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-primary/40 motion-reduce:hidden"
+          />
+        )}
+        <button
+          type="button"
+          onClick={listening ? stop : start}
+          disabled={state === "transcribing"}
+          aria-pressed={listening}
+          aria-label={label}
+          title={label}
+          className={`inline-flex size-10 items-center justify-center rounded-full text-primary-foreground transition-colors focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none disabled:opacity-70 ${
+            listening ? "bg-primary-hover" : "bg-primary hover:bg-primary-hover"
+          }`}
+        >
+          {state === "transcribing" ? (
+            <LoaderCircle aria-hidden="true" className="size-5 animate-spin" />
+          ) : listening ? (
+            <AudioLines aria-hidden="true" className="size-5" />
+          ) : (
+            <Mic aria-hidden="true" className="size-5" />
+          )}
+        </button>
       </span>
-      {listening && <span className="sr-only">{t.stop}</span>}
-    </button>
-  );
-}
-
-function MicIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <rect x="9" y="3" width="6" height="11" rx="3" />
-      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" strokeLinecap="round" />
-    </svg>
+    </div>
   );
 }

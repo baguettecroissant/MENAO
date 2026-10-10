@@ -42,7 +42,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
     return (
       <Card>
         <section aria-labelledby="abonnement" className="flex flex-col gap-3">
-          <h2 id="abonnement" className="text-lg font-semibold">
+          <h2 id="abonnement" className="text-lg font-medium">
             {t.current} : {plan?.nom ?? "—"}
           </h2>
           <p
@@ -74,11 +74,11 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           <li key={plan.code}>
             <Card>
               <section aria-labelledby={`plan-${plan.code}`} className="flex h-full flex-col gap-3">
-                <h2 id={`plan-${plan.code}`} className="text-lg font-semibold">
+                <h2 id={`plan-${plan.code}`} className="text-lg font-medium">
                   {plan.nom}
                 </h2>
                 <p>
-                  <span className="text-3xl font-bold">
+                  <span className="text-3xl font-medium tracking-tight">
                     {t.priceHt(euros.format(plan.prix_mensuel_ht_centimes / 100))}
                   </span>{" "}
                   <span className="text-muted-foreground">{t.perMonth}</span>

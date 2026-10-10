@@ -52,7 +52,7 @@ export default async function DocumentsStepPage() {
           <Card key={type}>
             <section aria-labelledby={`doc-${type}`} className="flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 id={`doc-${type}`} className="text-lg font-semibold">
+                <h2 id={`doc-${type}`} className="text-lg font-medium">
                   {t.types[type]}
                 </h2>
                 <span

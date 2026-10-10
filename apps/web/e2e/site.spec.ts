@@ -8,7 +8,7 @@ test("pages métier × ville : artisans de la commune, données structurées, sa
 }) => {
   await page.goto("/");
   await page
-    .getByRole("region", { name: "Trouvez un artisan par métier" })
+    .getByRole("region", { name: "Métiers du bâtiment" })
     .getByRole("link", { name: "Plombier" })
     .click();
   await expect(page).toHaveURL(/\/plombier$/);

@@ -18,7 +18,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   const nextYear = `${new Date().getFullYear() + 1}-06-30`;
 
   await page.goto("/pro");
-  await page.getByRole("link", { name: "Créer mon compte pro" }).click();
+  await page.getByRole("link", { name: "Créer mon compte pro" }).first().click();
   await expect(page).toHaveURL(/\/pro\/inscription$/);
   await page.getByLabel("Prénom").fill("Dominique");
   await page.getByLabel("Nom", { exact: true }).fill("Exemple");

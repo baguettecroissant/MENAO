@@ -36,7 +36,7 @@ export default async function TradesStepPage() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold">{t.certifications}</h2>
+        <h2 className="text-lg font-medium">{t.certifications}</h2>
         <p className="mb-4 text-sm text-muted-foreground">{t.certificationsHint}</p>
         {certifications.length === 0 ? (
           <p className="mb-4 text-muted-foreground">{t.noCertification}</p>

@@ -1,5 +1,7 @@
 import { AI_CONFIDENCE_THRESHOLD, parisToday } from "@menao/core";
+import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -80,30 +82,54 @@ export default async function ProjectReviewPage({
     project.ai_confidence !== null && project.ai_confidence < AI_CONFIDENCE_THRESHOLD;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold sm:text-3xl">{t.title}</h1>
-        <p className="text-muted-foreground">{project.analyzed_at ? t.intro : t.noAnalysis}</p>
+    <main className="bg-background">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
+        <Link
+          href="/recherche"
+          className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          {t.back}
+        </Link>
+        <div className="flex flex-col gap-2">
+          <h1 className="flex items-center gap-2.5 text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+            <Sparkles aria-hidden="true" className="size-6 shrink-0 text-primary" />
+            {t.title}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {project.analyzed_at ? t.intro : t.noAnalysis}
+          </p>
+        </div>
+        {lowConfidence && <Alert tone="info">{t.lowConfidence}</Alert>}
+        {photosParam === "erreur" && <Alert tone="error">{fr.search.errors.photos}</Alert>}
+        <details className="group rounded-card border border-border bg-surface px-5 py-4 shadow-card">
+          <summary className="cursor-pointer list-none text-sm font-medium marker:hidden">
+            <span className="inline-flex items-center gap-2">
+              <ChevronRight
+                aria-hidden="true"
+                className="size-4 text-primary transition-transform group-open:rotate-90"
+              />
+              {t.yourText}
+            </span>
+          </summary>
+          <p className="mt-3 text-sm whitespace-pre-line text-muted-foreground">
+            {project.description}
+          </p>
+        </details>
+        <CriteriaReview
+          projectId={project.id}
+          initial={initial}
+          trades={trades.data ?? []}
+          workTypes={(workTypes.data ?? []).map((w) => ({
+            code: w.code,
+            label: w.label,
+            trade: w.trade_code,
+          }))}
+          rooms={rooms.data ?? []}
+          photos={photoRows.map((p, i) => ({ id: p.id, url: signed?.[i]?.signedUrl ?? null }))}
+          today={parisToday()}
+        />
       </div>
-      {lowConfidence && <Alert tone="error">{t.lowConfidence}</Alert>}
-      {photosParam === "erreur" && <Alert tone="error">{fr.search.errors.photos}</Alert>}
-      <details className="rounded-card border border-border bg-surface p-4">
-        <summary className="cursor-pointer font-medium">{t.yourText}</summary>
-        <p className="mt-3 whitespace-pre-line text-muted-foreground">{project.description}</p>
-      </details>
-      <CriteriaReview
-        projectId={project.id}
-        initial={initial}
-        trades={trades.data ?? []}
-        workTypes={(workTypes.data ?? []).map((w) => ({
-          code: w.code,
-          label: w.label,
-          trade: w.trade_code,
-        }))}
-        rooms={rooms.data ?? []}
-        photos={photoRows.map((p, i) => ({ id: p.id, url: signed?.[i]?.signedUrl ?? null }))}
-        today={parisToday()}
-      />
     </main>
   );
 }

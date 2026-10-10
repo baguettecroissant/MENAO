@@ -24,7 +24,7 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-2xl font-bold">{fr.pro.onboarding.title}</h1>
+          <h1 className="text-2xl font-medium tracking-tight">{fr.pro.onboarding.title}</h1>
           <form action={signOut}>
             <button
               type="submit"

@@ -39,7 +39,7 @@ export default async function TradePage({ params }: PageProps<"/[metier]">) {
   const { trade, communes } = data;
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-12">
-      <h1 className="text-3xl font-bold">{t.tradeTitle(trade.label)}</h1>
+      <h1 className="text-3xl font-medium tracking-tight">{t.tradeTitle(trade.label)}</h1>
       <p className="text-lg text-muted-foreground">{t.tradeIntro(trade.label)}</p>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {communes.map((c) => (

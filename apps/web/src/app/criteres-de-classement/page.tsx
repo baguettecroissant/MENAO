@@ -10,10 +10,10 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 export default function RankingPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <h1 className="text-3xl font-bold">{t.title}</h1>
+      <h1 className="text-3xl font-medium tracking-tight">{t.title}</h1>
       <p>{t.intro}</p>
       <section className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold">{t.selectionTitle}</h2>
+        <h2 className="text-xl font-medium">{t.selectionTitle}</h2>
         <ul className="list-disc pl-6">
           {t.selection.map((line) => (
             <li key={line}>{line}</li>
@@ -21,7 +21,7 @@ export default function RankingPage() {
         </ul>
       </section>
       <section className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold">{t.orderTitle}</h2>
+        <h2 className="text-xl font-medium">{t.orderTitle}</h2>
         <ol className="list-decimal pl-6">
           {t.order.map((line) => (
             <li key={line}>{line}</li>
@@ -30,11 +30,11 @@ export default function RankingPage() {
         <p>{t.limit}</p>
       </section>
       <section className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold">{t.paidTitle}</h2>
+        <h2 className="text-xl font-medium">{t.paidTitle}</h2>
         <p>{t.paid}</p>
       </section>
       <section className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold">{t.reviewsTitle}</h2>
+        <h2 className="text-xl font-medium">{t.reviewsTitle}</h2>
         <p>{t.reviews}</p>
       </section>
       <p className="text-sm text-muted-foreground">{t.updated}</p>
