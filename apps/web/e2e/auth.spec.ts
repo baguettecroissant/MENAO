@@ -54,6 +54,8 @@ test("connexion par lien magique d'un compte existant (seed)", async ({ page, re
 
   await page.goto(await authLinkFor(request, "support@example.test"));
   await expect(page).toHaveURL(/\/mon-espace$/);
+  // Type de compte affiché dans le menu du compte (ADR 0034).
+  await page.getByRole("button", { name: "Mon compte" }).click();
   await expect(page.getByText("Support MENAO")).toBeVisible();
 });
 
