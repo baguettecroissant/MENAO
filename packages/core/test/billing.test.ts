@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { TRIAL_DAYS, subscriptionFromStripe, subscriptionGrantsAccess } from "../src/billing";
+import {
+  TRIAL_DAYS,
+  commissionComparison,
+  subscriptionFromStripe,
+  subscriptionGrantsAccess,
+} from "../src/billing";
 
 describe("abonnement (F-15)", () => {
   it("3 mois offerts : essai de 90 jours", () => {
@@ -79,5 +84,32 @@ describe("subscriptionFromStripe", () => {
     { ...sub, status: "inconnu" },
   ])("objet inexploitable → null (%j)", (input) => {
     expect(subscriptionFromStripe(input)).toBeNull();
+  });
+});
+
+describe("simulation de la page Espace Pro", () => {
+  it("commission d'une plateforme comparée à l'abonnement Base", () => {
+    // 8 000 € de chantiers à 15 % : 1 200 € de commission, soit 1 050 € de plus avec 150 € HT.
+    expect(
+      commissionComparison({
+        monthlyRevenueCents: 800_000,
+        commissionRateBp: 1_500,
+        subscriptionCents: 15_000,
+      }),
+    ).toEqual({
+      commissionCents: 120_000,
+      monthlySavingCents: 105_000,
+      yearlySavingCents: 1_260_000,
+    });
+  });
+
+  it("petite activité : la commission peut coûter moins cher (économie négative)", () => {
+    expect(
+      commissionComparison({
+        monthlyRevenueCents: 50_000,
+        commissionRateBp: 1_000,
+        subscriptionCents: 15_000,
+      }),
+    ).toEqual({ commissionCents: 5_000, monthlySavingCents: -10_000, yearlySavingCents: -120_000 });
   });
 });
