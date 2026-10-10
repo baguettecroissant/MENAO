@@ -570,5 +570,72 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(pvPdf.headers()["content-disposition"]).toMatch(/PV-\d{4}-R01-signe\.pdf/);
   await proPage.goto(chantierUrl);
   await expect(proPage.getByText(/Réception validée par Dominique le /)).toBeVisible();
+
+  // Paiement du solde (F-32) : Checkout sur le compte de l'artisan (simulé), webhook Connect
+  // signé ; facture de solde (lignes du devis, acompte déduit) et clôture du chantier.
+  await page.goto(`/mon-espace/chantiers/${chantierId}`);
+  const pay = page.getByRole("region", { name: "Vous avez un paiement à effectuer" });
+  await expect(pay.getByText(/64,30\s€/)).toBeVisible();
+  await pay.getByRole("link", { name: "Payer maintenant" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}/solde$`));
+  await expect(page.getByText("Bénéficiaire : PLOMBERIE NICE EXEMPLE")).toBeVisible();
+  await capture(page, "client-paiement-solde");
+  await page.getByRole("button", { name: /Payer 64,30/ }).click();
+  await expect(page).toHaveURL(/^https:\/\/checkout\.stripe\.com\//);
+  const balanceAt = Math.floor(Date.now() / 1000);
+  const balancePaid = signedStripeEvent(
+    {
+      id: `evt_solde_${balanceAt}`,
+      object: "event",
+      type: "checkout.session.completed",
+      account: "acct_seed_nice",
+      api_version: "2026-09-30.endive",
+      created: balanceAt,
+      livemode: false,
+      data: {
+        object: {
+          id: `cs_e2e_solde_${balanceAt}`,
+          object: "checkout.session",
+          mode: "payment",
+          payment_status: "paid",
+          amount_total: 6430,
+          currency: "eur",
+          payment_intent: `pi_e2e_solde_${balanceAt}`,
+          metadata: { menao_quote_id: quoteId, menao_kind: "solde" },
+        },
+      },
+    },
+    CONNECT_SECRET,
+  );
+  const balanceDelivered = await request.post(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
+    data: balancePaid.payload,
+    headers: { "Stripe-Signature": balancePaid.header, "Content-Type": "application/json" },
+  });
+  expect(balanceDelivered.status()).toBe(200);
+  await page.goto(`/mon-espace/chantiers/${chantierId}?paiement=termine`);
+  await expect(page.getByText(/^Terminé le \d{2}\/\d{2}\/\d{4}$/)).toBeVisible();
+  await expect(
+    page.getByText(/^Vous avez finalisé le paiement de ce chantier le \d{2}\/\d{2}\/\d{4}$/),
+  ).toBeVisible();
+  await capture(page, "client-chantier-cloture");
+  await page.getByRole("link", { name: "Dossier du chantier" }).click();
+  const balanceInvoice = page.getByRole("link", { name: /Facture de solde FAC-\d{4}-0002/ });
+  const balanceHref = (await balanceInvoice.getAttribute("href")) ?? "";
+  const balancePdf = await page.request.get(balanceHref);
+  expect(balancePdf.status()).toBe(200);
+  expect(balancePdf.headers()["content-disposition"]).toMatch(/FAC-\d{4}-0002\.pdf/);
+  const paidSchedule = page.getByRole("region", { name: "Échéancier de paiement" });
+  await expect(paidSchedule.getByText(/91,85\s€/)).toBeVisible();
+  await expect(paidSchedule.getByText(/0,00\s€/)).toBeVisible();
+  const allInvoices = await (await proPage.request.get("/pro/factures/export")).text();
+  expect(allInvoices).toContain('"Solde";"Dominique Test"');
+  // Solde 64,30 € : 83,50 € HT et 8,35 € de TVA du devis, moins ceux de l'acompte (25,05 € et 2,50 €).
+  expect(allInvoices).toContain('"58,45";"5,85";"64,30"');
+  await proPage.goto(chantierUrl);
+  await expect(proPage.getByText(/Chantier clôturé le .+ : solde de 64,30\s€ reçu/)).toBeVisible();
+  await page.goto("/mon-espace");
+  await expect(
+    page.getByRole("region", { name: "Mes chantiers terminés" }).getByText(/^Terminé le /),
+  ).toBeVisible();
   await pro.close();
 });
