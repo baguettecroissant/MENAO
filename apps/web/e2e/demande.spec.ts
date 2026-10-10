@@ -494,16 +494,26 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(schedule.getByText(/64,30\s€/)).toBeVisible();
   await capture(page, "client-chantier-dossier");
 
-  // Réception des travaux (F-25) : « Tout est conforme ? », aperçu du PV sans réserves (solde
-  // calculé), cases à cocher, signature chez le prestataire (faux DocuSeal), chantier réceptionné.
+  // Réception avec réserves (F-25, F-26) : « Tout est conforme ? » (solde), puis réserves saisies,
+  // aperçu du PV « avec réserves », signature chez le prestataire (faux DocuSeal). Le PV sans
+  // réserves est couvert par pgTAP.
   await page.goto(`/mon-espace/chantiers/${chantierId}`);
   await page.getByRole("button", { name: "Valider la réception du chantier" }).click();
   const conform = page.getByRole("dialog", { name: "Tout est conforme ?" });
   await expect(conform.getByText(/Le solde de 64,30\s€ vous sera demandé ensuite/)).toBeVisible();
-  await conform.getByRole("link", { name: "Signer le PV de réception" }).click();
-  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}/reception$`));
+  await conform.getByRole("button", { name: "Fermer" }).click();
+  await page.getByRole("button", { name: "Ajouter des réserves sur ce chantier" }).click();
+  const reservesDrawer = page.getByRole("dialog", { name: "Ajouter des réserves sur ce chantier" });
+  await reservesDrawer.getByRole("link", { name: "Ajouter des réserves" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}/reception\\?reserves=1$`));
+  await page.getByLabel("Vos réserves").fill("Court");
+  await page.getByRole("button", { name: "Continuer" }).click();
+  await expect(page.getByText("Décrivez vos réserves en 10 caractères au moins.")).toBeVisible();
+  await page.getByLabel("Vos réserves").fill("Joint du siphon à reprendre.");
+  await page.getByRole("button", { name: "Continuer" }).click();
   const pv = page.getByRole("figure", { name: "Aperçu du procès-verbal de réception" });
-  await expect(pv.getByText("Réception des travaux SANS RÉSERVES")).toBeVisible();
+  await expect(pv.getByText("Réception des travaux AVEC RÉSERVES")).toBeVisible();
+  await expect(pv.getByText("Joint du siphon à reprendre.")).toBeVisible();
   await expect(pv.getByText(/64,30\s€/)).toBeVisible();
   await capture(page, "client-signature-pv");
   await page.getByRole("button", { name: "Signer le PV de réception" }).click();
@@ -522,6 +532,31 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page).toHaveURL(/localhost:54397\/s\/signature-\d+$/);
   await page.getByRole("button", { name: "Signer le document" }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}\\?reception=signee$`));
+  await expect(page.getByText("Réserves à lever", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Vos réserves" }).getByText("Joint du siphon à reprendre."),
+  ).toBeVisible();
+
+  // Levée des réserves (F-26) : signalée par l'artisan, confirmée par le client (« Le chantier
+  // est-il parfait ? ») ; le chantier est réceptionné.
+  await proPage.goto(chantierUrl);
+  await expect(
+    proPage.getByRole("region", { name: "Réserves émises par Dominique" }),
+  ).toBeVisible();
+  await proPage.getByRole("button", { name: "Signaler la levée des réserves" }).click();
+  const lift = proPage.getByRole("dialog", { name: "Les réserves sont-elles levées ?" });
+  await lift.getByLabel(/Message pour votre client/).fill("Joint du siphon refait ce matin.");
+  await lift.getByRole("button", { name: "Signaler la levée" }).click();
+  await expect(
+    proPage.getByText(/Levée signalée le .+ : en attente de la confirmation de Dominique\./),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(/Noé a signalé la levée des réserves le/)).toBeVisible();
+  await expect(page.getByText("« Joint du siphon refait ce matin. »")).toBeVisible();
+  await page.getByRole("button", { name: "Confirmer la levée des réserves" }).click();
+  const perfect = page.getByRole("dialog", { name: "Le chantier est-il parfait ?" });
+  await expect(perfect.getByText(/Le solde de 64,30\s€ vous sera ensuite demandé/)).toBeVisible();
+  await perfect.getByRole("button", { name: "Confirmer la levée des réserves" }).click();
   await expect(page.getByText(/^Réceptionné le \d{2}\/\d{2}\/\d{4}$/)).toBeVisible();
   await expect(
     page.getByText(/Réception validée le .+ Prochaine étape : le paiement du solde\./),

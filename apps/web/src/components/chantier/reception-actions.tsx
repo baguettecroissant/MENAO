@@ -1,11 +1,14 @@
 "use client";
 
 import type { Route } from "next";
-import { useCallback, useState } from "react";
+import { useActionState, useCallback, useState } from "react";
 import { Drawer } from "@/components/drawer";
 import { StickyActions } from "@/components/pro/detail";
-import { Button, ButtonLink } from "@/components/ui";
+import { Alert, Button, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { initialFormState } from "@/lib/auth/form";
+import { confirmReservesLifted } from "@/lib/project/reception-actions";
+import { useActionSuccess } from "@/lib/use-action-success";
 
 const t = fr.chantier.reception;
 
@@ -61,6 +64,44 @@ export function ReceptionActions({
             {t.back}
           </Button>
         </div>
+      </Drawer>
+    </>
+  );
+}
+
+/** F-26 « Confirmer la levée des réserves » (tiroir « Le chantier est-il parfait ? »). */
+export function ConfirmLiftActions({
+  chantierId,
+  balance,
+}: {
+  chantierId: string;
+  balance: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const [state, formAction, pending] = useActionState(
+    confirmReservesLifted.bind(null, chantierId),
+    initialFormState,
+  );
+  useActionSuccess(state, close);
+  return (
+    <>
+      <StickyActions>
+        <Button type="button" size="lg" onClick={() => setOpen(true)}>
+          {t.confirmLift}
+        </Button>
+      </StickyActions>
+      <Drawer open={open} onClose={close} title={t.perfectTitle} backLabel={t.close}>
+        <form action={formAction} className="flex flex-col gap-4" noValidate>
+          <p className="text-sm text-muted-foreground">{t.perfectText(balance)}</p>
+          {state.error && <Alert tone="error">{state.error}</Alert>}
+          <Button type="submit" size="lg" disabled={pending}>
+            {t.confirmLift}
+          </Button>
+          <Button type="button" variant="ghost" onClick={close}>
+            {t.back}
+          </Button>
+        </form>
       </Drawer>
     </>
   );

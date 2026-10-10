@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CHANTIER_TRANSITIONS } from "../src/chantier-state";
-import { RESERVES_LIMITS, canStartReception, receptionNumber } from "../src/reception";
+import {
+  RESERVES_ESCALATION_DAYS,
+  RESERVES_LIMITS,
+  RESERVES_REMINDER_DAYS,
+  canLiftReserves,
+  canStartReception,
+  receptionNumber,
+} from "../src/reception";
 
 describe("réception des travaux (F-25, F-26)", () => {
   it("réception ouverte une fois la fin des travaux déclarée", () => {
@@ -30,5 +37,16 @@ describe("réception des travaux (F-25, F-26)", () => {
 
   it("réserves : 10 à 2 000 caractères", () => {
     expect(RESERVES_LIMITS).toEqual({ min: 10, max: 2000 });
+  });
+
+  it("levée des réserves : pendant les réserves à lever, relance à J+7, ticket à J+30", () => {
+    expect(canLiftReserves("reserves_a_lever")).toBe(true);
+    expect(canLiftReserves("receptionne")).toBe(false);
+    expect([RESERVES_REMINDER_DAYS, RESERVES_ESCALATION_DAYS]).toEqual([7, 30]);
+    expect(CHANTIER_TRANSITIONS).toContainEqual([
+      "reserves_a_lever",
+      "reserves_levees",
+      "receptionne",
+    ]);
   });
 });

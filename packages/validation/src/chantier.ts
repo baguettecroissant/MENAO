@@ -1,4 +1,4 @@
-import { CHANTIER_MESSAGE_MAX_LENGTH, RESERVES_LIMITS } from "@menao/core";
+import { CHANTIER_MESSAGE_MAX_LENGTH, LIFT_MESSAGE_MAX_LENGTH, RESERVES_LIMITS } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -64,4 +64,9 @@ export const receptionConsentsSchema = z.object({
   cgu_prestataire: receptionConsent,
   cgu_menao: receptionConsent,
   echeancier: receptionConsent,
+});
+
+/** F-26 « Signaler la levée des réserves » : message facultatif pour le client. */
+export const liftMessageSchema = z.object({
+  message: z.string().trim().max(LIFT_MESSAGE_MAX_LENGTH, { error: messages.tooLong }),
 });

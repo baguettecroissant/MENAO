@@ -810,6 +810,13 @@ export const fr = {
       received: (date: string) =>
         `Réception validée le ${date}. Prochaine étape : le paiement du solde.`,
       pvDocument: "PV de réception",
+      liftSignaled: (artisan: string, date: string) =>
+        `${artisan} a signalé la levée des réserves le ${date} : vérifiez les reprises, puis confirmez.`,
+      confirmLift: "Confirmer la levée des réserves",
+      perfectTitle: "Le chantier est-il parfait ?",
+      perfectText: (balance: string) =>
+        `En confirmant la levée des réserves, vous validez la fin définitive de vos travaux. Le solde de ${balance} vous sera ensuite demandé.`,
+      lifted: "Levée des réserves confirmée.",
     },
     report: "Signaler un problème lié au chantier",
     chooseAnother: "Choisir un autre artisan",
@@ -1128,6 +1135,16 @@ export const fr = {
         "Intervenez pour lever ces réserves : votre client confirmera ensuite leur levée, puis réglera le solde.",
       received: (client: string, date: string) =>
         `Réception validée par ${client} le ${date}. Prochaine étape : le paiement du solde.`,
+      signalLift: "Signaler la levée des réserves",
+      liftTitle: "Les réserves sont-elles levées ?",
+      liftText: (client: string) =>
+        `${client} sera invité à vérifier les reprises, puis à confirmer la levée des réserves. Pensez à ajouter des photos des reprises dans le suivi du chantier.`,
+      liftMessage: "Message pour votre client",
+      liftMessageNote: "(facultatif)",
+      liftSubmit: "Signaler la levée",
+      liftSignaled: (client: string, date: string) =>
+        `Levée signalée le ${date} : en attente de la confirmation de ${client}.`,
+      liftSent: "Levée des réserves signalée à votre client.",
       yourClientFallback: "votre client",
     },
     quote: {
@@ -1751,6 +1768,7 @@ export const fr = {
         dossier_recherche: "Dossier de recherche",
         contact: "Message de la page Contact",
         expertise: "Expertise d'un autre corps de métier (signalée par un artisan)",
+        reserves: "Levée des réserves non confirmée (30 jours après le signalement)",
       },
       empty: "Aucun dossier.",
       open: "À traiter",
