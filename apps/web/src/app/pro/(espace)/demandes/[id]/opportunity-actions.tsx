@@ -80,6 +80,7 @@ export function OpportunityActions({
                     <textarea
                       id="refusal-detail"
                       name="detail"
+                      defaultValue={refused.values?.detail}
                       rows={3}
                       maxLength={500}
                       aria-invalid={refused.fieldErrors?.detail ? true : undefined}

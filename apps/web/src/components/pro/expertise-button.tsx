@@ -48,7 +48,7 @@ export function ExpertiseButton({
           <SelectField
             label={t.trade}
             name="trade"
-            defaultValue=""
+            defaultValue={state.values?.trade ?? ""}
             required
             errors={state.fieldErrors?.trade}
           >
@@ -69,6 +69,7 @@ export function ExpertiseButton({
             <textarea
               id="expertise-message"
               name="message"
+              defaultValue={state.values?.message}
               rows={3}
               maxLength={2000}
               className={`${inputClasses} min-h-24 py-3`}

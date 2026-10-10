@@ -20,11 +20,9 @@ export async function refuseRequest(
   formData: FormData,
 ): Promise<FormState> {
   if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
-  const parsed = refusalSchema.safeParse({
-    reason: text(formData, "reason") ?? "",
-    detail: text(formData, "detail") ?? "",
-  });
-  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const values = { reason: text(formData, "reason") ?? "", detail: text(formData, "detail") ?? "" };
+  const parsed = refusalSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
   const { supabase } = await requireArtisan();
   const { error } = await supabase.rpc("artisan_respond_request", {
     p_request_id: requestId,
@@ -32,7 +30,9 @@ export async function refuseRequest(
     p_reason: parsed.data.reason,
     p_detail: parsed.data.detail,
   });
-  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
+  if (error) {
+    return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  }
   refresh();
   return { success: t.refused };
 }

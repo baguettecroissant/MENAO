@@ -23,23 +23,26 @@ const rpcError = (error: { code?: string; message: string }): FormState => ({
   error: error.code === "22023" ? error.message : fr.errors.generic,
 });
 
-/** Date et heure saisies : format (Zod), puis à venir et au plus 180 jours (@menao/core). */
+/**
+ * Date et heure saisies : format (Zod), puis à venir et au plus 180 jours (@menao/core). Les
+ * valeurs saisies sont renvoyées avec les erreurs : React vide le formulaire après l'envoi.
+ */
 function readAppointment(
   formData: FormData,
-): { ok: true; date: string; time: string } | { ok: false; state: FormState } {
-  const parsed = appointmentSchema.safeParse({
-    date: text(formData, "date") ?? "",
-    time: text(formData, "time") ?? "",
-  });
+):
+  | { ok: true; date: string; time: string; values: Record<string, string> }
+  | { ok: false; state: FormState } {
+  const values = { date: text(formData, "date") ?? "", time: text(formData, "time") ?? "" };
+  const parsed = appointmentSchema.safeParse(values);
   if (!parsed.success) {
-    return { ok: false, state: { fieldErrors: z.flattenError(parsed.error).fieldErrors } };
+    return { ok: false, state: { fieldErrors: z.flattenError(parsed.error).fieldErrors, values } };
   }
   const issue = appointmentInputError(parsed.data.date, parsed.data.time, new Date());
   if (issue) {
     const message = issue === "invalide" ? messages.appointmentDate : t.errors[issue];
-    return { ok: false, state: { fieldErrors: { date: [message] } } };
+    return { ok: false, state: { fieldErrors: { date: [message] }, values } };
   }
-  return { ok: true, ...parsed.data };
+  return { ok: true, ...parsed.data, values };
 }
 
 /** F-17 « Fixer un rendez-vous » : crée le chantier puis ouvre la vue du rendez-vous. */
@@ -57,7 +60,9 @@ export async function fixAppointment(
     p_date: input.date,
     p_time: input.time,
   });
-  if (error || !chantierId) return error ? rpcError(error) : { error: fr.errors.generic };
+  if (error || !chantierId) {
+    return { ...(error ? rpcError(error) : { error: fr.errors.generic }), values: input.values };
+  }
   revalidatePath("/pro", "layout");
   redirect(`/pro/chantiers/${chantierId}` as Route);
 }
@@ -76,7 +81,7 @@ export async function rescheduleAppointment(
     p_date: input.date,
     p_time: input.time,
   });
-  if (error) return rpcError(error);
+  if (error) return { ...rpcError(error), values: input.values };
   revalidatePath("/pro", "layout");
   return { success: t.rescheduled };
 }
@@ -88,14 +93,15 @@ export async function cancelChantier(
   formData: FormData,
 ): Promise<FormState> {
   if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
-  const parsed = cancelChantierSchema.safeParse({ reason: text(formData, "reason") ?? "" });
-  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const values = { reason: text(formData, "reason") ?? "" };
+  const parsed = cancelChantierSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
   const { supabase } = await requireArtisan();
   const { error } = await supabase.rpc("artisan_cancel_chantier", {
     p_chantier_id: chantierId,
     p_reason: parsed.data.reason,
   });
-  if (error) return rpcError(error);
+  if (error) return { ...rpcError(error), values };
   revalidatePath("/pro", "layout");
   return { success: t.cancelTitle };
 }
@@ -107,14 +113,15 @@ export async function saveAppointmentNotes(
   formData: FormData,
 ): Promise<FormState> {
   if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
-  const parsed = appointmentNotesSchema.safeParse({ notes: text(formData, "notes") ?? "" });
-  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const values = { notes: text(formData, "notes") ?? "" };
+  const parsed = appointmentNotesSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
   const { supabase } = await requireArtisan();
   const { error } = await supabase.rpc("artisan_save_appointment_notes", {
     p_chantier_id: chantierId,
     p_notes: parsed.data.notes,
   });
-  if (error) return rpcError(error);
+  if (error) return { ...rpcError(error), values };
   revalidatePath(`/pro/chantiers/${chantierId}`);
   return { success: t.notesSaved };
 }
@@ -126,17 +133,15 @@ export async function reportExpertise(
   formData: FormData,
 ): Promise<FormState> {
   if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
-  const parsed = expertiseSchema.safeParse({
-    trade: text(formData, "trade") ?? "",
-    message: text(formData, "message") ?? "",
-  });
-  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const values = { trade: text(formData, "trade") ?? "", message: text(formData, "message") ?? "" };
+  const parsed = expertiseSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
   const { supabase } = await requireArtisan();
   const { error } = await supabase.rpc("artisan_report_expertise", {
     p_request_id: requestId,
     p_trade_code: parsed.data.trade,
     p_message: parsed.data.message,
   });
-  if (error) return rpcError(error);
+  if (error) return { ...rpcError(error), values };
   return { success: fr.pro.expertise.sent };
 }

@@ -105,7 +105,7 @@ export function NotesBlock({ chantierId, notes }: { chantierId: string; notes: s
         name="notes"
         rows={5}
         maxLength={5000}
-        defaultValue={notes ?? ""}
+        defaultValue={state.values?.notes ?? notes ?? ""}
         autoFocus
         aria-invalid={state.fieldErrors?.notes ? true : undefined}
         className={`${inputClasses} min-h-32 py-3`}
@@ -149,6 +149,7 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
             <textarea
               id="cancel-reason"
               name="reason"
+              defaultValue={state.values?.reason}
               rows={3}
               maxLength={500}
               className={`${inputClasses} min-h-24 py-3`}

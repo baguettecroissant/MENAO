@@ -62,7 +62,7 @@ export function AppointmentForm({
             type="date"
             required
             min={minDate}
-            defaultValue={defaultDate}
+            defaultValue={state.values?.date ?? defaultDate}
             aria-invalid={dateError ? true : undefined}
             aria-describedby={dateError ? "rdv-date-error" : undefined}
             onClick={openPicker}
@@ -86,7 +86,7 @@ export function AppointmentForm({
             type="time"
             required
             step={300}
-            defaultValue={defaultTime}
+            defaultValue={state.values?.time ?? defaultTime}
             aria-invalid={timeError ? true : undefined}
             aria-describedby={timeError ? "rdv-time-error" : undefined}
             onClick={openPicker}

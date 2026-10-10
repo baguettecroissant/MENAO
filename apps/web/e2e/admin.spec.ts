@@ -64,7 +64,7 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await signIn(page, "dossier@example.test");
   await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
   await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-  await page.getByRole("link", { name: "Mon dossier" }).click();
+  await page.getByRole("link", { name: "Mon dossier", exact: true }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(page.getByRole("main").getByRole("status").first()).toHaveText(
     "Votre dossier est validé.",
