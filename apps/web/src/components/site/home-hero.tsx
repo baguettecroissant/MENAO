@@ -38,26 +38,29 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
         <div className="relative flex min-h-[620px] flex-col p-3 sm:p-6 lg:min-h-[680px]">
           <HomeNav />
 
-          {/* Pastilles flottantes : engagements réels de MENAO (pas de faux témoignages). */}
-          <ul aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block">
-            {t.heroTags.map((tag, i) => {
-              const Icon = TAG_ICONS[i] ?? BadgeCheck;
-              const position = [
-                "top-[34%] right-[30%]",
-                "top-[48%] right-[8%]",
-                "top-[60%] right-[24%]",
-              ][i];
-              return (
-                <li
-                  key={tag}
-                  className={`absolute ${position} flex items-center gap-2 rounded-2xl border border-white/40 bg-white/20 px-3.5 py-2 text-sm font-medium text-white shadow-raised backdrop-blur-md`}
-                >
-                  <Icon className="size-4" />
-                  {tag}
-                </li>
-              );
-            })}
-          </ul>
+          {/* Pastilles flottantes : engagements réels de MENAO (pas de faux témoignages). Masquées
+              sur la photo : posées sur des personnes fictives, elles ressembleraient à des badges. */}
+          {!HERO_IMAGE && (
+            <ul aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block">
+              {t.heroTags.map((tag, i) => {
+                const Icon = TAG_ICONS[i] ?? BadgeCheck;
+                const position = [
+                  "top-[34%] right-[30%]",
+                  "top-[48%] right-[8%]",
+                  "top-[60%] right-[24%]",
+                ][i];
+                return (
+                  <li
+                    key={tag}
+                    className={`absolute ${position} flex items-center gap-2 rounded-2xl border border-white/40 bg-white/20 px-3.5 py-2 text-sm font-medium text-white shadow-raised backdrop-blur-md`}
+                  >
+                    <Icon className="size-4" />
+                    {tag}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
           <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[34rem]">
             <h1 className="text-[2.375rem] leading-[1.05] font-medium tracking-tight text-white sm:text-[3.25rem] lg:text-[3.75rem]">

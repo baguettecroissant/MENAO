@@ -153,20 +153,22 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         </nav>
 
         <div
-          className={`relative overflow-hidden rounded-hero bg-gradient-to-br px-6 py-10 sm:px-10 sm:py-14 ${visual.gradient}`}
+          className={`relative grid overflow-hidden rounded-hero bg-gradient-to-br ${visual.gradient} ${
+            tradeImage ? "md:grid-cols-[minmax(0,1fr)_minmax(0,40%)]" : ""
+          }`}
         >
           {tradeImage ? (
-            <>
+            // Photo portrait en colonne (bandeau en mobile) : affichée sans agrandissement, visage
+            // entier, jamais sous le texte ; fondue dans le dégradé du métier.
+            <div className="relative h-56 md:order-2 md:h-auto md:min-h-[24rem]">
               {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
               <img
                 src={tradeImage}
                 alt=""
                 fetchPriority="high"
-                className="absolute inset-0 size-full object-cover object-[center_15%] sm:object-[center_3%]"
+                className="absolute inset-0 size-full object-cover object-[center_22%] [mask-image:linear-gradient(to_bottom,black_55%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,black_35%)]"
               />
-              <div className="absolute inset-0 bg-[#0b1230]/30" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0b1230]/85 via-[#0b1230]/45 to-transparent" />
-            </>
+            </div>
           ) : (
             <TradeIcon
               aria-hidden="true"
@@ -174,7 +176,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
               className="absolute -right-8 -bottom-10 size-72 text-white/15"
             />
           )}
-          <div className="relative flex max-w-2xl flex-col gap-4 text-white">
+          <div className="relative flex max-w-2xl flex-col justify-center gap-4 px-6 pt-4 pb-10 text-white sm:px-10 sm:pb-14 md:order-1 md:py-14">
             <h1 className="text-[2.25rem] leading-tight font-medium tracking-tight sm:text-[3rem]">
               {title}
             </h1>
