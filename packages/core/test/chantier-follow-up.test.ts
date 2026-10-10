@@ -6,9 +6,9 @@ import {
   START_DATE_STATUSES,
   canDeclareFinished,
   canEditStartDate,
-  chantierJournal,
   chantierStartInputError,
   isJournalOpen,
+  journalSummary,
   type ChantierUpdate,
 } from "../src/chantier-follow-up";
 import { CHANTIER_TRANSITIONS } from "../src/chantier-state";
@@ -50,7 +50,7 @@ describe("suivi du chantier (F-22)", () => {
     expect([...Constants.public.Enums.chantier_update_kind]).toEqual(["message", "photo"]);
   });
 
-  it("journal : du plus récent au plus ancien, photos ajoutées ensemble regroupées", () => {
+  it("journal : photos et messages du plus récent au plus ancien, dernière mise à jour", () => {
     const photo = (id: string, createdAt: string): ChantierUpdate => ({
       id,
       kind: "photo",
@@ -65,34 +65,21 @@ describe("suivi du chantier (F-22)", () => {
       storagePath: null,
       createdAt,
     });
-    const journal = chantierJournal([
-      photo("p3", "2026-10-12T09:09:00Z"),
-      message("m1", "2026-10-12T08:00:00Z", "Matériel livré."),
-      photo("p1", "2026-10-12T09:00:00Z"),
-      photo("p2", "2026-10-12T09:05:00Z"),
-      // 11 minutes après la précédente : nouvelle entrée.
-      photo("p4", "2026-10-12T09:20:00Z"),
-      message("m2", "2026-10-12T10:00:00Z", "Fin de la première journée."),
-      // Un message sépare les photos, même rapprochées.
-      photo("p5", "2026-10-12T10:01:00Z"),
-    ]);
-    expect(journal).toEqual([
-      { kind: "photos", id: "p5", paths: ["c/p5.jpg"], createdAt: "2026-10-12T10:01:00Z" },
-      {
-        kind: "message",
-        id: "m2",
-        message: "Fin de la première journée.",
-        createdAt: "2026-10-12T10:00:00Z",
-      },
-      { kind: "photos", id: "p4", paths: ["c/p4.jpg"], createdAt: "2026-10-12T09:20:00Z" },
-      {
-        kind: "photos",
-        id: "p1",
-        paths: ["c/p1.jpg", "c/p2.jpg", "c/p3.jpg"],
-        createdAt: "2026-10-12T09:09:00Z",
-      },
-      { kind: "message", id: "m1", message: "Matériel livré.", createdAt: "2026-10-12T08:00:00Z" },
-    ]);
-    expect(chantierJournal([])).toEqual([]);
+    expect(
+      journalSummary([
+        photo("p1", "2026-10-12T09:00:00Z"),
+        message("m1", "2026-10-12T08:00:00Z", "Matériel livré."),
+        photo("p2", "2026-10-12T09:05:00Z"),
+        message("m2", "2026-10-12T10:00:00Z", "Saignées rebouchées."),
+      ]),
+    ).toEqual({
+      photos: ["c/p2.jpg", "c/p1.jpg"],
+      messages: [
+        { id: "m2", message: "Saignées rebouchées.", createdAt: "2026-10-12T10:00:00Z" },
+        { id: "m1", message: "Matériel livré.", createdAt: "2026-10-12T08:00:00Z" },
+      ],
+      lastUpdateAt: "2026-10-12T10:00:00Z",
+    });
+    expect(journalSummary([])).toEqual({ photos: [], messages: [], lastUpdateAt: null });
   });
 });

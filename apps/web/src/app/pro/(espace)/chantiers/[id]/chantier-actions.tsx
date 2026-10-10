@@ -1,10 +1,13 @@
 "use client";
 
-import { NotebookPen, Plus } from "lucide-react";
-import { useActionState, useCallback, useState } from "react";
+import { Calendar, Clock, NotebookPen, Plus } from "lucide-react";
+import type { Route } from "next";
+import { usePathname, useRouter } from "next/navigation";
+import { useActionState, useCallback, useState, type MouseEvent } from "react";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
-import { Alert, Button, FieldError, inputClasses } from "@/components/ui";
+import { PhotoUpload } from "@/components/pro/chantier-journal-forms";
+import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import {
   cancelChantier,
@@ -18,6 +21,16 @@ import { useActionSuccess } from "@/lib/use-action-success";
 
 const t = fr.pro.appointment;
 const tf = fr.pro.followUp;
+// Champs date et heure : icône à gauche comme sur la maquette, sélecteur ouvert au clic.
+const pickerInput = "bg-surface pl-10 [&::-webkit-calendar-picker-indicator]:hidden";
+
+function openPicker(event: MouseEvent<HTMLInputElement>) {
+  try {
+    event.currentTarget.showPicker();
+  } catch {
+    // Sélecteur indisponible (navigateur ancien) : saisie au clavier.
+  }
+}
 
 /** « Modifier » dans le bandeau du rendez-vous : nouvelle date et heure d'arrivée. */
 export function RescheduleButton({
@@ -169,54 +182,126 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
 }
 
 /**
- * F-22 « Confirmer la date de démarrage » (barre d'actions, après l'acompte) ou « Modifier »
- * (bandeau, chantier planifié) : date et heure de démarrage des travaux.
+ * F-22 « Confirmer la date de démarrage » (maquette « Vue d'un chantier - Date à confirmer ») :
+ * panneau en bas de l'écran, date et heure côte à côte. Une fois la date confirmée, la page
+ * affiche la confirmation (?demarrage=confirme).
  */
-export function ChantierStartButton({
+export function ChantierStartPanel({
   chantierId,
-  mode,
   minDate,
   date,
   time,
   hint,
 }: {
   chantierId: string;
-  mode: "confirm" | "edit";
   minDate: string;
   date?: string;
   time: string;
   hint?: string;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [state, formAction, pending] = useActionState(
+    confirmChantierStart.bind(null, chantierId),
+    initialFormState,
+  );
+  const confirmed = useCallback(
+    () => router.replace(`${pathname}?demarrage=confirme` as Route, { scroll: false }),
+    [router, pathname],
+  );
+  useActionSuccess(state, confirmed);
+  const dateError = state.fieldErrors?.date?.[0];
+  const timeError = state.fieldErrors?.time?.[0];
+  return (
+    <div className="sticky bottom-0 z-20 border-t border-border bg-surface px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-raised sm:px-6">
+      <form action={formAction} className="mx-auto flex max-w-3xl flex-col gap-3" noValidate>
+        <h2 className="text-sm font-medium">{tf.confirmTitle}</h2>
+        {state.error && <Alert tone="error">{state.error}</Alert>}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
+            <label htmlFor="start-date" className="sr-only">
+              {tf.startDate}
+            </label>
+            <Calendar
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              id="start-date"
+              name="date"
+              type="date"
+              required
+              min={minDate}
+              defaultValue={state.values?.date ?? date}
+              aria-invalid={dateError ? true : undefined}
+              aria-describedby={dateError ? "start-date-error" : undefined}
+              onClick={openPicker}
+              className={`${inputClasses} ${pickerInput}`}
+            />
+          </div>
+          <div className="relative">
+            <label htmlFor="start-time" className="sr-only">
+              {tf.startTime}
+            </label>
+            <Clock
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              id="start-time"
+              name="time"
+              type="time"
+              required
+              step={300}
+              defaultValue={state.values?.time ?? time}
+              aria-invalid={timeError ? true : undefined}
+              aria-describedby={timeError ? "start-time-error" : undefined}
+              onClick={openPicker}
+              className={`${inputClasses} ${pickerInput}`}
+            />
+          </div>
+        </div>
+        {dateError && <FieldError id="start-date-error">{dateError}</FieldError>}
+        {timeError && <FieldError id="start-time-error">{timeError}</FieldError>}
+        {hint && <Hint>{hint}</Hint>}
+        <Button type="submit" size="lg" disabled={pending}>
+          {tf.confirm}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+/** « Modifier » la date de démarrage, tant que les travaux n'ont pas commencé (client prévenu). */
+export function EditChantierStartButton({
+  chantierId,
+  minDate,
+  date,
+  time,
+}: {
+  chantierId: string;
+  minDate: string;
+  date: string;
+  time: string;
+}) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   return (
     <>
-      {mode === "confirm" ? (
-        <Button type="button" size="lg" onClick={() => setOpen(true)}>
-          {tf.confirm}
-        </Button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded-md text-sm font-medium text-white underline underline-offset-2 hover:text-white/85 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none"
-        >
-          {tf.edit}
-        </button>
-      )}
-      <Drawer
-        open={open}
-        onClose={close}
-        title={mode === "confirm" ? tf.confirm : tf.editTitle}
-        backLabel={t.backToForm}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="self-center rounded-md px-2 py-1 text-sm font-medium text-primary-strong hover:underline focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
       >
+        {tf.editTitle}
+      </button>
+      <Drawer open={open} onClose={close} title={tf.editTitle} backLabel={t.backToForm}>
         <AppointmentForm
           action={confirmChantierStart.bind(null, chantierId)}
-          submitLabel={mode === "confirm" ? tf.confirmSubmit : tf.editSubmit}
+          submitLabel={tf.editSubmit}
           minDate={minDate}
           defaultDate={date}
           defaultTime={time}
-          hint={hint}
           dateLabel={tf.startDate}
           timeLabel={tf.startTime}
           onSuccess={close}
@@ -227,15 +312,15 @@ export function ChantierStartButton({
 }
 
 /**
- * F-22 « Déclarer le chantier terminé » : tiroir de confirmation rappelant d'ajouter les photos
- * finales ; le client est ensuite invité à réceptionner les travaux.
+ * F-22 « Déclarer le chantier terminé » (maquette « Ce chantier est-il terminé ? ») : rappel
+ * d'ajouter les photos finales, puis le client est invité à réceptionner les travaux.
  */
 export function DeclareFinishedButton({
   chantierId,
-  photoCount,
+  clientName,
 }: {
   chantierId: string;
-  photoCount: number;
+  clientName: string;
 }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -249,17 +334,16 @@ export function DeclareFinishedButton({
       <Button type="button" size="lg" onClick={() => setOpen(true)}>
         {tf.finish}
       </Button>
-      <Drawer open={open} onClose={close} title={tf.finish} backLabel={t.backToForm}>
+      <Drawer open={open} onClose={close} title={tf.finishTitle} backLabel={tf.finishClose}>
         <form action={formAction} className="flex flex-col gap-4" noValidate>
-          <p className="text-sm text-muted-foreground">{tf.finishIntro}</p>
-          {photoCount === 0 && <Alert tone="info">{tf.finishNoPhoto}</Alert>}
-          <p className="text-sm">{tf.finishNext}</p>
+          <p className="text-sm text-muted-foreground">{tf.finishIntro(clientName)}</p>
+          <p className="rounded-input bg-primary-softer px-4 py-3 text-sm text-primary-strong">
+            <span className="font-medium">{tf.finishImportant}</span> {tf.finishReminder}
+          </p>
+          <PhotoUpload chantierId={chantierId} label={tf.addPhotos} variant="link" />
           {state.error && <Alert tone="error">{state.error}</Alert>}
           <Button type="submit" size="lg" disabled={pending}>
-            {tf.finishConfirm}
-          </Button>
-          <Button type="button" variant="secondary" onClick={close}>
-            {tf.finishBack}
+            {tf.finish}
           </Button>
         </form>
       </Drawer>

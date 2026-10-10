@@ -1,0 +1,64 @@
+import type { ChantierStatus } from "@menao/core";
+import { fr } from "@/i18n/fr";
+import { formatDateNumeric } from "@/lib/format";
+
+const t = fr.chantier;
+
+export type ChantierTagData = {
+  text: string;
+  tone: "primary" | "success" | "neutral" | "danger";
+  /** Pastille d'état avec point (« • Chantier en cours ») plutôt que simple puce. */
+  dot: boolean;
+};
+
+/** Pastille de l'état du chantier (maquettes « Mes chantiers », « Vue d'un chantier »). */
+export function chantierTag(c: {
+  status: ChantierStatus;
+  startAt: string | null;
+  finishedAt: string | null;
+  closedAt: string | null;
+}): ChantierTagData {
+  switch (c.status) {
+    case "planifie":
+      return c.startAt
+        ? { text: t.startPlanned(formatDateNumeric(c.startAt)), tone: "primary", dot: false }
+        : { text: t.clientStatus.planifie, tone: "primary", dot: false };
+    case "en_cours":
+      return { text: t.inProgress, tone: "primary", dot: true };
+    case "travaux_termines":
+      return c.finishedAt
+        ? { text: t.finishedOn(formatDateNumeric(c.finishedAt)), tone: "success", dot: false }
+        : { text: t.clientStatus.travaux_termines, tone: "success", dot: false };
+    case "cloture":
+      return c.closedAt
+        ? { text: t.closedOn(formatDateNumeric(c.closedAt)), tone: "success", dot: false }
+        : { text: t.clientStatus.cloture, tone: "success", dot: false };
+    case "annule":
+      return {
+        text: c.closedAt ? t.cancelledOn(formatDateNumeric(c.closedAt)) : t.clientStatus.annule,
+        tone: "neutral",
+        dot: false,
+      };
+    case "devis_refuse":
+      return { text: t.quoteRefused, tone: "neutral", dot: false };
+    case "en_litige":
+      return { text: t.clientStatus.en_litige, tone: "danger", dot: true };
+    default:
+      return { text: t.clientStatus[c.status], tone: "primary", dot: false };
+  }
+}
+
+export type NextInterventionData = { kind: "rendez_vous" | "demarrage"; startsAt: string };
+
+/** Prochaine intervention : rendez-vous planifié, puis démarrage des travaux confirmé. */
+export function nextIntervention(c: {
+  status: ChantierStatus;
+  appointmentAt: string | null;
+  startAt: string | null;
+}): NextInterventionData | null {
+  if (c.status === "rdv_planifie" && c.appointmentAt) {
+    return { kind: "rendez_vous", startsAt: c.appointmentAt };
+  }
+  if (c.status === "planifie" && c.startAt) return { kind: "demarrage", startsAt: c.startAt };
+  return null;
+}

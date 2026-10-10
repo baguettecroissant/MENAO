@@ -14,8 +14,6 @@ export const CHANTIER_MESSAGE_MAX_LENGTH = 2000;
 export const MAX_CHANTIER_PHOTOS = 100;
 /** Photos envoyées en une fois par « Ajouter des photos ». */
 export const MAX_CHANTIER_PHOTOS_PER_BATCH = 10;
-/** Photos ajoutées à moins de 10 minutes d'intervalle : présentées ensemble dans le journal. */
-const PHOTO_GROUP_WINDOW_MS = 10 * 60_000;
 
 /** Date confirmée après l'acompte, modifiable tant que les travaux n'ont pas commencé. */
 export const START_DATE_STATUSES = [
@@ -63,33 +61,28 @@ export type ChantierUpdate = {
   createdAt: string;
 };
 
-export type JournalEntry =
-  | { kind: "message"; id: string; message: string; createdAt: string }
-  | { kind: "photos"; id: string; paths: string[]; createdAt: string };
+export type JournalSummary = {
+  /** Chemins des photos, de la plus récente à la plus ancienne. */
+  photos: string[];
+  /** Messages, du plus récent au plus ancien. */
+  messages: { id: string; message: string; createdAt: string }[];
+  lastUpdateAt: string | null;
+};
 
 /**
- * Journal du chantier, du plus récent au plus ancien. Les photos ajoutées ensemble (moins de
- * 10 minutes entre deux photos, sans message entre elles) forment une seule entrée, datée de la
- * dernière photo.
+ * Journal présenté comme sur les maquettes (F-22, F-12) : mosaïque des photos et messages, du plus
+ * récent au plus ancien, avec la date de la dernière mise à jour.
  */
-export function chantierJournal(updates: readonly ChantierUpdate[]): JournalEntry[] {
+export function journalSummary(updates: readonly ChantierUpdate[]): JournalSummary {
   const at = (iso: string) => new Date(iso).getTime();
-  const sorted = [...updates].sort((a, b) => at(a.createdAt) - at(b.createdAt));
-  const entries: JournalEntry[] = [];
-  for (const u of sorted) {
-    if (u.kind === "message") {
-      if (u.message)
-        entries.push({ kind: "message", id: u.id, message: u.message, createdAt: u.createdAt });
-      continue;
-    }
-    if (!u.storagePath) continue;
-    const last = entries.at(-1);
-    if (last?.kind === "photos" && at(u.createdAt) - at(last.createdAt) <= PHOTO_GROUP_WINDOW_MS) {
-      last.paths.push(u.storagePath);
-      last.createdAt = u.createdAt;
-    } else {
-      entries.push({ kind: "photos", id: u.id, paths: [u.storagePath], createdAt: u.createdAt });
-    }
-  }
-  return entries.reverse();
+  const sorted = [...updates].sort((a, b) => at(b.createdAt) - at(a.createdAt));
+  return {
+    photos: sorted.flatMap((u) => (u.kind === "photo" && u.storagePath ? [u.storagePath] : [])),
+    messages: sorted.flatMap((u) =>
+      u.kind === "message" && u.message
+        ? [{ id: u.id, message: u.message, createdAt: u.createdAt }]
+        : [],
+    ),
+    lastUpdateAt: sorted[0]?.createdAt ?? null,
+  };
 }
