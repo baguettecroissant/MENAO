@@ -21,10 +21,10 @@ delete from public.notifications;
 insert into public.artisans (id, user_id, status, raison_sociale, zone_mode, connect_charges_enabled)
 values ('f4000000-0000-4000-8000-000000000001', 'f2000000-0000-4000-8000-000000000001', 'valide', 'ARTISAN X', 'communes', true);
 insert into public.projects (id, user_id, status, description, summary, trade_code, ville_code_insee, ville_nom,
-  code_postal, adresse, urgence, criteria_validated_at) values
+  code_postal, adresse, location, urgence, criteria_validated_at) values
   ('f5000000-0000-4000-8000-000000000001', 'f1000000-0000-4000-8000-000000000001', 'demande_envoyee',
    'Ajouter deux prises.', 'Installation de prises, appelez le 06 12 34 56 78', 'electricien', '06088', 'Nice',
-   '06000', '1 Rue de l''Exemple 06000 Nice', true, now());
+   '06000', '1 Rue de l''Exemple 06000 Nice', 'SRID=4326;POINT(7.26 43.70)', true, now());
 
 -- ---------- Nouvelle demande : à l'artisan ----------
 insert into public.requests (id, project_id, artisan_id, particulier_id, contact_phone) values
