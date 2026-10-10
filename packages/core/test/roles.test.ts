@@ -55,7 +55,7 @@ describe("roleFromAppMetadata", () => {
 describe("homePathForRole", () => {
   it("envoie les artisans vers leur onboarding, les autres vers leur espace", () => {
     expect(homePathForRole("artisan_en_attente")).toBe("/pro/onboarding");
-    expect(homePathForRole("artisan")).toBe("/pro/onboarding");
+    expect(homePathForRole("artisan")).toBe("/pro/tableau-de-bord");
     expect(homePathForRole("particulier")).toBe("/mon-espace");
     expect(homePathForRole("admin")).toBe("/admin");
     expect(homePathForRole("support")).toBe("/mon-espace");

@@ -6,7 +6,10 @@ import { updateSession } from "@/lib/supabase/proxy";
 const PROTECTED_PREFIXES = [
   "/mon-espace",
   "/pro/onboarding",
+  "/pro/tableau-de-bord",
   "/pro/demandes",
+  "/pro/chantiers",
+  "/agenda",
   "/nouveau-mot-de-passe",
   "/admin",
 ];
@@ -64,7 +67,10 @@ export const config = {
     "/auth/:path*",
     "/pro/inscription",
     "/pro/onboarding/:path*",
+    "/pro/tableau-de-bord",
     "/pro/demandes/:path*",
+    "/pro/chantiers/:path*",
+    "/agenda/:path*",
     "/nouveau-mot-de-passe",
     "/admin/:path*",
     "/recherche/:path*",
