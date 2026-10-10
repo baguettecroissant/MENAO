@@ -31,7 +31,7 @@ test("inscription, confirmation de l'e-mail, déconnexion puis connexion", async
 
   await page.goto(await authLinkFor(request, email));
   await expect(page).toHaveURL(/\/mon-espace$/);
-  await expect(page.getByRole("heading", { name: "Bonjour Camille" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mes chantiers" })).toBeVisible();
   await expect(page.getByText("Particulier", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Me déconnecter" }).click();
@@ -42,7 +42,7 @@ test("inscription, confirmation de l'e-mail, déconnexion puis connexion", async
   await page.getByLabel("Mot de passe").fill(password);
   await page.getByRole("button", { name: "Me connecter" }).click();
   await expect(page).toHaveURL(/\/mon-espace$/);
-  await expect(page.getByRole("heading", { name: "Bonjour Camille" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mes chantiers" })).toBeVisible();
 });
 
 test("connexion par lien magique d'un compte existant (seed)", async ({ page, request }) => {
@@ -73,7 +73,7 @@ test("connexion du compte particulier du seed et retour vers la page demandée",
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
   await expect(page).toHaveURL(/\/mon-espace$/);
-  await expect(page.getByRole("heading", { name: "Bonjour Camille" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mes chantiers" })).toBeVisible();
 });
 
 test("mauvais mot de passe : message générique", async ({ page }) => {
