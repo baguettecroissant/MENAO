@@ -1,6 +1,6 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
-import { NOTIFICATION_TYPES, notificationContent, plainText } from "../src/content.ts";
+import { NOTIFICATION_TYPES, notificationContent, plainText, quoted } from "../src/content.ts";
 import { renderNotification } from "../src/render.tsx";
 
 const ctx = { siteUrl: "https://menao.example/", firstName: "Camille" };
@@ -88,6 +88,68 @@ describe("contenu des notifications (F-41)", () => {
     expect(c.subject).toBe("Xavier a annulé le rendez-vous");
     expect(c.quote).toBe("Planning complet");
     expect(c.cta.label).toBe("Choisir un autre artisan");
+  });
+
+  it("devis reçu, refusé, modification demandée : numéro, montant, motif et message", () => {
+    const quoteId = "33333333-3333-4333-8333-333333333333";
+    const recu = notificationContent(
+      "devis_recu",
+      {
+        ...ids,
+        quote_id: quoteId,
+        titre: "Prises",
+        artisan: "Xavier",
+        numero: "DEVIS-2026-0001",
+        montant_ttc: 33000,
+      },
+      ctx,
+    );
+    expect(recu.subject).toBe("Nouveau devis disponible pour votre chantier !");
+    expect(recu.paragraphs[1]).toContain(
+      `Xavier vous a envoyé son devis n° DEVIS-2026-0001 pour votre projet ${quoted("Prises")}, d'un montant de 330,00`,
+    );
+    expect(recu.cta).toEqual({
+      label: "Voir le devis",
+      url: `https://menao.example/mon-espace/devis/${quoteId}`,
+    });
+
+    const refuse = notificationContent(
+      "devis_refuse",
+      {
+        ...ids,
+        titre: "Prises",
+        client: "Camille",
+        numero: "DEVIS-2026-0001-v2",
+        motif: "trop_cher",
+        message: " Budget dépassé. ",
+      },
+      { ...ctx, firstName: "Xavier" },
+    );
+    expect(refuse.subject).toBe("Camille a refusé votre devis");
+    expect(refuse.paragraphs.slice(1)).toEqual([
+      `Camille a refusé votre devis n° DEVIS-2026-0001-v2 pour ${quoted("Prises")}.`,
+      "Motif indiqué : prix trop élevé.",
+    ]);
+    expect(refuse.quote).toBe("Budget dépassé.");
+    expect(refuse.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+
+    const modification = notificationContent(
+      "devis_modification",
+      {
+        ...ids,
+        titre: "Prises",
+        client: "Camille",
+        numero: "DEVIS-2026-0001",
+        message: "Une prise de plus.",
+      },
+      { ...ctx, firstName: "Xavier" },
+    );
+    expect(modification.subject).toBe("Camille demande une modification de votre devis");
+    expect(modification.quote).toBe("Une prise de plus.");
+    expect(modification.cta).toEqual({
+      label: "Modifier le devis",
+      url: `https://menao.example/pro/chantiers/${ids.chantier_id}/devis`,
+    });
   });
 
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
