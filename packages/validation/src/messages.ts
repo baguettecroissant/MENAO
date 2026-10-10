@@ -54,6 +54,8 @@ export const messages = {
   chantierStartTooFar: "Le démarrage doit avoir lieu dans les 12 prochains mois.",
   chantierMessageRequired: "Écrivez votre message.",
   chantierMessageTooLong: "Votre message dépasse 2 000 caractères.",
+  reservesTooShort: "Décrivez vos réserves en 10 caractères au moins.",
+  reservesTooLong: "Vos réserves dépassent 2 000 caractères.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;
