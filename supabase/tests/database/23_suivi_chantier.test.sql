@@ -149,12 +149,43 @@ select is((select chantier_start_at from public.particulier_requests() where cha
   'suivi du client : date de démarrage');
 reset role;
 
--- ---------- Journal : messages ----------
+-- ---------- Journal fermé avant le début des travaux (F-22, maquettes) ----------
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 set local role service_role;
 select is(public.record_payment(current_setting('test.devis2')::uuid, 'acompte', 'acct_suivi_x2', 'cs_2', 'pi_2', 540, 'paye'),
   'paye', 'acompte de X2 encaissé (date de démarrage non confirmée)');
 reset role;
+select pg_temp.connecter('af200000-0000-4000-8000-000000000001', 'artisan');
+set local role authenticated;
+select throws_ok(format('select public.artisan_add_chantier_message(%L, %L)', current_setting('test.chantier'), 'Bonjour'),
+  '22023', 'Le journal du chantier n''est pas ouvert à cette étape', 'chantier planifié : journal fermé');
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+set local role service_role;
+select is(public.record_chantier_photo(current_setting('test.chantier')::uuid, 'af200000-0000-4000-8000-000000000001',
+  current_setting('test.chantier') || '/p0.jpg'), 'locked', 'chantier planifié : photo refusée');
+reset role;
+
+-- ---------- Démarrage à la date prévue (tâche planifiée) ----------
+select is((select schedule from cron.job where jobname = 'menao-demarrage-chantiers'), '*/15 * * * *',
+  'tâche planifiée toutes les 15 minutes');
+select set_config('request.jwt.claims', '', true);
+select is(app.start_due_chantiers(now()), 0, 'date de démarrage à venir : rien ne démarre');
+select is(app.start_due_chantiers(now() + interval '8 days'), 1, 'date atteinte : le chantier démarre');
+select is(app.start_due_chantiers(now() + interval '8 days'), 0, 'tâche relancée : sans effet');
+select results_eq(
+  $$ select c.status::text, e.from_status::text, e.actor_id is null, e.actor_role
+     from public.chantiers c
+     join public.chantier_events e on e.chantier_id = c.id and e.event = 'demarrage'
+     where c.id = current_setting('test.chantier')::uuid $$,
+  $$ values ('en_cours'::text, 'planifie'::text, true, 'systeme'::text) $$,
+  'planifié → en cours, journalisé par le système');
+select pg_temp.connecter('af100000-0000-4000-8000-000000000001', 'particulier');
+set local role authenticated;
+select throws_ok('select app.start_due_chantiers()', '42501', null, 'particulier : pas de démarrage manuel');
+reset role;
+
+-- ---------- Journal : messages ----------
 select pg_temp.connecter('af200000-0000-4000-8000-000000000001', 'artisan');
 set local role authenticated;
 select ok(public.artisan_add_chantier_message(current_setting('test.chantier')::uuid,
@@ -231,25 +262,6 @@ set local role anon;
 select throws_ok('select 1 from public.chantier_updates', '42501', null, 'visiteur : aucun accès au journal');
 select throws_ok(format('select public.artisan_confirm_start(%L, %L, %L)', current_setting('test.chantier'),
     current_setting('test.aujourdhui')::date + 5, '08:00'), '42501', null, 'visiteur : aucune action');
-reset role;
-
--- ---------- Démarrage à la date prévue (tâche planifiée) ----------
-select is((select schedule from cron.job where jobname = 'menao-demarrage-chantiers'), '*/15 * * * *',
-  'tâche planifiée toutes les 15 minutes');
-select set_config('request.jwt.claims', '', true);
-select is(app.start_due_chantiers(now()), 0, 'date de démarrage à venir : rien ne démarre');
-select is(app.start_due_chantiers(now() + interval '8 days'), 1, 'date atteinte : le chantier démarre');
-select is(app.start_due_chantiers(now() + interval '8 days'), 0, 'tâche relancée : sans effet');
-select results_eq(
-  $$ select c.status::text, e.from_status::text, e.actor_id is null, e.actor_role
-     from public.chantiers c
-     join public.chantier_events e on e.chantier_id = c.id and e.event = 'demarrage'
-     where c.id = current_setting('test.chantier')::uuid $$,
-  $$ values ('en_cours'::text, 'planifie'::text, true, 'systeme'::text) $$,
-  'planifié → en cours, journalisé par le système');
-select pg_temp.connecter('af100000-0000-4000-8000-000000000001', 'particulier');
-set local role authenticated;
-select throws_ok('select app.start_due_chantiers()', '42501', null, 'particulier : pas de démarrage manuel');
 reset role;
 
 -- ---------- Fin des travaux ----------

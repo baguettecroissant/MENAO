@@ -1,4 +1,7 @@
-/** Fichier agenda .ics d'un rendez-vous (F-44), conforme à la RFC 5545. */
+/**
+ * Agenda (F-12, F-44) : fichier .ics d'un rendez-vous ou d'un démarrage de travaux, conforme à la
+ * RFC 5545, et liens « Ajouter à Google Agenda » et « Ajouter à Outlook ».
+ */
 
 export type IcsEvent = {
   uid: string;
@@ -67,4 +70,35 @@ export function buildIcs(event: IcsEvent): string {
     "END:VCALENDAR",
   ];
   return lines.map(fold).join("\r\n") + "\r\n";
+}
+
+export type CalendarEvent = Omit<IcsEvent, "uid" | "stamp">;
+
+const endOf = (event: CalendarEvent) =>
+  new Date(event.start.getTime() + event.durationMinutes * 60_000);
+
+/** « Ajouter à Google Agenda » : mêmes informations que le fichier .ics. */
+export function googleCalendarUrl(event: CalendarEvent): string {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.summary,
+    dates: `${utc(event.start)}/${utc(endOf(event))}`,
+  });
+  if (event.description) params.set("details", event.description);
+  if (event.location) params.set("location", event.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+/** « Ajouter à Outlook » (Outlook.com) : mêmes informations que le fichier .ics. */
+export function outlookCalendarUrl(event: CalendarEvent): string {
+  const params = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: event.summary,
+    startdt: event.start.toISOString(),
+    enddt: endOf(event).toISOString(),
+  });
+  if (event.description) params.set("body", event.description);
+  if (event.location) params.set("location", event.location);
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
 }

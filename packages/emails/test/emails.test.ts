@@ -46,7 +46,10 @@ describe("contenu des notifications (F-41)", () => {
     expect(fixe.paragraphs[1]).toBe(
       "Xavier a fixé un rendez-vous pour votre projet «\u00a0Prises\u00a0» : le vendredi 20 février à 16h30.",
     );
-    expect(fixe.cta.url).toBe("https://menao.example/mon-espace");
+    expect(fixe.cta).toEqual({
+      label: "Voir mon chantier",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
+    });
     const modifie = notificationContent(
       "rdv_modifie",
       { titre: "Prises", artisan: "Xavier", rendez_vous: "2026-07-14T07:00:00Z" },
@@ -181,7 +184,7 @@ describe("contenu des notifications (F-41)", () => {
     const client = notificationContent("acompte_paye", { ...data, destinataire: "client" }, ctx);
     expect(client.subject).toBe("Votre acompte est bien payé");
     expect(client.paragraphs[1]).toContain("a bien été payé à Xavier");
-    expect(client.cta.url).toBe("https://menao.example/mon-espace");
+    expect(client.cta.url).toBe(`https://menao.example/mon-espace/chantiers/${ids.chantier_id}`);
   });
 
   it("suivi du chantier (F-22) : démarrage planifié ou déplacé, travaux terminés", () => {
@@ -196,7 +199,7 @@ describe("contenu des notifications (F-41)", () => {
     expect(planned.paragraphs[1]).toBe(
       `Xavier a confirmé le démarrage des travaux pour ${quoted("Prises")} : le jeudi 22 octobre à 08h00.`,
     );
-    expect(planned.cta.url).toBe("https://menao.example/mon-espace");
+    expect(planned.cta.url).toBe(`https://menao.example/mon-espace/chantiers/${ids.chantier_id}`);
     const moved = notificationContent(
       "demarrage_modifie",
       { ...data, demarrage: "2026-10-26T13:30:00Z" },
@@ -207,6 +210,26 @@ describe("contenu des notifications (F-41)", () => {
     expect(done.subject).toBe(`Travaux terminés pour ${quoted("Prises")}`);
     expect(done.title).toBe("Travaux terminés !");
     expect(done.paragraphs[1]).toContain("Xavier a déclaré terminés les travaux");
+  });
+
+  it("nouveautés du journal (F-12) : photos et messages regroupés, lien vers le suivi", () => {
+    const data = { ...ids, titre: "Prises", artisan: "Jean" };
+    const c = notificationContent("chantier_nouveautes", { ...data, photos: 6, messages: 1 }, ctx);
+    expect(c.title).toBe("Du nouveau sur votre chantier !");
+    expect(c.subject).toBe(`Du nouveau sur votre chantier ${quoted("Prises")}`);
+    expect(c.paragraphs[1]).toBe(
+      `Jean a ajouté 6 nouvelles photos et 1 nouveau message dans le suivi de votre chantier ${quoted("Prises")}.`,
+    );
+    expect(c.cta).toEqual({
+      label: "Voir le suivi du chantier",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
+    });
+    expect(
+      notificationContent("chantier_nouveautes", { ...data, photos: 1, messages: 0 }, ctx).preview,
+    ).toBe("Jean a ajouté 1 nouvelle photo.");
+    expect(notificationContent("chantier_nouveautes", { ...data, messages: 2 }, ctx).preview).toBe(
+      "Jean a ajouté 2 nouveaux messages.",
+    );
   });
 
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
@@ -239,9 +262,13 @@ describe("rendu HTML et texte", () => {
     expect(email.subject).toBe("Rendez-vous fixé le vendredi 20 février à 16h30");
     expect(email.html.startsWith("<!DOCTYPE html")).toBe(true);
     expect(email.html).toContain('lang="fr"');
-    expect(email.html).toContain('href="https://menao.example/mon-espace"');
+    expect(email.html).toContain(
+      `href="https://menao.example/mon-espace/chantiers/${ids.chantier_id}"`,
+    );
     expect(email.html).toContain("Votre rendez-vous est fixé");
-    expect(email.text).toContain("Voir mon espace : https://menao.example/mon-espace");
+    expect(email.text).toContain(
+      `Voir mon chantier : https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
+    );
     expect(email.text).toBe(
       plainText(
         notificationContent(

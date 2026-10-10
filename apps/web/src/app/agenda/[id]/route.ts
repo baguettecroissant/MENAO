@@ -5,8 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
- * « Ajouter à mon agenda » (F-44) : fichier .ics du rendez-vous, pour l'artisan comme pour le
- * particulier (chantier_appointment ne renvoie rien aux autres comptes).
+ * « Ajouter à mon agenda » (F-12, F-44) : fichier .ics du rendez-vous ou du démarrage des travaux,
+ * pour l'artisan comme pour le particulier (chantier_appointment ne renvoie rien aux autres comptes).
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,7 +20,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     uid: id,
     start: new Date(row.starts_at),
     durationMinutes: APPOINTMENT_DURATION_MINUTES,
-    summary: fr.agenda.summary(row.title),
+    summary:
+      row.kind === "demarrage" ? fr.agenda.startSummary(row.title) : fr.agenda.summary(row.title),
     location: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" ") || null,
     description: fr.agenda.description(row.artisan_name, row.client_name),
     stamp: new Date(),
@@ -28,7 +29,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new Response(ics, {
     headers: {
       "content-type": "text/calendar; charset=utf-8",
-      "content-disposition": 'attachment; filename="rendez-vous-menao.ics"',
+      "content-disposition": `attachment; filename="${row.kind === "demarrage" ? "demarrage-travaux" : "rendez-vous"}-menao.ics"`,
       "cache-control": "private, no-store",
     },
   });

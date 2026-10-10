@@ -982,6 +982,7 @@ export type Database = {
           last_error: string | null;
           locked_at: string | null;
           read_at: string | null;
+          send_after: string;
           sent_at: string | null;
           status: Database["public"]["Enums"]["notification_status"];
           type: Database["public"]["Enums"]["notification_type"];
@@ -998,6 +999,7 @@ export type Database = {
           last_error?: string | null;
           locked_at?: string | null;
           read_at?: string | null;
+          send_after?: string;
           sent_at?: string | null;
           status?: Database["public"]["Enums"]["notification_status"];
           type: Database["public"]["Enums"]["notification_type"];
@@ -1013,6 +1015,7 @@ export type Database = {
           last_error?: string | null;
           locked_at?: string | null;
           read_at?: string | null;
+          send_after?: string;
           sent_at?: string | null;
           status?: Database["public"]["Enums"]["notification_status"];
           type?: Database["public"]["Enums"]["notification_type"];
@@ -2144,6 +2147,7 @@ export type Database = {
           artisan_name: string;
           client_name: string;
           code_postal: string;
+          kind: string;
           starts_at: string;
           title: string;
           ville_nom: string;
@@ -2186,6 +2190,35 @@ export type Database = {
           zone_communes: string[];
           zone_mode: Database["public"]["Enums"]["zone_mode"];
           zone_radius_km: number;
+        }[];
+      };
+      particulier_chantiers: {
+        Args: { p_chantier_id?: string };
+        Returns: {
+          adresse: string;
+          appointment_at: string;
+          artisan_avatar_path: string;
+          artisan_id: string;
+          artisan_name: string;
+          artisan_phone: string;
+          chantier_id: string;
+          closed_at: string;
+          code_postal: string;
+          created_at: string;
+          deposit_cents: number;
+          deposit_status: Database["public"]["Enums"]["payment_status"];
+          description: string;
+          finished_at: string;
+          photo_path: string;
+          project_id: string;
+          quote_id: string;
+          quote_status: Database["public"]["Enums"]["quote_status"];
+          quote_total_ttc_cents: number;
+          start_at: string;
+          status: Database["public"]["Enums"]["chantier_status"];
+          title: string;
+          trade_label: string;
+          ville_nom: string;
         }[];
       };
       particulier_refuse_quote: {
@@ -2418,7 +2451,8 @@ export type Database = {
         | "acompte_paye"
         | "chantier_planifie"
         | "demarrage_modifie"
-        | "travaux_termines";
+        | "travaux_termines"
+        | "chantier_nouveautes";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2620,6 +2654,7 @@ export const Constants = {
         "chantier_planifie",
         "demarrage_modifie",
         "travaux_termines",
+        "chantier_nouveautes",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

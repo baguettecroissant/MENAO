@@ -18,6 +18,7 @@ export const NOTIFICATION_TYPES = [
   "chantier_planifie",
   "demarrage_modifie",
   "travaux_termines",
+  "chantier_nouveautes",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -79,6 +80,12 @@ function amount(data: Record<string, unknown>, key: string): string | null {
     : null;
 }
 
+/** Nombre entier positif (compteurs des nouveautés), sinon 0. */
+function count(data: Record<string, unknown>, key: string): number {
+  const value = data[key];
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
 function uuid(data: Record<string, unknown>, key: string): string | null {
   const value = text(data, key);
   return value && UUID.test(value) ? value : null;
@@ -107,6 +114,11 @@ export function notificationContent(
   const artisan = text(data, "artisan") ?? "L'artisan";
   const rdv = moment(text(data, "rendez_vous"));
   const chantierId = uuid(data, "chantier_id");
+  // Vue du chantier du client (F-12), sinon son espace.
+  const myChantier = (label: string) => ({
+    label,
+    url: link(chantierId ? `/mon-espace/chantiers/${chantierId}` : "/mon-espace"),
+  });
 
   switch (type) {
     case "nouvelle_demande": {
@@ -146,7 +158,7 @@ export function notificationContent(
           "Ses coordonnées sont maintenant disponibles dans votre espace, si vous devez le joindre.",
         ],
         quote: null,
-        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+        cta: myChantier("Voir mon chantier"),
       };
     case "rdv_modifie":
       return {
@@ -162,7 +174,7 @@ export function notificationContent(
             : `${artisan} a déplacé le rendez-vous pour votre projet ${quoted(titre)}.`,
         ],
         quote: null,
-        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+        cta: myChantier("Voir mon chantier"),
       };
     case "rdv_rappel": {
       const forArtisan = text(data, "destinataire") === "artisan";
@@ -186,7 +198,7 @@ export function notificationContent(
               label: "Voir le rendez-vous",
               url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
             }
-          : { label: "Voir mon espace", url: link("/mon-espace") },
+          : myChantier("Voir mon chantier"),
       };
     }
     case "chantier_annule":
@@ -312,7 +324,7 @@ export function notificationContent(
           "L'artisan va vous confirmer la date de démarrage des travaux.",
         ],
         quote: null,
-        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+        cta: myChantier("Voir mon chantier"),
       };
     }
     case "chantier_planifie": {
@@ -331,7 +343,7 @@ export function notificationContent(
           "Vous pourrez suivre l'avancement du chantier depuis votre espace.",
         ],
         quote: null,
-        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+        cta: myChantier("Voir mon chantier"),
       };
     }
     case "demarrage_modifie": {
@@ -349,7 +361,7 @@ export function notificationContent(
             : `${artisan} a modifié la date de démarrage des travaux pour ${quoted(titre)}.`,
         ],
         quote: null,
-        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+        cta: myChantier("Voir mon chantier"),
       };
     }
     case "travaux_termines":
@@ -364,8 +376,29 @@ export function notificationContent(
           "Prochaine étape : la réception des travaux, que vous validerez depuis votre espace.",
         ],
         quote: null,
-        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+        cta: myChantier("Voir mon chantier"),
       };
+    case "chantier_nouveautes": {
+      // Nouveautés du journal regroupées (F-12) : « Jean a ajouté 6 nouvelles photos ».
+      const photos = count(data, "photos");
+      const messages = count(data, "messages");
+      const parts = [
+        photos ? (photos === 1 ? "1 nouvelle photo" : `${photos} nouvelles photos`) : null,
+        messages ? (messages === 1 ? "1 nouveau message" : `${messages} nouveaux messages`) : null,
+      ].filter((part): part is string => part !== null);
+      const added = parts.length ? `a ajouté ${parts.join(" et ")}` : "a publié des nouveautés";
+      return {
+        subject: `Du nouveau sur votre chantier ${quoted(titre)}`,
+        preview: `${artisan} ${added}.`,
+        title: "Du nouveau sur votre chantier !",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} ${added} dans le suivi de votre chantier ${quoted(titre)}.`,
+        ],
+        quote: null,
+        cta: myChantier("Voir le suivi du chantier"),
+      };
+    }
   }
 }
 
