@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
+import { env } from "@/env";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.clientQuote;
@@ -99,6 +100,27 @@ export async function startSignature(
         ? ((await error.context.json().catch(() => null)) as { message?: string } | null)
         : null;
     return { error: body?.message ?? t.signature.unavailable, values };
+  }
+  redirect(data.url as Route);
+}
+
+/**
+ * F-31 « Payer l'acompte » : paiement Stripe Checkout ouvert directement sur le compte de
+ * l'artisan (aucune commission MENAO), où le client est redirigé.
+ */
+export async function payDeposit(quoteId: string): Promise<FormState> {
+  if (!z.uuid().safeParse(quoteId).success) return { error: fr.errors.generic };
+  const supabase = await createClient();
+  const { data, error } = await supabase.functions.invoke<{ status: string; url?: string }>(
+    "deposit-checkout",
+    { body: { quoteId, origin: env.NEXT_PUBLIC_SITE_URL } },
+  );
+  if (error || !data?.url) {
+    const body =
+      error instanceof FunctionsHttpError && error.context.status === 409
+        ? ((await error.context.json().catch(() => null)) as { message?: string } | null)
+        : null;
+    return { error: body?.message ?? t.deposit.unavailable };
   }
   redirect(data.url as Route);
 }

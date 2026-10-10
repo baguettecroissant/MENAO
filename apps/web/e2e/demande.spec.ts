@@ -1,11 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { authLinkFor } from "./mailpit";
+import { signedStripeEvent } from "./stripe";
 
 // Demande de chantier (F-08, F-11, F-16 à F-18) : sélection de 2 artisans, compte créé au moment
 // de la demande (le projet anonyme est conservé), rendez-vous fixé par l'artisan (coordonnées
 // échangées), notes privées, brouillon de devis et dictée intelligente (F-19), date du
 // rendez-vous et fichier agenda côté particulier.
 const UUID = "[0-9a-f-]{36}";
+// Stripe est remplacé par stripe-mock en CI ; le webhook Connect est simulé et signé ici.
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
+const CONNECT_SECRET = process.env.STRIPE_CONNECT_WEBHOOK_SECRET ?? "whsec_menao_connect_ci";
 
 // Micro simulé par Chromium (son de test) pour la dictée du devis.
 test.use({
@@ -298,7 +302,60 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(signedPdf.headers()["content-disposition"]).toMatch(/DEVIS-\d{4}-0001-v2-signe\.pdf/);
 
   // L'artisan voit le devis signé sur la fiche du chantier.
-  await proPage.goto(previewUrl.replace(/\/devis\/apercu$/, ""));
+  const chantierUrl = previewUrl.replace(/\/devis\/apercu$/, "");
+  await proPage.goto(chantierUrl);
   await expect(proPage.getByText(/Le client a signé le devis le/)).toBeVisible();
+  await expect(
+    proPage.getByText("En attente du paiement de l'acompte par le client."),
+  ).toBeVisible();
+
+  // Paiement de l'acompte (F-31) : Stripe Checkout sur le compte de l'artisan (simulé), puis
+  // webhook Connect signé ; aucune commission MENAO.
+  const quoteUrl = page.url().split("?")[0] ?? "";
+  const quoteId = quoteUrl.split("/").pop() ?? "";
+  await page.goto(quoteUrl);
+  await page.getByRole("link", { name: /Payer l'acompte \(27,55\s€\)/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}/acompte$`));
+  await expect(page.getByText("Bénéficiaire : PLOMBERIE NICE EXEMPLE")).toBeVisible();
+  await page.route("https://checkout.stripe.com/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<h1>Stripe Checkout (simulé)</h1>" }),
+  );
+  await page.getByRole("button", { name: /Payer 27,55/ }).click();
+  await expect(page).toHaveURL(/^https:\/\/checkout\.stripe\.com\//);
+  const now = Math.floor(Date.now() / 1000);
+  const paid = signedStripeEvent(
+    {
+      id: `evt_acompte_${now}`,
+      object: "event",
+      type: "checkout.session.completed",
+      account: "acct_seed_nice",
+      api_version: "2026-09-30.endive",
+      created: now,
+      livemode: false,
+      data: {
+        object: {
+          id: `cs_e2e_${now}`,
+          object: "checkout.session",
+          mode: "payment",
+          payment_status: "paid",
+          amount_total: 2755,
+          currency: "eur",
+          payment_intent: `pi_e2e_${now}`,
+          metadata: { menao_quote_id: quoteId, menao_kind: "acompte" },
+        },
+      },
+    },
+    CONNECT_SECRET,
+  );
+  const delivered = await request.post(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
+    data: paid.payload,
+    headers: { "Stripe-Signature": paid.header, "Content-Type": "application/json" },
+  });
+  expect(delivered.status()).toBe(200);
+  await page.goto(quoteUrl);
+  await expect(page.getByText(/Acompte de 27,55\s€ payé le/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /Payer l'acompte/ })).toHaveCount(0);
+  await proPage.goto(chantierUrl);
+  await expect(proPage.getByText(/Acompte de 27,55\s€ payé le/)).toBeVisible();
   await pro.close();
 });

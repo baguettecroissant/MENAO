@@ -51,6 +51,17 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
         .limit(1)
         .maybeSingle(),
     ]);
+  // F-31 : acompte du devis signé.
+  const { data: deposit } =
+    sentQuote?.status === "signe"
+      ? await supabase
+          .from("payments")
+          .select("status, amount_cents, paid_at")
+          .eq("quote_id", sentQuote.id)
+          .eq("kind", "acompte")
+          .in("status", ["en_attente", "en_cours", "paye"])
+          .maybeSingle()
+      : { data: null };
   const status = c.chantier.status;
   // F-19 : devis à créer après le rendez-vous, ou à modifier si le client l'a demandé.
   const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
@@ -105,7 +116,7 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
             <StatusBadge tone="primary">{fr.pro.chantiers.status[status]}</StatusBadge>
           </div>
         )}
-        {sentQuote && <SentQuoteBlock quote={sentQuote} />}
+        {sentQuote && <SentQuoteBlock quote={sentQuote} deposit={deposit} />}
         <RequestBlocks
           detail={c}
           photoUrls={(signed ?? []).flatMap((p) => (p.signedUrl ? [p.signedUrl] : []))}
