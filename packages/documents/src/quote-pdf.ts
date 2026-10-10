@@ -11,8 +11,19 @@ import {
   type PDFPage,
   type RGB,
 } from "pdf-lib";
+import { SIGNER_ROLE } from "../../core/src/signature.ts";
 import { winAnsi } from "./format.ts";
 import { QUOTE_TEXTS as T, quoteDocumentModel, type QuotePdfData } from "./quote-model.ts";
+
+/**
+ * Balises lues par le prestataire de signature (F-13) : champs « date » et « signature » du
+ * client, dans le cadre « Bon pour accord » du devis envoyé. Écrites en blanc, elles sont
+ * retirées du PDF signé. Dimensions en points, à vérifier au premier essai réel (ADR 0022).
+ */
+export const SIGNATURE_TAGS = {
+  date: `{{Date;role=${SIGNER_ROLE};type=date;width=90;height=12}}`,
+  signature: `{{Signature;role=${SIGNER_ROLE};type=signature;width=200;height=34}}`,
+} as const;
 
 // ---------------------------------------------------------------------------
 // Dessin (A4, Helvetica)
@@ -280,22 +291,27 @@ export async function renderQuotePdf(data: QuotePdfData): Promise<Uint8Array> {
   c.y -= 4;
   for (const mention of m.mentions) c.paragraph(mention, 8, { color: COLOR.muted });
 
-  // « Bon pour accord » (signature électronique à venir, F-13).
-  c.ensure(96);
+  // « Bon pour accord » : date et signature du client, posées par le prestataire (F-13).
+  c.ensure(118);
   c.y -= 14;
   const boxTop = c.y;
   c.page.drawRectangle({
     x: right - 250,
-    y: boxTop - 78,
+    y: boxTop - 100,
     width: 250,
-    height: 78,
+    height: 100,
     borderColor: COLOR.line,
     borderWidth: 1,
   });
   c.text(winAnsi(T.agreement), right - 240, boxTop - 16, 9.5, { bold: true });
-  c.text(winAnsi(T.agreementDate), right - 240, boxTop - 34, 8.5, { color: COLOR.muted });
-  c.text(winAnsi(T.agreementSignature), right - 240, boxTop - 50, 8.5, { color: COLOR.muted });
-  c.y = boxTop - 84;
+  c.text(winAnsi(T.agreementDate), right - 240, boxTop - 32, 8.5, { color: COLOR.muted });
+  c.text(winAnsi(T.agreementSignature), right - 240, boxTop - 48, 8.5, { color: COLOR.muted });
+  if (!data.preview) {
+    const tag = { size: 5, font: fonts.regular, color: rgb(1, 1, 1) };
+    c.page.drawText(SIGNATURE_TAGS.date, { x: right - 205, y: boxTop - 32, ...tag });
+    c.page.drawText(SIGNATURE_TAGS.signature, { x: right - 240, y: boxTop - 60, ...tag });
+  }
+  c.y = boxTop - 106;
 
   // Pied de page et filigrane d'aperçu sur toutes les pages.
   const pages = doc.getPages();
