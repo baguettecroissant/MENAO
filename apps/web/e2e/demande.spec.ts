@@ -383,8 +383,12 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.goto(quoteUrl);
   await expect(page.getByText(/Acompte de 27,55\s€ payé le/)).toBeVisible();
   await expect(page.getByRole("link", { name: /Payer l'acompte/ })).toHaveCount(0);
-  await proPage.goto(chantierUrl);
-  await expect(proPage.getByText(/Acompte de 27,55\s€ payé le/)).toBeVisible();
+  // Côté artisan, la fiche devient la vue du chantier : acompte reçu, échéancier du dossier.
+  await proPage.goto(`${chantierUrl}?onglet=dossier`);
+  await expect(proPage.getByText("Acompte reçu")).toBeVisible();
+  await expect(
+    proPage.getByRole("region", { name: "Échéancier de paiement" }).getByText(/27,55\s€/),
+  ).toBeVisible();
 
   // Facture d'acompte (F-35) : émise à l'encaissement au nom de l'artisan, numéro FAC-AAAA-0001.
   const invoiceLink = page.getByRole("link", { name: /Facture d'acompte FAC-\d{4}-0001 \(PDF\)/ });
