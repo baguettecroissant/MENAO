@@ -4,13 +4,17 @@ import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
 import { requestDetailSchema } from "./requests";
 
-/** Détail d'un chantier de l'artisan (F-18) : demande d'origine, état, rendez-vous et notes privées. */
+/**
+ * Détail d'un chantier de l'artisan (F-18, F-22) : demande d'origine, état, date de démarrage,
+ * rendez-vous et notes privées.
+ */
 const chantierDetailSchema = requestDetailSchema.extend({
   chantier: z.object({
     id: z.string(),
     status: z.enum(CHANTIER_STATUSES),
     title: z.string(),
     created_at: z.string(),
+    start_at: z.string().nullable(),
     cancelled_at: z.string().nullable(),
   }),
   appointment: z

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { files } from "./fixtures";
 import { authLinkFor } from "./mailpit";
 import { signedStripeEvent } from "./stripe";
 
@@ -373,5 +374,31 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(csv).toContain('"Dominique Test"');
   // 27,55 € TTC à 10 % : 25,05 € HT et 2,50 € de TVA.
   expect(csv).toContain('"25,05";"2,50";"27,55"');
+
+  // Suivi du chantier (F-22) : date de démarrage confirmée après l'acompte (date du devis
+  // proposée), puis journal (message et photo). Le démarrage à la date prévue et la fin des
+  // travaux sont couverts par pgTAP (date simulée).
+  await proPage.goto(chantierUrl);
+  await expect(
+    proPage.getByText("Chantier validé ! Confirmez la date de démarrage."),
+  ).toBeVisible();
+  await proPage.getByRole("button", { name: "Confirmer la date de démarrage" }).click();
+  const startDrawer = proPage.getByRole("dialog", { name: "Confirmer la date de démarrage" });
+  await expect(startDrawer.getByLabel("Date de démarrage")).toHaveValue(day(12));
+  await startDrawer.getByLabel("Heure de démarrage").fill("08:30");
+  await startDrawer.getByRole("button", { name: "Confirmer le démarrage" }).click();
+  await expect(proPage.getByRole("heading", { level: 1, name: "Suivi du chantier" })).toBeVisible();
+  await expect(proPage.getByText(/^Démarrage le /)).toBeVisible();
+  await expect(proPage.getByText("08h30", { exact: true })).toBeVisible();
+  const journal = proPage.getByRole("region", { name: "Journal du chantier" });
+  await journal.getByLabel("Ajouter un message").fill("Matériel commandé, livraison lundi.");
+  await journal.getByRole("button", { name: "Publier le message" }).click();
+  await expect(journal.getByText("Message publié.")).toBeVisible();
+  await expect(journal.getByText("Matériel commandé, livraison lundi.")).toBeVisible();
+  await journal.getByLabel("Ajouter des photos").setInputFiles(files.png);
+  await expect(journal.getByText("Photo ajoutée au journal.")).toBeVisible();
+  await expect(journal.getByRole("img", { name: "Photo 1 sur 1" })).toBeVisible();
+  await page.goto("/mon-espace");
+  await expect(page.getByText(/Démarrage des travaux le .+ à 08h30/)).toBeVisible();
   await pro.close();
 });

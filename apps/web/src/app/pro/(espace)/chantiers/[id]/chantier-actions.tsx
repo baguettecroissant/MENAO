@@ -8,6 +8,8 @@ import { Alert, Button, FieldError, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import {
   cancelChantier,
+  confirmChantierStart,
+  declareChantierFinished,
   rescheduleAppointment,
   saveAppointmentNotes,
 } from "@/lib/artisan/chantier-actions";
@@ -15,6 +17,7 @@ import { initialFormState } from "@/lib/auth/form";
 import { useActionSuccess } from "@/lib/use-action-success";
 
 const t = fr.pro.appointment;
+const tf = fr.pro.followUp;
 
 /** « Modifier » dans le bandeau du rendez-vous : nouvelle date et heure d'arrivée. */
 export function RescheduleButton({
@@ -158,6 +161,105 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
           </div>
           <Button type="submit" variant="danger" size="lg" disabled={pending}>
             {t.cancelConfirm}
+          </Button>
+        </form>
+      </Drawer>
+    </>
+  );
+}
+
+/**
+ * F-22 « Confirmer la date de démarrage » (barre d'actions, après l'acompte) ou « Modifier »
+ * (bandeau, chantier planifié) : date et heure de démarrage des travaux.
+ */
+export function ChantierStartButton({
+  chantierId,
+  mode,
+  minDate,
+  date,
+  time,
+  hint,
+}: {
+  chantierId: string;
+  mode: "confirm" | "edit";
+  minDate: string;
+  date?: string;
+  time: string;
+  hint?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  return (
+    <>
+      {mode === "confirm" ? (
+        <Button type="button" size="lg" onClick={() => setOpen(true)}>
+          {tf.confirm}
+        </Button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-md text-sm font-medium text-white underline underline-offset-2 hover:text-white/85 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none"
+        >
+          {tf.edit}
+        </button>
+      )}
+      <Drawer
+        open={open}
+        onClose={close}
+        title={mode === "confirm" ? tf.confirm : tf.editTitle}
+        backLabel={t.backToForm}
+      >
+        <AppointmentForm
+          action={confirmChantierStart.bind(null, chantierId)}
+          submitLabel={mode === "confirm" ? tf.confirmSubmit : tf.editSubmit}
+          minDate={minDate}
+          defaultDate={date}
+          defaultTime={time}
+          hint={hint}
+          dateLabel={tf.startDate}
+          timeLabel={tf.startTime}
+          onSuccess={close}
+        />
+      </Drawer>
+    </>
+  );
+}
+
+/**
+ * F-22 « Déclarer le chantier terminé » : tiroir de confirmation rappelant d'ajouter les photos
+ * finales ; le client est ensuite invité à réceptionner les travaux.
+ */
+export function DeclareFinishedButton({
+  chantierId,
+  photoCount,
+}: {
+  chantierId: string;
+  photoCount: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const [state, formAction, pending] = useActionState(
+    declareChantierFinished.bind(null, chantierId),
+    initialFormState,
+  );
+  useActionSuccess(state, close);
+  return (
+    <>
+      <Button type="button" size="lg" onClick={() => setOpen(true)}>
+        {tf.finish}
+      </Button>
+      <Drawer open={open} onClose={close} title={tf.finish} backLabel={t.backToForm}>
+        <form action={formAction} className="flex flex-col gap-4" noValidate>
+          <p className="text-sm text-muted-foreground">{tf.finishIntro}</p>
+          {photoCount === 0 && <Alert tone="info">{tf.finishNoPhoto}</Alert>}
+          <p className="text-sm">{tf.finishNext}</p>
+          {state.error && <Alert tone="error">{state.error}</Alert>}
+          <Button type="submit" size="lg" disabled={pending}>
+            {tf.finishConfirm}
+          </Button>
+          <Button type="button" variant="secondary" onClick={close}>
+            {tf.finishBack}
           </Button>
         </form>
       </Drawer>

@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 const tone = (status: ChantierStatus) =>
   status === "annule" || status === "devis_refuse"
     ? "neutral"
-    : status === "rdv_planifie" || status === "devis_en_revision"
+    : status === "rdv_planifie" || status === "devis_en_revision" || status === "acompte_paye"
       ? "primary"
       : status === "en_litige"
         ? "danger"
@@ -65,6 +65,14 @@ export default async function ChantiersPage() {
                             formatDayInline(r.appointment_at),
                             formatTime(r.appointment_at),
                           )}
+                        </Tag>
+                      </div>
+                    )}
+                    {r.status === "planifie" && r.start_at && (
+                      <div>
+                        <Tag>
+                          <CalendarDays aria-hidden="true" className="size-3.5" />
+                          {t.startOn(formatDayInline(r.start_at), formatTime(r.start_at))}
                         </Tag>
                       </div>
                     )}

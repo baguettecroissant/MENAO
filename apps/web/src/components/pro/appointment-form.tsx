@@ -20,7 +20,10 @@ function openPicker(event: MouseEvent<HTMLInputElement>) {
   }
 }
 
-/** Champs du tiroir « Fixer un rendez-vous » / « Modifier le rendez-vous » (date + heure d'arrivée). */
+/**
+ * Champs du tiroir « Fixer un rendez-vous » / « Modifier le rendez-vous » (date + heure d'arrivée),
+ * repris pour la date de démarrage du chantier (F-22).
+ */
 export function AppointmentForm({
   action,
   submitLabel,
@@ -28,6 +31,8 @@ export function AppointmentForm({
   defaultDate,
   defaultTime,
   hint,
+  dateLabel = t.date,
+  timeLabel = t.time,
   onSuccess,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -37,6 +42,8 @@ export function AppointmentForm({
   defaultDate?: string;
   defaultTime?: string;
   hint?: string;
+  dateLabel?: string;
+  timeLabel?: string;
   onSuccess?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
@@ -49,7 +56,7 @@ export function AppointmentForm({
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="rdv-date" className="text-sm font-medium">
-          {t.date}
+          {dateLabel}
         </label>
         <div className="relative">
           <Calendar
@@ -73,7 +80,7 @@ export function AppointmentForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="rdv-time" className="text-sm font-medium">
-          {t.time}
+          {timeLabel}
         </label>
         <div className="relative">
           <Clock
