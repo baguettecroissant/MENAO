@@ -1661,6 +1661,11 @@ export type Database = {
           document: NonNullable<Json>;
           id: string;
           issued_on: string;
+          lift_escalated_at: string | null;
+          lift_message: string | null;
+          lift_reminded_at: string | null;
+          lift_signaled_at: string | null;
+          lifted_at: string | null;
           numero: string;
           quote_id: string;
           reserves: string | null;
@@ -1679,6 +1684,11 @@ export type Database = {
           document: NonNullable<Json>;
           id?: string;
           issued_on: string;
+          lift_escalated_at?: string | null;
+          lift_message?: string | null;
+          lift_reminded_at?: string | null;
+          lift_signaled_at?: string | null;
+          lifted_at?: string | null;
           numero: string;
           quote_id: string;
           reserves?: string | null;
@@ -1696,6 +1706,11 @@ export type Database = {
           document?: NonNullable<Json>;
           id?: string;
           issued_on?: string;
+          lift_escalated_at?: string | null;
+          lift_message?: string | null;
+          lift_reminded_at?: string | null;
+          lift_signaled_at?: string | null;
+          lifted_at?: string | null;
           numero?: string;
           quote_id?: string;
           reserves?: string | null;
@@ -2260,6 +2275,10 @@ export type Database = {
         };
         Returns: string;
       };
+      artisan_signal_reserves_lifted: {
+        Args: { p_chantier_id: string; p_message: string };
+        Returns: undefined;
+      };
       chantier_appointment: {
         Args: { p_chantier_id: string };
         Returns: {
@@ -2342,6 +2361,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_confirm_reserves_lifted: { Args: { p_chantier_id: string }; Returns: undefined };
       particulier_refuse_quote: {
         Args: {
           p_comment?: string;
@@ -2589,7 +2609,10 @@ export type Database = {
         | "travaux_termines"
         | "chantier_nouveautes"
         | "pv_signe"
-        | "reserves_emises";
+        | "reserves_emises"
+        | "levee_signalee"
+        | "levee_confirmee"
+        | "levee_relance";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2606,7 +2629,7 @@ export type Database = {
       review_decision: "valide" | "refuse" | "complement";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
       ticket_status: "ouvert" | "en_cours" | "resolu";
-      ticket_type: "dossier_recherche" | "contact" | "expertise";
+      ticket_type: "dossier_recherche" | "contact" | "expertise" | "reserves";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -2795,6 +2818,9 @@ export const Constants = {
         "chantier_nouveautes",
         "pv_signe",
         "reserves_emises",
+        "levee_signalee",
+        "levee_confirmee",
+        "levee_relance",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
@@ -2812,7 +2838,7 @@ export const Constants = {
       review_decision: ["valide", "refuse", "complement"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
-      ticket_type: ["dossier_recherche", "contact", "expertise"],
+      ticket_type: ["dossier_recherche", "contact", "expertise", "reserves"],
       zone_mode: ["rayon", "communes"],
     },
   },
