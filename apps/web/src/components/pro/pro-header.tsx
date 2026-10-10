@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth/actions";
@@ -30,6 +31,7 @@ export function ProHeader({
           <ProHeaderNav />
         </div>
         <div className="flex items-center gap-2">
+          <NotificationBell />
           <Link
             href="/pro/onboarding"
             className="flex items-center gap-2 rounded-pill py-1 pr-1 pl-1 hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:pr-3"

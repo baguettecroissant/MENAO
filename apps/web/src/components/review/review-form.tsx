@@ -26,11 +26,11 @@ import {
 import { startTransition, useActionState, useState, type ReactNode } from "react";
 import { Alert, Button, FieldError, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { initialFormState, type FormState } from "@/lib/auth/form";
+import { initialFormState } from "@/lib/auth/form";
 import { submitReview } from "@/lib/reviews/actions";
+import { useFieldErrors } from "@/lib/use-field-errors";
 
 const t = fr.review;
-const NONE: ReadonlySet<string> = new Set();
 
 /** Pictogramme de chaque tranche (« Inacceptable » … « Irréprochable »), comme la maquette. */
 const BAND_ICONS: Record<ReviewCriterion, readonly LucideIcon[]> = {
@@ -60,17 +60,7 @@ export function ReviewForm({
   );
   const [comment, setComment] = useState("");
   // Champs modifiés depuis le dernier envoi : leur erreur n'est plus affichée.
-  const [edited, setEdited] = useState<{ after: FormState; fields: ReadonlySet<string> }>({
-    after: state,
-    fields: NONE,
-  });
-  const editedFields = edited.after === state ? edited.fields : NONE;
-  const markEdited = (field: string) => {
-    if (!editedFields.has(field))
-      setEdited({ after: state, fields: new Set([...editedFields, field]) });
-  };
-  const errorOf = (field: string) =>
-    editedFields.has(field) ? undefined : state.fieldErrors?.[field]?.[0];
+  const { errorOf, markEdited } = useFieldErrors(state);
   const commentError = errorOf("comment");
   const valueError = errorOf("value_for_money");
   const length = comment.trim().length;

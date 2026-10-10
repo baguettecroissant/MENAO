@@ -15,6 +15,7 @@
     "@menao/core": "workspace:^",
     "@menao/db": "workspace:^",
     "@menao/documents": "workspace:^",
+    "@menao/emails": "workspace:^",
     "@menao/ui-tokens": "workspace:^",
     "@menao/validation": "workspace:^",
     "@sentry/nextjs": "11.6.0",

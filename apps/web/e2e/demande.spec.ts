@@ -739,6 +739,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.getByRole("button", { name: "Envoyer le signalement" }).click();
   await expect(page.getByText("Choisissez la nature du problème.")).toBeVisible();
   await page.getByText("Malfaçon").click();
+  // L'erreur disparaît dès que le champ est corrigé.
+  await expect(page.getByText("Choisissez la nature du problème.")).toHaveCount(0);
   await page
     .getByLabel("Description du problème")
     .fill("Le joint du siphon fuit de nouveau depuis hier soir.");
@@ -761,5 +763,19 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.goto(`/mon-espace/chantiers/${chantierId}`);
   await expect(page.getByText(/Votre signalement est en cours de traitement/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Suivre mon signalement" })).toBeVisible();
+
+  // Centre de notifications (F-41) : cloche avec les non lues, mêmes textes que les e-mails, lien
+  // vers la page concernée ; préférences d'e-mail (activité du chantier désactivée).
+  await page.getByRole("link", { name: /^Notifications : \d+ non lues?$/ }).click();
+  await expect(page).toHaveURL(/\/notifications$/);
+  const solde = page.getByRole("link", { name: /Votre chantier est terminé/ });
+  await expect(solde).toHaveAttribute("href", `/mon-espace/chantiers/${chantierId}/avis`);
+  await page.getByLabel(/Activité du chantier/).uncheck();
+  await page.getByRole("button", { name: "Enregistrer mes préférences" }).click();
+  await expect(page.getByText("Préférences enregistrées.")).toBeVisible();
+  await capture(page, "client-notifications");
+  await page.reload();
+  await expect(page.getByLabel(/Activité du chantier/)).not.toBeChecked();
+  await expect(page.getByLabel(/Rappels/)).toBeChecked();
   await pro.close();
 });

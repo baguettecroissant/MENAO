@@ -957,6 +957,21 @@ export const fr = {
     button: "Message",
     writeClient: "Écrire au client",
   },
+  notificationCenter: {
+    title: "Notifications",
+    subtitle: "Les dernières nouvelles de vos demandes et de vos chantiers.",
+    empty: "Aucune notification pour le moment.",
+    bell: (n: number) =>
+      n === 0 ? "Notifications" : `Notifications : ${n} non lue${n > 1 ? "s" : ""}`,
+    unread: "Non lue",
+    prefsTitle: "Préférences d'e-mails",
+    prefsIntro:
+      "Les e-mails importants (devis, paiements, réception, litiges, avis reçus) sont toujours envoyés. Les autres peuvent être désactivés ; ils restent visibles ici.",
+    activite: "Activité du chantier : nouvelles photos et nouveaux messages",
+    rappels: "Rappels : rendez-vous de la veille, avis à laisser, levée des réserves à confirmer",
+    save: "Enregistrer mes préférences",
+    saved: "Préférences enregistrées.",
+  },
   dispute: {
     reportTitle: "Signaler un problème",
     back: "Retour au chantier",
