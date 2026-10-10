@@ -25,6 +25,8 @@ export const NOTIFICATION_TYPES = [
   "levee_confirmee",
   "levee_relance",
   "solde_paye",
+  "avis_recu",
+  "avis_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -125,6 +127,12 @@ export function notificationContent(
     label,
     url: link(chantierId ? `/mon-espace/chantiers/${chantierId}` : "/mon-espace"),
   });
+  // Avis sur l'artisan (F-28) : « Comment s'est passée votre expérience ? ».
+  const artisanName = text(data, "artisan");
+  const reviewCta = {
+    label: artisanName ? `Noter ${artisanName}` : "Donner mon avis",
+    url: link(chantierId ? `/mon-espace/chantiers/${chantierId}/avis` : "/mon-espace"),
+  };
 
   switch (type) {
     case "nouvelle_demande": {
@@ -518,11 +526,45 @@ export function notificationContent(
           hello(ctx.firstName),
           `Votre solde${montant ? ` de ${montant}` : ""} pour ${quoted(titre)} a bien été payé à ${artisan}.`,
           "Le chantier est clôturé : la facture de solde est disponible dans le dossier du chantier. Merci de votre confiance !",
+          "Votre avis est précieux : prenez un court instant pour noter l'intervention et aider la communauté MENAO à choisir les meilleurs artisans.",
         ],
         quote: null,
-        cta: myChantier("Voir mon chantier"),
+        cta: reviewCta,
       };
     }
+    case "avis_recu": {
+      // F-28 : avis publié sur la fiche de l'artisan.
+      const client = text(data, "client") ?? "Votre client";
+      return {
+        subject: `Nouvel avis de ${client}`,
+        preview: `${client} a laissé un avis sur ${quoted(titre)}.`,
+        title: "Nouvel avis client",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a laissé un avis sur le chantier ${quoted(titre)}. Il est publié sur votre fiche MENAO, avec la mention ${quoted("Avis vérifié")}.`,
+          "Vous pouvez y répondre publiquement, une seule fois, depuis la page du chantier.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir l'avis",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
+      };
+    }
+    case "avis_relance":
+      // F-28 : relance unique du client, 3 jours après la clôture, sans avis.
+      return {
+        subject: "Votre avis est précieux",
+        preview: `Partagez votre expérience avec ${artisan}.`,
+        title: "Votre avis est précieux",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} a terminé votre chantier ${quoted(titre)}. Partagez votre expérience pour aider la communauté MENAO à faire le bon choix pour leurs chantiers.`,
+          "Cela ne prend qu'une minute : trois curseurs, le rapport qualité/prix et quelques mots.",
+        ],
+        quote: null,
+        cta: reviewCta,
+      };
   }
 }
 

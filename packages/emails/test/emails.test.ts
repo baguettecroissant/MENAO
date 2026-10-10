@@ -291,7 +291,30 @@ describe("contenu des notifications (F-41)", () => {
     const client = notificationContent("solde_paye", { ...data, destinataire: "client" }, ctx);
     expect(client.subject).toBe("Votre chantier est terminé");
     expect(client.paragraphs[1]).toContain("a bien été payé à Jean");
-    expect(client.cta.url).toBe(`https://menao.example/mon-espace/chantiers/${ids.chantier_id}`);
+    expect(client.paragraphs[3]).toContain("Votre avis est précieux");
+    expect(client.cta).toEqual({
+      label: "Noter Jean",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}/avis`,
+    });
+  });
+
+  it("avis (F-28) : avis reçu par l'artisan, relance du client", () => {
+    const data = { ...ids, titre: "Prises", artisan: "Jean", client: "Camille", score: 95 };
+    const received = notificationContent("avis_recu", data, { ...ctx, firstName: "Jean" });
+    expect(received.subject).toBe("Nouvel avis de Camille");
+    expect(received.paragraphs[2]).toContain("une seule fois");
+    expect(received.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    const reminder = notificationContent("avis_relance", data, ctx);
+    expect(reminder.subject).toBe("Votre avis est précieux");
+    expect(reminder.paragraphs[1]).toContain(`Jean a terminé votre chantier ${quoted("Prises")}`);
+    expect(reminder.cta).toEqual({
+      label: "Noter Jean",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}/avis`,
+    });
+    expect(notificationContent("avis_relance", {}, ctx).cta).toEqual({
+      label: "Donner mon avis",
+      url: "https://menao.example/mon-espace",
+    });
   });
 
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
