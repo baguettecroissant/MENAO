@@ -25,3 +25,4 @@ export * from "./reception";
 export * from "./review";
 export * from "./messaging";
 export * from "./dispute";
+export * from "./notifications";
