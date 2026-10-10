@@ -160,7 +160,10 @@ select throws_ok('select 1 from public.quote_lines', '42501', null, 'visiteur : 
 reset role;
 
 -- ---------- Devis envoyé : lignes figées, visible du particulier ----------
-update public.quotes set status = 'envoye' where id = current_setting('test.devis')::uuid;
+update public.quotes set status = 'envoye', numero = 'DEVIS-2026-0001', sent_at = now(),
+  valid_until = current_date + 30, start_date = current_date + 10, duration_days = 2,
+  payment_schedule = '[]', document = '{}'
+where id = current_setting('test.devis')::uuid;
 select throws_ok(
   $$ update public.quote_lines set unit_price_ht_cents = 1 where quote_id = current_setting('test.devis')::uuid $$,
   '42501', 'Les lignes d''un devis envoyé ne peuvent plus changer', 'lignes d''un devis envoyé figées');

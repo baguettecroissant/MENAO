@@ -10,6 +10,9 @@ export const NOTIFICATION_TYPES = [
   "rdv_modifie",
   "rdv_rappel",
   "chantier_annule",
+  "devis_recu",
+  "devis_refuse",
+  "devis_modification",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -48,10 +51,27 @@ const timeFormat = new Intl.DateTimeFormat("fr-FR", {
   timeZone: PARIS,
 });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+
+/** Motifs de refus d'un devis par le client (enum public.quote_refusal_reason), vus par l'artisan. */
+const REFUSAL_REASONS: Record<string, string> = {
+  trop_cher: "prix trop élevé",
+  autre_artisan: "un autre artisan a été choisi",
+  projet_reporte: "projet reporté",
+  autre: "autre raison",
+};
 
 function text(data: Record<string, unknown>, key: string): string | null {
   const value = data[key];
   return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
+}
+
+/** Montant en centimes → « 330,00 € ». */
+function amount(data: Record<string, unknown>, key: string): string | null {
+  const value = data[key];
+  return typeof value === "number" && Number.isInteger(value) && value >= 0
+    ? euros.format(value / 100)
+    : null;
 }
 
 function uuid(data: Record<string, unknown>, key: string): string | null {
@@ -177,6 +197,65 @@ export function notificationContent(
         quote: text(data, "motif"),
         cta: { label: "Choisir un autre artisan", url: link("/mon-espace") },
       };
+    case "devis_recu": {
+      const numero = text(data, "numero");
+      const montant = amount(data, "montant_ttc");
+      const quoteId = uuid(data, "quote_id");
+      return {
+        subject: "Nouveau devis disponible pour votre chantier !",
+        preview: `${artisan} vous a envoyé son devis pour ${quoted(titre)}.`,
+        title: "Nouveau devis disponible pour votre chantier !",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} vous a envoyé son devis${numero ? ` n° ${numero}` : ""} pour votre projet ${quoted(titre)}${montant ? `, d'un montant de ${montant} TTC` : ""}.`,
+          "Consultez-le dans votre espace pour y répondre.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le devis",
+          url: link(quoteId ? `/mon-espace/devis/${quoteId}` : "/mon-espace"),
+        },
+      };
+    }
+    case "devis_refuse": {
+      const client = text(data, "client") ?? "Le client";
+      const numero = text(data, "numero");
+      const motif = REFUSAL_REASONS[text(data, "motif") ?? ""];
+      return {
+        subject: `${client} a refusé votre devis`,
+        preview: `Votre devis pour ${quoted(titre)} a été refusé.`,
+        title: "Devis refusé",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a refusé votre devis${numero ? ` n° ${numero}` : ""} pour ${quoted(titre)}.`,
+          ...(motif ? [`Motif indiqué : ${motif}.`] : []),
+        ],
+        quote: text(data, "message"),
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
+      };
+    }
+    case "devis_modification": {
+      const client = text(data, "client") ?? "Le client";
+      const numero = text(data, "numero");
+      return {
+        subject: `${client} demande une modification de votre devis`,
+        preview: `Modification demandée pour ${quoted(titre)}.`,
+        title: "Modification du devis demandée",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} souhaite une modification de votre devis${numero ? ` n° ${numero}` : ""} pour ${quoted(titre)} :`,
+          "Une nouvelle version reprenant vos lignes vous attend : modifiez-la, puis envoyez-la.",
+        ],
+        quote: text(data, "message"),
+        cta: {
+          label: "Modifier le devis",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}/devis` : "/pro/devis"),
+        },
+      };
+    }
   }
 }
 

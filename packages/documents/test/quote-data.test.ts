@@ -18,8 +18,10 @@ const decennale = {
 const doc: QuoteDocument = {
   quote: {
     id: "a8000000-0000-4000-8000-000000000001",
+    artisan_id: "a8400000-0000-4000-8000-000000000001",
     status: "brouillon",
     numero: null,
+    version: 1,
     issued_on: "2026-10-10",
     total_ht_cents: 30000,
     total_tva_cents: 3000,
@@ -59,6 +61,7 @@ const doc: QuoteDocument = {
     code_postal: "06000",
     ville_nom: "Nice",
   },
+  terms: null,
 };
 
 describe("données du devis (quote_document)", () => {
@@ -125,12 +128,28 @@ describe("données du devis (quote_document)", () => {
     expect(d.issuer.legalForm).toBeNull();
   });
 
-  it("devis numéroté : fichier au nom du numéro", () => {
+  it("devis envoyé : numéro, modalités figées, fichier au nom du numéro", () => {
     const d = quotePdfData({
       ...doc,
       quote: { ...doc.quote, status: "envoye", numero: "DEVIS-2026-0018" },
+      terms: {
+        valid_until: "2026-11-09",
+        start_date: "2026-10-20",
+        duration_days: 2,
+        schedule: [
+          { percent: 30, trigger: "signature", amount_cents: 9900 },
+          { percent: 70, trigger: "reception", amount_cents: 23100 },
+        ],
+      },
     });
     expect(d.preview).toBe(false);
+    expect(d.validUntil).toBe("2026-11-09");
+    expect(d.startDate).toBe("2026-10-20");
+    expect(d.duration).toBe("2 jours");
+    expect(d.schedule).toEqual([
+      { percent: 30, trigger: "signature", amountCents: 9900 },
+      { percent: 70, trigger: "reception", amountCents: 23100 },
+    ]);
     expect(quotePdfFilename(d)).toBe("DEVIS-2026-0018.pdf");
   });
 

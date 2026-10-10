@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { StickyActions } from "@/components/pro/detail";
 import { QuoteHeader } from "@/components/pro/quote-header";
 import { QuotePaper } from "@/components/pro/quote-paper";
+import { QuoteTabs } from "@/components/pro/quote-tabs";
 import { ButtonLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
@@ -54,6 +55,7 @@ export default async function QuotePreviewPage({
         chantierTitle={c.chantier.title}
         appointmentAt={appointment?.starts_at ?? null}
       />
+      <QuoteTabs chantierId={id} active="apercu" />
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-5 px-4 py-6 sm:px-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-success-soft text-success">
@@ -77,8 +79,8 @@ export default async function QuotePreviewPage({
         </a>
       </div>
       <StickyActions>
-        <ButtonLink href={editorHref as Route} variant="secondary" size="lg" block>
-          {t.preview.edit}
+        <ButtonLink href={`/pro/chantiers/${id}/devis/envoi` as Route} size="lg" block>
+          {t.next}
         </ButtonLink>
         <p className="text-center text-xs text-muted-foreground">{t.preview.savedNote}</p>
       </StickyActions>

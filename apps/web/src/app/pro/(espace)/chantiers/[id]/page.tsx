@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { DetailHeader, StickyActions } from "@/components/pro/detail";
 import { ExpertiseButton } from "@/components/pro/expertise-button";
 import { RequestBlocks } from "@/components/pro/request-blocks";
+import { SentQuoteBlock } from "@/components/pro/sent-quote";
 import { Alert, ButtonLink, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
@@ -26,18 +27,30 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
   const c = await getChantierDetail(supabase, id);
   if (!c) notFound();
 
-  const [{ data: signed }, { data: trades }, { data: draft }] = await Promise.all([
-    c.photos.length
-      ? supabase.storage.from("project-photos").createSignedUrls(c.photos, 3600)
-      : Promise.resolve({ data: [] }),
-    supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
-    supabase
-      .from("quotes")
-      .select("id")
-      .eq("chantier_id", id)
-      .eq("status", "brouillon")
-      .maybeSingle(),
-  ]);
+  const [{ data: signed }, { data: trades }, { data: draft }, { data: sentQuote }] =
+    await Promise.all([
+      c.photos.length
+        ? supabase.storage.from("project-photos").createSignedUrls(c.photos, 3600)
+        : Promise.resolve({ data: [] }),
+      supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+      supabase
+        .from("quotes")
+        .select("id")
+        .eq("chantier_id", id)
+        .eq("status", "brouillon")
+        .maybeSingle(),
+      // F-21 : dernière version envoyée (réponse du client, PDF).
+      supabase
+        .from("quotes")
+        .select(
+          "id, status, numero, total_ttc_cents, sent_at, valid_until, refusal_reason, client_message",
+        )
+        .eq("chantier_id", id)
+        .neq("status", "brouillon")
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
   const status = c.chantier.status;
   // F-19 : devis à créer après le rendez-vous, ou à modifier si le client l'a demandé.
   const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
@@ -92,6 +105,7 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
             <StatusBadge tone="primary">{fr.pro.chantiers.status[status]}</StatusBadge>
           </div>
         )}
+        {sentQuote && <SentQuoteBlock quote={sentQuote} />}
         <RequestBlocks
           detail={c}
           photoUrls={(signed ?? []).flatMap((p) => (p.signedUrl ? [p.signedUrl] : []))}
@@ -104,7 +118,11 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
         <StickyActions>
           {awaitingQuote && (
             <ButtonLink href={`/pro/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
-              {draft ? fr.pro.quote.resume : fr.pro.quote.create}
+              {status === "devis_en_revision"
+                ? fr.pro.quote.sent.edit
+                : draft
+                  ? fr.pro.quote.resume
+                  : fr.pro.quote.create}
             </ButtonLink>
           )}
           {cancellable.includes(status) && <CancelChantierButton chantierId={c.chantier.id} />}

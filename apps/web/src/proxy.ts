@@ -74,6 +74,7 @@ export const config = {
     "/pro/chantiers/:path*",
     "/pro/devis/:path*",
     "/agenda/:path*",
+    "/devis/:path*",
     "/nouveau-mot-de-passe",
     "/admin/:path*",
     "/recherche/:path*",

@@ -127,6 +127,12 @@ values
    null, now(), true, true, 4, 'communes', null, null, null, null,
    'Plombière à Nice et Antibes : sanitaires et petites réparations.',
    now(), 'cus_seed_dispo', 'acct_seed_dispo', true, true, true, current_date + 14);
+-- Identité de l'entreprise (SIRET inexistant dans Sirene) : mentions obligatoires du devis (F-20).
+update public.artisans set
+  siret = case id when 'b0000000-0000-4000-8000-000000000011' then '00000110000015' else '00000110100013' end,
+  forme_juridique_code = '5499', adresse_ligne = '1 RUE DE L''EXEMPLE', adresse_code_postal = '06000',
+  adresse_commune = 'NICE', adresse_code_insee = '06088'
+where id in ('b0000000-0000-4000-8000-000000000011', 'b0000000-0000-4000-8000-000000000012');
 insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end) values
   ('b0000000-0000-4000-8000-000000000011', 'base', 'cus_seed_nice', 'sub_seed_nice', 'trialing', now() + interval '90 days'),
   ('b0000000-0000-4000-8000-000000000012', 'base', 'cus_seed_dispo', 'sub_seed_dispo', 'trialing', now() + interval '90 days');
