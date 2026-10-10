@@ -149,15 +149,8 @@ export async function reportExpertise(
   return { success: fr.pro.expertise.sent };
 }
 
-/**
- * F-22 « Confirmez la date de démarrage » : après l'acompte (le chantier passe « planifié »), puis
- * modification tant que les travaux n'ont pas commencé. Le client est notifié par la base.
- */
-export async function confirmChantierStart(
-  chantierId: string,
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
+/** Date et heure de démarrage saisies : format (Zod), puis à venir et au plus un an (@menao/core). */
+async function saveChantierStart(chantierId: string, formData: FormData): Promise<FormState> {
   if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
   const values = { date: text(formData, "date") ?? "", time: text(formData, "time") ?? "" };
   const parsed = chantierStartSchema.safeParse(values);
@@ -176,6 +169,29 @@ export async function confirmChantierStart(
   if (error) return { ...rpcError(error), values };
   revalidatePath("/pro", "layout");
   return { success: tf.saved };
+}
+
+/**
+ * F-22 « Confirmez la date de démarrage » (après l'acompte, le chantier passe « planifié ») : la
+ * fiche affiche ensuite la confirmation. Le client est notifié par la base.
+ */
+export async function confirmChantierStart(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const state = await saveChantierStart(chantierId, formData);
+  if (!state.success) return state;
+  redirect(`/pro/chantiers/${chantierId}?demarrage=confirme` as Route);
+}
+
+/** Modification de la date de démarrage tant que les travaux n'ont pas commencé (client prévenu). */
+export async function editChantierStart(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return saveChantierStart(chantierId, formData);
 }
 
 /** F-22 « Ajouter un message » au journal du chantier, visible par le client. */
