@@ -14,6 +14,7 @@ export const NOTIFICATION_TYPES = [
   "devis_refuse",
   "devis_modification",
   "devis_signe",
+  "acompte_paye",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -275,6 +276,39 @@ export function notificationContent(
           label: "Voir le chantier",
           url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
         },
+      };
+    }
+    case "acompte_paye": {
+      const montant = amount(data, "montant");
+      if (text(data, "destinataire") === "artisan") {
+        const client = text(data, "client") ?? "Le client";
+        return {
+          subject: `Acompte reçu pour ${quoted(titre)}`,
+          preview: `${client} a payé l'acompte${montant ? ` de ${montant}` : ""}.`,
+          title: "Acompte payé",
+          paragraphs: [
+            hello(ctx.firstName),
+            `${client} a payé l'acompte${montant ? ` de ${montant}` : ""} pour ${quoted(titre)}, directement sur votre compte Stripe.`,
+            "Confirmez maintenant la date de démarrage du chantier depuis votre espace pro.",
+          ],
+          quote: null,
+          cta: {
+            label: "Voir le chantier",
+            url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+          },
+        };
+      }
+      return {
+        subject: "Votre acompte est bien payé",
+        preview: `Paiement reçu pour ${quoted(titre)}.`,
+        title: "Acompte payé",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre acompte${montant ? ` de ${montant}` : ""} pour ${quoted(titre)} a bien été payé à ${text(data, "artisan") ?? "l'artisan"}.`,
+          "L'artisan va vous confirmer la date de démarrage des travaux.",
+        ],
+        quote: null,
+        cta: { label: "Voir mon espace", url: link("/mon-espace") },
       };
     }
   }
