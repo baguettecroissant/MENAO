@@ -48,6 +48,12 @@ export const messages = {
   quoteRefusalReasonRequired: "Choisissez la raison de votre refus.",
   revisionMessageTooShort: "Décrivez la modification souhaitée en 10 caractères au moins.",
   signatureConsentRequired: "Cochez cette case pour signer le devis.",
+  chantierStartDate: "Choisissez la date de démarrage des travaux.",
+  chantierStartTime: "Choisissez l'heure de démarrage des travaux.",
+  chantierStartPast: "Choisissez une date et une heure à venir.",
+  chantierStartTooFar: "Le démarrage doit avoir lieu dans les 12 prochains mois.",
+  chantierMessageRequired: "Écrivez votre message.",
+  chantierMessageTooLong: "Votre message dépasse 2 000 caractères.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

@@ -1,3 +1,4 @@
+import { CHANTIER_MESSAGE_MAX_LENGTH } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -27,4 +28,22 @@ export const appointmentNotesSchema = z.object({
 export const expertiseSchema = z.object({
   trade: z.string().regex(/^[a-z0-9-]{1,60}$/, { error: messages.expertiseTradeRequired }),
   message: z.string().trim().max(2000, { error: messages.tooLong }),
+});
+
+/**
+ * F-22 : date (AAAA-MM-JJ) et heure (HH:MM) de démarrage du chantier, en heure de Paris. Les dates
+ * passées ou à plus d'un an sont refusées par @menao/core (chantierStartInputError) et par la base.
+ */
+export const chantierStartSchema = z.object({
+  date: z.string().regex(DATE, { error: messages.chantierStartDate }),
+  time: z.string().regex(TIME, { error: messages.chantierStartTime }),
+});
+
+/** F-22 « Ajouter un message » au journal du chantier. */
+export const chantierMessageSchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(1, { error: messages.chantierMessageRequired })
+    .max(CHANTIER_MESSAGE_MAX_LENGTH, { error: messages.chantierMessageTooLong }),
 });

@@ -3,6 +3,8 @@ import {
   appointmentNotesSchema,
   appointmentSchema,
   cancelChantierSchema,
+  chantierMessageSchema,
+  chantierStartSchema,
   expertiseSchema,
 } from "../src/chantier";
 import { messages } from "../src/messages";
@@ -42,5 +44,29 @@ describe("annulation, notes, expertise (F-17, F-18)", () => {
     });
     const bad = expertiseSchema.safeParse({ trade: "", message: "" });
     expect(bad.error?.issues[0]?.message).toBe(messages.expertiseTradeRequired);
+  });
+});
+
+describe("suivi du chantier (F-22)", () => {
+  it("date et heure de démarrage : AAAA-MM-JJ et HH:MM", () => {
+    expect(chantierStartSchema.safeParse({ date: "2026-10-22", time: "08:00" }).success).toBe(true);
+    const bad = chantierStartSchema.safeParse({ date: "22/10/2026", time: "8h" });
+    expect(bad.error?.issues.map((i) => i.message)).toEqual([
+      messages.chantierStartDate,
+      messages.chantierStartTime,
+    ]);
+  });
+
+  it("message du journal : obligatoire, 2 000 caractères au plus, espaces retirés", () => {
+    expect(chantierMessageSchema.parse({ message: "  Matériel livré.  " })).toEqual({
+      message: "Matériel livré.",
+    });
+    expect(chantierMessageSchema.safeParse({ message: "   " }).error?.issues[0]?.message).toBe(
+      messages.chantierMessageRequired,
+    );
+    expect(chantierMessageSchema.safeParse({ message: "x".repeat(2000) }).success).toBe(true);
+    expect(
+      chantierMessageSchema.safeParse({ message: "x".repeat(2001) }).error?.issues[0]?.message,
+    ).toBe(messages.chantierMessageTooLong);
   });
 });

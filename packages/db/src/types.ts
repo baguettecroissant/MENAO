@@ -671,6 +671,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      chantier_updates: {
+        Row: {
+          author_id: string | null;
+          chantier_id: string;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["chantier_update_kind"];
+          message: string | null;
+          storage_path: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          chantier_id: string;
+          created_at?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["chantier_update_kind"];
+          message?: string | null;
+          storage_path?: string | null;
+        };
+        Update: {
+          author_id?: string | null;
+          chantier_id?: string;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["chantier_update_kind"];
+          message?: string | null;
+          storage_path?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chantier_updates_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chantiers: {
         Row: {
           adresse: string | null;
@@ -681,6 +720,7 @@ export type Database = {
           particulier_id: string;
           project_id: string;
           request_id: string;
+          start_at: string | null;
           status: Database["public"]["Enums"]["chantier_status"];
           title: string;
           updated_at: string;
@@ -696,6 +736,7 @@ export type Database = {
           particulier_id: string;
           project_id: string;
           request_id: string;
+          start_at?: string | null;
           status?: Database["public"]["Enums"]["chantier_status"];
           title: string;
           updated_at?: string;
@@ -710,6 +751,7 @@ export type Database = {
           particulier_id?: string;
           project_id?: string;
           request_id?: string;
+          start_at?: string | null;
           status?: Database["public"]["Enums"]["chantier_status"];
           title?: string;
           updated_at?: string;
@@ -1974,6 +2016,10 @@ export type Database = {
         Args: { p_certification_id: string; p_verified: boolean };
         Returns: undefined;
       };
+      artisan_add_chantier_message: {
+        Args: { p_chantier_id: string; p_message: string };
+        Returns: string;
+      };
       artisan_cancel_chantier: {
         Args: { p_chantier_id: string; p_reason: string };
         Returns: undefined;
@@ -1991,11 +2037,17 @@ export type Database = {
           created_at: string;
           particulier_id: string;
           request_id: string;
+          start_at: string;
           status: Database["public"]["Enums"]["chantier_status"];
           title: string;
           ville_nom: string;
         }[];
       };
+      artisan_confirm_start: {
+        Args: { p_chantier_id: string; p_date: string; p_time: string };
+        Returns: undefined;
+      };
+      artisan_declare_finished: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_dictation: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_fix_appointment: {
         Args: { p_date: string; p_request_id: string; p_time: string };
@@ -2158,6 +2210,7 @@ export type Database = {
           artisan_name: string;
           artisan_phone: string;
           chantier_id: string;
+          chantier_start_at: string;
           chantier_status: Database["public"]["Enums"]["chantier_status"];
           created_at: string;
           expires_at: string;
@@ -2193,6 +2246,10 @@ export type Database = {
       };
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       quote_document: { Args: { p_quote_id: string }; Returns: Json };
+      record_chantier_photo: {
+        Args: { p_chantier_id: string; p_storage_path: string; p_user_id: string };
+        Returns: string;
+      };
       record_payment: {
         Args: {
           p_amount_cents: number;
@@ -2342,6 +2399,7 @@ export type Database = {
         | "cloture"
         | "en_litige"
         | "annule";
+      chantier_update_kind: "message" | "photo";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
@@ -2357,7 +2415,10 @@ export type Database = {
         | "devis_refuse"
         | "devis_modification"
         | "devis_signe"
-        | "acompte_paye";
+        | "acompte_paye"
+        | "chantier_planifie"
+        | "demarrage_modifie"
+        | "travaux_termines";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -2539,6 +2600,7 @@ export const Constants = {
         "en_litige",
         "annule",
       ],
+      chantier_update_kind: ["message", "photo"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
@@ -2555,6 +2617,9 @@ export const Constants = {
         "devis_modification",
         "devis_signe",
         "acompte_paye",
+        "chantier_planifie",
+        "demarrage_modifie",
+        "travaux_termines",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

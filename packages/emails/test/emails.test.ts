@@ -172,13 +172,41 @@ describe("contenu des notifications (F-41)", () => {
       { ...data, destinataire: "artisan" },
       { ...ctx, firstName: "Xavier" },
     );
-    expect(artisan.subject).toBe(`Acompte reçu pour ${quoted("Prises")}`);
+    expect(artisan.subject).toBe("Chantier validé ! Confirmez la date de démarrage");
     expect(artisan.paragraphs[1]).toContain("directement sur votre compte Stripe");
-    expect(artisan.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    expect(artisan.cta).toEqual({
+      label: "Confirmer la date de démarrage",
+      url: `https://menao.example/pro/chantiers/${ids.chantier_id}`,
+    });
     const client = notificationContent("acompte_paye", { ...data, destinataire: "client" }, ctx);
     expect(client.subject).toBe("Votre acompte est bien payé");
     expect(client.paragraphs[1]).toContain("a bien été payé à Xavier");
     expect(client.cta.url).toBe("https://menao.example/mon-espace");
+  });
+
+  it("suivi du chantier (F-22) : démarrage planifié ou déplacé, travaux terminés", () => {
+    const data = { ...ids, titre: "Prises", artisan: "Xavier" };
+    // 22 octobre 2026, 8 h à Paris (heure d'été).
+    const planned = notificationContent(
+      "chantier_planifie",
+      { ...data, demarrage: "2026-10-22T06:00:00+00:00" },
+      ctx,
+    );
+    expect(planned.subject).toBe("Démarrage des travaux le jeudi 22 octobre à 08h00");
+    expect(planned.paragraphs[1]).toBe(
+      `Xavier a confirmé le démarrage des travaux pour ${quoted("Prises")} : le jeudi 22 octobre à 08h00.`,
+    );
+    expect(planned.cta.url).toBe("https://menao.example/mon-espace");
+    const moved = notificationContent(
+      "demarrage_modifie",
+      { ...data, demarrage: "2026-10-26T13:30:00Z" },
+      ctx,
+    );
+    expect(moved.subject).toBe("Démarrage des travaux déplacé au lundi 26 octobre à 14h30");
+    const done = notificationContent("travaux_termines", { ...data, photos: 6 }, ctx);
+    expect(done.subject).toBe(`Travaux terminés pour ${quoted("Prises")}`);
+    expect(done.title).toBe("Travaux terminés !");
+    expect(done.paragraphs[1]).toContain("Xavier a déclaré terminés les travaux");
   });
 
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {

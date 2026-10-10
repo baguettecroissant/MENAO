@@ -1,6 +1,15 @@
 import { timeLeft } from "@menao/core";
 import type { Database } from "@menao/db";
-import { CalendarDays, CalendarPlus, FileText, Mail, MapPin, Phone, Wrench } from "lucide-react";
+import {
+  CalendarDays,
+  CalendarPlus,
+  FileText,
+  HardHat,
+  Mail,
+  MapPin,
+  Phone,
+  Wrench,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
@@ -232,6 +241,23 @@ function ProjectCard({
                     </Link>
                   </div>
                 )}
+                {/* F-22 : date de démarrage confirmée par l'artisan, puis travaux. */}
+                {r.chantier_start_at &&
+                  (r.chantier_status === "planifie" ||
+                    r.chantier_status === "en_cours" ||
+                    r.chantier_status === "travaux_termines") && (
+                    <p className="inline-flex items-center gap-1.5 rounded-input bg-primary-softer px-3 py-2 text-xs font-medium text-primary-strong">
+                      <HardHat aria-hidden="true" className="size-3.5 shrink-0" />
+                      {r.chantier_status === "planifie"
+                        ? t.start(
+                            formatDayInline(r.chantier_start_at),
+                            formatTime(r.chantier_start_at),
+                          )
+                        : r.chantier_status === "en_cours"
+                          ? t.started(formatDayInline(r.chantier_start_at))
+                          : t.finished}
+                    </p>
+                  )}
                 {r.status === "annulee" && r.chantier_status === "annule" && (
                   <p className="text-xs text-muted-foreground">{t.cancelledByArtisan}</p>
                 )}

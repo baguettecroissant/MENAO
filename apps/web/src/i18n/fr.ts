@@ -684,6 +684,9 @@ export const fr = {
     seeArtisans: "Voir les artisans",
     quote: (amount: string) => `Devis reçu : ${amount} TTC`,
     viewQuote: "Voir le devis",
+    start: (day: string, time: string) => `Démarrage des travaux le ${day} à ${time}`,
+    started: (day: string) => `Travaux en cours depuis le ${day}`,
+    finished: "Travaux terminés : prochaine étape, la réception.",
   },
   clientQuote: {
     back: "Mon espace",
@@ -853,6 +856,7 @@ export const fr = {
       empty:
         "Aucun chantier pour le moment. Fixez un rendez-vous depuis une demande pour créer votre premier chantier.",
       appointmentOn: (day: string, time: string) => `Rendez-vous le ${day} à ${time}`,
+      startOn: (day: string, time: string) => `Démarrage le ${day} à ${time}`,
       status: {
         demande_envoyee: "Demande reçue",
         rdv_planifie: "Rendez-vous planifié",
@@ -907,6 +911,63 @@ export const fr = {
         passe: "Choisissez une date et une heure à venir.",
         trop_loin: "Le rendez-vous doit avoir lieu dans les 6 prochains mois.",
       },
+    },
+    followUp: {
+      title: "Suivi du chantier",
+      validated: "Chantier validé ! Confirmez la date de démarrage.",
+      confirmIntro:
+        "Le client a payé l'acompte. Confirmez la date et l'heure de démarrage des travaux : il en sera informé.",
+      confirm: "Confirmer la date de démarrage",
+      confirmSubmit: "Confirmer le démarrage",
+      edit: "Modifier",
+      editTitle: "Modifier la date de démarrage",
+      editSubmit: "Enregistrer la nouvelle date",
+      saved: "Date de démarrage enregistrée : votre client est informé.",
+      startDate: "Date de démarrage",
+      startTime: "Heure de démarrage",
+      quoteStart: (day: string) => `Date de début prévue au devis : ${day}.`,
+      startsOn: (day: string) => `Démarrage le ${day}`,
+      startedOn: (day: string) => `Travaux commencés le ${day}`,
+      autoStart: (day: string) =>
+        `Le chantier passera en cours le ${day}. Vous pouvez déjà publier des messages et des photos.`,
+      finishedOn: (day: string) =>
+        `Travaux terminés le ${day} : votre client est invité à réceptionner les travaux.`,
+      errors: {
+        passe: "Choisissez une date et une heure à venir.",
+        trop_loin: "Le démarrage doit avoir lieu dans les 12 prochains mois.",
+      },
+      journal: "Journal du chantier",
+      journalHint: "Vos messages et vos photos sont visibles par votre client.",
+      journalEmpty: "Aucun message ni photo pour le moment.",
+      message: "Ajouter un message",
+      messageSubmit: "Publier le message",
+      messageSent: "Message publié.",
+      addPhotos: "Ajouter des photos",
+      photosHint: "JPEG ou PNG, 10 photos à la fois, 10 Mo au plus par photo.",
+      uploading: (done: number, total: number) => `Envoi des photos : ${done} sur ${total}…`,
+      photosAdded: (n: number) =>
+        n <= 1 ? "Photo ajoutée au journal." : `${n} photos ajoutées au journal.`,
+      photoErrors: {
+        tooMany: "Ajoutez 10 photos au plus à la fois.",
+        tooLarge: (name: string) => `« ${name} » dépasse 10 Mo.`,
+        failed: (n: number) =>
+          n <= 1
+            ? "Une photo n'a pas pu être ajoutée. Réessayez."
+            : `${n} photos n'ont pas pu être ajoutées. Réessayez.`,
+        limit: "Ce chantier a atteint 100 photos.",
+        rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
+      },
+      photoCount: (n: number) => (n <= 1 ? "1 photo" : `${n} photos`),
+      photoAlt: (i: number, n: number) => `Photo ${i} sur ${n}`,
+      postedAt: (day: string, time: string) => `${day} à ${time}`,
+      finish: "Déclarer le chantier terminé",
+      finishIntro:
+        "Avez-vous ajouté les photos finales ? Elles permettent à votre client de constater les travaux réalisés.",
+      finishNoPhoto: "Aucune photo dans le journal pour le moment.",
+      finishNext: "Votre client sera ensuite invité à réceptionner les travaux.",
+      finishConfirm: "Confirmer la fin du chantier",
+      finishBack: "Ajouter des photos d'abord",
+      finished: "Chantier déclaré terminé.",
     },
     quote: {
       title: "Envoyer un devis",

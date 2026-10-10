@@ -15,6 +15,9 @@ export const NOTIFICATION_TYPES = [
   "devis_modification",
   "devis_signe",
   "acompte_paye",
+  "chantier_planifie",
+  "demarrage_modifie",
+  "travaux_termines",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -282,18 +285,19 @@ export function notificationContent(
       const montant = amount(data, "montant");
       if (text(data, "destinataire") === "artisan") {
         const client = text(data, "client") ?? "Le client";
+        // F-22 : « Chantier validé ! Confirmez la date de démarrage ».
         return {
-          subject: `Acompte reçu pour ${quoted(titre)}`,
-          preview: `${client} a payé l'acompte${montant ? ` de ${montant}` : ""}.`,
-          title: "Acompte payé",
+          subject: "Chantier validé ! Confirmez la date de démarrage",
+          preview: `${client} a payé l'acompte${montant ? ` de ${montant}` : ""} pour ${quoted(titre)}.`,
+          title: "Chantier validé !",
           paragraphs: [
             hello(ctx.firstName),
             `${client} a payé l'acompte${montant ? ` de ${montant}` : ""} pour ${quoted(titre)}, directement sur votre compte Stripe.`,
-            "Confirmez maintenant la date de démarrage du chantier depuis votre espace pro.",
+            "Confirmez maintenant la date et l'heure de démarrage des travaux : votre client en sera informé.",
           ],
           quote: null,
           cta: {
-            label: "Voir le chantier",
+            label: "Confirmer la date de démarrage",
             url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
           },
         };
@@ -311,6 +315,57 @@ export function notificationContent(
         cta: { label: "Voir mon espace", url: link("/mon-espace") },
       };
     }
+    case "chantier_planifie": {
+      const start = moment(text(data, "demarrage"));
+      return {
+        subject: start
+          ? `Démarrage des travaux le ${start.day} à ${start.time}`
+          : "Votre chantier est planifié",
+        preview: `${artisan} a confirmé la date de démarrage de ${quoted(titre)}.`,
+        title: "Chantier planifié",
+        paragraphs: [
+          hello(ctx.firstName),
+          start
+            ? `${artisan} a confirmé le démarrage des travaux pour ${quoted(titre)} : le ${start.day} à ${start.time}.`
+            : `${artisan} a confirmé la date de démarrage des travaux pour ${quoted(titre)}.`,
+          "Vous pourrez suivre l'avancement du chantier depuis votre espace.",
+        ],
+        quote: null,
+        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+      };
+    }
+    case "demarrage_modifie": {
+      const start = moment(text(data, "demarrage"));
+      return {
+        subject: start
+          ? `Démarrage des travaux déplacé au ${start.day} à ${start.time}`
+          : "La date de démarrage des travaux a changé",
+        preview: `${artisan} a modifié la date de démarrage de ${quoted(titre)}.`,
+        title: "Date de démarrage modifiée",
+        paragraphs: [
+          hello(ctx.firstName),
+          start
+            ? `${artisan} a déplacé le démarrage des travaux pour ${quoted(titre)} au ${start.day} à ${start.time}.`
+            : `${artisan} a modifié la date de démarrage des travaux pour ${quoted(titre)}.`,
+        ],
+        quote: null,
+        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+      };
+    }
+    case "travaux_termines":
+      // TODO : lien vers la réception (procès-verbal) et le paiement du solde (F-25, phase 5).
+      return {
+        subject: `Travaux terminés pour ${quoted(titre)}`,
+        preview: `${artisan} a déclaré les travaux terminés.`,
+        title: "Travaux terminés !",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} a déclaré terminés les travaux de votre chantier ${quoted(titre)}.`,
+          "Prochaine étape : la réception des travaux, que vous validerez depuis votre espace.",
+        ],
+        quote: null,
+        cta: { label: "Voir mon espace", url: link("/mon-espace") },
+      };
   }
 }
 

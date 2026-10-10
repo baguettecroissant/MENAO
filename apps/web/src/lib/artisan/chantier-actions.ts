@@ -1,10 +1,12 @@
 "use server";
 
-import { appointmentInputError } from "@menao/core";
+import { appointmentInputError, chantierStartInputError } from "@menao/core";
 import {
   appointmentNotesSchema,
   appointmentSchema,
   cancelChantierSchema,
+  chantierMessageSchema,
+  chantierStartSchema,
   expertiseSchema,
   messages,
 } from "@menao/validation";
@@ -17,6 +19,7 @@ import { text, type FormState } from "@/lib/auth/form";
 import { requireArtisan } from "./requests";
 
 const t = fr.pro.appointment;
+const tf = fr.pro.followUp;
 
 /** Erreur de la base affichable telle quelle (règle métier), sinon message générique. */
 const rpcError = (error: { code?: string; message: string }): FormState => ({
@@ -144,4 +147,63 @@ export async function reportExpertise(
   });
   if (error) return { ...rpcError(error), values };
   return { success: fr.pro.expertise.sent };
+}
+
+/**
+ * F-22 « Confirmez la date de démarrage » : après l'acompte (le chantier passe « planifié »), puis
+ * modification tant que les travaux n'ont pas commencé. Le client est notifié par la base.
+ */
+export async function confirmChantierStart(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const values = { date: text(formData, "date") ?? "", time: text(formData, "time") ?? "" };
+  const parsed = chantierStartSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const issue = chantierStartInputError(parsed.data.date, parsed.data.time, new Date());
+  if (issue) {
+    const message = issue === "invalide" ? messages.chantierStartDate : tf.errors[issue];
+    return { fieldErrors: { date: [message] }, values };
+  }
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_confirm_start", {
+    p_chantier_id: chantierId,
+    p_date: parsed.data.date,
+    p_time: parsed.data.time,
+  });
+  if (error) return { ...rpcError(error), values };
+  revalidatePath("/pro", "layout");
+  return { success: tf.saved };
+}
+
+/** F-22 « Ajouter un message » au journal du chantier, visible par le client. */
+export async function addChantierMessage(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const values = { message: text(formData, "message") ?? "" };
+  const parsed = chantierMessageSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_add_chantier_message", {
+    p_chantier_id: chantierId,
+    p_message: parsed.data.message,
+  });
+  if (error) return { ...rpcError(error), values };
+  revalidatePath(`/pro/chantiers/${chantierId}`);
+  return { success: tf.messageSent };
+}
+
+/** F-22 « Déclarer le chantier terminé » : le client est invité à réceptionner les travaux. */
+export async function declareChantierFinished(chantierId: string): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_declare_finished", { p_chantier_id: chantierId });
+  if (error) return rpcError(error);
+  revalidatePath("/pro", "layout");
+  return { success: tf.finished };
 }
