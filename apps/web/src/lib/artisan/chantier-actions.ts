@@ -1,0 +1,142 @@
+"use server";
+
+import { appointmentInputError } from "@menao/core";
+import {
+  appointmentNotesSchema,
+  appointmentSchema,
+  cancelChantierSchema,
+  expertiseSchema,
+  messages,
+} from "@menao/validation";
+import type { Route } from "next";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { fr } from "@/i18n/fr";
+import { text, type FormState } from "@/lib/auth/form";
+import { requireArtisan } from "./requests";
+
+const t = fr.pro.appointment;
+
+/** Erreur de la base affichable telle quelle (règle métier), sinon message générique. */
+const rpcError = (error: { code?: string; message: string }): FormState => ({
+  error: error.code === "22023" ? error.message : fr.errors.generic,
+});
+
+/** Date et heure saisies : format (Zod), puis à venir et au plus 180 jours (@menao/core). */
+function readAppointment(
+  formData: FormData,
+): { ok: true; date: string; time: string } | { ok: false; state: FormState } {
+  const parsed = appointmentSchema.safeParse({
+    date: text(formData, "date") ?? "",
+    time: text(formData, "time") ?? "",
+  });
+  if (!parsed.success) {
+    return { ok: false, state: { fieldErrors: z.flattenError(parsed.error).fieldErrors } };
+  }
+  const issue = appointmentInputError(parsed.data.date, parsed.data.time, new Date());
+  if (issue) {
+    const message = issue === "invalide" ? messages.appointmentDate : t.errors[issue];
+    return { ok: false, state: { fieldErrors: { date: [message] } } };
+  }
+  return { ok: true, ...parsed.data };
+}
+
+/** F-17 « Fixer un rendez-vous » : crée le chantier puis ouvre la vue du rendez-vous. */
+export async function fixAppointment(
+  requestId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
+  const input = readAppointment(formData);
+  if (!input.ok) return input.state;
+  const { supabase } = await requireArtisan();
+  const { data: chantierId, error } = await supabase.rpc("artisan_fix_appointment", {
+    p_request_id: requestId,
+    p_date: input.date,
+    p_time: input.time,
+  });
+  if (error || !chantierId) return error ? rpcError(error) : { error: fr.errors.generic };
+  revalidatePath("/pro", "layout");
+  redirect(`/pro/chantiers/${chantierId}` as Route);
+}
+
+export async function rescheduleAppointment(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const input = readAppointment(formData);
+  if (!input.ok) return input.state;
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_reschedule_appointment", {
+    p_chantier_id: chantierId,
+    p_date: input.date,
+    p_time: input.time,
+  });
+  if (error) return rpcError(error);
+  revalidatePath("/pro", "layout");
+  return { success: t.rescheduled };
+}
+
+/** F-18 « Annuler le chantier » : la demande est annulée, le particulier retrouve une place. */
+export async function cancelChantier(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const parsed = cancelChantierSchema.safeParse({ reason: text(formData, "reason") ?? "" });
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_cancel_chantier", {
+    p_chantier_id: chantierId,
+    p_reason: parsed.data.reason,
+  });
+  if (error) return rpcError(error);
+  revalidatePath("/pro", "layout");
+  return { success: t.cancelTitle };
+}
+
+/** F-18 « Ajouter des notes » : notes privées de l'artisan. */
+export async function saveAppointmentNotes(
+  chantierId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const parsed = appointmentNotesSchema.safeParse({ notes: text(formData, "notes") ?? "" });
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_save_appointment_notes", {
+    p_chantier_id: chantierId,
+    p_notes: parsed.data.notes,
+  });
+  if (error) return rpcError(error);
+  revalidatePath(`/pro/chantiers/${chantierId}`);
+  return { success: t.notesSaved };
+}
+
+/** « Ce chantier a besoin d'une expertise » : ticket pour l'équipe MENAO. */
+export async function reportExpertise(
+  requestId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
+  const parsed = expertiseSchema.safeParse({
+    trade: text(formData, "trade") ?? "",
+    message: text(formData, "message") ?? "",
+  });
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_report_expertise", {
+    p_request_id: requestId,
+    p_trade_code: parsed.data.trade,
+    p_message: parsed.data.message,
+  });
+  if (error) return rpcError(error);
+  return { success: fr.pro.expertise.sent };
+}

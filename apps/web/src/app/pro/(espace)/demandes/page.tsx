@@ -1,10 +1,10 @@
 import { timeLeft } from "@menao/core";
-import { ArrowLeft, Clock, MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { StatusBadge, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireArtisan } from "@/lib/artisan/requests";
+import { requireProSpace } from "@/lib/artisan/space";
 
 const t = fr.pro.onboarding.requests;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
@@ -22,7 +22,7 @@ const statusTone = {
 
 /** Demandes reçues (F-16, F-17), maquette « Dashboard – Dernières demandes de devis ». */
 export default async function ArtisanRequestsPage() {
-  const { supabase } = await requireArtisan();
+  const { supabase } = await requireProSpace();
   const { data } = await supabase.rpc("artisan_inbox");
   const rows = data ?? [];
   const now = new Date();
@@ -34,15 +34,8 @@ export default async function ArtisanRequestsPage() {
     path ? (signed?.find((s) => s.path === path)?.signedUrl ?? null) : null;
 
   return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6">
-        <Link
-          href="/pro/onboarding"
-          className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {t.back}
-        </Link>
+    <main className="flex-1">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>

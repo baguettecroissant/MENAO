@@ -1,0 +1,102 @@
+import { ARTISAN_CANCELLABLE_STATUSES, parisToday, type ChantierStatus } from "@menao/core";
+import { CalendarDays, CalendarPlus, Clock } from "lucide-react";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { DetailHeader, StickyActions } from "@/components/pro/detail";
+import { ExpertiseButton } from "@/components/pro/expertise-button";
+import { RequestBlocks } from "@/components/pro/request-blocks";
+import { Alert, StatusBadge } from "@/components/ui";
+import { fr } from "@/i18n/fr";
+import { getChantierDetail } from "@/lib/artisan/chantiers";
+import { requireProSpace } from "@/lib/artisan/space";
+import { formatDay, formatDayLong, formatTime, parisInputValues } from "@/lib/format";
+import { CancelChantierButton, NotesBlock, RescheduleButton } from "./chantier-actions";
+
+const t = fr.pro.appointment;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const cancellable: readonly ChantierStatus[] = ARTISAN_CANCELLABLE_STATUSES;
+
+export const metadata: Metadata = { title: `${t.title} — MENAO` };
+
+/** Vue d'un rendez-vous (F-18), maquette « Vue d'un rendez-vous ». */
+export default async function ChantierPage({ params }: PageProps<"/pro/chantiers/[id]">) {
+  const { id } = await params;
+  if (!UUID.test(id)) notFound();
+  const { supabase } = await requireProSpace();
+  const c = await getChantierDetail(supabase, id);
+  if (!c) notFound();
+
+  const [{ data: signed }, { data: trades }] = await Promise.all([
+    c.photos.length
+      ? supabase.storage.from("project-photos").createSignedUrls(c.photos, 3600)
+      : Promise.resolve({ data: [] }),
+    supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+  ]);
+  const status = c.chantier.status;
+  const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
+  const planned = status === "rdv_planifie" && appointment !== null;
+  const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
+
+  return (
+    <main className="flex flex-1 flex-col">
+      <DetailHeader backHref="/pro/chantiers" backLabel={t.back} title={t.title}>
+        {appointment ? (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays aria-hidden="true" className="size-4" />
+              {formatDayLong(appointment.starts_at)}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock aria-hidden="true" className="size-4" />
+              {formatTime(appointment.starts_at)}
+            </span>
+            {planned && (
+              <RescheduleButton
+                chantierId={c.chantier.id}
+                minDate={parisToday()}
+                {...parisInputValues(appointment.starts_at)}
+              />
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-white/85">{fr.pro.chantiers.status[status]}</p>
+        )}
+        {planned && (
+          <a
+            href={`/agenda/${c.chantier.id}`}
+            className="inline-flex min-h-9 items-center gap-1.5 self-start rounded-pill border border-white/60 px-3.5 text-sm font-medium text-white hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none"
+          >
+            <CalendarPlus aria-hidden="true" className="size-4" />
+            {t.addToCalendar}
+          </a>
+        )}
+      </DetailHeader>
+      {active && <ExpertiseButton requestId={c.id} trades={trades ?? []} />}
+
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-3 px-4 py-5 sm:px-6 sm:py-6">
+        {status === "annule" && (
+          <Alert tone="info">
+            {t.cancelled(formatDay(c.chantier.cancelled_at ?? c.chantier.created_at))}
+          </Alert>
+        )}
+        {status !== "rdv_planifie" && status !== "annule" && (
+          <div>
+            <StatusBadge tone="primary">{fr.pro.chantiers.status[status]}</StatusBadge>
+          </div>
+        )}
+        <RequestBlocks
+          detail={c}
+          photoUrls={(signed ?? []).flatMap((p) => (p.signedUrl ? [p.signedUrl] : []))}
+          variant="rendez-vous"
+        />
+        {c.appointment && <NotesBlock chantierId={c.chantier.id} notes={c.appointment.notes} />}
+      </div>
+
+      {cancellable.includes(status) && (
+        <StickyActions>
+          <CancelChantierButton chantierId={c.chantier.id} />
+        </StickyActions>
+      )}
+    </main>
+  );
+}
