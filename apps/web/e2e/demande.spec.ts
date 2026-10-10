@@ -3,7 +3,8 @@ import { authLinkFor } from "./mailpit";
 
 // Demande de chantier (F-08, F-11, F-16 à F-18) : sélection de 2 artisans, compte créé au moment
 // de la demande (le projet anonyme est conservé), rendez-vous fixé par l'artisan (coordonnées
-// échangées), notes privées, date du rendez-vous et fichier agenda côté particulier.
+// échangées), notes privées, brouillon de devis (F-19), date du rendez-vous et fichier agenda
+// côté particulier.
 const UUID = "[0-9a-f-]{36}";
 
 test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'artisan", async ({
@@ -120,6 +121,25 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await rdv.getByRole("button", { name: "Enregistrer les notes" }).click();
   await expect(rdv.getByText("Notes enregistrées.")).toBeVisible();
   await expect(rdv.getByText("Code portail 1234")).toBeVisible();
+
+  // Devis (F-19) : une ligne, totaux en direct, enregistrement, brouillon retrouvé.
+  await rdv.getByRole("link", { name: "Créer un devis" }).click();
+  await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis$`));
+  const editor = proPage.getByRole("main");
+  await expect(editor.getByRole("status")).toHaveText("Brouillon");
+  await editor.getByRole("button", { name: "Ajouter manuellement" }).click();
+  await editor.getByLabel("Désignation").fill("Remplacement du siphon");
+  await editor.getByLabel("Quantité").fill("2");
+  await editor.getByLabel("Prix unitaire HT").fill("35,50");
+  await editor.getByRole("button", { name: "10 %" }).click();
+  await editor.getByRole("button", { name: "Valider la ligne" }).click();
+  await expect(editor.getByRole("status")).toHaveText("Modifications apportées");
+  await expect(editor.getByText(/^78,10\s€$/).first()).toBeVisible();
+  await editor.getByRole("button", { name: "Enregistrer le devis" }).click();
+  await expect(editor.getByRole("status")).toHaveText("Enregistré et à jour");
+  await proPage.reload();
+  await expect(editor.getByText("Remplacement du siphon")).toBeVisible();
+  await expect(editor.getByRole("status")).toHaveText("Enregistré et à jour");
 
   // Le tableau de bord affiche le rendez-vous à venir.
   await proPage.goto("/pro/tableau-de-bord");

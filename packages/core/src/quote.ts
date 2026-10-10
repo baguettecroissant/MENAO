@@ -91,8 +91,8 @@ export function quoteTotals(lines: readonly QuoteLineAmounts[]): QuoteTotals {
   return { totalHtCents, totalTvaCents, totalTtcCents: totalHtCents + totalTvaCents, vat };
 }
 
-// Espaces de milliers acceptés : espace, insécable, fine insécable.
-const SPACES = /[\s  ]/g;
+// Espaces de milliers acceptés : espace, insécable, fine insécable (toutes couvertes par \s).
+const SPACES = /\s/g;
 
 /** « 22,50 » ou « 22.5 » → 2250 centimes ; null si invalide (2 décimales au plus). */
 export function parseEuros(input: string): number | null {
