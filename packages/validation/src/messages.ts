@@ -57,6 +57,14 @@ export const messages = {
   reservesTooShort: "Décrivez vos réserves en 10 caractères au moins.",
   reservesTooLong: "Vos réserves dépassent 2 000 caractères.",
   receptionConsentRequired: "Cochez cette case pour signer le PV de réception.",
+  reviewCriterionRequired: "Notez ce critère en faisant glisser le curseur.",
+  reviewValueRequired: "Choisissez le rapport qualité/prix.",
+  reviewCommentTooShort: "Décrivez votre expérience en 50 caractères au moins.",
+  reviewCommentTooLong: "Votre avis dépasse 2 000 caractères.",
+  reviewReplyRequired: "Écrivez votre réponse.",
+  reviewReplyTooLong: "Votre réponse dépasse 2 000 caractères.",
+  reviewReportTooShort: "Décrivez le problème en 10 caractères au moins.",
+  moderationReasonRequired: "Indiquez le motif en 10 caractères au moins.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;
