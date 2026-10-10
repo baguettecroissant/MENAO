@@ -18,6 +18,8 @@ export function TradeCard({ code, label, href }: { code: string; label: string; 
         <img
           src={image}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (

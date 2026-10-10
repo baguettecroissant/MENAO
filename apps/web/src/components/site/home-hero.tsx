@@ -22,8 +22,14 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
         {HERO_IMAGE ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
-            <img src={HERO_IMAGE} alt="" className="absolute inset-0 size-full object-cover" />
+            <img
+              src={HERO_IMAGE}
+              alt=""
+              fetchPriority="high"
+              className="absolute inset-x-0 top-0 h-[400px] w-full object-cover object-right-top sm:h-full sm:object-[70%_center] lg:object-center"
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b1230]/85 via-[#0b1230]/45 to-transparent" />
+            <div className="absolute inset-x-0 top-48 h-52 bg-gradient-to-b from-transparent to-[#0f1b4d] sm:hidden" />
           </>
         ) : (
           <HeroBackdrop />
@@ -32,28 +38,31 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
         <div className="relative flex min-h-[620px] flex-col p-3 sm:p-6 lg:min-h-[680px]">
           <HomeNav />
 
-          {/* Pastilles flottantes : engagements réels de MENAO (pas de faux témoignages). */}
-          <ul aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block">
-            {t.heroTags.map((tag, i) => {
-              const Icon = TAG_ICONS[i] ?? BadgeCheck;
-              const position = [
-                "top-[34%] right-[30%]",
-                "top-[48%] right-[8%]",
-                "top-[60%] right-[24%]",
-              ][i];
-              return (
-                <li
-                  key={tag}
-                  className={`absolute ${position} flex items-center gap-2 rounded-2xl border border-white/40 bg-white/20 px-3.5 py-2 text-sm font-medium text-white shadow-raised backdrop-blur-md`}
-                >
-                  <Icon className="size-4" />
-                  {tag}
-                </li>
-              );
-            })}
-          </ul>
+          {/* Pastilles flottantes : engagements réels de MENAO (pas de faux témoignages). Masquées
+              sur la photo : posées sur des personnes fictives, elles ressembleraient à des badges. */}
+          {!HERO_IMAGE && (
+            <ul aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block">
+              {t.heroTags.map((tag, i) => {
+                const Icon = TAG_ICONS[i] ?? BadgeCheck;
+                const position = [
+                  "top-[34%] right-[30%]",
+                  "top-[48%] right-[8%]",
+                  "top-[60%] right-[24%]",
+                ][i];
+                return (
+                  <li
+                    key={tag}
+                    className={`absolute ${position} flex items-center gap-2 rounded-2xl border border-white/40 bg-white/20 px-3.5 py-2 text-sm font-medium text-white shadow-raised backdrop-blur-md`}
+                  >
+                    <Icon className="size-4" />
+                    {tag}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
-          <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[40rem]">
+          <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[34rem]">
             <h1 className="text-[2.375rem] leading-[1.05] font-medium tracking-tight text-white sm:text-[3.25rem] lg:text-[3.75rem]">
               {t.heroTitleStart} <span className="text-[#aebcff]">{t.heroTitleAccent}</span>
             </h1>
