@@ -95,7 +95,7 @@ export default async function BalancePage({
               <span>{euros.format(progress.paidCents / 100)}</span>
             </li>
             <li className="relative flex items-center justify-between gap-3">
-              <span className="flex items-center gap-3 font-medium">
+              <span className="flex items-center gap-3 text-sm font-medium">
                 <span
                   aria-hidden="true"
                   className="flex size-6 items-center justify-center rounded-full border-[1.5px] border-primary bg-surface text-primary"
@@ -104,7 +104,7 @@ export default async function BalancePage({
                 </span>
                 {t.today}
               </span>
-              <span className="text-xl font-medium text-primary">{amount}</span>
+              <span className="text-lg font-medium whitespace-nowrap text-primary">{amount}</span>
             </li>
           </ol>
           <p className="flex items-baseline justify-between gap-3 border-t border-border pt-3 text-sm text-muted-foreground">
