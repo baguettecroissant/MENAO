@@ -1,8 +1,9 @@
-// Edge Function deposit-checkout (F-31) : paiement de l'acompte par le client, avec Stripe
-// Checkout créé directement sur le compte Stripe de l'artisan (charge directe, ADR 0011).
-// Aucune commission ni application_fee : MENAO ne prend jamais d'argent sur les chantiers
-// (CLAUDE.md règle 12). particulier_start_deposit, appelée au nom du client, décide de l'accès
-// et du montant (échéancier figé). Aucune donnée personnelle journalisée. ADR 0023.
+// Edge Function deposit-checkout (F-31, F-32) : paiement de l'acompte, ou du solde une fois le
+// chantier réceptionné, avec Stripe Checkout créé directement sur le compte Stripe de l'artisan
+// (charge directe, ADR 0011). Aucune commission ni application_fee : MENAO ne prend jamais
+// d'argent sur les chantiers (CLAUDE.md règle 12). particulier_start_deposit et
+// particulier_start_balance, appelées au nom du client, décident de l'accès et du montant
+// (échéancier figé, solde calculé). Aucune donnée personnelle journalisée. ADR 0023, 0029.
 import { createClient } from "@supabase/supabase-js";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
@@ -12,6 +13,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 type Started = {
   payment_id: string;
+  quote_id?: string;
   amount_cents: number;
   stripe_account_id: string;
   previous_session_id: string | null;
@@ -26,10 +28,14 @@ Deno.serve(async (req) => {
 
   const body = (await req.json().catch(() => null)) as {
     quoteId?: unknown;
+    chantierId?: unknown;
     origin?: unknown;
   } | null;
-  const quoteId = typeof body?.quoteId === "string" ? body.quoteId : "";
-  if (!UUID.test(quoteId)) return json({ status: "invalid" }, 400);
+  // Acompte : devis signé ; solde : chantier réceptionné.
+  const chantierId = typeof body?.chantierId === "string" ? body.chantierId : "";
+  const balance = UUID.test(chantierId);
+  const requestedQuote = typeof body?.quoteId === "string" ? body.quoteId : "";
+  if (!balance && !UUID.test(requestedQuote)) return json({ status: "invalid" }, 400);
 
   // Client au nom de l'utilisateur : auth.uid() et ses droits s'appliquent en base.
   const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
@@ -46,9 +52,9 @@ Deno.serve(async (req) => {
   });
   if (allowed !== true) return json({ status: "rate_limited" }, 429);
 
-  const { data: start, error } = await supabase.rpc("particulier_start_deposit", {
-    p_quote_id: quoteId,
-  });
+  const { data: start, error } = balance
+    ? await supabase.rpc("particulier_start_balance", { p_chantier_id: chantierId })
+    : await supabase.rpc("particulier_start_deposit", { p_quote_id: requestedQuote });
   if (error) {
     return error.code === "22023"
       ? json({ status: "refused", message: error.message }, 409)
@@ -56,6 +62,7 @@ Deno.serve(async (req) => {
   }
   const started = start as Started;
   const stripeAccount = started.stripe_account_id;
+  const quoteId = started.quote_id ?? requestedQuote;
 
   try {
     const stripe = stripeClient();
@@ -66,8 +73,8 @@ Deno.serve(async (req) => {
         .catch(() => undefined);
     }
     const origin = returnOrigin(body?.origin);
-    const label = `Acompte du devis ${started.numero}`;
-    const metadata = { menao_quote_id: quoteId, menao_kind: "acompte" };
+    const label = `${balance ? "Solde" : "Acompte"} du devis ${started.numero}`;
+    const metadata = { menao_quote_id: quoteId, menao_kind: balance ? "solde" : "acompte" };
     const session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
@@ -85,8 +92,12 @@ Deno.serve(async (req) => {
         ...(started.client_email ? { customer_email: started.client_email } : {}),
         metadata,
         payment_intent_data: { description: label, metadata },
-        success_url: `${origin}/mon-espace/devis/${quoteId}?paiement=termine`,
-        cancel_url: `${origin}/mon-espace/devis/${quoteId}/acompte`,
+        success_url: balance
+          ? `${origin}/mon-espace/chantiers/${chantierId}?paiement=termine`
+          : `${origin}/mon-espace/devis/${quoteId}?paiement=termine`,
+        cancel_url: balance
+          ? `${origin}/mon-espace/chantiers/${chantierId}/solde`
+          : `${origin}/mon-espace/devis/${quoteId}/acompte`,
       },
       { stripeAccount },
     );
