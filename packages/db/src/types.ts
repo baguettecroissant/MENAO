@@ -610,7 +610,7 @@ export type Database = {
           actor_role: string;
           chantier_id: string;
           created_at: string;
-          details: Json;
+          details: NonNullable<Json>;
           event: Database["public"]["Enums"]["chantier_event"];
           from_status: Database["public"]["Enums"]["chantier_status"];
           id: string;
@@ -622,7 +622,7 @@ export type Database = {
           actor_role: string;
           chantier_id: string;
           created_at?: string;
-          details?: Json;
+          details?: NonNullable<Json>;
           event: Database["public"]["Enums"]["chantier_event"];
           from_status: Database["public"]["Enums"]["chantier_status"];
           id?: string;
@@ -633,7 +633,7 @@ export type Database = {
           actor_role?: string;
           chantier_id?: string;
           created_at?: string;
-          details?: Json;
+          details?: NonNullable<Json>;
           event?: Database["public"]["Enums"]["chantier_event"];
           from_status?: Database["public"]["Enums"]["chantier_status"];
           id?: string;
@@ -1542,11 +1542,11 @@ export type Database = {
       particulier_requests: {
         Args: Record<PropertyKey, never>;
         Returns: {
+          appointment_at: string;
           artisan_avatar_path: string;
           artisan_email: string;
           artisan_id: string;
           artisan_name: string;
-          appointment_at: string;
           artisan_phone: string;
           chantier_id: string;
           chantier_status: Database["public"]["Enums"]["chantier_status"];
