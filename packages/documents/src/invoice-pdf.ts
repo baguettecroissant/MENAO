@@ -9,6 +9,8 @@ import { CONTENT, COLOR, Canvas, PAGE, embedFonts, wrap } from "./pdf-layout.ts"
 import { QUOTE_TEXTS } from "./quote-model.ts";
 
 const AMOUNT_WIDTH = 110;
+// Bloc des totaux : libellés longs de la facture de solde (« Acompte versé (facture …) »).
+const TOTALS_WIDTH = 330;
 
 export async function renderInvoicePdf(data: InvoicePdfData): Promise<Uint8Array> {
   const m = invoiceDocumentModel(data);
@@ -122,14 +124,14 @@ export async function renderInvoicePdf(data: InvoicePdfData): Promise<Uint8Array
     c.y -= last ? 16 : 13;
     if (last) {
       c.page.drawRectangle({
-        x: right - 230,
+        x: right - TOTALS_WIDTH,
         y: c.y - 5,
-        width: 230,
+        width: TOTALS_WIDTH,
         height: 18,
         color: COLOR.soft,
       });
     }
-    c.text(winAnsi(label), right - 225, c.y, last ? 10 : 9, { bold: last });
+    c.text(winAnsi(label), right - TOTALS_WIDTH + 5, c.y, last ? 10 : 9, { bold: last });
     c.text(value, right - 125, c.y, last ? 10 : 9, { bold: last, align: "right", width: 120 });
   });
   c.y -= 14;
