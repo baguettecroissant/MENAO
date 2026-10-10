@@ -39,6 +39,25 @@ export function llmConfig(): LlmConfig | null {
   return null;
 }
 
+/** Modèle des lignes de devis dictées (F-19) : Sonnet, la qualité prime sur la rapidité. */
+export function quoteModel(): string {
+  return (
+    env("AI_QUOTE_MODEL") ||
+    (env("ANTHROPIC_API_KEY") ? "claude-sonnet-5-5" : "anthropic/claude-sonnet-5.5")
+  );
+}
+
+/** Remplace les noms connus (prénom, nom) par [nom], en complément de scrubPersonalData. */
+export function scrubNames(text: string, names: (string | null | undefined)[]): string {
+  let clean = text;
+  for (const name of names) {
+    if (!name || name.trim().length < 2) continue;
+    const escaped = name.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    clean = clean.replace(new RegExp(`(?<![\\p{L}])${escaped}(?![\\p{L}])`, "giu"), "[nom]");
+  }
+  return clean;
+}
+
 /** Première adresse de X-Forwarded-For (posée par la passerelle Supabase). */
 export function clientIp(req: Request): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "inconnue";
@@ -75,7 +94,7 @@ export async function withinHourlyLimits(
 }
 
 export type AiRun = {
-  function_name: "analyze-need" | "transcribe";
+  function_name: "analyze-need" | "transcribe" | "quote-from-voice";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;

@@ -47,3 +47,25 @@ export async function searchPreviousLines(query: string): Promise<PreviousLine[]
     vatRateBp: l.vat_rate_bp,
   }));
 }
+
+/** « Sauvegarder cet enregistrement » (F-19) : le texte de la dictée, pour générer plus tard. */
+export async function saveDictation(
+  chantierId: string,
+  transcript: string,
+): Promise<SaveQuoteResult> {
+  if (!z.uuid().safeParse(chantierId).success) return { ok: false, error: fr.errors.generic };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_save_dictation", {
+    p_chantier_id: chantierId,
+    p_transcript: transcript.slice(0, 5000),
+  });
+  if (error)
+    return { ok: false, error: error.code === "22023" ? error.message : fr.errors.generic };
+  return { ok: true };
+}
+
+export async function deleteDictation(chantierId: string): Promise<void> {
+  if (!z.uuid().safeParse(chantierId).success) return;
+  const { supabase } = await requireArtisan();
+  await supabase.rpc("artisan_delete_dictation", { p_chantier_id: chantierId });
+}

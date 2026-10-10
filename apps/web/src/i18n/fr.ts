@@ -853,6 +853,41 @@ export const fr = {
       saved: "Devis enregistré.",
       create: "Créer un devis",
       resume: "Reprendre le devis",
+      toReview: "À vérifier",
+      dictation: {
+        open: "Dictée intelligente",
+        title: "Dictez votre devis",
+        example:
+          "Dites par exemple : « 4 prises de courant Legrand Céliane à 22,50 euros et 3 heures de pose à 55 euros de l'heure ».",
+        transcriptLabel: "Texte de la dictée",
+        placeholder: "Ce que vous dicterez s'affichera ici…",
+        record: "Dicter",
+        resume: "Reprendre la dictée",
+        pause: "Mettre en pause",
+        discard: "Effacer la dictée",
+        timer: (seconds: number, max: number) =>
+          `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} / ${Math.floor(max / 60)}:${String(max % 60).padStart(2, "0")}`,
+        recording: "Enregistrement…",
+        transcribing: "Transcription…",
+        save: "Sauvegarder cet enregistrement",
+        saveHint:
+          "Vous pourrez générer les lignes plus tard à partir d'un enregistrement sauvegardé.",
+        saved: "Enregistrement sauvegardé.",
+        generate: "Générer les lignes",
+        generating: "Génération des lignes…",
+        generated: (n: number) =>
+          n <= 1 ? "1 ligne ajoutée : vérifiez-la." : `${n} lignes ajoutées : vérifiez-les.`,
+        back: "Retour",
+        denied:
+          "Le micro n'est pas autorisé. Autorisez-le dans les réglages de votre navigateur pour dicter.",
+        unsupported: "La dictée n'est pas disponible sur ce navigateur.",
+        failed: "La transcription a échoué. Réessayez ou écrivez le texte.",
+        limit: "Dictée limitée à 2 minutes.",
+        rateLimited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
+        empty:
+          "Aucune ligne n'a pu être tirée de la dictée. Citez les fournitures, les quantités et les prix.",
+        unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
+      },
       list: {
         title: "Devis",
         subtitle: "Suivez vos devis Menao.",

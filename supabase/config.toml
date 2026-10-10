@@ -421,6 +421,7 @@ GEOCODING_BASE_URL = "env(GEOCODING_BASE_URL)"
 AI_ANALYZE_MODEL = "env(AI_ANALYZE_MODEL)"
 AI_ANALYZE_FALLBACK_MODEL = "env(AI_ANALYZE_FALLBACK_MODEL)"
 AI_TRANSCRIBE_MODEL = "env(AI_TRANSCRIBE_MODEL)"
+AI_QUOTE_MODEL = "env(AI_QUOTE_MODEL)"
 # Notifications (F-41, ADR 0017) : Resend, expéditeur (défaut : onboarding@resend.dev tant que le
 # domaine n'est pas vérifié) et secret partagé avec la base (Vault : menao_notify_secret).
 RESEND_API_KEY = "env(RESEND_API_KEY)"
@@ -449,6 +450,10 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.transcribe]
+verify_jwt = true
+
+# Dictée intelligente du devis (F-19) : artisan connecté.
+[functions.quote-from-voice]
 verify_jwt = true
 
 # Envoi des notifications (F-41) : appelée par la base avec un secret partagé, sans jeton.

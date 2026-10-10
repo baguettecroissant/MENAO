@@ -25,7 +25,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
     redirect(`/pro/chantiers/${id}` as Route);
   }
 
-  const [{ data: draft }, { data: artisan }] = await Promise.all([
+  const [{ data: draft }, { data: artisan }, { data: dictation }] = await Promise.all([
     supabase
       .from("quotes")
       .select(
@@ -35,6 +35,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
       .eq("status", "brouillon")
       .maybeSingle(),
     supabase.from("artisans").select("assujetti_tva").eq("id", artisanId).single(),
+    supabase.from("quote_dictations").select("transcript").eq("chantier_id", id).maybeSingle(),
   ]);
   const lines: QuoteLineInput[] = [...(draft?.quote_lines ?? [])]
     .sort((a, b) => a.position - b.position)
@@ -71,6 +72,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
         initialLines={lines}
         saved={Boolean(draft)}
         assujettiTva={artisan?.assujetti_tva ?? true}
+        savedDictation={dictation?.transcript ?? null}
       />
     </main>
   );
