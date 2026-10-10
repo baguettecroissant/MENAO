@@ -6,6 +6,8 @@ import {
   chantierMessageSchema,
   chantierStartSchema,
   expertiseSchema,
+  receptionConsentsSchema,
+  reservesSchema,
 } from "../src/chantier";
 import { messages } from "../src/messages";
 
@@ -68,5 +70,26 @@ describe("suivi du chantier (F-22)", () => {
     expect(
       chantierMessageSchema.safeParse({ message: "x".repeat(2001) }).error?.issues[0]?.message,
     ).toBe(messages.chantierMessageTooLong);
+  });
+});
+
+describe("réception avec réserves (F-26)", () => {
+  it("réserves : 10 à 2 000 caractères, espaces retirés", () => {
+    expect(reservesSchema.parse({ reserves: "  Plinthe à repeindre.  " })).toEqual({
+      reserves: "Plinthe à repeindre.",
+    });
+    expect(reservesSchema.safeParse({ reserves: "Court" }).error?.issues[0]?.message).toBe(
+      messages.reservesTooShort,
+    );
+    expect(reservesSchema.safeParse({ reserves: "x".repeat(2001) }).error?.issues[0]?.message).toBe(
+      messages.reservesTooLong,
+    );
+  });
+
+  it("cases du PV : toutes obligatoires, message propre au PV", () => {
+    const all = { document: true, cgu_prestataire: true, cgu_menao: true, echeancier: true };
+    expect(receptionConsentsSchema.safeParse(all).success).toBe(true);
+    const missing = receptionConsentsSchema.safeParse({ ...all, echeancier: false });
+    expect(missing.error?.issues[0]?.message).toBe(messages.receptionConsentRequired);
   });
 });

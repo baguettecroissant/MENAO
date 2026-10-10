@@ -4,13 +4,16 @@ import type { ChantierTagData } from "@/lib/chantier/view";
 const chip = {
   primary: "bg-primary-soft text-primary-strong",
   success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
   neutral: "bg-background text-muted-foreground",
   danger: "bg-danger-soft text-danger",
 } as const;
 
 /** Pastille d'état du chantier : puce colorée, ou pastille à point pour un état en cours. */
 export function ChantierStatusTag({ tag }: { tag: ChantierTagData }) {
-  if (tag.dot) return <StatusBadge tone={tag.tone}>{tag.text}</StatusBadge>;
+  if (tag.dot && tag.tone !== "warning") {
+    return <StatusBadge tone={tag.tone}>{tag.text}</StatusBadge>;
+  }
   if (tag.tone === "primary") return <Tag>{tag.text}</Tag>;
   return (
     <span

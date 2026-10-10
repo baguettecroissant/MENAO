@@ -1,4 +1,4 @@
-import { CHANTIER_MESSAGE_MAX_LENGTH } from "@menao/core";
+import { CHANTIER_MESSAGE_MAX_LENGTH, RESERVES_LIMITS } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -46,4 +46,22 @@ export const chantierMessageSchema = z.object({
     .trim()
     .min(1, { error: messages.chantierMessageRequired })
     .max(CHANTIER_MESSAGE_MAX_LENGTH, { error: messages.chantierMessageTooLong }),
+});
+
+/** F-26 « Ajouter des réserves » : points à reprendre, inscrits dans les observations du PV. */
+export const reservesSchema = z.object({
+  reserves: z
+    .string()
+    .trim()
+    .min(RESERVES_LIMITS.min, { error: messages.reservesTooShort })
+    .max(RESERVES_LIMITS.max, { error: messages.reservesTooLong }),
+});
+
+/** F-25 : cases cochées avant de signer le PV de réception (mêmes cases que le devis, F-13). */
+const receptionConsent = z.literal(true, { error: messages.receptionConsentRequired });
+export const receptionConsentsSchema = z.object({
+  document: receptionConsent,
+  cgu_prestataire: receptionConsent,
+  cgu_menao: receptionConsent,
+  echeancier: receptionConsent,
 });

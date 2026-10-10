@@ -6,7 +6,7 @@ const t = fr.chantier;
 
 export type ChantierTagData = {
   text: string;
-  tone: "primary" | "success" | "neutral" | "danger";
+  tone: "primary" | "success" | "warning" | "neutral" | "danger";
   /** Pastille d'état avec point (« • Chantier en cours ») plutôt que simple puce. */
   dot: boolean;
 };
@@ -17,6 +17,7 @@ export function chantierTag(c: {
   startAt: string | null;
   finishedAt: string | null;
   closedAt: string | null;
+  receivedAt?: string | null;
 }): ChantierTagData {
   switch (c.status) {
     case "planifie":
@@ -29,6 +30,12 @@ export function chantierTag(c: {
       return c.finishedAt
         ? { text: t.finishedOn(formatDateNumeric(c.finishedAt)), tone: "success", dot: false }
         : { text: t.clientStatus.travaux_termines, tone: "success", dot: false };
+    case "reserves_a_lever":
+      return { text: t.clientStatus.reserves_a_lever, tone: "warning", dot: false };
+    case "receptionne":
+      return c.receivedAt
+        ? { text: t.receivedOn(formatDateNumeric(c.receivedAt)), tone: "success", dot: false }
+        : { text: t.clientStatus.receptionne, tone: "success", dot: false };
     case "cloture":
       return c.closedAt
         ? { text: t.closedOn(formatDateNumeric(c.closedAt)), tone: "success", dot: false }

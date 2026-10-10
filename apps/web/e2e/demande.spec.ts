@@ -493,5 +493,47 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(schedule.getByText(/27,55\s€/)).toBeVisible();
   await expect(schedule.getByText(/64,30\s€/)).toBeVisible();
   await capture(page, "client-chantier-dossier");
+
+  // Réception des travaux (F-25) : « Tout est conforme ? », aperçu du PV sans réserves (solde
+  // calculé), cases à cocher, signature chez le prestataire (faux DocuSeal), chantier réceptionné.
+  await page.goto(`/mon-espace/chantiers/${chantierId}`);
+  await page.getByRole("button", { name: "Valider la réception du chantier" }).click();
+  const conform = page.getByRole("dialog", { name: "Tout est conforme ?" });
+  await expect(conform.getByText(/Le solde de 64,30\s€ vous sera demandé ensuite/)).toBeVisible();
+  await conform.getByRole("link", { name: "Signer le PV de réception" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}/reception$`));
+  const pv = page.getByRole("figure", { name: "Aperçu du procès-verbal de réception" });
+  await expect(pv.getByText("Réception des travaux SANS RÉSERVES")).toBeVisible();
+  await expect(pv.getByText(/64,30\s€/)).toBeVisible();
+  await capture(page, "client-signature-pv");
+  await page.getByRole("button", { name: "Signer le PV de réception" }).click();
+  await expect(
+    page.getByText("Cochez cette case pour signer le PV de réception.").first(),
+  ).toBeVisible();
+  for (const label of [
+    /J'ai lu et j'accepte le procès-verbal de réception/,
+    /conditions d'utilisation de DocuSeal/,
+    /conditions générales d'utilisation et la politique/,
+    /le solde restant à payer s'élève à 64,30/,
+  ]) {
+    await page.getByLabel(label).check();
+  }
+  await page.getByRole("button", { name: "Signer le PV de réception" }).click();
+  await expect(page).toHaveURL(/localhost:54397\/s\/signature-\d+$/);
+  await page.getByRole("button", { name: "Signer le document" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}\\?reception=signee$`));
+  await expect(page.getByText(/^Réceptionné le \d{2}\/\d{2}\/\d{4}$/)).toBeVisible();
+  await expect(
+    page.getByText(/Réception validée le .+ Prochaine étape : le paiement du solde\./),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Dossier du chantier" }).click();
+  const pvLink = page.getByRole("link", { name: /PV de réception PV-\d{4}-R01/ });
+  const pvHref = (await pvLink.getAttribute("href")) ?? "";
+  expect(pvHref).toMatch(new RegExp(`^/receptions/${UUID}/pdf$`));
+  const pvPdf = await page.request.get(pvHref);
+  expect(pvPdf.status()).toBe(200);
+  expect(pvPdf.headers()["content-disposition"]).toMatch(/PV-\d{4}-R01-signe\.pdf/);
+  await proPage.goto(chantierUrl);
+  await expect(proPage.getByText(/Réception validée par Dominique le /)).toBeVisible();
   await pro.close();
 });

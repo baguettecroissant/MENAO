@@ -232,6 +232,31 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("réception (F-25, F-26) : PV signé, réserves émises citées, lien vers le chantier", () => {
+    const data = { ...ids, titre: "Prises", client: "Camille", numero: "PV-2026-R01" };
+    const signed = notificationContent("pv_signe", data, { ...ctx, firstName: "Xavier" });
+    expect(signed.subject).toBe(`Réception validée pour ${quoted("Prises")}`);
+    expect(signed.paragraphs[1]).toContain("sans réserves");
+    expect(signed.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    const reserves = notificationContent(
+      "reserves_emises",
+      { ...data, reserves: "Plinthe à repeindre." },
+      { ...ctx, firstName: "Xavier" },
+    );
+    expect(reserves.subject).toBe("Réserves émises par Camille");
+    expect(reserves.quote).toBe("Plinthe à repeindre.");
+    expect(reserves.cta.label).toBe("Voir les réserves");
+    const done = notificationContent(
+      "travaux_termines",
+      { ...ids, titre: "Prises", artisan: "Jean" },
+      ctx,
+    );
+    expect(done.cta).toEqual({
+      label: "Valider la réception",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
+    });
+  });
+
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
     for (const type of NOTIFICATION_TYPES) {
       const c = notificationContent(
