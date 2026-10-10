@@ -258,5 +258,47 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await chantier.getByRole("link", { name: "Modifier le devis" }).click();
   await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis$`));
   await expect(proPage.getByText("Siphon PVC 40 mm")).toBeVisible();
+
+  // L'artisan envoie la nouvelle version : numéro d'origine suivi de l'indice.
+  await proPage.getByRole("button", { name: "Générer le devis" }).click();
+  await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis/apercu$`));
+  await proPage.getByRole("link", { name: "Suivant" }).click();
+  const sendingV2 = proPage.getByRole("main");
+  await sendingV2.getByRole("radio", { name: /Mon échéancier par défaut/ }).check();
+  await sendingV2.getByLabel("Date de début prévisionnelle").fill(day(12));
+  await sendingV2.getByLabel("Durée estimée (en jours)").fill("2");
+  await sendingV2.getByRole("button", { name: "Envoyer le devis" }).click();
+  await expect(proPage.getByText(/N° DEVIS-\d{4}-0001-v2/)).toBeVisible();
+
+  // Signature du devis (F-13) : cases à cocher, prestataire (faux DocuSeal), webhook, devis signé.
+  await page.goto("/mon-espace");
+  await page.getByRole("link", { name: "Voir le devis" }).click();
+  await expect(page.getByText(/N° DEVIS-\d{4}-0001-v2/)).toBeVisible();
+  await page.getByRole("link", { name: "Signer le devis" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}/signature$`));
+  await page.getByRole("button", { name: "Signer le devis" }).click();
+  await expect(page.getByText("Cochez cette case pour signer le devis.").first()).toBeVisible();
+  for (const label of [
+    /J'ai lu et j'accepte le devis/,
+    /conditions d'utilisation de DocuSeal/,
+    /conditions générales d'utilisation et la politique/,
+    /J'accepte l'échéancier : acompte de 27,55/,
+  ]) {
+    await page.getByLabel(label).check();
+  }
+  await page.getByRole("button", { name: "Signer le devis" }).click();
+  await expect(page).toHaveURL(/localhost:54397\/s\/signature-\d+$/);
+  await page.getByRole("button", { name: "Signer le document" }).click();
+  await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}\\?signature=terminee$`));
+  await expect(page.getByText(/Vous avez signé ce devis le/)).toBeVisible();
+  const signedPdf = await page.request.get(
+    `${new URL(page.url()).pathname.replace("/mon-espace", "")}/pdf`,
+  );
+  expect(signedPdf.status()).toBe(200);
+  expect(signedPdf.headers()["content-disposition"]).toMatch(/DEVIS-\d{4}-0001-v2-signe\.pdf/);
+
+  // L'artisan voit le devis signé sur la fiche du chantier.
+  await proPage.goto(previewUrl.replace(/\/devis\/apercu$/, ""));
+  await expect(proPage.getByText(/Le client a signé le devis le/)).toBeVisible();
   await pro.close();
 });

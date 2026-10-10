@@ -43,7 +43,7 @@ export default async function ChantierPage({ params }: PageProps<"/pro/chantiers
       supabase
         .from("quotes")
         .select(
-          "id, status, numero, total_ttc_cents, sent_at, valid_until, refusal_reason, client_message",
+          "id, status, numero, total_ttc_cents, sent_at, valid_until, refusal_reason, client_message, signed_at",
         )
         .eq("chantier_id", id)
         .neq("status", "brouillon")

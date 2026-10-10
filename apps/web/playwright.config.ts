@@ -25,6 +25,13 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
+      // Faux DocuSeal (F-13) : API appelée par les Edge Functions (Docker → hôte), page de
+      // signature ouverte par le navigateur, webhook vers signature-webhook.
+      command: "node e2e/mock-docuseal.mjs",
+      url: "http://127.0.0.1:54397/",
+      reuseExistingServer: !process.env.CI,
+    },
+    {
       command: "pnpm start",
       url: baseURL,
       reuseExistingServer: !process.env.CI,
