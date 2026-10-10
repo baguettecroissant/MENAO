@@ -199,6 +199,7 @@ export default async function ClientChantierPage({
             verified
             photoUrl={avatarUrl(supabase, c.artisan_avatar_path)}
             phone={c.artisan_phone}
+            messageHref={`/mon-espace/messages/${id}`}
           />
           {reviewInvited(status, review !== null) && (
             <ReviewInvite chantierId={id} artisanName={c.artisan_name} />

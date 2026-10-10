@@ -88,6 +88,27 @@ export async function moderateReview(_prev: FormState, formData: FormData): Prom
   return {};
 }
 
+/** F-40, F-55 : masque (motif obligatoire) ou rétablit un message signalé (admin_moderate_message). */
+export async function moderateMessage(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "messageId"));
+  const hide = text(formData, "hide") === "true";
+  if (!id.success) return { error: fr.errors.generic };
+  const values = { reason: text(formData, "reason") ?? "" };
+  const reason = hide ? reviewModerationSchema.safeParse(values) : null;
+  if (reason && !reason.success) {
+    return { fieldErrors: z.flattenError(reason.error).fieldErrors, values };
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_moderate_message", {
+    p_message_id: id.data,
+    p_hide: hide,
+    p_reason: reason?.success ? reason.data.reason : "",
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  revalidatePath("/admin/tickets");
+  return {};
+}
+
 /** Dossier envoyé par un particulier (F-09, F-56) : en cours, résolu ou rouvert. */
 export async function setTicketStatus(formData: FormData): Promise<void> {
   const id = z.uuid().safeParse(text(formData, "ticketId"));

@@ -4,7 +4,7 @@ import {
   roleFromAppMetadata,
   type ChantierStatus,
 } from "@menao/core";
-import { FileText, HardHat, Search } from "lucide-react";
+import { FileText, HardHat, MessageCircle, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
@@ -34,9 +34,11 @@ export default async function MySpacePage() {
   const home = homePathForRole(role);
   if (home !== "/mon-espace") redirect(home as Route);
 
-  const [{ data: chantierRows }, { data: requestRows }] = await Promise.all([
+  const [{ data: chantierRows }, { data: requestRows }, { data: unread }] = await Promise.all([
     supabase.rpc("particulier_chantiers"),
     supabase.rpc("particulier_requests"),
+    // F-40 : messages non lus de ses conversations.
+    supabase.rpc("my_unread_messages"),
   ]);
   const chantiers = chantierRows ?? [];
   const requests = requestRows ?? [];
@@ -160,10 +162,22 @@ export default async function MySpacePage() {
               </ul>
             )}
           </div>
-          <ButtonLink href="/recherche" size="md">
-            {t.start}
-            <Search aria-hidden="true" className="size-4" />
-          </ButtonLink>
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href="/mon-espace/messages" size="md" variant="outline">
+              <MessageCircle aria-hidden="true" className="size-4" />
+              {fr.messages.title}
+              {(unread ?? 0) > 0 && (
+                <span className="flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+                  {unread}
+                  <span className="sr-only"> — {fr.messages.unread(unread ?? 0)}</span>
+                </span>
+              )}
+            </ButtonLink>
+            <ButtonLink href="/recherche" size="md">
+              {t.start}
+              <Search aria-hidden="true" className="size-4" />
+            </ButtonLink>
+          </div>
         </div>
         {chantiers.length === 0 && requests.length === 0 ? (
           <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
