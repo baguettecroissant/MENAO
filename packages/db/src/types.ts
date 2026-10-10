@@ -1836,6 +1836,7 @@ export type Database = {
         }[];
       };
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      quote_document: { Args: { p_quote_id: string }; Returns: Json };
       record_sirene_result: {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
