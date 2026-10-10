@@ -40,6 +40,9 @@ export const QUOTE_LIMITS = {
   descriptionMaxLength: 1000,
 } as const;
 
+/** Durée de validité proposée pour un devis, en jours (maquette : « Devis valable 1 mois »). */
+export const QUOTE_VALIDITY_DAYS = 30;
+
 export type QuoteLineAmounts = {
   quantityMilli: number;
   unitPriceHtCents: number;

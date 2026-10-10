@@ -2,6 +2,7 @@
   "extends": "@menao/config/tsconfig.nextjs.json",
   "compilerOptions": {
     "types": ["node"],
+    "allowImportingTsExtensions": true,
     "paths": { "@/*": ["./src/*"] }
   },
   "include": [

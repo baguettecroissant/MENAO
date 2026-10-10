@@ -143,7 +143,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await editor.getByRole("button", { name: "Valider la ligne" }).click();
   await expect(editor.getByRole("status")).toHaveText("Modifications apportées");
   await expect(editor.getByText(/^78,10\s€$/).first()).toBeVisible();
-  await editor.getByRole("button", { name: "Enregistrer le devis" }).click();
+  await editor.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(editor.getByRole("status")).toHaveText("Enregistré et à jour");
   await proPage.reload();
   await expect(editor.getByText("Remplacement du siphon")).toBeVisible();
@@ -167,8 +167,24 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(editor.getByText("À vérifier")).toHaveCount(2);
   // 71,00 € (siphon remplacé) + 12,50 € + recherche de fuite sans prix dicté = 83,50 € HT.
   await expect(editor.getByText(/^91,85\s€$/)).toBeVisible();
-  await editor.getByRole("button", { name: "Enregistrer le devis" }).click();
-  await expect(editor.getByText("Enregistré et à jour")).toBeVisible();
+
+  // « Générer le devis » (F-20) : enregistrement, aperçu du brouillon et PDF.
+  await editor.getByRole("button", { name: "Générer le devis" }).click();
+  await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis/apercu$`));
+  const preview = proPage.getByRole("main");
+  await expect(preview.getByRole("heading", { name: "Votre devis est prêt !" })).toBeVisible();
+  await expect(
+    preview.getByText("Vérifiez une dernière fois votre devis avant de l'envoyer à Dominique."),
+  ).toBeVisible();
+  await expect(preview.getByText("Aperçu : numéro attribué à l'envoi")).toBeVisible();
+  await expect(preview.getByText("Siphon PVC 40 mm")).toBeVisible();
+  const pdfHref = await preview.getByRole("link", { name: "Voir le PDF" }).getAttribute("href");
+  expect(pdfHref).toMatch(new RegExp(`^/devis/${UUID}/pdf$`));
+  const pdf = await proPage.request.get(pdfHref ?? "");
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect(pdf.headers()["content-disposition"]).toContain("devis-apercu.pdf");
+  expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
 
   // Le tableau de bord affiche le rendez-vous à venir.
   await proPage.goto("/pro/tableau-de-bord");
@@ -188,4 +204,6 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(ics.headers()["content-type"]).toContain("text/calendar");
   expect(await ics.text()).toContain("BEGIN:VEVENT");
   expect(await ics.text()).not.toContain("Code portail");
+  // Le brouillon de devis reste privé à l'artisan.
+  expect((await page.request.get(pdfHref ?? "")).status()).toBe(404);
 });

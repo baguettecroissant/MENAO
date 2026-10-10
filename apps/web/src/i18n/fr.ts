@@ -1,3 +1,5 @@
+import { FORMES_JURIDIQUES } from "@menao/core";
+
 /** Textes de l'interface, centralisés (CLAUDE.md : pas de chaînes en dur dispersées). */
 export const fr = {
   meta: {
@@ -805,7 +807,8 @@ export const fr = {
       statusDirty: "Modifications apportées",
       statusSaved: "Enregistré et à jour",
       save: "Enregistrer",
-      saveQuote: "Enregistrer le devis",
+      generate: "Générer le devis",
+      generating: "Génération du devis…",
       saving: "Enregistrement…",
       lines: "Lignes du devis",
       lineCount: (n: number) => (n <= 1 ? `${n} ligne` : `${n} lignes`),
@@ -854,6 +857,20 @@ export const fr = {
       create: "Créer un devis",
       resume: "Reprendre le devis",
       toReview: "À vérifier",
+      preview: {
+        title: "Aperçu du devis",
+        back: "Lignes du devis",
+        ready: "Votre devis est prêt !",
+        check: (firstName: string | null) =>
+          firstName
+            ? `Vérifiez une dernière fois votre devis avant de l'envoyer à ${firstName}.`
+            : "Vérifiez une dernière fois votre devis avant de l'envoyer.",
+        miniature: "Miniature du devis",
+        viewPdf: "Voir le PDF",
+        newTab: "(nouvel onglet)",
+        edit: "Modifier le devis",
+        savedNote: "Votre devis est enregistré dans l'onglet « Devis ».",
+      },
       dictation: {
         open: "Dictée intelligente",
         title: "Dictez votre devis",
@@ -1440,16 +1457,7 @@ export const fr = {
     autre: "Autre",
   },
   /** Catégories juridiques INSEE les plus fréquentes chez les artisans. */
-  formesJuridiques: {
-    "1000": "Entrepreneur individuel",
-    "5410": "SARL nationale",
-    "5498": "EURL",
-    "5499": "SARL",
-    "5599": "SA",
-    "5710": "SAS",
-    "5720": "SASU",
-    "6540": "SCI",
-  } as Record<string, string>,
+  formesJuridiques: FORMES_JURIDIQUES as Record<string, string>,
   zoneErrors: {
     addressRequired: "Choisissez une adresse dans la liste proposée.",
   },

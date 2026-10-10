@@ -16,6 +16,8 @@ import {
 } from "@menao/core";
 import { quoteLineFormSchema, type QuoteLineInput } from "@menao/validation";
 import { Euro, Mic, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { Drawer } from "@/components/drawer";
 import { Alert, Button, FieldError, Hint, Select, inputClasses } from "@/components/ui";
@@ -78,6 +80,8 @@ export function QuoteEditor({
   const [notice, setNotice] = useState<string | null>(null);
   const [dictating, setDictating] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [generating, startGenerating] = useTransition();
+  const router = useRouter();
   // Ligne à remettre sous les yeux après validation (le formulaire se referme).
   const [reveal, setReveal] = useState<{ key: string } | null>(null);
 
@@ -111,6 +115,24 @@ export function QuoteEditor({
       } else {
         setError(result.error);
       }
+    });
+  }
+
+  /** « Générer le devis » : enregistre les modifications, puis ouvre l'aperçu (F-20). */
+  function generate() {
+    setError(null);
+    const toSave = plain;
+    startGenerating(async () => {
+      if (dirty) {
+        const result = await saveQuoteDraft(chantierId, toSave);
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setSnapshot(JSON.stringify(toSave));
+        setHasSaved(true);
+      }
+      router.push(`/pro/chantiers/${chantierId}/devis/apercu` as Route);
     });
   }
 
@@ -160,7 +182,7 @@ export function QuoteEditor({
           <button
             type="button"
             onClick={save}
-            disabled={!dirty || pending}
+            disabled={!dirty || pending || generating}
             className="inline-flex min-h-9 items-center gap-1.5 rounded-pill px-2 text-sm font-medium text-primary-strong hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none disabled:text-subtle-foreground disabled:hover:bg-transparent"
           >
             {pending ? t.saving : t.save}
@@ -244,8 +266,13 @@ export function QuoteEditor({
             {t.dictation.open}
             <Mic aria-hidden="true" className="size-4" />
           </Button>
-          <Button type="button" size="lg" onClick={save} disabled={!dirty || pending}>
-            {pending ? t.saving : t.saveQuote}
+          <Button
+            type="button"
+            size="lg"
+            onClick={generate}
+            disabled={lines.length === 0 || pending || generating}
+          >
+            {generating ? t.generating : t.generate}
           </Button>
         </div>
       </div>
