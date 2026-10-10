@@ -93,7 +93,7 @@ Le rôle est stocké dans `auth.users.app_metadata.role` (modifiable uniquement 
 | Backend | **Supabase** : Postgres + **PostGIS**, Auth, Storage, Realtime, Edge Functions | Projet dédié, voir 4.1 |
 | Validation | **Zod** (schémas partagés web/app/serveur) | |
 | Paiements | **Stripe** : Billing (abonnements artisans) + **Connect** (paiements chantiers) | Voir F-30 à F-34 |
-| Signature | **Universign** (comme maquettes) ou Yousign | Derrière une interface `SignatureProvider` |
+| Signature | **DocuSeal** (décision D8 du 10 octobre 2026, à la place d'Universign, absorbé par Signaturit) | Derrière une interface `SignatureProvider` |
 | E-mails transactionnels | **Resend** + React Email | Connexion, devis, RDV, paiements… Aussi SMTP des e-mails d'authentification Supabase. Derrière `NotificationProvider` |
 | SMS et marketing | **Brevo** | SMS de notification, campagnes et prospection artisans, newsletters. Derrière `NotificationProvider` |
 | DNS / domaine | **Cloudflare** (offre gratuite) | Prépare une éventuelle migration de l'hébergement |
@@ -487,7 +487,7 @@ Les maquettes demandent l'avis **avant** le PV. **Ordre retenu pour la V1 : 1. S
 | Document expirant (assurance) J-30, J-7 | Artisan + admin | ✓ | ✓ | |
 | Échec de paiement abonnement | Artisan | ✓ | ✓ | |
 
-- OTP de signature par SMS : envoyé en priorité par le prestataire de signature (Universign/Yousign) ; sinon par Brevo.
+- OTP de signature par SMS : envoyé en priorité par le prestataire de signature (DocuSeal) ; sinon par Brevo.
 - Préférences de notification par utilisateur (sauf notifications transactionnelles obligatoires).
 - Modèles d'e-mails dans `packages/emails` (React Email, envoyés par Resend), en français, avec lien vers l'espace concerné. SMS envoyés par Brevo.
 - Domaine d'envoi dédié (ex. `notifications.menao.fr`) avec SPF, DKIM et DMARC configurés ; vérifier dans les accords de traitement (DPA) de Resend et Brevo la localisation des données.
@@ -638,7 +638,7 @@ Le web est livré et utilisable avant l'app (phases 0 à 5), conformément à la
 | D5 | Configuration Stripe Connect (charges directes, type de compte, contrôle des versements) | Charges directes, sans commission — **Stripe Connect exclusivement (validé)** |
 | D6 | Frais Stripe des paiements de chantier | Payés par l'artisan (validé : MENAO ne prend pas d'argent) |
 | D7 | Alma en V1 ou V1.1 | V1.1 |
-| D8 | Prestataire de signature (Universign vs Yousign) | Universign (maquettes) |
+| D8 | Prestataire de signature (Universign vs Yousign) | **Tranché (10 octobre 2026)** : DocuSeal (signature simple, hébergement UE). Valeur probante à faire confirmer : `TODO(legal)` |
 | D9 | Fournisseur de transcription vocale | À choisir, derrière une interface |
 | D10 | Catalogue d'articles avec prix fournisseurs | Catalogue personnel de l'artisan seulement |
 | D11 | Notation du client par l'artisan : visibilité et base légale | Visible des artisans validés uniquement, après avis juridique |
