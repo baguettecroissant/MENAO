@@ -88,6 +88,26 @@ select is_empty(
 select is((select count(*)::int from public.match_artisans('c4000000-0000-4000-8000-000000000001', 1)), 1,
   'nombre de résultats limité');
 
+-- Score MENAO (F-28, ADR 0030) : en tête du tri, avant la disponibilité ; publié sur la fiche.
+reset role;
+insert into public.artisan_scores (artisan_id, review_count, quality, delays, communication, value_for_money, global_score)
+values ('c3000000-0000-4000-8000-000000000002', 1, 90, 90, 90, 100, 93);
+select pg_temp.connecter('c1000000-0000-4000-8000-000000000001', 'particulier');
+set local role authenticated;
+select results_eq(
+  $$ select artisan_id from public.match_artisans('c4000000-0000-4000-8000-000000000001') $$,
+  $$ values ('c3000000-0000-4000-8000-000000000002'::uuid), ('c3000000-0000-4000-8000-000000000001'::uuid) $$,
+  'score MENAO en tête du tri, avant la disponibilité');
+select is(public.artisan_public_profile('c3000000-0000-4000-8000-000000000002') #>> '{score,global}', '93',
+  'fiche : score MENAO publié');
+select is(public.artisan_public_profile('c3000000-0000-4000-8000-000000000001') -> 'score', 'null'::jsonb,
+  'fiche sans avis : pas de score');
+select is_empty($$ select * from public.artisan_scores $$, 'scores : pas de lecture directe par un client');
+reset role;
+delete from public.artisan_scores;
+select pg_temp.connecter('c1000000-0000-4000-8000-000000000001', 'particulier');
+set local role authenticated;
+
 -- Fiche publique
 select is(
   public.artisan_public_profile('c3000000-0000-4000-8000-000000000001') ->> 'display_name', 'Alice', 'fiche d''un artisan visible');
