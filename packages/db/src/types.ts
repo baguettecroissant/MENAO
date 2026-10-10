@@ -2612,6 +2612,7 @@ export type Database = {
       create_project_transfer: { Args: { p_project_id: string }; Returns: string };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
+      mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number };
       match_artisans: {
         Args: { p_limit?: number; p_project_id: string };
         Returns: {
@@ -2645,7 +2646,18 @@ export type Database = {
           unread: number;
         }[];
       };
+      my_notifications: {
+        Args: { p_limit?: number };
+        Returns: {
+          created_at: string;
+          data: Json;
+          notification_id: string;
+          read_at: string;
+          type: Database["public"]["Enums"]["notification_type"];
+        }[];
+      };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
+      my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
       particulier_chantiers: {
         Args: { p_chantier_id?: string };
         Returns: {
@@ -2877,6 +2889,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_notification_preferences: {
+        Args: { p_activite: boolean; p_rappels: boolean };
+        Returns: undefined;
+      };
       staff_set_ticket_status: {
         Args: { p_status: Database["public"]["Enums"]["ticket_status"]; p_ticket_id: string };
         Returns: undefined;
@@ -2947,7 +2963,7 @@ export type Database = {
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       message_kind: "texte" | "photo" | "fichier";
       notification_channel: "email" | "sms" | "push";
-      notification_status: "a_envoyer" | "en_cours" | "envoyee" | "echec";
+      notification_status: "a_envoyer" | "en_cours" | "envoyee" | "echec" | "ignoree";
       notification_type:
         | "nouvelle_demande"
         | "rdv_fixe"
@@ -3167,7 +3183,7 @@ export const Constants = {
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       message_kind: ["texte", "photo", "fichier"],
       notification_channel: ["email", "sms", "push"],
-      notification_status: ["a_envoyer", "en_cours", "envoyee", "echec"],
+      notification_status: ["a_envoyer", "en_cours", "envoyee", "echec", "ignoree"],
       notification_type: [
         "nouvelle_demande",
         "rdv_fixe",
