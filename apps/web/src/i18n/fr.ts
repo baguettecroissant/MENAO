@@ -997,6 +997,12 @@ export const fr = {
       zone: "Zone d'intervention",
       insurance: "Assurance décennale",
       insuranceValue: "Vérifiée par Menao",
+      responseTime: {
+        "1h": "Répond en moins d'1\u00a0h",
+        "3h": "Répond en moins de 3\u00a0h",
+        "24h": "Répond dans la journée",
+        "48h": "Répond sous 48\u00a0h",
+      },
       about: (name: string) => `À propos de ${name}`,
       expertise: "Expertises",
       guarantees: "Garanties & Assurances",
@@ -1721,7 +1727,21 @@ export const fr = {
       awaitingQuote: "En attente de devis",
       clients: (n: number) => (n <= 1 ? `${n} client` : `${n} clients`),
       revenue: "Encaissé ce mois",
+      trend: {
+        hausse: (percent: number, month: string) =>
+          `+${percent}\u00a0% par rapport à la même période en ${month}`,
+        baisse: (percent: number, month: string) =>
+          `−${percent}\u00a0% par rapport à la même période en ${month}`,
+        stable: (month: string) => `Stable par rapport à la même période en ${month}`,
+        nouveau: (amount: string, month: string) =>
+          `+${amount} par rapport à la même période en ${month}`,
+      },
+      responseTime: "Temps de réponse",
+      responseDetail: (n: number) =>
+        n === 1 ? "Sur 1 demande, 6 derniers mois" : `Moyenne sur ${n} demandes, 6 derniers mois`,
+      noResponse: "Pas encore de réponse sur 6 mois",
       upcoming: "À venir",
+      openAgenda: "Voir l'agenda",
       noUpcoming: "Aucune visite ni aucun démarrage de chantier à venir.",
       kinds: { visite: "Visite", demarrage: "Démarrage du chantier" },
       latestRequests: "Dernières demandes de devis",
