@@ -1,15 +1,17 @@
-import { parisToday } from "@menao/core";
+import { availability, parisToday, specialtiesPreview } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowRight, MapPinned } from "lucide-react";
 import { ArtisanResultCard } from "@/components/project/artisan-result-card";
-import { TRADE_VISUALS, DEFAULT_TRADE_VISUAL } from "@/components/site/trade-visuals";
+import { CtaBand } from "@/components/site/cta-band";
+import { GuaranteeSection } from "@/components/site/guarantees";
+import { SectionHeading } from "@/components/site/section-heading";
+import { Steps } from "@/components/site/steps";
+import { TradeHero } from "@/components/site/trade-hero";
 import { ButtonLink } from "@/components/ui";
-import { ArrowRight } from "lucide-react";
-import { availability, specialtiesPreview } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
-import { TRADE_IMAGES } from "@/lib/site/images";
 import { absoluteUrl } from "@/lib/site/seo";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -119,10 +121,10 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
     ],
   };
 
-  const visual = TRADE_VISUALS[trade.code] ?? DEFAULT_TRADE_VISUAL;
-  const TradeIcon = visual.icon;
-  const tradeImage = TRADE_IMAGES[trade.code];
   const dayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
+
+  const searchHref = `/recherche?metier=${trade.code}`;
+  const steps = fr.site.clientSteps;
 
   return (
     <main className="bg-background">
@@ -131,78 +133,37 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         // JSON sérialisé côté serveur à partir de données contrôlées ; « < » échappé.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
-        <nav aria-label="Fil d'Ariane" className="text-xs text-muted-foreground">
-          <ol className="flex flex-wrap gap-1.5">
-            <li>
-              <Link href="/" className="hover:text-foreground">
-                {t.breadcrumbHome}
-              </Link>{" "}
-              ›
-            </li>
-            <li>
-              <Link href={`/${trade.code}` as Route} className="hover:text-foreground">
-                {trade.label}
-              </Link>{" "}
-              ›
-            </li>
-            <li aria-current="page" className="text-foreground">
-              {commune.nom}
-            </li>
-          </ol>
-        </nav>
+      <TradeHero
+        id="city-title"
+        code={trade.code}
+        eyebrow={`${commune.nom} · ${fr.seo.tradeEyebrow}`}
+        title={title}
+        intro={t.cityIntro(trade.label, commune.nom)}
+        breadcrumbs={[
+          { label: t.breadcrumbHome, href: "/" },
+          { label: trade.label, href: `/${trade.code}` },
+          { label: commune.nom },
+        ]}
+        cta={{ href: searchHref, label: t.cta }}
+        hint={t.ctaHint}
+      />
 
-        <div
-          className={`relative grid overflow-hidden rounded-hero bg-gradient-to-br ${visual.gradient} ${
-            tradeImage ? "md:grid-cols-[minmax(0,1fr)_minmax(0,40%)]" : ""
-          }`}
-        >
-          {tradeImage ? (
-            // Photo portrait en colonne (bandeau en mobile) : affichée sans agrandissement, visage
-            // entier, jamais sous le texte ; fondue dans le dégradé du métier.
-            <div className="relative h-56 md:order-2 md:h-auto md:min-h-[24rem]">
-              {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
-              <img
-                src={tradeImage}
-                alt=""
-                fetchPriority="high"
-                className="absolute inset-0 size-full object-cover object-[center_22%] [mask-image:linear-gradient(to_bottom,black_55%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,black_35%)]"
-              />
-            </div>
-          ) : (
-            <TradeIcon
-              aria-hidden="true"
-              strokeWidth={1.1}
-              className="absolute -right-8 -bottom-10 size-72 text-white/15"
-            />
-          )}
-          <div className="relative flex max-w-2xl flex-col justify-center gap-4 px-6 pt-4 pb-10 text-white sm:px-10 sm:pb-14 md:order-1 md:py-14">
-            <h1 className="text-[2.25rem] leading-tight font-medium tracking-tight sm:text-[3rem]">
-              {title}
-            </h1>
-            <p className="text-white/90">{t.cityIntro(trade.label, commune.nom)}</p>
-            <div className="flex flex-col items-start gap-2 pt-2">
-              <ButtonLink
-                href={`/recherche?metier=${trade.code}` as Route}
-                variant="secondary"
-                size="lg"
-                className="border-white"
-              >
-                {t.cta}
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </ButtonLink>
-              <p className="text-xs text-white/80">{t.ctaHint}</p>
-            </div>
+      <section aria-labelledby="city-artisans" className="py-16 sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 sm:px-6">
+          <div className="flex flex-col gap-2">
+            <h2
+              id="city-artisans"
+              className="text-[1.75rem] leading-tight font-medium tracking-tight"
+            >
+              {t.artisansTitle(trade.label, commune.nom)}
+            </h2>
+            {artisans.length > 0 && (
+              <p className="text-muted-foreground">{t.found(artisans.length)}</p>
+            )}
           </div>
-        </div>
-
-        <section aria-label={title} className="flex flex-col gap-5">
-          <p className="text-lg font-medium">
-            {artisans.length ? t.found(artisans.length) : t.none(trade.label, commune.nom)}
-          </p>
-          {artisans.length > 0 && (
+          {artisans.length > 0 ? (
             <>
-              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {artisans.map((a) => {
                   const avail = availability(
                     { paused: false, availableFrom: a.available_from },
@@ -238,12 +199,47 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
               </ul>
               <p className="text-sm text-muted-foreground">{t.noContact}</p>
             </>
+          ) : (
+            <div className="flex flex-col items-center gap-4 rounded-hero border border-dashed border-border-strong bg-surface px-6 py-12 text-center sm:px-12">
+              <span className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                <MapPinned aria-hidden="true" className="size-7" strokeWidth={1.75} />
+              </span>
+              <h3 className="text-xl font-medium">{t.noneTitle(trade.label, commune.nom)}</h3>
+              <p className="max-w-xl text-sm leading-relaxed text-pretty text-muted-foreground">
+                {t.none(trade.label, commune.nom)}
+              </p>
+              <ButtonLink href={searchHref as Route} size="lg">
+                {t.cta}
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </ButtonLink>
+            </div>
           )}
-        </section>
+        </div>
+      </section>
 
-        <div className="grid gap-8 sm:grid-cols-2">
-          <nav aria-label={t.otherCities(trade.label)} className="flex flex-col gap-2">
-            <h2 className="text-lg font-medium">{t.otherCities(trade.label)}</h2>
+      <section aria-labelledby="city-steps" className="bg-surface py-16 sm:py-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+          <SectionHeading
+            id="city-steps"
+            eyebrow={steps.eyebrow}
+            title={steps.title}
+            subtitle={steps.subtitle}
+          />
+          <Steps items={steps.items} />
+        </div>
+      </section>
+
+      <GuaranteeSection id="city-guarantees" tone="light" />
+
+      <div className="pb-16 sm:pb-24">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 sm:px-6 md:grid-cols-2">
+          <nav
+            aria-labelledby="city-other-cities"
+            className="flex flex-col gap-4 rounded-hero border border-border bg-surface p-6 sm:p-8"
+          >
+            <h2 id="city-other-cities" className="text-lg font-medium">
+              {t.otherCities(trade.label)}
+            </h2>
             <ul className="flex flex-wrap gap-2">
               {communes
                 .filter((c) => c.slug !== commune.slug)
@@ -251,7 +247,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                   <li key={c.slug}>
                     <Link
                       href={`/${trade.code}/${c.slug}` as Route}
-                      className="text-primary hover:underline"
+                      className="inline-flex min-h-9 items-center rounded-pill border border-border bg-background px-3.5 text-sm hover:border-primary hover:text-primary-strong"
                     >
                       {c.nom}
                     </Link>
@@ -259,8 +255,13 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                 ))}
             </ul>
           </nav>
-          <nav aria-label={t.otherTrades(commune.nom)} className="flex flex-col gap-2">
-            <h2 className="text-lg font-medium">{t.otherTrades(commune.nom)}</h2>
+          <nav
+            aria-labelledby="city-other-trades"
+            className="flex flex-col gap-4 rounded-hero border border-border bg-surface p-6 sm:p-8"
+          >
+            <h2 id="city-other-trades" className="text-lg font-medium">
+              {t.otherTrades(commune.nom)}
+            </h2>
             <ul className="flex flex-wrap gap-2">
               {trades
                 .filter((tr) => tr.code !== trade.code)
@@ -268,7 +269,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                   <li key={tr.code}>
                     <Link
                       href={`/${tr.code}/${commune.slug}` as Route}
-                      className="text-primary hover:underline"
+                      className="inline-flex min-h-9 items-center rounded-pill border border-border bg-background px-3.5 text-sm hover:border-primary hover:text-primary-strong"
                     >
                       {tr.label}
                     </Link>
@@ -278,6 +279,14 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
           </nav>
         </div>
       </div>
+
+      <CtaBand
+        id="city-cta"
+        title={fr.site.cta.title}
+        text={fr.site.cta.text}
+        action={{ href: searchHref, label: fr.site.cta.action }}
+        reassurance={fr.site.cta.reassurance}
+      />
     </main>
   );
 }

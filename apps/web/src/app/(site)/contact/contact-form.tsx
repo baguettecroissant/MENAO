@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Alert, Button, Field } from "@/components/ui";
+import { Alert, Button, Field, FieldError, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
 import { sendContactMessage } from "@/lib/site/actions";
@@ -32,8 +32,8 @@ export function ContactForm() {
         defaultValue={state.values?.subject}
         errors={errors.subject}
       />
-      <div className="flex flex-col gap-1">
-        <label htmlFor="contact-message" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="contact-message" className="text-sm font-medium text-foreground">
           {t.message}
         </label>
         <textarea
@@ -44,9 +44,10 @@ export function ContactForm() {
           required
           defaultValue={state.values?.message}
           aria-invalid={errors.message ? true : undefined}
-          className="rounded-button border border-border bg-surface p-3"
+          aria-describedby={errors.message ? "contact-message-error" : undefined}
+          className={`${inputClasses} min-h-40 resize-y py-3 leading-relaxed`}
         />
-        {errors.message && <p className="text-sm text-danger">{errors.message[0]}</p>}
+        {errors.message && <FieldError id="contact-message-error">{errors.message[0]}</FieldError>}
       </div>
       <Button type="submit" disabled={pending}>
         {t.submit}

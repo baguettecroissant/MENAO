@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BulletList, ContentPage } from "@/components/site/content-page";
+import { BulletList, LegalPage } from "@/components/site/content-page";
 import { fr } from "@/i18n/fr";
 
 const t = fr.pages.cookies;
@@ -13,10 +13,9 @@ export const metadata: Metadata = {
 // tout cookie non indispensable (mesure d'audience PostHog), refus aussi simple que l'acceptation.
 export default function CookiesPage() {
   return (
-    <ContentPage title={t.title} intro={t.intro}>
+    <LegalPage path="/cookies" title={t.title} intro={t.intro}>
       <BulletList items={t.items} />
-      <p>{t.monitoring}</p>
-      <p className="text-sm text-muted-foreground">{t.draft}</p>
-    </ContentPage>
+      <p className="text-foreground/90">{t.monitoring}</p>
+    </LegalPage>
   );
 }

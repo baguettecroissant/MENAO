@@ -7,7 +7,6 @@ import {
   MessagesSquare,
   Mic,
   PhoneCall,
-  Plus,
   ReceiptText,
   Scale,
   ShieldCheck,
@@ -20,10 +19,13 @@ import {
 import type { Metadata } from "next";
 import { LogoMark } from "@/components/brand/logo";
 import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
+import { CtaBand } from "@/components/site/cta-band";
+import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
 import { HeroPreview } from "@/components/pro-landing/hero-preview";
 import { ProfileCardPreview } from "@/components/pro-landing/profile-card-preview";
-import { SectionHeading } from "@/components/pro-landing/section-heading";
+import { SectionHeading } from "@/components/site/section-heading";
+import { Steps } from "@/components/site/steps";
 import { ButtonLink, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -65,15 +67,6 @@ export default async function ProLandingPage() {
     .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte")
     .order("ordre");
   const base = plans?.find((p) => p.ouverte) ?? plans?.[0];
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: t.faq.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-  };
 
   return (
     <main className="bg-background">
@@ -190,32 +183,7 @@ export default async function ProLandingPage() {
             title={t.steps.title}
             subtitle={t.steps.subtitle}
           />
-          <ol className="relative grid gap-8 md:grid-cols-4 md:gap-6">
-            <span
-              aria-hidden="true"
-              className="absolute top-6 right-[12.5%] left-[12.5%] hidden h-px bg-border-strong md:block"
-            />
-            {t.steps.items.map((step, i) => (
-              <li
-                key={step.title}
-                className="relative flex gap-4 md:flex-col md:items-center md:text-center"
-              >
-                {i < t.steps.items.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-12 -bottom-8 left-6 w-px bg-border-strong md:hidden"
-                  />
-                )}
-                <span className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-medium text-primary-foreground shadow-raised">
-                  {i + 1}
-                </span>
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-[1.0625rem] font-medium">{step.title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{step.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <Steps items={t.steps.items} />
           <div className="flex justify-center">
             <ButtonLink href="/pro/inscription" size="lg">
               {t.hero.signUp}
@@ -450,63 +418,18 @@ export default async function ProLandingPage() {
       <section aria-labelledby="pro-faq" className="py-16 sm:py-24">
         <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 sm:px-6">
           <SectionHeading id="pro-faq" eyebrow={t.faqEyebrow} title={t.faqTitle} />
-          <div className="flex flex-col divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
-            {t.faq.map((item) => (
-              <details key={item.q} className="group">
-                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-medium marker:hidden hover:bg-background focus-visible:bg-background focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-                  {item.q}
-                  <Plus
-                    aria-hidden="true"
-                    className="size-5 shrink-0 text-primary transition-transform group-open:rotate-45"
-                  />
-                </summary>
-                <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
-              </details>
-            ))}
-          </div>
+          <FaqList items={t.faq} />
         </div>
-        <script
-          type="application/ld+json"
-          // Données structurées FAQ (texte statique de l'application, sans donnée utilisateur).
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }}
-        />
+        <FaqJsonLd items={t.faq} />
       </section>
 
-      {/* Appel final */}
-      <section aria-labelledby="pro-final" className="px-2 pb-2 sm:px-4 sm:pb-4">
-        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[linear-gradient(120deg,#1a2b85_0%,#4869f6_70%,#8ea4fb_100%)] px-6 py-16 text-center text-white sm:px-12 sm:py-20">
-          <LogoMark
-            tone="white"
-            className="absolute -top-20 -left-16 hidden size-[22rem] opacity-[0.08] md:block"
-          />
-          <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-5">
-            <h2
-              id="pro-final"
-              className="text-[1.75rem] leading-[1.15] font-medium tracking-tight text-balance sm:text-[2.5rem]"
-            >
-              {t.finalTitle}
-            </h2>
-            <p className="text-white/85">{t.finalText}</p>
-            <ButtonLink
-              href="/pro/inscription"
-              variant="secondary"
-              size="lg"
-              className="border-white"
-            >
-              {t.hero.signUp}
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </ButtonLink>
-            <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-white/85">
-              {t.finalReassurance.map((item) => (
-                <li key={item} className="flex items-center gap-1.5 whitespace-nowrap">
-                  <CircleCheck aria-hidden="true" className="size-4" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <CtaBand
+        id="pro-final"
+        title={t.finalTitle}
+        text={t.finalText}
+        action={{ href: "/pro/inscription", label: t.hero.signUp }}
+        reassurance={t.finalReassurance}
+      />
     </main>
   );
 }
