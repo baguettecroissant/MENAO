@@ -16,7 +16,13 @@ import {
   type NeedReferentials,
   type RawNeedAnalysis,
 } from "../../../packages/core/src/project.ts";
-import { llmConfig, logAiRuns, withinHourlyLimits, type AiRun } from "../_shared/ai.ts";
+import {
+  llmConfig,
+  logAiRuns,
+  reasoningFor,
+  withinHourlyLimits,
+  type AiRun,
+} from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { geocodeAddress, geocodeCommune } from "../_shared/geocoding.ts";
 import { withCors } from "../_shared/cors.ts";
@@ -128,13 +134,18 @@ async function analyze(
   const run: AiRun = { function_name: "analyze-need", model, outcome: "erreur", latency_ms: 0 };
   runs.push(run);
   try {
+    const reasoning = reasoningFor(model);
     const response = await client.messages.create({
       model,
-      max_tokens: 1500,
-      thinking: { type: "disabled" },
+      // Marge pour le raisonnement adaptatif du modèle de repli (Sonnet).
+      max_tokens: 4000,
+      thinking: reasoning.thinking,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
-      output_config: { format: { type: "json_schema", schema } },
+      output_config: {
+        ...(reasoning.effort ? { effort: reasoning.effort } : {}),
+        format: { type: "json_schema", schema },
+      },
     });
     run.latency_ms = Date.now() - started;
     run.input_tokens = response.usage?.input_tokens ?? null;

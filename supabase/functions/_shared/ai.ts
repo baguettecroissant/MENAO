@@ -47,6 +47,20 @@ export function quoteModel(): string {
   );
 }
 
+/**
+ * Raisonnement selon le modèle. Haiku 5.5 l'accepte désactivé (réponse la plus rapide) ;
+ * Sonnet 5.5 l'impose (« disabled » renvoie une 400 « Reasoning is mandatory ») : raisonnement
+ * adaptatif à effort bas, suffisant pour une extraction en sortie structurée.
+ */
+export function reasoningFor(model: string): {
+  thinking: { type: "disabled" } | { type: "adaptive" };
+  effort?: "low";
+} {
+  return /haiku/i.test(model)
+    ? { thinking: { type: "disabled" } }
+    : { thinking: { type: "adaptive" }, effort: "low" };
+}
+
 /** Remplace les noms connus (prénom, nom) par [nom], en complément de scrubPersonalData. */
 export function scrubNames(text: string, names: (string | null | undefined)[]): string {
   let clean = text;
