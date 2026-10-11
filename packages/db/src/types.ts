@@ -141,6 +141,120 @@ export type Database = {
           },
         ];
       };
+      artisan_absences: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          ends_on: string;
+          id: string;
+          label: string | null;
+          starts_on: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          ends_on: string;
+          id?: string;
+          label?: string | null;
+          starts_on: string;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          ends_on?: string;
+          id?: string;
+          label?: string | null;
+          starts_on?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_absences_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      artisan_blocked_slots: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          label: string | null;
+          starts_at: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          ends_at: string;
+          id?: string;
+          label?: string | null;
+          starts_at: string;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          ends_at?: string;
+          id?: string;
+          label?: string | null;
+          starts_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_blocked_slots_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      artisan_calendar_feeds: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          id: string;
+          last_read_at: string | null;
+          token: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          id?: string;
+          last_read_at?: string | null;
+          token: string;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          id?: string;
+          last_read_at?: string | null;
+          token?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_calendar_feeds_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_documents: {
         Row: {
           artisan_id: string;
@@ -203,6 +317,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "artisan_documents_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      artisan_hours: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          end_time: string;
+          id: string;
+          start_time: string;
+          updated_at: string;
+          weekday: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          end_time: string;
+          id?: string;
+          start_time: string;
+          updated_at?: string;
+          weekday: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          end_time?: string;
+          id?: string;
+          start_time?: string;
+          updated_at?: string;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_hours_artisan_id_fkey";
             columns: ["artisan_id"];
             isOneToOne: false;
             referencedRelation: "artisans";
@@ -2387,6 +2540,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_artisan_absence: {
+        Args: { p_ends_on: string; p_label?: string; p_starts_on: string };
+        Returns: string;
+      };
+      add_artisan_blocked_slot: {
+        Args: { p_date: string; p_end: string; p_label?: string; p_start: string };
+        Returns: string;
+      };
       add_ticket_message: { Args: { p_body: string; p_ticket_id: string }; Returns: string };
       admin_close_dispute: {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
@@ -2427,6 +2588,19 @@ export type Database = {
       artisan_add_chantier_message: {
         Args: { p_chantier_id: string; p_message: string };
         Returns: string;
+      };
+      artisan_calendar_events: {
+        Args: { p_token: string };
+        Returns: {
+          ends_at: string;
+          ends_on: string;
+          item_id: string;
+          kind: string;
+          place: string;
+          starts_at: string;
+          starts_on: string;
+          title: string;
+        }[];
       };
       artisan_cancel_chantier: {
         Args: { p_chantier_id: string; p_reason: string };
@@ -2610,6 +2784,9 @@ export type Database = {
         Returns: boolean;
       };
       create_project_transfer: { Args: { p_project_id: string }; Returns: string };
+      delete_artisan_absence: { Args: { p_id: string }; Returns: undefined };
+      delete_artisan_blocked_slot: { Args: { p_id: string }; Returns: undefined };
+      disable_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: undefined };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
       mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number };
@@ -2817,6 +2994,7 @@ export type Database = {
         Args: { p_storage_path: string; p_ticket_id: string; p_user_id: string };
         Returns: string;
       };
+      renew_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: string };
       report_chantier_problem: {
         Args: {
           p_category: Database["public"]["Enums"]["dispute_category"];
@@ -2873,6 +3051,7 @@ export type Database = {
         Args: { p_available_from: string; p_paused: boolean };
         Returns: undefined;
       };
+      set_artisan_hours: { Args: { p_hours: Json }; Returns: undefined };
       set_artisan_trades: {
         Args: { p_experience_years: number; p_trade_codes: string[]; p_work_type_codes: string[] };
         Returns: undefined;
