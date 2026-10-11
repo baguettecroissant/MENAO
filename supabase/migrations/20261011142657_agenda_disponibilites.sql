@@ -113,6 +113,52 @@ $$;
 revoke execute on function app.artisan_absent(uuid, date) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
+-- Pause et date de disponibilité, réglées séparément depuis « Mes disponibilités »
+-- (set_artisan_availability reste pour les versions déjà déployées de l'interface).
+-- ---------------------------------------------------------------------------
+create function public.set_artisan_paused(p_paused boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_artisan uuid := app.my_artisan_id();
+begin
+  if v_artisan is null then
+    raise exception 'Fiche artisan introuvable' using errcode = '42501';
+  end if;
+  update public.artisans set paused = coalesce(p_paused, false) where id = v_artisan;
+end;
+$$;
+revoke execute on function public.set_artisan_paused(boolean) from public, anon;
+grant execute on function public.set_artisan_paused(boolean) to authenticated;
+
+-- Date absente ou passée : disponible dès maintenant. Au plus un an à l'avance.
+create function public.set_artisan_available_from(p_date date default null)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_artisan uuid := app.my_artisan_id();
+  v_today date := (now() at time zone 'Europe/Paris')::date;
+begin
+  if v_artisan is null then
+    raise exception 'Fiche artisan introuvable' using errcode = '42501';
+  end if;
+  if p_date - v_today > 365 then
+    raise exception 'Choisissez une date dans l''année à venir' using errcode = '22023';
+  end if;
+  update public.artisans set available_from = case when p_date > v_today then p_date end
+  where id = v_artisan;
+end;
+$$;
+revoke execute on function public.set_artisan_available_from(date) from public, anon;
+grant execute on function public.set_artisan_available_from(date) to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- Horaires : remplacement complet, en une fois.
 -- p_hours : [{"weekday": 1, "start": "08:00", "end": "12:00"}, …]
 -- ---------------------------------------------------------------------------
@@ -348,10 +394,12 @@ grant execute on function public.disable_artisan_calendar_feed() to authenticate
 -- Événements lus par l'application d'agenda (sans session) : rendez-vous planifiés, démarrages,
 -- créneaux bloqués et absences, des 60 derniers jours et à venir. Commune du chantier seulement :
 -- ni adresse ni nom du client dans un lien qui peut circuler (la fiche du chantier les donne).
+-- Lien inconnu ou renouvelé : erreur P0002 (l'application d'agenda signale l'abonnement cassé).
 create function public.artisan_calendar_events(p_token text)
 returns table (
   kind text,
   item_id uuid,
+  chantier_id uuid,
   starts_at timestamptz,
   ends_at timestamptz,
   starts_on date,
@@ -368,33 +416,33 @@ declare
   v_artisan uuid;
   v_since timestamptz := now() - interval '60 days';
 begin
-  if p_token is null or p_token !~ '^[0-9a-f]{48}$' then
-    return;
+  if p_token ~ '^[0-9a-f]{48}$' then
+    select f.artisan_id into v_artisan from public.artisan_calendar_feeds f where f.token = p_token;
   end if;
-  select f.artisan_id into v_artisan from public.artisan_calendar_feeds f where f.token = p_token;
   if v_artisan is null then
-    return;
+    raise exception 'Lien d''abonnement inconnu' using errcode = 'P0002';
   end if;
   update public.artisan_calendar_feeds f set last_read_at = now()
   where f.artisan_id = v_artisan and (f.last_read_at is null or f.last_read_at < now() - interval '15 minutes');
 
   return query
-  select 'visite'::text, ap.id, ap.starts_at, null::timestamptz, null::date, null::date, c.title,
+  select 'visite'::text, ap.id, c.id, ap.starts_at, null::timestamptz, null::date, null::date, c.title,
     nullif(concat_ws(' ', c.code_postal, c.ville_nom), '')
   from public.chantiers c
   join public.appointments ap on ap.chantier_id = c.id and ap.status = 'planifie'
   where c.artisan_id = v_artisan and c.status <> 'annule' and ap.starts_at >= v_since
   union all
-  select 'demarrage'::text, c.id, c.start_at, null::timestamptz, null::date, null::date, c.title,
+  select 'demarrage'::text, c.id, c.id, c.start_at, null::timestamptz, null::date, null::date, c.title,
     nullif(concat_ws(' ', c.code_postal, c.ville_nom), '')
   from public.chantiers c
   where c.artisan_id = v_artisan and c.status <> 'annule' and c.start_at >= v_since
   union all
-  select 'creneau'::text, b.id, b.starts_at, b.ends_at, null::date, null::date, b.label, null::text
+  select 'creneau'::text, b.id, null::uuid, b.starts_at, b.ends_at, null::date, null::date, b.label, null::text
   from public.artisan_blocked_slots b
   where b.artisan_id = v_artisan and b.ends_at >= v_since
   union all
-  select 'absence'::text, a.id, null::timestamptz, null::timestamptz, a.starts_on, a.ends_on, a.label, null::text
+  select 'absence'::text, a.id, null::uuid, null::timestamptz, null::timestamptz, a.starts_on, a.ends_on, a.label,
+    null::text
   from public.artisan_absences a
   where a.artisan_id = v_artisan and a.ends_on >= (v_since at time zone 'Europe/Paris')::date;
 end;

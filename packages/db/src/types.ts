@@ -2592,6 +2592,7 @@ export type Database = {
       artisan_calendar_events: {
         Args: { p_token: string };
         Returns: {
+          chantier_id: string;
           ends_at: string;
           ends_on: string;
           item_id: string;
@@ -3051,7 +3052,9 @@ export type Database = {
         Args: { p_available_from: string; p_paused: boolean };
         Returns: undefined;
       };
+      set_artisan_available_from: { Args: { p_date?: string }; Returns: undefined };
       set_artisan_hours: { Args: { p_hours: Json }; Returns: undefined };
+      set_artisan_paused: { Args: { p_paused: boolean }; Returns: undefined };
       set_artisan_trades: {
         Args: { p_experience_years: number; p_trade_codes: string[]; p_work_type_codes: string[] };
         Returns: undefined;

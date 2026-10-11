@@ -40,6 +40,31 @@ insert into public.requests (id, project_id, artisan_id, particulier_id, contact
 -- Isolement : les artisans du seed (visibles à Nice) sont mis en pause le temps du test.
 update public.artisans set paused = true where id::text not like 'ad2%';
 
+-- ---------- Pause et date de disponibilité ----------
+select pg_temp.connecter('ad100000-0000-4000-8000-000000000001', 'artisan');
+set local role authenticated;
+select lives_ok($$ select public.set_artisan_available_from(pg_temp.jour(20)) $$, 'date de disponibilité enregistrée');
+select lives_ok($$ select public.set_artisan_paused(true) $$, 'mise en pause');
+reset role;
+select results_eq(
+  $$ select paused, available_from - pg_temp.jour(0) from public.artisans where id = 'ad200000-0000-4000-8000-000000000001' $$,
+  $$ values (true, 20) $$, 'pause sans effacer la date de disponibilité');
+select pg_temp.connecter('ad100000-0000-4000-8000-000000000001', 'artisan');
+set local role authenticated;
+select lives_ok($$ select public.set_artisan_paused(false) $$, 'reprise des demandes');
+select lives_ok($$ select public.set_artisan_available_from(pg_temp.jour(-2)) $$, 'date passée : dès maintenant');
+select throws_ok($$ select public.set_artisan_available_from(pg_temp.jour(400)) $$,
+  '22023', 'Choisissez une date dans l''année à venir', 'date trop lointaine refusée');
+reset role;
+select results_eq(
+  $$ select paused, available_from from public.artisans where id = 'ad200000-0000-4000-8000-000000000001' $$,
+  $$ values (false, null::date) $$, 'disponible dès maintenant');
+select pg_temp.connecter('ad000000-0000-4000-8000-000000000001', 'particulier');
+set local role authenticated;
+select throws_ok($$ select public.set_artisan_paused(true) $$, '42501', 'Fiche artisan introuvable',
+  'client : pas de pause');
+reset role;
+
 -- ---------- Horaires ----------
 select pg_temp.connecter('ad100000-0000-4000-8000-000000000001', 'artisan');
 set local role authenticated;
@@ -219,10 +244,16 @@ select results_eq(
             ('creneau', 'Rendez-vous personnel', null),
             ('visite', 'Fuite sous l''évier', '06000 Nice') $$,
   'abonnement : absences, créneaux et visites, avec la commune seulement');
-select is_empty(
-  $$ select * from public.artisan_calendar_events(repeat('0', 48)) $$, 'jeton inconnu : rien');
-select is_empty(
-  $$ select * from public.artisan_calendar_events('pas-un-jeton') $$, 'jeton mal formé : rien');
+select results_eq(
+  $$ select chantier_id = current_setting('test.chantier')::uuid from public.artisan_calendar_events(current_setting('test.jeton'))
+     where kind = 'visite' $$,
+  $$ values (true) $$, 'abonnement : visite reliée à son chantier');
+select throws_ok(
+  $$ select * from public.artisan_calendar_events(repeat('0', 48)) $$, 'P0002', 'Lien d''abonnement inconnu',
+  'jeton inconnu : refusé');
+select throws_ok(
+  $$ select * from public.artisan_calendar_events('pas-un-jeton') $$, 'P0002', 'Lien d''abonnement inconnu',
+  'jeton mal formé : refusé');
 reset role;
 select isnt((select last_read_at from public.artisan_calendar_feeds
   where artisan_id = 'ad200000-0000-4000-8000-000000000001'), null, 'dernière lecture notée');
@@ -234,8 +265,9 @@ select isnt(public.renew_artisan_calendar_feed(), current_setting('test.jeton'),
 reset role;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 set local role anon;
-select is_empty(
-  $$ select * from public.artisan_calendar_events(current_setting('test.jeton')) $$, 'ancien lien désactivé');
+select throws_ok(
+  $$ select * from public.artisan_calendar_events(current_setting('test.jeton')) $$, 'P0002', 'Lien d''abonnement inconnu',
+  'ancien lien désactivé');
 reset role;
 select pg_temp.connecter('ad100000-0000-4000-8000-000000000001', 'artisan');
 set local role authenticated;
