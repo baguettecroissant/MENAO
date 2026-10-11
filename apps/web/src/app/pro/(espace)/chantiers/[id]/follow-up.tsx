@@ -34,6 +34,7 @@ import { RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewSection } from "@/components/pro/review-section";
 import { Alert, ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { appointmentAgenda } from "@/lib/artisan/agenda";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
 import { signedUrlMap } from "@/lib/chantier/storage";
 import { chantierTag, nextIntervention } from "@/lib/chantier/view";
@@ -156,9 +157,13 @@ export async function ArtisanFollowUp({
       createdAt: u.created_at,
     })),
   );
-  const [photos, projectPhotos] = await Promise.all([
+  const [photos, projectPhotos, agenda] = await Promise.all([
     signedUrlMap(supabase, "chantier-photos", journal.photos),
     signedUrlMap(supabase, "project-photos", c.photos),
+    // F-44 : avertissements de la date de démarrage (absence, hors horaires, conflit).
+    status === "acompte_paye" || status === "planifie"
+      ? appointmentAgenda({ excludeChantierId: id, withSuggestions: false })
+      : undefined,
   ]);
 
   const clientName =
@@ -334,6 +339,7 @@ export async function ArtisanFollowUp({
                       chantierId={id}
                       minDate={today}
                       {...parisInputValues(startAt)}
+                      agenda={agenda}
                     />
                   )}
                 </NextIntervention>
@@ -365,6 +371,7 @@ export async function ArtisanFollowUp({
           date={quoteStart && quoteStart >= today ? quoteStart : undefined}
           time={DEFAULT_CHANTIER_START_TIME}
           hint={quoteStart ? tf.quoteStart(formatDayInline(quoteStart)) : undefined}
+          agenda={agenda}
         />
       )}
       {status === "planifie" && startConfirmed && startAt && (

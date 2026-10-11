@@ -28,7 +28,8 @@ function parisOffsetMinutes(at: number): number {
   return Math.round((asUtc - Math.floor(at / 60_000) * 60_000) / 60_000);
 }
 
-function isValidDate(date: string): boolean {
+/** Date AAAA-MM-JJ existante (le 30 février est refusé). */
+export function isValidDate(date: string): boolean {
   const m = DATE.exec(date);
   if (!m) return false;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];

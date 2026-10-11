@@ -1,6 +1,7 @@
 /**
- * Agenda (F-12, F-44) : fichier .ics d'un rendez-vous ou d'un démarrage de travaux, conforme à la
- * RFC 5545, et liens « Ajouter à Google Agenda » et « Ajouter à Outlook ».
+ * Agenda (F-12, F-44) : fichier .ics d'un rendez-vous ou d'un démarrage de travaux, agenda complet
+ * de l'artisan à synchroniser (abonnement), conformes à la RFC 5545, et liens « Ajouter à Google
+ * Agenda » et « Ajouter à Outlook ».
  */
 
 export type IcsEvent = {
@@ -50,26 +51,81 @@ function fold(line: string): string {
   return out.join("\r\n ");
 }
 
+/** Absence sur des journées entières (bornes incluses), dans l'agenda à synchroniser. */
+export type IcsAllDayEvent = {
+  uid: string;
+  startDate: string;
+  endDate: string;
+  summary: string;
+  description?: string | null;
+  stamp: Date;
+};
+
+const compactDate = (date: string) => date.replace(/-/g, "");
+
+/** Lendemain d'une date AAAA-MM-JJ : la fin d'un événement sur la journée est exclusive. */
+function nextDay(date: string): string {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
+function eventLines(event: IcsEvent | IcsAllDayEvent): string[] {
+  const when =
+    "startDate" in event
+      ? [
+          `DTSTART;VALUE=DATE:${compactDate(event.startDate)}`,
+          `DTEND;VALUE=DATE:${compactDate(nextDay(event.endDate))}`,
+        ]
+      : [
+          `DTSTART:${utc(event.start)}`,
+          `DTEND:${utc(new Date(event.start.getTime() + event.durationMinutes * 60_000))}`,
+        ];
+  return [
+    "BEGIN:VEVENT",
+    `UID:${event.uid}@menao.fr`,
+    `DTSTAMP:${utc(event.stamp)}`,
+    ...when,
+    `SUMMARY:${escapeText(event.summary)}`,
+    ...("location" in event && event.location ? [`LOCATION:${escapeText(event.location)}`] : []),
+    ...(event.description ? [`DESCRIPTION:${escapeText(event.description)}`] : []),
+    "END:VEVENT",
+  ];
+}
+
+const serialize = (lines: string[]) => lines.map(fold).join("\r\n") + "\r\n";
+
 export function buildIcs(event: IcsEvent): string {
-  const end = new Date(event.start.getTime() + event.durationMinutes * 60_000);
-  const lines = [
+  return serialize([
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//MENAO//Rendez-vous//FR",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "BEGIN:VEVENT",
-    `UID:${event.uid}@menao.fr`,
-    `DTSTAMP:${utc(event.stamp)}`,
-    `DTSTART:${utc(event.start)}`,
-    `DTEND:${utc(end)}`,
-    `SUMMARY:${escapeText(event.summary)}`,
-    ...(event.location ? [`LOCATION:${escapeText(event.location)}`] : []),
-    ...(event.description ? [`DESCRIPTION:${escapeText(event.description)}`] : []),
-    "END:VEVENT",
+    ...eventLines(event),
     "END:VCALENDAR",
-  ];
-  return lines.map(fold).join("\r\n") + "\r\n";
+  ]);
+}
+
+/**
+ * Agenda complet à synchroniser (F-44) : rendez-vous, démarrages, créneaux bloqués et absences.
+ * Les applications d'agenda le relisent d'elles-mêmes ; l'actualisation demandée est horaire.
+ */
+export function buildCalendar(
+  name: string,
+  events: readonly (IcsEvent | IcsAllDayEvent)[],
+): string {
+  return serialize([
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//MENAO//Agenda//FR",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${escapeText(name)}`,
+    "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
+    "X-PUBLISHED-TTL:PT1H",
+    ...events.flatMap(eventLines),
+    "END:VCALENDAR",
+  ]);
 }
 
 export type CalendarEvent = Omit<IcsEvent, "uid" | "stamp">;

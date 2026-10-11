@@ -1,5 +1,6 @@
 import {
   CalendarClock,
+  CalendarDays,
   ClipboardList,
   FileText,
   HardHat,
@@ -71,6 +72,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       label: fr.appShell.sections.activity,
       items: [
         { href: "/pro/tableau-de-bord", label: fr.pro.space.dashboard, icon: LayoutGrid },
+        { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
         { href: "/pro/demandes", label: fr.pro.space.requests, icon: Inbox, badge: "requests" },
         { href: "/pro/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
         { href: "/pro/devis", label: fr.pro.space.quotes, icon: FileText, badge: "quotes" },

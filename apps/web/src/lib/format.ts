@@ -36,7 +36,25 @@ const dayShort = new Intl.DateTimeFormat("fr-FR", {
   timeZone: PARIS,
 });
 
+const dayMonth = new Intl.DateTimeFormat("fr-FR", {
+  day: "numeric",
+  month: "long",
+  timeZone: PARIS,
+});
+const dayMonthShort = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: PARIS,
+});
+
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** « 12 octobre » (date AAAA-MM-JJ ou instant). */
+export const formatDayMonth = (iso: string) => dayMonth.format(new Date(iso));
+
+/** « mar. 13 oct. », au fil d'une phrase (créneaux proposés, absences). */
+export const formatDayMonthShort = (iso: string) => dayMonthShort.format(new Date(iso));
 
 /** « Vendredi 20 févr. 2026 » (maquette « Informations du rendez-vous »). */
 export const formatDayLong = (iso: string) => capitalize(dayLong.format(new Date(iso)));

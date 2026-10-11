@@ -1,10 +1,13 @@
 "use client";
 
-import { Calendar, Clock } from "lucide-react";
-import { useActionState, type MouseEvent } from "react";
+import { Calendar, Clock, Sparkles } from "lucide-react";
+import { useActionState, useState, type MouseEvent } from "react";
+import { SlotWarnings } from "@/components/agenda/slot-warnings";
 import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import { initialFormState, type FormState } from "@/lib/auth/form";
+import { formatDayMonthShort, formatTime, parisInputValues } from "@/lib/format";
 import { useActionSuccess } from "@/lib/use-action-success";
 
 const t = fr.pro.appointment;
@@ -22,7 +25,8 @@ function openPicker(event: MouseEvent<HTMLInputElement>) {
 
 /**
  * Champs du tiroir « Fixer un rendez-vous » / « Modifier le rendez-vous » (date + heure d'arrivée),
- * repris pour la date de démarrage du chantier (F-22).
+ * repris pour la date de démarrage du chantier (F-22). Avec l'agenda (F-44) : créneaux libres
+ * proposés et avertissements (absence, hors horaires, autre élément au même moment).
  */
 export function AppointmentForm({
   action,
@@ -34,6 +38,7 @@ export function AppointmentForm({
   dateLabel = t.date,
   timeLabel = t.time,
   onSuccess,
+  agenda,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   submitLabel: string;
@@ -45,15 +50,46 @@ export function AppointmentForm({
   dateLabel?: string;
   timeLabel?: string;
   onSuccess?: () => void;
+  agenda?: AppointmentAgenda;
 }) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
   useActionSuccess(state, onSuccess);
+  const [date, setDate] = useState(defaultDate ?? "");
+  const [time, setTime] = useState(defaultTime ?? "");
   const dateError = state.fieldErrors?.date?.[0];
   const timeError = state.fieldErrors?.time?.[0];
 
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       {state.error && <Alert tone="error">{state.error}</Alert>}
+      {agenda && agenda.suggestions.length > 0 && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+            <Sparkles aria-hidden="true" className="size-4 text-primary" />
+            {t.suggestions}
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {agenda.suggestions.map((iso) => {
+              const values = parisInputValues(iso);
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  aria-pressed={values.date === date && values.time === time}
+                  onClick={() => {
+                    setDate(values.date);
+                    setTime(values.time);
+                  }}
+                  className="inline-flex min-h-10 items-center rounded-pill border border-border bg-surface px-3.5 text-sm transition-colors hover:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none aria-pressed:border-primary aria-pressed:bg-primary-softer aria-pressed:font-medium aria-pressed:text-primary-strong"
+                >
+                  {t.suggestion(formatDayMonthShort(iso), formatTime(iso))}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">{t.suggestionsHint}</p>
+        </fieldset>
+      )}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="rdv-date" className="text-sm font-medium">
           {dateLabel}
@@ -69,7 +105,8 @@ export function AppointmentForm({
             type="date"
             required
             min={minDate}
-            defaultValue={state.values?.date ?? defaultDate}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
             aria-invalid={dateError ? true : undefined}
             aria-describedby={dateError ? "rdv-date-error" : undefined}
             onClick={openPicker}
@@ -93,7 +130,8 @@ export function AppointmentForm({
             type="time"
             required
             step={300}
-            defaultValue={state.values?.time ?? defaultTime}
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
             aria-invalid={timeError ? true : undefined}
             aria-describedby={timeError ? "rdv-time-error" : undefined}
             onClick={openPicker}
@@ -102,6 +140,7 @@ export function AppointmentForm({
         </div>
         {timeError && <FieldError id="rdv-time-error">{timeError}</FieldError>}
       </div>
+      {agenda && <SlotWarnings date={date} time={time} agenda={agenda} />}
       {hint && <Hint>{hint}</Hint>}
       <Button type="submit" size="lg" disabled={pending}>
         {submitLabel}
