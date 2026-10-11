@@ -12,6 +12,7 @@ import {
   layoutDay,
   mondayOf,
   parisDateTime,
+  slotConflicts,
   slotWarnings,
   suggestSlots,
   weekDates,
@@ -211,6 +212,19 @@ describe("créneaux de rendez-vous (F-18, F-44)", () => {
     expect(blockedSlotError("2026-10-13", "16:00", "14:00", now)).toBe("ordre");
     expect(blockedSlotError("2026-10-13", "08:00", "09:30", now)).toBe("passe");
     expect(blockedSlotError("2027-10-20", "08:00", "09:00", now)).toBe("trop_loin");
+  });
+
+  it("éléments en conflit, pour les nommer", () => {
+    const busy = [
+      { id: "visite", start: "2026-10-13T13:20:00Z", durationMinutes: 60 },
+      { id: "creneau", start: "2026-10-13T15:00:00Z", durationMinutes: 30 },
+    ];
+    expect(slotConflicts(new Date("2026-10-13T14:00:00Z"), 90, busy).map((b) => b.id)).toEqual([
+      "visite",
+      "creneau",
+    ]);
+    // Entre la fin de l'un et le début de l'autre : pas de conflit.
+    expect(slotConflicts(new Date("2026-10-13T14:20:00Z"), 40, busy)).toEqual([]);
   });
 
   it("suggestions : jours travaillés, hors absences et rendez-vous, un le matin, un l'après-midi", () => {

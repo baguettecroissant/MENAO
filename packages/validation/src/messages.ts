@@ -72,6 +72,11 @@ export const messages = {
   disputeDescriptionTooLong: "Votre description dépasse 2 000 caractères.",
   disputeOutcomeRequired: "Choisissez la décision : reprise ou annulation du chantier.",
   disputeDecisionTooShort: "Expliquez la décision en 10 caractères au moins.",
+  agendaLabelTooLong: "80 caractères au plus.",
+  absenceStartRequired: "Choisissez le premier jour de l'absence.",
+  absenceEndRequired: "Choisissez le dernier jour de l'absence.",
+  blockedSlotDateRequired: "Choisissez la date du créneau.",
+  hoursInvalid: "Vérifiez les heures saisies.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
 } as const;

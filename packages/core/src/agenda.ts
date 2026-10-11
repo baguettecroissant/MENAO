@@ -239,11 +239,17 @@ export function blockedSlotError(
   return null;
 }
 
-function overlapsBusy(start: number, durationMinutes: number, busy: readonly BusySlot[]): boolean {
-  const end = start + durationMinutes * 60_000;
-  return busy.some((b) => {
+/** Éléments de l'agenda qui chevauchent le créneau (pour les nommer dans l'avertissement). */
+export function slotConflicts<T extends BusySlot>(
+  start: Date,
+  durationMinutes: number,
+  busy: readonly T[],
+): T[] {
+  const from = start.getTime();
+  const to = from + durationMinutes * 60_000;
+  return busy.filter((b) => {
     const bStart = new Date(b.start).getTime();
-    return bStart < end && start < bStart + b.durationMinutes * 60_000;
+    return bStart < to && from < bStart + b.durationMinutes * 60_000;
   });
 }
 
@@ -272,7 +278,7 @@ export function slotWarnings({
   else if (hours.length > 0 && !withinHours(hours, date, minutes, minutes + durationMinutes)) {
     warnings.push("hors_horaires");
   }
-  if (overlapsBusy(start.getTime(), durationMinutes, busy)) warnings.push("conflit");
+  if (slotConflicts(start, durationMinutes, busy).length > 0) warnings.push("conflit");
   return warnings;
 }
 
@@ -320,7 +326,7 @@ export function suggestSlots({
       for (const m of starts) {
         if (m < from || m >= to) continue;
         const start = parisLocalToDate(date, minutesToTime(m));
-        if (start.getTime() < earliest || overlapsBusy(start.getTime(), durationMinutes, busy)) {
+        if (start.getTime() < earliest || slotConflicts(start, durationMinutes, busy).length > 0) {
           continue;
         }
         out.push(start);
