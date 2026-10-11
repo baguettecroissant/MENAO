@@ -105,6 +105,13 @@ export function clientChantierAction(input: {
   return null;
 }
 
+/** Nombre de chantiers qui attendent une action du client : devis à signer, acompte ou solde. */
+export function clientPendingActions(
+  chantiers: readonly Parameters<typeof clientChantierAction>[0][],
+): number {
+  return chantiers.filter((c) => clientChantierAction(c) !== null).length;
+}
+
 /**
  * Échéancier du dossier : déjà payé (paiements reçus) et restant à payer, toujours calculé
  * (CLAUDE.md règle 5 : solde = total − acomptes).

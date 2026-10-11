@@ -177,3 +177,26 @@ describe("liens d'agenda (F-12)", () => {
     });
   });
 });
+
+describe("actions attendues du client (compteur du menu)", () => {
+  it("compte les chantiers avec un devis à signer, un acompte ou un solde à payer", async () => {
+    const { clientPendingActions } = await import("../src/chantier-progress");
+    const base = {
+      quoteId: "q",
+      depositCents: 30000,
+      depositStatus: null,
+      balanceCents: 70000,
+      balanceStatus: null,
+    };
+    expect(
+      clientPendingActions([
+        { ...base, status: "devis_envoye", quoteStatus: "envoye" },
+        { ...base, status: "devis_signe", quoteStatus: "signe" },
+        { ...base, status: "receptionne", quoteStatus: "signe" },
+        { ...base, status: "en_cours", quoteStatus: "signe" },
+        { ...base, status: "devis_signe", quoteStatus: "signe", depositStatus: "paye" },
+      ]),
+    ).toBe(3);
+    expect(clientPendingActions([])).toBe(0);
+  });
+});
