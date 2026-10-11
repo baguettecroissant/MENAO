@@ -1720,9 +1720,10 @@ export const fr = {
       greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
       awaitingQuote: "En attente de devis",
       clients: (n: number) => (n <= 1 ? `${n} client` : `${n} clients`),
-      revenue: "Généré ce mois",
-      upcoming: "Prochains rendez-vous",
-      noUpcoming: "Vous n'avez pas de rendez-vous à venir",
+      revenue: "Encaissé ce mois",
+      upcoming: "À venir",
+      noUpcoming: "Aucune visite ni aucun démarrage de chantier à venir.",
+      kinds: { visite: "Visite", demarrage: "Démarrage du chantier" },
       latestRequests: "Dernières demandes de devis",
       noRequests: "Aucune nouvelle demande pour le moment.",
       allRequests: "Toutes mes demandes",
@@ -2577,8 +2578,6 @@ export const fr = {
       comingSoon: "bientôt disponible",
       saveAndContinue: "Enregistrer et continuer",
       saved: "Enregistré.",
-      nextStepsSoon:
-        "Les étapes « Paiements » et « Formule » arrivent très bientôt. Vos informations sont enregistrées.",
       submit: {
         title: "Envoyer mon dossier",
         intro:

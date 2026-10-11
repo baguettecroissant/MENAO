@@ -211,10 +211,11 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(anonymous.status()).toBe(307);
   expect(anonymous.headers().location).toContain("/connexion?next=");
 
-  // Le tableau de bord affiche le rendez-vous à venir.
+  // Le tableau de bord affiche la visite à venir (agenda « À venir »).
   const previewUrl = proPage.url();
   await proPage.goto("/pro/tableau-de-bord");
-  const upcoming = proPage.getByRole("region", { name: "Prochains rendez-vous" });
+  const upcoming = proPage.getByRole("region", { name: "À venir" });
+  await expect(upcoming.getByText("Visite", { exact: true }).first()).toBeVisible();
   await expect(upcoming.getByText("16h30").first()).toBeVisible();
 
   // Le particulier voit son chantier (rendez-vous, agenda) et les coordonnées de l'artisan.

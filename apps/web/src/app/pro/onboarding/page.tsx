@@ -75,9 +75,6 @@ export default async function OnboardingIndexPage() {
           <SubmitOnboarding />
         </Card>
       )}
-      <Card>
-        <p className="text-muted-foreground">{t.nextStepsSoon}</p>
-      </Card>
     </div>
   );
 }

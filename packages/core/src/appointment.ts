@@ -72,16 +72,25 @@ export function appointmentInputError(
   return futureParisInputError(date, time, now, APPOINTMENT_MAX_DAYS_AHEAD);
 }
 
-/** Prochains rendez-vous (F-16) : chantiers au rendez-vous planifié, du plus proche au plus lointain. */
-export function upcomingAppointments<T extends { status: string; appointmentAt: string | null }>(
-  rows: readonly T[],
-  now: Date,
-  limit = 3,
-): T[] {
-  const at = (r: T) =>
-    r.appointmentAt === null ? Number.NaN : new Date(r.appointmentAt).getTime();
-  return rows
-    .filter((r) => r.status === "rdv_planifie" && at(r) >= now.getTime())
-    .sort((a, b) => at(a) - at(b))
-    .slice(0, limit);
+export type AgendaKind = "visite" | "demarrage";
+
+/**
+ * Agenda à venir du tableau de bord (F-16) : visites planifiées et démarrages de chantier, quel
+ * que soit le stade du chantier (une visite reste à faire même après l'envoi du devis), du plus
+ * proche au plus lointain. Les chantiers annulés sont ignorés.
+ */
+export function upcomingAgenda<
+  T extends { status: string; appointmentAt: string | null; startAt: string | null },
+>(rows: readonly T[], now: Date, limit = 4): { kind: AgendaKind; at: string; row: T }[] {
+  const entries: { kind: AgendaKind; at: string; row: T }[] = [];
+  for (const row of rows) {
+    if (row.status === "annule") continue;
+    if (row.appointmentAt && Date.parse(row.appointmentAt) >= now.getTime()) {
+      entries.push({ kind: "visite", at: row.appointmentAt, row });
+    }
+    if (row.startAt && Date.parse(row.startAt) >= now.getTime()) {
+      entries.push({ kind: "demarrage", at: row.startAt, row });
+    }
+  }
+  return entries.sort((a, b) => Date.parse(a.at) - Date.parse(b.at)).slice(0, limit);
 }
