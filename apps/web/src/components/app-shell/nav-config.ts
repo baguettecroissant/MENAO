@@ -1,5 +1,4 @@
 import {
-  Bell,
   CalendarClock,
   ClipboardList,
   FileText,
@@ -41,7 +40,10 @@ export const SPACE_HOME: Record<Space, string> = {
   admin: "/admin/artisans",
 };
 
-/** Rubriques de chaque espace (ADR 0035), dans l'ordre d'usage. */
+/**
+ * Rubriques de chaque espace (ADR 0035), dans l'ordre d'usage. Les notifications passent par la
+ * cloche de la barre du haut et par le menu du compte.
+ */
 export const NAV: Record<Space, readonly NavSection[]> = {
   client: [
     {
@@ -61,7 +63,6 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           badge: "messages",
         },
         { href: "/mon-espace/documents", label: fr.clientApp.documents, icon: FileText },
-        { href: "/notifications", label: fr.clientApp.notifications, icon: Bell },
       ],
     },
   ],
@@ -84,10 +85,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
     },
     {
       label: fr.appShell.sections.account,
-      items: [
-        { href: "/pro/onboarding", label: fr.pro.space.file, icon: UserRound },
-        { href: "/notifications", label: fr.clientApp.notifications, icon: Bell },
-      ],
+      items: [{ href: "/pro/onboarding", label: fr.pro.space.file, icon: UserRound }],
     },
   ],
   admin: [

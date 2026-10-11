@@ -67,12 +67,12 @@ export function SidebarContent({
         )}
       </div>
 
-      <nav aria-label={t.nav[space]} className="flex-1 overflow-y-auto px-3 py-5">
+      <nav aria-label={t.nav[space]} className="flex-1 overflow-y-auto px-3 py-4">
         {NAV[space].map((section, index) => (
-          <div key={section.label ?? index} className="mb-6 last:mb-0">
+          <div key={section.label ?? index} className="mb-4 last:mb-0">
             {section.label &&
               (collapsed ? (
-                index > 0 && <hr className="mx-3 mb-4 border-border" />
+                index > 0 && <hr className="mx-3 mb-3 border-border" />
               ) : (
                 <p className="px-3 pb-2 text-[0.6875rem] font-semibold tracking-[0.14em] text-subtle-foreground uppercase">
                   {section.label}
@@ -96,7 +96,7 @@ export function SidebarContent({
 
       {visibility && !collapsed && <VisibilityCard visibility={visibility} />}
 
-      <div className="flex shrink-0 flex-col gap-1 border-t border-border p-3">
+      <div className="flex shrink-0 flex-col gap-0.5 border-t border-border p-2.5">
         {space !== "admin" && (
           <Link
             href="/contact"
@@ -137,7 +137,7 @@ function NavLink({
       href={item.href as Route}
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
-      className={`group relative flex min-h-11 items-center gap-3 rounded-xl text-[0.9375rem] transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${
+      className={`group relative flex min-h-11 items-center gap-3 rounded-xl text-[0.9375rem] lg:min-h-10 transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${
         collapsed ? "justify-center" : "px-3"
       } ${
         active
@@ -177,37 +177,36 @@ function NavLink({
 
 function VisibilityCard({ visibility }: { visibility: Visibility }) {
   const missingLabels = fr.pro.onboarding.visibility.missing;
-  return (
-    <div
-      className={`mx-3 mb-3 rounded-card p-3.5 ${visibility.visible ? "bg-success-soft" : "bg-warning-soft"}`}
-    >
+  if (visibility.visible) {
+    return (
       <p
-        className={`flex items-center gap-2 text-sm font-medium ${visibility.visible ? "text-success" : "text-warning"}`}
+        title={t.visibility.visibleText}
+        className="mx-3 mb-3 flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-xs font-medium text-success"
       >
-        {visibility.visible ? (
-          <Eye aria-hidden="true" className="size-4" />
-        ) : (
-          <EyeOff aria-hidden="true" className="size-4" />
-        )}
-        {visibility.visible ? t.visibility.visible : t.visibility.hidden}
+        <Eye aria-hidden="true" className="size-4 shrink-0" />
+        {t.visibility.visible}
       </p>
-      <p className="mt-1 text-xs leading-relaxed text-foreground/75">
-        {visibility.visible ? t.visibility.visibleText : t.visibility.hiddenText}
+    );
+  }
+  return (
+    <div className="mx-3 mb-3 rounded-card bg-warning-soft px-3 py-2.5">
+      <p className="flex items-center gap-2 text-sm font-medium text-warning">
+        <EyeOff aria-hidden="true" className="size-4" />
+        {t.visibility.hidden}
       </p>
-      {!visibility.visible && (
-        <ul className="mt-2 flex flex-col gap-1">
-          {visibility.missing.map((condition) => (
-            <li key={condition}>
-              <Link
-                href={MISSING_HREF[condition] as Route}
-                className="text-xs font-medium text-warning underline underline-offset-2 hover:no-underline"
-              >
-                {missingLabels[condition]}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <p className="mt-0.5 text-xs leading-snug text-foreground/75">{t.visibility.hiddenText}</p>
+      <ul className="mt-1.5 flex flex-col gap-1">
+        {visibility.missing.map((condition) => (
+          <li key={condition}>
+            <Link
+              href={MISSING_HREF[condition] as Route}
+              className="text-xs font-medium text-warning underline underline-offset-2 hover:no-underline"
+            >
+              {missingLabels[condition]}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
