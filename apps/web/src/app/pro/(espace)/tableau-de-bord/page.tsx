@@ -1,4 +1,9 @@
-import { clientsAwaitingQuote, requestsAwaitingAnswer, upcomingAppointments } from "@menao/core";
+import {
+  clientsAwaitingQuote,
+  collectedThisMonth,
+  requestsAwaitingAnswer,
+  upcomingAgenda,
+} from "@menao/core";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
 import { fr } from "@/i18n/fr";
@@ -31,11 +36,16 @@ export default async function DashboardPage() {
       : []),
   ];
   // Mêmes lectures que les compteurs du menu (mises en cache pour la requête).
-  const { chantiers, inbox } = await artisanActivity();
+  const [{ chantiers, inbox }, { data: payments }] = await Promise.all([
+    artisanActivity(),
+    // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
+    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+  ]);
   const now = new Date();
   const rows = chantiers.map((c) => ({
     ...c,
     appointmentAt: c.appointment_at as string | null,
+    startAt: c.start_at as string | null,
     particulierId: c.particulier_id,
   }));
   const latest = requestsAwaitingAnswer(inbox, now).slice(0, 3);
@@ -50,13 +60,16 @@ export default async function DashboardPage() {
       notices={notices}
       visible={visibility.visible}
       awaitingClients={clientsAwaitingQuote(rows)}
-      // Devis signés du mois : disponibles avec la signature (F-13).
-      revenueCents={0}
-      appointments={upcomingAppointments(rows, now).map((c) => ({
-        chantierId: c.chantier_id,
-        startsAt: c.appointment_at,
-        title: c.title,
-        place: c.adresse || [c.code_postal, c.ville_nom].filter(Boolean).join(" "),
+      revenueCents={collectedThisMonth(
+        (payments ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
+        now,
+      )}
+      appointments={upcomingAgenda(rows, now).map(({ kind, at, row }) => ({
+        kind,
+        chantierId: row.chantier_id,
+        startsAt: at,
+        title: row.title,
+        place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
       }))}
       requests={latest.map((r) => ({
         requestId: r.request_id,

@@ -12,6 +12,7 @@ const cardLink =
   "rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none";
 
 export type DashboardAppointment = {
+  kind: "visite" | "demarrage";
   chantierId: string;
   startsAt: string;
   title: string;
@@ -55,12 +56,19 @@ export function DashboardView({
       ) : (
         <ul className="flex flex-col gap-3">
           {appointments.map((a) => (
-            <li key={a.chantierId}>
+            <li key={`${a.kind}-${a.chantierId}`}>
               <Link
                 href={`/pro/chantiers/${a.chantierId}` as Route}
                 className={`block overflow-hidden ${cardLink}`}
               >
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+                <div
+                  className={`flex flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2.5 text-sm text-primary-foreground ${
+                    a.kind === "demarrage" ? "bg-success" : "bg-primary"
+                  }`}
+                >
+                  <span className="rounded-chip bg-white/20 px-2 py-0.5 text-xs font-medium">
+                    {t.kinds[a.kind]}
+                  </span>
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays aria-hidden="true" className="size-4" />
                     {formatDayLong(a.startsAt)}
