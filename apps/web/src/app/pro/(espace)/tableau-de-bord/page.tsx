@@ -1,8 +1,8 @@
-import { clientsAwaitingQuote, upcomingAppointments } from "@menao/core";
+import { clientsAwaitingQuote, requestsAwaitingAnswer, upcomingAppointments } from "@menao/core";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
 import { fr } from "@/i18n/fr";
-import { requireProSpace } from "@/lib/artisan/space";
+import { artisanActivity, requireProSpace } from "@/lib/artisan/space";
 
 const t = fr.pro.onboarding.requests;
 const dayShort = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: "UTC" });
@@ -30,19 +30,15 @@ export default async function DashboardPage() {
         ]
       : []),
   ];
-  const [{ data: chantiers }, { data: inbox }] = await Promise.all([
-    supabase.rpc("artisan_chantiers"),
-    supabase.rpc("artisan_inbox"),
-  ]);
+  // Mêmes lectures que les compteurs du menu (mises en cache pour la requête).
+  const { chantiers, inbox } = await artisanActivity();
   const now = new Date();
-  const rows = (chantiers ?? []).map((c) => ({
+  const rows = chantiers.map((c) => ({
     ...c,
     appointmentAt: c.appointment_at as string | null,
     particulierId: c.particulier_id,
   }));
-  const latest = (inbox ?? [])
-    .filter((r) => r.status === "envoyee" && new Date(r.expires_at) > now)
-    .slice(0, 3);
+  const latest = requestsAwaitingAnswer(inbox, now).slice(0, 3);
   const paths = latest.map((r) => r.photo_path).filter((p): p is string => Boolean(p));
   const { data: signed } = paths.length
     ? await supabase.storage.from("project-photos").createSignedUrls(paths, 3600)

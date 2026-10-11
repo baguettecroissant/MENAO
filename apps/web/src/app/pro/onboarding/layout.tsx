@@ -3,10 +3,13 @@ import type { ReactNode } from "react";
 import { MONITORED_DOCUMENT_TYPES, expiryStatus } from "@menao/core";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { AppShell } from "@/components/app-shell/app-shell";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { getProShell } from "@/lib/artisan/space";
 import { signOut } from "@/lib/auth/actions";
+import { getShellAccount } from "@/lib/client/shell";
 import { Stepper } from "./stepper";
 import { SubmitReminder } from "./submit-reminder";
 
@@ -23,6 +26,60 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
           return current && !pending && expiryStatus(current.date_fin) !== "ok";
         })
       : [];
+  // Artisan validé : « Mon dossier » dans la coque de l'espace pro (ADR 0035), menu latéral compris.
+  const validated = artisan.status === "valide" || artisan.status === "suspendu";
+  const inProSpace = validated && (await getShellAccount())?.account.role === "artisan";
+  const content = (
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-2xl font-medium tracking-tight">
+            {inProSpace ? fr.pro.space.file : fr.pro.onboarding.title}
+          </h1>
+          {!inProSpace && (
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="min-h-touch font-medium underline-offset-2 hover:underline"
+              >
+                {fr.mySpace.signOut}
+              </button>
+            </form>
+          )}
+        </div>
+        <p className="text-muted-foreground">
+          {inProSpace ? fr.pro.onboarding.fileIntro : fr.pro.onboarding.intro}
+        </p>
+      </div>
+      {artisan.status === "brouillon" && artisan.refusal_reason && (
+        <Alert tone="error">{fr.pro.onboarding.status.complement(artisan.refusal_reason)}</Alert>
+      )}
+      {artisan.status === "suspendu" && artisan.suspension_reason === "documents_expires" && (
+        <Alert tone="error">{fr.pro.onboarding.status.suspenduDocuments}</Alert>
+      )}
+      {toRenew.length > 0 && (
+        <Alert tone="error">
+          {fr.pro.onboarding.documents.expiringBanner(
+            toRenew.map((type) => fr.pro.onboarding.documents.types[type]).join(", "),
+          )}
+        </Alert>
+      )}
+      {(artisan.status === "brouillon" || artisan.status === "refuse") && canSubmit && (
+        <SubmitReminder />
+      )}
+      <Stepper progress={progress} />
+      {children}
+    </main>
+  );
+
+  if (inProSpace) {
+    const pro = await getProShell();
+    return (
+      <AppShell space="pro" account={pro.account} badges={pro.badges} visibility={pro.visibility}>
+        {content}
+      </AppShell>
+    );
+  }
   return (
     // Inscription de l'artisan (ADR 0034) : coque de l'Espace Pro, sans le site vitrine.
     <div className="flex min-h-dvh flex-col bg-background">
@@ -36,40 +93,7 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
           </span>
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h1 className="text-2xl font-medium tracking-tight">{fr.pro.onboarding.title}</h1>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="min-h-touch font-medium underline-offset-2 hover:underline"
-              >
-                {fr.mySpace.signOut}
-              </button>
-            </form>
-          </div>
-          <p className="text-muted-foreground">{fr.pro.onboarding.intro}</p>
-        </div>
-        {artisan.status === "brouillon" && artisan.refusal_reason && (
-          <Alert tone="error">{fr.pro.onboarding.status.complement(artisan.refusal_reason)}</Alert>
-        )}
-        {artisan.status === "suspendu" && artisan.suspension_reason === "documents_expires" && (
-          <Alert tone="error">{fr.pro.onboarding.status.suspenduDocuments}</Alert>
-        )}
-        {toRenew.length > 0 && (
-          <Alert tone="error">
-            {fr.pro.onboarding.documents.expiringBanner(
-              toRenew.map((type) => fr.pro.onboarding.documents.types[type]).join(", "),
-            )}
-          </Alert>
-        )}
-        {(artisan.status === "brouillon" || artisan.status === "refuse") && canSubmit && (
-          <SubmitReminder />
-        )}
-        <Stepper progress={progress} />
-        {children}
-      </main>
+      {content}
     </div>
   );
 }

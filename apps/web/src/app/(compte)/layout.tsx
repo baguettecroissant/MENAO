@@ -1,27 +1,37 @@
 import type { ReactNode } from "react";
-import { ClientShell } from "@/components/app-shell/client-shell";
-import { ProHeader } from "@/components/pro/pro-header";
-import { ProBottomNav } from "@/components/pro/pro-nav";
+import { AppShell } from "@/components/app-shell/app-shell";
+import { getProShell } from "@/lib/artisan/space";
 import { getShellAccount } from "@/lib/client/shell";
 
 /**
  * Pages communes au client et à l'artisan (centre de notifications, suivi d'un signalement) :
- * coque de l'application selon le rôle (ADR 0034).
+ * coque de l'application selon le rôle (ADR 0034, 0035).
  */
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const shell = await getShellAccount();
   const role = shell?.account.role;
-  if (role === "artisan" || role === "artisan_en_attente") {
+  if (role === "artisan") {
+    const pro = await getProShell();
     return (
-      <div className="flex min-h-dvh flex-col bg-background">
-        <ProHeader
-          firstName={shell?.account.firstName ?? null}
-          avatarUrl={shell?.account.avatarUrl ?? null}
-        />
-        <div className="flex flex-1 flex-col">{children}</div>
-        <ProBottomNav />
-      </div>
+      <AppShell space="pro" account={pro.account} badges={pro.badges} visibility={pro.visibility}>
+        {children}
+      </AppShell>
     );
   }
-  return <ClientShell>{children}</ClientShell>;
+  if (role === "artisan_en_attente") {
+    return (
+      <AppShell space="pro" account={shell?.account ?? null}>
+        {children}
+      </AppShell>
+    );
+  }
+  return (
+    <AppShell
+      space="client"
+      account={shell?.account ?? null}
+      badges={{ actions: shell?.actions ?? 0, messages: shell?.unreadMessages ?? 0 }}
+    >
+      {children}
+    </AppShell>
+  );
 }
