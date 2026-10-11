@@ -31,6 +31,14 @@ export const NOTIFICATION_TYPES = [
   "litige_ouvert",
   "litige_clos",
   "reponse_support",
+  "dossier_valide",
+  "dossier_refuse",
+  "dossier_complement",
+  "document_refuse",
+  "document_a_renouveler",
+  "document_a_renouveler_equipe",
+  "compte_suspendu",
+  "compte_reactive",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -88,6 +96,16 @@ const REFUSAL_REASONS: Record<string, string> = {
   autre: "autre raison",
 };
 
+/** Documents du dossier (enum public.document_type), au fil d'une phrase. */
+const DOCUMENTS: Record<string, string> = {
+  kbis: "extrait Kbis",
+  decennale: "attestation d'assurance décennale",
+  rc_pro: "attestation de responsabilité civile professionnelle",
+  identite: "pièce d'identité du dirigeant",
+};
+/** Assurances obligatoires : leur expiration suspend l'artisan (F-51). */
+const INSURANCES = ["decennale", "rc_pro"];
+
 function text(data: Record<string, unknown>, key: string): string | null {
   const value = data[key];
   return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
@@ -105,6 +123,29 @@ function amount(data: Record<string, unknown>, key: string): string | null {
 function count(data: Record<string, unknown>, key: string): number {
   const value = data[key];
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
+/** Entier positif ou nul (jours restants), sinon null. */
+function integer(data: Record<string, unknown>, key: string): number | null {
+  const value = data[key];
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+/** Date AAAA-MM-JJ → « jeudi 29 octobre ». */
+function dateDay(value: string | null): string | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : dayFormat.format(date);
+}
+
+/** Échéance d'un document : « aujourd'hui », « demain », « le jeudi 29 octobre (dans 20 jours) ». */
+function deadline(data: Record<string, unknown>): string {
+  const days = integer(data, "jours");
+  const day = dateDay(text(data, "date_fin"));
+  if (days === 0) return "aujourd'hui";
+  if (days === 1) return "demain";
+  if (day) return days === null ? `le ${day}` : `le ${day} (dans ${days}\u00a0jours)`;
+  return days === null ? "bientôt" : `dans ${days}\u00a0jours`;
 }
 
 function uuid(data: Record<string, unknown>, key: string): string | null {
@@ -666,6 +707,173 @@ export function notificationContent(
           label: "Lire la réponse",
           url: link(ticketId ? `/signalements/${ticketId}` : "/mon-espace"),
         },
+      };
+    }
+    case "dossier_valide": {
+      // F-50 : dossier validé ; visible seulement avec un abonnement et des paiements actifs (F-14).
+      const missing = [
+        data.abonnement === false && "choisir votre formule d'abonnement",
+        data.paiements === false && "activer vos paiements",
+      ].filter((step): step is string => typeof step === "string");
+      return {
+        subject: "Votre dossier MENAO est validé",
+        preview:
+          missing.length > 0
+            ? "Plus qu'une étape pour apparaître dans les recherches."
+            : "Votre profil est visible des particuliers de votre zone.",
+        title: "Bienvenue chez MENAO, votre dossier est validé !",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Bonne nouvelle : l'équipe MENAO a vérifié votre dossier et l'a validé.",
+          missing.length > 0
+            ? `Pour apparaître dans les recherches des particuliers, il vous reste à ${missing.join(" et à ")}.`
+            : "Votre profil est maintenant visible : les particuliers de votre zone peuvent vous envoyer leurs demandes de chantier.",
+        ],
+        quote: text(data, "motif"),
+        cta:
+          missing.length > 0
+            ? { label: "Terminer mon inscription", url: link("/pro/onboarding") }
+            : { label: "Accéder à mon espace pro", url: link("/pro/tableau-de-bord") },
+      };
+    }
+    case "dossier_refuse": {
+      const motif = text(data, "motif");
+      return {
+        subject: "Votre dossier MENAO n'a pas été validé",
+        preview: "Le motif et les étapes pour le corriger sont dans votre espace.",
+        title: "Votre dossier n'a pas été validé",
+        paragraphs: [
+          hello(ctx.firstName),
+          motif
+            ? "L'équipe MENAO a examiné votre dossier et ne peut pas le valider en l'état. Voici son message :"
+            : "L'équipe MENAO a examiné votre dossier et ne peut pas le valider en l'état. Le motif est indiqué dans votre espace.",
+          "Vous pouvez corriger votre dossier et le renvoyer en vérification.",
+        ],
+        quote: motif,
+        cta: { label: "Modifier mon dossier", url: link("/pro/onboarding") },
+      };
+    }
+    case "dossier_complement": {
+      const motif = text(data, "motif");
+      return {
+        subject: "Complément demandé pour votre dossier MENAO",
+        preview: "Quelques éléments à compléter avant la validation.",
+        title: "Votre dossier est presque complet",
+        paragraphs: [
+          hello(ctx.firstName),
+          motif
+            ? "L'équipe MENAO a besoin d'un complément pour valider votre dossier :"
+            : "L'équipe MENAO a besoin d'un complément pour valider votre dossier. Le détail est indiqué dans votre espace.",
+          "Complétez votre dossier, puis renvoyez-le en vérification.",
+        ],
+        quote: motif,
+        cta: { label: "Compléter mon dossier", url: link("/pro/onboarding") },
+      };
+    }
+    case "document_refuse": {
+      // F-51 : document déposé pour un renouvellement, refusé par l'équipe.
+      const doc = DOCUMENTS[text(data, "document") ?? ""] ?? "document";
+      const motif = text(data, "motif");
+      return {
+        subject: `Document refusé : ${doc}`,
+        preview: "Déposez un nouveau document depuis votre espace.",
+        title: "Document refusé",
+        paragraphs: [
+          hello(ctx.firstName),
+          motif
+            ? `L'équipe MENAO n'a pas pu accepter le document déposé (${doc}). Voici son message :`
+            : `L'équipe MENAO n'a pas pu accepter le document déposé (${doc}).`,
+          "Déposez un nouveau document depuis votre espace pro : l'équipe le vérifiera rapidement.",
+        ],
+        quote: motif,
+        cta: { label: "Déposer un nouveau document", url: link("/pro/onboarding/documents") },
+      };
+    }
+    case "document_a_renouveler": {
+      // F-51 : relances à J-30 puis J-7 (spec F-41).
+      const type = text(data, "document") ?? "";
+      const doc = DOCUMENTS[type] ?? "document";
+      const insurance = INSURANCES.includes(type);
+      const days = integer(data, "jours");
+      const urgent = days !== null && days <= 7;
+      return {
+        subject: `${urgent ? "Urgent : votre" : "Votre"} ${doc} expire ${deadline(data)}`,
+        preview: insurance
+          ? "Déposez la nouvelle attestation pour rester visible des particuliers."
+          : "Déposez un document en cours de validité.",
+        title: urgent
+          ? "Plus que quelques jours pour renouveler votre document"
+          : "Pensez à renouveler votre document",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre ${doc} expire ${deadline(data)}.`,
+          insurance
+            ? "Déposez dès maintenant votre nouvelle attestation : sans document à jour à l'échéance, votre profil sera suspendu automatiquement et vous n'apparaîtrez plus dans les recherches des particuliers."
+            : "Déposez dès maintenant un document en cours de validité pour que votre dossier reste à jour.",
+          "L'équipe MENAO vérifie le nouveau document, qui remplace ensuite l'ancien.",
+        ],
+        quote: null,
+        cta: { label: "Déposer le nouveau document", url: link("/pro/onboarding/documents") },
+      };
+    }
+    case "document_a_renouveler_equipe": {
+      // F-51 : copie à l'équipe (assurances seulement), pour le suivi des échéances.
+      const doc = DOCUMENTS[text(data, "document") ?? ""] ?? "document";
+      const entreprise = text(data, "entreprise") ?? "Un artisan";
+      return {
+        subject: `Assurance à renouveler : ${entreprise}`,
+        preview: `${entreprise} : ${doc}, échéance ${deadline(data)}.`,
+        title: "Assurance à renouveler",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${entreprise} doit renouveler son ${doc}, qui expire ${deadline(data)}.`,
+          "L'artisan a été relancé par e-mail. Sans nouveau document validé à l'échéance, son profil sera suspendu automatiquement.",
+        ],
+        quote: null,
+        cta: { label: "Voir les échéances", url: link("/admin/surveillance") },
+      };
+    }
+    case "compte_suspendu": {
+      // F-51 : suspension automatique, assurance expirée sans renouvellement validé.
+      const documents = Array.isArray(data.documents)
+        ? data.documents.flatMap((d) =>
+            typeof d === "string" && DOCUMENTS[d] ? [DOCUMENTS[d]] : [],
+          )
+        : [];
+      return {
+        subject: "Votre profil MENAO est suspendu",
+        preview:
+          "Assurance expirée : déposez votre attestation à jour pour être de nouveau visible.",
+        title: "Votre profil est suspendu",
+        paragraphs: [
+          hello(ctx.firstName),
+          documents.length > 0
+            ? `Votre profil est suspendu car une assurance obligatoire n'est plus à jour : ${documents.join(", ")}.`
+            : "Votre profil est suspendu car une assurance obligatoire n'est plus à jour.",
+          "Vous n'apparaissez plus dans les recherches des particuliers. Vos chantiers en cours ne changent pas.",
+          "Déposez votre attestation à jour : dès que l'équipe MENAO l'a validée, la suspension est levée automatiquement.",
+        ],
+        quote: null,
+        cta: { label: "Déposer mon attestation à jour", url: link("/pro/onboarding/documents") },
+      };
+    }
+    case "compte_reactive": {
+      const visible = data.visible === true;
+      return {
+        subject: "Votre profil MENAO est de nouveau actif",
+        preview: visible
+          ? "Vous apparaissez de nouveau dans les recherches."
+          : "Assurances à jour : la suspension de votre profil est levée.",
+        title: "La suspension de votre profil est levée",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Votre nouvelle attestation a été validée : vos assurances sont à jour et la suspension de votre profil est levée.",
+          visible
+            ? "Vous apparaissez de nouveau dans les recherches des particuliers de votre zone."
+            : "Pour apparaître de nouveau dans les recherches, vérifiez votre formule et vos paiements dans votre espace pro.",
+        ],
+        quote: null,
+        cta: { label: "Accéder à mon espace pro", url: link("/pro/tableau-de-bord") },
       };
     }
   }

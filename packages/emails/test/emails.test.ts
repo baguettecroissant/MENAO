@@ -390,6 +390,115 @@ describe("contenu des notifications (F-41)", () => {
   });
 });
 
+describe("dossier et documents de l'artisan (F-50, F-51)", () => {
+  const pro = { ...ctx, firstName: "Noé" };
+
+  it("dossier validé : étapes restantes pour être visible, ou profil visible", () => {
+    const pending = notificationContent(
+      "dossier_valide",
+      { abonnement: false, paiements: false },
+      pro,
+    );
+    expect(pending.subject).toBe("Votre dossier MENAO est validé");
+    expect(pending.paragraphs[2]).toBe(
+      "Pour apparaître dans les recherches des particuliers, il vous reste à choisir votre formule d'abonnement et à activer vos paiements.",
+    );
+    expect(pending.cta).toEqual({
+      label: "Terminer mon inscription",
+      url: "https://menao.example/pro/onboarding",
+    });
+    const visible = notificationContent(
+      "dossier_valide",
+      { abonnement: true, paiements: true },
+      pro,
+    );
+    expect(visible.paragraphs[2]).toContain("Votre profil est maintenant visible");
+    expect(visible.cta).toEqual({
+      label: "Accéder à mon espace pro",
+      url: "https://menao.example/pro/tableau-de-bord",
+    });
+  });
+
+  it("dossier refusé ou complément demandé : message de l'équipe en citation", () => {
+    const refused = notificationContent("dossier_refuse", { motif: "Kbis illisible" }, pro);
+    expect(refused.subject).toBe("Votre dossier MENAO n'a pas été validé");
+    expect(refused.quote).toBe("Kbis illisible");
+    expect(refused.cta.url).toBe("https://menao.example/pro/onboarding");
+    const more = notificationContent("dossier_complement", { motif: "RC Pro à jour" }, pro);
+    expect(more.subject).toBe("Complément demandé pour votre dossier MENAO");
+    expect(more.quote).toBe("RC Pro à jour");
+    expect(more.cta.label).toBe("Compléter mon dossier");
+  });
+
+  it("échéance d'un document : J-30, J-7 (urgent), suspension annoncée pour les assurances", () => {
+    const soon = notificationContent(
+      "document_a_renouveler",
+      { document: "decennale", date_fin: "2026-10-29", jours: 20 },
+      pro,
+    );
+    expect(soon.subject).toBe(
+      "Votre attestation d'assurance décennale expire le jeudi 29 octobre (dans 20\u00a0jours)",
+    );
+    expect(soon.title).toBe("Pensez à renouveler votre document");
+    expect(soon.paragraphs[2]).toContain("votre profil sera suspendu automatiquement");
+    expect(soon.cta).toEqual({
+      label: "Déposer le nouveau document",
+      url: "https://menao.example/pro/onboarding/documents",
+    });
+    const urgent = notificationContent(
+      "document_a_renouveler",
+      { document: "rc_pro", date_fin: "2026-10-16", jours: 5 },
+      pro,
+    );
+    expect(urgent.subject).toBe(
+      "Urgent : votre attestation de responsabilité civile professionnelle expire le vendredi 16 octobre (dans 5\u00a0jours)",
+    );
+    const tomorrow = notificationContent(
+      "document_a_renouveler",
+      { document: "identite", date_fin: "2026-10-12", jours: 1 },
+      pro,
+    );
+    expect(tomorrow.subject).toBe("Urgent : votre pièce d'identité du dirigeant expire demain");
+    expect(tomorrow.paragraphs[2]).not.toContain("suspendu");
+  });
+
+  it("copie à l'équipe : entreprise, document, échéance et lien vers le suivi", () => {
+    const team = notificationContent(
+      "document_a_renouveler_equipe",
+      { document: "decennale", date_fin: "2026-10-29", jours: 20, entreprise: "I.P.M" },
+      { ...ctx, firstName: "Alex" },
+    );
+    expect(team.subject).toBe("Assurance à renouveler : I.P.M");
+    expect(team.paragraphs[1]).toBe(
+      "I.P.M doit renouveler son attestation d'assurance décennale, qui expire le jeudi 29 octobre (dans 20\u00a0jours).",
+    );
+    expect(team.cta).toEqual({
+      label: "Voir les échéances",
+      url: "https://menao.example/admin/surveillance",
+    });
+  });
+
+  it("suspension, refus d'un renouvellement et levée de la suspension", () => {
+    const suspended = notificationContent("compte_suspendu", { documents: ["decennale"] }, pro);
+    expect(suspended.subject).toBe("Votre profil MENAO est suspendu");
+    expect(suspended.paragraphs[1]).toBe(
+      "Votre profil est suspendu car une assurance obligatoire n'est plus à jour : attestation d'assurance décennale.",
+    );
+    const refused = notificationContent(
+      "document_refuse",
+      { document: "decennale", motif: "Attestation illisible" },
+      pro,
+    );
+    expect(refused.subject).toBe("Document refusé : attestation d'assurance décennale");
+    expect(refused.quote).toBe("Attestation illisible");
+    const back = notificationContent("compte_reactive", { visible: true }, pro);
+    expect(back.preview).toBe("Vous apparaissez de nouveau dans les recherches.");
+    expect(notificationContent("compte_reactive", { visible: false }, pro).paragraphs[2]).toContain(
+      "vérifiez votre formule et vos paiements",
+    );
+  });
+});
+
 describe("rendu HTML et texte", () => {
   it("HTML complet, en français, avec le bouton et l'aperçu ; texte avec le lien", () => {
     const email = renderNotification(
