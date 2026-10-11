@@ -3,7 +3,6 @@ import {
   APPOINTMENT_MAX_DAYS_AHEAD,
   appointmentInputError,
   parisLocalToDate,
-  upcomingAppointments,
 } from "../src/appointment";
 import { buildIcs } from "../src/ics";
 
@@ -32,19 +31,6 @@ describe("rendez-vous (F-17, F-18)", () => {
     expect(appointmentInputError("2026-10-11", "24:00", now)).toBe("invalide");
     expect(appointmentInputError("11/10/2026", "10:00", now)).toBe("invalide");
     expect(appointmentInputError("", "", now)).toBe("invalide");
-  });
-
-  it("prochains rendez-vous : à venir, du plus proche au plus lointain", () => {
-    const now = new Date("2026-10-10T08:00:00Z");
-    const rows = [
-      { id: "passe", status: "rdv_planifie", appointmentAt: "2026-10-09T08:00:00Z" },
-      { id: "loin", status: "rdv_planifie", appointmentAt: "2026-11-20T08:00:00Z" },
-      { id: "proche", status: "rdv_planifie", appointmentAt: "2026-10-12T08:00:00Z" },
-      { id: "annule", status: "annule", appointmentAt: "2026-10-11T08:00:00Z" },
-      { id: "sans", status: "rdv_planifie", appointmentAt: null },
-    ] as const;
-    expect(upcomingAppointments(rows, now).map((r) => r.id)).toEqual(["proche", "loin"]);
-    expect(upcomingAppointments(rows, now, 1).map((r) => r.id)).toEqual(["proche"]);
   });
 });
 
@@ -80,5 +66,32 @@ describe("fichier agenda .ics (F-44)", () => {
     }
     expect(ics.replace(/\r\n /g, "")).toContain(`SUMMARY:${summary}\r\n`);
     expect(ics).not.toContain("LOCATION");
+  });
+});
+
+describe("agenda à venir du tableau de bord (F-16)", () => {
+  it("réunit les visites planifiées et les démarrages, quel que soit le stade du chantier", async () => {
+    const { upcomingAgenda } = await import("../src/appointment");
+    const now = new Date("2026-10-11T12:00:00Z");
+    const rows = [
+      // Devis signé, acompte payé : la visite à venir et le démarrage restent affichés.
+      {
+        id: "a",
+        status: "planifie",
+        appointmentAt: "2026-10-13T13:20:00Z",
+        startAt: "2026-10-22T06:00:00Z",
+      },
+      { id: "b", status: "rdv_planifie", appointmentAt: "2026-10-12T08:00:00Z", startAt: null },
+      // Visite passée, chantier annulé, démarrage passé : ignorés.
+      { id: "c", status: "devis_envoye", appointmentAt: "2026-10-10T08:00:00Z", startAt: null },
+      { id: "d", status: "annule", appointmentAt: "2026-10-14T08:00:00Z", startAt: null },
+      { id: "e", status: "en_cours", appointmentAt: null, startAt: "2026-10-09T06:00:00Z" },
+    ];
+    expect(upcomingAgenda(rows, now).map((e) => `${e.kind}:${e.row.id}`)).toEqual([
+      "visite:b",
+      "visite:a",
+      "demarrage:a",
+    ]);
+    expect(upcomingAgenda(rows, now, 2)).toHaveLength(2);
   });
 });
