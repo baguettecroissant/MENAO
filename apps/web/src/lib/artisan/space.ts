@@ -2,9 +2,11 @@ import "server-only";
 import {
   MONITORED_DOCUMENT_TYPES,
   artisanVisibility,
+  availabilityStatus,
   clientsAwaitingQuote,
   expiryStatus,
   homePathForRole,
+  parisToday,
   requestsAwaitingAnswer,
   roleFromAppMetadata,
   subscriptionGrantsAccess,
@@ -31,26 +33,41 @@ export const requireProSpace = cache(async () => {
 
   const { data: artisan } = await supabase
     .from("artisans")
-    .select("id, status, suspension_reason, connect_charges_enabled")
+    .select("id, status, suspension_reason, connect_charges_enabled, paused, available_from")
     .eq("user_id", auth.claims.sub)
     .single();
   if (!artisan || (artisan.status !== "valide" && artisan.status !== "suspendu")) {
     redirect("/pro/onboarding");
   }
 
-  const [{ data: profile }, { data: subscription }, { data: documents }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("first_name, last_name, avatar_path")
-      .eq("user_id", auth.claims.sub)
-      .single(),
-    supabase.from("subscriptions").select("status").eq("artisan_id", artisan.id).maybeSingle(),
-    supabase
-      .from("artisan_documents")
-      .select("type, status, date_fin")
-      .eq("artisan_id", artisan.id)
-      .in("status", ["valide", "en_attente"]),
-  ]);
+  const today = parisToday();
+  const [{ data: profile }, { data: subscription }, { data: documents }, { data: absences }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("first_name, last_name, avatar_path")
+        .eq("user_id", auth.claims.sub)
+        .single(),
+      supabase.from("subscriptions").select("status").eq("artisan_id", artisan.id).maybeSingle(),
+      supabase
+        .from("artisan_documents")
+        .select("type, status, date_fin")
+        .eq("artisan_id", artisan.id)
+        .in("status", ["valide", "en_attente"]),
+      // F-44 : absences en cours et à venir (statut du menu, agenda, disponibilités).
+      supabase
+        .from("artisan_absences")
+        .select("id, starts_on, ends_on, label")
+        .eq("artisan_id", artisan.id)
+        .gte("ends_on", today)
+        .order("starts_on"),
+    ]);
+  const upcomingAbsences = (absences ?? []).map((a) => ({
+    id: a.id,
+    startsOn: a.starts_on,
+    endsOn: a.ends_on,
+    label: a.label,
+  }));
   // F-51 : documents surveillés arrivant à échéance (ou expirés) sans renouvellement déposé.
   const documentsToRenew = MONITORED_DOCUMENT_TYPES.filter((type) => {
     const current = documents?.find((d) => d.type === type && d.status === "valide");
@@ -76,6 +93,16 @@ export const requireProSpace = cache(async () => {
       ),
       connectChargesEnabled: artisan.connect_charges_enabled,
     }),
+    today,
+    paused: artisan.paused,
+    availableFrom: artisan.available_from,
+    absences: upcomingAbsences,
+    availability: availabilityStatus({
+      paused: artisan.paused,
+      availableFrom: artisan.available_from,
+      absences: upcomingAbsences,
+      today,
+    }),
   };
 });
 
@@ -91,7 +118,7 @@ export const artisanActivity = cache(async () => {
 
 /**
  * Coque de l'espace pro (ADR 0035) : compte, compteurs du menu (demandes à traiter, clients en
- * attente de devis, messages non lus) et visibilité de l'artisan.
+ * attente de devis, messages non lus), visibilité de l'artisan et statut de disponibilité (F-44).
  */
 export const getProShell = cache(async () => {
   const space = await requireProSpace();
@@ -116,6 +143,6 @@ export const getProShell = cache(async () => {
       ),
       messages: unread ?? 0,
     },
-    visibility: space.visibility,
+    visibility: { ...space.visibility, availability: space.availability },
   };
 });

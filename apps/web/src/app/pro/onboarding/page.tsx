@@ -1,11 +1,11 @@
-import { ONBOARDING_STEPS, parisToday } from "@menao/core";
+import { ONBOARDING_STEPS } from "@menao/core";
+import { CalendarDays } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Alert, Card } from "@/components/ui";
+import { Alert, ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { AvailabilityForm } from "./availability-form";
 import { SubmitOnboarding } from "./submit-onboarding";
 
 const t = fr.pro.onboarding;
@@ -54,14 +54,15 @@ export default async function OnboardingIndexPage() {
         </Link>
       )}
       {(artisan.status === "valide" || artisan.status === "suspendu") && (
-        <Card>
-          <h2 className="mb-2 text-lg font-medium">{t.availability.title}</h2>
-          <p className="mb-4 text-muted-foreground">{t.availability.intro}</p>
-          <AvailabilityForm
-            paused={artisan.paused}
-            availableFrom={artisan.available_from}
-            today={parisToday()}
-          />
+        <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-medium">{t.availability.title}</h2>
+            <p className="text-muted-foreground">{t.availability.intro}</p>
+          </div>
+          <ButtonLink href="/pro/agenda/disponibilites" variant="outline" className="shrink-0">
+            <CalendarDays aria-hidden="true" className="size-4" />
+            {t.availability.manage}
+          </ButtonLink>
         </Card>
       )}
       {artisan.status === "suspendu" && artisan.suspension_reason !== "documents_expires" && (

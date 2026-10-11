@@ -1,10 +1,11 @@
 "use client";
 
-import type { VisibilityCondition } from "@menao/core";
-import { Eye, EyeOff, LifeBuoy } from "lucide-react";
+import type { AvailabilityStatus, VisibilityCondition } from "@menao/core";
+import { CalendarClock, Eye, EyeOff, LifeBuoy, Palmtree, CirclePause } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { availabilityLabel } from "@/components/agenda/availability-label";
 import { Logo, LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import type { ShellAccount } from "@/lib/client/shell";
@@ -21,7 +22,14 @@ import {
 
 const t = fr.appShell;
 
-export type Visibility = { visible: boolean; missing: VisibilityCondition[] };
+export type Visibility = {
+  visible: boolean;
+  missing: VisibilityCondition[];
+  /** Statut de disponibilité (F-44) : pause et congés retirent l'artisan des recherches. */
+  availability?: AvailabilityStatus;
+};
+
+const AVAILABILITY_HREF = "/pro/agenda/disponibilites";
 
 /** Étape de « Mon dossier » qui lève chaque condition de visibilité. */
 const MISSING_HREF: Record<VisibilityCondition, string> = {
@@ -177,15 +185,45 @@ function NavLink({
 
 function VisibilityCard({ visibility }: { visibility: Visibility }) {
   const missingLabels = fr.pro.onboarding.visibility.missing;
+  const availability = visibility.availability;
+  if (visibility.visible && (availability?.kind === "pause" || availability?.kind === "conges")) {
+    const Icon = availability.kind === "pause" ? CirclePause : Palmtree;
+    return (
+      <Link
+        href={AVAILABILITY_HREF}
+        className="mx-3 mb-3 block rounded-card bg-warning-soft px-3 py-2.5 transition-colors hover:bg-warning-soft/70 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium text-warning">
+          <Icon aria-hidden="true" className="size-4 shrink-0" />
+          {availabilityLabel(availability)}
+        </span>
+        <span className="mt-0.5 block text-xs leading-snug text-foreground/75">
+          {t.availability.hiddenText}
+        </span>
+        <span className="mt-1.5 block text-xs font-medium text-warning underline underline-offset-2">
+          {t.availability.manage}
+        </span>
+      </Link>
+    );
+  }
   if (visibility.visible) {
     return (
-      <p
+      <Link
+        href={AVAILABILITY_HREF}
         title={t.visibility.visibleText}
-        className="mx-3 mb-3 flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-xs font-medium text-success"
+        className="mx-3 mb-3 flex flex-col gap-0.5 rounded-xl bg-success-soft px-3 py-2 text-xs font-medium text-success transition-colors hover:bg-success-soft/70 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
       >
-        <Eye aria-hidden="true" className="size-4 shrink-0" />
-        {t.visibility.visible}
-      </p>
+        <span className="flex items-center gap-2">
+          <Eye aria-hidden="true" className="size-4 shrink-0" />
+          {t.visibility.visible}
+        </span>
+        {availability?.kind === "a_partir_du" && (
+          <span className="flex items-center gap-2 font-normal text-foreground/75">
+            <CalendarClock aria-hidden="true" className="size-4 shrink-0 text-primary" />
+            {availabilityLabel(availability)}
+          </span>
+        )}
+      </Link>
     );
   }
   return (
