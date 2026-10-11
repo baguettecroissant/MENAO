@@ -15,6 +15,7 @@ import {
   llmConfig,
   logAiRuns,
   quoteModel,
+  reasoningFor,
   scrubNames,
   withinHourlyLimits,
   type AiRun,
@@ -133,13 +134,18 @@ Deno.serve(
     };
     const started = Date.now();
     try {
+      const reasoning = reasoningFor(model);
       const response = await llm.client.messages.create({
         model,
-        max_tokens: 2500,
-        thinking: { type: "disabled" },
+        // Marge pour le raisonnement adaptatif (Sonnet) en plus des lignes du devis.
+        max_tokens: 8000,
+        thinking: reasoning.thinking,
         system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: `<dictee>\n${clean}\n</dictee>` }],
-        output_config: { format: { type: "json_schema", schema: quoteFromVoiceJsonSchema() } },
+        output_config: {
+          ...(reasoning.effort ? { effort: reasoning.effort } : {}),
+          format: { type: "json_schema", schema: quoteFromVoiceJsonSchema() },
+        },
       });
       run.latency_ms = Date.now() - started;
       run.input_tokens = response.usage?.input_tokens ?? null;
