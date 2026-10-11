@@ -2839,7 +2839,10 @@ export type Database = {
       };
       my_response_stats: {
         Args: Record<PropertyKey, never>;
-        Returns: { minutes: number; responses: number }[];
+        Returns: {
+          minutes: number;
+          responses: number;
+        }[];
       };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
