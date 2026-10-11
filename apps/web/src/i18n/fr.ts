@@ -1415,6 +1415,29 @@ export const fr = {
       help: "Aide",
     },
   },
+  appShell: {
+    skip: "Aller au contenu",
+    collapse: "Réduire le menu",
+    expand: "Déplier le menu",
+    openMenu: "Ouvrir le menu",
+    closeMenu: "Fermer le menu",
+    spaces: { client: "Espace client", pro: "Espace pro", admin: "Back-office" },
+    nav: {
+      client: "Navigation de mon espace",
+      pro: "Navigation de l'espace pro",
+      admin: "Navigation du back-office",
+    },
+    sections: { activity: "Activité", account: "Mon compte", tools: "Pilotage" },
+    help: "Aide et support",
+    toDo: (n: number) => (n === 1 ? "1 élément à traiter" : `${n} éléments à traiter`),
+    badge: (n: number) => (n > 99 ? "99+" : String(n)),
+    visibility: {
+      visible: "Profil visible",
+      visibleText: "Les particuliers de votre zone peuvent vous envoyer leurs demandes.",
+      hidden: "Profil masqué",
+      hiddenText: "Pour apparaître dans les recherches, il reste :",
+    },
+  },
   clientDocuments: {
     title: "Mes documents",
     subtitle: "Devis signés, factures et procès-verbaux de vos chantiers.",
@@ -2319,6 +2342,8 @@ export const fr = {
     onboarding: {
       title: "Mon inscription",
       intro: "Complétez chaque étape : vos informations sont enregistrées au fur et à mesure.",
+      fileIntro:
+        "Votre entreprise, vos métiers, votre zone, vos documents, votre profil public, vos paiements et votre formule.",
       stepper: "Étapes de l'inscription",
       steps: {
         entreprise: "Entreprise",
