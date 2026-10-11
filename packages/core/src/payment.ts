@@ -31,3 +31,22 @@ export function paymentStatusFromCheckout(
       return null;
   }
 }
+
+const parisMonth = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Paris",
+  year: "numeric",
+  month: "2-digit",
+});
+
+/** Montant encaissé pendant le mois en cours, heure de Paris (paiements reçus, en centimes). */
+export function collectedThisMonth(
+  payments: readonly { amountCents: number; paidAt: string | null }[],
+  now: Date,
+): number {
+  const month = parisMonth.format(now);
+  return payments.reduce(
+    (sum, p) =>
+      p.paidAt && parisMonth.format(new Date(p.paidAt)) === month ? sum + p.amountCents : sum,
+    0,
+  );
+}
