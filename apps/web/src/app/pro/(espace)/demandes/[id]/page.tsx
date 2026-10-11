@@ -7,6 +7,7 @@ import { ExpertiseButton } from "@/components/pro/expertise-button";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { appointmentAgenda } from "@/lib/artisan/agenda";
 import { getRequestDetail } from "@/lib/artisan/requests";
 import { requireProSpace } from "@/lib/artisan/space";
 import { OpportunityActions } from "./opportunity-actions";
@@ -28,15 +29,17 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
   if (!r) notFound();
   if (r.chantier_id) redirect(`/pro/chantiers/${r.chantier_id}` as Route);
 
-  const [{ data: signed }, { data: trades }] = await Promise.all([
+  const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
+  // En attente de réponse, ou acceptée avant la phase 3 sans rendez-vous (ADR 0016).
+  const open = (r.status === "envoyee" && left !== null) || r.status === "acceptee";
+  const [{ data: signed }, { data: trades }, agenda] = await Promise.all([
     r.photos.length
       ? supabase.storage.from("project-photos").createSignedUrls(r.photos, 3600)
       : Promise.resolve({ data: [] }),
     supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+    // F-44 : créneaux libres et avertissements du tiroir « Fixer un rendez-vous ».
+    open ? appointmentAgenda() : undefined,
   ]);
-  const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
-  // En attente de réponse, ou acceptée avant la phase 3 sans rendez-vous (ADR 0016).
-  const open = (r.status === "envoyee" && left !== null) || r.status === "acceptee";
 
   return (
     <main className="flex flex-1 flex-col">
@@ -82,6 +85,7 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
             clientFirstName={r.client.first_name}
             minDate={parisToday()}
             canRefuse={r.status === "envoyee"}
+            agenda={agenda}
           />
         </StickyActions>
       )}

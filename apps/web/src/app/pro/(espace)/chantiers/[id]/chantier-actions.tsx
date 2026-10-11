@@ -2,11 +2,13 @@
 
 import { Calendar, Clock, NotebookPen, Plus } from "lucide-react";
 import { useActionState, useCallback, useState, type MouseEvent } from "react";
+import { SlotWarnings } from "@/components/agenda/slot-warnings";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
 import { PhotoUpload } from "@/components/pro/chantier-journal-forms";
 import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import {
   cancelChantier,
   confirmChantierStart,
@@ -38,11 +40,13 @@ export function RescheduleButton({
   minDate,
   date,
   time,
+  agenda,
 }: {
   chantierId: string;
   minDate: string;
   date: string;
   time: string;
+  agenda?: AppointmentAgenda;
 }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -63,6 +67,7 @@ export function RescheduleButton({
           defaultDate={date}
           defaultTime={time}
           onSuccess={close}
+          agenda={agenda}
         />
       </Drawer>
     </>
@@ -192,17 +197,22 @@ export function ChantierStartPanel({
   date,
   time,
   hint,
+  agenda,
 }: {
   chantierId: string;
   minDate: string;
   date?: string;
   time: string;
   hint?: string;
+  /** F-44 : avertissements (absence, hors horaires, autre élément au même moment). */
+  agenda?: AppointmentAgenda;
 }) {
   const [state, formAction, pending] = useActionState(
     confirmChantierStart.bind(null, chantierId),
     initialFormState,
   );
+  const [startDate, setStartDate] = useState(date ?? "");
+  const [startTime, setStartTime] = useState(time);
   const dateError = state.fieldErrors?.date?.[0];
   const timeError = state.fieldErrors?.time?.[0];
   return (
@@ -225,7 +235,8 @@ export function ChantierStartPanel({
               type="date"
               required
               min={minDate}
-              defaultValue={state.values?.date ?? date}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               aria-invalid={dateError ? true : undefined}
               aria-describedby={dateError ? "start-date-error" : undefined}
               onClick={openPicker}
@@ -246,7 +257,8 @@ export function ChantierStartPanel({
               type="time"
               required
               step={300}
-              defaultValue={state.values?.time ?? time}
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
               aria-invalid={timeError ? true : undefined}
               aria-describedby={timeError ? "start-time-error" : undefined}
               onClick={openPicker}
@@ -256,6 +268,7 @@ export function ChantierStartPanel({
         </div>
         {dateError && <FieldError id="start-date-error">{dateError}</FieldError>}
         {timeError && <FieldError id="start-time-error">{timeError}</FieldError>}
+        {agenda && <SlotWarnings date={startDate} time={startTime} agenda={agenda} />}
         {hint && <Hint>{hint}</Hint>}
         <Button type="submit" size="lg" disabled={pending}>
           {tf.confirm}
@@ -271,11 +284,13 @@ export function EditChantierStartButton({
   minDate,
   date,
   time,
+  agenda,
 }: {
   chantierId: string;
   minDate: string;
   date: string;
   time: string;
+  agenda?: AppointmentAgenda;
 }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -298,6 +313,7 @@ export function EditChantierStartButton({
           dateLabel={tf.startDate}
           timeLabel={tf.startTime}
           onSuccess={close}
+          agenda={agenda}
         />
       </Drawer>
     </>

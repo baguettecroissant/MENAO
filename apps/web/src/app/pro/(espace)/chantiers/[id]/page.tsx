@@ -10,6 +10,7 @@ import { RequestBlocks } from "@/components/pro/request-blocks";
 import { SentQuoteBlock } from "@/components/pro/sent-quote";
 import { Alert, ButtonLink, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { appointmentAgenda } from "@/lib/artisan/agenda";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
 import { formatDay, formatDayLong, formatTime, parisInputValues } from "@/lib/format";
@@ -106,6 +107,10 @@ export default async function ChantierPage({
   const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const planned = status === "rdv_planifie" && appointment !== null;
+  // F-44 : créneaux libres et avertissements du tiroir « Modifier le rendez-vous ».
+  const agenda = planned
+    ? await appointmentAgenda({ excludeChantierId: c.chantier.id })
+    : undefined;
   const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
 
   return (
@@ -126,6 +131,7 @@ export default async function ChantierPage({
                 chantierId={c.chantier.id}
                 minDate={parisToday()}
                 {...parisInputValues(appointment.starts_at)}
+                agenda={agenda}
               />
             )}
           </div>

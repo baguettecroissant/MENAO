@@ -6,6 +6,7 @@ import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
 import { Alert, Button, FieldError, RadioGroup, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import { fixAppointment } from "@/lib/artisan/chantier-actions";
 import { refuseRequest } from "@/lib/artisan/request-actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -20,11 +21,14 @@ export function OpportunityActions({
   clientFirstName,
   minDate,
   canRefuse,
+  agenda,
 }: {
   requestId: string;
   clientFirstName: string | null;
   minDate: string;
   canRefuse: boolean;
+  /** F-44 : créneaux libres proposés et avertissements. */
+  agenda?: AppointmentAgenda;
 }) {
   const [panel, setPanel] = useState<"rendez-vous" | "refus" | null>(null);
   const close = useCallback(() => setPanel(null), []);
@@ -57,6 +61,7 @@ export function OpportunityActions({
           submitLabel={a.fixSubmit}
           minDate={minDate}
           hint={a.fixHint}
+          agenda={agenda}
         />
       </Drawer>
 
