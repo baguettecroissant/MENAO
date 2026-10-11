@@ -117,6 +117,16 @@ createServer(async (req, res) => {
   const body = await readJson(req);
 
   if (req.method === "POST" && url.pathname === "/v1/messages") {
+    // Comme la vraie API : Sonnet 5.5 refuse le raisonnement désactivé.
+    if (/sonnet/.test(body?.model ?? "") && body?.thinking?.type === "disabled") {
+      return send(400, {
+        type: "error",
+        error: {
+          type: "invalid_request_error",
+          message: "Reasoning is mandatory for this endpoint and cannot be disabled.",
+        },
+      });
+    }
     const content = body?.messages?.[0]?.content;
     const text = typeof content === "string" ? content : JSON.stringify(content ?? "");
     return send(200, {
