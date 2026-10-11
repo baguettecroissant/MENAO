@@ -19,8 +19,10 @@ test("paiements Stripe Connect : configuration, compte actif, artisan visible", 
     page.getByText("Votre profil n'est pas encore visible des particuliers"),
   ).toBeVisible();
   await page.goto("/pro/onboarding");
-  await expect(page.getByText("un compte de paiement actif")).toBeVisible();
-  await expect(page.getByText("un abonnement actif")).toHaveCount(0);
+  // Contenu de la page (le menu latéral répète l'état de visibilité, ADR 0035).
+  const main = page.getByRole("main");
+  await expect(main.getByText("un compte de paiement actif")).toBeVisible();
+  await expect(main.getByText("un abonnement actif")).toHaveCount(0);
 
   // Reprise de la configuration : redirection vers Stripe (simulée)
   await page.goto("/pro/onboarding/paiements");

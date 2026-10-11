@@ -38,3 +38,11 @@ export function timeLeft(deadline: Date, now: Date): { hours: number; minutes: n
   const minutes = Math.floor(ms / 60_000);
   return { hours: Math.floor(minutes / 60), minutes: minutes % 60 };
 }
+
+/** Demandes envoyées à l'artisan et encore ouvertes (non expirées) : à accepter ou à refuser. */
+export function requestsAwaitingAnswer<T extends { status: string; expires_at: string }>(
+  rows: readonly T[],
+  now: Date,
+): T[] {
+  return rows.filter((r) => r.status === "envoyee" && new Date(r.expires_at) > now);
+}

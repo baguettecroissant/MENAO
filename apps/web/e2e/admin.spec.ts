@@ -58,7 +58,8 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
     "Dossier validé",
   );
 
-  // Côté artisan : dossier validé
+  // Côté artisan : dossier validé. Déconnexion depuis le menu du compte (ADR 0035).
+  await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("button", { name: "Me déconnecter" }).click();
   await expect(page).toHaveURL("/");
   await signIn(page, "dossier@example.test");

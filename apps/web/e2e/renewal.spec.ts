@@ -32,10 +32,9 @@ test("renouvellement d'une assurance qui expire, validé par un admin", async ({
     decennale.getByText("Renouvellement · Déposé, en attente de vérification"),
   ).toBeVisible();
   await expect(decennale.getByText("Document en cours · Vérifié")).toBeVisible();
-  await page
-    .getByRole("button", { name: "Me déconnecter" })
-    .click()
-    .catch(() => undefined);
+  // « Mon dossier » d'un artisan validé : déconnexion depuis le menu du compte (ADR 0035).
+  await page.getByRole("button", { name: "Mon compte" }).click();
+  await page.getByRole("button", { name: "Me déconnecter" }).click();
 
   // Admin : « À surveiller », puis validation du renouvellement
   await page.context().clearCookies();

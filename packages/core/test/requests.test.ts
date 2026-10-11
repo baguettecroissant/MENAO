@@ -32,3 +32,18 @@ describe("demandes de chantier (F-11, F-17)", () => {
     expect(timeLeft(deadline, new Date("2026-10-12T00:00:00Z"))).toBeNull();
   });
 });
+
+describe("demandes à traiter par l'artisan (compteur du menu)", () => {
+  it("compte les demandes envoyées et encore ouvertes", async () => {
+    const { requestsAwaitingAnswer } = await import("../src/requests");
+    const now = new Date("2026-10-11T12:00:00Z");
+    const rows = [
+      { status: "envoyee", expires_at: "2026-10-12T12:00:00Z" },
+      { status: "envoyee", expires_at: "2026-10-11T11:59:00Z" },
+      { status: "acceptee", expires_at: "2026-10-12T12:00:00Z" },
+      { status: "refusee", expires_at: "2026-10-12T12:00:00Z" },
+    ];
+    expect(requestsAwaitingAnswer(rows, now)).toEqual([rows[0]]);
+    expect(requestsAwaitingAnswer([], now)).toEqual([]);
+  });
+});

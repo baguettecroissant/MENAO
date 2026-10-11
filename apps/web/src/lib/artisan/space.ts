@@ -2,10 +2,13 @@ import "server-only";
 import {
   MONITORED_DOCUMENT_TYPES,
   artisanVisibility,
+  clientsAwaitingQuote,
   expiryStatus,
   homePathForRole,
+  requestsAwaitingAnswer,
   roleFromAppMetadata,
   subscriptionGrantsAccess,
+  type ChantierStatus,
   type SubscriptionStatus,
 } from "@menao/core";
 import type { Route } from "next";
@@ -38,7 +41,7 @@ export const requireProSpace = cache(async () => {
   const [{ data: profile }, { data: subscription }, { data: documents }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("first_name, avatar_path")
+      .select("first_name, last_name, avatar_path")
       .eq("user_id", auth.claims.sub)
       .single(),
     supabase.from("subscriptions").select("status").eq("artisan_id", artisan.id).maybeSingle(),
@@ -62,6 +65,7 @@ export const requireProSpace = cache(async () => {
     suspensionReason: artisan.suspension_reason,
     documentsToRenew,
     firstName: profile?.first_name ?? null,
+    lastName: profile?.last_name ?? null,
     avatarUrl: profile?.avatar_path
       ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl
       : null,
@@ -72,5 +76,46 @@ export const requireProSpace = cache(async () => {
       ),
       connectChargesEnabled: artisan.connect_charges_enabled,
     }),
+  };
+});
+
+/** Demandes reçues et chantiers de l'artisan, partagés entre la coque et le tableau de bord. */
+export const artisanActivity = cache(async () => {
+  const { supabase } = await requireProSpace();
+  const [{ data: inbox }, { data: chantiers }] = await Promise.all([
+    supabase.rpc("artisan_inbox"),
+    supabase.rpc("artisan_chantiers"),
+  ]);
+  return { inbox: inbox ?? [], chantiers: chantiers ?? [] };
+});
+
+/**
+ * Coque de l'espace pro (ADR 0035) : compte, compteurs du menu (demandes à traiter, clients en
+ * attente de devis, messages non lus) et visibilité de l'artisan.
+ */
+export const getProShell = cache(async () => {
+  const space = await requireProSpace();
+  const [{ inbox, chantiers }, { data: unread }] = await Promise.all([
+    artisanActivity(),
+    space.supabase.rpc("my_unread_messages"),
+  ]);
+  return {
+    account: {
+      firstName: space.firstName,
+      lastName: space.lastName,
+      avatarUrl: space.avatarUrl,
+      role: "artisan" as const,
+    },
+    badges: {
+      requests: requestsAwaitingAnswer(inbox, new Date()).length,
+      quotes: clientsAwaitingQuote(
+        chantiers.map((c) => ({
+          status: c.status as ChantierStatus,
+          particulierId: c.particulier_id,
+        })),
+      ),
+      messages: unread ?? 0,
+    },
+    visibility: space.visibility,
   };
 });
