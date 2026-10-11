@@ -29,10 +29,10 @@ insert into public.artisan_zones (artisan_id, code_insee, nom) values ('ad200000
 insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end) values
   ('ad200000-0000-4000-8000-000000000001', 'base', 'cus_agenda_1', 'sub_agenda_1', 'trialing', now() + interval '30 days');
 insert into public.projects (id, user_id, status, description, summary, trade_code, ville_code_insee, ville_nom,
-  code_postal, adresse, ville_location, criteria_validated_at) values
+  code_postal, adresse, location, ville_location, criteria_validated_at) values
   ('ad300000-0000-4000-8000-000000000001', 'ad000000-0000-4000-8000-000000000001', 'demande_envoyee',
    'Fuite sous l''évier de la cuisine.', 'Fuite sous l''évier', 'plombier', '06088', 'Nice', '06000',
-   '1 Rue de l''Exemple 06000 Nice', 'SRID=4326;POINT(7.26 43.70)', now());
+   '1 Rue de l''Exemple 06000 Nice', 'SRID=4326;POINT(7.26 43.70)', 'SRID=4326;POINT(7.262 43.71)', now());
 insert into public.requests (id, project_id, artisan_id, particulier_id, contact_phone) values
   ('ad400000-0000-4000-8000-000000000001', 'ad300000-0000-4000-8000-000000000001',
    'ad200000-0000-4000-8000-000000000001', 'ad000000-0000-4000-8000-000000000001', '+33612345678');
