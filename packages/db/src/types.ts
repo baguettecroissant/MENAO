@@ -267,6 +267,7 @@ export type Database = {
           mime_type: string;
           numero: string | null;
           refusal_reason: string | null;
+          renewal_reminder_days: number | null;
           size_bytes: number;
           status: Database["public"]["Enums"]["document_status"];
           storage_path: string;
@@ -287,6 +288,7 @@ export type Database = {
           mime_type: string;
           numero?: string | null;
           refusal_reason?: string | null;
+          renewal_reminder_days?: number | null;
           size_bytes: number;
           status?: Database["public"]["Enums"]["document_status"];
           storage_path: string;
@@ -306,6 +308,7 @@ export type Database = {
           mime_type?: string;
           numero?: string | null;
           refusal_reason?: string | null;
+          renewal_reminder_days?: number | null;
           size_bytes?: number;
           status?: Database["public"]["Enums"]["document_status"];
           storage_path?: string;
@@ -3172,7 +3175,15 @@ export type Database = {
         | "nouveaux_messages"
         | "litige_ouvert"
         | "litige_clos"
-        | "reponse_support";
+        | "reponse_support"
+        | "dossier_valide"
+        | "dossier_refuse"
+        | "dossier_complement"
+        | "document_refuse"
+        | "document_a_renouveler"
+        | "document_a_renouveler_equipe"
+        | "compte_suspendu"
+        | "compte_reactive";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -3393,6 +3404,14 @@ export const Constants = {
         "litige_ouvert",
         "litige_clos",
         "reponse_support",
+        "dossier_valide",
+        "dossier_refuse",
+        "dossier_complement",
+        "document_refuse",
+        "document_a_renouveler",
+        "document_a_renouveler_equipe",
+        "compte_suspendu",
+        "compte_reactive",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
