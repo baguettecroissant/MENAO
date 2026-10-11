@@ -20,7 +20,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ jet
   const { data, error } = await createPublicClient().rpc("artisan_calendar_events", {
     p_token: token,
   });
-  if (error) return new Response(null, { status: error.code === "P0002" ? 404 : 503 });
+  if (error) return new Response(null, { status: error.code === "PT404" ? 404 : 503 });
 
   const stamp = new Date();
   const chantierLink = (id: string) => fr.agenda.feedDescription(`${SITE_URL}/pro/chantiers/${id}`);

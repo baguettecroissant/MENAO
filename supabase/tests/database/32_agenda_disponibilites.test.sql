@@ -249,10 +249,10 @@ select results_eq(
      where kind = 'visite' $$,
   $$ values (true) $$, 'abonnement : visite reliée à son chantier');
 select throws_ok(
-  $$ select * from public.artisan_calendar_events(repeat('0', 48)) $$, 'P0002', 'Lien d''abonnement inconnu',
+  $$ select * from public.artisan_calendar_events(repeat('0', 48)) $$, 'PT404', 'Lien d''abonnement inconnu',
   'jeton inconnu : refusé');
 select throws_ok(
-  $$ select * from public.artisan_calendar_events('pas-un-jeton') $$, 'P0002', 'Lien d''abonnement inconnu',
+  $$ select * from public.artisan_calendar_events('pas-un-jeton') $$, 'PT404', 'Lien d''abonnement inconnu',
   'jeton mal formé : refusé');
 reset role;
 select isnt((select last_read_at from public.artisan_calendar_feeds
@@ -266,7 +266,7 @@ reset role;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 set local role anon;
 select throws_ok(
-  $$ select * from public.artisan_calendar_events(current_setting('test.jeton')) $$, 'P0002', 'Lien d''abonnement inconnu',
+  $$ select * from public.artisan_calendar_events(current_setting('test.jeton')) $$, 'PT404', 'Lien d''abonnement inconnu',
   'ancien lien désactivé');
 reset role;
 select pg_temp.connecter('ad100000-0000-4000-8000-000000000001', 'artisan');
