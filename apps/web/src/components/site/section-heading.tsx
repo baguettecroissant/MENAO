@@ -1,4 +1,6 @@
-/** Titre de section de la page Espace Pro : surtitre, titre et chapeau. */
+import { frenchSpacing } from "@/lib/site/typography";
+
+/** Titre de section du site : surtitre, titre et chapeau. */
 export function SectionHeading({
   id,
   eyebrow,
@@ -28,13 +30,13 @@ export function SectionHeading({
         id={id}
         className="text-[1.75rem] leading-[1.15] font-medium tracking-tight text-balance sm:text-[2.25rem]"
       >
-        {title}
+        {frenchSpacing(title)}
       </h2>
       {subtitle && (
         <p
           className={`text-base text-pretty ${inverse ? "text-white/80" : "text-muted-foreground"}`}
         >
-          {subtitle}
+          {frenchSpacing(subtitle)}
         </p>
       )}
     </div>
