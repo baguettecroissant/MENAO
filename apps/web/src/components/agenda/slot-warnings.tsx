@@ -45,7 +45,11 @@ export function SlotWarnings({
   }, [agenda, date, time]);
 
   return (
-    <div aria-live="polite">
+    <>
+      {/* Annonce aux lecteurs d'écran, hors du flux : sans avertissement, aucun espace vide. */}
+      <p aria-live="polite" className="sr-only">
+        {warnings.join(" ")}
+      </p>
       {warnings.length > 0 && (
         <ul className="flex flex-col gap-1.5 rounded-input bg-warning-soft px-3.5 py-2.5 text-sm text-warning">
           {warnings.map((w) => (
@@ -56,6 +60,6 @@ export function SlotWarnings({
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 }
