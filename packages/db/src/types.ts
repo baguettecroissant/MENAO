@@ -2597,6 +2597,7 @@ export type Database = {
           occurred_at: string;
         }[];
       };
+      admin_artisan_activity: { Args: { p_artisan_id: string }; Returns: Json };
       admin_chantier_counts: { Args: { p_query?: string }; Returns: Json };
       admin_chantiers: {
         Args: {
@@ -2645,6 +2646,21 @@ export type Database = {
         Returns: undefined;
       };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_people: {
+        Args: { p_limit?: number; p_offset?: number; p_query?: string; p_role?: string };
+        Returns: {
+          artisan_id: string;
+          created_at: string;
+          email: string;
+          last_sign_in_at: string;
+          name: string;
+          phone: string;
+          role: string;
+          total: number;
+          user_id: string;
+        }[];
+      };
+      admin_people_counts: { Args: { p_query?: string }; Returns: Json };
       admin_project_counts: { Args: { p_query?: string }; Returns: Json };
       admin_projects: {
         Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
@@ -2663,6 +2679,7 @@ export type Database = {
           ville: string;
         }[];
       };
+      admin_reactivate_artisan: { Args: { p_artisan_id: string }; Returns: undefined };
       admin_review_document: {
         Args: {
           p_document_id: string;
@@ -2671,6 +2688,21 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_search: {
+        Args: { p_limit?: number; p_query: string };
+        Returns: {
+          detail: string;
+          id: string;
+          kind: string;
+          label: string;
+          tag: string;
+        }[];
+      };
+      admin_suspend_artisan: {
+        Args: { p_artisan_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      admin_user_account: { Args: { p_user_id: string }; Returns: Json };
       admin_user_emails: {
         Args: { p_user_ids: string[] };
         Returns: {

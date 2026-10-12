@@ -891,6 +891,22 @@ export function notificationContent(
       };
     }
     case "compte_suspendu": {
+      // Suspension décidée par l'équipe (ADR 0047) : motif cité, contact.
+      if (text(data, "par") === "equipe") {
+        return {
+          subject: "Votre profil MENAO est suspendu",
+          preview: "L'équipe MENAO a suspendu votre profil.",
+          title: "Votre profil est suspendu",
+          paragraphs: [
+            hello(ctx.firstName),
+            "L'équipe MENAO a suspendu votre profil, pour ce motif :",
+            "Vous n'apparaissez plus dans les recherches des particuliers. Vos chantiers en cours ne changent pas.",
+            "Pour en parler ou contester cette décision, écrivez à l'équipe MENAO.",
+          ],
+          quote: text(data, "motif"),
+          cta: { label: "Écrire à l'équipe MENAO", url: link("/contact") },
+        };
+      }
       // F-51 : suspension automatique, assurance expirée sans renouvellement validé.
       const documents = Array.isArray(data.documents)
         ? data.documents.flatMap((d) =>
@@ -924,7 +940,9 @@ export function notificationContent(
         title: "La suspension de votre profil est levée",
         paragraphs: [
           hello(ctx.firstName),
-          "Votre nouvelle attestation a été validée : vos assurances sont à jour et la suspension de votre profil est levée.",
+          text(data, "par") === "equipe"
+            ? "L'équipe MENAO a levé la suspension de votre profil."
+            : "Votre nouvelle attestation a été validée : vos assurances sont à jour et la suspension de votre profil est levée.",
           visible
             ? "Vous apparaissez de nouveau dans les recherches des particuliers de votre zone."
             : "Pour apparaître de nouveau dans les recherches, vérifiez votre formule et vos paiements dans votre espace pro.",

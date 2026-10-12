@@ -118,3 +118,35 @@ export async function setTicketStatus(formData: FormData): Promise<void> {
   await supabase.rpc("staff_set_ticket_status", { p_ticket_id: id.data, p_status: status.data });
   revalidatePath("/admin/tickets");
 }
+
+/**
+ * F-52 (ADR 0047) : suspension manuelle d'un artisan validé, motif obligatoire transmis à
+ * l'artisan. Règles, audit et notification : admin_suspend_artisan (base).
+ */
+export async function suspendArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "artisanId"));
+  if (!id.success) return { error: fr.errors.generic };
+  const values = { reason: text(formData, "reason") ?? "" };
+  if (!values.reason.trim()) {
+    return { fieldErrors: { reason: [fr.admin.suspension.reasonRequired] }, values };
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_suspend_artisan", {
+    p_artisan_id: id.data,
+    p_reason: values.reason,
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  refresh(id.data);
+  return { success: fr.admin.suspension.suspended };
+}
+
+/** Levée d'une suspension décidée par l'équipe, jamais sans assurances à jour (base). */
+export async function reactivateArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "artisanId"));
+  if (!id.success) return { error: fr.errors.generic };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_reactivate_artisan", { p_artisan_id: id.data });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
+  refresh(id.data);
+  return { success: fr.admin.suspension.reactivated };
+}

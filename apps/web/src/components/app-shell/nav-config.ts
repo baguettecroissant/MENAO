@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Star,
   UserRound,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
@@ -119,6 +120,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
         { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
         { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
+        { href: "/admin/personnes", label: fr.admin.nav.people, icon: Users },
         {
           href: "/admin/artisans",
           label: fr.admin.nav.artisans,

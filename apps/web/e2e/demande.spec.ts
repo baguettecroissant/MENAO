@@ -935,5 +935,46 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(
     admin.getByRole("link", { name: /^Ouvrir le chantier : Réparer une fuite/ }).first(),
   ).toBeVisible();
+
+  // Recherche globale (ADR 0047) : la barre du haut retrouve le client par son e-mail, sa fiche
+  // mène à sa demande.
+  const globalSearch = admin.getByRole("searchbox", { name: "Rechercher dans le back-office" });
+  await globalSearch.fill(email);
+  await globalSearch.press("Enter");
+  await expect(admin).toHaveURL(/\/admin\/recherche\?q=/);
+  await admin
+    .getByRole("region", { name: "Personnes" })
+    .getByRole("link", { name: "Dominique Test" })
+    .click();
+  await expect(admin).toHaveURL(new RegExp(`/admin/personnes/${UUID}$`));
+  await expect(admin.getByRole("heading", { name: "Dominique Test", level: 1 })).toBeVisible();
+  await expect(
+    admin
+      .getByRole("region", { name: "Demandes", exact: true })
+      .getByRole("link", { name: "Plombier · Nice" }),
+  ).toBeVisible();
+  await capture(admin, "admin-personne");
+
+  // Suspension manuelle d'un artisan (ADR 0047) : motif obligatoire, puis levée de la suspension.
+  await globalSearch.fill("VALIDE EXEMPLE");
+  await globalSearch.press("Enter");
+  await admin
+    .getByRole("region", { name: "Artisans" })
+    .getByRole("link", { name: "VALIDE EXEMPLE" })
+    .click();
+  const accountStatus = admin.getByRole("region", { name: "Statut du compte" });
+  await expect(admin.getByRole("region", { name: "Activité" })).toBeVisible();
+  await accountStatus.getByRole("button", { name: "Suspendre l'artisan" }).click();
+  await expect(accountStatus.getByText("Indiquez le motif de la suspension.")).toBeVisible();
+  await accountStatus
+    .getByLabel("Motif de la suspension (transmis à l'artisan)")
+    .fill("Test de suspension par l'équipe.");
+  await accountStatus.getByRole("button", { name: "Suspendre l'artisan" }).click();
+  await expect(
+    accountStatus.getByText("Artisan suspendu : il n'apparaît plus dans les recherches."),
+  ).toBeVisible();
+  await capture(admin, "admin-artisan-suspendu");
+  await accountStatus.getByRole("button", { name: "Lever la suspension" }).click();
+  await expect(accountStatus.getByText("Suspension levée.")).toBeVisible();
   await staff.close();
 });

@@ -562,6 +562,26 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
       "vérifiez votre formule et vos paiements",
     );
   });
+
+  it("suspension décidée par l'équipe (ADR 0047) : motif cité, contact ; levée par l'équipe", () => {
+    const suspended = notificationContent(
+      "compte_suspendu",
+      { par: "equipe", motif: "Plaintes répétées de clients." },
+      pro,
+    );
+    expect(suspended.subject).toBe("Votre profil MENAO est suspendu");
+    expect(suspended.preview).toBe("L'équipe MENAO a suspendu votre profil.");
+    expect(suspended.paragraphs[1]).toBe("L'équipe MENAO a suspendu votre profil, pour ce motif :");
+    expect(suspended.quote).toBe("Plaintes répétées de clients.");
+    expect(suspended.paragraphs.join(" ")).not.toContain("assurance");
+    expect(suspended.cta).toEqual({
+      label: "Écrire à l'équipe MENAO",
+      url: "https://menao.example/contact",
+    });
+    const back = notificationContent("compte_reactive", { par: "equipe", visible: true }, pro);
+    expect(back.paragraphs[1]).toBe("L'équipe MENAO a levé la suspension de votre profil.");
+    expect(back.paragraphs[2]).toContain("Vous apparaissez de nouveau dans les recherches");
+  });
 });
 
 describe("rendu HTML et texte", () => {
