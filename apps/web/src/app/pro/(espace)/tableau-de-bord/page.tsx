@@ -1,13 +1,15 @@
 import {
   clientsAwaitingQuote,
-  collectedThisMonth,
+  monthToDateRevenue,
   requestsAwaitingAnswer,
+  revenueTrend,
   upcomingAgenda,
 } from "@menao/core";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
 import { fr } from "@/i18n/fr";
 import { artisanActivity, requireProSpace } from "@/lib/artisan/space";
+import { formatMonthName } from "@/lib/format";
 
 const t = fr.pro.onboarding.requests;
 const dayShort = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: "UTC" });
@@ -36,12 +38,18 @@ export default async function DashboardPage() {
       : []),
   ];
   // Mêmes lectures que les compteurs du menu (mises en cache pour la requête).
-  const [{ chantiers, inbox }, { data: payments }] = await Promise.all([
+  const [{ chantiers, inbox }, { data: payments }, { data: response }] = await Promise.all([
     artisanActivity(),
     // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
     supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+    // Temps de réponse moyen (F-10), sur les 6 derniers mois.
+    supabase.rpc("my_response_stats"),
   ]);
   const now = new Date();
+  const revenue = monthToDateRevenue(
+    (payments ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
+    now,
+  );
   const rows = chantiers.map((c) => ({
     ...c,
     appointmentAt: c.appointment_at as string | null,
@@ -60,10 +68,15 @@ export default async function DashboardPage() {
       notices={notices}
       visible={visibility.visible}
       awaitingClients={clientsAwaitingQuote(rows)}
-      revenueCents={collectedThisMonth(
-        (payments ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
-        now,
-      )}
+      revenue={{
+        cents: revenue.currentCents,
+        trend: revenueTrend(revenue.currentCents, revenue.previousCents),
+        previousMonth: formatMonthName(revenue.previousMonth),
+      }}
+      responseTime={{
+        minutes: response?.[0]?.minutes ?? null,
+        responses: response?.[0]?.responses ?? 0,
+      }}
       appointments={upcomingAgenda(rows, now).map(({ kind, at, row }) => ({
         kind,
         chantierId: row.chantier_id,

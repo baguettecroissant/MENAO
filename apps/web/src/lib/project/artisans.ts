@@ -16,6 +16,8 @@ const profileSchema = z.object({
   presentation: z.string().nullable(),
   paused: z.boolean(),
   available_from: z.string().nullable(),
+  // Temps de réponse moyen en minutes (F-10), publié à partir de 3 réponses.
+  response_minutes: z.number().nullable().catch(null),
   zone: z.object({
     mode: z.enum(["rayon", "communes"]).nullable(),
     radius_km: z.number().nullable(),

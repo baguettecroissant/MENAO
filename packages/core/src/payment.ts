@@ -32,21 +32,53 @@ export function paymentStatusFromCheckout(
   }
 }
 
-const parisMonth = new Intl.DateTimeFormat("en-CA", {
+const parisDay = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Paris",
   year: "numeric",
   month: "2-digit",
+  day: "2-digit",
 });
 
-/** Montant encaissé pendant le mois en cours, heure de Paris (paiements reçus, en centimes). */
-export function collectedThisMonth(
+/**
+ * Montant encaissé du 1er du mois à aujourd'hui, et pendant la même période du mois précédent,
+ * heure de Paris (F-16 « chiffre généré ce mois et évolution ») : comparer un mois entamé à un
+ * mois complet donnerait une baisse trompeuse en début de mois. Le dernier jour du mois précédent
+ * borne la comparaison (31 mars ↔ 1er au 28 février). Paiements reçus, en centimes.
+ */
+export function monthToDateRevenue(
   payments: readonly { amountCents: number; paidAt: string | null }[],
   now: Date,
-): number {
-  const month = parisMonth.format(now);
-  return payments.reduce(
-    (sum, p) =>
-      p.paidAt && parisMonth.format(new Date(p.paidAt)) === month ? sum + p.amountCents : sum,
-    0,
-  );
+): { currentCents: number; previousCents: number; previousMonth: string } {
+  const today = parisDay.format(now);
+  const [year, month, day] = today.split("-").map(Number) as [number, number, number];
+  const previousMonth = new Date(Date.UTC(year, month - 2, 1)).toISOString().slice(0, 7);
+  const previousLastDay = new Date(Date.UTC(year, month - 1, 0)).getUTCDate();
+  const previousCutoff = `${previousMonth}-${String(Math.min(day, previousLastDay)).padStart(2, "0")}`;
+  const currentMonth = today.slice(0, 7);
+  let currentCents = 0;
+  let previousCents = 0;
+  for (const p of payments) {
+    if (!p.paidAt) continue;
+    const paidOn = parisDay.format(new Date(p.paidAt));
+    if (paidOn.startsWith(currentMonth) && paidOn <= today) currentCents += p.amountCents;
+    else if (paidOn.startsWith(previousMonth) && paidOn <= previousCutoff) {
+      previousCents += p.amountCents;
+    }
+  }
+  return { currentCents, previousCents, previousMonth };
+}
+
+export type RevenueTrend =
+  | { kind: "hausse" | "baisse" | "stable"; percent: number }
+  | { kind: "nouveau"; deltaCents: number }
+  | null;
+
+/** Évolution en % (arrondi) ; sans encaissement le mois précédent, le montant gagné. */
+export function revenueTrend(currentCents: number, previousCents: number): RevenueTrend {
+  if (previousCents === 0) {
+    return currentCents > 0 ? { kind: "nouveau", deltaCents: currentCents } : null;
+  }
+  const percent = Math.round(((currentCents - previousCents) / previousCents) * 100);
+  if (percent === 0) return { kind: "stable", percent: 0 };
+  return { kind: percent > 0 ? "hausse" : "baisse", percent: Math.abs(percent) };
 }

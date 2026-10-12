@@ -3,8 +3,11 @@ import {
   MAX_ARTISANS_PER_REQUEST,
   REFUSAL_REASONS,
   REQUEST_RESPONSE_HOURS,
+  RESPONSE_TIME_MIN_RESPONSES,
+  RESPONSE_TIME_WINDOW_DAYS,
   remainingSlots,
   requestDeadline,
+  responseTimeBucket,
   timeLeft,
 } from "../src/requests";
 
@@ -45,5 +48,24 @@ describe("demandes à traiter par l'artisan (compteur du menu)", () => {
     ];
     expect(requestsAwaitingAnswer(rows, now)).toEqual([rows[0]]);
     expect(requestsAwaitingAnswer([], now)).toEqual([]);
+  });
+});
+
+describe("temps de réponse moyen (F-10)", () => {
+  it("publié à partir de 3 réponses sur 180 jours (même règle en base)", () => {
+    expect(RESPONSE_TIME_MIN_RESPONSES).toBe(3);
+    expect(RESPONSE_TIME_WINDOW_DAYS).toBe(180);
+  });
+
+  it("tranches : moins d'1 h, moins de 3 h, dans la journée, sous 48 h ; au-delà, rien", () => {
+    expect(responseTimeBucket(0)).toBe("1h");
+    expect(responseTimeBucket(59)).toBe("1h");
+    expect(responseTimeBucket(60)).toBe("3h");
+    expect(responseTimeBucket(179)).toBe("3h");
+    expect(responseTimeBucket(180)).toBe("24h");
+    expect(responseTimeBucket(24 * 60 - 1)).toBe("24h");
+    expect(responseTimeBucket(24 * 60)).toBe("48h");
+    expect(responseTimeBucket(48 * 60 - 1)).toBe("48h");
+    expect(responseTimeBucket(48 * 60)).toBeNull();
   });
 });

@@ -50,6 +50,26 @@ const dayMonthShort = new Intl.DateTimeFormat("fr-FR", {
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" });
+
+/** Mois AAAA-MM → « septembre ». */
+export const formatMonthName = (month: string) =>
+  monthName.format(new Date(`${month}-15T12:00:00Z`));
+
+/** Durée en minutes → « 35 min », « 2 h 15 », « 1 j 3 h » (espaces insécables). */
+export function formatDuration(minutes: number): string {
+  const m = Math.max(0, Math.round(minutes));
+  if (m < 60) return `${m}\u00a0min`;
+  if (m < 24 * 60) {
+    const rest = m % 60;
+    return rest
+      ? `${Math.floor(m / 60)}\u00a0h\u00a0${String(rest).padStart(2, "0")}`
+      : `${m / 60}\u00a0h`;
+  }
+  const hours = Math.floor((m % (24 * 60)) / 60);
+  return `${Math.floor(m / (24 * 60))}\u00a0j${hours ? `\u00a0${hours}\u00a0h` : ""}`;
+}
+
 /** « 12 octobre » (date AAAA-MM-JJ ou instant). */
 export const formatDayMonth = (iso: string) => dayMonth.format(new Date(iso));
 

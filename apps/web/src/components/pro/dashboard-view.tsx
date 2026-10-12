@@ -1,10 +1,19 @@
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import type { RevenueTrend } from "@menao/core";
+import {
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  MapPin,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Alert, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { formatDayLong, formatTime } from "@/lib/format";
+import { formatDayLong, formatDuration, formatTime } from "@/lib/format";
 
 const t = fr.pro.dashboard;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -33,7 +42,8 @@ export function DashboardView({
   notices = [],
   visible,
   awaitingClients,
-  revenueCents,
+  revenue,
+  responseTime,
   appointments,
   requests,
 }: {
@@ -42,12 +52,23 @@ export function DashboardView({
   notices?: string[];
   visible: boolean;
   awaitingClients: number;
-  revenueCents: number;
+  /** Encaissé du 1er à aujourd'hui et évolution par rapport à la même période du mois précédent. */
+  revenue: { cents: number; trend: RevenueTrend; previousMonth: string };
+  /** Temps de réponse moyen aux demandes (6 derniers mois). */
+  responseTime: { minutes: number | null; responses: number };
   appointments: DashboardAppointment[];
   requests: DashboardRequest[];
 }) {
   const appointmentSection = (
-    <Section title={t.upcoming}>
+    <Section
+      title={t.upcoming}
+      action={
+        <TextLink href="/pro/agenda" className="inline-flex items-center gap-1 text-sm">
+          {t.openAgenda}
+          <ArrowRight aria-hidden="true" className="size-3.5" />
+        </TextLink>
+      }
+    >
       {appointments.length === 0 ? (
         <p className="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-12 text-center text-sm text-muted-foreground shadow-card">
           {t.noUpcoming}
@@ -158,9 +179,26 @@ export function DashboardView({
             {t.hiddenProfile} <TextLink href="/pro/onboarding">{t.completeFile}</TextLink>
           </Alert>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Kpi href="/pro/chantiers" label={t.awaitingQuote} value={t.clients(awaitingClients)} />
-          <Kpi label={t.revenue} value={euros.format(revenueCents / 100)} />
+          <Kpi
+            href="/pro/demandes"
+            label={t.responseTime}
+            value={responseTime.minutes === null ? "—" : formatDuration(responseTime.minutes)}
+            detail={
+              <span className="text-muted-foreground">
+                {responseTime.minutes === null
+                  ? t.noResponse
+                  : t.responseDetail(responseTime.responses)}
+              </span>
+            }
+          />
+          <Kpi
+            className="col-span-2 sm:col-span-1"
+            label={t.revenue}
+            value={euros.format(revenue.cents / 100)}
+            detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
+          />
         </div>
         {/* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */}
         {appointments.length > 0 ? (
@@ -179,27 +217,71 @@ export function DashboardView({
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  /** Lien à droite du titre (« Voir l'agenda »). */
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section aria-label={title} className="flex flex-col gap-3">
-      <h2 className="text-[0.9375rem] font-medium text-foreground/80">{title}</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-[0.9375rem] font-medium text-foreground/80">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );
 }
 
-function Kpi({ label, value, href }: { label: string; value: string; href?: string }) {
+/** Évolution du chiffre encaissé : hausse en vert, baisse et stabilité en gris. */
+function Trend({ trend, month }: { trend: RevenueTrend; month: string }) {
+  if (!trend) return null;
+  const [Icon, tone, text] =
+    trend.kind === "nouveau"
+      ? [TrendingUp, "text-success", t.trend.nouveau(euros.format(trend.deltaCents / 100), month)]
+      : trend.kind === "hausse"
+        ? [TrendingUp, "text-success", t.trend.hausse(trend.percent, month)]
+        : trend.kind === "baisse"
+          ? [TrendingDown, "text-muted-foreground", t.trend.baisse(trend.percent, month)]
+          : [Minus, "text-muted-foreground", t.trend.stable(month)];
+  return (
+    <span className={`flex items-start gap-1 ${tone}`}>
+      <Icon aria-hidden="true" className="mt-px size-3.5 shrink-0" />
+      <span>{text}</span>
+    </span>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  detail,
+  href,
+  className: extra = "",
+}: {
+  label: string;
+  value: string;
+  /** Ligne d'information sous la valeur (évolution, nombre de demandes). */
+  detail?: ReactNode;
+  href?: string;
+  className?: string;
+}) {
   const body = (
     <>
       <span className="text-xs text-muted-foreground underline-offset-2 group-hover:underline">
         {label}
       </span>
       <span className="text-lg font-medium text-primary sm:text-xl">{value}</span>
+      {detail && <span className="relative z-[1] pr-10 text-xs leading-snug">{detail}</span>}
       <Arc className="absolute -right-1 bottom-1 h-9 w-14" />
     </>
   );
-  const className =
-    "group relative flex min-h-20 flex-col gap-1 overflow-hidden rounded-card border border-border bg-surface p-4 shadow-card";
+  const className = `group relative flex min-h-20 flex-col gap-1 overflow-hidden rounded-card border border-border bg-surface p-4 shadow-card ${extra}`;
   return href ? (
     <Link
       href={href as Route}

@@ -2837,6 +2837,13 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"];
         }[];
       };
+      my_response_stats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          minutes: number;
+          responses: number;
+        }[];
+      };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
       particulier_chantiers: {

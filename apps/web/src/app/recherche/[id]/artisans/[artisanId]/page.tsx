@@ -1,9 +1,10 @@
-import { availability, parisToday } from "@menao/core";
+import { availability, parisToday, responseTimeBucket } from "@menao/core";
 import {
   BadgeCheck,
   Briefcase,
   ChevronRight,
   CircleCheck,
+  Clock,
   MapPin,
   ShieldCheck,
   Star,
@@ -61,6 +62,8 @@ export default async function ArtisanProfilePage({
     reply: row.reply,
   }));
 
+  const response =
+    profile.response_minutes !== null ? responseTimeBucket(profile.response_minutes) : null;
   const avail = availability(
     { paused: profile.paused, availableFrom: profile.available_from },
     parisToday(),
@@ -144,7 +147,16 @@ export default async function ArtisanProfilePage({
               <div className="flex min-w-0 flex-col gap-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{title}</h1>
-                  {badge}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {badge}
+                    {/* Temps de réponse moyen (F-10), publié à partir de 3 réponses. */}
+                    {response && (
+                      <Tag>
+                        <Clock aria-hidden="true" className="size-3.5" />
+                        {t.responseTime[response]}
+                      </Tag>
+                    )}
+                  </div>
                 </div>
                 <dl className="grid grid-cols-1 divide-y divide-border rounded-input border border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                   <InfoBox icon={<Briefcase />} label={t.experience}>

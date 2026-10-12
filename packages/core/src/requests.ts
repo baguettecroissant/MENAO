@@ -46,3 +46,21 @@ export function requestsAwaitingAnswer<T extends { status: string; expires_at: s
 ): T[] {
   return rows.filter((r) => r.status === "envoyee" && new Date(r.expires_at) > now);
 }
+
+/** Temps de réponse moyen (F-10) : publié à partir de 3 réponses, sur les 180 derniers jours. */
+export const RESPONSE_TIME_MIN_RESPONSES = 3;
+export const RESPONSE_TIME_WINDOW_DAYS = 180;
+
+export type ResponseTimeBucket = "1h" | "3h" | "24h" | "48h";
+
+/**
+ * Tranche affichée sur la fiche (« Répond en moins de 3 h ») ; au-delà de 48 h, délai de réponse
+ * aux demandes, rien n'est affiché (données anciennes ou atypiques).
+ */
+export function responseTimeBucket(minutes: number): ResponseTimeBucket | null {
+  if (minutes < 60) return "1h";
+  if (minutes < 3 * 60) return "3h";
+  if (minutes < 24 * 60) return "24h";
+  if (minutes < 48 * 60) return "48h";
+  return null;
+}
