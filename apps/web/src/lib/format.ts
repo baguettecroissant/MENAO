@@ -110,6 +110,10 @@ export const formatDayFull = (iso: string) => dayFull.format(new Date(iso));
 export const formatDayTime = (iso: string) =>
   `${capitalize(dayShort.format(new Date(iso)))} à ${formatTime(iso)}`;
 
+/** « jeudi 28 févr. à 08h30 », dans une phrase. */
+export const formatDayTimeInline = (iso: string) =>
+  `${dayShort.format(new Date(iso))} à ${formatTime(iso)}`;
+
 /** « à l'instant », « il y a 12 min », « il y a 3 h », « il y a 2 j », puis la date. */
 export function formatTimeAgo(iso: string, now: Date = new Date()): string {
   const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000);

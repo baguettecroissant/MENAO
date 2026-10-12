@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getProjectDetail } from "@/lib/admin/follow-up";
-import { formatDay, formatDayTime } from "@/lib/format";
+import { formatDay, formatDayTimeInline } from "@/lib/format";
 
 const t = fr.admin.followUp;
 const r = t.requests;
@@ -57,7 +57,7 @@ export default async function AdminRequestPage({ params }: PageProps<"/admin/dem
         <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">
           {[
-            r.createdOn(formatDayTime(p.created_at)),
+            r.createdOn(formatDayTimeInline(p.created_at)),
             p.analyzed_at && p.ai_confidence !== null
               ? r.ai(fr.review.percent(Math.round(Number(p.ai_confidence) * 100)))
               : r.noAi,
@@ -156,9 +156,11 @@ export default async function AdminRequestPage({ params }: PageProps<"/admin/dem
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {[
-                          r.sentOn(formatDayTime(q.created_at)),
-                          q.responded_at ? r.answeredOn(formatDayTime(q.responded_at)) : null,
-                          q.cancelled_at ? r.cancelledOn(formatDayTime(q.cancelled_at)) : null,
+                          r.sentOn(formatDayTimeInline(q.created_at)),
+                          q.responded_at ? r.answeredOn(formatDayTimeInline(q.responded_at)) : null,
+                          q.cancelled_at
+                            ? r.cancelledOn(formatDayTimeInline(q.cancelled_at))
+                            : null,
                           left ? fr.admin.overview.todo.expiresIn(left.hours, left.minutes) : null,
                         ]
                           .filter(Boolean)
@@ -190,7 +192,7 @@ export default async function AdminRequestPage({ params }: PageProps<"/admin/dem
           <DetailSection title={r.client}>
             <InfoList
               items={[
-                { label: r.client, value: client.name ?? t.visitor },
+                { label: t.name, value: client.name ?? t.visitor },
                 {
                   label: t.email,
                   value: client.email ? (

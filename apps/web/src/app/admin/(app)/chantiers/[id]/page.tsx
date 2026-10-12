@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getChantierDetail } from "@/lib/admin/follow-up";
-import { formatDay, formatDayTime } from "@/lib/format";
+import { formatDay, formatDayTime, formatDayTimeInline } from "@/lib/format";
 
 const t = fr.admin.followUp;
 const c = t.chantiers;
@@ -61,7 +61,7 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
         <p className="text-sm text-muted-foreground">
           {[
             ch.adresse ?? [ch.code_postal, ch.ville_nom].filter(Boolean).join(" "),
-            ch.start_at ? c.startOn(formatDayTime(ch.start_at)) : null,
+            ch.start_at ? c.startOn(formatDayTimeInline(ch.start_at)) : null,
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -86,7 +86,7 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
                   <span>
                     <span className="font-medium">{events[e.event] ?? e.event}</span>{" "}
                     <span className="text-muted-foreground">
-                      {c.by[e.actor_role] ?? c.by.systeme}
+                      · {c.by[e.actor_role] ?? c.by.systeme}
                     </span>
                   </span>
                   <time dateTime={e.created_at} className="shrink-0 text-xs text-muted-foreground">
@@ -219,7 +219,7 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
           <DetailSection title={c.client} note={c.privacy}>
             <InfoList
               items={[
-                { label: c.client, value: client.name },
+                { label: t.name, value: client.name },
                 {
                   label: t.email,
                   value: client.email ? (

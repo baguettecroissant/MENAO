@@ -170,13 +170,14 @@ export function DetailSection({
 /** Liste « libellé : valeur » des fiches ; une valeur vide s'affiche « — ». */
 export function InfoList({ items }: { items: { label: string; value: ReactNode }[] }) {
   return (
-    <dl className="flex flex-col">
+    // Carte étroite (colonne de droite) : libellé au-dessus de la valeur.
+    <dl className="@container flex flex-col">
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex flex-col gap-0.5 border-t border-border py-2 text-sm first:border-t-0 first:pt-0 sm:flex-row sm:gap-4"
+          className="flex flex-col gap-0.5 border-t border-border py-2 text-sm first:border-t-0 first:pt-0 @sm:flex-row @sm:gap-4"
         >
-          <dt className="shrink-0 text-muted-foreground sm:w-40">{item.label}</dt>
+          <dt className="shrink-0 text-muted-foreground @sm:w-40">{item.label}</dt>
           <dd className="min-w-0 break-words">{item.value ?? t.none}</dd>
         </div>
       ))}
