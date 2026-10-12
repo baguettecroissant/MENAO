@@ -1,8 +1,10 @@
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { money, winAnsi } from "../src/format.ts";
+import { LOGO_BOX, fitLogo } from "../src/pdf-layout.ts";
 import { quoteDocumentModel, type QuotePdfData } from "../src/quote-model.ts";
 import { SIGNATURE_TAGS, renderQuotePdf } from "../src/quote-pdf.ts";
+import { JPEG_LOGO, PNG_LOGO, drawnImages } from "./logo-fixtures.ts";
 
 const NBSP = "\u00a0";
 
@@ -199,5 +201,32 @@ describe("rendu PDF", () => {
       "{{Signature;role=Client;type=signature;width=200;height=34}}",
     );
     expect(SIGNATURE_TAGS.date).toBe("{{Date;role=Client;type=date;width=90;height=12}}");
+  });
+});
+
+describe("logo de l'entreprise (ADR 0038)", () => {
+  it("cadre de 140 × 56 points, proportions conservées", () => {
+    expect(LOGO_BOX).toEqual({ width: 140, height: 56 });
+    expect(fitLogo(600, 150)).toEqual({ width: 140, height: 35 });
+    expect(fitLogo(512, 512)).toEqual({ width: 56, height: 56 });
+    expect(fitLogo(200, 400)).toEqual({ width: 28, height: 56 });
+    expect(fitLogo(60, 24)).toEqual({ width: 140, height: 56 });
+  });
+
+  it("logo PNG (transparence) ou JPEG dessiné une fois, en tête du devis", async () => {
+    for (const logo of [PNG_LOGO, JPEG_LOGO]) {
+      const bytes = await renderQuotePdf(base, { logo });
+      expect(await drawnImages(bytes)).toEqual([{ width: 60, height: 24 }]);
+      expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
+    }
+  });
+
+  it("sans logo, ou fichier illisible : devis sans image, sans erreur", async () => {
+    expect(await drawnImages(await renderQuotePdf(base))).toEqual([]);
+    expect(await drawnImages(await renderQuotePdf(base, { logo: null }))).toEqual([]);
+    const broken = { type: "png" as const, bytes: PNG_LOGO.bytes.slice(0, 40) };
+    expect(await drawnImages(await renderQuotePdf(base, { logo: broken }))).toEqual([]);
+    const mislabeled = { type: "jpeg" as const, bytes: PNG_LOGO.bytes };
+    expect(await drawnImages(await renderQuotePdf(base, { logo: mislabeled }))).toEqual([]);
   });
 });

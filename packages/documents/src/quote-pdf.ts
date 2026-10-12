@@ -5,7 +5,17 @@
 import { PDFDocument, degrees, rgb } from "pdf-lib";
 import { SIGNER_ROLE } from "../../core/src/signature.ts";
 import { winAnsi } from "./format.ts";
-import { CONTENT, COLOR, Canvas, PAGE, embedFonts, wrap } from "./pdf-layout.ts";
+import {
+  CONTENT,
+  COLOR,
+  Canvas,
+  PAGE,
+  drawIssuer,
+  embedFonts,
+  embedLogo,
+  wrap,
+  type DocumentAssets,
+} from "./pdf-layout.ts";
 import { QUOTE_TEXTS as T, quoteDocumentModel, type QuotePdfData } from "./quote-model.ts";
 
 /**
@@ -60,7 +70,10 @@ function tableHeader(c: Canvas) {
 }
 
 /** Rendu du PDF (A4) : en-tête, client, tableau paginé, totaux, échéancier, mentions, accord. */
-export async function renderQuotePdf(data: QuotePdfData): Promise<Uint8Array> {
+export async function renderQuotePdf(
+  data: QuotePdfData,
+  assets: DocumentAssets = {},
+): Promise<Uint8Array> {
   const m = quoteDocumentModel(data);
   const doc = await PDFDocument.create();
   doc.setTitle(data.preview || !data.numero ? "Devis (aperçu)" : `Devis ${data.numero}`);
@@ -74,14 +87,8 @@ export async function renderQuotePdf(data: QuotePdfData): Promise<Uint8Array> {
 
   // En-tête : artisan à gauche, titre et références à droite.
   const top = c.y;
-  c.text(m.issuerName, PAGE.margin, top - 14, 13, { bold: true });
-  let left = top - 14;
-  for (const line of m.issuerLines) {
-    for (const part of wrap(line, fonts.regular, 8.5, 300)) {
-      left -= 11;
-      c.text(part, PAGE.margin, left, 8.5, { color: COLOR.muted });
-    }
-  }
+  const logo = await embedLogo(doc, assets.logo);
+  const left = drawIssuer(c, top, { name: m.issuerName, lines: m.issuerLines, logo }, 300);
   c.text(m.title, right - 200, top - 18, 22, {
     bold: true,
     color: COLOR.primary,

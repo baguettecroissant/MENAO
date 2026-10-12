@@ -14,6 +14,7 @@ import { renderReceptionPdf } from "../../../packages/documents/src/reception-pd
 import { adminClient, json } from "../_shared/artisan.ts";
 import { docuseal } from "../_shared/docuseal.ts";
 import { env } from "../_shared/env.ts";
+import { documentLogo } from "../_shared/logo.ts";
 import { sentQuotePdf } from "../_shared/quote-pdf.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -73,9 +74,10 @@ async function receptionSignature(
   });
   if (!document) return json({ status: "not_found" }, 404);
   try {
-    const pdf = new Uint8Array(
-      await renderReceptionPdf(receptionPdfData(document as ReceptionDocument)),
-    );
+    const doc = document as ReceptionDocument;
+    // Accès vérifié par reception_document : logo lu avec la clé serveur.
+    const logo = await documentLogo(adminClient(), doc.issuer.logo_path);
+    const pdf = new Uint8Array(await renderReceptionPdf(receptionPdfData(doc), { logo }));
     const request = await docuseal.createSigningRequest({
       pdfBase64: base64(pdf),
       filename: `${started.numero}.pdf`,

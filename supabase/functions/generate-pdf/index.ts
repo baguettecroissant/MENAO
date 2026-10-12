@@ -25,6 +25,7 @@ import {
 import { renderReceptionPdf } from "../../../packages/documents/src/reception-pdf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
+import { documentLogo } from "../_shared/logo.ts";
 import { sentQuotePdf } from "../_shared/quote-pdf.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -50,11 +51,12 @@ async function quotePdf(supabase: SupabaseClient, quoteId: string): Promise<Resp
   const doc = data as QuoteDocument;
   const document = quotePdfData(doc);
   const filename = quotePdfFilename(document);
-  if (document.preview) {
-    return pdfResponse(new Uint8Array(await renderQuotePdf(document)), filename);
-  }
-  // Accès vérifié ci-dessus : fichiers lus avec la clé serveur.
+  // Accès vérifié ci-dessus : fichiers (logo compris) lus avec la clé serveur.
   const admin = adminClient();
+  if (document.preview) {
+    const logo = await documentLogo(admin, doc.issuer.logo_path);
+    return pdfResponse(new Uint8Array(await renderQuotePdf(document, { logo })), filename);
+  }
   if (doc.quote.status === "signe" && doc.quote.signed_pdf_path) {
     const { data: signed } = await admin.storage
       .from("quote-signatures")
@@ -87,7 +89,8 @@ async function invoicePdf(supabase: SupabaseClient, invoiceId: string): Promise<
   const { data: stored } = await storage.download(path);
   if (stored) return pdfResponse(new Uint8Array(await stored.arrayBuffer()), filename);
   // Copie dans un ArrayBuffer simple, type attendu par Response et par le stockage.
-  const pdf = new Uint8Array(await renderInvoicePdf(invoice));
+  const logo = await documentLogo(admin, doc.issuer.logo_path);
+  const pdf = new Uint8Array(await renderInvoicePdf(invoice, { logo }));
   const { error: uploadError } = await storage.upload(path, pdf, {
     contentType: "application/pdf",
     upsert: false,
@@ -116,10 +119,11 @@ async function receptionPdf(supabase: SupabaseClient, receptionId: string): Prom
   if (!data) return json({ status: "not_found" }, 404);
   const doc = data as ReceptionDocument;
   const filename = receptionPdfFilename(receptionPdfData(doc));
+  // Accès vérifié ci-dessus : PV signé et logo lus avec la clé serveur.
+  const admin = adminClient();
   if (doc.reception.status === "signe" && doc.reception.signed_pdf_path) {
-    // Accès vérifié ci-dessus : PV signé lu avec la clé serveur.
-    const { data: signed } = await adminClient()
-      .storage.from("reception-signatures")
+    const { data: signed } = await admin.storage
+      .from("reception-signatures")
       .download(doc.reception.signed_pdf_path);
     if (signed) {
       return pdfResponse(
@@ -128,8 +132,9 @@ async function receptionPdf(supabase: SupabaseClient, receptionId: string): Prom
       );
     }
   }
+  const logo = await documentLogo(admin, doc.issuer.logo_path);
   return pdfResponse(
-    new Uint8Array(await renderReceptionPdf(receptionPdfData(doc, true))),
+    new Uint8Array(await renderReceptionPdf(receptionPdfData(doc, true), { logo })),
     filename,
   );
 }

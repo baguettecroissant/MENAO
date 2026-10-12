@@ -4,6 +4,7 @@ import { money } from "../src/format.ts";
 import { invoicePdfData, invoicePdfFilename, type InvoiceDocument } from "../src/invoice-data.ts";
 import { invoiceDocumentModel } from "../src/invoice-model.ts";
 import { renderInvoicePdf } from "../src/invoice-pdf.ts";
+import { JPEG_LOGO, drawnImages } from "./logo-fixtures.ts";
 
 // Réponse de invoice_document : acompte de 30 % sur un devis de 330 € TTC (TVA 10 %).
 const doc: InvoiceDocument = {
@@ -106,6 +107,12 @@ describe("facture d'acompte (F-35)", () => {
     const pdf = await PDFDocument.load(bytes);
     expect(pdf.getPageCount()).toBe(1);
     expect(pdf.getTitle()).toBe("Facture FAC-2026-0001");
+  });
+
+  it("PDF : logo de l'entreprise en tête, s'il y en a un (ADR 0038)", async () => {
+    const bytes = await renderInvoicePdf(invoicePdfData(doc), { logo: JPEG_LOGO });
+    expect(await drawnImages(bytes)).toEqual([{ width: 60, height: 24 }]);
+    expect(await drawnImages(await renderInvoicePdf(invoicePdfData(doc)))).toEqual([]);
   });
 
   it("facture de solde : lignes du devis, totaux des travaux, acompte déduit, solde", async () => {
