@@ -32,6 +32,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000007'::uuid, 'valide@example.test', 'artisan', 'Lou', 'Valide', null),
   -- Second admin, réservé au test e2e du renouvellement.
   ('a0000000-0000-4000-8000-000000000008'::uuid, 'admin2@example.test', 'admin', 'Sam', 'Admin', null),
+  -- Troisième admin, réservé au test e2e du suivi des demandes et des chantiers (ADR 0046).
+  ('a0000000-0000-4000-8000-000000000013'::uuid, 'admin3@example.test', 'admin', 'Charlie', 'Admin', null),
   -- Artisan validé sans abonnement (test e2e de l'abonnement, F-15).
   ('a0000000-0000-4000-8000-000000000009'::uuid, 'abonnement@example.test', 'artisan', 'Alix', 'Abonne', null),
   -- Artisan validé et abonné, compte Stripe Connect à finaliser (test e2e de la visibilité).

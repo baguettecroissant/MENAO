@@ -35,6 +35,39 @@ export function chantierStage(status: ChantierStatus): ChantierStage {
   return STAGE_OF[status];
 }
 
+/** Statuts d'une étape, dans l'ordre du parcours : filtre de la liste des chantiers (F-53). */
+export function statusesOfStage(stage: ChantierStage): ChantierStatus[] {
+  return (Object.keys(STAGE_OF) as ChantierStatus[]).filter((status) => STAGE_OF[status] === stage);
+}
+
+/** Étape lue dans l'adresse de la liste des chantiers ; null si absente ou inconnue. */
+export function parseChantierStage(value: unknown): ChantierStage | null {
+  return typeof value === "string" && (CHANTIER_STAGES as readonly string[]).includes(value)
+    ? (value as ChantierStage)
+    : null;
+}
+
+/**
+ * Filtres de la liste des demandes (F-53, ADR 0046), calculés par la base (admin_projects) :
+ * recherches non envoyées, en attente de réponse, qui expirent sous 12 h, rendez-vous fixé, sans
+ * suite (refusées, expirées ou annulées).
+ */
+export const PROJECT_FILTERS = [
+  "toutes",
+  "en_attente",
+  "expirent",
+  "chantier",
+  "sans_suite",
+  "non_envoyee",
+] as const;
+export type ProjectFilter = (typeof PROJECT_FILTERS)[number];
+
+export function parseProjectFilter(value: unknown): ProjectFilter {
+  return typeof value === "string" && (PROJECT_FILTERS as readonly string[]).includes(value)
+    ? (value as ProjectFilter)
+    : "toutes";
+}
+
 /** Chantiers par étape, à partir des compteurs par statut de la base (statuts inconnus ignorés). */
 export function chantiersByStage(byStatus: Record<string, number>): Record<ChantierStage, number> {
   const counts = Object.fromEntries(CHANTIER_STAGES.map((s) => [s, 0])) as Record<

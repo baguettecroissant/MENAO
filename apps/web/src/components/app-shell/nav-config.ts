@@ -11,6 +11,7 @@ import {
   MessageCircle,
   MessagesSquare,
   ReceiptText,
+  Send,
   Settings,
   ShieldCheck,
   Star,
@@ -116,6 +117,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       label: fr.appShell.sections.tools,
       items: [
         { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
+        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
+        { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
         {
           href: "/admin/artisans",
           label: fr.admin.nav.artisans,

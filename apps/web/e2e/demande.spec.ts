@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { capture, files } from "./fixtures";
 import { authLinkFor } from "./mailpit";
 import { signedStripeEvent } from "./stripe";
+import { totp } from "./totp";
 
 // Demande de chantier (F-08, F-11, F-16 à F-18) : sélection de 2 artisans, compte créé au moment
 // de la demande (le projet anonyme est conservé), rendez-vous fixé par l'artisan (coordonnées
@@ -27,7 +28,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   browser,
   request,
 }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(150_000);
   const email = `demande-${Date.now()}@example.test`;
 
   await page.goto("/recherche");
@@ -877,4 +878,62 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByText("Je précise : il s'agit du siphon de la cuisine.")).toBeVisible();
   await capture(page, "client-echange");
   await pro.close();
+
+  // Back-office (ADR 0046) : l'équipe retrouve la demande par l'e-mail du client, voit la réponse
+  // de chaque artisan, puis la fiche du chantier (historique, paiements, documents).
+  const staff = await browser.newContext();
+  const admin = await staff.newPage();
+  await admin.goto("/connexion");
+  await admin.getByLabel("Adresse e-mail").fill("admin3@example.test");
+  await admin.getByLabel("Mot de passe").fill("menao-local-dev-only");
+  await admin.getByRole("button", { name: "Me connecter" }).click();
+  await expect(admin).toHaveURL(/\/admin\/mfa\/activer$/);
+  const secret = (await admin.getByTestId("totp-secret").textContent())?.trim() ?? "";
+  await admin.getByLabel("Code à 6 chiffres").fill(totp(secret));
+  await admin.getByRole("button", { name: "Vérifier" }).click();
+  await expect(admin).toHaveURL(/\/admin$/);
+
+  await admin.getByRole("link", { name: "Demandes", exact: true }).click();
+  await expect(admin.getByRole("heading", { name: "Demandes", level: 1 })).toBeVisible();
+  await admin.getByRole("searchbox", { name: "Rechercher une demande" }).fill(email);
+  await admin.getByRole("button", { name: "Rechercher" }).click();
+  await expect(admin.getByText("1 résultat", { exact: true })).toBeVisible();
+  await capture(admin, "admin-demandes");
+  await admin.getByRole("link", { name: /^Ouvrir la demande : Plombier · Nice/ }).click();
+  await expect(admin).toHaveURL(new RegExp(`/admin/demandes/${UUID}$`));
+  const contacted = admin.getByRole("region", { name: "Artisans contactés" });
+  const noe = contacted.getByRole("listitem", { name: "Noé Plomberie" });
+  await expect(noe).toContainText("Acceptée");
+  await expect(contacted.getByRole("listitem", { name: "PLOMBERIE DISPO EXEMPLE" })).toContainText(
+    "Annulée par le client",
+  );
+  await expect(admin.getByRole("region", { name: "Client", exact: true })).toContainText(email);
+  await capture(admin, "admin-demande");
+
+  await noe.getByRole("link", { name: /Voir le chantier/ }).click();
+  await expect(admin).toHaveURL(new RegExp(`/admin/chantiers/${chantierId}$`));
+  const history = admin.getByRole("region", { name: "Historique" });
+  for (const step of ["Rendez-vous fixé", "Devis signé", "Acompte payé", "Solde payé"]) {
+    await expect(history.getByText(step, { exact: true })).toBeVisible();
+  }
+  await expect(admin.getByRole("region", { name: "Paiements" }).getByRole("listitem")).toHaveCount(
+    2,
+  );
+  const documents = admin.getByRole("region", { name: "Documents" });
+  await expect(documents.getByRole("link", { name: /^Facture acompte n° / })).toBeVisible();
+  await expect(
+    documents.getByRole("link", { name: /^PV de réception n° .*avec réserves/ }),
+  ).toBeVisible();
+  await capture(admin, "admin-chantier");
+
+  // Liste des chantiers : le chantier clôturé est parmi les « Terminés ».
+  await admin.getByRole("link", { name: "Tous les chantiers" }).click();
+  await admin
+    .getByRole("navigation", { name: "Filtrer les chantiers par étape" })
+    .getByRole("link", { name: /^Terminés/ })
+    .click();
+  await expect(
+    admin.getByRole("link", { name: /^Ouvrir le chantier : Réparer une fuite/ }).first(),
+  ).toBeVisible();
+  await staff.close();
 });

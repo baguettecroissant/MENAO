@@ -2597,6 +2597,29 @@ export type Database = {
           occurred_at: string;
         }[];
       };
+      admin_chantier_counts: { Args: { p_query?: string }; Returns: Json };
+      admin_chantiers: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_query?: string;
+          p_statuses?: Database["public"]["Enums"]["chantier_status"][];
+        };
+        Returns: {
+          artisan: string;
+          artisan_id: string;
+          chantier_id: string;
+          client: string;
+          created_at: string;
+          derniere_activite: string;
+          devis_ttc_cents: number;
+          paye_cents: number;
+          status: Database["public"]["Enums"]["chantier_status"];
+          title: string;
+          total: number;
+          ville: string;
+        }[];
+      };
       admin_close_dispute: {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
         Returns: undefined;
@@ -2622,6 +2645,24 @@ export type Database = {
         Returns: undefined;
       };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_project_counts: { Args: { p_query?: string }; Returns: Json };
+      admin_projects: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
+        Returns: {
+          acceptees: number;
+          chantier_id: string;
+          client: string;
+          created_at: string;
+          demandes: number;
+          en_attente: number;
+          etape: string;
+          metier: string;
+          prochaine_echeance: string;
+          project_id: string;
+          total: number;
+          ville: string;
+        }[];
+      };
       admin_review_document: {
         Args: {
           p_document_id: string;
@@ -2629,6 +2670,13 @@ export type Database = {
           p_status: Database["public"]["Enums"]["document_status"];
         };
         Returns: undefined;
+      };
+      admin_user_emails: {
+        Args: { p_user_ids: string[] };
+        Returns: {
+          email: string;
+          user_id: string;
+        }[];
       };
       admin_verify_certification: {
         Args: { p_certification_id: string; p_verified: boolean };
