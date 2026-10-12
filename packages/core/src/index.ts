@@ -30,3 +30,5 @@ export * from "./agenda";
 export * from "./profile";
 export * from "./overview";
 export * from "./webhook";
+export * from "./reference";
+export * from "./ai-runs";

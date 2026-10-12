@@ -8,13 +8,16 @@ import {
   Inbox,
   LayoutDashboard,
   LayoutGrid,
+  ListTree,
   MessageCircle,
   MessagesSquare,
   ReceiptText,
   Repeat,
+  ScrollText,
   Send,
   Settings,
   ShieldCheck,
+  Sparkles,
   Star,
   UserRound,
   Users,
@@ -147,6 +150,15 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       items: [
         { href: "/admin/paiements", label: fr.admin.nav.payments, icon: Wallet },
         { href: "/admin/abonnements", label: fr.admin.nav.subscriptions, icon: Repeat },
+      ],
+    },
+    {
+      // Listes de référence, journal d'audit et suivi de l'IA (ADR 0052).
+      label: fr.appShell.sections.control,
+      items: [
+        { href: "/admin/referentiels", label: fr.admin.nav.references, icon: ListTree },
+        { href: "/admin/journal", label: fr.admin.nav.journal, icon: ScrollText },
+        { href: "/admin/ia", label: fr.admin.nav.ai, icon: Sparkles },
       ],
     },
   ],

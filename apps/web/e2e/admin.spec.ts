@@ -13,7 +13,7 @@ async function signIn(page: Page, email: string) {
 test("admin : double authentification obligatoire puis validation d'un dossier", async ({
   page,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(210_000);
 
   // Sans second facteur, le back-office renvoie vers l'activation du TOTP.
   await signIn(page, "admin@example.test");
@@ -70,6 +70,30 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
     page.getByRole("heading", { name: "Notifications Stripe et DocuSeal", level: 1 }),
   ).toBeVisible();
   await capture(page, "admin-notifications-stripe");
+
+  // Contrôle (ADR 0052) : une pièce ajoutée puis désactivée, inscrite au journal ; suivi de l'IA.
+  const room = `Véranda ${Date.now().toString(36)}`;
+  await menu.getByRole("link", { name: "Métiers et travaux" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Métiers, travaux et pièces", level: 1 }),
+  ).toBeVisible();
+  const rooms = page.getByRole("region", { name: "Pièces" });
+  await rooms.getByLabel("Nouvelle pièce").fill(room);
+  await rooms.getByRole("button", { name: "Ajouter" }).click();
+  await expect(rooms.getByText(`« ${room} » est ajouté en fin de liste.`)).toBeVisible();
+  const added = rooms.getByRole("listitem", { name: room });
+  await added.getByRole("button", { name: "Désactiver" }).click();
+  await expect(added.getByText("Désactivée")).toBeVisible();
+  await capture(page, "admin-referentiels");
+  await menu.getByRole("link", { name: "Journal d'audit" }).click();
+  await expect(page.getByRole("heading", { name: "Journal d'audit", level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("row").filter({ hasText: "Entrée désactivée" }).filter({ hasText: room }),
+  ).toBeVisible();
+  await capture(page, "admin-journal");
+  await menu.getByRole("link", { name: "Suivi de l'IA" }).click();
+  await expect(page.getByRole("heading", { name: "Suivi de l'IA", level: 1 })).toBeVisible();
+  await capture(page, "admin-ia");
   await page.goto("/admin");
 
   // À traiter → dossier
