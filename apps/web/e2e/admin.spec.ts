@@ -41,6 +41,14 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await expect(page.getByRole("region", { name: "Demandes" })).toBeVisible();
   await capture(page, "admin-vue-ensemble");
 
+  // Alertes de l'équipe (ADR 0050) : la cloche du back-office, dossier envoyé par le seed.
+  await page.getByRole("link", { name: /^Notifications/ }).click();
+  await expect(page).toHaveURL(/\/notifications$/);
+  await expect(
+    page.getByRole("link", { name: /Dossier artisan à vérifier/ }).first(),
+  ).toBeVisible();
+  await page.goto("/admin");
+
   // À traiter → dossier
   await dossiers
     .getByRole("link", { name: "Ouvrir le dossier de PEINTURE DOSSIER EXEMPLE" })

@@ -42,6 +42,9 @@ export const NOTIFICATION_TYPES = [
   "demande_annulee",
   "acces_suspendu",
   "acces_retabli",
+  "equipe_nouveau_ticket",
+  "equipe_dossier_a_verifier",
+  "equipe_ticket_en_retard",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -117,6 +120,17 @@ const DOCUMENTS: Record<string, string> = {
 };
 /** Assurances obligatoires : leur expiration suspend l'artisan (F-51). */
 const INSURANCES = ["decennale", "rc_pro"];
+/** Types de tickets, dans les alertes de l'équipe (ADR 0050). */
+const TICKET_TYPES: Record<string, string> = {
+  contact: "message de la page Contact",
+  dossier_recherche: "dossier de recherche",
+  suppression_compte: "demande de suppression de compte",
+  expertise: "expertise signalée par un artisan",
+  reserves: "levée des réserves non confirmée",
+  avis: "avis signalé",
+  message: "message signalé",
+  litige: "litige sur un chantier",
+};
 
 function text(data: Record<string, unknown>, key: string): string | null {
   const value = data[key];
@@ -930,6 +944,47 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Déposer mon attestation à jour", url: link("/pro/onboarding/documents") },
+      };
+    }
+    case "equipe_nouveau_ticket":
+    case "equipe_ticket_en_retard": {
+      // Alertes de l'équipe (ADR 0050) : objet du ticket cité, lien vers sa page du back-office.
+      const ticketId = text(data, "ticket_id");
+      const label = TICKET_TYPES[text(data, "type") ?? ""] ?? "ticket";
+      const late = type === "equipe_ticket_en_retard";
+      return {
+        subject: `${late ? "Ticket en retard" : "Nouveau ticket"} : ${label}`,
+        preview: late ? "Le délai de réponse est dépassé." : "Un nouveau ticket attend l'équipe.",
+        title: late ? "Ticket en retard" : "Nouveau ticket",
+        paragraphs: [
+          hello(ctx.firstName),
+          late
+            ? `Le délai de réponse de ce ticket est dépassé : ${label}.`
+            : `Un nouveau ticket attend l'équipe MENAO : ${label}.`,
+        ],
+        quote: text(data, "objet"),
+        cta: {
+          label: "Ouvrir le ticket",
+          url: link(ticketId ? `/admin/tickets/${ticketId}` : "/admin/tickets"),
+        },
+      };
+    }
+    case "equipe_dossier_a_verifier": {
+      const artisanId = text(data, "artisan_id");
+      const entreprise = text(data, "entreprise") ?? "Un artisan";
+      return {
+        subject: `Dossier artisan à vérifier : ${entreprise}`,
+        preview: `${entreprise} a envoyé son dossier en vérification.`,
+        title: "Dossier artisan à vérifier",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${entreprise} a envoyé son dossier : documents, SIRET et assurances sont à vérifier.`,
+        ],
+        quote: null,
+        cta: {
+          label: "Vérifier le dossier",
+          url: link(artisanId ? `/admin/artisans/${artisanId}` : "/admin/artisans"),
+        },
       };
     }
     case "acces_suspendu":

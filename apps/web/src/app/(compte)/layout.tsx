@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell/app-shell";
+import { requireStaff } from "@/lib/admin/guard";
+import { getAdminShell } from "@/lib/admin/shell";
 import { getProShell } from "@/lib/artisan/space";
 import { getShellAccount } from "@/lib/client/shell";
 
@@ -10,6 +12,17 @@ import { getShellAccount } from "@/lib/client/shell";
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const shell = await getShellAccount();
   const role = shell?.account.role;
+  // Équipe MENAO (ADR 0050) : ses notifications dans la coque du back-office, après la double
+  // authentification.
+  if (role === "admin" || role === "support") {
+    const staff = await requireStaff();
+    const admin = await getAdminShell(staff.supabase, staff.userId, staff.role);
+    return (
+      <AppShell space="admin" account={admin.account} badges={admin.badges}>
+        {children}
+      </AppShell>
+    );
+  }
   if (role === "artisan") {
     const pro = await getProShell();
     return (
