@@ -174,7 +174,7 @@ export default async function MySpacePage() {
               </ul>
             )}
           </div>
-          <ButtonLink href="/recherche" size="md">
+          <ButtonLink href="/mon-espace/nouvelle-demande" size="md">
             {t.start}
             <Search aria-hidden="true" className="size-4" />
           </ButtonLink>

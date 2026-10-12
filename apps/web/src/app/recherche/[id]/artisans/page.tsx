@@ -76,7 +76,8 @@ export default async function ProjectResultsPage({
           {summary && <ProjectSummaryCard summary={summary} />}
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-6">
+        {/* Colonnes selon la place réelle (menu latéral de l'espace client, ADR 0042). */}
+        <div className="@container flex min-w-0 flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
               {results.length ? t.title : t.noneTitle}
@@ -101,7 +102,7 @@ export default async function ProjectResultsPage({
 
           <form id="selection" method="get" action={`/recherche/${id}/envoyer`} />
           {results.length > 0 && (
-            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <ul className="grid gap-4 @xl:grid-cols-2 @3xl:grid-cols-3">
               {results.map((a) => {
                 const avail = availability(
                   { paused: false, availableFrom: a.available_from },

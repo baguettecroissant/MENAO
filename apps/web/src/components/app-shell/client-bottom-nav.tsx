@@ -44,7 +44,7 @@ export function ClientBottomNav() {
         {ITEMS.slice(0, 2).map(tab)}
         <li className="flex justify-center">
           <Link
-            href="/recherche"
+            href="/mon-espace/nouvelle-demande"
             aria-label={t.tabs.start}
             className="-mt-6 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
           >

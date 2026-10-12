@@ -59,7 +59,12 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           icon: ClipboardList,
           badge: "actions",
           exact: true,
-          also: ["/mon-espace/chantiers", "/mon-espace/devis"],
+          also: [
+            "/mon-espace/chantiers",
+            "/mon-espace/devis",
+            "/mon-espace/nouvelle-demande",
+            "/recherche",
+          ],
         },
         {
           href: "/mon-espace/messages",
