@@ -307,7 +307,11 @@ export async function ArtisanFollowUp({
             </Alert>
           )}
           {review ? (
-            <ReviewSection review={review} chantierId={id} clientFirstName={clientFirstName} />
+            <ReviewSection
+              review={review}
+              chantierId={id}
+              heading={tf.reviewTitle(clientFirstName)}
+            />
           ) : (
             status === "cloture" && <Alert tone="info">{tf.reviewPending(clientFirstName)}</Alert>
           )}

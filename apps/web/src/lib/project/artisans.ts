@@ -48,10 +48,15 @@ const profileSchema = z.object({
 });
 export type ArtisanProfile = z.infer<typeof profileSchema>;
 
-export async function getArtisanProfile(supabase: Client, artisanId: string) {
-  const { data } = await supabase.rpc("artisan_public_profile", { p_artisan_id: artisanId });
+/** Fiche renvoyée par artisan_public_profile ou my_public_profile, ou null si invalide. */
+export function parseArtisanProfile(data: unknown): ArtisanProfile | null {
   const parsed = profileSchema.safeParse(data);
   return parsed.success ? parsed.data : null;
+}
+
+export async function getArtisanProfile(supabase: Client, artisanId: string) {
+  const { data } = await supabase.rpc("artisan_public_profile", { p_artisan_id: artisanId });
+  return parseArtisanProfile(data);
 }
 
 /** Derniers avis publiés d'un artisan visible, du plus récent au plus ancien (F-28). */

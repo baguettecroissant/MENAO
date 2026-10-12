@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Card } from "@/components/ui";
+import { ButtonLink, Card } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
 import { fr } from "@/i18n/fr";
 import { deletePortfolioPhoto } from "@/lib/artisan/actions";
@@ -16,6 +16,12 @@ export default async function ProfileStepPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Aperçu réservé à l'espace pro : artisans validés ou suspendus. */}
+      {(artisan.status === "valide" || artisan.status === "suspendu") && (
+        <ButtonLink href="/pro/profil" variant="outline" className="self-start">
+          {fr.pro.reviews.seePublic}
+        </ButtonLink>
+      )}
       <Card>
         <section aria-labelledby="avatar-title" className="flex flex-col gap-4">
           <h2 id="avatar-title" className="text-lg font-medium">

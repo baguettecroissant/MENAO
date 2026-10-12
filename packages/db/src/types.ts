@@ -2837,6 +2837,7 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"];
         }[];
       };
+      my_public_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       my_response_stats: {
         Args: Record<PropertyKey, never>;
         Returns: {

@@ -67,7 +67,8 @@ export async function replyToReview(
     p_reply: parsed.data.reply,
   });
   if (error) return { ...rpcError(error), values };
-  revalidatePath(`/pro/chantiers/${chantierId}`);
+  // Page du chantier, « Mes avis » et compteur du menu.
+  revalidatePath("/pro", "layout");
   return { success: fr.pro.followUp.replySent };
 }
 
