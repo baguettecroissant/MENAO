@@ -2381,6 +2381,42 @@ export type Database = {
           },
         ];
       };
+      ticket_notes: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          created_at: string;
+          id: string;
+          ticket_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          created_at?: string;
+          id?: string;
+          ticket_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          ticket_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_notes_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tickets: {
         Row: {
           category: Database["public"]["Enums"]["dispute_category"] | null;
@@ -3239,6 +3275,26 @@ export type Database = {
       staff_set_ticket_status: {
         Args: { p_status: Database["public"]["Enums"]["ticket_status"]; p_ticket_id: string };
         Returns: undefined;
+      };
+      staff_take_ticket: { Args: { p_take?: boolean; p_ticket_id: string }; Returns: undefined };
+      staff_ticket_counts: { Args: { p_query?: string }; Returns: Json };
+      staff_tickets: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
+        Returns: {
+          chantier_title: string;
+          contact_email: string;
+          created_at: string;
+          declarant: string;
+          due_at: string;
+          handled_by: string;
+          handler: string;
+          notes: number;
+          status: string;
+          subject: string;
+          ticket_id: string;
+          total: number;
+          type: string;
+        }[];
       };
       submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
       transition_chantier: {

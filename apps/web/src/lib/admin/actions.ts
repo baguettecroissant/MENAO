@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
-import { requireAdmin } from "./guard";
+import { requireAdmin, requireStaff } from "./guard";
 
 const t = fr.admin.detail;
 
@@ -77,14 +77,14 @@ export async function moderateReview(_prev: FormState, formData: FormData): Prom
   if (reason && !reason.success) {
     return { fieldErrors: z.flattenError(reason.error).fieldErrors, values };
   }
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const { error } = await supabase.rpc("admin_moderate_review", {
     p_review_id: id.data,
     p_status: status.data,
     p_reason: reason?.success ? reason.data.reason : "",
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
-  revalidatePath("/admin/tickets");
+  revalidatePath("/admin/tickets", "layout");
   return {};
 }
 
@@ -98,14 +98,14 @@ export async function moderateMessage(_prev: FormState, formData: FormData): Pro
   if (reason && !reason.success) {
     return { fieldErrors: z.flattenError(reason.error).fieldErrors, values };
   }
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const { error } = await supabase.rpc("admin_moderate_message", {
     p_message_id: id.data,
     p_hide: hide,
     p_reason: reason?.success ? reason.data.reason : "",
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
-  revalidatePath("/admin/tickets");
+  revalidatePath("/admin/tickets", "layout");
   return {};
 }
 
@@ -114,9 +114,9 @@ export async function setTicketStatus(formData: FormData): Promise<void> {
   const id = z.uuid().safeParse(text(formData, "ticketId"));
   const status = z.enum(["ouvert", "en_cours", "resolu"]).safeParse(text(formData, "status"));
   if (!id.success || !status.success) return;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   await supabase.rpc("staff_set_ticket_status", { p_ticket_id: id.data, p_status: status.data });
-  revalidatePath("/admin/tickets");
+  revalidatePath("/admin/tickets", "layout");
 }
 
 /**

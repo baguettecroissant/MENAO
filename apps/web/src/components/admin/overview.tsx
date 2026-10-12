@@ -180,7 +180,7 @@ export function describeActivity(item: ActivityItem): Described | null {
         label: `${label} · ${artisan}`,
         detail: [text(d, "titre"), text(d, "ville")].filter(Boolean).join(" · ") || null,
         href: event.startsWith("litige_")
-          ? "/admin/tickets"
+          ? "/admin/tickets?file=litiges"
           : chantierId
             ? `/admin/chantiers/${chantierId}`
             : null,
@@ -206,7 +206,7 @@ export function describeActivity(item: ActivityItem): Described | null {
         icon: Inbox,
         label: t.activity.ticket(label ?? ""),
         detail: null,
-        href: "/admin/tickets",
+        href: text(d, "ticket_id") ? `/admin/tickets/${text(d, "ticket_id")}` : "/admin/tickets",
       };
     }
     case "avis": {
@@ -418,7 +418,11 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
             value: o.avis.note_moyenne === null ? "—" : fr.review.percent(o.avis.note_moyenne),
           },
           { label: f.support.open, value: count(o.tickets.ouverts), href: "/admin/tickets" },
-          { label: f.support.late, value: count(o.tickets.en_retard), href: "/admin/tickets" },
+          {
+            label: f.support.late,
+            value: count(o.tickets.en_retard),
+            href: "/admin/tickets?file=en_retard",
+          },
         ]}
       />
     </div>

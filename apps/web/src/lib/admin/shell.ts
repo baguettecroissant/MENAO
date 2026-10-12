@@ -12,6 +12,7 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 export async function getAdminShell(
   supabase: Client,
   userId: string,
+  role: "admin" | "support" = "admin",
 ): Promise<{ account: ShellAccount; badges: { dossiers: number; tickets: number } }> {
   const [{ data: profile }, { count: dossiers }, { count: tickets }] = await Promise.all([
     supabase
@@ -33,7 +34,7 @@ export async function getAdminShell(
       firstName: profile?.first_name ?? null,
       lastName: profile?.last_name ?? null,
       avatarUrl: avatarUrl(supabase, profile?.avatar_path),
-      role: "admin",
+      role,
     },
     badges: { dossiers: dossiers ?? 0, tickets: tickets ?? 0 },
   };

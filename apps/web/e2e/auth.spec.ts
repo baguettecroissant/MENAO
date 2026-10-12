@@ -48,15 +48,15 @@ test("inscription, confirmation de l'e-mail, déconnexion puis connexion", async
 
 test("connexion par lien magique d'un compte existant (seed)", async ({ page, request }) => {
   await page.goto("/connexion/lien-magique");
-  await page.getByLabel("Adresse e-mail").fill("support@example.test");
+  await page.getByLabel("Adresse e-mail").fill("particulier@example.test");
   await page.getByRole("button", { name: "Recevoir mon lien" }).click();
   await expect(page.getByRole("main").getByRole("status")).toContainText("Si un compte existe");
 
-  await page.goto(await authLinkFor(request, "support@example.test"));
+  await page.goto(await authLinkFor(request, "particulier@example.test"));
   await expect(page).toHaveURL(/\/mon-espace$/);
   // Type de compte affiché dans le menu du compte (ADR 0034).
   await page.getByRole("button", { name: "Mon compte" }).click();
-  await expect(page.getByText("Support MENAO")).toBeVisible();
+  await expect(page.getByText("Particulier", { exact: true })).toBeVisible();
 });
 
 test("le lien magique ne crée pas de compte et ne révèle rien", async ({ page }) => {

@@ -982,6 +982,31 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await actions.getByRole("button", { name: "Rétablir l'accès" }).click();
   await expect(actions.getByText("Accès rétabli.")).toBeVisible();
 
+  // Boîte de réception (ADR 0049) : le message du client, pris en charge, note interne et réponse.
+  await admin.getByRole("link", { name: /^Dossiers et messages/ }).click();
+  await expect(admin).toHaveURL(/\/admin\/tickets$/);
+  const ticketList = admin.getByRole("main");
+  await ticketList.getByRole("searchbox", { name: "Rechercher un ticket" }).fill(email);
+  await ticketList.getByRole("button", { name: "Rechercher" }).click();
+  await admin.getByRole("link", { name: "Ouvrir le ticket : Question sur la garantie" }).click();
+  await expect(admin).toHaveURL(new RegExp(`/admin/tickets/${UUID}$`));
+  const handling = admin.getByRole("region", { name: "Prise en charge" });
+  await handling.getByRole("button", { name: "Je m'en occupe" }).click();
+  await expect(handling.getByText("Pris en charge par Charlie Admin.")).toBeVisible();
+  const notes = admin.getByRole("region", { name: "Notes internes" });
+  await notes.getByLabel("Nouvelle note").fill("Rappeler la cliente pour la garantie du siphon.");
+  await notes.getByRole("button", { name: "Ajouter la note" }).click();
+  await expect(notes.getByText("Rappeler la cliente pour la garantie du siphon.")).toBeVisible();
+  const conversation = admin.getByRole("region", { name: "Échanges avec le déclarant" });
+  await conversation
+    .getByLabel("Réponse au déclarant")
+    .fill("Bonjour, la garantie de bon fonctionnement dure deux ans.");
+  await conversation.getByRole("button", { name: "Répondre" }).click();
+  await expect(
+    conversation.getByText("Bonjour, la garantie de bon fonctionnement dure deux ans."),
+  ).toBeVisible();
+  await capture(admin, "admin-ticket");
+
   // Suspension manuelle d'un artisan (ADR 0047) : motif obligatoire, puis levée de la suspension.
   await globalSearch.fill("VALIDE EXEMPLE");
   await globalSearch.press("Enter");

@@ -80,7 +80,7 @@ export function OverviewScreen({
           tone="danger"
           title={todoT.disputes(o.tickets.litiges)}
           hint={todoT.disputesHint}
-          action={{ href: "/admin/tickets", label: todoT.disputesAction }}
+          action={{ href: "/admin/tickets?file=litiges", label: todoT.disputesAction }}
         />
       ),
     });
@@ -94,7 +94,7 @@ export function OverviewScreen({
           tone="danger"
           title={todoT.late(o.tickets.en_retard)}
           hint={todoT.lateHint}
-          action={{ href: "/admin/tickets", label: todoT.lateAction }}
+          action={{ href: "/admin/tickets?file=en_retard", label: todoT.lateAction }}
         />
       ),
     });
@@ -147,7 +147,7 @@ export function OverviewScreen({
               ? todoT.deletionsHint(formatDay(o.tickets.suppression_echeance))
               : ""
           }
-          action={{ href: "/admin/tickets", label: todoT.deletionsAction }}
+          action={{ href: "/admin/tickets?file=suppressions", label: todoT.deletionsAction }}
         />
       ),
     });

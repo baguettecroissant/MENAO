@@ -36,6 +36,8 @@ export type NavItem = {
   exact?: boolean;
   /** Autres débuts d'adresse rattachés à la rubrique (fiches d'un chantier, d'un devis…). */
   also?: readonly string[];
+  /** Back-office : rubrique ouverte au rôle support (ADR 0049) ; les autres sont réservées aux admins. */
+  support?: boolean;
 };
 export type NavSection = { label?: string; items: readonly NavItem[] };
 
@@ -133,6 +135,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           label: fr.admin.nav.tickets,
           icon: MessagesSquare,
           badge: "tickets",
+          support: true,
         },
       ],
     },
@@ -162,6 +165,14 @@ const startsWith = (pathname: string, href: string) =>
 export function isActive(item: NavItem, pathname: string): boolean {
   if (item.exact ? pathname === item.href : startsWith(pathname, item.href)) return true;
   return item.also?.some((href) => startsWith(pathname, href)) ?? false;
+}
+
+/** Rubriques d'un espace pour un rôle : le support ne voit que les siennes (ADR 0049). */
+export function navFor(space: Space, role?: string | null): readonly NavSection[] {
+  if (space !== "admin" || role !== "support") return NAV[space];
+  return NAV[space]
+    .map((section) => ({ ...section, items: section.items.filter((item) => item.support) }))
+    .filter((section) => section.items.length > 0);
 }
 
 /** Rubrique de la page affichée, pour la barre du haut. */
