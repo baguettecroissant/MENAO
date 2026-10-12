@@ -2,7 +2,7 @@ name: CI
 
 # Sur chaque PR (complète) et sur main après fusion (contrôles rapides : la PR a déjà tout testé).
 # Ouvrir une PR (même en brouillon) pour tester une branche. Une PR qui ne touche que la
-# documentation ne lance pas la CI.
+# documentation ne lance pas la CI. Dépôt public : runners de GitHub gratuits (ADR 0053).
 on:
   pull_request:
     paths-ignore:
@@ -18,17 +18,10 @@ concurrency:
 permissions:
   contents: read
 
-# Runner auto-hébergé sur le Mac de développement (ADR 0053) : gratuit et illimité pour un dépôt
-# privé. La variable de dépôt CI_RUNNER (JSON) le remplace, par exemple "ubuntu-latest" pour
-# revenir aux runners de GitHub. La CI y tourne isolée du poste : son propre Supabase
-# (scripts/ci/isoler-supabase.sh) et l'application sur le port 3100.
-env:
-  E2E_PORT: "3100"
-
 jobs:
   quality:
     name: Lint, typecheck, tests unitaires
-    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted", "macOS", "ARM64"]') }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
@@ -36,8 +29,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          # Le Mac garde le magasin pnpm d'une exécution à l'autre : cache GitHub inutile.
-          cache: ${{ runner.environment == 'github-hosted' && 'pnpm' || '' }}
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
@@ -52,22 +44,16 @@ jobs:
   database:
     name: Base de données (migrations, RLS pgTAP, types)
     if: github.event_name == 'pull_request'
-    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted", "macOS", "ARM64"]') }}
-    # Marge pour le premier téléchargement des images Docker sur le Mac.
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          # Le Mac garde le magasin pnpm d'une exécution à l'autre : cache GitHub inutile.
-          cache: ${{ runner.environment == 'github-hosted' && 'pnpm' || '' }}
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Isoler le Supabase de la CI
-        run: bash scripts/ci/isoler-supabase.sh
-      - name: Nettoyer une exécution précédente
-        run: pnpm exec supabase stop --no-backup || true
       - name: Démarrer Postgres (migrations + seed)
         id: db
         run: pnpm exec supabase db start
@@ -86,33 +72,22 @@ jobs:
           name: database-types
           path: packages/db/src/types.ts
           retention-days: 2
-      - name: Arrêter Postgres
-        if: always()
-        run: pnpm exec supabase stop --no-backup || true
 
   e2e:
     name: Bout en bout (Playwright)
     if: github.event_name == 'pull_request'
-    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted", "macOS", "ARM64"]') }}
-    # Marge pour le premier téléchargement des images Docker (Supabase complet) sur le Mac.
-    timeout-minutes: 40
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          # Le Mac garde le magasin pnpm d'une exécution à l'autre : cache GitHub inutile.
-          cache: ${{ runner.environment == 'github-hosted' && 'pnpm' || '' }}
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Isoler le Supabase de la CI
-        run: bash scripts/ci/isoler-supabase.sh
-      - name: Nettoyer une exécution précédente
-        run: |
-          docker rm -f stripe-mock-ci 2>/dev/null || true
-          pnpm exec supabase stop --no-backup || true
       - name: Démarrer stripe-mock (faux Stripe officiel)
-        run: docker run -d --name stripe-mock-ci -p 12112:12111 stripe/stripe-mock:v0.206.0
+        run: docker run -d --name stripe-mock -p 12111:12111 stripe/stripe-mock:v0.206.0
       - name: Démarrer Supabase local (Postgres, Auth, API, Storage, Edge Functions, Mailpit)
         # Les Edge Functions appellent les faux serveurs Sirene, IA et DocuSeal (lancés par
         # Playwright) et stripe-mock, tous sur l'hôte.
@@ -124,9 +99,9 @@ jobs:
           STRIPE_CONNECT_WEBHOOK_SECRET: whsec_menao_connect_ci
           STRIPE_TAX_RATE_ID: txr_menao_ci
           STRIPE_API_HOST: host.docker.internal
-          STRIPE_API_PORT: "12112"
+          STRIPE_API_PORT: "12111"
           STRIPE_API_PROTOCOL: http
-          SITE_URLS: http://localhost:${{ env.E2E_PORT }}
+          SITE_URLS: http://localhost:3000
           OPENROUTER_API_KEY: cle-factice-ci
           OPENROUTER_BASE_URL: http://host.docker.internal:54398
           GEOCODING_BASE_URL: http://host.docker.internal:54398
@@ -137,20 +112,18 @@ jobs:
       - name: Variables d'environnement de l'application
         run: |
           STATUS=$(pnpm exec supabase status -o json)
-          API_URL=$(jq -r '.API_URL' <<<"$STATUS")
           {
-            echo "NEXT_PUBLIC_SITE_URL=http://localhost:${E2E_PORT}"
-            echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL}"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r '.API_URL' <<<"$STATUS")"
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r '.PUBLISHABLE_KEY // .ANON_KEY' <<<"$STATUS")"
             # Clé serveur de l'instance locale (éphémère) : simulation des tâches planifiées en e2e.
             echo "SUPABASE_SERVICE_ROLE_KEY=$(jq -r '.SERVICE_ROLE_KEY // .SECRET_KEY' <<<"$STATUS")"
-            echo "MAILPIT_URL=$(jq -r '.MAILPIT_URL // .INBUCKET_URL' <<<"$STATUS")"
-            echo "MOCK_DOCUSEAL_WEBHOOK_URL=${API_URL}/functions/v1/signature-webhook"
+            echo "MAILPIT_URL=$(jq -r '.MAILPIT_URL // .INBUCKET_URL // "http://127.0.0.1:54324"' <<<"$STATUS")"
             echo "STRIPE_WEBHOOK_SECRET=whsec_menao_ci"
             echo "STRIPE_CONNECT_WEBHOOK_SECRET=whsec_menao_connect_ci"
           } >> "$GITHUB_ENV"
       - name: Installer Chromium
-        run: pnpm --filter web exec playwright install ${{ runner.os == 'Linux' && '--with-deps' || '' }} chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
       - name: Build
         run: pnpm --filter web build
       - name: Tests Playwright
@@ -165,7 +138,7 @@ jobs:
           retention-days: 2
       - name: Journaux des Edge Functions
         if: failure()
-        run: docker logs $(docker ps -aq --filter name=supabase_edge_runtime_menao-ci) 2>&1 | tail -150
+        run: docker logs $(docker ps -aq --filter name=supabase_edge_runtime) 2>&1 | tail -150
       - name: Rapport Playwright
         if: failure()
         uses: actions/upload-artifact@v4
@@ -175,8 +148,3 @@ jobs:
             apps/web/playwright-report
             apps/web/test-results
           retention-days: 3
-      - name: Arrêter les services
-        if: always()
-        run: |
-          docker rm -f stripe-mock-ci 2>/dev/null || true
-          pnpm exec supabase stop --no-backup || true

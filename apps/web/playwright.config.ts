@@ -1,8 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Port de l'application : 3000 sur le poste, un autre en CI (runner partagé avec le poste, ADR 0053).
-const port = process.env.E2E_PORT ?? "3000";
-const baseURL = `http://localhost:${port}`;
+const baseURL = "http://localhost:3000";
 
 /** Tests de bout en bout contre l'application buildée et un Supabase local (`pnpm db:start`). */
 export default defineConfig({
@@ -36,7 +34,6 @@ export default defineConfig({
     {
       command: "pnpm start",
       url: baseURL,
-      env: { PORT: port },
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },

@@ -94,5 +94,5 @@ test("redirection ouverte refusée après connexion", async ({ page }) => {
   await page.getByLabel("Adresse e-mail").fill("particulier@example.test");
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page).toHaveURL(/^http:\/\/localhost:\d+\/mon-espace$/);
+  await expect(page).toHaveURL(/localhost:3000\/mon-espace$/);
 });
