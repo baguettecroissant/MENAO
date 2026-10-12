@@ -29,3 +29,37 @@ export const RESERVES_ESCALATION_DAYS = 30;
 export function canLiftReserves(status: ChantierStatus): boolean {
   return status === "reserves_a_lever";
 }
+
+/**
+ * Garanties légales qui courent à compter de la réception, selon la nature des travaux (Code civil,
+ * art. 1792 et suivants) : parfait achèvement, bon fonctionnement des équipements, décennale.
+ * TODO(legal) : formulation et calcul des échéances à faire valider (garanties applicables selon
+ * la nature des travaux).
+ */
+export const WARRANTY_YEARS = {
+  parfaitAchevement: 1,
+  bonFonctionnement: 2,
+  decennale: 10,
+} as const;
+export type Warranty = keyof typeof WARRANTY_YEARS;
+
+const isLeapYear = (year: number) => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+
+/** Échéance N années après la réception (AAAA-MM-JJ) : même quantième, 29 février → 28 février. */
+export function warrantyEnd(receivedOn: string, years: number): string {
+  const [y, m, d] = receivedOn.split("-").map(Number) as [number, number, number];
+  const year = y + years;
+  const day = m === 2 && d === 29 && !isLeapYear(year) ? 28 : d;
+  return `${year}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Garanties d'un chantier réceptionné, avec leur échéance, en cours ou échues à la date donnée. */
+export function warranties(
+  receivedOn: string,
+  today: string,
+): { kind: Warranty; until: string; active: boolean }[] {
+  return (Object.keys(WARRANTY_YEARS) as Warranty[]).map((kind) => {
+    const until = warrantyEnd(receivedOn, WARRANTY_YEARS[kind]);
+    return { kind, until, active: today <= until };
+  });
+}

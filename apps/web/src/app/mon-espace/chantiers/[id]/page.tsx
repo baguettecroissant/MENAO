@@ -3,6 +3,7 @@ import {
   chantierStepIndex,
   clientChantierAction,
   journalSummary,
+  parisToday,
   paymentProgress,
   reviewInvited,
   type ChantierStatus,
@@ -28,8 +29,9 @@ import { ChantierStepper } from "@/components/chantier/chantier-stepper";
 import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
 import { ConfirmLiftActions, ReceptionActions } from "@/components/chantier/reception-actions";
-import { ReviewInvite } from "@/components/review/review-invite";
+import { WarrantyCard } from "@/components/chantier/warranty-card";
 import { CancelChantierButton } from "@/components/project/cancel-buttons";
+import { ReviewInvite } from "@/components/review/review-invite";
 import { Alert, ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
@@ -40,6 +42,14 @@ import { createClient } from "@/lib/supabase/server";
 
 const t = fr.chantier;
 const cancellable: readonly ChantierStatus[] = CLIENT_CANCELLABLE_STATUSES;
+
+/** Assureur décennal repris du devis figé (garanties après la réception). */
+function decennaleOf(value: unknown): { name: string; policy: string | null } | null {
+  if (typeof value !== "object" || value === null) return null;
+  const { assureur, numero } = value as { assureur?: unknown; numero?: unknown };
+  if (typeof assureur !== "string" || !assureur.trim()) return null;
+  return { name: assureur, policy: typeof numero === "string" && numero.trim() ? numero : null };
+}
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const STARTED: readonly ChantierStatus[] = [
@@ -90,7 +100,9 @@ export default async function ClientChantierPage({
       .eq("chantier_id", id),
     supabase
       .from("quotes")
-      .select("id, status, numero, sent_at, signed_at, total_ttc_cents")
+      .select(
+        "id, status, numero, sent_at, signed_at, total_ttc_cents, decennale:document->issuer->decennale",
+      )
       .eq("chantier_id", id)
       .neq("status", "brouillon")
       .order("version", { ascending: false })
@@ -314,6 +326,12 @@ export default async function ClientChantierPage({
             <>
               <ChantierDocuments documents={documents} />
               <PaymentSchedule progress={progress} />
+              {c.received_at && (
+                <WarrantyCard
+                  receivedOn={parisToday(new Date(c.received_at))}
+                  insurer={decennaleOf(quote?.decennale)}
+                />
+              )}
             </>
           )}
           {status === "cloture" && (

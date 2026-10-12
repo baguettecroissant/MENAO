@@ -1177,6 +1177,31 @@ export const fr = {
     },
     rehire: (name: string) => `Redemander un devis à ${name}`,
   },
+  warranties: {
+    title: "Vos garanties après la réception",
+    intro: (date: string) =>
+      `Selon la nature des travaux, la loi prévoit ces garanties à compter de la réception du ${date} :`,
+    kinds: {
+      parfaitAchevement: {
+        label: "Garantie de parfait achèvement",
+        what: "L'artisan répare les défauts signalés dans l'année qui suit la réception, y compris les réserves du procès-verbal.",
+      },
+      bonFonctionnement: {
+        label: "Garantie de bon fonctionnement",
+        what: "Équipements installés qui peuvent être retirés sans abîmer l'ouvrage (robinetterie, radiateurs, volets…).",
+      },
+      decennale: {
+        label: "Garantie décennale",
+        what: "Dommages qui compromettent la solidité de l'ouvrage ou le rendent impropre à son usage.",
+      },
+    },
+    until: (date: string) => `jusqu'au ${date}`,
+    ended: (date: string) => `terminée le ${date}`,
+    insurer: (insurer: string, policy: string | null) =>
+      `Assurance décennale de l'artisan : ${insurer}${policy ? `, contrat n° ${policy}` : ""}.`,
+    advice:
+      "En cas de problème, prévenez d'abord l'artisan par la messagerie, puis signalez-le à l'équipe MENAO depuis cette page.",
+  },
   clientCancel: {
     reasonsLegend: "Pourquoi annulez-vous ?",
     reasons: {
@@ -1744,31 +1769,6 @@ export const fr = {
     role: "Type de compte",
     signOut: "Me déconnecter",
   },
-  account: {
-    title: "Mon compte",
-    intro:
-      "Vos informations, votre adresse e-mail, votre mot de passe et vos données personnelles.",
-    proNav: "Paramètres du compte",
-    profile: {
-      title: "Mes informations",
-      firstName: "Prénom",
-      lastName: "Nom",
-      phone: "Téléphone",
-      phoneOptional: "(facultatif)",
-      phoneHintClient:
-        "Utilisé pour le code de signature envoyé par SMS et pour que l'artisan puisse vous rappeler.",
-      phoneHintPro: "Visible de vos clients une fois leur demande acceptée.",
-      save: "Enregistrer mes informations",
-      saved: "Vos informations sont enregistrées.",
-    },
-    email: {
-      title: "Adresse e-mail",
-      current: "Adresse actuelle",
-      label: "Nouvelle adresse e-mail",
-      hint: "Un lien de confirmation est envoyé à vos deux adresses : le changement prend effet une fois les deux liens ouverts.",
-      submit: "Changer d'adresse e-mail",
-      sent: (email: string) =>
-        `C'est presque fini : ouvrez les liens envoyés à votre adresse actuelle et à ${email} pour confirmer le changement.`,
   exchanges: {
     title: "Mes échanges avec MENAO",
     intro:
@@ -1800,6 +1800,31 @@ export const fr = {
     closed:
       "Cet échange est clos. Pour une nouvelle question, écrivez-nous depuis la page Contact.",
   },
+  account: {
+    title: "Mon compte",
+    intro:
+      "Vos informations, votre adresse e-mail, votre mot de passe et vos données personnelles.",
+    proNav: "Paramètres du compte",
+    profile: {
+      title: "Mes informations",
+      firstName: "Prénom",
+      lastName: "Nom",
+      phone: "Téléphone",
+      phoneOptional: "(facultatif)",
+      phoneHintClient:
+        "Utilisé pour le code de signature envoyé par SMS et pour que l'artisan puisse vous rappeler.",
+      phoneHintPro: "Visible de vos clients une fois leur demande acceptée.",
+      save: "Enregistrer mes informations",
+      saved: "Vos informations sont enregistrées.",
+    },
+    email: {
+      title: "Adresse e-mail",
+      current: "Adresse actuelle",
+      label: "Nouvelle adresse e-mail",
+      hint: "Un lien de confirmation est envoyé à vos deux adresses : le changement prend effet une fois les deux liens ouverts.",
+      submit: "Changer d'adresse e-mail",
+      sent: (email: string) =>
+        `C'est presque fini : ouvrez les liens envoyés à votre adresse actuelle et à ${email} pour confirmer le changement.`,
       pending: (email: string) =>
         `Changement en attente vers ${email} : ouvrez les liens reçus par e-mail pour le confirmer.`,
       confirmed: "C'est noté : votre adresse e-mail est confirmée.",

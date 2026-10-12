@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { CHANTIER_TRANSITIONS } from "../src/chantier-state";
 import {
+  WARRANTY_YEARS,
+  warranties,
+  warrantyEnd,
   RESERVES_ESCALATION_DAYS,
   RESERVES_LIMITS,
   RESERVES_REMINDER_DAYS,
@@ -47,6 +50,33 @@ describe("réception des travaux (F-25, F-26)", () => {
       "reserves_a_lever",
       "reserves_levees",
       "receptionne",
+    ]);
+  });
+});
+
+describe("garanties après réception (F-12, ADR 0041)", () => {
+  it("parfait achèvement 1 an, bon fonctionnement 2 ans, décennale 10 ans", () => {
+    expect(WARRANTY_YEARS).toEqual({ parfaitAchevement: 1, bonFonctionnement: 2, decennale: 10 });
+  });
+
+  it("échéance au même quantième, 29 février ramené au 28 les années non bissextiles", () => {
+    expect(warrantyEnd("2026-10-12", 1)).toBe("2027-10-12");
+    expect(warrantyEnd("2026-10-12", 10)).toBe("2036-10-12");
+    expect(warrantyEnd("2028-02-29", 1)).toBe("2029-02-28");
+    expect(warrantyEnd("2028-02-29", 4)).toBe("2032-02-29");
+    expect(warrantyEnd("2026-01-31", 2)).toBe("2028-01-31");
+  });
+
+  it("garanties en cours ou échues à une date donnée", () => {
+    expect(warranties("2026-10-12", "2027-10-12")).toEqual([
+      { kind: "parfaitAchevement", until: "2027-10-12", active: true },
+      { kind: "bonFonctionnement", until: "2028-10-12", active: true },
+      { kind: "decennale", until: "2036-10-12", active: true },
+    ]);
+    expect(warranties("2026-10-12", "2027-10-13").map((w) => w.active)).toEqual([
+      false,
+      true,
+      true,
     ]);
   });
 });

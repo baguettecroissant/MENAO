@@ -649,6 +649,18 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   const paidSchedule = page.getByRole("region", { name: "Échéancier de paiement" });
   await expect(paidSchedule.getByText(/91,85\s€/)).toBeVisible();
   await expect(paidSchedule.getByText(/0,00\s€/)).toBeVisible();
+  // Garanties après la réception (ADR 0041) : échéances calculées, assureur décennal du devis.
+  const guarantees = page.getByRole("region", { name: "Vos garanties après la réception" });
+  const nextYear = new Date().getFullYear() + 1;
+  await expect(
+    guarantees.getByText(
+      new RegExp(`^Garantie de parfait achèvement : jusqu'au \\d{1,2} \\S+ ${nextYear}$`),
+    ),
+  ).toBeVisible();
+  await expect(
+    guarantees.getByText(/^Assurance décennale de l'artisan : Assurances Exemple/),
+  ).toBeVisible();
+  await capture(page, "client-chantier-garanties");
   const allInvoices = await (await proPage.request.get("/pro/factures/export")).text();
   expect(allInvoices).toContain('"Solde";"Dominique Test"');
   // Solde 64,30 € : 83,50 € HT et 8,35 € de TVA du devis, moins ceux de l'acompte (25,05 € et 2,50 €).
@@ -828,8 +840,6 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.reload();
   await expect(page.getByLabel(/Activité du chantier/)).not.toBeChecked();
   await expect(page.getByLabel(/Rappels/)).toBeChecked();
-  await pro.close();
-});
 
   // « Mes échanges avec MENAO » (ADR 0041) : un message envoyé connecté depuis la page Contact
   // s'y retrouve avec son fil, à côté du signalement.
@@ -859,3 +869,5 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.getByRole("button", { name: "Envoyer", exact: true }).click();
   await expect(page.getByText("Je précise : il s'agit du siphon de la cuisine.")).toBeVisible();
   await capture(page, "client-echange");
+  await pro.close();
+});
