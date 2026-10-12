@@ -1,11 +1,16 @@
+import { connectAccountStatus, connectRequirementGroups } from "@menao/core";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { ConnectButton } from "./connect-button";
+import { formatDay } from "@/lib/format";
+import { ConnectStatusPanel } from "./connect-status";
 
 const t = fr.pro.onboarding.connect;
 
-/** Étape 6 — compte de paiement Stripe Connect (paiements directs, ADR 0011). */
+/**
+ * Étape 6 — compte de paiement Stripe Connect (paiements directs, ADR 0011). Dit en clair ce que
+ * Stripe attend encore (rubriques lisibles, date limite) ou qu'il vérifie les informations.
+ */
 export default async function PaymentsStepPage({
   searchParams,
 }: PageProps<"/pro/onboarding/paiements">) {
@@ -22,7 +27,7 @@ export default async function PaymentsStepPage({
     );
   }
 
-  // Retour depuis Stripe : relit l'état du compte sans attendre le webhook.
+  // Retour depuis Stripe (ou « Actualiser ») : relit l'état du compte sans attendre le webhook.
   if (params.retour === "1" && artisan.stripe_account_id && !artisan.connect_charges_enabled) {
     await supabase.functions.invoke("connect-onboarding", {
       method: "POST",
@@ -32,6 +37,14 @@ export default async function PaymentsStepPage({
     if (data) artisan = data;
   }
 
+  const status = connectAccountStatus({
+    hasAccount: artisan.stripe_account_id !== null,
+    chargesEnabled: artisan.connect_charges_enabled,
+    detailsSubmitted: artisan.connect_details_submitted,
+    requirementsDue: artisan.connect_requirements_due,
+    requirementsPending: artisan.connect_requirements_pending,
+    disabledReason: artisan.connect_disabled_reason,
+  });
   return (
     <Card>
       <section aria-labelledby="paiements" className="flex flex-col gap-4">
@@ -39,29 +52,17 @@ export default async function PaymentsStepPage({
           {fr.pro.onboarding.steps.paiements}
         </h2>
         {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
-        {artisan.connect_charges_enabled ? (
-          <>
-            <Alert tone="success">{t.active}</Alert>
-            {!artisan.connect_payouts_enabled && (
-              <p className="text-muted-foreground">{t.payoutsPending}</p>
-            )}
-            <a
-              href="https://dashboard.stripe.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-primary underline-offset-2 hover:underline"
-            >
-              {t.dashboard}
-            </a>
-          </>
-        ) : (
-          <>
-            <p>{t.intro}</p>
-            <p className="text-sm text-muted-foreground">{t.fees}</p>
-            {artisan.connect_details_submitted && <p role="status">{t.pending}</p>}
-            <ConnectButton label={artisan.stripe_account_id ? t.resume : t.start} />
-          </>
-        )}
+        <ConnectStatusPanel
+          status={status}
+          payoutsEnabled={artisan.connect_payouts_enabled}
+          due={connectRequirementGroups(artisan.connect_requirements_due)}
+          pending={connectRequirementGroups(artisan.connect_requirements_pending)}
+          deadline={
+            artisan.connect_requirements_deadline
+              ? formatDay(artisan.connect_requirements_deadline)
+              : null
+          }
+        />
       </section>
     </Card>
   );
