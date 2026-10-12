@@ -3254,7 +3254,6 @@ export type Database = {
         };
         Returns: string;
       };
-      record_webhook_failure: { Args: { p_error: string; p_event_id: string }; Returns: undefined };
       record_sirene_result: {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
@@ -3263,6 +3262,7 @@ export type Database = {
         Args: { p_storage_path: string; p_ticket_id: string; p_user_id: string };
         Returns: string;
       };
+      record_webhook_failure: { Args: { p_error: string; p_event_id: string }; Returns: undefined };
       renew_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: string };
       report_chantier_problem: {
         Args: {
