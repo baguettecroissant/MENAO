@@ -117,8 +117,8 @@ export default async function AdminSubscriptionsPage({
               }
             />
           </SummaryTiles>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <Card className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <Card className="flex min-w-0 flex-col gap-3">
               <h2 className="text-lg font-medium">{t.plans.title}</h2>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[30rem] text-left text-sm">

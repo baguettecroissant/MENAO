@@ -162,8 +162,8 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
             )}
           </Card>
 
-          <div className="grid items-start gap-6 lg:grid-cols-2">
-            <Card className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+            <Card className="flex min-w-0 flex-col gap-3">
               <h2 className="text-lg font-medium">{t.models.title}</h2>
               {summary.modeles.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t.empty}</p>
@@ -207,7 +207,7 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
             </Card>
 
             {summary.par_jour.length > 1 && (
-              <Card className="flex flex-col gap-3">
+              <Card className="flex min-w-0 flex-col gap-3">
                 <h2 className="text-lg font-medium">{t.daily.title}</h2>
                 <ol aria-label={t.daily.title} className="flex h-40 items-end gap-1">
                   {summary.par_jour.map((day) => {
