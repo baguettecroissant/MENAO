@@ -10,6 +10,11 @@ export async function saveConnectAccount(
     connect_charges_enabled: account.chargesEnabled,
     connect_payouts_enabled: account.payoutsEnabled,
     connect_details_submitted: account.detailsSubmitted,
+    // Ce que Stripe attend encore (page « Paiements »).
+    connect_requirements_due: account.requirementsDue,
+    connect_requirements_pending: account.requirementsPending,
+    connect_disabled_reason: account.disabledReason?.slice(0, 100) ?? null,
+    connect_requirements_deadline: account.requirementsDeadline,
     connect_updated_at: new Date().toISOString(),
   };
   const { data: updated, error } = await admin

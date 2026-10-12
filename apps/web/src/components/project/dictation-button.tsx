@@ -5,7 +5,9 @@ import { AudioLines, LoaderCircle, Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { fr } from "@/i18n/fr";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
-import { dictationSupported, recordingToWavBase64 } from "@/lib/project/dictation";
+import { dictationSupported, recordingToWav } from "@/lib/project/dictation";
+import { useMicLevel } from "@/lib/project/use-mic-level";
+import { MicLevel } from "./mic-level";
 
 const t = fr.search.dictation;
 
@@ -24,6 +26,9 @@ export function DictationButton({
   const [state, setStateRaw] = useState<DictationState>("idle");
   const [seconds, setSeconds] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
+  // Flux du micro pendant la dictée : niveau affiché et silence prolongé signalé.
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
+  const mic = useMicLevel(micStream);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const setState = (next: DictationState) => {
@@ -56,10 +61,12 @@ export function DictationButton({
     };
     rec.onstop = () => {
       stream.getTracks().forEach((track) => track.stop());
+      setMicStream(null);
       if (timer.current) clearInterval(timer.current);
       void transcribe(new Blob(chunks, { type: rec.mimeType }));
     };
     rec.start();
+    setMicStream(stream);
     setSeconds(0);
     setState("listening");
     timer.current = setInterval(() => setSeconds((s) => s + 1), 1000);
@@ -80,13 +87,15 @@ export function DictationButton({
   async function transcribe(recording: Blob) {
     setState("transcribing");
     try {
+      const audio = await recordingToWav(recording);
+      // Rien de capté (micro coupé, mauvais micro) : ni session ni transcription.
+      if (audio.silent) return onError(t.silent);
       const session = await ensureSession();
       if (!session) return onError(fr.search.errors.session);
-      const audio = await recordingToWavBase64(recording);
       const result = await invokeFunction<{ status: string; text?: string }>(
         session.supabase,
         "transcribe",
-        { audio },
+        { audio: audio.base64 },
       );
       if (result.status === "ok" && "text" in result && result.text) onText(result.text);
       else onError(result.status === "rate_limited" ? t.rate_limited : t.failed);
@@ -107,8 +116,14 @@ export function DictationButton({
   return (
     <div className="flex items-center gap-2">
       {state !== "idle" && (
-        <span aria-live="polite" className="text-xs font-medium text-primary-strong">
-          {state === "transcribing" ? t.transcribing : t.listening(seconds)}
+        <span
+          aria-live="polite"
+          className={`flex items-center gap-1.5 text-xs font-medium ${
+            listening && mic.quiet ? "text-warning" : "text-primary-strong"
+          }`}
+        >
+          {listening && <MicLevel level={mic.level} />}
+          {state === "transcribing" ? t.transcribing : mic.quiet ? t.quiet : t.listening(seconds)}
         </span>
       )}
       <span className="relative inline-flex">

@@ -70,3 +70,38 @@ export function wavDurationSeconds(bytes: Uint8Array): number | null {
   if (format !== 1 || byteRate < 8000 || byteRate > 384000) return null;
   return (bytes.length - HEADER_BYTES) / byteRate;
 }
+
+/** Niveau efficace (RMS) d'un bloc d'échantillons, de 0 à 1. */
+export function rms(samples: ArrayLike<number>): number {
+  if (samples.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const value = samples[i] ?? 0;
+    sum += value * value;
+  }
+  return Math.sqrt(sum / samples.length);
+}
+
+/** Niveau affiché de 0 à 1 sur une échelle de 60 dB (−60 dB et moins : 0 ; 0 dB : 1). */
+export function levelFromRms(value: number): number {
+  if (value <= 0) return 0;
+  return Math.min(1, Math.max(0, (20 * Math.log10(value) + 60) / 60));
+}
+
+/** Sous ce niveau (−40 dB), rien n'est entendu : micro coupé ou mauvais micro sélectionné. */
+export const SILENCE_RMS = 0.01;
+/** Silence continu pendant l'enregistrement : avertissement au bout de 3 secondes. */
+export const SILENCE_WARNING_MS = 3000;
+
+/** Niveau du bloc de 50 ms le plus fort de l'enregistrement : une syllabe audible suffit. */
+export function peakRms(samples: Float32Array, sampleRate: number): number {
+  const block = Math.max(1, Math.round(sampleRate / 20));
+  let peak = 0;
+  for (let i = 0; i < samples.length; i += block) {
+    peak = Math.max(peak, rms(samples.subarray(i, i + block)));
+  }
+  return peak;
+}
+
+/** Enregistrement silencieux : inutile de l'envoyer à la transcription. */
+export const isSilent = (peak: number) => peak < SILENCE_RMS;

@@ -3,11 +3,13 @@
 import { MAX_DICTATION_SECONDS, type VoiceLine } from "@menao/core";
 import { LoaderCircle, Mic, Pause, Save, Sparkles, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { MicLevel } from "@/components/project/mic-level";
 import { Alert, Button, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { saveDictation } from "@/lib/artisan/quote-actions";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
-import { dictationSupported, recordingToWavBase64 } from "@/lib/project/dictation";
+import { dictationSupported, recordingToWav } from "@/lib/project/dictation";
+import { useMicLevel } from "@/lib/project/use-mic-level";
 
 const t = fr.pro.quote.dictation;
 
@@ -38,6 +40,9 @@ export function QuoteDictation({
   const [generating, setGenerating] = useState(false);
   const [saving, startSaving] = useTransition();
   const recorder = useRef<MediaRecorder | null>(null);
+  // Flux du micro pendant l'enregistrement : niveau affiché et silence prolongé signalé.
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
+  const mic = useMicLevel(micStream);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   // Effacement pendant l'enregistrement : l'étape en cours n'est pas transcrite.
   const discarding = useRef(false);
@@ -73,11 +78,13 @@ export function QuoteDictation({
     };
     rec.onstop = () => {
       stream.getTracks().forEach((track) => track.stop());
+      setMicStream(null);
       if (timer.current) clearInterval(timer.current);
       if (discarding.current) return setPhase("idle");
       void transcribe(new Blob(chunks, { type: rec.mimeType }));
     };
     rec.start();
+    setMicStream(stream);
     setPhase("recording");
     timer.current = setInterval(tick, 1000);
   }
@@ -98,13 +105,15 @@ export function QuoteDictation({
   async function transcribe(recording: Blob) {
     setPhase("transcribing");
     try {
+      const audio = await recordingToWav(recording);
+      // Rien de capté (micro coupé, mauvais micro) : ni session ni transcription.
+      if (audio.silent) return setError(t.silent);
       const session = await ensureSession();
       if (!session) return setError(t.failed);
-      const audio = await recordingToWavBase64(recording);
       const result = await invokeFunction<{ status: string; text?: string }>(
         session.supabase,
         "transcribe",
-        { audio },
+        { audio: audio.base64 },
       );
       const text = result.status === "ok" && "text" in result ? result.text?.trim() : null;
       if (text) setTranscript((current) => [current.trim(), text].filter(Boolean).join(" "));
@@ -244,8 +253,20 @@ export function QuoteDictation({
           </button>
         </span>
       </div>
-      <p aria-live="polite" className="min-h-4 text-center text-xs text-muted-foreground">
-        {phase === "transcribing" ? t.transcribing : recording ? t.recording : ""}
+      <p
+        aria-live="polite"
+        className={`flex min-h-4 items-center justify-center gap-2 text-center text-xs ${
+          recording && mic.quiet ? "font-medium text-warning" : "text-muted-foreground"
+        }`}
+      >
+        {recording && <MicLevel level={mic.level} />}
+        {phase === "transcribing"
+          ? t.transcribing
+          : recording
+            ? mic.quiet
+              ? t.quiet
+              : t.recording
+            : ""}
       </p>
 
       {error && <Alert tone="error">{error}</Alert>}

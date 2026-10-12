@@ -745,6 +745,9 @@ export const fr = {
       failed: "La transcription a échoué. Réessayez ou saisissez votre projet au clavier.",
       rate_limited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
       limit: "Dictée limitée à 2 minutes.",
+      quiet: "On ne vous entend pas…",
+      silent:
+        "Aucun son capté : vérifiez que votre micro n'est pas coupé et qu'il est bien choisi dans votre navigateur, puis réessayez.",
     },
     photos: {
       add: "Ajouter des photos",
@@ -2332,6 +2335,10 @@ export const fr = {
         failed: "La transcription a échoué. Réessayez ou écrivez le texte.",
         limit: "Dictée limitée à 2 minutes.",
         rateLimited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
+        quiet:
+          "On ne vous entend pas : rapprochez-vous du micro ou vérifiez qu'il n'est pas coupé.",
+        silent:
+          "Aucun son capté : vérifiez que votre micro n'est pas coupé et qu'il est bien choisi dans votre navigateur, puis réessayez.",
         empty:
           "Aucune ligne n'a pu être tirée de la dictée. Citez les fournitures, les quantités et les prix.",
         unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
@@ -2755,14 +2762,37 @@ export const fr = {
           "La configuration des paiements sera disponible dès que l'équipe MENAO aura validé votre dossier.",
         start: "Configurer mes paiements avec Stripe",
         resume: "Reprendre la configuration Stripe",
-        pending:
-          "Stripe vérifie vos informations. Cela peut prendre quelques minutes ; revenez sur cette page ou reprenez la configuration si des éléments manquent.",
         active:
           "Votre compte de paiement est actif : vous pouvez recevoir les paiements de vos clients.",
         payoutsPending:
           "Les virements vers votre compte bancaire seront activés dès que Stripe aura terminé ses vérifications.",
         dashboard: "Ouvrir mon tableau de bord Stripe",
         linkExpired: "Le lien Stripe a expiré : reprenez la configuration.",
+        dueTitle: "Stripe attend encore quelques informations pour activer vos paiements :",
+        duePayoutsTitle: "Pour activer les virements vers votre banque, Stripe attend encore :",
+        deadline: (date: string) => `À fournir avant le ${date}.`,
+        complete: "Compléter mes informations sur Stripe",
+        verifying:
+          "Stripe vérifie les informations transmises. Rien à faire de votre côté pour l'instant : revenez sur cette page un peu plus tard pour voir où en est votre compte.",
+        verifyingItems: "En cours de vérification :",
+        check: "Actualiser l'état de mon compte",
+        refused:
+          "Stripe a refusé l'ouverture de ce compte de paiement. Contactez l'équipe MENAO pour trouver une solution.",
+        contact: "Contacter l'équipe MENAO",
+        groups: {
+          banque: "Coordonnées bancaires (IBAN) pour recevoir vos paiements",
+          identite: "Pièce d'identité du représentant légal",
+          representant:
+            "Informations sur le représentant légal (nom, date de naissance, coordonnées)",
+          adresse: "Adresse de l'entreprise ou du représentant",
+          entreprise: "Informations sur l'entreprise (raison sociale, SIREN, téléphone)",
+          justificatif_entreprise:
+            "Justificatif d'entreprise (par exemple un extrait Kbis ou un avis de situation INSEE)",
+          personnes: "Dirigeants et bénéficiaires effectifs",
+          activite: "Description de votre activité",
+          conditions: "Acceptation des conditions d'utilisation de Stripe",
+          autre: "Autres informations demandées par Stripe",
+        },
         errors: {
           not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
           no_account: "Aucun compte de paiement pour le moment.",

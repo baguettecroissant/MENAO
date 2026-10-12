@@ -35,6 +35,18 @@ select throws_ok($$ update public.artisans set stripe_account_id = 'acct_pirate'
   'artisan : identifiant de compte Stripe non modifiable');
 select results_eq($$ select stripe_account_id, connect_charges_enabled from public.artisans $$,
   $$ values ('acct_c'::text, true) $$, 'artisan : lit l''état de son compte de paiement');
+select throws_ok($$ update public.artisans set connect_requirements_due = '{}' $$, '42501', null,
+  'artisan : ne modifie pas les informations attendues par Stripe');
+reset role;
+update public.artisans set connect_requirements_due = array['external_account'],
+  connect_disabled_reason = 'requirements.past_due' where id = pg_temp.artisan();
+select set_config('request.jwt.claims', jsonb_build_object('sub', 'c9c9c9c9-0000-4000-8000-000000000001',
+  'role', 'authenticated', 'app_metadata', jsonb_build_object('role', 'artisan'))::text, true);
+set local role authenticated;
+select results_eq(
+  $$ select connect_requirements_due, connect_requirements_pending, connect_disabled_reason from public.artisans $$,
+  $$ values (array['external_account']::text[], '{}'::text[], 'requirements.past_due'::text) $$,
+  'artisan : lit ce que Stripe attend encore');
 reset role;
 
 select * from finish();

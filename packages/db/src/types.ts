@@ -614,7 +614,11 @@ export type Database = {
           base_location: unknown;
           connect_charges_enabled: boolean;
           connect_details_submitted: boolean;
+          connect_disabled_reason: string | null;
           connect_payouts_enabled: boolean;
+          connect_requirements_deadline: string | null;
+          connect_requirements_due: string[];
+          connect_requirements_pending: string[];
           connect_updated_at: string | null;
           created_at: string;
           default_deposit_percent: number;
@@ -657,7 +661,11 @@ export type Database = {
           base_location?: unknown;
           connect_charges_enabled?: boolean;
           connect_details_submitted?: boolean;
+          connect_disabled_reason?: string | null;
           connect_payouts_enabled?: boolean;
+          connect_requirements_deadline?: string | null;
+          connect_requirements_due?: string[];
+          connect_requirements_pending?: string[];
           connect_updated_at?: string | null;
           created_at?: string;
           default_deposit_percent?: number;
@@ -699,7 +707,11 @@ export type Database = {
           base_location?: unknown;
           connect_charges_enabled?: boolean;
           connect_details_submitted?: boolean;
+          connect_disabled_reason?: string | null;
           connect_payouts_enabled?: boolean;
+          connect_requirements_deadline?: string | null;
+          connect_requirements_due?: string[];
+          connect_requirements_pending?: string[];
           connect_updated_at?: string | null;
           created_at?: string;
           default_deposit_percent?: number;
