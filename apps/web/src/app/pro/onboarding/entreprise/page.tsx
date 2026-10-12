@@ -2,7 +2,9 @@ import { frenchVatNumber } from "@menao/core";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { documentLogoUrl } from "@/lib/documents/logo";
 import { CompanyForm } from "./company-form";
+import { LogoCard } from "./logo-card";
 import { SiretForm } from "./siret-form";
 
 const t = fr.pro.onboarding.company;
@@ -12,9 +14,10 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", {
 });
 
 export default async function CompanyStepPage() {
-  const { artisan } = await getOnboardingContext();
+  const { supabase, userId, artisan } = await getOnboardingContext();
   const verified = artisan.sirene_checked_at !== null;
   const editable = artisan.status === "brouillon";
+  const logoUrl = await documentLogoUrl(supabase, artisan.logo_path);
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,6 +71,9 @@ export default async function CompanyStepPage() {
           />
         </Card>
       )}
+
+      {/* Logo des documents (ADR 0038) : modifiable à tout moment, même après la validation. */}
+      <LogoCard userId={userId} logoUrl={logoUrl} hasLogo={artisan.logo_path !== null} />
     </div>
   );
 }

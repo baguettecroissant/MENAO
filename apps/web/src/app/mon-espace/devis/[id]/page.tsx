@@ -7,6 +7,7 @@ import { QuoteResponse } from "@/components/project/quote-response";
 import { QuotePaper } from "@/components/pro/quote-paper";
 import { Alert, ButtonLink, StatusBadge, TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { documentLogoUrl } from "@/lib/documents/logo";
 import { formatDay } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,7 +64,8 @@ export default async function ClientQuotePage({
         .maybeSingle(),
     ]);
   if (!document || !quote || quote.status === "brouillon") notFound();
-  const data = quotePdfData(document as unknown as QuoteDocument);
+  const doc = document as unknown as QuoteDocument;
+  const data = quotePdfData(doc);
   const { data: newer } =
     quote.status === "remplace"
       ? await supabase
@@ -74,6 +76,7 @@ export default async function ClientQuotePage({
           .maybeSingle()
       : { data: null };
   const artisan = data.issuer.tradeName ?? data.issuer.name;
+  const logoUrl = await documentLogoUrl(supabase, doc.issuer.logo_path);
 
   return (
     <main className="bg-background">
@@ -138,7 +141,12 @@ export default async function ClientQuotePage({
             )}
           </Alert>
         )}
-        <QuotePaper model={quoteDocumentModel(data)} label={t.document} clipped={false} />
+        <QuotePaper
+          model={quoteDocumentModel(data)}
+          label={t.document}
+          clipped={false}
+          logoUrl={logoUrl}
+        />
         <a
           href={`/devis/${id}/pdf`}
           target="_blank"

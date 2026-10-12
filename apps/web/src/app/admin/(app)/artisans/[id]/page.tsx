@@ -13,6 +13,7 @@ import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { verifyCertification } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
+import { documentLogoUrl } from "@/lib/documents/logo";
 import { DecisionForm, DocumentReview } from "./review-forms";
 
 const t = fr.admin.detail;
@@ -80,6 +81,8 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       .eq("artisan_id", id)
       .maybeSingle(),
   ]);
+  // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
+  const logoUrl = await documentLogoUrl(supabase, artisan.logo_path);
 
   const docs = documents.data ?? [];
   const { data: signed } = docs.length
@@ -287,6 +290,14 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
               width={96}
               height={96}
               className="size-24 rounded-full border border-border object-cover"
+            />
+          )}
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire, sans optimisation Vercel (spec §4.4)
+            <img
+              src={logoUrl}
+              alt={fr.documentLogo.alt(artisan.nom_commercial ?? artisan.raison_sociale ?? "")}
+              className="h-auto max-h-16 w-auto max-w-48 self-start rounded-input border border-border bg-surface object-contain p-2"
             />
           )}
           <p className="whitespace-pre-line">{artisan.presentation ?? "—"}</p>

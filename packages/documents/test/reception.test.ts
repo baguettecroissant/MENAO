@@ -8,6 +8,7 @@ import {
 } from "../src/reception-data.ts";
 import { receptionDocumentModel } from "../src/reception-model.ts";
 import { renderReceptionPdf } from "../src/reception-pdf.ts";
+import { PNG_LOGO, drawnImages } from "./logo-fixtures.ts";
 
 // Réponse de reception_document : devis de 330 € TTC, acompte de 30 % payé.
 const doc: ReceptionDocument = {
@@ -126,5 +127,11 @@ describe("procès-verbal de réception (F-25, F-26)", () => {
       expect(pdf.getPageCount()).toBe(1);
       expect(pdf.getTitle()).toBe("Procès-verbal de réception PV-2026-R01");
     }
+  });
+
+  it("PDF : logo de l'entreprise en tête, s'il y en a un (ADR 0038)", async () => {
+    const bytes = await renderReceptionPdf(receptionPdfData(doc, true), { logo: PNG_LOGO });
+    expect(await drawnImages(bytes)).toEqual([{ width: 60, height: 24 }]);
+    expect(await drawnImages(await renderReceptionPdf(receptionPdfData(doc)))).toEqual([]);
   });
 });

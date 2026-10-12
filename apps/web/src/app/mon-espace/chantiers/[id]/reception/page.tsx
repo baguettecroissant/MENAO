@@ -11,6 +11,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ReceptionForm } from "@/components/project/reception-form";
 import { fr } from "@/i18n/fr";
+import { documentLogoUrl } from "@/lib/documents/logo";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.reception;
@@ -72,6 +73,7 @@ export default async function ReceptionPage({
     site: { ...parties.site, city: quote.chantier.ville_nom },
     preview: true,
   };
+  const logoUrl = await documentLogoUrl(supabase, quote.issuer.logo_path);
 
   return (
     <main className="bg-background">
@@ -93,6 +95,7 @@ export default async function ReceptionPage({
           withReserves={reserves === "1"}
           artisanName={c.artisan_name}
           balance={euros.format(progress.remainingCents / 100)}
+          logoUrl={logoUrl}
         />
       </div>
     </main>

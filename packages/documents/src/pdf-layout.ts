@@ -1,11 +1,12 @@
 /**
- * Mise en page commune des documents PDF (devis, factures) : format A4, polices standard
- * (Helvetica), couleurs, découpage du texte et pagination.
+ * Mise en page commune des documents PDF (devis, factures, PV) : format A4, polices standard
+ * (Helvetica), couleurs, découpage du texte, pagination et bloc de l'émetteur avec son logo.
  */
 import {
   StandardFonts,
   type PDFDocument,
   type PDFFont,
+  type PDFImage,
   type PDFPage,
   type RGB,
   rgb,
@@ -120,4 +121,67 @@ export async function embedFonts(doc: PDFDocument): Promise<Fonts> {
     regular: await doc.embedFont(StandardFonts.Helvetica),
     bold: await doc.embedFont(StandardFonts.HelveticaBold),
   };
+}
+
+/** Logo de l'entreprise (ADR 0038) : fichier PNG ou JPEG vérifié au dépôt (process-upload). */
+export type DocumentLogo = { bytes: Uint8Array; type: "png" | "jpeg" };
+/** Éléments graphiques du rendu, fournis à part des données du document. */
+export type DocumentAssets = { logo?: DocumentLogo | null };
+
+/** Cadre du logo, en haut à gauche du document (points). */
+export const LOGO_BOX = { width: 140, height: 56 };
+
+/** Dimensions du logo dans son cadre, proportions conservées. */
+export function fitLogo(
+  width: number,
+  height: number,
+  box = LOGO_BOX,
+): { width: number; height: number } {
+  const scale = Math.min(box.width / width, box.height / height);
+  const round = (value: number) => Math.round(value * 100) / 100;
+  return { width: round(width * scale), height: round(height * scale) };
+}
+
+/** Logo intégré au PDF ; fichier illisible : null, le document sort sans logo. */
+export async function embedLogo(
+  doc: PDFDocument,
+  logo: DocumentLogo | null | undefined,
+): Promise<PDFImage | null> {
+  if (!logo) return null;
+  try {
+    const image =
+      logo.type === "png" ? await doc.embedPng(logo.bytes) : await doc.embedJpg(logo.bytes);
+    // Intégration immédiate : une erreur de décodage n'empêche pas la production du document.
+    await image.embed();
+    return image;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Bloc de l'émetteur en haut à gauche : logo éventuel, nom en gras, puis lignes d'identité
+ * enveloppées dans la largeur donnée. Renvoie l'ordonnée de la dernière ligne écrite.
+ */
+export function drawIssuer(
+  c: Canvas,
+  top: number,
+  issuer: { name: string; lines: string[]; logo: PDFImage | null },
+  width: number,
+): number {
+  let y = top;
+  if (issuer.logo) {
+    const size = fitLogo(issuer.logo.width, issuer.logo.height);
+    c.page.drawImage(issuer.logo, { x: PAGE.margin, y: top - size.height, ...size });
+    y -= size.height + 6;
+  }
+  c.text(issuer.name, PAGE.margin, y - 14, 13, { bold: true });
+  let left = y - 14;
+  for (const line of issuer.lines) {
+    for (const part of wrap(line, c.fonts.regular, 8.5, width)) {
+      left -= 11;
+      c.text(part, PAGE.margin, left, 8.5, { color: COLOR.muted });
+    }
+  }
+  return left;
 }

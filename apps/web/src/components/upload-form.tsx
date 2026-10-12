@@ -19,6 +19,8 @@ type UploadFormProps = {
   hint: string;
   /** Photos : redimensionnées dans le navigateur avant l'envoi. */
   resizeTo?: number;
+  /** Logos : réencodés en PNG pour garder la transparence (un JPEG reste un JPEG). */
+  keepTransparency?: boolean;
   /** Champs complémentaires (métadonnées d'un document). */
   children?: ReactNode | ((errors: Record<string, string[] | undefined>) => ReactNode);
   fileLabel?: string;
@@ -38,6 +40,7 @@ export function UploadForm({
   accept,
   hint,
   resizeTo,
+  keepTransparency = false,
   children,
   fileLabel = t.file,
   formId = purpose,
@@ -51,7 +54,9 @@ export function UploadForm({
     let blob: Blob = file;
     if (resizeTo) {
       try {
-        blob = await resizeImage(file, resizeTo);
+        blob = await resizeImage(file, resizeTo, {
+          type: keepTransparency && file.type !== "image/jpeg" ? "image/png" : "image/jpeg",
+        });
       } catch {
         return { error: t.status.invalid_type };
       }

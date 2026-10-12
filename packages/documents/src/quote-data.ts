@@ -51,6 +51,8 @@ export type QuoteDocument = {
     commune: string | null;
     email: string | null;
     phone: string | null;
+    /** Logo des documents (bucket privé artisan-logos), figé à l'envoi ; absent des anciens devis. */
+    logo_path?: string | null;
     decennale: {
       assureur: string | null;
       numero: string | null;

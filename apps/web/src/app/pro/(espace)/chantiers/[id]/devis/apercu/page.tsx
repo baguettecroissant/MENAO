@@ -10,6 +10,7 @@ import { ButtonLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
+import { documentLogoUrl } from "@/lib/documents/logo";
 
 const t = fr.pro.quote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -42,8 +43,10 @@ export default async function QuotePreviewPage({
   const { data: document } = draft
     ? await supabase.rpc("quote_document", { p_quote_id: draft.id })
     : { data: null };
-  const quote = document ? quotePdfData(document as unknown as QuoteDocument) : null;
-  if (!draft || !quote || quote.lines.length === 0) redirect(editorHref as Route);
+  const doc = document ? (document as unknown as QuoteDocument) : null;
+  const quote = doc ? quotePdfData(doc) : null;
+  if (!draft || !doc || !quote || quote.lines.length === 0) redirect(editorHref as Route);
+  const logoUrl = await documentLogoUrl(supabase, doc.issuer.logo_path);
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
 
   return (
@@ -66,7 +69,11 @@ export default async function QuotePreviewPage({
             {t.preview.check(c.client.first_name)}
           </p>
         </div>
-        <QuotePaper model={quoteDocumentModel(quote)} label={t.preview.miniature} />
+        <QuotePaper
+          model={quoteDocumentModel(quote)}
+          label={t.preview.miniature}
+          logoUrl={logoUrl}
+        />
         <a
           href={`/devis/${draft.id}/pdf`}
           target="_blank"

@@ -5,14 +5,27 @@
 import { PDFDocument } from "pdf-lib";
 import { winAnsi } from "./format.ts";
 import { INVOICE_TEXTS as T, invoiceDocumentModel, type InvoicePdfData } from "./invoice-model.ts";
-import { CONTENT, COLOR, Canvas, PAGE, embedFonts, wrap } from "./pdf-layout.ts";
+import {
+  CONTENT,
+  COLOR,
+  Canvas,
+  PAGE,
+  drawIssuer,
+  embedFonts,
+  embedLogo,
+  wrap,
+  type DocumentAssets,
+} from "./pdf-layout.ts";
 import { QUOTE_TEXTS } from "./quote-model.ts";
 
 const AMOUNT_WIDTH = 110;
 // Bloc des totaux : libellés longs de la facture de solde (« Acompte versé (facture …) »).
 const TOTALS_WIDTH = 330;
 
-export async function renderInvoicePdf(data: InvoicePdfData): Promise<Uint8Array> {
+export async function renderInvoicePdf(
+  data: InvoicePdfData,
+  assets: DocumentAssets = {},
+): Promise<Uint8Array> {
   const m = invoiceDocumentModel(data);
   const doc = await PDFDocument.create();
   doc.setTitle(`Facture ${data.numero}`);
@@ -26,14 +39,8 @@ export async function renderInvoicePdf(data: InvoicePdfData): Promise<Uint8Array
 
   // En-tête : artisan à gauche, titre et références à droite.
   const top = c.y;
-  c.text(m.issuerName, PAGE.margin, top - 14, 13, { bold: true });
-  let left = top - 14;
-  for (const line of m.issuerLines) {
-    for (const part of wrap(line, fonts.regular, 8.5, 300)) {
-      left -= 11;
-      c.text(part, PAGE.margin, left, 8.5, { color: COLOR.muted });
-    }
-  }
+  const logo = await embedLogo(doc, assets.logo);
+  const left = drawIssuer(c, top, { name: m.issuerName, lines: m.issuerLines, logo }, 300);
   c.text(winAnsi(m.title), right - 260, top - 18, 18, {
     bold: true,
     color: COLOR.primary,

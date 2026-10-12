@@ -1,4 +1,4 @@
-// Edge Function process-upload (F-05, F-14, F-22, F-40, F-42, F-43) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
@@ -24,6 +24,7 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   document: ["pdf", "jpeg", "png"],
   avatar: ["jpeg", "png"],
   portfolio: ["jpeg", "png"],
+  logo: ["jpeg", "png"],
   project_photo: ["jpeg", "png"],
   chantier_photo: ["jpeg", "png"],
   message_attachment: ["pdf", "jpeg", "png"],
@@ -35,6 +36,7 @@ type Purpose =
   | "document"
   | "avatar"
   | "portfolio"
+  | "logo"
   | "project_photo"
   | "chantier_photo"
   | "message_attachment"
@@ -148,6 +150,7 @@ Deno.serve(
         .maybeSingle();
       if (!artisan) return respond("forbidden", 403);
 
+      if (purpose === "logo") return await saveLogo(admin, artisan.id, file);
       return purpose === "portfolio"
         ? await savePortfolioPhoto(admin, artisan.id, file)
         : await saveDocument(admin, artisan, file, body?.document);
@@ -183,6 +186,29 @@ async function saveAvatar(admin: SupabaseClient, userId: string, file: CleanFile
     .eq("user_id", userId);
   if (error) throw error;
   if (previous?.avatar_path) await admin.storage.from("avatars").remove([previous.avatar_path]);
+  return respond("ok");
+}
+
+// Logo des documents (ADR 0038). L'ancien logo n'est effacé que s'il n'est repris dans aucun devis
+// envoyé : ces documents, et ceux qui en découlent, le gardent.
+async function saveLogo(admin: SupabaseClient, artisanId: string, file: CleanFile) {
+  const path = `${artisanId}/${file.name}`;
+  await store(admin, "artisan-logos", path, file);
+  const { data: previous } = await admin
+    .from("artisans")
+    .select("logo_path")
+    .eq("id", artisanId)
+    .single();
+  const { error } = await admin.from("artisans").update({ logo_path: path }).eq("id", artisanId);
+  if (error) throw error;
+  if (previous?.logo_path) {
+    const { count } = await admin
+      .from("quotes")
+      .select("id", { count: "exact", head: true })
+      .neq("status", "brouillon")
+      .eq("document->issuer->>logo_path", previous.logo_path);
+    if (count === 0) await admin.storage.from("artisan-logos").remove([previous.logo_path]);
+  }
   return respond("ok");
 }
 

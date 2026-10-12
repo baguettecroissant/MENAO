@@ -625,6 +625,7 @@ export type Database = {
           experience_years: number | null;
           forme_juridique_code: string | null;
           id: string;
+          logo_path: string | null;
           nom_commercial: string | null;
           paused: boolean;
           presentation: string | null;
@@ -672,6 +673,7 @@ export type Database = {
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
+          logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
           presentation?: string | null;
@@ -718,6 +720,7 @@ export type Database = {
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
+          logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
           presentation?: string | null;
@@ -2711,6 +2714,7 @@ export type Database = {
           version: number;
         }[];
       };
+      artisan_remove_logo: { Args: Record<PropertyKey, never>; Returns: string };
       artisan_reply_review: { Args: { p_reply: string; p_review_id: string }; Returns: undefined };
       artisan_report_expertise: {
         Args: { p_message: string; p_request_id: string; p_trade_code: string };

@@ -1,8 +1,18 @@
 import type { ReceptionDocumentModel } from "@menao/documents";
 import { Check } from "lucide-react";
+import { DocumentLogo } from "@/components/document-logo";
 
 /** Le PV de réception en HTML, issu du même modèle que le PDF (maquette « Signature du PV »). */
-export function ReceptionPaper({ model, label }: { model: ReceptionDocumentModel; label: string }) {
+export function ReceptionPaper({
+  model,
+  label,
+  logoUrl = null,
+}: {
+  model: ReceptionDocumentModel;
+  label: string;
+  /** Logo de l'entreprise (URL signée), s'il y en a un. */
+  logoUrl?: string | null;
+}) {
   const last = model.financial.length - 1;
   return (
     <figure className="w-full overflow-hidden rounded-chip border border-border bg-surface shadow-card">
@@ -10,6 +20,7 @@ export function ReceptionPaper({ model, label }: { model: ReceptionDocumentModel
       <div className="@container flex flex-col gap-3 p-5 text-xs leading-snug sm:p-6">
         <div className="flex flex-col gap-2 @sm:flex-row @sm:items-start @sm:justify-between @sm:gap-4">
           <div className="min-w-0">
+            <DocumentLogo url={logoUrl} name={model.issuerName} />
             <p className="text-[0.8125rem] font-semibold">{model.issuerName}</p>
             {model.issuerLines.map((line, i) => (
               <p key={i} className="text-muted-foreground">

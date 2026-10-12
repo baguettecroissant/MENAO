@@ -1,8 +1,10 @@
-// PDF du devis envoyé (F-21) : produit une fois depuis les données figées, conservé dans le
-// bucket privé quote-pdfs, puis relu tel quel (generate-pdf, signature-create). ADR 0021.
+// PDF du devis envoyé (F-21) : produit une fois depuis les données figées (logo compris, ADR 0038),
+// conservé dans le bucket privé quote-pdfs, puis relu tel quel (generate-pdf, signature-create).
+// ADR 0021.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { quotePdfData, type QuoteDocument } from "../../../packages/documents/src/quote-data.ts";
 import { renderQuotePdf } from "../../../packages/documents/src/quote-pdf.ts";
+import { documentLogo } from "./logo.ts";
 
 export async function sentQuotePdf(
   admin: SupabaseClient,
@@ -13,7 +15,8 @@ export async function sentQuotePdf(
   const { data: stored } = await storage.download(path);
   if (stored) return new Uint8Array(await stored.arrayBuffer());
   // Copie dans un ArrayBuffer simple, type attendu par Response et par le stockage.
-  const pdf = new Uint8Array(await renderQuotePdf(quotePdfData(doc)));
+  const logo = await documentLogo(admin, doc.issuer.logo_path);
+  const pdf = new Uint8Array(await renderQuotePdf(quotePdfData(doc), { logo }));
   const { error } = await storage.upload(path, pdf, {
     contentType: "application/pdf",
     upsert: false,

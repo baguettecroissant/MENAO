@@ -24,6 +24,7 @@ export function ReceptionForm({
   withReserves,
   artisanName,
   balance,
+  logoUrl = null,
 }: {
   chantierId: string;
   /** PV sans numéro (attribué à la signature) ni réserves. */
@@ -31,6 +32,8 @@ export function ReceptionForm({
   withReserves: boolean;
   artisanName: string;
   balance: string;
+  /** Logo de l'entreprise (URL signée), en tête du PV. */
+  logoUrl?: string | null;
 }) {
   const [step, setStep] = useState<"reserves" | "pv">(withReserves ? "reserves" : "pv");
   const [reserves, setReserves] = useState("");
@@ -133,7 +136,7 @@ export function ReceptionForm({
             {t.pvTitle}
           </h2>
           <p className="text-sm text-muted-foreground">{t.pvIntro}</p>
-          <ReceptionPaper model={model} label={t.pvLabel} />
+          <ReceptionPaper model={model} label={t.pvLabel} logoUrl={logoUrl} />
           {withReserves && (
             <Button
               type="button"

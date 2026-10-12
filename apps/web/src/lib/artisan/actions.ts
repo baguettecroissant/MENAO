@@ -312,6 +312,17 @@ export async function deletePortfolioPhoto(formData: FormData): Promise<void> {
   refresh();
 }
 
+/**
+ * « Retirer le logo » (ADR 0038). L'ancien fichier n'est effacé que s'il n'est repris dans aucun
+ * devis envoyé : la politique du bucket artisan-logos refuse sinon la suppression.
+ */
+export async function removeLogo(): Promise<void> {
+  const { supabase } = await getOnboardingContext();
+  const { data: previous } = await supabase.rpc("artisan_remove_logo");
+  if (previous) await supabase.storage.from("artisan-logos").remove([previous]);
+  refresh();
+}
+
 export async function submitOnboarding(): Promise<FormState> {
   const { supabase } = await getOnboardingContext();
   const { error } = await supabase.rpc("submit_artisan_onboarding");

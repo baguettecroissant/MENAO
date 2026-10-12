@@ -243,6 +243,13 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(await ics.text()).not.toContain("Code portail");
   await calendar.getByRole("button", { name: "Fermer" }).click();
 
+  // Logo de l'entreprise (ADR 0038) : déposé avant l'envoi, il figure sur le devis envoyé.
+  await proPage.goto("/pro/onboarding/entreprise");
+  const logo = proPage.getByRole("region", { name: "Logo sur vos documents (facultatif)" });
+  await logo.getByLabel("Fichier du logo").setInputFiles(files.logo);
+  await logo.getByRole("button", { name: "Envoyer mon logo" }).click();
+  await expect(logo.getByRole("img", { name: "Votre logo actuel" })).toBeVisible();
+
   // « Envoi du devis » (F-21) : échéancier par défaut, dates des travaux, numéro attribué.
   await proPage.goto(previewUrl);
   await proPage.getByRole("link", { name: "Suivant" }).click();
@@ -269,11 +276,14 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByText(/N° DEVIS-\d{4}-0001/)).toBeVisible();
   await expect(page.getByText("Siphon PVC 40 mm")).toBeVisible();
   await expect(page.getByText(/70 % à la réception des travaux, soit 64,30/)).toBeVisible();
+  await expect(page.getByRole("img", { name: /^Logo de / })).toBeVisible();
   const quotePdf = await page.request.get(
     `${new URL(page.url()).pathname.replace("/mon-espace", "")}/pdf`,
   );
   expect(quotePdf.status()).toBe(200);
   expect(quotePdf.headers()["content-disposition"]).toMatch(/DEVIS-\d{4}-0001\.pdf/);
+  // Logo intégré au PDF conservé (image en tête du devis).
+  expect((await quotePdf.body()).includes("/Subtype /Image")).toBe(true);
   await page.getByRole("button", { name: "Demander une modification" }).click();
   const revision = page.getByRole("dialog", { name: "Demander une modification" });
   await revision

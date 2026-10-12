@@ -74,10 +74,10 @@ select is(current_setting('test.document')::jsonb -> 'issuer',
     'raison_sociale', 'ARTISAN X1', 'nom_commercial', 'X1 Électricité', 'forme_juridique_code', '5710',
     'siret', '00000002600013', 'tva_intracom', current_setting('test.tva'), 'assujetti_tva', true,
     'adresse_ligne', '4 RUE DE LA PAIX', 'code_postal', '75002', 'commune', 'PARIS',
-    'email', 'pdf.x1@example.test', 'phone', '+33600000001',
+    'email', 'pdf.x1@example.test', 'phone', '+33600000001', 'logo_path', null,
     'decennale', jsonb_build_object('assureur', 'Assurances Exemple', 'numero', 'DEC-123',
       'couverture', 'France métropolitaine', 'date_fin', current_date + 200)),
-  'artisan : identité, TVA, contact et assurance décennale');
+  'artisan : identité, TVA, contact, logo (aucun) et assurance décennale');
 select is(current_setting('test.document')::jsonb -> 'client',
   '{"first_name":"Camille","last_name":"Exemple"}'::jsonb, 'client : prénom et nom');
 select is(current_setting('test.document')::jsonb -> 'chantier',

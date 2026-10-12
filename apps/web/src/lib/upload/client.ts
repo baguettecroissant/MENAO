@@ -19,8 +19,16 @@ export async function uploadRaw(userId: string, file: Blob): Promise<string | nu
  * Redimensionne une photo dans le navigateur (côté le plus long ≤ maxSide) et la réencode
  * en JPEG : fichier plus léger (spec §4.4) et sans métadonnées. L'orientation EXIF est
  * appliquée par createImageBitmap. Les métadonnées sont de toute façon retirées côté serveur.
+ * Logos : PNG, pour garder la transparence (en JPEG, le fond transparent deviendrait noir).
  */
-export async function resizeImage(file: File, maxSide: number, quality = 0.85): Promise<Blob> {
+export async function resizeImage(
+  file: File,
+  maxSide: number,
+  {
+    type = "image/jpeg",
+    quality = 0.85,
+  }: { type?: "image/jpeg" | "image/png"; quality?: number } = {},
+): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
@@ -31,7 +39,7 @@ export async function resizeImage(file: File, maxSide: number, quality = 0.85): 
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Encodage impossible"))),
-      "image/jpeg",
+      type,
       quality,
     ),
   );
