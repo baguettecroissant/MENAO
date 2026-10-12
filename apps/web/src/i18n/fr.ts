@@ -3308,6 +3308,10 @@ export const fr = {
         unpaid: (n: number) => (n > 1 ? `${n} abonnements impayés` : "1 abonnement impayé"),
         unpaidHint:
           "Stripe relance l'artisan ; son profil n'est plus visible tant que c'est impayé.",
+        deletions: (n: number) =>
+          n > 1 ? `${n} demandes de suppression de compte` : "1 demande de suppression de compte",
+        deletionsHint: (date: string) => `Réponse sous un mois : la plus proche avant le ${date}.`,
+        deletionsAction: "Traiter les demandes",
       },
       activity: {
         title: "Activité en direct",
@@ -3445,6 +3449,41 @@ export const fr = {
       reviews: "Avis rédigés",
       noReviews: "Aucun avis.",
       reviewOf: (artisan: string, score: string) => `${artisan} : ${score}`,
+    },
+    accountActions: {
+      title: "Actions sur le compte",
+      staff: "Les comptes de l'équipe MENAO ne se gèrent pas ici.",
+      reset: "Envoyer un lien de réinitialisation du mot de passe",
+      resetHint: "La personne reçoit le même e-mail que « Mot de passe oublié ».",
+      resetSent: (email: string) => `Lien envoyé à ${email}.`,
+      noEmail: "Ce compte n'a pas d'adresse e-mail.",
+      export: "Exporter ses données (RGPD)",
+      exportHint:
+        "Fichier JSON des données du compte, sans les messages privés entre client et artisan. L'export est journalisé.",
+      reasonLabel: "Motif de la suspension (transmis à la personne)",
+      reasonHint:
+        "La personne ne peut plus se connecter et ses sessions sont fermées (au plus une heure pour une page déjà ouverte). Ses données ne changent pas.",
+      artisanHint:
+        "Pour un artisan, cela bloque aussi son espace pro et ses chantiers. Pour seulement le retirer des recherches, suspendez sa fiche artisan.",
+      reasonRequired: "Indiquez le motif de la suspension.",
+      suspend: "Suspendre l'accès au compte",
+      suspended: "Accès suspendu : la personne ne peut plus se connecter.",
+      reactivate: "Rétablir l'accès",
+      reactivated: "Accès rétabli.",
+    },
+    deletion: {
+      title: "Demande de suppression du compte",
+      received: (date: string) => `Reçue le ${date}.`,
+      due: (date: string) => `Réponse attendue avant le ${date} (RGPD, un mois).`,
+      steps: [
+        "Exporter ses données si la personne les demande.",
+        "Suspendre l'accès au compte.",
+        "Effacer ou anonymiser les données qui ne doivent pas être conservées.",
+        "Répondre à la personne et clore la demande dans « Dossiers et messages ».",
+      ],
+      legal:
+        "Durées de conservation à faire valider par l'avocat (devis, factures et PV restent chez l'artisan au titre de ses obligations ; avis publiés) : l'effacement reste manuel pour l'instant.",
+      open: "Ouvrir la demande",
     },
     search: {
       title: "Recherche",

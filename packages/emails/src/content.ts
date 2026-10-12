@@ -40,6 +40,8 @@ export const NOTIFICATION_TYPES = [
   "compte_suspendu",
   "compte_reactive",
   "demande_annulee",
+  "acces_suspendu",
+  "acces_retabli",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -930,6 +932,33 @@ export function notificationContent(
         cta: { label: "Déposer mon attestation à jour", url: link("/pro/onboarding/documents") },
       };
     }
+    case "acces_suspendu":
+      // Accès au compte suspendu par l'équipe (ADR 0048) : motif cité, contact.
+      return {
+        subject: "L'accès à votre compte MENAO est suspendu",
+        preview: "L'équipe MENAO a suspendu l'accès à votre compte.",
+        title: "Accès à votre compte suspendu",
+        paragraphs: [
+          hello(ctx.firstName),
+          "L'équipe MENAO a suspendu l'accès à votre compte, pour ce motif :",
+          "Vous ne pouvez plus vous connecter pour le moment. Vos données sont conservées.",
+          "Pour en parler ou contester cette décision, écrivez à l'équipe MENAO.",
+        ],
+        quote: text(data, "motif"),
+        cta: { label: "Écrire à l'équipe MENAO", url: link("/contact") },
+      };
+    case "acces_retabli":
+      return {
+        subject: "L'accès à votre compte MENAO est rétabli",
+        preview: "Vous pouvez de nouveau vous connecter.",
+        title: "Accès à votre compte rétabli",
+        paragraphs: [
+          hello(ctx.firstName),
+          "L'équipe MENAO a rétabli l'accès à votre compte : vous pouvez de nouveau vous connecter.",
+        ],
+        quote: null,
+        cta: { label: "Me connecter", url: link("/connexion") },
+      };
     case "compte_reactive": {
       const visible = data.visible === true;
       return {

@@ -8,6 +8,7 @@ import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getPersonDetail } from "@/lib/admin/people";
 import { formatDay, formatDayTimeInline } from "@/lib/format";
+import { AccountActions } from "./account-actions";
 
 const t = fr.admin.people;
 const f = fr.admin.followUp;
@@ -27,7 +28,11 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
   const person = await getPersonDetail(supabase, id);
   if (!person) notFound();
   const { profile, account, projects, chantiers, tickets, reviews } = person;
-  const banned = account.banned_until && new Date(account.banned_until) > new Date();
+  const banned = Boolean(account.banned_until && new Date(account.banned_until) > new Date());
+  const staff = profile.role === "admin" || profile.role === "support";
+  // Demande de suppression en cours (ADR 0039, 0048) : traitement guidé, effacement manuel.
+  const deletion = tickets.find((x) => x.type === "suppression_compte" && x.status !== "resolu");
+  const d = fr.admin.deletion;
 
   return (
     <div className="flex flex-col gap-6">
@@ -50,6 +55,23 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex flex-col gap-6">
+          {deletion && (
+            // TODO(legal) : durées de conservation et anonymisation à valider avant tout
+            // effacement automatique (ADR 0039).
+            <DetailSection title={d.title} note={d.legal}>
+              <p className="text-sm">
+                {d.received(formatDay(deletion.created_at))} {d.due(formatDay(deletion.due_at))}
+              </p>
+              <ol className="ml-5 flex list-decimal flex-col gap-1 text-sm">
+                {d.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+              <Link href="/admin/tickets" className={`self-start ${link}`}>
+                {d.open} →
+              </Link>
+            </DetailSection>
+          )}
           <DetailSection title={t.requests}>
             {projects.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.noRequests}</p>
@@ -132,6 +154,17 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
                 { label: t.marketing, value: profile.marketing_opt_in ? t.yes : t.no },
               ]}
             />
+          </DetailSection>
+          <DetailSection title={fr.admin.accountActions.title}>
+            {staff ? (
+              <p className="text-sm text-muted-foreground">{fr.admin.accountActions.staff}</p>
+            ) : (
+              <AccountActions
+                userId={id}
+                isArtisan={Boolean(person.artisanId)}
+                suspended={banned}
+              />
+            )}
           </DetailSection>
           {person.artisanId && (
             <DetailSection title={t.artisanFile}>

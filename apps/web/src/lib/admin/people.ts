@@ -77,7 +77,7 @@ export async function getPersonDetail(supabase: Client, userId: string) {
       .limit(50),
     supabase
       .from("tickets")
-      .select("id, type, status, created_at")
+      .select("id, type, status, created_at, due_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(50),

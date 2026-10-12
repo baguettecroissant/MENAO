@@ -563,6 +563,19 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     );
   });
 
+  it("accès au compte suspendu puis rétabli par l'équipe (ADR 0048)", () => {
+    const blocked = notificationContent("acces_suspendu", { motif: "Fraude au paiement." }, pro);
+    expect(blocked.subject).toBe("L'accès à votre compte MENAO est suspendu");
+    expect(blocked.quote).toBe("Fraude au paiement.");
+    expect(blocked.cta).toEqual({
+      label: "Écrire à l'équipe MENAO",
+      url: "https://menao.example/contact",
+    });
+    const back = notificationContent("acces_retabli", {}, pro);
+    expect(back.subject).toBe("L'accès à votre compte MENAO est rétabli");
+    expect(back.cta).toEqual({ label: "Me connecter", url: "https://menao.example/connexion" });
+  });
+
   it("suspension décidée par l'équipe (ADR 0047) : motif cité, contact ; levée par l'équipe", () => {
     const suspended = notificationContent(
       "compte_suspendu",

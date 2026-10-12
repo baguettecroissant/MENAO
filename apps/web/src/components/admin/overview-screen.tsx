@@ -7,13 +7,14 @@ import {
   Scale,
   ShieldAlert,
   ShieldCheck,
+  UserX,
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { fr } from "@/i18n/fr";
 import type { ActivityItem, Overview, Todo } from "@/lib/admin/overview";
-import { formatTimeAgo } from "@/lib/format";
+import { formatDay, formatTimeAgo } from "@/lib/format";
 import { LiveRefresh } from "./live-refresh";
 import { ActivityFeed, KeyFigures, TodoCard } from "./overview";
 
@@ -130,6 +131,24 @@ export function OverviewScreen({
             })}
           </ul>
         </TodoCard>
+      ),
+    });
+  }
+  if (o.tickets.suppressions > 0) {
+    cards.push({
+      key: "suppressions",
+      node: (
+        <TodoCard
+          icon={UserX}
+          tone="warning"
+          title={todoT.deletions(o.tickets.suppressions)}
+          hint={
+            o.tickets.suppression_echeance
+              ? todoT.deletionsHint(formatDay(o.tickets.suppression_echeance))
+              : ""
+          }
+          action={{ href: "/admin/tickets", label: todoT.deletionsAction }}
+        />
       ),
     });
   }

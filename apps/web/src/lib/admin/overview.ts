@@ -32,7 +32,14 @@ const overviewSchema = z.object({
   chantiers: z.record(z.string(), n),
   paiements: z.object({ payes_30j: n, payes_30j_cents: n, echoues_7j: n }),
   avis: z.object({ publies_30j: n, note_moyenne: z.number().nullable() }),
-  tickets: z.object({ ouverts: n, en_retard: n, litiges: n }),
+  tickets: z.object({
+    ouverts: n,
+    en_retard: n,
+    litiges: n,
+    // Demandes de suppression (ADR 0048) : facultatif tant que la migration n'est pas déployée.
+    suppressions: n.default(0),
+    suppression_echeance: z.string().nullable().default(null),
+  }),
   documents: z.object({ renouvellements: n, assurances_7j: n }),
 });
 export type Overview = z.infer<typeof overviewSchema>;
