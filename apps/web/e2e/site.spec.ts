@@ -53,7 +53,16 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   expect(sitemap).toContain("/plombier/nice</loc>");
   expect(sitemap).toContain("/comment-ca-marche</loc>");
 
+  // Favicon, icône d'écran d'accueil et manifeste, déclarés dans l'en-tête de chaque page.
+  for (const icon of ["/favicon.ico", "/icon.svg", "/apple-icon.png", "/icons/icon-512.png"]) {
+    expect((await request.get(icon)).ok(), icon).toBe(true);
+  }
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest).toMatchObject({ short_name: "MENAO", theme_color: "#4869f6" });
+
   await page.goto("/");
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
   await page.getByRole("link", { name: "Mentions légales" }).click();
   await expect(page.getByRole("heading", { name: "Mentions légales" })).toBeVisible();
   await page.getByRole("link", { name: "Questions fréquentes" }).click();
