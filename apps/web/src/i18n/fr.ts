@@ -1176,6 +1176,10 @@ export const fr = {
       deleteLabel: (title: string) => `Supprimer la recherche « ${title} »`,
     },
     rehire: (name: string) => `Redemander un devis à ${name}`,
+    newRequest: {
+      intro:
+        "Décrivez vos travaux, avec vos mots ou à la voix : nous vous proposons des artisans vérifiés près de chez vous.",
+    },
   },
   warranties: {
     title: "Vos garanties après la réception",

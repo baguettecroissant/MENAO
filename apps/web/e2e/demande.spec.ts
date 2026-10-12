@@ -672,13 +672,23 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     page.getByRole("region", { name: "Mes chantiers terminés" }).getByText(/^Terminé le /),
   ).toBeVisible();
 
+  // « Démarrer un chantier » (ADR 0042) : la saisie s'ouvre dans l'espace client.
+  await page.getByRole("link", { name: "Démarrer un chantier", exact: true }).click();
+  await expect(page).toHaveURL(/\/mon-espace\/nouvelle-demande$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Démarrer un chantier" })).toBeVisible();
+  const clientNav = page.getByRole("navigation", { name: "Navigation de mon espace" });
+  await expect(clientNav).toBeVisible();
+  await capture(page, "client-nouvelle-demande");
+  await page.goto("/mon-espace");
+
   // « Redemander un devis » (F-12) : nouvelle recherche pour Noé, présenté en premier et
   // présélectionné ; la recherche non envoyée reste dans l'espace, puis est supprimée.
   await page
     .getByRole("region", { name: "Mes chantiers terminés" })
     .getByRole("link", { name: "Redemander un devis à Noé" })
     .click();
-  await expect(page).toHaveURL(/\/recherche\?artisan=/);
+  await expect(page).toHaveURL(/\/mon-espace\/nouvelle-demande\?artisan=/);
+  await expect(clientNav).toBeVisible();
   await expect(page.getByText(/^Nouvelle demande pour Noé/)).toBeVisible();
   await page
     .getByLabel("Décrivez votre projet")
@@ -686,11 +696,15 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   const rehireProjectId = new URL(page.url()).pathname.split("/").pop() ?? "";
+  // Critères et artisans gardent le menu latéral : le client reste dans son espace.
+  await expect(clientNav).toBeVisible();
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
+  await expect(clientNav).toBeVisible();
   const known = page.getByRole("listitem").filter({ hasText: "Déjà venu chez vous" });
   await expect(known.getByRole("heading", { name: "Noé" })).toBeVisible();
   await expect(known.getByRole("checkbox")).toBeChecked();
+  await capture(page, "client-recherche-artisans");
   await expect(page.getByRole("button", { name: /^Envoyer ma demande/ })).toBeEnabled();
   await page.goto("/mon-espace");
   const drafts = page.getByRole("region", { name: "Recherches non envoyées" });

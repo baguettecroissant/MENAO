@@ -46,7 +46,7 @@ export default async function ExchangesPage() {
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
           <p className="text-sm text-muted-foreground">{t.intro}</p>
         </div>
-        <ButtonLink href="/contact" variant="outline" size="md">
+        <ButtonLink href="/contact" variant="outline" size="md" className="shrink-0 self-start">
           {t.write}
         </ButtonLink>
       </div>

@@ -22,16 +22,20 @@ export function StickyProfileBar({ children, bar }: { children: ReactNode; bar: 
 
   return (
     <>
+      {/* Collée sous l'en-tête (site ou espace client), dans la largeur du contenu : elle ne
+          recouvre jamais le menu latéral de l'espace client (ADR 0042). */}
+      <div className="sticky top-16 z-20 h-0">
+        <div
+          inert={!visible}
+          className={`absolute inset-x-0 top-0 border-b border-border bg-surface/95 backdrop-blur transition-all duration-200 ${
+            visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
+          }`}
+        >
+          {bar}
+        </div>
+      </div>
       {children}
       <div ref={sentinel} aria-hidden="true" />
-      <div
-        inert={!visible}
-        className={`fixed inset-x-0 top-16 z-20 border-b border-border bg-surface/95 backdrop-blur transition-all duration-200 ${
-          visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
-        }`}
-      >
-        {bar}
-      </div>
     </>
   );
 }

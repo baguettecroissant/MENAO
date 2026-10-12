@@ -7,10 +7,11 @@ export function sendPagePath(projectId: string, artisanIds: string[], token?: st
 }
 
 /**
- * « Redemander un devis » (F-12, ADR 0040) : recherche pour un artisan d'un chantier précédent.
+ * « Redemander un devis » (F-12, ADR 0040) : recherche pour un artisan d'un chantier précédent,
+ * depuis l'espace client (ADR 0042).
  * Le nom ne sert qu'au bandeau ; analyze-need vérifie le chantier commun.
  */
 export function rehirePath(artisanId: string, chantierId: string, artisanName: string): string {
   const params = new URLSearchParams({ artisan: artisanId, depuis: chantierId, nom: artisanName });
-  return `/recherche?${params}`;
+  return `/mon-espace/nouvelle-demande?${params}`;
 }

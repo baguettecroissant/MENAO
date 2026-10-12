@@ -133,7 +133,7 @@ export function AppFrame({
 
           {space === "client" && (
             <Link
-              href="/recherche"
+              href="/mon-espace/nouvelle-demande"
               aria-label={fr.clientApp.searchLabel}
               className="mx-auto hidden min-h-11 w-full max-w-md items-center justify-between gap-3 rounded-pill border border-border bg-background px-4 text-sm text-subtle-foreground transition-colors hover:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none md:flex"
             >
