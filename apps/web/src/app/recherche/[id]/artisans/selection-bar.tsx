@@ -49,7 +49,7 @@ export function SelectionBar({ formId, slots }: { formId: string; slots: number 
         form={formId}
         disabled={count === 0}
         block={false}
-        className="w-full sm:w-auto"
+        className="w-full shrink-0 whitespace-nowrap sm:w-auto"
       >
         {t.submit(count)}
         <Send aria-hidden="true" className="size-4" />
