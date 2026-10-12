@@ -25,10 +25,13 @@ export function NeedForm({
   trades,
   initialText = "",
   initialTrade = null,
+  rehire = null,
 }: {
   trades: { code: string; label: string }[];
   initialText?: string;
   initialTrade?: string | null;
+  /** « Redemander un devis » : artisan d'un chantier précédent, proposé en premier. */
+  rehire?: { artisanId: string; chantierId: string; name: string } | null;
 }) {
   const router = useRouter();
   const [text, setText] = useState(initialText);
@@ -67,6 +70,9 @@ export function NeedForm({
     const result = await invokeFunction<AnalyzeResult>(session.supabase, "analyze-need", {
       description: text,
       tradeHint,
+      ...(rehire
+        ? { preferredArtisanId: rehire.artisanId, fromChantierId: rehire.chantierId }
+        : {}),
     });
     if (result.status !== "ok" || !("projectId" in result)) {
       setPhase("idle");
@@ -88,6 +94,11 @@ export function NeedForm({
   return (
     <>
       <form onSubmit={submit} className="flex w-full flex-col items-center gap-4" noValidate>
+        {rehire && (
+          <div className="w-full text-left">
+            <Alert tone="info">{t.rehire(rehire.name)}</Alert>
+          </div>
+        )}
         {errors.map((message) => (
           <div key={message} className="w-full">
             <Alert tone="error">{message}</Alert>
