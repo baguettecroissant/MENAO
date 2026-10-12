@@ -4,6 +4,7 @@ import {
   CHANTIER_STAGES,
   chantierStage,
   chantiersByStage,
+  churnRate,
   PROJECT_FILTERS,
   parseChantierStage,
   parseProjectFilter,
@@ -67,6 +68,12 @@ describe("vue d'ensemble du back-office : taux (F-58)", () => {
   it("conversion des recherches en demandes envoyées", () => {
     expect(searchConversion({ searches: 8, sent: 2 })).toBe(25);
     expect(searchConversion({ searches: 0, sent: 0 })).toBeNull();
+  });
+
+  it("désabonnement sur 30 jours : abonnements perdus parmi ceux en cours au début", () => {
+    expect(churnRate({ lost: 1, atStart: 20 })).toBe(5);
+    expect(churnRate({ lost: 1, atStart: 3 })).toBe(33);
+    expect(churnRate({ lost: 0, atStart: 0 })).toBeNull();
   });
 });
 

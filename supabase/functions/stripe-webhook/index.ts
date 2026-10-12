@@ -4,6 +4,7 @@
 import Stripe from "stripe";
 import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
 import { paymentStatusFromCheckout } from "../../../packages/core/src/payment.ts";
+import { webhookErrorCode } from "../../../packages/core/src/webhook.ts";
 import {
   subscriptionFromStripe,
   subscriptionGrantsAccess,
@@ -99,12 +100,11 @@ Deno.serve(async (req) => {
       .eq("id", event.id);
     return json({ received: true });
   } catch (error) {
-    // L'événement sera renvoyé par Stripe : on libère l'identifiant.
-    await admin.from("webhook_events").delete().eq("id", event.id);
-    console.error(
-      `stripe-webhook : échec du traitement (${event.type})`,
-      error instanceof Error ? error.name : "",
-    );
+    // Stripe renverra l'événement (traité à nouveau, faute de processed_at) ; l'échec reste
+    // visible dans le back-office, avec un code technique seulement (ADR 0051).
+    const code = webhookErrorCode(error);
+    await admin.rpc("record_webhook_failure", { p_event_id: event.id, p_error: code });
+    console.error(`stripe-webhook : échec du traitement (${event.type})`, code);
     return json({ error: "traitement impossible" }, 500);
   }
 });
@@ -136,7 +136,7 @@ async function savePayment(
     p_amount_cents: session.amount_total ?? 0,
     p_status: status,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   if (outcome === "incoherent" || outcome === "inconnu") {
     console.error(`stripe-webhook : paiement ${outcome} (${type})`);
   }
@@ -191,6 +191,7 @@ async function saveSubscription(admin: SupabaseClient, s: SubscriptionSnapshot) 
       current_period_end: s.currentPeriodEnd,
       trial_end: s.trialEnd,
       cancel_at_period_end: s.cancelAtPeriodEnd,
+      ended_at: s.endedAt,
     },
     { onConflict: "artisan_id" },
   );

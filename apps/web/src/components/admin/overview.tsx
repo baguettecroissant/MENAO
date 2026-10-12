@@ -1,4 +1,10 @@
-import { CHANTIER_STAGES, chantiersByStage, requestRates, searchConversion } from "@menao/core";
+import {
+  CHANTIER_STAGES,
+  chantiersByStage,
+  churnRate,
+  requestRates,
+  searchConversion,
+} from "@menao/core";
 import {
   Ban,
   BadgeCheck,
@@ -390,11 +396,46 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
             href: "/admin/artisans?statut=suspendu",
           },
           { label: f.artisans.signups, value: count(o.artisans.inscrits_30j) },
-          { label: f.artisans.active, value: count(o.abonnements.actifs) },
-          { label: f.artisans.trials, value: count(o.abonnements.essais) },
-          { label: f.artisans.unpaid, value: count(o.abonnements.impayes) },
-          { label: f.artisans.cancelled, value: count(o.abonnements.resilies_30j) },
         ]}
+      />
+      <FiguresCard
+        title={f.subscriptions.title}
+        rows={[
+          {
+            label: f.subscriptions.mrr,
+            value: euros.format(o.abonnements.mrr_cents / 100),
+            href: "/admin/abonnements",
+            emphasis: true,
+          },
+          {
+            label: f.subscriptions.paying,
+            value: count(o.abonnements.payants),
+            href: "/admin/abonnements?file=actifs",
+          },
+          {
+            label: f.subscriptions.trials,
+            value: count(o.abonnements.essais),
+            href: "/admin/abonnements?file=essais",
+          },
+          {
+            label: f.subscriptions.unpaid,
+            value: count(o.abonnements.impayes),
+            href: "/admin/abonnements?file=impayes",
+            emphasis: o.abonnements.impayes > 0,
+          },
+          {
+            label: f.subscriptions.cancelled,
+            value: count(o.abonnements.resilies_30j),
+            href: "/admin/abonnements?file=resilies",
+          },
+          {
+            label: f.subscriptions.churn,
+            value: percentOrDash(
+              churnRate({ lost: o.abonnements.perdus_30j, atStart: o.abonnements.en_cours_30j }),
+            ),
+          },
+        ]}
+        note={f.subscriptions.note}
       />
       <FiguresCard
         title={f.payments.title}
@@ -402,10 +443,15 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
           {
             label: f.payments.paid,
             value: euros.format(o.paiements.payes_30j_cents / 100),
+            href: "/admin/paiements?file=payes",
             emphasis: true,
           },
           { label: f.payments.count, value: count(o.paiements.payes_30j) },
-          { label: f.payments.failed, value: count(o.paiements.echoues_7j) },
+          {
+            label: f.payments.failed,
+            value: count(o.paiements.echoues_7j),
+            href: "/admin/paiements?file=echoues",
+          },
         ]}
         note={f.payments.note}
       />

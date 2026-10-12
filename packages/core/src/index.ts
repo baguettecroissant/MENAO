@@ -29,3 +29,4 @@ export * from "./notifications";
 export * from "./agenda";
 export * from "./profile";
 export * from "./overview";
+export * from "./webhook";

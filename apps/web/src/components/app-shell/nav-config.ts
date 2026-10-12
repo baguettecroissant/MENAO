@@ -11,12 +11,14 @@ import {
   MessageCircle,
   MessagesSquare,
   ReceiptText,
+  Repeat,
   Send,
   Settings,
   ShieldCheck,
   Star,
   UserRound,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
@@ -137,6 +139,14 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           badge: "tickets",
           support: true,
         },
+      ],
+    },
+    {
+      // Lecture seule (ADR 0051) : MENAO n'encaisse que l'abonnement des artisans.
+      label: fr.appShell.sections.money,
+      items: [
+        { href: "/admin/paiements", label: fr.admin.nav.payments, icon: Wallet },
+        { href: "/admin/abonnements", label: fr.admin.nav.subscriptions, icon: Repeat },
       ],
     },
   ],

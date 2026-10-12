@@ -101,6 +101,14 @@ export function requestRates(c: { accepted: number; refused: number; expired: nu
   };
 }
 
+/**
+ * Désabonnement sur 30 jours (F-58, ADR 0051) : abonnements en cours au début de la période et
+ * résiliés depuis, rapportés aux abonnements en cours au début de la période.
+ */
+export function churnRate(c: { lost: number; atStart: number }): number | null {
+  return percent(c.lost, c.atStart);
+}
+
 /** Part des recherches qui ont abouti à l'envoi d'une demande. */
 export function searchConversion(c: { searches: number; sent: number }): number | null {
   return percent(c.sent, c.searches);

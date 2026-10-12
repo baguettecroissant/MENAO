@@ -35,6 +35,8 @@ export type SubscriptionSnapshot = {
   currentPeriodEnd: string | null;
   trialEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  /** Fin effective de l'abonnement (résilié), pour dater les résiliations (ADR 0051). */
+  endedAt: string | null;
 };
 
 type Obj = Record<string, unknown>;
@@ -66,6 +68,7 @@ export function subscriptionFromStripe(input: unknown): SubscriptionSnapshot | n
     currentPeriodEnd: iso(item.current_period_end) ?? iso(input.current_period_end),
     trialEnd: iso(input.trial_end),
     cancelAtPeriodEnd: input.cancel_at_period_end === true,
+    endedAt: iso(input.ended_at),
   };
 }
 

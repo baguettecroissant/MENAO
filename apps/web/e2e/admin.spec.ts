@@ -13,7 +13,7 @@ async function signIn(page: Page, email: string) {
 test("admin : double authentification obligatoire puis validation d'un dossier", async ({
   page,
 }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(150_000);
 
   // Sans second facteur, le back-office renvoie vers l'activation du TOTP.
   await signIn(page, "admin@example.test");
@@ -47,6 +47,29 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await expect(
     page.getByRole("link", { name: /Dossier artisan à vérifier/ }).first(),
   ).toBeVisible();
+  await page.goto("/admin");
+
+  // Argent (ADR 0051), en lecture seule : abonnements des artisans (essais du seed), paiements des
+  // chantiers et notifications Stripe et DocuSeal.
+  const menu = page.getByRole("navigation", { name: "Navigation du back-office" });
+  await menu.getByRole("link", { name: "Abonnements" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Abonnements des artisans", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByText("Revenu mensuel récurrent", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "PLOMBERIE DISPO EXEMPLE" })).toBeVisible();
+  await capture(page, "admin-abonnements");
+  await menu.getByRole("link", { name: "Paiements" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Paiements des chantiers", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByText("Versé aux artisans (30 jours)")).toBeVisible();
+  await capture(page, "admin-paiements");
+  await page.goto("/admin/paiements/notifications");
+  await expect(
+    page.getByRole("heading", { name: "Notifications Stripe et DocuSeal", level: 1 }),
+  ).toBeVisible();
+  await capture(page, "admin-notifications-stripe");
   await page.goto("/admin");
 
   // À traiter → dossier
@@ -118,6 +141,9 @@ test("le support : sa boîte de réception, pas le reste du back-office (ADR 004
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/admin\/tickets$/);
   await page.goto("/admin/personnes");
+  await expect(page).toHaveURL(/\/admin\/tickets$/);
+  // Ni paiements ni abonnements (spec §4).
+  await page.goto("/admin/paiements");
   await expect(page).toHaveURL(/\/admin\/tickets$/);
 });
 

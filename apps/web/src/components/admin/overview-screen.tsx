@@ -7,6 +7,7 @@ import {
   Scale,
   ShieldAlert,
   ShieldCheck,
+  TriangleAlert,
   UserX,
 } from "lucide-react";
 import type { Route } from "next";
@@ -189,6 +190,7 @@ export function OverviewScreen({
           tone="warning"
           title={todoT.failed(o.paiements.echoues_7j)}
           hint={todoT.failedHint}
+          action={{ href: "/admin/paiements?file=echoues", label: todoT.failedAction }}
         />
       ),
     });
@@ -202,6 +204,21 @@ export function OverviewScreen({
           tone="warning"
           title={todoT.unpaid(o.abonnements.impayes)}
           hint={todoT.unpaidHint}
+          action={{ href: "/admin/abonnements?file=impayes", label: todoT.unpaidAction }}
+        />
+      ),
+    });
+  }
+  if (o.notifications.echecs > 0) {
+    cards.push({
+      key: "notifications",
+      node: (
+        <TodoCard
+          icon={TriangleAlert}
+          tone="danger"
+          title={todoT.webhooks(o.notifications.echecs)}
+          hint={todoT.webhooksHint}
+          action={{ href: "/admin/paiements/notifications", label: todoT.webhooksAction }}
         />
       ),
     });

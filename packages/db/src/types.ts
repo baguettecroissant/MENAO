@@ -2290,6 +2290,7 @@ export type Database = {
           cancel_at_period_end: boolean;
           created_at: string;
           current_period_end: string | null;
+          ended_at: string | null;
           id: string;
           plan_code: string | null;
           status: string;
@@ -2304,6 +2305,7 @@ export type Database = {
           cancel_at_period_end?: boolean;
           created_at?: string;
           current_period_end?: string | null;
+          ended_at?: string | null;
           id?: string;
           plan_code?: string | null;
           status: string;
@@ -2317,6 +2319,7 @@ export type Database = {
           cancel_at_period_end?: boolean;
           created_at?: string;
           current_period_end?: string | null;
+          ended_at?: string | null;
           id?: string;
           plan_code?: string | null;
           status?: string;
@@ -2544,7 +2547,10 @@ export type Database = {
       webhook_events: {
         Row: {
           created_at: string;
+          failed_at: string | null;
+          failures: number;
           id: string;
+          last_error: string | null;
           processed_at: string | null;
           received_at: string;
           source: string;
@@ -2554,7 +2560,10 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           created_at?: string;
+          failed_at?: string | null;
+          failures?: number;
           id: string;
+          last_error?: string | null;
           processed_at?: string | null;
           received_at?: string;
           source?: string;
@@ -2563,7 +2572,10 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          failed_at?: string | null;
+          failures?: number;
           id?: string;
+          last_error?: string | null;
           processed_at?: string | null;
           received_at?: string;
           source?: string;
@@ -2689,6 +2701,26 @@ export type Database = {
         Returns: undefined;
       };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_payment_counts: { Args: { p_query?: string }; Returns: Json };
+      admin_payment_summary: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_payments: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
+        Returns: {
+          amount_cents: number;
+          artisan: string;
+          artisan_id: string;
+          chantier: string;
+          chantier_id: string;
+          client: string;
+          created_at: string;
+          devis: string;
+          kind: string;
+          paid_at: string;
+          payment_id: string;
+          status: string;
+          total: number;
+        }[];
+      };
       admin_people: {
         Args: { p_limit?: number; p_offset?: number; p_query?: string; p_role?: string };
         Returns: {
@@ -2742,6 +2774,26 @@ export type Database = {
           tag: string;
         }[];
       };
+      admin_subscription_counts: { Args: { p_query?: string }; Returns: Json };
+      admin_subscription_summary: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_subscriptions: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
+        Returns: {
+          artisan: string;
+          artisan_id: string;
+          cancel_at_period_end: boolean;
+          created_at: string;
+          current_period_end: string;
+          ended_at: string;
+          formule: string;
+          prix_cents: number;
+          siret: string;
+          situation: string;
+          status: string;
+          total: number;
+          trial_end: string;
+        }[];
+      };
       admin_suspend_account: { Args: { p_reason: string; p_user_id: string }; Returns: undefined };
       admin_suspend_artisan: {
         Args: { p_artisan_id: string; p_reason: string };
@@ -2758,6 +2810,22 @@ export type Database = {
       admin_verify_certification: {
         Args: { p_certification_id: string; p_verified: boolean };
         Returns: undefined;
+      };
+      admin_webhook_counts: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_webhook_events: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number };
+        Returns: {
+          etat: string;
+          event_id: string;
+          failed_at: string;
+          failures: number;
+          last_error: string;
+          processed_at: string;
+          received_at: string;
+          source: string;
+          total: number;
+          type: string;
+        }[];
       };
       artisan_add_chantier_message: {
         Args: { p_chantier_id: string; p_message: string };
@@ -3194,6 +3262,7 @@ export type Database = {
         Args: { p_storage_path: string; p_ticket_id: string; p_user_id: string };
         Returns: string;
       };
+      record_webhook_failure: { Args: { p_error: string; p_event_id: string }; Returns: undefined };
       renew_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: string };
       report_chantier_problem: {
         Args: {
