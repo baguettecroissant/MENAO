@@ -78,6 +78,12 @@ export const ARTISAN_CANCELLABLE_STATUSES = [
   "devis_en_revision",
 ] as const satisfies readonly ChantierStatus[];
 
+/**
+ * Annulation par le client (F-12, ADR 0040) : mêmes états que pour l'artisan, avant tout devis
+ * signé et tout acompte. TODO(legal) : droit de rétractation après une signature à distance.
+ */
+export const CLIENT_CANCELLABLE_STATUSES = ARTISAN_CANCELLABLE_STATUSES;
+
 /** (état de départ, événement, état d'arrivée). « litige_resolu » ramène à l'état d'avant le litige. */
 export const CHANTIER_TRANSITIONS: readonly (readonly [
   ChantierStatus,

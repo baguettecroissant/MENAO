@@ -1,5 +1,7 @@
+import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import {
+  CLIENT_CANCEL_REASONS,
   MAX_ARTISANS_PER_REQUEST,
   REFUSAL_REASONS,
   REQUEST_RESPONSE_HOURS,
@@ -67,5 +69,18 @@ describe("temps de réponse moyen (F-10)", () => {
     expect(responseTimeBucket(24 * 60)).toBe("48h");
     expect(responseTimeBucket(48 * 60 - 1)).toBe("48h");
     expect(responseTimeBucket(48 * 60)).toBeNull();
+  });
+});
+
+describe("annulation par le client (F-11, F-12)", () => {
+  it("motifs proposés, alignés sur la base", () => {
+    expect(CLIENT_CANCEL_REASONS).toEqual([
+      "plus_besoin",
+      "autre_artisan",
+      "delai",
+      "budget",
+      "autre",
+    ]);
+    expect([...Constants.public.Enums.client_cancel_reason]).toEqual([...CLIENT_CANCEL_REASONS]);
   });
 });

@@ -4,6 +4,7 @@ import {
   ACTIVE_CHANTIER_STATUSES,
   ARTISAN_CANCELLABLE_STATUSES,
   CHANTIER_EVENTS,
+  CLIENT_CANCELLABLE_STATUSES,
   CHANTIER_STATUSES,
   CHANTIER_TRANSITIONS,
   type ChantierEvent,
@@ -99,6 +100,18 @@ describe("machine à états du chantier (spec §9)", () => {
       "devis_en_revision",
     ]);
     for (const s of ARTISAN_CANCELLABLE_STATUSES) expect(canTransition(s, "annulation")).toBe(true);
+  });
+
+  it("le client annule aussi, tant que l'acompte n'est pas payé et aucun devis signé (F-12)", () => {
+    expect(CLIENT_CANCELLABLE_STATUSES).toEqual([
+      "rdv_planifie",
+      "devis_envoye",
+      "devis_en_revision",
+    ]);
+    for (const s of CLIENT_CANCELLABLE_STATUSES) expect(canTransition(s, "annulation")).toBe(true);
+    for (const s of ["devis_signe", "acompte_paye", "travaux_en_cours"] as const) {
+      expect(CLIENT_CANCELLABLE_STATUSES).not.toContain(s);
+    }
   });
 
   it("cohérence avec les enums de la base", () => {

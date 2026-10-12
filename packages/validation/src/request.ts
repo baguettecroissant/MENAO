@@ -1,3 +1,4 @@
+import { CLIENT_CANCEL_REASONS } from "@menao/core";
 import { z } from "zod";
 import { normalizePhone } from "./auth";
 import { messages } from "./messages";
@@ -68,3 +69,14 @@ export const refusalSchema = z
       ctx.addIssue({ code: "custom", path: ["detail"], message: messages.required });
     }
   });
+
+/** Annulation par le client (F-11, F-12) : motif de la liste, mot facultatif pour l'artisan. */
+export const clientCancelSchema = z.object({
+  reason: z.enum(CLIENT_CANCEL_REASONS, { error: messages.cancelReasonRequired }),
+  comment: z
+    .string()
+    .trim()
+    .max(500, { error: messages.tooLong })
+    .optional()
+    .transform((value) => value || undefined),
+});
