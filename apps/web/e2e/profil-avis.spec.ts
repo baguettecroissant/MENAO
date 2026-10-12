@@ -39,4 +39,19 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   await expect(page.getByRole("region", { name: "Comment ça marche" })).toBeVisible();
   await page.getByRole("link", { name: "Voir ma fiche publique" }).click();
   await expect(page).toHaveURL(/\/pro\/profil$/);
+
+  // Mobile (ADR 0043) : messages dans la barre du haut, menu latéral en tiroir ; plus d'onglets.
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("link", { name: /^Messages/ })).toHaveAttribute(
+    "href",
+    "/pro/messages",
+  );
+  await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  await page
+    .getByRole("dialog", { name: "Navigation de l'espace pro" })
+    .getByRole("link", { name: "Avis", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/pro\/avis$/);
+  if (viewport) await page.setViewportSize(viewport);
 });

@@ -5,10 +5,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ClientBottomNav } from "@/components/app-shell/client-bottom-nav";
-import { Logo } from "@/components/brand/logo";
+import { Logo, LogoMark } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { ProBottomNav } from "@/components/pro/pro-nav";
 import { fr } from "@/i18n/fr";
 import type { ShellAccount } from "@/lib/client/shell";
 import { AccountMenu } from "./account-menu";
@@ -16,6 +14,7 @@ import {
   ACCOUNT_LINKS,
   MENU_COOKIE,
   SPACE_HOME,
+  SPACE_MESSAGES,
   activeItem,
   type Badges,
   type Space,
@@ -27,7 +26,8 @@ const t = fr.appShell;
 /**
  * Coque des espaces client, pro et admin (ADR 0035). Ordinateur : menu latéral fixe, repliable
  * en barre d'icônes (choix mémorisé), et barre du haut (rubrique, recherche, cloche). Mobile :
- * barre du haut, menu en tiroir (pro, admin) et onglets du bas. Le contenu n'est pas enveloppé
+ * barre du haut (messages, cloche, compte) et le même menu latéral, en tiroir ; pas d'onglets en
+ * bas d'écran, réservés aux applications iOS et Android (ADR 0043). Le contenu n'est pas enveloppé
  * dans <main> : chaque page porte le sien.
  */
 export function AppFrame({
@@ -53,7 +53,7 @@ export function AppFrame({
   const drawer = useRef<HTMLDialogElement>(null);
   const current = activeItem(space, pathname);
   const CurrentIcon = current?.icon;
-  const withDrawer = space !== "client";
+  const messagesHref = SPACE_MESSAGES[space];
 
   useEffect(() => {
     const dialog = drawer.current;
@@ -93,23 +93,25 @@ export function AppFrame({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur sm:gap-3 sm:px-5">
-          {withDrawer && (
-            <button
-              type="button"
-              onClick={() => setDrawerFor(pathname)}
-              aria-label={t.openMenu}
-              aria-expanded={drawerOpen}
-              className="inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
-            >
-              <Menu aria-hidden="true" className="size-5" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setDrawerFor(pathname)}
+            aria-label={t.openMenu}
+            aria-expanded={drawerOpen}
+            className="inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
+          >
+            <Menu aria-hidden="true" className="size-5" />
+          </button>
           <Link
             href={SPACE_HOME[space] as Route}
             aria-label={`MENAO, ${t.spaces[space]}`}
             className="shrink-0 rounded-md lg:hidden"
           >
-            <Logo />
+            {/* Téléphones étroits : symbole seul, pour laisser la place aux icônes (ADR 0043). */}
+            <LogoMark className="size-7 min-[420px]:hidden" />
+            <span className="hidden min-[420px]:inline-flex">
+              <Logo />
+            </span>
           </Link>
 
           <button
@@ -144,9 +146,19 @@ export function AppFrame({
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
             {space === "client" && (
+              // Petits écrans : la barre de recherche cède la place à une icône (ADR 0043).
               <Link
-                href="/mon-espace/messages"
-                aria-label={fr.clientApp.messages(badges.messages ?? 0)}
+                href="/mon-espace/nouvelle-demande"
+                aria-label={fr.clientApp.searchLabel}
+                className="inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none md:hidden"
+              >
+                <Search aria-hidden="true" className="size-5" />
+              </Link>
+            )}
+            {messagesHref && (
+              <Link
+                href={messagesHref as Route}
+                aria-label={t.messages(badges.messages ?? 0)}
                 className="relative inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
               >
                 <MessageCircle aria-hidden="true" className="size-5" />
@@ -172,42 +184,32 @@ export function AppFrame({
         <div id="contenu" tabIndex={-1} className="flex flex-1 flex-col outline-none">
           {children}
         </div>
-
-        {space === "client" && <ClientBottomNav />}
-        {space === "pro" && <ProBottomNav />}
       </div>
 
-      {withDrawer && (
-        <dialog
-          ref={drawer}
-          aria-label={t.nav[space]}
-          onClose={() => setDrawerFor(null)}
-          onClick={(event) => {
-            // Clic sur le fond assombri, en dehors du tiroir.
-            if (event.target === event.currentTarget) setDrawerFor(null);
-          }}
-          className="m-0 h-dvh max-h-none w-[85vw] max-w-xs bg-surface p-0 text-foreground shadow-raised backdrop:bg-[#0b1230]/50 lg:hidden"
-        >
-          <div className="relative h-full">
-            <button
-              type="button"
-              onClick={() => setDrawerFor(null)}
-              aria-label={t.closeMenu}
-              className="absolute top-3 right-3 z-10 inline-flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
-            >
-              <X aria-hidden="true" className="size-5" />
-            </button>
-            {drawerOpen && (
-              <SidebarContent
-                space={space}
-                badges={badges}
-                account={null}
-                visibility={visibility}
-              />
-            )}
-          </div>
-        </dialog>
-      )}
+      <dialog
+        ref={drawer}
+        aria-label={t.nav[space]}
+        onClose={() => setDrawerFor(null)}
+        onClick={(event) => {
+          // Clic sur le fond assombri, en dehors du tiroir.
+          if (event.target === event.currentTarget) setDrawerFor(null);
+        }}
+        className="m-0 h-dvh max-h-none w-[85vw] max-w-xs bg-surface p-0 text-foreground shadow-raised backdrop:bg-[#0b1230]/50 lg:hidden"
+      >
+        <div className="relative h-full">
+          <button
+            type="button"
+            onClick={() => setDrawerFor(null)}
+            aria-label={t.closeMenu}
+            className="absolute top-3 right-3 z-10 inline-flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
+          >
+            <X aria-hidden="true" className="size-5" />
+          </button>
+          {drawerOpen && (
+            <SidebarContent space={space} badges={badges} account={null} visibility={visibility} />
+          )}
+        </div>
+      </dialog>
     </div>
   );
 }

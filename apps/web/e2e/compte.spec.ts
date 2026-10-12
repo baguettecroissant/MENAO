@@ -32,6 +32,20 @@ test("Mon compte : informations, communications, mot de passe, e-mail, données,
   await page.goto(await authLinkFor(request, email));
   await expect(page).toHaveURL(/\/mon-espace$/);
 
+  // Mobile (ADR 0043) : le menu latéral s'ouvre en tiroir ; plus d'onglets en bas d'écran.
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  await page
+    .getByRole("dialog", { name: "Navigation de mon espace" })
+    .getByRole("link", { name: "Mes documents" })
+    .click();
+  await expect(page).toHaveURL(/\/mon-espace\/documents$/);
+  await expect(
+    page.getByRole("link", { name: "Démarrer un chantier : décrivez votre besoin" }),
+  ).toHaveAttribute("href", "/mon-espace/nouvelle-demande");
+  if (viewport) await page.setViewportSize(viewport);
+
   // Accès depuis le menu du compte.
   await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("link", { name: "Mon compte" }).click();

@@ -1485,22 +1485,13 @@ export const fr = {
     home: "MENAO, mes chantiers",
     search: "Décrivez votre besoin de travaux…",
     searchLabel: "Démarrer un chantier : décrivez votre besoin",
-    messages: (n: number) => (n === 0 ? "Messages" : `Messages : ${n} non lu${n > 1 ? "s" : ""}`),
     account: "Mon compte",
-    nav: "Navigation de mon espace",
     chantiers: "Mes chantiers",
     documents: "Mes documents",
     messagesLink: "Messages",
     notifications: "Notifications",
     help: "Aide et contact",
     signOut: "Me déconnecter",
-    tabs: {
-      chantiers: "Chantiers",
-      documents: "Documents",
-      start: "Démarrer un chantier",
-      messages: "Messages",
-      help: "Aide",
-    },
   },
   appShell: {
     skip: "Aller au contenu",
@@ -1508,6 +1499,7 @@ export const fr = {
     expand: "Déplier le menu",
     openMenu: "Ouvrir le menu",
     closeMenu: "Fermer le menu",
+    messages: (n: number) => (n === 0 ? "Messages" : `Messages : ${n} non lu${n > 1 ? "s" : ""}`),
     spaces: { client: "Espace client", pro: "Espace pro", admin: "Back-office" },
     nav: {
       client: "Navigation de mon espace",
@@ -1909,7 +1901,6 @@ export const fr = {
   },
   pro: {
     space: {
-      nav: "Navigation de l'espace pro",
       dashboard: "Tableau de bord",
       requests: "Demandes",
       chantiers: "Chantiers",
