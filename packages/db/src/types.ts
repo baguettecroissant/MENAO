@@ -2633,6 +2633,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_log_account_action: {
+        Args: { p_action: string; p_user_id: string };
+        Returns: undefined;
+      };
       admin_moderate_message: {
         Args: { p_hide: boolean; p_message_id: string; p_reason: string };
         Returns: undefined;
@@ -2679,6 +2683,7 @@ export type Database = {
           ville: string;
         }[];
       };
+      admin_reactivate_account: { Args: { p_user_id: string }; Returns: undefined };
       admin_reactivate_artisan: { Args: { p_artisan_id: string }; Returns: undefined };
       admin_review_document: {
         Args: {
@@ -2698,6 +2703,7 @@ export type Database = {
           tag: string;
         }[];
       };
+      admin_suspend_account: { Args: { p_reason: string; p_user_id: string }; Returns: undefined };
       admin_suspend_artisan: {
         Args: { p_artisan_id: string; p_reason: string };
         Returns: undefined;
@@ -3337,7 +3343,9 @@ export type Database = {
         | "document_a_renouveler_equipe"
         | "compte_suspendu"
         | "compte_reactive"
-        | "demande_annulee";
+        | "demande_annulee"
+        | "acces_suspendu"
+        | "acces_retabli";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -3575,6 +3583,8 @@ export const Constants = {
         "compte_suspendu",
         "compte_reactive",
         "demande_annulee",
+        "acces_suspendu",
+        "acces_retabli",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

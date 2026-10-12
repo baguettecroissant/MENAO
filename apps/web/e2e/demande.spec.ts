@@ -955,6 +955,33 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   ).toBeVisible();
   await capture(admin, "admin-personne");
 
+  // Actions sur le compte (ADR 0048) : lien de mot de passe reçu, export RGPD, suspension de
+  // l'accès (motif exigé) puis rétablissement.
+  const actions = admin.getByRole("region", { name: "Actions sur le compte" });
+  await actions
+    .getByRole("button", { name: "Envoyer un lien de réinitialisation du mot de passe" })
+    .click();
+  await expect(actions.getByText(`Lien envoyé à ${email}.`)).toBeVisible();
+  expect(await authLinkFor(request, email, "recovery")).toContain("type=recovery");
+  const exportHref = await actions
+    .getByRole("link", { name: "Exporter ses données (RGPD)" })
+    .getAttribute("href");
+  const exported = await admin.request.get(exportHref ?? "");
+  expect(exported.ok()).toBe(true);
+  expect(((await exported.json()) as { compte: { email: string } }).compte.email).toBe(email);
+  await actions.getByRole("button", { name: "Suspendre l'accès au compte" }).click();
+  await expect(actions.getByText("Indiquez le motif de la suspension.")).toBeVisible();
+  await actions
+    .getByLabel("Motif de la suspension (transmis à la personne)")
+    .fill("Test de suspension de l'accès.");
+  await actions.getByRole("button", { name: "Suspendre l'accès au compte" }).click();
+  await expect(
+    actions.getByText("Accès suspendu : la personne ne peut plus se connecter."),
+  ).toBeVisible();
+  await expect(admin.getByText(/^Compte suspendu jusqu'au/)).toBeVisible();
+  await actions.getByRole("button", { name: "Rétablir l'accès" }).click();
+  await expect(actions.getByText("Accès rétabli.")).toBeVisible();
+
   // Suspension manuelle d'un artisan (ADR 0047) : motif obligatoire, puis levée de la suspension.
   await globalSearch.fill("VALIDE EXEMPLE");
   await globalSearch.press("Enter");
