@@ -1,8 +1,13 @@
 name: CI
 
-# Sur chaque PR, et sur main après fusion. Ouvrir une PR (même en brouillon) pour tester une branche.
+# Sur chaque PR (complète) et sur main après fusion (contrôles rapides : la PR a déjà tout testé).
+# Ouvrir une PR (même en brouillon) pour tester une branche. Une PR qui ne touche que la
+# documentation ne lance pas la CI. Dépôt public : runners de GitHub gratuits (ADR 0053).
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   push:
     branches: [main]
 
@@ -38,6 +43,7 @@ jobs:
 
   database:
     name: Base de données (migrations, RLS pgTAP, types)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -65,9 +71,11 @@ jobs:
         with:
           name: database-types
           path: packages/db/src/types.ts
+          retention-days: 2
 
   e2e:
     name: Bout en bout (Playwright)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -127,7 +135,7 @@ jobs:
           name: captures-ecrans
           path: apps/web/test-results/**/captures/*.png
           if-no-files-found: ignore
-          retention-days: 3
+          retention-days: 2
       - name: Journaux des Edge Functions
         if: failure()
         run: docker logs $(docker ps -aq --filter name=supabase_edge_runtime) 2>&1 | tail -150
@@ -139,4 +147,4 @@ jobs:
           path: |
             apps/web/playwright-report
             apps/web/test-results
-          retention-days: 7
+          retention-days: 3
