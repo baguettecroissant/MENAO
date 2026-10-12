@@ -1,10 +1,18 @@
 "use client";
 
-import { canSearchArtisans, LIEU_TYPES, MAX_PROJECT_PHOTOS, SURFACE_TRANCHES } from "@menao/core";
+import {
+  canSearchArtisans,
+  LIEU_TYPES,
+  MAX_PROJECT_PHOTOS,
+  PROJECT_TEXT_MAX_LENGTH,
+  SURFACE_TRANCHES,
+  type CompletedSection,
+} from "@menao/core";
 import type { ProjectCriteriaInput } from "@menao/validation";
 import {
   Calendar,
   Camera,
+  FileText,
   MapPin,
   Paperclip,
   Search,
@@ -26,22 +34,35 @@ import {
   type CommuneSuggestion,
 } from "@/lib/geo/geoplateforme";
 import { deleteProjectPhoto, launchSearch, saveProjectCriteria } from "@/lib/project/actions";
-import { ensureSession } from "@/lib/project/client";
+import { ensureSession, invokeFunction } from "@/lib/project/client";
 import { PHOTO_ACCEPT, selectPhotos, uploadProjectPhoto } from "@/lib/project/photos";
 
 const t = fr.search.review;
 const dayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: "UTC" });
 
 type Labeled = { code: string; label: string };
-type Section = "site" | "address" | "date" | "photos";
+type Section = "description" | "site" | "address" | "date" | "photos";
 export type Criteria = ProjectCriteriaInput;
+type Status = { tone: "success" | "info"; text: string };
+type ReanalysisResult =
+  { status: "ok"; analysed: boolean; completed: CompletedSection[] } | { status: string };
+
+const SECTION_TITLES: Record<CompletedSection, string> = {
+  trade: t.trade.title,
+  site: t.site.title,
+  address: t.address.title,
+  date: t.date.title,
+};
 
 /**
  * Vérification des critères (F-07), maquettes « Vérifiez vos critères de recherche » : cinq cartes,
- * résumé en puces, édition carte par carte (Annuler / Enregistrer).
+ * résumé en puces, édition carte par carte (Annuler / Enregistrer). La description se modifie
+ * aussi : la nouvelle analyse complète les critères encore vides (ADR 0044).
  */
 export function CriteriaReview({
   projectId,
+  description,
+  analyzedAt,
   initial,
   trades,
   workTypes,
@@ -50,6 +71,8 @@ export function CriteriaReview({
   today,
 }: {
   projectId: string;
+  description: string;
+  analyzedAt: string | null;
   initial: Criteria;
   trades: Labeled[];
   workTypes: (Labeled & { trade: string })[];
@@ -60,16 +83,26 @@ export function CriteriaReview({
   const router = useRouter();
   const [saved, setSaved] = useState(initial);
   const [draft, setDraft] = useState(initial);
+  const [text, setText] = useState(description);
   const [editing, setEditing] = useState<Section | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Nouvelle analyse après une description modifiée : les critères complétés sont relus.
+  const [analysis, setAnalysis] = useState(analyzedAt);
+  if (analysis !== analyzedAt) {
+    setAnalysis(analyzedAt);
+    setSaved(initial);
+    setDraft(initial);
+  }
 
   const label = (list: Labeled[], code: string | null | undefined) =>
     list.find((i) => i.code === code)?.label;
 
   function edit(section: Section) {
     setDraft(saved);
+    setText(description);
     setEditing(section);
     setError(null);
     setStatus(null);
@@ -82,8 +115,44 @@ export function CriteriaReview({
       setSaved(next);
       setDraft(next);
       setError(null);
-      setStatus(t.saved);
+      setStatus({ tone: "success", text: t.saved });
       after?.();
+    });
+  }
+
+  // Description : enregistrée et analysée de nouveau par analyze-need (ADR 0044).
+  function saveDescription() {
+    const next = text.trim();
+    if (!next || next.length > PROJECT_TEXT_MAX_LENGTH) return setError(fr.search.errors.invalid);
+    if (next === description.trim()) return setEditing(null);
+    startTransition(async () => {
+      const session = await ensureSession();
+      if (!session) return setError(fr.search.errors.session);
+      const result = await invokeFunction<ReanalysisResult>(session.supabase, "analyze-need", {
+        projectId,
+        description: next,
+      });
+      if (result.status !== "ok" || !("completed" in result)) {
+        const key = result.status as keyof typeof fr.search.errors;
+        return setError(
+          result.status === "locked"
+            ? t.text.locked
+            : (fr.search.errors[key] ?? fr.search.errors.unavailable),
+        );
+      }
+      setEditing(null);
+      setError(null);
+      setStatus(
+        !result.analysed
+          ? { tone: "info", text: t.text.notAnalysed }
+          : {
+              tone: "success",
+              text: result.completed.length
+                ? t.text.completed(result.completed.map((s) => SECTION_TITLES[s]).join(", "))
+                : t.text.saved,
+            },
+      );
+      router.refresh();
     });
   }
 
@@ -130,7 +199,32 @@ export function CriteriaReview({
 
   return (
     <div className="flex flex-col gap-4">
-      {status && <Alert tone="success">{status}</Alert>}
+      {status && <Alert tone={status.tone}>{status.text}</Alert>}
+
+      <EditableCard
+        icon={<FileText />}
+        title={t.yourText}
+        description={t.text.description}
+        summary={<DescriptionText text={description} />}
+        {...cardProps("description")}
+        onSave={saveDescription}
+        savingLabel={t.text.analyzing}
+      >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="projectText" className="sr-only">
+            {t.text.label}
+          </label>
+          <textarea
+            id="projectText"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={6}
+            maxLength={PROJECT_TEXT_MAX_LENGTH}
+            className={`${inputClasses} min-h-36 resize-y bg-surface py-3 leading-relaxed`}
+          />
+          <Hint>{t.text.help}</Hint>
+        </div>
+      </EditableCard>
 
       <section
         aria-label={t.trade.title}
@@ -399,6 +493,7 @@ function EditableCard({
   error,
   children,
   footer,
+  savingLabel = t.saving,
 }: {
   icon: ReactNode;
   title: string;
@@ -413,6 +508,7 @@ function EditableCard({
   error: string | null;
   children: ReactNode;
   footer?: ReactNode;
+  savingLabel?: string;
 }) {
   return (
     <section
@@ -441,7 +537,7 @@ function EditableCard({
                   {t.cancel}
                 </Button>
                 <Button type="button" size="sm" block={false} onClick={onSave} disabled={pending}>
-                  {pending ? t.saving : t.save}
+                  {pending ? savingLabel : t.save}
                 </Button>
               </>
             )}
@@ -449,6 +545,31 @@ function EditableCard({
         </div>
       )}
     </section>
+  );
+}
+
+/** Description du particulier : les textes longs sont repliés sur quatre lignes. */
+function DescriptionText({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 280 || text.split("\n").length > 4;
+  return (
+    <div className="flex w-full flex-col items-start gap-1">
+      <p
+        className={`text-sm whitespace-pre-line text-muted-foreground ${long && !open ? "line-clamp-4" : ""}`}
+      >
+        {text}
+      </p>
+      {long && (
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="text-sm font-medium text-primary hover:text-primary-strong"
+        >
+          {open ? t.text.less : t.text.more}
+        </button>
+      )}
+    </div>
   );
 }
 

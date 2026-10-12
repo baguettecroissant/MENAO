@@ -6,11 +6,14 @@ import {
   SURFACE_TRANCHES,
   analysisNeedsFallback,
   canSearchArtisans,
+  completeCriteria,
   needAnalysisJsonSchema,
   needHelpLevel,
   normalizeNeedAnalysis,
   parisToday,
   scrubPersonalData,
+  type NeedCriteria,
+  type ProjectCriteriaState,
 } from "../src/project";
 
 describe("nettoyage avant envoi à l'IA (F-06)", () => {
@@ -129,6 +132,120 @@ describe("normalisation de l'analyse IA (F-06)", () => {
     expect(schema.properties.metier).toEqual({
       anyOf: [{ type: "string", enum: ref.trades }, { type: "null" }],
     });
+  });
+});
+
+describe("description modifiée : la nouvelle analyse complète les critères (F-07)", () => {
+  const empty: ProjectCriteriaState = {
+    tradeCode: null,
+    lieuType: null,
+    roomCodes: [],
+    workTypeCodes: [],
+    surface: null,
+    villeCodeInsee: null,
+    adresse: null,
+    dateMode: "inconnue",
+    dateSouhaitee: null,
+  };
+  const analysed: NeedCriteria = {
+    tradeCode: "plombier",
+    lieuType: "appartement",
+    roomCodes: ["cuisine"],
+    workTypeCodes: ["fuite"],
+    surface: "moins_10",
+    ville: "Nice",
+    codePostal: "06000",
+    adresse: "1 rue de l'Exemple",
+    dateMode: "des_que_possible",
+    dateSouhaitee: null,
+    urgence: true,
+    summary: "Réparer une fuite sous l'évier de la cuisine.",
+    confiance: 0.93,
+  };
+  const nice = { villeCode: "06088", adresse: "1 Rue de l'Exemple 06000 Nice" };
+
+  it("remplit tous les critères encore vides", () => {
+    const done = completeCriteria(empty, analysed, nice);
+    expect(done).toMatchObject({
+      tradeCode: "plombier",
+      lieuType: "appartement",
+      roomCodes: ["cuisine"],
+      workTypeCodes: ["fuite"],
+      surface: "moins_10",
+      dateMode: "des_que_possible",
+      dateSouhaitee: null,
+      takeVille: true,
+      takeAdresse: true,
+    });
+    expect(done.completed).toEqual(["trade", "site", "address", "date"]);
+  });
+
+  it("ne remplace jamais un choix déjà fait", () => {
+    const chosen: ProjectCriteriaState = {
+      tradeCode: "plombier",
+      lieuType: "maison",
+      roomCodes: ["salle-de-bain"],
+      workTypeCodes: ["chauffe-eau"],
+      surface: "10_20",
+      villeCodeInsee: "06004",
+      adresse: "2 avenue de l'Exemple 06600 Antibes",
+      dateMode: "date",
+      dateSouhaitee: "2026-11-02",
+    };
+    const done = completeCriteria(chosen, analysed, nice);
+    const { villeCodeInsee: _ville, adresse: _adresse, ...kept } = chosen;
+    expect(done).toMatchObject({ ...kept, takeVille: false, takeAdresse: false });
+    expect(done.completed).toEqual([]);
+  });
+
+  it("complète une carte en partie remplie sans toucher au reste", () => {
+    const partial = { ...empty, tradeCode: "plombier", roomCodes: ["salle-de-bain"] };
+    const done = completeCriteria(partial, analysed, nice);
+    expect(done.roomCodes).toEqual(["salle-de-bain"]);
+    expect(done.workTypeCodes).toEqual(["fuite"]);
+    expect(done.lieuType).toBe("appartement");
+    expect(done.completed).toEqual(["site", "address", "date"]);
+  });
+
+  it("ne reprend que les travaux du métier retenu", () => {
+    const done = completeCriteria({ ...empty, tradeCode: "carreleur" }, analysed, nice);
+    expect(done.tradeCode).toBe("carreleur");
+    expect(done.workTypeCodes).toEqual([]);
+  });
+
+  it("adresse reprise seulement dans la ville retenue", () => {
+    const antibes = { ...empty, villeCodeInsee: "06004" };
+    const done = completeCriteria(antibes, analysed, nice);
+    expect(done.takeVille).toBe(false);
+    expect(done.takeAdresse).toBe(false);
+    expect(done.completed).not.toContain("address");
+
+    const sameCity = completeCriteria({ ...empty, villeCodeInsee: "06088" }, analysed, nice);
+    expect(sameCity.takeVille).toBe(false);
+    expect(sameCity.takeAdresse).toBe(true);
+    expect(sameCity.completed).toContain("address");
+  });
+
+  it("ville ou adresse introuvables : rien n'est repris", () => {
+    const done = completeCriteria(empty, analysed, { villeCode: null, adresse: null });
+    expect(done.takeVille).toBe(false);
+    expect(done.takeAdresse).toBe(false);
+    expect(done.completed).not.toContain("address");
+  });
+
+  it("date : une date connue n'est pas remplacée, une date inconnue est complétée", () => {
+    const precise = { ...analysed, dateMode: "date" as const, dateSouhaitee: "2026-11-15" };
+    expect(completeCriteria(empty, precise, nice)).toMatchObject({
+      dateMode: "date",
+      dateSouhaitee: "2026-11-15",
+    });
+    const asap = { ...empty, dateMode: "des_que_possible" as const };
+    expect(completeCriteria(asap, precise, nice)).toMatchObject({
+      dateMode: "des_que_possible",
+      dateSouhaitee: null,
+    });
+    const nothing = { ...analysed, dateMode: "inconnue" as const };
+    expect(completeCriteria(empty, nothing, nice).completed).not.toContain("date");
   });
 });
 

@@ -1,10 +1,11 @@
 import { AI_CONFIDENCE_THRESHOLD, parisToday } from "@menao/core";
-import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { getShellAccount } from "@/lib/client/shell";
 import { createClient } from "@/lib/supabase/server";
 import { CriteriaReview, type Criteria } from "./criteria-review";
 
@@ -80,12 +81,16 @@ export default async function ProjectReviewPage({
 
   const lowConfidence =
     project.ai_confidence !== null && project.ai_confidence < AI_CONFIDENCE_THRESHOLD;
+  // Espace client : le retour mène à « Démarrer un chantier », sans quitter l'espace (ADR 0044).
+  const shell = await getShellAccount();
+  const back =
+    shell?.account.role === "particulier" ? "/mon-espace/nouvelle-demande" : "/recherche";
 
   return (
     <main className="bg-background">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
         <Link
-          href="/recherche"
+          href={back}
           className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
@@ -102,22 +107,10 @@ export default async function ProjectReviewPage({
         </div>
         {lowConfidence && <Alert tone="info">{t.lowConfidence}</Alert>}
         {photosParam === "erreur" && <Alert tone="error">{fr.search.errors.photos}</Alert>}
-        <details className="group rounded-card border border-border bg-surface px-5 py-4 shadow-card">
-          <summary className="cursor-pointer list-none text-sm font-medium marker:hidden">
-            <span className="inline-flex items-center gap-2">
-              <ChevronRight
-                aria-hidden="true"
-                className="size-4 text-primary transition-transform group-open:rotate-90"
-              />
-              {t.yourText}
-            </span>
-          </summary>
-          <p className="mt-3 text-sm whitespace-pre-line text-muted-foreground">
-            {project.description}
-          </p>
-        </details>
         <CriteriaReview
           projectId={project.id}
+          description={project.description}
+          analyzedAt={project.analyzed_at}
           initial={initial}
           trades={trades.data ?? []}
           workTypes={(workTypes.data ?? []).map((w) => ({
