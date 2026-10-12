@@ -3491,7 +3491,7 @@ export const fr = {
       label: "Rechercher dans le back-office",
       refine: "Affiner la recherche",
       placeholder: "Nom, e-mail, SIRET, n° de devis ou de facture…",
-      short: "Rechercher",
+      short: "Lancer la recherche",
       prompt: "Saisissez un nom, un e-mail, un SIRET, un numéro de devis ou de facture.",
       empty: (query: string) => `Aucun résultat pour « ${query} ».`,
       groups: {
