@@ -143,8 +143,43 @@ export function AppFrame({
               <Search aria-hidden="true" className="size-4 text-foreground" />
             </Link>
           )}
+          {space === "admin" && (
+            // Recherche globale du back-office (ADR 0047) : personnes, artisans, devis, factures.
+            <form
+              action="/admin/recherche"
+              role="search"
+              className="relative mx-auto hidden w-full max-w-md md:block"
+            >
+              <label htmlFor="admin-recherche-globale" className="sr-only">
+                {fr.admin.search.label}
+              </label>
+              <input
+                id="admin-recherche-globale"
+                type="search"
+                name="q"
+                placeholder={fr.admin.search.placeholder}
+                className="min-h-11 w-full rounded-pill border border-border bg-background pr-11 pl-4 text-sm text-foreground placeholder:text-subtle-foreground hover:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+              />
+              <button
+                type="submit"
+                aria-label={fr.admin.search.short}
+                className="absolute top-1/2 right-1.5 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-foreground hover:bg-surface"
+              >
+                <Search aria-hidden="true" className="size-4" />
+              </button>
+            </form>
+          )}
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
+            {space === "admin" && (
+              <Link
+                href="/admin/recherche"
+                aria-label={fr.admin.search.label}
+                className="inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none md:hidden"
+              >
+                <Search aria-hidden="true" className="size-5" />
+              </Link>
+            )}
             {space === "client" && (
               // Petits écrans : la barre de recherche cède la place à une icône (ADR 0043).
               <Link

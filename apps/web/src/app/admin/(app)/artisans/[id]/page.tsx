@@ -1,10 +1,13 @@
 import {
   REQUIRED_DOCUMENT_TYPES,
   artisanVisibility,
+  chantiersByStage,
   documentIsValid,
+  requestRates,
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "@menao/core";
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,8 +16,10 @@ import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { verifyCertification } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
+import { getArtisanActivity } from "@/lib/admin/people";
 import { documentLogoUrl } from "@/lib/documents/logo";
 import { DecisionForm, DocumentReview } from "./review-forms";
+import { SuspensionForm } from "./suspension-form";
 
 const t = fr.admin.detail;
 const docT = fr.pro.onboarding.documents;
@@ -82,7 +87,10 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       .maybeSingle(),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
-  const logoUrl = await documentLogoUrl(supabase, artisan.logo_path);
+  const [logoUrl, activity] = await Promise.all([
+    documentLogoUrl(supabase, artisan.logo_path),
+    getArtisanActivity(supabase, artisan.id),
+  ]);
 
   const docs = documents.data ?? [];
   const { data: signed } = docs.length
@@ -360,6 +368,67 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
         ) : (
           <p className="text-muted-foreground">{t.noSubscription}</p>
         )}
+      </Section>
+
+      <Section title={fr.admin.activity.title}>
+        {activity &&
+          (() => {
+            const a = fr.admin.activity;
+            const rates = requestRates({
+              accepted: activity.demandes.acceptees,
+              refused: activity.demandes.refusees,
+              expired: activity.demandes.expirees,
+            });
+            const stages = chantiersByStage(activity.chantiers);
+            const ongoing =
+              stages.demande + stages.devis + stages.travaux + stages.reception + stages.litige;
+            return (
+              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                <Info label={a.requests} value={String(activity.demandes.total)} />
+                <Info label={a.pending} value={String(activity.demandes.en_attente)} />
+                <Info label={a.accepted} value={String(activity.demandes.acceptees)} />
+                <Info label={a.refused} value={String(activity.demandes.refusees)} />
+                <Info label={a.expired} value={String(activity.demandes.expirees)} />
+                <Info
+                  label={a.responseRate}
+                  value={rates.response === null ? null : fr.review.percent(rates.response)}
+                />
+                <Info label={a.chantiers} value={String(ongoing)} />
+                <Info label={a.finished} value={String(stages.termine)} />
+                <Info label={a.reviews} value={String(activity.avis.publies)} />
+                <Info
+                  label={a.average}
+                  value={
+                    activity.avis.note_moyenne === null
+                      ? null
+                      : fr.review.percent(activity.avis.note_moyenne)
+                  }
+                />
+              </dl>
+            );
+          })()}
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <Link
+            href={`/admin/personnes/${artisan.user_id}` as Route}
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {fr.admin.activity.account} →
+          </Link>
+          <Link
+            href={`/admin/chantiers?q=${encodeURIComponent(name)}` as Route}
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {fr.admin.activity.seeChantiers} →
+          </Link>
+        </div>
+      </Section>
+
+      <Section title={fr.admin.suspension.title}>
+        <SuspensionForm
+          artisanId={artisan.id}
+          status={artisan.status}
+          suspensionReason={artisan.suspension_reason}
+        />
       </Section>
 
       <Section title={t.decision}>
