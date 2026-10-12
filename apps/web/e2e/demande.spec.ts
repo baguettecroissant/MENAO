@@ -139,7 +139,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}$`));
   const rdv = proPage.getByRole("main");
   await expect(rdv.getByRole("heading", { name: "Informations du rendez-vous" })).toBeVisible();
-  await expect(rdv.getByText("16h30")).toBeVisible();
+  // Texte exact : les créneaux libres proposés (« Lun. 12 oct. à 16h30 ») contiennent aussi l'heure.
+  await expect(rdv.getByText("16h30", { exact: true })).toBeVisible();
   await expect(rdv.getByText("Dominique Test")).toBeVisible();
   await expect(rdv.getByRole("link", { name: "Appeler Dominique" })).toBeVisible();
   await expect(rdv.getByRole("link", { name: email })).toBeVisible();
