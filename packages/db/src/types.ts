@@ -2648,7 +2648,30 @@ export type Database = {
           occurred_at: string;
         }[];
       };
+      admin_add_reference: {
+        Args: { p_code: string; p_kind: string; p_label: string; p_trade_code?: string };
+        Returns: undefined;
+      };
+      admin_ai_summary: { Args: { p_days?: number }; Returns: Json };
       admin_artisan_activity: { Args: { p_artisan_id: string }; Returns: Json };
+      admin_audit_counts: { Args: { p_query?: string }; Returns: Json };
+      admin_audit_log: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
+        Returns: {
+          acteur: string;
+          action: string;
+          automatique: boolean;
+          categorie: string;
+          cible: string;
+          created_at: string;
+          data: Json;
+          lien_id: string;
+          lien_type: string;
+          log_id: string;
+          target_type: string;
+          total: number;
+        }[];
+      };
       admin_chantier_counts: { Args: { p_query?: string }; Returns: Json };
       admin_chantiers: {
         Args: {
@@ -2698,6 +2721,10 @@ export type Database = {
           p_review_id: string;
           p_status: Database["public"]["Enums"]["review_status"];
         };
+        Returns: undefined;
+      };
+      admin_move_reference: {
+        Args: { p_code: string; p_kind: string; p_up: boolean };
         Returns: undefined;
       };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -2756,6 +2783,11 @@ export type Database = {
       };
       admin_reactivate_account: { Args: { p_user_id: string }; Returns: undefined };
       admin_reactivate_artisan: { Args: { p_artisan_id: string }; Returns: undefined };
+      admin_references: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_rename_reference: {
+        Args: { p_code: string; p_kind: string; p_label: string };
+        Returns: undefined;
+      };
       admin_review_document: {
         Args: {
           p_document_id: string;
@@ -2773,6 +2805,10 @@ export type Database = {
           label: string;
           tag: string;
         }[];
+      };
+      admin_set_reference_active: {
+        Args: { p_active: boolean; p_code: string; p_kind: string };
+        Returns: undefined;
       };
       admin_subscription_counts: { Args: { p_query?: string }; Returns: Json };
       admin_subscription_summary: { Args: Record<PropertyKey, never>; Returns: Json };
