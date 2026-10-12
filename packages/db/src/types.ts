@@ -1416,6 +1416,7 @@ export type Database = {
           id: string;
           last_name: string | null;
           marketing_opt_in: boolean;
+          marketing_updated_at: string | null;
           notification_preferences: NonNullable<Json>;
           phone: string | null;
           role: Database["public"]["Enums"]["app_role"];
@@ -1430,6 +1431,7 @@ export type Database = {
           id?: string;
           last_name?: string | null;
           marketing_opt_in?: boolean;
+          marketing_updated_at?: string | null;
           notification_preferences?: NonNullable<Json>;
           phone?: string | null;
           role?: Database["public"]["Enums"]["app_role"];
@@ -1443,6 +1445,7 @@ export type Database = {
           id?: string;
           last_name?: string | null;
           marketing_opt_in?: boolean;
+          marketing_updated_at?: string | null;
           notification_preferences?: NonNullable<Json>;
           phone?: string | null;
           role?: Database["public"]["Enums"]["app_role"];
@@ -3033,6 +3036,7 @@ export type Database = {
       };
       report_message: { Args: { p_message_id: string; p_reason: string }; Returns: string };
       report_review: { Args: { p_reason: string; p_review_id: string }; Returns: string };
+      request_account_deletion: { Args: { p_message?: string }; Returns: string };
       save_project_criteria: {
         Args: {
           p_adresse: string;
@@ -3226,7 +3230,14 @@ export type Database = {
       signature_request_status: "en_attente" | "signee" | "abandonnee";
       ticket_status: "ouvert" | "en_cours" | "resolu";
       ticket_type:
-        "dossier_recherche" | "contact" | "expertise" | "reserves" | "avis" | "message" | "litige";
+        | "dossier_recherche"
+        | "contact"
+        | "expertise"
+        | "reserves"
+        | "avis"
+        | "message"
+        | "litige"
+        | "suppression_compte";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       zone_mode: "rayon" | "communes";
     };
@@ -3462,6 +3473,7 @@ export const Constants = {
         "avis",
         "message",
         "litige",
+        "suppression_compte",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       zone_mode: ["rayon", "communes"],

@@ -1,3 +1,4 @@
+export * from "./account";
 export * from "./agenda";
 export * from "./artisan";
 export * from "./auth";

@@ -79,4 +79,6 @@ export const messages = {
   hoursInvalid: "Vérifiez les heures saisies.",
   termsRequired:
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
+  passwordUnchanged: "Choisissez un mot de passe différent de l'actuel.",
+  deletionConfirmRequired: "Cochez la case pour confirmer votre demande.",
 } as const;
