@@ -3,6 +3,7 @@ import { FORMES_JURIDIQUES } from "@menao/core";
 /** Textes de l'interface, centralisés (CLAUDE.md : pas de chaînes en dur dispersées). */
 export const fr = {
   meta: {
+    name: "MENAO",
     title: "MENAO — Artisans du bâtiment vérifiés",
     description:
       "Trouvez l'artisan du bâtiment qu'il vous faut : devis, signature, paiement sécurisé et suivi de chantier.",
