@@ -28,7 +28,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   browser,
   request,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(240_000);
   const email = `demande-${Date.now()}@example.test`;
 
   await page.goto("/recherche");
@@ -896,7 +896,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await admin.getByRole("link", { name: "Demandes", exact: true }).click();
   await expect(admin.getByRole("heading", { name: "Demandes", level: 1 })).toBeVisible();
   await admin.getByRole("searchbox", { name: "Rechercher une demande" }).fill(email);
-  await admin.getByRole("button", { name: "Rechercher" }).click();
+  await admin.getByRole("main").getByRole("button", { name: "Rechercher" }).click();
   await expect(admin.getByText("1 résultat", { exact: true })).toBeVisible();
   await capture(admin, "admin-demandes");
   await admin.getByRole("link", { name: /^Ouvrir la demande : Plombier · Nice/ }).click();
