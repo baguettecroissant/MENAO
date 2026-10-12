@@ -36,7 +36,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          # Le Mac garde le magasin pnpm d'une exécution à l'autre : cache GitHub inutile.
+          cache: ${{ runner.environment == 'github-hosted' && 'pnpm' || '' }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
@@ -52,14 +53,16 @@ jobs:
     name: Base de données (migrations, RLS pgTAP, types)
     if: github.event_name == 'pull_request'
     runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted", "macOS", "ARM64"]') }}
-    timeout-minutes: 20
+    # Marge pour le premier téléchargement des images Docker sur le Mac.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          # Le Mac garde le magasin pnpm d'une exécution à l'autre : cache GitHub inutile.
+          cache: ${{ runner.environment == 'github-hosted' && 'pnpm' || '' }}
       - run: pnpm install --frozen-lockfile
       - name: Isoler le Supabase de la CI
         run: bash scripts/ci/isoler-supabase.sh
@@ -91,14 +94,16 @@ jobs:
     name: Bout en bout (Playwright)
     if: github.event_name == 'pull_request'
     runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted", "macOS", "ARM64"]') }}
-    timeout-minutes: 25
+    # Marge pour le premier téléchargement des images Docker (Supabase complet) sur le Mac.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          # Le Mac garde le magasin pnpm d'une exécution à l'autre : cache GitHub inutile.
+          cache: ${{ runner.environment == 'github-hosted' && 'pnpm' || '' }}
       - run: pnpm install --frozen-lockfile
       - name: Isoler le Supabase de la CI
         run: bash scripts/ci/isoler-supabase.sh
