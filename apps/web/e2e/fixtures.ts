@@ -1,4 +1,16 @@
-import type { Page } from "@playwright/test";
+import { test, type Page } from "@playwright/test";
+
+/** Captures des écrans (ordinateur et mobile 390 px), publiées par la CI pour la revue du design. */
+export async function capture(page: Page, name: string) {
+  const viewport = page.viewportSize();
+  await page.screenshot({ path: test.info().outputPath(`captures/${name}.png`), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: test.info().outputPath(`captures/${name}-mobile.png`),
+    fullPage: true,
+  });
+  if (viewport) await page.setViewportSize(viewport);
+}
 
 function luhnKey(digits: string): string {
   for (let k = 0; k < 10; k++) {

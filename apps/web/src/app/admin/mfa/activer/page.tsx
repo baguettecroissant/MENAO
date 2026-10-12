@@ -9,7 +9,7 @@ const t = fr.admin.mfa;
 /** Activation du TOTP : un nouveau facteur non vérifié remplace les tentatives abandonnées. */
 export default async function EnrollMfaPage() {
   const { supabase, aal } = await requireAdmin({ requireMfa: false });
-  if (aal === "aal2") redirect("/admin/artisans");
+  if (aal === "aal2") redirect("/admin");
 
   const { data: factors } = await supabase.auth.mfa.listFactors();
   if (factors?.totp.some((f) => f.status === "verified")) redirect("/admin/mfa/verifier");

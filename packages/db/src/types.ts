@@ -2589,6 +2589,14 @@ export type Database = {
         Returns: string;
       };
       add_ticket_message: { Args: { p_body: string; p_ticket_id: string }; Returns: string };
+      admin_activity: {
+        Args: { p_limit?: number };
+        Returns: {
+          details: Json;
+          kind: string;
+          occurred_at: string;
+        }[];
+      };
       admin_close_dispute: {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
         Returns: undefined;
@@ -2613,6 +2621,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_review_document: {
         Args: {
           p_document_id: string;

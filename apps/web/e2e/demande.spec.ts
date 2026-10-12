@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { files } from "./fixtures";
+import { expect, test } from "@playwright/test";
+import { capture, files } from "./fixtures";
 import { authLinkFor } from "./mailpit";
 import { signedStripeEvent } from "./stripe";
 
@@ -13,18 +13,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:5
 const CONNECT_SECRET = process.env.STRIPE_CONNECT_WEBHOOK_SECRET ?? "whsec_menao_connect_ci";
 // Clé serveur de l'instance Supabase locale de la CI : simule la tâche planifiée du démarrage.
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-
-/** Captures des écrans (ordinateur et mobile 390 px), publiées par la CI pour la revue du design. */
-async function capture(page: Page, name: string) {
-  const viewport = page.viewportSize();
-  await page.screenshot({ path: test.info().outputPath(`captures/${name}.png`), fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({
-    path: test.info().outputPath(`captures/${name}-mobile.png`),
-    fullPage: true,
-  });
-  if (viewport) await page.setViewportSize(viewport);
-}
 
 // Micro simulé par Chromium (son de test) pour la dictée du devis.
 test.use({

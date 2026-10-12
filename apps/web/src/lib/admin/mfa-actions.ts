@@ -22,5 +22,5 @@ export async function verifyTotp(_prev: FormState, formData: FormData): Promise<
   });
   if (error) return { fieldErrors: { code: [fr.admin.mfa.invalidCode] } };
 
-  redirect("/admin/artisans");
+  redirect("/admin");
 }

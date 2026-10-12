@@ -43,9 +43,14 @@ test("renouvellement d'une assurance qui expire, validé par un admin", async ({
   const secret = (await page.getByTestId("totp-secret").textContent())?.trim() ?? "";
   await page.getByLabel("Code à 6 chiffres").fill(totp(secret));
   await page.getByRole("button", { name: "Vérifier" }).click();
-  await expect(page).toHaveURL(/\/admin\/artisans$/);
+  await expect(page).toHaveURL(/\/admin$/);
 
-  await page.getByRole("link", { name: "À surveiller" }).click();
+  // Vue d'ensemble (ADR 0045) : le renouvellement déposé est à traiter.
+  await page
+    .getByRole("article", { name: /renouvelés? à vérifier$/ })
+    .getByRole("link", { name: /Voir les échéances/ })
+    .click();
+  await expect(page).toHaveURL(/\/admin\/surveillance$/);
   const renewals = page.getByRole("region", { name: "Renouvellements à vérifier" });
   await expect(renewals.getByRole("row", { name: /VALIDE EXEMPLE.*décennale/ })).toBeVisible();
   const expiring = page.getByRole("region", { name: /arrivant à échéance/ });

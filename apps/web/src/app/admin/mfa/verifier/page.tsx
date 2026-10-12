@@ -6,7 +6,7 @@ import { TotpForm } from "../totp-form";
 
 export default async function VerifyMfaPage() {
   const { supabase, aal } = await requireAdmin({ requireMfa: false });
-  if (aal === "aal2") redirect("/admin/artisans");
+  if (aal === "aal2") redirect("/admin");
 
   const { data: factors } = await supabase.auth.mfa.listFactors();
   const factor = factors?.totp.find((f) => f.status === "verified");
