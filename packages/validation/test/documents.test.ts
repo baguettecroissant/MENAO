@@ -67,6 +67,6 @@ describe("presentationSchema et usages", () => {
   });
 
   it("usages des fichiers déposés", () => {
-    expect(UPLOAD_PURPOSES).toEqual(["document", "avatar", "portfolio"]);
+    expect(UPLOAD_PURPOSES).toEqual(["document", "avatar", "portfolio", "logo"]);
   });
 });

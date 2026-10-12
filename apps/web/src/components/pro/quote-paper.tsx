@@ -1,4 +1,5 @@
 import { QUOTE_TEXTS, type QuoteDocumentModel } from "@menao/documents";
+import { DocumentLogo } from "@/components/document-logo";
 
 const t = QUOTE_TEXTS;
 
@@ -10,10 +11,13 @@ export function QuotePaper({
   model,
   label,
   clipped = true,
+  logoUrl = null,
 }: {
   model: QuoteDocumentModel;
   label: string;
   clipped?: boolean;
+  /** Logo de l'entreprise (URL signée), s'il y en a un. */
+  logoUrl?: string | null;
 }) {
   const last = model.totals.length - 1;
   return (
@@ -27,6 +31,7 @@ export function QuotePaper({
         {/* Étroit : titre et références au-dessus de l'artisan ; sinon côte à côte, comme le PDF. */}
         <div className="flex flex-col gap-2 @sm:flex-row @sm:items-start @sm:justify-between @sm:gap-4">
           <div className="min-w-0">
+            <DocumentLogo url={logoUrl} name={model.issuerName} />
             <p className="text-[0.8125rem] font-semibold">{model.issuerName}</p>
             {model.issuerLines.map((line, i) => (
               <p key={i} className="text-muted-foreground">

@@ -97,6 +97,15 @@ export const files = {
       "base64",
     ),
   },
+  /** Logo PNG 60 × 24 à fond transparent (logo des documents, ADR 0038). */
+  logo: {
+    name: "logo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAADwAAAAYCAYAAACmwZ5SAAAAO0lEQVR42u3WsQ0AMAgDQcbLKtlfoiUzpATuJQ9wnSMkjercrEkDBt4O/g0YGBgYGBjY8QAG3gqW1KoHzSEcSMK+IsMAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  },
   /** Page HTML déguisée en PDF : refusée par le contrôle du type réel. */
   fakePdf: {
     name: "facture.pdf",

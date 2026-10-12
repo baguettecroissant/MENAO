@@ -1455,6 +1455,9 @@ export const fr = {
       manage: "Gérer mes disponibilités",
     },
   },
+  documentLogo: {
+    alt: (name: string) => `Logo de ${name}`,
+  },
   clientDocuments: {
     title: "Mes documents",
     subtitle: "Devis signés, factures et procès-verbaux de vos chantiers.",
@@ -2738,6 +2741,17 @@ export const fr = {
         tvaNo: "Non (franchise en base, art. 293 B du CGI)",
         tvaNumber: "Numéro de TVA intracommunautaire",
         verifyFirst: "Vérifiez d'abord votre SIRET pour continuer.",
+        logo: {
+          title: "Logo sur vos documents (facultatif)",
+          intro:
+            "Il apparaît en haut de vos devis, factures et procès-verbaux de réception. Les documents déjà envoyés gardent le logo qu'ils avaient.",
+          file: "Fichier du logo",
+          hint: "PNG, JPEG ou WebP, 10 Mo maximum. Un PNG à fond transparent rend le mieux.",
+          send: "Envoyer mon logo",
+          change: "Remplacer mon logo",
+          remove: "Retirer le logo",
+          current: "Votre logo actuel",
+        },
       },
       trades: {
         legend: "Vos métiers",
