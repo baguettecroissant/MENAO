@@ -2428,6 +2428,7 @@ export type Database = {
           id: string;
           message: string | null;
           message_id: string | null;
+          overdue_notified_at: string | null;
           project_id: string | null;
           resolved_at: string | null;
           review_id: string | null;
@@ -2448,6 +2449,7 @@ export type Database = {
           id?: string;
           message?: string | null;
           message_id?: string | null;
+          overdue_notified_at?: string | null;
           project_id?: string | null;
           resolved_at?: string | null;
           review_id?: string | null;
@@ -2467,6 +2469,7 @@ export type Database = {
           id?: string;
           message?: string | null;
           message_id?: string | null;
+          overdue_notified_at?: string | null;
           project_id?: string | null;
           resolved_at?: string | null;
           review_id?: string | null;
@@ -3401,7 +3404,10 @@ export type Database = {
         | "compte_reactive"
         | "demande_annulee"
         | "acces_suspendu"
-        | "acces_retabli";
+        | "acces_retabli"
+        | "equipe_nouveau_ticket"
+        | "equipe_dossier_a_verifier"
+        | "equipe_ticket_en_retard";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -3641,6 +3647,9 @@ export const Constants = {
         "demande_annulee",
         "acces_suspendu",
         "acces_retabli",
+        "equipe_nouveau_ticket",
+        "equipe_dossier_a_verifier",
+        "equipe_ticket_en_retard",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

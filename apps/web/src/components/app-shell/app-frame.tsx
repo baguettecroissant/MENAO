@@ -207,7 +207,8 @@ export function AppFrame({
                 )}
               </Link>
             )}
-            {space !== "admin" && <NotificationBell />}
+            {/* Back-office aussi : alertes de l'équipe (ADR 0050). */}
+            <NotificationBell />
             {account && (
               <div className="lg:hidden">
                 <AccountMenu account={account} links={ACCOUNT_LINKS[space]} />

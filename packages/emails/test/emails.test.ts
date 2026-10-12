@@ -563,6 +563,38 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     );
   });
 
+  it("alertes de l'équipe (ADR 0050) : nouveau ticket, dossier à vérifier, ticket en retard", () => {
+    const ticket = notificationContent(
+      "equipe_nouveau_ticket",
+      { ticket_id: ids.request_id, type: "litige", objet: "Fuite non réparée" },
+      pro,
+    );
+    expect(ticket.subject).toBe("Nouveau ticket : litige sur un chantier");
+    expect(ticket.quote).toBe("Fuite non réparée");
+    expect(ticket.cta).toEqual({
+      label: "Ouvrir le ticket",
+      url: `https://menao.example/admin/tickets/${ids.request_id}`,
+    });
+    const dossier = notificationContent(
+      "equipe_dossier_a_verifier",
+      { artisan_id: ids.chantier_id, entreprise: "PEINTURE EXEMPLE" },
+      pro,
+    );
+    expect(dossier.subject).toBe("Dossier artisan à vérifier : PEINTURE EXEMPLE");
+    expect(dossier.cta.url).toBe(`https://menao.example/admin/artisans/${ids.chantier_id}`);
+    const late = notificationContent(
+      "equipe_ticket_en_retard",
+      { ticket_id: ids.request_id, type: "contact", objet: null },
+      pro,
+    );
+    expect(late.subject).toBe("Ticket en retard : message de la page Contact");
+    expect(late.quote).toBeNull();
+    // Sans identifiant : la boîte de réception.
+    expect(notificationContent("equipe_ticket_en_retard", {}, pro).cta.url).toBe(
+      "https://menao.example/admin/tickets",
+    );
+  });
+
   it("accès au compte suspendu puis rétabli par l'équipe (ADR 0048)", () => {
     const blocked = notificationContent("acces_suspendu", { motif: "Fraude au paiement." }, pro);
     expect(blocked.subject).toBe("L'accès à votre compte MENAO est suspendu");
