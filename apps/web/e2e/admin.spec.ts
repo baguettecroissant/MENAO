@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { capture } from "./fixtures";
 import { totp } from "./totp";
 
 // Comptes fictifs du seed : admin@example.test et dossier@example.test (dossier envoyé).
@@ -24,10 +25,26 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await expect(page.getByText("Code incorrect ou expiré")).toBeVisible();
   await page.getByLabel("Code à 6 chiffres").fill(totp(secret));
   await page.getByRole("button", { name: "Vérifier" }).click();
-  await expect(page).toHaveURL(/\/admin\/artisans$/);
 
-  // File d'attente → dossier
-  await page.getByRole("link", { name: "Ouvrir le dossier de PEINTURE DOSSIER EXEMPLE" }).click();
+  // Vue d'ensemble (F-58, ADR 0045) : à traiter, activité de la plateforme, chiffres clés.
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole("heading", { name: "Vue d'ensemble", level: 1 })).toBeVisible();
+  const dossiers = page
+    .getByRole("region", { name: "À traiter maintenant" })
+    .getByRole("article", { name: /dossiers? à vérifier$/ });
+  await expect(dossiers).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Activité en direct" })
+      .getByText("Dossier envoyé par PEINTURE DOSSIER EXEMPLE"),
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Demandes" })).toBeVisible();
+  await capture(page, "admin-vue-ensemble");
+
+  // À traiter → dossier
+  await dossiers
+    .getByRole("link", { name: "Ouvrir le dossier de PEINTURE DOSSIER EXEMPLE" })
+    .click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("PEINTURE DOSSIER EXEMPLE");
   const validate = page.getByRole("button", { name: "Valider le dossier" });
   await expect(validate).toBeDisabled();

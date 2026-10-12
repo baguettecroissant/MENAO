@@ -77,7 +77,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
     supabase.from("work_types").select("code, label"),
     supabase
       .from("subscriptions")
-      .select("plan_code, status, trial_end, current_period_end")
+      .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end, plans(nom)")
       .eq("artisan_id", id)
       .maybeSingle(),
   ]);
@@ -344,9 +344,18 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       <Section title={t.subscription}>
         {subscription.data ? (
           <p>
-            {subscription.data.plan_code ?? "—"} · {subscription.data.status}
-            {subscription.data.trial_end &&
-              ` · essai jusqu'au ${day.format(new Date(subscription.data.trial_end))}`}
+            {[
+              subscription.data.plans?.nom ?? subscription.data.plan_code ?? "—",
+              t.subscriptionStatus[subscription.data.status] ?? subscription.data.status,
+              subscription.data.status === "trialing" && subscription.data.trial_end
+                ? t.trialUntil(day.format(new Date(subscription.data.trial_end)))
+                : null,
+              subscription.data.cancel_at_period_end && subscription.data.current_period_end
+                ? t.cancelAt(day.format(new Date(subscription.data.current_period_end)))
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         ) : (
           <p className="text-muted-foreground">{t.noSubscription}</p>

@@ -6,6 +6,7 @@ import {
   HardHat,
   IdCard,
   Inbox,
+  LayoutDashboard,
   LayoutGrid,
   MessageCircle,
   MessagesSquare,
@@ -42,7 +43,7 @@ export const MENU_COOKIE = "menao_menu";
 export const SPACE_HOME: Record<Space, string> = {
   client: "/mon-espace",
   pro: "/pro/tableau-de-bord",
-  admin: "/admin/artisans",
+  admin: "/admin",
 };
 
 /** Messages, accessibles depuis la barre du haut sur mobile (ADR 0043). */
@@ -114,6 +115,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
     {
       label: fr.appShell.sections.tools,
       items: [
+        { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
         {
           href: "/admin/artisans",
           label: fr.admin.nav.artisans,
