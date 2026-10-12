@@ -181,6 +181,43 @@ async function analyze(
   }
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+type PreviousProject = {
+  trade_code: string | null;
+  ville_code_insee: string | null;
+  ville_nom: string | null;
+  code_postal: string | null;
+  ville_location: unknown;
+  adresse: string | null;
+  location: unknown;
+};
+
+/**
+ * « Redemander un devis » (F-12, ADR 0040) : chantier précédent du particulier avec cet artisan.
+ * Sans chantier commun, la demande est une recherche ordinaire.
+ */
+async function previousProject(
+  admin: ReturnType<typeof adminClient>,
+  userId: string,
+  artisanId: unknown,
+  chantierId: unknown,
+): Promise<PreviousProject | null> {
+  if (typeof artisanId !== "string" || typeof chantierId !== "string") return null;
+  if (!UUID.test(artisanId) || !UUID.test(chantierId)) return null;
+  const { data } = await admin
+    .from("chantiers")
+    .select(
+      "projects(trade_code, ville_code_insee, ville_nom, code_postal, ville_location, adresse, location)",
+    )
+    .eq("id", chantierId)
+    .eq("particulier_id", userId)
+    .eq("artisan_id", artisanId)
+    .maybeSingle();
+  const project = (data as { projects: PreviousProject | null } | null)?.projects;
+  return project ?? null;
+}
+
 Deno.serve(
   withCors(async (req) => {
     if (req.method !== "POST") return new Response(null, { status: 405 });
@@ -194,6 +231,8 @@ Deno.serve(
     const body = (await req.json().catch(() => null)) as {
       description?: unknown;
       tradeHint?: unknown;
+      preferredArtisanId?: unknown;
+      fromChantierId?: unknown;
     } | null;
     const description = typeof body?.description === "string" ? body.description.trim() : "";
     if (description.length === 0 || description.length > PROJECT_TEXT_MAX_LENGTH) {
@@ -208,10 +247,15 @@ Deno.serve(
 
     try {
       const ref = await loadReferentials(admin);
-      const tradeHint =
-        typeof body?.tradeHint === "string" && ref.trades.includes(body.tradeHint)
-          ? body.tradeHint
-          : null;
+      const previous = await previousProject(
+        admin,
+        user.id,
+        body?.preferredArtisanId,
+        body?.fromChantierId,
+      );
+      // Métier choisi, sinon celui du chantier précédent (« Redemander un devis »).
+      const hint = typeof body?.tradeHint === "string" ? body.tradeHint : previous?.trade_code;
+      const tradeHint = hint && ref.trades.includes(hint) ? hint : null;
       const today = parisToday();
 
       const { data: profile } = await admin
@@ -255,6 +299,28 @@ Deno.serve(
       const c = best?.criteria;
       const commune = c?.ville ? await geocodeCommune(c.ville, c.codePostal) : null;
       const address = commune && c?.adresse ? await geocodeAddress(c.adresse, commune.code) : null;
+      // Aucune ville dans la description : adresse du chantier précédent, modifiable aux critères.
+      const place =
+        !commune && previous?.ville_code_insee
+          ? {
+              ville_code_insee: previous.ville_code_insee,
+              ville_nom: previous.ville_nom,
+              code_postal: previous.code_postal,
+              ville_location: previous.ville_location,
+              adresse: previous.adresse,
+              location: previous.location,
+            }
+          : {
+              ville_code_insee: commune?.code ?? null,
+              ville_nom: commune?.nom ?? null,
+              code_postal: commune?.postcode ?? null,
+              ville_location:
+                commune?.lon != null && commune.lat != null
+                  ? `SRID=4326;POINT(${commune.lon} ${commune.lat})`
+                  : null,
+              adresse: address?.label ?? null,
+              location: address ? `SRID=4326;POINT(${address.lon} ${address.lat})` : null,
+            };
 
       const { data: project, error } = await admin
         .from("projects")
@@ -271,15 +337,8 @@ Deno.serve(
           room_codes: c?.roomCodes ?? [],
           work_type_codes: c?.workTypeCodes ?? [],
           surface: c?.surface ?? null,
-          ville_code_insee: commune?.code ?? null,
-          ville_nom: commune?.nom ?? null,
-          code_postal: commune?.postcode ?? null,
-          ville_location:
-            commune?.lon != null && commune.lat != null
-              ? `SRID=4326;POINT(${commune.lon} ${commune.lat})`
-              : null,
-          adresse: address?.label ?? null,
-          location: address ? `SRID=4326;POINT(${address.lon} ${address.lat})` : null,
+          ...place,
+          preferred_artisan_id: previous ? body?.preferredArtisanId : null,
           date_mode: c?.dateMode ?? "inconnue",
           date_souhaitee: c?.dateSouhaitee ?? null,
           urgence: c?.urgence ?? false,

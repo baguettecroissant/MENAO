@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { artisanSelectionSchema, refusalSchema, requestFormSchema } from "../src/request";
+import { messages } from "../src/messages";
+import {
+  artisanSelectionSchema,
+  clientCancelSchema,
+  refusalSchema,
+  requestFormSchema,
+} from "../src/request";
 
 const a = "b0000000-0000-4000-8000-000000000011";
 const b = "b0000000-0000-4000-8000-000000000012";
@@ -52,5 +58,25 @@ describe("demande de chantier (F-11)", () => {
     expect(refusalSchema.safeParse({ reason: "hors_zone", detail: "" }).success).toBe(true);
     expect(refusalSchema.safeParse({ reason: "autre", detail: "" }).success).toBe(false);
     expect(refusalSchema.safeParse({ reason: "", detail: "x" }).success).toBe(false);
+  });
+});
+
+describe("annulation par le client (F-11, F-12)", () => {
+  it("motif de la liste obligatoire, commentaire facultatif et limité", () => {
+    expect(
+      clientCancelSchema.parse({ reason: "autre_artisan", comment: "  Trouvé plus près. " }),
+    ).toEqual({
+      reason: "autre_artisan",
+      comment: "Trouvé plus près.",
+    });
+    expect(clientCancelSchema.parse({ reason: "plus_besoin", comment: " " })).toEqual({
+      reason: "plus_besoin",
+      comment: undefined,
+    });
+    const missing = clientCancelSchema.safeParse({ reason: "", comment: "" });
+    expect(missing.error?.issues[0]?.message).toBe(messages.cancelReasonRequired);
+    expect(
+      clientCancelSchema.safeParse({ reason: "autre", comment: "a".repeat(501) }).success,
+    ).toBe(false);
   });
 });

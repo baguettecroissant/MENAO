@@ -1,4 +1,5 @@
 import {
+  CLIENT_CANCELLABLE_STATUSES,
   chantierStepIndex,
   clientChantierAction,
   journalSummary,
@@ -28,14 +29,17 @@ import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
 import { ConfirmLiftActions, ReceptionActions } from "@/components/chantier/reception-actions";
 import { ReviewInvite } from "@/components/review/review-invite";
-import { Alert, TextLink } from "@/components/ui";
+import { CancelChantierButton } from "@/components/project/cancel-buttons";
+import { Alert, ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
 import { chantierTag, nextIntervention } from "@/lib/chantier/view";
 import { formatDateNumeric } from "@/lib/format";
+import { rehirePath } from "@/lib/project/paths";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.chantier;
+const cancellable: readonly ChantierStatus[] = CLIENT_CANCELLABLE_STATUSES;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const STARTED: readonly ChantierStatus[] = [
@@ -312,7 +316,19 @@ export default async function ClientChantierPage({
               <PaymentSchedule progress={progress} />
             </>
           )}
+          {status === "cloture" && (
+            <ButtonLink
+              href={rehirePath(c.artisan_id, id, c.artisan_name) as Route}
+              variant="outline"
+              className="self-start"
+            >
+              {fr.myChantiers.rehire(c.artisan_name)}
+            </ButtonLink>
+          )}
           <ReportProblemLink href={`/mon-espace/chantiers/${id}/signaler`} />
+          {cancellable.includes(status) && (
+            <CancelChantierButton chantierId={id} artisanName={c.artisan_name} />
+          )}
         </div>
       </div>
       {status === "reserves_a_lever" && (

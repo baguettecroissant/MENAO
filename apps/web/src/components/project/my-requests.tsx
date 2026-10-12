@@ -5,6 +5,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { ChantierCover } from "@/components/chantier/chantier-parts";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
+import { CancelRequestButton } from "@/components/project/cancel-buttons";
 import { StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 
@@ -28,12 +29,15 @@ export function PendingRequests({
   photoUrls,
   avatarUrls,
   now,
+  cancelledByClient = new Set(),
 }: {
   rows: RequestRow[];
   /** Première photo de chaque projet, par identifiant de projet. */
   photoUrls: ReadonlyMap<string, string>;
   avatarUrls: ReadonlyMap<string, string>;
   now: Date;
+  /** Demandes annulées par le client lui-même (motif renseigné). */
+  cancelledByClient?: ReadonlySet<string>;
 }) {
   const projectIds = [...new Set(rows.filter((r) => !r.chantier_id).map((r) => r.project_id))];
   return (
@@ -108,8 +112,19 @@ export function PendingRequests({
                           {t.timeLeft(left.hours, left.minutes)}
                         </p>
                       )}
-                      {r.status === "annulee" && r.chantier_status === "annule" && (
-                        <p className="text-xs text-muted-foreground">{t.cancelledByArtisan}</p>
+                      {r.status === "envoyee" && (
+                        <CancelRequestButton
+                          requestId={r.request_id}
+                          artisanName={r.artisan_name}
+                        />
+                      )}
+                      {r.status === "annulee" && cancelledByClient.has(r.request_id) ? (
+                        <p className="text-xs text-muted-foreground">{t.cancelledByYou}</p>
+                      ) : (
+                        r.status === "annulee" &&
+                        r.chantier_status === "annule" && (
+                          <p className="text-xs text-muted-foreground">{t.cancelledByArtisan}</p>
+                        )
                       )}
                       {r.status === "acceptee" && (r.artisan_phone || r.artisan_email) && (
                         <div className="flex flex-col gap-1 text-xs">

@@ -34,7 +34,7 @@ export default async function ProjectResultsPage({
   const supabase = await createClient();
   const { data: project } = await supabase
     .from("projects")
-    .select("id, trade_code, work_type_codes, ville_code_insee")
+    .select("id, trade_code, work_type_codes, ville_code_insee, preferred_artisan_id")
     .eq("id", id)
     .maybeSingle();
   if (!project) notFound();
@@ -43,11 +43,26 @@ export default async function ProjectResultsPage({
   const [{ data: claims }, summary, artisans, sent] = await Promise.all([
     supabase.auth.getClaims(),
     getProjectSummary(supabase, id),
-    matchArtisans(supabase, id, MAX_SEARCH_RESULTS),
+    // Artisan d'un chantier précédent : cherché plus loin dans le classement (ADR 0040).
+    matchArtisans(
+      supabase,
+      id,
+      project.preferred_artisan_id ? MAX_SEARCH_RESULTS + 20 : MAX_SEARCH_RESULTS,
+    ),
     supabase.rpc("particulier_requests"),
   ]);
-  const results = artisans ?? [];
+  const preferredId = project.preferred_artisan_id;
+  const preferred = (artisans ?? []).find((a) => a.artisan_id === preferredId) ?? null;
+  // « Redemander un devis » : l'artisan connu en tête, présélectionné, à la demande du client.
+  const results = [
+    ...(preferred ? [preferred] : []),
+    ...(artisans ?? []).filter((a) => a !== preferred),
+  ].slice(0, MAX_SEARCH_RESULTS);
   const today = parisToday();
+  const preferredUnavailable =
+    preferredId && !preferred
+      ? ((sent.data ?? []).find((r) => r.artisan_id === preferredId)?.artisan_name ?? null)
+      : null;
   const projectRequests = (sent.data ?? []).filter((r) => r.project_id === id);
   const requested = new Set(projectRequests.map((r) => r.artisan_id));
   const slots = remainingSlots(projectRequests.map((r) => r.status));
@@ -80,6 +95,9 @@ export default async function ProjectResultsPage({
           {results.length > 0 && slots === 0 && (
             <Alert tone="info">{fr.search.selection.noSlot}</Alert>
           )}
+          {preferredUnavailable && (
+            <Alert tone="info">{t.knownUnavailable(preferredUnavailable)}</Alert>
+          )}
 
           <form id="selection" method="get" action={`/recherche/${id}/envoyer`} />
           {results.length > 0 && (
@@ -111,6 +129,7 @@ export default async function ProjectResultsPage({
                     selection={
                       requested.has(a.artisan_id) ? "sent" : slots > 0 ? "selectable" : "none"
                     }
+                    known={a.artisan_id === preferredId}
                   />
                 );
               })}

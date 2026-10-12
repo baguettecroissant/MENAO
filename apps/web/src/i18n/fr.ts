@@ -684,6 +684,8 @@ export const fr = {
     },
   },
   search: {
+    rehire: (name: string) =>
+      `Nouvelle demande pour ${name} : décrivez vos travaux, ${name} vous sera proposé en premier s'il intervient pour ce besoin.`,
     titleStart: "Trouvez l'artisan du BTP dont",
     titleAccent: "vous avez besoin",
     tagline: "Recherche rapide et intelligente",
@@ -871,6 +873,9 @@ export const fr = {
       summary: "Votre projet",
       edit: "Modifier",
       ranking: "Comment les artisans sont-ils classés ?",
+      knownArtisan: "Déjà venu chez vous",
+      knownUnavailable: (name: string) =>
+        `${name} n'est pas disponible pour cette demande (métier, zone d'intervention ou congés) : voici d'autres artisans vérifiés.`,
       viewProfile: (name: string) => `Voir le profil de ${name}`,
       viewProfileShort: "Voir le profil",
       experience: (years: number) =>
@@ -1142,6 +1147,7 @@ export const fr = {
     yourArtisans: "Vos artisans",
     chooseAnother: "Choisir un autre artisan",
     cancelledByArtisan: "L'artisan a annulé le rendez-vous.",
+    cancelledByYou: "Vous avez annulé cette demande.",
     seeArtisans: "Voir les artisans",
     seeChantier: "Voir le chantier",
   },
@@ -1158,6 +1164,47 @@ export const fr = {
     tabs: { inProgress: "Chantiers en cours", finished: "Chantiers terminés" },
     noActive: "Aucun chantier en cours pour le moment.",
     noFinished: "Aucun chantier terminé pour le moment.",
+    drafts: {
+      title: "Recherches non envoyées",
+      intro:
+        "Vous avez commencé ces recherches sans envoyer de demande : reprenez-les quand vous voulez.",
+      started: (date: string) => `Commencée le ${date}`,
+      untitled: "Recherche sans titre",
+      resume: "Reprendre",
+      delete: "Supprimer",
+      deleteLabel: (title: string) => `Supprimer la recherche « ${title} »`,
+    },
+    rehire: (name: string) => `Redemander un devis à ${name}`,
+  },
+  clientCancel: {
+    reasonsLegend: "Pourquoi annulez-vous ?",
+    reasons: {
+      plus_besoin: "Je n'ai plus besoin de ces travaux",
+      autre_artisan: "J'ai choisi un autre artisan",
+      delai: "Le délai ne me convient pas",
+      budget: "Le budget ne me convient pas",
+      autre: "Autre raison",
+    },
+    comment: "Un mot pour l'artisan ?",
+    optional: "(facultatif)",
+    back: "Retour",
+    request: {
+      open: "Annuler ma demande",
+      openLabel: (artisan: string) => `Annuler ma demande à ${artisan}`,
+      title: "Annuler votre demande ?",
+      intro: (artisan: string) =>
+        `${artisan} sera prévenu et n'aura plus à vous répondre. Vous pourrez solliciter un autre artisan.`,
+      submit: "Annuler ma demande",
+      done: "Votre demande est annulée.",
+    },
+    chantier: {
+      open: "Annuler le chantier",
+      title: "Annuler ce chantier ?",
+      intro: (artisan: string) =>
+        `Le rendez-vous avec ${artisan} sera annulé et il en sera prévenu. Cette annulation est définitive.`,
+      submit: "Annuler le chantier",
+      done: "Le chantier est annulé.",
+    },
   },
   chantier: {
     back: "Retour",
@@ -3129,6 +3176,7 @@ export const fr = {
       "Puis les artisans disponibles immédiatement, puis selon leur date de disponibilité.",
       "Ensuite, les artisans les plus proches du chantier.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
+      "Exception, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier, cet artisan est présenté en premier (mention « Déjà venu chez vous »), s'il remplit les conditions ci-dessus.",
     ],
     paidTitle: "Mise en avant payante",
     paid: "Aucune. Le classement ne dépend ni de la formule d'abonnement ni d'un paiement de l'artisan. Si cela devait changer, les artisans concernés seraient signalés par la mention « Mis en avant ».",
@@ -3137,7 +3185,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 10 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 12 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",

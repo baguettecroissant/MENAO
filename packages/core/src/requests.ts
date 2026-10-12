@@ -17,6 +17,16 @@ export const REFUSAL_REASONS = [
 ] as const;
 export type RefusalReason = (typeof REFUSAL_REASONS)[number];
 
+/** Motifs d'annulation par le client : demande en attente ou chantier avant l'acompte (F-11, F-12). */
+export const CLIENT_CANCEL_REASONS = [
+  "plus_besoin",
+  "autre_artisan",
+  "delai",
+  "budget",
+  "autre",
+] as const;
+export type ClientCancelReason = (typeof CLIENT_CANCEL_REASONS)[number];
+
 export const CALLBACK_MODES = ["des_que_possible", "plage"] as const;
 export const REQUEST_MESSAGE_MAX_LENGTH = 10_000;
 

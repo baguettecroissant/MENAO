@@ -1542,6 +1542,7 @@ export type Database = {
           id: string;
           lieu_type: Database["public"]["Enums"]["project_lieu_type"] | null;
           location: unknown;
+          preferred_artisan_id: string | null;
           room_codes: string[];
           status: Database["public"]["Enums"]["project_status"];
           summary: string | null;
@@ -1571,6 +1572,7 @@ export type Database = {
           id?: string;
           lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
           location?: unknown;
+          preferred_artisan_id?: string | null;
           room_codes?: string[];
           status?: Database["public"]["Enums"]["project_status"];
           summary?: string | null;
@@ -1599,6 +1601,7 @@ export type Database = {
           id?: string;
           lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
           location?: unknown;
+          preferred_artisan_id?: string | null;
           room_codes?: string[];
           status?: Database["public"]["Enums"]["project_status"];
           summary?: string | null;
@@ -1613,6 +1616,13 @@ export type Database = {
           work_type_codes?: string[];
         };
         Relationships: [
+          {
+            foreignKeyName: "projects_preferred_artisan_id_fkey";
+            columns: ["preferred_artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "projects_trade_code_fkey";
             columns: ["trade_code"];
@@ -2021,6 +2031,9 @@ export type Database = {
           callback_from: string | null;
           callback_mode: Database["public"]["Enums"]["callback_mode"];
           callback_to: string | null;
+          cancellation_comment: string | null;
+          cancellation_reason: Database["public"]["Enums"]["client_cancel_reason"] | null;
+          cancelled_at: string | null;
           contact_phone: string;
           created_at: string;
           expires_at: string;
@@ -2040,6 +2053,9 @@ export type Database = {
           callback_from?: string | null;
           callback_mode?: Database["public"]["Enums"]["callback_mode"];
           callback_to?: string | null;
+          cancellation_comment?: string | null;
+          cancellation_reason?: Database["public"]["Enums"]["client_cancel_reason"] | null;
+          cancelled_at?: string | null;
           contact_phone: string;
           created_at?: string;
           expires_at?: string;
@@ -2058,6 +2074,9 @@ export type Database = {
           callback_from?: string | null;
           callback_mode?: Database["public"]["Enums"]["callback_mode"];
           callback_to?: string | null;
+          cancellation_comment?: string | null;
+          cancellation_reason?: Database["public"]["Enums"]["client_cancel_reason"] | null;
+          cancelled_at?: string | null;
           contact_phone?: string;
           created_at?: string;
           expires_at?: string;
@@ -2866,6 +2885,22 @@ export type Database = {
       };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
+      particulier_cancel_chantier: {
+        Args: {
+          p_chantier_id: string;
+          p_comment?: string;
+          p_reason: Database["public"]["Enums"]["client_cancel_reason"];
+        };
+        Returns: undefined;
+      };
+      particulier_cancel_request: {
+        Args: {
+          p_comment?: string;
+          p_reason: Database["public"]["Enums"]["client_cancel_reason"];
+          p_request_id: string;
+        };
+        Returns: undefined;
+      };
       particulier_chantiers: {
         Args: { p_chantier_id?: string };
         Returns: {
@@ -3170,6 +3205,7 @@ export type Database = {
         | "en_litige"
         | "annule";
       chantier_update_kind: "message" | "photo";
+      client_cancel_reason: "plus_besoin" | "autre_artisan" | "delai" | "budget" | "autre";
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite";
@@ -3211,7 +3247,8 @@ export type Database = {
         | "document_a_renouveler"
         | "document_a_renouveler_equipe"
         | "compte_suspendu"
-        | "compte_reactive";
+        | "compte_reactive"
+        | "demande_annulee";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -3405,6 +3442,7 @@ export const Constants = {
         "annule",
       ],
       chantier_update_kind: ["message", "photo"],
+      client_cancel_reason: ["plus_besoin", "autre_artisan", "delai", "budget", "autre"],
       dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite"],
@@ -3447,6 +3485,7 @@ export const Constants = {
         "document_a_renouveler_equipe",
         "compte_suspendu",
         "compte_reactive",
+        "demande_annulee",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

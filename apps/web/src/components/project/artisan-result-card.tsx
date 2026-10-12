@@ -24,6 +24,7 @@ export function ArtisanResultCard({
   specialties,
   moreSpecialties,
   selection,
+  known = false,
   headingLevel = 2,
 }: {
   /** Fiche de l'artisan ; sans lien sur les pages publiques. */
@@ -40,6 +41,8 @@ export function ArtisanResultCard({
   specialties: string[];
   moreSpecialties: number;
   selection: "selectable" | "sent" | "none";
+  /** Artisan d'un chantier précédent (« Redemander un devis ») : mis en avant et présélectionné. */
+  known?: boolean;
   headingLevel?: 2 | 3;
 }) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
@@ -72,7 +75,8 @@ export function ArtisanResultCard({
             {distanceKm !== null ? ` · ${t.distance(distanceKm)}` : ""}
           </p>
         </div>
-        <div>
+        <div className="flex flex-wrap gap-1.5">
+          {known && <StatusBadge tone="primary">{t.knownArtisan}</StatusBadge>}
           {availableFrom ? (
             <StatusBadge tone="neutral">{t.availableFrom(availableFrom)}</StatusBadge>
           ) : (
@@ -107,6 +111,7 @@ export function ArtisanResultCard({
                 name="artisan"
                 value={artisanId}
                 form="selection"
+                defaultChecked={known}
                 // Case invisible couvrant tout le bouton : cible tactile complète, toujours accessible.
                 className="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-button opacity-0 disabled:cursor-not-allowed"
               />

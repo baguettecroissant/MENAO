@@ -9,6 +9,7 @@ import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
 import { SectionTabs } from "@/components/chantier/section-tabs";
+import { DraftSearches } from "@/components/project/draft-searches";
 import { PendingRequests } from "@/components/project/my-requests";
 import { ButtonLink, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -33,10 +34,22 @@ export default async function MySpacePage() {
   const home = homePathForRole(role);
   if (home !== "/mon-espace") redirect(home as Route);
 
-  const [{ data: chantierRows }, { data: requestRows }] = await Promise.all([
-    supabase.rpc("particulier_chantiers"),
-    supabase.rpc("particulier_requests"),
-  ]);
+  const [{ data: chantierRows }, { data: requestRows }, { data: draftRows }, { data: cancelled }] =
+    await Promise.all([
+      supabase.rpc("particulier_chantiers"),
+      supabase.rpc("particulier_requests"),
+      // Recherches commencées sans demande envoyée (ADR 0040).
+      supabase
+        .from("projects")
+        .select("id, status, summary, description, ville_nom, created_at, trades(label)")
+        .in("status", ["brouillon", "criteres_valides"])
+        .order("created_at", { ascending: false })
+        .limit(10),
+      // Demandes annulées par le client lui-même (motif renseigné).
+      supabase.from("requests").select("id").not("cancellation_reason", "is", null),
+    ]);
+  const drafts = draftRows ?? [];
+  const cancelledByClient = new Set((cancelled ?? []).map((r) => r.id));
   const chantiers = chantierRows ?? [];
   const requests = requestRows ?? [];
   const active = chantiers.filter((c) => !isChantierFinished(c.status as ChantierStatus));
@@ -109,9 +122,11 @@ export default async function MySpacePage() {
             photoUrls={projectPhotoUrls}
             avatarUrls={avatars}
             now={now}
+            cancelledByClient={cancelledByClient}
           />
         </section>
       )}
+      {drafts.length > 0 && <DraftSearches drafts={drafts} />}
     </>
   );
   const done = (
@@ -165,10 +180,13 @@ export default async function MySpacePage() {
           </ButtonLink>
         </div>
         {chantiers.length === 0 && requests.length === 0 ? (
-          <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
-            <p className="text-lg font-medium">{fr.myRequests.empty}</p>
-            <p className="max-w-md text-sm text-muted-foreground">{fr.myRequests.emptyHint}</p>
-          </section>
+          <>
+            <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
+              <p className="text-lg font-medium">{fr.myRequests.empty}</p>
+              <p className="max-w-md text-sm text-muted-foreground">{fr.myRequests.emptyHint}</p>
+            </section>
+            {drafts.length > 0 && <DraftSearches drafts={drafts} />}
+          </>
         ) : (
           <SectionTabs
             label={t.tabsLabel}

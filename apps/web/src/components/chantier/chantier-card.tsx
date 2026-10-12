@@ -11,6 +11,7 @@ import Link from "next/link";
 import { TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { chantierTag, nextIntervention } from "@/lib/chantier/view";
+import { rehirePath } from "@/lib/project/paths";
 import { ChantierActionBlock } from "./chantier-action";
 import { ChantierCover, PersonCard } from "./chantier-parts";
 import { ChantierStatusTag } from "./chantier-status-tag";
@@ -154,6 +155,14 @@ export function FinishedChantierCard({
         {isChantierFinished(status) && status !== "cloture" && (
           <TextLink href={`/recherche/${c.project_id}/artisans` as Route} className="text-xs">
             {t.chooseAnother}
+          </TextLink>
+        )}
+        {status === "cloture" && (
+          <TextLink
+            href={rehirePath(c.artisan_id, c.chantier_id, c.artisan_name) as Route}
+            className="text-xs"
+          >
+            {fr.myChantiers.rehire(c.artisan_name)}
           </TextLink>
         )}
       </div>

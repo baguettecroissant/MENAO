@@ -81,4 +81,5 @@ export const messages = {
     "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité.",
   passwordUnchanged: "Choisissez un mot de passe différent de l'actuel.",
   deletionConfirmRequired: "Cochez la case pour confirmer votre demande.",
+  cancelReasonRequired: "Choisissez le motif de votre annulation.",
 } as const;

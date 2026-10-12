@@ -39,6 +39,7 @@ export const NOTIFICATION_TYPES = [
   "document_a_renouveler_equipe",
   "compte_suspendu",
   "compte_reactive",
+  "demande_annulee",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -93,6 +94,15 @@ const REFUSAL_REASONS: Record<string, string> = {
   trop_cher: "prix trop élevé",
   autre_artisan: "un autre artisan a été choisi",
   projet_reporte: "projet reporté",
+  autre: "autre raison",
+};
+
+/** Motifs d'annulation par le client (enum public.client_cancel_reason), vus par l'artisan. */
+const CLIENT_CANCEL_REASONS: Record<string, string> = {
+  plus_besoin: "les travaux ne sont plus nécessaires",
+  autre_artisan: "un autre artisan a été choisi",
+  delai: "le délai ne convient pas",
+  budget: "le budget ne convient pas",
   autre: "autre raison",
 };
 
@@ -269,7 +279,27 @@ export function notificationContent(
           : myChantier("Voir mon chantier"),
       };
     }
-    case "chantier_annule":
+    case "chantier_annule": {
+      // Annulation par le client (F-12) : l'artisan est prévenu.
+      if (text(data, "destinataire") === "artisan") {
+        const client = text(data, "client") ?? "Le client";
+        const raison = CLIENT_CANCEL_REASONS[text(data, "raison") ?? ""];
+        return {
+          subject: `${client} a annulé le chantier`,
+          preview: `Le chantier ${quoted(titre)} est annulé.`,
+          title: "Chantier annulé par le client",
+          paragraphs: [
+            hello(ctx.firstName),
+            `${client} a annulé le chantier ${quoted(titre)} : le rendez-vous est annulé.`,
+            ...(raison ? [`Motif : ${raison}.`] : []),
+          ],
+          quote: text(data, "message"),
+          cta: {
+            label: "Voir le chantier",
+            url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+          },
+        };
+      }
       return {
         subject: `${artisan} a annulé le rendez-vous`,
         preview: `Votre projet ${quoted(titre)} : vous pouvez choisir un autre artisan.`,
@@ -282,6 +312,26 @@ export function notificationContent(
         quote: text(data, "motif"),
         cta: { label: "Choisir un autre artisan", url: link("/mon-espace") },
       };
+    }
+    case "demande_annulee": {
+      const client = text(data, "client") ?? "Le client";
+      const details = [text(data, "metier"), text(data, "ville") && `à ${text(data, "ville")}`]
+        .filter(Boolean)
+        .join(", ");
+      const raison = CLIENT_CANCEL_REASONS[text(data, "raison") ?? ""];
+      return {
+        subject: `${client} a annulé sa demande`,
+        preview: "Une demande de chantier a été annulée avant votre réponse.",
+        title: "Demande annulée par le client",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} a annulé sa demande de chantier${details ? ` (${details})` : ""} : vous n'avez plus à y répondre.`,
+          ...(raison ? [`Motif : ${raison}.`] : []),
+        ],
+        quote: text(data, "message"),
+        cta: { label: "Voir mes demandes", url: link("/pro/demandes") },
+      };
+    }
     case "devis_recu": {
       const numero = text(data, "numero");
       const montant = amount(data, "montant_ttc");

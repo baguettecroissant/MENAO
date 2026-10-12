@@ -93,6 +93,53 @@ describe("contenu des notifications (F-41)", () => {
     expect(c.cta.label).toBe("Choisir un autre artisan");
   });
 
+  it("annulation par le client (F-11, F-12) : demande ou chantier, motif et commentaire", () => {
+    const pro = { ...ctx, firstName: "Xavier" };
+    const demande = notificationContent(
+      "demande_annulee",
+      {
+        client: "Camille",
+        metier: "Électricien",
+        ville: "Nice",
+        raison: "autre_artisan",
+        message: "  Trouvé plus près.  ",
+      },
+      pro,
+    );
+    expect(demande.subject).toBe("Camille a annulé sa demande");
+    expect(demande.paragraphs.slice(1)).toEqual([
+      "Camille a annulé sa demande de chantier (Électricien, à Nice) : vous n'avez plus à y répondre.",
+      "Motif : un autre artisan a été choisi.",
+    ]);
+    expect(demande.quote).toBe("Trouvé plus près.");
+    expect(demande.cta).toEqual({
+      label: "Voir mes demandes",
+      url: "https://menao.example/pro/demandes",
+    });
+
+    const chantier = notificationContent(
+      "chantier_annule",
+      {
+        ...ids,
+        destinataire: "artisan",
+        titre: "Prises",
+        client: "Camille",
+        raison: "plus_besoin",
+      },
+      pro,
+    );
+    expect(chantier.subject).toBe("Camille a annulé le chantier");
+    expect(chantier.paragraphs.slice(1)).toEqual([
+      `Camille a annulé le chantier ${quoted("Prises")} : le rendez-vous est annulé.`,
+      "Motif : les travaux ne sont plus nécessaires.",
+    ]);
+    expect(chantier.quote).toBeNull();
+    expect(chantier.cta).toEqual({
+      label: "Voir le chantier",
+      url: `https://menao.example/pro/chantiers/${ids.chantier_id}`,
+    });
+  });
+
   it("devis reçu, refusé, modification demandée : numéro, montant, motif et message", () => {
     const quoteId = "33333333-3333-4333-8333-333333333333";
     const recu = notificationContent(

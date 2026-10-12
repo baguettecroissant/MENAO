@@ -450,6 +450,17 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByText(/Démarrage le .+ à 08h30/)).toBeVisible();
   await capture(page, "client-mes-chantiers");
 
+  // Demande restée sans réponse (F-11) : le client l'annule, avec un motif ; Inès est prévenue.
+  await page.getByRole("button", { name: "Annuler ma demande à Inès" }).click();
+  const cancelRequest = page.getByRole("dialog", { name: "Annuler votre demande ?" });
+  await cancelRequest.getByRole("button", { name: "Annuler ma demande" }).click();
+  await expect(cancelRequest.getByText("Choisissez le motif de votre annulation.")).toBeVisible();
+  await cancelRequest.getByLabel("J'ai choisi un autre artisan").check();
+  await cancelRequest.getByLabel(/Un mot pour l'artisan/).fill("Noé intervient déjà chez moi.");
+  await cancelRequest.getByRole("button", { name: "Annuler ma demande" }).click();
+  await expect(page.getByText("Vous avez annulé cette demande.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Annuler ma demande à Inès" })).toHaveCount(0);
+
   // Date de début atteinte : la tâche planifiée est simulée (même transition que app.start_due_chantiers).
   expect(SERVICE_KEY).not.toBe("");
   const started = await request.post(`${SUPABASE_URL}/rest/v1/rpc/transition_chantier`, {
@@ -648,6 +659,35 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(
     page.getByRole("region", { name: "Mes chantiers terminés" }).getByText(/^Terminé le /),
   ).toBeVisible();
+
+  // « Redemander un devis » (F-12) : nouvelle recherche pour Noé, présenté en premier et
+  // présélectionné ; la recherche non envoyée reste dans l'espace, puis est supprimée.
+  await page
+    .getByRole("region", { name: "Mes chantiers terminés" })
+    .getByRole("link", { name: "Redemander un devis à Noé" })
+    .click();
+  await expect(page).toHaveURL(/\/recherche\?artisan=/);
+  await expect(page.getByText(/^Nouvelle demande pour Noé/)).toBeVisible();
+  await page
+    .getByLabel("Décrivez votre projet")
+    .fill("Nouvelle fuite sous le lavabo de la salle de bain, à réparer.");
+  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
+  const rehireProjectId = new URL(page.url()).pathname.split("/").pop() ?? "";
+  await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
+  await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
+  const known = page.getByRole("listitem").filter({ hasText: "Déjà venu chez vous" });
+  await expect(known.getByRole("heading", { name: "Noé" })).toBeVisible();
+  await expect(known.getByRole("checkbox")).toBeChecked();
+  await expect(page.getByRole("button", { name: /^Envoyer ma demande/ })).toBeEnabled();
+  await page.goto("/mon-espace");
+  const drafts = page.getByRole("region", { name: "Recherches non envoyées" });
+  await expect(drafts.getByRole("link", { name: "Reprendre" })).toHaveAttribute(
+    "href",
+    `/recherche/${rehireProjectId}/artisans`,
+  );
+  await drafts.getByRole("button", { name: /^Supprimer la recherche/ }).click();
+  await expect(page.getByRole("region", { name: "Recherches non envoyées" })).toHaveCount(0);
 
   // Avis du client (F-28) : invitation au chantier clôturé, curseurs, rapport qualité/prix et
   // commentaire ; avis publié sur la fiche (« Avis vérifié »), score MENAO, réponse de l'artisan.
