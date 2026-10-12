@@ -64,7 +64,8 @@ select ok(
   'fil : dossier envoyé, avec le nom de l''entreprise');
 select ok(
   exists (select 1 from public.admin_activity(100) a
-          where a.kind = 'recherche' and a.details = '{"metier": "Plombier", "ville": "Nice"}'::jsonb),
+          where a.kind = 'recherche'
+            and a.details - 'project_id' = '{"metier": "Plombier", "ville": "Nice"}'::jsonb),
   'fil : nouvelle recherche, métier et ville seulement (pas d''identité du particulier)');
 select ok(
   exists (select 1 from public.admin_activity(100) a
