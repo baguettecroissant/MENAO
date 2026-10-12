@@ -7,7 +7,7 @@ select * from no_plan();
 
 insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values
   ('c1100000-0000-4000-8000-000000000001', 'alerte.client@example.test', false, now(), '{}', '{"first_name":"Camille"}'),
-  ('c1200000-0000-4000-8000-000000000001', 'alerte.artisan@example.test', false, now(), '{"role":"artisan_en_attente"}', '{}'),
+  ('c1200000-0000-4000-8000-000000000001', 'alerte.artisan@example.test', false, now(), '{"role":"artisan"}', '{}'),
   ('c1300000-0000-4000-8000-000000000001', 'alerte.admin@example.test', false, now(), '{"role":"admin"}', '{}'),
   ('c1300000-0000-4000-8000-000000000002', 'alerte.support@example.test', false, now(), '{"role":"support"}', '{}');
 
