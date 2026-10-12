@@ -53,7 +53,10 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
   }, [router]);
 
   return (
-    <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+    <p
+      role="status"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground sm:shrink-0 sm:flex-nowrap sm:whitespace-nowrap"
+    >
       <span
         aria-hidden="true"
         className={`size-2 rounded-full ${
