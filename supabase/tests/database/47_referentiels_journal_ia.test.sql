@@ -90,6 +90,7 @@ select is_empty(
   'ordre sans doublon après le déplacement');
 
 -- Le public ne voit plus le métier désactivé ; les admins voient tout, avec l'usage.
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
 set local role anon;
 select is_empty($$ select 1 from public.trades where code = 'poseur-test' $$, 'métier désactivé : invisible du public');
 reset role;
