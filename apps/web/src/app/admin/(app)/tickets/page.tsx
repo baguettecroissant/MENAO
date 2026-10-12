@@ -13,6 +13,7 @@ const t = fr.admin.tickets;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZone: "Europe/Paris" });
 
 type Status = "ouvert" | "en_cours" | "resolu";
+const CONVERSATIONS: readonly string[] = ["contact", "dossier_recherche", "suppression_compte"];
 
 /**
  * Dossiers « Envoyer mon dossier à MENAO », messages, signalements (avis signalés : masquage ou
@@ -56,6 +57,8 @@ export default async function TicketsPage() {
             const review = ticket.reviews;
             const reported = ticket.messages;
             const dispute = ticket.type === "litige" ? ticket.chantiers : null;
+            // Échange avec le déclarant, suivi dans « Mes échanges avec MENAO » (ADR 0041).
+            const conversation = CONVERSATIONS.includes(ticket.type);
             return (
               <Card key={ticket.id}>
                 <div className="flex flex-col gap-2">
@@ -130,6 +133,31 @@ export default async function TicketsPage() {
                           />
                           <DisputeDecision ticketId={ticket.id} />
                         </>
+                      )}
+                    </div>
+                  )}
+                  {conversation && (
+                    <div className="flex flex-col gap-3 rounded-input bg-background p-3">
+                      <p className="text-sm font-medium">{t.dispute.thread}</p>
+                      <TicketThread
+                        entries={[...ticket.ticket_messages]
+                          .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                          .map((m) => ({
+                            id: m.id,
+                            fromStaff: m.from_staff,
+                            body: m.body,
+                            photoUrl: null,
+                            createdAt: m.created_at,
+                          }))}
+                        labels={{ staff: t.dispute.support, reporter: t.dispute.reporter }}
+                        emptyText={t.noMessage}
+                      />
+                      {ticket.status !== "resolu" && (
+                        <TicketReplyForm
+                          ticketId={ticket.id}
+                          label={t.dispute.replyLabel}
+                          submit={t.dispute.replySubmit}
+                        />
                       )}
                     </div>
                   )}

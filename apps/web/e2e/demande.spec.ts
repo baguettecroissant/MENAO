@@ -830,3 +830,32 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByLabel(/Rappels/)).toBeChecked();
   await pro.close();
 });
+
+  // « Mes échanges avec MENAO » (ADR 0041) : un message envoyé connecté depuis la page Contact
+  // s'y retrouve avec son fil, à côté du signalement.
+  await page.goto("/contact");
+  await page.getByLabel("Votre adresse e-mail").fill(email);
+  await page.getByLabel("Sujet (facultatif)").fill("Question sur la garantie");
+  await page
+    .getByLabel("Votre message", { exact: true })
+    .fill("Combien de temps dure la garantie ?");
+  await page.getByRole("button", { name: "Envoyer", exact: true }).click();
+  await expect(page.getByText(/^Votre message est envoyé/)).toBeVisible();
+  await page
+    .getByRole("link", { name: "Suivre la réponse dans « Mes échanges avec MENAO »" })
+    .click();
+  await expect(page).toHaveURL(/\/echanges$/);
+  await capture(page, "client-echanges");
+  await expect(page.getByRole("link", { name: /Signalement sur un chantier/ })).toHaveAttribute(
+    "href",
+    new RegExp(`^/signalements/${UUID}$`),
+  );
+  await page.getByRole("link", { name: /Question sur la garantie/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/echanges/${UUID}$`));
+  await expect(page.getByText("L'équipe MENAO vous répondra ici.")).toBeVisible();
+  await page
+    .getByLabel("Votre message à l'équipe MENAO")
+    .fill("Je précise : il s'agit du siphon de la cuisine.");
+  await page.getByRole("button", { name: "Envoyer", exact: true }).click();
+  await expect(page.getByText("Je précise : il s'agit du siphon de la cuisine.")).toBeVisible();
+  await capture(page, "client-echange");

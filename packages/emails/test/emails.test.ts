@@ -380,6 +380,24 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("réponse de l'équipe à un autre échange (contact, dossier) : lien vers « Mes échanges »", () => {
+    const ticket = "8f14e45f-ceea-4e7a-9b1a-3a5d1c2b7e90";
+    const reply = notificationContent(
+      "reponse_support",
+      { titre: "Question sur un devis", ticket_id: ticket, type: "contact" },
+      ctx,
+    );
+    expect(reply.subject).toBe("Réponse de l'équipe MENAO à votre message");
+    expect(reply.paragraphs.slice(1)).toEqual([
+      `L'équipe MENAO a répondu à votre message ${quoted("Question sur un devis")}.`,
+      "Vous pouvez lui répondre depuis « Mes échanges avec MENAO ».",
+    ]);
+    expect(reply.cta).toEqual({
+      label: "Lire la réponse",
+      url: `https://menao.example/echanges/${ticket}`,
+    });
+  });
+
   it("messagerie (F-40) : messages groupés, lien vers la conversation, sans leur contenu", () => {
     const one = notificationContent(
       "nouveaux_messages",

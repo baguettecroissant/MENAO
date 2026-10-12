@@ -657,6 +657,7 @@ export const fr = {
       message: "Votre message",
       submit: "Envoyer",
       sent: "Votre message est envoyé. L'équipe MENAO vous répond sous 7 jours.",
+      follow: "Suivre la réponse dans « Mes échanges avec MENAO »",
       privacy: "Votre adresse e-mail sert uniquement à vous répondre.",
     },
     legalNotice: {
@@ -1768,6 +1769,37 @@ export const fr = {
       submit: "Changer d'adresse e-mail",
       sent: (email: string) =>
         `C'est presque fini : ouvrez les liens envoyés à votre adresse actuelle et à ${email} pour confirmer le changement.`,
+  exchanges: {
+    title: "Mes échanges avec MENAO",
+    intro:
+      "Vos messages à l'équipe MENAO et ses réponses : page Contact, dossiers de recherche, signalements et demande de suppression du compte.",
+    empty: "Aucun échange pour le moment.",
+    emptyHint: "Une question ? Écrivez-nous depuis la page Contact : la réponse arrivera ici.",
+    write: "Écrire à l'équipe MENAO",
+    types: {
+      contact: "Message",
+      dossier_recherche: "Dossier de recherche",
+      litige: "Signalement sur un chantier",
+      suppression_compte: "Suppression du compte",
+      avis: "Avis signalé",
+      message: "Message signalé",
+      expertise: "Expertise signalée",
+    },
+    statuses: { ouvert: "En attente de réponse", en_cours: "Réponse de l'équipe", resolu: "Clos" },
+    untitled: "Sans objet",
+    sentOn: (date: string) => `Envoyé le ${date}`,
+    lastReply: (date: string) => `Dernière réponse le ${date}`,
+    back: "Mes échanges avec MENAO",
+    yourMessage: "Votre message",
+    thread: "Échanges avec l'équipe MENAO",
+    you: "Vous",
+    support: "Équipe MENAO",
+    noMessages: "L'équipe MENAO vous répondra ici.",
+    messageLabel: "Votre message à l'équipe MENAO",
+    messageSubmit: "Envoyer",
+    closed:
+      "Cet échange est clos. Pour une nouvelle question, écrivez-nous depuis la page Contact.",
+  },
       pending: (email: string) =>
         `Changement en attente vers ${email} : ouvrez les liens reçus par e-mail pour le confirmer.`,
       confirmed: "C'est noté : votre adresse e-mail est confirmée.",
