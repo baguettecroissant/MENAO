@@ -1,213 +1,145 @@
-import { TicketReplyForm } from "@/components/dispute/ticket-reply-form";
-import { TicketThread } from "@/components/dispute/ticket-thread";
-import { Card } from "@/components/ui";
+import type { Metadata, Route } from "next";
+import Link from "next/link";
+import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
+import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { setTicketStatus } from "@/lib/admin/actions";
-import { requireAdmin } from "@/lib/admin/guard";
-import { signedUrlMap } from "@/lib/chantier/storage";
-import { DisputeDecision } from "./dispute-decision";
-import { ModerateMessage } from "./moderate-message";
-import { ModerateReview } from "./moderate-review";
+import { parsePage } from "@/lib/admin/follow-up";
+import { requireStaff } from "@/lib/admin/guard";
+import { TICKET_FILTERS, listTickets, parseTicketFilter, ticketCounts } from "@/lib/admin/tickets";
+import { formatDay } from "@/lib/format";
 
 const t = fr.admin.tickets;
-const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZone: "Europe/Paris" });
+const f = fr.admin.followUp;
+const PATH = "/admin/tickets";
 
-type Status = "ouvert" | "en_cours" | "resolu";
-const CONVERSATIONS: readonly string[] = ["contact", "dossier_recherche", "suppression_compte"];
+export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
+
+const TONES = { ouvert: "warning", en_cours: "primary", resolu: "neutral" } as const;
 
 /**
- * Dossiers « Envoyer mon dossier à MENAO », messages, signalements (avis signalés : masquage ou
- * republication, F-28) : réponse attendue sous 7 jours.
+ * Boîte de réception de l'équipe (F-56, ADR 0049) : messages, dossiers, signalements et litiges,
+ * les plus urgents d'abord, avec leur responsable. Ouverte au rôle support.
  */
-export default async function TicketsPage() {
-  const { supabase } = await requireAdmin();
-  const { data } = await supabase
-    .from("tickets")
-    .select(
-      "id, type, subject, status, contact_email, message, due_at, created_at, projects(description, ville_nom, trades(label)), reviews(id, author_name, score, comment, status, moderation_reason), messages(id, kind, body, hidden_at, moderation_reason), category, chantiers(title, status), ticket_messages(id, from_staff, body, storage_path, created_at)",
-    )
-    .order("due_at", { ascending: true })
-    .limit(100);
-  const tickets = data ?? [];
-  // Photos des litiges (F-42), servies par URL signées à l'équipe.
-  const photos = await signedUrlMap(
-    supabase,
-    "ticket-photos",
-    tickets.flatMap((x) => x.ticket_messages.map((m) => m.storage_path)),
-  );
+export default async function TicketsPage({ searchParams }: PageProps<"/admin/tickets">) {
+  const params = await searchParams;
+  const filter = parseTicketFilter(params.file);
+  const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
+  const page = parsePage(params.page);
+  const { supabase } = await requireStaff();
+  const [{ rows, total }, counts] = await Promise.all([
+    listTickets(supabase, { filter, query, page }),
+    ticketCounts(supabase, query),
+  ]);
   const now = new Date();
-  const open = tickets.filter((x) => x.status !== "resolu");
-  const closed = tickets.filter((x) => x.status === "resolu");
+  const href = (next: { file?: string; page?: number }) =>
+    listHref(PATH, {
+      file: (next.file ?? filter) === "a_traiter" ? null : (next.file ?? filter),
+      q: query,
+      page: next.page ?? 1,
+    });
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
-      {[
-        { title: t.open, rows: open },
-        { title: t.closed, rows: closed },
-      ].map((group) => (
-        <section key={group.title} aria-label={group.title} className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">
-            {group.title} ({group.rows.length})
-          </h2>
-          {group.rows.length === 0 && <p className="text-muted-foreground">{t.empty}</p>}
-          {group.rows.map((ticket) => {
-            const late = ticket.status !== "resolu" && new Date(ticket.due_at) < now;
-            const project = ticket.projects;
-            const review = ticket.reviews;
-            const reported = ticket.messages;
-            const dispute = ticket.type === "litige" ? ticket.chantiers : null;
-            // Échange avec le déclarant, suivi dans « Mes échanges avec MENAO » (ADR 0041).
-            const conversation = CONVERSATIONS.includes(ticket.type);
-            return (
-              <Card key={ticket.id}>
-                <div className="flex flex-col gap-2">
-                  <p className="flex flex-wrap items-center gap-2 font-medium">
-                    <span>{t.status[ticket.status as Status]}</span>
-                    <span className="text-muted-foreground">·</span>
-                    <span className={late ? "text-danger" : "text-muted-foreground"}>
-                      {late ? t.late : t.due(day.format(new Date(ticket.due_at)))}
-                    </span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">{t.types[ticket.type]}</p>
-                  <p>
-                    {t.contact} : {ticket.contact_email}
-                  </p>
-                  {ticket.subject && <p className="font-medium">{ticket.subject}</p>}
-                  {project && (
-                    <p>
-                      {t.project} :{" "}
-                      {[project.trades?.label, project.ville_nom].filter(Boolean).join(", ")}
-                      <span className="block text-sm whitespace-pre-line text-muted-foreground">
-                        {project.description}
-                      </span>
-                    </p>
-                  )}
-                  <p>
-                    {t.message} : {ticket.message ?? t.noMessage}
-                  </p>
-                  {review && (
-                    <div className="flex flex-col gap-2 rounded-input bg-background p-3">
-                      <p className="text-sm font-medium">
-                        {t.review.title} · {t.review.meta(review.author_name, review.score)}
-                      </p>
-                      <p className="text-sm whitespace-pre-line">{review.comment}</p>
-                      {review.status === "masque" && review.moderation_reason && (
-                        <p className="text-sm text-danger">
-                          {t.review.hidden(review.moderation_reason)}
-                        </p>
-                      )}
-                      <ModerateReview reviewId={review.id} status={review.status} />
-                    </div>
-                  )}
-                  {dispute && (
-                    <div className="flex flex-col gap-3 rounded-input bg-background p-3">
-                      <p className="text-sm">
-                        {t.dispute.chantier(dispute.title, fr.pro.chantiers.status[dispute.status])}
-                      </p>
-                      {ticket.category && (
-                        <p className="text-sm">
-                          {t.dispute.category(fr.dispute.categories[ticket.category])}
-                        </p>
-                      )}
-                      <p className="text-sm font-medium">{t.dispute.thread}</p>
-                      <TicketThread
-                        entries={[...ticket.ticket_messages]
-                          .sort((a, b) => a.created_at.localeCompare(b.created_at))
-                          .map((m) => ({
-                            id: m.id,
-                            fromStaff: m.from_staff,
-                            body: m.body,
-                            photoUrl: m.storage_path ? (photos.get(m.storage_path) ?? null) : null,
-                            createdAt: m.created_at,
-                          }))}
-                        labels={{ staff: t.dispute.support, reporter: t.dispute.reporter }}
-                        emptyText={t.noMessage}
-                      />
-                      {ticket.status !== "resolu" && (
-                        <>
-                          <TicketReplyForm
-                            ticketId={ticket.id}
-                            label={t.dispute.replyLabel}
-                            submit={t.dispute.replySubmit}
-                          />
-                          <DisputeDecision ticketId={ticket.id} />
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {conversation && (
-                    <div className="flex flex-col gap-3 rounded-input bg-background p-3">
-                      <p className="text-sm font-medium">{t.dispute.thread}</p>
-                      <TicketThread
-                        entries={[...ticket.ticket_messages]
-                          .sort((a, b) => a.created_at.localeCompare(b.created_at))
-                          .map((m) => ({
-                            id: m.id,
-                            fromStaff: m.from_staff,
-                            body: m.body,
-                            photoUrl: null,
-                            createdAt: m.created_at,
-                          }))}
-                        labels={{ staff: t.dispute.support, reporter: t.dispute.reporter }}
-                        emptyText={t.noMessage}
-                      />
-                      {ticket.status !== "resolu" && (
-                        <TicketReplyForm
-                          ticketId={ticket.id}
-                          label={t.dispute.replyLabel}
-                          submit={t.dispute.replySubmit}
-                        />
-                      )}
-                    </div>
-                  )}
-                  {reported && (
-                    <div className="flex flex-col gap-2 rounded-input bg-background p-3">
-                      <p className="text-sm font-medium">{t.reportedMessage.title}</p>
-                      <p className="text-sm whitespace-pre-line">
-                        {reported.body ?? t.reportedMessage.attachment}
-                      </p>
-                      {reported.hidden_at && reported.moderation_reason && (
-                        <p className="text-sm text-danger">
-                          {t.reportedMessage.hidden(reported.moderation_reason)}
-                        </p>
-                      )}
-                      <ModerateMessage
-                        messageId={reported.id}
-                        hidden={reported.hidden_at !== null}
-                      />
-                    </div>
-                  )}
-                  {!dispute && (
-                    <div className="flex flex-wrap gap-2">
-                      {(ticket.status === "resolu"
-                        ? [{ status: "ouvert", label: t.reopen }]
-                        : [
-                            ...(ticket.status === "ouvert"
-                              ? [{ status: "en_cours", label: t.markInProgress }]
-                              : []),
-                            { status: "resolu", label: t.markResolved },
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+        <p className="text-sm text-muted-foreground">{t.intro}</p>
+      </div>
+      <SearchForm
+        action={PATH}
+        label={t.searchLabel}
+        placeholder={t.searchPlaceholder}
+        query={query}
+        keep={{ file: filter === "a_traiter" ? null : filter }}
+      />
+      <FilterChips
+        label={t.filtersLabel}
+        items={TICKET_FILTERS.map((key) => ({
+          key,
+          href: href({ file: key }),
+          label: t.filters[key] ?? key,
+          count: counts[key],
+          active: key === filter,
+        }))}
+      />
+      <Card className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground" role="status">
+          {f.results(total)}
+        </p>
+        {rows.length === 0 ? (
+          <p className="text-muted-foreground">{f.empty}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[46rem] text-left text-sm">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th scope="col" className="py-2 pr-4 font-normal">
+                    {t.columns.ticket}
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-normal">
+                    {t.columns.declarant}
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-normal">
+                    {t.columns.status}
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-normal">
+                    {t.columns.handler}
+                  </th>
+                  <th scope="col" className="py-2 font-normal">
+                    {t.columns.due}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const type = t.types[row.type as keyof typeof t.types] ?? row.type;
+                  const label = row.subject ?? t.noSubject;
+                  const late = row.status !== "resolu" && new Date(row.due_at) < now;
+                  return (
+                    <tr key={row.ticket_id} className="border-t border-border align-top">
+                      <td className="py-3 pr-4">
+                        <Link
+                          href={`${PATH}/${row.ticket_id}` as Route}
+                          aria-label={t.openTicket(label)}
+                          className="font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          {label}
+                        </Link>
+                        <span className="block text-xs text-muted-foreground">
+                          {[
+                            type,
+                            row.chantier_title,
+                            row.notes > 0 ? t.notesCount(row.notes) : null,
                           ]
-                      ).map((action) => (
-                        <form key={action.status} action={setTicketStatus}>
-                          <input type="hidden" name="ticketId" value={ticket.id} />
-                          <input type="hidden" name="status" value={action.status} />
-                          <button
-                            type="submit"
-                            className="min-h-touch rounded-button border border-border px-4 font-medium hover:bg-background"
-                          >
-                            {action.label}
-                          </button>
-                        </form>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
-        </section>
-      ))}
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {row.declarant ?? row.contact_email}
+                        {row.declarant && (
+                          <span className="block text-xs break-all text-muted-foreground">
+                            {row.contact_email}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <StatusBadge tone={TONES[row.status as keyof typeof TONES] ?? "neutral"}>
+                          {t.status[row.status as keyof typeof t.status] ?? row.status}
+                        </StatusBadge>
+                      </td>
+                      <td className="py-3 pr-4">{row.handler ?? t.nobody}</td>
+                      <td className={`py-3 ${late ? "font-medium text-danger" : ""}`}>
+                        {late ? t.late : formatDay(row.due_at)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <Pagination page={page} total={total} hrefFor={(p) => href({ page: p })} />
+      </Card>
     </div>
   );
 }

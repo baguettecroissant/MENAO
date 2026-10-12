@@ -241,7 +241,7 @@ export default async function AdminRequestPage({ params }: PageProps<"/admin/dem
                 {tickets.map((ticket) => (
                   <li key={ticket.id}>
                     <Link
-                      href="/admin/tickets"
+                      href={`/admin/tickets/${ticket.id}` as Route}
                       className="text-primary underline-offset-2 hover:underline"
                     >
                       {fr.admin.tickets.types[ticket.type]}

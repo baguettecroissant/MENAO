@@ -143,7 +143,7 @@ export function AppFrame({
               <Search aria-hidden="true" className="size-4 text-foreground" />
             </Link>
           )}
-          {space === "admin" && (
+          {space === "admin" && account?.role !== "support" && (
             // Recherche globale du back-office (ADR 0047) : personnes, artisans, devis, factures.
             <form
               action="/admin/recherche"
@@ -171,7 +171,7 @@ export function AppFrame({
           )}
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
-            {space === "admin" && (
+            {space === "admin" && account?.role !== "support" && (
               <Link
                 href="/admin/recherche"
                 aria-label={fr.admin.search.label}
@@ -241,7 +241,13 @@ export function AppFrame({
             <X aria-hidden="true" className="size-5" />
           </button>
           {drawerOpen && (
-            <SidebarContent space={space} badges={badges} account={null} visibility={visibility} />
+            <SidebarContent
+              space={space}
+              badges={badges}
+              account={null}
+              role={account?.role}
+              visibility={visibility}
+            />
           )}
         </div>
       </dialog>

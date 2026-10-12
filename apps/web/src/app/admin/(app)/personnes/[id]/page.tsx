@@ -67,7 +67,10 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
                   <li key={step}>{step}</li>
                 ))}
               </ol>
-              <Link href="/admin/tickets" className={`self-start ${link}`}>
+              <Link
+                href={`/admin/tickets/${deletion.id}` as Route}
+                className={`self-start ${link}`}
+              >
                 {d.open} →
               </Link>
             </DetailSection>
@@ -181,7 +184,7 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
                 {tickets.map((ticket) => (
                   <li key={ticket.id}>
                     <Link
-                      href="/admin/tickets"
+                      href={`/admin/tickets/${ticket.id}` as Route}
                       className="text-primary underline-offset-2 hover:underline"
                     >
                       {fr.admin.tickets.types[ticket.type]}

@@ -89,6 +89,30 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   );
 });
 
+test("le support : sa boîte de réception, pas le reste du back-office (ADR 0049)", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await signIn(page, "support@example.test");
+  await expect(page).toHaveURL(/\/admin\/mfa\/activer$/);
+  const secret = (await page.getByTestId("totp-secret").textContent())?.trim() ?? "";
+  await page.getByLabel("Code à 6 chiffres").fill(totp(secret));
+  await page.getByRole("button", { name: "Vérifier" }).click();
+  await expect(page).toHaveURL(/\/admin\/tickets$/);
+  await expect(page.getByRole("heading", { name: "Dossiers et messages", level: 1 })).toBeVisible();
+  // Une seule rubrique, pas de recherche globale (réservée aux admins).
+  await expect(
+    page.getByRole("navigation", { name: "Navigation du back-office" }).getByRole("link"),
+  ).toHaveCount(1);
+  await expect(page.getByRole("searchbox", { name: "Rechercher dans le back-office" })).toHaveCount(
+    0,
+  );
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/admin\/tickets$/);
+  await page.goto("/admin/personnes");
+  await expect(page).toHaveURL(/\/admin\/tickets$/);
+});
+
 test("un artisan n'accède pas au back-office", async ({ page }) => {
   await signIn(page, "artisan@example.test");
   await expect(page).toHaveURL(/\/pro\/onboarding/);

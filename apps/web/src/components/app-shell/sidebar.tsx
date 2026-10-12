@@ -12,9 +12,9 @@ import type { ShellAccount } from "@/lib/client/shell";
 import { AccountMenu } from "./account-menu";
 import {
   ACCOUNT_LINKS,
-  NAV,
   SPACE_HOME,
   isActive,
+  navFor,
   type Badges,
   type NavItem,
   type Space,
@@ -48,12 +48,15 @@ export function SidebarContent({
   account,
   visibility,
   collapsed = false,
+  role = account?.role,
 }: {
   space: Space;
   badges: Badges;
   account: ShellAccount | null;
   visibility: Visibility | null;
   collapsed?: boolean;
+  /** Rôle du compte, pour les rubriques du back-office (le tiroir n'affiche pas le compte). */
+  role?: string | null;
 }) {
   const pathname = usePathname();
   return (
@@ -76,7 +79,7 @@ export function SidebarContent({
       </div>
 
       <nav aria-label={t.nav[space]} className="flex-1 overflow-y-auto px-3 py-4">
-        {NAV[space].map((section, index) => (
+        {navFor(space, role).map((section, index) => (
           <div key={section.label ?? index} className="mb-4 last:mb-0">
             {section.label &&
               (collapsed ? (

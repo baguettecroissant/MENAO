@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireStaff } from "@/lib/admin/guard";
 import { text, type FormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,7 +63,7 @@ export async function addTicketMessage(
   revalidatePath(`/signalements/${ticketId}`);
   revalidatePath(`/echanges/${ticketId}`);
   revalidatePath("/echanges");
-  revalidatePath("/admin/tickets");
+  revalidatePath("/admin/tickets", "layout");
   return { success: "ok" };
 }
 
@@ -80,13 +80,13 @@ export async function closeDispute(
   };
   const parsed = disputeDecisionSchema.safeParse(values);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const { error } = await supabase.rpc("admin_close_dispute", {
     p_ticket_id: ticketId,
     p_outcome: parsed.data.outcome,
     p_message: parsed.data.message,
   });
   if (error) return { ...rpcError(error), values };
-  revalidatePath("/admin/tickets");
+  revalidatePath("/admin/tickets", "layout");
   return {};
 }

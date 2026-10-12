@@ -43,6 +43,9 @@ export function homePathForRole(role: Role): string {
       return "/pro/onboarding";
     case "admin":
       return "/admin";
+    case "support":
+      // Équipe restreinte (spec §4) : tickets, modération et litiges (ADR 0049).
+      return "/admin/tickets";
     case "visiteur":
       return "/connexion";
     default:

@@ -1,15 +1,17 @@
 import { redirect } from "next/navigation";
 import { Alert, PageShell } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { homePathForRole } from "@menao/core";
+import type { Route } from "next";
+import { requireStaff } from "@/lib/admin/guard";
 import { TotpForm } from "../totp-form";
 
 const t = fr.admin.mfa;
 
 /** Activation du TOTP : un nouveau facteur non vérifié remplace les tentatives abandonnées. */
 export default async function EnrollMfaPage() {
-  const { supabase, aal } = await requireAdmin({ requireMfa: false });
-  if (aal === "aal2") redirect("/admin");
+  const { supabase, aal, role } = await requireStaff({ requireMfa: false });
+  if (aal === "aal2") redirect(homePathForRole(role) as Route);
 
   const { data: factors } = await supabase.auth.mfa.listFactors();
   if (factors?.totp.some((f) => f.status === "verified")) redirect("/admin/mfa/verifier");

@@ -58,7 +58,7 @@ describe("homePathForRole", () => {
     expect(homePathForRole("artisan")).toBe("/pro/tableau-de-bord");
     expect(homePathForRole("particulier")).toBe("/mon-espace");
     expect(homePathForRole("admin")).toBe("/admin");
-    expect(homePathForRole("support")).toBe("/mon-espace");
+    expect(homePathForRole("support")).toBe("/admin/tickets");
     expect(homePathForRole("visiteur")).toBe("/connexion");
   });
 });
