@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Alert, Button, Field, FieldError, inputClasses } from "@/components/ui";
+import { Alert, Button, Field, FieldError, TextLink, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
 import { sendContactMessage } from "@/lib/site/actions";
@@ -10,7 +10,18 @@ const t = fr.pages.contact;
 
 export function ContactForm() {
   const [state, action, pending] = useActionState(sendContactMessage, initialFormState);
-  if (state.success) return <Alert tone="success">{state.success}</Alert>;
+  if (state.success) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Alert tone="success">{state.success}</Alert>
+        {state.values?.suivi && (
+          <TextLink href="/echanges" className="self-start text-sm">
+            {t.follow}
+          </TextLink>
+        )}
+      </div>
+    );
+  }
   const errors = state.fieldErrors ?? {};
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>

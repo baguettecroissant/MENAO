@@ -741,21 +741,28 @@ export function notificationContent(
       };
     }
     case "reponse_support": {
-      // F-42 : réponse de l'équipe dans le ticket du déclarant.
+      // Réponse de l'équipe dans un ticket : litige (F-42) ou autre échange (contact, dossier de
+      // recherche, suppression du compte), suivi dans « Mes échanges avec MENAO » (ADR 0041).
       const ticketId = uuid(data, "ticket_id");
+      const dispute = (text(data, "type") ?? "litige") === "litige";
+      const what = dispute ? "signalement" : "message";
       return {
-        subject: "Réponse de l'équipe MENAO à votre signalement",
+        subject: `Réponse de l'équipe MENAO à votre ${what}`,
         preview: `À propos de ${quoted(titre)}.`,
         title: "L'équipe MENAO vous a répondu",
         paragraphs: [
           hello(ctx.firstName),
-          `L'équipe MENAO a répondu à votre signalement ${quoted(titre)}.`,
-          "Vous pouvez lui répondre depuis la page du signalement.",
+          `L'équipe MENAO a répondu à votre ${what} ${quoted(titre)}.`,
+          dispute
+            ? "Vous pouvez lui répondre depuis la page du signalement."
+            : "Vous pouvez lui répondre depuis « Mes échanges avec MENAO ».",
         ],
         quote: null,
         cta: {
           label: "Lire la réponse",
-          url: link(ticketId ? `/signalements/${ticketId}` : "/mon-espace"),
+          url: link(
+            ticketId ? `/${dispute ? "signalements" : "echanges"}/${ticketId}` : "/mon-espace",
+          ),
         },
       };
     }

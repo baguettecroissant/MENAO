@@ -34,7 +34,6 @@ export default async function TicketPage({ params }: PageProps<"/signalements/[i
         "id, type, status, category, message, created_at, chantiers(id, title, particulier_id)",
       )
       .eq("id", id)
-      .eq("type", "litige")
       .maybeSingle(),
     supabase
       .from("ticket_messages")
@@ -42,7 +41,10 @@ export default async function TicketPage({ params }: PageProps<"/signalements/[i
       .eq("ticket_id", id)
       .order("created_at"),
   ]);
-  if (!ticket || !ticket.chantiers) notFound();
+  if (!ticket) notFound();
+  // Autre échange (message de contact, dossier, suppression du compte) : page dédiée (ADR 0041).
+  if (ticket.type !== "litige") redirect(`/echanges/${id}` as Route);
+  if (!ticket.chantiers) notFound();
   const chantier = ticket.chantiers;
   const chantierHref =
     chantier.particulier_id === auth.claims.sub

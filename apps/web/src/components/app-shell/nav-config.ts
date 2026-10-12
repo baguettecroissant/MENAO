@@ -126,11 +126,13 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
   client: [
     { href: "/compte", label: fr.account.title },
     { href: "/notifications", label: fr.clientApp.notifications },
+    { href: "/echanges", label: fr.exchanges.title },
     { href: "/contact", label: fr.appShell.help },
   ],
   pro: [
     { href: "/compte", label: fr.account.title },
     { href: "/notifications", label: fr.clientApp.notifications },
+    { href: "/echanges", label: fr.exchanges.title },
     { href: "/contact", label: fr.appShell.help },
   ],
   admin: [],

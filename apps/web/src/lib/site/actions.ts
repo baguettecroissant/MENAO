@@ -36,5 +36,8 @@ export async function sendContactMessage(_prev: FormState, formData: FormData): 
     p_message: parsed.data.message,
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
-  return { success: fr.pages.contact.sent };
+  // Compte connecté : la réponse de l'équipe arrive dans « Mes échanges avec MENAO » (ADR 0041).
+  const { data: auth } = await supabase.auth.getClaims();
+  const follow = Boolean(auth && !auth.claims.is_anonymous);
+  return { success: fr.pages.contact.sent, ...(follow ? { values: { suivi: "1" } } : {}) };
 }

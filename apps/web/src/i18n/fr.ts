@@ -657,6 +657,7 @@ export const fr = {
       message: "Votre message",
       submit: "Envoyer",
       sent: "Votre message est envoyé. L'équipe MENAO vous répond sous 7 jours.",
+      follow: "Suivre la réponse dans « Mes échanges avec MENAO »",
       privacy: "Votre adresse e-mail sert uniquement à vous répondre.",
     },
     legalNotice: {
@@ -1175,6 +1176,31 @@ export const fr = {
       deleteLabel: (title: string) => `Supprimer la recherche « ${title} »`,
     },
     rehire: (name: string) => `Redemander un devis à ${name}`,
+  },
+  warranties: {
+    title: "Vos garanties après la réception",
+    intro: (date: string) =>
+      `Selon la nature des travaux, la loi prévoit ces garanties à compter de la réception du ${date} :`,
+    kinds: {
+      parfaitAchevement: {
+        label: "Garantie de parfait achèvement",
+        what: "L'artisan répare les défauts signalés dans l'année qui suit la réception, y compris les réserves du procès-verbal.",
+      },
+      bonFonctionnement: {
+        label: "Garantie de bon fonctionnement",
+        what: "Équipements installés qui peuvent être retirés sans abîmer l'ouvrage (robinetterie, radiateurs, volets…).",
+      },
+      decennale: {
+        label: "Garantie décennale",
+        what: "Dommages qui compromettent la solidité de l'ouvrage ou le rendent impropre à son usage.",
+      },
+    },
+    until: (date: string) => `jusqu'au ${date}`,
+    ended: (date: string) => `terminée le ${date}`,
+    insurer: (insurer: string, policy: string | null) =>
+      `Assurance décennale de l'artisan : ${insurer}${policy ? `, contrat n° ${policy}` : ""}.`,
+    advice:
+      "En cas de problème, prévenez d'abord l'artisan par la messagerie, puis signalez-le à l'équipe MENAO depuis cette page.",
   },
   clientCancel: {
     reasonsLegend: "Pourquoi annulez-vous ?",
@@ -1742,6 +1768,37 @@ export const fr = {
   mySpace: {
     role: "Type de compte",
     signOut: "Me déconnecter",
+  },
+  exchanges: {
+    title: "Mes échanges avec MENAO",
+    intro:
+      "Vos messages à l'équipe MENAO et ses réponses : page Contact, dossiers de recherche, signalements et demande de suppression du compte.",
+    empty: "Aucun échange pour le moment.",
+    emptyHint: "Une question ? Écrivez-nous depuis la page Contact : la réponse arrivera ici.",
+    write: "Écrire à l'équipe MENAO",
+    types: {
+      contact: "Message",
+      dossier_recherche: "Dossier de recherche",
+      litige: "Signalement sur un chantier",
+      suppression_compte: "Suppression du compte",
+      avis: "Avis signalé",
+      message: "Message signalé",
+      expertise: "Expertise signalée",
+    },
+    statuses: { ouvert: "En attente de réponse", en_cours: "Réponse de l'équipe", resolu: "Clos" },
+    untitled: "Sans objet",
+    sentOn: (date: string) => `Envoyé le ${date}`,
+    lastReply: (date: string) => `Dernière réponse le ${date}`,
+    back: "Mes échanges avec MENAO",
+    yourMessage: "Votre message",
+    thread: "Échanges avec l'équipe MENAO",
+    you: "Vous",
+    support: "Équipe MENAO",
+    noMessages: "L'équipe MENAO vous répondra ici.",
+    messageLabel: "Votre message à l'équipe MENAO",
+    messageSubmit: "Envoyer",
+    closed:
+      "Cet échange est clos. Pour une nouvelle question, écrivez-nous depuis la page Contact.",
   },
   account: {
     title: "Mon compte",

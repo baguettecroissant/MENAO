@@ -61,6 +61,8 @@ export async function addTicketMessage(
   });
   if (error) return { ...rpcError(error), values };
   revalidatePath(`/signalements/${ticketId}`);
+  revalidatePath(`/echanges/${ticketId}`);
+  revalidatePath("/echanges");
   revalidatePath("/admin/tickets");
   return { success: "ok" };
 }
