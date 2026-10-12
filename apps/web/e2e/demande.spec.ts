@@ -958,9 +958,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   // Actions sur le compte (ADR 0048) : lien de mot de passe reçu, export RGPD, suspension de
   // l'accès (motif exigé) puis rétablissement.
   const actions = admin.getByRole("region", { name: "Actions sur le compte" });
-  await actions
-    .getByRole("button", { name: "Envoyer un lien de réinitialisation du mot de passe" })
-    .click();
+  await actions.getByRole("button", { name: "Réinitialiser le mot de passe" }).click();
   await expect(actions.getByText(`Lien envoyé à ${email}.`)).toBeVisible();
   expect(await authLinkFor(request, email, "recovery")).toContain("type=recovery");
   const exportHref = await actions

@@ -5,6 +5,7 @@
 // reception-signatures pour les PV), puis document et chantier mis à jour. ADR 0022, 0027.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { verifyDocusealSignature } from "../../../packages/core/src/signature.ts";
+import { webhookErrorCode } from "../../../packages/core/src/webhook.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { docuseal } from "../_shared/docuseal.ts";
 import { env } from "../_shared/env.ts";
@@ -126,11 +127,11 @@ Deno.serve(async (req) => {
     await processed();
     return json({ received: true });
   } catch (e) {
-    // Le prestataire renvoie l'événement plus tard (nouvelles tentatives pendant 48 h).
-    console.error(
-      "signature-webhook : traitement en échec",
-      e instanceof Error ? e.message : "erreur",
-    );
+    // Le prestataire renvoie l'événement plus tard (nouvelles tentatives pendant 48 h) ; l'échec
+    // reste visible dans le back-office, avec un code technique seulement (ADR 0051).
+    const code = webhookErrorCode(e);
+    await admin.rpc("record_webhook_failure", { p_event_id: eventId, p_error: code });
+    console.error("signature-webhook : traitement en échec", code);
     return json({ error: "traitement en échec" }, 500);
   }
 });

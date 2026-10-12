@@ -132,9 +132,9 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-medium tracking-tight">{name}</h1>
         <span className="rounded-chip bg-primary-soft px-3 py-1 text-sm text-primary">
-          {fr.admin.statuses[artisan.status]}
-          {artisan.suspension_reason &&
-            ` — ${t.suspensionReasons[artisan.suspension_reason as keyof typeof t.suspensionReasons]}`}
+          {(artisan.status === "suspendu" &&
+            t.suspensionReasons[artisan.suspension_reason as keyof typeof t.suspensionReasons]) ||
+            fr.admin.status[artisan.status]}
         </span>
       </div>
 

@@ -16,7 +16,17 @@ const overviewSchema = z.object({
     suspendus: n,
     inscrits_30j: n,
   }),
-  abonnements: z.object({ actifs: n, essais: n, impayes: n, resilies_30j: n }),
+  abonnements: z.object({
+    actifs: n,
+    essais: n,
+    impayes: n,
+    resilies_30j: n,
+    // Revenu et désabonnement (ADR 0051) : facultatifs tant que la migration n'est pas déployée.
+    payants: n.default(0),
+    mrr_cents: n.default(0),
+    en_cours_30j: n.default(0),
+    perdus_30j: n.default(0),
+  }),
   recherches: z.object({ aujourdhui: n, j30: n, envoyees_30j: n, non_envoyees_7j: n }),
   demandes: z.object({
     aujourdhui: n,
@@ -41,6 +51,8 @@ const overviewSchema = z.object({
     suppression_echeance: z.string().nullable().default(null),
   }),
   documents: z.object({ renouvellements: n, assurances_7j: n }),
+  // Notifications Stripe ou DocuSeal en échec (ADR 0051).
+  notifications: z.object({ echecs: n }).default({ echecs: 0 }),
 });
 export type Overview = z.infer<typeof overviewSchema>;
 

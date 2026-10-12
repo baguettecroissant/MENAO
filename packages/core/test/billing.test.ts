@@ -56,7 +56,14 @@ describe("subscriptionFromStripe", () => {
       currentPeriodEnd: "2027-01-15T08:00:00.000Z",
       trialEnd: "2027-01-15T08:00:00.000Z",
       cancelAtPeriodEnd: false,
+      endedAt: null,
     });
+  });
+
+  it("date de fin d'un abonnement résilié (résiliations du back-office)", () => {
+    expect(
+      subscriptionFromStripe({ ...sub, status: "canceled", ended_at: 1_800_000_000 }),
+    ).toMatchObject({ status: "canceled", endedAt: "2027-01-15T08:00:00.000Z" });
   });
 
   it("accepte un client développé et l'ancienne position de la fin de période", () => {

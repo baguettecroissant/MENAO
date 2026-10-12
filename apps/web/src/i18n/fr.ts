@@ -1520,7 +1520,7 @@ export const fr = {
       pro: "Navigation de l'espace pro",
       admin: "Navigation du back-office",
     },
-    sections: { activity: "Activité", account: "Mon compte", tools: "Pilotage" },
+    sections: { activity: "Activité", account: "Mon compte", tools: "Pilotage", money: "Argent" },
     help: "Aide et support",
     toDo: (n: number) => (n === 1 ? "1 élément à traiter" : `${n} éléments à traiter`),
     badge: (n: number) => (n > 99 ? "99+" : String(n)),
@@ -3264,6 +3264,8 @@ export const fr = {
       artisans: "Dossiers artisans",
       watch: "À surveiller",
       tickets: "Dossiers et messages",
+      payments: "Paiements",
+      subscriptions: "Abonnements",
       signOut: "Me déconnecter",
     },
     overview: {
@@ -3305,9 +3307,17 @@ export const fr = {
         failed: (n: number) =>
           n > 1 ? `${n} paiements échoués cette semaine` : "1 paiement échoué cette semaine",
         failedHint: "Le client doit relancer le paiement depuis son espace.",
+        failedAction: "Voir les paiements échoués",
         unpaid: (n: number) => (n > 1 ? `${n} abonnements impayés` : "1 abonnement impayé"),
         unpaidHint:
-          "Stripe relance l'artisan ; son profil n'est plus visible tant que c'est impayé.",
+          "Stripe relance l'artisan. Sans paiement à la fin des relances, son profil n'est plus visible.",
+        unpaidAction: "Voir les impayés",
+        webhooks: (n: number) =>
+          n > 1
+            ? `${n} notifications Stripe ou DocuSeal en échec`
+            : "1 notification Stripe ou DocuSeal en échec",
+        webhooksHint: "Des paiements, abonnements ou signatures peuvent ne pas être à jour.",
+        webhooksAction: "Voir les notifications",
         deletions: (n: number) =>
           n > 1 ? `${n} demandes de suppression de compte` : "1 demande de suppression de compte",
         deletionsHint: (date: string) => `Réponse sous un mois : la plus proche avant le ${date}.`,
@@ -3388,10 +3398,16 @@ export const fr = {
           pending: "Dossiers à vérifier",
           suspended: "Suspendus",
           signups: "Inscriptions",
-          active: "Abonnements actifs",
+        },
+        subscriptions: {
+          title: "Abonnements des artisans",
+          mrr: "Revenu mensuel récurrent (HT)",
+          paying: "Abonnements payants",
           trials: "En période d'essai",
-          unpaid: "Abonnements impayés",
+          unpaid: "Impayés",
           cancelled: "Résiliations",
+          churn: "Taux de désabonnement",
+          note: "Seul revenu de MENAO, au tarif des formules, hors remises.",
         },
         payments: {
           title: "Paiements des chantiers",
@@ -3453,8 +3469,9 @@ export const fr = {
     accountActions: {
       title: "Actions sur le compte",
       staff: "Les comptes de l'équipe MENAO ne se gèrent pas ici.",
-      reset: "Envoyer un lien de réinitialisation du mot de passe",
-      resetHint: "La personne reçoit le même e-mail que « Mot de passe oublié ».",
+      reset: "Réinitialiser le mot de passe",
+      resetHint:
+        "La personne reçoit le même e-mail que « Mot de passe oublié » et choisit elle-même son nouveau mot de passe.",
       resetSent: (email: string) => `Lien envoyé à ${email}.`,
       noEmail: "Ce compte n'a pas d'adresse e-mail.",
       export: "Exporter ses données (RGPD)",
@@ -3712,6 +3729,173 @@ export const fr = {
           "Les messages entre le client et l'artisan restent privés : l'équipe n'y accède que sur un litige ou un signalement.",
       },
     },
+    payments: {
+      title: "Paiements des chantiers",
+      intro:
+        "Payés par les clients directement sur le compte Stripe de l'artisan : MENAO n'encaisse rien et suit seulement ces paiements.",
+      searchLabel: "Rechercher un paiement",
+      searchPlaceholder: "Chantier, artisan, client, e-mail ou n° de devis",
+      filtersLabel: "Filtrer les paiements",
+      filters: {
+        tous: "Tous",
+        payes: "Reçus",
+        en_cours: "En cours",
+        echoues: "Échoués",
+        annules: "Annulés",
+      } as Record<string, string>,
+      summary: {
+        paid: "Versé aux artisans (30 jours)",
+        paidCount: (n: number) =>
+          n === 0 ? "Aucun paiement" : n === 1 ? "1 paiement" : `${n} paiements`,
+        paidTotal: "Versé depuis le lancement",
+        paidTotalHint: "Acomptes et soldes reçus par les artisans.",
+        pending: "En cours",
+        pendingHint: (n: number) =>
+          n === 0
+            ? "Aucun paiement en attente de confirmation."
+            : n === 1
+              ? "1 paiement commencé, pas encore confirmé."
+              : `${n} paiements commencés, pas encore confirmés.`,
+        failed: "Échoués (7 jours)",
+        failedHint: "Le client relance le paiement depuis son espace.",
+      },
+      columns: {
+        chantier: "Chantier",
+        artisan: "Artisan",
+        payment: "Paiement",
+        amount: "Montant",
+        status: "Statut",
+      },
+      kinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+      statuses: {
+        en_attente: "Commencé",
+        en_cours: "En cours",
+        paye: "Reçu",
+        echoue: "Échoué",
+        annule: "Annulé",
+      } as Record<string, string>,
+      paidOn: (date: string) => `payé le ${date}`,
+      startedOn: (date: string) => `commencé le ${date}`,
+      webhooksAlert: (n: number) =>
+        n > 1
+          ? `${n} notifications Stripe ou DocuSeal sont en échec : des paiements ou abonnements peuvent ne pas être à jour.`
+          : "1 notification Stripe ou DocuSeal est en échec : des paiements ou abonnements peuvent ne pas être à jour.",
+      webhooksLink: "Notifications Stripe et DocuSeal",
+    },
+    subscriptions: {
+      title: "Abonnements des artisans",
+      intro:
+        "L'abonnement des artisans est le seul revenu de MENAO, encaissé par Stripe. Montants HT au tarif des formules, hors remises et coupons.",
+      searchLabel: "Rechercher un abonnement",
+      searchPlaceholder: "Entreprise, SIRET, e-mail ou formule",
+      filtersLabel: "Filtrer les abonnements",
+      filters: {
+        tous: "Tous",
+        actifs: "Actifs",
+        essais: "En essai",
+        impayes: "Impayés",
+        fin_programmee: "Fin programmée",
+        resilies: "Résiliés",
+      } as Record<string, string>,
+      summary: {
+        mrr: "Revenu mensuel récurrent",
+        mrrHint: (n: number) =>
+          n === 0
+            ? "Aucun abonnement payant pour le moment."
+            : n === 1
+              ? "1 abonnement payant, HT par mois."
+              : `${n} abonnements payants, HT par mois.`,
+        trials: "En période d'essai",
+        trialsHint: (amount: string) => `${amount} HT par mois à la fin des essais.`,
+        unpaid: "Impayés",
+        unpaidHint: (amount: string) => `${amount} HT par mois en jeu ; Stripe relance l'artisan.`,
+        cancelled: "Résiliations (30 jours)",
+        churn: (rate: string) => `Taux de désabonnement : ${rate}.`,
+        churnHint:
+          "Abonnements en cours il y a 30 jours et résiliés depuis, parmi tous ceux en cours il y a 30 jours.",
+        scheduled: "Fins programmées",
+        scheduledHint: "Résiliation demandée pour la fin de la période en cours.",
+      },
+      plans: {
+        title: "Par formule",
+        plan: "Formule",
+        price: "Prix HT par mois",
+        paying: "Payants",
+        trials: "En essai",
+        mrr: "Revenu mensuel",
+      },
+      noPlan: (n: number) =>
+        n > 1
+          ? `${n} abonnements payants n'ont pas de formule reconnue : ils ne sont pas comptés dans le revenu.`
+          : "1 abonnement payant n'a pas de formule reconnue : il n'est pas compté dans le revenu.",
+      columns: {
+        artisan: "Artisan",
+        plan: "Formule",
+        situation: "Situation",
+        next: "Échéance",
+        since: "Depuis",
+      },
+      situations: {
+        actifs: "Actif",
+        essais: "En essai",
+        impayes: "Impayé",
+        fin_programmee: "Fin programmée",
+        resilies: "Résilié",
+        autres: "Autre",
+      } as Record<string, string>,
+      unknownPlan: "Formule inconnue",
+      perMonth: (amount: string) => `${amount} HT par mois`,
+      trialUntil: (date: string) => `Essai jusqu'au ${date}`,
+      renewsOn: (date: string) => `Prochaine échéance le ${date}`,
+      endsOn: (date: string) => `Se termine le ${date}`,
+      endedOn: (date: string) => `Terminé le ${date}`,
+    },
+    webhooks: {
+      title: "Notifications Stripe et DocuSeal",
+      back: "Paiements des chantiers",
+      intro:
+        "Stripe et DocuSeal préviennent MENAO à chaque paiement, abonnement, compte d'artisan ou signature. Si le traitement échoue, le service renvoie la notification (pendant 3 jours pour Stripe, 48 heures pour DocuSeal) : en attendant, les données concernées peuvent être en retard.",
+      help: "Une notification reste en échec ? Vérifiez l'état de Supabase et du service concerné. Une fois le problème réglé, renvoyez-la depuis le tableau de bord du service (Stripe : Développeurs, puis Événements) ou attendez la tentative suivante.",
+      filtersLabel: "Filtrer les notifications",
+      filters: {
+        echecs: "En échec",
+        retablies: "Rétablies",
+        toutes: "Toutes",
+      } as Record<string, string>,
+      columns: {
+        received: "Reçue",
+        event: "Notification",
+        state: "État",
+        failures: "Échecs",
+        error: "Dernière erreur",
+      },
+      sources: { stripe: "Stripe", docuseal: "DocuSeal" } as Record<string, string>,
+      states: {
+        en_echec: "En échec",
+        bloquee: "Bloquée",
+        retablie: "Rétablie",
+        traitee: "Traitée",
+        en_cours: "En cours",
+      } as Record<string, string>,
+      events: {
+        "customer.subscription.created": "Abonnement créé",
+        "customer.subscription.updated": "Abonnement modifié",
+        "customer.subscription.deleted": "Abonnement terminé",
+        "customer.subscription.paused": "Abonnement mis en pause",
+        "customer.subscription.resumed": "Abonnement repris",
+        "checkout.session.completed": "Paiement validé",
+        "checkout.session.async_payment_succeeded": "Paiement différé réussi",
+        "checkout.session.async_payment_failed": "Paiement différé échoué",
+        "checkout.session.expired": "Paiement abandonné",
+        "account.updated": "Compte Stripe d'un artisan mis à jour",
+        "form.completed": "Signature terminée",
+        "form.declined": "Signature refusée",
+      } as Record<string, string>,
+      lastFailure: (date: string) => `dernier échec le ${date}`,
+      blockedHint: "Ni traitée ni en échec un quart d'heure après sa réception.",
+      empty: "Aucune notification dans cette catégorie.",
+      emptyFailures: "Aucune notification en échec : tout est à jour.",
+    },
     tickets: {
       title: "Dossiers et messages",
       types: {
@@ -3872,11 +4056,19 @@ export const fr = {
       refuse: "Refusés",
       suspendu: "Suspendus",
     },
+    /** Statut d'un dossier, au singulier (badge de la fiche). */
+    status: {
+      brouillon: "Brouillon",
+      en_verification: "En vérification",
+      valide: "Validé",
+      refuse: "Refusé",
+      suspendu: "Suspendu",
+    },
     detail: {
       back: "Retour aux dossiers",
       suspensionReasons: {
-        documents_expires: "suspendu automatiquement : assurance expirée",
-        decision_admin: "suspendu par décision MENAO",
+        documents_expires: "Suspendu automatiquement : assurance expirée",
+        decision_admin: "Suspendu par décision MENAO",
       },
       company: "Entreprise",
       contact: "Dirigeant",
