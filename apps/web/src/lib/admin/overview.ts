@@ -42,7 +42,13 @@ export type ActivityItem = { occurredAt: string; kind: string; details: Record<s
 /** Éléments nommés du bloc « À traiter maintenant », en plus des compteurs. */
 export type Todo = {
   dossiers: { id: string; name: string }[];
-  expiringRequests: { id: string; artisanId: string; artisan: string; expiresAt: string }[];
+  expiringRequests: {
+    id: string;
+    projectId: string;
+    artisanId: string;
+    artisan: string;
+    expiresAt: string;
+  }[];
 };
 
 export async function getOverview(supabase: Client): Promise<Overview | null> {
@@ -74,7 +80,7 @@ export async function getTodo(supabase: Client): Promise<Todo> {
       .limit(3),
     supabase
       .from("requests")
-      .select("id, expires_at, artisan_id, artisans(raison_sociale, nom_commercial)")
+      .select("id, project_id, expires_at, artisan_id, artisans(raison_sociale, nom_commercial)")
       .eq("status", "envoyee")
       .gt("expires_at", new Date().toISOString())
       .lte("expires_at", new Date(Date.now() + 12 * 3_600_000).toISOString())
@@ -88,6 +94,7 @@ export async function getTodo(supabase: Client): Promise<Todo> {
     })),
     expiringRequests: (expiring.data ?? []).map((r) => ({
       id: r.id,
+      projectId: r.project_id,
       artisanId: r.artisan_id,
       artisan: r.artisans?.nom_commercial ?? r.artisans?.raison_sociale ?? "",
       expiresAt: r.expires_at,

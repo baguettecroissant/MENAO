@@ -128,39 +128,48 @@ export function describeActivity(item: ActivityItem): Described | null {
   const artisan = text(d, "artisan") ?? text(d, "entreprise") ?? t.activity.unknownArtisan;
   const artisanId = text(d, "artisan_id");
   const artisanHref = artisanId ? `/admin/artisans/${artisanId}` : null;
+  // Fiches de la demande et du chantier (ADR 0046).
+  const projectId = text(d, "project_id");
+  const requestHref = projectId ? `/admin/demandes/${projectId}` : null;
+  const chantierId = text(d, "chantier_id");
   const place = [text(d, "metier"), text(d, "ville")].filter(Boolean).join(" · ") || null;
   switch (item.kind) {
     case "recherche":
-      return { icon: Search, label: t.activity.recherche, detail: place, href: null };
+      return { icon: Search, label: t.activity.recherche, detail: place, href: requestHref };
     case "demande_envoyee":
-      return { icon: Send, label: t.activity.demande_envoyee(artisan), detail: place, href: null };
+      return {
+        icon: Send,
+        label: t.activity.demande_envoyee(artisan),
+        detail: place,
+        href: requestHref,
+      };
     case "demande_acceptee":
       return {
         icon: CheckCircle2,
         label: t.activity.demande_acceptee(artisan),
         detail: text(d, "ville"),
-        href: null,
+        href: requestHref,
       };
     case "demande_refusee":
       return {
         icon: XCircle,
         label: t.activity.demande_refusee(artisan),
         detail: text(d, "ville"),
-        href: null,
+        href: requestHref,
       };
     case "demande_expiree":
       return {
         icon: Hourglass,
         label: t.activity.demande_expiree(artisan),
         detail: text(d, "ville"),
-        href: artisanHref,
+        href: requestHref ?? artisanHref,
       };
     case "demande_annulee":
       return {
         icon: Ban,
         label: t.activity.demande_annulee(artisan),
         detail: text(d, "ville"),
-        href: null,
+        href: requestHref,
       };
     case "chantier": {
       const event = text(d, "evenement") ?? "";
@@ -170,7 +179,11 @@ export function describeActivity(item: ActivityItem): Described | null {
         icon: CHANTIER_ICONS[event] ?? HardHat,
         label: `${label} · ${artisan}`,
         detail: [text(d, "titre"), text(d, "ville")].filter(Boolean).join(" · ") || null,
-        href: event.startsWith("litige_") ? "/admin/tickets" : null,
+        href: event.startsWith("litige_")
+          ? "/admin/tickets"
+          : chantierId
+            ? `/admin/chantiers/${chantierId}`
+            : null,
       };
     }
     case "dossier_envoye":
@@ -322,7 +335,11 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
           { label: f.requests.today, value: count(o.demandes.aujourdhui), emphasis: true },
           { label: f.requests.week, value: count(o.demandes.j7) },
           { label: f.requests.month, value: count(o.demandes.j30) },
-          { label: f.requests.pending, value: count(o.demandes.en_attente) },
+          {
+            label: f.requests.pending,
+            value: count(o.demandes.en_attente),
+            href: "/admin/demandes?filtre=en_attente",
+          },
           { label: f.requests.responseRate, value: percentOrDash(rates.response) },
           { label: f.requests.acceptanceRate, value: percentOrDash(rates.acceptance) },
           { label: f.requests.searches, value: count(o.recherches.j30) },
@@ -332,7 +349,11 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
               searchConversion({ searches: o.recherches.j30, sent: o.recherches.envoyees_30j }),
             ),
           },
-          { label: f.requests.drafts, value: count(o.recherches.non_envoyees_7j) },
+          {
+            label: f.requests.drafts,
+            value: count(o.recherches.non_envoyees_7j),
+            href: "/admin/demandes?filtre=non_envoyee",
+          },
         ]}
       />
       <FiguresCard
@@ -340,6 +361,7 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
         rows={[
           ...CHANTIER_STAGES.filter((s) => s !== "termine" && s !== "abandonne").map((stage) => ({
             label: f.chantiers.stages[stage],
+            href: `/admin/chantiers?etape=${stage}`,
             value: count(stages[stage]),
             emphasis: stage === "litige" && stages.litige > 0,
           })),

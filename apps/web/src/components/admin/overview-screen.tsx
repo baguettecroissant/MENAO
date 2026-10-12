@@ -107,6 +107,7 @@ export function OverviewScreen({
           tone="warning"
           title={todoT.expiring(o.demandes.expirent_12h)}
           hint={todoT.expiringHint}
+          action={{ href: "/admin/demandes?filtre=expirent", label: todoT.expiringAction }}
         >
           <ul className="flex flex-col gap-1.5 text-sm">
             {todo.expiringRequests.map((r) => {
@@ -114,7 +115,7 @@ export function OverviewScreen({
               return (
                 <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-x-3">
                   <Link
-                    href={`/admin/artisans/${r.artisanId}` as Route}
+                    href={`/admin/demandes/${r.projectId}` as Route}
                     className="font-medium text-primary underline-offset-2 hover:underline"
                   >
                     {r.artisan || t.activity.unknownArtisan}

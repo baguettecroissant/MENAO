@@ -4,9 +4,13 @@ import {
   CHANTIER_STAGES,
   chantierStage,
   chantiersByStage,
+  PROJECT_FILTERS,
+  parseChantierStage,
+  parseProjectFilter,
   percent,
   requestRates,
   searchConversion,
+  statusesOfStage,
 } from "../src/overview";
 
 describe("vue d'ensemble du back-office : étapes des chantiers (F-58)", () => {
@@ -63,5 +67,32 @@ describe("vue d'ensemble du back-office : taux (F-58)", () => {
   it("conversion des recherches en demandes envoyées", () => {
     expect(searchConversion({ searches: 8, sent: 2 })).toBe(25);
     expect(searchConversion({ searches: 0, sent: 0 })).toBeNull();
+  });
+});
+
+describe("listes du back-office : filtres (F-53)", () => {
+  it("les statuts d'une étape sont ceux qui y mènent, sans doublon ni oubli", () => {
+    expect(statusesOfStage("travaux")).toEqual([
+      "devis_signe",
+      "acompte_paye",
+      "planifie",
+      "en_cours",
+    ]);
+    expect(statusesOfStage("abandonne")).toEqual(["devis_refuse", "annule"]);
+    const all = CHANTIER_STAGES.flatMap((stage) => statusesOfStage(stage));
+    expect([...all].sort()).toEqual([...CHANTIER_STATUSES].sort());
+  });
+
+  it("filtre des demandes : valeur connue, sinon toutes", () => {
+    expect(PROJECT_FILTERS[0]).toBe("toutes");
+    expect(parseProjectFilter("expirent")).toBe("expirent");
+    expect(parseProjectFilter("inconnu")).toBe("toutes");
+    expect(parseProjectFilter(undefined)).toBe("toutes");
+  });
+
+  it("étape des chantiers : valeur connue, sinon aucune", () => {
+    expect(parseChantierStage("litige")).toBe("litige");
+    expect(parseChantierStage("inconnue")).toBeNull();
+    expect(parseChantierStage(["devis"])).toBeNull();
   });
 });
