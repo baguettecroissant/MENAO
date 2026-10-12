@@ -1715,6 +1715,8 @@ export const fr = {
       requests: "Demandes",
       chantiers: "Chantiers",
       agenda: "Agenda",
+      reviews: "Avis",
+      publicProfile: "Ma fiche publique",
       quotes: "Devis",
       messages: "Messages",
       file: "Mon dossier",
@@ -1971,6 +1973,81 @@ export const fr = {
           disabled: "Abonnement désactivé.",
         },
       },
+    },
+    publicProfile: {
+      title: "Ma fiche publique",
+      previewTitle: "Aperçu de votre fiche",
+      previewVisible:
+        "Voici votre fiche telle que la voient les particuliers depuis leurs résultats de recherche.",
+      previewHidden:
+        "Votre fiche n'est pas encore visible des particuliers. Voici comment elle apparaîtra.",
+      previewPaused:
+        "Vous êtes en pause : votre fiche n'apparaît plus dans les recherches. Voici comment elle s'affichera à votre retour.",
+      previewConges:
+        "Vous êtes en congés : votre fiche n'apparaît plus dans les recherches pendant votre absence.",
+      completeFile: "Terminer mon dossier",
+      manageAvailability: "Gérer mes disponibilités",
+      editLabel: "Modifier",
+      edit: {
+        profil: "Photo, présentation et réalisations",
+        metiers: "Métiers, spécialités et certifications",
+        zone: "Zone d'intervention",
+      },
+      ctaHint: "Le bouton que voient les particuliers pour vous envoyer leur demande.",
+      tipsTitle: "Pour une fiche plus convaincante",
+      tips: {
+        photo_profil: {
+          text: "Ajoutez une photo de vous ou votre logo : les particuliers choisissent plus volontiers un visage.",
+          action: "Ajouter ma photo",
+        },
+        realisations: {
+          text: "Montrez au moins 3\u00a0photos de chantiers réalisés.",
+          action: "Ajouter des photos",
+        },
+        presentation: {
+          text: "Développez votre présentation (300\u00a0caractères ou plus) : spécialités, expérience, secteur.",
+          action: "Compléter ma présentation",
+        },
+        specialites: {
+          text: "Indiquez vos spécialités : elles s'affichent sur votre fiche et dans les résultats.",
+          action: "Choisir mes spécialités",
+        },
+        certifications: {
+          text: "Ajoutez vos certifications (RGE, Qualibat…) : elles rassurent et apparaissent dans «\u00a0Garanties\u00a0».",
+          action: "Ajouter une certification",
+        },
+      },
+      tipsDone:
+        "Votre fiche est complète : photo, réalisations, présentation, spécialités et certifications.",
+      unavailable: "Votre fiche n'est pas disponible pour le moment.",
+    },
+    reviews: {
+      title: "Mes avis",
+      subtitle:
+        "Les avis de vos clients après la réception de leur chantier, et votre score MENAO.",
+      scoreTitle: "Votre score MENAO",
+      scoreEmpty: "Votre score apparaîtra avec votre premier avis publié.",
+      toAnswer: (n: number) =>
+        n === 0
+          ? "Vous avez répondu à tous vos avis."
+          : n === 1
+            ? "1\u00a0avis attend votre réponse."
+            : `${n}\u00a0avis attendent votre réponse.`,
+      howTitle: "Comment ça marche",
+      how: [
+        "Votre client est invité à donner son avis une fois le chantier clôturé, puis relancé une seule fois 3\u00a0jours plus tard.",
+        "Chaque avis porte sur un vrai chantier réceptionné sur MENAO : il est marqué «\u00a0Avis vérifié\u00a0».",
+        "Vous pouvez répondre publiquement à chaque avis, une seule fois.",
+        "Un avis contraire aux règles peut être signalé à l'équipe MENAO. Un avis n'est jamais masqué au seul motif qu'il est négatif.",
+      ],
+      empty:
+        "Aucun avis pour le moment. Vos clients pourront vous noter après la réception de leur chantier.",
+      listTitle: "Tous vos avis",
+      publishedOn: (date: string) => `Publié le ${date}`,
+      chantier: (title: string) => `Chantier « ${title} »`,
+      noReply: "Sans réponse",
+      hidden: "Masqué",
+      seePublic: "Voir ma fiche publique",
     },
     appointment: {
       title: "Informations du rendez-vous",

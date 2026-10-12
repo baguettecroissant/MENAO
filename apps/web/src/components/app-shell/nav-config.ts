@@ -4,19 +4,22 @@ import {
   ClipboardList,
   FileText,
   HardHat,
+  IdCard,
   Inbox,
   LayoutGrid,
   MessageCircle,
   MessagesSquare,
   ReceiptText,
   ShieldCheck,
+  Star,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
 
 export type Space = "client" | "pro" | "admin";
-export type BadgeKey = "actions" | "messages" | "requests" | "quotes" | "dossiers" | "tickets";
+export type BadgeKey =
+  "actions" | "messages" | "requests" | "quotes" | "reviews" | "dossiers" | "tickets";
 export type Badges = Partial<Record<BadgeKey, number>>;
 
 export type NavItem = {
@@ -83,11 +86,15 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           badge: "messages",
         },
         { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
+        { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
       ],
     },
     {
       label: fr.appShell.sections.account,
-      items: [{ href: "/pro/onboarding", label: fr.pro.space.file, icon: UserRound }],
+      items: [
+        { href: "/pro/onboarding", label: fr.pro.space.file, icon: UserRound },
+        { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
+      ],
     },
   ],
   admin: [

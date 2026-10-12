@@ -118,13 +118,21 @@ export const artisanActivity = cache(async () => {
 
 /**
  * Coque de l'espace pro (ADR 0035) : compte, compteurs du menu (demandes à traiter, clients en
- * attente de devis, messages non lus), visibilité de l'artisan et statut de disponibilité (F-44).
+ * attente de devis, messages non lus, avis sans réponse), visibilité de l'artisan et statut de
+ * disponibilité (F-44).
  */
 export const getProShell = cache(async () => {
   const space = await requireProSpace();
-  const [{ inbox, chantiers }, { data: unread }] = await Promise.all([
+  const [{ inbox, chantiers }, { data: unread }, { count: reviewsToAnswer }] = await Promise.all([
     artisanActivity(),
     space.supabase.rpc("my_unread_messages"),
+    // Avis publiés sans réponse de l'artisan (F-28).
+    space.supabase
+      .from("reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("artisan_id", space.artisanId)
+      .eq("status", "publie")
+      .is("reply", null),
   ]);
   return {
     account: {
@@ -142,6 +150,7 @@ export const getProShell = cache(async () => {
         })),
       ),
       messages: unread ?? 0,
+      reviews: reviewsToAnswer ?? 0,
     },
     visibility: { ...space.visibility, availability: space.availability },
   };

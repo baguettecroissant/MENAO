@@ -1,4 +1,5 @@
 import { REVIEW_CRITERIA, type ValueForMoney } from "@menao/core";
+import type { ReactNode } from "react";
 import { ReviewReplyForm } from "@/components/pro/review-reply-form";
 import { ReportReview } from "@/components/review/review-list";
 import { Stars } from "@/components/review/stars";
@@ -23,26 +24,34 @@ export type ChantierReview = {
 
 /**
  * Avis du client sur le chantier, côté artisan (F-28) : notes, commentaire, réponse publique
- * (une seule fois) et signalement à l'équipe MENAO.
+ * (une seule fois) et signalement à l'équipe MENAO. Sur la page du chantier comme dans
+ * « Mes avis » (titre, sous-titre et identifiant propres à chaque avis).
  */
 export function ReviewSection({
   review,
   chantierId,
-  clientFirstName,
+  heading,
+  meta,
 }: {
   review: ChantierReview;
   chantierId: string;
-  clientFirstName: string;
+  heading: string;
+  /** Ligne sous le titre (date, chantier, « Sans réponse »). */
+  meta?: ReactNode;
 }) {
+  const headingId = `avis-${review.id}`;
   return (
     <section
-      aria-labelledby="review-title"
+      aria-labelledby={headingId}
       className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="review-title" className="text-[1.0625rem] font-medium">
-          {t.reviewTitle(clientFirstName)}
-        </h2>
+        <div className="flex min-w-0 flex-col gap-1">
+          <h2 id={headingId} className="text-[1.0625rem] font-medium">
+            {heading}
+          </h2>
+          {meta}
+        </div>
         <p className="flex items-center gap-2 text-sm font-medium text-primary-strong">
           <Stars score={review.score} />
           {r.percent(review.score)}
