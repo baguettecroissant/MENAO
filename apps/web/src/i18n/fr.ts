@@ -1100,6 +1100,7 @@ export const fr = {
     invalidLink: "Ce lien est invalide ou a expiré. Connectez-vous ou demandez un nouveau lien.",
     forgotPassword: "Mot de passe oublié ?",
     passwordUpdated: "Votre mot de passe a été modifié.",
+    signedOutEverywhere: "Vous êtes déconnecté de tous vos appareils.",
   },
   forgotPassword: {
     title: "Mot de passe oublié",
@@ -1694,6 +1695,90 @@ export const fr = {
   mySpace: {
     role: "Type de compte",
     signOut: "Me déconnecter",
+  },
+  account: {
+    title: "Mon compte",
+    intro:
+      "Vos informations, votre adresse e-mail, votre mot de passe et vos données personnelles.",
+    proNav: "Paramètres du compte",
+    profile: {
+      title: "Mes informations",
+      firstName: "Prénom",
+      lastName: "Nom",
+      phone: "Téléphone",
+      phoneOptional: "(facultatif)",
+      phoneHintClient:
+        "Utilisé pour le code de signature envoyé par SMS et pour que l'artisan puisse vous rappeler.",
+      phoneHintPro: "Visible de vos clients une fois leur demande acceptée.",
+      save: "Enregistrer mes informations",
+      saved: "Vos informations sont enregistrées.",
+    },
+    email: {
+      title: "Adresse e-mail",
+      current: "Adresse actuelle",
+      label: "Nouvelle adresse e-mail",
+      hint: "Un lien de confirmation est envoyé à vos deux adresses : le changement prend effet une fois les deux liens ouverts.",
+      submit: "Changer d'adresse e-mail",
+      sent: (email: string) =>
+        `C'est presque fini : ouvrez les liens envoyés à votre adresse actuelle et à ${email} pour confirmer le changement.`,
+      pending: (email: string) =>
+        `Changement en attente vers ${email} : ouvrez les liens reçus par e-mail pour le confirmer.`,
+      confirmed: "C'est noté : votre adresse e-mail est confirmée.",
+      partial:
+        "Premier lien confirmé : ouvrez aussi le lien envoyé à votre autre adresse pour terminer le changement.",
+      same: "C'est déjà l'adresse de votre compte.",
+      taken: "Cette adresse est déjà utilisée par un autre compte.",
+    },
+    password: {
+      title: "Mot de passe",
+      current: "Mot de passe actuel",
+      new: "Nouveau mot de passe",
+      hint: "12 caractères minimum.",
+      submit: "Changer mon mot de passe",
+      wrong: "Mot de passe actuel incorrect.",
+      changed: "Mot de passe modifié. Vos autres appareils devront se reconnecter.",
+      weak: "Ce mot de passe est trop facile à deviner : choisissez-en un autre.",
+      forgot: "Mot de passe oublié ?",
+    },
+    communications: {
+      title: "Communications",
+      marketing: "Recevoir par e-mail les actualités et conseils de MENAO",
+      marketingHint:
+        "Vous pouvez changer d'avis à tout moment. Les e-mails liés à vos demandes et à vos chantiers ne dépendent pas de ce choix.",
+      save: "Enregistrer mes choix",
+      subscribed: "C'est noté : vous recevrez les actualités de MENAO.",
+      unsubscribed: "C'est noté : vous ne recevrez plus les actualités de MENAO.",
+      notifications: "Choisir les e-mails de suivi",
+    },
+    data: {
+      title: "Mes données",
+      intro:
+        "Téléchargez une copie de vos données personnelles, dans un fichier lisible par ordinateur (JSON) : compte, demandes, chantiers, devis, paiements, messages et avis.",
+      download: "Télécharger mes données",
+    },
+    deletion: {
+      title: "Supprimer mon compte",
+      intro:
+        "L'équipe MENAO traite votre demande sous un mois et vous écrit à l'adresse de votre compte. Certains documents liés à vos chantiers, comme les factures, doivent être conservés pendant une durée fixée par la loi.",
+      open: "Demander la suppression de mon compte",
+      message: "Une remarque ?",
+      messageNote: "(facultatif)",
+      confirm: "Je demande la suppression de mon compte MENAO.",
+      submit: "Envoyer ma demande",
+      sent: "Votre demande est enregistrée : l'équipe MENAO vous répond sous un mois.",
+      pending: (date: string) =>
+        `Demande de suppression envoyée le ${date}. L'équipe MENAO vous répond sous un mois à l'adresse de votre compte.`,
+    },
+    security: {
+      title: "Sécurité",
+      signOutAll: "Me déconnecter de tous mes appareils",
+      signOutAllHint:
+        "Utile si vous vous êtes connecté sur un appareil qui n'est pas le vôtre : il faudra vous reconnecter partout, y compris ici.",
+    },
+    errors: {
+      unavailable: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+      rateLimited: "Trop de tentatives en peu de temps. Réessayez dans quelques minutes.",
+    },
   },
   roles: {
     particulier: "Particulier",
@@ -3068,6 +3153,7 @@ export const fr = {
       types: {
         dossier_recherche: "Dossier de recherche",
         contact: "Message de la page Contact",
+        suppression_compte: "Demande de suppression de compte (RGPD, réponse sous un mois)",
         expertise: "Expertise d'un autre corps de métier (signalée par un artisan)",
         reserves: "Levée des réserves non confirmée (30 jours après le signalement)",
         avis: "Avis signalé",

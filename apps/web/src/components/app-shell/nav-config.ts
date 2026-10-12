@@ -10,6 +10,7 @@ import {
   MessageCircle,
   MessagesSquare,
   ReceiptText,
+  Settings,
   ShieldCheck,
   Star,
   UserRound,
@@ -94,6 +95,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       items: [
         { href: "/pro/onboarding", label: fr.pro.space.file, icon: UserRound },
         { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
+        { href: "/compte", label: fr.account.proNav, icon: Settings },
       ],
     },
   ],
@@ -122,10 +124,12 @@ export const NAV: Record<Space, readonly NavSection[]> = {
 /** Liens du menu du compte (en plus de la déconnexion). */
 export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string }[]> = {
   client: [
+    { href: "/compte", label: fr.account.title },
     { href: "/notifications", label: fr.clientApp.notifications },
     { href: "/contact", label: fr.appShell.help },
   ],
   pro: [
+    { href: "/compte", label: fr.account.title },
     { href: "/notifications", label: fr.clientApp.notifications },
     { href: "/contact", label: fr.appShell.help },
   ],
