@@ -17,6 +17,11 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
           <Alert tone="error">{fr.signIn.invalidLink}</Alert>
         </div>
       )}
+      {params.deconnexion === "partout" && (
+        <div className="mb-4">
+          <Alert tone="success">{fr.signIn.signedOutEverywhere}</Alert>
+        </div>
+      )}
       <SignInForm next={next} />
       <div className="mt-6 flex flex-col items-center gap-2 text-center">
         <TextLink href="/connexion/lien-magique">{fr.signIn.magicLinkLink}</TextLink>
