@@ -12,9 +12,9 @@
 
 ## Décision
 - **Site web, tous les espaces** (client, pro, admin) : le même menu latéral que sur ordinateur, ouvert en tiroir par le bouton « Ouvrir le menu » de la barre du haut. Plus d'onglets en bas d'écran.
-- **Accès rapides gardés dans la barre du haut, côté client** :
-  - une icône de recherche mène à « Démarrer un chantier » (`/mon-espace/nouvelle-demande`), à la place de la barre de recherche affichée sur les écrans plus larges ;
-  - l'icône des messages, avec le nombre de messages non lus ;
+- **Accès rapides gardés dans la barre du haut** :
+  - client : une icône de recherche mène à « Démarrer un chantier » (`/mon-espace/nouvelle-demande`), à la place de la barre de recherche affichée sur les écrans plus larges ;
+  - client et pro : l'icône des messages, avec le nombre de messages non lus. Le pro l'obtient en remplacement de son onglet « Messages » ;
   - la cloche et le menu du compte, comme avant.
 - **Téléphones étroits** (moins de 420 px) : la barre du haut affiche le symbole MENAO seul, sans le nom, pour que toutes les icônes tiennent dès 320 px.
 - **Applications natives** : la barre d'onglets de la maquette « Mes chantiers - Mobile » sera celle des applications iOS et Android.

@@ -1485,7 +1485,6 @@ export const fr = {
     home: "MENAO, mes chantiers",
     search: "Décrivez votre besoin de travaux…",
     searchLabel: "Démarrer un chantier : décrivez votre besoin",
-    messages: (n: number) => (n === 0 ? "Messages" : `Messages : ${n} non lu${n > 1 ? "s" : ""}`),
     account: "Mon compte",
     chantiers: "Mes chantiers",
     documents: "Mes documents",
@@ -1500,6 +1499,7 @@ export const fr = {
     expand: "Déplier le menu",
     openMenu: "Ouvrir le menu",
     closeMenu: "Fermer le menu",
+    messages: (n: number) => (n === 0 ? "Messages" : `Messages : ${n} non lu${n > 1 ? "s" : ""}`),
     spaces: { client: "Espace client", pro: "Espace pro", admin: "Back-office" },
     nav: {
       client: "Navigation de mon espace",

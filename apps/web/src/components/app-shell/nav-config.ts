@@ -45,6 +45,12 @@ export const SPACE_HOME: Record<Space, string> = {
   admin: "/admin/artisans",
 };
 
+/** Messages, accessibles depuis la barre du haut sur mobile (ADR 0043). */
+export const SPACE_MESSAGES: Partial<Record<Space, string>> = {
+  client: "/mon-espace/messages",
+  pro: "/pro/messages",
+};
+
 /**
  * Rubriques de chaque espace (ADR 0035), dans l'ordre d'usage. Les notifications passent par la
  * cloche de la barre du haut et par le menu du compte.

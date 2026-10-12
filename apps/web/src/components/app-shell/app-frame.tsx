@@ -14,6 +14,7 @@ import {
   ACCOUNT_LINKS,
   MENU_COOKIE,
   SPACE_HOME,
+  SPACE_MESSAGES,
   activeItem,
   type Badges,
   type Space,
@@ -25,9 +26,9 @@ const t = fr.appShell;
 /**
  * Coque des espaces client, pro et admin (ADR 0035). Ordinateur : menu latéral fixe, repliable
  * en barre d'icônes (choix mémorisé), et barre du haut (rubrique, recherche, cloche). Mobile :
- * barre du haut et le même menu latéral, en tiroir ; pas d'onglets en bas d'écran, réservés aux
- * applications iOS et Android (ADR 0043). Le contenu n'est pas enveloppé dans <main> : chaque
- * page porte le sien.
+ * barre du haut (messages, cloche, compte) et le même menu latéral, en tiroir ; pas d'onglets en
+ * bas d'écran, réservés aux applications iOS et Android (ADR 0043). Le contenu n'est pas enveloppé
+ * dans <main> : chaque page porte le sien.
  */
 export function AppFrame({
   space,
@@ -52,6 +53,7 @@ export function AppFrame({
   const drawer = useRef<HTMLDialogElement>(null);
   const current = activeItem(space, pathname);
   const CurrentIcon = current?.icon;
+  const messagesHref = SPACE_MESSAGES[space];
 
   useEffect(() => {
     const dialog = drawer.current;
@@ -153,10 +155,10 @@ export function AppFrame({
                 <Search aria-hidden="true" className="size-5" />
               </Link>
             )}
-            {space === "client" && (
+            {messagesHref && (
               <Link
-                href="/mon-espace/messages"
-                aria-label={fr.clientApp.messages(badges.messages ?? 0)}
+                href={messagesHref as Route}
+                aria-label={t.messages(badges.messages ?? 0)}
                 className="relative inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
               >
                 <MessageCircle aria-hidden="true" className="size-5" />
