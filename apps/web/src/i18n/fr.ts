@@ -745,6 +745,9 @@ export const fr = {
       failed: "La transcription a échoué. Réessayez ou saisissez votre projet au clavier.",
       rate_limited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
       limit: "Dictée limitée à 2 minutes.",
+      quiet: "On ne vous entend pas…",
+      silent:
+        "Aucun son capté : vérifiez que votre micro n'est pas coupé et qu'il est bien choisi dans votre navigateur, puis réessayez.",
     },
     photos: {
       add: "Ajouter des photos",
@@ -2332,6 +2335,10 @@ export const fr = {
         failed: "La transcription a échoué. Réessayez ou écrivez le texte.",
         limit: "Dictée limitée à 2 minutes.",
         rateLimited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
+        quiet:
+          "On ne vous entend pas : rapprochez-vous du micro ou vérifiez qu'il n'est pas coupé.",
+        silent:
+          "Aucun son capté : vérifiez que votre micro n'est pas coupé et qu'il est bien choisi dans votre navigateur, puis réessayez.",
         empty:
           "Aucune ligne n'a pu être tirée de la dictée. Citez les fournitures, les quantités et les prix.",
         unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
