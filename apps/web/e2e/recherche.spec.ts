@@ -134,9 +134,35 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await expect(page.getByText("Nous n'avons pas pu analyser votre description")).toBeVisible();
   // Le métier choisi avec les puces est conservé.
+  const trade = page.getByRole("region", { name: "Artisan recherché" }).getByLabel("Métier");
+  await expect(trade).toHaveValue("plombier");
+
+  // Description modifiée (ADR 0044) : la nouvelle analyse complète les critères encore vides,
+  // sans remplacer le métier déjà choisi.
+  const text = page.getByRole("region", { name: "Votre description" });
+  await expect(text.getByText("Panne de chaudière.")).toBeVisible();
+  await text.getByRole("button", { name: "Modifier : Votre description" }).click();
+  await text
+    .getByLabel("Description de votre projet")
+    .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice.");
+  await text.getByRole("button", { name: "Enregistrer" }).click();
   await expect(
-    page.getByRole("region", { name: "Artisan recherché" }).getByLabel("Métier"),
-  ).toHaveValue("plombier");
+    page.getByText(
+      "Description enregistrée. Critères complétés : Informations sur le chantier, Adresse, Date de début souhaitée.",
+    ),
+  ).toBeVisible({ timeout: 30_000 });
+  await expect(text.getByText("Fuite sous l'évier de la cuisine")).toBeVisible();
+  await expect(trade).toHaveValue("plombier");
+  await expect(
+    page
+      .getByRole("region", { name: "Informations sur le chantier" })
+      .getByText("Recherche et réparation de fuite", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Adresse" }).getByText("Nice (06000)"),
+  ).toBeVisible();
+  await expect(page.getByText("Nous n'avons pas pu analyser votre description")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Trouver l'artisan idéal" })).toBeEnabled();
 });
 
 test("une session anonyme n'ouvre pas l'espace client", async ({ page }) => {

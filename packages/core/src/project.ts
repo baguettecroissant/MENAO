@@ -188,3 +188,87 @@ export function normalizeNeedAnalysis(
 export function analysisNeedsFallback(c: NeedCriteria): boolean {
   return c.tradeCode === null || c.confiance < AI_CONFIDENCE_THRESHOLD;
 }
+
+// ---------------------------------------------------------------------------
+// Description modifiée à l'étape des critères (F-07)
+// ---------------------------------------------------------------------------
+
+/** Critères enregistrés d'un projet, que la nouvelle analyse peut compléter. */
+export type ProjectCriteriaState = {
+  tradeCode: string | null;
+  lieuType: LieuType | null;
+  roomCodes: string[];
+  workTypeCodes: string[];
+  surface: SurfaceTranche | null;
+  villeCodeInsee: string | null;
+  adresse: string | null;
+  dateMode: DateSouhaitMode;
+  dateSouhaitee: string | null;
+};
+
+/** Cartes de la vérification des critères (F-07) complétées par la nouvelle analyse. */
+export type CompletedSection = "trade" | "site" | "address" | "date";
+
+export type CriteriaCompletion = Omit<ProjectCriteriaState, "villeCodeInsee" | "adresse"> & {
+  /** Reprendre la ville analysée : aucune ville n'était choisie. */
+  takeVille: boolean;
+  /** Reprendre l'adresse analysée : aucune adresse n'était choisie, et elle est dans la ville. */
+  takeAdresse: boolean;
+  completed: CompletedSection[];
+};
+
+/**
+ * Le particulier modifie sa description à l'étape des critères (ADR 0044) : la nouvelle analyse
+ * complète les critères encore vides et ne remplace jamais un choix déjà fait. Les travaux ne
+ * sont repris que s'ils relèvent du métier retenu. `place` : ville analysée (code INSEE) et
+ * adresse analysée, une fois géocodées dans cette ville ; null si introuvables.
+ */
+export function completeCriteria(
+  current: ProjectCriteriaState,
+  analysed: NeedCriteria,
+  place: { villeCode: string | null; adresse: string | null },
+): CriteriaCompletion {
+  const tradeCode = current.tradeCode ?? analysed.tradeCode;
+  const lieuType = current.lieuType ?? analysed.lieuType;
+  const roomCodes = current.roomCodes.length ? current.roomCodes : analysed.roomCodes;
+  const workTypeCodes = current.workTypeCodes.length
+    ? current.workTypeCodes
+    : analysed.tradeCode === tradeCode
+      ? analysed.workTypeCodes
+      : [];
+  const surface = current.surface ?? analysed.surface;
+  const takeVille = current.villeCodeInsee === null && place.villeCode !== null;
+  const villeCode = takeVille ? place.villeCode : current.villeCodeInsee;
+  const takeAdresse =
+    current.adresse === null &&
+    place.adresse !== null &&
+    place.villeCode !== null &&
+    place.villeCode === villeCode;
+  const takeDate = current.dateMode === "inconnue" && analysed.dateMode !== "inconnue";
+
+  const completed: CompletedSection[] = [];
+  if (current.tradeCode === null && tradeCode !== null) completed.push("trade");
+  if (
+    (current.lieuType === null && lieuType !== null) ||
+    (!current.roomCodes.length && roomCodes.length > 0) ||
+    (!current.workTypeCodes.length && workTypeCodes.length > 0) ||
+    (current.surface === null && surface !== null)
+  ) {
+    completed.push("site");
+  }
+  if (takeVille || takeAdresse) completed.push("address");
+  if (takeDate) completed.push("date");
+
+  return {
+    tradeCode,
+    lieuType,
+    roomCodes,
+    workTypeCodes,
+    surface,
+    dateMode: takeDate ? analysed.dateMode : current.dateMode,
+    dateSouhaitee: takeDate ? analysed.dateSouhaitee : current.dateSouhaitee,
+    takeVille,
+    takeAdresse,
+    completed,
+  };
+}

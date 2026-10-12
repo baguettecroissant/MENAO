@@ -696,8 +696,12 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   const rehireProjectId = new URL(page.url()).pathname.split("/").pop() ?? "";
-  // Critères et artisans gardent le menu latéral : le client reste dans son espace.
+  // Critères et artisans gardent le menu latéral : le client reste dans son espace, retour compris.
   await expect(clientNav).toBeVisible();
+  await expect(page.getByRole("link", { name: "Retour", exact: true })).toHaveAttribute(
+    "href",
+    "/mon-espace/nouvelle-demande",
+  );
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
   await expect(clientNav).toBeVisible();

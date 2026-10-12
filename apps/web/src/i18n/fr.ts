@@ -773,6 +773,20 @@ export const fr = {
       lowConfidence:
         "Vérifiez bien ces critères : votre description laissait plusieurs interprétations possibles.",
       yourText: "Votre description",
+      text: {
+        description: "Ce que vous avez écrit ou dicté : l'artisan le lira avec votre demande.",
+        label: "Description de votre projet",
+        help: "En enregistrant, nous complétons les critères encore vides à partir de votre texte. Les choix déjà faits ne sont jamais remplacés.",
+        analyzing: "Analyse en cours…",
+        more: "Lire la suite",
+        less: "Réduire",
+        saved: "Description enregistrée.",
+        completed: (sections: string) =>
+          `Description enregistrée. Critères complétés : ${sections}.`,
+        notAnalysed:
+          "Description enregistrée. Nous n'avons pas pu l'analyser : vérifiez les critères ci-dessous.",
+        locked: "Cette demande a déjà été envoyée : sa description ne peut plus être modifiée.",
+      },
       edit: "Modifier",
       editLabel: (section: string) => `Modifier : ${section}`,
       cancel: "Annuler",
