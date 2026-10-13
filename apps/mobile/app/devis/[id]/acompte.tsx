@@ -27,7 +27,7 @@ const STEPS = [
 export default function DepositScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuote(id), [id]);
-  const quote = useFocusData(load);
+  const [quote] = useFocusData(load);
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 

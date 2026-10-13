@@ -11,9 +11,9 @@ import {
   type QuotePdfData,
 } from "@menao/documents";
 import type { Database } from "@menao/db";
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import { fr } from "@/i18n/fr";
 import { env } from "./env";
+import { functionError, sqlError, type Opened } from "./functions";
 import { supabase } from "./supabase";
 
 type Tables = Database["public"]["Tables"];
@@ -99,15 +99,6 @@ export async function loadQuote(id: string): Promise<ClientQuote | null> {
   };
 }
 
-/** Message d'une fonction refusée pour une règle métier (409), sinon le message proposé. */
-async function functionError(error: unknown, fallback: string): Promise<string> {
-  if (!(error instanceof FunctionsHttpError) || error.context.status !== 409) return fallback;
-  const body = (await error.context.json().catch(() => null)) as { message?: string } | null;
-  return body?.message ?? fallback;
-}
-
-export type Opened = { url: string } | { error: string };
-
 /**
  * F-13 « Signer le devis » : cases cochées (horodatées en base avec les versions des conditions),
  * puis signature chez le prestataire, avec retour dans l'application (ADR 0060).
@@ -152,10 +143,6 @@ export async function startDepositPayment(quoteId: string): Promise<Opened> {
   }
   return { url: data.url };
 }
-
-/** Erreur SQL : message des règles métier (code 22023), sinon message générique. */
-const sqlError = (error: { code?: string; message: string }) =>
-  error.code === "22023" ? error.message : fr.errors.generic;
 
 /** F-21 : refus du devis (motif de la liste, message facultatif pour l'artisan). */
 export async function refuseQuote(

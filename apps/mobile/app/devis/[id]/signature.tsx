@@ -31,7 +31,7 @@ const STEPS = [
 export default function QuoteSignatureScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuote(id), [id]);
-  const quote = useFocusData(load);
+  const [quote] = useFocusData(load);
   const [checked, setChecked] = useState<Partial<Record<SignatureConsent, boolean>>>({});
   const [errors, setErrors] = useState<Partial<Record<SignatureConsent, string>>>({});
   const [failure, setFailure] = useState<string | null>(null);

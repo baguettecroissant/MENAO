@@ -42,7 +42,7 @@ export default function QuoteScreen() {
         (retour === "paiement" && depositDue(q))),
     [retour],
   );
-  const quote = useFocusData(load, waiting);
+  const [quote] = useFocusData(load, waiting);
   const [pdfFailed, setPdfFailed] = useState(false);
   const [downloading, setDownloading] = useState<PdfTarget | null>(null);
 

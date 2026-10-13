@@ -1,9 +1,11 @@
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { money } from "../src/format.ts";
+import type { QuoteDocument } from "../src/quote-data.ts";
 import {
   receptionPdfData,
   receptionPdfFilename,
+  receptionPreviewData,
   type ReceptionDocument,
 } from "../src/reception-data.ts";
 import { receptionDocumentModel } from "../src/reception-model.ts";
@@ -133,5 +135,59 @@ describe("procès-verbal de réception (F-25, F-26)", () => {
     const bytes = await renderReceptionPdf(receptionPdfData(doc, true), { logo: PNG_LOGO });
     expect(await drawnImages(bytes)).toEqual([{ width: 60, height: 24 }]);
     expect(await drawnImages(await renderReceptionPdf(receptionPdfData(doc)))).toEqual([]);
+  });
+});
+
+describe("aperçu du PV avant la signature (site et application)", () => {
+  // Devis signé de 330 € TTC, échéancier 30 % / 70 %.
+  const quote: QuoteDocument = {
+    quote: {
+      id: "a8000000-0000-4000-8000-000000000002",
+      artisan_id: "ad400000-0000-4000-8000-000000000001",
+      status: "signe",
+      numero: "DEVIS-2026-0001",
+      version: 1,
+      issued_on: "2026-10-10",
+      total_ht_cents: 30000,
+      total_tva_cents: 3000,
+      total_ttc_cents: 33000,
+      vat_breakdown: [{ rateBp: 1000, baseHtCents: 30000, tvaCents: 3000 }],
+      signed_at: "2026-10-12T08:00:00Z",
+    },
+    lines: [],
+    issuer: doc.issuer,
+    client: doc.client,
+    chantier: doc.chantier,
+    terms: {
+      valid_until: "2026-11-09",
+      start_date: "2026-10-15",
+      duration_days: 2,
+      schedule: [
+        { percent: 30, trigger: "signature", amount_cents: 9900 },
+        { percent: 70, trigger: "reception", amount_cents: 23100 },
+      ],
+    },
+  };
+
+  it("mêmes données que le PV signé, sans numéro ni réserves", () => {
+    const preview = receptionPreviewData(quote, {
+      today: "2026-10-20",
+      finishedOn: "2026-10-19",
+      signedOn: "2026-10-12",
+      paidCents: 9900,
+    });
+    expect(preview).toEqual({ ...receptionPdfData(doc), numero: "", preview: true });
+  });
+
+  it("solde calculé : total TTC moins les acomptes payés", () => {
+    const model = receptionDocumentModel(
+      receptionPreviewData(quote, {
+        today: "2026-10-20",
+        finishedOn: null,
+        signedOn: null,
+        paidCents: 9900,
+      }),
+    );
+    expect(model.financial.at(-1)?.[1]).toBe(money(23100));
   });
 });

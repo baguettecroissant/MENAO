@@ -6,10 +6,14 @@ const RETRY_DELAYS_MS = [1500, 3000, 5000, 8000];
 
 /**
  * Données d'un écran, rechargées à chaque retour sur l'écran (undefined pendant le premier
- * chargement). Tant que `waiting` répond vrai (paiement ou signature en cours d'enregistrement),
- * le chargement est relancé quelques fois. `load` et `waiting` doivent être stables (useCallback).
+ * chargement), et fonction pour les recharger après une action. Tant que `waiting` répond vrai
+ * (paiement ou signature en cours d'enregistrement), le chargement est relancé quelques fois.
+ * `load` et `waiting` doivent être stables (useCallback).
  */
-export function useFocusData<T>(load: () => Promise<T>, waiting?: (value: T) => boolean) {
+export function useFocusData<T>(
+  load: () => Promise<T>,
+  waiting?: (value: T) => boolean,
+): readonly [T | undefined, () => void] {
   const [data, setData] = useState<T | undefined>(undefined);
   useFocusEffect(
     useCallback(() => {
@@ -32,5 +36,8 @@ export function useFocusData<T>(load: () => Promise<T>, waiting?: (value: T) => 
       };
     }, [load, waiting]),
   );
-  return data;
+  const reload = useCallback(() => {
+    load().then(setData);
+  }, [load]);
+  return [data, reload] as const;
 }

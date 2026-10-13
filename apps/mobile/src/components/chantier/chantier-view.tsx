@@ -4,7 +4,7 @@ import {
   paymentProgress,
   type ChantierStatus,
 } from "@menao/core";
-import { FileText, MapPin } from "lucide-react-native";
+import { CircleCheck, FileText, MapPin } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -24,6 +24,7 @@ import {
   PersonRow,
   StatusPill,
 } from "./parts";
+import { ReceptionBlocks } from "./reception-blocks";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail, ChantierDocument } from "@/lib/chantiers";
@@ -44,14 +45,19 @@ const STARTED: readonly ChantierStatus[] = [
 
 /**
  * Vue d'un chantier côté client (F-12, maquette « Vue d'un chantier ») : avancement, artisan,
- * action attendue ou prochaine intervention, puis « Suivi » (journal de l'artisan) et « Dossier »
- * (échéancier toujours calculé, documents).
+ * action attendue ou prochaine intervention, fin de chantier (réception, réserves), puis « Suivi »
+ * (journal de l'artisan) et « Dossier » (échéancier toujours calculé, documents). `retour` : fin de
+ * la signature du PV ou du paiement du solde ; `onChanged` recharge le chantier après une action.
  */
 export function ChantierView({
   detail,
+  retour,
+  onChanged,
   initialTab = "suivi",
 }: {
   detail: ChantierDetail;
+  retour?: string;
+  onChanged: () => void;
   initialTab?: "suivi" | "dossier";
 }) {
   const [tab, setTab] = useState(initialTab);
@@ -81,6 +87,12 @@ export function ChantierView({
       {step !== null && (
         <Card>
           <ChantierStepper current={step} />
+          {status === "cloture" && c.closed_at ? (
+            <View style={styles.row}>
+              <CircleCheck size={16} color={colors.success} />
+              <Text style={styles.meta}>{t.reception.closed(formatDateNumeric(c.closed_at))}</Text>
+            </View>
+          ) : null}
         </Card>
       )}
       <Card>
@@ -100,6 +112,12 @@ export function ChantierView({
       ) : next ? (
         <NextInterventionCard next={next} />
       ) : null}
+      <ReceptionBlocks
+        detail={detail}
+        retour={retour}
+        balanceCents={progress?.remainingCents ?? 0}
+        onChanged={onChanged}
+      />
 
       <View style={styles.tabs}>
         <Chip label={t.tabs.suivi} selected={tab === "suivi"} onPress={() => setTab("suivi")} />
@@ -191,12 +209,18 @@ function DocumentRow({ document: d }: { document: ChantierDocument }) {
       ? d.signed
         ? t.dossier.signedQuote
         : t.dossier.quote
-      : t.dossier.invoice[d.kind];
+      : d.kind === "pv"
+        ? t.reception.pvDocument
+        : t.dossier.invoice[d.kind];
   async function open() {
     setFailed(false);
     setDownloading(true);
     const ok = await sharePdf(
-      d.kind === "devis" ? { quoteId: d.id } : { invoiceId: d.id },
+      d.kind === "devis"
+        ? { quoteId: d.id }
+        : d.kind === "pv"
+          ? { receptionId: d.id }
+          : { invoiceId: d.id },
       d.numero,
     );
     setDownloading(false);

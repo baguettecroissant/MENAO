@@ -448,10 +448,89 @@ export const fr = {
       payText: "Effectuez le paiement pour démarrer le chantier",
       payBalanceText: "Réglez le solde pour clôturer votre chantier",
       pay: "Payer maintenant",
-      // Provisoire : le paiement du solde arrive dans l'application (lot 6b, partie 5b).
-      onSite: "S'ouvre sur le site MENAO, avec votre compte.",
+    },
+    reception: {
+      title: "Les travaux sont terminés",
+      text: (artisan: string) =>
+        `${artisan} a terminé les travaux. Vérifiez-les, puis validez la réception ou ajoutez des réserves.`,
+      validate: "Valider la réception du chantier",
+      addReserves: "Ajouter des réserves sur ce chantier",
+      processing:
+        "Signature reçue : son enregistrement est en cours. Elle apparaîtra ici dans quelques instants.",
+      yourReserves: "Vos réserves",
+      reservesNext: "Le paiement du solde vous sera demandé une fois les réserves levées.",
+      received: (date: string) =>
+        `Réception validée le ${date}. Prochaine étape : le paiement du solde.`,
+      pvDocument: "PV de réception",
+      liftSignaled: (artisan: string, date: string) =>
+        `${artisan} a signalé la levée des réserves le ${date} : vérifiez les reprises, puis confirmez.`,
+      confirmLift: "Confirmer la levée des réserves",
+      perfectTitle: "Le chantier est-il parfait ?",
+      perfectText: (balance: string) =>
+        `En confirmant la levée des réserves, vous validez la fin définitive de vos travaux. Le solde de ${balance} vous sera ensuite demandé.`,
+      cancel: "Retour",
+      balanceProcessing:
+        "Paiement reçu : sa confirmation est en cours. Il apparaîtra ici dans quelques instants.",
+      closed: (date: string) => `Vous avez finalisé le paiement de ce chantier le ${date}`,
     },
     notFound: "Ce chantier est introuvable.",
+  },
+  /** Réception des travaux (F-25, F-26) : réserves, PV signé chez DocuSeal. */
+  reception: {
+    title: "Réception des travaux",
+    steps: {
+      reserves: "Ajout des réserves",
+      pv: "Signature du PV",
+      solde: "Paiement du solde",
+    },
+    conformTitle: "Tout est conforme ?",
+    conformText: (artisan: string) =>
+      `En validant la réception, vous confirmez que les travaux de ${artisan} sont terminés et ne présentent aucune malfaçon visible.`,
+    important: "Information importante :",
+    conformNext: (balance: string) =>
+      `vous allez signer le procès-verbal de réception. Le solde de ${balance} vous sera demandé ensuite.`,
+    reservesTitle: "Ajouter des réserves",
+    reservesQuestion: "Un détail vous semble incomplet ou une finition nécessite une retouche ?",
+    reservesHelp: (artisan: string) =>
+      `Décrivez ici les points que ${artisan} doit corriger pour finaliser votre projet. Ces réserves seront inscrites sur votre PV de réception et ${artisan} en sera immédiatement informé.`,
+    reservesLabel: "Vos réserves",
+    reservesPlaceholder:
+      "Ex. : peinture à retoucher sur la plinthe, prise de courant mal fixée, nettoyage de fin de chantier à compléter…",
+    continue: "Continuer",
+    editReserves: "Modifier mes réserves",
+    pvTitle: "Signature du PV de réception",
+    pvIntro:
+      "Relisez attentivement le procès-verbal de réception pour vous assurer que tout est conforme, puis cochez les cases : vous signerez chez notre prestataire de signature électronique, DocuSeal.",
+    pvLabel: "Aperçu du procès-verbal de réception",
+    numberPending: "Numéro attribué à la signature",
+    consents: {
+      document: "J'ai lu et j'accepte le procès-verbal de réception.",
+      cgu_prestataire:
+        "J'accepte les conditions d'utilisation de DocuSeal, prestataire de signature électronique.",
+      cgu_menao:
+        "J'accepte les conditions générales d'utilisation et la politique de confidentialité de MENAO.",
+      echeancier: (balance: string) =>
+        `Je prends note que le solde restant à payer s'élève à ${balance}, selon l'échéancier du devis signé.`,
+    },
+    otp: "Un code à usage unique vous sera demandé pour confirmer votre identité.",
+    submit: "Signer le PV de réception",
+    unavailable:
+      "La signature électronique est momentanément indisponible. Réessayez dans un instant.",
+    balanceNext: "Le paiement du solde vous sera proposé après la signature.",
+  },
+  /** Paiement du solde (F-32), directement à l'entreprise de l'artisan. */
+  balance: {
+    title: "Paiement du solde",
+    intro:
+      "Réglez le solde de votre chantier. Le paiement est fait directement à l'entreprise de l'artisan, par Stripe.",
+    paid: "Montant déjà payé",
+    today: "Montant à payer aujourd'hui",
+    total: "Total du chantier",
+    beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+    direct: "Le solde est versé directement à l'entreprise, dès la réception de votre paiement.",
+    submit: (amount: string) => `Payer ${amount}`,
+    unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
+    inProgress: "Votre paiement du solde est en cours de confirmation.",
   },
   /** Devis reçu (F-21), signature (F-13) et acompte (F-31) : mêmes textes que le site. */
   quote: {
