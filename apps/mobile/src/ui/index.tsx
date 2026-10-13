@@ -10,7 +10,7 @@ import {
   View,
   type TextInputProps,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "./theme";
 
 const { colors, radius, font, spacing } = theme;
@@ -26,11 +26,15 @@ export function Screen({
   children,
   centered = false,
   header,
+  footer,
 }: {
   children: ReactNode;
   centered?: boolean;
   header?: ReactNode;
+  /** Bas d'écran fixe (bouton d'action principal), au-dessus de la marge du bas du téléphone. */
+  footer?: ReactNode;
 }) {
+  const insets = useSafeAreaInsets();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       {header ? <View style={styles.header}>{header}</View> : null}
@@ -40,6 +44,9 @@ export function Screen({
       >
         {children}
       </ScrollView>
+      {footer ? (
+        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing(3) }]}>{footer}</View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -298,6 +305,14 @@ export function LinkText({ label, onPress }: { label: string; onPress: () => voi
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
+  footer: {
+    gap: spacing(2),
+    paddingHorizontal: spacing(5),
+    paddingTop: spacing(3),
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
   screen: { flexGrow: 1, padding: spacing(5), gap: spacing(4) },
   centered: { justifyContent: "center" },
   title: { fontFamily: font.medium, fontSize: 26, lineHeight: 32, color: colors.foreground },

@@ -10,6 +10,17 @@ export const isConfigured = Boolean(env.supabaseUrl && env.supabaseKey);
 /** Lien des e-mails d'authentification, ouvert sur le site (même forme que le site : `?next=`). */
 const confirmUrl = (next: string) => `${env.siteUrl}/auth/confirm?next=${encodeURIComponent(next)}`;
 
+/**
+ * Lien de confirmation d'une inscription faite au moment de la demande (F-08) : il ouvre la page
+ * d'envoi du site, qui rattache le projet au compte grâce au jeton (mêmes paramètres que le site).
+ */
+export function requestConfirmUrl(projectId: string, artisanIds: string[], token: string): string {
+  const params = new URLSearchParams();
+  for (const id of artisanIds) params.append("artisan", id);
+  params.set("transfert", token);
+  return confirmUrl(`/recherche/${projectId}/envoyer?${params}`);
+}
+
 /** Pages du site ouvertes depuis l'application. */
 export const siteLinks = {
   terms: `${env.siteUrl}/cgu`,
