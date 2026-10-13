@@ -1,6 +1,8 @@
 import {
+  CLIENT_CANCELLABLE_STATUSES,
   chantierStepIndex,
   nextIntervention,
+  parisToday,
   paymentProgress,
   type ChantierStatus,
 } from "@menao/core";
@@ -26,15 +28,18 @@ import {
   StatusPill,
 } from "./parts";
 import { ReceptionBlocks } from "./reception-blocks";
+import { WarrantyCard } from "./warranty-card";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail, ChantierDocument } from "@/lib/chantiers";
 import { formatAgo, formatCents, formatDateNumeric } from "@/lib/format";
 import { sharePdf } from "@/lib/pdf";
-import { Body, Card, Chip, Notice, Screen, Title } from "@/ui";
+import { Body, Card, Chip, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.chantier;
+/** Annulation possible par le client : avant tout devis signé (F-12). */
+const CANCELLABLE: readonly ChantierStatus[] = CLIENT_CANCELLABLE_STATUSES;
 const { colors, font, radius, spacing } = theme;
 const STARTED: readonly ChantierStatus[] = [
   "en_cours",
@@ -120,6 +125,19 @@ export function ChantierView({
         balanceCents={progress?.remainingCents ?? 0}
         onChanged={onChanged}
       />
+      {status === "en_litige" || detail.openTicketId ? (
+        <View style={styles.dispute}>
+          <Notice tone="info">
+            {status === "en_litige" ? fr.dispute.ongoing : fr.dispute.pending}
+          </Notice>
+          {detail.openTicketId ? (
+            <LinkText
+              label={fr.dispute.follow}
+              onPress={() => router.push(`/signalement/${detail.openTicketId}`)}
+            />
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.tabs}>
         <Chip label={t.tabs.suivi} selected={tab === "suivi"} onPress={() => setTab("suivi")} />
@@ -196,8 +214,37 @@ export function ChantierView({
               </>
             )}
           </Card>
+          {c.received_at ? (
+            <WarrantyCard
+              receivedOn={parisToday(new Date(c.received_at))}
+              insurer={detail.insurer}
+            />
+          ) : null}
         </>
       )}
+      <View style={styles.footerLinks}>
+        <Pressable
+          role="link"
+          hitSlop={8}
+          onPress={() => router.push(`/chantier/${c.chantier_id}/signaler`)}
+        >
+          <Text style={styles.dangerLink}>{t.report}</Text>
+        </Pressable>
+        {CANCELLABLE.includes(status) ? (
+          <Pressable
+            role="link"
+            hitSlop={8}
+            onPress={() =>
+              router.push({
+                pathname: "/chantier/[id]/annuler",
+                params: { id: c.chantier_id, artisan: c.artisan_name },
+              })
+            }
+          >
+            <Text style={styles.dangerLink}>{fr.clientCancel.chantier.open}</Text>
+          </Pressable>
+        ) : null}
+      </View>
     </Screen>
   );
 }
@@ -283,6 +330,9 @@ const styles = StyleSheet.create({
     color: colors["muted-foreground"],
   },
   tabs: { flexDirection: "row", gap: spacing(2) },
+  dispute: { gap: spacing(2) },
+  footerLinks: { alignItems: "center", gap: spacing(4), paddingVertical: spacing(2) },
+  dangerLink: { fontFamily: font.medium, fontSize: 14, color: colors.danger },
   heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
   photos: { gap: spacing(3) },
   photo: {

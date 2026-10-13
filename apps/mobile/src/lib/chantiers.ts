@@ -1,4 +1,4 @@
-import { journalSummary, type JournalSummary } from "@menao/core";
+import { decennaleInsurer, journalSummary, type JournalSummary } from "@menao/core";
 import type { Database } from "@menao/db";
 import { fr } from "@/i18n/fr";
 import { publicUrl } from "./project";
@@ -124,6 +124,10 @@ export type ChantierDetail = {
   payments: { status: Database["public"]["Enums"]["payment_status"]; amountCents: number }[];
   documents: ChantierDocument[];
   reception: ChantierReception | null;
+  /** Signalement encore ouvert sur ce chantier (F-42). */
+  openTicketId: string | null;
+  /** Assureur décennal repris du devis figé (garanties après la réception). */
+  insurer: { name: string; policy: string | null } | null;
 };
 
 /** Vue d'un chantier (F-12) : avancement, journal de l'artisan, paiements, documents et PV. */
@@ -137,6 +141,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
     { data: payments },
     { data: invoices },
     { data: reception },
+    { data: openTicket },
   ] = await Promise.all([
     supabase
       .from("chantier_updates")
@@ -144,7 +149,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       .eq("chantier_id", id),
     supabase
       .from("quotes")
-      .select("id, status, numero, signed_at, sent_at")
+      .select("id, status, numero, signed_at, sent_at, decennale:document->issuer->decennale")
       .eq("chantier_id", id)
       .neq("status", "brouillon")
       .order("version", { ascending: false })
@@ -159,6 +164,13 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       .from("receptions")
       .select("id, numero, status, reserves, signed_at, lift_signaled_at, lift_message")
       .eq("chantier_id", id)
+      .maybeSingle(),
+    supabase
+      .from("tickets")
+      .select("id")
+      .eq("chantier_id", id)
+      .eq("type", "litige")
+      .neq("status", "resolu")
       .maybeSingle(),
   ]);
   const journal = journalSummary(
@@ -228,7 +240,24 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
           liftMessage: reception.lift_message,
         }
       : null,
+    openTicketId: openTicket?.id ?? null,
+    insurer: decennaleInsurer(quote?.decennale),
   };
+}
+
+/** Annulation du chantier par le client (F-12), avant tout devis signé : motif, mot facultatif. */
+export async function cancelChantier(
+  chantierId: string,
+  reason: CancelReason,
+  comment: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("particulier_cancel_chantier", {
+    p_chantier_id: chantierId,
+    p_reason: reason,
+    ...(comment.trim() ? { p_comment: comment.trim().slice(0, 500) } : {}),
+  });
+  if (!error) return null;
+  return error.code === "22023" ? error.message : fr.errors.generic;
 }
 
 /** Annulation d'une demande par le client (F-11), avec un motif ; l'artisan est prévenu. */

@@ -12,6 +12,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath(`/mon-espace/messages/${ID}`)).toBe(`/conversation/${ID}`);
     expect(appRouteForSitePath("/mon-espace")).toBe("/chantiers");
     expect(appRouteForSitePath("/notifications")).toBe("/notifications");
+    expect(appRouteForSitePath(`/signalements/${ID}`)).toBe(`/signalement/${ID}`);
   });
 
   it("ignore les paramètres et la barre finale", () => {
@@ -21,7 +22,6 @@ describe("liens des notifications vers les écrans de l'application", () => {
 
   it("laisse sur le site les pages sans écran dans l'application", () => {
     expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/avis`)).toBeNull();
-    expect(appRouteForSitePath(`/signalements/${ID}`)).toBeNull();
     expect(appRouteForSitePath("/pro/demandes")).toBeNull();
     expect(appRouteForSitePath("/mon-espace/chantiers/pas-un-identifiant")).toBeNull();
   });

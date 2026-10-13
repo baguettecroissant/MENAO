@@ -13,6 +13,7 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/mon-espace\/messages$/, () => "/messages"],
   [new RegExp(`^/mon-espace/messages/${UUID}$`), (id) => `/conversation/${id}`],
   [/^\/notifications$/, () => "/notifications"],
+  [new RegExp(`^/signalements/${UUID}$`), (id) => `/signalement/${id}`],
 ];
 
 /**
