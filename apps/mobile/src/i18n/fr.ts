@@ -810,6 +810,101 @@ export const fr = {
     save: "Enregistrer mes préférences",
     saved: "Préférences enregistrées.",
   },
+  /** Tableau de bord de l'artisan (F-16) : mêmes textes que l'espace pro du site. */
+  proDashboard: {
+    greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
+    error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
+    suspended: "Votre compte est suspendu. Contactez l'équipe MENAO.",
+    awaitingQuote: "En attente de devis",
+    clients: (n: number) => (n <= 1 ? `${n} client` : `${n} clients`),
+    revenue: "Encaissé ce mois",
+    trend: {
+      hausse: (percent: number, month: string) =>
+        `+${percent}\u00a0% par rapport à la même période en ${month}`,
+      baisse: (percent: number, month: string) =>
+        `−${percent}\u00a0% par rapport à la même période en ${month}`,
+      stable: (month: string) => `Stable par rapport à la même période en ${month}`,
+      nouveau: (amount: string, month: string) =>
+        `+${amount} par rapport à la même période en ${month}`,
+    },
+    responseTime: "Temps de réponse",
+    responseDetail: (n: number) =>
+      n === 1 ? "Sur 1 demande, 6 derniers mois" : `Moyenne sur ${n} demandes, 6 derniers mois`,
+    noResponse: "Pas encore de réponse sur 6 mois",
+    upcoming: "À venir",
+    noUpcoming: "Aucune visite ni aucun démarrage de chantier à venir.",
+    kinds: { visite: "Visite", demarrage: "Démarrage du chantier" },
+    latestRequests: "Dernières demandes de devis",
+    noRequests: "Aucune nouvelle demande pour le moment.",
+    allRequests: "Toutes mes demandes",
+  },
+  /** Demandes reçues par l'artisan (F-16, F-17) : mêmes textes que l'espace pro du site. */
+  proRequests: {
+    title: "Mes demandes",
+    subtitle: "Les particuliers qui vous ont choisi : répondez sous 48 heures.",
+    empty:
+      "Vous n'avez pas encore reçu de demande. Elles apparaîtront ici dès qu'un particulier vous contactera.",
+    error: "Vos demandes n'ont pas pu être chargées. Tirez vers le bas pour réessayer.",
+    startWish: (date: string) => `Début souhaité le ${date}`,
+    startAsap: "Début dès que possible",
+    startUnknown: "Date de début inconnue",
+    received: (date: string) => `Reçue le ${date}`,
+    urgent: "Urgent",
+    timeLeft: (h: number, m: number) => `${h} h ${String(m).padStart(2, "0")} pour répondre`,
+    status: {
+      envoyee: "À traiter",
+      acceptee: "Acceptée",
+      refusee: "Refusée",
+      expiree: "Expirée",
+      annulee: "Annulée",
+    },
+    client: "Client",
+    contactAfter:
+      "Ses coordonnées et l'adresse exacte s'affichent dès que vous fixez le rendez-vous.",
+    call: (name: string | null) => (name ? `Appeler ${name}` : "Appeler"),
+    callbackAsap: "À contacter dès que possible",
+    callbackRange: (from: string, to: string) => `À contacter de préférence entre ${from} et ${to}`,
+    address: "Adresse",
+    openMap: "Ouvrir la carte",
+    description: "Description du chantier",
+    message: "Message personnalisé",
+    date: "Date de début souhaitée",
+    dateAsap: "Dès que possible",
+    dateUnknown: "Date inconnue",
+    photo: (i: number) => `Photo ${i} du chantier : l'ouvrir`,
+    fixAppointment: "Fixer un rendez-vous",
+    refuse: "Refuser le chantier",
+    refusalLegend: "Pour quelle raison souhaitez-vous refuser ce chantier ?",
+    refusalDetail: "Précisez la raison",
+    confirmRefuse: "Refuser le chantier",
+    reasons: {
+      planning_complet: "Planning complet",
+      hors_expertise: "Hors de mon domaine d'expertise",
+      hors_zone: "Hors de ma zone d'intervention",
+      autre: "Autre",
+    },
+    appointmentFixed:
+      "Rendez-vous fixé : le client a reçu la date et vos coordonnées. Le suivi du chantier arrive bientôt dans l'application.",
+    notFound: "Cette demande est introuvable.",
+  },
+  /** Rendez-vous fixé par l'artisan (F-17) : mêmes textes et mêmes contrôles que le site. */
+  proAppointment: {
+    title: (name: string | null) =>
+      name ? `Fixer un rendez-vous avec ${name}` : "Fixer un rendez-vous",
+    date: "Date du rendez-vous",
+    time: "Heure d'arrivée estimée",
+    pickDate: "Choisir la date",
+    pickTime: "Choisir l'heure",
+    dateWeb: "Date (AAAA-MM-JJ)",
+    timeWeb: "Heure (HH:MM)",
+    summary: (day: string, time: string) => `Le ${day} à ${time}`,
+    submit: "Envoyer le rendez-vous",
+    hint: "Le client voit la date dans son espace et vos coordonnées lui sont communiquées.",
+    errors: {
+      passe: "Choisissez une date et une heure à venir.",
+      trop_loin: "Le rendez-vous doit avoir lieu dans les 6 prochains mois.",
+    },
+  },
   /** Documents PDF (devis, factures, PV), proposés au partage du téléphone. */
   pdf: {
     failed: "Le document n'a pas pu être téléchargé. Réessayez dans un instant.",
@@ -866,8 +961,6 @@ export const fr = {
   },
   soon: {
     title: "Bientôt dans l'application",
-    dashboard: "Votre activité arrive ici : nouvelles demandes, rendez-vous et devis à envoyer.",
-    requests: "Les demandes des particuliers de votre zone arriveront ici.",
     agenda: "Vos rendez-vous et vos chantiers arriveront ici.",
     artisanMessages: "Vos échanges avec vos clients arriveront ici.",
   },

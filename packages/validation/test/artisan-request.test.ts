@@ -1,0 +1,45 @@
+import { describe, expect, it } from "vitest";
+import { parseRequestDetail } from "../src/artisan-request";
+
+// Réponse d'artisan_request_detail avant le rendez-vous : sans coordonnées ni adresse exacte.
+const detail = {
+  id: "b1000000-0000-4000-8000-000000000001",
+  status: "envoyee",
+  created_at: "2026-10-13T08:00:00Z",
+  expires_at: "2026-10-15T08:00:00Z",
+  refusal_reason: null,
+  callback_mode: "plage",
+  callback_from: "09:00",
+  callback_to: "12:00",
+  message: null,
+  description: "Fuite sous l'évier de la cuisine.",
+  summary: "Fuite sous évier",
+  trade: "Plombier",
+  lieu_type: "appartement",
+  surface: null,
+  rooms: ["Cuisine"],
+  work_types: ["Réparation"],
+  urgence: true,
+  date_mode: "des_que_possible",
+  date_souhaitee: null,
+  ville_nom: "Nice",
+  code_postal: "06000",
+  adresse: null,
+  lat: null,
+  lon: null,
+  photos: [],
+  client: { first_name: "Camille", last_name: null, phone: null, email: null },
+  chantier_id: null,
+};
+
+describe("détail d'une demande vu par l'artisan (site et application)", () => {
+  it("lit la réponse de la base", () => {
+    expect(parseRequestDetail(detail)?.client.first_name).toBe("Camille");
+  });
+
+  it("refuse une réponse absente ou inattendue", () => {
+    expect(parseRequestDetail(null)).toBeNull();
+    expect(parseRequestDetail({ ...detail, status: "inconnu" })).toBeNull();
+    expect(parseRequestDetail({ ...detail, photos: undefined })).toBeNull();
+  });
+});

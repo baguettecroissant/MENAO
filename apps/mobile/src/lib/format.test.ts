@@ -6,6 +6,8 @@ import {
   formatDay,
   formatDayAndTime,
   formatDayLabel,
+  formatDuration,
+  formatMonthName,
   formatTime,
 } from "./format";
 
@@ -41,5 +43,14 @@ describe("mise en forme", () => {
     // 23h30 à Paris le 12 octobre.
     expect(formatDayLabel("2026-10-12T21:30:00Z", now)).toBe("Hier");
     expect(formatDayLabel("2026-10-05T10:00:00Z", now)).toBe("lundi 5 octobre 2026");
+  });
+
+  it("durées et mois du tableau de bord, comme sur le site", () => {
+    const plain = (text: string) => text.replace(/\u00a0/g, " ");
+    expect(plain(formatDuration(35))).toBe("35 min");
+    expect(plain(formatDuration(135))).toBe("2 h 15");
+    expect(plain(formatDuration(120))).toBe("2 h");
+    expect(plain(formatDuration(27 * 60))).toBe("1 j 3 h");
+    expect(formatMonthName("2026-09")).toBe("septembre");
   });
 });
