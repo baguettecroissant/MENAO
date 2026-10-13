@@ -20,34 +20,44 @@ function fromClock(day: string, clock: string | null): Date {
 }
 
 /**
- * Date et heure d'un rendez-vous (F-17) : calendrier et roue des heures (par 5 minutes) sur
- * iPhone, boîtes de dialogue sur Android, saisie au clavier dans la version web.
+ * Date et heure d'un rendez-vous (F-17), ou date seule (début des travaux, F-20) : calendrier et
+ * roue des heures (par 5 minutes) sur iPhone, boîtes de dialogue sur Android, saisie au clavier
+ * dans la version web.
  */
 export function DateTimeFields({
   date,
-  time,
+  time = null,
   minDate,
   onDate,
   onTime,
   error,
+  dateLabel = t.date,
 }: {
   /** AAAA-MM-JJ. */
   date: string | null;
-  /** HH:MM. */
-  time: string | null;
+  /** HH:MM ; sans `onTime`, la date seule est demandée. */
+  time?: string | null;
   /** Aujourd'hui (AAAA-MM-JJ) : pas de rendez-vous dans le passé. */
   minDate: string;
   onDate: (date: string) => void;
-  onTime: (time: string) => void;
+  onTime?: (time: string) => void;
   error?: string;
+  dateLabel?: string;
 }) {
   const [android, setAndroid] = useState<"date" | "time" | null>(null);
 
   if (Platform.OS === "web") {
     return (
       <View style={styles.fields}>
-        <TextField label={t.dateWeb} value={date ?? ""} onChangeText={onDate} />
-        <TextField label={t.timeWeb} value={time ?? ""} onChangeText={onTime} error={error} />
+        <TextField
+          label={`${dateLabel} — ${t.dateWeb}`}
+          value={date ?? ""}
+          onChangeText={onDate}
+          error={onTime ? undefined : error}
+        />
+        {onTime ? (
+          <TextField label={t.timeWeb} value={time ?? ""} onChangeText={onTime} error={error} />
+        ) : null}
       </View>
     );
   }
@@ -55,7 +65,7 @@ export function DateTimeFields({
   const day = date ?? minDate;
   return (
     <View style={styles.fields}>
-      <Text style={styles.label}>{t.date}</Text>
+      <Text style={styles.label}>{dateLabel}</Text>
       {Platform.OS === "android" ? (
         <Button
           label={date ? formatLongDate(date) : t.pickDate}
@@ -77,15 +87,15 @@ export function DateTimeFields({
           }}
         />
       ) : null}
-      <Text style={styles.label}>{t.time}</Text>
-      {Platform.OS === "android" ? (
+      {onTime ? <Text style={styles.label}>{t.time}</Text> : null}
+      {onTime && Platform.OS === "android" ? (
         <Button
           label={time ? time.replace(":", "h") : t.pickTime}
           variant="secondary"
           onPress={() => setAndroid("time")}
         />
       ) : null}
-      {Platform.OS === "ios" || android === "time" ? (
+      {onTime && (Platform.OS === "ios" || android === "time") ? (
         <DateTimePicker
           value={fromClock(day, time)}
           mode="time"
@@ -99,10 +109,12 @@ export function DateTimeFields({
           }}
         />
       ) : null}
-      {date && time ? (
+      {date && onTime && time ? (
         <Text style={styles.summary}>
           {t.summary(formatLongDate(date), time.replace(":", "h"))}
         </Text>
+      ) : date && !onTime ? (
+        <Text style={styles.summary}>{formatLongDate(date)}</Text>
       ) : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
