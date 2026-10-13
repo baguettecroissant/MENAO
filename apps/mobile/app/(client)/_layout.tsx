@@ -3,6 +3,8 @@ import { ClipboardList, House, MessageCircle, UserRound } from "lucide-react-nat
 import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
+import { useUnread } from "@/lib/unread";
+import { theme } from "@/ui/theme";
 
 /**
  * Espace client, ouvert sans compte : accueil, chantiers, messages et compte (ADR 0055). Un
@@ -10,6 +12,7 @@ import { useSession } from "@/lib/session";
  */
 export default function ClientLayout() {
   const { space } = useSession();
+  const { messages } = useUnread();
   const tabBarOptions = useTabBarOptions();
   if (space === "artisan") return <Redirect href="/pro" />;
   if (space === "equipe") return <Redirect href="/equipe" />;
@@ -34,6 +37,11 @@ export default function ClientLayout() {
         options={{
           title: fr.tabs.messages,
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
+          // Messages non lus (F-40), comme la pastille de « Mon espace » sur le site.
+          tabBarBadge: messages > 0 ? messages : undefined,
+          tabBarBadgeStyle: { backgroundColor: theme.colors.primary, fontSize: 11 },
+          tabBarAccessibilityLabel:
+            messages > 0 ? `${fr.tabs.messages}, ${fr.messages.unread(messages)}` : undefined,
         }}
       />
       <Tabs.Screen

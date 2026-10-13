@@ -4,6 +4,7 @@ import {
   paymentProgress,
   type ChantierStatus,
 } from "@menao/core";
+import { router } from "expo-router";
 import { CircleCheck, FileText, MapPin } from "lucide-react-native";
 import { useState } from "react";
 import {
@@ -101,6 +102,7 @@ export function ChantierView({
           detail={c.trade_label}
           photoUrl={detail.avatarUrl}
           phone={c.artisan_phone}
+          onMessage={() => router.push(`/conversation/${c.chantier_id}`)}
         />
       </Card>
       {action ? (

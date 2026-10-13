@@ -17,6 +17,7 @@ import { LogoMark } from "@/components/logo";
 import { tradeIcon } from "@/components/trade-icon";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
+import { useUnread } from "@/lib/unread";
 import { useTrades } from "@/lib/trades";
 import { Body, Button, Card, IconTile, LinkText, Section } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -33,14 +34,17 @@ const SHORTCUTS = 8;
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { signedIn } = useSession();
+  const { notifications, refresh } = useUnread();
   const trades = useTrades();
 
   // En-tête bleu : barre d'état claire tant que l'accueil est à l'écran.
   useFocusEffect(
     useCallback(() => {
       setStatusBarStyle("light");
+      // Retour sur l'accueil : pastille de la cloche à jour.
+      refresh();
       return () => setStatusBarStyle("dark");
-    }, []),
+    }, [refresh]),
   );
 
   return (
@@ -54,11 +58,16 @@ export function HomeScreen() {
           </View>
           <Pressable
             role="button"
-            aria-label={fr.home.notifications}
+            aria-label={fr.notificationCenter.bell(notifications)}
             onPress={() => router.push("/notifications")}
             style={({ pressed }) => [styles.roundButton, pressed && styles.pressed]}
           >
             <Bell size={22} color={colors["primary-foreground"]} />
+            {notifications > 0 ? (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{notifications > 9 ? "9+" : notifications}</Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
         <View style={styles.heroText}>
@@ -206,6 +215,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  bellBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: colors.danger,
+    borderWidth: 2,
+    borderColor: colors["primary-strong"],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellBadgeText: { fontFamily: font.bold, fontSize: 10, color: colors["primary-foreground"] },
   pressed: { opacity: 0.85 },
   heroText: { gap: spacing(1.5) },
   greeting: {

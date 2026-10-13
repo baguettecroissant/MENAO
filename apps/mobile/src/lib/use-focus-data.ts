@@ -13,7 +13,7 @@ const RETRY_DELAYS_MS = [1500, 3000, 5000, 8000];
 export function useFocusData<T>(
   load: () => Promise<T>,
   waiting?: (value: T) => boolean,
-): readonly [T | undefined, () => void] {
+): readonly [T | undefined, () => Promise<void>] {
   const [data, setData] = useState<T | undefined>(undefined);
   useFocusEffect(
     useCallback(() => {
@@ -36,8 +36,6 @@ export function useFocusData<T>(
       };
     }, [load, waiting]),
   );
-  const reload = useCallback(() => {
-    load().then(setData);
-  }, [load]);
+  const reload = useCallback(() => load().then(setData), [load]);
   return [data, reload] as const;
 }

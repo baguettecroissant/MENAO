@@ -54,7 +54,6 @@ export const fr = {
     requests: "Demandes",
     agenda: "Agenda",
     messages: "Messages",
-    notifications: "Notifications",
     account: "Compte",
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
@@ -62,7 +61,6 @@ export const fr = {
     greeting: "Bonjour !",
     subtitle: "Besoin d'un artisan du bâtiment ?",
     searchPlaceholder: "Décrivez votre projet…",
-    notifications: "Notifications",
     tags: ["Artisans vérifiés", "Décennale contrôlée", "Réponse sous 48\u00a0h"],
     tradesTitle: "Trouvez votre artisan",
     tradesText: "Des artisans vérifiés pour chaque corps de métier, dans les Alpes-Maritimes.",
@@ -631,6 +629,58 @@ export const fr = {
     },
     notFound: "Ce devis est introuvable.",
   },
+  /** Messagerie par chantier (F-40) : mêmes textes que le site. */
+  messages: {
+    title: "Messages",
+    subtitle: "Vos échanges avec vos artisans, chantier par chantier.",
+    empty:
+      "Aucun message pour le moment. Écrivez à votre artisan depuis la page de votre chantier (bouton « Message »).",
+    error: "Vos messages n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
+    unread: (n: number) => (n <= 1 ? "1 message non lu" : `${n} messages non lus`),
+    you: "Vous : ",
+    photo: "Photo",
+    file: "Document PDF",
+    hiddenPreview: "Message masqué",
+    closedTag: "Conversation fermée",
+    seeChantier: "Voir le chantier",
+    conversation: (name: string) => `Conversation avec ${name}`,
+    noMessages: (name: string) =>
+      `Aucun message pour l'instant : écrivez à ${name} pour préparer votre chantier.`,
+    read: "Lu",
+    hidden: "Message masqué par l'équipe MENAO.",
+    openPhoto: "Photo envoyée : l'ouvrir",
+    openFile: "Document PDF : l'ouvrir",
+    composerLabel: "Votre message",
+    composerPlaceholder: "Écrivez votre message…",
+    send: "Envoyer",
+    closed: "Conversation fermée : le chantier a été annulé ou le devis refusé.",
+    report: "Signaler ce message",
+    reportLabel: "Motif du signalement",
+    reportHint:
+      "Propos injurieux, demande de paiement hors MENAO, spam… L'équipe MENAO examinera le message.",
+    reportSubmit: "Envoyer le signalement",
+    reportCancel: "Annuler",
+    reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
+    button: "Message",
+    notFound: "Cette conversation est introuvable.",
+  },
+  /** Centre de notifications (F-41) : mêmes textes que les e-mails et que le site. */
+  notificationCenter: {
+    title: "Notifications",
+    subtitle: "Les dernières nouvelles de vos demandes et de vos chantiers.",
+    empty: "Aucune notification pour le moment.",
+    error: "Vos notifications n'ont pas pu être chargées. Tirez vers le bas pour réessayer.",
+    bell: (n: number) =>
+      n === 0 ? "Notifications" : `Notifications : ${n} non lue${n > 1 ? "s" : ""}`,
+    unread: "Non lue",
+    prefsTitle: "Préférences d'e-mails",
+    prefsIntro:
+      "Les e-mails importants (devis, paiements, réception, litiges, avis reçus) sont toujours envoyés. Les autres peuvent être désactivés ; ils restent visibles ici.",
+    activite: "Activité du chantier : nouvelles photos et nouveaux messages",
+    rappels: "Rappels : rendez-vous de la veille, avis à laisser, levée des réserves à confirmer",
+    save: "Enregistrer mes préférences",
+    saved: "Préférences enregistrées.",
+  },
   /** Documents PDF (devis, factures, PV), proposés au partage du téléphone. */
   pdf: {
     failed: "Le document n'a pas pu être téléchargé. Réessayez dans un instant.",
@@ -640,6 +690,8 @@ export const fr = {
     minutes: (n: number) => `il y a ${n} min`,
     hours: (n: number) => `il y a ${n} h`,
     days: (n: number) => (n <= 1 ? "hier" : `il y a ${n} jours`),
+    today: "Aujourd'hui",
+    yesterday: "Hier",
   },
   lieux: {
     appartement: "En appartement",
@@ -685,15 +737,10 @@ export const fr = {
   },
   soon: {
     title: "Bientôt dans l'application",
-    chantiers:
-      "Vos demandes et vos chantiers arrivent ici : devis, signature, paiements et suivi des travaux.",
-    messages: "Vos échanges avec les artisans arriveront ici.",
-    notifications: "Vos notifications arriveront ici, avec les alertes sur votre téléphone.",
     dashboard: "Votre activité arrive ici : nouvelles demandes, rendez-vous et devis à envoyer.",
     requests: "Les demandes des particuliers de votre zone arriveront ici.",
     agenda: "Vos rendez-vous et vos chantiers arriveront ici.",
     artisanMessages: "Vos échanges avec vos clients arriveront ici.",
-    web: "En attendant, tout est disponible sur le site MENAO.",
   },
   account: {
     title: "Mon compte",

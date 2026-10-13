@@ -8,6 +8,14 @@ const numeric = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
 });
 const dayLong = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
+const dayFull = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Europe/Paris",
+});
+const parisDay = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" });
 const longDay = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
   day: "numeric",
@@ -39,6 +47,19 @@ export function formatDay(iso: string): string {
 export function formatDayAndTime(iso: string): { day: string; time: string } {
   const date = new Date(iso);
   return { day: longDay.format(date), time: hourMinute.format(date).replace(":", "h") };
+}
+
+/** « 08h30 » (heure de Paris). */
+export function formatTime(iso: string): string {
+  return hourMinute.format(new Date(iso)).replace(":", "h");
+}
+
+/** Séparateur de jour d'une conversation : « Aujourd'hui », « Hier » ou « lundi 12 octobre 2026 ». */
+export function formatDayLabel(iso: string, now: Date = new Date()): string {
+  const day = parisDay.format(new Date(iso));
+  if (day === parisDay.format(now)) return fr.ago.today;
+  if (day === parisDay.format(new Date(now.getTime() - 86_400_000))) return fr.ago.yesterday;
+  return dayFull.format(new Date(iso));
 }
 
 /** « à l'instant », « il y a 5 min », « il y a 3 h », « hier », « il y a 4 jours ». */

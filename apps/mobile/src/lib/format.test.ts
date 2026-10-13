@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { formatAgo, formatCents, formatDateNumeric, formatDay, formatDayAndTime } from "./format";
+import {
+  formatAgo,
+  formatCents,
+  formatDateNumeric,
+  formatDay,
+  formatDayAndTime,
+  formatDayLabel,
+  formatTime,
+} from "./format";
 
 describe("mise en forme", () => {
   it("affiche les montants en euros à partir des centimes", () => {
@@ -24,5 +32,14 @@ describe("mise en forme", () => {
     expect(formatAgo("2026-10-13T09:00:00Z", now)).toBe("il y a 3 h");
     expect(formatAgo("2026-10-12T09:00:00Z", now)).toBe("hier");
     expect(formatAgo("2026-10-09T09:00:00Z", now)).toBe("il y a 4 jours");
+  });
+
+  it("sépare les jours d'une conversation, à l'heure de Paris", () => {
+    const now = new Date("2026-10-13T12:00:00Z");
+    expect(formatTime("2026-10-13T06:30:00Z")).toBe("08h30");
+    expect(formatDayLabel("2026-10-13T06:30:00Z", now)).toBe("Aujourd'hui");
+    // 23h30 à Paris le 12 octobre.
+    expect(formatDayLabel("2026-10-12T21:30:00Z", now)).toBe("Hier");
+    expect(formatDayLabel("2026-10-05T10:00:00Z", now)).toBe("lundi 5 octobre 2026");
   });
 });
