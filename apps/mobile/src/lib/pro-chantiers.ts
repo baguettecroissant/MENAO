@@ -3,6 +3,7 @@ import type { Database } from "@menao/db";
 import { parseArtisanChantierDetail, type ArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import type { ChantierDocument } from "./chantiers";
+import { REVIEW_COLUMNS, toArtisanReview, type ArtisanReview } from "./pro-reviews";
 import { supabase } from "./supabase";
 
 /** Liens signés (1 h) des fichiers d'un espace privé, par chemin ; les droits RLS s'appliquent. */
@@ -165,7 +166,8 @@ export type ArtisanFollowUp = {
   balancePaidAt: string | null;
   balanceCents: number | null;
   reception: { reserves: string | null; liftSignaledAt: string | null } | null;
-  reviewed: boolean;
+  /** Avis du client sur ce chantier (F-28), publié ou masqué par l'équipe. */
+  review: ArtisanReview | null;
   openTicketId: string | null;
 };
 
@@ -230,7 +232,7 @@ export async function loadArtisanFollowUp(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from("reviews").select("id").eq("chantier_id", chantierId).maybeSingle(),
+    supabase.from("reviews").select(REVIEW_COLUMNS).eq("chantier_id", chantierId).maybeSingle(),
     supabase
       .from("tickets")
       .select("id")
@@ -310,7 +312,7 @@ export async function loadArtisanFollowUp(
     reception: reception
       ? { reserves: reception.reserves, liftSignaledAt: reception.lift_signaled_at }
       : null,
-    reviewed: review !== null,
+    review: review ? toArtisanReview(review) : null,
     openTicketId: openTicket?.id ?? null,
   };
 }

@@ -9,6 +9,7 @@ import {
   type RevenueTrend,
 } from "@menao/core";
 import { loadInbox, type InboxItem } from "./pro-requests";
+import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
 
 export type Dashboard = {
@@ -25,26 +26,37 @@ export type Dashboard = {
     place: string;
   }[];
   requests: InboxItem[];
+  /** Avis publiés sans réponse (F-28), comme le compteur du menu du site. */
+  reviewsToAnswer: number;
 };
 
 /**
  * Tableau de bord de l'artisan (F-16), comme sur le site : clients en attente de devis, encaissé
- * ce mois (paiements reçus sur son compte), temps de réponse, rendez-vous à venir et dernières
- * demandes. Mêmes règles que le site (`@menao/core`), lectures avec les droits du compte (RLS).
+ * ce mois (paiements reçus sur son compte), temps de réponse, rendez-vous à venir, dernières
+ * demandes et avis sans réponse. Mêmes règles que le site (`@menao/core`), lectures avec les
+ * droits du compte (RLS).
  */
 export async function loadDashboard(): Promise<Dashboard | null> {
   const { data: session } = await supabase.auth.getSession();
   const userId = session.session?.user.id;
   if (!userId) return null;
-  const [inbox, { data: chantiers }, { data: payments }, { data: response }, profile, artisan] =
-    await Promise.all([
-      loadInbox(),
-      supabase.rpc("artisan_chantiers"),
-      supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
-      supabase.rpc("my_response_stats"),
-      supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
-      supabase.from("artisans").select("status").eq("user_id", userId).maybeSingle(),
-    ]);
+  const [
+    inbox,
+    { data: chantiers },
+    { data: payments },
+    { data: response },
+    profile,
+    artisan,
+    reviewsToAnswer,
+  ] = await Promise.all([
+    loadInbox(),
+    supabase.rpc("artisan_chantiers"),
+    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+    supabase.rpc("my_response_stats"),
+    supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
+    supabase.from("artisans").select("status").eq("user_id", userId).maybeSingle(),
+    countReviewsToAnswer(),
+  ]);
   if (inbox === null) return null;
   const now = new Date();
   const revenue = monthToDateRevenue(
@@ -79,5 +91,6 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
     })),
     requests: requestsAwaitingAnswer(inbox, now).slice(0, 3),
+    reviewsToAnswer,
   };
 }

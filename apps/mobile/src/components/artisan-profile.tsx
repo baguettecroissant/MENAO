@@ -1,6 +1,7 @@
 import { availability, parisToday, responseTimeBucket, reviewStars } from "@menao/core";
 import { BadgeCheck, Clock, MapPin, ShieldCheck, Star, Wrench } from "lucide-react-native";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScoreBreakdown } from "@/components/score-breakdown";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
 import type { ArtisanPage, PublicReview } from "@/lib/requests";
@@ -9,7 +10,6 @@ import { theme } from "@/ui/theme";
 
 const t = fr.profile;
 const { colors, font, radius, spacing } = theme;
-const SCORE_ROWS = ["quality", "delays", "communication", "value_for_money"] as const;
 const dayFromTimestamp = (iso: string) => formatLongDate(iso.slice(0, 10));
 
 /**
@@ -121,24 +121,7 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
       <Card>
         <Text style={styles.heading}>{t.score}</Text>
         {profile.score ? (
-          <>
-            {SCORE_ROWS.map((row) => (
-              <View key={row} style={styles.scoreRow}>
-                <View style={styles.scoreLine}>
-                  <Text style={styles.scoreLabel}>{t.scoreRows[row]}</Text>
-                  <Text style={styles.scoreValue}>{t.percent(profile.score?.[row] ?? 0)}</Text>
-                </View>
-                <View style={styles.bar}>
-                  <View style={[styles.barFill, { width: `${profile.score?.[row] ?? 0}%` }]} />
-                </View>
-              </View>
-            ))}
-            <View style={styles.scoreGlobal}>
-              <Text style={styles.heading}>{t.scoreGlobal}</Text>
-              <Text style={styles.scoreGlobalValue}>{t.percent(profile.score.global)}</Text>
-            </View>
-            <Text style={styles.meta}>{t.scoreBasis(profile.score.review_count)}</Text>
-          </>
+          <ScoreBreakdown score={profile.score} />
         ) : (
           <Body muted>{t.scoreEmpty}</Body>
         )}
@@ -289,21 +272,6 @@ const styles = StyleSheet.create({
   },
   tagText: { fontFamily: font.regular, fontSize: 13, color: colors.foreground },
   guaranteeText: { flex: 1, gap: spacing(0.5) },
-  scoreRow: { gap: spacing(1.5) },
-  scoreLine: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
-  scoreLabel: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  scoreValue: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
-  bar: { height: 6, borderRadius: 3, backgroundColor: colors["primary-soft"], overflow: "hidden" },
-  barFill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
-  scoreGlobal: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing(3),
-  },
-  scoreGlobalValue: { fontFamily: font.medium, fontSize: 24, color: colors["primary-strong"] },
   photos: { gap: spacing(3) },
   photo: {
     width: 160,
