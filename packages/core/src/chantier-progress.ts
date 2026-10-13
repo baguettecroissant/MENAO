@@ -125,3 +125,18 @@ export function paymentProgress(
     .reduce((sum, p) => sum + p.amountCents, 0);
   return { paidCents, remainingCents: Math.max(0, totalTtcCents - paidCents) };
 }
+
+export type NextIntervention = { kind: "rendez_vous" | "demarrage"; startsAt: string };
+
+/** Prochaine intervention : rendez-vous planifié, puis démarrage des travaux confirmé. */
+export function nextIntervention(c: {
+  status: ChantierStatus;
+  appointmentAt: string | null;
+  startAt: string | null;
+}): NextIntervention | null {
+  if (c.status === "rdv_planifie" && c.appointmentAt) {
+    return { kind: "rendez_vous", startsAt: c.appointmentAt };
+  }
+  if (c.status === "planifie" && c.startAt) return { kind: "demarrage", startsAt: c.startAt };
+  return null;
+}

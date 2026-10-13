@@ -200,3 +200,22 @@ describe("actions attendues du client (compteur du menu)", () => {
     expect(clientPendingActions([])).toBe(0);
   });
 });
+
+describe("nextIntervention", () => {
+  it("annonce le rendez-vous, puis le démarrage confirmé", async () => {
+    const { nextIntervention } = await import("../src/chantier-progress");
+    const at = "2026-10-20T08:30:00Z";
+    expect(nextIntervention({ status: "rdv_planifie", appointmentAt: at, startAt: null })).toEqual({
+      kind: "rendez_vous",
+      startsAt: at,
+    });
+    expect(nextIntervention({ status: "planifie", appointmentAt: null, startAt: at })).toEqual({
+      kind: "demarrage",
+      startsAt: at,
+    });
+    expect(nextIntervention({ status: "en_cours", appointmentAt: at, startAt: at })).toBeNull();
+    expect(
+      nextIntervention({ status: "rdv_planifie", appointmentAt: null, startAt: null }),
+    ).toBeNull();
+  });
+});

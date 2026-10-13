@@ -1018,7 +1018,7 @@ export const fr = {
       transferError:
         "Nous n'avons pas pu rattacher votre projet à votre compte. Recommencez votre recherche depuis l'accueil.",
       notParticulier: "Connectez-vous avec un compte particulier pour envoyer une demande.",
-      sentTitle: (names: string) => `Votre demande est envoyée à ${names} !`,
+      sentTitle: (names: string) => `Votre demande est envoyée à ${names}\u00a0!`,
       sentText: (names: string, many: boolean) =>
         many
           ? `${names} ont bien reçu votre demande dans leur espace Menao. Chacun a 48 heures pour l'accepter.`

@@ -55,17 +55,5 @@ export function chantierTag(c: {
   }
 }
 
-export type NextInterventionData = { kind: "rendez_vous" | "demarrage"; startsAt: string };
-
-/** Prochaine intervention : rendez-vous planifié, puis démarrage des travaux confirmé. */
-export function nextIntervention(c: {
-  status: ChantierStatus;
-  appointmentAt: string | null;
-  startAt: string | null;
-}): NextInterventionData | null {
-  if (c.status === "rdv_planifie" && c.appointmentAt) {
-    return { kind: "rendez_vous", startsAt: c.appointmentAt };
-  }
-  if (c.status === "planifie" && c.startAt) return { kind: "demarrage", startsAt: c.startAt };
-  return null;
-}
+/** Prochaine intervention : règle partagée avec l'application (`@menao/core`). */
+export { nextIntervention, type NextIntervention as NextInterventionData } from "@menao/core";
