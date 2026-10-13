@@ -192,6 +192,11 @@ export function DashboardScreen() {
               )}
               <LinkText label={t.allRequests} onPress={() => router.push("/pro/demandes")} />
             </Section>
+
+            <Section title={fr.proReviews.title}>
+              <Body muted>{fr.proReviews.toAnswer(data.reviewsToAnswer)}</Body>
+              <LinkText label={fr.proReviews.open} onPress={() => router.push("/pro-avis")} />
+            </Section>
           </>
         )}
       </ScrollView>

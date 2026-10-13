@@ -22,6 +22,7 @@ import {
 } from "@/components/chantier/parts";
 import { PhotoUpload } from "@/components/pro/photo-upload";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
+import { ReviewCard } from "@/components/pro/review-card";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
@@ -40,9 +41,9 @@ const { colors, font, radius, spacing } = theme;
 
 /**
  * Vue d'un chantier côté artisan après l'acompte (F-22), comme sur le site (maquettes « Vue d'un
- * chantier ») : confirmation de la date de démarrage, journal (messages) pendant les travaux,
- * « Déclarer le chantier terminé », réserves et leur levée, dossier (documents, échéancier,
- * client). Aucun lien vers le site (règle 10).
+ * chantier ») : confirmation de la date de démarrage, journal pendant les travaux, « Déclarer le
+ * chantier terminé », réserves et leur levée, avis du client et réponse publique (F-28), dossier
+ * (documents, échéancier, client). Aucun lien vers le site (règle 10).
  */
 export function FollowUpView({
   data,
@@ -177,7 +178,9 @@ export function FollowUpView({
           {t.closed(formatDateNumeric(f.balancePaidAt), formatCents(f.balanceCents))}
         </Notice>
       ) : null}
-      {status === "cloture" && !f.reviewed ? (
+      {f.review ? (
+        <ReviewCard review={f.review} heading={t.reviewTitle(client)} onReplied={onChanged} />
+      ) : status === "cloture" ? (
         <Notice tone="info">{t.reviewPending(client)}</Notice>
       ) : null}
 

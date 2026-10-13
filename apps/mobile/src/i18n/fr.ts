@@ -1145,6 +1145,13 @@ export const fr = {
       `Chantier clôturé le ${date} : solde de ${amount} reçu, facture de solde émise.`,
     reviewPending: (client: string) =>
       `${client} a été invité à donner son avis sur votre intervention. Il sera publié sur votre fiche MENAO.`,
+    reviewTitle: (client: string) => `Avis de ${client}`,
+    reviewHidden: (reason: string) => `Avis masqué par l'équipe MENAO : ${reason}`,
+    replyLabel: "Votre réponse publique",
+    replyHint: "Une seule réponse possible, visible sur votre fiche MENAO sous l'avis.",
+    replySubmit: "Publier ma réponse",
+    replySent: "Réponse publiée sur votre fiche.",
+    yourReply: "Votre réponse",
     yourClientFallback: "votre client",
     addPhoto: "Ajouter une photo",
     addPhotos: "Ajouter des photos",
@@ -1160,6 +1167,43 @@ export const fr = {
       limit: "Ce chantier a atteint 100 photos.",
       rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
     },
+  },
+  /** « Mes avis » de l'artisan (F-28) : mêmes textes que l'espace pro du site. */
+  proReviews: {
+    title: "Mes avis",
+    subtitle: "Les avis de vos clients après la réception de leur chantier, et votre score MENAO.",
+    open: "Voir mes avis",
+    scoreTitle: "Votre score MENAO",
+    scoreEmpty: "Votre score apparaîtra avec votre premier avis publié.",
+    toAnswer: (n: number) =>
+      n === 0
+        ? "Vous avez répondu à tous vos avis."
+        : n === 1
+          ? "1\u00a0avis attend votre réponse."
+          : `${n}\u00a0avis attendent votre réponse.`,
+    howTitle: "Comment ça marche",
+    how: [
+      "Votre client est invité à donner son avis une fois le chantier clôturé, puis relancé une seule fois 3\u00a0jours plus tard.",
+      "Chaque avis porte sur un vrai chantier réceptionné sur MENAO : il est marqué «\u00a0Avis vérifié\u00a0».",
+      "Vous pouvez répondre publiquement à chaque avis, une seule fois.",
+      "Un avis contraire aux règles peut être signalé à l'équipe MENAO. Un avis n'est jamais masqué au seul motif qu'il est négatif.",
+    ],
+    empty:
+      "Aucun avis pour le moment. Vos clients pourront vous noter après la réception de leur chantier.",
+    publishedOn: (date: string) => `Publié le ${date}`,
+    chantier: (title: string) => `Chantier « ${title} »`,
+    noReply: "Sans réponse",
+    hidden: "Masqué",
+    error: "Impossible d'afficher vos avis pour le moment. Réessayez dans quelques instants.",
+    /** Signalement d'un avis à l'équipe MENAO, comme sur le site. */
+    report: "Signaler cet avis",
+    reportTitle: "Signaler cet avis à l'équipe MENAO",
+    reportLabel: "Motif du signalement",
+    reportHint:
+      "Propos injurieux, données personnelles, faux avis… L'équipe MENAO examinera l'avis.",
+    reportSubmit: "Envoyer le signalement",
+    reportCancel: "Annuler",
+    reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
   },
   /** Chantiers de l'artisan (F-18) : mêmes textes que l'espace pro du site. */
   proChantiers: {
