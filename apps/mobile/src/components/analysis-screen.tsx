@@ -225,9 +225,10 @@ function AnalysisVisual({ animate }: { animate: boolean }) {
 /**
  * Écran « Analyse de votre projet en cours » (F-05), comme sur le site : le logo se dessine au
  * milieu des métiers, les étapes se cochent une à une et des faits sur MENAO défilent. Sans
- * animation quand le téléphone demande moins de mouvement.
+ * animation quand le téléphone demande moins de mouvement. `photos` : l'analyse est terminée et
+ * les photos du projet sont en cours d'envoi (dernière étape).
  */
-export function AnalysisScreen() {
+export function AnalysisScreen({ photos = false }: { photos?: boolean }) {
   const insets = useSafeAreaInsets();
   const animate = !useReduceMotion();
   const [step, setStep] = useState(0);
@@ -242,6 +243,9 @@ export function AnalysisScreen() {
     };
   }, []);
 
+  const labels = photos ? [...a.steps, a.photosStep] : a.steps;
+  const current = photos ? labels.length - 1 : step;
+
   return (
     <View
       style={[
@@ -251,11 +255,11 @@ export function AnalysisScreen() {
     >
       <AnalysisVisual animate={animate} />
       <Text aria-live="polite" style={styles.status}>
-        {fr.search.analyzing}
+        {photos ? fr.search.uploadingPhotos : fr.search.analyzing}
       </Text>
       <View style={styles.steps}>
-        {a.steps.map((label, i) => {
-          const state = i < step ? "done" : i === step ? "active" : "todo";
+        {labels.map((label, i) => {
+          const state = i < current ? "done" : i === current ? "active" : "todo";
           return (
             <View key={label} style={styles.step}>
               <View

@@ -1,20 +1,24 @@
-import { PROJECT_TEXT_MAX_LENGTH } from "@menao/core";
+import { MAX_PROJECT_PHOTOS, PROJECT_TEXT_MAX_LENGTH } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
+import { PhotoThumbnails } from "@/components/photo-thumbnails";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
+import { choosePhotoSource, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
 import { analyzeNeed } from "@/lib/project";
 import { useTrades } from "@/lib/trades";
+import { uploadBatch } from "@/lib/uploads";
 import { Body, Button, Chip, Notice, Screen, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
- * Saisie du projet (F-05), puis analyse par l'IA : l'écran animé reste affiché pendant l'analyse,
- * qui crée le projet et pré-remplit ses critères (ADR 0012). On passe ensuite à leur vérification.
+ * Saisie du projet (F-05), photos comprises (10 au plus), puis analyse par l'IA : l'écran animé
+ * reste affiché pendant l'analyse, qui crée le projet et pré-remplit ses critères (ADR 0012), puis
+ * pendant l'envoi des photos. On passe ensuite à la vérification des critères.
  * « Redemander un devis » (`artisan`, `depuis`, `nom`) : l'artisan d'un chantier précédent est
  * proposé en premier ; le nom ne sert qu'au bandeau, le serveur vérifie le chantier commun.
  */
@@ -32,20 +36,41 @@ export default function Recherche() {
   const trades = useTrades();
   const [description, setDescription] = useState("");
   const [trade, setTrade] = useState<string | null>(params.metier ?? null);
-  const [analyzing, setAnalyzing] = useState(false);
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
+  const [phase, setPhase] = useState<"idle" | "analyzing" | "photos">("idle");
   const [failure, setFailure] = useState<string | null>(null);
   const ready = description.trim().length > 0;
 
-  async function submit() {
-    if (!ready || analyzing) return;
+  async function addPhotos() {
+    const source = await choosePhotoSource(fr.search.photos.add);
+    if (!source) return;
+    const picked = await pickPhotos(source, MAX_PROJECT_PHOTOS - photos.length);
+    if ("error" in picked) return setFailure(picked.error);
     setFailure(null);
-    setAnalyzing(true);
+    setPhotos((current) => [...current, ...picked.photos].slice(0, MAX_PROJECT_PHOTOS));
+  }
+
+  async function submit() {
+    if (!ready || phase !== "idle") return;
+    setFailure(null);
+    setPhase("analyzing");
     const result = await analyzeNeed(description.trim(), trade, rehire);
     if (result.status !== "ok") {
-      setAnalyzing(false);
+      setPhase("idle");
       return setFailure(fr.search.errors[result.status]);
     }
-    router.replace({ pathname: "/projet/[id]", params: { id: result.projectId } });
+    let failed = false;
+    if (photos.length) {
+      // Comme sur le site : les photos rejoignent le projet créé par l'analyse.
+      setPhase("photos");
+      const project = { purpose: "project_photo", projectId: result.projectId } as const;
+      const sent = await uploadBatch(photos, (photo) => uploadPhoto(project, photo));
+      failed = sent.added < photos.length;
+    }
+    router.replace({
+      pathname: "/projet/[id]",
+      params: failed ? { id: result.projectId, photos: "erreur" } : { id: result.projectId },
+    });
   }
 
   return (
@@ -63,6 +88,21 @@ export default function Recherche() {
           multiline
           autoFocus
         />
+        {photos.length > 0 ? (
+          <PhotoThumbnails
+            // La même photo peut être choisie deux fois : repérée par sa place dans la liste.
+            photos={photos.map((photo, i) => ({ key: String(i), uri: photo.uri }))}
+            alt={fr.search.photos.alt}
+            removeLabel={fr.search.photos.remove}
+            onRemove={(key) => setPhotos((current) => current.filter((_, i) => String(i) !== key))}
+          />
+        ) : null}
+        {photos.length < MAX_PROJECT_PHOTOS ? (
+          <View style={styles.photos}>
+            <Button label={fr.search.photos.add} variant="secondary" onPress={addPhotos} />
+            <Text style={styles.privacy}>{fr.search.photos.hint}</Text>
+          </View>
+        ) : null}
         <Text style={styles.privacy}>{fr.search.privacy}</Text>
         <View style={styles.group}>
           <Text style={styles.groupTitle}>{fr.search.examplesTitle}</Text>
@@ -89,7 +129,7 @@ export default function Recherche() {
         )}
         <Button label={fr.search.submit} disabled={!ready} onPress={submit} />
       </Screen>
-      {analyzing && <AnalysisScreen />}
+      {phase !== "idle" && <AnalysisScreen photos={phase === "photos"} />}
     </View>
   );
 }
@@ -102,6 +142,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: theme.colors["muted-foreground"],
   },
+  photos: { gap: theme.spacing(1.5) },
   group: { gap: theme.spacing(2.5) },
   groupTitle: { fontFamily: theme.font.medium, fontSize: 14, color: theme.colors.foreground },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
