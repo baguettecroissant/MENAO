@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { MailCheck } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { fr } from "@/i18n/fr";
+import { closeAuth } from "@/lib/navigation";
 import { Body, Button, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
@@ -16,6 +17,7 @@ export default function CheckEmail() {
       <Title>{fr.auth.checkEmailTitle}</Title>
       <Body muted>{fr.auth.checkEmailText(email ?? "")}</Body>
       <Button label={fr.auth.backToSignIn} onPress={() => router.replace("/connexion")} />
+      <Button label={fr.auth.continueBrowsing} variant="secondary" onPress={closeAuth} />
     </Screen>
   );
 }

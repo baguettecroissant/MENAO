@@ -9,7 +9,10 @@ import { supabase } from "@/lib/supabase";
 import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
-/** Compte de l'utilisateur : identité, abonnement (artisans, sans lien d'achat), légal, déconnexion. */
+/**
+ * Compte de l'utilisateur : identité, abonnement (artisans, sans lien d'achat), aide (particuliers
+ * seulement : aucun lien vers le site pour les artisans, règle 10), légal, déconnexion.
+ */
 export function AccountScreen() {
   const { session, role } = useSession();
   const [leaving, setLeaving] = useState(false);
@@ -35,6 +38,19 @@ export function AccountScreen() {
           <Text style={styles.heading}>{fr.account.subscription}</Text>
           {/* CLAUDE.md règle 10 : aucun bouton ni lien d'achat de l'abonnement artisan. */}
           <Notice tone="info">{fr.account.subscriptionText}</Notice>
+        </Card>
+      )}
+      {role === "particulier" && (
+        <Card>
+          <Text style={styles.heading}>{fr.guest.helpTitle}</Text>
+          <LinkText
+            label={fr.guest.faq}
+            onPress={() => WebBrowser.openBrowserAsync(siteLinks.faq)}
+          />
+          <LinkText
+            label={fr.guest.contact}
+            onPress={() => WebBrowser.openBrowserAsync(siteLinks.contact)}
+          />
         </Card>
       )}
       <Card>

@@ -1,15 +1,27 @@
 import { Redirect, Tabs } from "expo-router";
-import { Bell, ClipboardList, MessageCircle, UserRound } from "lucide-react-native";
-import { tabBarOptions } from "@/components/tab-bar";
+import { ClipboardList, House, MessageCircle, UserRound } from "lucide-react-native";
+import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
 
-/** Espace particulier : chantiers, messages, notifications et compte. */
-export default function ParticulierLayout() {
+/**
+ * Espace client, ouvert sans compte : accueil, chantiers, messages et compte (ADR 0055). Un
+ * artisan ou un membre de l'équipe qui se connecte est renvoyé vers son espace.
+ */
+export default function ClientLayout() {
   const { space } = useSession();
-  if (space !== "particulier") return <Redirect href="/" />;
+  const tabBarOptions = useTabBarOptions();
+  if (space === "artisan") return <Redirect href="/pro" />;
+  if (space === "equipe") return <Redirect href="/equipe" />;
   return (
     <Tabs screenOptions={tabBarOptions}>
+      <Tabs.Screen
+        name="accueil"
+        options={{
+          title: fr.tabs.home,
+          tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        }}
+      />
       <Tabs.Screen
         name="chantiers"
         options={{
@@ -22,13 +34,6 @@ export default function ParticulierLayout() {
         options={{
           title: fr.tabs.messages,
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: fr.tabs.notifications,
-          tabBarIcon: ({ color, size }) => <Bell color={color} size={size} />,
         }}
       />
       <Tabs.Screen

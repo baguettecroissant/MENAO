@@ -1,5 +1,5 @@
-import { Check, CircleAlert, CircleCheck, Info } from "lucide-react-native";
-import type { ReactNode } from "react";
+import { Check, CircleAlert, CircleCheck, Info, type LucideIcon } from "lucide-react-native";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -18,16 +18,22 @@ const { colors, radius, font, spacing } = theme;
 // Accessibilité : props « role » et « aria-* », comprises à la fois par React Native (iOS, Android)
 // et par react-native-web (les anciennes props accessibilityState… ne sont plus lues sur le web).
 
-/** Écran défilant sur le fond crème, dans les marges sûres du téléphone. */
+/**
+ * Écran défilant sur le fond crème, dans les marges sûres du téléphone. `header` reste fixé en
+ * haut (barre de retour des écrans ouverts par-dessus les onglets).
+ */
 export function Screen({
   children,
   centered = false,
+  header,
 }: {
   children: ReactNode;
   centered?: boolean;
+  header?: ReactNode;
 }) {
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      {header ? <View style={styles.header}>{header}</View> : null}
       <ScrollView
         contentContainerStyle={[styles.screen, centered && styles.centered]}
         keyboardShouldPersistTaps="handled"
@@ -38,16 +44,96 @@ export function Screen({
   );
 }
 
-export function Title({ children }: { children: ReactNode }) {
+export function Title({ children, center = false }: { children: ReactNode; center?: boolean }) {
   return (
-    <Text role="heading" style={styles.title}>
+    <Text role="heading" style={[styles.title, center && styles.center]}>
       {children}
     </Text>
   );
 }
 
-export function Body({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
-  return <Text style={[styles.body, muted && styles.muted]}>{children}</Text>;
+export function Body({
+  children,
+  muted = false,
+  center = false,
+}: {
+  children: ReactNode;
+  muted?: boolean;
+  center?: boolean;
+}) {
+  return (
+    <Text style={[styles.body, muted && styles.muted, center && styles.center]}>{children}</Text>
+  );
+}
+
+/** Titre de section, avec une phrase d'introduction facultative. */
+export function Section({
+  title,
+  text,
+  children,
+}: {
+  title: string;
+  text?: string;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHead}>
+        <Text role="heading" style={styles.sectionTitle}>
+          {title}
+        </Text>
+        {text ? <Text style={styles.sectionText}>{text}</Text> : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+/** Icône dans un carré bleu clair aux coins arrondis. */
+export function IconTile({
+  icon: Icon,
+  size = "md",
+}: {
+  icon: LucideIcon;
+  size?: "sm" | "md" | "lg";
+}) {
+  const box = { sm: 36, md: 44, lg: 64 }[size];
+  return (
+    <View
+      style={[
+        styles.iconTile,
+        { width: box, height: box, borderRadius: size === "lg" ? radius.card + 4 : 12 },
+      ]}
+    >
+      <Icon size={{ sm: 18, md: 22, lg: 30 }[size]} color={colors.primary} />
+    </View>
+  );
+}
+
+/** Puce sélectionnable (métier, exemple de projet). */
+export function Chip({
+  label,
+  selected = false,
+  onPress,
+}: {
+  label: string;
+  selected?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      role="button"
+      aria-selected={selected}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.chip,
+        selected && styles.chipSelected,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{label}</Text>
+    </Pressable>
+  );
 }
 
 export function Button({
@@ -101,8 +187,11 @@ export function TextField({
   label,
   error,
   hint,
+  onFocus,
+  onBlur,
   ...input
 }: TextInputProps & { label: string; error?: string; hint?: string }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -110,7 +199,20 @@ export function TextField({
         aria-label={label}
         accessibilityHint={error ?? hint}
         placeholderTextColor={colors["subtle-foreground"]}
-        style={[styles.input, error ? styles.inputError : null]}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
+        style={[
+          styles.input,
+          input.multiline ? styles.inputMultiline : null,
+          focused ? styles.inputFocused : null,
+          error ? styles.inputError : null,
+        ]}
         {...input}
       />
       {error ? (
@@ -175,8 +277,14 @@ export function Notice({
   );
 }
 
-export function Card({ children }: { children: ReactNode }) {
-  return <View style={styles.card}>{children}</View>;
+export function Card({
+  children,
+  tone = "default",
+}: {
+  children: ReactNode;
+  tone?: "default" | "soft";
+}) {
+  return <View style={[styles.card, tone === "soft" && styles.cardSoft]}>{children}</View>;
 }
 
 export function LinkText({ label, onPress }: { label: string; onPress: () => void }) {
@@ -189,11 +297,39 @@ export function LinkText({ label, onPress }: { label: string; onPress: () => voi
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   screen: { flexGrow: 1, padding: spacing(5), gap: spacing(4) },
   centered: { justifyContent: "center" },
   title: { fontFamily: font.medium, fontSize: 26, lineHeight: 32, color: colors.foreground },
   body: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
   muted: { color: colors["muted-foreground"] },
+  center: { textAlign: "center" },
+  section: { gap: spacing(3) },
+  sectionHead: { gap: spacing(1) },
+  sectionTitle: { fontFamily: font.medium, fontSize: 20, lineHeight: 26, color: colors.foreground },
+  sectionText: {
+    fontFamily: font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
+  iconTile: {
+    backgroundColor: colors["primary-soft"],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chip: {
+    minHeight: 36,
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing(3.5),
+  },
+  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipLabel: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  chipLabelSelected: { color: colors["primary-foreground"] },
   button: {
     minHeight: theme.touchTarget + 4,
     borderRadius: radius.button,
@@ -225,6 +361,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.foreground,
   },
+  inputMultiline: {
+    minHeight: 140,
+    paddingTop: spacing(3),
+    paddingBottom: spacing(3),
+    textAlignVertical: "top",
+  },
+  // Contour du champ actif (remplace celui du navigateur sur la version web).
+  inputFocused: { borderColor: colors.primary, outlineWidth: 0 },
   inputError: { borderColor: colors.danger },
   error: { fontFamily: font.regular, fontSize: 13, color: colors.danger },
   hint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
@@ -270,5 +414,6 @@ const styles = StyleSheet.create({
     padding: spacing(5),
     gap: spacing(3),
   },
+  cardSoft: { backgroundColor: colors["primary-softer"], borderColor: colors["primary-soft"] },
   link: { fontFamily: font.medium, fontSize: 15, color: colors["primary-strong"] },
 });

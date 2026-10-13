@@ -5,6 +5,8 @@ import { supabase } from "./supabase";
 
 type SessionState = {
   session: Session | null;
+  /** Compte connecté (une session anonyme de recherche n'en est pas un, ADR 0012). */
+  signedIn: boolean;
   role: Role;
   space: AppSpace;
   loading: boolean;
@@ -12,14 +14,15 @@ type SessionState = {
 
 const SessionContext = createContext<SessionState>({
   session: null,
+  signedIn: false,
   role: "visiteur",
-  space: "connexion",
+  space: "client",
   loading: true,
 });
 
 /**
  * Session de l'utilisateur et espace de l'application selon son rôle, lu dans `app_metadata`
- * (jamais dans `user_metadata`, CLAUDE.md règle 7).
+ * (jamais dans `user_metadata`, CLAUDE.md règle 7). Sans compte, on visite l'espace client.
  */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -43,8 +46,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<SessionState>(() => {
-    const role = session ? roleFromAppMetadata(session.user.app_metadata) : "visiteur";
-    return { session, role, space: appSpaceForRole(role), loading };
+    const signedIn = Boolean(session && !session.user.is_anonymous);
+    const role = session && signedIn ? roleFromAppMetadata(session.user.app_metadata) : "visiteur";
+    return { session, signedIn, role, space: appSpaceForRole(role), loading };
   }, [session, loading]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
