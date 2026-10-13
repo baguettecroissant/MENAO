@@ -69,6 +69,12 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(page.getByRole("heading", { name: "Questions fréquentes" })).toBeVisible();
 
   await page.goto("/pro");
+  // Vidéo de démonstration (ADR 0058) : chargée seulement à la lecture, aperçu et sous-titres servis.
+  const video = page.getByRole("region", { name: "MENAO en 80 secondes" }).locator("video");
+  await expect(video).toHaveAttribute("preload", "none");
+  for (const file of ["/videos/menao-demo.webp", "/videos/menao-demo.vtt"]) {
+    expect((await page.request.get(file)).status()).toBe(200);
+  }
   const plans = page.getByRole("region", { name: "Un abonnement fixe, aucune commission." });
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(plans.getByText(/^150\s€$/)).toBeVisible();

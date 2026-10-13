@@ -2657,6 +2657,15 @@ export const fr = {
           "3 mois offerts, sans engagement",
         ],
       },
+      video: {
+        eyebrow: "En vidéo",
+        title: "MENAO en 80 secondes",
+        subtitle:
+          "De la demande de votre client à la réception du chantier : voyez comment MENAO vous accompagne à chaque étape.",
+        label: "Vidéo de démonstration de MENAO, avec voix off et sous-titres",
+        captions: "Français",
+        fallback: "Votre navigateur ne peut pas lire cette vidéo.",
+      },
       preview: {
         label:
           "Illustration : une demande de chantier qualifiée, un devis signé et un acompte reçu dans l'application MENAO.",

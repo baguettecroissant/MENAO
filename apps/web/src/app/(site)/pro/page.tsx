@@ -19,6 +19,7 @@ import {
 import type { Metadata } from "next";
 import { LogoMark } from "@/components/brand/logo";
 import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
+import { DemoVideo } from "@/components/pro-landing/demo-video";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
@@ -128,6 +129,19 @@ export default async function ProLandingPage() {
             </div>
             <HeroPreview />
           </div>
+        </div>
+      </section>
+
+      {/* En vidéo */}
+      <section aria-labelledby="pro-video" className="pt-16 sm:pt-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6">
+          <SectionHeading
+            id="pro-video"
+            eyebrow={t.video.eyebrow}
+            title={t.video.title}
+            subtitle={t.video.subtitle}
+          />
+          <DemoVideo />
         </div>
       </section>
 
