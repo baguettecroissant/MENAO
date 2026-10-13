@@ -39,6 +39,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
+  await capture(page, "video-resultats");
 
   // Sélection : 1 à 3 artisans.
   const send = page.getByRole("button", { name: /^Envoyer ma demande/ });
@@ -100,8 +101,10 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(proPage).toHaveURL(/\/pro\/tableau-de-bord$/);
   await expect(proPage.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
   await expect(proPage.getByText("Bonjour Noé !")).toBeVisible();
+  await capture(proPage, "video-pro-tableau-de-bord");
   await proPage.getByRole("link", { name: "Toutes mes demandes" }).click();
   await expect(proPage.getByRole("heading", { name: "Mes demandes" })).toBeVisible();
+  await capture(proPage, "video-pro-demandes");
   await proPage
     .getByRole("link", { name: /Dominique/ })
     .first()
@@ -111,10 +114,13 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(main.getByText("Ses coordonnées et l'adresse exacte s'affichent")).toBeVisible();
   await expect(main.getByText("À contacter de préférence entre 09h00 et 12h00")).toBeVisible();
   expect(await main.innerText()).not.toContain("+33612345678");
+  await capture(proPage, "video-pro-demande");
 
   // « Fixer un rendez-vous » (tiroir) : date passée refusée, puis rendez-vous dans 3 jours.
   await proPage.getByRole("button", { name: "Fixer un rendez-vous" }).click();
   const drawer = proPage.getByRole("dialog", { name: "Fixer un rendez-vous avec Dominique" });
+  await expect(drawer).toBeVisible();
+  await capture(proPage, "video-pro-rdv");
   const day = (offset: number) =>
     new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
   await drawer.getByLabel("Date du rendez-vous").fill(day(-2));
@@ -138,6 +144,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await rdv.getByRole("button", { name: "Enregistrer les notes" }).click();
   await expect(rdv.getByText("Notes enregistrées.")).toBeVisible();
   await expect(rdv.getByText("Code portail 1234")).toBeVisible();
+  await capture(proPage, "video-pro-rendez-vous");
 
   // Devis (F-19) : une ligne, totaux en direct, enregistrement, brouillon retrouvé.
   await rdv.getByRole("link", { name: "Créer un devis" }).click();
@@ -152,6 +159,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await editor.getByRole("button", { name: "Valider la ligne" }).click();
   await expect(editor.getByRole("status")).toHaveText("Modifications apportées");
   await expect(editor.getByText(/^78,10\s€$/).first()).toBeVisible();
+  await capture(proPage, "video-devis-ligne");
   await editor.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(editor.getByRole("status")).toHaveText("Enregistré et à jour");
   await proPage.reload();
@@ -168,6 +176,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(dictation.getByLabel("Texte de la dictée")).toHaveValue(
     "Fuite sous l'évier de la cuisine à Nice.",
   );
+  await capture(proPage, "video-devis-dictee");
   await dictation.getByRole("button", { name: "Sauvegarder cet enregistrement" }).click();
   await expect(dictation.getByText("Enregistrement sauvegardé.", { exact: true })).toBeVisible();
   await dictation.getByRole("button", { name: "Générer les lignes" }).click();
@@ -176,6 +185,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(editor.getByText("À vérifier")).toHaveCount(2);
   // 71,00 € (siphon remplacé) + 12,50 € + recherche de fuite sans prix dicté = 83,50 € HT.
   await expect(editor.getByText(/^91,85\s€$/)).toBeVisible();
+  await capture(proPage, "video-devis-lignes");
 
   // « Générer le devis » (F-20) : enregistrement, aperçu du brouillon et PDF.
   await editor.getByRole("button", { name: "Générer le devis" }).click();
@@ -187,6 +197,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   ).toBeVisible();
   await expect(preview.getByText("Aperçu : numéro attribué à l'envoi")).toBeVisible();
   await expect(preview.getByText("Siphon PVC 40 mm")).toBeVisible();
+  await capture(proPage, "video-devis-apercu");
   const pdfHref = await preview.getByRole("link", { name: "Voir le PDF" }).getAttribute("href");
   expect(pdfHref).toMatch(new RegExp(`^/devis/${UUID}/pdf$`));
   const pdf = await proPage.request.get(pdfHref ?? "");
@@ -207,6 +218,11 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   const upcoming = proPage.getByRole("region", { name: "À venir" });
   await expect(upcoming.getByText("Visite", { exact: true }).first()).toBeVisible();
   await expect(upcoming.getByText("16h30").first()).toBeVisible();
+  await capture(proPage, "video-pro-tableau-de-bord-visite");
+  await proPage.goto(`/pro/agenda?semaine=${day(3)}`);
+  await proPage.waitForLoadState("networkidle");
+  await capture(proPage, "video-pro-agenda");
+  await proPage.goto("/pro/tableau-de-bord");
 
   // Le particulier voit son chantier (rendez-vous, agenda) et les coordonnées de l'artisan.
   await page.reload();
@@ -244,6 +260,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await proPage.goto(previewUrl);
   await proPage.getByRole("link", { name: "Suivant" }).click();
   await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis/envoi$`));
+  await capture(proPage, "video-devis-envoi");
   const sending = proPage.getByRole("main");
   await expect(sending.getByRole("button", { name: "Envoyer le devis" })).toBeDisabled();
   await sending.getByRole("radio", { name: /Mon échéancier par défaut/ }).check();
@@ -262,6 +279,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByText("Votre devis est prêt")).toBeVisible();
   await page.getByRole("link", { name: "Voir et signer le devis" }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}$`));
+  await capture(page, "video-client-devis");
   await expect(page.getByRole("heading", { name: "Devis de Noé Plomberie" })).toBeVisible();
   await expect(page.getByText(/N° DEVIS-\d{4}-0001/)).toBeVisible();
   await expect(page.getByText("Siphon PVC 40 mm")).toBeVisible();
@@ -309,6 +327,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page.getByText(/N° DEVIS-\d{4}-0001-v2/)).toBeVisible();
   await page.getByRole("link", { name: "Signer le devis" }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}/signature$`));
+  await capture(page, "video-client-signature");
   await page.getByRole("button", { name: "Signer le devis" }).click();
   await expect(page.getByText("Cochez cette case pour signer le devis.").first()).toBeVisible();
   for (const label of [
@@ -345,6 +364,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.goto(quoteUrl);
   await page.getByRole("link", { name: /Payer l'acompte \(27,55\s€\)/ }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}/acompte$`));
+  await capture(page, "video-client-acompte");
   await expect(page.getByText("Bénéficiaire : PLOMBERIE NICE EXEMPLE")).toBeVisible();
   await page.route("https://checkout.stripe.com/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<h1>Stripe Checkout (simulé)</h1>" }),
@@ -390,6 +410,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(
     proPage.getByRole("region", { name: "Échéancier de paiement" }).getByText(/27,55\s€/),
   ).toBeVisible();
+  await capture(proPage, "video-pro-dossier");
 
   // Facture d'acompte (F-35) : émise à l'encaissement au nom de l'artisan, numéro FAC-AAAA-0001.
   const invoiceLink = page.getByRole("link", { name: /Facture d'acompte FAC-\d{4}-0001 \(PDF\)/ });
@@ -401,6 +422,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect((await invoicePdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
   await proPage.goto("/pro/factures");
   await expect(proPage.getByRole("link", { name: /Voir la facture FAC-\d{4}-0001/ })).toBeVisible();
+  await capture(proPage, "video-pro-factures");
   const csv = await (await proPage.request.get("/pro/factures/export")).text();
   expect(csv).toContain('"Acompte"');
   expect(csv).toContain('"Dominique Test"');

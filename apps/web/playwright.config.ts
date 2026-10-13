@@ -10,7 +10,8 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: { baseURL, trace: "retain-on-failure" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Branche jetable de la vidéo : captures en double résolution.
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], deviceScaleFactor: 2 } }],
   webServer: [
     {
       // Faux serveur API Sirene, appelé par l'Edge Function sirene-check (Docker → hôte).
