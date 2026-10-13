@@ -923,7 +923,7 @@ export const fr = {
         city ? `${km} km autour de ${city}` : `Rayon de ${km} km`,
       zoneCommunes: (communes: string[]) =>
         communes.length > 3
-          ? `${communes.slice(0, 3).join(", ")} et ${communes.length - 3} autres`
+          ? `${communes.slice(0, 3).join(", ")} et ${communes.length - 3} autre${communes.length > 4 ? "s" : ""}`
           : communes.join(", "),
       distance: (km: number) => `à ${km.toLocaleString("fr-FR")} km`,
       availableNow: "Dispo immédiate",

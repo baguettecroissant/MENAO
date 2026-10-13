@@ -319,6 +319,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chip: {
+    // Une puce trop longue passe à la ligne au lieu de déborder de l'écran.
+    maxWidth: "100%",
     minHeight: 36,
     justifyContent: "center",
     borderRadius: radius.pill,
@@ -326,6 +328,7 @@ const styles = StyleSheet.create({
     borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
     paddingHorizontal: spacing(3.5),
+    paddingVertical: spacing(1.5),
   },
   chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipLabel: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
