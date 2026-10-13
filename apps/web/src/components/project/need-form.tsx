@@ -5,11 +5,11 @@ import { Paperclip, Search, Sparkles, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LogoMark } from "@/components/brand/logo";
 import { Alert, Button, Hint } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
 import { PHOTO_ACCEPT, selectPhotos, uploadProjectPhoto } from "@/lib/project/photos";
+import { AnalysisScreen } from "./analysis-screen";
 import { DictationButton, type DictationState } from "./dictation-button";
 import { TradeChips } from "./trade-chips";
 
@@ -238,23 +238,5 @@ export function NeedForm({
 
       {phase !== "idle" && <AnalysisScreen photos={phase === "photos"} />}
     </>
-  );
-}
-
-/** Écran « Analyse de votre projet en cours » (maquette « Recherche en cours »). */
-export function AnalysisScreen({ photos = false }: { photos?: boolean }) {
-  return (
-    <div
-      role="status"
-      className="fixed inset-x-0 top-16 bottom-0 z-40 flex flex-col items-center justify-center gap-5 bg-background px-6 text-center"
-    >
-      <span className="inline-flex size-16 items-center justify-center rounded-full border border-primary/40 bg-surface">
-        <LogoMark className="size-8 animate-menao-pulse" />
-      </span>
-      <div className="flex flex-col gap-2">
-        <p className="text-2xl font-medium">{photos ? t.uploadingPhotos : t.analyzing}</p>
-        <p className="text-sm text-muted-foreground">{t.analyzingHint}</p>
-      </div>
-    </div>
   );
 }

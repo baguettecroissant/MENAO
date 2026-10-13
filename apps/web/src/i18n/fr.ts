@@ -724,8 +724,23 @@ export const fr = {
     tradesLegend: "Vous savez déjà quel artisan il vous faut ?",
     submit: "Trouver mon artisan du BTP idéal",
     analyzing: "Analyse de votre projet en cours",
-    analyzingHint: "Analyse détaillée de votre besoin …",
     uploadingPhotos: "Envoi de vos photos…",
+    analysis: {
+      steps: {
+        read: "Lecture de votre description",
+        trade: "Identification du métier et des travaux",
+        place: "Repérage du lieu et des pièces",
+        criteria: "Préparation de vos critères",
+        photos: "Envoi de vos photos",
+      },
+      factsTitle: "Le saviez-vous ?",
+      facts: [
+        "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
+        "Vous payez l'artisan directement, par paiement sécurisé : MENAO ne prend aucune commission sur vos travaux.",
+        "Devis, signature, paiement et suivi du chantier : tout se passe au même endroit.",
+        "Votre demande part à 3 artisans au plus, qui ont 48 heures pour vous répondre.",
+      ],
+    },
     privacy:
       "Votre description est analysée par une intelligence artificielle pour pré-remplir votre recherche. Ne saisissez ni nom, ni téléphone, ni e-mail : ils sont de toute façon retirés avant l'analyse.",
     errors: {
