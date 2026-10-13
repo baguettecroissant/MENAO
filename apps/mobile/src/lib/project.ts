@@ -26,15 +26,31 @@ async function ensureSession(): Promise<boolean> {
 export type AnalyzeOutcome =
   { status: "ok"; projectId: string } | { status: keyof typeof fr.search.errors };
 
-/** Analyse du besoin (Edge Function `analyze-need`), qui crée le projet et pré-remplit ses critères. */
+/** Artisan d'un chantier précédent à proposer en premier (« Redemander un devis », ADR 0040). */
+export type Rehire = { artisanId: string; chantierId: string };
+
+/**
+ * Analyse du besoin (Edge Function `analyze-need`), qui crée le projet et pré-remplit ses critères.
+ * Pour une nouvelle demande à un artisan déjà connu, la fonction vérifie le chantier commun.
+ */
 export async function analyzeNeed(
   description: string,
   tradeHint: string | null,
+  rehire: Rehire | null = null,
 ): Promise<AnalyzeOutcome> {
   if (!(await ensureSession())) return { status: "session" };
   const { data, error } = await supabase.functions.invoke<{ status: string; projectId?: string }>(
     "analyze-need",
-    { method: "POST", body: { description, tradeHint } },
+    {
+      method: "POST",
+      body: {
+        description,
+        tradeHint,
+        ...(rehire
+          ? { preferredArtisanId: rehire.artisanId, fromChantierId: rehire.chantierId }
+          : {}),
+      },
+    },
   );
   const payload =
     error instanceof FunctionsHttpError

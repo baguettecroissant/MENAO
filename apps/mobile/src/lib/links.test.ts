@@ -7,6 +7,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
   it("ouvre l'écran qui correspond à la page du site", () => {
     expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}`)).toBe(`/chantier/${ID}`);
     expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/solde`)).toBe(`/chantier/${ID}/solde`);
+    expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/avis`)).toBe(`/chantier/${ID}/avis`);
     expect(appRouteForSitePath(`/mon-espace/devis/${ID}`)).toBe(`/devis/${ID}`);
     expect(appRouteForSitePath(`/mon-espace/devis/${ID}/acompte`)).toBe(`/devis/${ID}/acompte`);
     expect(appRouteForSitePath(`/mon-espace/messages/${ID}`)).toBe(`/conversation/${ID}`);
@@ -21,7 +22,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
   });
 
   it("laisse sur le site les pages sans écran dans l'application", () => {
-    expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/avis`)).toBeNull();
+    expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/signaler/plus`)).toBeNull();
     expect(appRouteForSitePath("/pro/demandes")).toBeNull();
     expect(appRouteForSitePath("/mon-espace/chantiers/pas-un-identifiant")).toBeNull();
   });

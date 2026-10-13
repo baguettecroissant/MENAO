@@ -128,6 +128,8 @@ export type ChantierDetail = {
   openTicketId: string | null;
   /** Assureur décennal repris du devis figé (garanties après la réception). */
   insurer: { name: string; policy: string | null } | null;
+  /** Avis déjà laissé sur ce chantier (F-28). */
+  reviewed: boolean;
 };
 
 /** Vue d'un chantier (F-12) : avancement, journal de l'artisan, paiements, documents et PV. */
@@ -142,6 +144,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
     { data: invoices },
     { data: reception },
     { data: openTicket },
+    { data: review },
   ] = await Promise.all([
     supabase
       .from("chantier_updates")
@@ -172,6 +175,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       .eq("type", "litige")
       .neq("status", "resolu")
       .maybeSingle(),
+    supabase.from("reviews").select("id").eq("chantier_id", id).maybeSingle(),
   ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
@@ -242,6 +246,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       : null,
     openTicketId: openTicket?.id ?? null,
     insurer: decennaleInsurer(quote?.decennale),
+    reviewed: review !== null,
   };
 }
 

@@ -1,13 +1,16 @@
 import {
   chantierStepIndex,
   clientChantierAction,
+  isChantierFinished,
   nextIntervention,
   type ChantierStatus,
 } from "@menao/core";
 import { router } from "expo-router";
 import { MapPin } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { fr } from "@/i18n/fr";
 import { type ClientChantier } from "@/lib/chantiers";
+import { LinkText } from "@/ui";
 import { theme } from "@/ui/theme";
 import {
   ActionCard,
@@ -47,6 +50,16 @@ export const actionOf = (c: ClientChantier) =>
 
 const open = (c: ClientChantier) =>
   router.push({ pathname: "/chantier/[id]", params: { id: c.chantier_id } });
+
+/**
+ * « Redemander un devis » (F-12, ADR 0040) : nouvelle recherche où l'artisan de ce chantier est
+ * proposé en premier ; le serveur vérifie le chantier commun, le nom ne sert qu'au bandeau.
+ */
+export const rehire = (c: Pick<ClientChantier, "artisan_id" | "chantier_id" | "artisan_name">) =>
+  router.push({
+    pathname: "/recherche",
+    params: { artisan: c.artisan_id, depuis: c.chantier_id, nom: c.artisan_name },
+  });
 
 /**
  * Carte d'un chantier en cours (maquette « Mes chantiers ») : photo, état, titre, adresse,
@@ -126,6 +139,16 @@ export function FinishedChantierCard({
         </Text>
         <Text style={styles.meta}>{c.artisan_name}</Text>
         <StatusPill {...tagOf(c)} />
+        {c.status === "cloture" ? (
+          <LinkText label={fr.chantier.rehire(c.artisan_name)} onPress={() => rehire(c)} />
+        ) : isChantierFinished(c.status as ChantierStatus) ? (
+          <LinkText
+            label={fr.myRequests.chooseAnother}
+            onPress={() =>
+              router.push({ pathname: "/projet/[id]/artisans", params: { id: c.project_id } })
+            }
+          />
+        ) : null}
       </View>
     </Pressable>
   );
