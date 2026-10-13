@@ -2,6 +2,7 @@ import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import {
   CLIENT_CANCEL_REASONS,
+  joinNames,
   MAX_ARTISANS_PER_REQUEST,
   REFUSAL_REASONS,
   REQUEST_RESPONSE_HOURS,
@@ -82,5 +83,14 @@ describe("annulation par le client (F-11, F-12)", () => {
       "autre",
     ]);
     expect([...Constants.public.Enums.client_cancel_reason]).toEqual([...CLIENT_CANCEL_REASONS]);
+  });
+});
+
+describe("joinNames", () => {
+  it("assemble les prénoms à la française", () => {
+    expect(joinNames([])).toBe("");
+    expect(joinNames(["Noé"])).toBe("Noé");
+    expect(joinNames(["Noé", "Inès"])).toBe("Noé et Inès");
+    expect(joinNames(["Noé", "Inès", "Lou"])).toBe("Noé, Inès et Lou");
   });
 });

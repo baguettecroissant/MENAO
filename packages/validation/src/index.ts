@@ -1,6 +1,7 @@
 export * from "./account";
 export * from "./agenda";
 export * from "./artisan";
+export * from "./artisan-profile";
 export * from "./auth";
 export * from "./chantier";
 export * from "./conversation";

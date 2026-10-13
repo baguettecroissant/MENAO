@@ -74,3 +74,9 @@ export function responseTimeBucket(minutes: number): ResponseTimeBucket | null {
   if (minutes < 48 * 60) return "48h";
   return null;
 }
+
+/** « Noé », « Noé et Inès », « Noé, Inès et Lou » (sans Intl.ListFormat, absent de Hermes). */
+export function joinNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}`;
+}

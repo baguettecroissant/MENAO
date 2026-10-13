@@ -14,3 +14,9 @@ export function closeAuth(): void {
   if (router.canDismiss()) router.dismissAll();
   else router.replace("/");
 }
+
+/** Referme les écrans ouverts par-dessus les onglets, puis affiche l'onglet demandé. */
+export function openTab(href: "/accueil" | "/chantiers"): void {
+  if (router.canDismiss()) router.dismissAll();
+  router.navigate(href);
+}

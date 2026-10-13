@@ -169,6 +169,38 @@ export type ProjectResults = {
   artisans: MatchedArtisan[];
 };
 
+/** Adresse publique d'un fichier des espaces publics (photos de profil, réalisations). */
+export function publicUrl(bucket: "avatars" | "portfolio", path: string): string {
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
+/** Artisans proposés par la base (`match_artisans`), classés ; null en cas d'erreur. */
+export async function matchArtisans(
+  projectId: string,
+  limit: number,
+): Promise<MatchedArtisan[] | null> {
+  const { data: rows, error } = await supabase.rpc("match_artisans", {
+    p_project_id: projectId,
+    p_limit: limit,
+  });
+  if (error) return null;
+  return (rows ?? []).map((row) => ({
+    id: row.artisan_id,
+    name: row.display_name,
+    avatarUrl: row.avatar_path ? publicUrl("avatars", row.avatar_path) : null,
+    experienceYears: row.experience_years,
+    availableFrom: row.available_from,
+    distanceKm: row.distance_km === null ? null : Number(row.distance_km),
+    zone: {
+      mode: row.zone_mode,
+      radiusKm: row.zone_radius_km,
+      city: row.zone_city,
+      communes: row.zone_communes ?? [],
+    },
+    specialties: specialtiesSchema.catch([]).parse(row.specialties),
+  }));
+}
+
 /**
  * Artisans proposés pour un projet (F-09) : sélection et classement faits par la base
  * (`match_artisans`, 5 artisans au plus), comme sur le site. Null en cas d'erreur.
@@ -180,31 +212,15 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     .eq("id", projectId)
     .maybeSingle();
   if (!project?.trade_code) return null;
-  const [{ data: trade }, { data: rows, error }] = await Promise.all([
+  const [{ data: trade }, artisans] = await Promise.all([
     supabase.from("trades").select("label").eq("code", project.trade_code).maybeSingle(),
-    supabase.rpc("match_artisans", { p_project_id: projectId, p_limit: MAX_SEARCH_RESULTS }),
+    matchArtisans(projectId, MAX_SEARCH_RESULTS),
   ]);
-  if (error) return null;
+  if (!artisans) return null;
   return {
     tradeLabel: trade?.label ?? project.trade_code,
     city: project.ville_nom ?? "",
     workTypeCodes: project.work_type_codes,
-    artisans: (rows ?? []).map((row) => ({
-      id: row.artisan_id,
-      name: row.display_name,
-      avatarUrl: row.avatar_path
-        ? supabase.storage.from("avatars").getPublicUrl(row.avatar_path).data.publicUrl
-        : null,
-      experienceYears: row.experience_years,
-      availableFrom: row.available_from,
-      distanceKm: row.distance_km === null ? null : Number(row.distance_km),
-      zone: {
-        mode: row.zone_mode,
-        radiusKm: row.zone_radius_km,
-        city: row.zone_city,
-        communes: row.zone_communes ?? [],
-      },
-      specialties: specialtiesSchema.catch([]).parse(row.specialties),
-    })),
+    artisans,
   };
 }
