@@ -20,6 +20,7 @@ import {
   PersonRow,
   StatusPill,
 } from "@/components/chantier/parts";
+import { PhotoUpload } from "@/components/pro/photo-upload";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -200,6 +201,7 @@ export function FollowUpView({
             emptyText={
               open ? fr.chantier.journal.artisanIntro(client) : fr.chantier.journal.artisanLocked
             }
+            photoAction={open ? <PhotoUpload chantierId={id} onAdded={onChanged} /> : undefined}
           >
             {open ? <MessageComposer chantierId={id} onDone={onChanged} /> : null}
           </JournalCard>
@@ -352,6 +354,7 @@ function FinishPanel({
       <Text style={styles.important}>
         <Text style={styles.importantLabel}>{t.finishImportant}</Text> {t.finishReminder}
       </Text>
+      <PhotoUpload chantierId={chantierId} label={t.addPhotos} variant="link" onAdded={onDone} />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
       <Button label={t.finish} onPress={confirm} loading={pending} />
       <Button label={t.back} variant="ghost" onPress={() => setOpen(false)} />

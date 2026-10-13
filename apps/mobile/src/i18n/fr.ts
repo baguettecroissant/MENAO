@@ -601,6 +601,15 @@ export const fr = {
     photo: "Photo du signalement : l'ouvrir",
     messageLabel: "Votre message à l'équipe MENAO",
     messageSubmit: "Envoyer",
+    addPhoto: "Ajouter une photo",
+    photoAdded: "Photo ajoutée au signalement.",
+    photoErrors: {
+      too_large: "Photo trop lourde : 10 Mo au plus.",
+      invalid_type: "Format non pris en charge : photo JPEG ou PNG.",
+      locked: "Ce signalement est clos.",
+      limit: "20 photos au plus par signalement.",
+      failed: "La photo n'a pas pu être ajoutée. Réessayez.",
+    },
     closed: "Ce signalement est clos.",
     ongoing:
       "Litige en cours : l'équipe MENAO examine la situation. Les étapes du chantier sont suspendues.",
@@ -799,6 +808,16 @@ export const fr = {
     reportSubmit: "Envoyer le signalement",
     reportCancel: "Annuler",
     reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
+    attach: "Joindre une photo",
+    uploading: "Envoi de la pièce jointe…",
+    attachErrors: {
+      too_large: "Fichier trop lourd : 10 Mo au plus.",
+      invalid_type: "Format non pris en charge : photo JPEG ou PNG.",
+      locked: "Cette conversation est fermée.",
+      limit: "Nombre maximal de pièces jointes atteint pour ce chantier.",
+      rate_limited: "Trop d'envois : réessayez dans un moment.",
+      failed: "La pièce jointe n'a pas pu être envoyée. Réessayez.",
+    },
     button: "Message",
     notFound: "Cette conversation est introuvable.",
   },
@@ -1094,6 +1113,20 @@ export const fr = {
     reviewPending: (client: string) =>
       `${client} a été invité à donner son avis sur votre intervention. Il sera publié sur votre fiche MENAO.`,
     yourClientFallback: "votre client",
+    addPhoto: "Ajouter une photo",
+    addPhotos: "Ajouter des photos",
+    photosHint: "10 photos à la fois au plus.",
+    uploading: (done: number, total: number) => `Envoi des photos : ${done} sur ${total}…`,
+    photosAdded: (n: number) =>
+      n <= 1 ? "Photo ajoutée au suivi du chantier." : `${n} photos ajoutées au suivi du chantier.`,
+    photoErrors: {
+      failed: (n: number) =>
+        n <= 1
+          ? "Une photo n'a pas pu être ajoutée. Réessayez."
+          : `${n} photos n'ont pas pu être ajoutées. Réessayez.`,
+      limit: "Ce chantier a atteint 100 photos.",
+      rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
+    },
   },
   /** Chantiers de l'artisan (F-18) : mêmes textes que l'espace pro du site. */
   proChantiers: {
@@ -1145,6 +1178,15 @@ export const fr = {
       projet_reporte: "projet reporté",
       autre: "autre raison",
     },
+  },
+  /** Photos du téléphone (journal, messagerie, signalement) : appareil photo ou photothèque. */
+  photos: {
+    camera: "Prendre une photo",
+    library: "Choisir dans mes photos",
+    cancel: "Annuler",
+    cameraDenied:
+      "MENAO n'a pas accès à l'appareil photo. Autorisez-le dans les réglages du téléphone.",
+    failed: "Les photos n'ont pas pu être ouvertes. Réessayez.",
   },
   /** Documents PDF (devis, factures, PV), proposés au partage du téléphone. */
   pdf: {

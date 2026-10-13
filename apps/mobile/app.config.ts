@@ -39,6 +39,18 @@ const config: ExpoConfig = {
     "expo-secure-store",
     "expo-font",
     [
+      // Photos du journal, des messages et des signalements (ADR 0069) : textes des demandes
+      // d'accès sur iPhone ; pas de vidéo, donc pas d'accès au micro.
+      "expo-image-picker",
+      {
+        photosPermission:
+          "MENAO accède à vos photos pour les joindre au suivi de vos chantiers, à vos messages et à vos signalements.",
+        cameraPermission:
+          "MENAO utilise l'appareil photo pour photographier vos chantiers et joindre ces photos au suivi, à vos messages ou à vos signalements.",
+        microphonePermission: false,
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         image: "./assets/splash-icon.png",

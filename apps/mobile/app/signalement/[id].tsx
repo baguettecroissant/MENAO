@@ -10,6 +10,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { addTicketMessage, loadTicket } from "@/lib/disputes";
 import { formatDateNumeric, formatDayAndTime } from "@/lib/format";
+import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Card, LinkText, Notice, Screen, TextField, Title } from "@/ui";
@@ -21,7 +22,7 @@ const TONE = { ouvert: "primary", en_cours: "warning", resolu: "neutral" } as co
 
 /**
  * Suivi d'un signalement par son déclarant (F-42), comme sur le site : description, échanges avec
- * l'équipe MENAO (photos comprises), réponse tant que le signalement n'est pas clos.
+ * l'équipe MENAO (photos comprises), réponse et photos tant que le signalement n'est pas clos.
  */
 export default function TicketScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -137,11 +138,47 @@ export default function TicketScreen() {
                 error={error}
               />
               <Button label={t.messageSubmit} onPress={send} loading={pending} />
+              <TicketPhotoUpload ticketId={id} onAdded={reload} />
             </View>
           )}
         </View>
       </Card>
     </Screen>
+  );
+}
+
+/** « Ajouter une photo » au signalement (F-42) : vérifiée et rangée par process-upload. */
+function TicketPhotoUpload({ ticketId, onAdded }: { ticketId: string; onAdded: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+
+  async function add() {
+    const source = await choosePhotoSource(t.addPhoto);
+    if (!source) return;
+    const picked = await pickPhotos(source);
+    if ("error" in picked) return setNotice({ tone: "error", text: picked.error });
+    const photo = picked.photos[0];
+    if (!photo) return;
+    setBusy(true);
+    setNotice(null);
+    const status = await uploadPhoto({ purpose: "ticket_photo", ticketId }, photo);
+    setBusy(false);
+    if (status === "ok") {
+      setNotice({ tone: "success", text: t.photoAdded });
+      onAdded();
+    } else {
+      setNotice({
+        tone: "error",
+        text: t.photoErrors[status as keyof typeof t.photoErrors] ?? t.photoErrors.failed,
+      });
+    }
+  }
+
+  return (
+    <View style={styles.reply}>
+      <Button label={t.addPhoto} variant="secondary" onPress={add} loading={busy} />
+      {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
+    </View>
   );
 }
 

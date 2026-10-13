@@ -23,17 +23,20 @@ const { colors, font, radius, spacing } = theme;
 /**
  * Journal du chantier (F-22, F-12) : photos et messages de l'artisan, du plus récent au plus
  * ancien, communs aux vues du client et de l'artisan. `emptyText` : texte quand rien n'est publié ;
- * `children` : actions de l'artisan (message, photos).
+ * `photoAction` et `children` : actions de l'artisan (photos, message).
  */
 export function JournalCard({
   journal,
   photoUrls,
   emptyText,
+  photoAction,
   children,
 }: {
   journal: JournalSummary;
   photoUrls: string[];
   emptyText: string | null;
+  /** « Ajouter une photo » (artisan, pendant les travaux), sous les photos comme sur le site. */
+  photoAction?: ReactNode;
   children?: ReactNode;
 }) {
   const empty = journal.messages.length === 0 && photoUrls.length === 0;
@@ -63,6 +66,7 @@ export function JournalCard({
             ))}
           </ScrollView>
         ) : null}
+        {photoAction}
         {journal.messages.map((m) => (
           <View key={m.id} style={styles.message}>
             <Text style={styles.messageText}>{m.message}</Text>
