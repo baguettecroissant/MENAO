@@ -1,9 +1,6 @@
-import { MessageCircle } from "lucide-react-native";
-import { ComingSoon } from "@/components/coming-soon";
-import { fr } from "@/i18n/fr";
+import { MessagesScreen } from "@/components/messages/messages-screen";
 
-export default function Messages() {
-  return (
-    <ComingSoon icon={MessageCircle} title={fr.tabs.messages} text={fr.soon.artisanMessages} />
-  );
+/** Onglet « Messages » de l'artisan (F-40) : une conversation par chantier avec ses clients. */
+export default function ProMessages() {
+  return <MessagesScreen />;
 }

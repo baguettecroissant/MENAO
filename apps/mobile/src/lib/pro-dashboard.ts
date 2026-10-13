@@ -19,7 +19,7 @@ export type Dashboard = {
   responseTime: { minutes: number | null; responses: number };
   appointments: {
     kind: AgendaKind;
-    requestId: string;
+    chantierId: string;
     startsAt: string;
     title: string;
     place: string;
@@ -73,7 +73,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     },
     appointments: upcomingAgenda(rows, now).map(({ kind, at, row }) => ({
       kind,
-      requestId: row.request_id,
+      chantierId: row.chantier_id,
       startsAt: at,
       title: row.title,
       place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),

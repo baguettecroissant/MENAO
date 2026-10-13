@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseRequestDetail } from "../src/artisan-request";
+import { parseArtisanChantierDetail, parseRequestDetail } from "../src/artisan-request";
 
 // Réponse d'artisan_request_detail avant le rendez-vous : sans coordonnées ni adresse exacte.
 const detail = {
@@ -41,5 +41,32 @@ describe("détail d'une demande vu par l'artisan (site et application)", () => {
     expect(parseRequestDetail(null)).toBeNull();
     expect(parseRequestDetail({ ...detail, status: "inconnu" })).toBeNull();
     expect(parseRequestDetail({ ...detail, photos: undefined })).toBeNull();
+  });
+});
+
+describe("détail d'un chantier vu par l'artisan (site et application)", () => {
+  const chantier = {
+    ...detail,
+    status: "acceptee",
+    chantier_id: "c1000000-0000-4000-8000-000000000001",
+    chantier: {
+      id: "c1000000-0000-4000-8000-000000000001",
+      status: "rdv_planifie",
+      title: "Fuite sous évier",
+      created_at: "2026-10-13T09:00:00Z",
+      start_at: null,
+      cancelled_at: null,
+    },
+    appointment: { starts_at: "2026-10-16T07:30:00Z", status: "planifie", notes: null },
+  };
+
+  it("lit le chantier, son rendez-vous et ses notes", () => {
+    expect(parseArtisanChantierDetail(chantier)?.appointment?.status).toBe("planifie");
+  });
+
+  it("refuse un état de chantier inconnu", () => {
+    expect(
+      parseArtisanChantierDetail({ ...chantier, chantier: { ...chantier.chantier, status: "x" } }),
+    ).toBeNull();
   });
 });

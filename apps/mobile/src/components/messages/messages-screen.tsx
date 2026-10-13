@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationRow } from "./conversation-row";
 import { fr } from "@/i18n/fr";
 import { loadConversations, type ConversationItem } from "@/lib/messages";
+import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, Title } from "@/ui";
@@ -19,9 +20,13 @@ import { theme } from "@/ui/theme";
 const t = fr.messages;
 const { colors, radius, spacing } = theme;
 
-/** Messages du client (F-40) : une conversation par chantier, rechargées à chaque retour. */
+/**
+ * Messages (F-40), du client avec ses artisans ou de l'artisan avec ses clients : une conversation
+ * par chantier, rechargées à chaque retour.
+ */
 export function MessagesScreen() {
   const { refresh } = useUnread();
+  const artisan = useSession().space === "artisan";
   const load = useCallback(async (): Promise<ConversationItem[] | null> => {
     const rows = await loadConversations();
     refresh();
@@ -56,13 +61,13 @@ export function MessagesScreen() {
       >
         <View style={styles.head}>
           <Title>{t.title}</Title>
-          <Body muted>{t.subtitle}</Body>
+          <Body muted>{artisan ? t.subtitlePro : t.subtitle}</Body>
         </View>
         {rows === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : rows.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>{t.empty}</Text>
+            <Text style={styles.emptyText}>{artisan ? t.emptyPro : t.empty}</Text>
           </View>
         ) : (
           <View style={styles.list}>

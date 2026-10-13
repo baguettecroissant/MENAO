@@ -1,37 +1,17 @@
 import "server-only";
-import { CHANTIER_STATUSES } from "@menao/core";
-import { z } from "zod";
+import { parseArtisanChantierDetail, type ArtisanChantierDetail } from "@menao/validation";
 import type { createClient } from "@/lib/supabase/server";
-import { requestDetailSchema } from "./requests";
 
 /**
  * Détail d'un chantier de l'artisan (F-18, F-22) : demande d'origine, état, date de démarrage,
- * rendez-vous et notes privées.
+ * rendez-vous et notes privées. Schéma partagé avec l'application (`@menao/validation`).
  */
-const chantierDetailSchema = requestDetailSchema.extend({
-  chantier: z.object({
-    id: z.string(),
-    status: z.enum(CHANTIER_STATUSES),
-    title: z.string(),
-    created_at: z.string(),
-    start_at: z.string().nullable(),
-    cancelled_at: z.string().nullable(),
-  }),
-  appointment: z
-    .object({
-      starts_at: z.string(),
-      status: z.enum(["planifie", "annule"]),
-      notes: z.string().nullable(),
-    })
-    .nullable(),
-});
-export type ChantierDetail = z.infer<typeof chantierDetailSchema>;
+export type ChantierDetail = ArtisanChantierDetail;
 
 export async function getChantierDetail(
   supabase: Awaited<ReturnType<typeof createClient>>,
   chantierId: string,
 ): Promise<ChantierDetail | null> {
   const { data } = await supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId });
-  const parsed = chantierDetailSchema.safeParse(data);
-  return parsed.success ? parsed.data : null;
+  return parseArtisanChantierDetail(data);
 }

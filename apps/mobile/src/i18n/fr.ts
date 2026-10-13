@@ -762,8 +762,11 @@ export const fr = {
   messages: {
     title: "Messages",
     subtitle: "Vos échanges avec vos artisans, chantier par chantier.",
+    subtitlePro: "Vos échanges avec vos clients, chantier par chantier.",
     empty:
       "Aucun message pour le moment. Écrivez à votre artisan depuis la page de votre chantier (bouton « Message »).",
+    emptyPro:
+      "Aucun message pour le moment. Écrivez à votre client depuis la fiche du chantier (bouton « Écrire au client »).",
     error: "Vos messages n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
     unread: (n: number) => (n <= 1 ? "1 message non lu" : `${n} messages non lus`),
     you: "Vous : ",
@@ -883,8 +886,6 @@ export const fr = {
       hors_zone: "Hors de ma zone d'intervention",
       autre: "Autre",
     },
-    appointmentFixed:
-      "Rendez-vous fixé : le client a reçu la date et vos coordonnées. Le suivi du chantier arrive bientôt dans l'application.",
     notFound: "Cette demande est introuvable.",
   },
   /** Rendez-vous fixé par l'artisan (F-17) : mêmes textes et mêmes contrôles que le site. */
@@ -903,6 +904,77 @@ export const fr = {
     errors: {
       passe: "Choisissez une date et une heure à venir.",
       trop_loin: "Le rendez-vous doit avoir lieu dans les 6 prochains mois.",
+    },
+    reschedule: "Modifier",
+    rescheduleTitle: "Modifier le rendez-vous",
+    rescheduleSubmit: "Enregistrer la nouvelle date",
+    notes: "Notes privées",
+    addNotes: "Ajouter des notes",
+    editNotes: "Modifier mes notes",
+    notesHint: "Visibles par vous seul : code d'accès, matériel à prévoir…",
+    saveNotes: "Enregistrer les notes",
+    cancel: "Annuler le chantier",
+    cancelTitle: "Annuler le chantier",
+    cancelIntro:
+      "Le client sera informé de l'annulation et pourra contacter un autre artisan. Cette action est définitive.",
+    cancelReason: "Message pour le client (facultatif)",
+    cancelConfirm: "Annuler le chantier",
+    cancelled: (date: string) => `Chantier annulé le ${date}.`,
+    writeClient: "Écrire au client",
+    place: "Lieu du rendez-vous",
+    reminder: "Rappel du chantier",
+    // Provisoire : la création du devis arrive dans l'application (lot 6c, partie suivante).
+    quoteSoon: "La préparation du devis arrive bientôt dans l'application.",
+  },
+  /** Chantiers de l'artisan (F-18) : mêmes textes que l'espace pro du site. */
+  proChantiers: {
+    title: "Mes chantiers",
+    subtitle: "Vos rendez-vous et vos chantiers en cours.",
+    all: "Tous mes chantiers",
+    empty:
+      "Aucun chantier pour le moment. Fixez un rendez-vous depuis une demande pour créer votre premier chantier.",
+    error: "Vos chantiers n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
+    appointmentOn: (day: string, time: string) => `Rendez-vous le ${day} à ${time}`,
+    startOn: (day: string, time: string) => `Démarrage le ${day} à ${time}`,
+    status: {
+      demande_envoyee: "Demande reçue",
+      rdv_planifie: "Rendez-vous planifié",
+      devis_envoye: "Devis envoyé",
+      devis_en_revision: "Modification demandée",
+      devis_refuse: "Devis refusé",
+      devis_signe: "Devis signé",
+      acompte_paye: "Acompte payé",
+      planifie: "Chantier planifié",
+      en_cours: "Travaux en cours",
+      travaux_termines: "Travaux terminés",
+      reserves_a_lever: "Réserves à lever",
+      receptionne: "Chantier réceptionné",
+      cloture: "Chantier clôturé",
+      en_litige: "Litige en cours",
+      annule: "Chantier annulé",
+    },
+    notFound: "Ce chantier est introuvable.",
+  },
+  /** Dernier devis envoyé, vu par l'artisan (F-21, F-31) : mêmes textes que le site. */
+  proQuoteSent: {
+    title: "Devis envoyé",
+    summary: (numero: string, amount: string) => `N° ${numero} · ${amount} TTC`,
+    sentOn: (day: string, until: string) => `Envoyé le ${day}, valable jusqu'au ${until}`,
+    waiting: "En attente de la réponse du client.",
+    revision: "Le client demande une modification :",
+    refused: (reason: string) => `Le client a refusé le devis : ${reason}.`,
+    signed: (date: string) => `Le client a signé le devis le ${date}.`,
+    depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
+    depositInvoice: (numero: string) => `Télécharger la facture d'acompte ${numero}`,
+    depositInProgress: "Paiement de l'acompte en cours (virement ou prélèvement en attente).",
+    depositWaiting: "En attente du paiement de l'acompte par le client.",
+    viewSigned: "Télécharger le devis signé",
+    viewPdf: "Télécharger le PDF",
+    refusalReasons: {
+      trop_cher: "prix trop élevé",
+      autre_artisan: "un autre artisan a été choisi",
+      projet_reporte: "projet reporté",
+      autre: "autre raison",
     },
   },
   /** Documents PDF (devis, factures, PV), proposés au partage du téléphone. */
@@ -962,7 +1034,6 @@ export const fr = {
   soon: {
     title: "Bientôt dans l'application",
     agenda: "Vos rendez-vous et vos chantiers arriveront ici.",
-    artisanMessages: "Vos échanges avec vos clients arriveront ici.",
   },
   account: {
     title: "Mon compte",

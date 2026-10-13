@@ -3,6 +3,8 @@ import { CalendarDays, Inbox, LayoutGrid, MessageCircle, UserRound } from "lucid
 import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
+import { useUnread } from "@/lib/unread";
+import { theme } from "@/ui/theme";
 
 /**
  * Espace artisan : tableau de bord, demandes, agenda, messages et compte. Aucun lien vers
@@ -10,6 +12,7 @@ import { useSession } from "@/lib/session";
  */
 export default function ProLayout() {
   const { space } = useSession();
+  const { messages } = useUnread();
   const tabBarOptions = useTabBarOptions();
   if (space !== "artisan") return <Redirect href="/" />;
   return (
@@ -40,6 +43,10 @@ export default function ProLayout() {
         options={{
           title: fr.tabs.messages,
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
+          tabBarBadge: messages > 0 ? messages : undefined,
+          tabBarBadgeStyle: { backgroundColor: theme.colors.primary, fontSize: 11 },
+          tabBarAccessibilityLabel:
+            messages > 0 ? `${fr.tabs.messages}, ${fr.messages.unread(messages)}` : undefined,
         }}
       />
       <Tabs.Screen
