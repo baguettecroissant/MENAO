@@ -6,6 +6,7 @@ export * from "./chantier";
 export * from "./conversation";
 export * from "./dispute";
 export * from "./documents";
+export * from "./geo";
 export * from "./messages";
 export * from "./project";
 export * from "./quote";

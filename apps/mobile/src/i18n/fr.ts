@@ -105,11 +105,14 @@ export const fr = {
     ],
     free: "MENAO est 100\u00a0% gratuit.",
   },
+  // Recherche (F-05 à F-07) : textes repris de la recherche du site.
   search: {
     title: "Votre projet",
     intro: "Décrivez vos travaux : MENAO trouve les artisans vérifiés de votre secteur.",
     label: "Décrivez votre besoin",
     placeholder: "Par exemple : fuite sous l'évier de la cuisine, à Nice…",
+    privacy:
+      "Votre description est analysée par une intelligence artificielle pour pré-remplir votre recherche. Ne saisissez ni nom, ni téléphone, ni e-mail : ils sont de toute façon retirés avant l'analyse.",
     examplesTitle: "Besoin d'inspiration ?",
     examples: [
       "Fuite sous l'évier de la cuisine, à Nice",
@@ -117,8 +120,111 @@ export const fr = {
       "Remplacer le chauffe-eau de mon appartement",
       "Refaire la salle de bain avec une douche à l'italienne",
     ],
-    tradeLabel: "Métier (facultatif)",
-    submit: "Lancer la recherche",
+    tradeLabel: "Vous savez déjà quel artisan il vous faut ?",
+    submit: "Trouver mon artisan",
+    analyzing: "Analyse de votre projet en cours",
+    analysis: {
+      steps: [
+        "Lecture de votre description",
+        "Identification du métier et des travaux",
+        "Repérage du lieu et des pièces",
+        "Préparation de vos critères",
+      ],
+      factsTitle: "Le saviez-vous ?",
+      facts: [
+        "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
+        "Vous payez l'artisan directement, par paiement sécurisé : MENAO ne prend aucune commission sur vos travaux.",
+        "Devis, signature, paiement et suivi du chantier : tout se passe au même endroit.",
+        "Votre demande part à 3 artisans au plus, qui ont 48\u00a0heures pour vous répondre.",
+      ],
+    },
+    errors: {
+      rate_limited:
+        "Vous avez lancé beaucoup d'analyses en peu de temps. Réessayez dans une heure.",
+      invalid: "Décrivez votre projet en 5\u00a0000 caractères au plus.",
+      unavailable: "L'analyse est momentanément indisponible. Réessayez dans quelques instants.",
+      session:
+        "Impossible de démarrer votre recherche. Vérifiez votre connexion et réessayez dans quelques instants.",
+    },
+  },
+  review: {
+    title: "Vérifiez vos critères",
+    intro:
+      "Assurez-vous que ces informations correspondent à votre besoin et complétez-les si nécessaire.",
+    noAnalysis:
+      "Nous n'avons pas pu analyser votre description automatiquement. Complétez les rubriques ci-dessous.",
+    lowConfidence:
+      "Vérifiez bien ces critères : votre description laissait plusieurs interprétations possibles.",
+    yourText: "Votre description",
+    more: "Lire la suite",
+    less: "Réduire",
+    trade: "Artisan recherché",
+    tradeHelp: "Quel type d'artisan conviendrait le mieux à votre besoin ?",
+    works: "Travaux attendus",
+    worksNeedTrade: "Choisissez d'abord le métier recherché.",
+    site: "Le chantier",
+    lieu: "Où seront réalisés les travaux ?",
+    rooms: "Pièces concernées",
+    surface: "Surface estimée des travaux",
+    address: "Adresse",
+    city: "Votre ville",
+    cityPlaceholder: "Commencez à saisir une ville",
+    street: "Adresse exacte (facultatif)",
+    streetHint:
+      "Elle affine la recherche et ne sera communiquée qu'aux artisans qui acceptent votre demande.",
+    streetPlaceholder: "Ex : 1 rue de France",
+    change: "Modifier",
+    date: "Date de début souhaitée",
+    dateModes: {
+      des_que_possible: "Dès que possible",
+      date: "Préciser une date",
+      inconnue: "Je ne sais pas encore",
+    },
+    pickDate: "Choisir la date",
+    startsOn: (date: string) => `Début le ${date}`,
+    noMatch: "Aucun résultat.",
+    submit: "Trouver l'artisan idéal",
+    submitHint: "Renseignez au moins le métier et la ville pour lancer la recherche.",
+    notFound: "Ce projet est introuvable.",
+  },
+  results: {
+    title: "Sélectionnez votre artisan idéal",
+    found: (n: number) =>
+      n === 1
+        ? "Nous avons trouvé 1 artisan vérifié qui correspond à votre projet."
+        : `Nous avons trouvé ${n} artisans vérifiés qui correspondent à votre projet.`,
+    noneTitle: "Aucun artisan disponible pour l'instant",
+    none: "Aucun artisan vérifié ne couvre encore votre secteur pour ce métier.",
+    project: "Votre projet",
+    projectSummary: (trade: string, city: string) => `${trade} à ${city}`,
+    edit: "Modifier",
+    experience: (years: number) =>
+      years <= 1 ? `${years} an d'expérience` : `${years} ans d'expérience`,
+    zoneRadius: (km: number, city: string | null) =>
+      city ? `${km} km autour de ${city}` : `Rayon de ${km} km`,
+    zoneCommunes: (communes: string[]) =>
+      communes.length > 3
+        ? `${communes.slice(0, 3).join(", ")} et ${communes.length - 3} autre${communes.length > 4 ? "s" : ""}`
+        : communes.join(", "),
+    distance: (km: string) => `à ${km} km`,
+    availableNow: "Dispo immédiate",
+    availableFrom: (date: string) => `Disponible à partir du ${date}`,
+    more: (n: number) => `+${n}`,
+    nextStep:
+      "Bientôt dans l'application : la fiche de chaque artisan et l'envoi de votre demande à 3 artisans au plus.",
+    error: "Impossible d'afficher les artisans pour le moment. Réessayez dans quelques instants.",
+  },
+  lieux: {
+    appartement: "En appartement",
+    maison: "En maison",
+    jardin: "Dans un jardin",
+    entreprise: "En entreprise",
+  },
+  surfaces: {
+    moins_10: "< 10 m²",
+    "10_20": "10 à 20 m²",
+    "20_50": "20 à 50 m²",
+    plus_50: "> 50 m²",
   },
   guest: {
     spaceTitle: "Votre espace MENAO",

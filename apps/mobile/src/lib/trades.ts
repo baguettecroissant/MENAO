@@ -14,6 +14,7 @@ export function useTrades(): Trade[] {
     supabase
       .from("trades")
       .select("code, label")
+      .eq("active", true)
       .order("sort_order")
       .then(({ data }) => {
         if (active && data) setTrades(data);
