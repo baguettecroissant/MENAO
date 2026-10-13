@@ -1,0 +1,17 @@
+# Générés par Expo
+.expo/
+expo-env.d.ts
+dist/
+web-build/
+
+# Dossiers natifs générés par « expo prebuild » : la configuration vit dans app.config.ts
+/ios
+/android
+
+# Identifiants de signature des stores : uniquement dans EAS, jamais dans le dépôt
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+credentials.json

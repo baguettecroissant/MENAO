@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ROLES,
+  appSpaceForRole,
   homePathForRole,
   isAdmin,
   isRole,
@@ -60,5 +61,16 @@ describe("homePathForRole", () => {
     expect(homePathForRole("admin")).toBe("/admin");
     expect(homePathForRole("support")).toBe("/admin/tickets");
     expect(homePathForRole("visiteur")).toBe("/connexion");
+  });
+});
+
+describe("appSpaceForRole (application native)", () => {
+  it("particulier et artisan ont chacun leur espace ; l'équipe utilise le back-office web", () => {
+    expect(appSpaceForRole("particulier")).toBe("particulier");
+    expect(appSpaceForRole("artisan")).toBe("artisan");
+    expect(appSpaceForRole("artisan_en_attente")).toBe("artisan");
+    expect(appSpaceForRole("admin")).toBe("equipe");
+    expect(appSpaceForRole("support")).toBe("equipe");
+    expect(appSpaceForRole("visiteur")).toBe("connexion");
   });
 });
