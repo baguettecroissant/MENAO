@@ -52,3 +52,13 @@ export function homePathForRole(role: Role): string {
       return "/mon-espace";
   }
 }
+
+/** Espace de l'application native selon le rôle (phase 6) ; l'équipe MENAO utilise le back-office web. */
+export type AppSpace = "particulier" | "artisan" | "equipe" | "connexion";
+
+export function appSpaceForRole(role: Role): AppSpace {
+  if (role === "visiteur") return "connexion";
+  if (isStaff(role)) return "equipe";
+  if (role === "artisan" || role === "artisan_en_attente") return "artisan";
+  return "particulier";
+}

@@ -53,6 +53,18 @@ export const fontFamily = {
 /** Taille tactile minimale (spec §5 : 44 px). */
 export const minTouchTarget = "2.75rem";
 
+/** Valeurs numériques pour l'application native (React Native, phase 6) : mêmes rayons et cible tactile. */
+export const nativeRadius = {
+  button: 999,
+  input: 12,
+  card: 16,
+  hero: 28,
+  chip: 6,
+  pill: 999,
+} as const;
+
+export const nativeTouchTarget = 44;
+
 /** Paires texte / fond utilisées par l'interface : contraste AA (≥ 4,5:1) exigé. */
 export const contrastPairs: ReadonlyArray<readonly [text: ColorToken, background: ColorToken]> = [
   ["foreground", "background"],

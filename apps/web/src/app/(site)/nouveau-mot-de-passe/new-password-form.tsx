@@ -2,7 +2,7 @@
 
 import { PASSWORD_MIN_LENGTH } from "@menao/validation";
 import { useActionState } from "react";
-import { Alert, Button, Field } from "@/components/ui";
+import { Alert, Button } from "@/components/ui";
 import { PasswordField } from "@/components/form-fields";
 import { fr } from "@/i18n/fr";
 import { updatePassword } from "@/lib/auth/actions";

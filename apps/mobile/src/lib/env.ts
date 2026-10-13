@@ -1,0 +1,19 @@
+/** Variables publiques de l'application (fichier .env, préfixe EXPO_PUBLIC_, jamais de secret). */
+export const env = {
+  supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
+  supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
+  siteUrl: process.env.EXPO_PUBLIC_SITE_URL ?? "https://menao-web.vercel.app",
+};
+
+export const isConfigured = Boolean(env.supabaseUrl && env.supabaseKey);
+
+/** Lien des e-mails d'authentification, ouvert sur le site (même forme que le site : `?next=`). */
+const confirmUrl = (next: string) => `${env.siteUrl}/auth/confirm?next=${encodeURIComponent(next)}`;
+
+/** Pages du site ouvertes depuis l'application. */
+export const siteLinks = {
+  terms: `${env.siteUrl}/cgu`,
+  privacy: `${env.siteUrl}/confidentialite`,
+  resetPassword: confirmUrl("/nouveau-mot-de-passe"),
+  emailConfirmed: confirmUrl("/mon-espace"),
+};
