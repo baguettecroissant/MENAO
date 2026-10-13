@@ -62,6 +62,27 @@ export function formatDayLabel(iso: string, now: Date = new Date()): string {
   return dayFull.format(new Date(iso));
 }
 
+const parisParts = new Intl.DateTimeFormat("fr-CA", {
+  timeZone: "Europe/Paris",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** Date (AAAA-MM-JJ) et heure (HH:MM) de Paris d'un instant : pré-remplissage des champs. */
+export function parisDateTime(iso: string): { date: string; time: string } {
+  const parts = Object.fromEntries(
+    parisParts.formatToParts(new Date(iso)).map((part) => [part.type, part.value]),
+  );
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    time: `${parts.hour}:${parts.minute}`,
+  };
+}
+
 const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" });
 
 /** Mois AAAA-MM → « septembre », comme sur le site. */

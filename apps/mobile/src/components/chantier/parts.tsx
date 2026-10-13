@@ -163,12 +163,18 @@ export function ChantierStepper({ current }: { current: number }) {
 
 /** Artisan du chantier : photo, nom, métier, et l'appel une fois les coordonnées échangées. */
 export function PersonRow({
+  label = t.yourArtisan,
   name,
   detail,
   photoUrl,
   phone,
   onMessage,
+  verified = true,
 }: {
+  /** « Votre artisan » côté client, « Votre client » côté artisan. */
+  label?: string;
+  /** Badge « Artisan vérifié par MENAO » (vue du client). */
+  verified?: boolean;
   name: string;
   detail: string | null;
   photoUrl: string | null;
@@ -178,15 +184,19 @@ export function PersonRow({
 }) {
   return (
     <View style={styles.person}>
-      <Text style={styles.personLabel}>{t.yourArtisan}</Text>
+      <Text style={styles.personLabel}>{label}</Text>
       <View style={styles.personRow}>
         <Avatar url={photoUrl} name={name} />
         <View style={styles.personText}>
           <Text style={styles.personName}>{name}</Text>
-          <View style={styles.personMeta}>
-            <Text style={styles.meta}>{detail}</Text>
-            <BadgeCheck size={14} color={colors.primary} aria-label={t.verified} />
-          </View>
+          {detail || verified ? (
+            <View style={styles.personMeta}>
+              {detail ? <Text style={styles.meta}>{detail}</Text> : null}
+              {verified ? (
+                <BadgeCheck size={14} color={colors.primary} aria-label={t.verified} />
+              ) : null}
+            </View>
+          ) : null}
         </View>
         {phone ? (
           <Pressable

@@ -6,30 +6,14 @@ import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
+import { parisDateTime } from "@/lib/format";
 import { rescheduleAppointment } from "@/lib/pro-chantiers";
 import { Button, Notice, Screen, Title } from "@/ui";
 
 const t = fr.proAppointment;
-const paris = new Intl.DateTimeFormat("fr-CA", {
-  timeZone: "Europe/Paris",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-});
-
-/** Date (AAAA-MM-JJ) et heure (HH:MM) de Paris d'un instant, pour pré-remplir les champs. */
+/** Date et heure de Paris du rendez-vous actuel, pour pré-remplir les champs. */
 function parisValues(iso: string | undefined): { date: string | null; time: string } {
-  if (!iso) return { date: null, time: "09:00" };
-  const parts = Object.fromEntries(
-    paris.formatToParts(new Date(iso)).map((p) => [p.type, p.value]),
-  );
-  return {
-    date: `${parts.year}-${parts.month}-${parts.day}`,
-    time: `${parts.hour}:${parts.minute}`,
-  };
+  return iso ? parisDateTime(iso) : { date: null, time: "09:00" };
 }
 
 /** F-18 « Modifier le rendez-vous », comme sur le site : nouvelle date et heure d'arrivée. */

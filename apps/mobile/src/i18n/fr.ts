@@ -392,6 +392,8 @@ export const fr = {
     },
     stepsLabel: "Avancement du chantier",
     yourArtisan: "Votre artisan",
+    yourClient: "Votre client",
+    depositReceived: "Acompte reçu",
     verified: "Artisan vérifié par MENAO",
     call: "Appeler",
     tabs: { suivi: "Suivi", dossier: "Dossier" },
@@ -426,6 +428,10 @@ export const fr = {
         `Le suivi de chantier débutera dès que ${artisan} commencera les travaux.`,
       clientEmpty: (artisan: string) =>
         `Les photos et messages du chantier laissés par ${artisan} seront affichés ici.`,
+      artisanIntro: (client: string) =>
+        `Ajoutez des photos et des messages pour que ${client} puisse suivre son chantier.`,
+      artisanLocked:
+        "Vous pourrez ajouter des photos et des messages sur ce chantier une fois celui-ci en cours.",
       photosTitle: "Photos du chantier",
       messageLeft: (ago: string) => `Message laissé ${ago}`,
     },
@@ -1039,6 +1045,55 @@ export const fr = {
       submit: "Envoyer le devis",
       sent: "Devis envoyé : le client peut le consulter dans son espace.",
     },
+  },
+  /** Suivi du chantier par l'artisan après l'acompte (F-22, F-26) : mêmes textes que le site. */
+  proFollowUp: {
+    confirm: "Confirmer la date de démarrage",
+    edit: "Modifier",
+    editTitle: "Modifier la date de démarrage",
+    editSubmit: "Enregistrer la nouvelle date",
+    startDate: "Date de démarrage",
+    quoteStart: (day: string) => `Date de début prévue au devis : ${day}.`,
+    confirmedTitle: "Date de démarrage des travaux confirmée",
+    confirmed: (day: string, time: string, client: string) =>
+      `Vous avez confirmé le début des travaux le ${day} à ${time}. Une notification a bien été envoyée à ${client}.`,
+    errors: {
+      passe: "Choisissez une date et une heure à venir.",
+      trop_loin: "Le démarrage doit avoir lieu dans les 12 prochains mois.",
+    },
+    addMessage: "Ajouter un message",
+    messageLabel: "Message pour votre client",
+    messageSubmit: "Publier le message",
+    messageCancel: "Annuler",
+    messageSent: "Message publié.",
+    finish: "Déclarer le chantier terminé",
+    finishTitle: "Ce chantier est-il terminé ?",
+    finishIntro: (client: string) =>
+      `En déclarant ce chantier comme terminé, ${client} recevra une notification l'invitant à réceptionner les travaux.`,
+    finishImportant: "Information importante :",
+    finishReminder:
+      "Avant de déclarer le chantier comme terminé, assurez-vous d'avoir ajouté des photos du chantier une fois terminé.",
+    back: "Retour",
+    awaitingReception: (client: string) =>
+      `En attente de la réception des travaux par ${client} (signature du procès-verbal).`,
+    reservesTitle: (client: string) => `Réserves émises par ${client}`,
+    reservesNext:
+      "Intervenez pour lever ces réserves : votre client confirmera ensuite leur levée, puis réglera le solde.",
+    received: (client: string, date: string, balance: string) =>
+      `Réception validée par ${client} le ${date}. Prochaine étape : le paiement du solde (${balance}).`,
+    signalLift: "Signaler la levée des réserves",
+    liftTitle: "Les réserves sont-elles levées ?",
+    liftText: (client: string) =>
+      `${client} sera invité à vérifier les reprises, puis à confirmer la levée des réserves. Pensez à ajouter des photos des reprises dans le suivi du chantier.`,
+    liftMessage: "Message pour votre client (facultatif)",
+    liftSubmit: "Signaler la levée",
+    liftSignaled: (client: string, date: string) =>
+      `Levée signalée le ${date} : en attente de la confirmation de ${client}.`,
+    closed: (date: string, amount: string) =>
+      `Chantier clôturé le ${date} : solde de ${amount} reçu, facture de solde émise.`,
+    reviewPending: (client: string) =>
+      `${client} a été invité à donner son avis sur votre intervention. Il sera publié sur votre fiche MENAO.`,
+    yourClientFallback: "votre client",
   },
   /** Chantiers de l'artisan (F-18) : mêmes textes que l'espace pro du site. */
   proChantiers: {

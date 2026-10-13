@@ -9,6 +9,7 @@ import {
   formatDuration,
   formatMonthName,
   formatTime,
+  parisDateTime,
 } from "./format";
 
 describe("mise en forme", () => {
@@ -52,5 +53,12 @@ describe("mise en forme", () => {
     expect(plain(formatDuration(120))).toBe("2 h");
     expect(plain(formatDuration(27 * 60))).toBe("1 j 3 h");
     expect(formatMonthName("2026-09")).toBe("septembre");
+  });
+
+  it("pré-remplit la date et l'heure de Paris d'un instant", () => {
+    // 07h30 UTC en octobre (heure d'été) : 09h30 à Paris.
+    expect(parisDateTime("2026-10-20T07:30:00Z")).toEqual({ date: "2026-10-20", time: "09:30" });
+    // 23h30 UTC le 31 décembre : déjà le 1er janvier à Paris.
+    expect(parisDateTime("2026-12-31T23:30:00Z")).toEqual({ date: "2027-01-01", time: "00:30" });
   });
 });
