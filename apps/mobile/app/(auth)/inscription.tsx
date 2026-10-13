@@ -1,10 +1,11 @@
 import { authErrorKind, LEGAL_DOCUMENT_VERSIONS, SIGNUP_REQUIRED_DOCUMENTS } from "@menao/core";
 import { PASSWORD_MIN_LENGTH, signUpSchema } from "@menao/validation";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { z } from "zod";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
@@ -76,7 +77,7 @@ export default function SignUp() {
   }
 
   return (
-    <Screen>
+    <Screen header={<TopBar />}>
       <Title>{fr.auth.signUpTitle}</Title>
       <Notice tone="info">{fr.auth.signUpText}</Notice>
       {failure && <Notice tone="error">{failure}</Notice>}
@@ -151,9 +152,7 @@ export default function SignUp() {
       <Button label={fr.auth.signUp} onPress={submit} loading={pending} />
       <View style={styles.footer}>
         <Body muted>{fr.auth.haveAccount}</Body>
-        <Link href="/connexion" style={styles.link}>
-          {fr.auth.signIn}
-        </Link>
+        <LinkText label={fr.auth.signIn} onPress={() => router.replace("/connexion")} />
       </View>
     </Screen>
   );
@@ -163,6 +162,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: theme.spacing(3) },
   half: { flex: 1 },
   links: { gap: theme.spacing(2), paddingLeft: theme.spacing(8.5) },
-  link: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors["primary-strong"] },
   footer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing(2) },
 });

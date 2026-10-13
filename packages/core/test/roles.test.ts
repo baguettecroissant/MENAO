@@ -65,12 +65,12 @@ describe("homePathForRole", () => {
 });
 
 describe("appSpaceForRole (application native)", () => {
-  it("particulier et artisan ont chacun leur espace ; l'équipe utilise le back-office web", () => {
-    expect(appSpaceForRole("particulier")).toBe("particulier");
+  it("visiteurs et particuliers partagent l'espace client ; l'équipe utilise le back-office web", () => {
+    expect(appSpaceForRole("visiteur")).toBe("client");
+    expect(appSpaceForRole("particulier")).toBe("client");
     expect(appSpaceForRole("artisan")).toBe("artisan");
     expect(appSpaceForRole("artisan_en_attente")).toBe("artisan");
     expect(appSpaceForRole("admin")).toBe("equipe");
     expect(appSpaceForRole("support")).toBe("equipe");
-    expect(appSpaceForRole("visiteur")).toBe("connexion");
   });
 });

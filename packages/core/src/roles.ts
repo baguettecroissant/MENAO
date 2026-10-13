@@ -53,12 +53,15 @@ export function homePathForRole(role: Role): string {
   }
 }
 
-/** Espace de l'application native selon le rôle (phase 6) ; l'équipe MENAO utilise le back-office web. */
-export type AppSpace = "particulier" | "artisan" | "equipe" | "connexion";
+/**
+ * Espace de l'application native selon le rôle (phase 6). Les visiteurs et les particuliers
+ * partagent l'espace client : on visite et on cherche sans compte (ADR 0055). L'équipe MENAO
+ * utilise le back-office web.
+ */
+export type AppSpace = "client" | "artisan" | "equipe";
 
 export function appSpaceForRole(role: Role): AppSpace {
-  if (role === "visiteur") return "connexion";
   if (isStaff(role)) return "equipe";
   if (role === "artisan" || role === "artisan_en_attente") return "artisan";
-  return "particulier";
+  return "client";
 }

@@ -1,13 +1,12 @@
 import { passwordResetRequestSchema } from "@menao/validation";
-import { Link } from "expo-router";
 import { useState } from "react";
-import { StyleSheet } from "react-native";
 import { z } from "zod";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
+import { goBack } from "@/lib/navigation";
 import { supabase } from "@/lib/supabase";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Body, Button, LinkText, Notice, Screen, TextField, Title } from "@/ui";
 
 /** Mot de passe oublié : le lien reçu s'ouvre sur le site, pour choisir un nouveau mot de passe. */
 export default function ForgotPassword() {
@@ -30,7 +29,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <Screen>
+    <Screen header={<TopBar />}>
       <Title>{fr.auth.resetTitle}</Title>
       <Body muted>{fr.auth.resetText}</Body>
       {sent && <Notice tone="success">{fr.auth.resetSent}</Notice>}
@@ -45,13 +44,7 @@ export default function ForgotPassword() {
         textContentType="emailAddress"
       />
       <Button label={fr.auth.resetSubmit} onPress={submit} loading={pending} />
-      <Link href="/connexion" style={styles.link}>
-        {fr.auth.backToSignIn}
-      </Link>
+      <LinkText label={fr.auth.backToSignIn} onPress={goBack} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  link: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors["primary-strong"] },
-});

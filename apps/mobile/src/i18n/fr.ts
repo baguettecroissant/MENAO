@@ -1,6 +1,9 @@
 /** Textes de l'application native, en français et centralisés (comme ceux du site). */
 export const fr = {
   brand: "MENAO",
+  nav: {
+    back: "Retour",
+  },
   errors: {
     generic: "Une erreur est survenue. Réessayez dans quelques instants.",
     invalidCredentials: "Adresse e-mail ou mot de passe incorrect.",
@@ -10,8 +13,8 @@ export const fr = {
     config: "L'application n'est pas configurée : adresse du serveur manquante.",
   },
   auth: {
-    welcome: "Trouvez l'artisan du BTP dont vous avez besoin",
-    welcomeText: "Devis, signature, paiement et suivi du chantier, au même endroit.",
+    signInTitle: "Connexion à votre espace",
+    signInText: "Retrouvez vos demandes, vos devis et l'avancement de vos chantiers.",
     email: "Adresse e-mail",
     password: "Mot de passe",
     signIn: "Me connecter",
@@ -35,6 +38,7 @@ export const fr = {
     checkEmailText: (email: string) =>
       `Nous avons envoyé un lien de confirmation à ${email}. Ouvrez-le pour activer votre compte, puis connectez-vous.`,
     backToSignIn: "Revenir à la connexion",
+    continueBrowsing: "Continuer la visite",
     resetTitle: "Mot de passe oublié",
     resetText:
       "Indiquez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe.",
@@ -42,6 +46,7 @@ export const fr = {
     resetSent: "Si un compte existe pour cette adresse, un e-mail vient de vous être envoyé.",
   },
   tabs: {
+    home: "Accueil",
     chantiers: "Mes chantiers",
     dashboard: "Tableau de bord",
     requests: "Demandes",
@@ -49,6 +54,101 @@ export const fr = {
     messages: "Messages",
     notifications: "Notifications",
     account: "Compte",
+  },
+  // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
+  home: {
+    greeting: "Bonjour !",
+    subtitle: "Besoin d'un artisan du bâtiment ?",
+    searchPlaceholder: "Décrivez votre projet…",
+    notifications: "Notifications",
+    tags: ["Artisans vérifiés", "Décennale contrôlée", "Réponse sous 48\u00a0h"],
+    tradesTitle: "Trouvez votre artisan",
+    tradesText: "Des artisans vérifiés pour chaque corps de métier, dans les Alpes-Maritimes.",
+    allTrades: "Tous les métiers",
+    stepsTitle: "Comment ça marche",
+    steps: [
+      {
+        title: "Décrivez votre projet",
+        text: "Notre assistant IA en déduit le métier, les travaux et les délais.",
+      },
+      {
+        title: "Choisissez vos artisans",
+        text: "MENAO vous présente jusqu'à 5 artisans vérifiés de votre secteur.",
+      },
+      {
+        title: "Signez votre devis en ligne",
+        text: "L'artisan accepte sous 48\u00a0h, vient voir votre chantier, puis vous envoie son devis.",
+      },
+      {
+        title: "Suivez jusqu'à la réception",
+        text: "Acompte, photos de l'avancement, réception et solde : tout se passe dans votre espace.",
+      },
+    ],
+    trustTitle: "La confiance, ça se vérifie",
+    trust: [
+      {
+        title: "Artisans vérifiés",
+        text: "Entreprise active, Kbis récent, assurance décennale, RC Pro et identité du dirigeant contrôlés.",
+      },
+      {
+        title: "Paiement direct à l'artisan",
+        text: "Par carte, via Stripe : MENAO ne prélève rien sur votre chantier.",
+      },
+      {
+        title: "Avis vérifiés",
+        text: "Seuls les clients ayant réalisé un chantier via MENAO peuvent noter un artisan.",
+      },
+      {
+        title: "Un recours en cas de problème",
+        text: "Signalez un souci depuis votre espace : l'équipe MENAO l'examine et vous répond.",
+      },
+    ],
+    free: "MENAO est 100\u00a0% gratuit.",
+  },
+  search: {
+    title: "Votre projet",
+    intro: "Décrivez vos travaux : MENAO trouve les artisans vérifiés de votre secteur.",
+    label: "Décrivez votre besoin",
+    placeholder: "Par exemple : fuite sous l'évier de la cuisine, à Nice…",
+    examplesTitle: "Besoin d'inspiration ?",
+    examples: [
+      "Fuite sous l'évier de la cuisine, à Nice",
+      "Repeindre un salon de 20 m² à Antibes",
+      "Remplacer le chauffe-eau de mon appartement",
+      "Refaire la salle de bain avec une douche à l'italienne",
+    ],
+    tradeLabel: "Métier (facultatif)",
+    submit: "Lancer la recherche",
+  },
+  guest: {
+    spaceTitle: "Votre espace MENAO",
+    spaceText: "Gratuit, il vous accompagne de la demande jusqu'à la réception du chantier.",
+    benefits: [
+      "Suivez vos demandes et vos chantiers",
+      "Échangez avec vos artisans",
+      "Retrouvez vos devis et vos factures",
+    ],
+    createAccount: "Créer mon compte",
+    haveAccount: "Vous avez déjà un compte ?",
+    signIn: "Me connecter",
+    chantiers: {
+      title: "Suivez vos chantiers",
+      text: "Créez votre compte pour retrouver vos demandes, vos devis et l'avancement de vos travaux.",
+    },
+    messages: {
+      title: "Échangez avec vos artisans",
+      text: "Avec un compte, vous discutez avec vos artisans et retrouvez leurs réponses ici.",
+    },
+    notifications: {
+      title: "Restez informé",
+      text: "Avec un compte, vous êtes prévenu des réponses des artisans, des devis et des paiements.",
+    },
+    artisanTitle: "Vous êtes artisan ?",
+    // Règle 10 et règles des stores : aucun lien vers l'inscription pro ni l'abonnement [À VALIDER].
+    artisanText: "L'espace pro MENAO se crée depuis le site, sur ordinateur.",
+    helpTitle: "Besoin d'aide ?",
+    faq: "Questions fréquentes",
+    contact: "Nous contacter",
   },
   soon: {
     title: "Bientôt dans l'application",

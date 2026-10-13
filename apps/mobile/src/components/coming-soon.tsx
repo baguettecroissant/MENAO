@@ -1,10 +1,9 @@
 import * as WebBrowser from "expo-web-browser";
 import type { LucideIcon } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import type { ReactNode } from "react";
 import { fr } from "@/i18n/fr";
 import { env } from "@/lib/env";
-import { Body, Button, Card, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Body, Button, Card, IconTile, Screen, Title } from "@/ui";
 
 /**
  * Écran d'attente d'un onglet dont le contenu arrive dans un lot suivant de la phase 6. Le lien
@@ -12,23 +11,23 @@ import { theme } from "@/ui/theme";
  * l'abonnement artisan dans l'application).
  */
 export function ComingSoon({
-  icon: Icon,
+  icon,
   title,
   text,
   siteLink = false,
+  header,
 }: {
   icon: LucideIcon;
   title: string;
   text: string;
   siteLink?: boolean;
+  header?: ReactNode;
 }) {
   return (
-    <Screen>
+    <Screen header={header}>
       <Title>{title}</Title>
       <Card>
-        <View style={styles.icon}>
-          <Icon size={22} color={theme.colors.primary} />
-        </View>
+        <IconTile icon={icon} />
         <Body>{fr.soon.title}</Body>
         <Body muted>{text}</Body>
         {siteLink && (
@@ -45,14 +44,3 @@ export function ComingSoon({
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: theme.colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

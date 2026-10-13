@@ -5,15 +5,20 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { z } from "zod";
 import { LogoMark } from "@/components/logo";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { isConfigured } from "@/lib/env";
+import { closeAuth } from "@/lib/navigation";
 import { supabase } from "@/lib/supabase";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, LinkText, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 type Errors = Partial<Record<"email" | "password", string>>;
 
-/** Connexion par e-mail et mot de passe (mêmes règles que le site). */
+/**
+ * Connexion par e-mail et mot de passe (mêmes règles que le site), ouverte par-dessus l'écran
+ * d'où l'on vient : on y revient une fois connecté.
+ */
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,15 +39,15 @@ export default function SignIn() {
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     setPending(false);
     if (error) return setFailure(fr.errors[authErrorKind(error.code)]);
-    router.replace("/");
+    closeAuth();
   }
 
   return (
-    <Screen centered>
+    <Screen centered header={<TopBar />}>
       <View style={styles.brand}>
         <LogoMark size={48} />
-        <Title>{fr.auth.welcome}</Title>
-        <Body muted>{fr.auth.welcomeText}</Body>
+        <Title>{fr.auth.signInTitle}</Title>
+        <Body muted>{fr.auth.signInText}</Body>
       </View>
       {failure && <Notice tone="error">{failure}</Notice>}
       <TextField
@@ -73,9 +78,7 @@ export default function SignIn() {
       </Link>
       <View style={styles.footer}>
         <Body muted>{fr.auth.noAccount}</Body>
-        <Link href="/inscription" style={styles.link}>
-          {fr.auth.createAccount}
-        </Link>
+        <LinkText label={fr.auth.createAccount} onPress={() => router.replace("/inscription")} />
       </View>
     </Screen>
   );

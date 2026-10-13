@@ -1,6 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { CalendarDays, Inbox, LayoutGrid, MessageCircle, UserRound } from "lucide-react-native";
-import { tabBarOptions } from "@/components/tab-bar";
+import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
 
@@ -10,6 +10,7 @@ import { useSession } from "@/lib/session";
  */
 export default function ProLayout() {
   const { space } = useSession();
+  const tabBarOptions = useTabBarOptions();
   if (space !== "artisan") return <Redirect href="/" />;
   return (
     <Tabs screenOptions={tabBarOptions}>

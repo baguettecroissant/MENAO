@@ -14,6 +14,8 @@ const confirmUrl = (next: string) => `${env.siteUrl}/auth/confirm?next=${encodeU
 export const siteLinks = {
   terms: `${env.siteUrl}/cgu`,
   privacy: `${env.siteUrl}/confidentialite`,
+  faq: `${env.siteUrl}/faq`,
+  contact: `${env.siteUrl}/contact`,
   resetPassword: confirmUrl("/nouveau-mot-de-passe"),
   emailConfirmed: confirmUrl("/mon-espace"),
 };
