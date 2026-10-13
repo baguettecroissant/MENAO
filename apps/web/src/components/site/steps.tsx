@@ -13,19 +13,27 @@ export function Steps({
   const columns = items.length >= 4 ? "md:grid-cols-4" : "md:grid-cols-3";
   const inset = items.length >= 4 ? "right-[12.5%] left-[12.5%]" : "right-[16.66%] left-[16.66%]";
   const line = inverse ? "bg-white/20" : "bg-border-strong";
+  // Le trait se remplit au fil du défilement (sans prise en charge : il reste plein).
+  const fill = inverse ? "bg-white" : "bg-primary";
   return (
     <ol className={`relative grid gap-8 md:gap-6 ${columns}`}>
-      <span aria-hidden="true" className={`absolute top-6 hidden h-px md:block ${inset} ${line}`} />
+      <span aria-hidden="true" className={`absolute top-6 hidden h-px md:block ${inset} ${line}`}>
+        <span className={`fill-x-on-scroll block h-full origin-left ${fill}`} />
+      </span>
       {items.map((step, i) => (
         <li
           key={step.title}
-          className="relative flex gap-4 md:flex-col md:items-center md:text-center"
+          className="reveal relative flex gap-4 md:flex-col md:items-center md:text-center"
+          // Cascade : chaque étape apparaît un peu après la précédente.
+          style={{ animationRange: `entry ${i * 6}% cover ${22 + i * 6}%` }}
         >
           {i < items.length - 1 && (
             <span
               aria-hidden="true"
               className={`absolute top-12 -bottom-8 left-6 w-px md:hidden ${line}`}
-            />
+            >
+              <span className={`fill-y-on-scroll block h-full origin-top ${fill}`} />
+            </span>
           )}
           <span
             className={`relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-medium shadow-raised ${

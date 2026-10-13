@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import { HERO_IMAGE } from "@/lib/site/images";
+import { HeroSearchInput } from "./hero-search-input";
 import { HomeNav } from "./home-nav";
 
 const t = fr.home;
@@ -26,7 +27,7 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
               src={HERO_IMAGE}
               alt=""
               fetchPriority="high"
-              className="absolute inset-x-0 top-0 h-[400px] w-full object-cover object-right-top sm:h-full sm:object-[70%_center] lg:object-center"
+              className="absolute inset-x-0 top-0 h-[400px] w-full animate-menao-kenburns object-cover object-right-top sm:h-full sm:object-[70%_center] lg:object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b1230]/85 via-[#0b1230]/45 to-transparent" />
             <div className="absolute inset-x-0 top-48 h-52 bg-gradient-to-b from-transparent to-[#0f1b4d] sm:hidden" />
@@ -63,10 +64,10 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
           )}
 
           <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[34rem]">
-            <h1 className="text-[2.375rem] leading-[1.05] font-medium tracking-tight text-white sm:text-[3.25rem] lg:text-[3.75rem]">
+            <h1 className="animate-menao-rise text-[2.375rem] leading-[1.05] font-medium tracking-tight text-white sm:text-[3.25rem] lg:text-[3.75rem]">
               {t.heroTitleStart} <span className="text-[#aebcff]">{t.heroTitleAccent}</span>
             </h1>
-            <div className="text-[0.9375rem] text-white/90 sm:text-base">
+            <div className="animate-menao-rise text-[0.9375rem] text-white/90 [animation-delay:120ms] sm:text-base">
               <p className="font-medium text-white">{t.heroFree}</p>
               <p>{t.heroSubtitle}</p>
             </div>
@@ -74,17 +75,16 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
               action="/recherche"
               method="get"
               role="search"
-              className="flex w-full max-w-xl items-center gap-2 rounded-pill bg-white p-1.5 pl-5 shadow-raised focus-within:ring-4 focus-within:ring-white/40"
+              className="flex w-full max-w-xl animate-menao-rise items-center gap-2 rounded-pill bg-white p-1.5 pl-5 shadow-raised [animation-delay:240ms] focus-within:ring-4 focus-within:ring-white/40"
             >
               <label htmlFor="hero-q" className="sr-only">
                 {t.searchLabel}
               </label>
-              <input
+              <HeroSearchInput
                 id="hero-q"
                 name="q"
                 placeholder={t.searchPlaceholder}
-                autoComplete="off"
-                className="min-w-0 flex-1 bg-transparent text-[0.9375rem] text-foreground placeholder:text-subtle-foreground focus:outline-none"
+                examples={t.searchExamples}
               />
               <button
                 type="submit"
@@ -94,7 +94,10 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
                 <Search aria-hidden="true" className="size-5" />
               </button>
             </form>
-            <ul aria-label={t.shortcuts} className="flex flex-wrap gap-2">
+            <ul
+              aria-label={t.shortcuts}
+              className="flex animate-menao-rise flex-wrap gap-2 [animation-delay:360ms]"
+            >
               {SHORTCUTS.map((code) => {
                 const domain = fr.tradeDomains[code];
                 return (
@@ -121,7 +124,7 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
             </ul>
           </div>
 
-          <div className="absolute right-6 bottom-6 hidden items-center gap-3 rounded-2xl border border-white/40 bg-white/15 py-2.5 pr-5 pl-2.5 text-white shadow-raised backdrop-blur-md lg:flex">
+          <div className="absolute right-6 bottom-6 hidden animate-menao-rise items-center gap-3 rounded-2xl border border-white/40 bg-white/15 py-2.5 pr-5 pl-2.5 text-white shadow-raised backdrop-blur-md [animation-delay:600ms] lg:flex">
             <span className="flex -space-x-2">
               {[BadgeCheck, ShieldCheck, Clock].map((Icon, i) => (
                 <span

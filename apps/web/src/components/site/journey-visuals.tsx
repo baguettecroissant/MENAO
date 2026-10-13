@@ -53,7 +53,9 @@ export function QuoteSignVisual() {
           <span className="text-sm text-muted-foreground">{t.quoteTotalLabel}</span>
           <span className="text-xl font-medium tracking-tight tabular-nums">{t.quoteTotal}</span>
         </p>
-        <span className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-button bg-primary text-sm font-medium text-primary-foreground">
+        <span className="relative mt-4 flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-button bg-primary text-sm font-medium text-primary-foreground">
+          {/* Reflet qui passe sur le bouton, pour inviter à signer. */}
+          <span className="pointer-events-none absolute inset-y-0 left-0 w-1/4 animate-menao-shine bg-white/25" />
           <Signature className="size-4" />
           {t.quoteSign}
         </span>
@@ -131,7 +133,10 @@ export function ProgressVisual() {
                 {i < current ? (
                   <Check className="size-3.5" />
                 ) : i === current ? (
-                  <span className="size-2 rounded-full bg-primary" />
+                  <>
+                    <span className="absolute inset-0 animate-ping rounded-full bg-primary/25" />
+                    <span className="size-2 rounded-full bg-primary" />
+                  </>
                 ) : null}
               </span>
               <span
@@ -222,7 +227,7 @@ export function ReviewVisual() {
               </span>
               <span className="h-1.5 rounded-full bg-background">
                 <span
-                  className="block h-full rounded-full bg-primary"
+                  className="fill-x-on-scroll block h-full origin-left rounded-full bg-primary"
                   style={{ width: `${REVIEW_LEVELS[i]}%` }}
                 />
               </span>

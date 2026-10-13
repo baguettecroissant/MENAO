@@ -29,7 +29,7 @@ export function GuaranteeSection({
         subtitle={t.subtitle}
         tone={dark ? "inverse" : "default"}
       />
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="reveal-group grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {t.items.map((item, i) => {
           const Icon = ICONS[i] ?? ShieldCheck;
           return (
