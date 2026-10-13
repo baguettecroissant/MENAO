@@ -1,7 +1,6 @@
-import { Inbox } from "lucide-react-native";
-import { ComingSoon } from "@/components/coming-soon";
-import { fr } from "@/i18n/fr";
+import { RequestsScreen } from "@/components/pro/requests-screen";
 
+/** Onglet « Demandes » de l'artisan (F-16, F-17). */
 export default function Demandes() {
-  return <ComingSoon icon={Inbox} title={fr.tabs.requests} text={fr.soon.requests} />;
+  return <RequestsScreen />;
 }

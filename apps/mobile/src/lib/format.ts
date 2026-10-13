@@ -62,6 +62,27 @@ export function formatDayLabel(iso: string, now: Date = new Date()): string {
   return dayFull.format(new Date(iso));
 }
 
+const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" });
+
+/** Mois AAAA-MM → « septembre », comme sur le site. */
+export function formatMonthName(month: string): string {
+  return monthName.format(new Date(`${month}-15T12:00:00Z`));
+}
+
+/** Durée en minutes → « 35 min », « 2 h 15 », « 1 j 3 h » (espaces insécables), comme sur le site. */
+export function formatDuration(minutes: number): string {
+  const m = Math.max(0, Math.round(minutes));
+  if (m < 60) return `${m}\u00a0min`;
+  if (m < 24 * 60) {
+    const rest = m % 60;
+    return rest
+      ? `${Math.floor(m / 60)}\u00a0h\u00a0${String(rest).padStart(2, "0")}`
+      : `${m / 60}\u00a0h`;
+  }
+  const hours = Math.floor((m % (24 * 60)) / 60);
+  return `${Math.floor(m / (24 * 60))}\u00a0j${hours ? `\u00a0${hours}\u00a0h` : ""}`;
+}
+
 /** « à l'instant », « il y a 5 min », « il y a 3 h », « hier », « il y a 4 jours ». */
 export function formatAgo(iso: string, now: Date = new Date()): string {
   const minutes = Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000));

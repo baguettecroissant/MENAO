@@ -1,17 +1,15 @@
-import { Hourglass, LayoutGrid } from "lucide-react-native";
+import { Hourglass } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
-import { ComingSoon } from "@/components/coming-soon";
+import { DashboardScreen } from "@/components/pro/dashboard-screen";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
 import { Body, Card, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
-/** Tableau de bord artisan ; tant que le dossier n'est pas validé, son état à la place. */
+/** Tableau de bord artisan (F-16) ; tant que le dossier n'est pas validé, son état à la place. */
 export default function Dashboard() {
   const { role } = useSession();
-  if (role !== "artisan_en_attente") {
-    return <ComingSoon icon={LayoutGrid} title={fr.tabs.dashboard} text={fr.soon.dashboard} />;
-  }
+  if (role !== "artisan_en_attente") return <DashboardScreen />;
   return (
     <Screen>
       <Title>{fr.tabs.dashboard}</Title>
