@@ -34,6 +34,8 @@ export type ArtisanChantier = {
   sentQuote: SentQuote | null;
   deposit: DepositPayment | null;
   depositInvoice: { id: string; numero: string } | null;
+  /** Brouillon de devis en cours (F-19). */
+  hasDraft: boolean;
 };
 
 /**
@@ -42,7 +44,7 @@ export type ArtisanChantier = {
  * renvoie que ses chantiers.
  */
 export async function loadArtisanChantier(chantierId: string): Promise<ArtisanChantier | null> {
-  const [{ data }, { data: sentQuote }] = await Promise.all([
+  const [{ data }, { data: sentQuote }, { data: draft }] = await Promise.all([
     supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId }),
     supabase
       .from("quotes")
@@ -53,6 +55,12 @@ export async function loadArtisanChantier(chantierId: string): Promise<ArtisanCh
       .neq("status", "brouillon")
       .order("version", { ascending: false })
       .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("quotes")
+      .select("id")
+      .eq("chantier_id", chantierId)
+      .eq("status", "brouillon")
       .maybeSingle(),
   ]);
   const detail = parseArtisanChantierDetail(data);
@@ -85,6 +93,7 @@ export async function loadArtisanChantier(chantierId: string): Promise<ArtisanCh
     sentQuote: sentQuote ?? null,
     deposit: deposit ?? null,
     depositInvoice: invoice ?? null,
+    hasDraft: draft !== null,
   };
 }
 

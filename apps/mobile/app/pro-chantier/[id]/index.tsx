@@ -11,7 +11,7 @@ import { fr } from "@/i18n/fr";
 import { formatDay, formatDayAndTime } from "@/lib/format";
 import { loadArtisanChantier } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, Title } from "@/ui";
+import { Button, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAppointment;
@@ -25,7 +25,7 @@ const CANCELLABLE: readonly ChantierStatus[] = ARTISAN_CANCELLABLE_STATUSES;
  * (règle 10).
  */
 export default function ArtisanChantierScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, envoye } = useLocalSearchParams<{ id: string; envoye?: string }>();
   const load = useCallback(() => loadArtisanChantier(id), [id]);
   const [data] = useFocusData(load);
 
@@ -71,6 +71,9 @@ export default function ArtisanChantierScreen() {
           tone={status === "annule" || status === "devis_refuse" ? "neutral" : "primary"}
         />
       </View>
+      {envoye === "1" && status === "devis_envoye" ? (
+        <Notice tone="success">{fr.proQuote.send.sent}</Notice>
+      ) : null}
       {status === "annule" ? (
         <Notice tone="info">
           {t.cancelled(formatDay(c.chantier.cancelled_at ?? c.chantier.created_at))}
@@ -105,7 +108,18 @@ export default function ArtisanChantierScreen() {
         variant="secondary"
         onPress={() => router.push(`/conversation/${id}`)}
       />
-      {awaitingQuote ? <Body muted>{t.quoteSoon}</Body> : null}
+      {awaitingQuote ? (
+        <Button
+          label={
+            status === "devis_en_revision"
+              ? fr.proQuote.edit
+              : data.hasDraft
+                ? fr.proQuote.resume
+                : fr.proQuote.create
+          }
+          onPress={() => router.push(`/pro-chantier/${id}/devis`)}
+        />
+      ) : null}
 
       {data.sentQuote ? (
         <SentQuoteBlock
