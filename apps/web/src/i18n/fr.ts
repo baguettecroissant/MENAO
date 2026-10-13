@@ -59,6 +59,14 @@ export const fr = {
     heroSubtitle: "De la mise en relation avec votre artisan à la réception du chantier.",
     searchLabel: "Décrivez votre besoin",
     searchPlaceholder: "Décrivez en détail votre besoin …",
+    // Exemples qui s'écrivent dans la barre de recherche de l'accueil (F-01).
+    searchExamples: [
+      "Fuite sous l'évier de la cuisine, à Nice…",
+      "Repeindre un salon de 20 m² à Antibes…",
+      "Remplacer le chauffe-eau de mon appartement…",
+      "Refaire la salle de bain avec une douche à l'italienne…",
+      "Installer une borne de recharge dans mon garage…",
+    ],
     searchSubmit: "Lancer la recherche",
     shortcuts: "Raccourcis par métier",
     moreTrades: "Plus de métiers",

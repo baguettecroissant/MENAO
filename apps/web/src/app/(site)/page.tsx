@@ -83,7 +83,7 @@ export default async function HomePage() {
             title={t.space.title}
             subtitle={t.space.subtitle}
           />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="reveal-group grid grid-cols-1 gap-4 lg:grid-cols-3">
             <article className="grid grid-cols-1 items-center gap-8 rounded-hero border border-border bg-background p-6 sm:p-8 md:grid-cols-2 lg:col-span-2">
               <div className="flex flex-col gap-4">
                 <Tag className="self-start">
@@ -149,7 +149,7 @@ export default async function HomePage() {
             title={t.tradesTitle}
             subtitle={t.tradesSubtitle}
           />
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="reveal-group grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {trades.map((trade) => (
               <li key={trade.code}>
                 <TradeTile

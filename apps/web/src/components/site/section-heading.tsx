@@ -19,7 +19,7 @@ export function SectionHeading({
   const inverse = tone === "inverse";
   return (
     <div
-      className={`flex flex-col gap-3 ${align === "center" ? "mx-auto max-w-2xl items-center text-center" : "max-w-xl"}`}
+      className={`reveal flex flex-col gap-3 ${align === "center" ? "mx-auto max-w-2xl items-center text-center" : "max-w-xl"}`}
     >
       <p
         className={`text-xs font-semibold tracking-[0.14em] uppercase ${inverse ? "text-white/70" : "text-primary-strong"}`}

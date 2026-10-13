@@ -10,7 +10,7 @@ export function ProTeaser({ id }: { id: string }) {
   return (
     <section aria-labelledby={id} className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 overflow-hidden rounded-hero bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_55%,#4869f6_100%)] px-6 py-12 text-white sm:px-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:py-14">
-        <div className="flex flex-col gap-5">
+        <div className="reveal flex flex-col gap-5">
           <p className="text-xs font-semibold tracking-[0.14em] text-white/70 uppercase">
             {t.eyebrow}
           </p>

@@ -43,14 +43,14 @@ export function PageHero({
       >
         <LogoMark
           tone={brand ? "white" : "brand"}
-          className={`absolute -right-16 -bottom-24 hidden size-[26rem] lg:block ${brand ? "opacity-[0.07]" : "opacity-[0.06]"}`}
+          className={`absolute -right-16 -bottom-24 hidden size-[26rem] animate-menao-float [animation-duration:9s] lg:block ${brand ? "opacity-[0.07]" : "opacity-[0.06]"}`}
         />
         <div
           className={`relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 ${
             aside ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12" : ""
           }`}
         >
-          <div className="flex flex-col gap-5">
+          <div className="flex animate-menao-rise flex-col gap-5">
             {breadcrumbs && (
               <Breadcrumbs items={breadcrumbs} tone={brand ? "inverse" : "default"} />
             )}
@@ -93,7 +93,11 @@ export function PageHero({
             )}
             {children}
           </div>
-          {aside && <div className="min-w-0">{aside}</div>}
+          {aside && (
+            <div className="min-w-0 animate-menao-rise [animation-delay:200ms]">
+              <div className="animate-menao-float [animation-duration:7s]">{aside}</div>
+            </div>
+          )}
         </div>
       </div>
     </section>

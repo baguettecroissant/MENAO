@@ -51,7 +51,7 @@ export function buttonClasses({
   size = "md",
   block = true,
 }: { variant?: ButtonVariant; size?: keyof typeof buttonSizes; block?: boolean } = {}) {
-  return `inline-flex items-center justify-center gap-2 rounded-button font-medium transition-colors disabled:cursor-not-allowed ${
+  return `inline-flex items-center justify-center gap-2 rounded-button font-medium transition-colors disabled:cursor-not-allowed [&>svg.lucide-arrow-right]:transition-transform hover:[&>svg.lucide-arrow-right]:translate-x-1 ${
     block ? "w-full" : ""
   } ${buttonSizes[size]} ${buttonVariants[variant]} ${focusRing}`;
 }

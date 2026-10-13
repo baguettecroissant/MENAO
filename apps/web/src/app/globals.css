@@ -134,7 +134,114 @@
   .animate-menao-fade-up {
     animation: menao-fade-up 0.45s ease-out both;
   }
+  /* Site vitrine (F-01) : apparition au chargement, zoom lent des photos, reflet d'un bouton. */
+  @keyframes menao-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-menao-rise {
+    animation: menao-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes menao-kenburns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.07);
+    }
+  }
+  .animate-menao-kenburns {
+    animation: menao-kenburns 24s ease-in-out infinite alternate;
+    transform-origin: 65% 40%;
+  }
+  /* Sur mobile, la photo a une hauteur fixe fondue dans le bleu : pas de zoom, pour ne pas
+     faire apparaître son bord. */
+  @media (max-width: 639px) {
+    .animate-menao-kenburns {
+      animation: none;
+    }
+  }
+  @keyframes menao-shine {
+    0% {
+      transform: translateX(-120%) skewX(-20deg);
+    }
+    45%,
+    100% {
+      transform: translateX(420%) skewX(-20deg);
+    }
+  }
+  .animate-menao-shine {
+    animation: menao-shine 3.6s ease-in-out infinite;
+  }
+  /* Apparitions au défilement (animations liées au défilement, sans JavaScript) : sans prise en
+     charge par le navigateur, le contenu s'affiche simplement, sans animation. */
+  @keyframes menao-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes menao-fill-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes menao-fill-y {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal,
+      .reveal-group > * {
+        animation: menao-reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 22%;
+      }
+      /* Cascade : chaque élément d'une rangée apparaît un peu après le précédent. */
+      .reveal-group > :nth-child(4n + 2) {
+        animation-range: entry 6% cover 28%;
+      }
+      .reveal-group > :nth-child(4n + 3) {
+        animation-range: entry 12% cover 34%;
+      }
+      .reveal-group > :nth-child(4n + 4) {
+        animation-range: entry 18% cover 40%;
+      }
+      .fill-x-on-scroll {
+        animation: menao-fill-x linear both;
+        animation-timeline: view();
+        animation-range: cover 10% cover 40%;
+      }
+      .fill-y-on-scroll {
+        animation: menao-fill-y linear both;
+        animation-timeline: view();
+        animation-range: cover 10% cover 40%;
+      }
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
+    .animate-menao-rise,
+    .animate-menao-kenburns,
+    .animate-menao-shine,
+    .animate-ping,
     .animate-menao-pulse,
     .animate-menao-float,
     .animate-menao-wave,
