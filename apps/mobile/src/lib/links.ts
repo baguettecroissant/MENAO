@@ -8,6 +8,7 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [new RegExp(`^/mon-espace/chantiers/${UUID}$`), (id) => `/chantier/${id}`],
   [new RegExp(`^/mon-espace/chantiers/${UUID}/reception$`), (id) => `/chantier/${id}/reception`],
   [new RegExp(`^/mon-espace/chantiers/${UUID}/solde$`), (id) => `/chantier/${id}/solde`],
+  [new RegExp(`^/mon-espace/chantiers/${UUID}/avis$`), (id) => `/chantier/${id}/avis`],
   [new RegExp(`^/mon-espace/devis/${UUID}$`), (id) => `/devis/${id}`],
   [new RegExp(`^/mon-espace/devis/${UUID}/acompte$`), (id) => `/devis/${id}/acompte`],
   [/^\/mon-espace\/messages$/, () => "/messages"],

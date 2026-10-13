@@ -10,12 +10,25 @@ import { useTrades } from "@/lib/trades";
 import { Body, Button, Chip, Notice, Screen, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
 /**
  * Saisie du projet (F-05), puis analyse par l'IA : l'écran animé reste affiché pendant l'analyse,
  * qui crée le projet et pré-remplit ses critères (ADR 0012). On passe ensuite à leur vérification.
+ * « Redemander un devis » (`artisan`, `depuis`, `nom`) : l'artisan d'un chantier précédent est
+ * proposé en premier ; le nom ne sert qu'au bandeau, le serveur vérifie le chantier commun.
  */
 export default function Recherche() {
-  const params = useLocalSearchParams<{ metier?: string }>();
+  const params = useLocalSearchParams<{
+    metier?: string;
+    artisan?: string;
+    depuis?: string;
+    nom?: string;
+  }>();
+  const rehire =
+    params.artisan && params.depuis && UUID.test(params.artisan) && UUID.test(params.depuis)
+      ? { artisanId: params.artisan, chantierId: params.depuis }
+      : null;
   const trades = useTrades();
   const [description, setDescription] = useState("");
   const [trade, setTrade] = useState<string | null>(params.metier ?? null);
@@ -27,7 +40,7 @@ export default function Recherche() {
     if (!ready || analyzing) return;
     setFailure(null);
     setAnalyzing(true);
-    const result = await analyzeNeed(description.trim(), trade);
+    const result = await analyzeNeed(description.trim(), trade, rehire);
     if (result.status !== "ok") {
       setAnalyzing(false);
       return setFailure(fr.search.errors[result.status]);
@@ -39,6 +52,7 @@ export default function Recherche() {
     <View style={styles.page}>
       <Screen header={<TopBar title={fr.search.title} />}>
         <Body muted>{fr.search.intro}</Body>
+        {rehire && params.nom ? <Notice tone="info">{fr.search.rehire(params.nom)}</Notice> : null}
         {failure && <Notice tone="error">{failure}</Notice>}
         <TextField
           label={fr.search.label}

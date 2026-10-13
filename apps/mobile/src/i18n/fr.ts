@@ -109,6 +109,8 @@ export const fr = {
   search: {
     title: "Votre projet",
     intro: "Décrivez vos travaux : MENAO trouve les artisans vérifiés de votre secteur.",
+    rehire: (name: string) =>
+      `Nouvelle demande pour ${name} : décrivez vos travaux, ${name} vous sera proposé en premier s'il intervient pour ce besoin.`,
     label: "Décrivez votre besoin",
     placeholder: "Par exemple : fuite sous l'évier de la cuisine, à Nice…",
     privacy:
@@ -479,7 +481,61 @@ export const fr = {
       closed: (date: string) => `Vous avez finalisé le paiement de ce chantier le ${date}`,
     },
     report: "Signaler un problème lié au chantier",
+    reviewInvite: {
+      title: (artisan: string) => `Noter ${artisan} pour son chantier`,
+      text: (artisan: string) =>
+        `Vous avez fait confiance à ${artisan} pour votre chantier. D'autres personnes pourraient faire appel à ses services : prenez un court instant pour noter son intervention et aider la communauté MENAO à choisir les meilleurs artisans.`,
+      cta: (artisan: string) => `Noter ${artisan}`,
+    },
+    rehire: (name: string) => `Redemander un devis à ${name}`,
     notFound: "Ce chantier est introuvable.",
+  },
+  /** Avis du client (F-28) : mêmes textes que le site. */
+  clientReview: {
+    title: (artisan: string) => `Comment s'est passée votre expérience avec ${artisan} ?`,
+    intro:
+      "Partagez votre expérience pour aider la communauté MENAO à faire le bon choix pour leurs chantiers.",
+    steps: { avis: "Votre avis" },
+    criteria: {
+      quality: "Qualité des prestations",
+      delays: "Respect des délais",
+      communication: "Communication",
+    },
+    unset: "--\u00a0%",
+    percent: (value: number) => `${value}\u00a0%`,
+    dragToRate: "Faites glisser pour noter",
+    bands: {
+      quality: ["Inacceptable", "Décevant", "Correct", "Très soigné", "Irréprochable"],
+      delays: ["Inacceptable", "Retard important", "Quelques retards", "Léger retard", "À l'heure"],
+      communication: [
+        "Inacceptable",
+        "Peu réactif",
+        "Échanges corrects",
+        "Très réactif",
+        "Irréprochable",
+      ],
+    },
+    valueTitle: "Rapport qualité/prix",
+    values: {
+      excellent: "Excellent rapport qualité/prix",
+      convenable: "Prix convenable",
+      trop_cher: "Trop cher pour la qualité fournie",
+    },
+    commentTitle: "Votre avis fait la qualité MENAO",
+    commentHelp:
+      "Votre retour est essentiel pour nous aider à proposer les meilleurs artisans à la communauté.",
+    commentLabel: "Votre commentaire",
+    commentPlaceholder: (artisan: string) =>
+      `Qu'avez-vous particulièrement apprécié ? Le soin de ${artisan}, ses conseils techniques, sa ponctualité ? Dites-nous tout…`,
+    commentCount: (n: number) => `${n}/50 caractères minimum`,
+    submit: "Publier mon avis",
+    visibility: (artisan: string) =>
+      `Votre avis sera visible par la communauté MENAO et aidera ${artisan} à améliorer ses services.`,
+    thanksTitle: "Merci d'avoir fait confiance à MENAO",
+    thanksText:
+      "MENAO vous remercie : votre retour aide la communauté à maintenir le meilleur niveau de qualité.",
+    back: "Retour au chantier",
+    seeProfile: (artisan: string) => `Voir la fiche de ${artisan}`,
   },
   /** Garanties légales après la réception (ADR 0041) : mêmes textes que le site. */
   warranties: {

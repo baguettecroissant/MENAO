@@ -4,6 +4,7 @@ import {
   nextIntervention,
   parisToday,
   paymentProgress,
+  reviewInvited,
   type ChantierStatus,
 } from "@menao/core";
 import { router } from "expo-router";
@@ -18,7 +19,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { actionOf, addressOf, tagOf } from "./chantier-card";
+import { actionOf, addressOf, rehire, tagOf } from "./chantier-card";
 import {
   ActionCard,
   ChantierCover,
@@ -34,7 +35,7 @@ import { fr } from "@/i18n/fr";
 import type { ChantierDetail, ChantierDocument } from "@/lib/chantiers";
 import { formatAgo, formatCents, formatDateNumeric } from "@/lib/format";
 import { sharePdf } from "@/lib/pdf";
-import { Body, Card, Chip, LinkText, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Card, Chip, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.chantier;
@@ -125,6 +126,18 @@ export function ChantierView({
         balanceCents={progress?.remainingCents ?? 0}
         onChanged={onChanged}
       />
+      {reviewInvited(status, detail.reviewed) ? (
+        <View style={styles.invite}>
+          <Text role="heading" style={styles.inviteTitle}>
+            {t.reviewInvite.title(c.artisan_name)}
+          </Text>
+          <Body muted>{t.reviewInvite.text(c.artisan_name)}</Body>
+          <Button
+            label={t.reviewInvite.cta(c.artisan_name)}
+            onPress={() => router.push(`/chantier/${c.chantier_id}/avis`)}
+          />
+        </View>
+      ) : null}
       {status === "en_litige" || detail.openTicketId ? (
         <View style={styles.dispute}>
           <Notice tone="info">
@@ -222,6 +235,9 @@ export function ChantierView({
           ) : null}
         </>
       )}
+      {status === "cloture" ? (
+        <Button label={t.rehire(c.artisan_name)} variant="secondary" onPress={() => rehire(c)} />
+      ) : null}
       <View style={styles.footerLinks}>
         <Pressable
           role="link"
@@ -331,6 +347,15 @@ const styles = StyleSheet.create({
   },
   tabs: { flexDirection: "row", gap: spacing(2) },
   dispute: { gap: spacing(2) },
+  invite: {
+    gap: spacing(3),
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: spacing(4),
+  },
+  inviteTitle: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
   footerLinks: { alignItems: "center", gap: spacing(4), paddingVertical: spacing(2) },
   dangerLink: { fontFamily: font.medium, fontSize: 14, color: colors.danger },
   heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
