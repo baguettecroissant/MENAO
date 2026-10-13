@@ -394,3 +394,91 @@ export function layoutDay<T extends Timed>(
   close();
   return out;
 }
+
+export type AgendaItemKind = "visite" | "demarrage" | "creneau";
+
+/** Élément horaire de l'agenda (F-44) : visite, démarrage de chantier ou créneau bloqué. */
+export type AgendaItem = {
+  id: string;
+  kind: AgendaItemKind;
+  /** Instant ISO. */
+  start: string;
+  durationMinutes: number;
+  /** Titre du chantier, ou motif du créneau bloqué. */
+  title: string | null;
+  /** Commune du chantier. */
+  place: string | null;
+  chantierId: string | null;
+};
+
+/**
+ * Visites planifiées, démarrages de chantier et créneaux bloqués qui commencent entre deux instants
+ * (chantiers annulés exclus), triés par heure : agenda du site et de l'application.
+ * `excludeChantierId` : le rendez-vous en cours de modification.
+ */
+export function agendaItemsFrom({
+  chantiers,
+  blocked,
+  from,
+  to,
+  excludeChantierId,
+}: {
+  chantiers: readonly {
+    chantierId: string;
+    status: string;
+    title: string;
+    codePostal: string | null;
+    villeNom: string | null;
+    appointmentAt: string | null;
+    startAt: string | null;
+  }[];
+  blocked: readonly { id: string; startsAt: string; endsAt: string; label: string | null }[];
+  from: Date;
+  to: Date;
+  excludeChantierId?: string;
+}): AgendaItem[] {
+  const within = (iso: string | null): iso is string => {
+    if (!iso) return false;
+    const at = new Date(iso).getTime();
+    return at >= from.getTime() && at < to.getTime();
+  };
+  const items: AgendaItem[] = [];
+  for (const c of chantiers) {
+    if (c.status === "annule" || c.chantierId === excludeChantierId) continue;
+    const place = [c.codePostal, c.villeNom].filter(Boolean).join(" ") || null;
+    const base = { title: c.title, place, chantierId: c.chantierId };
+    const durationMinutes = APPOINTMENT_DURATION_MINUTES;
+    if (within(c.appointmentAt)) {
+      items.push({
+        ...base,
+        id: `visite-${c.chantierId}`,
+        kind: "visite",
+        start: c.appointmentAt,
+        durationMinutes,
+      });
+    }
+    if (within(c.startAt)) {
+      items.push({
+        ...base,
+        id: `demarrage-${c.chantierId}`,
+        kind: "demarrage",
+        start: c.startAt,
+        durationMinutes,
+      });
+    }
+  }
+  for (const b of blocked) {
+    items.push({
+      id: b.id,
+      kind: "creneau",
+      start: b.startsAt,
+      durationMinutes: Math.round(
+        (new Date(b.endsAt).getTime() - new Date(b.startsAt).getTime()) / 60_000,
+      ),
+      title: b.label,
+      place: null,
+      chantierId: null,
+    });
+  }
+  return items.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+}

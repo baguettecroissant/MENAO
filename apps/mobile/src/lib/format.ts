@@ -84,6 +84,21 @@ export function parisDateTime(iso: string): { date: string; time: string } {
 }
 
 const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" });
+const dayMonth = new Intl.DateTimeFormat("fr-FR", {
+  day: "numeric",
+  month: "long",
+  timeZone: "Europe/Paris",
+});
+
+/** « 12 octobre » (date AAAA-MM-JJ ou instant, heure de Paris), comme sur le site. */
+export function formatDayMonth(iso: string): string {
+  return dayMonth.format(new Date(iso));
+}
+
+/** Heure HH:MM → « 09h00 », comme sur le site. */
+export function formatClock(hhmm: string): string {
+  return hhmm.slice(0, 5).replace(":", "h");
+}
 
 /** Mois AAAA-MM → « septembre », comme sur le site. */
 export function formatMonthName(month: string): string {

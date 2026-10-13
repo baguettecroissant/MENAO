@@ -1168,6 +1168,64 @@ export const fr = {
       rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
     },
   },
+  /** Agenda de l'artisan (F-44) : mêmes textes que l'espace pro du site. */
+  proAgenda: {
+    title: "Agenda",
+    subtitle:
+      "Vos visites, démarrages de chantier, créneaux bloqués et absences, semaine par semaine.",
+    weekdays: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
+    week: (from: string, to: string) => `Du ${from} au ${to}`,
+    previousWeek: "Semaine précédente",
+    nextWeek: "Semaine suivante",
+    thisWeek: "Aujourd'hui",
+    closed: "Fermé",
+    kinds: {
+      visite: "Visite",
+      demarrage: "Démarrage",
+      creneau: "Occupé",
+      absence: "Absent",
+    },
+    legendLabel: "Légende",
+    legend: {
+      visite: "Visite chez le client",
+      demarrage: "Démarrage de chantier",
+      creneau: "Créneau bloqué",
+      absence: "Absence",
+    },
+    emptyDay: "Rien de prévu",
+    emptyWeek: "Rien de prévu cette semaine.",
+    hoursMissing: "Renseignez vos horaires de travail pour les voir dans l'agenda.",
+    openChantier: (title: string) => `Ouvrir le chantier « ${title} »`,
+    range: (from: string, to: string) => `${from} – ${to}`,
+    error: "Impossible d'afficher votre agenda pour le moment. Réessayez dans quelques instants.",
+    availability: {
+      disponible: "Disponible",
+      pause: "En pause",
+      conges: (until: string) => `En congés jusqu'au ${until}`,
+      aPartirDu: (date: string) => `Nouveaux chantiers à partir du ${date}`,
+    },
+    block: {
+      open: "Bloquer un créneau",
+      title: "Bloquer un créneau",
+      intro:
+        "Rendez-vous personnel, chantier hors MENAO… Le créneau s'affiche dans votre agenda et n'est plus proposé pour vos rendez-vous.",
+      date: "Date",
+      start: "De",
+      end: "À",
+      label: "Motif (facultatif, visible par vous seul)",
+      labelPlaceholder: "Ex. : chantier hors MENAO",
+      submit: "Bloquer ce créneau",
+      added: "Créneau bloqué.",
+      remove: (what: string) => `Libérer le créneau ${what}`,
+      removed: "Créneau libéré.",
+      errors: {
+        invalide: "Choisissez la date et les heures du créneau.",
+        ordre: "L'heure de fin doit suivre l'heure de début.",
+        passe: "Ce créneau est déjà passé.",
+        trop_loin: "Un créneau se bloque au plus un an à l'avance.",
+      },
+    },
+  },
   /** « Mes avis » de l'artisan (F-28) : mêmes textes que l'espace pro du site. */
   proReviews: {
     title: "Mes avis",
@@ -1318,10 +1376,6 @@ export const fr = {
     helpTitle: "Besoin d'aide ?",
     faq: "Questions fréquentes",
     contact: "Nous contacter",
-  },
-  soon: {
-    title: "Bientôt dans l'application",
-    agenda: "Vos rendez-vous et vos chantiers arriveront ici.",
   },
   account: {
     title: "Mon compte",
