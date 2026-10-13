@@ -1,7 +1,19 @@
+import { journalSummary, paymentProgress, type JournalSummary } from "@menao/core";
 import type { Database } from "@menao/db";
 import { parseArtisanChantierDetail, type ArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
+import type { ChantierDocument } from "./chantiers";
 import { supabase } from "./supabase";
+
+/** Liens signés (1 h) des fichiers d'un espace privé, par chemin ; les droits RLS s'appliquent. */
+async function signedUrls(bucket: string, paths: readonly string[]) {
+  const unique = [...new Set(paths.filter(Boolean))];
+  if (unique.length === 0) return new Map<string, string>();
+  const { data } = await supabase.storage.from(bucket).createSignedUrls(unique, 3600);
+  return new Map(
+    (data ?? []).flatMap((s) => (s.path && s.signedUrl ? [[s.path, s.signedUrl] as const] : [])),
+  );
+}
 
 type Tables = Database["public"]["Tables"];
 export type ArtisanChantierRow =
@@ -135,6 +147,214 @@ export async function cancelArtisanChantier(
   const { error } = await supabase.rpc("artisan_cancel_chantier", {
     p_chantier_id: chantierId,
     p_reason: reason,
+  });
+  return error ? rpcError(error) : null;
+}
+
+export type ArtisanFollowUp = {
+  coverUrl: string | null;
+  depositPaid: boolean;
+  journal: JournalSummary;
+  photoUrls: string[];
+  documents: ChantierDocument[];
+  /** Devis signé : total TTC et échéancier recalculé (règle 5), date de début prévue au devis. */
+  quote: { totalTtcCents: number; startDate: string | null } | null;
+  progress: { paidCents: number; remainingCents: number } | null;
+  finishedAt: string | null;
+  receivedAt: string | null;
+  balancePaidAt: string | null;
+  balanceCents: number | null;
+  reception: { reserves: string | null; liftSignaledAt: string | null } | null;
+  reviewed: boolean;
+  openTicketId: string | null;
+};
+
+/**
+ * Suivi du chantier côté artisan après l'acompte (F-22), comme sur le site : journal, documents,
+ * échéancier, étapes de fin de chantier (fin déclarée, réception, réserves, solde) et avis.
+ */
+export async function loadArtisanFollowUp(
+  chantierId: string,
+  projectPhotos: readonly string[],
+): Promise<ArtisanFollowUp> {
+  const [
+    { data: quote },
+    { data: payments },
+    { data: invoices },
+    { data: updates },
+    { data: finished },
+    { data: reception },
+    { data: received },
+    { data: review },
+    { data: openTicket },
+  ] = await Promise.all([
+    supabase
+      .from("quotes")
+      .select("id, status, numero, sent_at, signed_at, created_at, total_ttc_cents, start_date")
+      .eq("chantier_id", chantierId)
+      .neq("status", "brouillon")
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("payments")
+      .select("quote_id, kind, status, amount_cents, paid_at")
+      .eq("chantier_id", chantierId),
+    supabase
+      .from("invoices")
+      .select("id, numero, kind, issued_on")
+      .eq("chantier_id", chantierId)
+      .order("issued_on"),
+    supabase
+      .from("chantier_updates")
+      .select("id, kind, message, storage_path, created_at")
+      .eq("chantier_id", chantierId),
+    supabase
+      .from("chantier_events")
+      .select("created_at")
+      .eq("chantier_id", chantierId)
+      .eq("event", "fin_declaree")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("receptions")
+      .select("id, numero, status, reserves, signed_at, lift_signaled_at")
+      .eq("chantier_id", chantierId)
+      .maybeSingle(),
+    supabase
+      .from("chantier_events")
+      .select("created_at")
+      .eq("chantier_id", chantierId)
+      .eq("to_status", "receptionne")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from("reviews").select("id").eq("chantier_id", chantierId).maybeSingle(),
+    supabase
+      .from("tickets")
+      .select("id")
+      .eq("chantier_id", chantierId)
+      .eq("type", "litige")
+      .neq("status", "resolu")
+      .maybeSingle(),
+  ]);
+  const journal = journalSummary(
+    (updates ?? []).map((u) => ({
+      id: u.id,
+      kind: u.kind,
+      message: u.message,
+      storagePath: u.storage_path,
+      createdAt: u.created_at,
+    })),
+  );
+  const [journalPhotos, cover] = await Promise.all([
+    signedUrls("chantier-photos", journal.photos),
+    signedUrls("project-photos", projectPhotos.slice(0, 1)),
+  ]);
+  const signed = quote?.status === "signe" ? quote : null;
+  const progress = signed
+    ? paymentProgress(
+        signed.total_ttc_cents,
+        (payments ?? [])
+          .filter((p) => p.quote_id === signed.id)
+          .map((p) => ({ status: p.status, amountCents: p.amount_cents })),
+      )
+    : null;
+  const balance = (payments ?? []).find((p) => p.kind === "solde" && p.status === "paye") ?? null;
+  return {
+    coverUrl: projectPhotos[0] ? (cover.get(projectPhotos[0]) ?? null) : null,
+    depositPaid: (payments ?? []).some((p) => p.kind === "acompte" && p.status === "paye"),
+    journal,
+    photoUrls: journal.photos.flatMap((p) => {
+      const url = journalPhotos.get(p);
+      return url ? [url] : [];
+    }),
+    documents: [
+      ...(quote?.numero
+        ? [
+            {
+              kind: "devis" as const,
+              numero: quote.numero,
+              date: quote.signed_at ?? quote.sent_at ?? quote.created_at,
+              id: quote.id,
+              signed: quote.status === "signe",
+            },
+          ]
+        : []),
+      ...(invoices ?? []).map((i) => ({
+        kind: (i.kind === "solde" ? "solde" : "acompte") as "acompte" | "solde",
+        numero: i.numero,
+        date: i.issued_on,
+        id: i.id,
+        signed: false,
+      })),
+      ...(reception?.status === "signe" && reception.signed_at
+        ? [
+            {
+              kind: "pv" as const,
+              numero: reception.numero,
+              date: reception.signed_at,
+              id: reception.id,
+              signed: true,
+            },
+          ]
+        : []),
+    ],
+    quote: signed ? { totalTtcCents: signed.total_ttc_cents, startDate: signed.start_date } : null,
+    progress,
+    finishedAt: finished?.created_at ?? null,
+    receivedAt: received?.created_at ?? null,
+    balancePaidAt: balance?.paid_at ?? null,
+    balanceCents: balance?.amount_cents ?? null,
+    reception: reception
+      ? { reserves: reception.reserves, liftSignaledAt: reception.lift_signaled_at }
+      : null,
+    reviewed: review !== null,
+    openTicketId: openTicket?.id ?? null,
+  };
+}
+
+/** F-22 « Confirmer la date de démarrage » (ou la modifier tant que les travaux n'ont pas commencé). */
+export async function confirmChantierStart(
+  chantierId: string,
+  date: string,
+  time: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_confirm_start", {
+    p_chantier_id: chantierId,
+    p_date: date,
+    p_time: time,
+  });
+  return error ? rpcError(error) : null;
+}
+
+/** F-22 « Ajouter un message » au journal du chantier, visible par le client. */
+export async function addChantierMessage(
+  chantierId: string,
+  message: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_add_chantier_message", {
+    p_chantier_id: chantierId,
+    p_message: message,
+  });
+  return error ? rpcError(error) : null;
+}
+
+/** F-22 « Déclarer le chantier terminé » : le client est invité à réceptionner les travaux. */
+export async function declareChantierFinished(chantierId: string): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_declare_finished", { p_chantier_id: chantierId });
+  return error ? rpcError(error) : null;
+}
+
+/** F-26 « Signaler la levée des réserves » : le client est invité à confirmer la levée. */
+export async function signalReservesLifted(
+  chantierId: string,
+  message: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_signal_reserves_lifted", {
+    p_chantier_id: chantierId,
+    p_message: message,
   });
   return error ? rpcError(error) : null;
 }

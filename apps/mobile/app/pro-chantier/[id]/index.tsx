@@ -5,11 +5,12 @@ import { useCallback } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
+import { FollowUpView } from "@/components/pro/follow-up-view";
 import { SentQuoteBlock } from "@/components/pro/sent-quote-block";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatDay, formatDayAndTime } from "@/lib/format";
-import { loadArtisanChantier } from "@/lib/pro-chantiers";
+import { loadArtisanChantier, loadArtisanFollowUp } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -17,33 +18,66 @@ import { theme } from "@/ui/theme";
 const t = fr.proAppointment;
 const { colors, font, radius, spacing } = theme;
 const CANCELLABLE: readonly ChantierStatus[] = ARTISAN_CANCELLABLE_STATUSES;
+/** Après l'acompte, la fiche devient la vue du chantier (F-22), comme sur le site. */
+const FOLLOW_UP: readonly ChantierStatus[] = [
+  "acompte_paye",
+  "planifie",
+  "en_cours",
+  "travaux_termines",
+  "reserves_a_lever",
+  "receptionne",
+  "cloture",
+  "en_litige",
+];
 
 /**
  * Vue d'un rendez-vous côté artisan (F-18), comme sur le site (maquette « Vue d'un rendez-vous ») :
  * date et heure (modifiables tant que le rendez-vous est planifié), écrire au client, dernier devis
- * envoyé, client et lieu, rappel du chantier, notes privées, annulation. Aucun lien vers le site
- * (règle 10).
+ * envoyé, client et lieu, rappel du chantier, notes privées, annulation. Après l'acompte : suivi du
+ * chantier (F-22). Aucun lien vers le site (règle 10).
  */
 export default function ArtisanChantierScreen() {
-  const { id, envoye } = useLocalSearchParams<{ id: string; envoye?: string }>();
-  const load = useCallback(() => loadArtisanChantier(id), [id]);
-  const [data] = useFocusData(load);
+  const { id, envoye, demarrage } = useLocalSearchParams<{
+    id: string;
+    envoye?: string;
+    demarrage?: string;
+  }>();
+  const load = useCallback(async () => {
+    const chantier = await loadArtisanChantier(id);
+    if (!chantier) return null;
+    const followUp = FOLLOW_UP.includes(chantier.detail.chantier.status)
+      ? await loadArtisanFollowUp(id, chantier.detail.photos)
+      : null;
+    return { chantier, followUp };
+  }, [id]);
+  const [loaded, reload] = useFocusData(load);
 
-  if (data === undefined) {
+  if (loaded === undefined) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
-  if (data === null) {
+  if (loaded === null) {
     return (
       <Screen header={<TopBar />}>
         <Notice tone="error">{fr.proChantiers.notFound}</Notice>
       </Screen>
     );
   }
+  if (loaded.followUp) {
+    return (
+      <FollowUpView
+        data={loaded.chantier}
+        followUp={loaded.followUp}
+        confirmed={demarrage === "confirme"}
+        onChanged={reload}
+      />
+    );
+  }
 
+  const data = loaded.chantier;
   const c = data.detail;
   const status = c.chantier.status;
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
