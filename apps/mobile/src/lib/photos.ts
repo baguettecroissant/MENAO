@@ -14,8 +14,12 @@ const JPEG_QUALITY = 0.85;
 /** Photo choisie dans la photothèque ou prise avec l'appareil photo. */
 export type PickedPhoto = { uri: string };
 
-/** Où ranger la photo : journal du chantier (F-22), conversation (F-40) ou signalement (F-42). */
+/**
+ * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40) ou
+ * signalement (F-42).
+ */
 export type PhotoTarget =
+  | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
   | { purpose: "message_attachment"; chantierId: string }
   | { purpose: "ticket_photo"; ticketId: string };

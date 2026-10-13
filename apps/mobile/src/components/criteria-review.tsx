@@ -5,11 +5,17 @@ import { Sparkles } from "lucide-react-native";
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
+import { ProjectPhotosCard } from "@/components/project-photos-card";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatLongDate, fromIsoDate, toIsoDate } from "@/lib/dates";
 import { searchAddresses, searchCommunes } from "@/lib/geo";
-import { saveAndValidateCriteria, type Criteria, type ProjectForReview } from "@/lib/project";
+import {
+  saveAndValidateCriteria,
+  type Criteria,
+  type ProjectForReview,
+  type ProjectPhoto,
+} from "@/lib/project";
 import { useReferentials } from "@/lib/referentials";
 import { Body, Button, Card, Chip, LinkText, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -26,10 +32,19 @@ function toggle(list: string[], code: string): string[] {
 
 /**
  * Vérification des critères pré-remplis par l'IA (F-07), comme sur le site : métier et travaux,
- * chantier, adresse (ville puis adresse exacte de cette ville), date de début. « Trouver
+ * chantier, adresse (ville puis adresse exacte de cette ville), date de début, photos. « Trouver
  * l'artisan idéal » enregistre le tout, vérifié par la base (métier et ville obligatoires).
  */
-export function CriteriaReview({ project }: { project: ProjectForReview }) {
+export function CriteriaReview({
+  project,
+  photos,
+  photosFailed,
+}: {
+  project: ProjectForReview;
+  photos: ProjectPhoto[];
+  /** Des photos jointes à la saisie n'ont pas pu être ajoutées au projet. */
+  photosFailed: boolean;
+}) {
   const { trades, workTypes, rooms } = useReferentials();
   const [criteria, setCriteria] = useState<Criteria>(project.criteria);
   const [expanded, setExpanded] = useState(false);
@@ -61,6 +76,7 @@ export function CriteriaReview({ project }: { project: ProjectForReview }) {
     <Screen header={<TopBar title={r.title} />}>
       <Body muted>{project.analyzed ? r.intro : r.noAnalysis}</Body>
       {project.lowConfidence && <Notice tone="info">{r.lowConfidence}</Notice>}
+      {photosFailed && <Notice tone="error">{fr.search.errors.photos}</Notice>}
 
       <Card tone="soft">
         <View style={styles.cardTitle}>
@@ -218,6 +234,8 @@ export function CriteriaReview({ project }: { project: ProjectForReview }) {
           />
         )}
       </Card>
+
+      <ProjectPhotosCard projectId={project.id} initial={photos} />
 
       {failure && <Notice tone="error">{failure}</Notice>}
       <Button label={r.submit} onPress={submit} loading={saving} disabled={!ready} />

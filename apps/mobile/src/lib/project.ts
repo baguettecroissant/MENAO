@@ -117,6 +117,51 @@ export async function loadProject(id: string, confidenceThreshold: number) {
   return project;
 }
 
+/** Photo du projet (F-05), par URL signée (1 h) du bucket privé project-photos. */
+export type ProjectPhoto = { id: string; url: string | null };
+
+/** Photos du projet, dans l'ordre d'ajout, comme sur le site (RLS : le propriétaire seulement). */
+export async function loadProjectPhotos(projectId: string): Promise<ProjectPhoto[]> {
+  const { data: rows } = await supabase
+    .from("project_photos")
+    .select("id, storage_path")
+    .eq("project_id", projectId)
+    .order("sort_order")
+    .order("created_at");
+  const list = rows ?? [];
+  const { data: signed } = list.length
+    ? await supabase.storage.from("project-photos").createSignedUrls(
+        list.map((p) => p.storage_path),
+        3600,
+      )
+    : { data: [] };
+  const urls = new Map(
+    (signed ?? []).flatMap((s) => (s.path && s.signedUrl ? [[s.path, s.signedUrl] as const] : [])),
+  );
+  return list.map((p) => ({ id: p.id, url: urls.get(p.storage_path) ?? null }));
+}
+
+/**
+ * Suppression d'une photo du projet, comme sur le site : ligne puis fichier, avec les droits du
+ * propriétaire (RLS). Renvoie le message d'erreur à afficher, ou null.
+ */
+export async function deleteProjectPhoto(
+  projectId: string,
+  photoId: string,
+): Promise<string | null> {
+  const { data: photo } = await supabase
+    .from("project_photos")
+    .select("id, storage_path")
+    .eq("id", photoId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+  if (!photo) return fr.errors.generic;
+  const { error } = await supabase.from("project_photos").delete().eq("id", photo.id);
+  if (error) return fr.errors.generic;
+  await supabase.storage.from("project-photos").remove([photo.storage_path]);
+  return null;
+}
+
 /** Message d'une erreur SQL : ceux des règles métier (code 22023) sont rédigés pour l'utilisateur. */
 function sqlError(error: { code?: string; message: string }): string {
   return error.code === "22023" ? error.message : fr.errors.generic;

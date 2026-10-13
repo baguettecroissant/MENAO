@@ -125,6 +125,7 @@ export const fr = {
     tradeLabel: "Vous savez déjà quel artisan il vous faut ?",
     submit: "Trouver mon artisan",
     analyzing: "Analyse de votre projet en cours",
+    uploadingPhotos: "Envoi de vos photos…",
     analysis: {
       steps: [
         "Lecture de votre description",
@@ -132,6 +133,7 @@ export const fr = {
         "Repérage du lieu et des pièces",
         "Préparation de vos critères",
       ],
+      photosStep: "Envoi de vos photos",
       factsTitle: "Le saviez-vous ?",
       facts: [
         "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
@@ -147,6 +149,27 @@ export const fr = {
       unavailable: "L'analyse est momentanément indisponible. Réessayez dans quelques instants.",
       session:
         "Impossible de démarrer votre recherche. Vérifiez votre connexion et réessayez dans quelques instants.",
+      photos:
+        "Certaines photos n'ont pas pu être ajoutées. Vous pourrez les ajouter à l'étape suivante.",
+    },
+    photos: {
+      add: "Ajouter des photos",
+      hint: "10 photos au plus, pour aider l'analyse et les artisans.",
+      remove: (index: number) => `Retirer la photo ${index}`,
+      alt: (index: number) => `Photo ${index} de votre projet`,
+    },
+    /** Statuts de process-upload (photos du projet), comme sur le site. */
+    upload: {
+      unreadable: "Une photo n'a pas pu être lue. Essayez-en une autre.",
+      invalid: "Photo invalide.",
+      invalid_type: "Format non pris en charge (JPEG ou PNG).",
+      too_large: "Photo trop lourde (10 Mo maximum).",
+      not_found: "Photo introuvable, réessayez.",
+      locked: "Ce projet n'est plus modifiable.",
+      limit: "Vous avez atteint la limite de 10 photos.",
+      forbidden: "Action non autorisée.",
+      rate_limited: "Trop d'envois en peu de temps. Réessayez plus tard.",
+      unavailable: "Service momentanément indisponible. Réessayez plus tard.",
     },
   },
   review: {
@@ -185,6 +208,16 @@ export const fr = {
     pickDate: "Choisir la date",
     startsOn: (date: string) => `Début le ${date}`,
     noMatch: "Aucun résultat.",
+    photos: {
+      title: "Photos supplémentaires",
+      description: "Ajouter des photos permet une analyse plus précise de votre besoin.",
+      add: "Ajouter une photo",
+      addHelp: "Vous pouvez ajouter jusqu'à 10 photos.",
+      none: "Aucune photo.",
+      alt: (index: number) => `Photo ${index} du chantier`,
+      delete: (index: number) => `Supprimer la photo ${index}`,
+      limit: "Vous avez atteint la limite de 10 photos.",
+    },
     submit: "Trouver l'artisan idéal",
     submitHint: "Renseignez au moins le métier et la ville pour lancer la recherche.",
     notFound: "Ce projet est introuvable.",
