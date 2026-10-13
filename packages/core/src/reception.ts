@@ -63,3 +63,14 @@ export function warranties(
     return { kind, until, active: today <= until };
   });
 }
+
+/**
+ * Assureur décennal repris du devis figé (`document->issuer->decennale`), affiché avec les
+ * garanties après la réception ; null si l'assureur n'est pas renseigné.
+ */
+export function decennaleInsurer(value: unknown): { name: string; policy: string | null } | null {
+  if (typeof value !== "object" || value === null) return null;
+  const { assureur, numero } = value as { assureur?: unknown; numero?: unknown };
+  if (typeof assureur !== "string" || !assureur.trim()) return null;
+  return { name: assureur, policy: typeof numero === "string" && numero.trim() ? numero : null };
+}

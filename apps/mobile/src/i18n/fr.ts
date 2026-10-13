@@ -372,6 +372,13 @@ export const fr = {
       `${artisan} recevra un message et n'aura plus à vous répondre. Vous pourrez solliciter un autre artisan.`,
     submit: "Annuler ma demande",
     done: "Votre demande est annulée.",
+    chantier: {
+      open: "Annuler le chantier",
+      title: "Annuler ce chantier ?",
+      intro: (artisan: string) =>
+        `Le rendez-vous avec ${artisan} sera annulé et il en sera prévenu. Cette annulation est définitive.`,
+      submit: "Annuler le chantier",
+    },
   },
   chantier: {
     steps: {
@@ -471,7 +478,73 @@ export const fr = {
         "Paiement reçu : sa confirmation est en cours. Il apparaîtra ici dans quelques instants.",
       closed: (date: string) => `Vous avez finalisé le paiement de ce chantier le ${date}`,
     },
+    report: "Signaler un problème lié au chantier",
     notFound: "Ce chantier est introuvable.",
+  },
+  /** Garanties légales après la réception (ADR 0041) : mêmes textes que le site. */
+  warranties: {
+    title: "Vos garanties après la réception",
+    intro: (date: string) =>
+      `Selon la nature des travaux, la loi prévoit ces garanties à compter de la réception du ${date} :`,
+    kinds: {
+      parfaitAchevement: {
+        label: "Garantie de parfait achèvement",
+        what: "L'artisan répare les défauts signalés dans l'année qui suit la réception, y compris les réserves du procès-verbal.",
+      },
+      bonFonctionnement: {
+        label: "Garantie de bon fonctionnement",
+        what: "Équipements installés qui peuvent être retirés sans abîmer l'ouvrage (robinetterie, radiateurs, volets…).",
+      },
+      decennale: {
+        label: "Garantie décennale",
+        what: "Dommages qui compromettent la solidité de l'ouvrage ou le rendent impropre à son usage.",
+      },
+    },
+    until: (date: string) => `jusqu'au ${date}`,
+    ended: (date: string) => `terminée le ${date}`,
+    insurer: (insurer: string, policy: string | null) =>
+      `Assurance décennale de l'artisan : ${insurer}${policy ? `, contrat n° ${policy}` : ""}.`,
+    advice:
+      "En cas de problème, prévenez d'abord l'artisan par la messagerie, puis signalez-le à l'équipe MENAO depuis cette page.",
+  },
+  /** Signalement d'un problème (F-42) et son suivi : mêmes textes que le site. */
+  dispute: {
+    reportTitle: "Signaler un problème",
+    intro:
+      "Décrivez le problème rencontré sur ce chantier. L'équipe MENAO l'examine et vous répond dans votre espace.",
+    suspends:
+      "Le chantier passera en litige : ses étapes (paiements, démarrage, réception) sont suspendues jusqu'à la décision de l'équipe MENAO, qui peut faire reprendre le chantier ou l'annuler.",
+    noSuspension:
+      "Le chantier n'étant plus en cours, votre signalement est transmis à l'équipe MENAO.",
+    categoryLegend: "Nature du problème",
+    categories: {
+      retard: "Retard",
+      malfacon: "Malfaçon",
+      comportement: "Comportement",
+      paiement: "Paiement",
+      autre: "Autre",
+    },
+    descriptionLabel: "Description du problème",
+    descriptionHint: "20 caractères au moins.",
+    submit: "Envoyer le signalement",
+    ticketTitle: "Votre signalement",
+    ticketMeta: (category: string, date: string) => `${category} · signalé le ${date}`,
+    chantierLink: (title: string) => `Chantier : ${title}`,
+    statuses: { ouvert: "Envoyé à l'équipe", en_cours: "En cours de traitement", resolu: "Clos" },
+    description: "Votre description",
+    thread: "Échanges avec l'équipe MENAO",
+    you: "Vous",
+    support: "Équipe MENAO",
+    noMessages: "L'équipe MENAO vous répondra ici.",
+    photo: "Photo du signalement : l'ouvrir",
+    messageLabel: "Votre message à l'équipe MENAO",
+    messageSubmit: "Envoyer",
+    closed: "Ce signalement est clos.",
+    ongoing:
+      "Litige en cours : l'équipe MENAO examine la situation. Les étapes du chantier sont suspendues.",
+    follow: "Suivre mon signalement",
+    pending: "Votre signalement est en cours de traitement par l'équipe MENAO.",
+    notFound: "Ce signalement est introuvable.",
   },
   /** Réception des travaux (F-25, F-26) : réserves, PV signé chez DocuSeal. */
   reception: {

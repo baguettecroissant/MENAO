@@ -3,6 +3,7 @@ import { CHANTIER_TRANSITIONS } from "../src/chantier-state";
 import {
   WARRANTY_YEARS,
   warranties,
+  decennaleInsurer,
   warrantyEnd,
   RESERVES_ESCALATION_DAYS,
   RESERVES_LIMITS,
@@ -78,5 +79,24 @@ describe("garanties après réception (F-12, ADR 0041)", () => {
       true,
       true,
     ]);
+  });
+});
+
+describe("assureur décennal repris du devis (garanties)", () => {
+  it("nom et numéro de contrat, si l'assureur est renseigné", () => {
+    expect(decennaleInsurer({ assureur: "Assurances Exemple", numero: "DEC-123" })).toEqual({
+      name: "Assurances Exemple",
+      policy: "DEC-123",
+    });
+    expect(decennaleInsurer({ assureur: "Assurances Exemple", numero: " " })).toEqual({
+      name: "Assurances Exemple",
+      policy: null,
+    });
+  });
+
+  it("rien si l'assureur manque ou si la donnée est inattendue", () => {
+    expect(decennaleInsurer(null)).toBeNull();
+    expect(decennaleInsurer("Assurances Exemple")).toBeNull();
+    expect(decennaleInsurer({ assureur: "  ", numero: "DEC-123" })).toBeNull();
   });
 });
