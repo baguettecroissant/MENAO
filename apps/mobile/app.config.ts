@@ -4,6 +4,12 @@ import type { ExpoConfig } from "expo/config";
  * Application native MENAO (phase 6, ADR 0054) : une seule app pour les particuliers et les
  * artisans, l'espace dépend du rôle. Identifiant des stores à confirmer avant la publication.
  */
+/**
+ * Projet Expo (expo.dev) de l'application : Expo Go n'ouvre que les projets rattachés à un compte.
+ * L'identifiant est lu dans le fichier .env, hors du dépôt public.
+ */
+const easProjectId = process.env.EAS_PROJECT_ID;
+
 const config: ExpoConfig = {
   name: "MENAO",
   slug: "menao",
@@ -45,6 +51,7 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
   },
+  ...(easProjectId ? { extra: { eas: { projectId: easProjectId } } } : {}),
 };
 
 export default config;

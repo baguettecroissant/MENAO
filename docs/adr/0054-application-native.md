@@ -43,6 +43,9 @@
   - la CI lance le lint, le typecheck et les tests unitaires de l'app (Turborepo) ;
   - la version web (react-native-web) permet de vérifier les écrans sans Xcode ;
   - les essais sur téléphone se font avec Expo Go, les builds natifs avec EAS, dans le cloud.
+- **Expo Go** n'ouvre que les projets rattachés à un compte Expo.
+  - Il faut un compte gratuit, connecté dans Expo Go sur le téléphone et sur le Mac (`expo login`).
+  - L'identifiant du projet Expo est lu dans `apps/mobile/.env` (`EAS_PROJECT_ID`), hors du dépôt public, comme le nom du compte.
 - L'identifiant des stores `fr.menao.app` est provisoire, à confirmer avant la publication.
 
 ## Conséquences
