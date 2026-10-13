@@ -54,6 +54,7 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
   const rates = aiRates(totals);
   const failures = totals.invalid + totals.refused + totals.errors;
   const maxPerDay = Math.max(1, ...(summary?.par_jour ?? []).map((d) => d.appels));
+  const hasDailyCalls = (summary?.par_jour ?? []).some((d) => d.appels > 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -209,54 +210,60 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
             {summary.par_jour.length > 1 && (
               <Card className="flex min-w-0 flex-col gap-3">
                 <h2 className="text-lg font-medium">{t.daily.title}</h2>
-                <ol aria-label={t.daily.title} className="flex h-40 items-end gap-1">
-                  {summary.par_jour.map((day) => {
-                    const label = t.daily.day(
-                      formatDayMonthShort(`${day.jour}T12:00:00Z`),
-                      day.appels,
-                      day.echecs,
-                    );
-                    return (
-                      <li
-                        key={day.jour}
-                        title={label}
-                        className="flex h-full min-w-0 flex-1 flex-col justify-end"
-                      >
-                        <span className="sr-only">{label}</span>
-                        <span
-                          aria-hidden="true"
-                          className="flex w-full flex-col overflow-hidden rounded-t-sm bg-primary/70"
-                          style={{ height: `${(day.appels / maxPerDay) * 100}%` }}
-                        >
-                          <span
-                            className="mt-auto block w-full bg-danger"
-                            style={{
-                              height: day.appels ? `${(day.echecs / day.appels) * 100}%` : 0,
-                            }}
-                          />
+                {!hasDailyCalls ? (
+                  <p className="text-sm text-muted-foreground">{t.empty}</p>
+                ) : (
+                  <>
+                    <ol aria-label={t.daily.title} className="flex h-40 items-end gap-1">
+                      {summary.par_jour.map((day) => {
+                        const label = t.daily.day(
+                          formatDayMonthShort(`${day.jour}T12:00:00Z`),
+                          day.appels,
+                          day.echecs,
+                        );
+                        return (
+                          <li
+                            key={day.jour}
+                            title={label}
+                            className="flex h-full min-w-0 flex-1 flex-col justify-end"
+                          >
+                            <span className="sr-only">{label}</span>
+                            <span
+                              aria-hidden="true"
+                              className="flex w-full flex-col overflow-hidden rounded-t-sm bg-primary/70"
+                              style={{ height: `${(day.appels / maxPerDay) * 100}%` }}
+                            >
+                              <span
+                                className="mt-auto block w-full bg-danger"
+                                style={{
+                                  height: day.appels ? `${(day.echecs / day.appels) * 100}%` : 0,
+                                }}
+                              />
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{formatDayMonthShort(`${summary.par_jour[0]?.jour}T12:00:00Z`)}</span>
+                      <span className="flex items-center gap-3">
+                        <span className="flex items-center gap-1.5">
+                          <span aria-hidden="true" className="size-2.5 rounded-sm bg-primary/70" />
+                          {t.daily.legendCalls}
                         </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatDayMonthShort(`${summary.par_jour[0]?.jour}T12:00:00Z`)}</span>
-                  <span className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5">
-                      <span aria-hidden="true" className="size-2.5 rounded-sm bg-primary/70" />
-                      {t.daily.legendCalls}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span aria-hidden="true" className="size-2.5 rounded-sm bg-danger" />
-                      {t.daily.legendFailures}
-                    </span>
-                  </span>
-                  <span>
-                    {formatDayMonthShort(
-                      `${summary.par_jour[summary.par_jour.length - 1]?.jour}T12:00:00Z`,
-                    )}
-                  </span>
-                </div>
+                        <span className="flex items-center gap-1.5">
+                          <span aria-hidden="true" className="size-2.5 rounded-sm bg-danger" />
+                          {t.daily.legendFailures}
+                        </span>
+                      </span>
+                      <span>
+                        {formatDayMonthShort(
+                          `${summary.par_jour[summary.par_jour.length - 1]?.jour}T12:00:00Z`,
+                        )}
+                      </span>
+                    </div>
+                  </>
+                )}
               </Card>
             )}
           </div>
