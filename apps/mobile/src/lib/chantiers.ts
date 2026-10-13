@@ -96,12 +96,23 @@ export async function loadMyChantiers(): Promise<MyChantiers | null> {
 export const artisanAvatar = avatarOf;
 
 export type ChantierDocument = {
-  kind: "devis" | "acompte" | "solde";
+  kind: "devis" | "acompte" | "solde" | "pv";
   numero: string;
   date: string;
   id: string;
   /** Devis signé (PDF signé chez le prestataire). */
   signed: boolean;
+};
+
+/** PV de réception (F-25, F-26) : réserves, levée signalée par l'artisan. */
+export type ChantierReception = {
+  id: string;
+  numero: string;
+  status: string;
+  reserves: string | null;
+  signedAt: string | null;
+  liftSignaledAt: string | null;
+  liftMessage: string | null;
 };
 
 export type ChantierDetail = {
@@ -112,33 +123,44 @@ export type ChantierDetail = {
   photoUrls: string[];
   payments: { status: Database["public"]["Enums"]["payment_status"]; amountCents: number }[];
   documents: ChantierDocument[];
+  reception: ChantierReception | null;
 };
 
-/** Vue d'un chantier (F-12) : avancement, journal de l'artisan, paiements et documents. */
+/** Vue d'un chantier (F-12) : avancement, journal de l'artisan, paiements, documents et PV. */
 export async function loadChantier(id: string): Promise<ChantierDetail | null> {
   const { data: rows } = await supabase.rpc("particulier_chantiers", { p_chantier_id: id });
   const c = rows?.[0];
   if (!c) return null;
-  const [{ data: updates }, { data: quotes }, { data: payments }, { data: invoices }] =
-    await Promise.all([
-      supabase
-        .from("chantier_updates")
-        .select("id, kind, message, storage_path, created_at")
-        .eq("chantier_id", id),
-      supabase
-        .from("quotes")
-        .select("id, status, numero, signed_at, sent_at")
-        .eq("chantier_id", id)
-        .neq("status", "brouillon")
-        .order("version", { ascending: false })
-        .limit(1),
-      supabase.from("payments").select("status, amount_cents").eq("chantier_id", id),
-      supabase
-        .from("invoices")
-        .select("id, numero, kind, issued_on")
-        .eq("chantier_id", id)
-        .order("issued_on"),
-    ]);
+  const [
+    { data: updates },
+    { data: quotes },
+    { data: payments },
+    { data: invoices },
+    { data: reception },
+  ] = await Promise.all([
+    supabase
+      .from("chantier_updates")
+      .select("id, kind, message, storage_path, created_at")
+      .eq("chantier_id", id),
+    supabase
+      .from("quotes")
+      .select("id, status, numero, signed_at, sent_at")
+      .eq("chantier_id", id)
+      .neq("status", "brouillon")
+      .order("version", { ascending: false })
+      .limit(1),
+    supabase.from("payments").select("status, amount_cents").eq("chantier_id", id),
+    supabase
+      .from("invoices")
+      .select("id, numero, kind, issued_on")
+      .eq("chantier_id", id)
+      .order("issued_on"),
+    supabase
+      .from("receptions")
+      .select("id, numero, status, reserves, signed_at, lift_signaled_at, lift_message")
+      .eq("chantier_id", id)
+      .maybeSingle(),
+  ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
       id: u.id,
@@ -172,6 +194,17 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       id: i.id,
       signed: false,
     })),
+    ...(reception?.status === "signe" && reception.signed_at
+      ? [
+          {
+            kind: "pv" as const,
+            numero: reception.numero,
+            date: reception.signed_at,
+            id: reception.id,
+            signed: true,
+          },
+        ]
+      : []),
   ];
   return {
     c,
@@ -184,6 +217,17 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
     }),
     payments: (payments ?? []).map((p) => ({ status: p.status, amountCents: p.amount_cents })),
     documents,
+    reception: reception
+      ? {
+          id: reception.id,
+          numero: reception.numero,
+          status: reception.status,
+          reserves: reception.reserves,
+          signedAt: reception.signed_at,
+          liftSignaledAt: reception.lift_signaled_at,
+          liftMessage: reception.lift_message,
+        }
+      : null,
   };
 }
 

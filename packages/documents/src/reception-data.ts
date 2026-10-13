@@ -54,3 +54,33 @@ export function receptionPdfData(doc: ReceptionDocument, preview = false): Recep
 }
 
 export const receptionPdfFilename = (data: ReceptionPdfData) => `${data.numero}.pdf`;
+
+/**
+ * Aperçu du PV avant sa signature (F-25), à partir du devis signé : sans numéro (attribué à la
+ * signature) ni réserves, que le client ajoute ensuite. Partagé par le site et l'application. Les
+ * jours (AAAA-MM-JJ, heure de Paris) sont calculés par l'appelant.
+ */
+export function receptionPreviewData(
+  quote: QuoteDocument,
+  input: { today: string; finishedOn: string | null; signedOn: string | null; paidCents: number },
+): ReceptionPdfData {
+  const parties = partiesData(quote.client, quote.chantier);
+  return {
+    numero: "",
+    issuedOn: input.today,
+    finishedOn: input.finishedOn,
+    quote: {
+      numero: quote.quote.numero,
+      signedOn: input.signedOn,
+      totalTtcCents: quote.quote.total_ttc_cents,
+      depositPercent: quote.terms?.schedule.find((s) => s.trigger === "signature")?.percent ?? null,
+    },
+    paidCents: input.paidCents,
+    withReserves: false,
+    reserves: null,
+    issuer: issuerData(quote.issuer, input.today),
+    client: parties.client,
+    site: { ...parties.site, city: quote.chantier.ville_nom },
+    preview: true,
+  };
+}

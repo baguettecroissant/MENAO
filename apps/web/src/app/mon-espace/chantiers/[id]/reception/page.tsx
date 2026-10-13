@@ -1,10 +1,5 @@
 import { parisToday, paymentProgress } from "@menao/core";
-import {
-  issuerData,
-  partiesData,
-  type QuoteDocument,
-  type ReceptionPdfData,
-} from "@menao/documents";
+import { receptionPreviewData, type QuoteDocument } from "@menao/documents";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
@@ -53,26 +48,12 @@ export default async function ReceptionPage({
     quote.quote.total_ttc_cents,
     (payments ?? []).map((p) => ({ status: p.status, amountCents: p.amount_cents })),
   );
-  const today = parisToday();
-  const parties = partiesData(quote.client, quote.chantier);
-  const preview: ReceptionPdfData = {
-    numero: "",
-    issuedOn: today,
+  const preview = receptionPreviewData(quote, {
+    today: parisToday(),
     finishedOn: c.finished_at ? parisToday(new Date(c.finished_at)) : null,
-    quote: {
-      numero: quote.quote.numero,
-      signedOn: quote.quote.signed_at ? parisToday(new Date(quote.quote.signed_at)) : null,
-      totalTtcCents: quote.quote.total_ttc_cents,
-      depositPercent: quote.terms?.schedule.find((s) => s.trigger === "signature")?.percent ?? null,
-    },
+    signedOn: quote.quote.signed_at ? parisToday(new Date(quote.quote.signed_at)) : null,
     paidCents: progress.paidCents,
-    withReserves: false,
-    reserves: null,
-    issuer: issuerData(quote.issuer, today),
-    client: parties.client,
-    site: { ...parties.site, city: quote.chantier.ville_nom },
-    preview: true,
-  };
+  });
   const logoUrl = await documentLogoUrl(supabase, quote.issuer.logo_path);
 
   return (

@@ -5,7 +5,6 @@ import {
   type NextIntervention,
 } from "@menao/core";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import {
   BadgeCheck,
   CalendarDays,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react-native";
 import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
-import { env } from "@/lib/env";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { Button } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -238,9 +236,7 @@ export function ActionCard({
   const sign = action.kind === "signer_devis";
   const balance = action.kind === "payer_solde";
   function open() {
-    // Provisoire : le paiement du solde arrive dans l'application avec la réception (partie 5b).
-    if (balance)
-      WebBrowser.openBrowserAsync(`${env.siteUrl}/mon-espace/chantiers/${chantierId}/solde`);
+    if (balance) router.push(`/chantier/${chantierId}/solde`);
     else if (sign) router.push(`/devis/${action.quoteId}`);
     else router.push(`/devis/${action.quoteId}/acompte`);
   }
@@ -266,7 +262,6 @@ export function ActionCard({
         <Text style={styles.amount}>{formatCents(totalTtcCents)}</Text>
       )}
       <Button label={sign ? t.action.sign : t.action.pay} onPress={open} />
-      {balance && <Text style={styles.small}>{t.action.onSite}</Text>}
     </View>
   );
 }
@@ -354,10 +349,4 @@ const styles = StyleSheet.create({
     padding: spacing(4),
   },
   amount: { fontFamily: font.bold, fontSize: 24, color: colors.foreground },
-  small: {
-    fontFamily: font.regular,
-    fontSize: 12,
-    color: colors["muted-foreground"],
-    textAlign: "center",
-  },
 });
