@@ -3,8 +3,11 @@
 // (charge directe, ADR 0011). Aucune commission ni application_fee : MENAO ne prend jamais
 // d'argent sur les chantiers (CLAUDE.md règle 12). particulier_start_deposit et
 // particulier_start_balance, appelées au nom du client, décident de l'accès et du montant
-// (échéancier figé, solde calculé). Aucune donnée personnelle journalisée. ADR 0023, 0029.
+// (échéancier figé, solde calculé). Depuis l'application (`app: true`), la fin du paiement passe
+// par la page de retour du site, qui rouvre l'application (ADR 0060). Aucune donnée personnelle
+// journalisée. ADR 0023, 0029.
 import { createClient } from "@supabase/supabase-js";
+import { appReturnUrl, type AppReturn } from "../../../packages/core/src/app-return.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
@@ -30,6 +33,7 @@ Deno.serve(async (req) => {
     quoteId?: unknown;
     chantierId?: unknown;
     origin?: unknown;
+    app?: unknown;
   } | null;
   // Acompte : devis signé ; solde : chantier réceptionné.
   const chantierId = typeof body?.chantierId === "string" ? body.chantierId : "";
@@ -73,6 +77,13 @@ Deno.serve(async (req) => {
         .catch(() => undefined);
     }
     const origin = returnOrigin(body?.origin);
+    // Application : retour par la page du site qui rouvre l'écran d'origine (paiement ou abandon).
+    const appTarget: Omit<AppReturn, "state"> | null =
+      body?.app === true
+        ? balance
+          ? { screen: "chantier", id: chantierId }
+          : { screen: "devis", id: quoteId }
+        : null;
     const label = `${balance ? "Solde" : "Acompte"} du devis ${started.numero}`;
     const metadata = { menao_quote_id: quoteId, menao_kind: balance ? "solde" : "acompte" };
     const session = await stripe.checkout.sessions.create(
@@ -92,12 +103,16 @@ Deno.serve(async (req) => {
         ...(started.client_email ? { customer_email: started.client_email } : {}),
         metadata,
         payment_intent_data: { description: label, metadata },
-        success_url: balance
-          ? `${origin}/mon-espace/chantiers/${chantierId}?paiement=termine`
-          : `${origin}/mon-espace/devis/${quoteId}?paiement=termine`,
-        cancel_url: balance
-          ? `${origin}/mon-espace/chantiers/${chantierId}/solde`
-          : `${origin}/mon-espace/devis/${quoteId}/acompte`,
+        success_url: appTarget
+          ? appReturnUrl(origin, { ...appTarget, state: "paiement" })
+          : balance
+            ? `${origin}/mon-espace/chantiers/${chantierId}?paiement=termine`
+            : `${origin}/mon-espace/devis/${quoteId}?paiement=termine`,
+        cancel_url: appTarget
+          ? appReturnUrl(origin, { ...appTarget, state: "annule" })
+          : balance
+            ? `${origin}/mon-espace/chantiers/${chantierId}/solde`
+            : `${origin}/mon-espace/devis/${quoteId}/acompte`,
       },
       { stripeAccount },
     );

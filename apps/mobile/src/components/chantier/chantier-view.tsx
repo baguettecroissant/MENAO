@@ -4,10 +4,17 @@ import {
   paymentProgress,
   type ChantierStatus,
 } from "@menao/core";
-import * as WebBrowser from "expo-web-browser";
 import { FileText, MapPin } from "lucide-react-native";
 import { useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { actionOf, addressOf, tagOf } from "./chantier-card";
 import {
   ActionCard,
@@ -19,10 +26,10 @@ import {
 } from "./parts";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import type { ChantierDetail } from "@/lib/chantiers";
-import { env } from "@/lib/env";
+import type { ChantierDetail, ChantierDocument } from "@/lib/chantiers";
 import { formatAgo, formatCents, formatDateNumeric } from "@/lib/format";
-import { Body, Card, Chip, Screen, Title } from "@/ui";
+import { sharePdf } from "@/lib/pdf";
+import { Body, Card, Chip, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.chantier;
@@ -35,11 +42,6 @@ const STARTED: readonly ChantierStatus[] = [
   "cloture",
 ];
 
-/**
- * Vue d'un chantier côté client (F-12, maquette « Vue d'un chantier ») : avancement, artisan,
- * action attendue ou prochaine intervention, puis « Suivi » (journal de l'artisan) et « Dossier »
- * (échéancier toujours calculé, documents).
- */
 /**
  * Vue d'un chantier côté client (F-12, maquette « Vue d'un chantier ») : avancement, artisan,
  * action attendue ou prochaine intervention, puis « Suivi » (journal de l'artisan) et « Dossier »
@@ -169,36 +171,61 @@ export function ChantierView({
             ) : (
               <>
                 {detail.documents.map((d) => (
-                  <Pressable
-                    key={`${d.kind}-${d.id}`}
-                    role="link"
-                    style={styles.document}
-                    onPress={() =>
-                      WebBrowser.openBrowserAsync(
-                        `${env.siteUrl}/${d.kind === "devis" ? "devis" : "factures"}/${d.id}/pdf`,
-                      )
-                    }
-                  >
-                    <View style={styles.docIcon}>
-                      <FileText size={20} color={colors.primary} />
-                    </View>
-                    <View style={styles.flex}>
-                      <Text style={styles.docTitle}>
-                        {d.kind === "devis" ? t.dossier.signedQuote : t.dossier.invoice[d.kind]}
-                      </Text>
-                      <Text style={styles.meta}>
-                        {t.dossier.meta(d.numero, formatDateNumeric(d.date))}
-                      </Text>
-                    </View>
-                  </Pressable>
+                  <DocumentRow key={`${d.kind}-${d.id}`} document={d} />
                 ))}
-                <Text style={styles.small}>{t.dossier.openOnSite}</Text>
               </>
             )}
           </Card>
         </>
       )}
     </Screen>
+  );
+}
+
+/** Document du dossier : PDF produit pour le compte, puis proposé au partage du téléphone. */
+function DocumentRow({ document: d }: { document: ChantierDocument }) {
+  const [downloading, setDownloading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const title =
+    d.kind === "devis"
+      ? d.signed
+        ? t.dossier.signedQuote
+        : t.dossier.quote
+      : t.dossier.invoice[d.kind];
+  async function open() {
+    setFailed(false);
+    setDownloading(true);
+    const ok = await sharePdf(
+      d.kind === "devis" ? { quoteId: d.id } : { invoiceId: d.id },
+      d.numero,
+    );
+    setDownloading(false);
+    setFailed(!ok);
+  }
+  return (
+    <View style={styles.documentItem}>
+      <Pressable
+        role="button"
+        aria-label={`${title}, ${t.dossier.meta(d.numero, formatDateNumeric(d.date))}`}
+        aria-busy={downloading}
+        disabled={downloading}
+        style={styles.document}
+        onPress={open}
+      >
+        <View style={styles.docIcon}>
+          {downloading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <FileText size={20} color={colors.primary} />
+          )}
+        </View>
+        <View style={styles.flex}>
+          <Text style={styles.docTitle}>{title}</Text>
+          <Text style={styles.meta}>{t.dossier.meta(d.numero, formatDateNumeric(d.date))}</Text>
+        </View>
+      </Pressable>
+      {failed ? <Notice tone="error">{fr.pdf.failed}</Notice> : null}
+    </View>
   );
 }
 
@@ -249,6 +276,7 @@ const styles = StyleSheet.create({
   line: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
   lineValue: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   lineStrong: { fontFamily: font.bold, color: colors.foreground },
+  documentItem: { gap: spacing(2) },
   document: {
     flexDirection: "row",
     alignItems: "center",

@@ -100,6 +100,8 @@ export type ChantierDocument = {
   numero: string;
   date: string;
   id: string;
+  /** Devis signé (PDF signé chez le prestataire). */
+  signed: boolean;
 };
 
 export type ChantierDetail = {
@@ -159,6 +161,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
             numero: quote.numero,
             date: quote.signed_at ?? quote.sent_at ?? c.created_at,
             id: quote.id,
+            signed: quote.status === "signe",
           },
         ]
       : []),
@@ -167,6 +170,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       numero: i.numero,
       date: i.issued_on,
       id: i.id,
+      signed: false,
     })),
   ];
   return {

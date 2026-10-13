@@ -1792,6 +1792,21 @@ export const fr = {
     },
     backToQuote: "Retour au devis",
   },
+  /** Page de retour après une signature ou un paiement ouverts depuis l'application (ADR 0060). */
+  appReturn: {
+    title: "Retour à l'application",
+    states: {
+      signature: "Merci\u00a0! Votre signature est en cours d'enregistrement.",
+      reception: "Merci\u00a0! Votre signature du PV est en cours d'enregistrement.",
+      paiement: "Merci\u00a0! Votre paiement est en cours de confirmation.",
+      annule: "Le paiement n'a pas été effectué.",
+    },
+    redirecting: "Retour à l'application MENAO…",
+    open: "Ouvrir l'application MENAO",
+    site: "Continuer sur le site",
+    invalid: "Ce lien de retour n'est pas valide.",
+    mySpace: "Aller à mon espace",
+  },
   agenda: {
     summary: (title: string) => `Rendez-vous MENAO : ${title}`,
     startSummary: (title: string) => `Démarrage des travaux : ${title}`,

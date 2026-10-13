@@ -4,6 +4,7 @@ import {
   type ClientChantierAction,
   type NextIntervention,
 } from "@menao/core";
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import {
   BadgeCheck,
@@ -235,12 +236,14 @@ export function ActionCard({
   chantierId: string;
 }) {
   const sign = action.kind === "signer_devis";
-  const path =
-    action.kind === "payer_solde"
-      ? `/mon-espace/chantiers/${chantierId}/solde`
-      : action.kind === "payer_acompte"
-        ? `/mon-espace/devis/${action.quoteId}/acompte`
-        : `/mon-espace/devis/${action.quoteId}`;
+  const balance = action.kind === "payer_solde";
+  function open() {
+    // Provisoire : le paiement du solde arrive dans l'application avec la réception (partie 5b).
+    if (balance)
+      WebBrowser.openBrowserAsync(`${env.siteUrl}/mon-espace/chantiers/${chantierId}/solde`);
+    else if (sign) router.push(`/devis/${action.quoteId}`);
+    else router.push(`/devis/${action.quoteId}/acompte`);
+  }
   return (
     <View style={styles.action}>
       <View style={styles.nextTitle}>
@@ -262,11 +265,8 @@ export function ActionCard({
       {sign && totalTtcCents !== null && (
         <Text style={styles.amount}>{formatCents(totalTtcCents)}</Text>
       )}
-      <Button
-        label={sign ? t.action.sign : t.action.pay}
-        onPress={() => WebBrowser.openBrowserAsync(env.siteUrl + path)}
-      />
-      <Text style={styles.small}>{t.action.onSite}</Text>
+      <Button label={sign ? t.action.sign : t.action.pay} onPress={open} />
+      {balance && <Text style={styles.small}>{t.action.onSite}</Text>}
     </View>
   );
 }

@@ -1,9 +1,11 @@
 // Edge Function signature-create (F-13, F-25) : ouvre la signature du devis, ou du PV de réception,
 // chez le prestataire. particulier_start_signature / particulier_start_reception et les fonctions
 // de données, appelées au nom du client, décident de l'accès ; le PDF du devis envoyé est transmis
-// tel quel, le PV est produit à partir de ses données figées. Aucune donnée personnelle dans les
-// journaux. ADR 0022, 0027.
+// tel quel, le PV est produit à partir de ses données figées. Depuis l'application (`app: true`),
+// la fin de la signature passe par la page de retour du site, qui rouvre l'application (ADR 0060).
+// Aucune donnée personnelle dans les journaux. ADR 0022, 0027.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { appReturnUrl } from "../../../packages/core/src/app-return.ts";
 import { parisLocalToDate } from "../../../packages/core/src/appointment.ts";
 import type { QuoteDocument } from "../../../packages/documents/src/quote-data.ts";
 import {
@@ -59,6 +61,7 @@ async function receptionSignature(
   chantierId: string,
   reserves: string | null,
   consents: unknown,
+  fromApp: boolean,
 ): Promise<Response> {
   const { data: start, error } = await supabase.rpc("particulier_start_reception", {
     p_chantier_id: chantierId,
@@ -87,7 +90,9 @@ async function receptionSignature(
         phone: started.signer.phone,
       },
       externalId: started.reception_id,
-      completedRedirectUrl: `${siteUrl()}/mon-espace/chantiers/${chantierId}?reception=signee`,
+      completedRedirectUrl: fromApp
+        ? appReturnUrl(siteUrl(), { screen: "chantier", id: chantierId, state: "reception" })
+        : `${siteUrl()}/mon-espace/chantiers/${chantierId}?reception=signee`,
       expireAt: new Date(Date.now() + RECEPTION_SIGNING_DAYS * 86_400_000).toISOString(),
     });
     const { error: updateError } = await adminClient()
@@ -120,10 +125,13 @@ Deno.serve(async (req) => {
     chantierId?: unknown;
     reserves?: unknown;
     consents?: unknown;
+    app?: unknown;
   } | null;
   const quoteId = typeof body?.quoteId === "string" ? body.quoteId : "";
   const chantierId = typeof body?.chantierId === "string" ? body.chantierId : "";
   if (!UUID.test(quoteId) && !UUID.test(chantierId)) return json({ status: "invalid" }, 400);
+  // Une signature déjà ouverte est reprise avec son lien, donc avec son adresse de fin d'origine.
+  const fromApp = body?.app === true;
 
   // Client au nom de l'utilisateur : auth.uid() et ses droits s'appliquent en base.
   const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
@@ -132,7 +140,7 @@ Deno.serve(async (req) => {
   });
   if (UUID.test(chantierId)) {
     const reserves = typeof body?.reserves === "string" ? body.reserves : null;
-    return receptionSignature(supabase, chantierId, reserves, body?.consents);
+    return receptionSignature(supabase, chantierId, reserves, body?.consents, fromApp);
   }
   const { data: start, error } = await supabase.rpc("particulier_start_signature", {
     p_quote_id: quoteId,
@@ -158,7 +166,9 @@ Deno.serve(async (req) => {
         phone: started.signer.phone,
       },
       externalId: quoteId,
-      completedRedirectUrl: `${site}/mon-espace/devis/${quoteId}?signature=terminee`,
+      completedRedirectUrl: fromApp
+        ? appReturnUrl(site, { screen: "devis", id: quoteId, state: "signature" })
+        : `${site}/mon-espace/devis/${quoteId}?signature=terminee`,
       // Plus de signature possible après la fin de validité du devis (heure de Paris).
       expireAt: parisLocalToDate(started.valid_until, "23:59").toISOString(),
     });

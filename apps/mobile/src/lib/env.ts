@@ -30,3 +30,8 @@ export const siteLinks = {
   resetPassword: confirmUrl("/nouveau-mot-de-passe"),
   emailConfirmed: confirmUrl("/mon-espace"),
 };
+
+/** Conditions des prestataires, à lire avant de signer (mêmes liens que le site). */
+export const providerLinks = {
+  docusealTerms: "https://www.docuseal.com/terms",
+};

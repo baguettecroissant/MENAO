@@ -7,6 +7,7 @@ const numeric = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: "Europe/Paris",
 });
+const dayLong = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
 const longDay = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
   day: "numeric",
@@ -27,6 +28,11 @@ export function formatCents(cents: number): string {
 /** « 25/10/2026 » (heure de Paris). */
 export function formatDateNumeric(iso: string): string {
   return numeric.format(new Date(iso));
+}
+
+/** « 25 octobre 2026 » (heure de Paris), comme sur le site. */
+export function formatDay(iso: string): string {
+  return dayLong.format(new Date(iso));
 }
 
 /** « dimanche 25 octobre » et « 08h30 », comme sur le site (heure de Paris). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAgo, formatCents, formatDateNumeric, formatDayAndTime } from "./format";
+import { formatAgo, formatCents, formatDateNumeric, formatDay, formatDayAndTime } from "./format";
 
 describe("mise en forme", () => {
   it("affiche les montants en euros à partir des centimes", () => {
@@ -9,6 +9,8 @@ describe("mise en forme", () => {
 
   it("affiche les dates à l'heure de Paris", () => {
     expect(formatDateNumeric("2026-10-25T06:30:00Z")).toBe("25/10/2026");
+    // Minuit et demi à Paris : encore le 24 octobre en temps universel.
+    expect(formatDay("2026-10-24T22:30:00Z")).toBe("25 octobre 2026");
     expect(formatDayAndTime("2026-10-25T06:30:00Z")).toEqual({
       day: "dimanche 25 octobre",
       time: "07h30",

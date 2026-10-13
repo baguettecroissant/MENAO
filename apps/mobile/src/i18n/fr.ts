@@ -3,6 +3,8 @@ export const fr = {
   brand: "MENAO",
   nav: {
     back: "Retour",
+    currentStep: "étape en cours",
+    doneStep: "étape terminée",
   },
   errors: {
     generic: "Une erreur est survenue. Réessayez dans quelques instants.",
@@ -437,7 +439,6 @@ export const fr = {
       paid: "Déjà payé",
       remaining: "Restant à payer",
       noSchedule: "L'échéancier de paiement apparaîtra avec le devis signé.",
-      openOnSite: "Les documents s'ouvrent sur le site MENAO.",
     },
     action: {
       signTitle: "Votre devis est prêt",
@@ -447,10 +448,113 @@ export const fr = {
       payText: "Effectuez le paiement pour démarrer le chantier",
       payBalanceText: "Réglez le solde pour clôturer votre chantier",
       pay: "Payer maintenant",
-      // Provisoire : la signature et les paiements arrivent dans l'application (lot 6b, partie 5).
+      // Provisoire : le paiement du solde arrive dans l'application (lot 6b, partie 5b).
       onSite: "S'ouvre sur le site MENAO, avec votre compte.",
     },
     notFound: "Ce chantier est introuvable.",
+  },
+  /** Devis reçu (F-21), signature (F-13) et acompte (F-31) : mêmes textes que le site. */
+  quote: {
+    title: (artisan: string) => `Devis de ${artisan}`,
+    titleFallback: "Votre devis",
+    statuses: {
+      brouillon: "Brouillon",
+      envoye: "À consulter",
+      signe: "Signé",
+      refuse: "Refusé",
+      revision_demandee: "Modification demandée",
+      remplace: "Remplacé",
+    },
+    validUntil: (date: string) => `Valable jusqu'au ${date}`,
+    document: "Contenu du devis",
+    pdf: "Télécharger le PDF",
+    signedPdf: "Télécharger le devis signé",
+    revisionNotice:
+      "Vous avez demandé une modification. L'artisan va vous envoyer une nouvelle version :",
+    refusedNotice: "Vous avez refusé ce devis.",
+    replacedNotice: "Ce devis a été remplacé par une nouvelle version.",
+    seeNewVersion: "Voir la nouvelle version",
+    requestChange: "Demander une modification",
+    refuse: "Refuser le devis",
+    sign: "Signer le devis",
+    signedNotice: (date: string) => `Vous avez signé ce devis le ${date}.`,
+    payDeposit: (amount: string) => `Payer l'acompte (${amount})`,
+    depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
+    depositInvoice: (numero: string) => `Télécharger la facture d'acompte ${numero}`,
+    depositInProgress:
+      "Votre paiement de l'acompte est en cours de confirmation par Stripe (virement ou prélèvement en attente).",
+    signatureReturned:
+      "Merci\u00a0! Votre signature est en cours d'enregistrement : elle apparaîtra ici dans quelques instants.",
+    paymentReturned:
+      "Merci\u00a0! Votre paiement est en cours de confirmation : il apparaîtra ici dans quelques instants.",
+    steps: {
+      label: "Étapes de la signature",
+      sign: "Signature du devis",
+      deposit: "Paiement de l'acompte",
+    },
+    signature: {
+      title: "Signature du devis",
+      intro:
+        "Vérifiez le devis et cochez les cases ci-dessous : vous signerez ensuite chez notre prestataire de signature électronique, DocuSeal.",
+      summary: (numero: string, amount: string) => `Devis n° ${numero} · ${amount} TTC`,
+      consents: {
+        document: "J'ai lu et j'accepte le devis.",
+        cgu_prestataire:
+          "J'accepte les conditions d'utilisation de DocuSeal, prestataire de signature électronique.",
+        cgu_menao:
+          "J'accepte les conditions générales d'utilisation et la politique de confidentialité de MENAO.",
+        echeancier: (deposit: string, balance: string) =>
+          `J'accepte l'échéancier : acompte de ${deposit} à la signature, solde de ${balance} à la réception des travaux.`,
+      },
+      links: {
+        provider: "Conditions DocuSeal",
+        terms: "CGU",
+        privacy: "Confidentialité",
+      },
+      otp: "Un code à usage unique vous sera demandé pour confirmer votre identité.",
+      submit: "Signer le devis",
+      unavailable:
+        "La signature électronique est momentanément indisponible. Réessayez dans un instant.",
+      depositNext: "Le paiement de l'acompte vous sera proposé après la signature.",
+    },
+    deposit: {
+      title: "Paiement de l'acompte",
+      intro:
+        "L'acompte est versé directement à l'artisan, sur son compte Stripe. MENAO ne perçoit aucune commission.",
+      start: (date: string) => `Démarrage prévu le ${date}`,
+      today: "À payer aujourd'hui",
+      later: "À la réception des travaux",
+      beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+      methods: "Carte bancaire, Apple Pay ou Google Pay, selon les moyens acceptés par l'artisan.",
+      secure: "Paiement sécurisé par Stripe",
+      submit: (amount: string) => `Payer ${amount}`,
+      unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
+    },
+    revision: {
+      title: "Demander une modification",
+      intro:
+        "Expliquez à l'artisan ce que vous souhaitez changer : il vous enverra une nouvelle version du devis.",
+      label: "Modification souhaitée",
+      submit: "Envoyer la demande",
+    },
+    refusal: {
+      title: "Refuser le devis",
+      intro: "L'artisan sera prévenu. Ce choix est définitif.",
+      reason: "Raison du refus",
+      reasons: {
+        trop_cher: "Le prix est trop élevé",
+        autre_artisan: "J'ai choisi un autre artisan",
+        projet_reporte: "Je reporte mon projet",
+        autre: "Autre raison",
+      },
+      comment: "Message pour l'artisan (facultatif)",
+      submit: "Refuser le devis",
+    },
+    notFound: "Ce devis est introuvable.",
+  },
+  /** Documents PDF (devis, factures, PV), proposés au partage du téléphone. */
+  pdf: {
+    failed: "Le document n'a pas pu être téléchargé. Réessayez dans un instant.",
   },
   ago: {
     now: "à l'instant",
