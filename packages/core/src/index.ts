@@ -28,6 +28,7 @@ export * from "./dispute";
 export * from "./notifications";
 export * from "./agenda";
 export * from "./profile";
+export * from "./app-return";
 export * from "./overview";
 export * from "./webhook";
 export * from "./reference";

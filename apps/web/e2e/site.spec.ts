@@ -89,3 +89,22 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await page.getByRole("button", { name: "Envoyer" }).click();
   await expect(page.getByText("Votre message est envoyé")).toBeVisible();
 });
+
+test("retour dans l'application après une signature ou un paiement (ADR 0060)", async ({
+  page,
+}) => {
+  // Aucune redirection libre : écran, état et identifiant inconnus sont refusés.
+  await page.goto("/retour-application?ecran=devis&id=https://exemple.com&etat=paiement");
+  await expect(page.getByText("Ce lien de retour n'est pas valide.")).toBeVisible();
+
+  const id = "3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b";
+  await page.goto(`/retour-application?ecran=chantier&id=${id}&etat=paiement`);
+  await expect(page.getByRole("link", { name: "Ouvrir l'application MENAO" })).toHaveAttribute(
+    "href",
+    `menao://chantier/${id}?retour=paiement`,
+  );
+  await expect(page.getByRole("link", { name: "Continuer sur le site" })).toHaveAttribute(
+    "href",
+    `/mon-espace/chantiers/${id}?paiement=termine`,
+  );
+});
