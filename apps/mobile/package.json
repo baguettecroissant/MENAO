@@ -18,6 +18,7 @@
     "@menao/core": "workspace:^",
     "@menao/db": "workspace:^",
     "@menao/documents": "workspace:^",
+    "@menao/emails": "workspace:^",
     "@menao/ui-tokens": "workspace:^",
     "@menao/validation": "workspace:^",
     "@react-native-community/datetimepicker": "9.1.0",

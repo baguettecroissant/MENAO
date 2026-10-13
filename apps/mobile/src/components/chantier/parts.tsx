@@ -11,10 +11,12 @@ import {
   Check,
   CreditCard,
   FilePen,
+  MessageCircle,
   Phone,
   Wrench,
 } from "lucide-react-native";
 import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Avatar } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { Button } from "@/ui";
@@ -165,23 +167,20 @@ export function PersonRow({
   detail,
   photoUrl,
   phone,
+  onMessage,
 }: {
   name: string;
   detail: string | null;
   photoUrl: string | null;
   phone?: string | null;
+  /** Conversation du chantier (F-40), à côté de l'appel. */
+  onMessage?: () => void;
 }) {
   return (
     <View style={styles.person}>
       <Text style={styles.personLabel}>{t.yourArtisan}</Text>
       <View style={styles.personRow}>
-        {photoUrl ? (
-          <Image source={{ uri: photoUrl }} style={styles.avatar} alt="" />
-        ) : (
-          <View style={[styles.avatar, styles.avatarEmpty]}>
-            <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-          </View>
-        )}
+        <Avatar url={photoUrl} name={name} />
         <View style={styles.personText}>
           <Text style={styles.personName}>{name}</Text>
           <View style={styles.personMeta}>
@@ -197,6 +196,16 @@ export function PersonRow({
             style={styles.callButton}
           >
             <Phone size={18} color={colors["primary-strong"]} />
+          </Pressable>
+        ) : null}
+        {onMessage ? (
+          <Pressable
+            role="button"
+            aria-label={`${fr.messages.button} : ${name}`}
+            onPress={onMessage}
+            style={styles.callButton}
+          >
+            <MessageCircle size={18} color={colors["primary-strong"]} />
           </Pressable>
         ) : null}
       </View>
@@ -307,13 +316,6 @@ const styles = StyleSheet.create({
   person: { gap: spacing(2) },
   personLabel: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   personRow: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  avatar: { width: 44, height: 44, borderRadius: 22 },
-  avatarEmpty: {
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontFamily: font.medium, fontSize: 17, color: colors["primary-strong"] },
   personText: { flex: 1, gap: 2 },
   personName: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
   personMeta: { flexDirection: "row", alignItems: "center", gap: spacing(1) },

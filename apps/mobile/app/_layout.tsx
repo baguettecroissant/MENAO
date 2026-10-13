@@ -10,6 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider, useSession } from "@/lib/session";
+import { UnreadProvider } from "@/lib/unread";
 
 // L'écran de démarrage (logo MENAO) reste affiché jusqu'au chargement des polices et de la session.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -23,7 +24,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
-        <Root ready={fontsLoaded} />
+        <UnreadProvider>
+          <Root ready={fontsLoaded} />
+        </UnreadProvider>
       </SessionProvider>
     </SafeAreaProvider>
   );

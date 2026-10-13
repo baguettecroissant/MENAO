@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react-native";
-import { ComingSoon } from "@/components/coming-soon";
 import { GuestInvite } from "@/components/guest-invite";
+import { NotificationCenter } from "@/components/notification-center";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
@@ -11,13 +11,5 @@ export default function Notifications() {
   if (!signedIn) {
     return <GuestInvite icon={Bell} {...fr.guest.notifications} header={<TopBar />} />;
   }
-  return (
-    <ComingSoon
-      icon={Bell}
-      title={fr.tabs.notifications}
-      text={fr.soon.notifications}
-      siteLink
-      header={<TopBar />}
-    />
-  );
+  return <NotificationCenter />;
 }

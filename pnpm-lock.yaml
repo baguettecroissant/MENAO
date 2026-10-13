@@ -41,6 +41,9 @@ importers:
       '@menao/documents':
         specifier: workspace:^
         version: link:../../packages/documents
+      '@menao/emails':
+        specifier: workspace:^
+        version: link:../../packages/emails
       '@menao/ui-tokens':
         specifier: workspace:^
         version: link:../../packages/ui-tokens
