@@ -1,3 +1,4 @@
+import { CHANTIER_STATUSES } from "@menao/core";
 import { z } from "zod";
 
 /**
@@ -44,5 +45,34 @@ export type RequestDetail = z.infer<typeof requestDetailSchema>;
 /** Réponse de artisan_request_detail lue et contrôlée ; null si elle est absente ou inattendue. */
 export function parseRequestDetail(data: unknown): RequestDetail | null {
   const parsed = requestDetailSchema.safeParse(data);
+  return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Détail d'un chantier de l'artisan (fonction artisan_chantier_detail, F-18, F-22) : demande
+ * d'origine, état, date de démarrage, rendez-vous et notes privées.
+ */
+export const artisanChantierDetailSchema = requestDetailSchema.extend({
+  chantier: z.object({
+    id: z.string(),
+    status: z.enum(CHANTIER_STATUSES),
+    title: z.string(),
+    created_at: z.string(),
+    start_at: z.string().nullable(),
+    cancelled_at: z.string().nullable(),
+  }),
+  appointment: z
+    .object({
+      starts_at: z.string(),
+      status: z.enum(["planifie", "annule"]),
+      notes: z.string().nullable(),
+    })
+    .nullable(),
+});
+export type ArtisanChantierDetail = z.infer<typeof artisanChantierDetailSchema>;
+
+/** Réponse de artisan_chantier_detail lue et contrôlée ; null si elle est absente ou inattendue. */
+export function parseArtisanChantierDetail(data: unknown): ArtisanChantierDetail | null {
+  const parsed = artisanChantierDetailSchema.safeParse(data);
   return parsed.success ? parsed.data : null;
 }

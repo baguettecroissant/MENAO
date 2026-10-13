@@ -10,6 +10,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { addTicketMessage, loadTicket } from "@/lib/disputes";
 import { formatDateNumeric, formatDayAndTime } from "@/lib/format";
+import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Card, LinkText, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -24,6 +25,7 @@ const TONE = { ouvert: "primary", en_cours: "warning", resolu: "neutral" } as co
  */
 export default function TicketScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const artisan = useSession().space === "artisan";
   const load = useCallback(() => loadTicket(id), [id]);
   const [ticket, reload] = useFocusData(load);
   const [body, setBody] = useState("");
@@ -68,7 +70,11 @@ export default function TicketScreen() {
         <StatusPill text={t.statuses[ticket.status]} tone={TONE[ticket.status]} />
         <LinkText
           label={t.chantierLink(ticket.chantier.title)}
-          onPress={() => router.push(`/chantier/${ticket.chantier.id}`)}
+          onPress={() =>
+            router.push(
+              artisan ? `/pro-chantier/${ticket.chantier.id}` : `/chantier/${ticket.chantier.id}`,
+            )
+          }
         />
         {ticket.category ? (
           <Text style={styles.meta}>

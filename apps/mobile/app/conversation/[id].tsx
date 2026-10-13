@@ -17,6 +17,7 @@ import { MessageBubble } from "@/components/messages/message-bubble";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadConversation, markConversationRead, subscribeToConversation } from "@/lib/messages";
+import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, Screen } from "@/ui";
@@ -26,14 +27,15 @@ const t = fr.messages;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * Conversation du client avec l'artisan de son chantier (F-40), comme sur le site : messages du
+ * Conversation d'un chantier entre le client et son artisan (F-40), comme sur le site : messages du
  * plus ancien au plus récent, mis à jour en temps réel tant que l'écran est affiché, marqués lus
  * à l'affichage. Lecture seule si le chantier est annulé ou le devis refusé.
  */
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { refresh } = useUnread();
-  const load = useCallback(() => loadConversation(id), [id]);
+  const artisan = useSession().space === "artisan";
+  const load = useCallback(() => loadConversation(id, artisan), [id, artisan]);
   const [conversation, reload] = useFocusData(load);
   const scrollRef = useRef<ScrollView>(null);
   const messages = conversation?.messages ?? [];
@@ -81,7 +83,11 @@ export default function ConversationScreen() {
             <Text role="heading" style={styles.name} numberOfLines={1}>
               {conversation.otherName}
             </Text>
-            <Pressable role="link" hitSlop={8} onPress={() => router.push(`/chantier/${id}`)}>
+            <Pressable
+              role="link"
+              hitSlop={8}
+              onPress={() => router.push(conversation.chantierPath)}
+            >
               <Text style={styles.chantier} numberOfLines={1}>
                 {conversation.title} · <Text style={styles.link}>{t.seeChantier}</Text>
               </Text>

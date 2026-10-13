@@ -1,5 +1,6 @@
 import { conversationClosed } from "@menao/core";
 import type { Database } from "@menao/db";
+import { parseArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar } from "./chantiers";
 import { formatDayLabel, formatTime } from "./format";
@@ -35,22 +36,54 @@ export type Conversation = {
   title: string;
   otherName: string;
   avatarUrl: string | null;
+  /** Vue du chantier de l'utilisateur : côté client, ou côté artisan. */
+  chantierPath: `/chantier/${string}` | `/pro-chantier/${string}`;
   /** Lecture seule : chantier annulé ou devis refusé. */
   closed: boolean;
   messages: ConversationMessage[];
 };
 
-/**
- * Conversation du client avec l'artisan de son chantier (F-40), comme sur le site : contenu des
- * messages masqués retiré par la base (chantier_messages), pièces jointes par URL signées.
- */
-export async function loadConversation(chantierId: string): Promise<Conversation | null> {
-  const [{ data: rows }, { data: messages }] = await Promise.all([
-    supabase.rpc("particulier_chantiers", { p_chantier_id: chantierId }),
-    supabase.rpc("chantier_messages", { p_chantier_id: chantierId }),
-  ]);
+/** Interlocuteur et chantier : vus par le client (son artisan), sinon par l'artisan (son client). */
+async function conversationParty(chantierId: string, artisan: boolean) {
+  if (artisan) {
+    const { data } = await supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId });
+    const c = parseArtisanChantierDetail(data);
+    if (!c) return null;
+    return {
+      title: c.chantier.title,
+      otherName: [c.client.first_name, c.client.last_name].filter(Boolean).join(" "),
+      avatarUrl: null,
+      chantierPath: `/pro-chantier/${chantierId}` as const,
+      closed: conversationClosed(c.chantier.status),
+    };
+  }
+  const { data: rows } = await supabase.rpc("particulier_chantiers", {
+    p_chantier_id: chantierId,
+  });
   const c = rows?.[0];
   if (!c) return null;
+  return {
+    title: c.title,
+    otherName: c.artisan_name,
+    avatarUrl: artisanAvatar(c.artisan_avatar_path),
+    chantierPath: `/chantier/${chantierId}` as const,
+    closed: conversationClosed(c.status),
+  };
+}
+
+/**
+ * Conversation d'un chantier (F-40), comme sur le site, entre le client et son artisan : contenu
+ * des messages masqués retiré par la base (chantier_messages), pièces jointes par URL signées.
+ */
+export async function loadConversation(
+  chantierId: string,
+  artisan: boolean,
+): Promise<Conversation | null> {
+  const [party, { data: messages }] = await Promise.all([
+    conversationParty(chantierId, artisan),
+    supabase.rpc("chantier_messages", { p_chantier_id: chantierId }),
+  ]);
+  if (!party) return null;
   const list = messages ?? [];
   const paths = [...new Set(list.flatMap((m) => (m.storage_path ? [m.storage_path] : [])))];
   const { data: signed } = paths.length
@@ -61,10 +94,7 @@ export async function loadConversation(chantierId: string): Promise<Conversation
   );
   const now = new Date();
   return {
-    title: c.title,
-    otherName: c.artisan_name,
-    avatarUrl: artisanAvatar(c.artisan_avatar_path),
-    closed: conversationClosed(c.status),
+    ...party,
     messages: list.map((m) => ({
       id: m.message_id,
       mine: m.mine === true,

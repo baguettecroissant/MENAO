@@ -2,7 +2,6 @@ import {
   DISPUTE_CATEGORIES,
   DISPUTE_DESCRIPTION_LIMITS,
   reportSuspendsChantier,
-  type ChantierStatus,
   type DisputeCategory,
 } from "@menao/core";
 import { problemReportSchema } from "@menao/validation";
@@ -13,8 +12,8 @@ import { z } from "zod";
 import { RadioGroup } from "@/components/radio-group";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadChantier } from "@/lib/chantiers";
-import { reportProblem } from "@/lib/disputes";
+import { loadReportContext, reportProblem } from "@/lib/disputes";
+import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -29,7 +28,9 @@ const CATEGORIES = DISPUTE_CATEGORIES.map((value) => ({ value, label: t.categori
  */
 export default function ReportProblemScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const load = useCallback(() => loadChantier(id), [id]);
+  // Même écran pour le client et pour l'artisan du chantier (F-42).
+  const artisan = useSession().space === "artisan";
+  const load = useCallback(() => loadReportContext(id, artisan), [id, artisan]);
   const [detail] = useFocusData(load);
   const [category, setCategory] = useState<DisputeCategory | null>(null);
   const [description, setDescription] = useState("");
@@ -52,6 +53,7 @@ export default function ReportProblemScreen() {
     );
   }
   if (detail.openTicketId) return <Redirect href={`/signalement/${detail.openTicketId}`} />;
+  const context = detail;
 
   async function submit() {
     const parsed = problemReportSchema.safeParse({ category: category ?? "", description });
@@ -73,11 +75,11 @@ export default function ReportProblemScreen() {
     <Screen header={<TopBar />}>
       <View style={styles.head}>
         <Title>{t.reportTitle}</Title>
-        <Body muted>{t.chantierLink(detail.c.title)}</Body>
+        <Body muted>{t.chantierLink(context.title)}</Body>
       </View>
       <Body>{t.intro}</Body>
       <Notice tone="info">
-        {reportSuspendsChantier(detail.c.status as ChantierStatus) ? t.suspends : t.noSuspension}
+        {reportSuspendsChantier(context.status) ? t.suspends : t.noSuspension}
       </Notice>
       <RadioGroup
         legend={t.categoryLegend}

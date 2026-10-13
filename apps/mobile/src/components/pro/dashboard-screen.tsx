@@ -139,6 +139,7 @@ export function DashboardScreen() {
             </View>
 
             <Section title={t.upcoming}>
+              <LinkText label={fr.proChantiers.all} onPress={() => router.push("/pro-chantiers")} />
               {data.appointments.length === 0 ? (
                 <Body muted>{t.noUpcoming}</Body>
               ) : (
@@ -146,9 +147,9 @@ export function DashboardScreen() {
                   const { day, time } = formatDayAndTime(a.startsAt);
                   return (
                     <Pressable
-                      key={`${a.kind}-${a.requestId}`}
+                      key={`${a.kind}-${a.chantierId}`}
                       role="link"
-                      onPress={() => router.push(`/opportunite/${a.requestId}`)}
+                      onPress={() => router.push(`/pro-chantier/${a.chantierId}`)}
                     >
                       <Card>
                         <View style={styles.item}>

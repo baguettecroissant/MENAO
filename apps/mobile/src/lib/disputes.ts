@@ -1,5 +1,6 @@
-import type { DisputeCategory } from "@menao/core";
+import type { ChantierStatus, DisputeCategory } from "@menao/core";
 import type { Database } from "@menao/db";
+import { parseArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
 
@@ -19,6 +20,29 @@ export async function openDispute(chantierId: string): Promise<string | null> {
     .neq("status", "resolu")
     .maybeSingle();
   return data?.id ?? null;
+}
+
+/**
+ * Chantier à signaler, vu par le client ou par l'artisan : titre, état (le chantier actif passe en
+ * litige) et signalement déjà ouvert. null si le chantier n'est pas le sien.
+ */
+export async function loadReportContext(
+  chantierId: string,
+  artisan: boolean,
+): Promise<{ title: string; status: ChantierStatus; openTicketId: string | null } | null> {
+  const [chantier, openTicketId] = await Promise.all([
+    artisan
+      ? supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId }).then(({ data }) => {
+          const c = parseArtisanChantierDetail(data);
+          return c ? { title: c.chantier.title, status: c.chantier.status } : null;
+        })
+      : supabase.rpc("particulier_chantiers", { p_chantier_id: chantierId }).then(({ data }) => {
+          const c = data?.[0];
+          return c ? { title: c.title, status: c.status as ChantierStatus } : null;
+        }),
+    openDispute(chantierId),
+  ]);
+  return chantier ? { ...chantier, openTicketId } : null;
 }
 
 /**
