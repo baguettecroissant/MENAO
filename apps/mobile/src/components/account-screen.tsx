@@ -4,6 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import { ChevronRight } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAccount, saveMarketingOptIn, shareAccountData } from "@/lib/account";
 import { siteLinks } from "@/lib/env";
@@ -93,7 +94,7 @@ export function AccountScreen() {
   }
 
   return (
-    <Screen>
+    <Screen header={<TopBar />}>
       <Title>{t.title}</Title>
       <Card>
         {name ? <Text style={styles.name}>{name}</Text> : <Body muted>{t.signedInAs}</Body>}

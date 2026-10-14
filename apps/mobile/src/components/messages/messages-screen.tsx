@@ -9,12 +9,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationRow } from "./conversation-row";
+import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { loadConversations, type ConversationItem } from "@/lib/messages";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.messages;
@@ -59,10 +60,7 @@ export function MessagesScreen() {
           />
         }
       >
-        <View style={styles.head}>
-          <Title>{t.title}</Title>
-          <Body muted>{artisan ? t.subtitlePro : t.subtitle}</Body>
-        </View>
+        <TabHeader title={t.title} subtitle={artisan ? t.subtitlePro : t.subtitle} />
         {rows === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : rows.length === 0 ? (
@@ -92,7 +90,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
-  head: { gap: spacing(2) },
   list: {
     overflow: "hidden",
     borderRadius: radius.card,

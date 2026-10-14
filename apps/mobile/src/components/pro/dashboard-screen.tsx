@@ -1,8 +1,7 @@
 import { timeLeft } from "@menao/core";
-import { router, useFocusEffect, type Href } from "expo-router";
+import { router, type Href } from "expo-router";
 import {
   ArrowRight,
-  Bell,
   CalendarClock,
   CalendarDays,
   Clock,
@@ -15,7 +14,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react-native";
-import { useCallback, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -32,6 +31,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { StatusPill } from "@/components/chantier/parts";
 import { PushPrompt } from "@/components/push-prompt";
+import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
@@ -228,7 +228,7 @@ function RequestCard({ request: r, now }: { request: Dashboard["requests"][numbe
 /** Raccourcis vers les écrans de gestion : devis, factures, avis (à répondre), disponibilités. */
 function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
   const items: { icon: LucideIcon; label: string; href: Href; badge?: string }[] = [
-    { icon: FileText, label: fr.proQuotes.open, href: "/pro-devis" },
+    { icon: FileText, label: fr.proQuotes.open, href: "/pro/devis" },
     { icon: ReceiptText, label: fr.proInvoices.open, href: "/pro-factures" },
     {
       icon: Star,
@@ -276,14 +276,8 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
  */
 export function DashboardScreen() {
   const [data, reload] = useFocusData(loadDashboard);
-  const { notifications, refresh } = useUnread();
+  const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
-  // Retour sur le tableau de bord : pastille de la cloche à jour.
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [refresh]),
-  );
 
   if (data === undefined) {
     return (
@@ -295,7 +289,7 @@ export function DashboardScreen() {
   const now = new Date();
   const appointments = data ? (
     <View style={styles.section}>
-      <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro/agenda" }} />
+      <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro-agenda" }} />
       {data.appointments.length === 0 ? (
         <View style={[styles.card, styles.empty]}>
           <Text style={styles.emptyText}>{t.noUpcoming}</Text>
@@ -310,7 +304,7 @@ export function DashboardScreen() {
   ) : null;
   const requests = data ? (
     <View style={styles.section}>
-      <SectionHead title={t.latestRequests} link={{ label: t.seeAll, href: "/pro/demandes" }} />
+      <SectionHead title={t.latestRequests} link={{ label: t.seeAll, href: "/pro-demandes" }} />
       {data.requests.length === 0 ? (
         <View style={styles.dashed}>
           <Text style={styles.emptyText}>{t.noRequests}</Text>
@@ -338,41 +332,7 @@ export function DashboardScreen() {
           />
         }
       >
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text role="heading" style={styles.title}>
-              {t.title}
-            </Text>
-            <Text style={styles.greeting}>{t.greeting(data?.firstName ?? null)}</Text>
-          </View>
-          <Pressable
-            role="button"
-            aria-label={fr.notificationCenter.bell(notifications)}
-            onPress={() => router.push("/notifications")}
-            style={({ pressed }) => [styles.bell, pressed && styles.pressed]}
-          >
-            <Bell size={22} color={colors.primary} />
-            {notifications > 0 ? (
-              <View style={styles.bellBadge}>
-                <Text style={styles.bellBadgeText}>{notifications > 9 ? "9+" : notifications}</Text>
-              </View>
-            ) : null}
-          </Pressable>
-          <Pressable
-            role="link"
-            aria-label={t.account}
-            onPress={() => router.push("/pro/compte")}
-            style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
-          >
-            {data?.avatarUrl ? (
-              <Image source={{ uri: data.avatarUrl }} style={styles.avatarImage} alt="" />
-            ) : (
-              <Text style={styles.avatarInitial}>
-                {(data?.firstName ?? "").charAt(0).toUpperCase()}
-              </Text>
-            )}
-          </Pressable>
-        </View>
+        <TabHeader title={t.title} subtitle={t.greeting(data?.firstName ?? null)} />
 
         {data === null ? (
           <Notice tone="error">{t.error}</Notice>
@@ -384,7 +344,7 @@ export function DashboardScreen() {
               <Kpi
                 label={t.awaitingQuote}
                 value={t.clients(data.awaitingClients)}
-                href="/pro-chantiers"
+                href="/pro/chantiers"
               />
               <Kpi
                 label={t.responseTime}
@@ -400,7 +360,7 @@ export function DashboardScreen() {
                       : t.responseDetail(data.responseTime.responses)}
                   </Text>
                 }
-                href="/pro/demandes"
+                href="/pro-demandes"
               />
               <Kpi
                 wide
@@ -442,43 +402,6 @@ const styles = StyleSheet.create({
   },
   content: { padding: spacing(5), gap: spacing(7), paddingBottom: spacing(10) },
   pressed: { opacity: 0.85 },
-  header: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  headerText: { flex: 1, gap: spacing(1) },
-  title: { fontFamily: font.medium, fontSize: 30, lineHeight: 36, color: colors.foreground },
-  greeting: { fontFamily: font.regular, fontSize: 15, color: colors["muted-foreground"] },
-  bell: {
-    width: theme.touchTarget,
-    height: theme.touchTarget,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bellBadge: {
-    position: "absolute",
-    top: 4,
-    right: 2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    backgroundColor: colors.danger,
-    borderWidth: 2,
-    borderColor: colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bellBadgeText: { fontFamily: font.bold, fontSize: 10, color: ON_COLOR },
-  avatar: {
-    width: 48,
-    height: 48,
-    overflow: "hidden",
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarImage: { width: 48, height: 48 },
-  avatarInitial: { fontFamily: font.bold, fontSize: 18, color: colors["primary-strong"] },
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
   kpi: {
     flexGrow: 1,

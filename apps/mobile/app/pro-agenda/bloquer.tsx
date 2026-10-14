@@ -14,7 +14,7 @@ const t = fr.proAgenda.block;
  * Date, heures de début et de fin, motif facultatif ; l'agenda s'ouvre ensuite sur cette semaine.
  */
 export default function BlockSlotScreen() {
-  const params = useLocalSearchParams<{ date?: string }>();
+  const params = useLocalSearchParams<{ date?: string; depuis?: string }>();
   const today = parisToday();
   const [date, setDate] = useState(params.date && params.date >= today ? params.date : today);
   const [start, setStart] = useState("14:00");
@@ -30,10 +30,13 @@ export default function BlockSlotScreen() {
     const result = await addBlockedSlot({ date, start, end, label });
     setPending(false);
     if (result === null) {
-      router.navigate({
-        pathname: "/pro/agenda",
+      // Retour à l'agenda d'où l'on vient, sinon l'agenda remplace cet écran (bouton (+)).
+      const agenda = {
+        pathname: "/pro-agenda",
         params: { semaine: mondayOf(date), bloque: "1" },
-      });
+      } as const;
+      if (params.depuis === "agenda") router.navigate(agenda);
+      else router.replace(agenda);
       return;
     }
     if ("fields" in result) return setErrors(result.fields);

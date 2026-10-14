@@ -9,14 +9,11 @@ import {
   type RevenueTrend,
 } from "@menao/core";
 import { loadInbox, type InboxItem } from "./pro-requests";
-import { publicUrl } from "./project";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
 
 export type Dashboard = {
   firstName: string | null;
-  /** Photo du profil (en-tête du tableau de bord, comme la maquette). */
-  avatarUrl: string | null;
   suspended: boolean;
   awaitingClients: number;
   revenue: { cents: number; trend: RevenueTrend; previousMonth: string };
@@ -34,8 +31,8 @@ export type Dashboard = {
 };
 
 /**
- * Tableau de bord de l'artisan (F-16), comme sur le site : prénom et photo, clients en attente de
- * devis, encaissé ce mois (paiements reçus sur son compte), temps de réponse, rendez-vous à venir,
+ * Tableau de bord de l'artisan (F-16), comme sur le site : prénom, clients en attente de devis,
+ * encaissé ce mois (paiements reçus sur son compte), temps de réponse, rendez-vous à venir,
  * dernières demandes et avis sans réponse. Mêmes règles que le site (`@menao/core`), lectures avec les
  * droits du compte (RLS).
  */
@@ -56,7 +53,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     supabase.rpc("artisan_chantiers"),
     supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
     supabase.rpc("my_response_stats"),
-    supabase.from("profiles").select("first_name, avatar_path").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     supabase.from("artisans").select("status").eq("user_id", userId).maybeSingle(),
     countReviewsToAnswer(),
   ]);
@@ -75,7 +72,6 @@ export async function loadDashboard(): Promise<Dashboard | null> {
   }));
   return {
     firstName: profile.data?.first_name ?? null,
-    avatarUrl: profile.data?.avatar_path ? publicUrl("avatars", profile.data.avatar_path) : null,
     suspended: artisan.data?.status === "suspendu",
     awaitingClients: clientsAwaitingQuote(rows),
     revenue: {

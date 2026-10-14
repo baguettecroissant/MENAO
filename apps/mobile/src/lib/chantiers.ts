@@ -113,6 +113,98 @@ export type ChantierDocument = {
   signed: boolean;
 };
 
+/**
+ * Documents d'un chantier, dans l'ordre du dossier, comme sur le site : dernière version envoyée
+ * du devis, factures d'acompte et de solde, PV de réception signé.
+ */
+export function chantierDocuments(input: {
+  quote:
+    | {
+        id: string;
+        status: string;
+        numero: string | null;
+        signed_at: string | null;
+        sent_at: string | null;
+      }
+    | null
+    | undefined;
+  invoices: readonly { id: string; numero: string; kind: string; issued_on: string }[];
+  reception:
+    { id: string; numero: string; status: string; signed_at: string | null } | null | undefined;
+  createdAt: string;
+}): ChantierDocument[] {
+  const { quote, reception } = input;
+  return [
+    ...(quote?.numero
+      ? [
+          {
+            kind: "devis" as const,
+            numero: quote.numero,
+            date: quote.signed_at ?? quote.sent_at ?? input.createdAt,
+            id: quote.id,
+            signed: quote.status === "signe",
+          },
+        ]
+      : []),
+    ...input.invoices.map((i) => ({
+      kind: (i.kind === "solde" ? "solde" : "acompte") as "acompte" | "solde",
+      numero: i.numero,
+      date: i.issued_on,
+      id: i.id,
+      signed: false,
+    })),
+    ...(reception?.status === "signe" && reception.signed_at
+      ? [
+          {
+            kind: "pv" as const,
+            numero: reception.numero,
+            date: reception.signed_at,
+            id: reception.id,
+            signed: true,
+          },
+        ]
+      : []),
+  ];
+}
+
+export type DocumentSection = { chantierId: string; title: string; documents: ChantierDocument[] };
+
+/**
+ * « Mes documents » (maquette « Mes chantiers - Mobile », onglet Documents), comme sur le site :
+ * devis, factures et PV de tous les chantiers du client, par chantier. null en cas d'erreur.
+ */
+export async function loadMyDocuments(): Promise<DocumentSection[] | null> {
+  const [chantiers, { data: quotes }, { data: invoices }, { data: receptions }] = await Promise.all(
+    [
+      supabase.rpc("particulier_chantiers"),
+      supabase
+        .from("quotes")
+        .select("id, chantier_id, status, numero, sent_at, signed_at, version")
+        .neq("status", "brouillon")
+        .order("version", { ascending: false }),
+      supabase
+        .from("invoices")
+        .select("id, chantier_id, numero, kind, issued_on")
+        .order("issued_on"),
+      supabase
+        .from("receptions")
+        .select("id, chantier_id, numero, status, signed_at")
+        .eq("status", "signe"),
+    ],
+  );
+  if (chantiers.error) return null;
+  return (chantiers.data ?? []).flatMap((c) => {
+    const documents = chantierDocuments({
+      // Dernière version envoyée du devis, comme dans le dossier du chantier.
+      quote: (quotes ?? []).find((q) => q.chantier_id === c.chantier_id && q.numero),
+      invoices: (invoices ?? []).filter((i) => i.chantier_id === c.chantier_id),
+      reception: (receptions ?? []).find((r) => r.chantier_id === c.chantier_id),
+      createdAt: c.created_at,
+    });
+    return documents.length ? [{ chantierId: c.chantier_id, title: c.title, documents }] : [];
+  });
+}
+
 /** PV de réception (F-25, F-26) : réserves, levée signalée par l'artisan. */
 export type ChantierReception = {
   id: string;
@@ -200,37 +292,12 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
     signedUrls("project-photos", [c.photo_path]),
   ]);
   const quote = quotes?.[0];
-  const documents: ChantierDocument[] = [
-    ...(quote?.numero
-      ? [
-          {
-            kind: "devis" as const,
-            numero: quote.numero,
-            date: quote.signed_at ?? quote.sent_at ?? c.created_at,
-            id: quote.id,
-            signed: quote.status === "signe",
-          },
-        ]
-      : []),
-    ...(invoices ?? []).map((i) => ({
-      kind: (i.kind === "solde" ? "solde" : "acompte") as "acompte" | "solde",
-      numero: i.numero,
-      date: i.issued_on,
-      id: i.id,
-      signed: false,
-    })),
-    ...(reception?.status === "signe" && reception.signed_at
-      ? [
-          {
-            kind: "pv" as const,
-            numero: reception.numero,
-            date: reception.signed_at,
-            id: reception.id,
-            signed: true,
-          },
-        ]
-      : []),
-  ];
+  const documents = chantierDocuments({
+    quote,
+    invoices: invoices ?? [],
+    reception,
+    createdAt: c.created_at,
+  });
   return {
     c,
     coverUrl: c.photo_path ? (cover.get(c.photo_path) ?? null) : null,

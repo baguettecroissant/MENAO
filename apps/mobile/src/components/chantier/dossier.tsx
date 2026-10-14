@@ -128,12 +128,19 @@ export function ScheduleCard({
 }
 
 /** Documents du chantier (devis, factures, PV) : aperçu, puis PDF à télécharger ou partager. */
-export function DocumentsCard({ documents }: { documents: ChantierDocument[] }) {
+export function DocumentsCard({
+  documents,
+  title = t.dossier.documents,
+}: {
+  documents: ChantierDocument[];
+  /** Titre de la carte : « Documents liés », ou le chantier dans « Mes documents ». */
+  title?: string;
+}) {
   return (
     <Card>
       <View style={styles.card}>
         <Text role="heading" style={styles.heading}>
-          {t.dossier.documents}
+          {title}
         </Text>
         {documents.length === 0 ? (
           <Body muted>{t.dossier.noDocuments}</Body>
@@ -145,7 +152,6 @@ export function DocumentsCard({ documents }: { documents: ChantierDocument[] }) 
   );
 }
 
-/** Document du dossier : PDF produit pour le compte, puis proposé au partage du téléphone. */
 /** Document du chantier : un appui ouvre son aperçu, d'où il se télécharge en PDF. */
 function DocumentRow({ document: d }: { document: ChantierDocument }) {
   const title =

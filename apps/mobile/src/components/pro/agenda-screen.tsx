@@ -35,6 +35,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatClock, formatDay, formatDayMonth } from "@/lib/format";
 import { deleteBlockedSlot, loadAgendaWeek } from "@/lib/pro-agenda";
@@ -154,6 +155,9 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <View style={styles.topBar}>
+        <TopBar />
+      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -236,7 +240,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
           onPress={() =>
             router.push({
               pathname: "/pro-agenda/bloquer",
-              params: { date: monday > today ? monday : today },
+              params: { date: monday > today ? monday : today, depuis: "agenda" },
             })
           }
         />
@@ -384,6 +388,7 @@ function AgendaRow({ item, onFree }: { item: Placed; onFree: () => Promise<void>
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  topBar: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   loading: {
     flex: 1,
     alignItems: "center",

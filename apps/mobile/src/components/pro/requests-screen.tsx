@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
@@ -31,7 +32,6 @@ const TONE: Record<InboxItem["status"], Tone> = {
   annulee: "neutral",
 };
 
-/** Début souhaité par le client, comme sur la liste du site. */
 /**
  * Demandes reçues par l'artisan (F-16, F-17), comme sur le site : à traiter sous 48 heures, avec le
  * temps restant, le début souhaité et la première photo du projet.
@@ -50,6 +50,9 @@ export function RequestsScreen() {
   const now = new Date();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      <View style={styles.topBar}>
+        <TopBar />
+      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -123,6 +126,7 @@ export function RequestsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  topBar: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   loading: {
     flex: 1,
     alignItems: "center",
