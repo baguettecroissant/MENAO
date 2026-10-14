@@ -927,8 +927,9 @@ export const fr = {
   },
   /** Tableau de bord de l'artisan (F-16) : mêmes textes que l'espace pro du site. */
   proDashboard: {
-    documents: "Devis et factures",
+    title: "Tableau de bord",
     greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
+    account: "Mon compte",
     error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
     suspended: "Votre compte est suspendu. Contactez l'équipe MENAO.",
     awaitingQuote: "En attente de devis",
@@ -947,12 +948,18 @@ export const fr = {
     responseDetail: (n: number) =>
       n === 1 ? "Sur 1 demande, 6 derniers mois" : `Moyenne sur ${n} demandes, 6 derniers mois`,
     noResponse: "Pas encore de réponse sur 6 mois",
-    upcoming: "À venir",
+    upcoming: "Prochains rendez-vous",
     noUpcoming: "Aucune visite ni aucun démarrage de chantier à venir.",
+    openAgenda: "Voir l'agenda",
     kinds: { visite: "Visite", demarrage: "Démarrage du chantier" },
+    appointment: (kind: string, day: string, time: string, title: string) =>
+      `${kind}, ${day} à ${time} : ${title}`,
     latestRequests: "Dernières demandes de devis",
     noRequests: "Aucune nouvelle demande pour le moment.",
     allRequests: "Toutes mes demandes",
+    seeAll: "Tout voir",
+    shortcuts: "Raccourcis",
+    toAnswer: (n: number) => `${n} à répondre`,
   },
   /** Demandes reçues par l'artisan (F-16, F-17) : mêmes textes que l'espace pro du site. */
   proRequests: {
