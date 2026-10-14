@@ -1,5 +1,6 @@
 /**
- * Photos d'illustration générées par IA, personnes fictives (voir docs/images/photos-generees.md).
+ * Photos d'illustration générées par IA, personnes fictives (voir docs/images/photos-generees.md),
+ * à remplacer par de vraies photos avec apps/web/scripts/photos-reelles.mjs (docs/images/photos-reelles.md).
  * WebP précompressés servis depuis public/images, sans optimisation Vercel. Un métier sans
  * photo conserve son visuel de remplacement aux couleurs MENAO.
  */
