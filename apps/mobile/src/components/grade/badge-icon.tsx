@@ -1,4 +1,12 @@
 import {
+  BADGE_FACE,
+  BADGE_RING,
+  BADGE_SHINE,
+  BADGE_STYLES,
+  BADGE_VIEWBOX,
+  badgeStyle,
+} from "@menao/ui-tokens";
+import {
   AlarmClock,
   Award,
   Camera,
@@ -10,11 +18,9 @@ import {
   Sparkles,
   SprayCan,
 } from "lucide-react-native";
+import { useId } from "react";
 import { StyleSheet, View } from "react-native";
-import Svg, { Polygon } from "react-native-svg";
-import { theme } from "@/ui/theme";
-
-const { colors } = theme;
+import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
 /** Pictogramme de chaque badge du référentiel ; un badge ajouté en base prend la médaille. */
 const ICONS: Record<string, LucideIcon> = {
@@ -29,12 +35,10 @@ const ICONS: Record<string, LucideIcon> = {
   main_d_or: Hand,
 };
 
-// Hexagone des maquettes, pointe en haut.
-const HEXAGON = "50,3 93,27 93,73 50,97 7,73 7,27";
-
 /**
- * Badge MENAO (maquettes « Mon grade Menao ») : hexagone bleu plein une fois obtenu, gris clair
- * tant qu'il est à obtenir ; « Main d'or » en doré.
+ * Badge MENAO (maquettes « Mon grade Menao », ADR 0096) : hexagone bleu à liseré argenté une fois
+ * obtenu, liseré doré pour « Main d'or », gris tant qu'il est à obtenir. Même dessin que le site
+ * (`@menao/ui-tokens`).
  */
 export function BadgeIcon({
   code,
@@ -45,24 +49,55 @@ export function BadgeIcon({
   unlocked: boolean;
   size?: number;
 }) {
+  // Identifiants des dégradés propres à chaque badge (plusieurs badges par écran).
+  const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   const Icon = ICONS[code] ?? Award;
-  const gold = code === "main_d_or";
-  const fill = unlocked ? (gold ? colors.warning : colors.primary) : colors.border;
-  const stroke = unlocked
-    ? gold
-      ? colors.warning
-      : colors["primary-strong"]
-    : colors["border-strong"];
+  const style = BADGE_STYLES[badgeStyle(code, unlocked)];
   return (
     <View style={[styles.box, { width: size, height: size }]}>
-      <Svg width={size} height={size} viewBox="0 0 100 100" style={StyleSheet.absoluteFill}>
-        <Polygon points={HEXAGON} fill={fill} stroke={stroke} strokeWidth={4} />
+      <Svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${BADGE_VIEWBOX} ${BADGE_VIEWBOX}`}
+        style={styles.layer}
+      >
+        <Defs>
+          <LinearGradient id={`${id}ring`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={style.ring[0]} />
+            <Stop offset="1" stopColor={style.ring[1]} />
+          </LinearGradient>
+          <LinearGradient id={`${id}face`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={style.face[0]} />
+            <Stop offset="1" stopColor={style.face[1]} />
+          </LinearGradient>
+          <LinearGradient id={`${id}shine`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#ffffff" stopOpacity={style.shine} />
+            <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Path
+          d={BADGE_RING}
+          fill={`url(#${id}ring)`}
+          stroke={`url(#${id}ring)`}
+          strokeWidth={5}
+          strokeLinejoin="round"
+        />
+        <Path
+          d={BADGE_FACE}
+          fill={`url(#${id}face)`}
+          stroke={`url(#${id}face)`}
+          strokeWidth={3}
+          strokeLinejoin="round"
+        />
+        <Path d={BADGE_SHINE} fill={`url(#${id}shine)`} />
       </Svg>
       {/* Au-dessus de l'hexagone (lui aussi positionné). */}
-      <View style={styles.icon}>
+      <View style={styles.layer}>
         <Icon
-          size={Math.round(size * 0.42)}
-          color={unlocked ? colors["primary-foreground"] : colors["muted-foreground"]}
+          size={Math.round(size * 0.4)}
+          color={style.icon}
+          fill={style.iconFill}
+          strokeWidth={2.2}
         />
       </View>
     </View>
@@ -71,7 +106,7 @@ export function BadgeIcon({
 
 const styles = StyleSheet.create({
   box: { alignItems: "center", justifyContent: "center" },
-  icon: {
+  layer: {
     position: "absolute",
     top: 0,
     right: 0,
