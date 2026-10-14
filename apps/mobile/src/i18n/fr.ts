@@ -1012,6 +1012,16 @@ export const fr = {
     openFile: "Document PDF : l'ouvrir",
     composerLabel: "Votre message",
     composerPlaceholder: "Écrivez votre message…",
+    /** Carte « Messagerie avec … » du suivi côté artisan (maquette « Vue d'un chantier »). */
+    card: {
+      title: (name: string) => `Messagerie avec ${name}`,
+      last: (ago: string) => `Dernier message ${ago}`,
+      none: "Aucun message pour l'instant",
+      unread: (n: number) => (n <= 1 ? "1 non lu" : `${n} non lus`),
+      open: (name: string) => `Ouvrir la conversation avec ${name}`,
+      placeholder: "Envoyer un message…",
+      sent: "Message envoyé.",
+    },
     send: "Envoyer",
     closed: "Conversation fermée : le chantier a été annulé ou le devis refusé.",
     report: "Signaler ce message",
@@ -1258,9 +1268,32 @@ export const fr = {
       title: "Dictez votre devis",
       example:
         "Dites par exemple : « 4 prises de courant Legrand Céliane à 22,50 euros et 3 heures de pose à 55 euros de l'heure ».",
-      keyboard: "Touchez le micro du clavier pour dicter, ou écrivez le texte.",
       transcriptLabel: "Texte de la dictée",
       placeholder: "Ce que vous dicterez s'affichera ici…",
+      /** Enregistreur de la maquette « Dictez votre devis », comme sur le site. */
+      record: "Dicter",
+      resume: "Reprendre la dictée",
+      pause: "Mettre en pause",
+      discard: "Effacer la dictée",
+      timer: (seconds: number, max: number) =>
+        `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} / ${Math.floor(max / 60)}:${String(max % 60).padStart(2, "0")}`,
+      recording: "Enregistrement…",
+      transcribing: "Transcription…",
+      quiet: "On ne vous entend pas : rapprochez-vous du micro ou vérifiez qu'il n'est pas coupé.",
+      save: "Sauvegarder cet enregistrement",
+      saveHint:
+        "Vous pourrez générer les lignes plus tard à partir d'un enregistrement sauvegardé.",
+      saved: "Enregistrement sauvegardé.",
+      generating: "Génération des lignes…",
+      errors: {
+        denied:
+          "Le micro n'est pas autorisé. Autorisez-le dans les réglages du téléphone pour dicter.",
+        limit: "Dictée limitée à 2 minutes.",
+        silent: "Aucun son capté : vérifiez que le micro n'est pas coupé, puis réessayez.",
+        session: "La transcription a échoué. Réessayez ou écrivez le texte.",
+        failed: "La transcription a échoué. Réessayez ou écrivez le texte.",
+        rate_limited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
+      },
       generate: "Générer les lignes",
       generated: (n: number) =>
         n <= 1 ? "1 ligne ajoutée : vérifiez-la." : `${n} lignes ajoutées : vérifiez-les.`,
@@ -1305,7 +1338,9 @@ export const fr = {
     editTitle: "Modifier la date de démarrage",
     editSubmit: "Enregistrer la nouvelle date",
     startDate: "Date de démarrage",
+    startTime: "Heure de démarrage",
     quoteStart: (day: string) => `Date de début prévue au devis : ${day}.`,
+    dashboard: "Retourner à mon tableau de bord",
     confirmedTitle: "Date de démarrage des travaux confirmée",
     confirmed: (day: string, time: string, client: string) =>
       `Vous avez confirmé le début des travaux le ${day} à ${time}. Une notification a bien été envoyée à ${client}.`,

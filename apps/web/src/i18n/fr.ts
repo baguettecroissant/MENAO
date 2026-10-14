@@ -1498,6 +1498,16 @@ export const fr = {
     composerLabel: "Votre message",
     composerPlaceholder: "Écrivez votre message…",
     send: "Envoyer",
+    /** Carte « Messagerie avec … » du suivi côté artisan (maquette « Vue d'un chantier »). */
+    card: {
+      title: (name: string) => `Messagerie avec ${name}`,
+      last: (ago: string) => `Dernier message ${ago}`,
+      none: "Aucun message pour l'instant",
+      unread: (n: number) => (n <= 1 ? "1 non lu" : `${n} non lus`),
+      open: (name: string) => `Ouvrir la conversation avec ${name}`,
+      placeholder: "Envoyer un message…",
+      sent: "Message envoyé.",
+    },
     attach: "Joindre une photo ou un PDF",
     uploading: "Envoi de la pièce jointe…",
     closed: "Conversation fermée : le chantier a été annulé ou le devis refusé.",
