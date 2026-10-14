@@ -9,7 +9,7 @@ import { router } from "expo-router";
 import { MapPin } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
-import { type ClientChantier } from "@/lib/chantiers";
+import { chantierAddress, type ClientChantier } from "@/lib/chantiers";
 import { LinkText } from "@/ui";
 import { theme } from "@/ui/theme";
 import {
@@ -34,8 +34,7 @@ export const tagOf = (c: ClientChantier) =>
   });
 
 /** Adresse du chantier, ou à défaut son code postal et sa ville. */
-export const addressOf = (c: ClientChantier) =>
-  c.adresse || [c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null;
+export const addressOf = (c: ClientChantier) => chantierAddress(c);
 
 export const actionOf = (c: ClientChantier) =>
   clientChantierAction({

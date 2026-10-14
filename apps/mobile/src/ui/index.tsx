@@ -20,24 +20,29 @@ const { colors, radius, font, spacing } = theme;
 
 /**
  * Écran défilant sur le fond crème, dans les marges sûres du téléphone. `header` reste fixé en
- * haut (barre de retour des écrans ouverts par-dessus les onglets).
+ * haut (barre de retour des écrans ouverts par-dessus les onglets) ; `band` le remplace par le
+ * bandeau bleu des maquettes, qui couvre aussi la barre d'état.
  */
 export function Screen({
   children,
   centered = false,
   header,
+  band,
   footer,
 }: {
   children: ReactNode;
   centered?: boolean;
   header?: ReactNode;
+  /** Bandeau bleu en haut de l'écran (`HeaderBand`), bord à bord. */
+  band?: ReactNode;
   /** Bas d'écran fixe (bouton d'action principal), au-dessus de la marge du bas du téléphone. */
   footer?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      {header ? <View style={styles.header}>{header}</View> : null}
+    <SafeAreaView style={styles.safe} edges={band ? ["left", "right"] : ["top", "left", "right"]}>
+      {band}
+      {header && !band ? <View style={styles.header}>{header}</View> : null}
       <ScrollView
         contentContainerStyle={[styles.screen, centered && styles.centered]}
         keyboardShouldPersistTaps="handled"
@@ -152,7 +157,8 @@ export function Button({
 }: {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "ghost";
+  /** « danger » : action à risque en texte rouge (refuser, annuler), comme les maquettes. */
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   loading?: boolean;
   disabled?: boolean;
 }) {
@@ -180,7 +186,11 @@ export function Button({
         <Text
           style={[
             styles.buttonLabel,
-            variant === "primary" ? styles.buttonLabelPrimary : styles.buttonLabelOther,
+            variant === "primary"
+              ? styles.buttonLabelPrimary
+              : variant === "danger"
+                ? styles.buttonLabelDanger
+                : styles.buttonLabelOther,
           ]}
         >
           {label}
@@ -363,6 +373,7 @@ const styles = StyleSheet.create({
   },
   buttonLabel: { fontFamily: font.medium, fontSize: 15 },
   buttonLabelPrimary: { color: colors["primary-foreground"] },
+  buttonLabelDanger: { color: colors.danger },
   buttonLabelOther: { color: colors["primary-strong"] },
   pressed: { opacity: 0.85 },
   disabled: { opacity: 0.5 },

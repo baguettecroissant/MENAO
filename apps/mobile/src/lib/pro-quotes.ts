@@ -34,6 +34,8 @@ async function artisanRow() {
 
 export type QuoteDraft = {
   lines: QuoteLineInput[];
+  /** Rendez-vous planifié (bandeau « Envoyer un devis »). */
+  appointmentAt: string | null;
   /** Un brouillon existe déjà en base. */
   saved: boolean;
   assujettiTva: boolean;
@@ -41,7 +43,7 @@ export type QuoteDraft = {
 
 /** Brouillon du devis du chantier (F-19), comme sur le site : lignes dans l'ordre. */
 export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | null> {
-  const [{ data: draft, error }, artisan] = await Promise.all([
+  const [{ data: draft, error }, artisan, { data: appointment }] = await Promise.all([
     supabase
       .from("quotes")
       .select(
@@ -51,9 +53,16 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
       .eq("status", "brouillon")
       .maybeSingle(),
     artisanRow(),
+    supabase
+      .from("appointments")
+      .select("starts_at")
+      .eq("chantier_id", chantierId)
+      .eq("status", "planifie")
+      .maybeSingle(),
   ]);
   if (error || !artisan) return null;
   return {
+    appointmentAt: appointment?.starts_at ?? null,
     lines: [...(draft?.quote_lines ?? [])]
       .sort((a, b) => a.position - b.position)
       .map((l) => ({
@@ -135,6 +144,8 @@ export type QuoteSendContext = {
   /** Rattachement au chantier (F-21) : client et rappel du chantier. */
   client: { firstName: string | null; name: string; email: string | null; phone: string | null };
   chantier: { title: string; summary: string | null };
+  /** Rendez-vous planifié (bandeau « Envoyer un devis »). */
+  appointmentAt: string | null;
 };
 
 /** Brouillon à prévisualiser puis envoyer (F-20, F-21) ; null s'il n'y a pas encore de ligne. */
@@ -170,6 +181,7 @@ export async function loadQuoteSendContext(chantierId: string): Promise<QuoteSen
       phone: c.client.phone,
     },
     chantier: { title: c.chantier.title, summary: c.summary },
+    appointmentAt: c.appointment?.status === "planifie" ? c.appointment.starts_at : null,
   };
 }
 

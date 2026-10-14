@@ -1,8 +1,9 @@
 import { dateLong } from "@menao/documents";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Lock } from "lucide-react-native";
+import { Lock, MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { HeaderBand } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -10,7 +11,7 @@ import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadQuote, startDepositPayment } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Card, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
@@ -72,15 +73,20 @@ export default function DepositScreen() {
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <HeaderBand
+          title={quote.data.site.title}
+          meta={[{ icon: MapPin, text: quote.data.site.addressLines.join(", ") }]}
+        >
+          <StepTabs steps={STEPS} current="deposit" />
+        </HeaderBand>
+      }
       footer={
         inProgress ? undefined : (
           <Button label={t.deposit.submit(amount)} onPress={pay} loading={pending} />
         )
       }
     >
-      <Title>{t.deposit.title}</Title>
-      <StepTabs steps={STEPS} current="deposit" />
       <Body muted>{t.deposit.intro}</Body>
       <Card>
         <View style={styles.summary}>

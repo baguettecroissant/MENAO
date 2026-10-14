@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
+import { HeaderBand, whenMeta } from "@/components/header-band";
 import { QuoteDictation } from "@/components/pro/quote-dictation";
 import { LineCard } from "@/components/pro/quote-line-card";
 import { LineForm } from "@/components/pro/quote-line-form";
@@ -21,7 +22,7 @@ import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteDraft, saveQuoteDraft, type QuoteDraft } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, Title } from "@/ui";
+import { Button, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuote;
@@ -147,7 +148,36 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <HeaderBand title={t.title} meta={whenMeta(draft.appointmentAt)}>
+          <View style={styles.statusRow}>
+            <StatusPill
+              text={
+                status === "dirty"
+                  ? t.statusDirty
+                  : status === "saved"
+                    ? t.statusSaved
+                    : t.statusDraft
+              }
+              tone={status === "dirty" ? "warning" : status === "saved" ? "success" : "neutral"}
+            />
+            <Pressable
+              role="button"
+              aria-disabled={!dirty || saving}
+              disabled={!dirty || saving}
+              onPress={save}
+              style={styles.save}
+              hitSlop={8}
+            >
+              <Text style={[styles.saveText, (!dirty || saving) && styles.disabled]}>{t.save}</Text>
+              <Save
+                size={16}
+                color={!dirty || saving ? colors["subtle-foreground"] : colors["primary-strong"]}
+              />
+            </Pressable>
+          </View>
+        </HeaderBand>
+      }
       footer={
         <View style={styles.footer}>
           <View style={styles.totalLine}>
@@ -172,30 +202,6 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
         </View>
       }
     >
-      <Title>{t.title}</Title>
-      <View style={styles.statusRow}>
-        <StatusPill
-          text={
-            status === "dirty" ? t.statusDirty : status === "saved" ? t.statusSaved : t.statusDraft
-          }
-          tone={status === "dirty" ? "warning" : status === "saved" ? "success" : "neutral"}
-        />
-        <Pressable
-          role="button"
-          aria-disabled={!dirty || saving}
-          disabled={!dirty || saving}
-          onPress={save}
-          style={styles.save}
-          hitSlop={8}
-        >
-          <Text style={[styles.saveText, (!dirty || saving) && styles.disabled]}>{t.save}</Text>
-          <Save
-            size={16}
-            color={!dirty || saving ? colors["subtle-foreground"] : colors["primary-strong"]}
-          />
-        </Pressable>
-      </View>
-
       <View style={styles.linesHead}>
         <Text role="heading" style={styles.heading}>
           {t.lines}
@@ -265,7 +271,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  statusRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: spacing(3),
+  },
   save: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   saveText: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
   disabled: { color: colors["subtle-foreground"] },
