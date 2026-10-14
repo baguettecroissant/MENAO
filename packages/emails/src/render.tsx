@@ -21,7 +21,8 @@ export function renderNotification(
   const content = notificationContent(type, data, ctx);
   return {
     subject: content.subject,
-    html: DOCTYPE + renderToStaticMarkup(<NotificationEmail content={content} />),
+    html:
+      DOCTYPE + renderToStaticMarkup(<NotificationEmail content={content} siteUrl={ctx.siteUrl} />),
     text: plainText(content),
   };
 }

@@ -673,6 +673,9 @@ describe("rendu HTML et texte", () => {
       `href="https://menao.example/mon-espace/chantiers/${ids.chantier_id}"`,
     );
     expect(email.html).toContain("Votre rendez-vous est fixé");
+    // Logo du bandeau servi par le site.
+    expect(email.html).toContain('src="https://menao.example/images/email/logo.png"');
+    expect(email.html).toContain('alt="MENAO"');
     expect(email.text).toContain(
       `Voir mon chantier : https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
     );

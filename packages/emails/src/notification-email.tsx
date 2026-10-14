@@ -14,8 +14,25 @@ import { EMAIL_FOOTER, quoted, type EmailContent } from "./content.ts";
 // Polices système : les messageries ignorent le plus souvent les polices web.
 const font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
 
-/** Mise en page commune des e-mails MENAO : logo, carte blanche, bouton en pilule, pied de page. */
-export function NotificationEmail({ content }: { content: EmailContent }) {
+// Espace insécable avant « ! ? : ; » : la ponctuation ne passe jamais seule à la ligne.
+const typo = (text: string) => text.replace(/ ([!?:;])/g, "\u00a0$1");
+
+// Logo servi par le site (public/images/email/logo.png, 342 × 96, densité ×3), affiché à 150 px.
+const LOGO = { path: "/images/email/logo.png", width: 150, height: 42 };
+
+/**
+ * Mise en page commune des e-mails MENAO, d'après la maquette « Nouveau devis disponible » :
+ * bandeau bleu clair avec le logo, carte blanche, bouton en pilule centré, pied de page.
+ * Sans adresse du site (aperçus), le logo est remplacé par le mot « menao ».
+ */
+export function NotificationEmail({
+  content,
+  siteUrl = "",
+}: {
+  content: EmailContent;
+  siteUrl?: string;
+}) {
+  const base = siteUrl.replace(/\/+$/, "");
   return (
     <Html lang="fr">
       <Head />
@@ -29,16 +46,40 @@ export function NotificationEmail({ content }: { content: EmailContent }) {
         }}
       >
         <Container style={{ maxWidth: 560, margin: "0 auto", padding: "0 16px" }}>
-          <Text
-            style={{ fontSize: 24, fontWeight: 700, color: colors.primary, margin: "0 0 16px" }}
+          <Section
+            align="center"
+            style={{
+              backgroundColor: colors["primary-soft"],
+              borderRadius: "16px 16px 0 0",
+              padding: "24px",
+              textAlign: "center",
+            }}
           >
-            menao
-          </Text>
+            {base ? (
+              <img
+                src={`${base}${LOGO.path}`}
+                width={LOGO.width}
+                height={LOGO.height}
+                alt="MENAO"
+                style={{
+                  display: "block",
+                  margin: "0 auto",
+                  border: 0,
+                  outline: "none",
+                  textDecoration: "none",
+                }}
+              />
+            ) : (
+              <Text style={{ fontSize: 26, fontWeight: 700, color: colors.primary, margin: 0 }}>
+                menao
+              </Text>
+            )}
+          </Section>
           <Section
             style={{
               backgroundColor: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 16,
+              borderLeft: `1px solid ${colors.border}`,
+              borderRight: `1px solid ${colors.border}`,
               padding: "28px 24px",
             }}
           >
@@ -51,7 +92,7 @@ export function NotificationEmail({ content }: { content: EmailContent }) {
                 margin: "0 0 16px",
               }}
             >
-              {content.title}
+              {typo(content.title)}
             </Heading>
             {content.paragraphs.map((paragraph) => (
               <Text
@@ -63,7 +104,7 @@ export function NotificationEmail({ content }: { content: EmailContent }) {
                   margin: "0 0 12px",
                 }}
               >
-                {paragraph}
+                {typo(paragraph)}
               </Text>
             ))}
             {content.quote && (
@@ -82,21 +123,34 @@ export function NotificationEmail({ content }: { content: EmailContent }) {
                 {quoted(content.quote)}
               </Text>
             )}
-            <Button
-              href={content.cta.url}
-              style={{
-                backgroundColor: colors.primary,
-                color: colors["primary-foreground"],
-                borderRadius: 9999,
-                fontSize: 15,
-                fontWeight: 600,
-                padding: "12px 24px",
-                marginTop: 8,
-                textDecoration: "none",
-              }}
-            >
-              {content.cta.label}
-            </Button>
+            <Section style={{ textAlign: "center", paddingTop: 8 }}>
+              <Button
+                href={content.cta.url}
+                style={{
+                  backgroundColor: colors.primary,
+                  color: colors["primary-foreground"],
+                  borderRadius: 9999,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  padding: "12px 24px",
+                  textDecoration: "none",
+                }}
+              >
+                {content.cta.label}
+              </Button>
+            </Section>
+          </Section>
+          {/* Bande bleu clair qui ferme la carte, comme sur la maquette. */}
+          <Section
+            style={{
+              backgroundColor: colors["primary-soft"],
+              borderRadius: "0 0 16px 16px",
+              height: 12,
+              lineHeight: "12px",
+              fontSize: 0,
+            }}
+          >
+            &nbsp;
           </Section>
           <Hr style={{ borderColor: colors.border, margin: "24px 0 12px" }} />
           <Text
