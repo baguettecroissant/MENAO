@@ -85,3 +85,20 @@ export async function fixAppointment(
   if (error || !data) return { error: error ? sqlError(error) : fr.errors.generic };
   return { chantierId: data };
 }
+
+/**
+ * « Ce chantier a besoin d'une expertise » (F-17, F-18), comme sur le site : signalement à l'équipe
+ * MENAO, avec le corps de métier nécessaire (artisan_report_expertise).
+ */
+export async function reportExpertise(
+  requestId: string,
+  trade: string,
+  message: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_report_expertise", {
+    p_request_id: requestId,
+    p_trade_code: trade,
+    p_message: message,
+  });
+  return error ? sqlError(error) : null;
+}

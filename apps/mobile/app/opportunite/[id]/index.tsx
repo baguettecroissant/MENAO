@@ -17,8 +17,9 @@ const { colors, font, spacing } = theme;
 
 /**
  * Opportunité (F-17), comme sur le site (maquette « Vue d'une opportunité ») : client, adresse,
- * description, date souhaitée, message ; puis « Fixer un rendez-vous » ou « Refuser le chantier ».
- * Une fois le rendez-vous fixé, la demande s'ouvre sur la vue du chantier (F-18).
+ * description, date souhaitée, message ; puis « Fixer un rendez-vous » ou « Refuser le chantier »,
+ * et « Ce chantier a besoin d'une expertise ». Une fois le rendez-vous fixé, la demande s'ouvre sur
+ * la vue du chantier (F-18).
  */
 export default function OpportunityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -88,6 +89,13 @@ export default function OpportunityScreen() {
           </View>
         ) : null}
       </View>
+      {open ? (
+        <Button
+          label={fr.proExpertise.open}
+          variant="secondary"
+          onPress={() => router.push(`/opportunite/${id}/expertise`)}
+        />
+      ) : null}
       <RequestBlocks detail={r} photoUrls={photoUrls} variant="opportunite" />
     </Screen>
   );

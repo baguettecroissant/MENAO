@@ -32,8 +32,9 @@ const FOLLOW_UP: readonly ChantierStatus[] = [
 
 /**
  * Vue d'un rendez-vous côté artisan (F-18), comme sur le site (maquette « Vue d'un rendez-vous ») :
- * date et heure (modifiables tant que le rendez-vous est planifié), écrire au client, dernier devis
- * envoyé, client et lieu, rappel du chantier, notes privées, annulation. Après l'acompte : suivi du
+ * date et heure (modifiables tant que le rendez-vous est planifié), écrire au client, « Ce chantier
+ * a besoin d'une expertise », dernier devis envoyé, client et lieu, rappel du chantier, notes
+ * privées, annulation. Après l'acompte : suivi du
  * chantier (F-22). Aucun lien vers le site (règle 10).
  */
 export default function ArtisanChantierScreen() {
@@ -83,6 +84,8 @@ export default function ArtisanChantierScreen() {
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const planned = status === "rdv_planifie" && appointment !== null;
   const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
+  // « Ce chantier a besoin d'une expertise » tant que le chantier est actif, comme sur le site.
+  const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
   const when = appointment ? formatDayAndTime(appointment.starts_at) : null;
 
   return (
@@ -142,6 +145,13 @@ export default function ArtisanChantierScreen() {
         variant="secondary"
         onPress={() => router.push(`/conversation/${id}`)}
       />
+      {active ? (
+        <Button
+          label={fr.proExpertise.open}
+          variant="secondary"
+          onPress={() => router.push(`/opportunite/${c.id}/expertise`)}
+        />
+      ) : null}
       {awaitingQuote ? (
         <Button
           label={

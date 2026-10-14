@@ -1178,6 +1178,18 @@ export const fr = {
       rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
     },
   },
+  /** « Ce chantier a besoin d'une expertise » (F-17, F-18) : mêmes textes que le site. */
+  proExpertise: {
+    open: "Ce chantier a besoin d'une expertise",
+    title: "Ce chantier a besoin d'une expertise",
+    intro:
+      "Indiquez le corps de métier nécessaire : l'équipe MENAO proposera un artisan adapté au client.",
+    trade: "Corps de métier nécessaire",
+    message: "Précisions (facultatif)",
+    submit: "Envoyer à l'équipe MENAO",
+    sent: "Merci ! L'équipe MENAO a bien reçu votre signalement.",
+    back: "Retour",
+  },
   /** Agenda de l'artisan (F-44) : mêmes textes que l'espace pro du site. */
   proAgenda: {
     title: "Agenda",
