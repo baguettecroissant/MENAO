@@ -1,10 +1,12 @@
 import {
   clientsAwaitingQuote,
+  levelProgress,
   monthToDateRevenue,
   requestsAwaitingAnswer,
   revenueTrend,
   upcomingAgenda,
 } from "@menao/core";
+import { parseGrade } from "@menao/validation";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
 import { fr } from "@/i18n/fr";
@@ -38,13 +40,28 @@ export default async function DashboardPage() {
       : []),
   ];
   // Mêmes lectures que les compteurs du menu (mises en cache pour la requête).
-  const [{ chantiers, inbox }, { data: payments }, { data: response }] = await Promise.all([
-    artisanActivity(),
-    // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
-    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
-    // Temps de réponse moyen (F-10), sur les 6 derniers mois.
-    supabase.rpc("my_response_stats"),
-  ]);
+  const [{ chantiers, inbox }, { data: payments }, { data: response }, { data: gradeData }] =
+    await Promise.all([
+      artisanActivity(),
+      // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
+      supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+      // Temps de réponse moyen (F-10), sur les 6 derniers mois.
+      supabase.rpc("my_response_stats"),
+      // F-24 : carte « Mon grade MENAO ».
+      supabase.rpc("artisan_grade"),
+    ]);
+  const grade = parseGrade(gradeData);
+  const gradeLevels =
+    grade?.levels.map((l) => ({
+      level: l.level,
+      xpMin: l.xp_min,
+      reward: l.reward,
+      rewardDetail: l.reward_detail,
+    })) ?? [];
+  const gradeProgress = grade ? levelProgress(gradeLevels, grade.xp) : null;
+  const lastBadge = grade?.badges
+    .filter((b) => b.unlocked_at)
+    .sort((a, b) => (b.unlocked_at ?? "").localeCompare(a.unlocked_at ?? ""))[0];
   const now = new Date();
   const revenue = monthToDateRevenue(
     (payments ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
@@ -64,6 +81,18 @@ export default async function DashboardPage() {
 
   return (
     <DashboardView
+      grade={
+        grade && gradeProgress
+          ? {
+              level: grade.level,
+              xp: grade.xp,
+              nextXp: gradeProgress.next?.xpMin ?? null,
+              progress: gradeProgress.progress,
+              badge: lastBadge?.code ?? null,
+              newBadge: grade.badges.some((b) => b.unlocked_at && !b.seen),
+            }
+          : null
+      }
       firstName={firstName}
       notices={notices}
       visible={visibility.visible}

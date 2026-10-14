@@ -1,4 +1,5 @@
 import {
+  Award,
   CalendarClock,
   CalendarDays,
   ClipboardList,
@@ -109,6 +110,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         },
         { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
         { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
+        { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
       ],
     },
     {

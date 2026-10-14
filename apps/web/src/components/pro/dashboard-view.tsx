@@ -2,6 +2,7 @@ import type { RevenueTrend } from "@menao/core";
 import {
   ArrowRight,
   CalendarDays,
+  ChevronRight,
   Clock,
   MapPin,
   Minus,
@@ -11,6 +12,7 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BadgeIcon } from "@/components/pro/grade/badge-icon";
 import { Alert, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatDayLong, formatDuration, formatTime } from "@/lib/format";
@@ -46,6 +48,7 @@ export function DashboardView({
   responseTime,
   appointments,
   requests,
+  grade = null,
 }: {
   firstName: string | null;
   /** Alertes du dossier (documents à renouveler, suspension), comme dans « Mon dossier ». */
@@ -58,6 +61,15 @@ export function DashboardView({
   responseTime: { minutes: number | null; responses: number };
   appointments: DashboardAppointment[];
   requests: DashboardRequest[];
+  /** « Mon grade MENAO » (F-24) : niveau, points, avancement, dernier badge, badge à fêter. */
+  grade?: {
+    level: number;
+    xp: number;
+    nextXp: number | null;
+    progress: number;
+    badge: string | null;
+    newBadge: boolean;
+  } | null;
 }) {
   const appointmentSection = (
     <Section
@@ -200,6 +212,38 @@ export function DashboardView({
             detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
           />
         </div>
+        {grade && (
+          <Link
+            href="/pro/grade"
+            className="flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+          >
+            <BadgeIcon
+              code={grade.badge ?? "main_d_argent"}
+              unlocked={Boolean(grade.badge)}
+              className="size-11"
+            />
+            <span className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="flex items-center gap-2">
+                <span className="font-medium">{fr.pro.grade.title}</span>
+                {grade.newBadge && (
+                  <span className="rounded-pill bg-primary px-2 py-0.5 text-[0.6875rem] font-medium text-primary-foreground">
+                    {fr.pro.grade.newBadgeShort}
+                  </span>
+                )}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {fr.pro.grade.card(grade.level)} · {fr.pro.grade.xp(grade.xp, grade.nextXp)}
+              </span>
+              <span className="h-1.5 overflow-hidden rounded-pill bg-primary-soft">
+                <span
+                  className="block h-full rounded-pill bg-primary"
+                  style={{ width: `${Math.round(grade.progress * 100)}%` }}
+                />
+              </span>
+            </span>
+            <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
+          </Link>
+        )}
         {/* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */}
         {appointments.length > 0 ? (
           <>
