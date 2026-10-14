@@ -16,7 +16,7 @@ export default async function MyReviewsPage() {
     supabase
       .from("reviews")
       .select(
-        "id, chantier_id, author_name, score, quality, delays, communication, value_for_money, comment, experience_on, status, moderation_reason, reply, created_at",
+        "id, chantier_id, author_name, score, quality, delays, communication, cleanliness, value_for_money, comment, experience_on, status, moderation_reason, reply, created_at",
       )
       .eq("artisan_id", space.artisanId)
       .order("created_at", { ascending: false }),

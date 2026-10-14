@@ -16,11 +16,12 @@ const criterion = z
   .regex(/^(100|[1-9]?\d)$/, { error: messages.reviewCriterionRequired })
   .transform(Number);
 
-/** F-28 : avis du client (trois curseurs, rapport qualité/prix, commentaire). */
+/** F-28 : avis du client (quatre curseurs, rapport qualité/prix, commentaire). */
 export const reviewSchema = z.object({
   quality: criterion,
   delays: criterion,
   communication: criterion,
+  cleanliness: criterion,
   value_for_money: z.enum(VALUE_FOR_MONEY, { error: messages.reviewValueRequired }),
   comment: z
     .string()

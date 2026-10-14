@@ -137,7 +137,7 @@ export async function ArtisanFollowUp({
     supabase
       .from("reviews")
       .select(
-        "id, score, quality, delays, communication, value_for_money, comment, status, moderation_reason, reply",
+        "id, score, quality, delays, communication, cleanliness, value_for_money, comment, status, moderation_reason, reply",
       )
       .eq("chantier_id", id)
       .maybeSingle(),

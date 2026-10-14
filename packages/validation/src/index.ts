@@ -8,6 +8,7 @@ export * from "./chantier";
 export * from "./conversation";
 export * from "./dispute";
 export * from "./documents";
+export * from "./gamification";
 export * from "./geo";
 export * from "./messages";
 export * from "./project";

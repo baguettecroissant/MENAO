@@ -10,12 +10,13 @@ import {
 const comment = "Travail soigné, chantier propre et artisan ponctuel du début à la fin.";
 
 describe("avis du client (F-28)", () => {
-  it("trois notes de 0 à 100, rapport qualité/prix, commentaire nettoyé", () => {
+  it("quatre notes de 0 à 100 (dont la propreté), rapport qualité/prix, commentaire nettoyé", () => {
     expect(
       reviewSchema.parse({
         quality: "80",
         delays: "100",
         communication: "0",
+        cleanliness: "90",
         value_for_money: "excellent",
         comment: `  ${comment}  `,
       }),
@@ -23,6 +24,7 @@ describe("avis du client (F-28)", () => {
       quality: 80,
       delays: 100,
       communication: 0,
+      cleanliness: 90,
       value_for_money: "excellent",
       comment,
     });
@@ -33,11 +35,13 @@ describe("avis du client (F-28)", () => {
       quality: "",
       delays: "101",
       communication: "4.5",
+      cleanliness: "",
       value_for_money: "gratuit",
       comment,
     });
     expect(bad.success).toBe(false);
     expect(bad.error?.issues.map((i) => i.message)).toEqual([
+      messages.reviewCriterionRequired,
       messages.reviewCriterionRequired,
       messages.reviewCriterionRequired,
       messages.reviewCriterionRequired,
@@ -51,6 +55,7 @@ describe("avis du client (F-28)", () => {
       quality: "50",
       delays: "50",
       communication: "50",
+      cleanliness: "50",
       value_for_money: "convenable",
     };
     const short = reviewSchema.safeParse({ ...base, comment: `  ${"x".repeat(49)}   ` });

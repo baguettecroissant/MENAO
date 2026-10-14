@@ -180,6 +180,43 @@ export type Database = {
           },
         ];
       };
+      artisan_badges: {
+        Row: {
+          artisan_id: string;
+          badge_code: string;
+          seen_at: string | null;
+          unlocked_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          badge_code: string;
+          seen_at?: string | null;
+          unlocked_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          badge_code?: string;
+          seen_at?: string | null;
+          unlocked_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_badges_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_badges_badge_code_fkey";
+            columns: ["badge_code"];
+            isOneToOne: false;
+            referencedRelation: "badges";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       artisan_blocked_slots: {
         Row: {
           artisan_id: string;
@@ -778,6 +815,37 @@ export type Database = {
         };
         Relationships: [];
       };
+      badges: {
+        Row: {
+          active: boolean;
+          code: string;
+          description: string;
+          label: string;
+          metric: string;
+          position: number;
+          target: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          code: string;
+          description: string;
+          label: string;
+          metric: string;
+          position?: number;
+          target: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          description?: string;
+          label?: string;
+          metric?: string;
+          position?: number;
+          target?: number;
+        };
+        Relationships: [];
+      };
       certifications: {
         Row: {
           artisan_id: string;
@@ -1031,6 +1099,62 @@ export type Database = {
           pilote?: boolean;
           slug?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      gamification_levels: {
+        Row: {
+          level: number;
+          reward: string | null;
+          reward_detail: string | null;
+          xp_min: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          level: number;
+          reward?: string | null;
+          reward_detail?: string | null;
+          xp_min: number;
+        };
+        Update: {
+          level?: number;
+          reward?: string | null;
+          reward_detail?: string | null;
+          xp_min?: number;
+        };
+        Relationships: [];
+      };
+      gamification_objectives: {
+        Row: {
+          active: boolean;
+          code: string;
+          description: string;
+          metric: string;
+          position: number;
+          target: number;
+          title: string;
+          xp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          code: string;
+          description: string;
+          metric: string;
+          position?: number;
+          target: number;
+          title: string;
+          xp: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          description?: string;
+          metric?: string;
+          position?: number;
+          target?: number;
+          title?: string;
+          xp?: number;
         };
         Relationships: [];
       };
@@ -2155,6 +2279,7 @@ export type Database = {
           artisan_id: string;
           author_name: string;
           chantier_id: string;
+          cleanliness: number | null;
           comment: string;
           communication: number;
           created_at: string;
@@ -2178,6 +2303,7 @@ export type Database = {
           artisan_id: string;
           author_name: string;
           chantier_id: string;
+          cleanliness?: number | null;
           comment: string;
           communication: number;
           created_at?: string;
@@ -2200,6 +2326,7 @@ export type Database = {
           artisan_id?: string;
           author_name?: string;
           chantier_id?: string;
+          cleanliness?: number | null;
           comment?: string;
           communication?: number;
           created_at?: string;
@@ -2231,6 +2358,71 @@ export type Database = {
             columns: ["chantier_id"];
             isOneToOne: true;
             referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reward_claims: {
+        Row: {
+          address: string;
+          artisan_id: string;
+          city: string;
+          country: string;
+          created_at: string;
+          id: string;
+          jacket_size: string;
+          level: number;
+          pants_size: string;
+          phone: string;
+          ticket_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          address: string;
+          artisan_id: string;
+          city: string;
+          country: string;
+          created_at?: string;
+          id?: string;
+          jacket_size: string;
+          level: number;
+          pants_size: string;
+          phone: string;
+          ticket_id?: string | null;
+        };
+        Update: {
+          address?: string;
+          artisan_id?: string;
+          city?: string;
+          country?: string;
+          created_at?: string;
+          id?: string;
+          jacket_size?: string;
+          level?: number;
+          pants_size?: string;
+          phone?: string;
+          ticket_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reward_claims_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reward_claims_level_fkey";
+            columns: ["level"];
+            isOneToOne: false;
+            referencedRelation: "gamification_levels";
+            referencedColumns: ["level"];
+          },
+          {
+            foreignKeyName: "reward_claims_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
             referencedColumns: ["id"];
           },
         ];
@@ -2669,6 +2861,46 @@ export type Database = {
           },
         ];
       };
+      xp_events: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          id: string;
+          objective_code: string;
+          xp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          id?: string;
+          objective_code: string;
+          xp: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          id?: string;
+          objective_code?: string;
+          xp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "xp_events_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "xp_events_objective_code_fkey";
+            columns: ["objective_code"];
+            isOneToOne: false;
+            referencedRelation: "gamification_objectives";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -2947,6 +3179,18 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      artisan_claim_reward: {
+        Args: {
+          p_address: string;
+          p_city: string;
+          p_country: string;
+          p_jacket_size: string;
+          p_level: number;
+          p_pants_size: string;
+          p_phone: string;
+        };
+        Returns: string;
+      };
       artisan_confirm_start: {
         Args: { p_chantier_id: string; p_date: string; p_time: string };
         Returns: undefined;
@@ -2957,6 +3201,7 @@ export type Database = {
         Args: { p_date: string; p_request_id: string; p_time: string };
         Returns: string;
       };
+      artisan_grade: { Args: Record<PropertyKey, never>; Returns: Json };
       artisan_inbox: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2975,6 +3220,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      artisan_mark_badges_seen: { Args: Record<PropertyKey, never>; Returns: undefined };
       artisan_previous_lines: {
         Args: { p_query: string };
         Returns: {
@@ -3277,6 +3523,7 @@ export type Database = {
       particulier_submit_review: {
         Args: {
           p_chantier_id: string;
+          p_cleanliness: number;
           p_comment: string;
           p_communication: number;
           p_delays: number;
@@ -3575,7 +3822,9 @@ export type Database = {
         | "equipe_nouveau_ticket"
         | "equipe_dossier_a_verifier"
         | "equipe_ticket_en_retard"
-        | "acompte_relance";
+        | "acompte_relance"
+        | "badge_debloque"
+        | "niveau_atteint";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -3602,7 +3851,8 @@ export type Database = {
         | "avis"
         | "message"
         | "litige"
-        | "suppression_compte";
+        | "suppression_compte"
+        | "recompense";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       zone_mode: "rayon" | "communes";
     };
@@ -3820,6 +4070,8 @@ export const Constants = {
         "equipe_dossier_a_verifier",
         "equipe_ticket_en_retard",
         "acompte_relance",
+        "badge_debloque",
+        "niveau_atteint",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
@@ -3848,6 +4100,7 @@ export const Constants = {
         "message",
         "litige",
         "suppression_compte",
+        "recompense",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       zone_mode: ["rayon", "communes"],

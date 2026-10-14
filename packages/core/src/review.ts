@@ -1,13 +1,14 @@
 /**
  * Avis du client sur l'artisan (F-28) : un avis par chantier, dès le PV de réception signé
- * (« Avis vérifié »). Trois critères notés au curseur de 0 à 100 % (libellés « Inacceptable » →
+ * (« Avis vérifié »). Quatre critères notés au curseur de 0 à 100 % (libellés « Inacceptable » →
  * « Irréprochable »), le rapport qualité/prix (trois choix) et un commentaire de 50 caractères au
- * moins. L'avis ne conditionne jamais un paiement (F-27) : l'invitation vient après le solde.
+ * moins. La propreté du chantier (ADR 0091) sert aux badges de l'artisan (F-24) ; elle n'entre pas
+ * dans le score MENAO en V1, et les avis plus anciens ne l'ont pas. L'avis ne conditionne jamais un paiement (F-27) : l'invitation vient après le solde.
  * Score MENAO : mêmes règles en base (app.review_score). ADR 0030.
  */
 import type { ChantierStatus } from "./chantier-state";
 
-export const REVIEW_CRITERIA = ["quality", "delays", "communication"] as const;
+export const REVIEW_CRITERIA = ["quality", "delays", "communication", "cleanliness"] as const;
 export type ReviewCriterion = (typeof REVIEW_CRITERIA)[number];
 export const VALUE_FOR_MONEY = ["excellent", "convenable", "trop_cher"] as const;
 export type ValueForMoney = (typeof VALUE_FOR_MONEY)[number];

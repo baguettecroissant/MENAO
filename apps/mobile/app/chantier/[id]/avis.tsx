@@ -42,6 +42,7 @@ export default function ReviewScreen() {
     quality: null,
     delays: null,
     communication: null,
+    cleanliness: null,
   });
   const [value, setValue] = useState<ValueForMoney | null>(null);
   const [comment, setComment] = useState("");
@@ -115,6 +116,7 @@ export default function ReviewScreen() {
       quality: ratings.quality === null ? "" : String(ratings.quality),
       delays: ratings.delays === null ? "" : String(ratings.delays),
       communication: ratings.communication === null ? "" : String(ratings.communication),
+      cleanliness: ratings.cleanliness === null ? "" : String(ratings.cleanliness),
       value_for_money: value ?? "",
       comment,
     });

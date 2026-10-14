@@ -29,6 +29,7 @@ const THREADED: readonly string[] = [
   "contact",
   "dossier_recherche",
   "suppression_compte",
+  "recompense",
 ];
 
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
