@@ -1,6 +1,6 @@
 import { clientPendingActions, isChantierFinished, type ChantierStatus } from "@menao/core";
 import { router, useFocusEffect } from "expo-router";
-import { FileText, HardHat, Search } from "lucide-react-native";
+import { FileText, HardHat } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +20,7 @@ import { artisanAvatar, loadMyChantiers, type MyChantiers } from "@/lib/chantier
 import { formatDateNumeric } from "@/lib/format";
 import { Body, Card, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.myChantiers;
 const { colors, font, radius, spacing } = theme;
@@ -112,23 +113,15 @@ export function MyChantiersScreen() {
         {data === null && <Notice tone="error">{t.error}</Notice>}
 
         {empty && data !== null ? (
-          <Card>
-            <View style={styles.emptyIcon}>
-              <Search size={22} color={colors.primary} />
-            </View>
-            <Text style={styles.heading}>{t.empty}</Text>
-            <Body muted>{t.emptyHint}</Body>
-          </Card>
+          <EmptyState illustration="demandes" title={t.empty}>
+            {t.emptyHint}
+          </EmptyState>
         ) : (
           // Maquette « Mes chantiers - Mobile » : en cours, demandes, puis terminés, sur une page.
           <>
             <Text style={styles.section}>{t.inProgress}</Text>
             {active.length === 0 ? (
-              <View style={styles.dashed}>
-                <Body muted center>
-                  {t.noActive}
-                </Body>
-              </View>
+              <EmptyState illustration="chantiers">{t.noActive}</EmptyState>
             ) : (
               active.map((c) => (
                 <ChantierCard
@@ -219,23 +212,7 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     marginTop: spacing(2),
   },
-  dashed: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    padding: spacing(6),
-  },
   heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
   draft: {
     flexDirection: "row",
     alignItems: "center",

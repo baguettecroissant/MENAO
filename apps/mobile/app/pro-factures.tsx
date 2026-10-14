@@ -18,6 +18,7 @@ import { loadArtisanInvoices, shareInvoicesCsv } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.proInvoices;
 const { colors, font, radius, spacing } = theme;
@@ -89,7 +90,9 @@ export default function ArtisanInvoicesScreen() {
             loading={busy === "csv"}
           />
         ) : null}
-        {invoices && invoices.length === 0 ? <Text style={styles.empty}>{t.empty}</Text> : null}
+        {invoices && invoices.length === 0 ? (
+          <EmptyState illustration="documents">{t.empty}</EmptyState>
+        ) : null}
         {(invoices ?? []).map((invoice) => (
           <Pressable
             key={invoice.id}
@@ -140,18 +143,6 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
   head: { gap: spacing(2), marginBottom: spacing(1) },
-  empty: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-    textAlign: "center",
-    fontFamily: font.regular,
-    fontSize: 14,
-    color: colors["muted-foreground"],
-  },
   card: {
     flexDirection: "row",
     alignItems: "flex-start",

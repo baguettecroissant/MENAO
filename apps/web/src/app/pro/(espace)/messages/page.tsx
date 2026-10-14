@@ -3,6 +3,7 @@ import { ConversationList } from "@/components/messages/conversation-list";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { avatarUrl } from "@/lib/chantier/storage";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.messages;
 
@@ -34,9 +35,7 @@ export default async function ProMessagesPage() {
             now={new Date()}
           />
         ) : (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            {t.emptyPro}
-          </p>
+          <EmptyState illustration="messages">{t.emptyPro}</EmptyState>
         )}
       </div>
     </main>

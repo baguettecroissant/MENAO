@@ -17,6 +17,7 @@ import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
 import { qrSvg } from "@/lib/qr";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.myChantiers;
 
@@ -97,9 +98,9 @@ export default async function MySpacePage() {
           {t.inProgress}
         </h2>
         {active.length === 0 ? (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-8 text-center text-sm text-muted-foreground">
+          <EmptyState illustration="chantiers" className="py-8">
             {t.noActive}
-          </p>
+          </EmptyState>
         ) : (
           <ul className="flex flex-col gap-5">
             {active.map((c) => (
@@ -189,10 +190,9 @@ export default async function MySpacePage() {
         </div>
         {chantiers.length === 0 && requests.length === 0 ? (
           <>
-            <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
-              <p className="text-lg font-medium">{fr.myRequests.empty}</p>
-              <p className="max-w-md text-sm text-muted-foreground">{fr.myRequests.emptyHint}</p>
-            </section>
+            <EmptyState illustration="demandes" title={fr.myRequests.empty} className="py-14">
+              {fr.myRequests.emptyHint}
+            </EmptyState>
             {drafts.length > 0 && <DraftSearches drafts={drafts} />}
           </>
         ) : (

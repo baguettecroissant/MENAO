@@ -7,6 +7,7 @@ import { formatLongDate } from "@/lib/dates";
 import type { MatchedArtisan } from "@/lib/project";
 import { Button } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ArtisanPlaceholder } from "@/components/artisan-placeholder";
 
 const t = fr.results;
 const { colors, font, radius, spacing } = theme;
@@ -67,9 +68,7 @@ export function ArtisanTile({
         {artisan.avatarUrl ? (
           <Image source={{ uri: artisan.avatarUrl }} style={styles.photo} alt="" />
         ) : (
-          <View style={[styles.photo, styles.photoEmpty]}>
-            <Text style={styles.initial}>{artisan.name.charAt(0).toUpperCase()}</Text>
-          </View>
+          <ArtisanPlaceholder name={artisan.name} style={styles.photo} medallion={72} />
         )}
         <View style={styles.body}>
           <View style={styles.nameRow}>
@@ -184,8 +183,6 @@ const styles = StyleSheet.create({
   tileSelected: { borderColor: colors.primary, borderWidth: 2 },
   pressed: { opacity: 0.85 },
   photo: { width: "100%", height: 140, backgroundColor: colors["primary-soft"] },
-  photoEmpty: { alignItems: "center", justifyContent: "center" },
-  initial: { fontFamily: font.medium, fontSize: 40, color: colors["primary-strong"] },
   body: { gap: spacing(1.5), padding: spacing(3.5) },
   nameRow: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   name: { flexShrink: 1, fontFamily: font.medium, fontSize: 17, color: colors.foreground },

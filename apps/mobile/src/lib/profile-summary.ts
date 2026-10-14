@@ -14,6 +14,8 @@ const initialsOf = (...names: (string | null | undefined)[]) =>
 
 /** Initiales et photo du compte connecté, lues une fois puis gardées pour tous les en-têtes. */
 let cache: { userId: string; summary: ProfileSummary } | null = null;
+/** En-têtes affichés, prévenus quand le résumé doit être relu. */
+const listeners = new Set<() => void>();
 
 async function loadSummary(userId: string): Promise<ProfileSummary> {
   const { data } = await supabase
@@ -35,6 +37,14 @@ export function useProfileSummary(): ProfileSummary | null {
   const { session, signedIn } = useSession();
   const userId = signedIn ? (session?.user.id ?? null) : null;
   const [loaded, setLoaded] = useState(cache);
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const listener = () => setVersion((v) => v + 1);
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
   useEffect(() => {
     if (!userId || cache?.userId === userId) return;
     let active = true;
@@ -45,12 +55,13 @@ export function useProfileSummary(): ProfileSummary | null {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, version]);
   const current = loaded?.userId === userId ? loaded : cache?.userId === userId ? cache : null;
   return current?.summary ?? null;
 }
 
-/** À appeler après un changement du prénom ou du nom : les en-têtes les relisent. */
+/** À appeler après un changement du prénom, du nom ou de la photo : les en-têtes les relisent. */
 export function forgetProfileSummary(): void {
   cache = null;
+  for (const listener of listeners) listener();
 }

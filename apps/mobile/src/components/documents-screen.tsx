@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DocumentsCard } from "@/components/chantier/dossier";
 import { TabHeader } from "@/components/tab-header";
@@ -15,9 +8,10 @@ import { loadMyDocuments } from "@/lib/chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.clientDocuments;
-const { colors, font, radius, spacing } = theme;
+const { colors, spacing } = theme;
 
 /**
  * « Mes documents » du client (onglet Documents des maquettes), comme sur le site : devis signés,
@@ -53,9 +47,7 @@ export function DocumentsScreen() {
         <TabHeader title={t.title} subtitle={t.subtitle} />
         {sections === null ? <Notice tone="error">{t.error}</Notice> : null}
         {sections?.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>{t.empty}</Text>
-          </View>
+          <EmptyState illustration="documents">{t.empty}</EmptyState>
         ) : null}
         {(sections ?? []).map((section) => (
           <DocumentsCard
@@ -78,20 +70,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
-  empty: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-  },
-  emptyText: {
-    fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors["muted-foreground"],
-    textAlign: "center",
-  },
 });

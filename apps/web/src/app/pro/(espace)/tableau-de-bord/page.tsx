@@ -20,7 +20,7 @@ export const metadata: Metadata = { title: `${fr.pro.dashboard.title} — MENAO`
 
 /** Tableau de bord artisan (F-16) : chantiers et demandes de l'artisan connecté. */
 export default async function DashboardPage() {
-  const { supabase, firstName, visibility, status, suspensionReason, documentsToRenew } =
+  const { supabase, firstName, avatarUrl, visibility, status, suspensionReason, documentsToRenew } =
     await requireProSpace();
   const onboarding = fr.pro.onboarding;
   const notices = [
@@ -94,6 +94,7 @@ export default async function DashboardPage() {
           : null
       }
       firstName={firstName}
+      missingPhoto={!avatarUrl}
       notices={notices}
       visible={visibility.visible}
       awaitingClients={clientsAwaitingQuote(rows)}

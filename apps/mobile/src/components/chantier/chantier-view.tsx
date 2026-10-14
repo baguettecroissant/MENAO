@@ -82,6 +82,7 @@ export function ChantierView({
   return (
     <ChantierLayout
       coverUrl={detail.coverUrl}
+      trade={c.trade_label}
       title={c.title}
       address={address}
       pills={<StatusPill {...tagOf(c)} />}

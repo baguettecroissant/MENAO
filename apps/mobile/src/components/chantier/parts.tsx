@@ -4,6 +4,7 @@ import {
   type ChantierStatus,
   type ClientChantierAction,
   type NextIntervention,
+  referenceCode,
 } from "@menao/core";
 import { router } from "expo-router";
 import {
@@ -14,8 +15,8 @@ import {
   FilePen,
   MessageCircle,
   Phone,
-  Wrench,
 } from "lucide-react-native";
+import { createElement } from "react";
 import {
   type DimensionValue,
   Image,
@@ -26,6 +27,7 @@ import {
   View,
 } from "react-native";
 import { Avatar } from "@/components/avatar";
+import { tradeIcon } from "@/components/trade-icon";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { Button } from "@/ui";
@@ -123,20 +125,28 @@ export function StatusPill({
 /** Couverture du chantier : première photo du projet, sinon un dégradé bleu et une clé. */
 export function ChantierCover({
   url,
+  trade = null,
   height = 150,
   compact = false,
 }: {
   url: string | null;
+  /** Libellé du métier : sans photo, son icône (code du référentiel tiré du libellé). */
+  trade?: string | null;
   /** Hauteur fixe, ou « 100% » pour remplir son cadre (chantiers terminés). */
   height?: DimensionValue;
   /** Vignette (accueil) : icône réduite et centrée. */
   compact?: boolean;
 }) {
-  return url ? (
-    <Image source={{ uri: url }} style={[styles.cover, { height }]} alt="" />
-  ) : (
+  if (url) return <Image source={{ uri: url }} style={[styles.cover, { height }]} alt="" />;
+  return (
     <View style={[styles.cover, styles.coverEmpty, compact && styles.coverCompact, { height }]}>
-      <Wrench size={compact ? 22 : 36} color={colors["primary-foreground"]} strokeWidth={1.5} />
+      <View style={[styles.coverBadge, compact && styles.coverBadgeCompact]}>
+        {createElement(tradeIcon(trade ? referenceCode(trade) : ""), {
+          size: compact ? 20 : 34,
+          color: colors["primary-foreground"],
+          strokeWidth: 1.5,
+        })}
+      </View>
     </View>
   );
 }
@@ -351,13 +361,20 @@ const styles = StyleSheet.create({
   pillDot: { width: 6, height: 6, borderRadius: 3 },
   pillText: { fontFamily: font.medium, fontSize: 12 },
   cover: { width: "100%", backgroundColor: colors["primary-soft"] },
-  coverEmpty: {
-    alignItems: "flex-end",
-    justifyContent: "flex-end",
-    padding: spacing(4),
-    backgroundColor: "#a9b9fb",
+  coverEmpty: { alignItems: "center", justifyContent: "center", backgroundColor: "#a9b9fb" },
+  coverCompact: { padding: 0 },
+  // Médaillon blanc translucide autour de l'icône du métier, comme sur le site.
+  coverBadge: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.6)",
   },
-  coverCompact: { alignItems: "center", justifyContent: "center", padding: 0 },
+  coverBadgeCompact: { width: 40, height: 40, borderRadius: 20 },
   stepper: { flexDirection: "row", alignItems: "flex-start" },
   track: { position: "absolute", top: 12, height: 2, backgroundColor: colors["border-strong"] },
   trackFill: { height: 2, backgroundColor: colors.primary },

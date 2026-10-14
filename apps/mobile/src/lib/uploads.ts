@@ -19,6 +19,8 @@ export type UploadStatus =
 
 /** Côté le plus long d'une photo envoyée, comme sur le site (spec §4.4 : fichiers légers). */
 export const PHOTO_MAX_SIDE = 2000;
+/** Côté de la photo de profil, comme sur le site. */
+export const AVATAR_MAX_SIDE = 512;
 
 /** Dimensions de la photo réduite (proportions gardées), ou null si elle est déjà assez petite. */
 export function fitWithin(

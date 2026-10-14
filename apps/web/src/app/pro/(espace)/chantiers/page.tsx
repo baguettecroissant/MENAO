@@ -6,6 +6,7 @@ import { StatusBadge, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { formatDayInline, formatTime } from "@/lib/format";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.pro.chantiers;
 
@@ -34,9 +35,7 @@ export default async function ChantiersPage() {
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
         {rows.length === 0 ? (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
-            {t.empty}
-          </p>
+          <EmptyState illustration="chantiers">{t.empty}</EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
             {rows.map((r) => {

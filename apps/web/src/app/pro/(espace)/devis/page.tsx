@@ -4,6 +4,7 @@ import { Alert, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { formatDay, formatTime } from "@/lib/format";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.pro.quote;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -75,9 +76,9 @@ export default async function QuotesPage({ searchParams }: PageProps<"/pro/devis
             {tab === "a-envoyer" ? t.list.toSend : t.list.sent} ({rows.length})
           </h2>
           {rows.length === 0 ? (
-            <p className="rounded-card border border-border bg-surface px-6 py-12 text-center text-sm text-muted-foreground shadow-card">
+            <EmptyState illustration="devis">
               {tab === "a-envoyer" ? t.list.emptyToSend : t.list.emptySent}
-            </p>
+            </EmptyState>
           ) : (
             <ul className="flex flex-col gap-3">
               {rows.map((q) => (

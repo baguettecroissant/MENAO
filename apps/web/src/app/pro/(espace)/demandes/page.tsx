@@ -5,6 +5,7 @@ import Link from "next/link";
 import { StatusBadge, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.pro.onboarding.requests;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
@@ -40,11 +41,7 @@ export default async function ArtisanRequestsPage() {
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
-        {rows.length === 0 && (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
-            {t.empty}
-          </p>
-        )}
+        {rows.length === 0 && <EmptyState illustration="demandes">{t.empty}</EmptyState>}
         <ul className="flex flex-col gap-3">
           {rows.map((r) => {
             const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), now) : null;

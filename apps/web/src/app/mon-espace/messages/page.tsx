@@ -4,6 +4,7 @@ import { ConversationList } from "@/components/messages/conversation-list";
 import { fr } from "@/i18n/fr";
 import { avatarUrl } from "@/lib/chantier/storage";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.messages;
 
@@ -37,9 +38,7 @@ export default async function ClientMessagesPage() {
             now={new Date()}
           />
         ) : (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            {t.emptyClient}
-          </p>
+          <EmptyState illustration="messages">{t.emptyClient}</EmptyState>
         )}
       </div>
     </main>

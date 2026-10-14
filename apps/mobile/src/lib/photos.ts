@@ -6,7 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert, Platform } from "react-native";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
-import { fitWithin, uploadId, type UploadStatus } from "./uploads";
+import { AVATAR_MAX_SIDE, fitWithin, PHOTO_MAX_SIDE, uploadId, type UploadStatus } from "./uploads";
 
 /** Qualité JPEG des photos réduites, comme sur le site. */
 const JPEG_QUALITY = 0.85;
@@ -15,10 +15,11 @@ const JPEG_QUALITY = 0.85;
 export type PickedPhoto = { uri: string };
 
 /**
- * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40) ou
- * signalement (F-42).
+ * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40),
+ * signalement (F-42) ou photo de profil.
  */
 export type PhotoTarget =
+  | { purpose: "avatar" }
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
   | { purpose: "message_attachment"; chantierId: string }
@@ -52,6 +53,8 @@ export function choosePhotoSource(title: string): Promise<"camera" | "library" |
 export async function pickPhotos(
   source: "camera" | "library",
   max = 1,
+  /** Recadrage carré proposé par le système (photo de profil). */
+  square = false,
 ): Promise<{ photos: PickedPhoto[] } | { error: string }> {
   try {
     if (source === "camera") {
@@ -63,6 +66,7 @@ export async function pickPhotos(
       quality: 1,
       allowsMultipleSelection: max > 1,
       selectionLimit: max,
+      ...(square && max === 1 ? { allowsEditing: true, aspect: [1, 1] as [number, number] } : {}),
     };
     const result =
       source === "camera"
@@ -76,14 +80,15 @@ export async function pickPhotos(
 }
 
 /**
- * Photo réduite (2 000 px au plus) et réencodée en JPEG, comme sur le site : fichier léger, photos
- * HEIC de l'iPhone converties, métadonnées (dont la position GPS) retirées.
+ * Photo réduite (2 000 px au plus, 512 px pour la photo de profil) et réencodée en JPEG, comme sur
+ * le site : fichier léger, photos HEIC de l'iPhone converties, métadonnées (dont la position GPS)
+ * retirées.
  */
-async function toJpeg(uri: string): Promise<string> {
+async function toJpeg(uri: string, maxSide: number): Promise<string> {
   const context = ImageManipulator.manipulate(uri);
   const original = await context.renderAsync();
   context.release();
-  const size = fitWithin(original.width, original.height);
+  const size = fitWithin(original.width, original.height, maxSide);
   let image = original;
   if (size) {
     const resizing = ImageManipulator.manipulate(original).resize(size);
@@ -122,7 +127,7 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
   let jpeg: string;
   let bytes: Uint8Array;
   try {
-    jpeg = await toJpeg(photo.uri);
+    jpeg = await toJpeg(photo.uri, target.purpose === "avatar" ? AVATAR_MAX_SIDE : PHOTO_MAX_SIDE);
     bytes = await readBytes(jpeg);
   } catch {
     return "unreadable";

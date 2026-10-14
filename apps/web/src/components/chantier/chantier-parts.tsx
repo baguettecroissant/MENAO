@@ -1,25 +1,52 @@
-import { ArrowLeft, BadgeCheck, MapPin, MessageCircle, Phone, Wrench } from "lucide-react";
+import { referenceCode } from "@menao/core";
+import { ArrowLeft, BadgeCheck, Hammer, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
+import { TRADE_VISUALS } from "@/components/site/trade-visuals";
 import { buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 
 const t = fr.chantier;
 
-/** Photo du chantier (première photo du projet) ou, à défaut, dégradé MENAO. */
-export function ChantierCover({ url, className = "" }: { url: string | null; className?: string }) {
+/**
+ * Photo du chantier (première photo du projet) ou, à défaut, dégradé MENAO avec l'icône du métier
+ * (marteau pour un métier inconnu). `trade` est le libellé du métier, dont le code du référentiel
+ * se déduit (`referenceCode`).
+ */
+export function ChantierCover({
+  url,
+  trade = null,
+  className = "",
+  compact = false,
+}: {
+  url: string | null;
+  trade?: string | null;
+  className?: string;
+  /** Petite vignette : icône réduite. */
+  compact?: boolean;
+}) {
   if (url) {
     // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire, sans optimisation Vercel (spec §4.4)
     return <img src={url} alt="" className={`object-cover ${className}`} />;
   }
+  const Icon = (trade && TRADE_VISUALS[referenceCode(trade)]?.icon) || Hammer;
   return (
     <div
       aria-hidden="true"
-      className={`relative bg-[linear-gradient(135deg,#dfe6fe_0%,#b9c7fc_55%,#8ea4fb_100%)] ${className}`}
+      className={`flex items-center justify-center bg-[linear-gradient(135deg,#dfe6fe_0%,#b9c7fc_55%,#8ea4fb_100%)] ${className}`}
     >
-      <Wrench strokeWidth={1.25} className="absolute right-4 bottom-4 size-14 text-white/70" />
+      <span
+        className={`flex items-center justify-center rounded-full bg-white/35 ring-1 ring-white/60 ${
+          compact ? "size-12" : "size-20"
+        }`}
+      >
+        <Icon
+          strokeWidth={1.5}
+          className={`text-white drop-shadow-[0_1px_2px_rgb(52_81_209/0.35)] ${compact ? "size-6" : "size-10"}`}
+        />
+      </span>
     </div>
   );
 }
@@ -30,6 +57,7 @@ export function ChantierCover({ url, className = "" }: { url: string | null; cla
  */
 export function ChantierHero({
   photoUrl,
+  trade = null,
   backHref,
   title,
   address,
@@ -38,6 +66,8 @@ export function ChantierHero({
   children,
 }: {
   photoUrl: string | null;
+  /** Libellé du métier, pour l'icône de la couverture sans photo. */
+  trade?: string | null;
   backHref: string;
   title: string;
   address: string | null;
@@ -48,7 +78,7 @@ export function ChantierHero({
   return (
     <article className="overflow-hidden bg-surface sm:rounded-card sm:border sm:border-border sm:shadow-card">
       <div className="relative">
-        <ChantierCover url={photoUrl} className="h-48 w-full sm:h-64" />
+        <ChantierCover url={photoUrl} trade={trade} className="h-48 w-full sm:h-64" />
         <Link
           href={backHref as Route}
           className="absolute top-4 left-4 flex size-10 items-center justify-center rounded-full bg-surface/95 text-foreground shadow-card hover:bg-surface focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"

@@ -57,6 +57,7 @@ export function PendingRequests({
           >
             <ChantierCover
               url={photoUrls.get(projectId) ?? null}
+              trade={head.trade_label}
               className="h-36 w-full md:h-full"
             />
             <div className="flex flex-col gap-3 p-5">

@@ -41,7 +41,7 @@ export function RequestGroup({
   );
   return (
     <View style={styles.card}>
-      <ChantierCover url={photoUrl} height={120} />
+      <ChantierCover url={photoUrl} trade={head.trade_label} height={120} />
       <View style={styles.body}>
         <StatusPill text={t.status[lead.status]} tone={TONE[lead.status]} />
         <Text style={styles.title}>{head.trade_label}</Text>

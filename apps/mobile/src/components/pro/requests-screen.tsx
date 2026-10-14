@@ -21,6 +21,7 @@ import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.proRequests;
 const { colors, font, radius, spacing } = theme;
@@ -72,11 +73,7 @@ export function RequestsScreen() {
           <Body muted>{t.subtitle}</Body>
         </View>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
-        {rows?.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>{t.empty}</Text>
-          </View>
-        ) : null}
+        {rows?.length === 0 ? <EmptyState illustration="demandes">{t.empty}</EmptyState> : null}
         {(rows ?? []).map((r) => {
           const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), now) : null;
           const title = [r.trade_label, r.summary].filter(Boolean).join(" — ");
@@ -151,20 +148,4 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   meta: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   thumb: { width: 64, height: 64, borderRadius: radius.input },
-  empty: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-  },
-  emptyText: {
-    fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    color: colors["muted-foreground"],
-  },
 });

@@ -228,6 +228,7 @@ export async function ArtisanFollowUp({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col sm:gap-5 sm:px-6 sm:py-8">
         <ChantierHero
           photoUrl={c.photos[0] ? (projectPhotos.get(c.photos[0]) ?? null) : null}
+          trade={c.trade}
           backHref="/pro/chantiers"
           title={c.chantier.title}
           address={address}
