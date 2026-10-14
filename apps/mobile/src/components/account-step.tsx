@@ -4,15 +4,17 @@ import { SignInForm } from "@/components/sign-in-form";
 import { SignUpForm } from "@/components/sign-up-form";
 import { fr } from "@/i18n/fr";
 import { signInForRequest, signUpForRequest } from "@/lib/requests";
-import { Body, Chip, Notice, Title } from "@/ui";
+import { Body, Button, Card, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const r = fr.request;
 
 /**
- * Dernière étape avant l'envoi, sans compte (F-08) : créer son espace ou se connecter. Le projet
- * de la session anonyme est rattaché au compte. Après l'inscription, le lien de confirmation
- * arrive par e-mail ; on se connecte ensuite ici pour envoyer la demande.
+ * Dernière étape avant l'envoi, sans compte (F-08), d'après la maquette « Dernière étape » et comme
+ * sur le site : « Informations personnelles », « Créer mon espace client MENAO », puis « Vous avez
+ * déjà un espace MENAO ? ». Le projet de la session anonyme est rattaché au compte. Après
+ * l'inscription, le lien de confirmation arrive par e-mail ; on se connecte ensuite ici pour
+ * envoyer la demande.
  */
 export function AccountStep({
   projectId,
@@ -21,47 +23,65 @@ export function AccountStep({
   projectId: string;
   artisanIds: string[];
 }) {
-  const [tab, setTab] = useState<"signUp" | "signIn">("signUp");
+  const [mode, setMode] = useState<"signUp" | "signIn">("signUp");
   const [emailSent, setEmailSent] = useState(false);
 
   return (
     <>
       <Title>{r.accountTitle}</Title>
       <Body muted>{r.accountIntro}</Body>
-      <View style={styles.tabs}>
-        <Chip label={r.signUpTab} selected={tab === "signUp"} onPress={() => setTab("signUp")} />
-        <Chip label={r.signInTab} selected={tab === "signIn"} onPress={() => setTab("signIn")} />
-      </View>
       {emailSent && <Notice tone="success">{r.checkEmail}</Notice>}
-      {tab === "signUp" ? (
+      {mode === "signUp" ? (
         <SignUpForm
           submitLabel={r.signUpSubmit}
+          sections={{
+            personal: { title: r.personalTitle, intro: r.personalIntro, phoneHint: r.phoneHint },
+            space: { title: r.spaceTitle, intro: r.spaceIntro, free: r.free },
+          }}
           onSubmit={async (input) => {
             const error = await signUpForRequest(projectId, artisanIds, input);
             if (!error) {
               setEmailSent(true);
-              setTab("signIn");
+              setMode("signIn");
             }
             return error;
           }}
         />
       ) : (
-        <SignInForm
-          submitLabel={r.signInSubmit}
-          onSubmit={(input) => signInForRequest(projectId, input)}
-        />
+        <Card>
+          <Text role="heading" style={styles.heading}>
+            {r.signInTitle}
+          </Text>
+          <SignInForm
+            submitLabel={r.signInSubmit}
+            onSubmit={(input) => signInForRequest(projectId, input)}
+          />
+        </Card>
       )}
-      <Text style={styles.free}>{r.free}</Text>
+      <View style={styles.switch}>
+        <Text style={styles.switchTitle}>
+          {mode === "signUp" ? r.haveAccountTitle : r.noAccountTitle}
+        </Text>
+        {mode === "signUp" ? <Body muted>{r.haveAccountText}</Body> : null}
+        <Button
+          label={mode === "signUp" ? r.haveAccountButton : r.backToSignUp}
+          variant="secondary"
+          onPress={() => setMode(mode === "signUp" ? "signIn" : "signUp")}
+        />
+      </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  tabs: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
-  free: {
-    fontFamily: theme.font.regular,
-    fontSize: 13,
-    textAlign: "center",
-    color: theme.colors["muted-foreground"],
+  heading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
+  switch: {
+    gap: theme.spacing(2.5),
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    borderColor: theme.colors["primary-soft"],
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing(4),
   },
+  switchTitle: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },
 });

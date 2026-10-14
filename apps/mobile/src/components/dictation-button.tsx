@@ -27,9 +27,10 @@ const ERRORS = {
 type DictationState = "idle" | "listening" | "transcribing";
 
 /**
- * Dictée du projet (F-05), comme sur le site (bouton micro des maquettes) : le micro est capturé en
- * PCM (expo-audio, iPhone et Android), le niveau s'affiche et un silence prolongé est signalé ;
- * 2 minutes au plus. Le texte transcrit est ajouté à la description.
+ * Dictée du projet (F-05), comme sur le site (bouton micro dans la zone de saisie des maquettes) :
+ * seul le bouton rond s'affiche au repos. Le micro est capturé en PCM (expo-audio, iPhone et
+ * Android), le niveau s'affiche et un silence prolongé est signalé ; 2 minutes au plus. Le texte
+ * transcrit est ajouté à la description.
  */
 export function DictationButton({
   onText,
@@ -128,9 +129,7 @@ export function DictationButton({
             {state === "transcribing" ? t.transcribing : quiet ? t.quiet : t.listening(seconds)}
           </Text>
         </View>
-      ) : (
-        <Text style={styles.hint}>{t.start}</Text>
-      )}
+      ) : null}
       <Pressable
         role="button"
         aria-label={label}
@@ -184,10 +183,9 @@ const styles = StyleSheet.create({
   status: { flexShrink: 1, flexDirection: "row", alignItems: "center", gap: spacing(2) },
   statusText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
   quiet: { color: colors.warning },
-  hint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   button: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
     alignItems: "center",

@@ -1,8 +1,9 @@
 import { artisanSelectionSchema } from "@menao/validation";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AccountStep } from "@/components/account-step";
+import { NeedSummaryBand } from "@/components/need-summary";
 import { RequestForm } from "@/components/request-form";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -26,10 +27,51 @@ export default function Envoyer() {
 
   let content;
   if (!selection.success) content = <Notice tone="error">{r.nothingToSend}</Notice>;
-  else if (!signedIn) content = <AccountStep projectId={id} artisanIds={artisanIds} />;
+  else if (!signedIn) return <AccountScreen projectId={id} artisanIds={artisanIds} />;
   else if (role !== "particulier") content = <Notice tone="error">{r.notParticulier}</Notice>;
   else return <SignedInSend projectId={id} artisanIds={artisanIds} />;
   return <Screen header={<TopBar />}>{content}</Screen>;
+}
+
+/**
+ * Création du compte ou connexion avant l'envoi (maquette « Dernière étape ») : le résumé du besoin
+ * reste en haut, comme sur le formulaire d'envoi. Le projet appartient à la session anonyme (RLS).
+ */
+function AccountScreen({ projectId, artisanIds }: { projectId: string; artisanIds: string[] }) {
+  const [summary, setSummary] = useState<NeedSummary | null | undefined>(undefined);
+
+  useEffect(() => {
+    let active = true;
+    loadNeedSummary(projectId).then((found) => {
+      if (active) setSummary(found);
+    });
+    return () => {
+      active = false;
+    };
+  }, [projectId]);
+
+  if (summary === undefined) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={theme.colors.primary} />
+      </View>
+    );
+  }
+  const step = <AccountStep projectId={projectId} artisanIds={artisanIds} />;
+  return summary ? (
+    <Screen
+      band={
+        <NeedSummaryBand
+          summary={summary}
+          onEdit={() => router.dismissTo({ pathname: "/projet/[id]", params: { id: projectId } })}
+        />
+      }
+    >
+      {step}
+    </Screen>
+  ) : (
+    <Screen header={<TopBar />}>{step}</Screen>
+  );
 }
 
 /** Formulaire d'envoi d'un particulier connecté : artisans encore joignables et coordonnées. */
