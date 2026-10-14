@@ -134,6 +134,11 @@ export function canTransition(from: ChantierStatus, event: ChantierEvent): boole
 /** F-16 « En attente de devis » : rendez-vous fixé ou modification demandée. */
 const AWAITING_QUOTE: readonly ChantierStatus[] = ["rdv_planifie", "devis_en_revision"];
 
+/** Chantier qui attend un devis de l'artisan (« Créer un devis » du bouton d'actions). */
+export function isAwaitingQuote(status: ChantierStatus): boolean {
+  return AWAITING_QUOTE.includes(status);
+}
+
 /** Nombre de clients distincts qui attendent un devis de l'artisan. */
 export function clientsAwaitingQuote(
   chantiers: readonly { status: ChantierStatus; particulierId: string }[],

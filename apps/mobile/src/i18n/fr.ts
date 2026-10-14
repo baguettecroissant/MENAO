@@ -47,14 +47,16 @@ export const fr = {
     resetSubmit: "Recevoir le lien",
     resetSent: "Si un compte existe pour cette adresse, un e-mail vient de vous être envoyé.",
   },
+  // Barres d'onglets des maquettes (ADR 0084) : client « Accueil · Chantiers · (Recherche) ·
+  // Documents · Messages », artisan « Accueil · Chantiers · (+) · Devis · Messages ».
   tabs: {
     home: "Accueil",
-    chantiers: "Mes chantiers",
-    dashboard: "Tableau de bord",
-    requests: "Demandes",
-    agenda: "Agenda",
+    chantiers: "Chantiers",
+    documents: "Documents",
+    quotes: "Devis",
     messages: "Messages",
-    account: "Compte",
+    search: "Nouvelle recherche",
+    quickActions: "Actions rapides",
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
   home: {
@@ -1542,6 +1544,31 @@ export const fr = {
     reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
   },
   /** Chantiers de l'artisan (F-18) : mêmes textes que l'espace pro du site. */
+  /** « Mes documents » du client (onglet Documents) : mêmes textes que le site. */
+  clientDocuments: {
+    title: "Mes documents",
+    subtitle: "Devis signés, factures et procès-verbaux de vos chantiers.",
+    empty: "Vos documents (devis signés, factures, PV de réception) apparaîtront ici.",
+    error: "Vos documents n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
+  },
+  /** Bouton (+) de l'artisan (ADR 0084) : actions rapides et choix du chantier. */
+  proQuickActions: {
+    title: "Actions rapides",
+    quote: "Créer un devis",
+    quoteDetail: "Pour un chantier qui attend votre devis",
+    block: "Bloquer un créneau",
+    blockDetail: "Une indisponibilité dans votre agenda",
+    photo: "Ajouter une photo au suivi",
+    photoDetail: "Sur un chantier en cours, visible de votre client",
+    close: "Fermer",
+    chooseQuoteTitle: "Pour quel chantier ?",
+    chooseQuoteIntro: "Les chantiers dont le client attend votre devis.",
+    choosePhotoTitle: "Sur quel chantier ?",
+    choosePhotoIntro:
+      "Vos chantiers en cours : les photos s'ajoutent au suivi que voit votre client.",
+    emptyQuote: "Aucun chantier n'attend de devis pour le moment.",
+    emptyPhoto: "Aucun chantier en cours pour le moment.",
+  },
   proChantiers: {
     title: "Mes chantiers",
     subtitle: "Vos rendez-vous et vos chantiers en cours.",
@@ -1657,6 +1684,10 @@ export const fr = {
     messages: {
       title: "Échangez avec vos artisans",
       text: "Avec un compte, vous discutez avec vos artisans et retrouvez leurs réponses ici.",
+    },
+    documents: {
+      title: "Retrouvez vos documents",
+      text: "Avec un compte, vos devis signés, vos factures et vos PV de réception sont rangés ici.",
     },
     notifications: {
       title: "Restez informé",

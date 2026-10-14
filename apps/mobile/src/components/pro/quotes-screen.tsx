@@ -12,12 +12,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
 import { Segmented } from "@/components/segmented";
-import { TopBar } from "@/components/top-bar";
+import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDay, formatDayMonthNumeric, formatTime } from "@/lib/format";
 import { loadArtisanQuotes, type ArtisanQuote } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, LinkText, Notice, Title } from "@/ui";
+import { LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuotes;
@@ -36,7 +36,7 @@ const STATUS_TONE: Record<ArtisanQuote["status"], Tone> = {
  * Devis de l'artisan, comme sur le site (maquettes « Devis – Aucun » et « Devis envoyés ») :
  * brouillons à envoyer (vers la préparation du devis) et devis envoyés (vers le chantier).
  */
-export default function ArtisanQuotesScreen() {
+export function ArtisanQuotesScreen() {
   const [rows, reload] = useFocusData(loadArtisanQuotes);
   const [tab, setTab] = useState<"a-envoyer" | "envoyes">("a-envoyer");
   const [refreshing, setRefreshing] = useState(false);
@@ -55,9 +55,6 @@ export default function ArtisanQuotesScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <View style={styles.header}>
-        <TopBar />
-      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -72,11 +69,9 @@ export default function ArtisanQuotesScreen() {
           />
         }
       >
-        <View style={styles.head}>
-          <Title>{t.title}</Title>
-          <Body muted>{t.subtitle}</Body>
+        <TabHeader title={t.title} subtitle={t.subtitle}>
           <LinkText label={fr.proInvoices.open} onPress={() => router.push("/pro-factures")} />
-        </View>
+        </TabHeader>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
         <Segmented
           label={t.title}
@@ -157,9 +152,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
-  head: { gap: spacing(2), marginBottom: spacing(1) },
   count: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   empty: {
     borderRadius: radius.card,

@@ -1,9 +1,10 @@
 import { Hourglass } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { DashboardScreen } from "@/components/pro/dashboard-screen";
+import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
-import { Body, Card, Screen, Title } from "@/ui";
+import { Body, Card, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 /** Tableau de bord artisan (F-16) ; tant que le dossier n'est pas validé, son état à la place. */
@@ -12,7 +13,8 @@ export default function Dashboard() {
   if (role !== "artisan_en_attente") return <DashboardScreen />;
   return (
     <Screen>
-      <Title>{fr.tabs.dashboard}</Title>
+      {/* En-tête des onglets : le compte reste accessible par la photo pendant la vérification. */}
+      <TabHeader title={fr.proDashboard.title} />
       <Card>
         <View style={styles.icon}>
           <Hourglass size={22} color={theme.colors.primary} />

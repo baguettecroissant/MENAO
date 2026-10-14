@@ -13,11 +13,13 @@ import {
   Search,
   ShieldCheck,
   Star,
+  UserRound,
   type LucideIcon,
 } from "lucide-react-native";
 import { useCallback, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -33,6 +35,7 @@ import { PushPrompt } from "@/components/push-prompt";
 import { fr } from "@/i18n/fr";
 import { loadClientHome } from "@/lib/client-home";
 import { openTab } from "@/lib/navigation";
+import { useProfileSummary } from "@/lib/profile-summary";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useTrades } from "@/lib/trades";
@@ -209,6 +212,7 @@ function HomeFrame({
 }) {
   const insets = useSafeAreaInsets();
   const { notifications, refresh } = useUnread();
+  const profile = useProfileSummary();
   const [refreshing, setRefreshing] = useState(false);
 
   // En-tête bleu : barre d'état claire tant que l'accueil est à l'écran.
@@ -259,6 +263,21 @@ function HomeFrame({
                 <Text style={styles.bellBadgeText}>{notifications > 9 ? "9+" : notifications}</Text>
               </View>
             ) : null}
+          </Pressable>
+          {/* Photo du compte, comme l'en-tête des onglets (maquettes) : ouvre « Mon compte ». */}
+          <Pressable
+            role="link"
+            aria-label={fr.account.title}
+            onPress={() => router.push("/compte")}
+            style={({ pressed }) => [styles.roundButton, styles.avatar, pressed && styles.pressed]}
+          >
+            {profile?.avatarUrl ? (
+              <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} alt="" />
+            ) : profile?.firstName ? (
+              <Text style={styles.avatarInitial}>{profile.firstName.charAt(0).toUpperCase()}</Text>
+            ) : (
+              <UserRound size={22} color={colors["primary-foreground"]} />
+            )}
           </Pressable>
         </View>
         <View style={styles.heroText}>
@@ -378,8 +397,8 @@ const styles = StyleSheet.create({
     height: 1000,
     backgroundColor: colors.primary,
   },
-  heroTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  brand: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
+  heroTop: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
+  brand: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing(2) },
   brandName: {
     fontFamily: font.bold,
     fontSize: 18,
@@ -409,6 +428,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bellBadgeText: { fontFamily: font.bold, fontSize: 10, color: colors["primary-foreground"] },
+  avatar: { overflow: "hidden" },
+  avatarImage: { width: theme.touchTarget, height: theme.touchTarget },
+  avatarInitial: { fontFamily: font.bold, fontSize: 17, color: colors["primary-foreground"] },
   pressed: { opacity: 0.85 },
   heroText: { gap: spacing(1.5) },
   greeting: {

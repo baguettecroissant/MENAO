@@ -11,6 +11,7 @@ import {
   type ChantierStatus,
   canTransition,
   clientsAwaitingQuote,
+  isAwaitingQuote,
   nextChantierStatus,
 } from "../src/chantier-state";
 
@@ -134,5 +135,12 @@ describe("tableau de bord (F-16)", () => {
       ]),
     ).toBe(2);
     expect(clientsAwaitingQuote([])).toBe(0);
+  });
+
+  it("« Créer un devis » : rendez-vous fixé ou modification demandée, rien d'autre", () => {
+    expect(CHANTIER_STATUSES.filter(isAwaitingQuote)).toEqual([
+      "rdv_planifie",
+      "devis_en_revision",
+    ]);
   });
 });

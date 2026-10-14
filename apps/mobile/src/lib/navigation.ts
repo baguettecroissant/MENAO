@@ -16,7 +16,7 @@ export function closeAuth(): void {
 }
 
 /** Referme les écrans ouverts par-dessus les onglets, puis affiche l'onglet demandé. */
-export function openTab(href: "/accueil" | "/chantiers" | "/messages"): void {
+export function openTab(href: "/accueil" | "/chantiers" | "/documents" | "/messages"): void {
   if (router.canDismiss()) router.dismissAll();
   router.navigate(href);
 }

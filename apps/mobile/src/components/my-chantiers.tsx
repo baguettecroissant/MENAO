@@ -14,10 +14,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
 import { StatusPill } from "@/components/chantier/parts";
 import { RequestGroup } from "@/components/chantier/request-group";
+import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar, loadMyChantiers, type MyChantiers } from "@/lib/chantiers";
 import { formatDateNumeric } from "@/lib/format";
-import { Body, Button, Card, Chip, LinkText, Notice, Title } from "@/ui";
+import { Body, Card, Chip, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.myChantiers;
@@ -90,9 +91,7 @@ export function MyChantiersScreen() {
           />
         }
       >
-        <View style={styles.head}>
-          <Title>{t.title}</Title>
-          <Body muted>{t.subtitle}</Body>
+        <TabHeader title={t.title} subtitle={t.subtitle}>
           {(active.length > 0 || toSign > 0) && (
             <View style={styles.counts}>
               <View style={styles.count}>
@@ -108,8 +107,7 @@ export function MyChantiersScreen() {
               {pending > toSign && <StatusPill text={fr.chantier.action.payTitle} tone="primary" />}
             </View>
           )}
-          <Button label={t.start} onPress={() => router.push("/recherche")} />
-        </View>
+        </TabHeader>
 
         {data === null && <Notice tone="error">{t.error}</Notice>}
 
@@ -222,7 +220,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
-  head: { gap: spacing(2.5) },
   counts: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   count: {
     flexDirection: "row",

@@ -9,6 +9,7 @@ import {
   MessageCircle,
 } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
 import { Body, Button, Card, IconTile, LinkText, Screen, Title } from "@/ui";
@@ -16,10 +17,10 @@ import { theme } from "@/ui/theme";
 
 const BENEFIT_ICONS = [ClipboardList, MessageCircle, FileText];
 
-/** Onglet Compte d'un visiteur : ce que l'espace MENAO apporte, création de compte, connexion. */
+/** Compte d'un visiteur : ce que l'espace MENAO apporte, création de compte, connexion. */
 export function GuestAccount() {
   return (
-    <Screen>
+    <Screen header={<TopBar />}>
       <Title>{fr.account.title}</Title>
       <Card tone="soft">
         <Text style={styles.heading}>{fr.guest.spaceTitle}</Text>

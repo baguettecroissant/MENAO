@@ -11,6 +11,7 @@ import * as Sharing from "expo-sharing";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "./env";
+import { forgetProfileSummary } from "./profile-summary";
 import { supabase } from "./supabase";
 
 const t = fr.account;
@@ -94,7 +95,10 @@ export async function saveProfile(
       phone: parsed.data.phone ?? null,
     })
     .eq("user_id", userId);
-  return error ? { error: t.errors.unavailable } : { success: t.profile.saved };
+  if (error) return { error: t.errors.unavailable };
+  // Prénom des en-têtes (avatar) relu au prochain affichage.
+  forgetProfileSummary();
+  return { success: t.profile.saved };
 }
 
 /**
