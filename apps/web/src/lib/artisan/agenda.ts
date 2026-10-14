@@ -1,29 +1,17 @@
 import "server-only";
 import {
-  APPOINTMENT_DURATION_MINUTES,
+  agendaItemsFrom,
   suggestSlots,
   type Absence,
+  type AgendaItem,
   type HoursRange,
   type Weekday,
 } from "@menao/core";
 import { cache } from "react";
 import { artisanActivity, requireProSpace } from "./space";
 
-export type AgendaKind = "visite" | "demarrage" | "creneau";
-
-/** Élément horaire de l'agenda (F-44) : visite, démarrage de chantier ou créneau bloqué. */
-export type AgendaItem = {
-  id: string;
-  kind: AgendaKind;
-  /** Instant ISO. */
-  start: string;
-  durationMinutes: number;
-  /** Titre du chantier, ou motif du créneau bloqué. */
-  title: string | null;
-  /** Commune du chantier. */
-  place: string | null;
-  chantierId: string | null;
-};
+/** Élément horaire de l'agenda (F-44), commun avec l'application (`@menao/core`). */
+export type { AgendaItem, AgendaItemKind as AgendaKind } from "@menao/core";
 
 export type AgendaAbsence = Absence & { id: string; label: string | null };
 
@@ -63,7 +51,8 @@ export async function absencesBetween(from: string, to: string): Promise<AgendaA
 
 /**
  * Visites planifiées, démarrages de chantier et créneaux bloqués qui commencent entre deux instants
- * (chantiers annulés exclus). `excludeChantierId` : le rendez-vous en cours de modification.
+ * (chantiers annulés exclus), assemblés par `agendaItemsFrom` (`@menao/core`).
+ * `excludeChantierId` : le rendez-vous en cours de modification.
  */
 export async function agendaItems(
   from: Date,
@@ -81,50 +70,26 @@ export async function agendaItems(
       .gt("ends_at", from.toISOString())
       .order("starts_at"),
   ]);
-  const within = (iso: string | null): iso is string => {
-    if (!iso) return false;
-    const at = new Date(iso).getTime();
-    return at >= from.getTime() && at < to.getTime();
-  };
-  const items: AgendaItem[] = [];
-  for (const c of chantiers) {
-    if (c.status === "annule" || c.chantier_id === excludeChantierId) continue;
-    const place = [c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null;
-    const base = { title: c.title, place, chantierId: c.chantier_id };
-    const duration = APPOINTMENT_DURATION_MINUTES;
-    if (within(c.appointment_at)) {
-      items.push({
-        ...base,
-        id: `visite-${c.chantier_id}`,
-        kind: "visite",
-        start: c.appointment_at,
-        durationMinutes: duration,
-      });
-    }
-    if (within(c.start_at)) {
-      items.push({
-        ...base,
-        id: `demarrage-${c.chantier_id}`,
-        kind: "demarrage",
-        start: c.start_at,
-        durationMinutes: duration,
-      });
-    }
-  }
-  for (const b of blocked ?? []) {
-    items.push({
+  return agendaItemsFrom({
+    chantiers: chantiers.map((c) => ({
+      chantierId: c.chantier_id,
+      status: c.status,
+      title: c.title,
+      codePostal: c.code_postal,
+      villeNom: c.ville_nom,
+      appointmentAt: c.appointment_at,
+      startAt: c.start_at,
+    })),
+    blocked: (blocked ?? []).map((b) => ({
       id: b.id,
-      kind: "creneau",
-      start: b.starts_at,
-      durationMinutes: Math.round(
-        (new Date(b.ends_at).getTime() - new Date(b.starts_at).getTime()) / 60_000,
-      ),
-      title: b.label,
-      place: null,
-      chantierId: null,
-    });
-  }
-  return items.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      startsAt: b.starts_at,
+      endsAt: b.ends_at,
+      label: b.label,
+    })),
+    from,
+    to,
+    excludeChantierId,
+  });
 }
 
 /** Contexte des formulaires de rendez-vous (F-18) : créneaux libres et avertissements. */

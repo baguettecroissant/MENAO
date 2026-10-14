@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   formatAgo,
   formatCents,
+  formatClock,
   formatDateNumeric,
   formatDay,
   formatDayAndTime,
   formatDayLabel,
+  formatDayMonth,
   formatDuration,
   formatMonthName,
   formatTime,
@@ -60,5 +62,17 @@ describe("mise en forme", () => {
     expect(parisDateTime("2026-10-20T07:30:00Z")).toEqual({ date: "2026-10-20", time: "09:30" });
     // 23h30 UTC le 31 décembre : déjà le 1er janvier à Paris.
     expect(parisDateTime("2026-12-31T23:30:00Z")).toEqual({ date: "2027-01-01", time: "00:30" });
+  });
+});
+
+describe("dates de l'agenda", () => {
+  it("affiche le jour et le mois, comme sur le site", () => {
+    expect(formatDayMonth("2026-10-12")).toBe("12 octobre");
+    expect(formatDayMonth("2026-11-01")).toBe("1 novembre");
+  });
+
+  it("affiche une heure HH:MM", () => {
+    expect(formatClock("09:00")).toBe("09h00");
+    expect(formatClock("18:30:00")).toBe("18h30");
   });
 });

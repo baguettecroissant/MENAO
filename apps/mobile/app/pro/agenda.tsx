@@ -1,7 +1,11 @@
-import { CalendarDays } from "lucide-react-native";
-import { ComingSoon } from "@/components/coming-soon";
-import { fr } from "@/i18n/fr";
+import { useLocalSearchParams } from "expo-router";
+import { AgendaScreen } from "@/components/pro/agenda-screen";
 
+/**
+ * Onglet « Agenda » de l'artisan (F-44). `semaine` : un jour de la semaine à afficher ; `bloque` :
+ * créneau tout juste bloqué (l'écran repart sur cette semaine).
+ */
 export default function Agenda() {
-  return <ComingSoon icon={CalendarDays} title={fr.tabs.agenda} text={fr.soon.agenda} />;
+  const { semaine, bloque } = useLocalSearchParams<{ semaine?: string; bloque?: string }>();
+  return <AgendaScreen key={semaine ?? ""} week={semaine ?? null} blocked={bloque === "1"} />;
 }

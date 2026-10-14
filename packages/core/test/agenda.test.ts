@@ -4,6 +4,7 @@ import {
   absenceError,
   absenceOn,
   addDays,
+  agendaItemsFrom,
   availabilityStatus,
   availableFromChoices,
   blockedSlotError,
@@ -300,5 +301,75 @@ describe("agenda à synchroniser (.ics, F-44)", () => {
     expect(ics).toContain("DTEND;VALUE=DATE:20261025");
     expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true);
+  });
+});
+
+describe("éléments de l'agenda (F-44)", () => {
+  const from = new Date("2026-10-12T00:00:00+02:00");
+  const to = new Date("2026-10-19T00:00:00+02:00");
+  const chantier = {
+    chantierId: "c1",
+    status: "rdv_planifie",
+    title: "Salle de bain",
+    codePostal: "06000",
+    villeNom: "Nice",
+    appointmentAt: "2026-10-14T07:30:00Z",
+    startAt: null,
+  };
+
+  it("réunit visites, démarrages et créneaux bloqués de la semaine, triés par heure", () => {
+    const items = agendaItemsFrom({
+      chantiers: [
+        chantier,
+        {
+          ...chantier,
+          chantierId: "c2",
+          status: "planifie",
+          appointmentAt: null,
+          startAt: "2026-10-13T06:00:00Z",
+        },
+      ],
+      blocked: [
+        { id: "b1", startsAt: "2026-10-15T12:00:00Z", endsAt: "2026-10-15T14:00:00Z", label: null },
+      ],
+      from,
+      to,
+    });
+    expect(items.map((i) => [i.id, i.kind, i.durationMinutes])).toEqual([
+      ["demarrage-c2", "demarrage", 60],
+      ["visite-c1", "visite", 60],
+      ["b1", "creneau", 120],
+    ]);
+    expect(items[1]).toMatchObject({
+      title: "Salle de bain",
+      place: "06000 Nice",
+      chantierId: "c1",
+    });
+    expect(items[2]).toMatchObject({ title: null, place: null, chantierId: null });
+  });
+
+  it("écarte les chantiers annulés, hors période ou en cours de modification", () => {
+    const items = agendaItemsFrom({
+      chantiers: [
+        { ...chantier, status: "annule" },
+        { ...chantier, chantierId: "c3", appointmentAt: "2026-10-19T08:00:00Z" },
+        { ...chantier, chantierId: "c4" },
+      ],
+      blocked: [],
+      from,
+      to,
+      excludeChantierId: "c4",
+    });
+    expect(items).toEqual([]);
+  });
+
+  it("n'affiche pas de lieu vide", () => {
+    const [item] = agendaItemsFrom({
+      chantiers: [{ ...chantier, codePostal: null, villeNom: null }],
+      blocked: [],
+      from,
+      to,
+    });
+    expect(item?.place).toBeNull();
   });
 });

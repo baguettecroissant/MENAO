@@ -127,3 +127,56 @@ const styles = StyleSheet.create({
   summary: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors["primary-strong"] },
   error: { fontFamily: theme.font.regular, fontSize: 13, color: theme.colors.danger },
 });
+
+/**
+ * Heure seule (début ou fin d'un créneau bloqué, F-44) : roue des heures (par 5 minutes) sur
+ * iPhone, boîte de dialogue sur Android, saisie au clavier dans la version web.
+ */
+export function TimeField({
+  label,
+  time,
+  onTime,
+  error,
+}: {
+  label: string;
+  /** HH:MM. */
+  time: string;
+  onTime: (time: string) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (Platform.OS === "web") {
+    return (
+      <TextField
+        label={`${label} — ${t.timeWeb}`}
+        value={time}
+        onChangeText={onTime}
+        error={error}
+      />
+    );
+  }
+  return (
+    <View style={styles.fields}>
+      <Text style={styles.label}>{label}</Text>
+      {Platform.OS === "android" ? (
+        <Button label={time.replace(":", "h")} variant="secondary" onPress={() => setOpen(true)} />
+      ) : null}
+      {Platform.OS === "ios" || open ? (
+        <DateTimePicker
+          value={fromClock(toIsoDate(new Date()), time)}
+          mode="time"
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          minuteInterval={5}
+          is24Hour
+          locale="fr-FR"
+          onChange={(event, picked) => {
+            setOpen(false);
+            if (event.type === "set" && picked) onTime(toClock(picked));
+          }}
+        />
+      ) : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+    </View>
+  );
+}
