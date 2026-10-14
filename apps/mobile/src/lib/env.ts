@@ -29,6 +29,8 @@ export const siteLinks = {
   contact: `${env.siteUrl}/contact`,
   resetPassword: confirmUrl("/nouveau-mot-de-passe"),
   emailConfirmed: confirmUrl("/mon-espace"),
+  /** Changement d'adresse e-mail : chaque lien se confirme sur la page « Mon compte » du site. */
+  emailChanged: confirmUrl("/compte?email=confirme"),
 };
 
 /** Conditions des prestataires, à lire avant de signer (mêmes liens que le site). */

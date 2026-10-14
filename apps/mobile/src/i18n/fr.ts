@@ -1670,6 +1670,69 @@ export const fr = {
     privacy: "Politique de confidentialité",
     signOut: "Me déconnecter",
     version: (version: string) => `Version ${version}`,
+    /** Gestion du compte (F-08, ADR 0039 et 0083) : mêmes textes que le site. */
+    settings: "Paramètres du compte",
+    profile: {
+      title: "Mes informations",
+      firstName: "Prénom",
+      lastName: "Nom",
+      phone: "Téléphone",
+      phoneOptional: "Téléphone (facultatif)",
+      phoneHintClient:
+        "Utilisé pour le code de signature envoyé par SMS et pour que l'artisan puisse vous rappeler.",
+      phoneHintPro: "Visible de vos clients une fois leur demande acceptée.",
+      save: "Enregistrer mes informations",
+      saved: "Vos informations sont enregistrées.",
+    },
+    email: {
+      title: "Adresse e-mail",
+      current: "Adresse actuelle",
+      label: "Nouvelle adresse e-mail",
+      hint: "Un lien de confirmation est envoyé à vos deux adresses : le changement prend effet une fois les deux liens ouverts.",
+      submit: "Changer d'adresse e-mail",
+      sent: (email: string) =>
+        `C'est presque fini : ouvrez les liens envoyés à votre adresse actuelle et à ${email} pour confirmer le changement.`,
+      pending: (email: string) =>
+        `Changement en attente vers ${email} : ouvrez les liens reçus par e-mail pour le confirmer.`,
+      same: "C'est déjà l'adresse de votre compte.",
+      taken: "Cette adresse est déjà utilisée par un autre compte.",
+    },
+    password: {
+      title: "Mot de passe",
+      current: "Mot de passe actuel",
+      new: "Nouveau mot de passe",
+      submit: "Changer mon mot de passe",
+      wrong: "Mot de passe actuel incorrect.",
+      changed: "Mot de passe modifié. Vos autres appareils devront se reconnecter.",
+      weak: "Ce mot de passe est trop facile à deviner : choisissez-en un autre.",
+      forgot: "Mot de passe oublié ?",
+    },
+    communications: {
+      title: "Communications",
+      marketing: "Recevoir par e-mail les actualités et conseils de MENAO",
+      marketingHint:
+        "Vous pouvez changer d'avis à tout moment. Les e-mails liés à vos demandes et à vos chantiers ne dépendent pas de ce choix.",
+      subscribed: "C'est noté : vous recevrez les actualités de MENAO.",
+      unsubscribed: "C'est noté : vous ne recevrez plus les actualités de MENAO.",
+      notifications: "Choisir les e-mails de suivi",
+    },
+    data: {
+      title: "Mes données",
+      intro:
+        "Téléchargez une copie de vos données personnelles, dans un fichier lisible par ordinateur (JSON) : compte, demandes, chantiers, devis, paiements, messages et avis.",
+      download: "Télécharger mes données",
+      error: "Impossible de préparer le fichier pour le moment. Réessayez dans quelques minutes.",
+    },
+    security: {
+      title: "Sécurité",
+      signOutAll: "Me déconnecter de tous mes appareils",
+      signOutAllHint:
+        "Utile si vous vous êtes connecté sur un appareil qui n'est pas le vôtre : il faudra vous reconnecter partout, y compris ici.",
+    },
+    errors: {
+      unavailable: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+      rateLimited: "Trop de tentatives en peu de temps. Réessayez dans quelques minutes.",
+    },
     /** Suppression du compte (Apple 5.1.1 v) : mêmes textes que le site. */
     deletion: {
       title: "Supprimer mon compte",

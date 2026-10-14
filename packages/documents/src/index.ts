@@ -1,5 +1,6 @@
-// Modèles des documents, sans pdf-lib (aperçu web). Rendus PDF : « @menao/documents/pdf »,
-// « …/invoice-pdf » et « …/reception-pdf ».
+// Modèles des documents et export des données du compte, sans pdf-lib (aperçu web, application).
+// Rendus PDF : « @menao/documents/pdf », « …/invoice-pdf » et « …/reception-pdf ».
+export * from "./account-export.ts";
 export * from "./format.ts";
 export * from "./invoice-data.ts";
 export * from "./invoice-model.ts";
