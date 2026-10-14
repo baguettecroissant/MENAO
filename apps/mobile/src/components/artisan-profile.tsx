@@ -1,6 +1,8 @@
 import { availability, parisToday, responseTimeBucket, reviewStars } from "@menao/core";
 import { BadgeCheck, Clock, MapPin, ShieldCheck, Star, Wrench } from "lucide-react-native";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PhotoViewer } from "@/components/photo-viewer";
 import { ScoreBreakdown } from "@/components/score-breakdown";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
@@ -130,15 +132,7 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
       {page.photoUrls.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.heading}>{t.recent}</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.photos}
-          >
-            {page.photoUrls.map((uri) => (
-              <Image key={uri} source={{ uri }} style={styles.photo} alt="" />
-            ))}
-          </ScrollView>
+          <RecentPhotos urls={page.photoUrls} />
         </View>
       )}
 
@@ -154,6 +148,33 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
           <Body muted>{t.reviewsEmpty}</Body>
         )}
       </View>
+    </>
+  );
+}
+
+/** Chantiers récents (F-10) : vignettes ouvertes en grand d'un appui, comme la galerie du site. */
+function RecentPhotos({ urls }: { urls: string[] }) {
+  const [viewing, setViewing] = useState<number | null>(null);
+  return (
+    <>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.photos}
+      >
+        {urls.map((uri, i) => (
+          <Pressable
+            key={uri}
+            role="button"
+            aria-label={fr.photoViewer.open(i + 1, urls.length)}
+            onPress={() => setViewing(i)}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Image source={{ uri }} style={styles.photo} alt="" />
+          </Pressable>
+        ))}
+      </ScrollView>
+      <PhotoViewer photos={urls} index={viewing} onClose={() => setViewing(null)} />
     </>
   );
 }
@@ -279,6 +300,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.input,
     backgroundColor: colors["primary-soft"],
   },
+  pressed: { opacity: 0.85 },
   reviewHead: {
     flexDirection: "row",
     alignItems: "center",

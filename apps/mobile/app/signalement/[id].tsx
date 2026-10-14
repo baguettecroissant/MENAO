@@ -1,11 +1,11 @@
 import { TICKET_MESSAGE_MAX_LENGTH } from "@menao/core";
 import { ticketMessageSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { StatusPill } from "@/components/chantier/parts";
+import { PhotoViewer } from "@/components/photo-viewer";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { addTicketMessage, loadTicket } from "@/lib/disputes";
@@ -32,6 +32,7 @@ export default function TicketScreen() {
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
   const [pending, setPending] = useState(false);
+  const [viewing, setViewing] = useState<number | null>(null);
 
   if (ticket === undefined) {
     return (
@@ -64,6 +65,8 @@ export default function TicketScreen() {
   }
 
   const closed = ticket.status === "resolu";
+  // Photos de l'échange, ouvertes en grand d'un appui (on passe de l'une à l'autre).
+  const photos = ticket.entries.flatMap((entry) => (entry.photoUrl ? [entry.photoUrl] : []));
   return (
     <Screen header={<TopBar />}>
       <View style={styles.head}>
@@ -109,9 +112,9 @@ export default function TicketScreen() {
                   </Text>
                   {entry.photoUrl ? (
                     <Pressable
-                      role="link"
+                      role="button"
                       aria-label={t.photo}
-                      onPress={() => entry.photoUrl && WebBrowser.openBrowserAsync(entry.photoUrl)}
+                      onPress={() => setViewing(photos.indexOf(entry.photoUrl ?? ""))}
                     >
                       <Image source={{ uri: entry.photoUrl }} style={styles.photo} alt="" />
                     </Pressable>
@@ -143,6 +146,7 @@ export default function TicketScreen() {
           )}
         </View>
       </Card>
+      <PhotoViewer photos={photos} index={viewing} onClose={() => setViewing(null)} />
     </Screen>
   );
 }

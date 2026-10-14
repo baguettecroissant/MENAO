@@ -1,8 +1,9 @@
 import type { RequestDetail } from "@menao/validation";
 import * as WebBrowser from "expo-web-browser";
 import { Calendar, MapPin, MessageSquare, User, Wrench } from "lucide-react-native";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PhotoViewer } from "@/components/photo-viewer";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
 import { Button, Card } from "@/ui";
@@ -40,6 +41,30 @@ export function DetailBlock({
  * adresse, description (photos, critères), date souhaitée, message. Coordonnées et adresse exacte
  * seulement une fois le rendez-vous fixé (décision C, ADR 0014).
  */
+/** Photos du projet : vignettes ouvertes en grand d'un appui. */
+function RequestPhotos({ urls }: { urls: string[] }) {
+  const [viewing, setViewing] = useState<number | null>(null);
+  return (
+    <>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.photos}>
+          {urls.map((url, i) => (
+            <Pressable
+              key={url}
+              role="button"
+              aria-label={t.photo(i + 1)}
+              onPress={() => setViewing(i)}
+            >
+              <Image source={{ uri: url }} style={styles.photo} alt="" />
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+      <PhotoViewer photos={urls} index={viewing} onClose={() => setViewing(null)} />
+    </>
+  );
+}
+
 export function RequestBlocks({
   detail: r,
   photoUrls,
@@ -120,22 +145,7 @@ export function RequestBlocks({
       >
         {r.summary ? <Text style={styles.strong}>{r.summary}</Text> : null}
         <Text style={styles.text}>{r.description}</Text>
-        {photoUrls.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.photos}>
-              {photoUrls.map((url, i) => (
-                <Pressable
-                  key={url}
-                  role="link"
-                  aria-label={t.photo(i + 1)}
-                  onPress={() => WebBrowser.openBrowserAsync(url)}
-                >
-                  <Image source={{ uri: url }} style={styles.photo} alt="" />
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-        ) : null}
+        {photoUrls.length > 0 ? <RequestPhotos urls={photoUrls} /> : null}
         {tags.length > 0 ? (
           <View style={styles.tags}>
             {tags.map((tag) => (
