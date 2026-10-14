@@ -105,3 +105,73 @@ export function peakRms(samples: Float32Array, sampleRate: number): number {
 
 /** Enregistrement silencieux : inutile de l'envoyer à la transcription. */
 export const isSilent = (peak: number) => peak < SILENCE_RMS;
+
+/**
+ * Échantillons PCM 16 bits petit-boutistes entrelacés (capture du micro de l'application) → un
+ * tableau de −1 à 1 par canal, prêt pour downmixAndResample.
+ */
+export function pcm16ToChannels(bytes: Uint8Array, channelCount: number): Float32Array[] {
+  const count = Math.max(1, Math.floor(channelCount));
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const frames = Math.floor(bytes.byteLength / (2 * count));
+  const channels = Array.from({ length: count }, () => new Float32Array(frames));
+  for (let f = 0; f < frames; f++) {
+    for (let c = 0; c < count; c++) {
+      const channel = channels[c];
+      if (channel) channel[f] = view.getInt16((f * count + c) * 2, true) / 0x8000;
+    }
+  }
+  return channels;
+}
+
+const BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/**
+ * Encodage base64 de l'audio envoyé à transcribe, identique partout (navigateur, téléphone). Par
+ * blocs assemblés à la fin : plusieurs millions de caractères pour 2 minutes de dictée.
+ */
+export function toBase64(bytes: Uint8Array): string {
+  const parts: string[] = [];
+  // Blocs de 3 × 4 096 octets : le complément « = » n'apparaît qu'à la toute fin.
+  for (let start = 0; start < bytes.length; start += 12_288) {
+    const end = Math.min(start + 12_288, bytes.length);
+    const chars: string[] = [];
+    for (let i = start; i < end; i += 3) {
+      const triple = ((bytes[i] ?? 0) << 16) | ((bytes[i + 1] ?? 0) << 8) | (bytes[i + 2] ?? 0);
+      chars.push(
+        BASE64.charAt((triple >> 18) & 63),
+        BASE64.charAt((triple >> 12) & 63),
+        i + 1 < bytes.length ? BASE64.charAt((triple >> 6) & 63) : "=",
+        i + 2 < bytes.length ? BASE64.charAt(triple & 63) : "=",
+      );
+    }
+    parts.push(chars.join(""));
+  }
+  return parts.join("");
+}
+
+/**
+ * Capture du micro de l'application (morceaux PCM 16 bits, fréquence et canaux réels) → WAV PCM
+ * 16 bits mono 16 kHz pour transcribe, comme la dictée du site ; « silent » si rien n'a été capté.
+ */
+export function captureToWav(
+  chunks: readonly Uint8Array[],
+  sampleRate: number,
+  channelCount: number,
+): { wav: Uint8Array; silent: boolean } {
+  const bytes = new Uint8Array(chunks.reduce((total, chunk) => total + chunk.byteLength, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const samples = downmixAndResample(
+    pcm16ToChannels(bytes, channelCount),
+    sampleRate,
+    DICTATION_SAMPLE_RATE,
+  );
+  return {
+    wav: encodeWav(samples, DICTATION_SAMPLE_RATE),
+    silent: isSilent(peakRms(samples, DICTATION_SAMPLE_RATE)),
+  };
+}

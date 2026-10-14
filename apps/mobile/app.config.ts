@@ -10,6 +10,10 @@ import type { ExpoConfig } from "expo/config";
  */
 const easProjectId = process.env.EAS_PROJECT_ID;
 
+/** Demande d'accès au micro sur iPhone (dictée du projet). */
+const MICROPHONE_PERMISSION =
+  "MENAO utilise le micro pour dicter la description de votre projet, qui est ensuite transcrite en texte.";
+
 const config: ExpoConfig = {
   name: "MENAO",
   slug: "menao",
@@ -40,14 +44,27 @@ const config: ExpoConfig = {
     "expo-font",
     [
       // Photos du journal, des messages et des signalements (ADR 0069) : textes des demandes
-      // d'accès sur iPhone ; pas de vidéo, donc pas d'accès au micro.
+      // d'accès sur iPhone (le micro sert à la dictée, jamais aux vidéos).
       "expo-image-picker",
       {
         photosPermission:
           "MENAO accède à vos photos pour les joindre au suivi de vos chantiers, à vos messages et à vos signalements.",
         cameraPermission:
           "MENAO utilise l'appareil photo pour photographier vos chantiers et joindre ces photos au suivi, à vos messages ou à vos signalements.",
-        microphonePermission: false,
+        // Même texte que la dictée : le micro sert à dicter le projet, jamais aux vidéos.
+        microphonePermission: MICROPHONE_PERMISSION,
+      },
+    ],
+    [
+      // Dictée du projet (F-05, ADR 0081) : capture du micro en PCM, iPhone et Android.
+      "expo-audio",
+      // Ni lecture ni enregistrement en arrière-plan : pas de mode audio permanent sur iPhone ni de
+      // service au premier plan sur Android.
+      {
+        microphonePermission: MICROPHONE_PERMISSION,
+        recordAudioAndroid: true,
+        enableBackgroundPlayback: false,
+        enableBackgroundRecording: false,
       },
     ],
     [
