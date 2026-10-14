@@ -13,6 +13,7 @@ import {
 import { absenceSchema, availableFromSchema, hoursSchema } from "@menao/validation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
+import { env } from "./env";
 import type { AgendaAbsence } from "./pro-agenda";
 import { supabase } from "./supabase";
 
@@ -26,11 +27,14 @@ export type Availability = {
   hours: HoursRange[];
   /** Absences en cours et à venir. */
   absences: AgendaAbsence[];
+  /** Lien d'abonnement .ics (servi par le site), s'il a été créé. */
+  feed: { url: string; lastReadAt: string | null } | null;
 };
 
 /**
  * « Mes disponibilités » (F-44), comme sur le site : statut, date de reprise, horaires de travail,
- * absences en cours et à venir. Lectures avec les droits du compte (RLS). Null en cas d'erreur.
+ * absences en cours et à venir, lien d'abonnement .ics. Lectures avec les droits du compte (RLS).
+ * Null en cas d'erreur.
  */
 export async function loadAvailability(): Promise<Availability | null> {
   const { data: session } = await supabase.auth.getSession();
@@ -43,7 +47,7 @@ export async function loadAvailability(): Promise<Availability | null> {
     .maybeSingle();
   if (!artisan) return null;
   const today = parisToday();
-  const [{ data: hours }, { data: absences }] = await Promise.all([
+  const [{ data: hours }, { data: absences }, { data: feed }] = await Promise.all([
     supabase
       .from("artisan_hours")
       .select("weekday, start_time, end_time")
@@ -56,6 +60,11 @@ export async function loadAvailability(): Promise<Availability | null> {
       .eq("artisan_id", artisan.id)
       .gte("ends_on", today)
       .order("starts_on"),
+    supabase
+      .from("artisan_calendar_feeds")
+      .select("token, last_read_at")
+      .eq("artisan_id", artisan.id)
+      .maybeSingle(),
   ]);
   const upcoming = (absences ?? []).map((a) => ({
     id: a.id,
@@ -79,6 +88,9 @@ export async function loadAvailability(): Promise<Availability | null> {
       end: h.end_time.slice(0, 5),
     })),
     absences: upcoming,
+    feed: feed
+      ? { url: `${env.siteUrl}/calendrier/${feed.token}.ics`, lastReadAt: feed.last_read_at }
+      : null,
   };
 }
 
@@ -158,4 +170,17 @@ export async function deleteAbsence(id: string): Promise<Outcome> {
   const { error } = await supabase.rpc("delete_artisan_absence", { p_id: id });
   if (error) return { error: rpcError(error) };
   return { success: t.absences.removed };
+}
+
+/** F-44 : crée le lien d'abonnement .ics, ou le remplace (l'ancien cesse de fonctionner). */
+export async function renewCalendarFeed(renewing: boolean): Promise<Outcome> {
+  const { error } = await supabase.rpc("renew_artisan_calendar_feed");
+  if (error) return { error: rpcError(error) };
+  return { success: renewing ? t.sync.renewed : t.sync.created };
+}
+
+export async function disableCalendarFeed(): Promise<Outcome> {
+  const { error } = await supabase.rpc("disable_artisan_calendar_feed");
+  if (error) return { error: rpcError(error) };
+  return { success: t.sync.disabled };
 }

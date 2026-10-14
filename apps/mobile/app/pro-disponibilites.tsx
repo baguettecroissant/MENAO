@@ -1,5 +1,6 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AbsencesManager } from "@/components/availability/absences-manager";
+import { CalendarSync } from "@/components/availability/calendar-sync";
 import { HoursEditor } from "@/components/availability/hours-editor";
 import { StatusCard } from "@/components/availability/status-card";
 import { TopBar } from "@/components/top-bar";
@@ -13,7 +14,8 @@ const t = fr.proAvailability;
 
 /**
  * « Mes disponibilités » de l'artisan (F-44), comme sur le site : statut (pause, date de reprise),
- * horaires de travail, congés et absences. Aucun lien vers le site (règle 10).
+ * horaires de travail, congés et absences, abonnement .ics pour le calendrier du téléphone. Aucun
+ * lien vers les pages du site (règle 10).
  */
 export default function AvailabilityScreen() {
   const [data, reload] = useFocusData(loadAvailability);
@@ -42,6 +44,7 @@ export default function AvailabilityScreen() {
           />
           <HoursEditor initial={data.hours} onSaved={reload} />
           <AbsencesManager absences={data.absences} today={data.today} onChanged={reload} />
+          <CalendarSync feed={data.feed} onChanged={reload} />
         </>
       )}
     </Screen>

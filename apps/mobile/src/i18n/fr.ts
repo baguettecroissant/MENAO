@@ -1232,7 +1232,7 @@ export const fr = {
   proAvailability: {
     title: "Mes disponibilités",
     intro:
-      "Choisissez quand vous recevez de nouvelles demandes, vos horaires de travail et vos absences.",
+      "Choisissez quand vous recevez de nouvelles demandes, vos horaires de travail, vos absences, et retrouvez votre agenda MENAO dans celui de votre téléphone.",
     error:
       "Impossible d'afficher vos disponibilités pour le moment. Réessayez dans quelques instants.",
     status: {
@@ -1337,6 +1337,32 @@ export const fr = {
         trop_longue: "Une absence dure un an au plus.",
         trop_loin: "Une absence se déclare au plus un an à l'avance.",
       },
+    },
+    sync: {
+      title: "Synchroniser avec votre agenda",
+      text: "Retrouvez vos visites, démarrages, créneaux bloqués et absences MENAO dans Google Agenda, Apple Calendrier ou Outlook, mis à jour automatiquement.",
+      create: "Créer mon lien d'abonnement",
+      created: "Lien créé : ajoutez-le à votre agenda.",
+      link: "Lien d'abonnement",
+      share: "Partager ou copier le lien",
+      google: "Google Agenda",
+      apple: "Apple Calendrier",
+      outlook: "Outlook",
+      addTo: "Ajouter à :",
+      feedName: "MENAO",
+      privacy:
+        "Ce lien est personnel : il donne accès à votre agenda (titres des chantiers et communes, sans adresse ni nom de client). Ne le partagez pas.",
+      delay:
+        "Les applications d'agenda relisent l'abonnement d'elles-mêmes, en général toutes les quelques heures.",
+      lastRead: (ago: string) => `Dernière lecture par votre agenda : ${ago}.`,
+      neverRead: "Pas encore lu par une application d'agenda.",
+      renew: "Renouveler le lien",
+      renewHint: "L'ancien lien cessera aussitôt de fonctionner.",
+      renewed: "Nouveau lien créé : remplacez l'ancien dans votre agenda.",
+      disable: "Désactiver l'abonnement",
+      disabled: "Abonnement désactivé.",
+      openFailed:
+        "Cette application d'agenda n'a pas pu être ouverte. Partagez le lien à la place.",
     },
   },
   /** « Mes avis » de l'artisan (F-28) : mêmes textes que l'espace pro du site. */
