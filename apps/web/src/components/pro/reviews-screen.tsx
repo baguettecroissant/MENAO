@@ -1,11 +1,12 @@
 import type { ValueForMoney } from "@menao/core";
-import { Info, MessageSquareQuote } from "lucide-react";
+import { Info } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { ScoreBreakdown, formatProfileDay } from "@/components/artisan-profile/profile-view";
 import { ReviewSection } from "@/components/pro/review-section";
 import { StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.pro.reviews;
 const publishedFormat = new Intl.DateTimeFormat("fr-FR", {
@@ -90,10 +91,7 @@ export function ReviewsScreen({
               </p>
             )}
             {reviews.length === 0 ? (
-              <p className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
-                <MessageSquareQuote aria-hidden="true" className="size-8 text-primary/60" />
-                {t.empty}
-              </p>
+              <EmptyState illustration="avis">{t.empty}</EmptyState>
             ) : (
               reviews.map((review) => {
                 const title = chantierTitles[review.chantier_id];

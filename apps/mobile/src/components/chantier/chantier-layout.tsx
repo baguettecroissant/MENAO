@@ -20,6 +20,7 @@ const { colors, font, radius, spacing } = theme;
  */
 export function ChantierLayout({
   coverUrl,
+  trade = null,
   title,
   address,
   pills,
@@ -34,6 +35,8 @@ export function ChantierLayout({
   children,
 }: {
   coverUrl: string | null;
+  /** Libellé du métier, pour l'icône de la couverture sans photo. */
+  trade?: string | null;
   title: string;
   address: string | null;
   pills: ReactNode;
@@ -65,7 +68,7 @@ export function ChantierLayout({
         contentContainerStyle={{ paddingBottom: (footer ? 0 : insets.bottom) + spacing(6) }}
       >
         <View>
-          <ChantierCover url={coverUrl} height={230} />
+          <ChantierCover url={coverUrl} trade={trade} height={230} />
           <Pressable
             role="button"
             aria-label={fr.nav.back}

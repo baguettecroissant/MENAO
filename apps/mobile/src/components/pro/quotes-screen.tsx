@@ -19,6 +19,7 @@ import { loadArtisanQuotes, type ArtisanQuote } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
 import { LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.proQuotes;
 const { colors, font, radius, spacing } = theme;
@@ -84,7 +85,9 @@ export function ArtisanQuotesScreen() {
         />
         <Text role="heading" style={styles.count}>{`${heading} (${list.length})`}</Text>
         {list.length === 0 ? (
-          <Text style={styles.empty}>{tab === "a-envoyer" ? t.emptyToSend : t.emptySent}</Text>
+          <EmptyState illustration="devis">
+            {tab === "a-envoyer" ? t.emptyToSend : t.emptySent}
+          </EmptyState>
         ) : (
           list.map((q) => (
             <Pressable
@@ -154,18 +157,6 @@ const styles = StyleSheet.create({
   },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
   count: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  empty: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-    textAlign: "center",
-    fontFamily: font.regular,
-    fontSize: 14,
-    color: colors["muted-foreground"],
-  },
   card: {
     gap: spacing(2),
     borderRadius: radius.card,

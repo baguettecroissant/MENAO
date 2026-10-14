@@ -63,7 +63,7 @@ export function ChantierCard({
   return (
     <article className="grid overflow-hidden rounded-card border border-border bg-surface shadow-card lg:grid-cols-[14rem_minmax(0,1fr)_20rem]">
       <Link href={hrefOf(c)} tabIndex={-1} aria-hidden="true" className="block">
-        <ChantierCover url={photoUrl} className="h-44 w-full lg:h-full" />
+        <ChantierCover url={photoUrl} trade={c.trade_label} className="h-44 w-full lg:h-full" />
       </Link>
       <div className="flex flex-col gap-3 p-5">
         <div>
@@ -133,7 +133,12 @@ export function FinishedChantierCard({
   const status = c.status as ChantierStatus;
   return (
     <article className="flex overflow-hidden rounded-card border border-border bg-surface shadow-card">
-      <ChantierCover url={photoUrl} className="w-24 shrink-0 sm:w-28" />
+      <ChantierCover
+        url={photoUrl}
+        trade={c.trade_label}
+        compact
+        className="w-24 shrink-0 sm:w-28"
+      />
       <div className="flex min-w-0 flex-col gap-1.5 p-3">
         <h3 className="text-sm font-medium">
           <Link

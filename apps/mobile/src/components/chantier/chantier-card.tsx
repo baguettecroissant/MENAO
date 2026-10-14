@@ -81,7 +81,7 @@ export function ChantierCard({
   return (
     <View style={styles.card}>
       <Pressable role="link" onPress={() => open(c)} aria-label={c.title}>
-        <ChantierCover url={photoUrl} />
+        <ChantierCover url={photoUrl} trade={c.trade_label} />
         <View style={styles.body}>
           <StatusPill {...tag} />
           <Text style={styles.title}>{c.title}</Text>
@@ -132,7 +132,7 @@ export function FinishedChantierCard({
       {/* Image sur toute la hauteur de la carte, même quand le lien passe sur deux lignes. */}
       <View style={styles.finishedCover}>
         <View style={StyleSheet.absoluteFill}>
-          <ChantierCover url={photoUrl} height="100%" />
+          <ChantierCover url={photoUrl} trade={c.trade_label} height="100%" compact />
         </View>
       </View>
       <View style={styles.finishedBody}>

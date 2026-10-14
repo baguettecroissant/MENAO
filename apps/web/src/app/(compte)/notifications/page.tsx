@@ -7,6 +7,7 @@ import { fr } from "@/i18n/fr";
 import { formatTimeAgo } from "@/lib/format";
 import { loadNotifications } from "@/lib/notifications/center";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.notificationCenter;
 
@@ -64,9 +65,7 @@ export default async function NotificationsPage() {
             ))}
           </ul>
         ) : (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            {t.empty}
-          </p>
+          <EmptyState illustration="notifications">{t.empty}</EmptyState>
         )}
         <MarkAllRead />
         <section

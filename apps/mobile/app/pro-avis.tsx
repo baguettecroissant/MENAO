@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Info, MessageSquareQuote } from "lucide-react-native";
+import { Info } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -22,6 +22,7 @@ import { loadMyReviews } from "@/lib/pro-reviews";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Card, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.proReviews;
 const { colors, font, radius, spacing } = theme;
@@ -76,10 +77,7 @@ export default function MyReviews() {
           </Text>
         ) : null}
         {data && reviews.length === 0 ? (
-          <View style={styles.empty}>
-            <MessageSquareQuote size={32} color={colors.primary} />
-            <Text style={styles.emptyText}>{t.empty}</Text>
-          </View>
+          <EmptyState illustration="avis">{t.empty}</EmptyState>
         ) : null}
         {reviews.map((review) => {
           const title = data?.chantierTitles.get(review.chantierId);
@@ -162,24 +160,6 @@ const styles = StyleSheet.create({
   },
   toAnswerWarning: { backgroundColor: colors["warning-soft"], color: colors.warning },
   toAnswerDone: { backgroundColor: colors["success-soft"], color: colors.success },
-  empty: {
-    alignItems: "center",
-    gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-  },
-  emptyText: {
-    textAlign: "center",
-    fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors["muted-foreground"],
-  },
   meta: { gap: spacing(1) },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   link: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },

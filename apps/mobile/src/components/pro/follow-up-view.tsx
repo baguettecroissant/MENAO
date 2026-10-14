@@ -81,6 +81,7 @@ export function FollowUpView({
   return (
     <ChantierLayout
       coverUrl={f.coverUrl}
+      trade={c.trade}
       title={c.chantier.title}
       address={address}
       pills={

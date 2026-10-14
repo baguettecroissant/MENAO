@@ -6,6 +6,7 @@ import { ButtonLink, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.exchanges;
 const TYPES = [
@@ -52,10 +53,9 @@ export default async function ExchangesPage() {
         </ButtonLink>
       </div>
       {tickets.length === 0 ? (
-        <section className="flex flex-col items-center gap-2 rounded-card border border-dashed border-border-strong bg-surface px-6 py-12 text-center">
-          <p className="font-medium">{t.empty}</p>
-          <p className="max-w-md text-sm text-muted-foreground">{t.emptyHint}</p>
-        </section>
+        <EmptyState illustration="messages" title={t.empty}>
+          {t.emptyHint}
+        </EmptyState>
       ) : (
         <ul className="flex flex-col gap-3">
           {tickets.map((ticket) => {

@@ -169,6 +169,7 @@ export function ClientDashboard({ home }: { home: ClientHome }) {
                   <View style={styles.thumb}>
                     <ChantierCover
                       url={c.photo_path ? (home.photoByPath.get(c.photo_path) ?? null) : null}
+                      trade={c.trade_label}
                       height={64}
                       compact
                     />

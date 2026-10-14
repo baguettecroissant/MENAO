@@ -29,6 +29,7 @@ import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Checkbox, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.notificationCenter;
 const { colors, font, radius, spacing } = theme;
@@ -91,9 +92,7 @@ export function NotificationCenter() {
         {items === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : items.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>{t.empty}</Text>
-          </View>
+          <EmptyState illustration="notifications">{t.empty}</EmptyState>
         ) : (
           <View style={styles.list}>
             {items.map((item, i) => (
@@ -213,21 +212,6 @@ const styles = StyleSheet.create({
     color: colors["muted-foreground"],
   },
   time: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  empty: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-  },
-  emptyText: {
-    fontFamily: font.regular,
-    fontSize: 14,
-    textAlign: "center",
-    color: colors["muted-foreground"],
-  },
   prefs: { gap: spacing(3) },
   prefsTitle: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
 });

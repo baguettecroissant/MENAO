@@ -1067,6 +1067,14 @@ export const fr = {
   /** Tableau de bord de l'artisan (F-16) : mêmes textes que l'espace pro du site. */
   proDashboard: {
     title: "Tableau de bord",
+    /** Artisan sans photo de profil : invitation à en ajouter une (aucun chiffre avancé). */
+    photo: {
+      title: "Une photo rassure vos futurs clients",
+      text: "Ajoutez votre photo de profil : vos clients sauront qui viendra chez eux.",
+      add: "Ajouter ma photo",
+      sending: "Envoi de la photo…",
+      choose: "Votre photo de profil",
+    },
     greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
     account: "Mon compte",
     error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",

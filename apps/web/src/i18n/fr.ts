@@ -2059,6 +2059,12 @@ export const fr = {
     },
     dashboard: {
       title: "Tableau de bord",
+      /** Artisan sans photo de profil : invitation à en ajouter une (aucun chiffre avancé). */
+      photo: {
+        title: "Une photo rassure vos futurs clients",
+        text: "Ajoutez votre photo de profil : vos clients sauront qui viendra chez eux.",
+        add: "Ajouter ma photo",
+      },
       greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
       awaitingQuote: "En attente de devis",
       clients: (n: number) => (n <= 1 ? `${n} client` : `${n} clients`),

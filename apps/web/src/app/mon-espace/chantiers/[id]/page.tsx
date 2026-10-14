@@ -195,6 +195,7 @@ export default async function ClientChantierPage({
       <div className="mx-auto flex w-full max-w-3xl flex-col sm:gap-5 sm:px-6 sm:py-8">
         <ChantierHero
           photoUrl={c.photo_path ? (cover.get(c.photo_path) ?? null) : null}
+          trade={c.trade_label}
           backHref="/mon-espace"
           title={c.title}
           address={addressOf(c)}

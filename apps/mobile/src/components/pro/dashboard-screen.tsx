@@ -32,6 +32,7 @@ import Svg, { Path } from "react-native-svg";
 import { StatusPill } from "@/components/chantier/parts";
 import { GradeCard } from "@/components/grade/grade-card";
 import { NewBadgeModal } from "@/components/grade/new-badge-modal";
+import { PhotoNudge } from "@/components/pro/photo-nudge";
 import { PushPrompt } from "@/components/push-prompt";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
@@ -39,6 +40,7 @@ import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "
 import { loadGrade, markBadgesSeen } from "@/lib/grade";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
 import { requestStart } from "@/lib/pro-requests";
+import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
 import { Notice } from "@/ui";
@@ -282,6 +284,8 @@ export function DashboardScreen() {
   // Gamification (F-24) : carte « Mon grade MENAO » et badge tout juste obtenu à fêter.
   const [grade, reloadGrade] = useFocusData(loadGrade);
   const [celebrated, setCelebrated] = useState(false);
+  // Photo de profil : carte d'invitation tant qu'il n'y en a pas.
+  const profile = useProfileSummary();
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
   const newBadge = celebrated
@@ -385,6 +389,7 @@ export function DashboardScreen() {
                 href="/pro-factures"
               />
             </View>
+            {profile && !profile.avatarUrl ? <PhotoNudge /> : null}
             {grade ? <GradeCard grade={grade} /> : null}
             {/* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */}
             {data.appointments.length > 0 ? (

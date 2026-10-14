@@ -22,6 +22,7 @@ import { goBack } from "@/lib/navigation";
 import type { ArtisanPage, PublicReview } from "@/lib/requests";
 import { Body, Card } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ArtisanPlaceholder } from "@/components/artisan-placeholder";
 
 const t = fr.profile;
 const { colors, font, radius, spacing } = theme;
@@ -58,9 +59,7 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
         {cover ? (
           <Image source={{ uri: cover }} style={styles.cover} alt="" />
         ) : (
-          <View style={[styles.cover, styles.coverEmpty]}>
-            <Text style={styles.coverInitial}>{profile.display_name.charAt(0).toUpperCase()}</Text>
-          </View>
+          <ArtisanPlaceholder name={profile.display_name} style={styles.cover} medallion={104} />
         )}
         <Pressable
           role="button"
@@ -326,8 +325,6 @@ function ReviewItem({
 const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   cover: { width: "100%", height: 230, backgroundColor: colors["primary-soft"] },
-  coverEmpty: { alignItems: "center", justifyContent: "center" },
-  coverInitial: { fontFamily: font.medium, fontSize: 56, color: colors["primary-strong"] },
   back: {
     position: "absolute",
     left: spacing(4),

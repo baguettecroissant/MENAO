@@ -1,12 +1,5 @@
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationRow } from "./conversation-row";
 import { TabHeader } from "@/components/tab-header";
@@ -17,6 +10,7 @@ import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.messages;
 const { colors, radius, spacing } = theme;
@@ -64,9 +58,7 @@ export function MessagesScreen() {
         {rows === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : rows.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>{artisan ? t.emptyPro : t.empty}</Text>
-          </View>
+          <EmptyState illustration="messages">{artisan ? t.emptyPro : t.empty}</EmptyState>
         ) : (
           <View style={styles.list}>
             {rows.map((row, i) => (
@@ -98,20 +90,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   separator: { borderTopWidth: 1, borderTopColor: colors.border },
-  empty: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(6),
-    paddingVertical: spacing(10),
-  },
-  emptyText: {
-    fontFamily: theme.font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    color: colors["muted-foreground"],
-  },
 });

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { formatDay } from "@/lib/format";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.pro.invoices;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -45,9 +46,7 @@ export default async function InvoicesPage() {
           )}
         </div>
         {invoices.length === 0 ? (
-          <p className="rounded-card border border-border bg-surface px-6 py-12 text-center text-sm text-muted-foreground shadow-card">
-            {t.empty}
-          </p>
+          <EmptyState illustration="documents">{t.empty}</EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
             {invoices.map((invoice) => {

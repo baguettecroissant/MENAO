@@ -4,6 +4,7 @@ import { ChantierDocuments, type ChantierDocument } from "@/components/chantier/
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 
 const t = fr.clientDocuments;
 const d = fr.chantier.dossier;
@@ -87,9 +88,7 @@ export default async function ClientDocumentsPage() {
             />
           ))
         ) : (
-          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-10 text-center text-sm text-muted-foreground">
-            {t.empty}
-          </p>
+          <EmptyState illustration="documents">{t.empty}</EmptyState>
         )}
       </div>
     </main>

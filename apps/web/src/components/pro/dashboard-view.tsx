@@ -2,6 +2,7 @@ import type { RevenueTrend } from "@menao/core";
 import {
   ArrowRight,
   CalendarDays,
+  Camera,
   ChevronRight,
   Clock,
   MapPin,
@@ -49,6 +50,7 @@ export function DashboardView({
   appointments,
   requests,
   grade = null,
+  missingPhoto = false,
 }: {
   firstName: string | null;
   /** Alertes du dossier (documents à renouveler, suspension), comme dans « Mon dossier ». */
@@ -70,6 +72,8 @@ export function DashboardView({
     badge: string | null;
     newBadge: boolean;
   } | null;
+  /** Pas encore de photo de profil : carte d'invitation à en ajouter une. */
+  missingPhoto?: boolean;
 }) {
   const appointmentSection = (
     <Section
@@ -212,6 +216,24 @@ export function DashboardView({
             detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
           />
         </div>
+        {missingPhoto && (
+          <Link
+            href="/pro/onboarding/profil"
+            className={`flex flex-wrap items-center gap-4 p-4 ${cardLink}`}
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
+              <Camera aria-hidden="true" className="size-5" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="font-medium">{t.photo.title}</span>
+              <span className="text-xs text-muted-foreground">{t.photo.text}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary-strong">
+              {t.photo.add}
+              <ArrowRight aria-hidden="true" className="size-3.5" />
+            </span>
+          </Link>
+        )}
         {grade && (
           <Link
             href="/pro/grade"
