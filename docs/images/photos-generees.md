@@ -31,6 +31,10 @@ Poids exprimés en Ko décimaux : **1 Ko = 1 000 octets**. Les liens « Prompt e
 
 Poids total des 16 fichiers : **1659,092 Ko**.
 
+## Images dérivées
+
+Les images de partage `apps/web/public/images/og/*.jpg` (1200 × 630, ADR 0094) reprennent ces photos : le bandeau pour `menao.jpg`, et la photo de chaque métier pour l'image du métier. Elles montrent donc les mêmes personnes fictives. Pour les remplacer par de vraies photos, voir [photos-reelles.md](photos-reelles.md).
+
 ## Conversion et provenance
 
 - Format livré : WebP, **qualité 80**, encodeur configuré avec **method 6** ; métadonnées EXIF, XMP et profil ICC supprimés.
