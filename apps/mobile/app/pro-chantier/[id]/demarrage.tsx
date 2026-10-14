@@ -2,13 +2,16 @@ import { DEFAULT_CHANTIER_START_TIME, chantierStartInputError, parisToday } from
 import { dateLong } from "@menao/documents";
 import { chantierStartSchema, messages } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
+import { SlotWarnings } from "@/components/pro/slot-helpers";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { parisDateTime } from "@/lib/format";
+import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { confirmChantierStart } from "@/lib/pro-chantiers";
+import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, Title } from "@/ui";
 
 const t = fr.proFollowUp;
@@ -16,7 +19,7 @@ const t = fr.proFollowUp;
 /**
  * F-22 « Confirmer la date de démarrage » après l'acompte (`devis` : date prévue au devis), ou la
  * modifier tant que les travaux n'ont pas commencé (`debut` : démarrage actuel), comme sur le
- * site. Le client est prévenu par la base.
+ * site, avec les avertissements de l'agenda (F-44). Le client est prévenu par la base.
  */
 export default function ChantierStartScreen() {
   const { id, devis, debut } = useLocalSearchParams<{
@@ -34,6 +37,12 @@ export default function ChantierStartScreen() {
   const [error, setError] = useState<string | undefined>(undefined);
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [agenda] = useFocusData(
+    useCallback(
+      () => loadAppointmentAgenda({ excludeChantierId: id, withSuggestions: false }),
+      [id],
+    ),
+  );
 
   async function submit() {
     const parsed = chantierStartSchema.safeParse({ date: date ?? "", time: time ?? "" });
@@ -82,6 +91,7 @@ export default function ChantierStartScreen() {
         }}
         error={error}
       />
+      {agenda ? <SlotWarnings date={date} time={time} agenda={agenda} /> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
     </Screen>
   );
