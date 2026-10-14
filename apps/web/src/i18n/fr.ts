@@ -8,6 +8,22 @@ export const fr = {
     description:
       "Trouvez l'artisan du bâtiment qu'il vous faut : devis, signature, paiement sécurisé et suivi de chantier.",
   },
+  /** Page introuvable (404) et erreur inattendue, aux couleurs MENAO. */
+  notFound: {
+    code: "Erreur 404",
+    title: "Cette page est introuvable",
+    text: "Le lien est peut-être erroné, ou la page a été déplacée. Votre projet, lui, reste entre de bonnes mains.",
+    home: "Retour à l'accueil",
+    search: "Trouver un artisan",
+    help: "Besoin d'aide ? Contactez-nous",
+    logo: "MENAO, accueil",
+  },
+  errorPage: {
+    title: "Un imprévu sur le chantier",
+    text: "Une erreur inattendue est survenue. Réessayez dans un instant ; si elle persiste, contactez-nous.",
+    retry: "Réessayer",
+    home: "Retour à l'accueil",
+  },
   nav: {
     home: "MENAO",
     signIn: "Connexion",

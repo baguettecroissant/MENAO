@@ -14,6 +14,7 @@ import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { absoluteUrl } from "@/lib/site/seo";
 import { createPublicClient } from "@/lib/supabase/public";
+import { shareImage } from "@/lib/site/images";
 
 const t = fr.seo;
 
@@ -45,7 +46,17 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path, type: "website", locale: "fr_FR" },
+    openGraph: {
+      title,
+      description,
+      url: path,
+      type: "website",
+      locale: "fr_FR",
+      siteName: "MENAO",
+      // Image du métier (le partage des pages d'un métier montre ce métier).
+      images: [shareImage(data.trade.code)],
+    },
+    twitter: { card: "summary_large_image", images: [shareImage(data.trade.code).url] },
   };
 }
 

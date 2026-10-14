@@ -10,6 +10,7 @@ import { Steps } from "@/components/site/steps";
 import { TradeHero } from "@/components/site/trade-hero";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
+import { shareImage } from "@/lib/site/images";
 
 const t = fr.seo;
 const steps = fr.site.clientSteps;
@@ -38,7 +39,17 @@ export async function generateMetadata({ params }: PageProps<"/[metier]">): Prom
     title,
     description,
     alternates: { canonical: `/${data.trade.code}` },
-    openGraph: { title, description, url: `/${data.trade.code}`, type: "website", locale: "fr_FR" },
+    openGraph: {
+      title,
+      description,
+      url: `/${data.trade.code}`,
+      type: "website",
+      locale: "fr_FR",
+      siteName: "MENAO",
+      // Image du métier (le partage des pages d'un métier montre ce métier).
+      images: [shareImage(data.trade.code)],
+    },
+    twitter: { card: "summary_large_image", images: [shareImage(data.trade.code).url] },
   };
 }
 

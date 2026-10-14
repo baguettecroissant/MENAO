@@ -22,3 +22,12 @@ export const TRADE_IMAGES: Partial<Record<string, string>> = {
   terrassier: "/images/metiers/terrassier.webp",
   paysagiste: "/images/metiers/paysagiste.webp",
 };
+
+/**
+ * Image de partage (Open Graph, 1200 × 630) : une par métier pour les pages métier et ville, sinon
+ * celle de MENAO. Fichiers statiques dans public/images/og (ADR 0094).
+ */
+export function shareImage(tradeCode?: string) {
+  const file = tradeCode && TRADE_IMAGES[tradeCode] ? tradeCode : "menao";
+  return { url: `/images/og/${file}.jpg`, width: 1200, height: 630, alt: "MENAO" };
+}
