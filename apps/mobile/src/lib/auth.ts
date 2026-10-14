@@ -45,3 +45,12 @@ export async function signOut(): Promise<void> {
   await unregisterDevice().catch(() => undefined);
   await supabase.auth.signOut();
 }
+
+/**
+ * Déconnexion de tous les appareils, comme sur le site : toutes les sessions du compte cessent,
+ * y compris celle-ci (les autres au plus tard à l'expiration de leur jeton, une heure).
+ */
+export async function signOutEverywhere(): Promise<void> {
+  await unregisterDevice().catch(() => undefined);
+  await supabase.auth.signOut({ scope: "global" });
+}
