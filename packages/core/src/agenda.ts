@@ -482,3 +482,70 @@ export function agendaItemsFrom({
   }
   return items.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 }
+
+/** Plage horaire d'une journée (HH:MM), dans l'éditeur d'horaires. */
+export type DayRange = { start: string; end: string };
+/** Horaires de la semaine, jour par jour. */
+export type WeekHours = Record<Weekday, DayRange[]>;
+
+/** Journée ouverte d'un geste : 8 h – 12 h et 13 h 30 – 17 h 30. */
+export const DEFAULT_DAY_RANGES: readonly DayRange[] = [
+  { start: "08:00", end: "12:00" },
+  { start: "13:30", end: "17:30" },
+];
+
+const workdays = (ranges: readonly DayRange[], saturdayMorning = false): HoursRange[] =>
+  ([1, 2, 3, 4, 5] as const)
+    .flatMap((weekday) => ranges.map((r): HoursRange => ({ weekday, ...r })))
+    .concat(saturdayMorning ? [{ weekday: 6, start: "08:00", end: "12:00" }] : []);
+
+export type HoursPreset = "semaine" | "samedi" | "continue" | "vide";
+
+/** Modèles d'horaires courants dans le bâtiment, dans l'ordre d'affichage. */
+export const HOURS_PRESETS: Readonly<Record<HoursPreset, readonly HoursRange[]>> = {
+  semaine: SUGGESTED_HOURS,
+  samedi: workdays(DEFAULT_DAY_RANGES, true),
+  continue: workdays([{ start: "07:30", end: "16:00" }]),
+  vide: [],
+};
+
+/** Horaires rangés par jour de la semaine, plages dans l'ordre de la journée. */
+export function weekHours(hours: readonly HoursRange[]): WeekHours {
+  return Object.fromEntries(
+    WEEKDAYS.map((d) => [
+      d,
+      hours
+        .filter((h) => h.weekday === d)
+        .sort((a, b) => a.start.localeCompare(b.start))
+        .map(({ start, end }) => ({ start, end })),
+    ]),
+  ) as WeekHours;
+}
+
+/** Horaires de la semaine remis à plat (contrôles, enregistrement). */
+export function hoursOfWeek(week: WeekHours): HoursRange[] {
+  return WEEKDAYS.flatMap((weekday) => week[weekday].map((r) => ({ weekday, ...r })));
+}
+
+/** Nouvelle plage après la dernière de la journée : une heure plus tard, pour deux heures. */
+export function nextDayRange(ranges: readonly DayRange[]): DayRange {
+  const last = ranges[ranges.length - 1];
+  const startMinutes = last ? Math.min(timeToMinutes(last.end) + 60, 21 * 60) : 8 * 60;
+  return {
+    start: minutesToTime(startMinutes),
+    end: minutesToTime(Math.min(startMinutes + 120, 23 * 60 + 45)),
+  };
+}
+
+/** Horaires du lundi recopiés du mardi au vendredi. */
+export function copyMondayToWeekdays(week: WeekHours): WeekHours {
+  return {
+    ...week,
+    ...Object.fromEntries(([2, 3, 4, 5] as const).map((d) => [d, week[1].map((r) => ({ ...r }))])),
+  };
+}
+
+/** Durée de travail de la semaine, en minutes. */
+export function weeklyMinutes(hours: readonly HoursRange[]): number {
+  return hours.reduce((sum, h) => sum + timeToMinutes(h.end) - timeToMinutes(h.start), 0);
+}

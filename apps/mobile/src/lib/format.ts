@@ -95,6 +95,18 @@ export function formatDayMonth(iso: string): string {
   return dayMonth.format(new Date(iso));
 }
 
+const dayMonthShort = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "Europe/Paris",
+});
+
+/** « mar. 13 oct. », au fil d'une phrase (absences), comme sur le site. */
+export function formatDayMonthShort(iso: string): string {
+  return dayMonthShort.format(new Date(iso));
+}
+
 /** Heure HH:MM → « 09h00 », comme sur le site. */
 export function formatClock(hhmm: string): string {
   return hhmm.slice(0, 5).replace(":", "h");
