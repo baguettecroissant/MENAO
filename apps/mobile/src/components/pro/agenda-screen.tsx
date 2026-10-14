@@ -39,7 +39,7 @@ import { fr } from "@/i18n/fr";
 import { formatClock, formatDay, formatDayMonth } from "@/lib/format";
 import { deleteBlockedSlot, loadAgendaWeek } from "@/lib/pro-agenda";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Title } from "@/ui";
+import { Body, Button, LinkText, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAgenda;
@@ -114,7 +114,7 @@ const describe = (item: Placed) =>
 
 /**
  * Agenda de l'artisan (F-44), comme la version mobile du site : semaine par semaine, statut de
- * disponibilité, « Bloquer un créneau », puis chaque jour ses horaires, son absence éventuelle, ses
+ * disponibilité (vers « Mes disponibilités »), « Bloquer un créneau », puis chaque jour ses horaires, son absence éventuelle, ses
  * visites et démarrages (vers le chantier) et ses créneaux bloqués (« Libérer »). `week` : un jour
  * de la semaine à afficher (sinon la semaine en cours) ; `blocked` : créneau tout juste bloqué.
  */
@@ -207,10 +207,14 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
         </Text>
 
         {current ? (
-          <View
-            style={[
+          <Pressable
+            role="link"
+            aria-label={`${availabilityLabel(current.availability)}. ${t.manage}`}
+            onPress={() => router.push("/pro-disponibilites")}
+            style={({ pressed }) => [
               styles.status,
               { backgroundColor: STATUS_COLORS[current.availability.kind].bg },
+              pressed && styles.pressed,
             ]}
           >
             <View
@@ -224,7 +228,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
             >
               {availabilityLabel(current.availability)}
             </Text>
-          </View>
+          </Pressable>
         ) : null}
         <Button
           label={t.block.open}
@@ -239,7 +243,10 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
         {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
 
         {current && current.hours.length === 0 ? (
-          <Notice tone="info">{t.hoursMissing}</Notice>
+          <View style={styles.hoursMissing}>
+            <Notice tone="info">{t.hoursMissing}</Notice>
+            <LinkText label={t.setHours} onPress={() => router.push("/pro-disponibilites")} />
+          </View>
         ) : null}
         {current && current.items.length === 0 && current.absences.length === 0 ? (
           <Body muted>{t.emptyWeek}</Body>
@@ -418,6 +425,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(2),
   },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
+  hoursMissing: { gap: spacing(2) },
   statusText: { fontFamily: font.medium, fontSize: 14 },
   day: {
     gap: spacing(2),

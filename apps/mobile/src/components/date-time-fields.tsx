@@ -1,6 +1,6 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { formatLongDate, fromIsoDate, toIsoDate } from "@/lib/dates";
 import { Button, TextField } from "@/ui";
@@ -20,9 +20,9 @@ function fromClock(day: string, clock: string | null): Date {
 }
 
 /**
- * Date et heure d'un rendez-vous (F-17), ou date seule (début des travaux, F-20) : calendrier et
- * roue des heures (par 5 minutes) sur iPhone, boîtes de dialogue sur Android, saisie au clavier
- * dans la version web.
+ * Date et heure d'un rendez-vous (F-17), ou date seule (début des travaux, F-20, absences, F-44) :
+ * calendrier et roue des heures (par 5 minutes) sur iPhone, boîtes de dialogue sur Android, saisie
+ * au clavier dans la version web. `compact` : sur iPhone, une pastille qui ouvre le calendrier.
  */
 export function DateTimeFields({
   date,
@@ -32,6 +32,7 @@ export function DateTimeFields({
   onTime,
   error,
   dateLabel = t.date,
+  compact = false,
 }: {
   /** AAAA-MM-JJ. */
   date: string | null;
@@ -43,6 +44,7 @@ export function DateTimeFields({
   onTime?: (time: string) => void;
   error?: string;
   dateLabel?: string;
+  compact?: boolean;
 }) {
   const [android, setAndroid] = useState<"date" | "time" | null>(null);
 
@@ -77,7 +79,7 @@ export function DateTimeFields({
         <DateTimePicker
           value={fromIsoDate(day)}
           mode="date"
-          display={Platform.OS === "ios" ? "inline" : "default"}
+          display={Platform.OS === "ios" ? (compact ? "compact" : "inline") : "default"}
           minimumDate={fromIsoDate(minDate)}
           locale="fr-FR"
           accentColor={theme.colors.primary}
@@ -126,6 +128,20 @@ const styles = StyleSheet.create({
   label: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },
   summary: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors["primary-strong"] },
   error: { fontFamily: theme.font.regular, fontSize: 13, color: theme.colors.danger },
+  compactInput: {
+    minWidth: 76,
+    height: 40,
+    justifyContent: "center",
+    borderRadius: theme.radius.input,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing(3),
+    fontFamily: theme.font.regular,
+    fontSize: 15,
+    color: theme.colors.foreground,
+  },
+  compactText: { fontFamily: theme.font.regular, fontSize: 15, color: theme.colors.foreground },
 });
 
 /**
@@ -178,5 +194,79 @@ export function TimeField({
       ) : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
+  );
+}
+
+/**
+ * Heure compacte (éditeur d'horaires, F-44) : pastille qui ouvre la roue sur iPhone, bouton et boîte
+ * de dialogue sur Android, champ HH:MM dans la version web. `label` : nom lu par les lecteurs
+ * d'écran.
+ */
+export function CompactTimePicker({
+  label,
+  time,
+  onTime,
+  minuteInterval = 15,
+}: {
+  label: string;
+  /** HH:MM. */
+  time: string;
+  onTime: (time: string) => void;
+  minuteInterval?: 5 | 15;
+}) {
+  const [open, setOpen] = useState(false);
+  const value = fromClock(toIsoDate(new Date()), time);
+
+  if (Platform.OS === "web") {
+    return (
+      <TextInput
+        aria-label={label}
+        value={time}
+        onChangeText={onTime}
+        maxLength={5}
+        style={styles.compactInput}
+      />
+    );
+  }
+  if (Platform.OS === "ios") {
+    return (
+      <View accessible accessibilityLabel={label}>
+        <DateTimePicker
+          value={value}
+          mode="time"
+          display="compact"
+          minuteInterval={minuteInterval}
+          locale="fr-FR"
+          accentColor={theme.colors.primary}
+          onChange={(event, picked) => {
+            if (event.type === "set" && picked) onTime(toClock(picked));
+          }}
+        />
+      </View>
+    );
+  }
+  return (
+    <>
+      <Pressable
+        role="button"
+        aria-label={label}
+        onPress={() => setOpen(true)}
+        style={styles.compactInput}
+      >
+        <Text style={styles.compactText}>{time}</Text>
+      </Pressable>
+      {open ? (
+        <DateTimePicker
+          value={value}
+          mode="time"
+          display="default"
+          is24Hour
+          onChange={(event, picked) => {
+            setOpen(false);
+            if (event.type === "set" && picked) onTime(toClock(picked));
+          }}
+        />
+      ) : null}
+    </>
   );
 }

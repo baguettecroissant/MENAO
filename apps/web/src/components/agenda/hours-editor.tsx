@@ -1,13 +1,21 @@
 "use client";
 
 import {
+  DEFAULT_DAY_RANGES,
+  HOURS_PRESETS,
   MAX_RANGES_PER_DAY,
-  SUGGESTED_HOURS,
   WEEKDAYS,
+  copyMondayToWeekdays,
   hoursErrors,
+  hoursOfWeek,
   minutesToTime,
-  timeToMinutes,
+  nextDayRange,
+  weekHours,
+  weeklyMinutes,
+  type DayRange,
+  type HoursPreset,
   type HoursRange,
+  type WeekHours,
   type Weekday,
 } from "@menao/core";
 import { ChevronDown, Clock, Copy, Plus, Trash2 } from "lucide-react";
@@ -54,53 +62,16 @@ function TimeSelect({
   );
 }
 const days = fr.pro.agenda.weekdays;
-
-type Range = { start: string; end: string };
-type Week = Record<Weekday, Range[]>;
-
-const toWeek = (hours: readonly HoursRange[]): Week =>
-  Object.fromEntries(
-    WEEKDAYS.map((d) => [
-      d,
-      hours
-        .filter((h) => h.weekday === d)
-        .sort((a, b) => a.start.localeCompare(b.start))
-        .map(({ start, end }) => ({ start, end })),
-    ]),
-  ) as Week;
-const toHours = (week: Week): HoursRange[] =>
-  WEEKDAYS.flatMap((weekday) => week[weekday].map((r) => ({ weekday, ...r })));
-
-function workdays(ranges: Range[], withSaturdayMorning = false): HoursRange[] {
-  const saturday: HoursRange[] = withSaturdayMorning
-    ? [{ weekday: 6, start: "08:00", end: "12:00" }]
-    : [];
-  return ([1, 2, 3, 4, 5] as const)
-    .flatMap((weekday) => ranges.map((r): HoursRange => ({ weekday, ...r })))
-    .concat(saturday);
-}
-
-/** Journée ouverte d'un clic : 8 h – 12 h et 13 h 30 – 17 h 30. */
-const DEFAULT_DAY: Range[] = [
-  { start: "08:00", end: "12:00" },
-  { start: "13:30", end: "17:30" },
-];
-
-/** Modèles d'horaires courants dans le bâtiment. */
-const PRESETS = {
-  semaine: SUGGESTED_HOURS,
-  samedi: workdays(DEFAULT_DAY, true),
-  continue: workdays([{ start: "07:30", end: "16:00" }]),
-  vide: [],
-} satisfies Record<keyof typeof t.presets, readonly HoursRange[]>;
+/** Modèles d'horaires courants (`@menao/core`, communs avec l'application). */
+const PRESET_KEYS = Object.keys(HOURS_PRESETS) as HoursPreset[];
 
 /**
  * Horaires de travail de la semaine (F-44) : jusqu'à trois plages par jour, modèles courants,
  * recopie du lundi. Enregistrés en une fois ; contrôles de @menao/core avant l'envoi.
  */
 export function HoursEditor({ initial }: { initial: HoursRange[] }) {
-  const [week, setWeek] = useState<Week>(() => toWeek(initial));
-  const [saved, setSaved] = useState(() => JSON.stringify(toHours(toWeek(initial))));
+  const [week, setWeek] = useState<WeekHours>(() => weekHours(initial));
+  const [saved, setSaved] = useState(() => JSON.stringify(hoursOfWeek(weekHours(initial))));
   const [state, action, pending] = useActionState(
     async (prev: typeof initialFormState, formData: FormData) => {
       const result = await saveHours(prev, formData);
@@ -109,39 +80,23 @@ export function HoursEditor({ initial }: { initial: HoursRange[] }) {
     },
     initialFormState,
   );
-  const hours = useMemo(() => toHours(week), [week]);
+  const hours = useMemo(() => hoursOfWeek(week), [week]);
   const json = JSON.stringify(hours);
   const dirty = json !== saved;
   const issue = hoursErrors(hours);
-  const total = hours.reduce((sum, h) => sum + timeToMinutes(h.end) - timeToMinutes(h.start), 0);
+  const total = weeklyMinutes(hours);
 
-  const update = (weekday: Weekday, ranges: Range[]) =>
+  const update = (weekday: Weekday, ranges: DayRange[]) =>
     setWeek((current) => ({ ...current, [weekday]: ranges }));
-  const setRange = (weekday: Weekday, index: number, patch: Partial<Range>) =>
+  const setRange = (weekday: Weekday, index: number, patch: Partial<DayRange>) =>
     update(
       weekday,
       week[weekday].map((r, i) => (i === index ? { ...r, ...patch } : r)),
     );
-  const addRange = (weekday: Weekday) => {
-    const ranges = week[weekday];
-    const last = ranges[ranges.length - 1];
-    // Nouvelle plage après la dernière : une heure plus tard, pour deux heures.
-    const startMinutes = last ? Math.min(timeToMinutes(last.end) + 60, 21 * 60) : 8 * 60;
-    update(weekday, [
-      ...ranges,
-      {
-        start: minutesToTime(startMinutes),
-        end: minutesToTime(Math.min(startMinutes + 120, 23 * 60 + 45)),
-      },
-    ]);
-  };
-  const copyMonday = () =>
-    setWeek((current) => ({
-      ...current,
-      ...Object.fromEntries(
-        ([2, 3, 4, 5] as const).map((d) => [d, current[1].map((r) => ({ ...r }))]),
-      ),
-    }));
+  // Nouvelle plage après la dernière : une heure plus tard, pour deux heures.
+  const addRange = (weekday: Weekday) =>
+    update(weekday, [...week[weekday], nextDayRange(week[weekday])]);
+  const copyMonday = () => setWeek(copyMondayToWeekdays);
 
   return (
     <section
@@ -158,11 +113,11 @@ export function HoursEditor({ initial }: { initial: HoursRange[] }) {
       </div>
 
       <div role="group" aria-label={t.presetsLabel} className="mt-4 flex flex-wrap gap-2">
-        {(Object.keys(PRESETS) as (keyof typeof PRESETS)[]).map((key) => (
+        {PRESET_KEYS.map((key) => (
           <button
             key={key}
             type="button"
-            onClick={() => setWeek(toWeek(PRESETS[key]))}
+            onClick={() => setWeek(weekHours(HOURS_PRESETS[key]))}
             className="inline-flex min-h-9 items-center rounded-pill border border-border bg-background px-3.5 text-sm hover:border-primary/50 hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
           >
             {t.presets[key]}
@@ -186,7 +141,9 @@ export function HoursEditor({ initial }: { initial: HoursRange[] }) {
                     role="switch"
                     checked={open}
                     aria-label={t.open(day.toLowerCase())}
-                    onChange={(e) => update(weekday, e.target.checked ? DEFAULT_DAY : [])}
+                    onChange={(e) =>
+                      update(weekday, e.target.checked ? [...DEFAULT_DAY_RANGES] : [])
+                    }
                     className="peer sr-only"
                   />
                   <span

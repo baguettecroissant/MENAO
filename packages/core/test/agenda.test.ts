@@ -3,8 +3,14 @@ import {
   SUGGESTED_HOURS,
   absenceError,
   absenceOn,
+  HOURS_PRESETS,
   addDays,
   agendaItemsFrom,
+  copyMondayToWeekdays,
+  hoursOfWeek,
+  nextDayRange,
+  weekHours,
+  weeklyMinutes,
   availabilityStatus,
   availableFromChoices,
   blockedSlotError,
@@ -371,5 +377,60 @@ describe("éléments de l'agenda (F-44)", () => {
       to,
     });
     expect(item?.place).toBeNull();
+  });
+});
+
+describe("éditeur d'horaires (F-44)", () => {
+  it("range les horaires par jour, dans l'ordre de la journée, et les remet à plat", () => {
+    const week = weekHours([
+      { weekday: 1, start: "13:30", end: "17:30" },
+      { weekday: 1, start: "08:00", end: "12:00" },
+      { weekday: 6, start: "08:00", end: "12:00" },
+    ]);
+    expect(week[1]).toEqual([
+      { start: "08:00", end: "12:00" },
+      { start: "13:30", end: "17:30" },
+    ]);
+    expect(week[2]).toEqual([]);
+    expect(hoursOfWeek(week)).toEqual([
+      { weekday: 1, start: "08:00", end: "12:00" },
+      { weekday: 1, start: "13:30", end: "17:30" },
+      { weekday: 6, start: "08:00", end: "12:00" },
+    ]);
+  });
+
+  it("propose des modèles valides", () => {
+    expect(weeklyMinutes(HOURS_PRESETS.semaine)).toBe(5 * 8 * 60);
+    expect(weeklyMinutes(HOURS_PRESETS.samedi)).toBe(5 * 8 * 60 + 4 * 60);
+    expect(weeklyMinutes(HOURS_PRESETS.continue)).toBe(5 * 8.5 * 60);
+    expect(HOURS_PRESETS.vide).toEqual([]);
+    for (const preset of Object.values(HOURS_PRESETS)) expect(hoursErrors(preset)).toBeNull();
+  });
+
+  it("ajoute une plage une heure après la dernière, pour deux heures", () => {
+    expect(nextDayRange([])).toEqual({ start: "08:00", end: "10:00" });
+    expect(nextDayRange([{ start: "08:00", end: "12:00" }])).toEqual({
+      start: "13:00",
+      end: "15:00",
+    });
+    expect(nextDayRange([{ start: "18:00", end: "22:30" }])).toEqual({
+      start: "21:00",
+      end: "23:00",
+    });
+  });
+
+  it("recopie le lundi du mardi au vendredi, sans toucher au week-end", () => {
+    const week = copyMondayToWeekdays(
+      weekHours([
+        ...HOURS_PRESETS.continue.slice(0, 1),
+        { weekday: 6, start: "09:00", end: "11:00" },
+      ]),
+    );
+    for (const d of [1, 2, 3, 4, 5] as const)
+      expect(week[d]).toEqual([{ start: "07:30", end: "16:00" }]);
+    expect(week[6]).toEqual([{ start: "09:00", end: "11:00" }]);
+    const tuesday = week[2][0];
+    if (tuesday) tuesday.start = "08:00";
+    expect(week[1][0]?.start).toBe("07:30");
   });
 });
