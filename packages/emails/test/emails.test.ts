@@ -423,7 +423,8 @@ describe("contenu des notifications (F-41)", () => {
     expect(received.paragraphs[2]).toContain("une seule fois");
     expect(received.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
     const reminder = notificationContent("avis_relance", data, ctx);
-    expect(reminder.subject).toBe("Votre avis est précieux");
+    expect(reminder.subject).toBe("MENAO a besoin de vous !");
+    expect(reminder.preview).toContain("votre expérience avec Jean");
     expect(reminder.paragraphs[1]).toContain(`Jean a terminé votre chantier ${quoted("Prises")}`);
     expect(reminder.cta).toEqual({
       label: "Noter Jean",
@@ -432,6 +433,18 @@ describe("contenu des notifications (F-41)", () => {
     expect(notificationContent("avis_relance", {}, ctx).cta).toEqual({
       label: "Donner mon avis",
       url: "https://menao.example/mon-espace",
+    });
+  });
+
+  it("relance « Paiement en attente » : acompte à régler, lien vers le chantier", () => {
+    const data = { ...ids, titre: "Prises", artisan: "Jean" };
+    const reminder = notificationContent("acompte_relance", data, ctx);
+    expect(reminder.subject).toBe("Paiement en attente");
+    expect(reminder.paragraphs[1]).toContain(`devis de Jean pour ${quoted("Prises")}`);
+    expect(reminder.paragraphs[2]).toContain("directement sur le compte de l'artisan");
+    expect(reminder.cta).toEqual({
+      label: "Payer l'acompte",
+      url: `https://menao.example/mon-espace/chantiers/${ids.chantier_id}`,
     });
   });
 

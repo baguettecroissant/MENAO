@@ -1057,7 +1057,8 @@ export const fr = {
     prefsIntro:
       "Les e-mails importants (devis, paiements, réception, litiges, avis reçus) sont toujours envoyés. Les autres peuvent être désactivés ; ils restent visibles ici.",
     activite: "Activité du chantier : nouvelles photos et nouveaux messages",
-    rappels: "Rappels : rendez-vous de la veille, avis à laisser, levée des réserves à confirmer",
+    rappels:
+      "Rappels : rendez-vous de la veille, acompte à régler, avis à laisser, levée des réserves à confirmer",
     save: "Enregistrer mes préférences",
     saved: "Préférences enregistrées.",
   },

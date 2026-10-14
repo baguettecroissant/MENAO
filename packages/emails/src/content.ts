@@ -45,6 +45,7 @@ export const NOTIFICATION_TYPES = [
   "equipe_nouveau_ticket",
   "equipe_dossier_a_verifier",
   "equipe_ticket_en_retard",
+  "acompte_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -427,6 +428,21 @@ export function notificationContent(
         },
       };
     }
+    case "acompte_relance":
+      // Maquette « Paiement en attente » : relance unique, acompte non réglé 2 jours après la
+      // signature. Le paiement va directement à l'artisan (règle 12).
+      return {
+        subject: "Paiement en attente",
+        preview: `L'acompte de votre chantier ${quoted(titre)} reste à régler.`,
+        title: "Paiement en attente",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Vous avez signé le devis de ${artisan} pour ${quoted(titre)} : il reste à régler l'acompte pour que ${artisan} puisse confirmer la date de démarrage.`,
+          "Le paiement se fait en ligne, de façon sécurisée, directement sur le compte de l'artisan.",
+        ],
+        quote: null,
+        cta: myChantier("Payer l'acompte"),
+      };
     case "acompte_paye": {
       const montant = amount(data, "montant");
       if (text(data, "destinataire") === "artisan") {
@@ -672,11 +688,12 @@ export function notificationContent(
       };
     }
     case "avis_relance":
-      // F-28 : relance unique du client, 3 jours après la clôture, sans avis.
+      // F-28 : relance unique du client, 3 jours après la clôture, sans avis (maquette « Rappel de
+      // laisser un avis »).
       return {
-        subject: "Votre avis est précieux",
-        preview: `Partagez votre expérience avec ${artisan}.`,
-        title: "Votre avis est précieux",
+        subject: "MENAO a besoin de vous !",
+        preview: `En partageant votre expérience avec ${artisan}, vous aidez à mettre en avant les meilleurs artisans.`,
+        title: "MENAO a besoin de vous !",
         paragraphs: [
           hello(ctx.firstName),
           `${artisan} a terminé votre chantier ${quoted(titre)}. Partagez votre expérience pour aider la communauté MENAO à faire le bon choix pour leurs chantiers.`,

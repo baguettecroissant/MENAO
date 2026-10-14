@@ -7,12 +7,15 @@ import {
 import { FileText, HardHat, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
+import { AppDownloadModal } from "@/components/app-shell/app-download-modal";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
 import { DraftSearches } from "@/components/project/draft-searches";
 import { PendingRequests } from "@/components/project/my-requests";
 import { ButtonLink, Tag } from "@/components/ui";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
+import { qrSvg } from "@/lib/qr";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.myChantiers;
@@ -143,8 +146,18 @@ export default async function MySpacePage() {
     </section>
   );
 
+  // Maquette « Mes chantiers - Modale » : seulement une fois l'application publiée.
+  const appStore = env.NEXT_PUBLIC_APP_STORE_URL ?? null;
+  const playStore = env.NEXT_PUBLIC_PLAY_STORE_URL ?? null;
   return (
     <main className="bg-background">
+      {(appStore || playStore) && (
+        <AppDownloadModal
+          qr={qrSvg(`${env.NEXT_PUBLIC_SITE_URL}/application`)}
+          appStoreUrl={appStore}
+          playStoreUrl={playStore}
+        />
+      )}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-12">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-col gap-2">

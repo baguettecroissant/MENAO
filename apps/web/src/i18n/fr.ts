@@ -1469,6 +1469,20 @@ export const fr = {
     unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
     inProgress: "Votre paiement du solde est en cours de confirmation.",
   },
+  /** Maquette « Mes chantiers - Modale » : fenêtre de l'application mobile (QR code). */
+  appDownload: {
+    title: "Suivez tous vos chantiers, depuis votre poche.",
+    features: [
+      "Recherchez et échangez facilement avec un artisan",
+      "Signature de devis et factures rapides",
+      "Suivi détaillé de chaque étape de vos chantiers",
+    ],
+    qrAlt: "QR code de l'application MENAO",
+    scan: "Scannez avec votre téléphone",
+    appStore: "Télécharger dans l'App Store",
+    playStore: "Disponible sur Google Play",
+    close: "Fermer",
+  },
   messages: {
     title: "Messages",
     subtitleClient: "Vos échanges avec vos artisans, chantier par chantier.",
@@ -1597,7 +1611,8 @@ export const fr = {
     prefsIntro:
       "Les e-mails importants (devis, paiements, réception, litiges, avis reçus) sont toujours envoyés. Les autres peuvent être désactivés ; ils restent visibles ici.",
     activite: "Activité du chantier : nouvelles photos et nouveaux messages",
-    rappels: "Rappels : rendez-vous de la veille, avis à laisser, levée des réserves à confirmer",
+    rappels:
+      "Rappels : rendez-vous de la veille, acompte à régler, avis à laisser, levée des réserves à confirmer",
     save: "Enregistrer mes préférences",
     saved: "Préférences enregistrées.",
   },
