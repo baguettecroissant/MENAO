@@ -1,11 +1,21 @@
 import { parisToday } from "@menao/core";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import { Sparkles } from "lucide-react-native";
-import { useState } from "react";
+import {
+  CalendarDays,
+  type LucideIcon,
+  MapPin,
+  Pencil,
+  Search,
+  Sparkles,
+  UserRound,
+  Wrench,
+} from "lucide-react-native";
+import { type ReactNode, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
 import { ProjectPhotosCard } from "@/components/project-photos-card";
+import { RadioGroup } from "@/components/radio-group";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatLongDate, fromIsoDate, toIsoDate } from "@/lib/dates";
@@ -30,10 +40,14 @@ function toggle(list: string[], code: string): string[] {
   return list.includes(code) ? list.filter((c) => c !== code) : [...list, code];
 }
 
+type Section = "trade" | "site" | "address" | "date";
+
 /**
- * Vérification des critères pré-remplis par l'IA (F-07), comme sur le site : métier et travaux,
- * chantier, adresse (ville puis adresse exacte de cette ville), date de début, photos. « Trouver
- * l'artisan idéal » enregistre le tout, vérifié par la base (métier et ville obligatoires).
+ * Vérification des critères pré-remplis par l'IA (F-07), d'après la maquette « Vérifiez vos
+ * critères » et comme sur le site : chaque carte montre un résumé et un crayon ; la modification
+ * se fait dans la carte (Annuler / Enregistrer). Métier et travaux, chantier, adresse (ville puis
+ * adresse exacte de cette ville), date de début, photos. « Trouver l'artisan idéal » enregistre le
+ * tout, vérifié par la base (métier et ville obligatoires).
  */
 export function CriteriaReview({
   project,
@@ -47,20 +61,43 @@ export function CriteriaReview({
 }) {
   const { trades, workTypes, rooms } = useReferentials();
   const [criteria, setCriteria] = useState<Criteria>(project.criteria);
+  // Carte en cours de modification : brouillon validé par « Enregistrer ». Le métier ou la ville
+  // manquants ouvrent directement leur carte.
+  const [editing, setEditing] = useState<Section | null>(
+    !project.criteria.tradeCode ? "trade" : !project.criteria.ville ? "address" : null,
+  );
+  const [draft, setDraft] = useState<Criteria>(project.criteria);
   const [expanded, setExpanded] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const set = (patch: Partial<Criteria>) => setCriteria((current) => ({ ...current, ...patch }));
+  const set = (patch: Partial<Criteria>) => setDraft((current) => ({ ...current, ...patch }));
   const today = parisToday();
-  const tradeWorks = workTypes.filter((w) => w.trade === criteria.tradeCode);
-  const ready = Boolean(criteria.tradeCode && criteria.ville);
+  const tradeWorks = workTypes.filter((w) => w.trade === draft.tradeCode);
+  const ready = Boolean(criteria.tradeCode && criteria.ville) && editing === null;
+  const labelOf = (list: readonly { code: string; label: string }[], code: string) =>
+    list.find((item) => item.code === code)?.label ?? code;
+
+  function edit(section: Section) {
+    setDraft(criteria);
+    setEditing(section);
+  }
+  function cancel() {
+    setDraft(criteria);
+    setEditing(null);
+    setShowPicker(false);
+  }
+  function save() {
+    setCriteria(draft);
+    setEditing(null);
+    setShowPicker(false);
+  }
 
   function changeTrade(code: string) {
-    const tradeCode = criteria.tradeCode === code ? null : code;
+    const tradeCode = draft.tradeCode === code ? null : code;
     // Les travaux suivent le métier : ceux d'un autre métier sont retirés.
     const allowed = new Set(workTypes.filter((w) => w.trade === tradeCode).map((w) => w.code));
-    set({ tradeCode, workTypeCodes: (criteria.workTypeCodes ?? []).filter((c) => allowed.has(c)) });
+    set({ tradeCode, workTypeCodes: (draft.workTypeCodes ?? []).filter((c) => allowed.has(c)) });
   }
 
   async function submit() {
@@ -71,6 +108,31 @@ export function CriteriaReview({
     if (error) return setFailure(error);
     router.push({ pathname: "/projet/[id]/artisans", params: { id: project.id } });
   }
+
+  const card = (section: Section) => ({
+    editing: editing === section,
+    locked: editing !== null && editing !== section,
+    onEdit: () => edit(section),
+    onCancel: cancel,
+    onSave: save,
+    // Pas de carte « Artisan recherché » enregistrée sans métier, ni d'adresse sans ville.
+    canSave:
+      section === "trade"
+        ? Boolean(draft.tradeCode)
+        : section === "address"
+          ? Boolean(draft.ville)
+          : true,
+  });
+  const siteTags = [
+    criteria.lieuType ? fr.lieux[criteria.lieuType] : null,
+    ...(criteria.workTypeCodes ?? []).map((code) => labelOf(workTypes, code)),
+    ...(criteria.roomCodes ?? []).map((code) => labelOf(rooms, code)),
+    criteria.surface ? fr.surfaces[criteria.surface] : null,
+  ].filter((tag): tag is string => Boolean(tag));
+  const dateTag =
+    criteria.dateMode === "date" && criteria.dateSouhaitee
+      ? r.startsOn(formatLongDate(criteria.dateSouhaitee))
+      : r.dateModes[criteria.dateMode ?? "des_que_possible"];
 
   return (
     <Screen header={<TopBar title={r.title} />}>
@@ -91,46 +153,55 @@ export function CriteriaReview({
         )}
       </Card>
 
-      <Card>
-        <Text style={styles.heading}>{r.trade}</Text>
-        <Body muted>{r.tradeHelp}</Body>
+      <EditableCard
+        icon={UserRound}
+        title={r.trade}
+        help={r.tradeHelp}
+        summary={criteria.tradeCode ? [labelOf(trades, criteria.tradeCode)] : []}
+        {...card("trade")}
+      >
         <View style={styles.chips}>
           {trades.map((t) => (
             <Chip
               key={t.code}
               label={t.label}
-              selected={criteria.tradeCode === t.code}
+              selected={draft.tradeCode === t.code}
               onPress={() => changeTrade(t.code)}
             />
           ))}
         </View>
         <Text style={styles.label}>{r.works}</Text>
-        {criteria.tradeCode ? (
+        {draft.tradeCode ? (
           <View style={styles.chips}>
             {tradeWorks.map((w) => (
               <Chip
                 key={w.code}
                 label={w.label}
-                selected={(criteria.workTypeCodes ?? []).includes(w.code)}
-                onPress={() => set({ workTypeCodes: toggle(criteria.workTypeCodes ?? [], w.code) })}
+                selected={(draft.workTypeCodes ?? []).includes(w.code)}
+                onPress={() => set({ workTypeCodes: toggle(draft.workTypeCodes ?? [], w.code) })}
               />
             ))}
           </View>
         ) : (
           <Body muted>{r.worksNeedTrade}</Body>
         )}
-      </Card>
+      </EditableCard>
 
-      <Card>
-        <Text style={styles.heading}>{r.site}</Text>
+      <EditableCard
+        icon={Wrench}
+        title={r.site}
+        help={r.siteHelp}
+        summary={siteTags}
+        {...card("site")}
+      >
         <Text style={styles.label}>{r.lieu}</Text>
         <View style={styles.chips}>
           {LIEUX.map((lieu) => (
             <Chip
               key={lieu}
               label={fr.lieux[lieu]}
-              selected={criteria.lieuType === lieu}
-              onPress={() => set({ lieuType: criteria.lieuType === lieu ? null : lieu })}
+              selected={draft.lieuType === lieu}
+              onPress={() => set({ lieuType: draft.lieuType === lieu ? null : lieu })}
             />
           ))}
         </View>
@@ -140,8 +211,8 @@ export function CriteriaReview({
             <Chip
               key={room.code}
               label={room.label}
-              selected={(criteria.roomCodes ?? []).includes(room.code)}
-              onPress={() => set({ roomCodes: toggle(criteria.roomCodes ?? [], room.code) })}
+              selected={(draft.roomCodes ?? []).includes(room.code)}
+              onPress={() => set({ roomCodes: toggle(draft.roomCodes ?? [], room.code) })}
             />
           ))}
         </View>
@@ -151,19 +222,29 @@ export function CriteriaReview({
             <Chip
               key={surface}
               label={fr.surfaces[surface]}
-              selected={criteria.surface === surface}
-              onPress={() => set({ surface: criteria.surface === surface ? null : surface })}
+              selected={draft.surface === surface}
+              onPress={() => set({ surface: draft.surface === surface ? null : surface })}
             />
           ))}
         </View>
-      </Card>
+      </EditableCard>
 
-      <Card>
-        <Text style={styles.heading}>{r.address}</Text>
-        {criteria.ville ? (
+      <EditableCard
+        icon={MapPin}
+        title={r.address}
+        help={r.addressHelp}
+        summary={[
+          criteria.ville
+            ? `${criteria.ville.nom}${criteria.ville.codePostal ? ` (${criteria.ville.codePostal})` : ""}`
+            : null,
+          criteria.adresse?.label ?? null,
+        ].filter((tag): tag is string => Boolean(tag))}
+        {...card("address")}
+      >
+        {draft.ville ? (
           <Selected
             label={r.city}
-            value={`${criteria.ville.nom}${criteria.ville.codePostal ? ` (${criteria.ville.codePostal})` : ""}`}
+            value={`${draft.ville.nom}${draft.ville.codePostal ? ` (${draft.ville.codePostal})` : ""}`}
             // Changer de ville retire l'adresse exacte, qui doit être dans la ville choisie.
             onChange={() => set({ ville: null, adresse: null })}
           />
@@ -187,11 +268,11 @@ export function CriteriaReview({
             }
           />
         )}
-        {criteria.ville &&
-          (criteria.adresse ? (
+        {draft.ville &&
+          (draft.adresse ? (
             <Selected
               label={r.street}
-              value={criteria.adresse.label}
+              value={draft.adresse.label}
               onChange={() => set({ adresse: null })}
             />
           ) : (
@@ -199,31 +280,32 @@ export function CriteriaReview({
               label={r.street}
               placeholder={r.streetPlaceholder}
               hint={r.streetHint}
-              search={(q, signal) => searchAddresses(q, criteria.ville?.code ?? "", signal)}
+              search={(q, signal) => searchAddresses(q, draft.ville?.code ?? "", signal)}
               itemLabel={(a) => a.label}
               onSelect={(a) => set({ adresse: a })}
             />
           ))}
-      </Card>
+      </EditableCard>
 
-      <Card>
-        <Text style={styles.heading}>{r.date}</Text>
-        <View style={styles.chips}>
-          {DATE_MODES.map((mode) => (
-            <Chip
-              key={mode}
-              label={r.dateModes[mode]}
-              selected={criteria.dateMode === mode}
-              onPress={() => {
-                set({ dateMode: mode });
-                setShowPicker(mode === "date" && Platform.OS === "android");
-              }}
-            />
-          ))}
-        </View>
-        {criteria.dateMode === "date" && (
+      <EditableCard
+        icon={CalendarDays}
+        title={r.date}
+        help={r.dateHelp}
+        summary={[dateTag]}
+        {...card("date")}
+      >
+        <RadioGroup
+          legend={r.date}
+          options={DATE_MODES.map((mode) => ({ value: mode, label: r.dateModes[mode] }))}
+          value={draft.dateMode ?? null}
+          onChange={(mode) => {
+            set({ dateMode: mode });
+            setShowPicker(mode === "date" && Platform.OS === "android");
+          }}
+        />
+        {draft.dateMode === "date" && (
           <DatePicker
-            value={criteria.dateSouhaitee ?? null}
+            value={draft.dateSouhaitee ?? null}
             today={today}
             showAndroid={showPicker}
             onOpenAndroid={() => setShowPicker(true)}
@@ -233,14 +315,96 @@ export function CriteriaReview({
             }}
           />
         )}
-      </Card>
+      </EditableCard>
 
       <ProjectPhotosCard projectId={project.id} initial={photos} />
 
       {failure && <Notice tone="error">{failure}</Notice>}
-      <Button label={r.submit} onPress={submit} loading={saving} disabled={!ready} />
-      {!ready && <Text style={styles.hint}>{r.submitHint}</Text>}
+      <Button label={r.submit} icon={Search} onPress={submit} loading={saving} disabled={!ready} />
+      {editing !== null ? (
+        <Text style={styles.hint}>{r.editing}</Text>
+      ) : !ready ? (
+        <Text style={styles.hint}>{r.submitHint}</Text>
+      ) : null}
     </Screen>
+  );
+}
+
+/**
+ * Carte à résumé de la maquette : titre avec icône, crayon, puces du résumé ; en modification, le
+ * contenu et « Annuler » / « Enregistrer ». Les autres cartes sont verrouillées pendant ce temps.
+ */
+function EditableCard({
+  icon: Icon,
+  title,
+  help,
+  summary,
+  editing,
+  locked,
+  canSave,
+  onEdit,
+  onCancel,
+  onSave,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  help: string;
+  summary: string[];
+  editing: boolean;
+  locked: boolean;
+  canSave: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onSave: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Card>
+      <View style={styles.cardHead}>
+        <Icon size={18} color={theme.colors.primary} />
+        <Text role="heading" style={[styles.heading, styles.cardHeading]}>
+          {title}
+        </Text>
+        {!editing ? (
+          <Pressable
+            role="button"
+            aria-label={r.editLabel(title)}
+            aria-disabled={locked}
+            disabled={locked}
+            hitSlop={8}
+            onPress={onEdit}
+            style={({ pressed }) => [locked && styles.locked, pressed && styles.pressed]}
+          >
+            <Pencil size={18} color={theme.colors["primary-strong"]} />
+          </Pressable>
+        ) : null}
+      </View>
+      {editing ? (
+        <>
+          <Body muted>{help}</Body>
+          {children}
+          <View style={styles.editActions}>
+            <View style={styles.editAction}>
+              <Button label={r.cancel} variant="secondary" onPress={onCancel} />
+            </View>
+            <View style={styles.editAction}>
+              <Button label={r.save} onPress={onSave} disabled={!canSave} />
+            </View>
+          </View>
+        </>
+      ) : summary.length > 0 ? (
+        <View style={styles.chips}>
+          {summary.map((tag) => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Body muted>{r.notSet}</Body>
+      )}
+    </Card>
   );
 }
 
@@ -318,6 +482,19 @@ function DatePicker({
 
 const styles = StyleSheet.create({
   cardTitle: { flexDirection: "row", alignItems: "center", gap: theme.spacing(2) },
+  cardHead: { flexDirection: "row", alignItems: "center", gap: theme.spacing(2) },
+  cardHeading: { flex: 1 },
+  locked: { opacity: 0.4 },
+  pressed: { opacity: 0.7 },
+  editActions: { flexDirection: "row", gap: theme.spacing(3) },
+  editAction: { flex: 1 },
+  tag: {
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors["primary-soft"],
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(1.5),
+  },
+  tagText: { fontFamily: theme.font.medium, fontSize: 13, color: theme.colors["primary-strong"] },
   heading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
   label: { fontFamily: theme.font.medium, fontSize: 14, color: theme.colors.foreground },
   description: {
