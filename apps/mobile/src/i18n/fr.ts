@@ -1529,6 +1529,13 @@ export const fr = {
       autre: "autre raison",
     },
   },
+  /** Notifications push (F-41) : invitation à les activer sur l'accueil. */
+  push: {
+    title: "Ne manquez rien de vos chantiers",
+    text: "Recevez une notification pour vos rendez-vous, devis, paiements et messages, même application fermée.",
+    enable: "Activer les notifications",
+    later: "Plus tard",
+  },
   /** Photos du téléphone (journal, messagerie, signalement) : appareil photo ou photothèque. */
   photos: {
     camera: "Prendre une photo",

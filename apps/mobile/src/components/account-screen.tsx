@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
 import { useSession } from "@/lib/session";
-import { supabase } from "@/lib/supabase";
+import { signOut } from "@/lib/auth";
 import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
@@ -70,7 +70,7 @@ export function AccountScreen() {
         loading={leaving}
         onPress={async () => {
           setLeaving(true);
-          await supabase.auth.signOut();
+          await signOut();
           setLeaving(false);
         }}
       />

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PushPrompt } from "@/components/push-prompt";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
@@ -108,6 +109,7 @@ export function DashboardScreen() {
           <>
             <Title>{t.greeting(data.firstName)}</Title>
             {data.suspended ? <Notice tone="error">{t.suspended}</Notice> : null}
+            <PushPrompt />
             <View style={styles.stats}>
               <Stat
                 icon={<Hammer size={16} color={colors.primary} />}

@@ -16,6 +16,18 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath(`/signalements/${ID}`)).toBe(`/signalement/${ID}`);
   });
 
+  it("ouvre les écrans de l'espace artisan, sans renvoi vers le site", () => {
+    expect(appRouteForSitePath("/pro/tableau-de-bord")).toBe("/pro");
+    expect(appRouteForSitePath(`/pro/demandes/${ID}`)).toBe(`/opportunite/${ID}`);
+    expect(appRouteForSitePath(`/pro/chantiers/${ID}`)).toBe(`/pro-chantier/${ID}`);
+    expect(appRouteForSitePath(`/pro/chantiers/${ID}/devis`)).toBe(`/pro-chantier/${ID}/devis`);
+    expect(appRouteForSitePath(`/pro/messages/${ID}`)).toBe(`/conversation/${ID}`);
+    expect(appRouteForSitePath("/pro/avis")).toBe("/pro-avis");
+    expect(appRouteForSitePath("/pro/agenda/disponibilites")).toBe("/pro-disponibilites");
+    expect(appRouteForSitePath("/pro/factures")).toBe("/pro-factures");
+    expect(appRouteForSitePath("/pro/onboarding")).toBeNull();
+  });
+
   it("ignore les paramètres et la barre finale", () => {
     expect(appRouteForSitePath(`/mon-espace/devis/${ID}?signature=terminee`)).toBe(`/devis/${ID}`);
     expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/`)).toBe(`/chantier/${ID}`);
@@ -23,7 +35,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
 
   it("laisse sur le site les pages sans écran dans l'application", () => {
     expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/signaler/plus`)).toBeNull();
-    expect(appRouteForSitePath("/pro/demandes")).toBeNull();
+    expect(appRouteForSitePath("/pro/onboarding/documents")).toBeNull();
     expect(appRouteForSitePath("/mon-espace/chantiers/pas-un-identifiant")).toBeNull();
   });
 });

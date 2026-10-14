@@ -15,6 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LogoMark } from "@/components/logo";
 import { tradeIcon } from "@/components/trade-icon";
+import { PushPrompt } from "@/components/push-prompt";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
@@ -101,6 +102,7 @@ export function HomeScreen() {
       </View>
 
       <View style={styles.body}>
+        <PushPrompt />
         {trades.length > 0 && (
           <Section title={fr.home.tradesTitle} text={fr.home.tradesText}>
             <View style={styles.trades}>

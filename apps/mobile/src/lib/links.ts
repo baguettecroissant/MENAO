@@ -2,7 +2,7 @@ import type { Href } from "expo-router";
 
 const UUID = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})";
 
-/** Pages de l'espace client du site qui ont leur écran dans l'application. */
+/** Pages des espaces client et artisan du site qui ont leur écran dans l'application. */
 const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/mon-espace$/, () => "/chantiers"],
   [new RegExp(`^/mon-espace/chantiers/${UUID}$`), (id) => `/chantier/${id}`],
@@ -15,6 +15,20 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [new RegExp(`^/mon-espace/messages/${UUID}$`), (id) => `/conversation/${id}`],
   [/^\/notifications$/, () => "/notifications"],
   [new RegExp(`^/signalements/${UUID}$`), (id) => `/signalement/${id}`],
+  // Espace artisan (règle 10 : jamais de renvoi vers le site).
+  [/^\/pro\/tableau-de-bord$/, () => "/pro"],
+  [/^\/pro\/demandes$/, () => "/pro/demandes"],
+  [new RegExp(`^/pro/demandes/${UUID}$`), (id) => `/opportunite/${id}`],
+  [/^\/pro\/chantiers$/, () => "/pro-chantiers"],
+  [new RegExp(`^/pro/chantiers/${UUID}$`), (id) => `/pro-chantier/${id}`],
+  [new RegExp(`^/pro/chantiers/${UUID}/devis$`), (id) => `/pro-chantier/${id}/devis`],
+  [/^\/pro\/devis$/, () => "/pro-devis"],
+  [/^\/pro\/factures$/, () => "/pro-factures"],
+  [/^\/pro\/avis$/, () => "/pro-avis"],
+  [/^\/pro\/agenda$/, () => "/pro/agenda"],
+  [/^\/pro\/agenda\/disponibilites$/, () => "/pro-disponibilites"],
+  [/^\/pro\/messages$/, () => "/pro/messages"],
+  [new RegExp(`^/pro/messages/${UUID}$`), (id) => `/conversation/${id}`],
 ];
 
 /**

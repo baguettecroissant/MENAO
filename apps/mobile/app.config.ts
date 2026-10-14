@@ -51,6 +51,18 @@ const config: ExpoConfig = {
       },
     ],
     [
+      // Notifications push (F-41, ADR 0079) : couleur sur Android ; environnement APNs de
+      // production pour les versions distribuées (preview, production), de test sinon.
+      "expo-notifications",
+      {
+        color: "#4869f6",
+        mode:
+          process.env.EAS_BUILD_PROFILE && process.env.EAS_BUILD_PROFILE !== "development"
+            ? "production"
+            : "development",
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         image: "./assets/splash-icon.png",

@@ -33,11 +33,14 @@ import { theme } from "@/ui/theme";
 const t = fr.notificationCenter;
 const { colors, font, radius, spacing } = theme;
 
-/** Ouvre l'écran concerné dans l'application, sinon la page du site (avis, signalement…). */
-function open(item: NotificationItem) {
+/**
+ * Ouvre l'écran concerné dans l'application, sinon la page du site (contact…). Jamais de renvoi
+ * vers le site pour un artisan (règle 10) : la notification reste alors affichée ici.
+ */
+function open(item: NotificationItem, artisan: boolean) {
   const route = appRouteForSitePath(item.link);
   if (route) router.push(route);
-  else WebBrowser.openBrowserAsync(`${env.siteUrl}${item.link}`);
+  else if (!artisan) WebBrowser.openBrowserAsync(`${env.siteUrl}${item.link}`);
 }
 
 /**
@@ -46,6 +49,7 @@ function open(item: NotificationItem) {
  */
 export function NotificationCenter() {
   const { refresh } = useUnread();
+  const artisan = useSession().space === "artisan";
   const [items, reload] = useFocusData(loadNotifications);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -104,7 +108,7 @@ export function NotificationCenter() {
                 ]
                   .filter(Boolean)
                   .join(", ")}
-                onPress={() => open(item)}
+                onPress={() => open(item, artisan)}
                 style={({ pressed }) => [
                   styles.item,
                   i > 0 && styles.separator,
