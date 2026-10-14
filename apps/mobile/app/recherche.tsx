@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
+import { DictationButton } from "@/components/dictation-button";
 import { PhotoThumbnails } from "@/components/photo-thumbnails";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -16,7 +17,8 @@ import { theme } from "@/ui/theme";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
- * Saisie du projet (F-05), photos comprises (10 au plus), puis analyse par l'IA : l'écran animé
+ * Saisie du projet (F-05), au clavier ou dictée, photos comprises (10 au plus), puis analyse par
+ * l'IA : l'écran animé
  * reste affiché pendant l'analyse, qui crée le projet et pré-remplit ses critères (ADR 0012), puis
  * pendant l'envoi des photos. On passe ensuite à la vérification des critères.
  * « Redemander un devis » (`artisan`, `depuis`, `nom`) : l'artisan d'un chantier précédent est
@@ -87,6 +89,17 @@ export default function Recherche() {
           maxLength={PROJECT_TEXT_MAX_LENGTH}
           multiline
           autoFocus
+        />
+        <DictationButton
+          onText={(spoken) =>
+            setDescription((current) =>
+              (current.trim() ? `${current.trim()} ${spoken}` : spoken).slice(
+                0,
+                PROJECT_TEXT_MAX_LENGTH,
+              ),
+            )
+          }
+          onError={setFailure}
         />
         {photos.length > 0 ? (
           <PhotoThumbnails

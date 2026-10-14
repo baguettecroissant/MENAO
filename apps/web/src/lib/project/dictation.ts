@@ -4,16 +4,8 @@ import {
   encodeWav,
   isSilent,
   peakRms,
+  toBase64,
 } from "@menao/core";
-
-/** Encode en base64 par blocs (évite de dépasser la pile avec String.fromCharCode). */
-export function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  }
-  return btoa(binary);
-}
 
 /**
  * Convertit l'enregistrement du navigateur (WebM/Opus, MP4/AAC selon le navigateur) en WAV PCM

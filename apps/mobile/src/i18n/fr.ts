@@ -152,6 +152,20 @@ export const fr = {
       photos:
         "Certaines photos n'ont pas pu être ajoutées. Vous pourrez les ajouter à l'étape suivante.",
     },
+    /** Dictée (F-05), comme sur le site : capture du micro, transcription par l'IA. */
+    dictation: {
+      start: "Dicter mon projet",
+      stop: "Arrêter la dictée",
+      listening: (seconds: number) => `Écoute… ${seconds}\u00a0s`,
+      transcribing: "Transcription en cours…",
+      denied:
+        "Le micro n'est pas autorisé. Autorisez-le dans les réglages du téléphone pour dicter votre projet.",
+      failed: "La transcription a échoué. Réessayez ou saisissez votre projet au clavier.",
+      rate_limited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
+      limit: "Dictée limitée à 2 minutes.",
+      quiet: "On ne vous entend pas…",
+      silent: "Aucun son capté : vérifiez que le micro n'est pas coupé, puis réessayez.",
+    },
     photos: {
       add: "Ajouter des photos",
       hint: "10 photos au plus, pour aider l'analyse et les artisans.",

@@ -16,7 +16,7 @@ type NullableArgs<T> = { [K in keyof T]: T[K] | null };
  * Session de recherche, comme sur le site (ADR 0012) : celle du compte connecté, sinon une session
  * anonyme Supabase. Le projet appartient à cet utilisateur et le restera s'il crée son compte.
  */
-async function ensureSession(): Promise<boolean> {
+export async function ensureSession(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
   if (data.session) return true;
   const { data: anonymous, error } = await supabase.auth.signInAnonymously();
