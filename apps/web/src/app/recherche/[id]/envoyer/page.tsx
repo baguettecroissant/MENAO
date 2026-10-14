@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ProjectSummaryCard } from "@/components/project/project-summary-card";
+import { ProjectSummaryBand, ProjectSummaryCard } from "@/components/project/project-summary-card";
 import { SelectedArtisansCard } from "@/components/project/selected-artisans-card";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -117,7 +117,15 @@ export default async function SendRequestPage({
               availableNow: a.available_now,
             }))}
           />
-          {summary && <ProjectSummaryCard summary={summary} />}
+          {summary && (
+            <>
+              <div className="hidden lg:block">
+                <ProjectSummaryCard summary={summary} />
+              </div>
+              {/* Téléphone (maquette « Envoyez votre demande ») : bande du besoin en premier. */}
+              <ProjectSummaryBand summary={summary} className="order-first" />
+            </>
+          )}
         </aside>
         <div className="flex min-w-0 flex-col gap-6">
           <Link

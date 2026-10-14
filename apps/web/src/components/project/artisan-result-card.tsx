@@ -26,6 +26,7 @@ export function ArtisanResultCard({
   selection,
   known = false,
   headingLevel = 2,
+  className = "",
 }: {
   /** Fiche de l'artisan ; sans lien sur les pages publiques. */
   href?: string | null;
@@ -44,10 +45,14 @@ export function ArtisanResultCard({
   /** Artisan d'un chantier précédent (« Redemander un devis ») : mis en avant et présélectionné. */
   known?: boolean;
   headingLevel?: 2 | 3;
+  /** Largeur dans le carrousel des résultats sur téléphone. */
+  className?: string;
 }) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
   return (
-    <li className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/30">
+    <li
+      className={`group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/30 ${className}`}
+    >
       <ArtisanPhoto url={photoUrl} name={name} className="aspect-[16/10] w-full" />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex flex-col gap-1">

@@ -949,6 +949,8 @@ export const fr = {
       address: "Adresse",
       date: "Date de début",
       photos: "Photos du projet",
+      photoCount: (n: number) => (n <= 1 ? "1 photo" : `${n} photos`),
+      editLabel: "Modifier mon besoin",
     },
     selection: {
       select: (name: string) => `Sélectionner ${name}`,
@@ -1199,10 +1201,7 @@ export const fr = {
     inProgress: "Mes chantiers en cours",
     pending: "Mes demandes en attente",
     finished: "Mes chantiers terminés",
-    tabsLabel: "Mes chantiers",
-    tabs: { inProgress: "Chantiers en cours", finished: "Chantiers terminés" },
     noActive: "Aucun chantier en cours pour le moment.",
-    noFinished: "Aucun chantier terminé pour le moment.",
     drafts: {
       title: "Recherches non envoyées",
       intro:

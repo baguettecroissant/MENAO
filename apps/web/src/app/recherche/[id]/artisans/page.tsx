@@ -8,7 +8,7 @@ import {
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ArtisanResultCard } from "@/components/project/artisan-result-card";
-import { ProjectSummaryCard } from "@/components/project/project-summary-card";
+import { ProjectSummaryBand, ProjectSummaryCard } from "@/components/project/project-summary-card";
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { matchArtisans, publicUrl } from "@/lib/project/artisans";
@@ -72,12 +72,14 @@ export default async function ProjectResultsPage({
   return (
     <main className="bg-background">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[17.5rem_1fr]">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
           {summary && <ProjectSummaryCard summary={summary} />}
         </aside>
 
         {/* Colonnes selon la place réelle (menu latéral de l'espace client, ADR 0042). */}
         <div className="@container flex min-w-0 flex-col gap-6">
+          {/* Téléphone (maquette « Résultat de recherche - in app ») : bande du besoin en haut. */}
+          {summary && <ProjectSummaryBand summary={summary} />}
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
               {results.length ? t.title : t.noneTitle}
@@ -102,7 +104,8 @@ export default async function ProjectResultsPage({
 
           <form id="selection" method="get" action={`/recherche/${id}/envoyer`} />
           {results.length > 0 && (
-            <ul className="grid gap-4 @xl:grid-cols-2 @3xl:grid-cols-3">
+            // Téléphone : carrousel horizontal (F-09, maquette « in app »), la carte suivante dépasse.
+            <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 @xl:grid-cols-2 @3xl:grid-cols-3">
               {results.map((a) => {
                 const avail = availability(
                   { paused: false, availableFrom: a.available_from },
@@ -131,6 +134,7 @@ export default async function ProjectResultsPage({
                       requested.has(a.artisan_id) ? "sent" : slots > 0 ? "selectable" : "none"
                     }
                     known={a.artisan_id === preferredId}
+                    className="w-[16.5rem] shrink-0 snap-start sm:w-auto"
                   />
                 );
               })}
