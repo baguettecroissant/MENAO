@@ -1051,6 +1051,8 @@ export const fr = {
     cancelConfirm: "Annuler le chantier",
     cancelled: (date: string) => `Chantier annulé le ${date}.`,
     writeClient: "Écrire au client",
+    // Bandeau de la vue d'un rendez-vous planifié (maquette « Vue d'un rendez-vous »).
+    bandTitle: "Informations du rendez-vous",
     place: "Lieu du rendez-vous",
     reminder: "Rappel du chantier",
   },

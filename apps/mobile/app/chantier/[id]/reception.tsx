@@ -2,11 +2,13 @@ import { RESERVES_LIMITS, SIGNATURE_CONSENTS, type SignatureConsent } from "@men
 import { receptionDocumentModel } from "@menao/documents";
 import { receptionConsentsSchema, reservesSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { ConsentList, type ConsentItem } from "@/components/consents";
 import { ReceptionPaper } from "@/components/documents/reception-paper";
+import { HeaderBand } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -15,7 +17,7 @@ import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadReception, startReceptionSignature } from "@/lib/reception";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, Section, TextField, Title } from "@/ui";
+import { Body, Button, Card, Notice, Screen, Section, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.reception;
@@ -131,25 +133,21 @@ export default function ReceptionScreen() {
     }
   }
 
-  const header = (
-    <>
-      <View style={styles.head}>
-        <Title>{t.title}</Title>
-        <Body muted>{reception.title}</Body>
-      </View>
+  const address = reception.preview.site.addressLines.join(", ");
+  const band = (
+    <HeaderBand title={reception.title} meta={address ? [{ icon: MapPin, text: address }] : []}>
       <StepTabs steps={steps} current={step} />
-    </>
+    </HeaderBand>
   );
 
   if (step === "reserves") {
     return (
       <Screen
-        header={<TopBar />}
+        band={band}
         footer={
           <Button label={t.continue} onPress={() => checkReserves() !== null && setStep("pv")} />
         }
       >
-        {header}
         <Section title={t.reservesTitle}>
           <Text style={styles.strong}>{t.reservesQuestion}</Text>
           <Body muted>{t.reservesHelp(reception.artisanName)}</Body>
@@ -171,11 +169,7 @@ export default function ReceptionScreen() {
   }
 
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
-    >
-      {header}
+    <Screen band={band} footer={<Button label={t.submit} onPress={submit} loading={pending} />}>
       {withReserves ? null : (
         <Card tone="soft">
           <View style={styles.conform}>
@@ -220,7 +214,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  head: { gap: spacing(1) },
   strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   conform: { gap: spacing(2) },
   important: {

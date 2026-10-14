@@ -1,10 +1,12 @@
 import { SIGNATURE_CONSENTS, type SignatureConsent } from "@menao/core";
 import { signatureConsentsSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { ConsentList, type ConsentItem } from "@/components/consents";
+import { HeaderBand } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -14,7 +16,7 @@ import { openHostedPage } from "@/lib/hosted";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuote, startQuoteSignature } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
@@ -108,11 +110,16 @@ export default function QuoteSignatureScreen() {
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <HeaderBand
+          title={quote.data.site.title}
+          meta={[{ icon: MapPin, text: quote.data.site.addressLines.join(", ") }]}
+        >
+          <StepTabs steps={STEPS} current="sign" />
+        </HeaderBand>
+      }
       footer={<Button label={t.signature.submit} onPress={submit} loading={pending} />}
     >
-      <Title>{t.signature.title}</Title>
-      <StepTabs steps={STEPS} current="sign" />
       <Body muted>{t.signature.intro}</Body>
       <Card>
         <View style={styles.summary}>

@@ -1,10 +1,11 @@
 import { canReview, type ValueForMoney } from "@menao/core";
 import { fr } from "@/i18n/fr";
-import { artisanAvatar } from "./chantiers";
+import { artisanAvatar, chantierAddress } from "./chantiers";
 import { supabase } from "./supabase";
 
 export type ReviewState = {
   title: string;
+  address: string | null;
   artisanName: string;
   artisanId: string;
   projectId: string;
@@ -32,6 +33,7 @@ export async function loadReviewState(chantierId: string): Promise<ReviewState |
   if (!c) return null;
   return {
     title: c.title,
+    address: chantierAddress(c),
     artisanName: c.artisan_name,
     artisanId: c.artisan_id,
     projectId: c.project_id,

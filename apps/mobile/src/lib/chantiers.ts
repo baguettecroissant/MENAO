@@ -27,6 +27,15 @@ async function signedUrls(bucket: string, paths: readonly (string | null | undef
 
 const avatarOf = (path: string | null) => (path ? publicUrl("avatars", path) : null);
 
+/** Adresse du chantier, ou à défaut son code postal et sa ville. */
+export function chantierAddress(c: {
+  adresse: string | null;
+  code_postal: string | null;
+  ville_nom: string | null;
+}): string | null {
+  return c.adresse || [c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null;
+}
+
 export type MyChantiers = {
   chantiers: ClientChantier[];
   requests: RequestRow[];

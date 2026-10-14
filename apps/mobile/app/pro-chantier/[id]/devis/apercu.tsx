@@ -2,8 +2,8 @@ import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { QuotePaper } from "@/components/documents/quote-paper";
+import { HeaderBand, whenMeta } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuoteSendContext } from "@/lib/pro-quotes";
@@ -36,12 +36,15 @@ export default function QuotePreviewScreen() {
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <HeaderBand title={t.title} meta={whenMeta(context.appointmentAt)}>
+          <StepTabs steps={STEPS} current="preview" />
+        </HeaderBand>
+      }
       footer={
         <Button label={t.next} onPress={() => router.push(`/pro-chantier/${id}/devis/envoi`)} />
       }
     >
-      <StepTabs steps={STEPS} current="preview" />
       <Title>{t.preview.ready}</Title>
       <Body muted>{t.preview.check(context.client.firstName)}</Body>
       <QuotePaper model={context.model} />

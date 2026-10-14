@@ -36,11 +36,6 @@ export function DetailBlock({
   );
 }
 
-/**
- * Blocs communs à l'opportunité (F-17) et au rendez-vous (F-18), comme sur le site : client,
- * adresse, description (photos, critères), date souhaitée, message. Coordonnées et adresse exacte
- * seulement une fois le rendez-vous fixé (décision C, ADR 0014).
- */
 /** Photos du projet : vignettes ouvertes en grand d'un appui. */
 function RequestPhotos({ urls }: { urls: string[] }) {
   const [viewing, setViewing] = useState<number | null>(null);
@@ -65,14 +60,22 @@ function RequestPhotos({ urls }: { urls: string[] }) {
   );
 }
 
+/**
+ * Blocs communs à l'opportunité (F-17) et au rendez-vous (F-18), comme sur le site : client,
+ * adresse, description (photos, critères), date souhaitée, message. Coordonnées et adresse exacte
+ * seulement une fois le rendez-vous fixé (décision C, ADR 0014).
+ * `onMessage` : « Écrire au client », dans la carte du client (maquette « Vue d'un rendez-vous »).
+ */
 export function RequestBlocks({
   detail: r,
   photoUrls,
   variant,
+  onMessage,
 }: {
   detail: RequestDetail;
   photoUrls: string[];
   variant: "opportunite" | "rendez-vous";
+  onMessage?: () => void;
 }) {
   const accepted = r.status === "acceptee";
   const clientName = [r.client.first_name, r.client.last_name].filter(Boolean).join(" ");
@@ -96,6 +99,9 @@ export function RequestBlocks({
       <DetailBlock icon={icon(User)} title={t.client}>
         <Text style={styles.strong}>{clientName || "—"}</Text>
         {accepted && r.client.email ? <Text style={styles.meta}>{r.client.email}</Text> : null}
+        {onMessage ? (
+          <Button label={fr.proAppointment.writeClient} variant="secondary" onPress={onMessage} />
+        ) : null}
         {phone ? (
           <Button
             label={t.call(r.client.first_name)}
@@ -192,14 +198,15 @@ const styles = StyleSheet.create({
   photos: { flexDirection: "row", gap: spacing(2) },
   photo: { width: 96, height: 96, borderRadius: radius.input },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  // Puces bleu clair des maquettes (« En appartement », « Installation de prises »).
   tag: {
     overflow: "hidden",
     borderRadius: radius.pill,
-    backgroundColor: colors.background,
+    backgroundColor: colors["primary-softer"],
     paddingHorizontal: spacing(2.5),
     paddingVertical: spacing(1),
-    fontFamily: font.regular,
+    fontFamily: font.medium,
     fontSize: 12,
-    color: colors["muted-foreground"],
+    color: colors["primary-strong"],
   },
 });

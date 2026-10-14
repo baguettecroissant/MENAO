@@ -12,13 +12,13 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { DetailBlock } from "@/components/pro/request-blocks";
+import { HeaderBand, whenMeta } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteSendContext, sendQuote } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Checkbox, Notice, Screen, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuote;
@@ -119,13 +119,15 @@ export default function QuoteSendScreen() {
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <HeaderBand title={t.title} meta={whenMeta(ctx.appointmentAt)}>
+          <StepTabs steps={STEPS} current="send" />
+        </HeaderBand>
+      }
       footer={
         <Button label={s.submit} onPress={submit} loading={pending} disabled={schedule === null} />
       }
     >
-      <StepTabs steps={STEPS} current="send" />
-      <Title>{s.title}</Title>
       {!ctx.insured ? <Notice tone="error">{s.insuranceMissing}</Notice> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
 

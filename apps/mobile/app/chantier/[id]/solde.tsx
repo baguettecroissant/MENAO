@@ -1,7 +1,8 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Check, CircleDashed, Lock } from "lucide-react-native";
+import { Check, CircleDashed, Lock, MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { HeaderBand } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -9,7 +10,7 @@ import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadBalance, startBalancePayment } from "@/lib/reception";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Card, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.balance;
@@ -67,15 +68,20 @@ export default function BalanceScreen() {
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <HeaderBand
+          title={balance.title}
+          meta={balance.address ? [{ icon: MapPin, text: balance.address }] : []}
+        >
+          <StepTabs steps={STEPS} current="solde" />
+        </HeaderBand>
+      }
       footer={
         balance.inProgress ? undefined : (
           <Button label={t.submit(amount)} onPress={pay} loading={pending} />
         )
       }
     >
-      <Title>{t.title}</Title>
-      <StepTabs steps={STEPS} current="solde" />
       <Body muted>{t.intro}</Body>
       <Card>
         <View style={styles.summary}>

@@ -8,11 +8,12 @@ import {
 } from "@menao/core";
 import { reviewSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Check, CircleCheck } from "lucide-react-native";
+import { Check, CircleCheck, MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { PersonRow } from "@/components/chantier/parts";
+import { HeaderBand } from "@/components/header-band";
 import { RadioGroup } from "@/components/radio-group";
 import { RatingSlider } from "@/components/rating-slider";
 import { StepTabs } from "@/components/step-tabs";
@@ -70,10 +71,18 @@ export default function ReviewScreen() {
     { key: "avis", label: t.steps.avis },
   ] as const;
 
+  const band = (
+    <HeaderBand
+      title={state.title}
+      meta={state.address ? [{ icon: MapPin, text: state.address }] : []}
+    >
+      <StepTabs steps={steps} current="avis" />
+    </HeaderBand>
+  );
+
   if (state.reviewed) {
     return (
-      <Screen header={<TopBar />}>
-        <StepTabs steps={steps} current="avis" />
+      <Screen band={band}>
         <Card>
           <View style={styles.thanks}>
             <View style={styles.badge}>
@@ -132,11 +141,7 @@ export default function ReviewScreen() {
   const length = comment.trim().length;
   const enough = length >= REVIEW_COMMENT_LIMITS.min;
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
-    >
-      <StepTabs steps={steps} current="avis" />
+    <Screen band={band} footer={<Button label={t.submit} onPress={submit} loading={pending} />}>
       <View style={styles.intro}>
         <View style={styles.badge}>
           <CircleCheck size={24} color={colors["primary-foreground"]} />

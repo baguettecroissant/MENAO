@@ -8,6 +8,7 @@ import { receptionPreviewData, type QuoteDocument, type ReceptionPdfData } from 
 import type { Database } from "@menao/db";
 import { fr } from "@/i18n/fr";
 import { env } from "./env";
+import { chantierAddress } from "./chantiers";
 import { functionError, sqlError, type Opened } from "./functions";
 import { supabase } from "./supabase";
 
@@ -117,6 +118,8 @@ export type BalanceStart =
   | { ready: false }
   | {
       ready: true;
+      title: string;
+      address: string | null;
       totalCents: number;
       paidCents: number;
       remainingCents: number;
@@ -149,6 +152,8 @@ export async function loadBalance(chantierId: string): Promise<BalanceStart | nu
   const issuer = (document as unknown as QuoteDocument | null)?.issuer;
   return {
     ready: true,
+    title: c.title,
+    address: chantierAddress(c),
     totalCents: total,
     paidCents: progress.paidCents,
     remainingCents: progress.remainingCents,
