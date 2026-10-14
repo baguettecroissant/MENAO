@@ -13,6 +13,16 @@ const schema = z.object({
     .url()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  // Fiches de l'application dans les stores : vides tant qu'elle n'est pas publiée (fenêtre
+  // « depuis votre poche » masquée, /application renvoie à l'accueil).
+  NEXT_PUBLIC_APP_STORE_URL: z
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  NEXT_PUBLIC_PLAY_STORE_URL: z
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
 });
 
 export const env = schema.parse({
@@ -20,4 +30,6 @@ export const env = schema.parse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  NEXT_PUBLIC_APP_STORE_URL: process.env.NEXT_PUBLIC_APP_STORE_URL,
+  NEXT_PUBLIC_PLAY_STORE_URL: process.env.NEXT_PUBLIC_PLAY_STORE_URL,
 });
