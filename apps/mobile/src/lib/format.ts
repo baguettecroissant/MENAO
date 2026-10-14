@@ -38,6 +38,17 @@ export function formatDateNumeric(iso: string): string {
   return numeric.format(new Date(iso));
 }
 
+const dayMonthNumeric = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Paris",
+});
+
+/** « 25/10 » (heure de Paris), dans les listes de devis comme sur le site. */
+export function formatDayMonthNumeric(iso: string): string {
+  return dayMonthNumeric.format(new Date(iso));
+}
+
 /** « 25 octobre 2026 » (heure de Paris), comme sur le site. */
 export function formatDay(iso: string): string {
   return dayLong.format(new Date(iso));

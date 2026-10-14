@@ -8,6 +8,7 @@ import {
   formatDayAndTime,
   formatDayLabel,
   formatDayMonth,
+  formatDayMonthNumeric,
   formatDayMonthShort,
   formatDuration,
   formatMonthName,
@@ -74,6 +75,10 @@ describe("dates de l'agenda", () => {
 
   it("abrège le jour et le mois au fil d'une phrase", () => {
     expect(formatDayMonthShort("2026-10-13")).toBe("mar. 13 oct.");
+  });
+
+  it("affiche le jour et le mois en chiffres, heure de Paris", () => {
+    expect(formatDayMonthNumeric("2026-10-13T22:30:00Z")).toBe("14/10");
   });
 
   it("affiche une heure HH:MM", () => {

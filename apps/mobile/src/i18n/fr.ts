@@ -873,6 +873,7 @@ export const fr = {
   },
   /** Tableau de bord de l'artisan (F-16) : mêmes textes que l'espace pro du site. */
   proDashboard: {
+    documents: "Devis et factures",
     greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
     error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
     suspended: "Votre compte est suspendu. Contactez l'équipe MENAO.",
@@ -1176,6 +1177,59 @@ export const fr = {
           : `${n} photos n'ont pas pu être ajoutées. Réessayez.`,
       limit: "Ce chantier a atteint 100 photos.",
       rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
+    },
+  },
+  /** Devis de l'artisan : mêmes textes que l'espace pro du site. */
+  proQuotes: {
+    title: "Devis",
+    subtitle: "Suivez vos devis Menao.",
+    open: "Mes devis",
+    toSend: "Devis à envoyer",
+    sent: "Devis envoyés",
+    emptyToSend: "Vous n'avez aucun devis à envoyer.",
+    emptySent: "Vous n'avez encore envoyé aucun devis.",
+    visit: (day: string, time: string) => `Visite le ${day} à ${time}`,
+    updated: (date: string) => `Modifié le ${date}`,
+    sentOn: (day: string, time: string) => `Envoyé le ${day} à ${time}`,
+    version: (n: number) => `Version ${n}`,
+    draft: "Brouillon",
+    lineCount: (n: number) => (n <= 1 ? `${n} ligne` : `${n} lignes`),
+    statuses: {
+      brouillon: "Brouillon",
+      envoye: "Envoyé",
+      signe: "Signé",
+      refuse: "Refusé",
+      revision_demandee: "Modification demandée",
+      remplace: "Remplacé par une nouvelle version",
+    },
+    error: "Impossible d'afficher vos devis pour le moment. Réessayez dans quelques instants.",
+  },
+  /** Factures de l'artisan (F-35) : mêmes textes que l'espace pro du site. */
+  proInvoices: {
+    title: "Factures",
+    subtitle: "Factures émises en votre nom à chaque paiement reçu, numérotées sans interruption.",
+    open: "Mes factures",
+    empty: "Aucune facture pour le moment : elles sont émises à chaque paiement reçu.",
+    export: "Exporter pour le comptable (CSV)",
+    exportFailed: "L'export n'a pas pu être préparé. Réessayez dans un instant.",
+    kinds: { acompte: "Acompte", solde: "Solde" },
+    line: (kind: string, date: string, client: string | null) =>
+      [kind, date, client].filter(Boolean).join(" · "),
+    view: (numero: string) => `Partager la facture ${numero} (PDF)`,
+    error: "Impossible d'afficher vos factures pour le moment. Réessayez dans quelques instants.",
+    csv: {
+      filename: "factures-menao.csv",
+      headers: [
+        "Numéro",
+        "Date",
+        "Type",
+        "Client",
+        "Chantier",
+        "Devis",
+        "Total HT",
+        "TVA",
+        "Total TTC",
+      ],
     },
   },
   /** « Ce chantier a besoin d'une expertise » (F-17, F-18) : mêmes textes que le site. */

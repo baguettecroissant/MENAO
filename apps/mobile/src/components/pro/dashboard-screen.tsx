@@ -193,6 +193,11 @@ export function DashboardScreen() {
               <LinkText label={t.allRequests} onPress={() => router.push("/pro/demandes")} />
             </Section>
 
+            <Section title={t.documents}>
+              <LinkText label={fr.proQuotes.open} onPress={() => router.push("/pro-devis")} />
+              <LinkText label={fr.proInvoices.open} onPress={() => router.push("/pro-factures")} />
+            </Section>
+
             <Section title={fr.proReviews.title}>
               <Body muted>{fr.proReviews.toAnswer(data.reviewsToAnswer)}</Body>
               <LinkText label={fr.proReviews.open} onPress={() => router.push("/pro-avis")} />
