@@ -72,6 +72,8 @@ const config: ExpoConfig = {
       // production pour les versions distribuées (preview, production), de test sinon.
       "expo-notifications",
       {
+        // Icône de la barre d'état Android : logo blanc sur fond transparent (96 × 96, ADR 0097).
+        icon: "./assets/notification-icon.png",
         color: "#4869f6",
         mode:
           process.env.EAS_BUILD_PROFILE && process.env.EAS_BUILD_PROFILE !== "development"
