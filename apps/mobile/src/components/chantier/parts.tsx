@@ -191,8 +191,8 @@ export function PersonRow({
   onMessage,
   verified = true,
 }: {
-  /** « Votre artisan » côté client, « Votre client » côté artisan. */
-  label?: string;
+  /** « Votre artisan » côté client, « Votre client » côté artisan ; null : affiché au-dessus. */
+  label?: string | null;
   /** Badge « Artisan vérifié par MENAO » (vue du client). */
   verified?: boolean;
   name: string;
@@ -204,7 +204,7 @@ export function PersonRow({
 }) {
   return (
     <View style={styles.person}>
-      <Text style={styles.personLabel}>{label}</Text>
+      {label ? <Text style={styles.personLabel}>{label}</Text> : null}
       <View style={styles.personRow}>
         <Avatar url={photoUrl} name={name} />
         <View style={styles.personText}>

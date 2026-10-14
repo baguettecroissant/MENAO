@@ -23,6 +23,7 @@ import {
 import { ChantierStatusTag } from "@/components/chantier/chantier-status-tag";
 import { ChantierStepper } from "@/components/chantier/chantier-stepper";
 import { JournalCard } from "@/components/chantier/journal-card";
+import { ConversationCard } from "@/components/messages/conversation-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
 import {
   LockedJournalActions,
@@ -87,6 +88,7 @@ export async function ArtisanFollowUp({
     { data: received },
     { data: review },
     { data: openTicket },
+    { data: conversations },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -147,7 +149,10 @@ export async function ArtisanFollowUp({
       .eq("type", "litige")
       .neq("status", "resolu")
       .maybeSingle(),
+    // F-40 : dernier échange, pour la carte « Messagerie avec … ».
+    supabase.rpc("my_conversations"),
   ]);
+  const conversation = (conversations ?? []).find((row) => row.chantier_id === id) ?? null;
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
       id: u.id,
@@ -318,6 +323,14 @@ export async function ArtisanFollowUp({
           <ChantierTabs base={`/pro/chantiers/${id}`} active={tab} />
           {tab === "suivi" ? (
             <>
+              {!conversation?.closed && (
+                <ConversationCard
+                  chantierId={id}
+                  name={clientName}
+                  lastAt={conversation?.last_at ?? null}
+                  unread={conversation?.unread ?? 0}
+                />
+              )}
               <JournalCard
                 summary={journal}
                 photoUrls={photos}

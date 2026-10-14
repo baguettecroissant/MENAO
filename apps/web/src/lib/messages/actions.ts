@@ -15,6 +15,8 @@ const rpcError = (error: { code?: string; message: string }): FormState => ({
 function refresh(chantierId: string) {
   revalidatePath(`/mon-espace/messages/${chantierId}`);
   revalidatePath(`/pro/messages/${chantierId}`);
+  // Carte « Messagerie avec … » de la vue du chantier côté artisan.
+  revalidatePath(`/pro/chantiers/${chantierId}`);
 }
 
 /** F-40 : message texte dans la conversation du chantier (send_message : droits, limites). */

@@ -18,6 +18,16 @@ export async function loadConversations(): Promise<ConversationItem[] | null> {
   return (data ?? []).map((row) => ({ ...row, avatarUrl: artisanAvatar(row.other_avatar_path) }));
 }
 
+/** Dernier échange d'un chantier : carte « Messagerie avec … » de la vue de l'artisan (RLS). */
+export async function loadConversationPreview(
+  chantierId: string,
+): Promise<{ lastAt: string | null; unread: number; closed: boolean } | null> {
+  const { data, error } = await supabase.rpc("my_conversations");
+  if (error) return null;
+  const row = (data ?? []).find((item) => item.chantier_id === chantierId);
+  return { lastAt: row?.last_at ?? null, unread: row?.unread ?? 0, closed: row?.closed ?? false };
+}
+
 export type ConversationMessage = {
   id: string;
   mine: boolean;

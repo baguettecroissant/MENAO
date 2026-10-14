@@ -107,9 +107,31 @@ export async function searchPreviousLines(query: string): Promise<QuoteLineInput
   }));
 }
 
+/** Texte d'une dictée sauvegardée pour ce chantier (F-19), comme sur le site (RLS : l'artisan). */
+export async function loadSavedDictation(chantierId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("quote_dictations")
+    .select("transcript")
+    .eq("chantier_id", chantierId)
+    .maybeSingle();
+  return data?.transcript ?? null;
+}
+
+/** « Sauvegarder cet enregistrement » (F-19) : le texte de la dictée, pour générer plus tard. */
+export async function saveDictation(
+  chantierId: string,
+  transcript: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_save_dictation", {
+    p_chantier_id: chantierId,
+    p_transcript: transcript.slice(0, 5000),
+  });
+  return error ? sqlError(error) : null;
+}
+
 /**
- * Dictée intelligente (F-19) : le texte dicté (au clavier du téléphone) devient des lignes
- * proposées par quote-from-voice, à vérifier avant d'enregistrer.
+ * Dictée intelligente (F-19) : le texte dicté devient des lignes proposées par quote-from-voice,
+ * à vérifier avant d'enregistrer.
  */
 export async function linesFromDictation(
   chantierId: string,

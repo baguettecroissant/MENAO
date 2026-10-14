@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand, whenMeta } from "@/components/header-band";
+import { BottomSheet } from "@/components/bottom-sheet";
 import { QuoteDictation } from "@/components/pro/quote-dictation";
 import { LineCard } from "@/components/pro/quote-line-card";
 import { LineForm } from "@/components/pro/quote-line-form";
@@ -194,6 +195,12 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
           </View>
           {!draft.assujettiTva ? <Text style={styles.small}>{t.vatExempt}</Text> : null}
           <Button
+            label={t.dictation.open}
+            variant="secondary"
+            icon={Mic}
+            onPress={() => setDictating(true)}
+          />
+          <Button
             label={t.generate}
             onPress={generate}
             loading={generating}
@@ -247,19 +254,15 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
           <Text style={styles.addText}>{t.addManual}</Text>
         </Pressable>
       )}
-      {dictating ? (
-        <QuoteDictation
-          chantierId={chantierId}
-          defaultVatBp={defaultVat}
-          onLines={addGenerated}
-          onClose={() => setDictating(false)}
-        />
-      ) : (
-        <Pressable role="button" onPress={() => setDictating(true)} style={styles.add}>
-          <Mic size={16} color={colors["primary-strong"]} />
-          <Text style={styles.addText}>{t.dictation.open}</Text>
-        </Pressable>
-      )}
+      {/* Maquette « Dictez votre devis » : feuille au-dessus de l'éditeur. */}
+      <BottomSheet
+        visible={dictating}
+        onClose={() => setDictating(false)}
+        title={t.dictation.title}
+        closeLabel={t.dictation.close}
+      >
+        <QuoteDictation chantierId={chantierId} defaultVatBp={defaultVat} onLines={addGenerated} />
+      </BottomSheet>
     </Screen>
   );
 }

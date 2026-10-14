@@ -1,36 +1,24 @@
-import {
-  DICTATION_SAMPLE_RATE,
-  MAX_DICTATION_SECONDS,
-  SILENCE_RMS,
-  SILENCE_WARNING_MS,
-  levelFromRms,
-  pcm16ToChannels,
-  rms,
-} from "@menao/core";
-import { requestRecordingPermissionsAsync, useAudioStream } from "expo-audio";
 import { AudioLines, Mic } from "lucide-react-native";
-import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
-import { transcribeCapture } from "@/lib/dictation";
+import { useDictation } from "@/lib/use-dictation";
 import { theme } from "@/ui/theme";
 
 const t = fr.search.dictation;
 const { colors, font, radius, spacing } = theme;
 const ERRORS = {
+  denied: t.denied,
+  limit: t.limit,
   silent: t.silent,
   session: fr.search.errors.session,
   rate_limited: t.rate_limited,
   failed: t.failed,
 } as const;
 
-type DictationState = "idle" | "listening" | "transcribing";
-
 /**
  * Dictée du projet (F-05), comme sur le site (bouton micro dans la zone de saisie des maquettes) :
- * seul le bouton rond s'affiche au repos. Le micro est capturé en PCM (expo-audio, iPhone et
- * Android), le niveau s'affiche et un silence prolongé est signalé ; 2 minutes au plus. Le texte
- * transcrit est ajouté à la description.
+ * seul le bouton rond s'affiche au repos ; pendant l'écoute, le niveau du micro et la durée.
+ * 2 minutes au plus ; le texte transcrit est ajouté à la description.
  */
 export function DictationButton({
   onText,
@@ -39,78 +27,10 @@ export function DictationButton({
   onText: (text: string) => void;
   onError: (message: string | null) => void;
 }) {
-  const [state, setState] = useState<DictationState>("idle");
-  const [seconds, setSeconds] = useState(0);
-  const [level, setLevel] = useState(0);
-  const [quiet, setQuiet] = useState(false);
-  const chunks = useRef<Uint8Array[]>([]);
-  const format = useRef({ sampleRate: DICTATION_SAMPLE_RATE, channels: 1 });
-  // Instants en secondes depuis le début de la capture (horodatage des morceaux reçus).
-  const heardAt = useRef(0);
-  const shownAt = useRef(-1);
-  const stopping = useRef(false);
-
-  const { stream } = useAudioStream({
-    sampleRate: DICTATION_SAMPLE_RATE,
-    channels: 1,
-    encoding: "int16",
-    onBuffer: (buffer) => {
-      if (stopping.current) return;
-      const bytes = new Uint8Array(buffer.data);
-      chunks.current.push(bytes);
-      format.current = { sampleRate: buffer.sampleRate, channels: buffer.channels };
-      const now = buffer.timestamp;
-      const value = rms(pcm16ToChannels(bytes, buffer.channels)[0] ?? new Float32Array(0));
-      if (value >= SILENCE_RMS) heardAt.current = now;
-      // Affichage rafraîchi dix fois par seconde au plus.
-      if (now - shownAt.current >= 0.1) {
-        shownAt.current = now;
-        setLevel(levelFromRms(value));
-        setQuiet((now - heardAt.current) * 1000 >= SILENCE_WARNING_MS);
-        setSeconds(Math.floor(now));
-      }
-      if (buffer.timestamp >= MAX_DICTATION_SECONDS) {
-        onError(t.limit);
-        void stop();
-      }
-    },
+  const { state, seconds, level, quiet, start, stop } = useDictation({
+    onText,
+    onError: (error) => onError(error ? ERRORS[error] : null),
   });
-
-  async function start() {
-    onError(null);
-    const permission = await requestRecordingPermissionsAsync();
-    if (!permission.granted) return onError(t.denied);
-    chunks.current = [];
-    stopping.current = false;
-    heardAt.current = 0;
-    shownAt.current = -1;
-    setSeconds(0);
-    setLevel(0);
-    setQuiet(false);
-    try {
-      await stream.start();
-      setState("listening");
-    } catch {
-      onError(t.failed);
-    }
-  }
-
-  async function stop() {
-    if (stopping.current) return;
-    stopping.current = true;
-    stream.stop();
-    setState("transcribing");
-    const captured = chunks.current;
-    chunks.current = [];
-    const outcome = await transcribeCapture(
-      captured,
-      format.current.sampleRate,
-      format.current.channels,
-    );
-    setState("idle");
-    if ("text" in outcome) onText(outcome.text);
-    else onError(ERRORS[outcome.error]);
-  }
 
   const listening = state === "listening";
   const label =
@@ -156,7 +76,7 @@ export function DictationButton({
 }
 
 /** Niveau du micro en trois barres, comme sur le site. */
-function LevelBars({ level }: { level: number }) {
+export function LevelBars({ level }: { level: number }) {
   return (
     <View aria-hidden style={styles.bars}>
       {[0.2, 0.5, 0.8].map((threshold) => (

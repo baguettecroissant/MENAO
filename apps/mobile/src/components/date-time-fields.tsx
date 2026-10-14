@@ -198,6 +198,80 @@ export function TimeField({
 }
 
 /**
+ * Date compacte (pied d'écran « Confirmer la date de démarrage », F-22) : pastille qui ouvre le
+ * calendrier sur iPhone, bouton et boîte de dialogue sur Android, champ AAAA-MM-JJ dans la version
+ * web. `label` : nom lu par les lecteurs d'écran.
+ */
+export function CompactDatePicker({
+  label,
+  date,
+  minDate,
+  onDate,
+}: {
+  label: string;
+  /** AAAA-MM-JJ. */
+  date: string;
+  /** Aujourd'hui (AAAA-MM-JJ) : pas de date passée. */
+  minDate: string;
+  onDate: (date: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (Platform.OS === "web") {
+    return (
+      <TextInput
+        aria-label={label}
+        value={date}
+        onChangeText={onDate}
+        maxLength={10}
+        style={styles.compactInput}
+      />
+    );
+  }
+  if (Platform.OS === "ios") {
+    return (
+      <View accessible accessibilityLabel={label}>
+        <DateTimePicker
+          value={fromIsoDate(date)}
+          mode="date"
+          display="compact"
+          minimumDate={fromIsoDate(minDate)}
+          locale="fr-FR"
+          accentColor={theme.colors.primary}
+          onChange={(event, picked) => {
+            if (event.type === "set" && picked) onDate(toIsoDate(picked));
+          }}
+        />
+      </View>
+    );
+  }
+  return (
+    <>
+      <Pressable
+        role="button"
+        aria-label={label}
+        onPress={() => setOpen(true)}
+        style={styles.compactInput}
+      >
+        <Text style={styles.compactText}>{formatLongDate(date)}</Text>
+      </Pressable>
+      {open ? (
+        <DateTimePicker
+          value={fromIsoDate(date)}
+          mode="date"
+          display="default"
+          minimumDate={fromIsoDate(minDate)}
+          onChange={(event, picked) => {
+            setOpen(false);
+            if (event.type === "set" && picked) onDate(toIsoDate(picked));
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/**
  * Heure compacte (éditeur d'horaires, F-44) : pastille qui ouvre la roue sur iPhone, bouton et boîte
  * de dialogue sur Android, champ HH:MM dans la version web. `label` : nom lu par les lecteurs
  * d'écran.

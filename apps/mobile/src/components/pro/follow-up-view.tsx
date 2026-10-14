@@ -8,23 +8,25 @@ import {
 } from "@menao/core";
 import { chantierMessageSchema, liftMessageSchema } from "@menao/validation";
 import { router } from "expo-router";
-import { MapPin, NotebookPen, ShieldCheck } from "lucide-react-native";
+import { NotebookPen, ShieldCheck } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
+import { BottomSheet } from "@/components/bottom-sheet";
+import { ChantierLayout } from "@/components/chantier/chantier-layout";
 import { DocumentsCard, JournalCard, ScheduleCard } from "@/components/chantier/dossier";
 import {
-  ChantierCover,
-  ChantierStepper,
   NextInterventionCard,
   PersonRow,
   StatusPill,
+  chantierTag,
 } from "@/components/chantier/parts";
+import { ConversationCard } from "@/components/messages/conversation-card";
 import { PhotoUpload } from "@/components/pro/photo-upload";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewCard } from "@/components/pro/review-card";
+import { StartDateForm } from "@/components/pro/start-date-form";
 import { Segmented } from "@/components/segmented";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import {
@@ -34,17 +36,18 @@ import {
   type ArtisanChantier,
   type ArtisanFollowUp,
 } from "@/lib/pro-chantiers";
-import { Body, Button, Card, LinkText, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, LinkText, Notice, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proFollowUp;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * Vue d'un chantier côté artisan après l'acompte (F-22), comme sur le site (maquettes « Vue d'un
- * chantier ») : confirmation de la date de démarrage, journal pendant les travaux, « Déclarer le
- * chantier terminé », réserves et leur levée, avis du client et réponse publique (F-28), dossier
- * (documents, échéancier, client). Aucun lien vers le site (règle 10).
+ * Vue d'un chantier côté artisan après l'acompte (F-22), comme sur le site et avec la mise en page
+ * de la vue du client (maquettes « Vue d'un chantier ») : confirmation de la date de démarrage et
+ * « Déclarer le chantier terminé » en pied d'écran, « Messagerie avec … » et journal pendant les
+ * travaux, réserves et leur levée, avis du client et réponse publique (F-28), dossier (documents,
+ * échéancier, client). Aucun lien vers le site (règle 10).
  */
 export function FollowUpView({
   data,
@@ -59,6 +62,8 @@ export function FollowUpView({
   onChanged: () => void;
 }) {
   const [tab, setTab] = useState<"suivi" | "dossier">("suivi");
+  const [justConfirmed, setJustConfirmed] = useState(false);
+  const [finishOpen, setFinishOpen] = useState(false);
   const c = data.detail;
   const id = c.chantier.id;
   const status = c.chantier.status;
@@ -71,52 +76,64 @@ export function FollowUpView({
   const next = nextIntervention({ status, appointmentAt: null, startAt });
   const address = c.adresse ?? ([c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null);
   const start = startAt ? formatDayAndTime(startAt) : null;
+  const showConfirmed = (confirmed || justConfirmed) && status === "planifie" && start;
 
   return (
-    <Screen header={<TopBar />}>
-      <View style={styles.cover}>
-        <ChantierCover url={f.coverUrl} height={170} />
-      </View>
-      <View style={styles.tags}>
-        <StatusPill
-          text={fr.proChantiers.status[status]}
-          tone={status === "en_litige" ? "danger" : "primary"}
-        />
-        {f.depositPaid ? (
-          <View style={styles.deposit}>
-            <ShieldCheck size={14} color={colors.success} />
-            <Text style={styles.depositText}>{fr.chantier.depositReceived}</Text>
-          </View>
-        ) : null}
-      </View>
-      <Title>{c.chantier.title}</Title>
-      {address ? (
-        <View style={styles.row}>
-          <MapPin size={14} color={colors["muted-foreground"]} />
-          <Text style={styles.meta}>{address}</Text>
+    <ChantierLayout
+      coverUrl={f.coverUrl}
+      title={c.chantier.title}
+      address={address}
+      pills={
+        <>
+          {/* Même pastille que la vue du client et que le site (« Démarrage prévu le … »). */}
+          <StatusPill
+            {...chantierTag({
+              status,
+              startAt,
+              finishedAt: f.finishedAt,
+              closedAt: status === "cloture" ? f.balancePaidAt : null,
+              receivedAt: f.receivedAt,
+            })}
+          />
+          {f.depositPaid ? (
+            <View style={styles.deposit}>
+              <ShieldCheck size={14} color={colors.success} />
+              <Text style={styles.depositText}>{fr.chantier.depositReceived}</Text>
+            </View>
+          ) : null}
+        </>
+      }
+      description={c.description}
+      personLabel={fr.chantier.yourClient}
+      person={
+        <PersonRow label={null} name={clientName} detail={null} photoUrl={null} verified={false} />
+      }
+      onMessage={() => router.push(`/conversation/${id}`)}
+      phone={c.client.phone}
+      step={step}
+      footer={
+        // Maquettes « Date à confirmer » et « Chantier en cours » : action principale en pied.
+        status === "acompte_paye" ? (
+          <StartDateForm
+            chantierId={id}
+            quoteStart={f.quote?.startDate ?? null}
+            onConfirmed={() => {
+              setJustConfirmed(true);
+              onChanged();
+            }}
+          />
+        ) : canDeclareFinished(status) ? (
+          <Button label={t.finish} onPress={() => setFinishOpen(true)} />
+        ) : undefined
+      }
+    >
+      {showConfirmed ? (
+        <View style={styles.group}>
+          <Notice tone="success">
+            {`${t.confirmedTitle}. ${t.confirmed(start.day, start.time, client)}`}
+          </Notice>
+          <LinkText label={t.dashboard} onPress={() => router.navigate("/pro")} />
         </View>
-      ) : null}
-      <Card>
-        <PersonRow
-          label={fr.chantier.yourClient}
-          name={clientName}
-          detail={null}
-          photoUrl={null}
-          phone={c.client.phone}
-          verified={false}
-          onMessage={() => router.push(`/conversation/${id}`)}
-        />
-      </Card>
-      {step !== null ? (
-        <Card>
-          <ChantierStepper current={step} />
-        </Card>
-      ) : null}
-
-      {confirmed && status === "planifie" && start ? (
-        <Notice tone="success">
-          {`${t.confirmedTitle}. ${t.confirmed(start.day, start.time, client)}`}
-        </Notice>
       ) : null}
       {status === "en_litige" || f.openTicketId ? (
         <View style={styles.group}>
@@ -130,20 +147,6 @@ export function FollowUpView({
             />
           ) : null}
         </View>
-      ) : null}
-      {status === "acompte_paye" ? (
-        <Button
-          label={t.confirm}
-          onPress={() =>
-            router.push({
-              pathname: "/pro-chantier/[id]/demarrage",
-              params: { id, devis: f.quote?.startDate ?? "" },
-            })
-          }
-        />
-      ) : null}
-      {canDeclareFinished(status) ? (
-        <FinishPanel chantierId={id} client={client} onDone={onChanged} />
       ) : null}
       {status === "travaux_termines" ? (
         <Notice tone="info">{t.awaitingReception(client)}</Notice>
@@ -196,6 +199,7 @@ export function FollowUpView({
       />
       {tab === "suivi" ? (
         <>
+          <ConversationCard chantierId={id} name={clientName} />
           <JournalCard
             journal={f.journal}
             photoUrls={f.photoUrls}
@@ -257,7 +261,22 @@ export function FollowUpView({
       >
         <Text style={styles.danger}>{fr.chantier.report}</Text>
       </Pressable>
-    </Screen>
+      <BottomSheet
+        visible={finishOpen}
+        onClose={() => setFinishOpen(false)}
+        title={t.finishTitle}
+        closeLabel={fr.chantier.next.close}
+      >
+        <FinishPanel
+          chantierId={id}
+          client={client}
+          onDone={() => {
+            setFinishOpen(false);
+            onChanged();
+          }}
+        />
+      </BottomSheet>
+    </ChantierLayout>
   );
 }
 
@@ -321,7 +340,10 @@ function MessageComposer({ chantierId, onDone }: { chantierId: string; onDone: (
   );
 }
 
-/** F-22 « Déclarer le chantier terminé », après la question « Ce chantier est-il terminé ? ». */
+/**
+ * F-22 « Déclarer le chantier terminé », dans la feuille « Ce chantier est-il terminé ? »
+ * (maquette « Chantier en cours ») : rappel des photos, puis confirmation.
+ */
 function FinishPanel({
   chantierId,
   client,
@@ -331,7 +353,6 @@ function FinishPanel({
   client: string;
   onDone: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -341,16 +362,11 @@ function FinishPanel({
     const failed = await declareChantierFinished(chantierId);
     setPending(false);
     if (failed) return setFailure(failed);
-    setOpen(false);
     onDone();
   }
 
-  if (!open) return <Button label={t.finish} onPress={() => setOpen(true)} />;
   return (
-    <View style={styles.panel}>
-      <Text role="heading" style={styles.panelTitle}>
-        {t.finishTitle}
-      </Text>
+    <>
       <Body muted>{t.finishIntro(client)}</Body>
       <Text style={styles.important}>
         <Text style={styles.importantLabel}>{t.finishImportant}</Text> {t.finishReminder}
@@ -358,8 +374,7 @@ function FinishPanel({
       <PhotoUpload chantierId={chantierId} label={t.addPhotos} variant="link" onAdded={onDone} />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
       <Button label={t.finish} onPress={confirm} loading={pending} />
-      <Button label={t.back} variant="ghost" onPress={() => setOpen(false)} />
-    </View>
+    </>
   );
 }
 
@@ -418,8 +433,6 @@ function LiftPanel({
 }
 
 const styles = StyleSheet.create({
-  cover: { overflow: "hidden", borderRadius: radius.card },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   deposit: {
     flexDirection: "row",
     alignItems: "center",
@@ -430,13 +443,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(1),
   },
   depositText: { fontFamily: font.medium, fontSize: 12, color: colors.success },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
-  meta: {
-    flexShrink: 1,
-    fontFamily: font.regular,
-    fontSize: 13,
-    color: colors["muted-foreground"],
-  },
   group: { gap: spacing(2) },
   text: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
