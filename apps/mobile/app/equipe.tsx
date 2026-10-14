@@ -4,7 +4,7 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { useSession } from "@/lib/session";
-import { supabase } from "@/lib/supabase";
+import { signOut } from "@/lib/auth";
 import { Body, Button, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
@@ -26,7 +26,7 @@ export default function Equipe() {
         loading={leaving}
         onPress={async () => {
           setLeaving(true);
-          await supabase.auth.signOut();
+          await signOut();
           setLeaving(false);
         }}
       />

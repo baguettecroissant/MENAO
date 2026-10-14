@@ -1,6 +1,7 @@
 import { authErrorKind, LEGAL_DOCUMENT_VERSIONS, SIGNUP_REQUIRED_DOCUMENTS } from "@menao/core";
 import type { SignIn, SignUp } from "@menao/validation";
 import { fr } from "@/i18n/fr";
+import { unregisterDevice } from "./push";
 import { supabase } from "./supabase";
 
 /**
@@ -37,4 +38,10 @@ export async function signIn(input: SignIn) {
   return error
     ? { error: fr.errors[authErrorKind(error.code)], user: null }
     : { error: null, user: data.user };
+}
+
+/** Déconnexion : l'appareil cesse d'abord de recevoir les notifications de ce compte (ADR 0079). */
+export async function signOut(): Promise<void> {
+  await unregisterDevice().catch(() => undefined);
+  await supabase.auth.signOut();
 }

@@ -9,6 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { PushNotifications } from "@/components/push-notifications";
 import { SessionProvider, useSession } from "@/lib/session";
 import { UnreadProvider } from "@/lib/unread";
 
@@ -43,6 +44,7 @@ function Root({ ready }: { ready: boolean }) {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }} />
+      <PushNotifications />
     </>
   );
 }
