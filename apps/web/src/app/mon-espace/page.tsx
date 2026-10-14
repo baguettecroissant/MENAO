@@ -8,7 +8,6 @@ import { FileText, HardHat, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
-import { SectionTabs } from "@/components/chantier/section-tabs";
 import { DraftSearches } from "@/components/project/draft-searches";
 import { PendingRequests } from "@/components/project/my-requests";
 import { ButtonLink, Tag } from "@/components/ui";
@@ -134,17 +133,13 @@ export default async function MySpacePage() {
       <h2 id="termines" className="text-lg font-medium">
         {t.finished}
       </h2>
-      {finished.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t.noFinished}</p>
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {finished.map((c) => (
-            <li key={c.chantier_id}>
-              <FinishedChantierCard c={c} photoUrl={photoOf(c.photo_path)} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {finished.map((c) => (
+          <li key={c.chantier_id}>
+            <FinishedChantierCard c={c} photoUrl={photoOf(c.photo_path)} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 
@@ -188,13 +183,12 @@ export default async function MySpacePage() {
             {drafts.length > 0 && <DraftSearches drafts={drafts} />}
           </>
         ) : (
-          <SectionTabs
-            label={t.tabsLabel}
-            tabs={[
-              { label: t.tabs.inProgress, panel: inProgress },
-              { label: t.tabs.finished, panel: done },
-            ]}
-          />
+          // Une seule page, sur ordinateur comme sur téléphone et dans l'application (maquette
+          // « Mes chantiers - Mobile ») : en cours, demandes, recherches, puis terminés s'il y en a.
+          <>
+            {inProgress}
+            {finished.length > 0 && done}
+          </>
         )}
       </div>
     </main>

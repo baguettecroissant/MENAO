@@ -112,7 +112,12 @@ export default async function ArtisanProfilePage({
               title={title}
               actions={
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <ButtonLink href={requestHref} size="lg" className="sm:w-auto">
+                  {/* Libellé sur une ligne, même à côté du menu latéral (maquette « Fiche artisan »). */}
+                  <ButtonLink
+                    href={requestHref}
+                    size="lg"
+                    className="shrink-0 whitespace-nowrap sm:w-auto"
+                  >
                     {t.request}
                   </ButtonLink>
                   <p className="rounded-input bg-primary-softer px-3 py-2 text-xs text-primary-strong">
