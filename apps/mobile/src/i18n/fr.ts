@@ -1603,6 +1603,13 @@ export const fr = {
   pdf: {
     failed: "Le document n'a pas pu être téléchargé. Réessayez dans un instant.",
   },
+  /** Aperçu d'un document du chantier (devis, facture, PV), comme le PDF ouvert sur le site. */
+  documentPreview: {
+    pdf: "Télécharger le PDF",
+    signedPdf: "Télécharger le devis signé",
+    open: (title: string, meta: string) => `${title}, ${meta} : ouvrir l'aperçu`,
+    notFound: "Ce document est introuvable.",
+  },
   ago: {
     now: "à l'instant",
     minutes: (n: number) => `il y a ${n} min`,

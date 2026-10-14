@@ -108,8 +108,7 @@ export default function QuoteScreen() {
             <LinkText
               label={t.depositInvoice(quote.depositInvoice.numero)}
               onPress={() =>
-                quote.depositInvoice &&
-                download({ invoiceId: quote.depositInvoice.id }, quote.depositInvoice.numero)
+                quote.depositInvoice && router.push(`/document/facture/${quote.depositInvoice.id}`)
               }
             />
           ) : null}
