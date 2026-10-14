@@ -23,6 +23,7 @@ import {
 import { PhotoUpload } from "@/components/pro/photo-upload";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewCard } from "@/components/pro/review-card";
+import { Segmented } from "@/components/segmented";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
@@ -33,7 +34,7 @@ import {
   type ArtisanChantier,
   type ArtisanFollowUp,
 } from "@/lib/pro-chantiers";
-import { Body, Button, Card, Chip, LinkText, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proFollowUp;
@@ -184,18 +185,15 @@ export function FollowUpView({
         <Notice tone="info">{t.reviewPending(client)}</Notice>
       ) : null}
 
-      <View style={styles.tabs}>
-        <Chip
-          label={fr.chantier.tabs.suivi}
-          selected={tab === "suivi"}
-          onPress={() => setTab("suivi")}
-        />
-        <Chip
-          label={fr.chantier.tabs.dossier}
-          selected={tab === "dossier"}
-          onPress={() => setTab("dossier")}
-        />
-      </View>
+      <Segmented
+        label={fr.chantier.tabs.label}
+        options={[
+          { value: "suivi", label: fr.chantier.tabs.suivi },
+          { value: "dossier", label: fr.chantier.tabs.dossier },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
       {tab === "suivi" ? (
         <>
           <JournalCard
@@ -440,7 +438,6 @@ const styles = StyleSheet.create({
     color: colors["muted-foreground"],
   },
   group: { gap: spacing(2) },
-  tabs: { flexDirection: "row", gap: spacing(2) },
   text: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   reserves: {

@@ -273,8 +273,8 @@ function HomeFrame({
           >
             {profile?.avatarUrl ? (
               <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} alt="" />
-            ) : profile?.firstName ? (
-              <Text style={styles.avatarInitial}>{profile.firstName.charAt(0).toUpperCase()}</Text>
+            ) : profile?.initials ? (
+              <Text style={styles.avatarInitial}>{profile.initials}</Text>
             ) : (
               <UserRound size={22} color={colors["primary-foreground"]} />
             )}

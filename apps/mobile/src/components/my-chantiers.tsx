@@ -18,20 +18,20 @@ import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar, loadMyChantiers, type MyChantiers } from "@/lib/chantiers";
 import { formatDateNumeric } from "@/lib/format";
-import { Body, Card, Chip, LinkText, Notice } from "@/ui";
+import { Body, Card, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.myChantiers;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * « Mes chantiers » (F-12), comme sur le site : chantiers en cours (avancement, action attendue,
- * prochaine intervention), demandes en attente, recherches non envoyées, puis chantiers terminés.
+ * « Mes chantiers » (F-12), d'après la maquette « Mes chantiers - Mobile » et comme sur le site :
+ * sur une seule page, chantiers en cours (avancement, action attendue, prochaine intervention),
+ * demandes en attente, recherches non envoyées, puis chantiers terminés.
  */
 export function MyChantiersScreen() {
   const [data, setData] = useState<MyChantiers | null | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState<"inProgress" | "finished">("inProgress");
 
   const load = useCallback(async () => {
     setData(await loadMyChantiers());
@@ -120,69 +120,39 @@ export function MyChantiersScreen() {
             <Body muted>{t.emptyHint}</Body>
           </Card>
         ) : (
+          // Maquette « Mes chantiers - Mobile » : en cours, demandes, puis terminés, sur une page.
           <>
-            <View style={styles.tabs}>
-              <Chip
-                label={t.tabs.inProgress}
-                selected={tab === "inProgress"}
-                onPress={() => setTab("inProgress")}
-              />
-              <Chip
-                label={t.tabs.finished}
-                selected={tab === "finished"}
-                onPress={() => setTab("finished")}
-              />
-            </View>
-            {tab === "inProgress" ? (
-              <>
-                <Text style={styles.section}>{t.inProgress}</Text>
-                {active.length === 0 ? (
-                  <View style={styles.dashed}>
-                    <Body muted center>
-                      {t.noActive}
-                    </Body>
-                  </View>
-                ) : (
-                  active.map((c) => (
-                    <ChantierCard
-                      key={c.chantier_id}
-                      c={c}
-                      photoUrl={photoOf(c.photo_path)}
-                      avatarUrl={artisanAvatar(c.artisan_avatar_path)}
-                    />
-                  ))
-                )}
-                {pendingProjects.length > 0 && <Text style={styles.section}>{t.pending}</Text>}
-                {pendingProjects.map((projectId) => (
-                  <RequestGroup
-                    key={projectId}
-                    items={requests.filter((r) => r.project_id === projectId)}
-                    photoUrl={data?.photoByProject.get(projectId) ?? null}
-                    now={now}
-                    cancelledByClient={data?.cancelledByClient ?? new Set()}
-                  />
-                ))}
-              </>
+            <Text style={styles.section}>{t.inProgress}</Text>
+            {active.length === 0 ? (
+              <View style={styles.dashed}>
+                <Body muted center>
+                  {t.noActive}
+                </Body>
+              </View>
             ) : (
-              <>
-                <Text style={styles.section}>{t.finished}</Text>
-                {finished.length === 0 ? (
-                  <Body muted>{t.noFinished}</Body>
-                ) : (
-                  finished.map((c) => (
-                    <FinishedChantierCard
-                      key={c.chantier_id}
-                      c={c}
-                      photoUrl={photoOf(c.photo_path)}
-                    />
-                  ))
-                )}
-              </>
+              active.map((c) => (
+                <ChantierCard
+                  key={c.chantier_id}
+                  c={c}
+                  photoUrl={photoOf(c.photo_path)}
+                  avatarUrl={artisanAvatar(c.artisan_avatar_path)}
+                />
+              ))
             )}
+            {pendingProjects.length > 0 && <Text style={styles.section}>{t.pending}</Text>}
+            {pendingProjects.map((projectId) => (
+              <RequestGroup
+                key={projectId}
+                items={requests.filter((r) => r.project_id === projectId)}
+                photoUrl={data?.photoByProject.get(projectId) ?? null}
+                now={now}
+                cancelledByClient={data?.cancelledByClient ?? new Set()}
+              />
+            ))}
           </>
         )}
 
-        {tab === "inProgress" && (data?.drafts.length ?? 0) > 0 && (
+        {(data?.drafts.length ?? 0) > 0 && (
           <Card>
             <Text style={styles.heading}>{t.drafts.title}</Text>
             <Body muted>{t.drafts.intro}</Body>
@@ -206,6 +176,15 @@ export function MyChantiersScreen() {
             ))}
           </Card>
         )}
+
+        {finished.length > 0 ? (
+          <>
+            <Text style={styles.section}>{t.finished}</Text>
+            {finished.map((c) => (
+              <FinishedChantierCard key={c.chantier_id} c={c} photoUrl={photoOf(c.photo_path)} />
+            ))}
+          </>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -221,17 +200,19 @@ const styles = StyleSheet.create({
   },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   counts: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  // Puces blanches bordées de la maquette (« 1 chantier en cours », « 1 document à signer »).
   count: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(1.5),
-    borderRadius: radius.chip,
-    backgroundColor: colors["primary-softer"],
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors["primary-soft"],
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(1.5),
   },
   countText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  tabs: { flexDirection: "row", gap: spacing(2) },
   section: {
     fontFamily: font.medium,
     fontSize: 18,

@@ -129,14 +129,26 @@ export function FinishedChantierCard({
 }) {
   return (
     <Pressable role="link" onPress={() => open(c)} style={styles.finished}>
+      {/* Image sur toute la hauteur de la carte, même quand le lien passe sur deux lignes. */}
       <View style={styles.finishedCover}>
-        <ChantierCover url={photoUrl} height={96} />
+        <View style={StyleSheet.absoluteFill}>
+          <ChantierCover url={photoUrl} height="100%" />
+        </View>
       </View>
       <View style={styles.finishedBody}>
         <Text style={styles.finishedTitle} numberOfLines={2}>
           {c.title}
         </Text>
-        <Text style={styles.meta}>{c.artisan_name}</Text>
+        {addressOf(c) ? (
+          <View style={styles.address}>
+            <MapPin size={13} color={colors["muted-foreground"]} />
+            <Text style={styles.meta} numberOfLines={2}>
+              {addressOf(c)}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.meta}>{c.artisan_name}</Text>
+        )}
         <StatusPill {...tagOf(c)} />
         {c.status === "cloture" ? (
           <LinkText label={fr.chantier.rehire(c.artisan_name)} onPress={() => rehire(c)} />
@@ -188,7 +200,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  finishedCover: { width: 96 },
+  finishedCover: { width: 96, minHeight: 96 },
   finishedBody: { flex: 1, gap: spacing(1.5), padding: spacing(3) },
   finishedTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
 });

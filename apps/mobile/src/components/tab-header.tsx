@@ -61,10 +61,10 @@ export function TabHeader({
         >
           {profile?.avatarUrl ? (
             <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} alt="" />
-          ) : profile?.firstName ? (
-            <Text style={styles.initial}>{profile.firstName.charAt(0).toUpperCase()}</Text>
+          ) : profile?.initials ? (
+            <Text style={styles.initial}>{profile.initials}</Text>
           ) : (
-            <UserRound size={22} color={colors["primary-strong"]} />
+            <UserRound size={22} color={colors["primary-foreground"]} />
           )}
         </Pressable>
       </View>
@@ -102,15 +102,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   badgeText: { fontFamily: font.bold, fontSize: 10, color: colors["primary-foreground"] },
+  // Pastille bleue pleine de la maquette (« NS ») quand il n'y a pas de photo.
   avatar: {
     width: 48,
     height: 48,
     overflow: "hidden",
     borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarImage: { width: 48, height: 48 },
-  initial: { fontFamily: font.bold, fontSize: 18, color: colors["primary-strong"] },
+  initial: { fontFamily: font.bold, fontSize: 18, color: colors["primary-foreground"] },
 });

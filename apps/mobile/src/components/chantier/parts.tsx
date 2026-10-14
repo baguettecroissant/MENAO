@@ -1,4 +1,5 @@
 import {
+  APPOINTMENT_DURATION_MINUTES,
   CHANTIER_STEPS,
   type ChantierStatus,
   type ClientChantierAction,
@@ -15,12 +16,21 @@ import {
   Phone,
   Wrench,
 } from "lucide-react-native";
-import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  type DimensionValue,
+  Image,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Avatar } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { Button } from "@/ui";
 import { theme } from "@/ui/theme";
+import { AddToCalendar } from "./add-to-calendar";
 
 const t = fr.chantier;
 const { colors, font, radius, spacing } = theme;
@@ -117,7 +127,8 @@ export function ChantierCover({
   compact = false,
 }: {
   url: string | null;
-  height?: number;
+  /** Hauteur fixe, ou « 100% » pour remplir son cadre (chantiers terminés). */
+  height?: DimensionValue;
   /** Vignette (accueil) : icône réduite et centrée. */
   compact?: boolean;
 }) {
@@ -233,7 +244,14 @@ export function PersonRow({
 }
 
 /** Prochaine intervention : rendez-vous, puis démarrage des travaux. */
-export function NextInterventionCard({ next }: { next: NextIntervention }) {
+export function NextInterventionCard({
+  next,
+  calendar,
+}: {
+  next: NextIntervention;
+  /** « Ajouter à mon calendrier » (vue d'un chantier) : chantier, lieu et artisan de l'événement. */
+  calendar?: { chantierId: string; title: string; location: string | null; artisan: string };
+}) {
   const { day, time } = formatDayAndTime(next.startsAt);
   return (
     <View style={styles.next}>
@@ -244,6 +262,21 @@ export function NextInterventionCard({ next }: { next: NextIntervention }) {
       <Text style={styles.nextWhen}>
         {next.kind === "rendez_vous" ? t.next.appointmentOn(day, time) : t.next.startOn(day, time)}
       </Text>
+      {calendar ? (
+        <AddToCalendar
+          uid={`${calendar.chantierId}-${next.kind}`}
+          event={{
+            start: new Date(next.startsAt),
+            durationMinutes: APPOINTMENT_DURATION_MINUTES,
+            summary:
+              next.kind === "demarrage"
+                ? t.next.startSummary(calendar.title)
+                : t.next.summary(calendar.title),
+            location: calendar.location,
+            description: t.next.description(calendar.artisan),
+          }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -285,10 +318,21 @@ export function ActionCard({
             ? t.action.payBalanceText
             : t.action.payText}
       </Text>
-      {!sign && <Text style={styles.amount}>{formatCents(action.amountCents)}</Text>}
-      {sign && totalTtcCents !== null && (
-        <Text style={styles.amount}>{formatCents(totalTtcCents)}</Text>
-      )}
+      {/* Maquette « Mes chantiers » : à payer maintenant, puis total du chantier. */}
+      {!sign ? (
+        <View style={styles.amountLine}>
+          <Text style={styles.meta}>{t.action.dueNow}</Text>
+          <Text style={styles.amountDue}>{formatCents(action.amountCents)}</Text>
+        </View>
+      ) : null}
+      {totalTtcCents !== null ? (
+        <View style={styles.amountLine}>
+          <Text style={styles.meta}>{t.dossier.total}</Text>
+          <Text style={sign ? styles.amountDue : styles.amountTotal}>
+            {formatCents(totalTtcCents)}
+          </Text>
+        </View>
+      ) : null}
       <Button label={sign ? t.action.sign : t.action.pay} onPress={open} />
     </View>
   );
@@ -370,5 +414,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing(4),
   },
-  amount: { fontFamily: font.bold, fontSize: 24, color: colors.foreground },
+  amountLine: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+  amountDue: { fontFamily: font.medium, fontSize: 15, color: colors.primary },
+  amountTotal: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
 });

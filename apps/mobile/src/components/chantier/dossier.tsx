@@ -82,23 +82,6 @@ export function JournalCard({
   );
 }
 
-function Line({
-  label,
-  value,
-  strong = false,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-}) {
-  return (
-    <View style={styles.line}>
-      <Text style={[styles.meta, strong && styles.lineStrong]}>{label}</Text>
-      <Text style={[styles.lineValue, strong && styles.lineStrong]}>{value}</Text>
-    </View>
-  );
-}
-
 /** Échéancier du devis signé, toujours recalculé à partir des paiements (CLAUDE.md règle 5). */
 export function ScheduleCard({
   progress,
@@ -114,11 +97,25 @@ export function ScheduleCard({
           {t.dossier.schedule}
         </Text>
         {progress && totalTtcCents !== null ? (
-          <>
-            <Line label={t.dossier.total} value={formatCents(totalTtcCents)} />
-            <Line label={t.dossier.paid} value={formatCents(progress.paidCents)} />
-            <Line label={t.dossier.remaining} value={formatCents(progress.remainingCents)} strong />
-          </>
+          // Frise de la maquette « Dossier du chantier » : déjà payé, puis restant à payer.
+          <View>
+            <View style={styles.step}>
+              <View style={[styles.stepDot, styles.stepDotDone]}>
+                <View style={styles.stepDotInner} />
+              </View>
+              <Text style={[styles.meta, styles.stepLabel]}>{t.dossier.paid}</Text>
+              <Text style={styles.paid}>{formatCents(progress.paidCents)}</Text>
+            </View>
+            <View style={styles.stepLine} />
+            <View style={styles.step}>
+              <View style={styles.stepDot} />
+              <Text style={[styles.meta, styles.stepLabel]}>{t.dossier.remaining}</Text>
+              <Text style={styles.lineValue}>{formatCents(progress.remainingCents)}</Text>
+            </View>
+            <Text style={[styles.small, styles.total]}>
+              {t.dossier.totalLine(formatCents(totalTtcCents))}
+            </Text>
+          </View>
         ) : (
           <Body muted>{t.dossier.noSchedule}</Body>
         )}
@@ -201,6 +198,32 @@ const styles = StyleSheet.create({
     backgroundColor: colors["primary-soft"],
   },
   pressed: { opacity: 0.85 },
+  step: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
+  stepDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
+  },
+  stepDotDone: {
+    borderStyle: "solid",
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepDotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  stepLine: {
+    width: 1.5,
+    height: spacing(5),
+    marginLeft: 10,
+    backgroundColor: colors["border-strong"],
+  },
+  stepLabel: { flex: 1 },
+  paid: { fontFamily: font.medium, fontSize: 15, color: colors.primary },
+  total: { marginTop: spacing(3) },
   message: {
     gap: spacing(1),
     borderRadius: radius.input,
@@ -209,9 +232,7 @@ const styles = StyleSheet.create({
   },
   messageText: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.foreground },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  line: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
   lineValue: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  lineStrong: { fontFamily: font.bold, color: colors.foreground },
   document: {
     flexDirection: "row",
     alignItems: "center",
