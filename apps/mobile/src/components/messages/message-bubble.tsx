@@ -5,6 +5,7 @@ import { FileText, Flag } from "lucide-react-native";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
+import { PhotoViewer } from "@/components/photo-viewer";
 import { fr } from "@/i18n/fr";
 import { reportMessage, type ConversationMessage } from "@/lib/messages";
 import { Button, Notice, TextField } from "@/ui";
@@ -15,7 +16,8 @@ const { colors, font, radius, spacing } = theme;
 
 /**
  * Un message de la conversation (F-40) : les siens à droite, ceux de l'artisan à gauche, heure et
- * « Lu » sous son dernier message lu. Les photos et PDF s'ouvrent dans le navigateur (URL signées).
+ * « Lu » sous son dernier message lu. Les photos s'ouvrent en grand, les PDF dans le navigateur
+ * (URL signées).
  */
 export function MessageBubble({
   message: m,
@@ -45,19 +47,7 @@ function Content({ message: m }: { message: ConversationMessage }) {
       </View>
     );
   }
-  if (m.kind === "photo" && m.url) {
-    const url = m.url;
-    return (
-      <Pressable
-        role="link"
-        aria-label={t.openPhoto}
-        onPress={() => WebBrowser.openBrowserAsync(url)}
-        style={styles.photoFrame}
-      >
-        <Image source={{ uri: url }} style={styles.photo} resizeMode="cover" alt="" />
-      </Pressable>
-    );
-  }
+  if (m.kind === "photo" && m.url) return <PhotoMessage url={m.url} />;
   if (m.kind === "fichier" && m.url) {
     const url = m.url;
     return (
@@ -80,6 +70,24 @@ function Content({ message: m }: { message: ConversationMessage }) {
         {m.body}
       </Text>
     </View>
+  );
+}
+
+/** Photo envoyée : ouverte en grand d'un appui. */
+function PhotoMessage({ url }: { url: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Pressable
+        role="button"
+        aria-label={t.openPhoto}
+        onPress={() => setOpen(true)}
+        style={styles.photoFrame}
+      >
+        <Image source={{ uri: url }} style={styles.photo} resizeMode="cover" alt="" />
+      </Pressable>
+      <PhotoViewer photos={[url]} index={open ? 0 : null} onClose={() => setOpen(false)} />
+    </>
   );
 }
 

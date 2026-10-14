@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { PhotoViewer } from "@/components/photo-viewer";
 import { fr } from "@/i18n/fr";
 import type { ChantierDocument } from "@/lib/chantiers";
 import { formatAgo, formatCents, formatDateNumeric } from "@/lib/format";
@@ -21,9 +22,10 @@ const t = fr.chantier;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * Journal du chantier (F-22, F-12) : photos et messages de l'artisan, du plus récent au plus
- * ancien, communs aux vues du client et de l'artisan. `emptyText` : texte quand rien n'est publié ;
- * `photoAction` et `children` : actions de l'artisan (photos, message).
+ * Journal du chantier (F-22, F-12) : photos (ouvertes en grand d'un appui) et messages de
+ * l'artisan, du plus récent au plus ancien, communs aux vues du client et de l'artisan.
+ * `emptyText` : texte quand rien n'est publié ; `photoAction` et `children` : actions de
+ * l'artisan (photos, message).
  */
 export function JournalCard({
   journal,
@@ -40,6 +42,7 @@ export function JournalCard({
   children?: ReactNode;
 }) {
   const empty = journal.messages.length === 0 && photoUrls.length === 0;
+  const [viewing, setViewing] = useState<number | null>(null);
   return (
     <Card>
       <View style={styles.card}>
@@ -57,15 +60,23 @@ export function JournalCard({
             contentContainerStyle={styles.photos}
           >
             {photoUrls.map((uri, i) => (
-              <Image
+              <Pressable
                 key={uri}
-                source={{ uri }}
-                style={styles.photo}
-                alt={`${t.journal.photosTitle} ${i + 1}`}
-              />
+                role="button"
+                aria-label={fr.photoViewer.open(i + 1, photoUrls.length)}
+                onPress={() => setViewing(i)}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <Image
+                  source={{ uri }}
+                  style={styles.photo}
+                  alt={`${t.journal.photosTitle} ${i + 1}`}
+                />
+              </Pressable>
             ))}
           </ScrollView>
         ) : null}
+        <PhotoViewer photos={photoUrls} index={viewing} onClose={() => setViewing(null)} />
         {photoAction}
         {journal.messages.map((m) => (
           <View key={m.id} style={styles.message}>
@@ -212,6 +223,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.input,
     backgroundColor: colors["primary-soft"],
   },
+  pressed: { opacity: 0.85 },
   message: {
     gap: spacing(1),
     borderRadius: radius.input,

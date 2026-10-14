@@ -1653,6 +1653,15 @@ export const fr = {
     faq: "Questions fréquentes",
     contact: "Nous contacter",
   },
+  /** Photos ouvertes en grand (journal, messages, demandes, signalements, fiche de l'artisan). */
+  photoViewer: {
+    open: (i: number, n: number) => `Agrandir la photo ${i} sur ${n}`,
+    alt: (i: number, n: number) => `Photo ${i} sur ${n}`,
+    counter: (i: number, n: number) => `${i} / ${n}`,
+    close: "Fermer",
+    previous: "Photo précédente",
+    next: "Photo suivante",
+  },
   account: {
     title: "Mon compte",
     signedInAs: "Connecté en tant que",
