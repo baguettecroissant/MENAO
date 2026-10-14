@@ -228,7 +228,64 @@ export type ProjectResults = {
   city: string;
   workTypeCodes: string[];
   artisans: MatchedArtisan[];
+  summary: NeedSummary;
 };
+
+/** « Résumé de mon besoin » (maquettes) : métier, ville, date souhaitée et photos du projet. */
+export type NeedSummary = {
+  tradeLabel: string;
+  city: string | null;
+  dateMode: Database["public"]["Enums"]["project_date_mode"];
+  /** AAAA-MM-JJ, quand une date est choisie. */
+  dateSouhaitee: string | null;
+  photoCount: number;
+};
+
+/** Résumé du besoin d'un projet ; null si le projet n'a pas encore de métier. */
+export async function loadNeedSummary(projectId: string): Promise<NeedSummary | null> {
+  const [{ data: project }, { count }] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("trade_code, ville_nom, date_mode, date_souhaitee")
+      .eq("id", projectId)
+      .maybeSingle(),
+    supabase
+      .from("project_photos")
+      .select("*", { count: "exact", head: true })
+      .eq("project_id", projectId),
+  ]);
+  if (!project?.trade_code) return null;
+  const { data: trade } = await supabase
+    .from("trades")
+    .select("label")
+    .eq("code", project.trade_code)
+    .maybeSingle();
+  return {
+    tradeLabel: trade?.label ?? project.trade_code,
+    city: project.ville_nom,
+    dateMode: project.date_mode,
+    dateSouhaitee: project.date_souhaitee,
+    photoCount: count ?? 0,
+  };
+}
+
+/**
+ * « Envoyer mon dossier à MENAO » (F-09, F-56), comme sur le site : ticket pour l'équipe, avec un
+ * message facultatif ; l'e-mail est demandé à une session anonyme. Message d'erreur, ou null.
+ */
+export async function sendProjectToMenao(
+  projectId: string,
+  message: string,
+  email: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("send_project_to_menao", {
+    p_project_id: projectId,
+    p_message: message.slice(0, 2000),
+    p_contact_email: email.trim(),
+  });
+  if (!error) return null;
+  return error.code === "22023" ? fr.dossier.emailInvalid : fr.errors.generic;
+}
 
 /** Adresse publique d'un fichier des espaces publics (photos de profil, réalisations). */
 export function publicUrl(bucket: "avatars" | "portfolio", path: string): string {
@@ -267,21 +324,17 @@ export async function matchArtisans(
  * (`match_artisans`, 5 artisans au plus), comme sur le site. Null en cas d'erreur.
  */
 export async function loadResults(projectId: string): Promise<ProjectResults | null> {
-  const { data: project } = await supabase
-    .from("projects")
-    .select("trade_code, work_type_codes, ville_nom")
-    .eq("id", projectId)
-    .maybeSingle();
-  if (!project?.trade_code) return null;
-  const [{ data: trade }, artisans] = await Promise.all([
-    supabase.from("trades").select("label").eq("code", project.trade_code).maybeSingle(),
+  const [{ data: project }, summary, artisans] = await Promise.all([
+    supabase.from("projects").select("work_type_codes").eq("id", projectId).maybeSingle(),
+    loadNeedSummary(projectId),
     matchArtisans(projectId, MAX_SEARCH_RESULTS),
   ]);
-  if (!artisans) return null;
+  if (!project || !summary || !artisans) return null;
   return {
-    tradeLabel: trade?.label ?? project.trade_code,
-    city: project.ville_nom ?? "",
+    tradeLabel: summary.tradeLabel,
+    city: summary.city ?? "",
     workTypeCodes: project.work_type_codes,
     artisans,
+    summary,
   };
 }

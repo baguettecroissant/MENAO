@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { PartyPopper } from "lucide-react-native";
+import { CircleCheck } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { openTab } from "@/lib/navigation";
@@ -8,7 +8,10 @@ import { theme } from "@/ui/theme";
 
 const t = fr.sent;
 
-/** Confirmation de l'envoi (F-11) : rappel de la préférence de rappel et suite du parcours. */
+/**
+ * Confirmation de l'envoi (F-11), comme la maquette « Votre demande est envoyée » : coche,
+ * rappel de la préférence de rappel et suite du parcours.
+ */
 export default function Envoyee() {
   const {
     names = "",
@@ -24,7 +27,7 @@ export default function Envoyee() {
   return (
     <Screen centered>
       <View style={styles.icon}>
-        <IconTile icon={PartyPopper} size="lg" />
+        <IconTile icon={CircleCheck} size="lg" />
       </View>
       <Title center>{t.title(names)}</Title>
       <Body muted center>
