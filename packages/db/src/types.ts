@@ -1248,6 +1248,10 @@ export type Database = {
           id: string;
           last_error: string | null;
           locked_at: string | null;
+          push_attempts: number;
+          push_locked_at: string | null;
+          push_status: Database["public"]["Enums"]["notification_status"] | null;
+          pushed_at: string | null;
           read_at: string | null;
           send_after: string;
           sent_at: string | null;
@@ -1265,6 +1269,10 @@ export type Database = {
           id?: string;
           last_error?: string | null;
           locked_at?: string | null;
+          push_attempts?: number;
+          push_locked_at?: string | null;
+          push_status?: Database["public"]["Enums"]["notification_status"] | null;
+          pushed_at?: string | null;
           read_at?: string | null;
           send_after?: string;
           sent_at?: string | null;
@@ -1281,6 +1289,10 @@ export type Database = {
           id?: string;
           last_error?: string | null;
           locked_at?: string | null;
+          push_attempts?: number;
+          push_locked_at?: string | null;
+          push_status?: Database["public"]["Enums"]["notification_status"] | null;
+          pushed_at?: string | null;
           read_at?: string | null;
           send_after?: string;
           sent_at?: string | null;
@@ -1631,6 +1643,37 @@ export type Database = {
             referencedColumns: ["code"];
           },
         ];
+      };
+      push_tokens: {
+        Row: {
+          created_at: string;
+          id: string;
+          last_seen_at: string;
+          platform: Database["public"]["Enums"]["push_platform"];
+          token: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          platform: Database["public"]["Enums"]["push_platform"];
+          token: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          platform?: Database["public"]["Enums"]["push_platform"];
+          token?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       quote_dictations: {
         Row: {
@@ -3055,8 +3098,21 @@ export type Database = {
         }[];
       };
       claim_project: { Args: { p_token: string }; Returns: string };
+      claim_push_notifications: {
+        Args: { p_limit?: number };
+        Returns: {
+          data: Json;
+          id: string;
+          tokens: string[];
+          type: Database["public"]["Enums"]["notification_type"];
+        }[];
+      };
       complete_notification: {
         Args: { p_error?: string; p_id: string; p_retry?: boolean; p_sent: boolean };
+        Returns: undefined;
+      };
+      complete_push_notification: {
+        Args: { p_id: string; p_retry: boolean; p_sent: boolean };
         Returns: undefined;
       };
       consume_rate_limit: {
@@ -3067,6 +3123,7 @@ export type Database = {
       delete_artisan_absence: { Args: { p_id: string }; Returns: undefined };
       delete_artisan_blocked_slot: { Args: { p_id: string }; Returns: undefined };
       disable_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: undefined };
+      forget_push_tokens: { Args: { p_tokens: string[] }; Returns: undefined };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
       mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number };
@@ -3299,6 +3356,10 @@ export type Database = {
         Returns: string;
       };
       record_webhook_failure: { Args: { p_error: string; p_event_id: string }; Returns: undefined };
+      register_push_token: {
+        Args: { p_platform: Database["public"]["Enums"]["push_platform"]; p_token: string };
+        Returns: undefined;
+      };
       renew_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: string };
       report_chantier_problem: {
         Args: {
@@ -3413,6 +3474,7 @@ export type Database = {
         };
         Returns: Database["public"]["Enums"]["chantier_status"];
       };
+      unregister_push_token: { Args: { p_token: string }; Returns: undefined };
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
     };
     Enums: {
@@ -3519,6 +3581,7 @@ export type Database = {
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
       project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
+      push_platform: "ios" | "android";
       quote_line_type: "materiel" | "main_oeuvre" | "autre";
       quote_refusal_reason: "trop_cher" | "autre_artisan" | "projet_reporte" | "autre";
       quote_status: "brouillon" | "envoye" | "signe" | "refuse" | "revision_demandee" | "remplace";
@@ -3762,6 +3825,7 @@ export const Constants = {
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],
       project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
+      push_platform: ["ios", "android"],
       quote_line_type: ["materiel", "main_oeuvre", "autre"],
       quote_refusal_reason: ["trop_cher", "autre_artisan", "projet_reporte", "autre"],
       quote_status: ["brouillon", "envoye", "signe", "refuse", "revision_demandee", "remplace"],

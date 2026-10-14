@@ -431,6 +431,8 @@ AI_QUOTE_MODEL = "env(AI_QUOTE_MODEL)"
 RESEND_API_KEY = "env(RESEND_API_KEY)"
 EMAIL_FROM = "env(EMAIL_FROM)"
 NOTIFY_SECRET = "env(NOTIFY_SECRET)"
+# Push (F-41, ADR 0078) : jeton d'accès facultatif du service Expo (sécurité renforcée des envois).
+EXPO_ACCESS_TOKEN = "env(EXPO_ACCESS_TOKEN)"
 # Signature électronique (F-13, ADR 0022) : DocuSeal UE, clé API, secret HMAC du webhook, code à
 # usage unique (sms par défaut, email ou aucun). CI : faux DocuSeal (DOCUSEAL_API_URL).
 DOCUSEAL_API_URL = "env(DOCUSEAL_API_URL)"
