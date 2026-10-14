@@ -2,13 +2,14 @@
 
 import { claimableReward, levelProgress, nextReward, type GradeLevel } from "@menao/core";
 import type { Grade } from "@menao/validation";
-import { Shirt, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert, Button, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { markBadgesSeen } from "@/lib/artisan/grade-actions";
 import { formatDateNumeric } from "@/lib/format";
 import { BadgeIcon } from "./badge-icon";
+import { OutfitIllustration } from "./outfit-illustration";
 import { RewardForm, type DeliveryDefaults } from "./reward-form";
 
 const t = fr.pro.grade;
@@ -56,6 +57,15 @@ export function GradeScreen({ grade, delivery }: { grade: Grade; delivery: Deliv
                     {t.reward.title(delivery.firstName)}
                   </h2>
                   <p className="text-sm text-muted-foreground">{t.reward.intro(claimable.level)}</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 rounded-input bg-primary-softer p-4 text-center">
+                  <p className="text-sm font-medium text-primary-strong">{t.reward.waiting}</p>
+                  <OutfitIllustration className="my-2 h-32" />
+                  <p className="text-sm font-medium">{claimable.reward}</p>
+                  {claimable.rewardDetail && (
+                    <p className="text-xs text-muted-foreground">{claimable.rewardDetail}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{t.illustrationNote}</p>
                 </div>
                 <RewardForm level={claimable.level} defaults={delivery} />
               </Card>
@@ -171,8 +181,8 @@ function LevelCard({ xp, levels }: { xp: number; levels: readonly GradeLevel[] }
         <div className="flex flex-col items-center gap-1 text-center">
           <p className="text-xs text-muted-foreground">{t.nextReward}</p>
           <p className="text-sm font-medium text-primary-strong">{reward.reward}</p>
-          <div className="mt-2 flex h-28 w-full items-center justify-center rounded-input bg-primary-softer">
-            <Shirt aria-hidden="true" className="size-14 text-primary" strokeWidth={1.4} />
+          <div className="mt-2 flex h-32 w-full items-center justify-center rounded-input bg-primary-softer">
+            <OutfitIllustration className="h-26" />
           </div>
         </div>
       )}

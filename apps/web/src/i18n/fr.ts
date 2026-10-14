@@ -2012,6 +2012,10 @@ export const fr = {
       levelLong: (n: number) => `Niveau ${n}`,
       maxLevel: "Niveau maximal atteint",
       nextReward: "Prochaine récompense de niveau :",
+      outfitAlt:
+        "Illustration de l'ensemble de chantier MENAO : veste et pantalon bleus, logo brodé",
+      /** La tenue n'existe pas encore : le dessin est indicatif (aucune promesse sur son aspect). */
+      illustrationNote: "Illustration : la tenue définitive peut différer.",
       rewardReady: "Votre récompense vous attend\u00a0!",
       claim: "Réclamer ma récompense",
       claimed: "Récompense demandée : l'équipe MENAO prépare son envoi.",
@@ -2041,6 +2045,7 @@ export const fr = {
         continue: "Continuer sur MENAO",
       },
       reward: {
+        waiting: "Votre récompense vous attend\u00a0!",
         title: (name: string | null) =>
           name ? `Félicitations, ${name}\u00a0!` : "Félicitations\u00a0!",
         intro: (level: number) =>

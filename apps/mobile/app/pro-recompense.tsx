@@ -1,7 +1,7 @@
 import { REWARD_SIZES, claimableReward, type RewardSize } from "@menao/core";
 import { rewardClaimSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
-import { CircleCheck, MapPin, Shirt } from "lucide-react-native";
+import { CircleCheck, MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import { claimReward, loadDeliveryDefaults, loadGrade } from "@/lib/grade";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, LinkText, Notice, Screen, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
+import { OutfitIllustration } from "@/components/grade/outfit-illustration";
 
 const t = fr.grade.reward;
 const { colors, font, radius, spacing } = theme;
@@ -127,10 +128,11 @@ function RewardForm({
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t.waiting}</Text>
         <View style={styles.rewardImage}>
-          <Shirt size={64} color={colors.primary} strokeWidth={1.4} />
+          <OutfitIllustration height={132} />
         </View>
         <Text style={styles.rewardName}>{reward.reward}</Text>
         {reward.rewardDetail ? <Text style={styles.small}>{reward.rewardDetail}</Text> : null}
+        <Text style={styles.small}>{fr.grade.illustrationNote}</Text>
       </View>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t.sizesTitle}</Text>

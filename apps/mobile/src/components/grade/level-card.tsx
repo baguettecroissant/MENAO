@@ -1,8 +1,8 @@
 import { levelProgress, nextReward, type GradeLevel } from "@menao/core";
-import { Shirt } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { theme } from "@/ui/theme";
+import { OutfitIllustration } from "@/components/grade/outfit-illustration";
 
 const t = fr.grade;
 const { colors, font, radius, spacing } = theme;
@@ -40,7 +40,7 @@ export function LevelCard({ xp, levels }: { xp: number; levels: readonly GradeLe
           <Text style={[styles.small, styles.center]}>{t.nextReward}</Text>
           <Text style={styles.rewardName}>{reward.reward}</Text>
           <View style={styles.rewardImage}>
-            <Shirt size={56} color={colors.primary} strokeWidth={1.4} />
+            <OutfitIllustration height={100} />
           </View>
         </View>
       ) : null}
