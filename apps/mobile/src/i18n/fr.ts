@@ -959,6 +959,16 @@ export const fr = {
     summary: (day: string, time: string) => `Le ${day} à ${time}`,
     submit: "Envoyer le rendez-vous",
     hint: "Le client voit la date dans son espace et vos coordonnées lui sont communiquées.",
+    /** Agenda (F-44) : créneaux libres proposés et avertissements, comme sur le site. */
+    suggestions: "Créneaux libres",
+    suggestionsHint: "D'après vos horaires et votre agenda.",
+    suggestion: (day: string, time: string) =>
+      `${day.charAt(0).toUpperCase()}${day.slice(1)} à ${time}`,
+    warnings: {
+      absence: "Vous êtes absent ce jour-là.",
+      hors_horaires: "En dehors de vos horaires de travail.",
+      conflit: (what: string) => `Déjà prévu à ce moment : ${what}.`,
+    },
     errors: {
       passe: "Choisissez une date et une heure à venir.",
       trop_loin: "Le rendez-vous doit avoir lieu dans les 6 prochains mois.",
