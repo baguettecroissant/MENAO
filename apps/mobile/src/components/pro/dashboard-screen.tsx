@@ -30,10 +30,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { StatusPill } from "@/components/chantier/parts";
+import { GradeCard } from "@/components/grade/grade-card";
+import { NewBadgeModal } from "@/components/grade/new-badge-modal";
 import { PushPrompt } from "@/components/push-prompt";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
+import { loadGrade, markBadgesSeen } from "@/lib/grade";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
 import { requestStart } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -276,8 +279,20 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
  */
 export function DashboardScreen() {
   const [data, reload] = useFocusData(loadDashboard);
+  // Gamification (F-24) : carte « Mon grade MENAO » et badge tout juste obtenu à fêter.
+  const [grade, reloadGrade] = useFocusData(loadGrade);
+  const [celebrated, setCelebrated] = useState(false);
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
+  const newBadge = celebrated
+    ? null
+    : (grade?.badges.find((b) => b.unlocked_at && !b.seen) ?? null);
+  async function closeBadge(next?: () => void) {
+    setCelebrated(true);
+    await markBadgesSeen();
+    next?.();
+    reloadGrade();
+  }
 
   if (data === undefined) {
     return (
@@ -326,7 +341,7 @@ export function DashboardScreen() {
             onRefresh={async () => {
               setRefreshing(true);
               refresh();
-              await reload();
+              await Promise.all([reload(), reloadGrade()]);
               setRefreshing(false);
             }}
           />
@@ -370,6 +385,7 @@ export function DashboardScreen() {
                 href="/pro-factures"
               />
             </View>
+            {grade ? <GradeCard grade={grade} /> : null}
             {/* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */}
             {data.appointments.length > 0 ? (
               <>
@@ -386,6 +402,11 @@ export function DashboardScreen() {
           </>
         )}
       </ScrollView>
+      <NewBadgeModal
+        badge={newBadge}
+        onClose={() => closeBadge()}
+        onCollection={() => closeBadge(() => router.push("/pro-grade"))}
+      />
     </SafeAreaView>
   );
 }

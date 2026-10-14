@@ -27,6 +27,7 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/devis$/, () => "/pro/devis"],
   [/^\/pro\/factures$/, () => "/pro-factures"],
   [/^\/pro\/avis$/, () => "/pro-avis"],
+  [/^\/pro\/grade$/, () => "/pro-grade"],
   [/^\/pro\/agenda$/, () => "/pro-agenda"],
   [/^\/pro\/agenda\/disponibilites$/, () => "/pro-disponibilites"],
   [/^\/pro\/messages$/, () => "/pro/messages"],

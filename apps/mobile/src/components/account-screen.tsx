@@ -148,6 +148,13 @@ export function AccountScreen() {
         />
       </Card>
 
+      {role === "artisan" && (
+        <Card>
+          <Text style={styles.heading}>{fr.grade.title}</Text>
+          <Body muted>{fr.grade.subtitle}</Body>
+          <LinkText label={fr.grade.title} onPress={() => router.push("/pro-grade")} />
+        </Card>
+      )}
       {(role === "artisan" || role === "artisan_en_attente") && (
         <Card>
           <Text style={styles.heading}>{t.subscription}</Text>
