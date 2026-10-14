@@ -1,21 +1,27 @@
 import Constants from "expo-constants";
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
+import { loadDeletionRequest } from "@/lib/account";
 import { siteLinks } from "@/lib/env";
+import { formatDay } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { signOut } from "@/lib/auth";
+import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 /**
  * Compte de l'utilisateur : identité, abonnement (artisans, sans lien d'achat), aide (particuliers
- * seulement : aucun lien vers le site pour les artisans, règle 10), légal, déconnexion.
+ * seulement : aucun lien vers le site pour les artisans, règle 10), légal, suppression du compte
+ * (Apple 5.1.1 v), déconnexion.
  */
 export function AccountScreen() {
   const { session, role } = useSession();
   const [leaving, setLeaving] = useState(false);
+  const [deletionSince] = useFocusData(loadDeletionRequest);
   const roleLabel =
     role === "artisan"
       ? fr.account.artisan
@@ -63,6 +69,20 @@ export function AccountScreen() {
           label={fr.account.privacy}
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.privacy)}
         />
+      </Card>
+      <Card>
+        <Text style={styles.heading}>{fr.account.deletion.title}</Text>
+        {deletionSince ? (
+          <Notice tone="info">{fr.account.deletion.pending(formatDay(deletionSince))}</Notice>
+        ) : (
+          <>
+            <Body muted>{fr.account.deletion.intro}</Body>
+            <LinkText
+              label={fr.account.deletion.open}
+              onPress={() => router.push("/suppression-compte")}
+            />
+          </>
+        )}
       </Card>
       <Button
         label={fr.account.signOut}

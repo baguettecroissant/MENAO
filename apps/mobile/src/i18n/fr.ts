@@ -1616,6 +1616,21 @@ export const fr = {
     privacy: "Politique de confidentialité",
     signOut: "Me déconnecter",
     version: (version: string) => `Version ${version}`,
+    /** Suppression du compte (Apple 5.1.1 v) : mêmes textes que le site. */
+    deletion: {
+      title: "Supprimer mon compte",
+      intro:
+        "L'équipe MENAO traite votre demande sous un mois et vous écrit à l'adresse de votre compte. Certains documents liés à vos chantiers, comme les factures, doivent être conservés pendant une durée fixée par la loi.",
+      open: "Demander la suppression de mon compte",
+      message: "Une remarque ? (facultatif)",
+      confirm: "Je demande la suppression de mon compte MENAO.",
+      submit: "Envoyer ma demande",
+      sent: "Votre demande est enregistrée : l'équipe MENAO vous répond sous un mois.",
+      pending: (date: string) =>
+        `Demande de suppression envoyée le ${date}. L'équipe MENAO vous répond sous un mois à l'adresse de votre compte.`,
+      error: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+      back: "Retour",
+    },
   },
   notFound: {
     title: "Page introuvable",
