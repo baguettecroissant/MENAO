@@ -35,3 +35,47 @@ export const rewardClaimSchema = z.object({
   }),
 });
 export type RewardClaim = z.infer<typeof rewardClaimSchema>;
+
+/** Progression lue par `artisan_grade` (F-24) : écrans « Mon grade MENAO » du site et de l'app. */
+export const gradeSchema = z.object({
+  xp: z.number().int(),
+  level: z.number().int(),
+  levels: z.array(
+    z.object({
+      level: z.number().int(),
+      xp_min: z.number().int(),
+      reward: z.string().nullable(),
+      reward_detail: z.string().nullable(),
+    }),
+  ),
+  objectives: z.array(
+    z.object({
+      code: z.string(),
+      title: z.string(),
+      description: z.string(),
+      xp: z.number().int(),
+      target: z.number().int(),
+      progress: z.number().int(),
+      achieved_at: z.string().nullable(),
+    }),
+  ),
+  badges: z.array(
+    z.object({
+      code: z.string(),
+      label: z.string(),
+      description: z.string(),
+      target: z.number().int(),
+      progress: z.number().int(),
+      unlocked_at: z.string().nullable(),
+      seen: z.boolean(),
+    }),
+  ),
+  claims: z.array(z.object({ level: z.number().int(), created_at: z.string() })),
+});
+export type Grade = z.infer<typeof gradeSchema>;
+
+/** Réponse d'`artisan_grade` validée, ou null si elle est inattendue. */
+export function parseGrade(data: unknown): Grade | null {
+  const parsed = gradeSchema.safeParse(data);
+  return parsed.success ? parsed.data : null;
+}
