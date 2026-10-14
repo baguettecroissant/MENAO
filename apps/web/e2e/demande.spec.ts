@@ -721,19 +721,21 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     page.getByRole("heading", { name: "Comment s'est passée votre expérience avec Noé ?" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Publier mon avis" }).click();
-  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(3);
+  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(4);
   await expect(page.getByText("Choisissez le rapport qualité/prix.")).toBeVisible();
   await page.getByRole("slider", { name: "Qualité des prestations" }).focus();
   await page.keyboard.press("End");
   for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowLeft");
   await expect(page.getByText("Très soigné")).toBeVisible();
   // L'erreur d'un critère disparaît dès qu'il est noté.
-  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(2);
-  for (const name of ["Respect des délais", "Communication"]) {
+  await expect(page.getByText("Notez ce critère en faisant glisser le curseur.")).toHaveCount(3);
+  // Propreté du chantier (ADR 0091) : sert aux badges de l'artisan.
+  for (const name of ["Respect des délais", "Communication", "Propreté du chantier"]) {
     await page.getByRole("slider", { name }).focus();
     await page.keyboard.press("End");
   }
   await expect(page.getByText("À l'heure")).toBeVisible();
+  await expect(page.getByText("Impeccable")).toBeVisible();
   await page.getByText("Excellent rapport qualité/prix").click();
   await page
     .getByLabel("Votre commentaire")

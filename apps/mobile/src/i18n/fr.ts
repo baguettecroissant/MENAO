@@ -719,6 +719,7 @@ export const fr = {
       quality: "Qualité des prestations",
       delays: "Respect des délais",
       communication: "Communication",
+      cleanliness: "Propreté du chantier",
     },
     unset: "--\u00a0%",
     percent: (value: number) => `${value}\u00a0%`,
@@ -733,6 +734,7 @@ export const fr = {
         "Très réactif",
         "Irréprochable",
       ],
+      cleanliness: ["Inacceptable", "Peu soigné", "Correct", "Propre", "Impeccable"],
     },
     valueTitle: "Rapport qualité/prix",
     values: {

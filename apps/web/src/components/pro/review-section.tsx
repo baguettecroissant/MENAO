@@ -15,6 +15,8 @@ export type ChantierReview = {
   quality: number;
   delays: number;
   communication: number;
+  /** Propreté du chantier (ADR 0091) : absente des avis plus anciens. */
+  cleanliness: number | null;
   value_for_money: ValueForMoney;
   comment: string;
   status: "publie" | "masque";
@@ -61,12 +63,17 @@ export function ReviewSection({
         <Alert tone="info">{t.reviewHidden(review.moderation_reason)}</Alert>
       )}
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
-        {REVIEW_CRITERIA.map((criterion) => (
-          <div key={criterion} className="flex justify-between gap-3">
-            <dt className="text-muted-foreground">{r.criteria[criterion]}</dt>
-            <dd className="font-medium">{r.percent(review[criterion])}</dd>
-          </div>
-        ))}
+        {REVIEW_CRITERIA.map((criterion) => {
+          const value = review[criterion];
+          return (
+            value !== null && (
+              <div key={criterion} className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">{r.criteria[criterion]}</dt>
+                <dd className="font-medium">{r.percent(value)}</dd>
+              </div>
+            )
+          );
+        })}
         <div className="flex justify-between gap-3">
           <dt className="text-muted-foreground">{r.valueTitle}</dt>
           <dd className="text-right font-medium">{r.values[review.value_for_money]}</dd>

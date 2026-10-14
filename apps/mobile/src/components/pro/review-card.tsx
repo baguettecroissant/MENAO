@@ -68,12 +68,16 @@ export function ReviewCard({
         <Notice tone="info">{t.reviewHidden(review.moderationReason)}</Notice>
       ) : null}
       <View style={styles.criteria}>
-        {REVIEW_CRITERIA.map((criterion) => (
-          <View key={criterion} style={styles.line}>
-            <Text style={styles.label}>{r.criteria[criterion]}</Text>
-            <Text style={styles.value}>{r.percent(review[criterion])}</Text>
-          </View>
-        ))}
+        {REVIEW_CRITERIA.map((criterion) => {
+          // Propreté absente des avis antérieurs à ce critère (ADR 0091).
+          const value = review[criterion];
+          return value === null ? null : (
+            <View key={criterion} style={styles.line}>
+              <Text style={styles.label}>{r.criteria[criterion]}</Text>
+              <Text style={styles.value}>{r.percent(value)}</Text>
+            </View>
+          );
+        })}
         <View style={styles.line}>
           <Text style={styles.label}>{r.valueTitle}</Text>
           <Text style={[styles.value, styles.valueText]}>{r.values[review.valueForMoney]}</Text>

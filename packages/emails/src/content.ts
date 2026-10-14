@@ -46,6 +46,8 @@ export const NOTIFICATION_TYPES = [
   "equipe_dossier_a_verifier",
   "equipe_ticket_en_retard",
   "acompte_relance",
+  "badge_debloque",
+  "niveau_atteint",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -131,6 +133,7 @@ const TICKET_TYPES: Record<string, string> = {
   avis: "avis signalé",
   message: "message signalé",
   litige: "litige sur un chantier",
+  recompense: "récompense à expédier",
 };
 
 function text(data: Record<string, unknown>, key: string): string | null {
@@ -425,6 +428,54 @@ export function notificationContent(
         cta: {
           label: "Voir le chantier",
           url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
+      };
+    }
+    case "badge_debloque": {
+      // F-24 : notification push seulement (jamais d'e-mail), maquette « Nouveau badge débloqué ».
+      const badge = text(data, "badge");
+      return {
+        subject: "Nouveau badge débloqué !",
+        preview: badge
+          ? `Votre travail de qualité est récompensé : vous avez débloqué le badge ${quoted(badge)}.`
+          : "Votre travail de qualité est récompensé : vous avez débloqué un nouveau badge MENAO.",
+        title: "Nouveau badge MENAO débloqué !",
+        paragraphs: [
+          hello(ctx.firstName),
+          badge
+            ? `Félicitations : vous avez débloqué le badge ${quoted(badge)}.`
+            : "Félicitations : vous avez débloqué un nouveau badge MENAO.",
+          "Retrouvez votre collection de badges et vos prochains objectifs dans « Mon grade MENAO ».",
+        ],
+        quote: null,
+        cta: { label: "Voir mes badges", url: link("/pro/grade") },
+      };
+    }
+    case "niveau_atteint": {
+      // F-24 : notification push seulement ; au niveau 5, la tenue MENAO est à réclamer.
+      const niveau = count(data, "niveau");
+      const recompense = text(data, "recompense");
+      return {
+        subject: niveau
+          ? `Vous avez atteint le niveau ${niveau} !`
+          : "Vous avez atteint un nouveau niveau !",
+        preview: recompense
+          ? `Votre récompense vous attend : ${recompense}.`
+          : "Découvrez vos prochains objectifs dans « Mon grade MENAO ».",
+        title: niveau ? `Niveau ${niveau} atteint !` : "Nouveau niveau atteint !",
+        paragraphs: [
+          hello(ctx.firstName),
+          niveau
+            ? `Bravo : vous avez atteint le niveau ${niveau} sur MENAO.`
+            : "Bravo : vous avez atteint un nouveau niveau sur MENAO.",
+          recompense
+            ? `Votre récompense vous attend : ${recompense}. Réclamez-la depuis « Mon grade MENAO ».`
+            : "Continuez vos objectifs pour débloquer les prochaines récompenses.",
+        ],
+        quote: null,
+        cta: {
+          label: recompense ? "Réclamer ma récompense" : "Voir mon grade",
+          url: link("/pro/grade"),
         },
       };
     }

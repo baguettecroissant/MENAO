@@ -102,29 +102,29 @@ select results_eq(
 select pg_temp.connecter('d4100000-0000-4000-8000-000000000002', 'particulier');
 set local role authenticated;
 select throws_ok(
-  format('select public.particulier_submit_review(%L, 80, 100, 100, %L, %L)', current_setting('test.chantier_b'),
+  format('select public.particulier_submit_review(%L, 80, 100, 100, 90, %L, %L)', current_setting('test.chantier_b'),
     'excellent', repeat('x', 60)),
   '22023', 'Vous pourrez noter l''artisan une fois le PV de réception signé', 'sans PV signé : pas d''avis');
 select throws_ok(
-  format('select public.particulier_submit_review(%L, 80, 100, 100, %L, %L)', current_setting('test.chantier_a'),
+  format('select public.particulier_submit_review(%L, 80, 100, 100, 90, %L, %L)', current_setting('test.chantier_a'),
     'excellent', repeat('x', 60)),
   '42501', 'Chantier introuvable', 'autre client : pas d''avis sur le chantier d''autrui');
 reset role;
 select pg_temp.connecter('d4200000-0000-4000-8000-000000000001', 'artisan');
 set local role authenticated;
 select throws_ok(
-  format('select public.particulier_submit_review(%L, 100, 100, 100, %L, %L)', current_setting('test.chantier_a'),
+  format('select public.particulier_submit_review(%L, 100, 100, 100, 90, %L, %L)', current_setting('test.chantier_a'),
     'excellent', repeat('x', 60)),
   '42501', 'Chantier introuvable', 'artisan : pas d''avis sur son propre chantier');
 reset role;
 select pg_temp.connecter('d4100000-0000-4000-8000-000000000001', 'particulier');
 set local role authenticated;
 select throws_ok(
-  format('select public.particulier_submit_review(%L, 80, 100, 100, %L, %L)', current_setting('test.chantier_a'),
+  format('select public.particulier_submit_review(%L, 80, 100, 100, 90, %L, %L)', current_setting('test.chantier_a'),
     'excellent', '   ' || repeat('x', 49) || '   '),
   '22023', 'Votre avis doit compter entre 50 et 2 000 caractères', 'commentaire de moins de 50 caractères refusé');
 select throws_ok(
-  format('select public.particulier_submit_review(%L, null, 100, 101, %L, %L)', current_setting('test.chantier_a'),
+  format('select public.particulier_submit_review(%L, null, 100, 101, 90, %L, %L)', current_setting('test.chantier_a'),
     'excellent', repeat('x', 60)),
   '22023', 'Notez chaque critère', 'critère manquant ou hors bornes refusé');
 select throws_ok(
@@ -133,10 +133,10 @@ select throws_ok(
      values (current_setting('test.chantier_a')::uuid, 'd4400000-0000-4000-8000-000000000001', auth.uid(), 'Moi',
        100, 100, 100, 'excellent', 100, repeat('x', 60), current_date) $$,
   '42501', null, 'écriture directe refusée');
-select set_config('test.avis', public.particulier_submit_review(current_setting('test.chantier_a')::uuid, 80, 100, 100,
+select set_config('test.avis', public.particulier_submit_review(current_setting('test.chantier_a')::uuid, 80, 100, 100, 90,
   'excellent', '  Travail soigné, chantier laissé propre et artisan ponctuel du début à la fin.  ')::text, true);
 select throws_ok(
-  format('select public.particulier_submit_review(%L, 10, 10, 10, %L, %L)', current_setting('test.chantier_a'),
+  format('select public.particulier_submit_review(%L, 10, 10, 10, 90, %L, %L)', current_setting('test.chantier_a'),
     'trop_cher', repeat('x', 60)),
   '22023', 'Vous avez déjà laissé un avis sur ce chantier', 'un seul avis par chantier');
 select results_eq(
@@ -191,7 +191,7 @@ select results_eq(
 select is(public.artisan_public_profile('d4400000-0000-4000-8000-000000000001') #>> '{score,global}', '95',
   'visiteur : score MENAO sur la fiche');
 select throws_ok(
-  format('select public.particulier_submit_review(%L, 80, 100, 100, %L, %L)', current_setting('test.chantier_a'),
+  format('select public.particulier_submit_review(%L, 80, 100, 100, 90, %L, %L)', current_setting('test.chantier_a'),
     'excellent', repeat('x', 60)),
   '42501', null, 'visiteur : aucune action');
 reset role;

@@ -11,6 +11,8 @@ export type ArtisanReview = {
   quality: number;
   delays: number;
   communication: number;
+  /** Propreté du chantier (ADR 0091) : absente des avis plus anciens. */
+  cleanliness: number | null;
   valueForMoney: ValueForMoney;
   comment: string;
   experienceOn: string;
@@ -21,7 +23,7 @@ export type ArtisanReview = {
 };
 
 export const REVIEW_COLUMNS =
-  "id, chantier_id, author_name, score, quality, delays, communication, value_for_money, comment, experience_on, status, moderation_reason, reply, created_at";
+  "id, chantier_id, author_name, score, quality, delays, communication, cleanliness, value_for_money, comment, experience_on, status, moderation_reason, reply, created_at";
 
 type ReviewRow = {
   id: string;
@@ -31,6 +33,7 @@ type ReviewRow = {
   quality: number;
   delays: number;
   communication: number;
+  cleanliness: number | null;
   value_for_money: ValueForMoney;
   comment: string;
   experience_on: string;
@@ -48,6 +51,7 @@ export const toArtisanReview = (r: ReviewRow): ArtisanReview => ({
   quality: r.quality,
   delays: r.delays,
   communication: r.communication,
+  cleanliness: r.cleanliness,
   valueForMoney: r.value_for_money,
   comment: r.comment,
   experienceOn: r.experience_on,

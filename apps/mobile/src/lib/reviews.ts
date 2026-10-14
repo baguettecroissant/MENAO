@@ -52,6 +52,7 @@ export type ReviewInput = {
   quality: number;
   delays: number;
   communication: number;
+  cleanliness: number;
   value_for_money: ValueForMoney;
   comment: string;
 };
@@ -63,6 +64,7 @@ export async function submitReview(chantierId: string, input: ReviewInput): Prom
     p_quality: input.quality,
     p_delays: input.delays,
     p_communication: input.communication,
+    p_cleanliness: input.cleanliness,
     p_value: input.value_for_money,
     p_comment: input.comment,
   });

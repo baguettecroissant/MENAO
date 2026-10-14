@@ -37,11 +37,12 @@ const BAND_ICONS: Record<ReviewCriterion, readonly LucideIcon[]> = {
   quality: [X, Frown, ThumbsUp, Sparkles, Trophy],
   delays: [X, Hourglass, AlarmClock, Clock, Rocket],
   communication: [X, ThumbsDown, MessageCircle, Zap, Trophy],
+  cleanliness: [X, Frown, ThumbsUp, Sparkles, Trophy],
 };
 
 /**
- * Avis du client (F-28, maquette « Comment s'est passée votre expérience ? ») : trois curseurs de
- * 0 à 100 %, rapport qualité/prix, commentaire de 50 caractères au moins. Le formulaire n'est pas
+ * Avis du client (F-28, maquette « Comment s'est passée votre expérience ? ») : quatre curseurs
+ * de 0 à 100 % (dont la propreté du chantier, ADR 0091), rapport qualité/prix, commentaire de 50 caractères au moins. Le formulaire n'est pas
  * réinitialisé après une erreur : les curseurs gardent leur position.
  */
 export function ReviewForm({

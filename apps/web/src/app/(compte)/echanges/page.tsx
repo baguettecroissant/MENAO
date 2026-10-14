@@ -16,6 +16,7 @@ const TYPES = [
   "avis",
   "message",
   "expertise",
+  "recompense",
 ] as const;
 const tone = { ouvert: "primary", en_cours: "success", resolu: "neutral" } as const;
 

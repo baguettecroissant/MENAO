@@ -16,7 +16,7 @@ const rpcError = (error: { code?: string; message: string }): FormState => ({
 });
 
 /**
- * F-28 « Comment s'est passée votre expérience ? » : trois curseurs, rapport qualité/prix,
+ * F-28 « Comment s'est passée votre expérience ? » : quatre curseurs, rapport qualité/prix,
  * commentaire. Droits (PV signé, un avis par chantier) et score MENAO : particulier_submit_review.
  */
 export async function submitReview(
@@ -29,6 +29,7 @@ export async function submitReview(
     quality: text(formData, "quality") ?? "",
     delays: text(formData, "delays") ?? "",
     communication: text(formData, "communication") ?? "",
+    cleanliness: text(formData, "cleanliness") ?? "",
     value_for_money: text(formData, "value_for_money") ?? "",
     comment: text(formData, "comment") ?? "",
   };
@@ -40,6 +41,7 @@ export async function submitReview(
     p_quality: parsed.data.quality,
     p_delays: parsed.data.delays,
     p_communication: parsed.data.communication,
+    p_cleanliness: parsed.data.cleanliness,
     p_value: parsed.data.value_for_money,
     p_comment: parsed.data.comment,
   });

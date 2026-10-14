@@ -436,6 +436,23 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("gamification (F-24) : badge débloqué et niveau atteint, vers « Mon grade MENAO »", () => {
+    const badge = notificationContent("badge_debloque", { badge: "Pro du nettoyage" }, ctx);
+    expect(badge.subject).toBe("Nouveau badge débloqué !");
+    expect(badge.preview).toContain(quoted("Pro du nettoyage"));
+    expect(badge.cta.url).toBe("https://menao.example/pro/grade");
+    const level = notificationContent(
+      "niveau_atteint",
+      { niveau: 5, recompense: "Ensemble de chantier MENAO" },
+      ctx,
+    );
+    expect(level.subject).toBe("Vous avez atteint le niveau 5 !");
+    expect(level.cta.label).toBe("Réclamer ma récompense");
+    expect(notificationContent("niveau_atteint", { niveau: 2 }, ctx).cta.label).toBe(
+      "Voir mon grade",
+    );
+  });
+
   it("relance « Paiement en attente » : acompte à régler, lien vers le chantier", () => {
     const data = { ...ids, titre: "Prises", artisan: "Jean" };
     const reminder = notificationContent("acompte_relance", data, ctx);

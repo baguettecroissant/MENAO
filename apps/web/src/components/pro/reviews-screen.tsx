@@ -21,6 +21,7 @@ export type ArtisanReviewRow = {
   quality: number;
   delays: number;
   communication: number;
+  cleanliness: number | null;
   value_for_money: string;
   comment: string;
   experience_on: string;
