@@ -21,6 +21,7 @@ export * from "./payment";
 export * from "./invoice";
 export * from "./chantier-follow-up";
 export * from "./chantier-progress";
+export * from "./client-home";
 export * from "./reception";
 export * from "./review";
 export * from "./messaging";

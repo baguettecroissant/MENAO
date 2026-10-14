@@ -104,6 +104,46 @@ export const fr = {
       },
     ],
     free: "MENAO est 100\u00a0% gratuit.",
+    // Accueil du client connect\u00e9 (ADR 0082) : tableau de bord.
+    dashboard: {
+      hello: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
+      summary: {
+        actions: (n: number) =>
+          n <= 1 ? "Une action vous attend." : `${n} actions vous attendent.`,
+        a_jour: "Rien \u00e0 faire de votre c\u00f4t\u00e9 : vos chantiers suivent leur cours.",
+        demandes: (n: number) =>
+          n <= 1
+            ? "Votre demande attend la r\u00e9ponse de l'artisan."
+            : `Vos ${n} demandes attendent la r\u00e9ponse des artisans.`,
+      },
+      counts: {
+        requests: (n: number) => (n <= 1 ? `${n} demande en attente` : `${n} demandes en attente`),
+      },
+      todoTitle: "\u00c0 faire",
+      todo: {
+        signer_devis: "Signer le devis",
+        payer_acompte: "Payer l'acompte",
+        valider_reception: "R\u00e9ceptionner les travaux",
+        confirmer_levee: "Confirmer la lev\u00e9e des r\u00e9serves",
+        payer_solde: "Payer le solde",
+        donner_avis: (artisan: string) => `Noter ${artisan}`,
+      },
+      detail: (title: string, artisan: string) => `${title} \u00b7 ${artisan}`,
+      appointmentsTitle: "Prochains rendez-vous",
+      appointmentKinds: {
+        visite: "Rendez-vous avec l'artisan",
+        demarrage: "D\u00e9marrage des travaux",
+      },
+      when: (day: string, time: string) => `${day} \u00e0 ${time}`,
+      chantiersTitle: "Mes chantiers en cours",
+      allChantiers: "Tous mes chantiers",
+      draftTitle: "Recherche non envoy\u00e9e",
+      newProjectTitle: "Un nouveau projet ?",
+      newProjectText:
+        "Choisissez un m\u00e9tier ou d\u00e9crivez vos travaux : MENAO vous pr\u00e9sente des artisans v\u00e9rifi\u00e9s.",
+      error:
+        "Impossible d'afficher votre tableau de bord pour le moment. Tirez vers le bas pour r\u00e9essayer.",
+    },
   },
   // Recherche (F-05 à F-07) : textes repris de la recherche du site.
   search: {

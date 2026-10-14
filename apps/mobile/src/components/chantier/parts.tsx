@@ -111,12 +111,21 @@ export function StatusPill({
 }
 
 /** Couverture du chantier : première photo du projet, sinon un dégradé bleu et une clé. */
-export function ChantierCover({ url, height = 150 }: { url: string | null; height?: number }) {
+export function ChantierCover({
+  url,
+  height = 150,
+  compact = false,
+}: {
+  url: string | null;
+  height?: number;
+  /** Vignette (accueil) : icône réduite et centrée. */
+  compact?: boolean;
+}) {
   return url ? (
     <Image source={{ uri: url }} style={[styles.cover, { height }]} alt="" />
   ) : (
-    <View style={[styles.cover, styles.coverEmpty, { height }]}>
-      <Wrench size={36} color={colors["primary-foreground"]} strokeWidth={1.5} />
+    <View style={[styles.cover, styles.coverEmpty, compact && styles.coverCompact, { height }]}>
+      <Wrench size={compact ? 22 : 36} color={colors["primary-foreground"]} strokeWidth={1.5} />
     </View>
   );
 }
@@ -304,6 +313,7 @@ const styles = StyleSheet.create({
     padding: spacing(4),
     backgroundColor: "#a9b9fb",
   },
+  coverCompact: { alignItems: "center", justifyContent: "center", padding: 0 },
   stepper: { flexDirection: "row", alignItems: "flex-start" },
   track: { position: "absolute", top: 12, height: 2, backgroundColor: colors["border-strong"] },
   trackFill: { height: 2, backgroundColor: colors.primary },
