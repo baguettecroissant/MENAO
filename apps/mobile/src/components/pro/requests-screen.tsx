@@ -15,9 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
 import { fr } from "@/i18n/fr";
-import { formatLongDate } from "@/lib/dates";
 import { formatDay } from "@/lib/format";
-import { loadInbox, type InboxItem } from "@/lib/pro-requests";
+import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -33,12 +32,6 @@ const TONE: Record<InboxItem["status"], Tone> = {
 };
 
 /** Début souhaité par le client, comme sur la liste du site. */
-function startOf(r: InboxItem): string {
-  if (r.date_mode === "date" && r.date_souhaitee)
-    return t.startWish(formatLongDate(r.date_souhaitee));
-  return r.date_mode === "des_que_possible" ? t.startAsap : t.startUnknown;
-}
-
 /**
  * Demandes reçues par l'artisan (F-16, F-17), comme sur le site : à traiter sous 48 heures, avec le
  * temps restant, le début souhaité et la première photo du projet.
@@ -105,7 +98,7 @@ export function RequestsScreen() {
                     <Text style={styles.meta}>{place}</Text>
                   </View>
                 ) : null}
-                <Text style={styles.meta}>{startOf(r)}</Text>
+                <Text style={styles.meta}>{requestStart(r)}</Text>
                 {left ? (
                   <View style={styles.row}>
                     <Clock size={14} color={colors["muted-foreground"]} />

@@ -2,10 +2,20 @@ import type { RefusalReason } from "@menao/core";
 import type { Database } from "@menao/db";
 import { parseRequestDetail, type RequestDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
+import { formatLongDate } from "./dates";
 import { supabase } from "./supabase";
 
 type InboxRow = Database["public"]["Functions"]["artisan_inbox"]["Returns"][number];
 export type InboxItem = InboxRow & { photoUrl: string | null };
+
+/** Début souhaité d'une demande : date, « dès que possible » ou inconnu. */
+export function requestStart(r: Pick<InboxRow, "date_mode" | "date_souhaitee">): string {
+  const t = fr.proRequests;
+  if (r.date_mode === "date" && r.date_souhaitee) {
+    return t.startWish(formatLongDate(r.date_souhaitee));
+  }
+  return r.date_mode === "des_que_possible" ? t.startAsap : t.startUnknown;
+}
 
 /** Photos privées des projets (bucket project-photos), par liens signés d'une heure. */
 async function signedPhotos(paths: readonly string[]): Promise<Map<string, string>> {
