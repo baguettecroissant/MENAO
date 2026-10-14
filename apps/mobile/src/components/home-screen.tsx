@@ -1,26 +1,43 @@
+import type { ClientHomeSummary } from "@menao/core";
 import { router, useFocusEffect } from "expo-router";
 import { setStatusBarStyle } from "expo-status-bar";
 import {
   ArrowRight,
   BadgeCheck,
   Bell,
+  Clock,
   CreditCard,
+  HardHat,
   LifeBuoy,
+  MessageCircle,
   Search,
   ShieldCheck,
   Star,
+  type LucideIcon,
 } from "lucide-react-native";
-import { useCallback } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState, type ReactNode } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ClientDashboard } from "@/components/client-dashboard";
 import { LogoMark } from "@/components/logo";
 import { tradeIcon } from "@/components/trade-icon";
 import { PushPrompt } from "@/components/push-prompt";
 import { fr } from "@/i18n/fr";
+import { loadClientHome } from "@/lib/client-home";
+import { openTab } from "@/lib/navigation";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useTrades } from "@/lib/trades";
-import { Body, Button, Card, IconTile, LinkText, Section } from "@/ui";
+import { useFocusData } from "@/lib/use-focus-data";
+import { Body, Button, Card, IconTile, LinkText, Notice, Section } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
@@ -28,15 +45,171 @@ const TRUST_ICONS = [ShieldCheck, CreditCard, Star, LifeBuoy];
 /** Raccourcis par métier affichés sur l'accueil (deux lignes de quatre). */
 const SHORTCUTS = 8;
 
+const t = fr.home.dashboard;
+
 /**
- * Accueil de l'espace client, ouvert à tous sans compte : recherche, raccourcis par métier,
- * fonctionnement et garanties, puis invitation à créer son espace (ADR 0055).
+ * Accueil de l'espace client (ADR 0055), ouvert à tous sans compte : recherche, raccourcis par
+ * métier, fonctionnement et garanties, puis invitation à créer son espace. Un client connecté y
+ * trouve son tableau de bord (ADR 0082), remis à zéro au changement de compte.
  */
 export function HomeScreen() {
+  const { signedIn, session } = useSession();
+  if (signedIn && session) return <ClientHome key={session.user.id} />;
+  return <GuestHome />;
+}
+
+function GuestHome() {
+  return (
+    <HomeFrame title={fr.home.greeting} subtitle={fr.home.subtitle} badges={<Tags />}>
+      <TradeShortcuts title={fr.home.tradesTitle} text={fr.home.tradesText} />
+      <Steps />
+      <Section title={fr.home.trustTitle}>
+        <Card>
+          {fr.home.trust.map((item, i) => (
+            <View key={item.title} style={styles.item}>
+              <IconTile icon={TRUST_ICONS[i] ?? ShieldCheck} size="sm" />
+              <View style={styles.itemText}>
+                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Body muted>{item.text}</Body>
+              </View>
+            </View>
+          ))}
+        </Card>
+      </Section>
+      <Card tone="soft">
+        <Text style={styles.itemTitle}>{fr.guest.spaceTitle}</Text>
+        <Body muted>{fr.guest.spaceText}</Body>
+        <Button label={fr.guest.createAccount} onPress={() => router.push("/inscription")} />
+        <Button
+          label={fr.guest.signIn}
+          variant="secondary"
+          onPress={() => router.push("/connexion")}
+        />
+      </Card>
+      <Text style={styles.free}>{fr.home.free}</Text>
+    </HomeFrame>
+  );
+}
+
+const summaryText = (summary: ClientHomeSummary) => {
+  switch (summary.kind) {
+    case "actions":
+      return t.summary.actions(summary.count);
+    case "a_jour":
+      return t.summary.a_jour;
+    case "demandes":
+      return t.summary.demandes(summary.count);
+    default:
+      return fr.home.subtitle;
+  }
+};
+
+/**
+ * Tableau de bord du client connecté (ADR 0082) : message personnalisé, compteurs, ce qui
+ * l'attend, prochains rendez-vous et chantiers en cours. Sans chantier ni demande, l'accueil garde
+ * « Comment ça marche ».
+ */
+function ClientHome() {
+  const [home, reload] = useFocusData(loadClientHome);
+  const { messages } = useUnread();
+  const counters: { icon: LucideIcon; label: string; onPress: () => void }[] = home
+    ? [
+        ...(home.activeCount > 0
+          ? [
+              {
+                icon: HardHat,
+                label: fr.myChantiers.countActive(home.activeCount),
+                onPress: () => openTab("/chantiers"),
+              },
+            ]
+          : []),
+        ...(home.awaitingRequests > 0
+          ? [
+              {
+                icon: Clock,
+                label: t.counts.requests(home.awaitingRequests),
+                onPress: () => openTab("/chantiers"),
+              },
+            ]
+          : []),
+        ...(messages > 0
+          ? [
+              {
+                icon: MessageCircle,
+                label: fr.messages.unread(messages),
+                onPress: () => openTab("/messages"),
+              },
+            ]
+          : []),
+      ]
+    : [];
+  const fresh = home?.summary.kind === "accueil" && !home.draft;
+
+  return (
+    <HomeFrame
+      title={t.hello(home?.firstName ?? null)}
+      subtitle={home ? summaryText(home.summary) : fr.home.subtitle}
+      badges={
+        counters.length > 0 ? (
+          <View style={styles.tags}>
+            {counters.map(({ icon: Icon, label, onPress }) => (
+              <Pressable
+                key={label}
+                role="link"
+                onPress={onPress}
+                style={({ pressed }) => [styles.tag, pressed && styles.pressed]}
+              >
+                <Icon size={14} color={colors["primary-foreground"]} />
+                <Text style={styles.tagText}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : (
+          <Tags />
+        )
+      }
+      onRefresh={reload}
+    >
+      <PushPrompt />
+      {home === undefined ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : home === null ? (
+        <Notice tone="error">{t.error}</Notice>
+      ) : (
+        <ClientDashboard home={home} />
+      )}
+      {fresh ? (
+        <>
+          <TradeShortcuts title={fr.home.tradesTitle} text={fr.home.tradesText} />
+          <Steps />
+        </>
+      ) : (
+        <TradeShortcuts title={t.newProjectTitle} text={t.newProjectText} />
+      )}
+    </HomeFrame>
+  );
+}
+
+/**
+ * En-tête bleu de l'accueil (marque, cloche, message, recherche, puces) puis le contenu. Tirer
+ * vers le bas relit les données (`onRefresh`) et les compteurs de la cloche.
+ */
+function HomeFrame({
+  title,
+  subtitle,
+  badges,
+  onRefresh,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  badges: ReactNode;
+  onRefresh?: () => Promise<void>;
+  children: ReactNode;
+}) {
   const insets = useSafeAreaInsets();
-  const { signedIn } = useSession();
   const { notifications, refresh } = useUnread();
-  const trades = useTrades();
+  const [refreshing, setRefreshing] = useState(false);
 
   // En-tête bleu : barre d'état claire tant que l'accueil est à l'écran.
   useFocusEffect(
@@ -49,7 +222,24 @@ export function HomeScreen() {
   );
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            tintColor={colors["primary-foreground"]}
+            onRefresh={async () => {
+              setRefreshing(true);
+              refresh();
+              await onRefresh();
+              setRefreshing(false);
+            }}
+          />
+        ) : undefined
+      }
+    >
       <View style={[styles.hero, { paddingTop: insets.top + spacing(3) }]}>
         <View style={styles.overscroll} />
         <View style={styles.heroTop}>
@@ -73,9 +263,9 @@ export function HomeScreen() {
         </View>
         <View style={styles.heroText}>
           <Text role="heading" style={styles.greeting}>
-            {fr.home.greeting}
+            {title}
           </Text>
-          <Text style={styles.subtitle}>{fr.home.subtitle}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
         <Pressable
           role="button"
@@ -91,93 +281,80 @@ export function HomeScreen() {
             <ArrowRight size={20} color={colors["primary-foreground"]} />
           </View>
         </Pressable>
-        <View style={styles.tags}>
-          {fr.home.tags.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <BadgeCheck size={14} color={colors["primary-foreground"]} />
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
+        {badges}
       </View>
-
-      <View style={styles.body}>
-        <PushPrompt />
-        {trades.length > 0 && (
-          <Section title={fr.home.tradesTitle} text={fr.home.tradesText}>
-            <View style={styles.trades}>
-              {trades.slice(0, SHORTCUTS).map((trade) => {
-                const Icon = tradeIcon(trade.code);
-                return (
-                  <Pressable
-                    key={trade.code}
-                    role="button"
-                    onPress={() =>
-                      router.push({ pathname: "/recherche", params: { metier: trade.code } })
-                    }
-                    style={({ pressed }) => [styles.trade, pressed && styles.pressed]}
-                  >
-                    <View style={styles.tradeIcon}>
-                      <Icon size={24} color={colors.primary} />
-                    </View>
-                    <Text style={styles.tradeLabel} numberOfLines={1}>
-                      {trade.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {trades.length > SHORTCUTS && (
-              <LinkText label={fr.home.allTrades} onPress={() => router.push("/recherche")} />
-            )}
-          </Section>
-        )}
-
-        <Section title={fr.home.stepsTitle}>
-          <Card>
-            {fr.home.steps.map((step, i) => (
-              <View key={step.title} style={styles.item}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>{i + 1}</Text>
-                </View>
-                <View style={styles.itemText}>
-                  <Text style={styles.itemTitle}>{step.title}</Text>
-                  <Body muted>{step.text}</Body>
-                </View>
-              </View>
-            ))}
-          </Card>
-        </Section>
-
-        <Section title={fr.home.trustTitle}>
-          <Card>
-            {fr.home.trust.map((item, i) => (
-              <View key={item.title} style={styles.item}>
-                <IconTile icon={TRUST_ICONS[i] ?? ShieldCheck} size="sm" />
-                <View style={styles.itemText}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Body muted>{item.text}</Body>
-                </View>
-              </View>
-            ))}
-          </Card>
-        </Section>
-
-        {!signedIn && (
-          <Card tone="soft">
-            <Text style={styles.itemTitle}>{fr.guest.spaceTitle}</Text>
-            <Body muted>{fr.guest.spaceText}</Body>
-            <Button label={fr.guest.createAccount} onPress={() => router.push("/inscription")} />
-            <Button
-              label={fr.guest.signIn}
-              variant="secondary"
-              onPress={() => router.push("/connexion")}
-            />
-          </Card>
-        )}
-        <Text style={styles.free}>{fr.home.free}</Text>
-      </View>
+      <View style={styles.body}>{children}</View>
     </ScrollView>
+  );
+}
+
+/** Garanties de MENAO, en puces sous la recherche. */
+function Tags() {
+  return (
+    <View style={styles.tags}>
+      {fr.home.tags.map((tag) => (
+        <View key={tag} style={styles.tag}>
+          <BadgeCheck size={14} color={colors["primary-foreground"]} />
+          <Text style={styles.tagText}>{tag}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Raccourcis par métier vers la recherche. */
+function TradeShortcuts({ title, text }: { title: string; text: string }) {
+  const trades = useTrades();
+  if (trades.length === 0) return null;
+  return (
+    <Section title={title} text={text}>
+      <View style={styles.trades}>
+        {trades.slice(0, SHORTCUTS).map((trade) => {
+          const Icon = tradeIcon(trade.code);
+          return (
+            <Pressable
+              key={trade.code}
+              role="button"
+              onPress={() =>
+                router.push({ pathname: "/recherche", params: { metier: trade.code } })
+              }
+              style={({ pressed }) => [styles.trade, pressed && styles.pressed]}
+            >
+              <View style={styles.tradeIcon}>
+                <Icon size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.tradeLabel} numberOfLines={1}>
+                {trade.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {trades.length > SHORTCUTS && (
+        <LinkText label={fr.home.allTrades} onPress={() => router.push("/recherche")} />
+      )}
+    </Section>
+  );
+}
+
+/** « Comment ça marche », en quatre étapes. */
+function Steps() {
+  return (
+    <Section title={fr.home.stepsTitle}>
+      <Card>
+        {fr.home.steps.map((step, i) => (
+          <View key={step.title} style={styles.item}>
+            <View style={styles.stepNumber}>
+              <Text style={styles.stepNumberText}>{i + 1}</Text>
+            </View>
+            <View style={styles.itemText}>
+              <Text style={styles.itemTitle}>{step.title}</Text>
+              <Body muted>{step.text}</Body>
+            </View>
+          </View>
+        ))}
+      </Card>
+    </Section>
   );
 }
 
