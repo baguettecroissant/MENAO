@@ -530,7 +530,11 @@ export const fr = {
     depositReceived: "Acompte reçu",
     verified: "Artisan vérifié par MENAO",
     call: "Appeler",
-    tabs: { suivi: "Suivi", dossier: "Dossier" },
+    tabs: {
+      label: "Partie du chantier",
+      suivi: "Suivi du chantier",
+      dossier: "Dossier du chantier",
+    },
     startPlanned: (date: string) => `Démarrage prévu le ${date}`,
     inProgress: "Chantier en cours",
     clientStatus: {
@@ -573,6 +577,18 @@ export const fr = {
       title: "Prochaine intervention",
       appointmentOn: (day: string, time: string) => `Rendez-vous le ${day} à ${time}`,
       startOn: (day: string, time: string) => `Démarrage le ${day} à ${time}`,
+      // « Ajouter à mon calendrier » (maquette) : mêmes choix que le site.
+      addToCalendar: "Ajouter à mon calendrier",
+      google: "Ajouter à Google Agenda",
+      outlook: "Ajouter à Outlook",
+      phone: "Calendrier du téléphone (fichier .ics)",
+      close: "Fermer",
+      failed: "Le fichier n'a pas pu être préparé. Réessayez dans un instant.",
+      // Événement ajouté à l'agenda : mêmes textes que le site.
+      summary: (title: string) => `Rendez-vous MENAO : ${title}`,
+      startSummary: (title: string) => `Démarrage des travaux : ${title}`,
+      description: (artisan: string | null) =>
+        [artisan && `Artisan : ${artisan}`, "Suivi sur MENAO"].filter(Boolean).join("\n"),
     },
     dossier: {
       documents: "Documents liés",
@@ -583,6 +599,7 @@ export const fr = {
       noDocuments: "Les documents du chantier (devis, factures) apparaîtront ici.",
       schedule: "Échéancier de paiement",
       total: "Total du chantier",
+      totalLine: (amount: string) => `Total du chantier : ${amount}`,
       paid: "Déjà payé",
       remaining: "Restant à payer",
       noSchedule: "L'échéancier de paiement apparaîtra avec le devis signé.",
@@ -595,6 +612,7 @@ export const fr = {
       payText: "Effectuez le paiement pour démarrer le chantier",
       payBalanceText: "Réglez le solde pour clôturer votre chantier",
       pay: "Payer maintenant",
+      dueNow: "À payer maintenant",
     },
     reception: {
       title: "Les travaux sont terminés",

@@ -154,6 +154,7 @@ export function Button({
   variant = "primary",
   loading = false,
   disabled = false,
+  icon: Icon,
 }: {
   label: string;
   onPress: () => void;
@@ -161,8 +162,16 @@ export function Button({
   variant?: "primary" | "secondary" | "ghost" | "danger";
   loading?: boolean;
   disabled?: boolean;
+  /** Icône après le libellé (« Message », « Appeler », « Ajouter à mon calendrier »). */
+  icon?: LucideIcon;
 }) {
   const inactive = disabled || loading;
+  const labelColor =
+    variant === "primary"
+      ? colors["primary-foreground"]
+      : variant === "danger"
+        ? colors.danger
+        : colors["primary-strong"];
   return (
     <Pressable
       role="button"
@@ -183,18 +192,21 @@ export function Button({
           color={variant === "primary" ? colors["primary-foreground"] : colors.primary}
         />
       ) : (
-        <Text
-          style={[
-            styles.buttonLabel,
-            variant === "primary"
-              ? styles.buttonLabelPrimary
-              : variant === "danger"
-                ? styles.buttonLabelDanger
-                : styles.buttonLabelOther,
-          ]}
-        >
-          {label}
-        </Text>
+        <View style={styles.buttonContent}>
+          <Text
+            style={[
+              styles.buttonLabel,
+              variant === "primary"
+                ? styles.buttonLabelPrimary
+                : variant === "danger"
+                  ? styles.buttonLabelDanger
+                  : styles.buttonLabelOther,
+            ]}
+          >
+            {label}
+          </Text>
+          {Icon ? <Icon size={18} color={labelColor} /> : null}
+        </View>
       )}
     </Pressable>
   );
@@ -365,6 +377,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonContent: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   buttonPrimary: { backgroundColor: colors.primary },
   buttonSecondary: {
     backgroundColor: colors.surface,
