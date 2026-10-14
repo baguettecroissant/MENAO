@@ -302,6 +302,36 @@ export const fr = {
     availableFrom: (date: string) => `Disponible à partir du ${date}`,
     more: (n: number) => `+${n}`,
     error: "Impossible d'afficher les artisans pour le moment. Réessayez dans quelques instants.",
+    // Carte d'un artisan du carrousel (maquette « Résultat de recherche - in app »).
+    since: (trade: string, years: number | null) =>
+      years === null ? trade : `${trade} depuis ${years} an${years > 1 ? "s" : ""}`,
+    // Dernière carte du carrousel : mêmes textes que le site (aucune promesse de délai de mise en relation).
+    help: {
+      title: "Vous ne trouvez pas votre artisan idéal ?",
+      text: "Envoyez votre dossier à l'équipe MENAO : nous vous répondons sous 7 jours.",
+      cta: "Envoyer mon dossier à MENAO",
+    },
+  },
+  /** « Résumé de mon besoin » en haut des résultats et de l'envoi (maquettes). */
+  needSummary: {
+    title: "Résumé de mon besoin",
+    edit: "Modifier mon besoin",
+    asap: "Dès que possible",
+    unknownDate: "Date à définir",
+    photos: (n: number) => (n <= 1 ? `${n} photo` : `${n} photos`),
+  },
+  /** « Envoyer mon dossier à MENAO » (F-09, F-56) : mêmes textes que le site. */
+  dossier: {
+    title: "Vous ne trouvez pas votre artisan idéal ?",
+    intro: "Envoyez votre dossier à l'équipe MENAO : nous vous répondons sous 7 jours.",
+    message: "Votre message (facultatif)",
+    email: "Votre adresse e-mail",
+    emailHint: "Pour que l'équipe MENAO puisse vous répondre.",
+    emailInvalid:
+      "Indiquez une adresse e-mail valide pour que l'équipe MENAO puisse vous répondre.",
+    submit: "Envoyer mon dossier à MENAO",
+    sent: "Votre dossier est transmis à l'équipe MENAO. Nous vous répondons sous 7 jours.",
+    back: "Revenir aux artisans",
   },
   selection: {
     select: "Sélectionner",
@@ -327,6 +357,17 @@ export const fr = {
       "48h": "Répond sous 48\u00a0h",
     },
     unavailable: "Indisponible pour le moment",
+    // Cartes d'informations de la fiche (maquette « Fiche artisan ») : valeur courte.
+    responseLabel: "Temps de réponse",
+    responseShort: {
+      "1h": "< 1\u00a0h",
+      "3h": "< 3\u00a0h",
+      "24h": "Dans la journée",
+      "48h": "< 48\u00a0h",
+    },
+    verified: "Avis vérifié",
+    seeMore: "Voir plus",
+    seeLess: "Voir moins",
     about: (name: string) => `À propos de ${name}`,
     expertise: "Expertises",
     guarantees: "Garanties & assurances",
@@ -371,7 +412,11 @@ export const fr = {
     checkEmail:
       "Nous venons de vous envoyer un e-mail de confirmation. Ouvrez le lien qu'il contient, puis connectez-vous ici pour envoyer votre demande.",
     selected: "Artisans sélectionnés",
-    messageTitle: "Message personnalisé (facultatif)",
+    selectedOne: "Artisan sélectionné",
+    changeSelection: "Modifier la sélection",
+    messageCount: (n: number) => `${n.toLocaleString("fr-FR")} / 10 000`,
+    messageCardTitle: "Ajouter un message personnalisé",
+    messageLabel: "Votre message (facultatif)",
     messageHint: (names: string) =>
       `Il peut aider ${names} à préparer votre rendez-vous et le devis.`,
     contactTitle: "Vos coordonnées",

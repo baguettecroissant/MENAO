@@ -1,18 +1,19 @@
 import { joinNames } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { Sparkles } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { ArtisanCard, type CardSelection } from "@/components/artisan-card";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ArtisanTile, HelpTile, TILE_WIDTH, type CardSelection } from "@/components/artisan-card";
+import { NeedSummaryBand } from "@/components/need-summary";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadResults, type ProjectResults } from "@/lib/project";
 import { loadProjectRequests, type ProjectRequests } from "@/lib/requests";
-import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.results;
 const s = fr.selection;
+const GAP = theme.spacing(3);
 
 /**
  * Artisans proposés pour le projet (F-09) : fiche de chacun, et sélection de 3 artisans au plus
@@ -81,23 +82,18 @@ export default function ProjetArtisans() {
 
   return (
     <Screen
-      header={<TopBar />}
+      band={
+        <NeedSummaryBand
+          summary={results.summary}
+          onEdit={() => router.dismissTo({ pathname: "/projet/[id]", params: { id } })}
+        />
+      }
       footer={
         selected.length > 0 ? (
           <Button label={s.submit(selected.length)} onPress={() => send(selected)} />
         ) : undefined
       }
     >
-      <Card tone="soft">
-        <View style={styles.summary}>
-          <Sparkles size={16} color={theme.colors.primary} />
-          <Text style={styles.summaryLabel}>{t.project}</Text>
-          <LinkText label={t.edit} onPress={() => router.back()} />
-        </View>
-        <Text style={styles.summaryValue}>
-          {results.city ? t.projectSummary(results.tradeLabel, results.city) : results.tradeLabel}
-        </Text>
-      </Card>
       <Title>{results.artisans.length ? t.title : t.noneTitle}</Title>
       <Body muted>{results.artisans.length ? t.found(results.artisans.length) : t.none}</Body>
       {requests.pendingNames.length > 0 && (
@@ -110,27 +106,40 @@ export default function ProjetArtisans() {
           <Notice tone="info">{s.noSlot}</Notice>
         ))}
       {limitReached && <Notice tone="info">{s.limit}</Notice>}
-      {results.artisans.map((artisan) => (
-        <ArtisanCard
-          key={artisan.id}
-          artisan={artisan}
-          tradeLabel={results.tradeLabel}
-          projectWorkTypes={results.workTypeCodes}
-          selection={selectionOf(artisan.id)}
-          onToggle={() => toggle(artisan.id)}
-          onOpen={() =>
-            router.push({
-              pathname: "/projet/[id]/artisan/[artisanId]",
-              params: {
-                id,
-                artisanId: artisan.id,
-                // La fiche propose l'envoi seulement si une place reste et l'artisan n'est pas sollicité.
-                canRequest: requests.slots > 0 && !requests.requested.has(artisan.id) ? "1" : "0",
-              },
-            })
-          }
+      {/* Carrousel de la maquette « Résultat de recherche - in app », bord à bord. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={TILE_WIDTH + GAP}
+        decelerationRate="fast"
+        style={styles.carousel}
+        contentContainerStyle={styles.carouselContent}
+      >
+        {results.artisans.map((artisan) => (
+          <ArtisanTile
+            key={artisan.id}
+            artisan={artisan}
+            tradeLabel={results.tradeLabel}
+            projectWorkTypes={results.workTypeCodes}
+            selection={selectionOf(artisan.id)}
+            onToggle={() => toggle(artisan.id)}
+            onOpen={() =>
+              router.push({
+                pathname: "/projet/[id]/artisan/[artisanId]",
+                params: {
+                  id,
+                  artisanId: artisan.id,
+                  // La fiche propose l'envoi seulement si une place reste et l'artisan n'est pas sollicité.
+                  canRequest: requests.slots > 0 && !requests.requested.has(artisan.id) ? "1" : "0",
+                },
+              })
+            }
+          />
+        ))}
+        <HelpTile
+          onPress={() => router.push({ pathname: "/projet/[id]/dossier", params: { id } })}
         />
-      ))}
+      </ScrollView>
     </Screen>
   );
 }
@@ -142,12 +151,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: theme.colors.background,
   },
-  summary: { flexDirection: "row", alignItems: "center", gap: theme.spacing(2) },
-  summaryLabel: {
-    flex: 1,
-    fontFamily: theme.font.medium,
-    fontSize: 14,
-    color: theme.colors["primary-strong"],
+  // Le carrousel déborde des marges de l'écran, les cartes restent alignées sur le texte.
+  carousel: { marginHorizontal: -theme.spacing(5), flexGrow: 0 },
+  carouselContent: {
+    gap: GAP,
+    paddingHorizontal: theme.spacing(5),
+    paddingVertical: theme.spacing(1),
+    alignItems: "stretch",
   },
-  summaryValue: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
 });

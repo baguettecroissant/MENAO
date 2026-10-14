@@ -6,6 +6,7 @@ import { AccountStep } from "@/components/account-step";
 import { RequestForm } from "@/components/request-form";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
+import { loadNeedSummary, type NeedSummary } from "@/lib/project";
 import { loadSendContext, type SendContext } from "@/lib/requests";
 import { useSession } from "@/lib/session";
 import { Notice, Screen } from "@/ui";
@@ -34,34 +35,37 @@ export default function Envoyer() {
 /** Formulaire d'envoi d'un particulier connecté : artisans encore joignables et coordonnées. */
 function SignedInSend({ projectId, artisanIds }: { projectId: string; artisanIds: string[] }) {
   const key = artisanIds.join(",");
-  const [context, setContext] = useState<SendContext | null | undefined>(undefined);
+  const [loaded, setLoaded] = useState<
+    { context: SendContext | null; summary: NeedSummary | null } | undefined
+  >(undefined);
 
   useEffect(() => {
     let active = true;
-    loadSendContext(projectId, key.split(",")).then((found) => {
-      if (active) setContext(found);
-    });
+    Promise.all([loadSendContext(projectId, key.split(",")), loadNeedSummary(projectId)]).then(
+      ([context, summary]) => {
+        if (active) setLoaded({ context, summary });
+      },
+    );
     return () => {
       active = false;
     };
   }, [projectId, key]);
 
-  if (context === undefined) {
+  if (loaded === undefined) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={theme.colors.primary} />
       </View>
     );
   }
-  return (
-    <Screen header={<TopBar />}>
-      {context ? (
-        <RequestForm projectId={projectId} context={context} />
-      ) : (
+  if (!loaded.context || !loaded.summary) {
+    return (
+      <Screen header={<TopBar />}>
         <Notice tone="info">{r.nothingToSend}</Notice>
-      )}
-    </Screen>
-  );
+      </Screen>
+    );
+  }
+  return <RequestForm projectId={projectId} context={loaded.context} summary={loaded.summary} />;
 }
 
 const styles = StyleSheet.create({
