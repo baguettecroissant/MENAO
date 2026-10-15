@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "./test";
 
 // Agenda et disponibilités (F-44). Compte fictif du seed : valide@example.test (Lou, artisan
 // validé, absent des tests de recherche : la pause et les absences ne les perturbent pas).

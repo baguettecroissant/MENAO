@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { dates, fakeSiret, files, mockGeocoding } from "./fixtures";
 import { authLinkFor } from "./mailpit";
 

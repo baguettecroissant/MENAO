@@ -84,22 +84,24 @@ export function CommissionCalculator({ subscriptionCents }: { subscriptionCents:
             value: "text-primary-strong",
           },
         ].map((row) => (
-          <div key={row.label} className="flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-sm">{row.label}</dt>
-              <dd
-                className={`shrink-0 text-xl font-medium whitespace-nowrap tabular-nums ${row.value}`}
-              >
-                {euros.format(row.cents / 100)}{" "}
-                <span className="text-xs font-normal text-muted-foreground">{t.perMonth}</span>
-              </dd>
-            </div>
-            <div aria-hidden="true" className="h-2 rounded-full bg-background">
+          // Un groupe = dt + dd (HTML : seuls dt et dd sont admis dans le div d'un dl).
+          <div
+            key={row.label}
+            className="grid grid-cols-[1fr_auto] items-baseline gap-x-3 gap-y-1.5"
+          >
+            <dt className="text-sm">{row.label}</dt>
+            <dd
+              className={`shrink-0 text-xl font-medium whitespace-nowrap tabular-nums ${row.value}`}
+            >
+              {euros.format(row.cents / 100)}{" "}
+              <span className="text-xs font-normal text-muted-foreground">{t.perMonth}</span>
+            </dd>
+            <dd aria-hidden="true" className="col-span-2 h-2 rounded-full bg-background">
               <div
                 className={`h-full rounded-full transition-[width] duration-300 ${row.bar}`}
                 style={{ width: `${Math.max(2, (row.cents / max) * 100)}%` }}
               />
-            </div>
+            </dd>
           </div>
         ))}
       </dl>

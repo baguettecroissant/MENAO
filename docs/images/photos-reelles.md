@@ -40,6 +40,7 @@ Les images de partage (`apps/web/public/images/og/`) sont refaites à partir de 
    - Chaque photo est recadrée au format de son emplacement, réduite et convertie en WebP. Les métadonnées, dont la position GPS, sont retirées.
    - L'image de partage correspondante est refaite.
    - `--partage` refait seulement les images de partage, d'après les photos déjà en place.
+   - Chaque photo est aussi écrite en version réduite, même cadrage (`accueil-bandeau-960.webp`, `metiers/<métier>-400.webp`), servie aux petits écrans et aux vignettes (ADR 0103). `--variantes` les refait seules, d'après les photos déjà en place.
 3. Contrôler en local (`pnpm --filter web dev`) : accueil, une page métier, une page ville.
 4. Mettre à jour la documentation :
    - le registre ci-dessous ;

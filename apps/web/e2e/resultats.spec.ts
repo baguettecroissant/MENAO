@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Résultats (F-09) et fiche artisan (F-10). Seed : Noé (plombier, 25 km autour de Nice, disponible)
 // et Inès (plombière à Nice et Antibes, disponible dans deux semaines).

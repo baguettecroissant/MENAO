@@ -17,6 +17,9 @@ const steps = fr.site.clientSteps;
 
 // Pages statiques régénérées toutes les heures (spec §4.4).
 export const revalidate = 3600;
+// Seules les pages générées au build existent : une adresse inconnue répond 404 tout de suite,
+// sans fonction ni requête à la base (robots, coût d'hébergement, spec §4.4).
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   const { trades } = await seoCatalog();

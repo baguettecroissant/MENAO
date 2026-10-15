@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { signedStripeEvent } from "./stripe";
 
 // Stripe est remplacé par stripe-mock en CI ; les webhooks sont simulés et signés ici.

@@ -1,6 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { TRADE_IMAGES } from "@/lib/site/images";
+import { TRADE_IMAGES, tradeSrcSet } from "@/lib/site/images";
 import { DEFAULT_TRADE_VISUAL, TRADE_VISUALS } from "./trade-visuals";
 
 /** Carte métier en photo, libellé en bas sur un dégradé sombre (maquettes). */
@@ -17,6 +17,8 @@ export function TradeCard({ code, label, href }: { code: string; label: string; 
         // eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4)
         <img
           src={image}
+          srcSet={tradeSrcSet(code)}
+          sizes="(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 50vw"
           alt=""
           loading="lazy"
           decoding="async"

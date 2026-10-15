@@ -120,7 +120,7 @@ export default function HowItWorksPage() {
                 <div className={`flex flex-col gap-4 ${i % 2 ? "lg:order-2" : ""}`}>
                   <span
                     aria-hidden="true"
-                    className="text-5xl leading-none font-medium tracking-tight text-primary/25 tabular-nums"
+                    className="text-5xl leading-none font-medium tracking-tight text-primary/80 tabular-nums"
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>

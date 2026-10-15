@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
-import { TRADE_IMAGES } from "@/lib/site/images";
+import { TRADE_IMAGES, tradeSrcSet } from "@/lib/site/images";
 import { frenchSpacing } from "@/lib/site/typography";
 import { Breadcrumbs, type Crumb } from "./breadcrumbs";
 import { DEFAULT_TRADE_VISUAL, TRADE_VISUALS } from "./trade-visuals";
@@ -43,6 +43,8 @@ export function TradeHero({
             {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
             <img
               src={image}
+              srcSet={tradeSrcSet(code)}
+              sizes="(min-width: 768px) 42vw, 100vw"
               alt=""
               fetchPriority="high"
               className="absolute inset-0 size-full object-cover object-[center_22%] [mask-image:linear-gradient(to_bottom,black_55%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,black_35%)]"

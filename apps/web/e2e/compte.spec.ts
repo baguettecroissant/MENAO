@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { authLinkFor } from "./mailpit";
 
 // « Mon compte » (F-08, ADR 0039) sur un compte particulier créé pour le test. Données fictives
