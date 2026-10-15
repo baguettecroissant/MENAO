@@ -2,10 +2,10 @@ import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Logo, LogoMark } from "@/components/brand/logo";
-import { DemoVideo } from "@/components/pro-landing/demo-video";
 import { fr } from "@/i18n/fr";
 import { frenchSpacing } from "@/lib/site/typography";
 import { AccessForm } from "./access-form";
+import { TeaserVideo } from "./teaser-video";
 
 const t = fr.prelaunch;
 
@@ -29,7 +29,7 @@ export default function PrelaunchPage() {
       />
       <LogoMark className="pointer-events-none absolute -top-10 -right-24 hidden size-[26rem] animate-menao-float opacity-[0.07] [animation-duration:9s] md:block" />
 
-      <section className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 pt-12 pb-14 text-center sm:pt-20">
+      <section className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 pt-12 pb-10 text-center sm:pt-20">
         <Logo />
         <span className="inline-flex items-center gap-2 rounded-pill border border-primary/20 bg-surface px-3 py-1 text-sm font-medium text-primary-strong">
           <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-primary" />
@@ -39,6 +39,13 @@ export default function PrelaunchPage() {
           {frenchSpacing(t.title)}
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">{t.lead}</p>
+      </section>
+
+      <section className="relative mx-auto w-full max-w-5xl px-4 pb-10">
+        <TeaserVideo />
+      </section>
+
+      <section className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 pb-14 text-center">
         <ul className="flex flex-wrap justify-center gap-2">
           {t.points.map((point) => (
             <li
@@ -51,14 +58,6 @@ export default function PrelaunchPage() {
           ))}
         </ul>
         <p className="text-sm text-muted-foreground">{t.area}</p>
-      </section>
-
-      <section className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-5 px-4 pb-14 text-center">
-        <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">
-          {frenchSpacing(t.pro.title)}
-        </h2>
-        <p className="max-w-xl text-muted-foreground">{t.pro.text}</p>
-        <DemoVideo />
       </section>
 
       <section className="relative mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 px-4 pb-14 sm:grid-cols-2">
