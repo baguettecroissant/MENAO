@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { capture, files } from "./fixtures";
 import { authLinkFor } from "./mailpit";
 import { signedStripeEvent } from "./stripe";

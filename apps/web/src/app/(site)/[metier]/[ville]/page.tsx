@@ -20,6 +20,9 @@ const t = fr.seo;
 
 // Pré-générées au build pour les métiers × communes pilotes, régénérées toutes les heures.
 export const revalidate = 3600;
+// Seules les pages générées au build existent : une adresse inconnue répond 404 tout de suite,
+// sans fonction ni requête à la base (robots, coût d'hébergement, spec §4.4).
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   const { trades, communes } = await seoCatalog();

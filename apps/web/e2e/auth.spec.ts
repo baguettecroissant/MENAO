@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { authLinkFor } from "./mailpit";
 
 // Données fictives uniquement (domaine réservé .test).

@@ -6,6 +6,19 @@
  */
 export const HERO_IMAGE: string | null = "/images/accueil-bandeau.webp";
 
+/**
+ * Versions réduites (même cadrage) générées par photos-reelles.mjs : le navigateur choisit selon
+ * la taille d'affichage (srcset), pour alléger les petits écrans et les vignettes (ADR 0103).
+ */
+export const HERO_SRCSET = HERO_IMAGE
+  ? `${HERO_IMAGE.replace(/\.webp$/, "-960.webp")} 960w, ${HERO_IMAGE} 1536w`
+  : undefined;
+
+export function tradeSrcSet(code: string): string | undefined {
+  const image = TRADE_IMAGES[code];
+  return image ? `${image.replace(/\.webp$/, "-400.webp")} 400w, ${image} 800w` : undefined;
+}
+
 export const TRADE_IMAGES: Partial<Record<string, string>> = {
   electricien: "/images/metiers/electricien.webp",
   plombier: "/images/metiers/plombier.webp",

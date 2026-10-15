@@ -5,6 +5,7 @@
 // Usage, depuis la racine du dépôt :
 //   node apps/web/scripts/photos-reelles.mjs <dossier>   photos nommées par emplacement
 //   node apps/web/scripts/photos-reelles.mjs --partage   images de partage seules, d'après le site
+//   node apps/web/scripts/photos-reelles.mjs --variantes versions réduites seules, d'après le site
 //
 // Noms acceptés : accueil-bandeau.jpg, plombier.jpg, electricien.png… (JPEG, PNG, WebP ou HEIC).
 // Cadrage facultatif dans le nom : « plombier@50,30.jpg » garde le point situé à 50 % de la
@@ -46,6 +47,11 @@ const formatDe = (code) =>
   code === "accueil-bandeau"
     ? EMPLACEMENTS[code]
     : { fichier: `metiers/${code}.webp`, largeur: 800, hauteur: 1200 };
+/** Version réduite, même cadrage, pour les petits écrans et les vignettes (srcset, ADR 0103). */
+const varianteDe = (code) =>
+  code === "accueil-bandeau"
+    ? { fichier: "accueil-bandeau-960.webp", largeur: 960, hauteur: 640 }
+    : { fichier: `metiers/${code}-400.webp`, largeur: 400, hauteur: 600 };
 const QUALITE_WEBP = 0.82;
 
 const TYPES = {
@@ -153,6 +159,20 @@ const browser = await chromium.launch(
 try {
   if (args.includes("--partage")) {
     for (const code of Object.keys(EMPLACEMENTS)) await refairePartage(browser, code);
+  } else if (args.includes("--variantes")) {
+    const page = await browser.newPage();
+    for (const code of Object.keys(EMPLACEMENTS)) {
+      const variante = varianteDe(code);
+      const octets = await recadrer(
+        page,
+        dataUrl(join(publicDir, formatDe(code).fichier)),
+        variante,
+        0.5,
+        0.5,
+      );
+      writeFileSync(join(publicDir, variante.fichier), octets);
+      console.log(`public/images/${variante.fichier} (${Math.round(octets.length / 1000)} Ko)`);
+    }
   } else {
     const dossier = args[0];
     if (!dossier)
@@ -171,6 +191,11 @@ try {
       const format = formatDe(code);
       const octets = await recadrer(page, dataUrl(join(dossier, nom)), format, x, y);
       writeFileSync(join(publicDir, format.fichier), octets);
+      const variante = varianteDe(code);
+      writeFileSync(
+        join(publicDir, variante.fichier),
+        await recadrer(page, dataUrl(join(dossier, nom)), variante, x, y),
+      );
       console.log(
         `${nom} → public/images/${format.fichier} (${Math.round(octets.length / 1000)} Ko)`,
       );

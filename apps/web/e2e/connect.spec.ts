@@ -1,4 +1,4 @@
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import { type APIRequestContext, expect, test } from "./test";
 import { signedStripeEvent } from "./stripe";
 
 // Seed : paiement@example.test (validé, en essai, compte Connect acct_seed_paiement inactif).

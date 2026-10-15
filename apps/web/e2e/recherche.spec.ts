@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { dates, files, mockGeocoding } from "./fixtures";
 
 // Recherche IA (F-05 à F-07) en session anonyme. L'Edge Function analyze-need interroge le faux

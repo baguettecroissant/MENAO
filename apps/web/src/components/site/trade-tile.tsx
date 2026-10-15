@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { TRADE_IMAGES } from "@/lib/site/images";
+import { TRADE_IMAGES, tradeSrcSet } from "@/lib/site/images";
 import { DEFAULT_TRADE_VISUAL, TRADE_VISUALS } from "./trade-visuals";
 
 /** Vignette compacte d'un métier (photo, libellé, flèche), pour les grilles de métiers. */
@@ -31,6 +31,8 @@ export function TradeTile({
           // eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4)
           <img
             src={image}
+            srcSet={tradeSrcSet(code)}
+            sizes="56px"
             alt=""
             loading="lazy"
             decoding="async"

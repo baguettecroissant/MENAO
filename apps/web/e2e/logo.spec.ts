@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { files } from "./fixtures";
 
 // Logo des documents (ADR 0038) depuis « Mon dossier → Entreprise ». Compte fictif du seed :

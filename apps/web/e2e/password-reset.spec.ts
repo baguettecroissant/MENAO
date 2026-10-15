@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { authLinkFor } from "./mailpit";
 
 test("mot de passe oublié : lien e-mail, nouveau mot de passe, reconnexion", async ({

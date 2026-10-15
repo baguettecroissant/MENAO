@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Site public (F-01 à F-03). Seed : Noé (plombier, 25 km autour de Nice) et Inès (plombière à
 // Nice et Antibes).

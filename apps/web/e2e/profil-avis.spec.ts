@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 
 // « Ma fiche publique » et « Mes avis » (F-10, F-28). Compte fictif du seed : valide@example.test
 // (Lou, électricien validé, sans photo ni avis).

@@ -3,7 +3,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
-import { HERO_IMAGE } from "@/lib/site/images";
+import { HERO_IMAGE, HERO_SRCSET } from "@/lib/site/images";
 import { HeroSearchInput } from "./hero-search-input";
 import { HomeNav } from "./home-nav";
 
@@ -25,6 +25,9 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
             {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
             <img
               src={HERO_IMAGE}
+              srcSet={HERO_SRCSET}
+              // Mobile : bande de 400 px de haut recadrée, la version 960 suffit.
+              sizes="(max-width: 639px) 480px, (max-width: 1440px) 100vw, 1440px"
               alt=""
               fetchPriority="high"
               className="absolute inset-x-0 top-0 h-[400px] w-full animate-menao-kenburns object-cover object-right-top sm:h-full sm:object-[70%_center] lg:object-center"
