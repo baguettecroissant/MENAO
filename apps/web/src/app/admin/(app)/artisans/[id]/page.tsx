@@ -49,6 +49,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
     tradeRef,
     workTypeRef,
     subscription,
+    charter,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -84,6 +85,14 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       .from("subscriptions")
       .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end, plans(nom)")
       .eq("artisan_id", id)
+      .maybeSingle(),
+    // Charte qualité signée (ADR 0104), dernière version.
+    supabase
+      .from("artisan_charter_acceptances")
+      .select("version, signer_name, company, siret, signature_path, accepted_at")
+      .eq("artisan_id", id)
+      .order("accepted_at", { ascending: false })
+      .limit(1)
       .maybeSingle(),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
@@ -223,6 +232,40 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
             </li>
           ))}
         </ul>
+      </Section>
+
+      <Section title={t.charter}>
+        {charter.data ? (
+          <div className="flex flex-col gap-2">
+            <p>
+              {t.charterSigned(
+                day.format(new Date(charter.data.accepted_at)),
+                charter.data.version,
+                charter.data.signer_name,
+              )}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t.charterIdentity(charter.data.company, charter.data.siret)}
+            </p>
+            <svg
+              viewBox="0 0 600 150"
+              role="img"
+              aria-label={t.charterSignature}
+              className="h-24 w-full max-w-md rounded-input border border-border bg-input"
+            >
+              <path
+                d={charter.data.signature_path}
+                fill="none"
+                stroke="#111728"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">{t.charterMissing}</p>
+        )}
       </Section>
 
       <Section title={t.documents}>

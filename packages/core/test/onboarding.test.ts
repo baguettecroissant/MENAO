@@ -25,6 +25,7 @@ const vide: ArtisanOnboardingSnapshot = {
   hasAvatar: false,
   subscriptionActive: false,
   connectChargesEnabled: false,
+  charterAccepted: false,
 };
 
 const entrepriseOk = {
@@ -36,15 +37,16 @@ const entrepriseOk = {
 };
 
 describe("étapes d'onboarding (F-14)", () => {
-  it("les 7 étapes sont disponibles", () => {
+  it("les 8 étapes sont disponibles", () => {
     expect(ONBOARDING_STEPS.every((s) => s.available)).toBe(true);
   });
 
-  it("liste les 7 étapes de la spec, dans l'ordre", () => {
+  it("liste les 8 étapes, dans l'ordre (charte qualité après la zone)", () => {
     expect(ONBOARDING_STEPS.map((s) => s.key)).toEqual([
       "entreprise",
       "metiers",
       "zone",
+      "charte",
       "documents",
       "profil",
       "paiements",
@@ -82,10 +84,25 @@ describe("étapes d'onboarding (F-14)", () => {
     expect(onboardingProgress({ ...base, communeCount: 3 }).zone).toBe(true);
   });
 
-  it("étapes 1 à 3 faites : la suivante est « documents »", () => {
+  it("étapes 1 à 3 faites : la suivante est la charte qualité", () => {
     expect(
       firstIncompleteStep(
         { ...entrepriseOk, tradeCount: 1, zoneMode: "communes", communeCount: 1 },
+        today,
+      ),
+    ).toBe("charte");
+  });
+
+  it("charte signée : la suivante est « documents »", () => {
+    expect(
+      firstIncompleteStep(
+        {
+          ...entrepriseOk,
+          tradeCount: 1,
+          zoneMode: "communes",
+          communeCount: 1,
+          charterAccepted: true,
+        },
         today,
       ),
     ).toBe("documents");
@@ -97,6 +114,7 @@ const etapes123 = {
   tradeCount: 1,
   zoneMode: "communes" as const,
   communeCount: 1,
+  charterAccepted: true,
 };
 const documentsOk = {
   kbis: { status: "en_attente" as const, dateEmission: "2026-08-01", dateFin: null },
@@ -164,9 +182,10 @@ describe("profil public et envoi en vérification", () => {
     expect(onboardingProgress({ ...complet, hasAvatar: false }, today).profil).toBe(false);
   });
 
-  it("envoi possible quand les étapes 1 à 5 sont terminées", () => {
+  it("envoi possible quand les étapes jusqu'au profil sont terminées, charte comprise", () => {
     expect(canSubmitOnboarding(complet, today)).toBe(true);
     expect(canSubmitOnboarding({ ...complet, tradeCount: 0 }, today)).toBe(false);
+    expect(canSubmitOnboarding({ ...complet, charterAccepted: false }, today)).toBe(false);
     expect(firstIncompleteStep(complet, today)).toBe("paiements");
   });
 

@@ -4,6 +4,7 @@ export * from "./artisan";
 export * from "./artisan-request";
 export * from "./artisan-profile";
 export * from "./auth";
+export * from "./charter";
 export * from "./chantier";
 export * from "./conversation";
 export * from "./dispute";

@@ -292,6 +292,54 @@ export type Database = {
           },
         ];
       };
+      artisan_charter_acceptances: {
+        Row: {
+          accepted_at: string;
+          artisan_id: string;
+          company: string;
+          created_at: string;
+          id: string;
+          rules_count: number;
+          signature_path: string;
+          signer_name: string;
+          siret: string;
+          version: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_at?: string;
+          artisan_id: string;
+          company: string;
+          created_at?: string;
+          id?: string;
+          rules_count: number;
+          signature_path: string;
+          signer_name: string;
+          siret: string;
+          version: string;
+        };
+        Update: {
+          accepted_at?: string;
+          artisan_id?: string;
+          company?: string;
+          created_at?: string;
+          id?: string;
+          rules_count?: number;
+          signature_path?: string;
+          signer_name?: string;
+          siret?: string;
+          version?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_charter_acceptances_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_documents: {
         Row: {
           artisan_id: string;
@@ -2906,6 +2954,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_artisan_charter: {
+        Args: {
+          p_company: string;
+          p_rules_count: number;
+          p_signature_path: string;
+          p_signer_name: string;
+          p_siret: string;
+          p_version: string;
+        };
+        Returns: string;
+      };
       add_artisan_absence: {
         Args: { p_ends_on: string; p_label?: string; p_starts_on: string };
         Returns: string;
