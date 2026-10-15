@@ -1,6 +1,6 @@
 # ADR 0058 — Vidéo de démonstration de l'Espace Pro
 
-- Statut : accepté
+- Statut : accepté (complété par l'ADR 0099 pour la deuxième version de la vidéo)
 - Date : 13 octobre 2026
 
 ## Contexte
