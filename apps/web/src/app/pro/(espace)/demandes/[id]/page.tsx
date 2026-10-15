@@ -32,14 +32,17 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
   const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
   // En attente de réponse, ou acceptée avant la phase 3 sans rendez-vous (ADR 0016).
   const open = (r.status === "envoyee" && left !== null) || r.status === "acceptee";
-  const [{ data: signed }, { data: trades }, agenda] = await Promise.all([
+  const [{ data: signed }, { data: trades }, agenda, { data: reputation }] = await Promise.all([
     r.photos.length
       ? supabase.storage.from("project-photos").createSignedUrls(r.photos, 3600)
       : Promise.resolve({ data: [] }),
     supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
     // F-44 : créneaux libres et avertissements du tiroir « Fixer un rendez-vous ».
     open ? appointmentAgenda() : undefined,
+    // F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible.
+    supabase.rpc("client_reputation", { p_request_id: r.id }),
   ]);
+  const clientReputation = reputation?.[0] ?? null;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -71,6 +74,29 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
           photoUrls={(signed ?? []).flatMap((p) => (p.signedUrl ? [p.signedUrl] : []))}
           variant="opportunite"
         />
+        {clientReputation && (
+          <section
+            aria-labelledby="client-reputation"
+            className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4"
+          >
+            <h2 id="client-reputation" className="font-medium">
+              {fr.pro.clientRating.reputationTitle}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {fr.pro.clientRating.reputation(clientReputation.ratings)}
+            </p>
+            <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+              {(["welcome", "clarity", "payment"] as const).map((key) => (
+                <div key={key} className="rounded-input bg-background px-3 py-2">
+                  <dt className="text-muted-foreground">{fr.pro.clientRating.criteria[key]}</dt>
+                  <dd className="font-medium tabular-nums">
+                    {fr.review.percent(clientReputation[key])}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
         {!open && (
           <div>
             <StatusBadge tone="neutral">{t.status[r.status]}</StatusBadge>

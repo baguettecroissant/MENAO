@@ -5,6 +5,7 @@ export * from "./artisan-request";
 export * from "./artisan-profile";
 export * from "./auth";
 export * from "./charter";
+export * from "./client-rating";
 export * from "./chantier";
 export * from "./conversation";
 export * from "./dispute";

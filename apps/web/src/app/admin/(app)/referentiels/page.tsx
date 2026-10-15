@@ -5,6 +5,7 @@ import { AddReferenceForm, RenameReferenceForm } from "@/components/admin/refere
 import { Alert, Button, Card, StatusBadge, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
+import { setPlatformSetting } from "@/lib/admin/settings-actions";
 import { moveReference, setReferenceActive } from "@/lib/admin/reference-actions";
 import { getReferences } from "@/lib/admin/references";
 
@@ -137,7 +138,15 @@ function Section({ kind, children }: { kind: Kind; children: ReactNode }) {
  */
 export default async function ReferencesPage() {
   const { supabase } = await requireAdmin();
-  const refs = await getReferences(supabase);
+  const [refs, { data: ratingsSetting }] = await Promise.all([
+    getReferences(supabase),
+    supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "client_ratings_visible")
+      .maybeSingle(),
+  ]);
+  const ratingsVisible = ratingsSetting?.value === true;
 
   return (
     <div className="flex flex-col gap-6">
@@ -145,6 +154,29 @@ export default async function ReferencesPage() {
         <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">{t.intro}</p>
       </div>
+      <Card className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">{fr.admin.settings.title}</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex max-w-2xl flex-col gap-1">
+            <p className="font-medium">
+              {fr.admin.settings.clientRatingsVisible}{" "}
+              <StatusBadge tone={ratingsVisible ? "success" : "neutral"}>
+                {ratingsVisible ? fr.admin.settings.on : fr.admin.settings.off}
+              </StatusBadge>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {fr.admin.settings.clientRatingsVisibleHelp}
+            </p>
+          </div>
+          <form action={setPlatformSetting}>
+            <input type="hidden" name="key" value="client_ratings_visible" />
+            <input type="hidden" name="value" value={ratingsVisible ? "false" : "true"} />
+            <Button type="submit" variant="secondary" block={false}>
+              {ratingsVisible ? fr.admin.settings.disable : fr.admin.settings.enable}
+            </Button>
+          </form>
+        </div>
+      </Card>
       {!refs ? (
         <Alert tone="error">{fr.errors.generic}</Alert>
       ) : (

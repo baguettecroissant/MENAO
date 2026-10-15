@@ -27,6 +27,14 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
   const { supabase } = await requireAdmin();
   const person = await getPersonDetail(supabase, id);
   if (!person) notFound();
+  // F-23 : notes laissées par les artisans sur ce client (visibles de l'équipe seulement ici).
+  const { data: clientRatings } = await supabase
+    .from("client_ratings")
+    .select(
+      "id, welcome, clarity, payment, comment, created_at, artisans(nom_commercial, raison_sociale)",
+    )
+    .eq("particulier_id", id)
+    .order("created_at", { ascending: false });
   const { profile, account, projects, chantiers, tickets, reviews } = person;
   const banned = Boolean(account.banned_until && new Date(account.banned_until) > new Date());
   const staff = profile.role === "admin" || profile.role === "support";
@@ -128,6 +136,29 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
               </ul>
             )}
           </DetailSection>
+          {(clientRatings ?? []).length > 0 && (
+            <DetailSection title={fr.admin.clientRatings.title}>
+              <ul className="flex flex-col gap-3 text-sm">
+                {(clientRatings ?? []).map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex flex-col gap-1 border-t border-border pt-3 first:border-t-0 first:pt-0"
+                  >
+                    <span className="font-medium">
+                      {fr.admin.clientRatings.item(
+                        r.artisans?.nom_commercial ?? r.artisans?.raison_sociale ?? f.none,
+                        formatDay(r.created_at),
+                      )}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {fr.admin.clientRatings.values(r.welcome, r.clarity, r.payment)}
+                    </span>
+                    <p className="whitespace-pre-line">{r.comment}</p>
+                  </li>
+                ))}
+              </ul>
+            </DetailSection>
+          )}
         </div>
 
         <div className="flex flex-col gap-6">
