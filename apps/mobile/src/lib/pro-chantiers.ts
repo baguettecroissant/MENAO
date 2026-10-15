@@ -169,11 +169,19 @@ export type ArtisanFollowUp = {
   /** Avis du client sur ce chantier (F-28), publié ou masqué par l'équipe. */
   review: ArtisanReview | null;
   openTicketId: string | null;
+  /** Note de l'artisan sur son client, après la clôture (F-23). */
+  clientRating: Pick<
+    Tables["client_ratings"]["Row"],
+    "welcome" | "clarity" | "payment" | "created_at"
+  > | null;
+  /** Moyenne des notes visible des artisans qui reçoivent une demande du client (paramètre). */
+  ratingsVisible: boolean;
 };
 
 /**
  * Suivi du chantier côté artisan après l'acompte (F-22), comme sur le site : journal, documents,
- * échéancier, étapes de fin de chantier (fin déclarée, réception, réserves, solde) et avis.
+ * échéancier, étapes de fin de chantier (fin déclarée, réception, réserves, solde), avis du
+ * client et note de l'artisan sur son client (F-23).
  */
 export async function loadArtisanFollowUp(
   chantierId: string,
@@ -189,6 +197,8 @@ export async function loadArtisanFollowUp(
     { data: received },
     { data: review },
     { data: openTicket },
+    { data: clientRating },
+    { data: ratingsVisible },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -240,6 +250,12 @@ export async function loadArtisanFollowUp(
       .eq("type", "litige")
       .neq("status", "resolu")
       .maybeSingle(),
+    supabase
+      .from("client_ratings")
+      .select("welcome, clarity, payment, created_at")
+      .eq("chantier_id", chantierId)
+      .maybeSingle(),
+    supabase.rpc("client_ratings_visible"),
   ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
@@ -314,6 +330,8 @@ export async function loadArtisanFollowUp(
       : null,
     review: review ? toArtisanReview(review) : null,
     openTicketId: openTicket?.id ?? null,
+    clientRating: clientRating ?? null,
+    ratingsVisible: ratingsVisible === true,
   };
 }
 
