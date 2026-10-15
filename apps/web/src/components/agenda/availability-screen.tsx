@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { AvailabilityStatus, HoursRange } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import type { AgendaAbsence } from "@/lib/artisan/agenda";
@@ -23,6 +24,7 @@ export function AvailabilityScreen({
   absences,
   feedUrl,
   feedLastReadAt,
+  scoreCard,
 }: {
   availability: AvailabilityStatus;
   paused: boolean;
@@ -33,6 +35,8 @@ export function AvailabilityScreen({
   absences: AgendaAbsence[];
   feedUrl: string | null;
   feedLastReadAt: string | null;
+  /** Score MENAO et « Mon planning est à jour » (ADR 0105), rendus par la page. */
+  scoreCard?: ReactNode;
 }) {
   return (
     <main className="flex-1">
@@ -57,6 +61,7 @@ export function AvailabilityScreen({
           <HoursEditor initial={hours} />
           <div className="flex flex-col gap-5">
             <AbsencesManager absences={absences} today={today} />
+            {scoreCard}
             <CalendarSync url={feedUrl} lastReadAt={feedLastReadAt} />
           </div>
         </div>

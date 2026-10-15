@@ -20,7 +20,16 @@ type Badge = Grade["badges"][number];
  * récompense (à réclamer au niveau 5), onglets objectifs et badges, progression d'un badge en
  * fenêtre, « Nouveau badge MENAO débloqué ! » pour un badge pas encore montré.
  */
-export function GradeScreen({ grade, delivery }: { grade: Grade; delivery: DeliveryDefaults }) {
+export function GradeScreen({
+  grade,
+  delivery,
+  scoreCard,
+}: {
+  grade: Grade;
+  delivery: DeliveryDefaults;
+  /** Score MENAO de la charte (ADR 0105), rendu par la page. */
+  scoreCard?: ReactNode;
+}) {
   const levels: GradeLevel[] = grade.levels.map((l) => ({
     level: l.level,
     xpMin: l.xp_min,
@@ -50,6 +59,7 @@ export function GradeScreen({ grade, delivery }: { grade: Grade; delivery: Deliv
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
           <div className="flex flex-col gap-4 lg:sticky lg:top-24">
             <LevelCard xp={grade.xp} levels={levels} />
+            {scoreCard}
             {claimable ? (
               <Card className="flex flex-col gap-4 border-primary">
                 <div className="flex flex-col gap-1 text-center">

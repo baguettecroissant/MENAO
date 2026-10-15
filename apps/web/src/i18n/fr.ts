@@ -572,7 +572,7 @@ export const fr = {
       rankingEyebrow: "Classement",
       rankingTitle: "Aucune place ne s'achète.",
       rankingText:
-        "Les artisans sont classés selon le score de leurs avis vérifiés, leur disponibilité puis leur distance. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
+        "Les artisans sont classés selon leur score MENAO (avis des clients, respect des délais, réactivité, planning à jour, chantiers menés à terme, ancienneté), puis leur disponibilité et leur distance. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
       rankingLink: "Lire les critères de classement",
     },
     faq: {
@@ -2034,6 +2034,21 @@ export const fr = {
   },
   pro: {
     /** Gamification artisan (F-24) : maquettes « Mon grade Menao », mêmes textes que l'application. */
+    /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan. */
+    score: {
+      title: "Votre score MENAO",
+      outOf: "/ 100",
+      intro:
+        "Calculé selon la charte qualité, il détermine votre place quand un client cherche un artisan.",
+      value: (v: number) => `${Math.round(v)} / 100`,
+      weight: (w: number) => `${w} %`,
+      planningUpdated: (date: string) => `Planning confirmé le ${date}.`,
+      planningNever: "Planning jamais confirmé.",
+      planningHint: "Confirmez-le chaque semaine, même sans changement.",
+      confirm: "Mon planning est à jour",
+      confirmed: "Merci, votre planning est confirmé.",
+      learnMore: "Comprendre le classement",
+    },
     grade: {
       title: "Mon grade MENAO",
       subtitle: "Vos objectifs, vos badges et vos récompenses.",
@@ -2989,7 +3004,7 @@ export const fr = {
           },
           {
             title: "Un classement transparent",
-            text: "Score des avis vérifiés, disponibilité, puis distance : nos critères sont publics, et une mise en avant est toujours signalée comme telle.",
+            text: "Score MENAO (avis des clients, délais, réactivité), disponibilité, puis distance : nos critères sont publics, et une mise en avant est toujours signalée comme telle.",
           },
           {
             title: "Des pros vérifiés",
@@ -3485,7 +3500,7 @@ export const fr = {
     ],
     orderTitle: "Dans quel ordre ?",
     order: [
-      "D'abord le score MENAO : moyenne des avis vérifiés des clients (qualité des prestations, respect des délais, communication, rapport qualité/prix). Les artisans sans avis viennent ensuite.",
+      "D'abord le score MENAO, de 0 à 100, calculé selon la charte qualité des artisans : notes des clients en fin de chantier (40 %), devis envoyé dans les 72 h suivant la demande (20 %), réponse aux demandes et aux messages des clients sous 24 h (15 %), planning tenu à jour chaque semaine (10 %), chantiers menés à terme sans annulation par l'artisan (10 %), ancienneté et badges obtenus (5 %). Les mesures portent sur les 6 à 12 derniers mois. Un artisan sans historique part d'une valeur neutre sur chaque critère, remplacée peu à peu par ses résultats réels.",
       "Puis les artisans disponibles immédiatement, puis selon leur date de disponibilité.",
       "Ensuite, les artisans les plus proches du chantier.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
@@ -3498,7 +3513,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 12 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 15 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",
