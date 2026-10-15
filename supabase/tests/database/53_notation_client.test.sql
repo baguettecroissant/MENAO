@@ -36,11 +36,16 @@ insert into public.requests (id, project_id, artisan_id, particulier_id, contact
    'c5300000-0000-4000-8000-0000000000c1', '+33600000002', 'acceptee', now()),
   ('c5330000-0000-4000-8000-000000000003', 'c5320000-0000-4000-8000-000000000003', 'c5310000-0000-4000-8000-0000000000b1',
    'c5300000-0000-4000-8000-0000000000c1', '+33600000002', 'envoyee', null);
-insert into public.chantiers (id, project_id, request_id, artisan_id, particulier_id, status, title) values
+insert into public.chantiers (id, project_id, request_id, artisan_id, particulier_id, title) values
   ('c5340000-0000-4000-8000-000000000001', 'c5320000-0000-4000-8000-000000000001', 'c5330000-0000-4000-8000-000000000001',
-   'c5310000-0000-4000-8000-0000000000a1', 'c5300000-0000-4000-8000-0000000000c1', 'cloture', 'Salle de bain'),
+   'c5310000-0000-4000-8000-0000000000a1', 'c5300000-0000-4000-8000-0000000000c1', 'Salle de bain'),
   ('c5340000-0000-4000-8000-000000000002', 'c5320000-0000-4000-8000-000000000002', 'c5330000-0000-4000-8000-000000000002',
-   'c5310000-0000-4000-8000-0000000000a1', 'c5300000-0000-4000-8000-0000000000c1', 'en_cours', 'Cuisine');
+   'c5310000-0000-4000-8000-0000000000a1', 'c5300000-0000-4000-8000-0000000000c1', 'Cuisine');
+-- États posés directement (le parcours complet est testé ailleurs), comme le fait transition_chantier().
+select set_config('menao.transition_chantier', 'on', true);
+update public.chantiers set status = 'cloture' where id = 'c5340000-0000-4000-8000-000000000001';
+update public.chantiers set status = 'en_cours' where id = 'c5340000-0000-4000-8000-000000000002';
+select set_config('menao.transition_chantier', '', true);
 
 -- ---------- Artisan A : notation ----------
 select pg_temp.connecter('c5300000-0000-4000-8000-0000000000a1', 'artisan');

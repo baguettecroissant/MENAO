@@ -38,10 +38,9 @@ insert into public.requests (id, project_id, artisan_id, particulier_id, contact
 select is((select xp_min from public.gamification_levels where level = 5), 1000, 'niveau 5 à 1 000 XP');
 select is((select reward from public.gamification_levels where level = 5), 'Ensemble de chantier MENAO',
   'récompense du niveau 5');
-select results_eq(
-  $$ select code from public.gamification_objectives where not active order by code $$,
-  $$ values ('amateur_des_avis'::text), ('expert_des_avis'), ('premier_avis') $$,
-  'objectifs de notation des clients (F-23) inactifs en attendant l''avis juridique');
+select is_empty(
+  $$ select code from public.gamification_objectives where not active $$,
+  'tous les objectifs actifs, dont la notation des clients (F-23, ADR 0106)');
 select is((select count(*)::int from public.badges where active), 9, '9 badges, dont « Pro du nettoyage »');
 
 -- Parcours jusqu'au chantier clôturé (mêmes étapes que le test 28), en propriétaire de la base.
