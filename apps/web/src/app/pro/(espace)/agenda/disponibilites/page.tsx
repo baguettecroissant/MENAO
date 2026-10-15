@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { AvailabilityScreen } from "@/components/agenda/availability-screen";
+import { CharterScoreCard } from "@/components/pro/score/charter-score-card";
 import { fr } from "@/i18n/fr";
 import { artisanHours, calendarFeed } from "@/lib/artisan/agenda";
+import { myCharterScore } from "@/lib/artisan/score";
 import { requireProSpace } from "@/lib/artisan/space";
 import { SITE_URL } from "@/lib/site/seo";
 
@@ -13,7 +15,11 @@ export const metadata: Metadata = { title: `${fr.pro.agenda.availability.title} 
  */
 export default async function AvailabilityPage() {
   const space = await requireProSpace();
-  const [hours, feed] = await Promise.all([artisanHours(), calendarFeed()]);
+  const [hours, feed, score] = await Promise.all([
+    artisanHours(),
+    calendarFeed(),
+    myCharterScore(space.supabase),
+  ]);
   return (
     <AvailabilityScreen
       availability={space.availability}
@@ -25,6 +31,7 @@ export default async function AvailabilityPage() {
       absences={space.absences}
       feedUrl={feed ? `${SITE_URL}/calendrier/${feed.token}.ics` : null}
       feedLastReadAt={feed?.last_read_at ?? null}
+      scoreCard={score ? <CharterScoreCard score={score} /> : null}
     />
   );
 }

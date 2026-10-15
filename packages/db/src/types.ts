@@ -713,6 +713,7 @@ export type Database = {
           logo_path: string | null;
           nom_commercial: string | null;
           paused: boolean;
+          planning_updated_at: string | null;
           presentation: string | null;
           radius_km: number | null;
           raison_sociale: string | null;
@@ -761,6 +762,7 @@ export type Database = {
           logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
+          planning_updated_at?: string | null;
           presentation?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
@@ -808,6 +810,7 @@ export type Database = {
           logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
+          planning_updated_at?: string | null;
           presentation?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
@@ -3250,6 +3253,7 @@ export type Database = {
         };
         Returns: string;
       };
+      artisan_confirm_planning: { Args: Record<PropertyKey, never>; Returns: string };
       artisan_confirm_start: {
         Args: { p_chantier_id: string; p_date: string; p_time: string };
         Returns: undefined;
@@ -3447,6 +3451,19 @@ export type Database = {
           zone_communes: string[];
           zone_mode: Database["public"]["Enums"]["zone_mode"];
           zone_radius_km: number;
+        }[];
+      };
+      my_charter_score: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          anciennete: number;
+          chantiers_termines: number;
+          delai72h: number;
+          notes: number;
+          planning: number;
+          planning_updated_at: string;
+          reactivite: number;
+          score: number;
         }[];
       };
       my_conversations: {
