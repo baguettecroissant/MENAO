@@ -453,6 +453,22 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("rappel du planning : jours écoulés, lien vers « Mes disponibilités »", () => {
+    const reminder = notificationContent("planning_relance", { jours: 9 }, ctx);
+    expect(reminder.subject).toBe("Votre planning est-il à jour ?");
+    expect(reminder.paragraphs[1]).toBe(
+      "Votre planning n'a pas été mis à jour depuis 9\u00a0jours.",
+    );
+    expect(reminder.paragraphs[2]).toContain(`appui sur ${quoted("Mon planning est à jour")}`);
+    expect(reminder.paragraphs[3]).toContain("score MENAO");
+    expect(reminder.cta).toEqual({
+      label: "Mettre à jour mon planning",
+      url: "https://menao.example/pro/agenda/disponibilites",
+    });
+    const never = notificationContent("planning_relance", { jours: null }, ctx);
+    expect(never.preview).toBe("Vous n'avez pas encore confirmé votre planning sur MENAO.");
+  });
+
   it("relance « Paiement en attente » : acompte à régler, lien vers le chantier", () => {
     const data = { ...ids, titre: "Prises", artisan: "Jean" };
     const reminder = notificationContent("acompte_relance", data, ctx);

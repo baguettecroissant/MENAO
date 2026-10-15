@@ -6,6 +6,7 @@ import { BottomSheet } from "@/components/bottom-sheet";
 import { BadgeIcon } from "@/components/grade/badge-icon";
 import { LevelCard } from "@/components/grade/level-card";
 import { HeaderBand } from "@/components/header-band";
+import { CharterScoreCard } from "@/components/pro/charter-score-card";
 import { Segmented } from "@/components/segmented";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
@@ -21,8 +22,9 @@ type Badge = GradeView["badges"][number];
 
 /**
  * « Mon grade MENAO » (F-24, maquettes « Mon grade Menao - Objectifs / Badges ») : niveau et
- * points, prochaine récompense, objectifs en cours puis atteints, badges à obtenir puis obtenus
- * (un appui ouvre la progression du badge), récompense du niveau 5 à réclamer.
+ * points, score MENAO de la charte (ADR 0105), prochaine récompense, objectifs en cours puis
+ * atteints, badges à obtenir puis obtenus (un appui ouvre la progression du badge), récompense du
+ * niveau 5 à réclamer.
  */
 export default function GradeScreen() {
   // Rechargé à chaque retour sur l'écran (récompense demandée, nouveau badge).
@@ -49,6 +51,7 @@ export default function GradeScreen() {
   return (
     <Screen band={band}>
       <LevelCard xp={grade.xp} levels={grade.levels} />
+      <CharterScoreCard />
       {claimable ? (
         <View style={styles.claim}>
           <Text style={styles.claimTitle}>{t.rewardReady}</Text>

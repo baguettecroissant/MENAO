@@ -52,6 +52,5 @@ Chaque critère est noté de 0 à 100. Les mêmes formules existent dans `packag
 - **Nom** : la fiche publique et le classement parlent tous deux de « Score MENAO », sans être la même chose. Renommer l'un des deux est à décider.
 - **Engagements de la charte encore absents** :
   - mesure des appels ;
-  - rappel hebdomadaire du planning ;
-  - statut « Élite Menao » ;
-  - bouton « Mon planning est à jour » dans l'application mobile.
+  - statut « Élite Menao ».
+- **Rappel hebdomadaire du planning et bouton « Mon planning est à jour » dans l'application** : ADR 0107.
