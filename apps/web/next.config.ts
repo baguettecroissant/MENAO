@@ -1,5 +1,6 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
+import { prelaunchRewrites } from "./src/lib/site/prelaunch";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
@@ -50,6 +51,14 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  // Mode pré-lancement (ADR 0101) : page d'attente sans le cookie des testeurs.
+  async rewrites() {
+    return {
+      beforeFiles: prelaunchRewrites(process.env.PRELAUNCH_ACCESS_CODE),
+      afterFiles: [],
+      fallback: [],
+    };
   },
   async redirects() {
     if (!siteUrl || new URL(siteUrl).host === VERCEL_HOST) return [];
