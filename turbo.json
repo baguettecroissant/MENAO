@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NEXT_PUBLIC_*", "SENTRY_*"]
+      "env": ["NEXT_PUBLIC_*", "SENTRY_*", "ALLOW_INDEXING", "PRELAUNCH_ACCESS_CODE"]
     },
     "dev": {
       "cache": false,
