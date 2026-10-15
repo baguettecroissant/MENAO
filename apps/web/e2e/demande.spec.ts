@@ -671,13 +671,14 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     .getByLabel("Votre commentaire")
     .fill("Client accueillant, accès facile au chantier, besoin clair et solde réglé rapidement.");
   await clientRating.getByRole("button", { name: "Enregistrer ma note" }).click();
-  await expect(proPage.getByText("Merci, votre note est enregistrée.")).toBeVisible();
+  // La page se met à jour : le résumé de la note remplace le formulaire, et reste au rechargement.
+  const ratingSummary = proPage.getByText(
+    /Vous avez noté ce client le .+ : accueil 90\s%, clarté 80\s%, paiements 100\s%\./,
+  );
+  await expect(ratingSummary).toBeVisible();
+  await expect(clientRating).toHaveCount(0);
   await proPage.reload();
-  await expect(
-    proPage.getByText(
-      /Vous avez noté ce client le .+ : accueil 90\s%, clarté 80\s%, paiements 100\s%\./,
-    ),
-  ).toBeVisible();
+  await expect(ratingSummary).toBeVisible();
   await page.goto("/mon-espace");
   await expect(
     page.getByRole("region", { name: "Mes chantiers terminés" }).getByText(/^Terminé le /),

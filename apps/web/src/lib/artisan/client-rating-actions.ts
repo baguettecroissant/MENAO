@@ -39,6 +39,7 @@ export async function rateClient(
       values,
     };
   }
+  // La page se met à jour : son résumé de la note remplace le formulaire (message en repli).
   revalidatePath(`/pro/chantiers/${chantierId}`);
   return { success: fr.pro.clientRating.saved };
 }
