@@ -657,6 +657,27 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   expect(allInvoices).toContain('"58,45";"5,85";"64,30"');
   await proPage.goto(chantierUrl);
   await expect(proPage.getByText(/Chantier clôturé le .+ : solde de 64,30\s€ reçu/)).toBeVisible();
+  // Notation du client par l'artisan (F-23) : trois curseurs et un commentaire, jamais montrés au
+  // client ; une seule note par chantier.
+  const clientRating = proPage.getByRole("form", { name: /Comment s'est passé ce chantier avec/ });
+  await clientRating.getByRole("button", { name: "Enregistrer ma note" }).click();
+  await expect(
+    clientRating.getByText("Notez ce critère en faisant glisser le curseur.").first(),
+  ).toBeVisible();
+  await clientRating.getByLabel("Accueil et accès au chantier").fill("90");
+  await clientRating.getByLabel("Clarté du besoin").fill("80");
+  await clientRating.getByLabel("Délai des paiements").fill("100");
+  await clientRating
+    .getByLabel("Votre commentaire")
+    .fill("Client accueillant, accès facile au chantier, besoin clair et solde réglé rapidement.");
+  await clientRating.getByRole("button", { name: "Enregistrer ma note" }).click();
+  await expect(proPage.getByText("Merci, votre note est enregistrée.")).toBeVisible();
+  await proPage.reload();
+  await expect(
+    proPage.getByText(
+      /Vous avez noté ce client le .+ : accueil 90\s%, clarté 80\s%, paiements 100\s%\./,
+    ),
+  ).toBeVisible();
   await page.goto("/mon-espace");
   await expect(
     page.getByRole("region", { name: "Mes chantiers terminés" }).getByText(/^Terminé le /),

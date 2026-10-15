@@ -27,6 +27,7 @@ export * from "./review";
 export * from "./gamification";
 export * from "./charter";
 export * from "./ranking";
+export * from "./client-rating";
 export * from "./messaging";
 export * from "./dispute";
 export * from "./notifications";

@@ -2034,6 +2034,39 @@ export const fr = {
   },
   pro: {
     /** Gamification artisan (F-24) : maquettes « Mon grade Menao », mêmes textes que l'application. */
+    /** Notation du client par l'artisan (F-23, ADR 0106). */
+    clientRating: {
+      title: (name: string) => `Comment s'est passé ce chantier avec ${name} ?`,
+      intro:
+        "Notez votre client : comme la charte qualité vous y engage, votre avis protège les autres artisans du réseau.",
+      privacy: "Votre note n'est jamais montrée au client ni publiée.",
+      privacyNetwork:
+        "Les artisans MENAO qui reçoivent une demande de ce client voient la moyenne des notes, jamais votre commentaire.",
+      privacyTeam: "Seule l'équipe MENAO peut la consulter pour l'instant.",
+      criteria: {
+        welcome: "Accueil et accès au chantier",
+        clarity: "Clarté du besoin",
+        payment: "Délai des paiements",
+      },
+      bands: {
+        welcome: ["Très difficile", "Difficile", "Correct", "Bon accueil", "Excellent accueil"],
+        clarity: ["Très confus", "Confus", "Correct", "Clair", "Parfaitement clair"],
+        payment: ["Très en retard", "En retard", "Correct", "Rapide", "Immédiat"],
+      },
+      commentTitle: "Votre commentaire",
+      commentHelp: "Décrivez en quelques mots le déroulement du chantier avec ce client.",
+      commentPlaceholder:
+        "Ex. Client accueillant, accès facile, échanges clairs, solde réglé rapidement.",
+      submit: "Enregistrer ma note",
+      done: (date: string, welcome: number, clarity: number, payment: number) =>
+        `Vous avez noté ce client le ${date} : accueil ${welcome}\u00a0%, clarté ${clarity}\u00a0%, paiements ${payment}\u00a0%.`,
+      saved: "Merci, votre note est enregistrée.",
+      reputationTitle: "Ce client sur MENAO",
+      reputation: (n: number) =>
+        n === 1
+          ? "Noté par 1 artisan après un chantier."
+          : `Noté par ${n} artisans après leurs chantiers.`,
+    },
     /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan. */
     score: {
       title: "Votre score MENAO",
@@ -4160,6 +4193,24 @@ export const fr = {
       blockedHint: "Ni traitée ni en échec un quart d'heure après sa réception.",
       empty: "Aucune notification dans cette catégorie.",
       emptyFailures: "Aucune notification en échec : tout est à jour.",
+    },
+    /** Paramètres de la plateforme : décisions [À VALIDER] réglables par un admin. */
+    settings: {
+      title: "Paramètres de la plateforme",
+      on: "Activé",
+      off: "Désactivé",
+      enable: "Activer",
+      disable: "Désactiver",
+      clientRatingsVisible: "Notes des clients visibles des artisans (F-23)",
+      clientRatingsVisibleHelp:
+        "Les artisans validés qui reçoivent une demande voient la moyenne des notes du client par les autres artisans (jamais les commentaires). À activer seulement après validation juridique (décision D11) et mise à jour de la politique de confidentialité.",
+    },
+    clientRatings: {
+      title: "Notes des artisans sur ce client",
+      empty: "Aucune note pour le moment.",
+      item: (artisan: string, date: string) => `${artisan} · ${date}`,
+      values: (welcome: number, clarity: number, payment: number) =>
+        `Accueil ${welcome}\u00a0% · Clarté ${clarity}\u00a0% · Paiements ${payment}\u00a0%`,
     },
     references: {
       title: "Métiers, travaux et pièces",

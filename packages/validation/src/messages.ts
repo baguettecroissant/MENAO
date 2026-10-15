@@ -73,6 +73,8 @@ export const messages = {
   reviewValueRequired: "Choisissez le rapport qualité/prix.",
   reviewCommentTooShort: "Décrivez votre expérience en 50 caractères au moins.",
   reviewCommentTooLong: "Votre avis dépasse 2 000 caractères.",
+  clientRatingCommentTooShort: "Décrivez ce chantier avec le client en 50 caractères au moins.",
+  clientRatingCommentTooLong: "Votre commentaire dépasse 1 000 caractères.",
   reviewReplyRequired: "Écrivez votre réponse.",
   reviewReplyTooLong: "Votre réponse dépasse 2 000 caractères.",
   reviewReportTooShort: "Décrivez le problème en 10 caractères au moins.",

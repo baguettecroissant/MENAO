@@ -1116,6 +1116,58 @@ export type Database = {
           },
         ];
       };
+      client_ratings: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          clarity: number;
+          comment: string;
+          created_at: string;
+          id: string;
+          particulier_id: string;
+          payment: number;
+          welcome: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          clarity: number;
+          comment: string;
+          created_at?: string;
+          id?: string;
+          particulier_id: string;
+          payment: number;
+          welcome: number;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          clarity?: number;
+          comment?: string;
+          created_at?: string;
+          id?: string;
+          particulier_id?: string;
+          payment?: number;
+          welcome?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_ratings_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_ratings_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: true;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       communes: {
         Row: {
           code_insee: string;
@@ -1592,6 +1644,28 @@ export type Database = {
           prix_mensuel_ht_centimes?: number;
           stripe_lookup_key?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_settings: {
+        Row: {
+          key: string;
+          updated_at: string;
+          updated_by: string | null;
+          value: Json;
+        };
+        ComputedFields: never;
+        Insert: {
+          key: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value: Json;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: Json;
         };
         Relationships: [];
       };
@@ -3143,6 +3217,7 @@ export type Database = {
           tag: string;
         }[];
       };
+      admin_set_platform_setting: { Args: { p_key: string; p_value: Json }; Returns: undefined };
       admin_set_reference_active: {
         Args: { p_active: boolean; p_code: string; p_kind: string };
         Returns: undefined;
@@ -3326,6 +3401,16 @@ export type Database = {
           version: number;
         }[];
       };
+      artisan_rate_client: {
+        Args: {
+          p_chantier_id: string;
+          p_clarity: number;
+          p_comment: string;
+          p_payment: number;
+          p_welcome: number;
+        };
+        Returns: string;
+      };
       artisan_remove_logo: { Args: Record<PropertyKey, never>; Returns: string };
       artisan_reply_review: { Args: { p_reply: string; p_review_id: string }; Returns: undefined };
       artisan_report_expertise: {
@@ -3414,6 +3499,16 @@ export type Database = {
           id: string;
           tokens: string[];
           type: Database["public"]["Enums"]["notification_type"];
+        }[];
+      };
+      client_ratings_visible: { Args: Record<PropertyKey, never>; Returns: boolean };
+      client_reputation: {
+        Args: { p_request_id: string };
+        Returns: {
+          clarity: number;
+          payment: number;
+          ratings: number;
+          welcome: number;
         }[];
       };
       complete_notification: {

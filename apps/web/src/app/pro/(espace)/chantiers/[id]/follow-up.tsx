@@ -34,6 +34,7 @@ import { StickyActions } from "@/components/pro/detail";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewSection } from "@/components/pro/review-section";
 import { Alert, ButtonLink, TextLink } from "@/components/ui";
+import { ClientRatingForm } from "@/components/pro/client-rating-form";
 import { fr } from "@/i18n/fr";
 import { appointmentAgenda } from "@/lib/artisan/agenda";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
@@ -89,6 +90,8 @@ export async function ArtisanFollowUp({
     { data: review },
     { data: openTicket },
     { data: conversations },
+    { data: clientRating },
+    { data: ratingsVisible },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -151,6 +154,13 @@ export async function ArtisanFollowUp({
       .maybeSingle(),
     // F-40 : dernier échange, pour la carte « Messagerie avec … ».
     supabase.rpc("my_conversations"),
+    // F-23 : note de l'artisan sur son client (après la clôture).
+    supabase
+      .from("client_ratings")
+      .select("welcome, clarity, payment, created_at")
+      .eq("chantier_id", id)
+      .maybeSingle(),
+    supabase.rpc("client_ratings_visible"),
   ]);
   const conversation = (conversations ?? []).find((row) => row.chantier_id === id) ?? null;
   const journal = journalSummary(
@@ -321,6 +331,23 @@ export async function ArtisanFollowUp({
           ) : (
             status === "cloture" && <Alert tone="info">{tf.reviewPending(clientFirstName)}</Alert>
           )}
+          {status === "cloture" &&
+            (clientRating ? (
+              <Alert tone="info">
+                {fr.pro.clientRating.done(
+                  formatDateNumeric(clientRating.created_at),
+                  clientRating.welcome,
+                  clientRating.clarity,
+                  clientRating.payment,
+                )}
+              </Alert>
+            ) : (
+              <ClientRatingForm
+                chantierId={id}
+                clientName={clientFirstName}
+                visibleToNetwork={ratingsVisible === true}
+              />
+            ))}
           <ChantierTabs base={`/pro/chantiers/${id}`} active={tab} />
           {tab === "suivi" ? (
             <>
