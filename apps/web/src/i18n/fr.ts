@@ -18,6 +18,35 @@ export const fr = {
     help: "Besoin d'aide ? Contactez-nous",
     logo: "MENAO, accueil",
   },
+  /** Page d'attente du mode pré-lancement (ADR 0101) et accès des testeurs. */
+  prelaunch: {
+    metaTitle: "MENAO arrive bientôt",
+    metaDescription:
+      "Artisans du bâtiment vérifiés, devis, signature, paiement sécurisé et suivi de chantier dans un seul outil. Lancement prochain dans les Alpes-Maritimes.",
+    badge: "Bientôt disponible",
+    title: "MENAO arrive bientôt",
+    lead: "Trouvez des artisans du bâtiment vérifiés près de chez vous, et suivez votre projet du devis jusqu'à la fin du chantier, dans un seul outil.",
+    points: [
+      "Artisans vérifiés",
+      "Devis et signature en ligne",
+      "Paiement sécurisé par Stripe",
+      "Suivi du chantier en photos",
+    ],
+    area: "Lancement d'abord dans les Alpes-Maritimes.",
+    pro: {
+      title: "Vous êtes artisan du bâtiment ?",
+      text: "Découvrez en vidéo l'outil qui vous accompagne de la demande jusqu'au paiement, sans commission sur vos chantiers.",
+    },
+    contact: { title: "Une question ?", text: "Écrivez-nous à", email: "contact@menao.fr" },
+    access: {
+      title: "Accès testeurs",
+      text: "Vous participez aux essais ? Saisissez votre code.",
+      label: "Code d'accès",
+      submit: "Entrer",
+      wrong: "Ce code n'est pas valable.",
+    },
+    footer: "© 2026 MENAO",
+  },
   errorPage: {
     title: "Un imprévu sur le chantier",
     text: "Une erreur inattendue est survenue. Réessayez dans un instant ; si elle persiste, contactez-nous.",

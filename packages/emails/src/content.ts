@@ -63,7 +63,7 @@ export type EmailContent = {
 };
 
 export type EmailContext = {
-  /** Adresse du site, sans barre finale (ex. https://menao-web.vercel.app). */
+  /** Adresse du site, sans barre finale (ex. https://menao.fr). */
   siteUrl: string;
   /** Prénom du destinataire. */
   firstName: string | null;
