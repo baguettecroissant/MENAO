@@ -62,9 +62,13 @@ insert into public.requests (id, project_id, artisan_id, particulier_id, contact
    'c5200000-0000-4000-8000-000000000002', '+33600000001', 'refusee', now() - interval '5 days', now() - interval '5 days' + interval '1 hour', 'planning_complet'),
   ('c5500000-0000-4000-8000-000000000003', 'c5400000-0000-4000-8000-000000000003', 'c5300000-0000-4000-8000-000000000001',
    'c5200000-0000-4000-8000-000000000002', '+33600000001', 'acceptee', now() - interval '5 days', now() - interval '5 days' + interval '2 hours', null);
-insert into public.chantiers (id, project_id, request_id, artisan_id, particulier_id, status, title) values
+insert into public.chantiers (id, project_id, request_id, artisan_id, particulier_id, title) values
   ('c5600000-0000-4000-8000-000000000001', 'c5400000-0000-4000-8000-000000000003', 'c5500000-0000-4000-8000-000000000003',
-   'c5300000-0000-4000-8000-000000000001', 'c5200000-0000-4000-8000-000000000002', 'receptionne', 'Salle de bain');
+   'c5300000-0000-4000-8000-000000000001', 'c5200000-0000-4000-8000-000000000002', 'Salle de bain');
+-- État posé directement (le parcours complet est testé ailleurs), comme le fait transition_chantier().
+select set_config('menao.transition_chantier', 'on', true);
+update public.chantiers set status = 'receptionne' where id = 'c5600000-0000-4000-8000-000000000001';
+select set_config('menao.transition_chantier', '', true);
 insert into public.quotes (chantier_id, artisan_id, sent_at)
 values ('c5600000-0000-4000-8000-000000000001', 'c5300000-0000-4000-8000-000000000001', now() - interval '5 days' + interval '10 hours');
 
