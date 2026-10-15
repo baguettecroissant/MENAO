@@ -48,6 +48,7 @@ export const NOTIFICATION_TYPES = [
   "acompte_relance",
   "badge_debloque",
   "niveau_atteint",
+  "planning_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -449,6 +450,28 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Voir mes badges", url: link("/pro/grade") },
+      };
+    }
+    case "planning_relance": {
+      // Charte qualité : « un rappel chaque semaine pour mettre ton planning à jour » (ADR 0107),
+      // envoyé seulement si le planning n'a ni changé ni été confirmé depuis 7 jours.
+      const jours = integer(data, "jours");
+      const since =
+        jours === null
+          ? "Vous n'avez pas encore confirmé votre planning sur MENAO."
+          : `Votre planning n'a pas été mis à jour depuis ${jours}\u00a0jours.`;
+      return {
+        subject: "Votre planning est-il à jour ?",
+        preview: since,
+        title: "Votre planning est-il à jour ?",
+        paragraphs: [
+          hello(ctx.firstName),
+          since,
+          `Vérifiez vos horaires, vos absences et votre date de disponibilité : MENAO vous envoie en priorité les demandes qui tombent quand vous êtes libre. Sans changement, un appui sur ${quoted("Mon planning est à jour")} suffit.`,
+          "Un planning tenu à jour compte dans votre score MENAO, qui détermine votre place quand un client cherche un artisan.",
+        ],
+        quote: null,
+        cta: { label: "Mettre à jour mon planning", url: link("/pro/agenda/disponibilites") },
       };
     }
     case "niveau_atteint": {

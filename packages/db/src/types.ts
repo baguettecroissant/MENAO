@@ -3995,7 +3995,8 @@ export type Database = {
         | "equipe_ticket_en_retard"
         | "acompte_relance"
         | "badge_debloque"
-        | "niveau_atteint";
+        | "niveau_atteint"
+        | "planning_relance";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -4243,6 +4244,7 @@ export const Constants = {
         "acompte_relance",
         "badge_debloque",
         "niveau_atteint",
+        "planning_relance",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

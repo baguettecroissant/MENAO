@@ -1060,7 +1060,7 @@ export const fr = {
       "Les e-mails importants (devis, paiements, réception, litiges, avis reçus) sont toujours envoyés. Les autres peuvent être désactivés ; ils restent visibles ici.",
     activite: "Activité du chantier : nouvelles photos et nouveaux messages",
     rappels:
-      "Rappels : rendez-vous de la veille, acompte à régler, avis à laisser, levée des réserves à confirmer",
+      "Rappels : rendez-vous de la veille, acompte à régler, avis à laisser, levée des réserves à confirmer, planning à mettre à jour",
     save: "Enregistrer mes préférences",
     saved: "Préférences enregistrées.",
   },
@@ -1445,6 +1445,22 @@ export const fr = {
       n === 1
         ? "Noté par 1 artisan après un chantier."
         : `Noté par ${n} artisans après leurs chantiers.`,
+  },
+  /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan : mêmes textes que le site. */
+  proScore: {
+    title: "Votre score MENAO",
+    outOf: "/ 100",
+    intro:
+      "Calculé selon la charte qualité, il détermine votre place quand un client cherche un artisan.",
+    value: (v: number) => `${Math.round(v)} / 100`,
+    weight: (w: number) => `${w}\u00a0%`,
+    criterion: (label: string, weight: string, value: string) => `${label} (${weight}) : ${value}`,
+    planningUpdated: (date: string) => `Planning confirmé le ${date}.`,
+    planningNever: "Planning jamais confirmé.",
+    planningHint: "Confirmez-le chaque semaine, même sans changement.",
+    confirm: "Mon planning est à jour",
+    confirmed: "Merci, votre planning est confirmé.",
+    error: "Votre score n'a pas pu être chargé.",
   },
   /** Gamification artisan (F-24) : maquettes « Mon grade Menao », badges et récompense. */
   grade: {
