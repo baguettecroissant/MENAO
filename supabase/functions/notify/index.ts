@@ -2,7 +2,11 @@
 // push vers l'application (Expo). Appelée chaque minute par la base (pg_cron + pg_net) avec un
 // secret partagé ; aucune donnée personnelle journalisée (CLAUDE.md règle 11). ADR 0017, 0078.
 import { notificationContent } from "../../../packages/emails/src/content.ts";
-import { renderNotification, type NotificationType } from "../../../packages/emails/src/index.ts";
+import {
+  isDeliverableAddress,
+  renderNotification,
+  type NotificationType,
+} from "../../../packages/emails/src/index.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { notificationProvider, pushProvider, type PushMessage } from "../_shared/notifications.ts";
@@ -100,10 +104,13 @@ Deno.serve(async (req) => {
   let failed = 0;
   for (const n of (provider ? (data ?? []) : []) as Claimed[]) {
     const email = renderNotification(n.type, n.data ?? {}, { siteUrl, firstName: n.first_name });
+    // Domaines réservés (comptes de démonstration ou de test) : aucun envoi, aucun rebond.
     const result =
-      n.email && provider
-        ? await provider.sendEmail({ to: n.email, ...email, idempotencyKey: n.id })
-        : { ok: false as const, error: "adresse absente", retry: false };
+      !n.email || !provider
+        ? { ok: false as const, error: "adresse absente", retry: false }
+        : !isDeliverableAddress(n.email)
+          ? { ok: false as const, error: "domaine réservé", retry: false }
+          : await provider.sendEmail({ to: n.email, ...email, idempotencyKey: n.id });
     await admin.rpc("complete_notification", {
       p_id: n.id,
       p_sent: result.ok,
