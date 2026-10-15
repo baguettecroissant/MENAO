@@ -33,9 +33,11 @@ export const fr = {
       "Suivi du chantier en photos",
     ],
     area: "Lancement d'abord dans les Alpes-Maritimes.",
-    pro: {
-      title: "Vous êtes artisan du bâtiment ?",
-      text: "Découvrez en vidéo l'outil qui vous accompagne de la demande jusqu'au paiement, sans commission sur vos chantiers.",
+    teaser: {
+      label: "Teaser de MENAO",
+      soundOn: "Activer le son",
+      soundOff: "Couper le son",
+      fallback: "Votre navigateur ne peut pas lire cette vidéo.",
     },
     contact: { title: "Une question ?", text: "Écrivez-nous à", email: "contact@menao.fr" },
     access: {
