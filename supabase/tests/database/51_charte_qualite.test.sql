@@ -50,11 +50,11 @@ select throws_ok(
   $$ insert into public.artisan_charter_acceptances (artisan_id, version, rules_count, signer_name, company, siret, signature_path)
      select id, 'V6', 25, 'X', 'Y', '00000001800010', 'M 1 1 L 2 2' from public.artisans $$,
   '42501', null, 'artisan : pas d''écriture directe');
-select is_empty(
-  $$ update public.artisan_charter_acceptances set signer_name = 'Autre' returning id $$,
+select throws_ok(
+  $$ update public.artisan_charter_acceptances set signer_name = 'Autre' $$, '42501', null,
   'artisan : pas de modification');
-select is_empty(
-  $$ delete from public.artisan_charter_acceptances returning id $$,
+select throws_ok(
+  $$ delete from public.artisan_charter_acceptances $$, '42501', null,
   'artisan : pas de suppression');
 reset role;
 
