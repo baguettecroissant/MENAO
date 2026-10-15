@@ -64,7 +64,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("option", { name: "1 Rue de l'Exemple 06000 Nice" }).click();
   await page.getByLabel("Rayon d'intervention").selectOption("30");
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding\/documents$/);
+  await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
   const stepper = page.getByRole("navigation", { name: "Étapes de l'inscription" });
   for (const step of ["Entreprise", "Métiers", "Zone d'intervention"]) {
     await expect(
@@ -81,9 +81,36 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByRole("list", { name: "Communes" }).getByRole("listitem")).toHaveCount(2);
   await page.getByRole("button", { name: "Retirer Nice" }).click();
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
+
+  // Étape 4 — charte qualité (ADR 0104) : 25 règles cochées, tracé de signature, accord
+  await expect(page.getByRole("heading", { name: /Rejoindre Menao/ })).toBeVisible();
+  await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Pour signer" })).toContainText(
+    "coche les 25 règle(s) restante(s)",
+  );
+  const rules = page.getByRole("checkbox", { name: /^Règle R\d+\.\d+ :/ });
+  await expect(rules).toHaveCount(25);
+  for (const rule of await rules.all()) await rule.click();
+  await expect(page.getByText("25 / 25")).toBeVisible();
+  await expect(page.getByLabel("N° SIRET")).not.toHaveValue("");
+  const pad = page.getByLabel("Zone de signature : signe avec le doigt ou la souris");
+  await pad.scrollIntoViewIfNeeded();
+  const box = await pad.boundingBox();
+  if (!box) throw new Error("zone de signature introuvable");
+  await page.mouse.move(box.x + 30, box.y + 90);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 150, box.y + 40, { steps: 8 });
+  await page.mouse.move(box.x + 280, box.y + 100, { steps: 8 });
+  await page.mouse.up();
+  await page.getByRole("checkbox", { name: /accepte la Charte qualité Menao/ }).click();
+  await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
+  await expect(page.getByRole("heading", { name: /Tu fais partie de Menao/ })).toBeVisible();
+  await expect(page.getByText("25 / 25 (R1.1 à R6.2)")).toBeVisible();
+  await page.getByRole("link", { name: /Continuer : vérification de mes documents/ }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/documents$/);
 
-  // Étape 4 — documents (un faux PDF est refusé d'après son contenu réel)
+  // Étape 5 — documents (un faux PDF est refusé d'après son contenu réel)
   const kbis = page.getByRole("region", { name: "Kbis ou extrait INSEE/RNE de moins de 3 mois" });
   await kbis.getByLabel("Date d'émission").fill(dates.recent);
   await kbis.getByLabel("Fichier").setInputFiles(files.fakePdf);
@@ -122,7 +149,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     /token=/,
   );
 
-  // Étape 5 — profil public
+  // Étape 6 — profil public
   await page.goto("/pro/onboarding/profil");
   const avatar = page.getByRole("region", { name: "Photo de profil" });
   await avatar.getByLabel("Fichier").setInputFiles(files.png);

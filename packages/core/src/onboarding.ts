@@ -4,6 +4,8 @@ export const ONBOARDING_STEPS = [
   { key: "entreprise", available: true },
   { key: "metiers", available: true },
   { key: "zone", available: true },
+  // Charte qualité de l'artisan (charter.ts), signée avant le dépôt des documents.
+  { key: "charte", available: true },
   { key: "documents", available: true },
   { key: "profil", available: true },
   { key: "paiements", available: true },
@@ -45,6 +47,8 @@ export type ArtisanOnboardingSnapshot = {
   subscriptionActive: boolean;
   /** Compte Stripe Connect capable d'encaisser (charges_enabled). */
   connectChargesEnabled: boolean;
+  /** Charte qualité signée dans sa version en cours (CHARTER_VERSION). */
+  charterAccepted: boolean;
 };
 
 function isoDay(date: Date): string {
@@ -90,6 +94,7 @@ export function onboardingProgress(
     entreprise: a.siretVerified && a.sireneActive && !!a.raisonSociale && a.assujettiTva !== null,
     metiers: a.tradeCount > 0,
     zone,
+    charte: a.charterAccepted,
     documents: REQUIRED_DOCUMENT_TYPES.every((t) => documentIsValid(t, a.documents[t], today)),
     profil: a.hasAvatar && a.presentationLength >= PRESENTATION_MIN_LENGTH,
     paiements: a.connectChargesEnabled,
@@ -97,13 +102,13 @@ export function onboardingProgress(
   };
 }
 
-/** Envoi du dossier en vérification : étapes 1 à 5 terminées (contrôle refait en base). */
+/** Envoi du dossier en vérification : étapes jusqu'au profil terminées, charte comprise (contrôle refait en base). */
 export function canSubmitOnboarding(
   a: ArtisanOnboardingSnapshot,
   today: Date = new Date(),
 ): boolean {
   const p = onboardingProgress(a, today);
-  return p.entreprise && p.metiers && p.zone && p.documents && p.profil;
+  return p.entreprise && p.metiers && p.zone && p.charte && p.documents && p.profil;
 }
 
 export function firstIncompleteStep(

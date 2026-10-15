@@ -1,5 +1,6 @@
 import "server-only";
 import {
+  CHARTER_VERSION,
   artisanVisibility,
   canSubmitOnboarding,
   subscriptionGrantsAccess,
@@ -35,39 +36,56 @@ export const getOnboardingContext = cache(async () => {
     .single();
   if (error) throw new Error("Fiche artisan introuvable");
 
-  const [trades, workTypes, zones, certifications, documents, photos, profile, subscriptionRow] =
-    await Promise.all([
-      supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
-      supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", artisan.id),
-      supabase
-        .from("artisan_zones")
-        .select("code_insee, nom")
-        .eq("artisan_id", artisan.id)
-        .order("nom"),
-      supabase
-        .from("certifications")
-        .select("id, type, numero, date_fin, verified_at")
-        .eq("artisan_id", artisan.id)
-        .order("date_fin"),
-      supabase
-        .from("artisan_documents")
-        .select(
-          "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
-        )
-        .eq("artisan_id", artisan.id),
-      supabase
-        .from("artisan_photos")
-        .select("id, storage_path")
-        .eq("artisan_id", artisan.id)
-        .order("sort_order"),
-      supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
-      supabase
-        .from("subscriptions")
-        .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end")
-        .eq("artisan_id", artisan.id)
-        .maybeSingle(),
-    ]);
+  const [
+    trades,
+    workTypes,
+    zones,
+    certifications,
+    documents,
+    photos,
+    profile,
+    subscriptionRow,
+    charterRow,
+  ] = await Promise.all([
+    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
+    supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", artisan.id),
+    supabase
+      .from("artisan_zones")
+      .select("code_insee, nom")
+      .eq("artisan_id", artisan.id)
+      .order("nom"),
+    supabase
+      .from("certifications")
+      .select("id, type, numero, date_fin, verified_at")
+      .eq("artisan_id", artisan.id)
+      .order("date_fin"),
+    supabase
+      .from("artisan_documents")
+      .select(
+        "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
+      )
+      .eq("artisan_id", artisan.id),
+    supabase
+      .from("artisan_photos")
+      .select("id, storage_path")
+      .eq("artisan_id", artisan.id)
+      .order("sort_order"),
+    supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
+    supabase
+      .from("subscriptions")
+      .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end")
+      .eq("artisan_id", artisan.id)
+      .maybeSingle(),
+    // Charte qualité signée dans sa version en vigueur (ADR 0104).
+    supabase
+      .from("artisan_charter_acceptances")
+      .select("version, signer_name, company, siret, accepted_at")
+      .eq("artisan_id", artisan.id)
+      .eq("version", CHARTER_VERSION)
+      .maybeSingle(),
+  ]);
   const subscription = subscriptionRow.data;
+  const charter = charterRow.data;
 
   // Les documents archivés (« remplace ») ne comptent plus. Par type : le document validé en
   // cours s'il existe, sinon celui en cours d'examen.
@@ -101,6 +119,7 @@ export const getOnboardingContext = cache(async () => {
     presentationLength: artisan.presentation?.trim().length ?? 0,
     hasAvatar: avatarPath !== null,
     connectChargesEnabled: artisan.connect_charges_enabled,
+    charterAccepted: charter !== null,
     subscriptionActive: subscriptionGrantsAccess(
       (subscription?.status as SubscriptionStatus | undefined) ?? null,
     ),
@@ -112,6 +131,7 @@ export const getOnboardingContext = cache(async () => {
     artisan,
     avatarPath,
     subscription,
+    charter,
     documents: documentList,
     photos: photos.data ?? [],
     canSubmit: canSubmitOnboarding(snapshot),
