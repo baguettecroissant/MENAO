@@ -20,7 +20,7 @@ export interface NotificationProvider {
 }
 
 /** Expéditeur tant que le domaine d'envoi (notifications.menao.fr) n'est pas vérifié. */
-const DEFAULT_FROM = "MENAO <onboarding@resend.dev>";
+const DEFAULT_FROM = "MENAO <notifications@menao.fr>";
 
 /** Resend : https://resend.com/docs/api-reference/emails/send-email */
 export class ResendProvider implements NotificationProvider {

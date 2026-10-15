@@ -1,15 +1,130 @@
-<h2>Connexion à MENAO</h2>
-<p>Bonjour,</p>
-<p>
-  Cliquez sur le lien ci-dessous pour vous connecter. Il est valable une heure et ne peut servir
-  qu'une fois.
-</p>
-<p>
-  <a
-    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/mon-espace"
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connexion à MENAO</title>
+  </head>
+  <!-- Même mise en page que les e-mails de notification (packages/emails) : bandeau bleu clair avec
+       le logo servi par le site, carte blanche, bouton en pilule centré, pied de page. -->
+  <body
+    style="
+      margin: 0;
+      padding: 24px 0;
+      background-color: #f9f7f0;
+      font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
+    "
   >
-    Me connecter
-  </a>
-</p>
-<p>Si vous n'avez pas demandé ce lien, ignorez ce message.</p>
-<p>L'équipe MENAO</p>
+    <div style="display: none; max-height: 0; overflow: hidden">
+      Votre lien de connexion, valable une heure.
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding: 0 16px">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="max-width: 560px"
+          >
+            <tr>
+              <td
+                align="center"
+                style="background-color: #e4eafd; border-radius: 16px 16px 0 0; padding: 24px"
+              >
+                <img
+                  src="{{ .SiteURL }}/images/email/logo.png"
+                  width="150"
+                  height="42"
+                  alt="MENAO"
+                  style="
+                    display: block;
+                    margin: 0 auto;
+                    border: 0;
+                    outline: none;
+                    text-decoration: none;
+                  "
+                />
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  background-color: #ffffff;
+                  border-left: 1px solid #e6e9ef;
+                  border-right: 1px solid #e6e9ef;
+                  padding: 28px 24px;
+                "
+              >
+                <h1 style="margin: 0 0 16px; font-size: 22px; line-height: 28px; color: #111728">
+                  Connexion à MENAO
+                </h1>
+                <p style="margin: 0 0 12px; font-size: 15px; line-height: 22px; color: #111728">
+                  Bonjour,
+                </p>
+                <p style="margin: 0 0 12px; font-size: 15px; line-height: 22px; color: #111728">
+                  Cliquez sur le bouton ci-dessous pour vous connecter. Le lien est valable une
+                  heure et ne peut servir qu'une fois.
+                </p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" style="padding: 8px 0 4px">
+                      <a
+                        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/mon-espace"
+                        style="
+                          display: inline-block;
+                          background-color: #4869f6;
+                          color: #ffffff;
+                          border-radius: 9999px;
+                          font-size: 15px;
+                          font-weight: 600;
+                          padding: 12px 24px;
+                          text-decoration: none;
+                        "
+                        >Me connecter</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin: 16px 0 0; font-size: 13px; line-height: 20px; color: #636b78">
+                  Si vous n'avez pas demandé ce lien, ignorez ce message.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  background-color: #e4eafd;
+                  border-radius: 0 0 16px 16px;
+                  height: 12px;
+                  line-height: 12px;
+                  font-size: 0;
+                "
+              >
+                &nbsp;
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 24px 0 0; border-bottom: 0">
+                <p
+                  style="
+                    margin: 0;
+                    border-top: 1px solid #e6e9ef;
+                    padding-top: 12px;
+                    font-size: 12px;
+                    line-height: 18px;
+                    color: #636b78;
+                  "
+                >
+                  Message envoyé automatiquement par MENAO&nbsp;: merci de ne pas y répondre.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

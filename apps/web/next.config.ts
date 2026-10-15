@@ -2,6 +2,12 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
+
+// Ancienne adresse Vercel du site : redirigée vers le domaine dès que NEXT_PUBLIC_SITE_URL le désigne
+// (une seule adresse pour le référencement et les cookies de session). Les déploiements de
+// prévisualisation gardent leur propre adresse.
+const VERCEL_HOST = "menao-web.vercel.app";
 
 // CSP en mode « Report-Only » pendant la phase 0 : elle sera durcie (nonces) puis
 // appliquée une fois les intégrations (Stripe, signature, etc.) connues.
@@ -44,6 +50,17 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  async redirects() {
+    if (!siteUrl || new URL(siteUrl).host === VERCEL_HOST) return [];
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: VERCEL_HOST }],
+        destination: `${siteUrl}/:path*`,
+        permanent: true,
+      },
+    ];
   },
 };
 

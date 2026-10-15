@@ -245,8 +245,8 @@ otp_expiry = 3600
 # sender_name = "Admin"
 
 # Modèles d'e-mails d'authentification en français (environnement local).
-# En staging/production : même contenu à reporter dans le tableau de bord Supabase,
-# envoi via le SMTP Resend (ADR 0002).
+# En staging/production : mêmes objets et modèles, appliqués avec scripts/supabase-auth.mjs,
+# envoi via le SMTP Resend (ADR 0002, ADR 0100).
 [auth.email.template.confirmation]
 subject = "Confirmez votre adresse e-mail MENAO"
 content_path = "./supabase/templates/confirmation.html"

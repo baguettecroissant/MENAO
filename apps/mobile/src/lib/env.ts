@@ -2,7 +2,7 @@
 export const env = {
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
   supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
-  siteUrl: process.env.EXPO_PUBLIC_SITE_URL ?? "https://menao-web.vercel.app",
+  siteUrl: process.env.EXPO_PUBLIC_SITE_URL ?? "https://menao.fr",
 };
 
 export const isConfigured = Boolean(env.supabaseUrl && env.supabaseKey);
