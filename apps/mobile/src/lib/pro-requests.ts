@@ -2,6 +2,7 @@ import type { RefusalReason } from "@menao/core";
 import type { Database } from "@menao/db";
 import { parseRequestDetail, type RequestDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
+import { loadClientReputation, type ClientReputation } from "./client-ratings";
 import { formatLongDate } from "./dates";
 import { supabase } from "./supabase";
 
@@ -39,7 +40,12 @@ export async function loadInbox(): Promise<InboxItem[] | null> {
   }));
 }
 
-export type Opportunity = { detail: RequestDetail; photoUrls: string[] };
+export type Opportunity = {
+  detail: RequestDetail;
+  photoUrls: string[];
+  /** F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible. */
+  reputation: ClientReputation | null;
+};
 
 /**
  * Opportunité (F-17), comme sur le site : coordonnées et adresse exacte seulement une fois le
@@ -49,13 +55,17 @@ export async function loadOpportunity(requestId: string): Promise<Opportunity | 
   const { data } = await supabase.rpc("artisan_request_detail", { p_request_id: requestId });
   const detail = parseRequestDetail(data);
   if (!detail) return null;
-  const photos = await signedPhotos(detail.photos);
+  const [photos, reputation] = await Promise.all([
+    signedPhotos(detail.photos),
+    loadClientReputation(requestId),
+  ]);
   return {
     detail,
     photoUrls: detail.photos.flatMap((p) => {
       const url = photos.get(p);
       return url ? [url] : [];
     }),
+    reputation,
   };
 }
 

@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand } from "@/components/header-band";
+import { ClientReputationCard } from "@/components/pro/client-reputation-card";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -18,8 +19,9 @@ const { colors, spacing } = theme;
 
 /**
  * Opportunité (F-17), comme sur le site (maquette « Vue d'une opportunité ») : client, adresse,
- * description, date souhaitée, message ; puis « Fixer un rendez-vous » ou « Refuser le chantier »,
- * et « Ce chantier a besoin d'une expertise ». Une fois le rendez-vous fixé, la demande s'ouvre sur
+ * description, date souhaitée, message, « Ce client sur MENAO » si l'équipe a rendu les notes
+ * visibles (F-23) ; puis « Fixer un rendez-vous » ou « Refuser le chantier », et « Ce chantier a
+ * besoin d'une expertise ». Une fois le rendez-vous fixé, la demande s'ouvre sur
  * la vue du chantier (F-18).
  */
 export default function OpportunityScreen() {
@@ -41,7 +43,7 @@ export default function OpportunityScreen() {
       </Screen>
     );
   }
-  const { detail: r, photoUrls } = opportunity;
+  const { detail: r, photoUrls, reputation } = opportunity;
   if (r.chantier_id) return <Redirect href={`/pro-chantier/${r.chantier_id}`} />;
 
   const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
@@ -97,6 +99,7 @@ export default function OpportunityScreen() {
         {r.urgence ? <StatusPill text={t.urgent} tone="danger" /> : null}
       </View>
       <RequestBlocks detail={r} photoUrls={photoUrls} variant="opportunite" />
+      {reputation ? <ClientReputationCard reputation={reputation} /> : null}
     </Screen>
   );
 }

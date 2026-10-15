@@ -22,6 +22,7 @@ import {
   chantierTag,
 } from "@/components/chantier/parts";
 import { ConversationCard } from "@/components/messages/conversation-card";
+import { ClientRatingForm } from "@/components/pro/client-rating-form";
 import { PhotoUpload } from "@/components/pro/photo-upload";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewCard } from "@/components/pro/review-card";
@@ -46,8 +47,9 @@ const { colors, font, radius, spacing } = theme;
  * Vue d'un chantier côté artisan après l'acompte (F-22), comme sur le site et avec la mise en page
  * de la vue du client (maquettes « Vue d'un chantier ») : confirmation de la date de démarrage et
  * « Déclarer le chantier terminé » en pied d'écran, « Messagerie avec … » et journal pendant les
- * travaux, réserves et leur levée, avis du client et réponse publique (F-28), dossier (documents,
- * échéancier, client). Aucun lien vers le site (règle 10).
+ * travaux, réserves et leur levée, avis du client et réponse publique (F-28), note de l'artisan
+ * sur son client après la clôture (F-23), dossier (documents, échéancier, client). Aucun lien vers
+ * le site (règle 10).
  */
 export function FollowUpView({
   data,
@@ -187,6 +189,25 @@ export function FollowUpView({
         <ReviewCard review={f.review} heading={t.reviewTitle(client)} onReplied={onChanged} />
       ) : status === "cloture" ? (
         <Notice tone="info">{t.reviewPending(client)}</Notice>
+      ) : null}
+      {status === "cloture" ? (
+        f.clientRating ? (
+          <Notice tone="info">
+            {fr.proClientRating.done(
+              formatDateNumeric(f.clientRating.created_at),
+              f.clientRating.welcome,
+              f.clientRating.clarity,
+              f.clientRating.payment,
+            )}
+          </Notice>
+        ) : (
+          <ClientRatingForm
+            chantierId={id}
+            clientName={client}
+            visibleToNetwork={f.ratingsVisible}
+            onRated={onChanged}
+          />
+        )
       ) : null}
 
       <Segmented

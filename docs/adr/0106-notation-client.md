@@ -1,6 +1,6 @@
 # ADR 0106 — Notation du client par l'artisan (F-23)
 
-- Statut : accepté (web ; l'application mobile suivra)
+- Statut : accepté (site et application mobile)
 - Date : 15 octobre 2026
 
 ## Contexte
@@ -23,6 +23,9 @@
   - **chantier clôturé** : la vue de l'artisan propose le formulaire (curseurs, commentaire), puis un résumé de la note. Le texte indique honnêtement qui pourra la voir : l'équipe seulement, ou aussi les artisans qui reçoivent une demande, selon le paramètre ;
   - **demande reçue** : bloc « Ce client sur MENAO » quand la moyenne est visible ;
   - **back-office** : notes listées sur la fiche du client.
+- **Application mobile** : mêmes écrans côté artisan, sans lien vers le site (règle 10).
+  - **chantier clôturé** : formulaire (mêmes curseurs que l'avis du client), puis résumé de la note ;
+  - **demande reçue** : bloc « Ce client sur MENAO » quand la moyenne est visible.
 - **Gamification** (F-24) : la mesure `avis_clients` compte les notes laissées. Les objectifs « Premier avis », « Amateur des avis » et « Expert des avis » sont activés.
 
 ## Conséquences
@@ -31,5 +34,4 @@
   - information des clients (politique de confidentialité) ;
   - droits d'accès et de rectification ;
   - durée de conservation.
-- **Application mobile** : la même notation y sera ajoutée dans une prochaine PR (les écrans artisan existent déjà).
 - **Pas encore fait** : relance de l'artisan s'il ne note pas le client (notification). À ajouter si besoin.

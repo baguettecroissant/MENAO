@@ -1414,6 +1414,38 @@ export const fr = {
       rate_limited: "Trop de photos envoyées en peu de temps : réessayez dans un moment.",
     },
   },
+  /** Notation du client par l'artisan (F-23, ADR 0106) : mêmes textes que le site. */
+  proClientRating: {
+    title: (name: string) => `Comment s'est passé ce chantier avec ${name} ?`,
+    intro:
+      "Notez votre client : comme la charte qualité vous y engage, votre avis protège les autres artisans du réseau.",
+    privacy: "Votre note n'est jamais montrée au client ni publiée.",
+    privacyNetwork:
+      "Les artisans MENAO qui reçoivent une demande de ce client voient la moyenne des notes, jamais votre commentaire.",
+    privacyTeam: "Seule l'équipe MENAO peut la consulter pour l'instant.",
+    criteria: {
+      welcome: "Accueil et accès au chantier",
+      clarity: "Clarté du besoin",
+      payment: "Délai des paiements",
+    },
+    bands: {
+      welcome: ["Très difficile", "Difficile", "Correct", "Bon accueil", "Excellent accueil"],
+      clarity: ["Très confus", "Confus", "Correct", "Clair", "Parfaitement clair"],
+      payment: ["Très en retard", "En retard", "Correct", "Rapide", "Immédiat"],
+    },
+    commentTitle: "Votre commentaire",
+    commentHelp: "Décrivez en quelques mots le déroulement du chantier avec ce client.",
+    commentPlaceholder:
+      "Ex. Client accueillant, accès facile, échanges clairs, solde réglé rapidement.",
+    submit: "Enregistrer ma note",
+    done: (date: string, welcome: number, clarity: number, payment: number) =>
+      `Vous avez noté ce client le ${date} : accueil ${welcome}\u00a0%, clarté ${clarity}\u00a0%, paiements ${payment}\u00a0%.`,
+    reputationTitle: "Ce client sur MENAO",
+    reputation: (n: number) =>
+      n === 1
+        ? "Noté par 1 artisan après un chantier."
+        : `Noté par ${n} artisans après leurs chantiers.`,
+  },
   /** Gamification artisan (F-24) : maquettes « Mon grade Menao », badges et récompense. */
   grade: {
     title: "Mon grade MENAO",
