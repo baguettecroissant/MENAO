@@ -41,6 +41,9 @@ select ('c5410000-0000-4000-8000-00000000000' || n)::uuid, 'base', 'cus_planning
   'trialing', now() + interval '30 days'
 from generate_series(1, 4) n;
 
+-- Artisans du jeu de données de base : planning daté dans le futur, hors du test.
+update public.artisans set planning_updated_at = now() + interval '1 year' where id::text not like 'c541%';
+
 -- ---------- Lundi : A (10 jours) et C (jamais) ----------
 select is(app.remind_planning(), 2, 'A et C relancés ; B à jour, D en pause, E invisible');
 select results_eq(
@@ -63,8 +66,8 @@ select isnt(public.artisan_confirm_planning(), null, 'A confirme son planning');
 select is((select count(*)::int from public.notifications where type = 'planning_relance'), 2,
   'A ne voit que ses propres relances');
 reset role;
-select is(app.remind_planning(now() + interval '6 days'), 2,
-  'six jours après la confirmation : B et C relancés, pas A');
+select is(app.remind_planning(now() + interval '6 days 12 hours'), 2,
+  'six jours et demi après la confirmation : B et C relancés, pas A');
 select is((select count(*)::int from public.notifications where type = 'planning_relance'
   and user_id = 'c5400000-0000-4000-8000-000000000001'), 2, 'A : pas de nouvelle relance');
 
