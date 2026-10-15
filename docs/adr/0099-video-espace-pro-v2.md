@@ -13,6 +13,10 @@
 - **Déroulé** : le même que la première version. Les textes ont été corrigés pour coller au produit :
   - « la commune » au lieu de « l'adresse » : l'adresse exacte n'est donnée qu'après le rendez-vous ;
   - plus de « code de confirmation » à la signature.
+- **Motion design** : l'ouverture et les animations de la première version sont reprises, et d'autres sont ajoutées :
+  - reprises : logo qui se dessine entouré de tuiles d'icônes, écran « Analyse de votre projet en cours » animé (ondes, icônes de métiers en orbite, étapes cochées), carte « Nouvelle demande », indicateur de dictée, cartes « Acompte reçu » et « Facture d'acompte », grand « 0 % de commission », bulles du suivi, « Avis vérifié » ;
+  - ajoutées : la demande qui file du téléphone du client à l'ordinateur de l'artisan, les lignes du devis qui sortent de la dictée, l'acompte qui part du téléphone vers le compte de l'artisan (compteur), des confettis sur le nouveau badge.
+- **Prononciation** : « Ménao » seul faisait hésiter la voix multilingue sur la langue (accent étranger). Le nom est donc toujours dit dans une phrase française (« Ménao. Remplissez votre agenda… », « Ménao, de la demande… »).
 - **Écrans réels, données fictives** :
   - **ordinateur** : les vraies pages de l'Espace Pro web (tableau de bord, demande, tiroir de rendez-vous, devis vide, dictée, lignes, aperçu, grade et nouveau badge, page Espace Pro), composées dans un aperçu local non versionné, et animées par une caméra (zoom et déplacement) et un curseur ;
   - **téléphone** : les vrais écrans de l'application (description du projet, critères, artisans, devis, acompte, suivi, réception, avis), avec les requêtes Supabase interceptées et une session fictive, comme pour les visuels des stores (ADR 0097) ;
