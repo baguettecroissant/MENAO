@@ -6,14 +6,14 @@
 ## Contexte
 - **Demande** : l'utilisateur veut, sur la page d'attente de menao.fr, une vidéo de teasing à la place de la vidéo de présentation de l'Espace Pro.
 - **Choix de l'utilisateur** : musique seule, sans voix ; lecture automatique en boucle et en sourdine.
-- **Retour de l'utilisateur sur la première version** (27 s) : images trop rapides, et seul le toit du logo apparaissait au milieu du film. Le rythme est ralenti et le logo montré en entier.
+- **Retour de l'utilisateur sur la première version** (27 s) : images trop rapides, et seul le toit du logo apparaissait au milieu du film. Le rythme est ralenti (deux fois : 3 temps par écran, puis une mesure à la demande de l'utilisateur) et le logo montré en entier.
 
 ## Décision
-- **Déroulé** (36,5 s) :
+- **Déroulé** (41 s) :
   - une accroche tapée au clavier (« Trouver un bon artisan… c'est déjà tout un chantier. ») ;
   - trois galères barrées une à une ;
   - le logo complet qui se dessine dans le silence (toit, sourire, puis le mot « menao ») ;
-  - huit flashs calés sur le tempo, de trois temps chacun (1,7 s) : vrais écrans de l'application en très gros plan et floutés, un élément animé, un mot (Décrivez, Vérifiés, Chiffré, Signé, Payé, Suivi, Terminé, Reconnu) ;
+  - huit flashs calés sur le tempo, d'une mesure chacun (4 temps, 2,3 s) : vrais écrans de l'application en très gros plan et floutés, un élément animé, un mot (Décrivez, Vérifiés, Chiffré, Signé, Payé, Suivi, Terminé, Reconnu) ;
   - « Particuliers. Artisans. Une seule plateforme. » ;
   - impact sur le logo, puis « Bientôt. », menao.fr et Alpes-Maritimes ;
   - un fondu final pour que la boucle reprenne sans à-coup.
