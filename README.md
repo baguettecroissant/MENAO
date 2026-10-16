@@ -78,6 +78,32 @@ where email = 'adresse@exemple.fr';
 
 À la connexion suivante, le back-office (`/admin`) impose l'activation de la double authentification (TOTP). Sans elle, la base refuse tout droit admin (ADR 0008).
 
+## Application mobile : build de développement (iPhone)
+
+Une vraie version de MENAO sur l'iPhone, reliée au serveur Expo du Mac comme Expo Go, avec les fonctions natives en plus : notifications push, retour `menao://` après Google ou Apple. Le build se fait dans le cloud d'Expo (EAS), sans Xcode.
+
+Prérequis : compte Apple Developer, projet Expo rattaché (`EAS_PROJECT_ID` dans `apps/mobile/.env`), iPhone en **mode développeur** (Réglages, puis Confidentialité et sécurité, puis Mode développeur).
+
+Une seule fois, depuis `apps/mobile` :
+
+```bash
+# Identifiant du projet pour les serveurs de build (lu dans .env, sans l'afficher).
+npx eas-cli env:create --name EAS_PROJECT_ID --value "$(grep '^EAS_PROJECT_ID=' .env | cut -d= -f2-)" \
+  --environment development --environment preview --environment production --visibility plaintext
+# Enregistrement de l'iPhone (QR code à ouvrir sur le téléphone).
+npx eas-cli device:create
+# Build (connexion au compte Apple demandée ; certificats et clé des notifications push créés par EAS).
+npx eas-cli build --profile development --platform ios
+```
+
+Installer l'app depuis le lien donné à la fin du build, puis lancer le serveur et ouvrir « MENAO » sur l'iPhone :
+
+```bash
+REACT_NATIVE_PACKAGER_HOSTNAME="$(scutil --get LocalHostName).local" pnpm --filter mobile start
+```
+
+Le nom `.local` remplace l'adresse IP, refusée par Supabase comme adresse de retour (ADR 0108). Pour continuer avec Expo Go : `pnpm --filter mobile start --go`. Un nouveau build n'est nécessaire que si un module natif change.
+
 ## CI
 
 GitHub Actions sur chaque PR et sur `main` : format, lint, typecheck, tests unitaires ; migrations + tests pgTAP + contrôle des types générés ; build + Playwright (inscription, confirmation e-mail, connexion). Aucun secret requis : Supabase tourne dans le runner.
