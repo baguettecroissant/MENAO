@@ -1461,6 +1461,46 @@ export const fr = {
         ? "Noté par 1 artisan après un chantier."
         : `Noté par ${n} artisans après leurs chantiers.`,
   },
+  /**
+   * Charte qualité demandée à un artisan déjà inscrit (ADR 0109) : mêmes textes que le site, en
+   * tutoiement comme la charte.
+   */
+  proCharter: {
+    intro:
+      "Nouveau : la charte qualité Menao. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
+    ruleLabel: (code: string, title: string) => `Règle ${code} : ${title}`,
+    progress: (n: number, total: number) => `${n} / ${total} règles validées`,
+    name: "Nom et prénom",
+    company: "Entreprise",
+    siret: "N° SIRET",
+    signature: "Signature",
+    padLabel: "Zone de signature : signe avec le doigt",
+    padHint: "Signe ici avec le doigt",
+    clear: "Effacer",
+    missingPrefix: "Pour signer : ",
+    missing: {
+      rules: (n: number) => `coche les ${n} règle(s) restante(s)`,
+      name: "indique ton nom",
+      company: "indique ton entreprise",
+      siret: "saisis un SIRET à 14 chiffres",
+      signature: "signe dans le cadre",
+      agree: "coche l'acceptation de la charte",
+    },
+    submit: "Signer et rejoindre Menao",
+    outdated: "Cette version de la charte n'est plus en vigueur : relance l'application.",
+    recap: {
+      company: "Entreprise",
+      siret: "SIRET",
+      signedAt: "Signée le",
+      rules: "Règles acceptées",
+      rulesValue: (total: number, first: string, last: string) =>
+        `${total} / ${total} (${first} à ${last})`,
+      level: "Niveau de départ",
+    },
+    signedOn: (date: string, time: string) => `${date} à ${time}`,
+    continue: "Accéder à mon espace pro",
+    error: "La charte n'a pas pu être chargée.",
+  },
   /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan : mêmes textes que le site. */
   proScore: {
     title: "Votre score MENAO",

@@ -1,6 +1,6 @@
 # ADR 0109 — Charte qualité pour les artisans déjà inscrits
 
-- Statut : accepté (site ; l'application mobile suivra)
+- Statut : accepté (site et application mobile)
 - Date : 16 octobre 2026
 
 ## Contexte
@@ -18,9 +18,13 @@
   - un artisan encore en inscription est renvoyé à l'étape « Charte qualité » de l'inscription.
 - **Blocage** : le temps de lire et signer (quelques minutes), l'artisan ne voit pas ses demandes ni ses chantiers. C'est le choix le plus simple et le plus cohérent avec l'inscription. Ses chantiers en cours ne sont pas touchés : les clients et la base ne voient aucune différence.
 - **Jeu de données** : les artisans du seed ont signé, sauf `charte@example.test`, réservé au test de bout en bout de ce parcours.
+- **Application mobile** :
+  - l'espace artisan (`app/pro/_layout.tsx`) fait le même contrôle (`charterRequired`) et ouvre l'écran `pro-charte` ;
+  - mêmes textes (packages/core), même contrôle (`charterAcceptanceSchema`) et même enregistrement (`accept_artisan_charter`) que sur le site ;
+  - signature tracée au doigt, dans le même cadre de 600 × 150 ;
+  - en cas d'erreur de lecture, l'espace n'est pas bloqué.
 
 ## Conséquences
 
 - **Visibilité inchangée** : un artisan qui ne se connecte pas reste proposé aux clients sans avoir signé. Conditionner la visibilité à la signature serait une règle de classement à valider.
-- **Application mobile** : la même demande dans l'espace artisan de l'application, dans une prochaine PR (signature tracée au doigt).
 - **Nouvelle version de la charte** : changer `CHARTER_VERSION` et `app.current_charter_version()` suffit à redemander la signature à tous.
