@@ -42,6 +42,8 @@
 - **Supabase** (Auth > Providers) : activer Google et Apple, et coller les identifiants. Les secrets ne sont jamais dans le dépôt (règle 1).
 - **Vercel** : `NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple`, puis redéployer.
 - **Adresses de retour de l'application** (`scripts/supabase-auth.mjs --app-urls`) : `menao://**`, plus `exp://**` sur staging pour Expo Go.
+  - Supabase refuse une adresse de retour dont l'hôte est une adresse IP (`exp://192.168.…`, celle d'Expo Go par défaut) : il renvoie alors vers le site.
+  - Pour essayer dans Expo Go, lancer Expo avec le nom local du Mac : `REACT_NATIVE_PACKAGER_HOSTNAME="$(scutil --get LocalHostName).local" pnpm --filter mobile start`.
 - **Application** : `EXPO_PUBLIC_OAUTH_PROVIDERS` dans `.env` (et les variables d'EAS pour les builds).
 
 ## Conséquences
