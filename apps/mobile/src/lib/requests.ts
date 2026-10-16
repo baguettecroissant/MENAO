@@ -143,6 +143,22 @@ export async function signUpForRequest(
 }
 
 /**
+ * « Continuer avec Google / Apple » au moment de la demande (ADR 0108) : comme pour l'inscription
+ * par e-mail, le jeton de transfert est gardé ; la demande est reprise après la connexion (et la
+ * finalisation d'un nouveau compte) par resumePendingRequest. Renvoie le message d'erreur, ou null.
+ */
+export async function prepareProviderSignIn(
+  projectId: string,
+  artisanIds: string[],
+): Promise<string | null> {
+  const token = await createTransfer(projectId);
+  if (!token) return fr.request.transferError;
+  const pending: Pending = { projectId, artisanIds, token };
+  await kv.set(PENDING_KEY, JSON.stringify(pending));
+  return null;
+}
+
+/**
  * Connexion au moment de la demande : le projet de la session anonyme est rattaché au compte
  * (jeton créé avant la connexion, puis `claim_project`). Renvoie le message d'erreur, ou null.
  */

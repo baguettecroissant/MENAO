@@ -1,9 +1,12 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { OAuthButtons } from "@/components/oauth-buttons";
 import { SignInForm } from "@/components/sign-in-form";
 import { SignUpForm } from "@/components/sign-up-form";
 import { fr } from "@/i18n/fr";
-import { signInForRequest, signUpForRequest } from "@/lib/requests";
+import { continueAfterSignIn } from "@/lib/after-sign-in";
+import { prepareProviderSignIn, signInForRequest, signUpForRequest } from "@/lib/requests";
 import { Body, Button, Card, Notice, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
@@ -14,7 +17,8 @@ const r = fr.request;
  * sur le site : « Informations personnelles », « Créer mon espace client MENAO », puis « Vous avez
  * déjà un espace MENAO ? ». Le projet de la session anonyme est rattaché au compte. Après
  * l'inscription, le lien de confirmation arrive par e-mail ; on se connecte ensuite ici pour
- * envoyer la demande.
+ * envoyer la demande. Au-dessus, « Continuer avec Google / Apple » (ADR 0108) : la demande reprend
+ * après la connexion, ou après « Finaliser mon compte » pour un nouveau compte.
  */
 export function AccountStep({
   projectId,
@@ -31,6 +35,12 @@ export function AccountStep({
       <Title>{r.accountTitle}</Title>
       <Body muted>{r.accountIntro}</Body>
       {emailSent && <Notice tone="success">{r.checkEmail}</Notice>}
+      <OAuthButtons
+        prepare={() => prepareProviderSignIn(projectId, artisanIds)}
+        onSignedIn={(pending) =>
+          pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
+        }
+      />
       {mode === "signUp" ? (
         <SignUpForm
           submitLabel={r.signUpSubmit}

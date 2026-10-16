@@ -4,7 +4,8 @@ import {
   GoogleSans_700Bold,
   useFonts,
 } from "@expo-google-fonts/google-sans";
-import { Stack } from "expo-router";
+import { signupPending } from "@menao/core";
+import { router, Stack, usePathname, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -45,6 +46,22 @@ function Root({ ready }: { ready: boolean }) {
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }} />
       <PushNotifications />
+      <SignupGate />
     </>
   );
+}
+
+/**
+ * Compte Google ou Apple à finaliser (ADR 0108) : « Finaliser mon compte » s'affiche tant que les
+ * CGU ne sont pas acceptées, même à la réouverture de l'application, comme le garde du site.
+ */
+function SignupGate() {
+  const { session, signedIn } = useSession();
+  const pathname = usePathname();
+  const ready = Boolean(useRootNavigationState()?.key);
+  const pending = signedIn && signupPending(session?.user.app_metadata);
+  useEffect(() => {
+    if (ready && pending && pathname !== "/finaliser-compte") router.replace("/finaliser-compte");
+  }, [ready, pending, pathname]);
+  return null;
 }

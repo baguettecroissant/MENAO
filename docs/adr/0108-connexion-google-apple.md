@@ -1,6 +1,6 @@
 # ADR 0108 — Connexion avec Google ou Apple pour les clients
 
-- Statut : accepté (site ; l'application mobile suivra)
+- Statut : accepté (site et application mobile)
 - Date : 16 octobre 2026
 
 ## Contexte
@@ -26,19 +26,26 @@
   - tant que ce n'est pas fait, le garde du site (`proxy.ts`) y ramène depuis les espaces protégés et la recherche.
 - **Activation** : `NEXT_PUBLIC_OAUTH_PROVIDERS` (« google,apple »). Vide, aucun bouton : on l'active une fois les fournisseurs configurés dans Supabase.
 - **CSP** : Supabase, `accounts.google.com` et `appleid.apple.com` sont ajoutés aux cibles des formulaires (redirections après l'envoi du bouton).
+- **Application mobile** :
+  - mêmes boutons sur la connexion, l'inscription et l'étape compte de la demande (jeton de transfert gardé, demande reprise après la connexion) ;
+  - la page du fournisseur s'ouvre dans la fenêtre sécurisée du téléphone (`openAuthSessionAsync`, comme ADR 0060), et Supabase rouvre l'application (`menao://auth/callback`, ou l'adresse d'Expo Go en développement) avec la session ;
+  - c'est le flux web de Supabase, donc aucun identifiant Google iOS ou Android, et pas de module natif : il marche dans Expo Go ;
+  - même écran « Finaliser mon compte », et garde dans `app/_layout.tsx`, y compris à la réouverture de l'application ;
+  - activation par `EXPO_PUBLIC_OAUTH_PROVIDERS`.
 
 ## Configuration (à faire par l'équipe, hors du dépôt)
-- **Google Cloud** : identifiant OAuth de type « Application Web », avec l'adresse de retour `https://<projet>.supabase.co/auth/v1/callback`, et l'écran de consentement au nom de MENAO (domaine menao.fr). Identifiants iOS et Android pour l'application.
+- **Google Cloud** : identifiant OAuth de type « Application Web », avec l'adresse de retour `https://<projet>.supabase.co/auth/v1/callback`, et l'écran de consentement au nom de MENAO (domaine menao.fr). Il sert aussi à l'application.
 - **Apple Developer** :
   - Services ID et clé « Sign in with Apple » ;
   - le secret client (un jeton signé) **expire au bout de 6 mois** et doit être renouvelé dans Supabase ;
   - déclarer menao.fr et `notifications@menao.fr` dans le service de relais des adresses masquées. Sinon, les e-mails envoyés aux adresses `@privaterelay.appleid.com` sont rejetés.
 - **Supabase** (Auth > Providers) : activer Google et Apple, et coller les identifiants. Les secrets ne sont jamais dans le dépôt (règle 1).
 - **Vercel** : `NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple`, puis redéployer.
+- **Adresses de retour de l'application** (`scripts/supabase-auth.mjs --app-urls`) : `menao://**`, plus `exp://**` sur staging pour Expo Go.
+- **Application** : `EXPO_PUBLIC_OAUTH_PROVIDERS` dans `.env` (et les variables d'EAS pour les builds).
 
 ## Conséquences
 - **`TODO(legal)`** :
   - la politique de confidentialité doit citer Google et Apple comme fournisseurs d'identité (données reçues : nom, adresse e-mail) ;
   - faire valider l'acceptation des CGU à l'étape « Finaliser mon compte ».
-- **Application mobile** : mêmes boutons et même écran « Finaliser mon compte » dans une prochaine PR (fenêtre sécurisée du téléphone, compatible avec Expo Go).
 - **Hors périmètre** : connexion des artisans par Google ou Apple à l'inscription, photo de profil du fournisseur.
