@@ -98,11 +98,13 @@ select throws_ok(
   'un rôle inconnu est refusé à la modification'
 );
 
-select throws_ok(
-  $$ update auth.users set raw_app_meta_data = raw_app_meta_data - 'role'
-     where id = '22222222-2222-4222-8222-222222222222' $$,
-  '22023',
-  null,
+-- Retrait du rôle (Supabase Auth réécrit parfois app_metadata sans lui) : le rôle est conservé
+-- (ADR 0108).
+update auth.users set raw_app_meta_data = raw_app_meta_data - 'role'
+where id = '22222222-2222-4222-8222-222222222222';
+select is(
+  (select raw_app_meta_data ->> 'role' from auth.users where id = '22222222-2222-4222-8222-222222222222'),
+  (select role::text from public.profiles where user_id = '22222222-2222-4222-8222-222222222222'),
   'le rôle ne peut pas être retiré'
 );
 

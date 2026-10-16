@@ -5,6 +5,7 @@ import {
   SIGNUP_REQUIRED_DOCUMENTS,
   isOAuthProvider,
   roleFromAppMetadata,
+  signupPending,
 } from "@menao/core";
 import {
   artisanSelectionSchema,
@@ -133,7 +134,12 @@ export async function signInForRequest(
   }
   const { error: claimError } = await supabase.rpc("claim_project", { p_token: token });
   if (claimError) return { error: t.transferError, values };
-  redirect(sendPagePath(context.projectId, context.artisanIds) as Route);
+  const target = sendPagePath(context.projectId, context.artisanIds);
+  // Compte Google ou Apple à finaliser (ADR 0108) : CGU d'abord, puis la page d'envoi.
+  if (signupPending(data.user.app_metadata)) {
+    redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
+  }
+  redirect(target as Route);
 }
 
 /** F-11 : envoi aux artisans choisis (règles et éligibilité vérifiées en base). */

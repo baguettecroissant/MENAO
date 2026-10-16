@@ -7,6 +7,7 @@ import {
   homePathForRole,
   isOAuthProvider,
   roleFromAppMetadata,
+  signupPending,
 } from "@menao/core";
 import {
   artisanSignUpSchema,
@@ -30,6 +31,18 @@ import { checkbox, text, type FormState } from "./form";
 import { redirectToProvider } from "./oauth";
 
 const confirmUrl = `${env.NEXT_PUBLIC_SITE_URL}/auth/confirm`;
+
+/**
+ * Après une connexion : la page demandée, ou d'abord « Finaliser mon compte » pour un compte
+ * Google ou Apple à finaliser (ADR 0108). Une redirection d'action serveur ne repasse pas par le
+ * garde (proxy.ts) : la vérification est donc faite ici aussi.
+ */
+function redirectAfterSignIn(appMetadata: unknown, target: string): never {
+  if (signupPending(appMetadata)) {
+    redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
+  }
+  redirect(target as Route);
+}
 
 export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
   const values = {
@@ -130,7 +143,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   if (error) return { error: authErrorMessage(error), values };
 
   const home = homePathForRole(roleFromAppMetadata(data.user.app_metadata));
-  redirect(safeRedirectPath(text(formData, "next"), home) as Route);
+  redirectAfterSignIn(data.user.app_metadata, safeRedirectPath(text(formData, "next"), home));
 }
 
 export async function sendMagicLink(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -186,7 +199,10 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   const { data, error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return { error: authErrorMessage(error) };
 
-  redirect(homePathForRole(roleFromAppMetadata(data.user.app_metadata)) as Route);
+  redirectAfterSignIn(
+    data.user.app_metadata,
+    homePathForRole(roleFromAppMetadata(data.user.app_metadata)),
+  );
 }
 
 /** « Continuer avec Google / Apple » (ADR 0108), depuis la connexion ou l'inscription client. */
