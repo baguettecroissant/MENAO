@@ -156,3 +156,27 @@ end;
 $$;
 revoke execute on function public.complete_oauth_signup(text, text, text, boolean, jsonb) from public, anon;
 grant execute on function public.complete_oauth_signup(text, text, text, boolean, jsonb) to authenticated;
+
+-- Supabase Auth réécrit parfois app_metadata depuis sa copie en mémoire, sans le rôle posé par
+-- before_auth_user_insert : création par l'API d'administration ou par « Add user » du tableau
+-- de bord (fournisseurs mis à jour juste après l'insertion). Le rôle est alors conservé, au lieu
+-- d'être refusé par after_auth_user_role_update. Un changement de rôle reste toujours possible.
+create function app.before_auth_user_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if nullif(new.raw_app_meta_data ->> 'role', '') is null
+     and nullif(old.raw_app_meta_data ->> 'role', '') is not null then
+    new.raw_app_meta_data := coalesce(new.raw_app_meta_data, '{}'::jsonb)
+      || jsonb_build_object('role', old.raw_app_meta_data ->> 'role');
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function app.before_auth_user_update() from public, anon, authenticated;
+create trigger before_auth_user_update
+  before update of raw_app_meta_data on auth.users
+  for each row execute function app.before_auth_user_update();

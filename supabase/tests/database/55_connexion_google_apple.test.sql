@@ -39,6 +39,19 @@ select results_eq(
 select is((select count(*)::int from public.legal_acceptances where user_id = 'c5500000-0000-4000-8000-000000000001'), 0,
   'compte Google : aucune acceptation tant qu''il n''est pas finalisé');
 
+-- ---------- Métadonnées réécrites par Supabase Auth (API d'administration) ----------
+update auth.users set raw_app_meta_data = '{"provider":"email","providers":["email"],"signup_pending":true}'
+where id = 'c5500000-0000-4000-8000-000000000002';
+select results_eq(
+  $$ select raw_app_meta_data ->> 'role', raw_app_meta_data ->> 'signup_pending', p.role::text
+     from auth.users u join public.profiles p on p.user_id = u.id where u.id = 'c5500000-0000-4000-8000-000000000002' $$,
+  $$ values ('particulier'::text, 'true'::text, 'particulier'::text) $$,
+  'rôle conservé quand app_metadata est réécrit sans lui');
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"artisan_en_attente"}'
+where id = 'c5500000-0000-4000-8000-000000000002';
+select is((select role::text from public.profiles where user_id = 'c5500000-0000-4000-8000-000000000002'),
+  'artisan_en_attente', 'un changement de rôle reste possible');
+
 -- ---------- Finaliser mon compte ----------
 select pg_temp.connecter('c5500000-0000-4000-8000-000000000001');
 set local role authenticated;
