@@ -12,6 +12,7 @@ import { matchArtisans, publicUrl } from "@/lib/project/artisans";
 import { joinNames } from "@/lib/project/names";
 import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
+import { oauthProviders } from "@/lib/auth/oauth";
 import { AccountStep } from "./account-step";
 import { RequestForm } from "./request-form";
 
@@ -75,7 +76,7 @@ export default async function SendRequestPage({
 
   let form;
   if (anonymous) {
-    form = <AccountStep context={context} />;
+    form = <AccountStep context={context} providers={oauthProviders} />;
   } else if (roleFromAppMetadata(auth.claims.app_metadata) !== "particulier") {
     form = <Alert tone="error">{t.notParticulier}</Alert>;
   } else {

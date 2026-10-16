@@ -1,4 +1,4 @@
-import { homePathForRole, roleFromAppMetadata } from "@menao/core";
+import { homePathForRole, roleFromAppMetadata, signupPending } from "@menao/core";
 import { safeRedirectPath } from "@menao/validation";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
@@ -24,7 +24,11 @@ const PROTECTED_PREFIXES = [
   "/notifications",
   "/nouveau-mot-de-passe",
   "/admin",
+  "/finaliser-compte",
 ];
+// Compte Google ou Apple à finaliser (ADR 0108) : ramené à cette page tant que les CGU ne sont
+// pas acceptées, depuis les espaces protégés et la recherche.
+const COMPLETE_SIGNUP = "/finaliser-compte";
 // Recherche (F-05 à F-07) : accessible avec une session anonyme (ADR 0012).
 const SEARCH_PREFIX = "/recherche";
 const GUEST_ONLY = ["/connexion", "/inscription", "/pro/inscription"];
@@ -44,6 +48,17 @@ export async function proxy(request: NextRequest) {
   );
   if (isProtected && !claims) {
     const url = new URL("/connexion", request.url);
+    url.searchParams.set("next", safeRedirectPath(pathname + search));
+    return redirectWithSession(url, response);
+  }
+
+  if (
+    claims &&
+    signupPending(claims.app_metadata) &&
+    pathname !== COMPLETE_SIGNUP &&
+    (isProtected || pathname.startsWith(`${SEARCH_PREFIX}/`))
+  ) {
+    const url = new URL(COMPLETE_SIGNUP, request.url);
     url.searchParams.set("next", safeRedirectPath(pathname + search));
     return redirectWithSession(url, response);
   }
@@ -97,5 +112,6 @@ export const config = {
     "/nouveau-mot-de-passe",
     "/admin/:path*",
     "/recherche/:path*",
+    "/finaliser-compte",
   ],
 };

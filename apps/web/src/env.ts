@@ -23,6 +23,9 @@ const schema = z.object({
     .url()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  // Connexion avec Google ou Apple (« google,apple ») : vide tant que les fournisseurs ne sont pas
+  // configurés dans Supabase, aucun bouton (ADR 0108).
+  NEXT_PUBLIC_OAUTH_PROVIDERS: z.string().optional(),
 });
 
 export const env = schema.parse({
@@ -32,4 +35,5 @@ export const env = schema.parse({
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   NEXT_PUBLIC_APP_STORE_URL: process.env.NEXT_PUBLIC_APP_STORE_URL,
   NEXT_PUBLIC_PLAY_STORE_URL: process.env.NEXT_PUBLIC_PLAY_STORE_URL,
+  NEXT_PUBLIC_OAUTH_PROVIDERS: process.env.NEXT_PUBLIC_OAUTH_PROVIDERS,
 });

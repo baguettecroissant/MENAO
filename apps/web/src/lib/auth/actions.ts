@@ -5,10 +5,12 @@ import {
   LEGAL_DOCUMENT_VERSIONS,
   SIGNUP_REQUIRED_DOCUMENTS,
   homePathForRole,
+  isOAuthProvider,
   roleFromAppMetadata,
 } from "@menao/core";
 import {
   artisanSignUpSchema,
+  completeSignupSchema,
   magicLinkSchema,
   newPasswordSchema,
   passwordResetRequestSchema,
@@ -25,6 +27,7 @@ import { createClient } from "@/lib/supabase/server";
 import { confirmUrlFor } from "./confirm-url";
 import { authErrorMessage } from "./errors";
 import { checkbox, text, type FormState } from "./form";
+import { redirectToProvider } from "./oauth";
 
 const confirmUrl = `${env.NEXT_PUBLIC_SITE_URL}/auth/confirm`;
 
@@ -184,6 +187,52 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   if (error) return { error: authErrorMessage(error) };
 
   redirect(homePathForRole(roleFromAppMetadata(data.user.app_metadata)) as Route);
+}
+
+/** « Continuer avec Google / Apple » (ADR 0108), depuis la connexion ou l'inscription client. */
+export async function continueWithProvider(formData: FormData): Promise<void> {
+  const provider = text(formData, "provider");
+  if (!isOAuthProvider(provider)) redirect("/connexion?erreur=oauth");
+  const next = text(formData, "next");
+  await redirectToProvider(provider, next ? safeRedirectPath(next) : null);
+}
+
+/**
+ * « Finaliser mon compte » après Google ou Apple (ADR 0108) : nom, téléphone, acceptation des CGU
+ * et de la politique de confidentialité (versions en vigueur), newsletters. Le jeton est ensuite
+ * rafraîchi pour ne plus porter le marqueur « à finaliser ».
+ */
+export async function completeSignup(
+  next: string | null,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = {
+    firstName: text(formData, "firstName") ?? "",
+    lastName: text(formData, "lastName") ?? "",
+    phone: text(formData, "phone") ?? "",
+  };
+  const parsed = completeSignupSchema.safeParse({
+    ...values,
+    acceptTerms: checkbox(formData, "acceptTerms"),
+    marketingOptIn: checkbox(formData, "marketingOptIn"),
+  });
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("complete_oauth_signup", {
+    p_first_name: parsed.data.firstName,
+    p_last_name: parsed.data.lastName,
+    p_phone: parsed.data.phone ?? "",
+    p_marketing_opt_in: parsed.data.marketingOptIn,
+    p_legal: Object.fromEntries(
+      SIGNUP_REQUIRED_DOCUMENTS.map((doc) => [doc, LEGAL_DOCUMENT_VERSIONS[doc]]),
+    ),
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  const { data } = await supabase.auth.refreshSession();
+  const home = homePathForRole(roleFromAppMetadata(data.user?.app_metadata));
+  redirect(safeRedirectPath(next, home) as Route);
 }
 
 export async function signOut(): Promise<void> {

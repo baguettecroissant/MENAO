@@ -3,6 +3,7 @@
 import {
   LEGAL_DOCUMENT_VERSIONS,
   SIGNUP_REQUIRED_DOCUMENTS,
+  isOAuthProvider,
   roleFromAppMetadata,
 } from "@menao/core";
 import {
@@ -18,6 +19,7 @@ import { fr } from "@/i18n/fr";
 import { confirmUrlFor } from "@/lib/auth/confirm-url";
 import { authErrorMessage } from "@/lib/auth/errors";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
+import { redirectToProvider } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/server";
 import { sendPagePath } from "./paths";
 
@@ -83,6 +85,27 @@ export async function signUpForRequest(
   });
   if (error) return { error: authErrorMessage(error), values };
   return { success: t.checkEmail };
+}
+
+/**
+ * « Continuer avec Google / Apple » au moment de la demande (ADR 0108) : comme pour l'inscription
+ * par e-mail, un jeton de transfert rattachera le projet de la session anonyme au compte, à
+ * l'arrivée sur la page d'envoi (après « Finaliser mon compte » pour un nouveau compte).
+ */
+export async function continueWithProviderForRequest(
+  ctx: RequestContext,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const context = parseContext(ctx);
+  const provider = text(formData, "provider");
+  if (!context || !isOAuthProvider(provider)) return { error: fr.errors.generic };
+  const supabase = await createClient();
+  const { data: token, error } = await supabase.rpc("create_project_transfer", {
+    p_project_id: context.projectId,
+  });
+  if (error || !token) return { error: t.transferError };
+  return redirectToProvider(provider, sendPagePath(context.projectId, context.artisanIds, token));
 }
 
 /** Connexion à un compte existant : le projet de la session anonyme lui est rattaché. */

@@ -64,6 +64,16 @@ export const signUpSchema = z.object({
 export type SignUpInput = z.input<typeof signUpSchema>;
 export type SignUp = z.output<typeof signUpSchema>;
 
+/** « Finaliser mon compte » après Google ou Apple (ADR 0108) : l'adresse vient du fournisseur. */
+export const completeSignupSchema = signUpSchema.pick({
+  firstName: true,
+  lastName: true,
+  phone: true,
+  acceptTerms: true,
+  marketingOptIn: true,
+});
+export type CompleteSignup = z.output<typeof completeSignupSchema>;
+
 export const signInSchema = z.object({
   email,
   password: z.string().min(1, { error: messages.required }),

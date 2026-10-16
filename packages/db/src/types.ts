@@ -3515,6 +3515,16 @@ export type Database = {
         Args: { p_error?: string; p_id: string; p_retry?: boolean; p_sent: boolean };
         Returns: undefined;
       };
+      complete_oauth_signup: {
+        Args: {
+          p_first_name: string;
+          p_last_name: string;
+          p_legal: Json;
+          p_marketing_opt_in: boolean;
+          p_phone: string;
+        };
+        Returns: undefined;
+      };
       complete_push_notification: {
         Args: { p_id: string; p_retry: boolean; p_sent: boolean };
         Returns: undefined;
