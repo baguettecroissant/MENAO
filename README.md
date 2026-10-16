@@ -84,6 +84,8 @@ GitHub Actions sur chaque PR et sur `main` : format, lint, typecheck, tests unit
 
 ## Environnements
 
+Mise en production (passage de staging à la production, ouverture du site) : [docs/MISE_EN_PRODUCTION.md](docs/MISE_EN_PRODUCTION.md).
+
 ### Supabase staging (`menao-staging`)
 1. Secrets GitHub (environnement `staging`) : `SUPABASE_ACCESS_TOKEN`, `SUPABASE_STAGING_PROJECT_REF`, `SUPABASE_STAGING_DB_PASSWORD`, puis lancer le workflow **Migrations → staging** (migrations + Edge Functions).
    Secrets des Edge Functions (tableau de bord → Edge Functions → Secrets) : `INSEE_API_KEY` (et `INSEE_API_BASE_URL` si différente de la valeur par défaut).
