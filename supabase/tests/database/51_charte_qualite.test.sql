@@ -76,7 +76,8 @@ reset role;
 -- Équipe MENAO : lecture.
 select pg_temp.connecter('c5100000-0000-4000-8000-000000000004', 'support');
 set local role authenticated;
-select is((select count(*)::int from public.artisan_charter_acceptances), 1, 'support : voit les signatures');
+select is((select count(*)::int from public.artisan_charter_acceptances a join public.artisans ar on ar.id = a.artisan_id
+  where ar.user_id = 'c5100000-0000-4000-8000-000000000001'), 1, 'support : voit les signatures');
 reset role;
 
 -- Visiteur : aucun accès.

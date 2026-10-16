@@ -12,8 +12,15 @@ const PARIS = "Europe/Paris";
 /** Écran de bienvenue après la signature de la charte (ADR 0104), avec le récapitulatif. */
 export function CharterDone({
   charter,
+  continueHref,
+  continueLabel,
+  rereadHref,
 }: {
   charter: { signer_name: string; company: string; siret: string; accepted_at: string };
+  /** Suite : documents de l'inscription, ou espace pro pour un artisan déjà inscrit. */
+  continueHref: string;
+  continueLabel: string;
+  rereadHref: string;
 }) {
   const signedAt = new Date(charter.accepted_at);
   const date = signedAt.toLocaleDateString("fr-FR", {
@@ -63,14 +70,14 @@ export function CharterDone({
         ))}
       </dl>
       <Link
-        href={"/pro/onboarding/documents" as Route}
+        href={continueHref as Route}
         className="flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-primary px-6 font-bold text-white hover:bg-primary-hover"
       >
-        {t.next}
+        {continueLabel}
         <ArrowRight aria-hidden="true" className="size-5" strokeWidth={2.4} />
       </Link>
       <Link
-        href={"/pro/onboarding/charte?relire=1" as Route}
+        href={rereadHref as Route}
         className="text-sm font-bold text-primary-strong hover:underline"
       >
         {t.reread}
