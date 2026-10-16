@@ -10,8 +10,17 @@ import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import { getOnboardingContext } from "./context";
 
-/** Signature de la charte qualité (ADR 0104) : contrôlée ici, puis enregistrée par la base. */
-export async function acceptCharter(_prev: FormState, formData: FormData): Promise<FormState> {
+export type CharterDestination = "onboarding" | "espace";
+
+/**
+ * Signature de la charte qualité (ADR 0104) : contrôlée ici, puis enregistrée par la base.
+ * Pendant l'inscription, ou pour un artisan déjà inscrit à qui l'espace pro la demande (ADR 0109).
+ */
+export async function acceptCharter(
+  destination: CharterDestination,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
   const parsed = charterAcceptanceSchema.safeParse({
     version: text(formData, "version"),
     rules: formData.getAll("rule").filter((v): v is string => typeof v === "string"),
@@ -43,6 +52,10 @@ export async function acceptCharter(_prev: FormState, formData: FormData): Promi
     return { error: error.code === "22023" ? messages.charterOutdated : fr.errors.generic };
   }
 
+  if (destination === "espace") {
+    revalidatePath("/pro", "layout");
+    redirect("/pro/charte" as Route);
+  }
   revalidatePath("/pro/onboarding", "layout");
   redirect("/pro/onboarding/charte" as Route);
 }

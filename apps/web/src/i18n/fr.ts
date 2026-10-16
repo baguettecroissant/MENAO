@@ -2083,6 +2083,13 @@ export const fr = {
           ? "Noté par 1 artisan après un chantier."
           : `Noté par ${n} artisans après leurs chantiers.`,
     },
+    /** Charte qualité demandée à un artisan déjà inscrit (ADR 0109), en tutoiement comme la charte. */
+    charterRenewal: {
+      title: "Charte qualité Menao",
+      intro:
+        "Nouveau : la charte qualité Menao. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
+      continue: "Accéder à mon espace pro",
+    },
     /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan. */
     score: {
       title: "Votre score MENAO",

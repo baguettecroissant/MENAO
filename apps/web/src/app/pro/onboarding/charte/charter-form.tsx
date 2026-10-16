@@ -16,7 +16,7 @@ import {
 } from "@/components/pro/charter/charter-parts";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
-import { acceptCharter } from "@/lib/artisan/charter-actions";
+import { acceptCharter, type CharterDestination } from "@/lib/artisan/charter-actions";
 import { SignaturePad } from "./signature-pad";
 
 const t = fr.pro.onboarding.charter;
@@ -35,10 +35,16 @@ const inputClass =
  */
 export function CharterForm({
   defaults,
+  destination = "onboarding",
 }: {
   defaults: { name: string; company: string; siret: string };
+  /** Inscription pro, ou espace pro pour un artisan déjà inscrit (ADR 0109). */
+  destination?: CharterDestination;
 }) {
-  const [state, action, pending] = useActionState(acceptCharter, initialFormState);
+  const [state, action, pending] = useActionState(
+    acceptCharter.bind(null, destination),
+    initialFormState,
+  );
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [name, setName] = useState(defaults.name);
   const [company, setCompany] = useState(defaults.company);

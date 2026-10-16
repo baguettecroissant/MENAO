@@ -1,5 +1,6 @@
 import "server-only";
 import {
+  CHARTER_VERSION,
   MONITORED_DOCUMENT_TYPES,
   artisanVisibility,
   availabilityStatus,
@@ -20,8 +21,9 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Espace pro (tableau de bord, demandes, chantiers) : artisans validés (ou suspendus, qui gardent
- * l'accès à leurs chantiers). Les autres artisans finissent leur inscription. Mis en cache pour la
- * durée de la requête, partagé entre le layout et les pages.
+ * l'accès à leurs chantiers). Les autres artisans finissent leur inscription. Charte qualité en
+ * vigueur signée d'abord (ADR 0109). Mis en cache pour la durée de la requête, partagé entre le
+ * layout et les pages.
  */
 export const requireProSpace = cache(async () => {
   const supabase = await createClient();
@@ -39,6 +41,14 @@ export const requireProSpace = cache(async () => {
   if (!artisan || (artisan.status !== "valide" && artisan.status !== "suspendu")) {
     redirect("/pro/onboarding");
   }
+  // Artisan inscrit avant la charte, ou nouvelle version de la charte : signature d'abord.
+  const { data: charter } = await supabase
+    .from("artisan_charter_acceptances")
+    .select("id")
+    .eq("artisan_id", artisan.id)
+    .eq("version", CHARTER_VERSION)
+    .maybeSingle();
+  if (!charter) redirect("/pro/charte");
 
   const today = parisToday();
   const [{ data: profile }, { data: subscription }, { data: documents }, { data: absences }] =
