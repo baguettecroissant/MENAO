@@ -50,7 +50,7 @@ test("compte Google à finaliser : CGU acceptées, puis espace client", async ({
       app_metadata: { signup_pending: true },
     },
   });
-  expect(created.ok()).toBe(true);
+  expect(created.status(), await created.text()).toBe(200);
 
   await page.goto("/connexion");
   await page.getByLabel("Adresse e-mail").fill(email);

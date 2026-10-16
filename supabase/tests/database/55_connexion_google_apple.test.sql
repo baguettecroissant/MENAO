@@ -6,16 +6,16 @@ create extension if not exists pgtap with schema extensions;
 select * from no_plan();
 
 insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values
-  ('c5500000-0000-4000-8000-000000000001', 'google.nom@example.test', false, now(),
+  ('c5500000-0000-4000-8000-000000000001', 'oauth55.google.nom@example.test', false, now(),
    '{"provider":"google","providers":["google"]}', '{"full_name":"Camille Exemple","email_verified":true}'),
-  ('c5500000-0000-4000-8000-000000000002', 'google.prenom@example.test', false, now(),
+  ('c5500000-0000-4000-8000-000000000002', 'oauth55.google.prenom@example.test', false, now(),
    '{"provider":"google","providers":["google"]}', '{"given_name":"Alex","family_name":"Martin","full_name":"Alex Martin"}'),
-  ('c5500000-0000-4000-8000-000000000003', 'apple.masque@example.test', false, now(),
+  ('c5500000-0000-4000-8000-000000000003', 'oauth55.apple.masque@example.test', false, now(),
    '{"provider":"apple","providers":["apple"]}', '{}'),
-  ('c5500000-0000-4000-8000-000000000004', 'email@example.test', false, now(),
+  ('c5500000-0000-4000-8000-000000000004', 'oauth55.email@example.test', false, now(),
    '{"provider":"email","providers":["email"]}',
    '{"first_name":"Sam","last_name":"Exemple","legal":{"cgu":"v1","confidentialite":"v1"}}'),
-  ('c5500000-0000-4000-8000-000000000005', 'artisan@example.test', false, now(),
+  ('c5500000-0000-4000-8000-000000000005', 'oauth55.artisan@example.test', false, now(),
    '{"provider":"email","providers":["email"]}', '{"account_type":"artisan","first_name":"Lou"}');
 
 create function pg_temp.connecter(uid uuid, anonyme boolean default false) returns void language sql as $$
