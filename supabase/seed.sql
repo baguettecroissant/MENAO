@@ -41,6 +41,8 @@ from (values
   -- Artisans visibles (validés, en essai, paiements actifs) : résultats de recherche (F-09).
   ('a0000000-0000-4000-8000-000000000011'::uuid, 'plombier-nice@example.test', 'artisan', 'Noé', 'Exemple', null),
   ('a0000000-0000-4000-8000-000000000012'::uuid, 'plombier-dispo@example.test', 'artisan', 'Inès', 'Exemple', null),
+  -- Artisan validé inscrit avant la charte qualité, réservé au test e2e de sa signature (ADR 0109).
+  ('a0000000-0000-4000-8000-000000000014'::uuid, 'charte@example.test', 'artisan', 'Maxime', 'Exemple', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -158,3 +160,16 @@ from public.artisans a,
           ('rc_pro', null, current_date + 250, 'Assurances Exemple', 'RC-2222', null),
           ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
 where a.id in ('b0000000-0000-4000-8000-000000000011', 'b0000000-0000-4000-8000-000000000012');
+
+-- Artisan validé sans charte signée : l'espace pro lui demande de la signer (ADR 0109).
+insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva, zone_mode, submitted_at)
+values ('b0000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000014', 'valide', 'CHARTE EXEMPLE',
+  now(), true, true, 'communes', now());
+
+-- Charte qualité (ADR 0104) signée par les autres artisans du jeu de données : ils ouvrent leur
+-- espace pro sans passer par la signature.
+insert into public.artisan_charter_acceptances (artisan_id, version, rules_count, signer_name, company, siret, signature_path)
+select a.id, 'V5', 25, 'Signataire Exemple', coalesce(a.raison_sociale, 'ENTREPRISE EXEMPLE'),
+  coalesce(a.siret, '00000001800010'), 'M 10 10 L 200 80 L 400 40'
+from public.artisans a
+where a.id <> 'b0000000-0000-4000-8000-000000000014';
