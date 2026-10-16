@@ -1194,6 +1194,22 @@ export const fr = {
     forgotPassword: "Mot de passe oublié ?",
     passwordUpdated: "Votre mot de passe a été modifié.",
     signedOutEverywhere: "Vous êtes déconnecté de tous vos appareils.",
+    oauthError:
+      "La connexion avec Google ou Apple n'a pas abouti. Réessayez, ou utilisez votre adresse e-mail.",
+  },
+  /** Connexion avec Google ou Apple, pour les clients (ADR 0108). */
+  oauth: {
+    google: "Continuer avec Google",
+    apple: "Continuer avec Apple",
+    orEmail: "ou avec votre adresse e-mail",
+    group: "Se connecter avec un compte Google ou Apple",
+  },
+  completeSignup: {
+    title: "Finaliser mon compte",
+    intro: (provider: string, email: string | null) =>
+      `Vous êtes connecté avec ${provider}${email ? ` (${email})` : ""}. Vérifiez vos informations et acceptez les conditions d'utilisation pour accéder à votre espace.`,
+    submit: "Accéder à mon espace",
+    notYou: "Ce n'est pas vous ? Se déconnecter",
   },
   forgotPassword: {
     title: "Mot de passe oublié",

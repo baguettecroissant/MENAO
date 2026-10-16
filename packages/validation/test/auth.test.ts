@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  completeSignupSchema,
   magicLinkSchema,
   newPasswordSchema,
   normalizePhone,
@@ -18,6 +19,32 @@ const valid = {
   acceptTerms: true,
   marketingOptIn: false,
 };
+
+describe("completeSignupSchema (Google ou Apple, ADR 0108)", () => {
+  const input = {
+    firstName: " Camille ",
+    lastName: "Exemple",
+    phone: "06 39 98 00 01",
+    acceptTerms: true,
+    marketingOptIn: true,
+  };
+
+  it("sans adresse ni mot de passe : ils viennent du fournisseur", () => {
+    expect(completeSignupSchema.parse(input)).toEqual({
+      firstName: "Camille",
+      lastName: "Exemple",
+      phone: "+33639980001",
+      acceptTerms: true,
+      marketingOptIn: true,
+    });
+  });
+
+  it("exige les CGU et le nom", () => {
+    const r = completeSignupSchema.safeParse({ ...input, acceptTerms: false, lastName: "" });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues.map((i) => i.path[0]).sort()).toEqual(["acceptTerms", "lastName"]);
+  });
+});
 
 describe("signUpSchema", () => {
   it("accepte une inscription valide et normalise les champs", () => {

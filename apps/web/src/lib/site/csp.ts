@@ -5,7 +5,8 @@
  * et des nonces imposeraient un rendu dynamique de chaque page (fin des pages statiques, spec §4.4).
  * La politique ferme tout le reste : origines de scripts, d'images et de connexions limitées à
  * celles que le site utilise, aucun cadre (ni contenu ni inclusion du site ailleurs), aucun plugin,
- * envois de formulaires limités au site et aux pages de paiement et de signature.
+ * envois de formulaires limités au site, aux pages de paiement et de signature, et à la connexion
+ * avec Google ou Apple.
  */
 export type CspOptions = {
   supabaseUrl: string;
@@ -26,6 +27,9 @@ const FORM_TARGETS = [
   "https://docuseal.eu",
   "https://docuseal.com",
 ];
+// Connexion avec Google ou Apple (ADR 0108) : le bouton envoie un formulaire, redirigé vers
+// Supabase Auth puis vers la page du fournisseur.
+const OAUTH_TARGETS = ["https://accounts.google.com", "https://appleid.apple.com"];
 
 /** Adresse de signalement des violations de Sentry, déduite du DSN (`…/api/<projet>/security/`). */
 export function sentryReportUri(dsn: string | undefined): string | null {
@@ -75,7 +79,7 @@ export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: 
     ["object-src", "'none'"],
     ["base-uri", "'self'"],
     ["manifest-src", "'self'"],
-    ["form-action", "'self'", ...FORM_TARGETS],
+    ["form-action", "'self'", ...FORM_TARGETS, supabase, ...OAUTH_TARGETS],
     ...(report ? ([["report-uri", report]] as [string, ...string[]][]) : []),
   ];
   return directives.map((d) => d.join(" ")).join("; ");

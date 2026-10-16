@@ -3,7 +3,9 @@
 import {
   LEGAL_DOCUMENT_VERSIONS,
   SIGNUP_REQUIRED_DOCUMENTS,
+  isOAuthProvider,
   roleFromAppMetadata,
+  signupPending,
 } from "@menao/core";
 import {
   artisanSelectionSchema,
@@ -18,6 +20,7 @@ import { fr } from "@/i18n/fr";
 import { confirmUrlFor } from "@/lib/auth/confirm-url";
 import { authErrorMessage } from "@/lib/auth/errors";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
+import { redirectToProvider } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/server";
 import { sendPagePath } from "./paths";
 
@@ -85,6 +88,27 @@ export async function signUpForRequest(
   return { success: t.checkEmail };
 }
 
+/**
+ * « Continuer avec Google / Apple » au moment de la demande (ADR 0108) : comme pour l'inscription
+ * par e-mail, un jeton de transfert rattachera le projet de la session anonyme au compte, à
+ * l'arrivée sur la page d'envoi (après « Finaliser mon compte » pour un nouveau compte).
+ */
+export async function continueWithProviderForRequest(
+  ctx: RequestContext,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const context = parseContext(ctx);
+  const provider = text(formData, "provider");
+  if (!context || !isOAuthProvider(provider)) return { error: fr.errors.generic };
+  const supabase = await createClient();
+  const { data: token, error } = await supabase.rpc("create_project_transfer", {
+    p_project_id: context.projectId,
+  });
+  if (error || !token) return { error: t.transferError };
+  return redirectToProvider(provider, sendPagePath(context.projectId, context.artisanIds, token));
+}
+
 /** Connexion à un compte existant : le projet de la session anonyme lui est rattaché. */
 export async function signInForRequest(
   ctx: RequestContext,
@@ -110,7 +134,12 @@ export async function signInForRequest(
   }
   const { error: claimError } = await supabase.rpc("claim_project", { p_token: token });
   if (claimError) return { error: t.transferError, values };
-  redirect(sendPagePath(context.projectId, context.artisanIds) as Route);
+  const target = sendPagePath(context.projectId, context.artisanIds);
+  // Compte Google ou Apple à finaliser (ADR 0108) : CGU d'abord, puis la page d'envoi.
+  if (signupPending(data.user.app_metadata)) {
+    redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
+  }
+  redirect(target as Route);
 }
 
 /** F-11 : envoi aux artisans choisis (règles et éligibilité vérifiées en base). */

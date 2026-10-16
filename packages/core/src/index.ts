@@ -39,3 +39,4 @@ export * from "./webhook";
 export * from "./reference";
 export * from "./ai-runs";
 export * from "./auth-errors";
+export * from "./oauth";

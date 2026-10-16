@@ -1,0 +1,44 @@
+# ADR 0108 — Connexion avec Google ou Apple pour les clients
+
+- Statut : accepté (site ; l'application mobile suivra)
+- Date : 16 octobre 2026
+
+## Contexte
+- **Spec** : « Connexion aussi par lien magique e-mail ; Apple/Google en V1.1 ».
+- **Demande** (16 octobre 2026) : l'utilisateur avance Google et Apple avant l'ouverture au public, **pour les clients seulement**. Leur compte se crée en pleine demande de devis, l'étape où l'on perd le plus de monde.
+- **Apple** : sur iPhone, une application qui propose Google doit aussi proposer « Se connecter avec Apple » (règle 4.8 de l'App Store). Les deux vont donc ensemble.
+- **Inscription par e-mail** : le nom, le téléphone, les newsletters et l'acceptation des CGU et de la politique de confidentialité (avec leur version) passent par les métadonnées lues par `app.after_auth_user_insert`. Google et Apple ne fournissent rien de tout cela, sauf parfois le nom.
+
+## Décision
+- **Où** :
+  - boutons « Continuer avec Google » et « Continuer avec Apple » sur la connexion, l'inscription client et l'étape compte de la demande de devis ;
+  - pas sur l'inscription pro : les artisans gardent l'inscription par e-mail (SIRET et CGV, ADR 0006). Un artisan dont l'adresse est la même peut tout de même se connecter avec Google, car Supabase rattache le fournisseur au compte existant.
+- **Flux** :
+  - PKCE côté serveur : la Server Action redirige vers Supabase Auth, puis vers le fournisseur ;
+  - retour sur `/auth/confirm` (échange du code), puis sur `next` ou l'accueil du rôle ;
+  - dans la demande de devis, un jeton de transfert rattache le projet de la session anonyme, comme pour l'inscription par e-mail (ADR 0014).
+- **Nouveau compte** :
+  - compte particulier, avec le marqueur `signup_pending` dans `app_metadata` (règle 7 : lisible dans le jeton, jamais modifiable par l'utilisateur) ;
+  - prénom et nom repris du fournisseur quand il les donne.
+- **« Finaliser mon compte »** (`/finaliser-compte`) :
+  - le client vérifie son nom, ajoute son téléphone s'il le souhaite, accepte les CGU et la politique de confidentialité, et choisit les newsletters, comme à l'inscription ;
+  - `complete_oauth_signup()` enregistre ces choix et retire le marqueur, puis le jeton est rafraîchi ;
+  - tant que ce n'est pas fait, le garde du site (`proxy.ts`) y ramène depuis les espaces protégés et la recherche.
+- **Activation** : `NEXT_PUBLIC_OAUTH_PROVIDERS` (« google,apple »). Vide, aucun bouton : on l'active une fois les fournisseurs configurés dans Supabase.
+- **CSP** : Supabase, `accounts.google.com` et `appleid.apple.com` sont ajoutés aux cibles des formulaires (redirections après l'envoi du bouton).
+
+## Configuration (à faire par l'équipe, hors du dépôt)
+- **Google Cloud** : identifiant OAuth de type « Application Web », avec l'adresse de retour `https://<projet>.supabase.co/auth/v1/callback`, et l'écran de consentement au nom de MENAO (domaine menao.fr). Identifiants iOS et Android pour l'application.
+- **Apple Developer** :
+  - Services ID et clé « Sign in with Apple » ;
+  - le secret client (un jeton signé) **expire au bout de 6 mois** et doit être renouvelé dans Supabase ;
+  - déclarer menao.fr et `notifications@menao.fr` dans le service de relais des adresses masquées. Sinon, les e-mails envoyés aux adresses `@privaterelay.appleid.com` sont rejetés.
+- **Supabase** (Auth > Providers) : activer Google et Apple, et coller les identifiants. Les secrets ne sont jamais dans le dépôt (règle 1).
+- **Vercel** : `NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple`, puis redéployer.
+
+## Conséquences
+- **`TODO(legal)`** :
+  - la politique de confidentialité doit citer Google et Apple comme fournisseurs d'identité (données reçues : nom, adresse e-mail) ;
+  - faire valider l'acceptation des CGU à l'étape « Finaliser mon compte ».
+- **Application mobile** : mêmes boutons et même écran « Finaliser mon compte » dans une prochaine PR (fenêtre sécurisée du téléphone, compatible avec Expo Go).
+- **Hors périmètre** : connexion des artisans par Google ou Apple à l'inscription, photo de profil du fournisseur.

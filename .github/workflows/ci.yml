@@ -121,6 +121,8 @@ jobs:
             echo "MAILPIT_URL=$(jq -r '.MAILPIT_URL // .INBUCKET_URL // "http://127.0.0.1:54324"' <<<"$STATUS")"
             echo "STRIPE_WEBHOOK_SECRET=whsec_menao_ci"
             echo "STRIPE_CONNECT_WEBHOOK_SECRET=whsec_menao_connect_ci"
+            # Boutons Google et Apple affichés ; la redirection vers le fournisseur est interceptée.
+            echo "NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple"
           } >> "$GITHUB_ENV"
       - name: Installer Chromium
         run: pnpm --filter web exec playwright install --with-deps chromium

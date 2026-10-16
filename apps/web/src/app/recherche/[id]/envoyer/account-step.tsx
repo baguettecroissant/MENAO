@@ -1,13 +1,16 @@
 "use client";
 
+import type { OAuthProvider } from "@menao/core";
 import { PASSWORD_MIN_LENGTH } from "@menao/validation";
 import { ShieldCheck } from "lucide-react";
 import { useActionState, useState } from "react";
 import { PasswordField, PhoneField } from "@/components/form-fields";
+import { OAuthButtons } from "@/components/oauth-buttons";
 import { Alert, Button, Card, CardTitle, CheckboxField, Field, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
 import {
+  continueWithProviderForRequest,
   signInForRequest,
   signUpForRequest,
   type RequestContext,
@@ -19,11 +22,24 @@ const s = fr.signUp;
 /**
  * F-08 : compte créé (ou connexion) au moment d'envoyer la demande, maquettes « Dernière étape » :
  * « Informations personnelles », « Créer mon espace client Menao », puis « Vous avez déjà un espace ».
+ * Au-dessus, « Continuer avec Google / Apple » (ADR 0108), pour un nouveau compte comme pour un
+ * compte existant.
  */
-export function AccountStep({ context }: { context: RequestContext }) {
+export function AccountStep({
+  context,
+  providers,
+}: {
+  context: RequestContext;
+  providers: readonly OAuthProvider[];
+}) {
   const [mode, setMode] = useState<"signup" | "signin">("signup");
+  const [oauthState, oauthAction] = useActionState(
+    continueWithProviderForRequest.bind(null, context),
+    initialFormState,
+  );
   return (
     <div className="flex flex-col gap-4">
+      <OAuthButtons providers={providers} action={oauthAction} error={oauthState.error} />
       {mode === "signup" ? <SignUpStep context={context} /> : <SignInStep context={context} />}
       <div className="flex flex-col items-start justify-between gap-3 rounded-card border border-primary/25 bg-primary-softer p-5 sm:flex-row sm:items-center">
         <div>
