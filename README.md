@@ -84,11 +84,12 @@ Une vraie version de MENAO sur l'iPhone, reliée au serveur Expo du Mac comme Ex
 
 Prérequis : compte Apple Developer, projet Expo rattaché (`EAS_PROJECT_ID` dans `apps/mobile/.env`), iPhone en **mode développeur** (Réglages, puis Confidentialité et sécurité, puis Mode développeur).
 
-Une seule fois, depuis `apps/mobile` :
+Une seule fois, depuis `apps/mobile`. L'outil EAS ne lit pas `.env` : l'identifiant du projet lui est passé par la variable `EAS_PROJECT_ID`, sinon il propose de créer un second projet Expo (à refuser).
 
 ```bash
-# Identifiant du projet pour les serveurs de build (lu dans .env, sans l'afficher).
-npx eas-cli env:create --name EAS_PROJECT_ID --value "$(grep '^EAS_PROJECT_ID=' .env | cut -d= -f2-)" \
+export EAS_PROJECT_ID="$(grep '^EAS_PROJECT_ID=' .env | cut -d= -f2-)"
+# Identifiant du projet pour les serveurs de build (sans l'afficher).
+npx eas-cli env:create --name EAS_PROJECT_ID --value "$EAS_PROJECT_ID" \
   --environment development --environment preview --environment production --visibility plaintext
 # Enregistrement de l'iPhone (QR code à ouvrir sur le téléphone).
 npx eas-cli device:create
