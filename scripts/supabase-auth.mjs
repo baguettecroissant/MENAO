@@ -10,7 +10,10 @@
 // Usage :
 //   export SUPABASE_ACCESS_TOKEN=…   (et RESEND_SMTP_KEY=… avec --smtp oui)
 //   node scripts/supabase-auth.mjs --project <ref> --site-url https://menao.fr \
-//     [--extra-urls https://menao-web.vercel.app,http://localhost:3000] [--smtp oui] [--dry-run oui]
+//     [--extra-urls https://menao-web.vercel.app,http://localhost:3000] \
+//     [--app-urls menao://**,exp://**] [--smtp oui] [--dry-run oui]
+// --app-urls : retours de l'application après Google ou Apple (ADR 0108), repris tels quels ;
+// exp://** (Expo Go) seulement sur staging.
 import { readFileSync } from "node:fs";
 
 const PRODUCTION_REF = "ffidtbwxiyqybyfdqmkj";
@@ -51,9 +54,16 @@ const extras = (args["extra-urls"] ?? "")
   .split(",")
   .map((u) => u.trim().replace(/\/+$/, ""))
   .filter(Boolean);
+const appUrls = (args["app-urls"] ?? "")
+  .split(",")
+  .map((u) => u.trim())
+  .filter(Boolean);
+if (project === PRODUCTION_REF && appUrls.some((u) => u.startsWith("exp:"))) {
+  throw new Error("exp:// (Expo Go) est réservé à staging");
+}
 const config = {
   site_url: siteUrl,
-  uri_allow_list: [siteUrl, ...extras].map((u) => `${u}/**`).join(","),
+  uri_allow_list: [...[siteUrl, ...extras].map((u) => `${u}/**`), ...appUrls].join(","),
 };
 for (const name of TEMPLATES) {
   const { subject, content } = template(name);

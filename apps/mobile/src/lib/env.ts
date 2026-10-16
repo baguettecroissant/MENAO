@@ -1,3 +1,5 @@
+import { enabledOAuthProviders } from "@menao/core";
+
 /** Variables publiques de l'application (fichier .env, préfixe EXPO_PUBLIC_, jamais de secret). */
 export const env = {
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
@@ -6,6 +8,12 @@ export const env = {
 };
 
 export const isConfigured = Boolean(env.supabaseUrl && env.supabaseKey);
+
+/**
+ * Connexion avec Google ou Apple (« google,apple », ADR 0108) : vide tant que les fournisseurs ne
+ * sont pas configurés dans Supabase, aucun bouton.
+ */
+export const oauthProviders = enabledOAuthProviders(process.env.EXPO_PUBLIC_OAUTH_PROVIDERS);
 
 /** Lien des e-mails d'authentification, ouvert sur le site (même forme que le site : `?next=`). */
 const confirmUrl = (next: string) => `${env.siteUrl}/auth/confirm?next=${encodeURIComponent(next)}`;

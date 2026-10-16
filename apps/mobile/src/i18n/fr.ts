@@ -47,6 +47,21 @@ export const fr = {
     resetSubmit: "Recevoir le lien",
     resetSent: "Si un compte existe pour cette adresse, un e-mail vient de vous être envoyé.",
   },
+  /** Connexion avec Google ou Apple, pour les clients (ADR 0108) : mêmes textes que le site. */
+  oauth: {
+    google: "Continuer avec Google",
+    apple: "Continuer avec Apple",
+    orEmail: "ou avec votre adresse e-mail",
+    error:
+      "La connexion avec Google ou Apple n'a pas abouti. Réessayez, ou utilisez votre adresse e-mail.",
+  },
+  completeSignup: {
+    title: "Finaliser mon compte",
+    intro: (provider: string, email: string | null) =>
+      `Vous êtes connecté avec ${provider}${email ? ` (${email})` : ""}. Vérifiez vos informations et acceptez les conditions d'utilisation pour accéder à votre espace.`,
+    submit: "Accéder à mon espace",
+    notYou: "Ce n'est pas vous ? Se déconnecter",
+  },
   // Barres d'onglets des maquettes (ADR 0084) : client « Accueil · Chantiers · (Recherche) ·
   // Documents · Messages », artisan « Accueil · Chantiers · (+) · Devis · Messages ».
   tabs: {

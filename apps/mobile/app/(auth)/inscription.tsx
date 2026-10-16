@@ -1,19 +1,29 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
+import { OAuthButtons } from "@/components/oauth-buttons";
 import { SignUpForm } from "@/components/sign-up-form";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
+import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signUpParticulier } from "@/lib/auth";
 import { siteLinks } from "@/lib/env";
 import { Body, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
-/** Inscription d'un particulier, comme sur le site. Les artisans s'inscrivent sur le site. */
+/**
+ * Inscription d'un particulier, comme sur le site : avec Google ou Apple (ADR 0108), ou par
+ * e-mail. Les artisans s'inscrivent sur le site.
+ */
 export default function SignUp() {
   return (
     <Screen header={<TopBar />}>
       <Title>{fr.auth.signUpTitle}</Title>
       <Notice tone="info">{fr.auth.signUpText}</Notice>
+      <OAuthButtons
+        onSignedIn={(pending) =>
+          pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
+        }
+      />
       <SignUpForm
         submitLabel={fr.auth.signUp}
         onSubmit={async (input) => {

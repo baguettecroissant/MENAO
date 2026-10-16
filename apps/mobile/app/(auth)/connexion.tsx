@@ -1,9 +1,11 @@
 import { Link, router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { LogoMark } from "@/components/logo";
+import { OAuthButtons } from "@/components/oauth-buttons";
 import { SignInForm } from "@/components/sign-in-form";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
+import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signIn } from "@/lib/auth";
 import { closeAuth } from "@/lib/navigation";
 import { resumePendingRequest } from "@/lib/requests";
@@ -11,9 +13,9 @@ import { Body, LinkText, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 /**
- * Connexion par e-mail et mot de passe (mêmes règles que le site), ouverte par-dessus l'écran
- * d'où l'on vient : on y revient une fois connecté. Une demande commencée sans compte (lien de
- * confirmation reçu par e-mail) reprend à l'écran d'envoi.
+ * Connexion avec Google ou Apple (ADR 0108), ou par e-mail et mot de passe (mêmes règles que le
+ * site), ouverte par-dessus l'écran d'où l'on vient : on y revient une fois connecté. Une demande
+ * commencée sans compte (lien de confirmation reçu par e-mail) reprend à l'écran d'envoi.
  */
 export default function SignInScreen() {
   return (
@@ -23,6 +25,11 @@ export default function SignInScreen() {
         <Title>{fr.auth.signInTitle}</Title>
         <Body muted>{fr.auth.signInText}</Body>
       </View>
+      <OAuthButtons
+        onSignedIn={(pending) =>
+          pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
+        }
+      />
       <SignInForm
         submitLabel={fr.auth.signIn}
         onSubmit={async (input) => {
