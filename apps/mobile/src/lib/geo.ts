@@ -36,3 +36,11 @@ export async function searchAddresses(
 ): Promise<AddressSuggestion[]> {
   return toAddressSuggestions(await search(addressSearchParams(q, citycode), signal));
 }
+
+/** Adresse de départ de la zone d'un artisan, dans toute la France (ADR 0113). */
+export async function searchStartAddress(
+  q: string,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> {
+  return toAddressSuggestions(await search(addressSearchParams(q), signal));
+}

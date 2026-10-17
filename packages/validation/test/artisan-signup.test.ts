@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   artisanAccountSchema,
   artisanOAuthAccountSchema,
+  artisanSignupMetadata,
   artisanSignupProfileSchema,
   emailCodeSchema,
 } from "../src/artisan-signup";
@@ -66,6 +67,24 @@ describe("artisanSignupProfileSchema", () => {
     expect(
       artisanSignupProfileSchema.safeParse({ ...profile, assujettiTva: undefined }).success,
     ).toBe(false);
+  });
+});
+
+describe("artisanSignupMetadata", () => {
+  it("met les choix du parcours dans la forme lue par la base", () => {
+    expect(artisanSignupMetadata(artisanSignupProfileSchema.parse(profile))).toEqual({
+      trade_codes: ["plombier", "chauffagiste"],
+      assujetti_tva: false,
+      is_dirigeant: true,
+      zone: {
+        mode: "rayon",
+        base_label: "12 Avenue des Oliviers 06100 Nice",
+        base_citycode: "06088",
+        lon: 7.26,
+        lat: 43.72,
+        radius_km: 20,
+      },
+    });
   });
 });
 

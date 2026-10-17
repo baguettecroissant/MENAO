@@ -10,9 +10,9 @@ import {
 import {
   artisanAccountSchema,
   artisanOAuthAccountSchema,
+  artisanSignupMetadata,
   artisanSignupProfileSchema,
   emailCodeSchema,
-  type ArtisanSignupProfile,
 } from "@menao/validation";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
@@ -34,23 +34,6 @@ export type ArtisanSignupState = {
   /** Compte créé : code envoyé à cette adresse. */
   codeSentTo?: string;
 };
-
-/** Choix du parcours, sous la forme lue par la base (app.apply_artisan_signup). */
-function signupMetadata(profile: ArtisanSignupProfile) {
-  return {
-    trade_codes: profile.tradeCodes,
-    assujetti_tva: profile.assujettiTva,
-    is_dirigeant: profile.isDirigeant,
-    zone: {
-      mode: profile.zone.mode,
-      base_label: profile.zone.baseLabel,
-      base_citycode: profile.zone.baseCitycode,
-      lon: profile.zone.lon,
-      lat: profile.zone.lat,
-      radius_km: profile.zone.radiusKm,
-    },
-  };
-}
 
 const legalVersions = () =>
   Object.fromEntries(
@@ -86,7 +69,7 @@ export async function signUpArtisan(input: {
         siret: profile.data.siret,
         marketing_opt_in: a.marketingOptIn,
         legal: legalVersions(),
-        signup: signupMetadata(profile.data),
+        signup: artisanSignupMetadata(profile.data),
       },
     },
   });
@@ -164,7 +147,7 @@ export async function completeArtisanOAuthSignup(input: {
     p_marketing_opt_in: a.marketingOptIn,
     p_legal: legalVersions(),
     p_siret: profile.data.siret,
-    p_signup: signupMetadata(profile.data),
+    p_signup: artisanSignupMetadata(profile.data),
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
   await supabase.auth.refreshSession();
