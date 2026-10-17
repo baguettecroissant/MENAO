@@ -55,10 +55,15 @@ export function GuestAccount() {
           <IconTile icon={HardHat} />
           <View style={styles.rowText}>
             <Text style={styles.heading}>{fr.guest.artisanTitle}</Text>
-            {/* Règle 10 : aucun lien vers l'inscription pro ni l'abonnement [À VALIDER]. */}
+            {/* Règle 10 : l'inscription pro, jamais l'abonnement (ADR 0113). */}
             <Body muted>{fr.guest.artisanText}</Body>
           </View>
         </View>
+        <Button
+          label={fr.guest.artisanCta}
+          variant="secondary"
+          onPress={() => router.push("/pro-inscription")}
+        />
       </Card>
       <Card>
         <View style={styles.row}>

@@ -17,6 +17,26 @@ export const artisanSignupProfileSchema = z.object({
 });
 export type ArtisanSignupProfile = z.output<typeof artisanSignupProfileSchema>;
 
+/**
+ * Choix du parcours sous la forme lue par la base (`app.apply_artisan_signup`) : objet « signup »
+ * des métadonnées d'inscription, ou paramètre de `complete_artisan_oauth_signup`.
+ */
+export function artisanSignupMetadata(profile: ArtisanSignupProfile) {
+  return {
+    trade_codes: profile.tradeCodes,
+    assujetti_tva: profile.assujettiTva,
+    is_dirigeant: profile.isDirigeant,
+    zone: {
+      mode: profile.zone.mode,
+      base_label: profile.zone.baseLabel,
+      base_citycode: profile.zone.baseCitycode,
+      lon: profile.zone.lon,
+      lat: profile.zone.lat,
+      radius_km: profile.zone.radiusKm,
+    },
+  };
+}
+
 const phoneRequired = (v: { phone?: string }) => v.phone !== undefined;
 const cgv = z.literal(true, { error: messages.cgvRequired });
 

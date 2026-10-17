@@ -7,18 +7,24 @@ import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signUpParticulier } from "@/lib/auth";
 import { siteLinks } from "@/lib/env";
-import { Body, LinkText, Notice, Screen, Title } from "@/ui";
+import { Body, LinkText, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 /**
  * Inscription d'un particulier, comme sur le site : avec Google ou Apple (ADR 0108), ou par
- * e-mail. Les artisans s'inscrivent sur le site.
+ * e-mail. Les artisans ont leur propre parcours (ADR 0113).
  */
 export default function SignUp() {
   return (
     <Screen header={<TopBar />}>
       <Title>{fr.auth.signUpTitle}</Title>
-      <Notice tone="info">{fr.auth.signUpText}</Notice>
+      <View style={styles.pro}>
+        <Body muted>{fr.auth.signUpText}</Body>
+        <LinkText
+          label={fr.auth.proSignUpLink}
+          onPress={() => router.replace("/pro-inscription")}
+        />
+      </View>
       <OAuthButtons
         onSignedIn={(pending) =>
           pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
@@ -42,5 +48,6 @@ export default function SignUp() {
 }
 
 const styles = StyleSheet.create({
+  pro: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing(2) },
   footer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing(2) },
 });

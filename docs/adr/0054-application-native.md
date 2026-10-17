@@ -28,7 +28,7 @@
 - **Authentification** : même projet Supabase et mêmes règles que le site.
   - Mêmes schémas Zod (`packages/validation`) et mêmes messages d'erreur (`authErrorKind`, partagé avec le site).
   - Les particuliers s'inscrivent dans l'app, avec les mêmes métadonnées que sur le site : profil et versions des documents légaux acceptés.
-  - Les artisans s'inscrivent sur le site, car le parcours demande le SIRET, les documents et Stripe.
+  - Les artisans s'inscrivaient sur le site ; depuis le 17 octobre 2026, ils s'inscrivent aussi dans l'app (ADR 0113), sans abonnement.
   - Les liens des e-mails (confirmation, nouveau mot de passe) s'ouvrent sur le site.
 - **Session** gardée dans le trousseau chiffré du téléphone (expo-secure-store : Keychain sur iPhone, Keystore sur Android).
   - Elle est découpée en morceaux de 1 800 caractères, car une entrée est limitée à environ 2 Ko.
@@ -58,5 +58,5 @@
 - À régler avant la publication (6f) :
   - **Suppression du compte depuis l'app** : Apple l'exige dès qu'une app permet de créer un compte (règle 5.1.1(v)). Elle passera par la fonction `request_account_deletion`, déjà utilisée par le site.
   - **Comptes développeur** Apple (99 $ par an) et Google (25 $ une fois) : décision du porteur de projet.
-  - **Mention « inscription des artisans sur le site »** à l'écran d'inscription : à confirmer au regard des règles des stores sur les achats hors de l'app **[À VALIDER]**.
+  - **Mention « inscription des artisans sur le site »** : sans objet depuis l'inscription artisan dans l'app (ADR 0113).
 - À chaque montée de version d'Expo, lancer `npx expo install --check` dans `apps/mobile` et mettre à jour les versions fixées.

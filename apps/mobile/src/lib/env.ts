@@ -33,6 +33,7 @@ export function requestConfirmUrl(projectId: string, artisanIds: string[], token
 export const siteLinks = {
   terms: `${env.siteUrl}/cgu`,
   privacy: `${env.siteUrl}/confidentialite`,
+  cgvArtisans: `${env.siteUrl}/cgv-artisans`,
   faq: `${env.siteUrl}/faq`,
   contact: `${env.siteUrl}/contact`,
   resetPassword: confirmUrl("/nouveau-mot-de-passe"),

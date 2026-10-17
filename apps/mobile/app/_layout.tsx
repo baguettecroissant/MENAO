@@ -4,13 +4,14 @@ import {
   GoogleSans_700Bold,
   useFonts,
 } from "@expo-google-fonts/google-sans";
-import { signupPending } from "@menao/core";
+import { ARTISAN_SIGNUP_DRAFT_KEY, signupPending } from "@menao/core";
 import { router, Stack, usePathname, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PushNotifications } from "@/components/push-notifications";
+import { kv } from "@/lib/kv";
 import { SessionProvider, useSession } from "@/lib/session";
 import { UnreadProvider } from "@/lib/unread";
 
@@ -53,7 +54,8 @@ function Root({ ready }: { ready: boolean }) {
 
 /**
  * Compte Google ou Apple à finaliser (ADR 0108) : « Finaliser mon compte » s'affiche tant que les
- * CGU ne sont pas acceptées, même à la réouverture de l'application, comme le garde du site.
+ * CGU ne sont pas acceptées, même à la réouverture de l'application, comme le garde du site ; ou
+ * l'inscription artisan, si elle a été commencée sur ce téléphone (ADR 0113).
  */
 function SignupGate() {
   const { session, signedIn } = useSession();
@@ -61,7 +63,18 @@ function SignupGate() {
   const ready = Boolean(useRootNavigationState()?.key);
   const pending = signedIn && signupPending(session?.user.app_metadata);
   useEffect(() => {
-    if (ready && pending && pathname !== "/finaliser-compte") router.replace("/finaliser-compte");
+    if (!ready || !pending || SIGNUP_SCREENS.includes(pathname)) return;
+    let active = true;
+    // Inscription artisan commencée sur ce téléphone (ADR 0113) : elle se finalise dans son
+    // propre parcours, pas dans « Finaliser mon compte » (compte client).
+    kv.get(ARTISAN_SIGNUP_DRAFT_KEY).then((draft) => {
+      if (active) router.replace(draft ? "/pro-inscription" : "/finaliser-compte");
+    });
+    return () => {
+      active = false;
+    };
   }, [ready, pending, pathname]);
   return null;
 }
+
+const SIGNUP_SCREENS = ["/finaliser-compte", "/pro-inscription"];
