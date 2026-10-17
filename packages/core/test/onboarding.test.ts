@@ -124,6 +124,7 @@ const documentsOk = {
   decennale: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-01-01" },
   rc_pro: { status: "valide" as const, dateEmission: null, dateFin: "2027-01-01" },
   identite: { status: "en_attente" as const, dateEmission: null, dateFin: null },
+  urssaf: { status: "en_attente" as const, dateEmission: "2026-09-15", dateFin: null },
 };
 
 describe("documents (F-14 étape 4)", () => {
@@ -160,12 +161,29 @@ describe("documents (F-14 étape 4)", () => {
     expect(documentIsValid("kbis", undefined, today)).toBe(false);
   });
 
-  it("étape documents terminée avec les 4 documents valides", () => {
+  it("attestation URSSAF de moins de 6 mois (ADR 0115)", () => {
+    expect(documentIsValid("urssaf", documentsOk.urssaf, today)).toBe(true);
+    expect(
+      documentIsValid("urssaf", { ...documentsOk.urssaf, dateEmission: "2026-04-09" }, today),
+    ).toBe(true);
+    expect(
+      documentIsValid("urssaf", { ...documentsOk.urssaf, dateEmission: "2026-04-08" }, today),
+    ).toBe(false);
+    expect(documentIsValid("urssaf", { ...documentsOk.urssaf, dateEmission: null }, today)).toBe(
+      false,
+    );
+  });
+
+  it("étape documents terminée avec les 5 documents valides", () => {
     expect(onboardingProgress({ ...etapes123, documents: documentsOk }, today).documents).toBe(
       true,
     );
     const { identite: _absent, ...sansIdentite } = documentsOk;
     expect(onboardingProgress({ ...etapes123, documents: sansIdentite }, today).documents).toBe(
+      false,
+    );
+    const { urssaf: _sansUrssaf, ...sansUrssaf } = documentsOk;
+    expect(onboardingProgress({ ...etapes123, documents: sansUrssaf }, today).documents).toBe(
       false,
     );
   });
@@ -234,8 +252,8 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
   });
 
   it("compte les éléments restant avant l'envoi", () => {
-    expect(DOSSIER_ITEM_COUNT).toBe(7);
-    expect(dossierItemsLeft(vide, today)).toBe(7);
+    expect(DOSSIER_ITEM_COUNT).toBe(8);
+    expect(dossierItemsLeft(vide, today)).toBe(8);
     const profilFait = {
       ...entrepriseOk,
       tradeCount: 1,
@@ -244,7 +262,7 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
       radiusKm: 20,
       charterAccepted: true,
     };
-    expect(dossierItemsLeft(profilFait, today)).toBe(5);
+    expect(dossierItemsLeft(profilFait, today)).toBe(6);
     const complet = {
       ...profilFait,
       hasAvatar: true,
@@ -254,6 +272,7 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
         decennale: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-06-30" },
         rc_pro: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-06-30" },
         identite: { status: "en_attente" as const, dateEmission: null, dateFin: null },
+        urssaf: { status: "en_attente" as const, dateEmission: "2026-09-20", dateFin: null },
       },
     };
     expect(dossierItemsLeft(complet, today)).toBe(0);

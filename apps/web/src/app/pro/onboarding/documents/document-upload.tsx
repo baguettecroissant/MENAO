@@ -66,6 +66,24 @@ export function DocumentUpload({
               )}
             </div>
           )}
+          {type === "urssaf" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                id={id("dateEmission")}
+                label={t.dateEmission}
+                name="dateEmission"
+                type="date"
+                errors={errors.dateEmission}
+              />
+              <Field
+                id={id("numero")}
+                label={t.securityCode}
+                name="numero"
+                hint={t.securityCodeHint}
+                errors={errors.numero}
+              />
+            </div>
+          )}
           {type === "identite" && (
             <Field
               id={id("dateFin")}

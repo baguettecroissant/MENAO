@@ -3986,7 +3986,7 @@ export type Database = {
       client_cancel_reason: "plus_besoin" | "autre_artisan" | "delai" | "budget" | "autre";
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
-      document_type: "kbis" | "decennale" | "rc_pro" | "identite";
+      document_type: "kbis" | "decennale" | "rc_pro" | "identite" | "urssaf";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       message_kind: "texte" | "photo" | "fichier";
       notification_channel: "email" | "sms" | "push";
@@ -4236,7 +4236,7 @@ export const Constants = {
       client_cancel_reason: ["plus_besoin", "autre_artisan", "delai", "budget", "autre"],
       dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
-      document_type: ["kbis", "decennale", "rc_pro", "identite"],
+      document_type: ["kbis", "decennale", "rc_pro", "identite", "urssaf"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       message_kind: ["texte", "photo", "fichier"],
       notification_channel: ["email", "sms", "push"],

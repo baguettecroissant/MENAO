@@ -14,11 +14,19 @@ export const ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number]["key"];
 
-export const REQUIRED_DOCUMENT_TYPES = ["kbis", "decennale", "rc_pro", "identite"] as const;
+export const REQUIRED_DOCUMENT_TYPES = [
+  "kbis",
+  "decennale",
+  "rc_pro",
+  "identite",
+  "urssaf",
+] as const;
 export type RequiredDocumentType = (typeof REQUIRED_DOCUMENT_TYPES)[number];
 
 /** Le Kbis (ou extrait INSEE/RNE) doit dater de moins de 3 mois (F-14). */
 export const KBIS_MAX_AGE_MONTHS = 3;
+/** L'attestation de vigilance URSSAF vaut 6 mois à compter de son émission (ADR 0115). */
+export const URSSAF_MAX_AGE_MONTHS = 6;
 export const PRESENTATION_MIN_LENGTH = 100;
 
 export type DocumentSnapshot = {
@@ -79,6 +87,10 @@ export function documentIsValid(
       return doc.dateFin !== null && doc.dateFin >= day;
     case "identite":
       return doc.dateFin === null || doc.dateFin >= day;
+    case "urssaf":
+      return (
+        doc.dateEmission !== null && doc.dateEmission >= monthsBefore(today, URSSAF_MAX_AGE_MONTHS)
+      );
   }
 }
 

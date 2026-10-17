@@ -46,6 +46,20 @@ describe("documentMetadataSchema", () => {
     );
   });
 
+  it("attestation URSSAF : moins de 6 mois, code de sécurité obligatoire (ADR 0115)", () => {
+    expect(
+      schema.parse({ type: "urssaf", dateEmission: "2026-09-15", numero: " ABCD1234 " }),
+    ).toEqual({ type: "urssaf", dateEmission: "2026-09-15", numero: "ABCD1234" });
+    expect(
+      schema.safeParse({ type: "urssaf", dateEmission: "2026-03-01", numero: "ABCD1234" }).error
+        ?.issues[0]?.message,
+    ).toBe(messages.urssafTooOld);
+    expect(
+      schema.safeParse({ type: "urssaf", dateEmission: "2026-09-15", numero: "" }).error?.issues[0]
+        ?.message,
+    ).toBe(messages.required);
+  });
+
   it("pièce d'identité : date d'expiration facultative", () => {
     expect(schema.parse({ type: "identite" })).toEqual({ type: "identite" });
     expect(schema.parse({ type: "identite", dateFin: "" })).toEqual({ type: "identite" });

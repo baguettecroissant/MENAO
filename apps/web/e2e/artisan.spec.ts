@@ -68,8 +68,8 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(
     page.getByRole("heading", { level: 1, name: "Faire vérifier mon entreprise" }),
   ).toBeVisible();
-  await expect(page.getByText("1 sur 7")).toBeVisible();
-  await expect(page.getByText("Encore 6 éléments avant l'envoi.")).toBeVisible();
+  await expect(page.getByText("1 sur 8")).toBeVisible();
+  await expect(page.getByText("Encore 7 éléments avant l'envoi.")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Envoyer mon dossier en vérification" }),
   ).toBeDisabled();
@@ -180,6 +180,14 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await identite.getByLabel("Fichier").setInputFiles(files.pdf);
   await identite.getByRole("button", { name: "Déposer le document" }).click();
   await expect(identite.getByText("Déposé, en attente de vérification")).toBeVisible();
+
+  // Attestation de vigilance URSSAF (ADR 0115) : date d'émission et code de sécurité.
+  const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF" });
+  await urssaf.getByLabel("Date d'émission").fill(dates.recent);
+  await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
+  await urssaf.getByLabel("Fichier").setInputFiles(files.pdf);
+  await urssaf.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(urssaf.getByText("Déposé, en attente de vérification")).toBeVisible();
   await expect(kbis.getByRole("link", { name: "Voir le document" })).toHaveAttribute(
     "href",
     /token=/,

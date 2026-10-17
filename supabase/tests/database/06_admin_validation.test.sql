@@ -24,7 +24,8 @@ insert into public.artisan_documents (artisan_id, type, storage_path, mime_type,
 select a.id, d.type::public.document_type, a.id || '/' || d.type || '.pdf', 'application/pdf', 1000, d.emission, d.fin
 from public.artisans a,
   (values ('kbis', current_date - 10, null::date), ('decennale', null, current_date + 200),
-          ('rc_pro', null, current_date + 200), ('identite', null, null)) as d (type, emission, fin)
+          ('rc_pro', null, current_date + 200), ('identite', null, null),
+          ('urssaf', current_date - 20, null)) as d (type, emission, fin)
 where a.user_id = 'e1e1e1e1-0000-4000-8000-000000000001';
 insert into public.certifications (artisan_id, type, numero, date_fin)
   select id, 'rge', 'E-0001', current_date + 300 from public.artisans where user_id = 'e1e1e1e1-0000-4000-8000-000000000001';
@@ -61,7 +62,7 @@ set local role authenticated;
 
 select throws_ok(
   $$ select public.admin_decide_artisan((select id from public.artisans where user_id = 'e1e1e1e1-0000-4000-8000-000000000001'), 'valide') $$,
-  '22023', 'Les 4 documents doivent être validés et en cours de validité.',
+  '22023', 'Les 5 documents doivent être validés et en cours de validité.',
   'validation impossible tant que les documents ne sont pas validés');
 select throws_ok(
   $$ select public.admin_review_document((select id from public.artisan_documents where type = 'kbis' limit 1), 'refuse') $$,
@@ -70,11 +71,11 @@ select throws_ok(
 select lives_ok(
   $$ select public.admin_review_document(d.id, 'valide') from public.artisan_documents d
      where d.artisan_id = (select id from public.artisans where user_id = 'e1e1e1e1-0000-4000-8000-000000000001') $$,
-  'les 4 documents sont validés');
+  'les 5 documents sont validés');
 select results_eq(
   $$ select count(*)::int from public.artisan_documents
      where status = 'valide' and verified_by = 'e4e4e4e4-0000-4000-8000-000000000004' and verified_at is not null $$,
-  array[4], 'documents validés avec l''auteur et la date de vérification');
+  array[5], 'documents validés avec l''auteur et la date de vérification');
 select lives_ok(
   $$ select public.admin_verify_certification((select id from public.certifications limit 1), true) $$,
   'certification vérifiée');
@@ -112,8 +113,8 @@ select results_eq(
   $$ values ('brouillon'::text, 'Merci de déposer une attestation décennale lisible.'::text) $$,
   'complément : retour en brouillon avec le message pour l''artisan');
 select ok(
-  (select count(*) from public.audit_logs where actor_id = 'e4e4e4e4-0000-4000-8000-000000000004') = 7,
-  'journal d''audit : 4 documents, 1 certification, 2 décisions');
+  (select count(*) from public.audit_logs where actor_id = 'e4e4e4e4-0000-4000-8000-000000000004') = 8,
+  'journal d''audit : 5 documents, 1 certification, 2 décisions');
 select results_eq(
   $$ select decision::text from public.artisan_reviews order by created_at $$,
   $$ values ('valide'::text), ('complement') $$, 'historique des décisions');

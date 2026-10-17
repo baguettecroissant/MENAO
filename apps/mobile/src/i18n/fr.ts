@@ -181,6 +181,7 @@ export const fr = {
         "Attestation d'assurance décennale",
         "Attestation de responsabilité civile professionnelle",
         "Pièce d'identité du dirigeant",
+        "Attestation de vigilance URSSAF",
         "Votre photo et votre présentation",
       ],
       duration: "Environ 5 minutes, en photo depuis votre téléphone",
@@ -225,12 +226,14 @@ export const fr = {
       decennale: "Attestation d'assurance décennale",
       rc_pro: "Attestation de responsabilité civile professionnelle",
       identite: "Pièce d'identité du dirigeant",
+      urssaf: "Attestation de vigilance URSSAF",
     },
     documentHints: {
       kbis: "De moins de 3 mois",
       decennale: "En cours de validité",
       rc_pro: "En cours de validité",
       identite: "Carte d'identité ou passeport",
+      urssaf: "De moins de 6 mois",
     },
     states: {
       missing: "À ajouter",
@@ -254,6 +257,10 @@ export const fr = {
     replace: "Reprendre la photo",
     added: "Photo prête à envoyer",
     dateEmission: "Date de l'extrait",
+    dateEmissionUrssaf: "Date d'émission",
+    securityCode: "Code de sécurité",
+    securityCodeHint:
+      "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF.",
     dateFin: "Valable jusqu'au",
     dateFinIdentite: "Date d'expiration (facultatif)",
     datePlaceholder: "JJ/MM/AAAA",
@@ -1315,6 +1322,9 @@ export const fr = {
     account: "Mon compte",
     error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
     suspended: "Votre compte est suspendu. Contactez l'équipe MENAO.",
+    urssafMissing:
+      "Ajoutez votre attestation de vigilance URSSAF : elle est désormais demandée à tous les artisans MENAO.",
+    urssafAdd: "Ajouter mon attestation URSSAF",
     radiated: (motif: string | null) =>
       `Votre compte a été radié du réseau MENAO${motif ? ` : ${motif}` : ""}. Votre profil n'apparaît plus. Vous gardez l'accès à vos chantiers en cours et à vos factures.`,
     awaitingQuote: "En attente de devis",

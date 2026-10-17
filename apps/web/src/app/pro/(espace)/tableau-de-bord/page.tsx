@@ -29,6 +29,7 @@ export default async function DashboardPage() {
     suspensionReason,
     radiationReason,
     documentsToRenew,
+    urssafMissing,
   } = await requireProSpace();
   const onboarding = fr.pro.onboarding;
   const notices = [
@@ -40,6 +41,7 @@ export default async function DashboardPage() {
             : onboarding.status.suspendu,
         ]
       : []),
+    ...(urssafMissing && status !== "radie" ? [onboarding.documents.urssafMissing] : []),
     ...(documentsToRenew.length
       ? [
           onboarding.documents.expiringBanner(
