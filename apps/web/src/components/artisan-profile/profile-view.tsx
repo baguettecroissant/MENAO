@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from "react";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { ReviewList, type PublicReview } from "@/components/review/review-list";
-import { StatusBadge, Tag } from "@/components/ui";
+import { StatusBadge, Tag, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ArtisanProfile } from "@/lib/project/artisans";
 import { PhotoGallery } from "./photo-gallery";
@@ -81,6 +81,7 @@ export function ProfileHeader({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Title className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{title}</Title>
           <div className="flex flex-wrap items-center gap-2">
+            {profile.verified && <VerifiedBadge>{t.verifiedBadge}</VerifiedBadge>}
             <AvailabilityBadge profile={profile} />
             {response && (
               <Tag>
@@ -97,9 +98,15 @@ export function ProfileHeader({
           <InfoBox icon={<MapPin />} label={t.zone}>
             {zone}
           </InfoBox>
-          <InfoBox icon={<ShieldCheck />} label={t.insurance}>
-            {t.insuranceValue}
-          </InfoBox>
+          {profile.decennale_exempt ? (
+            <InfoBox icon={<ShieldCheck />} label={t.insuranceRcPro}>
+              {t.insuranceRcProValue}
+            </InfoBox>
+          ) : (
+            <InfoBox icon={<ShieldCheck />} label={t.insurance}>
+              {t.insuranceValue}
+            </InfoBox>
+          )}
         </dl>
         {actions}
       </div>
@@ -174,14 +181,33 @@ export function ProfileBody({
         )}
         <Section title={t.guarantees}>
           <ul className="flex flex-col gap-4">
-            <Guarantee icon={<ShieldCheck />} title={t.decennaleTitle}>
-              {profile.decennale?.valid_until
-                ? t.decennaleUntil(
-                    formatProfileDay(profile.decennale.valid_until),
-                    profile.decennale.insurer,
-                  )
-                : null}
-            </Guarantee>
+            {profile.verified && (
+              <Guarantee icon={<BadgeCheck />} title={t.verifiedTitle}>
+                {t.verifiedDetail(profile.decennale_exempt)}
+              </Guarantee>
+            )}
+            {profile.decennale_exempt ? (
+              <Guarantee icon={<ShieldCheck />} title={t.decennaleExemptTitle}>
+                {t.decennaleExemptDetail}
+              </Guarantee>
+            ) : (
+              <Guarantee icon={<ShieldCheck />} title={t.decennaleTitle}>
+                {profile.decennale?.valid_until
+                  ? t.decennaleUntil(
+                      formatProfileDay(profile.decennale.valid_until),
+                      profile.decennale.insurer,
+                    )
+                  : null}
+              </Guarantee>
+            )}
+            {profile.rc_pro?.valid_until && (
+              <Guarantee icon={<ShieldCheck />} title={t.rcProTitle}>
+                {t.decennaleUntil(
+                  formatProfileDay(profile.rc_pro.valid_until),
+                  profile.rc_pro.insurer,
+                )}
+              </Guarantee>
+            )}
             {profile.certifications.map((c) => (
               <Guarantee
                 key={`${c.type}-${c.numero}`}

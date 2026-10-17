@@ -1,5 +1,5 @@
 import { availability, parisToday, specialtiesPreview } from "@menao/core";
-import { BadgeCheck, BriefcaseBusiness, Check, MapPin } from "lucide-react-native";
+import { BadgeCheck, BriefcaseBusiness, Check, MapPin, ShieldCheck } from "lucide-react-native";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { fr } from "@/i18n/fr";
@@ -90,6 +90,12 @@ export function ArtisanTile({
               {distance ? ` · ${distance}` : ""}
             </Text>
           </View>
+          {artisan.verified ? (
+            <View style={styles.badge}>
+              <ShieldCheck size={13} color={colors["primary-strong"]} />
+              <Text style={styles.badgeText}>{t.verified}</Text>
+            </View>
+          ) : null}
           <View style={[styles.badge, avail.kind === "immediate" && styles.badgeNow]}>
             {avail.kind === "immediate" ? <View style={styles.dot} /> : null}
             <Text style={[styles.badgeText, avail.kind === "immediate" && styles.badgeTextNow]}>

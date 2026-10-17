@@ -84,15 +84,23 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
           <BadgeCheck size={18} color={colors.primary} />
         </View>
         {profile.company_name ? <Text style={styles.meta}>{profile.company_name}</Text> : null}
-        <View style={[styles.badge, avail.kind === "immediate" && styles.badgeNow]}>
-          {avail.kind === "immediate" ? <View style={styles.dot} /> : null}
-          <Text style={[styles.badgeText, avail.kind === "immediate" && styles.badgeTextNow]}>
-            {avail.kind === "paused"
-              ? t.unavailable
-              : avail.kind === "from"
-                ? fr.results.availableFrom(formatLongDate(avail.date))
-                : fr.results.availableNow}
-          </Text>
+        <View style={styles.badges}>
+          {profile.verified ? (
+            <View style={styles.badge}>
+              <ShieldCheck size={14} color={colors["primary-strong"]} />
+              <Text style={styles.badgeText}>{t.verifiedBadge}</Text>
+            </View>
+          ) : null}
+          <View style={[styles.badge, avail.kind === "immediate" && styles.badgeNow]}>
+            {avail.kind === "immediate" ? <View style={styles.dot} /> : null}
+            <Text style={[styles.badgeText, avail.kind === "immediate" && styles.badgeTextNow]}>
+              {avail.kind === "paused"
+                ? t.unavailable
+                : avail.kind === "from"
+                  ? fr.results.availableFrom(formatLongDate(avail.date))
+                  : fr.results.availableNow}
+            </Text>
+          </View>
         </View>
         <ScrollView
           horizontal
@@ -146,19 +154,39 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
           </Card>
         ) : null}
 
-        {profile.decennale?.valid_until ||
+        {profile.verified ||
+        profile.decennale_exempt ||
+        profile.decennale?.valid_until ||
+        profile.rc_pro?.valid_until ||
         profile.certifications.length > 0 ||
         profile.rge.length > 0 ? (
           <Card>
             <Text role="heading" style={styles.heading}>
               {t.guarantees}
             </Text>
-            {profile.decennale?.valid_until ? (
+            {profile.verified ? (
+              <Guarantee
+                title={t.verifiedTitle}
+                detail={t.verifiedDetail(profile.decennale_exempt)}
+              />
+            ) : null}
+            {profile.decennale_exempt ? (
+              <Guarantee title={t.decennaleExemptTitle} detail={t.decennaleExemptDetail} />
+            ) : profile.decennale?.valid_until ? (
               <Guarantee
                 title={t.decennaleTitle}
                 detail={t.decennaleUntil(
                   formatLongDate(profile.decennale.valid_until),
                   profile.decennale.insurer,
+                )}
+              />
+            ) : null}
+            {profile.rc_pro?.valid_until ? (
+              <Guarantee
+                title={t.rcProTitle}
+                detail={t.decennaleUntil(
+                  formatLongDate(profile.rc_pro.valid_until),
+                  profile.rc_pro.insurer,
                 )}
               />
             ) : null}
@@ -371,6 +399,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(2.5),
     paddingVertical: spacing(1),
   },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   badgeNow: { backgroundColor: colors["success-soft"] },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
   badgeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },

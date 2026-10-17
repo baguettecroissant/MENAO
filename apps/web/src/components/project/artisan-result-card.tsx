@@ -2,14 +2,15 @@ import { Briefcase, Check, MapPin } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
-import { StatusBadge, Tag } from "@/components/ui";
+import { StatusBadge, Tag, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 
 const t = fr.search.results;
 
 /**
  * Carte artisan des résultats (maquettes « Cartes alignées ») : photo, prénom, métier et
- * expérience, zone, disponibilité, spécialités, puis sélection pour la demande (F-11).
+ * expérience, zone, badge « Assuré et vérifié », disponibilité, spécialités, puis sélection pour
+ * la demande (F-11).
  */
 export function ArtisanResultCard({
   href = null,
@@ -25,6 +26,7 @@ export function ArtisanResultCard({
   moreSpecialties,
   selection,
   known = false,
+  verified = false,
   headingLevel = 2,
   className = "",
 }: {
@@ -44,6 +46,8 @@ export function ArtisanResultCard({
   selection: "selectable" | "sent" | "none";
   /** Artisan d'un chantier précédent (« Redemander un devis ») : mis en avant et présélectionné. */
   known?: boolean;
+  /** Badge « Assuré et vérifié » (ADR 0119). */
+  verified?: boolean;
   headingLevel?: 2 | 3;
   /** Largeur dans le carrousel des résultats sur téléphone. */
   className?: string;
@@ -82,6 +86,7 @@ export function ArtisanResultCard({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {known && <StatusBadge tone="primary">{t.knownArtisan}</StatusBadge>}
+          {verified && <VerifiedBadge>{t.verified}</VerifiedBadge>}
           {availableFrom ? (
             <StatusBadge tone="neutral">{t.availableFrom(availableFrom)}</StatusBadge>
           ) : (

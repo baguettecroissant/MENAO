@@ -603,6 +603,7 @@ export const fr = {
         ? `${communes.slice(0, 3).join(", ")} et ${communes.length - 3} autre${communes.length > 4 ? "s" : ""}`
         : communes.join(", "),
     distance: (km: string) => `à ${km} km`,
+    verified: "Assuré et vérifié",
     availableNow: "Dispo immédiate",
     availableFrom: (date: string) => `Disponible à partir du ${date}`,
     more: (n: number) => `+${n}`,
@@ -676,9 +677,18 @@ export const fr = {
     about: (name: string) => `À propos de ${name}`,
     expertise: "Expertises",
     guarantees: "Garanties & assurances",
+    verifiedBadge: "Assuré et vérifié",
+    verifiedTitle: "Assuré et vérifié par MENAO",
+    verifiedDetail: (exempt: boolean) =>
+      exempt
+        ? "Responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe MENAO."
+        : "Décennale, responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe MENAO.",
     decennaleTitle: "Assurance décennale vérifiée",
     decennaleUntil: (date: string, insurer: string | null) =>
       `Valable jusqu'au ${date}${insurer ? ` · ${insurer}` : ""}`,
+    decennaleExemptTitle: "Activité non soumise à la décennale",
+    decennaleExemptDetail: "Déclaration vérifiée par l'équipe MENAO",
+    rcProTitle: "Responsabilité civile professionnelle vérifiée",
     certificationTitle: (label: string) => `Certifié ${label}`,
     certificationDetail: (numero: string, date: string) =>
       `N° ${numero} · valable jusqu'au ${date}`,

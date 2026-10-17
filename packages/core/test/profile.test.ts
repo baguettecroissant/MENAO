@@ -11,6 +11,7 @@ const complete = {
   photoCount: 6,
   workTypeCount: 3,
   certificationCount: 1,
+  verified: true,
 };
 
 describe("conseils pour une fiche plus convaincante (F-10)", () => {
@@ -31,9 +32,18 @@ describe("conseils pour une fiche plus convaincante (F-10)", () => {
         photoCount: 1,
         workTypeCount: 0,
         certificationCount: 0,
+        verified: true,
       }),
     ).toEqual(["photo_profil", "realisations", "presentation", "specialites", "certifications"]);
     expect(profileTips({ ...complete, photoCount: 2 })).toEqual(["realisations"]);
     expect(profileTips({ ...complete, presentationLength: 299 })).toEqual(["presentation"]);
+  });
+
+  it("badge « Assuré et vérifié » manquant : premier conseil (ADR 0119)", () => {
+    expect(profileTips({ ...complete, verified: false })).toEqual(["assure_verifie"]);
+    expect(profileTips({ ...complete, verified: false, hasAvatar: false })).toEqual([
+      "assure_verifie",
+      "photo_profil",
+    ]);
   });
 });

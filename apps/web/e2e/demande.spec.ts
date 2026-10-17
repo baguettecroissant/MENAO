@@ -39,6 +39,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
+  // Badge « Assuré et vérifié » (ADR 0119) : documents du jeu de démonstration validés.
+  await expect(page.getByText("Assuré et vérifié").first()).toBeVisible();
 
   // Sélection : 1 à 3 artisans.
   const send = page.getByRole("button", { name: /^Envoyer ma demande/ });

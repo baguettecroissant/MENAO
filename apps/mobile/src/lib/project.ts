@@ -221,6 +221,8 @@ export type MatchedArtisan = {
     communes: string[];
   };
   specialties: { code: string; label: string }[];
+  /** Badge « Assuré et vérifié » (ADR 0119). */
+  verified: boolean;
 };
 
 export type ProjectResults = {
@@ -316,6 +318,7 @@ export async function matchArtisans(
       communes: row.zone_communes ?? [],
     },
     specialties: specialtiesSchema.catch([]).parse(row.specialties),
+    verified: row.verified === true,
   }));
 }
 

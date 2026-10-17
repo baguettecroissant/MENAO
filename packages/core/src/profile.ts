@@ -5,7 +5,12 @@ export const PROFILE_GOOD_PRESENTATION_LENGTH = 300;
 export const PROFILE_GOOD_PHOTO_COUNT = 3;
 
 export type ProfileTip =
-  "photo_profil" | "realisations" | "presentation" | "specialites" | "certifications";
+  | "assure_verifie"
+  | "photo_profil"
+  | "realisations"
+  | "presentation"
+  | "specialites"
+  | "certifications";
 
 /** Conseils encore à suivre, dans l'ordre de leur effet sur les demandes reçues. */
 export function profileTips(p: {
@@ -14,8 +19,11 @@ export function profileTips(p: {
   photoCount: number;
   workTypeCount: number;
   certificationCount: number;
+  /** Badge « Assuré et vérifié » obtenu (ADR 0119). */
+  verified: boolean;
 }): ProfileTip[] {
   const tips: ProfileTip[] = [];
+  if (!p.verified) tips.push("assure_verifie");
   if (!p.hasAvatar) tips.push("photo_profil");
   if (p.photoCount < PROFILE_GOOD_PHOTO_COUNT) tips.push("realisations");
   if (p.presentationLength < PROFILE_GOOD_PRESENTATION_LENGTH) tips.push("presentation");

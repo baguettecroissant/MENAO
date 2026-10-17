@@ -36,7 +36,16 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
 
   await page.getByRole("link", { name: "Voir le profil de Noé" }).click();
   await expect(page.getByRole("heading", { name: "Noé", level: 1 })).toBeVisible();
-  await expect(page.getByText(/Valable jusqu'au .* · Assurances Exemple/)).toBeVisible();
+  // Garanties (ADR 0119) : badge, décennale et RC Pro vérifiées, certification.
+  await expect(page.getByText("Assuré et vérifié par Menao")).toBeVisible();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "Assurance décennale vérifiée" }),
+  ).toContainText(/Valable jusqu'au .* · Assurances Exemple/);
+  await expect(
+    page
+      .getByRole("listitem")
+      .filter({ hasText: "Responsabilité civile professionnelle vérifiée" }),
+  ).toContainText(/Valable jusqu'au .* · Assurances Exemple/);
   await expect(page.getByText(/N° Q-11111/)).toBeVisible();
   await expect(page.getByText("25 km autour de Nice")).toBeVisible();
   // Ni téléphone, ni e-mail, ni SIRET, ni adresse de base.
