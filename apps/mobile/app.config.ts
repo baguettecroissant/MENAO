@@ -25,6 +25,10 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "fr.menao.app",
     supportsTablet: false,
+    // « Se connecter avec Apple » (ADR 0108) : fr.menao.app est l'identifiant principal du Services ID
+    // du site. Déclaré ici, EAS garde la fonction activée chez Apple au lieu de tenter de la retirer
+    // (refusé par Apple, et le bouton cesserait de fonctionner).
+    usesAppleSignIn: true,
     infoPlist: {
       // Chiffrement standard seulement (HTTPS, trousseau de l'iPhone) : exempté des règles
       // d'exportation, aucune déclaration à chaque build ni à la soumission.
