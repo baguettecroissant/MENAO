@@ -1315,6 +1315,8 @@ export const fr = {
     account: "Mon compte",
     error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
     suspended: "Votre compte est suspendu. Contactez l'équipe MENAO.",
+    radiated: (motif: string | null) =>
+      `Votre compte a été radié du réseau MENAO${motif ? ` : ${motif}` : ""}. Votre profil n'apparaît plus. Vous gardez l'accès à vos chantiers en cours et à vos factures.`,
     awaitingQuote: "En attente de devis",
     clients: (n: number) => (n <= 1 ? `${n} client` : `${n} clients`),
     revenue: "Encaissé ce mois",

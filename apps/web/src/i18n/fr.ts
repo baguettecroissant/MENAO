@@ -3385,6 +3385,8 @@ export const fr = {
         refuse: (motif: string | null) =>
           `Votre dossier a été refusé${motif ? ` : ${motif}` : ""}. Corrigez les éléments concernés puis renvoyez-le.`,
         suspendu: "Votre compte est suspendu. Contactez l'équipe MENAO.",
+        radie: (motif: string | null) =>
+          `Votre compte a été radié du réseau MENAO${motif ? ` : ${motif}` : ""}. Votre profil n'apparaît plus. Vous gardez l'accès à vos chantiers en cours et à vos factures ; pour toute question, contactez l'équipe MENAO.`,
         suspenduDocuments:
           "Votre compte est suspendu : une assurance obligatoire a expiré. Déposez l'attestation à jour dans « Documents » ; le compte sera réactivé dès sa validation.",
       },
@@ -4014,6 +4016,7 @@ export const fr = {
         valide: "Validé",
         refuse: "Refusé",
         suspendu: "Suspendu",
+        radie: "Radié",
       } as Record<string, string>,
     },
     activity: {
@@ -4045,6 +4048,20 @@ export const fr = {
       reactivated: "Suspension levée.",
       automatic:
         "Suspension automatique pour assurance expirée : elle sera levée dès qu'un nouveau document sera validé.",
+    },
+    /** Radiation : exclusion définitive (ADR 0114). */
+    radiation: {
+      title: "Radiation",
+      intro:
+        "Exclusion définitive du réseau MENAO (fraude, manquement grave à la charte). Le profil n'apparaît plus jamais ; l'artisan garde l'accès à ses chantiers en cours et à ses factures.",
+      reasonLabel: "Motif de la radiation (transmis à l'artisan)",
+      reasonRequired: "Indiquez le motif de la radiation.",
+      confirm: "Je confirme : la radiation est définitive et ne pourra pas être annulée.",
+      confirmRequired: "Cochez la confirmation : la radiation est définitive.",
+      submit: "Radier définitivement",
+      done: "Artisan radié.",
+      radiated: (date: string, reason: string | null) =>
+        `Radié le ${date}${reason ? ` : ${reason}` : ""}.`,
     },
     followUp: {
       search: "Rechercher",
@@ -4732,6 +4749,7 @@ export const fr = {
       valide: "Validés",
       refuse: "Refusés",
       suspendu: "Suspendus",
+      radie: "Radiés",
     },
     /** Statut d'un dossier, au singulier (badge de la fiche). */
     status: {
@@ -4740,6 +4758,7 @@ export const fr = {
       valide: "Validé",
       refuse: "Refusé",
       suspendu: "Suspendu",
+      radie: "Radié",
     },
     detail: {
       back: "Retour aux dossiers",

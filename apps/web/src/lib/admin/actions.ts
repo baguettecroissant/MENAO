@@ -140,6 +140,27 @@ export async function suspendArtisan(_prev: FormState, formData: FormData): Prom
   return { success: fr.admin.suspension.suspended };
 }
 
+/** Radiation définitive d'un artisan (ADR 0114) : motif transmis à l'artisan, confirmation. */
+export async function radiateArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "artisanId"));
+  if (!id.success) return { error: fr.errors.generic };
+  const values = { reason: text(formData, "reason") ?? "" };
+  if (!values.reason.trim()) {
+    return { fieldErrors: { reason: [fr.admin.radiation.reasonRequired] }, values };
+  }
+  if (formData.get("confirm") !== "on") {
+    return { fieldErrors: { confirm: [fr.admin.radiation.confirmRequired] }, values };
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_radiate_artisan", {
+    p_artisan_id: id.data,
+    p_reason: values.reason,
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  refresh(id.data);
+  return { success: fr.admin.radiation.done };
+}
+
 /** Levée d'une suspension décidée par l'équipe, jamais sans assurances à jour (base). */
 export async function reactivateArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = z.uuid().safeParse(text(formData, "artisanId"));

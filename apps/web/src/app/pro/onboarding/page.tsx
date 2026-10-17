@@ -73,6 +73,9 @@ export default async function OnboardingIndexPage() {
       {artisan.status === "suspendu" && artisan.suspension_reason !== "documents_expires" && (
         <Alert tone="error">{t.status.suspendu}</Alert>
       )}
+      {artisan.status === "radie" && (
+        <Alert tone="error">{t.status.radie(artisan.radiation_reason)}</Alert>
+      )}
 
       {validated && (
         <>
@@ -108,7 +111,7 @@ export default async function OnboardingIndexPage() {
 
       {editable && <p className="leading-relaxed text-muted-foreground">{d.lead}</p>}
 
-      {!validated && (
+      {!validated && artisan.status !== "radie" && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between text-sm font-medium text-muted-foreground">
             <span>{d.progressLabel}</span>

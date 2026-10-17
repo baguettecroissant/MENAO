@@ -6,7 +6,14 @@ import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 
 type Status = Database["public"]["Enums"]["artisan_status"];
-const STATUSES: Status[] = ["en_verification", "brouillon", "valide", "refuse", "suspendu"];
+const STATUSES: Status[] = [
+  "en_verification",
+  "brouillon",
+  "valide",
+  "refuse",
+  "suspendu",
+  "radie",
+];
 const t = fr.admin.list;
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",

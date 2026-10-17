@@ -20,8 +20,8 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Espace pro (tableau de bord, demandes, chantiers) : artisans validés (ou suspendus, qui gardent
- * l'accès à leurs chantiers). Les autres artisans finissent leur inscription. Charte qualité en
+ * Espace pro (tableau de bord, demandes, chantiers) : artisans validés (ou suspendus et radiés, qui
+ * gardent l'accès à leurs chantiers). Les autres artisans finissent leur inscription. Charte qualité en
  * vigueur signée d'abord (ADR 0109). Mis en cache pour la durée de la requête, partagé entre le
  * layout et les pages.
  */
@@ -35,10 +35,16 @@ export const requireProSpace = cache(async () => {
 
   const { data: artisan } = await supabase
     .from("artisans")
-    .select("id, status, suspension_reason, connect_charges_enabled, paused, available_from")
+    .select(
+      "id, status, suspension_reason, radiation_reason, connect_charges_enabled, paused, available_from",
+    )
     .eq("user_id", auth.claims.sub)
     .single();
-  if (!artisan || (artisan.status !== "valide" && artisan.status !== "suspendu")) {
+  // Un artisan radié garde, comme un suspendu, l'accès à ses chantiers et factures (ADR 0114).
+  if (
+    !artisan ||
+    (artisan.status !== "valide" && artisan.status !== "suspendu" && artisan.status !== "radie")
+  ) {
     redirect("/pro/onboarding");
   }
   // Artisan inscrit avant la charte, ou nouvelle version de la charte : signature d'abord.
@@ -90,6 +96,7 @@ export const requireProSpace = cache(async () => {
     artisanId: artisan.id,
     status: artisan.status,
     suspensionReason: artisan.suspension_reason,
+    radiationReason: artisan.radiation_reason,
     documentsToRenew,
     firstName: profile?.first_name ?? null,
     lastName: profile?.last_name ?? null,
