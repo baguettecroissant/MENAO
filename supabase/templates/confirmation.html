@@ -87,6 +87,23 @@
                     </td>
                   </tr>
                 </table>
+                <!-- Code à 6 chiffres : l'inscription artisan le fait saisir sans quitter la page
+                     (ADR 0110). Le lien reste valable pour tous. -->
+                <p style="margin: 20px 0 8px; font-size: 15px; line-height: 22px; color: #111728">
+                  Ou saisissez ce code sur MENAO&nbsp;:
+                </p>
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 30px;
+                    line-height: 38px;
+                    font-weight: 700;
+                    letter-spacing: 8px;
+                    color: #111728;
+                  "
+                >
+                  {{ .Token }}
+                </p>
                 <p style="margin: 16px 0 0; font-size: 13px; line-height: 20px; color: #636b78">
                   Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message.
                 </p>

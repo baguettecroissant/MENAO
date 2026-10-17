@@ -1,5 +1,10 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { homePathForRole, roleFromAppMetadata, signupPending } from "@menao/core";
+import {
+  homePathForRole,
+  isArtisanFinalizePath,
+  roleFromAppMetadata,
+  signupPending,
+} from "@menao/core";
 import { safeRedirectPath } from "@menao/validation";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
@@ -43,7 +48,9 @@ export async function GET(request: NextRequest) {
       const target = nextParam
         ? next
         : homePathForRole(roleFromAppMetadata(data.user.app_metadata));
-      if (signupPending(data.user.app_metadata)) {
+      // Compte à finaliser : « Finaliser mon compte », sauf depuis l'inscription artisan
+      // (ADR 0110), qui a sa propre finalisation.
+      if (signupPending(data.user.app_metadata) && !isArtisanFinalizePath(target)) {
         redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
       }
       redirect(target as Route);

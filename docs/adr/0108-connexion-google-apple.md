@@ -50,4 +50,5 @@
 - **`TODO(legal)`** :
   - la politique de confidentialité doit citer Google et Apple comme fournisseurs d'identité (données reçues : nom, adresse e-mail) ;
   - faire valider l'acceptation des CGU à l'étape « Finaliser mon compte ».
-- **Hors périmètre** : connexion des artisans par Google ou Apple à l'inscription, photo de profil du fournisseur.
+- **Hors périmètre** : photo de profil du fournisseur.
+- **Artisans** (17 octobre 2026) : Google et Apple sont aussi proposés à l'inscription artisan, avec leur propre finalisation (ADR 0110).

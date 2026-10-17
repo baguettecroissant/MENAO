@@ -710,6 +710,7 @@ export type Database = {
           experience_years: number | null;
           forme_juridique_code: string | null;
           id: string;
+          is_dirigeant: boolean | null;
           logo_path: string | null;
           nom_commercial: string | null;
           paused: boolean;
@@ -759,6 +760,7 @@ export type Database = {
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
+          is_dirigeant?: boolean | null;
           logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
@@ -807,6 +809,7 @@ export type Database = {
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
+          is_dirigeant?: boolean | null;
           logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
@@ -3510,6 +3513,18 @@ export type Database = {
           ratings: number;
           welcome: number;
         }[];
+      };
+      complete_artisan_oauth_signup: {
+        Args: {
+          p_first_name: string;
+          p_last_name: string;
+          p_legal: Json;
+          p_marketing_opt_in: boolean;
+          p_phone: string;
+          p_signup: Json;
+          p_siret: string;
+        };
+        Returns: undefined;
       };
       complete_notification: {
         Args: { p_error?: string; p_id: string; p_retry?: boolean; p_sent: boolean };

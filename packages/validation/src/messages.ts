@@ -18,6 +18,7 @@ export const messages = {
   cgvRequired: "Vous devez accepter les conditions générales de vente artisans.",
   phoneRequired: "Le téléphone est obligatoire pour un compte professionnel.",
   tradeRequired: "Choisissez au moins un métier.",
+  emailCodeInvalid: "Le code contient 6 chiffres.",
   experienceInvalid: "Nombre d'années invalide.",
   dateInvalid: "Date invalide.",
   dateExpired: "Cette date est déjà passée.",

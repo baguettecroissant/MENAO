@@ -1,16 +1,15 @@
 "use server";
 
 import {
-  ARTISAN_SIGNUP_REQUIRED_DOCUMENTS,
   LEGAL_DOCUMENT_VERSIONS,
   SIGNUP_REQUIRED_DOCUMENTS,
   homePathForRole,
+  isArtisanFinalizePath,
   isOAuthProvider,
   roleFromAppMetadata,
   signupPending,
 } from "@menao/core";
 import {
-  artisanSignUpSchema,
   completeSignupSchema,
   magicLinkSchema,
   newPasswordSchema,
@@ -38,7 +37,8 @@ const confirmUrl = `${env.NEXT_PUBLIC_SITE_URL}/auth/confirm`;
  * garde (proxy.ts) : la vérification est donc faite ici aussi.
  */
 function redirectAfterSignIn(appMetadata: unknown, target: string): never {
-  if (signupPending(appMetadata)) {
+  // La finalisation artisan (ADR 0110) remplace « Finaliser mon compte ».
+  if (signupPending(appMetadata) && !isArtisanFinalizePath(target)) {
     redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
   }
   redirect(target as Route);
@@ -87,52 +87,6 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
 }
 
 /** Inscription professionnelle (F-14) : rôle artisan_en_attente attribué par le trigger SQL. */
-export async function signUpArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
-  const values = {
-    firstName: text(formData, "firstName") ?? "",
-    lastName: text(formData, "lastName") ?? "",
-    phone: text(formData, "phone") ?? "",
-    email: text(formData, "email") ?? "",
-    siret: text(formData, "siret") ?? "",
-  };
-  const parsed = artisanSignUpSchema.safeParse({
-    ...values,
-    password: text(formData, "password") ?? "",
-    acceptTerms: checkbox(formData, "acceptTerms"),
-    acceptCgv: checkbox(formData, "acceptCgv"),
-    marketingOptIn: checkbox(formData, "marketingOptIn"),
-  });
-  if (!parsed.success) {
-    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
-  }
-
-  const input = parsed.data;
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: input.email,
-    password: input.password,
-    options: {
-      emailRedirectTo: confirmUrlFor("/mon-espace"),
-      // « account_type » n'est qu'une intention : le trigger SQL ne peut en déduire que
-      // artisan_en_attente (jamais artisan ni admin). ADR 0006.
-      data: {
-        account_type: "artisan",
-        first_name: input.firstName,
-        last_name: input.lastName,
-        phone: input.phone ?? null,
-        siret: input.siret,
-        marketing_opt_in: input.marketingOptIn,
-        legal: Object.fromEntries(
-          ARTISAN_SIGNUP_REQUIRED_DOCUMENTS.map((doc) => [doc, LEGAL_DOCUMENT_VERSIONS[doc]]),
-        ),
-      },
-    },
-  });
-  if (error) return { error: authErrorMessage(error), values };
-
-  redirect("/verifier-email");
-}
-
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
   const values = { email: text(formData, "email") ?? "" };
   const parsed = signInSchema.safeParse({ ...values, password: text(formData, "password") ?? "" });

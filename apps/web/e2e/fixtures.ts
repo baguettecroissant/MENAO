@@ -40,6 +40,49 @@ export function fakeSiret(kind: "active" | "fermee"): string {
   return siren + "0001" + luhnKey(siren + "0001");
 }
 
+/**
+ * Remplace l'API Recherche d'entreprises (ADR 0110) par une entreprise fictive : celle du faux
+ * serveur Sirene pour ce SIRET, avec son siège à Nice et une dirigeante fictive.
+ */
+export async function mockCompanySearch(page: Page, siret: string) {
+  await page.route("https://recherche-entreprises.api.gouv.fr/**", async (route) => {
+    await route.fulfill({
+      json: {
+        results: [
+          {
+            siren: siret.slice(0, 9),
+            nom_raison_sociale: "MENUISERIE EXEMPLE",
+            nom_complet: "MENUISERIE EXEMPLE",
+            nature_juridique: "5499",
+            etat_administratif: "A",
+            activite_principale: "43.32A",
+            date_creation: "2018-04-01",
+            siege: {
+              siret,
+              etat_administratif: "A",
+              adresse: "1 RUE DE L'EXEMPLE 06000 NICE",
+              code_postal: "06000",
+              libelle_commune: "NICE",
+              commune: "06088",
+              latitude: "43.7",
+              longitude: "7.27",
+            },
+            dirigeants: [
+              {
+                type_dirigeant: "personne physique",
+                nom: "EXEMPLE",
+                prenoms: "DOMINIQUE",
+                qualite: "Gérant",
+              },
+            ],
+          },
+        ],
+        total_results: 1,
+      },
+    });
+  });
+}
+
 /** Remplace la Géoplateforme (géocodage BAN) par des réponses fictives. */
 export async function mockGeocoding(page: Page) {
   await page.route("https://data.geopf.fr/geocodage/**", async (route) => {
