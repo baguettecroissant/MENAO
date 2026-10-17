@@ -222,6 +222,9 @@ test("SIRET inconnu ou entreprise fermée : message clair (compte artisan du see
   await page.getByLabel("Adresse e-mail").fill("artisan@example.test");
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
+  // Le dossier (ADR 0111), puis l'étape « Entreprise ».
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await page.getByRole("link", { name: "Entreprise", exact: true }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/entreprise$/);
 
   await page.getByLabel("Numéro SIRET").fill("00000003400017");
