@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  DOSSIER_ITEM_COUNT,
   ONBOARDING_STEPS,
   canSubmitOnboarding,
   documentIsValid,
   documentState,
+  dossierItemCount,
   dossierItemsLeft,
+  requiredDocumentTypes,
   firstIncompleteStep,
   onboardingProgress,
   type ArtisanOnboardingSnapshot,
@@ -29,6 +30,7 @@ const vide: ArtisanOnboardingSnapshot = {
   subscriptionActive: false,
   connectChargesEnabled: false,
   charterAccepted: false,
+  decennaleExempt: false,
 };
 
 const entrepriseOk = {
@@ -252,7 +254,7 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
   });
 
   it("compte les éléments restant avant l'envoi", () => {
-    expect(DOSSIER_ITEM_COUNT).toBe(8);
+    expect(dossierItemCount(vide)).toBe(8);
     expect(dossierItemsLeft(vide, today)).toBe(8);
     const profilFait = {
       ...entrepriseOk,
@@ -277,5 +279,19 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
     };
     expect(dossierItemsLeft(complet, today)).toBe(0);
     expect(canSubmitOnboarding(complet, today)).toBe(true);
+  });
+
+  it("« non soumis » à la décennale : elle n'est pas exigée (ADR 0116)", () => {
+    const exempt = { ...vide, decennaleExempt: true };
+    expect(requiredDocumentTypes(exempt)).toEqual(["kbis", "rc_pro", "identite", "urssaf"]);
+    expect(dossierItemCount(exempt)).toBe(7);
+    const { decennale: _sans, ...sansDecennale } = documentsOk;
+    expect(
+      onboardingProgress({ ...etapes123, decennaleExempt: true, documents: sansDecennale }, today)
+        .documents,
+    ).toBe(true);
+    expect(onboardingProgress({ ...etapes123, documents: sansDecennale }, today).documents).toBe(
+      false,
+    );
   });
 });

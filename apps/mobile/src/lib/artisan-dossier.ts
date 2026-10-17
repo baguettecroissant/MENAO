@@ -29,6 +29,8 @@ export type Dossier = {
   status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu" | "radie";
   refusalReason: string | null;
   snapshot: ArtisanOnboardingSnapshot;
+  /** Métiers déclarés, avec leur libellé (couverture de la décennale, ADR 0116). */
+  trades: { code: string; label: string }[];
   documents: DossierDocument[];
   presentation: string;
   avatarPath: string | null;
@@ -43,7 +45,7 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis",
     )
     .eq("user_id", auth.user.id)
     .maybeSingle();
@@ -76,6 +78,11 @@ export async function loadDossier(): Promise<Dossier | null> {
     snapshots[d.type] = { status: d.status, dateEmission: d.date_emission, dateFin: d.date_fin };
   }
 
+  const tradeCodes = (trades.data ?? []).map((t) => t.trade_code);
+  const { data: tradeLabels } = tradeCodes.length
+    ? await supabase.from("trades").select("code, label").in("code", tradeCodes).order("sort_order")
+    : { data: [] };
+
   const presentation = artisan.presentation ?? "";
   const avatarPath = profile.data?.avatar_path ?? null;
   const snapshot: ArtisanOnboardingSnapshot = {
@@ -96,11 +103,13 @@ export async function loadDossier(): Promise<Dossier | null> {
     ),
     connectChargesEnabled: artisan.connect_charges_enabled,
     charterAccepted: charter.data !== null,
+    decennaleExempt: artisan.decennale_non_soumis,
   };
   return {
     status: artisan.status,
     refusalReason: artisan.refusal_reason,
     snapshot,
+    trades: tradeLabels ?? [],
     documents: rows.map((d) => ({
       type: d.type,
       status: d.status,
@@ -118,6 +127,12 @@ export async function loadDossier(): Promise<Dossier | null> {
 export async function submitDossier(): Promise<string | null> {
   const { error } = await supabase.rpc("submit_artisan_onboarding");
   return error ? fr.proDossier.submitError : null;
+}
+
+/** « Non soumis » à la décennale (ADR 0116), tant que le dossier n'est pas envoyé. */
+export async function setDecennaleExempt(value: boolean): Promise<string | null> {
+  const { error } = await supabase.rpc("set_decennale_non_soumis", { p_value: value });
+  return error ? fr.errors.generic : null;
 }
 
 /** Présentation de la fiche (100 caractères au moins). Message d'erreur, ou null. */

@@ -120,6 +120,7 @@ export const getOnboardingContext = cache(async () => {
     hasAvatar: avatarPath !== null,
     connectChargesEnabled: artisan.connect_charges_enabled,
     charterAccepted: charter !== null,
+    decennaleExempt: artisan.decennale_non_soumis,
     subscriptionActive: subscriptionGrantsAccess(
       (subscription?.status as SubscriptionStatus | undefined) ?? null,
     ),

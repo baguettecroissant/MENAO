@@ -67,7 +67,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
     supabase
       .from("artisan_documents")
       .select(
-        "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
+        "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason",
       )
       .eq("artisan_id", id),
     supabase
@@ -112,6 +112,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
   const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
   const publicUrl = (bucket: string, path: string) =>
     supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  const declaredTrades = (trades.data ?? []).map((tr) => tr.trade_code);
   const label = (ref: { code: string; label: string }[] | null, code: string) =>
     ref?.find((r) => r.code === code)?.label ?? code;
   const pending = artisan.status === "en_verification";
@@ -280,6 +281,9 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
                 className="flex flex-col gap-3 rounded-button border border-border p-3"
               >
                 <span className="font-medium">{docT.types[type]}</span>
+                {type === "decennale" && artisan.decennale_non_soumis && (
+                  <p className="text-sm font-medium text-warning">{t.decennaleExempt}</p>
+                )}
                 {rows.length === 0 && <span className="text-sm">{t.docMissing}</span>}
                 {rows.map((d) => {
                   const url = urlByPath.get(d.storage_path);
@@ -316,6 +320,13 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
                           </>
                         )}
                       </p>
+                      {type === "decennale" && d.covered_trades && (
+                        <CoveredTrades
+                          covered={d.covered_trades}
+                          declared={declaredTrades}
+                          labelOf={(code) => label(tradeRef.data, code)}
+                        />
+                      )}
                       {d.refusal_reason && (
                         <p className="text-sm text-danger">
                           {docT.refusedBecause(d.refusal_reason)}
@@ -529,5 +540,32 @@ function Info({ label, value }: { label: string; value: string | null | false | 
       <dt className="text-muted-foreground">{label} :</dt>
       <dd className="font-medium">{value || "—"}</dd>
     </div>
+  );
+}
+
+/** Décennale : métiers couverts selon l'artisan, et métiers déclarés non couverts (ADR 0116). */
+function CoveredTrades({
+  covered,
+  declared,
+  labelOf,
+}: {
+  covered: string[];
+  declared: string[];
+  labelOf: (code: string) => string;
+}) {
+  const uncovered = declared.filter((code) => !covered.includes(code));
+  return (
+    <>
+      {covered.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {t.coverage(covered.map(labelOf).join(", "))}
+        </p>
+      )}
+      {uncovered.length > 0 && (
+        <p className="text-sm font-medium text-warning">
+          {t.uncovered(uncovered.map(labelOf).join(", "))}
+        </p>
+      )}
+    </>
   );
 }

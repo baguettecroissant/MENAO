@@ -3303,7 +3303,9 @@ export const fr = {
           todo: "À faire",
           done: "Fait",
           signed: "Signée",
+          exempt: "Non soumis",
         },
+        exemptHint: "Vous avez déclaré vos métiers non soumis : l'équipe MENAO le vérifie.",
         privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
         afterTitle: "Après la vérification",
         afterLead: "Pour recevoir des demandes, il faudra aussi :",
@@ -3655,6 +3657,15 @@ export const fr = {
         dateEmission: "Date d'émission",
         dateFin: "Date de fin de validité",
         dateFinIdentite: "Date d'expiration (optionnel)",
+        coverageLegend: "Votre attestation couvre-t-elle ces métiers ?",
+        coverageHint: "Un métier non couvert passe en vérification manuelle par l'équipe MENAO.",
+        exemptTitle: "Métiers non soumis à la décennale ?",
+        exemptText:
+          "Pour les rares métiers sans travaux sur le bâti (nettoyage, petit dépannage sans travaux…), la décennale n'est pas obligatoire. L'équipe MENAO vérifie votre déclaration.",
+        exemptDeclare: "Mes métiers ne sont pas soumis à la décennale",
+        exemptDeclared:
+          "Vous avez déclaré vos métiers non soumis à la décennale : l'équipe MENAO vérifiera votre déclaration avec votre dossier.",
+        exemptCancel: "Annuler : je dépose mon attestation décennale",
         securityCode: "Code de sécurité",
         securityCodeHint:
           "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF.",
@@ -4768,6 +4779,10 @@ export const fr = {
       radie: "Radié",
     },
     detail: {
+      coverage: (trades: string) => `Métiers couverts selon l'artisan : ${trades}`,
+      uncovered: (trades: string) => `Non couverts : ${trades} (à vérifier)`,
+      decennaleExempt:
+        "Décennale : l'artisan déclare ses métiers non soumis. À vérifier avant de valider le dossier.",
       back: "Retour aux dossiers",
       suspensionReasons: {
         documents_expires: "Suspendu automatiquement : assurance expirée",

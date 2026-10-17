@@ -252,6 +252,7 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
       assureur: text(formData, "assureur"),
       numero: text(formData, "numero"),
       couverture: text(formData, "couverture"),
+      coveredTrades: formData.getAll("coveredTrades").filter((v) => typeof v === "string"),
     });
     if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
     document = parsed.data;
@@ -320,6 +321,13 @@ export async function removeLogo(): Promise<void> {
   const { supabase } = await getOnboardingContext();
   const { data: previous } = await supabase.rpc("artisan_remove_logo");
   if (previous) await supabase.storage.from("artisan-logos").remove([previous]);
+  refresh();
+}
+
+/** « Non soumis » à la décennale (ADR 0116), déclaré ou retiré tant que le dossier est modifiable. */
+export async function setDecennaleExempt(formData: FormData): Promise<void> {
+  const { supabase } = await getOnboardingContext();
+  await supabase.rpc("set_decennale_non_soumis", { p_value: formData.get("value") === "oui" });
   refresh();
 }
 

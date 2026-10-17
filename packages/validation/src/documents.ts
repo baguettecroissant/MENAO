@@ -39,6 +39,12 @@ export const documentMetadataSchema = (today: Date = new Date()) => {
       numero: text(60),
       dateFin: notPast,
       couverture: text(200),
+      // Métiers de l'artisan couverts par l'attestation, selon lui (ADR 0116).
+      coveredTrades: z
+        .array(z.string().regex(/^[a-z0-9-]{1,60}$/))
+        .max(30)
+        .default([])
+        .transform((codes) => [...new Set(codes)]),
     }),
     z.object({
       type: z.literal("rc_pro"),

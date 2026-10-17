@@ -1,8 +1,8 @@
 import {
   CHARTER_RULE_COUNT,
-  DOSSIER_ITEM_COUNT,
   REQUIRED_DOCUMENT_TYPES,
   documentState,
+  dossierItemCount,
   dossierItemsLeft,
   type DocumentState,
 } from "@menao/core";
@@ -58,7 +58,8 @@ export default async function OnboardingIndexPage() {
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
   const validated = artisan.status === "valide" || artisan.status === "suspendu";
   const left = dossierItemsLeft(snapshot);
-  const done = DOSSIER_ITEM_COUNT - left;
+  const total = dossierItemCount(snapshot);
+  const done = total - left;
   const profileDone = progress.entreprise && progress.metiers && progress.zone;
 
   return (
@@ -115,19 +116,19 @@ export default async function OnboardingIndexPage() {
         <div className="flex flex-col gap-2">
           <div className="flex justify-between text-sm font-medium text-muted-foreground">
             <span>{d.progressLabel}</span>
-            <span>{d.progress(done, DOSSIER_ITEM_COUNT)}</span>
+            <span>{d.progress(done, total)}</span>
           </div>
           <div
             role="progressbar"
             aria-label={d.progressLabel}
             aria-valuemin={0}
-            aria-valuemax={DOSSIER_ITEM_COUNT}
+            aria-valuemax={total}
             aria-valuenow={done}
             className="h-1.5 overflow-hidden rounded-pill bg-primary-soft"
           >
             <div
               className="h-full rounded-pill bg-success transition-[width] duration-300"
-              style={{ width: `${(done / DOSSIER_ITEM_COUNT) * 100}%` }}
+              style={{ width: `${(done / total) * 100}%` }}
             />
           </div>
         </div>
@@ -168,6 +169,20 @@ export default async function OnboardingIndexPage() {
         />
 
         {REQUIRED_DOCUMENT_TYPES.map((type) => {
+          // « Non soumis » à la décennale (ADR 0116) : pas exigée, l'équipe le vérifie.
+          if (type === "decennale" && snapshot.decennaleExempt) {
+            return (
+              <Row
+                key={type}
+                href={`/pro/onboarding/documents?type=${type}`}
+                icon={<FileText aria-hidden="true" className="size-5" />}
+                title={t.documents.types[type]}
+                hint={d.exemptHint}
+                tone="pending"
+                status={d.states.exempt}
+              />
+            );
+          }
           const state = documentState(type, snapshot.documents[type]);
           const refused = documents.find((doc) => doc.type === type && doc.status === "refuse");
           return (

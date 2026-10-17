@@ -348,6 +348,7 @@ export type Database = {
           artisan_id: string;
           assureur: string | null;
           couverture: string | null;
+          covered_trades: string[] | null;
           created_at: string;
           date_emission: string | null;
           date_fin: string | null;
@@ -369,6 +370,7 @@ export type Database = {
           artisan_id: string;
           assureur?: string | null;
           couverture?: string | null;
+          covered_trades?: string[] | null;
           created_at?: string;
           date_emission?: string | null;
           date_fin?: string | null;
@@ -389,6 +391,7 @@ export type Database = {
           artisan_id?: string;
           assureur?: string | null;
           couverture?: string | null;
+          covered_trades?: string[] | null;
           created_at?: string;
           date_emission?: string | null;
           date_fin?: string | null;
@@ -709,6 +712,7 @@ export type Database = {
           connect_requirements_pending: string[];
           connect_updated_at: string | null;
           created_at: string;
+          decennale_non_soumis: boolean;
           default_deposit_percent: number;
           experience_years: number | null;
           forme_juridique_code: string | null;
@@ -761,6 +765,7 @@ export type Database = {
           connect_requirements_pending?: string[];
           connect_updated_at?: string | null;
           created_at?: string;
+          decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
@@ -812,6 +817,7 @@ export type Database = {
           connect_requirements_pending?: string[];
           connect_updated_at?: string | null;
           created_at?: string;
+          decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
@@ -3894,6 +3900,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_decennale_non_soumis: { Args: { p_value: boolean }; Returns: undefined };
       set_notification_preferences: {
         Args: { p_activite: boolean; p_rappels: boolean };
         Returns: undefined;

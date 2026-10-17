@@ -1,7 +1,7 @@
 "use client";
 
 import type { RequiredDocumentType } from "@menao/core";
-import { Field } from "@/components/ui";
+import { CheckboxField, Field } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
 import { fr } from "@/i18n/fr";
 
@@ -11,10 +11,13 @@ export function DocumentUpload({
   type,
   userId,
   label,
+  trades,
 }: {
   type: RequiredDocumentType;
   userId: string;
   label: string;
+  /** Décennale : métiers de l'artisan, à cocher s'ils sont couverts (ADR 0116). */
+  trades?: { code: string; label: string }[];
 }) {
   const id = (name: string) => `${type}-${name}`;
   return (
@@ -65,6 +68,23 @@ export function DocumentUpload({
                 />
               )}
             </div>
+          )}
+          {type === "decennale" && trades && trades.length > 0 && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-2 font-medium">{t.coverageLegend}</legend>
+              {trades.map((trade) => (
+                <CheckboxField
+                  key={trade.code}
+                  id={id(`trade-${trade.code}`)}
+                  name="coveredTrades"
+                  value={trade.code}
+                  defaultChecked
+                >
+                  {trade.label}
+                </CheckboxField>
+              ))}
+              <p className="text-sm text-muted-foreground">{t.coverageHint}</p>
+            </fieldset>
           )}
           {type === "urssaf" && (
             <div className="grid gap-4 sm:grid-cols-2">
