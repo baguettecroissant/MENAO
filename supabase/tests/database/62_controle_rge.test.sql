@@ -15,9 +15,9 @@ insert into public.artisans (id, user_id, status, siret, raison_sociale, forme_j
   adresse_code_postal, adresse_commune, zone_mode, assujetti_tva, sirene_checked_at, sirene_active)
 values
   ('c6210000-0000-4000-8000-000000000001', 'c6200000-0000-4000-8000-000000000001', 'valide',
-   '00000001800010', 'ISOLATION EXEMPLE', '5710', '1 RUE DE L''EXEMPLE', '06000', 'NICE', 'communes', true, now(), true),
+   '00000062000005', 'ISOLATION EXEMPLE', '5710', '1 RUE DE L''EXEMPLE', '06000', 'NICE', 'communes', true, now(), true),
   ('c6210000-0000-4000-8000-000000000002', 'c6200000-0000-4000-8000-000000000002', 'brouillon',
-   '00000002600014', 'AUTRE EXEMPLE', '5710', '2 RUE DE L''EXEMPLE', '06000', 'NICE', 'communes', true, now(), true);
+   '00000062000013', 'AUTRE EXEMPLE', '5710', '2 RUE DE L''EXEMPLE', '06000', 'NICE', 'communes', true, now(), true);
 
 create function pg_temp.connecter(uid uuid, app_role text, aal text default 'aal1') returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
@@ -27,7 +27,7 @@ $$;
 
 -- ---------- Fiches à relire ----------
 select results_eq(
-  $$ select artisan_id from public.rge_refresh_candidates(10)
+  $$ select artisan_id from public.rge_refresh_candidates(200)
      where artisan_id in ('c6210000-0000-4000-8000-000000000001', 'c6210000-0000-4000-8000-000000000002') $$,
   $$ values ('c6210000-0000-4000-8000-000000000001'::uuid) $$,
   'à relire : artisan validé jamais lu (pas un brouillon)');
