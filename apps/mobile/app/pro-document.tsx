@@ -1,6 +1,7 @@
 import {
   KBIS_MAX_AGE_MONTHS,
   REQUIRED_DOCUMENT_TYPES,
+  URSSAF_MAX_AGE_MONTHS,
   type RequiredDocumentType,
 } from "@menao/core";
 import { documentMetadataSchema } from "@menao/validation";
@@ -164,6 +165,25 @@ function DocumentForm({ type }: { type: RequiredDocumentType }) {
           placeholder={t.couverturePlaceholder}
           error={errors.couverture}
         />
+      ) : null}
+      {type === "urssaf" ? (
+        <>
+          <DateTimeFields
+            date={values.dateEmission}
+            minDate={monthsAgo(URSSAF_MAX_AGE_MONTHS)}
+            onDate={(dateEmission) => setValues((v) => ({ ...v, dateEmission }))}
+            dateLabel={t.dateEmissionUrssaf}
+            error={errors.dateEmission}
+          />
+          <TextField
+            label={t.securityCode}
+            value={values.numero}
+            onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
+            autoCapitalize="characters"
+            hint={t.securityCodeHint}
+            error={errors.numero}
+          />
+        </>
       ) : null}
       {type === "identite" ? (
         <DateTimeFields

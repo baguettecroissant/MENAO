@@ -77,7 +77,8 @@ from public.artisans a,
   (values ('kbis', current_date - 20, null::date, null, null, null),
           ('decennale', null, current_date + 300, 'Assurances Exemple', 'DEC-0000', 'France métropolitaine'),
           ('rc_pro', null, current_date + 300, 'Assurances Exemple', 'RC-0000', null),
-          ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
+          ('identite', null, null, null, null, null),
+          ('urssaf', current_date - 15, null, null, 'URSSAF-0000', null)) as d (type, emission, fin, assureur, numero, couverture)
 where a.user_id = 'a0000000-0000-4000-8000-000000000005';
 update public.profiles set avatar_path = 'a0000000-0000-4000-8000-000000000005/seed.jpg'
 where user_id = 'a0000000-0000-4000-8000-000000000005';
@@ -99,7 +100,8 @@ from public.artisans a,
   (values ('kbis', current_date - 40, null::date, null, null, null),
           ('decennale', null, current_date + 10, 'Assurances Exemple', 'DEC-1111', 'France métropolitaine'),
           ('rc_pro', null, current_date + 300, 'Assurances Exemple', 'RC-1111', null),
-          ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
+          ('identite', null, null, null, null, null),
+          ('urssaf', current_date - 40, null, null, 'URSSAF-1111', null)) as d (type, emission, fin, assureur, numero, couverture)
 where a.user_id = 'a0000000-0000-4000-8000-000000000007';
 
 -- Artisan validé sans abonnement (identifiant de fiche fixe, utilisé par le test e2e du webhook).
@@ -158,7 +160,8 @@ from public.artisans a,
   (values ('kbis', current_date - 30, null::date, null, null, null),
           ('decennale', null, current_date + 250, 'Assurances Exemple', 'DEC-2222', 'France métropolitaine'),
           ('rc_pro', null, current_date + 250, 'Assurances Exemple', 'RC-2222', null),
-          ('identite', null, null, null, null, null)) as d (type, emission, fin, assureur, numero, couverture)
+          ('identite', null, null, null, null, null),
+          ('urssaf', current_date - 30, null, null, 'URSSAF-2222', null)) as d (type, emission, fin, assureur, numero, couverture)
 where a.id in ('b0000000-0000-4000-8000-000000000011', 'b0000000-0000-4000-8000-000000000012');
 
 -- Artisan validé sans charte signée : l'espace pro lui demande de la signer (ADR 0109).

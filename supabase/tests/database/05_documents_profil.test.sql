@@ -81,12 +81,19 @@ insert into public.artisan_documents (artisan_id, type, storage_path, mime_type,
 select a.id, d.type::public.document_type, a.id || '/' || d.type || '.pdf', 'application/pdf', 1000, d.emission, d.fin
 from public.artisans a,
   (values ('kbis', current_date - 10, null::date), ('decennale', null, current_date + 200),
-          ('rc_pro', null, current_date + 200), ('identite', null, null)) as d (type, emission, fin)
+          ('rc_pro', null, current_date + 200), ('identite', null, null),
+          ('urssaf', current_date - 20, null)) as d (type, emission, fin)
 where a.user_id = 'd1d1d1d1-0000-4000-8000-000000000001';
 update public.profiles set avatar_path = 'd1d1d1d1-0000-4000-8000-000000000001/a.jpg'
 where user_id = 'd1d1d1d1-0000-4000-8000-000000000001';
 insert into public.artisan_photos (artisan_id, storage_path)
   select id, id || '/p1.jpg' from public.artisans where user_id = 'd1d1d1d1-0000-4000-8000-000000000001';
+
+-- Attestation URSSAF (ADR 0115) : valable 6 mois après son émission.
+select is(
+  (select date_fin from public.artisan_documents where type = 'urssaf'
+     and artisan_id = (select id from public.artisans where user_id = 'd1d1d1d1-0000-4000-8000-000000000001')),
+  (current_date - 20 + interval '6 months')::date, 'URSSAF : date de fin calculée (6 mois)');
 
 -- Kbis trop ancien : envoi refusé.
 update public.artisan_documents set date_emission = current_date - 100
@@ -94,7 +101,7 @@ where type = 'kbis' and artisan_id = (select id from public.artisans where user_
 
 select pg_temp.connecter('d1d1d1d1-0000-4000-8000-000000000001', 'artisan_en_attente');
 set local role authenticated;
-select is((select count(*)::int from public.artisan_documents), 4, 'artisan : voit ses 4 documents');
+select is((select count(*)::int from public.artisan_documents), 5, 'artisan : voit ses 5 documents');
 select is((select count(*)::int from public.artisan_photos), 1, 'artisan : voit ses photos');
 select throws_ok($$ select public.submit_artisan_onboarding() $$, '22023', 'Étapes incomplètes : documents',
   'Kbis de plus de 3 mois : envoi refusé');

@@ -90,6 +90,9 @@ export const requireProSpace = cache(async () => {
     const pending = documents?.some((d) => d.type === type && d.status === "en_attente");
     return current && !pending && expiryStatus(current.date_fin) !== "ok";
   });
+  // Attestation URSSAF demandée depuis le 17 octobre 2026 (ADR 0115) : un artisan validé avant
+  // n'est pas suspendu, il est invité à l'ajouter.
+  const urssafMissing = !documents?.some((d) => d.type === "urssaf");
 
   return {
     supabase,
@@ -98,6 +101,7 @@ export const requireProSpace = cache(async () => {
     suspensionReason: artisan.suspension_reason,
     radiationReason: artisan.radiation_reason,
     documentsToRenew,
+    urssafMissing,
     firstName: profile?.first_name ?? null,
     lastName: profile?.last_name ?? null,
     avatarUrl: profile?.avatar_path

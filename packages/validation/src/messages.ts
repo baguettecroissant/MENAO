@@ -27,6 +27,7 @@ export const messages = {
   communesRequired: "Ajoutez au moins une commune.",
   tooMany: "Trop d'éléments sélectionnés.",
   kbisTooOld: "Le Kbis (ou l'extrait INSEE/RNE) doit dater de moins de 3 mois.",
+  urssafTooOld: "L'attestation URSSAF doit dater de moins de 6 mois.",
   dateInFuture: "Cette date ne peut pas être dans le futur.",
   dateInPast: "La date de début ne peut pas être passée.",
   addressOutsideCity: "Choisissez une adresse située dans la ville indiquée.",

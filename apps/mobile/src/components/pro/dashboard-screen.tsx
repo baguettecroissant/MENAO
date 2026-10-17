@@ -43,7 +43,7 @@ import { requestStart } from "@/lib/pro-requests";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
-import { Notice } from "@/ui";
+import { Button, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDashboard;
@@ -361,6 +361,18 @@ export function DashboardScreen() {
             {data.radiated ? (
               <Notice tone="error">{t.radiated(data.radiated.reason)}</Notice>
             ) : null}
+            {data.urssafMissing ? (
+              <View style={styles.urssaf}>
+                <Notice tone="info">{t.urssafMissing}</Notice>
+                <Button
+                  label={t.urssafAdd}
+                  variant="secondary"
+                  onPress={() =>
+                    router.push({ pathname: "/pro-document", params: { type: "urssaf" } })
+                  }
+                />
+              </View>
+            ) : null}
             <PushPrompt />
             <View style={styles.kpis}>
               <Kpi
@@ -422,6 +434,7 @@ export function DashboardScreen() {
 const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 
 const styles = StyleSheet.create({
+  urssaf: { gap: theme.spacing(2) },
   safe: { flex: 1, backgroundColor: colors.background },
   loading: {
     flex: 1,

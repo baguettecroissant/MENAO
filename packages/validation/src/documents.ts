@@ -47,6 +47,22 @@ export const documentMetadataSchema = (today: Date = new Date()) => {
       dateFin: notPast,
     }),
     z.object({
+      type: z.literal("urssaf"),
+      dateEmission: isoDate
+        .refine((d) => d <= day, { error: messages.dateInFuture })
+        .refine(
+          (d) =>
+            documentIsValid(
+              "urssaf",
+              { status: "en_attente", dateEmission: d, dateFin: null },
+              today,
+            ),
+          { error: messages.urssafTooOld },
+        ),
+      // Code de sécurité de l'attestation, vérifié par l'équipe sur le site de l'URSSAF.
+      numero: text(60),
+    }),
+    z.object({
       type: z.literal("identite"),
       dateFin: z
         .union([z.literal(""), notPast])

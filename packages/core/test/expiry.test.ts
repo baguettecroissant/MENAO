@@ -11,8 +11,8 @@ import {
 const today = new Date("2026-10-09T12:00:00Z");
 
 describe("suivi des échéances (F-51)", () => {
-  it("surveille la décennale, la RC Pro et la pièce d'identité (pas le Kbis)", () => {
-    expect(MONITORED_DOCUMENT_TYPES).toEqual(["decennale", "rc_pro", "identite"]);
+  it("surveille la décennale, la RC Pro, la pièce d'identité et l'URSSAF (pas le Kbis)", () => {
+    expect(MONITORED_DOCUMENT_TYPES).toEqual(["decennale", "rc_pro", "identite", "urssaf"]);
   });
 
   it("alertes à J-30 et J-7", () => {

@@ -469,6 +469,16 @@ describe("contenu des notifications (F-41)", () => {
     expect(never.preview).toBe("Vous n'avez pas encore confirmé votre planning sur MENAO.");
   });
 
+  it("attestation URSSAF à renouveler : son expiration suspend l'artisan (ADR 0115)", () => {
+    const urssaf = notificationContent(
+      "document_a_renouveler",
+      { document: "urssaf", jours: 20 },
+      ctx,
+    );
+    expect(urssaf.subject).toBe("Votre attestation de vigilance URSSAF expire dans 20\u00a0jours");
+    expect(urssaf.paragraphs[2]).toContain("suspendu automatiquement");
+  });
+
   it("radiation : motif cité, accès aux chantiers et factures, contact", () => {
     const radie = notificationContent("compte_radie", { motif: "Faux documents" }, ctx);
     expect(radie.subject).toBe("Votre compte MENAO a été radié");
@@ -626,7 +636,7 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     const suspended = notificationContent("compte_suspendu", { documents: ["decennale"] }, pro);
     expect(suspended.subject).toBe("Votre profil MENAO est suspendu");
     expect(suspended.paragraphs[1]).toBe(
-      "Votre profil est suspendu car une assurance obligatoire n'est plus à jour : attestation d'assurance décennale.",
+      "Votre profil est suspendu car un document obligatoire n'est plus à jour : attestation d'assurance décennale.",
     );
     const refused = notificationContent(
       "document_refuse",

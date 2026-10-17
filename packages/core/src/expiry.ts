@@ -1,7 +1,10 @@
 /** Suivi des échéances des documents et certifications d'un artisan validé (F-51). */
 
-/** Documents dont l'expiration est surveillée après validation (le Kbis ne l'est pas). */
-export const MONITORED_DOCUMENT_TYPES = ["decennale", "rc_pro", "identite"] as const;
+/**
+ * Documents dont l'expiration est surveillée après validation (le Kbis ne l'est pas).
+ * L'attestation URSSAF expire 6 mois après son émission (date de fin calculée en base, ADR 0115).
+ */
+export const MONITORED_DOCUMENT_TYPES = ["decennale", "rc_pro", "identite", "urssaf"] as const;
 export type MonitoredDocumentType = (typeof MONITORED_DOCUMENT_TYPES)[number];
 
 /** Alertes à J-30 puis J-7 (spec F-41 : « Document expirant J-30, J-7 »). */

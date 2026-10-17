@@ -123,9 +123,10 @@ const DOCUMENTS: Record<string, string> = {
   decennale: "attestation d'assurance décennale",
   rc_pro: "attestation de responsabilité civile professionnelle",
   identite: "pièce d'identité du dirigeant",
+  urssaf: "attestation de vigilance URSSAF",
 };
-/** Assurances obligatoires : leur expiration suspend l'artisan (F-51). */
-const INSURANCES = ["decennale", "rc_pro"];
+/** Documents dont l'expiration suspend l'artisan : assurances (F-51) et URSSAF (ADR 0115). */
+const SUSPENDING = ["decennale", "rc_pro", "urssaf"];
 /** Types de tickets, dans les alertes de l'équipe (ADR 0050). */
 const TICKET_TYPES: Record<string, string> = {
   contact: "message de la page Contact",
@@ -1034,7 +1035,7 @@ export function notificationContent(
       // F-51 : relances à J-30 puis J-7 (spec F-41).
       const type = text(data, "document") ?? "";
       const doc = DOCUMENTS[type] ?? "document";
-      const insurance = INSURANCES.includes(type);
+      const insurance = SUSPENDING.includes(type);
       const days = integer(data, "jours");
       const urgent = days !== null && days <= 7;
       return {
@@ -1107,7 +1108,8 @@ export function notificationContent(
           cta: { label: "Écrire à l'équipe MENAO", url: link("/contact") },
         };
       }
-      // F-51 : suspension automatique, assurance expirée sans renouvellement validé.
+      // F-51 : suspension automatique, document obligatoire expiré (assurance ou attestation
+      // URSSAF) sans renouvellement validé.
       const documents = Array.isArray(data.documents)
         ? data.documents.flatMap((d) =>
             typeof d === "string" && DOCUMENTS[d] ? [DOCUMENTS[d]] : [],
@@ -1115,14 +1117,13 @@ export function notificationContent(
         : [];
       return {
         subject: "Votre profil MENAO est suspendu",
-        preview:
-          "Assurance expirée : déposez votre attestation à jour pour être de nouveau visible.",
+        preview: "Document expiré : déposez votre attestation à jour pour être de nouveau visible.",
         title: "Votre profil est suspendu",
         paragraphs: [
           hello(ctx.firstName),
           documents.length > 0
-            ? `Votre profil est suspendu car une assurance obligatoire n'est plus à jour : ${documents.join(", ")}.`
-            : "Votre profil est suspendu car une assurance obligatoire n'est plus à jour.",
+            ? `Votre profil est suspendu car un document obligatoire n'est plus à jour : ${documents.join(", ")}.`
+            : "Votre profil est suspendu car un document obligatoire n'est plus à jour.",
           "Vous n'apparaissez plus dans les recherches des particuliers. Vos chantiers en cours ne changent pas.",
           "Déposez votre attestation à jour : dès que l'équipe MENAO l'a validée, la suspension est levée automatiquement.",
         ],

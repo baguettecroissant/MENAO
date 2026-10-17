@@ -3292,6 +3292,7 @@ export const fr = {
           decennale: "En cours de validité",
           rc_pro: "En cours de validité",
           identite: "Carte d'identité ou passeport",
+          urssaf: "De moins de 6 mois",
         },
         states: {
           missing: "À ajouter",
@@ -3388,7 +3389,7 @@ export const fr = {
         radie: (motif: string | null) =>
           `Votre compte a été radié du réseau MENAO${motif ? ` : ${motif}` : ""}. Votre profil n'apparaît plus. Vous gardez l'accès à vos chantiers en cours et à vos factures ; pour toute question, contactez l'équipe MENAO.`,
         suspenduDocuments:
-          "Votre compte est suspendu : une assurance obligatoire a expiré. Déposez l'attestation à jour dans « Documents » ; le compte sera réactivé dès sa validation.",
+          "Votre compte est suspendu : un document obligatoire a expiré (assurance ou attestation URSSAF). Déposez l'attestation à jour dans « Documents » ; le compte sera réactivé dès sa validation.",
       },
       company: {
         siretLabel: "Numéro SIRET",
@@ -3633,12 +3634,13 @@ export const fr = {
       },
       documents: {
         intro:
-          "Déposez les 4 justificatifs ci-dessous. Ils restent privés : seule l'équipe MENAO peut les consulter pour vérifier votre entreprise.",
+          "Déposez les 5 justificatifs ci-dessous. Ils restent privés : seule l'équipe MENAO peut les consulter pour vérifier votre entreprise.",
         types: {
           kbis: "Kbis ou extrait INSEE/RNE de moins de 3 mois",
           decennale: "Attestation d'assurance décennale",
           rc_pro: "Attestation de responsabilité civile professionnelle",
           identite: "Pièce d'identité du dirigeant",
+          urssaf: "Attestation de vigilance URSSAF",
         },
         missing: "À déposer",
         statuses: {
@@ -3653,6 +3655,11 @@ export const fr = {
         dateEmission: "Date d'émission",
         dateFin: "Date de fin de validité",
         dateFinIdentite: "Date d'expiration (optionnel)",
+        securityCode: "Code de sécurité",
+        securityCodeHint:
+          "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF.",
+        urssafMissing:
+          "Ajoutez votre attestation de vigilance URSSAF dans « Documents » : elle est désormais demandée à tous les artisans MENAO.",
         assureur: "Assureur",
         numero: "Numéro de contrat",
         couverture: "Couverture géographique",

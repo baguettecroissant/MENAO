@@ -35,12 +35,13 @@ insert into public.artisans (user_id, status, raison_sociale) values
   ('ae000000-0000-4000-8000-000000000004', 'valide', 'NOTIF EXEMPLE'),
   ('ae000000-0000-4000-8000-000000000005', 'valide', 'NOTIF E');
 
--- A : les 4 documents validés (dossier validable).
+-- A : les 5 documents validés (dossier validable).
 insert into public.artisan_documents (artisan_id, type, storage_path, mime_type, size_bytes, date_emission, date_fin, status)
 select pg_temp.artisan('ae000000-0000-4000-8000-000000000001'), d.type::public.document_type, 'na/' || d.type || '.pdf',
   'application/pdf', 1000, d.emission, d.fin, 'valide'
 from (values ('kbis', current_date - 10, null::date), ('decennale', null, current_date + 200),
-             ('rc_pro', null, current_date + 200), ('identite', null, null)) as d (type, emission, fin);
+             ('rc_pro', null, current_date + 200), ('identite', null, null),
+             ('urssaf', current_date - 20, null)) as d (type, emission, fin);
 -- D : décennale à J-20, RC Pro à J-200, pièce d'identité à J-5.
 insert into public.artisan_documents (artisan_id, type, storage_path, mime_type, size_bytes, date_fin, status)
 select pg_temp.artisan('ae000000-0000-4000-8000-000000000004'), d.type::public.document_type, 'nd/' || d.type || '.pdf',

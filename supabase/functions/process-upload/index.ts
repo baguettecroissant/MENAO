@@ -19,7 +19,7 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const MAX_UPLOADS_PER_HOUR = 60;
 const MAX_PORTFOLIO_PHOTOS = 12;
-const DOCUMENT_TYPES = new Set(["kbis", "decennale", "rc_pro", "identite"]);
+const DOCUMENT_TYPES = new Set(["kbis", "decennale", "rc_pro", "identite", "urssaf"]);
 const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   document: ["pdf", "jpeg", "png"],
   avatar: ["jpeg", "png"],

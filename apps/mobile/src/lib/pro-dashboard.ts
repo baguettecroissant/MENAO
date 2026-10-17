@@ -16,6 +16,7 @@ export type Dashboard = {
   firstName: string | null;
   suspended: boolean;
   radiated: { reason: string | null } | null;
+  urssafMissing: boolean;
   awaitingClients: number;
   revenue: { cents: number; trend: RevenueTrend; previousMonth: string };
   responseTime: { minutes: number | null; responses: number };
@@ -57,7 +58,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     supabase
       .from("artisans")
-      .select("status, radiation_reason")
+      .select("status, radiation_reason, artisan_documents(type, status)")
       .eq("user_id", userId)
       .maybeSingle(),
     countReviewsToAnswer(),
@@ -80,6 +81,12 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     suspended: artisan.data?.status === "suspendu",
     // Radiation (ADR 0114) : l'espace reste accessible, le profil n'apparaît plus.
     radiated: artisan.data?.status === "radie" ? { reason: artisan.data.radiation_reason } : null,
+    // Attestation URSSAF demandée depuis le 17 octobre 2026 (ADR 0115) : invitation à l'ajouter.
+    urssafMissing:
+      artisan.data?.status === "valide" &&
+      !artisan.data.artisan_documents.some(
+        (d) => d.type === "urssaf" && (d.status === "valide" || d.status === "en_attente"),
+      ),
     awaitingClients: clientsAwaitingQuote(rows),
     revenue: {
       cents: revenue.currentCents,
