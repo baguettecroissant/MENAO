@@ -19,6 +19,9 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [new RegExp(`^/signalements/${UUID}$`), (id) => `/signalement/${id}`],
   // Espace artisan (règle 10 : jamais de renvoi vers le site).
   [/^\/pro\/tableau-de-bord$/, () => "/pro"],
+  // Dossier (« Faire vérifier mon entreprise », ADR 0113) : l'accueil de l'espace pro.
+  [/^\/pro\/onboarding$/, () => "/pro"],
+  [/^\/pro\/bienvenue$/, () => "/pro-bienvenue"],
   [/^\/pro\/demandes$/, () => "/pro-demandes"],
   [new RegExp(`^/pro/demandes/${UUID}$`), (id) => `/opportunite/${id}`],
   [/^\/pro\/chantiers$/, () => "/pro/chantiers"],

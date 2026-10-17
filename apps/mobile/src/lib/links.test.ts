@@ -32,7 +32,8 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/grade")).toBe("/pro-grade");
     expect(appRouteForSitePath("/pro/agenda/disponibilites")).toBe("/pro-disponibilites");
     expect(appRouteForSitePath("/pro/factures")).toBe("/pro-factures");
-    expect(appRouteForSitePath("/pro/onboarding")).toBeNull();
+    expect(appRouteForSitePath("/pro/onboarding")).toBe("/pro");
+    expect(appRouteForSitePath("/pro/bienvenue")).toBe("/pro-bienvenue");
   });
 
   it("ignore les paramètres et la barre finale", () => {
