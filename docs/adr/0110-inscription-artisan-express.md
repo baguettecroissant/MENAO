@@ -50,7 +50,7 @@
   - un SIRET introuvable, fermé ou déjà utilisé y est signalé.
 
 ## Conséquences
-- **Staging et production** : après la fusion, appliquer la migration et le nouveau modèle d'e-mail (`scripts/supabase-auth.mjs`), sinon l'e-mail ne contient pas le code.
+- **Staging et production** : après la fusion, appliquer la migration et le nouveau modèle d'e-mail (`scripts/supabase-auth.mjs`), sinon l'e-mail ne contient pas le code. Le script aligne aussi la longueur du code sur `supabase/config.toml` (6 chiffres, valable 1 heure) : Supabase hébergé en envoie 8 par défaut.
 - **Mot de passe** : 12 caractères minimum, comme pour les clients (la maquette indiquait 8).
 - **CGU et CGV** : deux cases distinctes, comme avant. Les réunir en une seule est une question juridique, laissée de côté.
 - **Hors périmètre de cette étape** :
