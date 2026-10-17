@@ -3,6 +3,8 @@
 // Aucune dépendance. Applique :
 // - l'adresse du site et les adresses de retour autorisées ;
 // - les objets et modèles d'e-mails français de supabase/config.toml (mêmes fichiers qu'en local) ;
+// - la longueur et la durée du code reçu par e-mail ([auth.email] de config.toml) : 6 chiffres,
+//   saisis dans l'inscription artisan (ADR 0110). Supabase hébergé en envoie 8 par défaut ;
 // - avec --smtp oui : l'envoi par le SMTP de Resend (domaine vérifié chez Resend), qui lève la
 //   limite de 2 e-mails par heure du service par défaut.
 // N'affiche jamais la clé SMTP.
@@ -50,6 +52,13 @@ function template(name) {
   return { subject, content: readFileSync(new URL(`../${path}`, import.meta.url), "utf8") };
 }
 
+// Code reçu par e-mail : mêmes réglages qu'en local.
+const emailSection = toml.split("\n[auth.email]\n")[1]?.split("\n[")[0] ?? "";
+const otpLength = Number(/^otp_length = (\d+)$/m.exec(emailSection)?.[1]);
+const otpExpiry = Number(/^otp_expiry = (\d+)$/m.exec(emailSection)?.[1]);
+if (!otpLength || !otpExpiry)
+  throw new Error("otp_length ou otp_expiry introuvable dans config.toml");
+
 const extras = (args["extra-urls"] ?? "")
   .split(",")
   .map((u) => u.trim().replace(/\/+$/, ""))
@@ -64,6 +73,8 @@ if (project === PRODUCTION_REF && appUrls.some((u) => u.startsWith("exp:"))) {
 const config = {
   site_url: siteUrl,
   uri_allow_list: [...[siteUrl, ...extras].map((u) => `${u}/**`), ...appUrls].join(","),
+  mailer_otp_length: otpLength,
+  mailer_otp_exp: otpExpiry,
 };
 for (const name of TEMPLATES) {
   const { subject, content } = template(name);
@@ -105,4 +116,6 @@ console.log("Appliqué :", {
   smtp_host: after.smtp_host,
   smtp_admin_email: after.smtp_admin_email,
   rate_limit_email_sent: after.rate_limit_email_sent,
+  mailer_otp_length: after.mailer_otp_length,
+  mailer_otp_exp: after.mailer_otp_exp,
 });
