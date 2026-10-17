@@ -1,4 +1,5 @@
 import { MAX_UPLOAD_BYTES } from "@menao/core";
+import type { DocumentMetadata } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
@@ -16,10 +17,12 @@ export type PickedPhoto = { uri: string };
 
 /**
  * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40),
- * signalement (F-42) ou photo de profil.
+ * signalement (F-42), photo de profil, ou document du dossier de l'artisan avec ses dates
+ * (F-14, ADR 0113).
  */
 export type PhotoTarget =
   | { purpose: "avatar" }
+  | { purpose: "document"; document: DocumentMetadata }
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
   | { purpose: "message_attachment"; chantierId: string }

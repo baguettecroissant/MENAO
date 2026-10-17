@@ -1,6 +1,6 @@
 # ADR 0113 — Inscription artisan dans l'application
 
-- Statut : accepté (« Créer mon profil » ; « Faire vérifier mon entreprise » à suivre)
+- Statut : accepté
 - Date : 17 octobre 2026
 - Reprend dans l'application les ADR 0110 (inscription en un seul parcours) et 0111 ; modifie l'ADR 0054.
 
@@ -22,12 +22,20 @@
   - un artisan existant va à son espace ; un compte client déjà en service ne devient pas un compte pro.
 - **« Votre profil est créé »** (`/pro-bienvenue`) : aperçu de la fiche et liste de ce qu'il reste à fournir.
 - **Points d'entrée** : la carte « Vous êtes artisan ? » de l'écran Compte et l'écran d'inscription mènent au parcours.
+- **« Faire vérifier mon entreprise »** (onglet Accueil de l'espace pro, tant que le dossier n'est pas validé), comme sur le site (ADR 0111) :
+  - même liste et mêmes règles : `onboardingProgress`, `documentState`, `dossierItemsLeft`, `canSubmitOnboarding` (`packages/core`) ;
+  - même envoi : `submit_artisan_onboarding` ;
+  - charte : l'écran déjà présent (`/pro-charte`, ADR 0109) ;
+  - chaque document (`/pro-document`) : photo prise ou choisie, puis les mêmes champs et contrôles que le site (`documentMetadataSchema`), envoi par `process-upload` (photo réduite et réencodée en JPEG, sans position GPS) ;
+  - photo et présentation (`/pro-profil-public`) ;
+  - entreprise, métiers et zone, faits dans le parcours, ne se modifient que sur le site. L'application l'indique, sans lien ;
+  - les liens des notifications vers le dossier (`/pro/onboarding`) ouvrent cet écran.
 - **Règle 10**, inchangée :
   - aucun bouton, lien ni écran d'abonnement dans l'application ;
   - l'invitation à choisir sa formule passera par e-mail, après la validation du dossier ;
   - le mot « abonnement » n'apparaît pas dans le parcours.
 
 ## Conséquences
-- **Suite** : « Faire vérifier mon entreprise » dans l'application (charte, documents en photo, photo et présentation, envoi du dossier). En attendant, « Votre profil est créé » mène à l'espace pro.
+- **Pas dans l'application** : les PDF (seulement des photos), la modification de l'entreprise, des métiers et de la zone, le compte de paiement (Stripe Connect) et la formule. MENAO écrit à l'artisan une fois son dossier validé.
 - **Revue d'Apple** : fournir un compte artisan de démonstration déjà validé, sinon les vérificateurs restent bloqués à « dossier en vérification ».
 - **ADR 0054** : la ligne « les artisans s'inscrivent sur le site » ne vaut plus ; le point [À VALIDER] sur la mention « inscription des artisans sur le site » disparaît, puisque l'inscription se fait dans l'application.

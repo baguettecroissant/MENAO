@@ -197,6 +197,92 @@ export const fr = {
       },
     },
   },
+  /** « Faire vérifier mon entreprise » dans l'application (ADR 0113) : mêmes textes que le site. */
+  proDossier: {
+    title: "Faire vérifier mon entreprise",
+    lead: "Ajoutez chaque élément, dans l'ordre que vous voulez. Tout est enregistré au fur et à mesure.",
+    progressLabel: "Éléments terminés",
+    progress: (done: number, total: number) => `${done} sur ${total}`,
+    left: (n: number) =>
+      n === 1 ? "Encore 1 élément avant l'envoi." : `Encore ${n} éléments avant l'envoi.`,
+    ready: "Tout est prêt : envoyez votre dossier à l'équipe MENAO.",
+    submit: "Envoyer mon dossier en vérification",
+    submitError: "Votre dossier est incomplet. Vérifiez chaque élément puis réessayez.",
+    sent: "Votre dossier est en cours de vérification. Nous vous prévenons par e-mail dès qu'il est validé.",
+    refused: (motif: string | null) =>
+      motif
+        ? `Votre dossier n'a pas été validé. Motif : ${motif}`
+        : "Votre dossier n'a pas été validé. Corrigez-le et renvoyez-le.",
+    complement: (motif: string) => `L'équipe MENAO demande un complément : ${motif}`,
+    profileTitle: "Votre entreprise, vos métiers, votre zone",
+    profileTodo: "À compléter sur le site MENAO",
+    charterTitle: "Charte qualité MENAO",
+    charterHint: (rules: number) => `${rules} règles à lire et cocher, puis une signature`,
+    profilTitle: "Votre photo et votre présentation",
+    profilHint: "Ce que les clients verront sur votre fiche",
+    documents: {
+      kbis: "Kbis ou extrait INSEE/RNE de moins de 3 mois",
+      decennale: "Attestation d'assurance décennale",
+      rc_pro: "Attestation de responsabilité civile professionnelle",
+      identite: "Pièce d'identité du dirigeant",
+    },
+    documentHints: {
+      kbis: "De moins de 3 mois",
+      decennale: "En cours de validité",
+      rc_pro: "En cours de validité",
+      identite: "Carte d'identité ou passeport",
+    },
+    states: {
+      missing: "À ajouter",
+      en_attente: "Déposé",
+      valide: "Vérifié",
+      refuse: "Refusé",
+      a_refaire: "À refaire",
+      todo: "À faire",
+      done: "Fait",
+      signed: "Signée",
+    },
+    refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
+    privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
+    after: "Une fois votre entreprise vérifiée, MENAO vous écrit pour la suite.",
+  },
+  /** Un document du dossier, en photo (ADR 0113) : mêmes champs et contrôles que le site. */
+  proDocument: {
+    photoHint: "Une photo nette, à plat et bien éclairée.",
+    take: "Prendre en photo",
+    choose: "Choisir dans mes photos",
+    replace: "Reprendre la photo",
+    added: "Photo prête à envoyer",
+    dateEmission: "Date de l'extrait",
+    dateFin: "Valable jusqu'au",
+    dateFinIdentite: "Date d'expiration (facultatif)",
+    datePlaceholder: "JJ/MM/AAAA",
+    dateInvalid: "Date invalide (JJ/MM/AAAA).",
+    assureur: "Assureur",
+    numero: "Numéro de contrat",
+    couverture: "Couverture géographique",
+    couverturePlaceholder: "France métropolitaine",
+    send: "Envoyer le document",
+    sent: "Document envoyé : l'équipe MENAO le vérifie.",
+    photoRequired: "Ajoutez une photo du document.",
+    locked:
+      "Votre dossier est en cours de vérification : les documents ne peuvent plus être changés.",
+    current: (state: string) => `État : ${state}`,
+  },
+  /** Photo et présentation de la fiche de l'artisan (ADR 0113), comme sur le site. */
+  proPublicProfile: {
+    title: "Votre photo et votre présentation",
+    photoTitle: "Photo de profil",
+    photoHint: "Votre visage ou le logo de votre entreprise, bien cadré.",
+    addPhoto: "Ajouter une photo",
+    changePhoto: "Changer la photo",
+    photoDone: "Photo enregistrée.",
+    presentation: "Présentation",
+    presentationHint: (min: number, length: number) =>
+      `${min} caractères au moins (${length} pour l'instant) : votre expérience, vos spécialités, votre façon de travailler.`,
+    save: "Enregistrer la présentation",
+    saved: "Présentation enregistrée.",
+  },
   // Barres d'onglets des maquettes (ADR 0084) : client « Accueil · Chantiers · (Recherche) ·
   // Documents · Messages », artisan « Accueil · Chantiers · (+) · Devis · Messages ».
   tabs: {
