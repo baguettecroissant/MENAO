@@ -67,7 +67,7 @@ select lives_ok($$ select public.admin_decide_artisan(pg_temp.artisan('ae000000-
 select lives_ok($$ select public.admin_decide_artisan(pg_temp.artisan('ae000000-0000-4000-8000-000000000003'), 'complement',
   'Ajoutez votre attestation RC Pro à jour') $$, 'complément demandé pour C');
 select lives_ok($$ select public.admin_review_document((select id from public.artisan_documents where storage_path = 'nf/rc.pdf'),
-  'refuse', 'Attestation illisible') $$, 'document de F refusé pendant la vérification');
+  'refuse', 'Attestation illisible', 'illisible') $$, 'document de F refusé pendant la vérification');
 reset role;
 
 select results_eq($$ select type::text, data from pg_temp.notifs('ae000000-0000-4000-8000-000000000001') $$,
@@ -124,7 +124,7 @@ insert into public.artisan_documents (artisan_id, type, storage_path, mime_type,
 select pg_temp.connecter('ae000000-0000-4000-8000-000000000009', 'admin', 'aal2');
 set local role authenticated;
 select lives_ok($$ select public.admin_review_document((select id from public.artisan_documents where storage_path = 'nd/dec-renouv.pdf'),
-  'refuse', 'Attestation illisible') $$, 'renouvellement refusé');
+  'refuse', 'Attestation illisible', 'illisible') $$, 'renouvellement refusé');
 reset role;
 select results_eq(
   $$ select data from pg_temp.notifs('ae000000-0000-4000-8000-000000000004') where type = 'document_refuse' $$,

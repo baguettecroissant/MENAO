@@ -358,6 +358,7 @@ export type Database = {
           id: string;
           mime_type: string;
           numero: string | null;
+          refusal_code: string | null;
           refusal_reason: string | null;
           renewal_reminder_days: number | null;
           size_bytes: number;
@@ -380,6 +381,7 @@ export type Database = {
           id?: string;
           mime_type: string;
           numero?: string | null;
+          refusal_code?: string | null;
           refusal_reason?: string | null;
           renewal_reminder_days?: number | null;
           size_bytes: number;
@@ -401,6 +403,7 @@ export type Database = {
           id?: string;
           mime_type?: string;
           numero?: string | null;
+          refusal_code?: string | null;
           refusal_reason?: string | null;
           renewal_reminder_days?: number | null;
           size_bytes?: number;
@@ -3288,6 +3291,7 @@ export type Database = {
       };
       admin_review_document: {
         Args: {
+          p_code?: string;
           p_document_id: string;
           p_reason?: string;
           p_status: Database["public"]["Enums"]["document_status"];

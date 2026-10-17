@@ -4,7 +4,8 @@
  * Les scripts en ligne restent autorisés ('unsafe-inline') : Next.js en insère pour l'hydratation,
  * et des nonces imposeraient un rendu dynamique de chaque page (fin des pages statiques, spec §4.4).
  * La politique ferme tout le reste : origines de scripts, d'images et de connexions limitées à
- * celles que le site utilise, aucun cadre (ni contenu ni inclusion du site ailleurs), aucun plugin,
+ * celles que le site utilise, aucun cadre hors du stockage Supabase (PDF du back-office, ADR 0120)
+ * et aucune inclusion du site ailleurs, aucun plugin,
  * envois de formulaires limités au site, aux pages de paiement et de signature, et à la connexion
  * avec Google ou Apple.
  */
@@ -76,7 +77,10 @@ export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: 
       ...(preview ? [...live, "wss://ws-us3.pusher.com"] : []),
     ],
     ["worker-src", "'self'", "blob:"],
-    ["frame-src", ...(preview ? live : ["'none'"])],
+    // Cadres : le stockage Supabase seulement (ADR 0120), pour les PDF des artisans vérifiés côte à
+    // côte dans le back-office. Sur tout le site : lors d'une navigation interne, la page garde la
+    // politique du premier document chargé (une règle propre à /admin ne s'appliquerait pas).
+    ["frame-src", supabase, ...live],
     ["frame-ancestors", "'none'"],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],

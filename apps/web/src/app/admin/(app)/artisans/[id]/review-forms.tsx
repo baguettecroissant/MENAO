@@ -1,7 +1,8 @@
 "use client";
 
+import { DOCUMENT_REFUSAL_CODES } from "@menao/validation";
 import { useActionState } from "react";
-import { Alert, Button, Field } from "@/components/ui";
+import { Alert, Button, Field, SelectField } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { decideArtisan, reviewDocument } from "@/lib/admin/actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -21,7 +22,29 @@ export function DocumentReview({
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <input type="hidden" name="documentId" value={documentId} />
       <input type="hidden" name="artisanId" value={artisanId} />
-      <Field id={`reason-${documentId}`} label={t.docReason} name="reason" />
+      {/* Motifs en liste (ADR 0120) : utilisés seulement pour un refus. */}
+      <SelectField
+        id={`code-${documentId}`}
+        label={t.docReason}
+        name="code"
+        defaultValue=""
+        errors={state.fieldErrors?.code}
+      >
+        <option value="">{t.docReasonChoose}</option>
+        {DOCUMENT_REFUSAL_CODES.map((code) => (
+          <option key={code} value={code}>
+            {t.refusalReasons[code]}
+          </option>
+        ))}
+      </SelectField>
+      <Field
+        id={`detail-${documentId}`}
+        label={t.docDetail}
+        name="detail"
+        maxLength={300}
+        hint={t.docDetailHint}
+        errors={state.fieldErrors?.detail}
+      />
       <div className="flex flex-wrap gap-2">
         <Button
           type="submit"

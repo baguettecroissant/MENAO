@@ -61,7 +61,8 @@ test("renouvellement d'une assurance qui expire, validé par un admin", async ({
   await renewals.getByRole("link", { name: "VALIDE EXEMPLE" }).click();
   const item = page.getByRole("listitem", { name: "Attestation d'assurance décennale" });
   await item.getByRole("button", { name: "Valider le document" }).click();
-  await expect(item.getByText("DEC-2222")).toBeVisible();
-  await expect(item.getByText("DEC-1111")).toHaveCount(0);
+  await expect(item.getByText(/DEC-2222/).first()).toBeVisible();
+  // L'ancienne attestation passe dans l'historique du document (ADR 0120).
+  await expect(item.locator("details").getByText(/DEC-1111/)).toHaveCount(1);
   await expect(item.getByRole("button", { name: "Valider le document" })).toHaveCount(0);
 });
