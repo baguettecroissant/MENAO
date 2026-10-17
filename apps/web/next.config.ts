@@ -19,6 +19,15 @@ const csp = contentSecurityPolicy({
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 });
 
+// Back-office (ADR 0120) : même politique, avec les documents des artisans intégrés (PDF).
+const adminCsp = contentSecurityPolicy({
+  supabaseUrl,
+  dev: process.env.NODE_ENV !== "production",
+  preview: (process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV) === "preview",
+  sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  documentFrames: true,
+});
+
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -44,7 +53,11 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   typedRoutes: true,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // La dernière règle l'emporte pour une même en-tête.
+      { source: "/admin/:path*", headers: [{ key: "Content-Security-Policy", value: adminCsp }] },
+    ];
   },
   // Mode pré-lancement (ADR 0101) : page d'attente sans le cookie des testeurs.
   async rewrites() {

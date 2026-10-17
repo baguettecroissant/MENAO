@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { UPLOAD_PURPOSES, documentMetadataSchema, presentationSchema } from "../src/documents";
+import {
+  DOCUMENT_REFUSAL_CODES,
+  UPLOAD_PURPOSES,
+  documentMetadataSchema,
+  documentRefusalSchema,
+  presentationSchema,
+} from "../src/documents";
 import { messages } from "../src/messages";
 
 const today = new Date("2026-10-09T12:00:00Z");
@@ -82,5 +88,32 @@ describe("presentationSchema et usages", () => {
 
   it("usages des fichiers déposés", () => {
     expect(UPLOAD_PURPOSES).toEqual(["document", "avatar", "portfolio", "logo"]);
+  });
+});
+
+describe("motifs de refus d'un document (ADR 0120)", () => {
+  it("motif de la liste, précision facultative", () => {
+    expect(documentRefusalSchema.parse({ code: "illisible", detail: " " })).toEqual({
+      code: "illisible",
+    });
+    expect(documentRefusalSchema.parse({ code: "expire", detail: "Kbis de mai" })).toEqual({
+      code: "expire",
+      detail: "Kbis de mai",
+    });
+  });
+
+  it("motif absent ou inconnu : refusé", () => {
+    for (const code of ["", "inconnu", undefined]) {
+      const r = documentRefusalSchema.safeParse({ code });
+      expect(r.success).toBe(false);
+      expect(r.error?.issues[0]?.message).toBe(messages.refusalCode);
+    }
+  });
+
+  it("« autre » : précision obligatoire", () => {
+    const r = documentRefusalSchema.safeParse({ code: "autre", detail: "" });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0]?.message).toBe(messages.refusalDetail);
+    expect(DOCUMENT_REFUSAL_CODES).toContain("autre");
   });
 });

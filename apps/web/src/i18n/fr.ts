@@ -4869,6 +4869,75 @@ export const fr = {
       docValidate: "Valider le document",
       docRefuse: "Refuser le document",
       docReason: "Motif du refus",
+      docReasonChoose: "Choisir un motif",
+      docDetail: "Précision pour l'artisan",
+      docDetailHint: "Facultative, sauf pour « Autre ». Ajoutée au motif dans le message.",
+      // Motifs de refus (ADR 0120) : libellés envoyés tels quels à l'artisan.
+      refusalReasons: {
+        illisible: "Document illisible : reprenez la photo à plat, bien éclairée, sans reflet.",
+        incomplet:
+          "Document incomplet : toutes les pages ou le recto et le verso sont nécessaires.",
+        expire: "Document expiré ou trop ancien : envoyez une version à jour.",
+        mauvais_document: "Ce n'est pas le document demandé.",
+        nom_different: "Le nom ou l'entreprise ne correspond pas à votre dossier.",
+        siret_different: "Le SIRET ne correspond pas à celui de votre entreprise.",
+        dates_differentes: "Les dates saisies ne correspondent pas à celles du document.",
+        couverture_insuffisante: "L'assurance ne couvre pas les métiers que vous avez déclarés.",
+        code_securite_invalide:
+          "Le code de sécurité de l'attestation n'a pas pu être vérifié sur le site de l'URSSAF.",
+        autre: "Autre motif",
+      },
+      // Vue côte à côte (ADR 0120).
+      docPreview: (label: string) => `Aperçu : ${label}`,
+      docOpen: "Ouvrir dans un nouvel onglet",
+      docNoPreview: "Aperçu impossible pour ce format : ouvrez le document.",
+      docReplaced: "Remplacé",
+      docEntered: "Saisi par l'artisan",
+      docDeposited: (date: string) => `Déposé le ${date}`,
+      docChecks: "À contrôler",
+      docCompany: "Fiche de l'entreprise",
+      docCompanyName: "Raison sociale",
+      docCompanySiret: "SIRET",
+      docCompanySigner: "Signataire de la charte",
+      docCompanyAddress: "Adresse",
+      docEmission: "Date d'émission",
+      docEnd: "Fin de validité",
+      docNumber: "Numéro",
+      docSecurityCode: "Code de sécurité",
+      docInsurer: "Assureur",
+      docCoverage: "Couverture",
+      checks: {
+        kbis: [
+          "Raison sociale et SIRET identiques à la fiche de l'entreprise",
+          "Extrait de moins de 3 mois",
+          "Le dirigeant est bien le signataire de la charte",
+        ],
+        decennale: [
+          "Raison sociale ou nom identiques à la fiche",
+          "Période de validité conforme aux dates saisies",
+          "Activités couvertes : les métiers déclarés (ci-dessous)",
+        ],
+        rc_pro: [
+          "Raison sociale ou nom identiques à la fiche",
+          "Période de validité conforme aux dates saisies",
+        ],
+        identite: [
+          "Nom identique à celui du dirigeant et du signataire de la charte",
+          "Document en cours de validité, recto et verso lisibles",
+        ],
+        urssaf: [
+          "Code de sécurité vérifié sur le site de l'URSSAF",
+          "Raison sociale et SIRET identiques à la fiche",
+          "Date d'émission conforme (moins de 6 mois)",
+        ],
+      },
+      docHistory: (count: number) =>
+        count === 1
+          ? "Historique : 1 version précédente"
+          : `Historique : ${count} versions précédentes`,
+      docDecidedBy: (date: string, name: string | null) =>
+        name ? `Décision le ${date} par ${name}` : `Décision le ${date}`,
+      decidedBy: (name: string) => `par ${name}`,
       profile: "Profil public",
       visibility: "Visibilité",
       visible: "Visible des particuliers",
@@ -4894,7 +4963,8 @@ export const fr = {
       decision: "Décision sur le dossier",
       decisionNotPending: "Ce dossier n'est pas en attente de vérification.",
       validate: "Valider le dossier",
-      validateHint: "Possible quand les 4 documents sont validés et en cours de validité.",
+      validateHint:
+        "Possible quand les documents obligatoires sont validés et en cours de validité.",
       refuse: "Refuser le dossier",
       complement: "Demander un complément",
       message: "Message à l'artisan",

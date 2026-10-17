@@ -16,6 +16,11 @@ export type CspOptions = {
   preview: boolean;
   /** DSN Sentry : les violations y sont signalées. */
   sentryDsn?: string;
+  /**
+   * Back-office seulement (ADR 0120) : documents des artisans (PDF) intégrés depuis le stockage
+   * Supabase, par URL signée, pour la vérification côte à côte.
+   */
+  documentFrames?: boolean;
 };
 
 // Pages externes atteintes après l'envoi d'un formulaire (redirection d'une Server Action sans
@@ -44,7 +49,13 @@ export function sentryReportUri(dsn: string | undefined): string | null {
   }
 }
 
-export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: CspOptions) {
+export function contentSecurityPolicy({
+  supabaseUrl,
+  dev,
+  preview,
+  sentryDsn,
+  documentFrames = false,
+}: CspOptions) {
   const supabase = supabaseUrl.replace(/\/+$/, "");
   const realtime = supabase.replace(/^http/, "ws");
   const live = preview ? ["https://vercel.live"] : [];
@@ -76,7 +87,12 @@ export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: 
       ...(preview ? [...live, "wss://ws-us3.pusher.com"] : []),
     ],
     ["worker-src", "'self'", "blob:"],
-    ["frame-src", ...(preview ? live : ["'none'"])],
+    [
+      "frame-src",
+      ...(preview || documentFrames
+        ? [...(preview ? live : []), ...(documentFrames ? [supabase] : [])]
+        : ["'none'"]),
+    ],
     ["frame-ancestors", "'none'"],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],
