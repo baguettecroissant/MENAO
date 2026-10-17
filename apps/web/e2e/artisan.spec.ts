@@ -82,6 +82,12 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByRole("heading", { level: 1, name: "Entreprise" })).toBeVisible();
   await expect(page.getByText(/^FR\d{11}$/)).toBeVisible();
   await page.goto("/pro/onboarding/metiers");
+  // RGE lu dans l'annuaire de l'ADEME (faux serveur) avec la vérification du SIRET, puis
+  // « Actualiser » (ADR 0118).
+  await expect(page.getByText("Isolation des combles perdus")).toBeVisible();
+  await page.getByRole("button", { name: "Actualiser" }).click();
+  await expect(page.getByText("Annuaire RGE consulté : votre fiche est à jour.")).toBeVisible();
+  await expect(page.getByText(/^Annuaire consulté le /)).toBeVisible();
   await page.getByLabel("Type").selectOption("rge");
   await page.getByLabel("Numéro", { exact: true }).fill("E-00000");
   await page.getByLabel("Date de fin de validité").fill(nextYear);

@@ -1108,6 +1108,8 @@ export const fr = {
       certificationTitle: (label: string) => `Certifié ${label}`,
       certificationDetail: (numero: string, date: string) =>
         `N° ${numero} · valable jusqu'au ${date}`,
+      rgeTitle: "Reconnu Garant de l'Environnement (RGE)",
+      rgeDetail: "Vérifié dans l'annuaire officiel des entreprises RGE",
       score: "Score Menao",
       scoreEmpty:
         "Pas encore de score : cet artisan vient de rejoindre Menao. Le score sera calculé à partir des avis vérifiés de ses clients.",
@@ -3448,7 +3450,20 @@ export const fr = {
         specialties: "Spécialités",
         experience: "Années d'expérience",
         certifications: "Certifications et qualifications",
-        certificationsHint: "RGE, Qualifelec, Qualibat… Elles seront vérifiées par l'équipe MENAO.",
+        certificationsHint:
+          "Qualibat, Qualifelec, QualiPAC… L'équipe MENAO les vérifie avant de les afficher sur votre fiche.",
+        rgeTitle: "RGE : vérifié automatiquement avec votre SIRET",
+        rgeFound: "Domaines RGE trouvés dans l'annuaire officiel, affichés sur votre fiche :",
+        rgeNone:
+          "Aucune qualification RGE en cours pour votre SIRET dans l'annuaire officiel. Si vous venez de l'obtenir, elle apparaîtra dès sa publication.",
+        rgeCheckedOn: (date: string) => `Annuaire consulté le ${date}.`,
+        rgeRefresh: "Actualiser",
+        rgeStatus: {
+          ok: "Annuaire RGE consulté : votre fiche est à jour.",
+          rate_limited: "Trop de demandes : réessayez dans une heure.",
+          siret_missing: "Renseignez d'abord votre SIRET à l'étape Entreprise.",
+          unavailable: "L'annuaire RGE ne répond pas pour l'instant. Réessayez plus tard.",
+        },
         certType: "Type",
         certNumber: "Numéro",
         certEnd: "Date de fin de validité",
@@ -4805,6 +4820,22 @@ export const fr = {
         `${km ?? "?"} km autour de ${label ?? "?"}`,
       certifications: "Certifications",
       certVerified: "Vérifiée",
+      certRgeConfirmed: (organisme: string, date: string) =>
+        `Confirmée par l'annuaire RGE (${organisme}, jusqu'au ${date})`,
+      certRgeUnknown: "Absente de l'annuaire RGE : à vérifier sur le site de l'organisme.",
+      rge: "Qualifications RGE (annuaire officiel de l'ADEME)",
+      rgeNone: "Aucune qualification RGE pour ce SIRET.",
+      rgeNever: "Annuaire pas encore consulté.",
+      rgeCheckedOn: (date: string) => `Annuaire consulté le ${date}.`,
+      rgeExpired: "expirée",
+      rgeCertificate: "Certificat",
+      rgeRefresh: "Revérifier le RGE",
+      rgeStatus: {
+        ok: "Annuaire RGE consulté.",
+        rate_limited: "Trop de demandes : réessayez dans une heure.",
+        siret_missing: "SIRET absent ou invalide.",
+        unavailable: "L'annuaire RGE ne répond pas pour l'instant.",
+      },
       certVerify: "Marquer comme vérifiée",
       certUnverify: "Annuler la vérification",
       charter: "Charte qualité",

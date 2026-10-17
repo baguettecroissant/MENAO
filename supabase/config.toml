@@ -402,6 +402,8 @@ deno_version = 2
 [edge_runtime.secrets]
 INSEE_API_BASE_URL = "env(INSEE_API_BASE_URL)"
 INSEE_API_KEY = "env(INSEE_API_KEY)"
+# Annuaire RGE de l'ADEME (ADR 0118) : adresse par défaut si absente (faux serveur en e2e).
+RGE_API_BASE_URL = "env(RGE_API_BASE_URL)"
 STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
 STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
 STRIPE_CONNECT_WEBHOOK_SECRET = "env(STRIPE_CONNECT_WEBHOOK_SECRET)"
@@ -443,6 +445,10 @@ DOCUSEAL_OTP = "env(DOCUSEAL_OTP)"
 # Vérification Sirene (F-14) : réservée aux utilisateurs connectés.
 [functions.sirene-check]
 verify_jwt = true
+
+# Appelée par l'artisan, un admin (jeton vérifié dans la fonction) ou la base (secret partagé).
+[functions.rge-check]
+verify_jwt = false
 
 # Abonnements (F-15). Le webhook Stripe n'a pas de jeton Supabase : signature Stripe vérifiée.
 [functions.billing-checkout]

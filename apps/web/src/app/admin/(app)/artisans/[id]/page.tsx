@@ -3,7 +3,9 @@ import {
   artisanVisibility,
   chantiersByStage,
   documentIsValid,
+  parisToday,
   requestRates,
+  rgeConfirmation,
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "@menao/core";
@@ -12,12 +14,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui";
+import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { verifyCertification } from "@/lib/admin/actions";
+import { adminRefreshRge, verifyCertification } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { documentLogoUrl } from "@/lib/documents/logo";
+import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
 import { DecisionForm, DocumentReview } from "./review-forms";
 import { RadiationForm } from "./radiation-form";
 import { SuspensionForm } from "./suspension-form";
@@ -31,8 +34,15 @@ const dateTime = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
 });
 
-export default async function AdminArtisanPage({ params }: PageProps<"/admin/artisans/[id]">) {
+export default async function AdminArtisanPage({
+  params,
+  searchParams,
+}: PageProps<"/admin/artisans/[id]">) {
   const { id } = await params;
+  const { rge } = (await searchParams) as { rge?: string };
+  const rgeStatus = (RGE_REFRESH_STATUSES as readonly string[]).includes(rge ?? "")
+    ? (rge as RgeRefreshStatus)
+    : null;
   const { supabase } = await requireAdmin();
 
   const { data: artisan } = await supabase.from("artisans").select("*").eq("id", id).maybeSingle();
@@ -51,6 +61,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
     workTypeRef,
     subscription,
     charter,
+    rgeRows,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -97,6 +108,12 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
       .order("accepted_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Qualifications RGE lues dans l'annuaire de l'ADEME (ADR 0118).
+    supabase
+      .from("artisan_rge_qualifications")
+      .select("id, organisme, nom_certificat, nom_qualification, domaine, date_fin, url_certificat")
+      .eq("artisan_id", id)
+      .order("domaine"),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
   const [logoUrl, activity] = await Promise.all([
@@ -115,6 +132,12 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
   const publicUrl = (bucket: string, path: string) =>
     supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   const declaredTrades = (trades.data ?? []).map((tr) => tr.trade_code);
+  const today = parisToday();
+  const rgeList = (rgeRows.data ?? []).map((r) => ({
+    ...r,
+    certificate: r.nom_certificat,
+    endsOn: r.date_fin,
+  }));
   const label = (ref: { code: string; label: string }[] | null, code: string) =>
     ref?.find((r) => r.code === code)?.label ?? code;
   const pending = artisan.status === "en_verification";
@@ -221,6 +244,7 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
                 {fr.certificationTypes[c.type]} · {c.numero} ·{" "}
                 {docT.validUntil(day.format(new Date(c.date_fin)))}
                 {c.verified_at && <span className="ml-2 text-success">✓ {t.certVerified}</span>}
+                <CertificationRgeHint type={c.type} rows={rgeList} today={today} />
               </span>
               <form action={verifyCertification}>
                 <input type="hidden" name="certificationId" value={c.id} />
@@ -236,6 +260,66 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
             </li>
           ))}
         </ul>
+      </Section>
+
+      <Section title={t.rge}>
+        <div className="flex flex-col gap-3">
+          {rgeStatus && (
+            <Alert tone={rgeStatus === "ok" ? "success" : "error"}>{t.rgeStatus[rgeStatus]}</Alert>
+          )}
+          {rgeList.length === 0 ? (
+            <p className="text-muted-foreground">
+              {artisan.rge_checked_at ? t.rgeNone : t.rgeNever}
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-1 text-sm">
+              {rgeList.map((r) => (
+                <li key={r.id}>
+                  <span className="font-medium">{r.domaine}</span>
+                  {" · "}
+                  <span className="text-muted-foreground">
+                    {[r.nom_certificat ?? r.organisme, r.nom_qualification]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {" · "}
+                    {r.date_fin < today
+                      ? t.rgeExpired
+                      : docT.validUntil(day.format(new Date(r.date_fin)))}
+                  </span>
+                  {r.url_certificat && (
+                    <>
+                      {" · "}
+                      <a
+                        href={r.url_certificat}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-primary underline"
+                      >
+                        {t.rgeCertificate}
+                      </a>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            {artisan.rge_checked_at && (
+              <span className="text-muted-foreground">
+                {t.rgeCheckedOn(dateTime.format(new Date(artisan.rge_checked_at)))}
+              </span>
+            )}
+            <form action={adminRefreshRge}>
+              <input type="hidden" name="artisanId" value={artisan.id} />
+              <button
+                type="submit"
+                className="min-h-touch font-medium text-primary underline-offset-2 hover:underline"
+              >
+                {t.rgeRefresh}
+              </button>
+            </form>
+          </div>
+        </div>
       </Section>
 
       <Section title={t.charter}>
@@ -572,5 +656,26 @@ function CoveredTrades({
         </p>
       )}
     </>
+  );
+}
+
+/** Aide à la vérification d'une certification déclarée : l'annuaire RGE la confirme-t-il ? */
+function CertificationRgeHint({
+  type,
+  rows,
+  today,
+}: {
+  type: string;
+  rows: { organisme: string; certificate: string | null; endsOn: string }[];
+  today: string;
+}) {
+  if (type === "autre") return null;
+  const match = rgeConfirmation(type, rows, today);
+  return match ? (
+    <span className="block text-sm text-success">
+      {t.certRgeConfirmed(match.certificate ?? match.organisme, day.format(new Date(match.endsOn)))}
+    </span>
+  ) : (
+    <span className="block text-sm text-muted-foreground">{t.certRgeUnknown}</span>
   );
 }

@@ -94,6 +94,7 @@ jobs:
         env:
           INSEE_API_BASE_URL: http://host.docker.internal:54399
           INSEE_API_KEY: cle-factice-ci
+          RGE_API_BASE_URL: http://host.docker.internal:54399/rge/lines
           STRIPE_SECRET_KEY: sk_test_menaoci
           STRIPE_WEBHOOK_SECRET: whsec_menao_ci
           STRIPE_CONNECT_WEBHOOK_SECRET: whsec_menao_connect_ci

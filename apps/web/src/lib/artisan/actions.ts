@@ -21,6 +21,7 @@ import { z } from "zod";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
+import { invokeRgeCheck } from "@/lib/rge";
 import { getOnboardingContext } from "./context";
 
 const t = fr.pro.onboarding;
@@ -75,6 +76,14 @@ export async function verifySiret(): Promise<SireneCheckState> {
   }
   refresh();
   return { status: status ?? "unavailable" };
+}
+
+/** Nouvelle lecture de l'annuaire RGE pour le SIRET de l'artisan (ADR 0118), « Actualiser ». */
+export async function refreshRge(): Promise<void> {
+  const { supabase } = await getOnboardingContext();
+  const status = await invokeRgeCheck(supabase);
+  refresh();
+  redirect(`/pro/onboarding/metiers?rge=${status}` as Route);
 }
 
 export async function saveCompany(_prev: FormState, formData: FormData): Promise<FormState> {

@@ -1,5 +1,14 @@
 import { availability, parisToday, responseTimeBucket } from "@menao/core";
-import { BadgeCheck, Briefcase, CircleCheck, Clock, MapPin, ShieldCheck, Star } from "lucide-react";
+import {
+  BadgeCheck,
+  Briefcase,
+  CircleCheck,
+  Clock,
+  Leaf,
+  MapPin,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { ReviewList, type PublicReview } from "@/components/review/review-list";
@@ -184,6 +193,20 @@ export function ProfileBody({
                 {t.certificationDetail(c.numero, formatProfileDay(c.valid_until))}
               </Guarantee>
             ))}
+            {profile.rge.length > 0 && (
+              <Guarantee icon={<Leaf />} title={t.rgeTitle}>
+                <span className="flex flex-col gap-2">
+                  <span>{t.rgeDetail}</span>
+                  <span className="flex flex-wrap gap-1.5">
+                    {profile.rge.map((q) => (
+                      <Tag key={q.domain} tone="neutral">
+                        {q.domain}
+                      </Tag>
+                    ))}
+                  </span>
+                </span>
+              </Guarantee>
+            )}
           </ul>
         </Section>
         <Section title={t.score}>
