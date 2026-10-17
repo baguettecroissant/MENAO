@@ -3514,10 +3514,6 @@ export type Database = {
           welcome: number;
         }[];
       };
-      complete_notification: {
-        Args: { p_error?: string; p_id: string; p_retry?: boolean; p_sent: boolean };
-        Returns: undefined;
-      };
       complete_artisan_oauth_signup: {
         Args: {
           p_first_name: string;
@@ -3528,6 +3524,10 @@ export type Database = {
           p_signup: Json;
           p_siret: string;
         };
+        Returns: undefined;
+      };
+      complete_notification: {
+        Args: { p_error?: string; p_id: string; p_retry?: boolean; p_sent: boolean };
         Returns: undefined;
       };
       complete_oauth_signup: {
