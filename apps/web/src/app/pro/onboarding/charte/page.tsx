@@ -41,7 +41,7 @@ export default async function CharterPage({
   return (
     <CharterDone
       charter={charter}
-      continueHref="/pro/onboarding/documents"
+      continueHref="/pro/onboarding"
       continueLabel={t.next}
       rereadHref="/pro/onboarding/charte?relire=1"
     />

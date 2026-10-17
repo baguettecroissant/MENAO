@@ -92,11 +92,9 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   await page.goto("/pro/onboarding/formule");
   await expect(page.getByRole("heading", { name: "Votre abonnement : Base" })).toBeVisible();
   await expect(page.getByRole("status")).toContainText("Période d'essai jusqu'au");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Étapes de l'inscription" })
-      .getByRole("link", { name: /Formule.*terminée/ }),
-  ).toBeVisible();
+  await page.goto("/pro/onboarding");
+  await expect(page.getByRole("link", { name: /Choisir votre formule.*Fait/ })).toBeVisible();
+  await page.goto("/pro/onboarding/formule");
 
   // URL du portail fournie par Stripe (stripe-mock en CI) : toute navigation externe est simulée.
   const external: string[] = [];

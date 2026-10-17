@@ -63,17 +63,23 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByText(/30 km autour de 1 Rue de l'Exemple 06000 Nice/)).toBeVisible();
   await page.getByRole("link", { name: "Faire vérifier mon entreprise" }).click();
 
-  // Entreprise, métiers et zone sont déjà faits : l'inscription reprend à la charte.
-  await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
-  const stepper = page.getByRole("navigation", { name: "Étapes de l'inscription" });
-  for (const step of ["Entreprise", "Métiers", "Zone d'intervention"]) {
-    await expect(
-      stepper.getByRole("link", { name: new RegExp(`${step}.*terminée`) }),
-    ).toBeVisible();
-  }
+  // « Faire vérifier mon entreprise » (ADR 0111) : entreprise, métiers et zone déjà faits.
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Faire vérifier mon entreprise" }),
+  ).toBeVisible();
+  await expect(page.getByText("1 sur 7")).toBeVisible();
+  await expect(page.getByText("Encore 6 éléments avant l'envoi.")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Envoyer mon dossier en vérification" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "Votre entreprise, vos métiers, votre zone" }),
+  ).toContainText("Fait");
 
   // Les étapes restent modifiables : certification et spécialité, puis zone en communes.
   await page.goto("/pro/onboarding/entreprise");
+  await expect(page.getByRole("heading", { level: 1, name: "Entreprise" })).toBeVisible();
   await expect(page.getByText(/^FR\d{11}$/)).toBeVisible();
   await page.goto("/pro/onboarding/metiers");
   await page.getByLabel("Type").selectOption("rge");
@@ -85,8 +91,9 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByLabel("Fenêtres").check();
   await page.getByLabel("Années d'expérience").fill("8");
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding\/zone$/);
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
 
+  await page.goto("/pro/onboarding/zone");
   await page.getByLabel("Une liste de communes").check();
   await page.getByRole("combobox", { name: "Ajouter une commune" }).fill("nic");
   await page.getByRole("option", { name: "Nice (06000)" }).click();
@@ -95,6 +102,8 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByRole("list", { name: "Communes" }).getByRole("listitem")).toHaveCount(2);
   await page.getByRole("button", { name: "Retirer Nice" }).click();
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await page.getByRole("link", { name: /Charte qualité MENAO/ }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
 
   // Étape 4 — charte qualité (ADR 0104) : 25 règles cochées, tracé de signature, accord
@@ -121,10 +130,18 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
   await expect(page.getByRole("heading", { name: /Tu fais partie de Menao/ })).toBeVisible();
   await expect(page.getByText("25 / 25 (R1.1 à R6.2)")).toBeVisible();
-  await page.getByRole("link", { name: /Continuer : vérification de mes documents/ }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding\/documents$/);
+  await page.getByRole("link", { name: /Continuer : mes documents/ }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await expect(page.getByRole("link", { name: /Charte qualité MENAO.*Signée/ })).toBeVisible();
 
-  // Étape 5 — documents (un faux PDF est refusé d'après son contenu réel)
+  // Documents : une pièce à la fois depuis le dossier (un faux PDF est refusé d'après son contenu
+  // réel), puis les autres sur la page de tous les documents.
+  await page
+    .getByRole("link", { name: /Kbis ou extrait INSEE\/RNE de moins de 3 mois.*À ajouter/ })
+    .click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/documents\?type=kbis$/);
+  await expect(page.getByRole("region")).toHaveCount(1);
+  await expect(page.getByLabel("Prendre en photo")).toHaveAttribute("capture", "environment");
   const kbis = page.getByRole("region", { name: "Kbis ou extrait INSEE/RNE de moins de 3 mois" });
   await kbis.getByLabel("Date d'émission").fill(dates.recent);
   await kbis.getByLabel("Fichier").setInputFiles(files.fakePdf);
@@ -134,6 +151,11 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await kbis.getByLabel("Fichier").setInputFiles(files.pdf);
   await kbis.getByRole("button", { name: "Déposer le document" }).click();
   await expect(kbis.getByText("Déposé, en attente de vérification")).toBeVisible();
+  await page.getByRole("link", { name: "Retour à mon dossier" }).click();
+  await expect(
+    page.getByRole("link", { name: /Kbis ou extrait INSEE\/RNE de moins de 3 mois.*Déposé/ }),
+  ).toBeVisible();
+  await page.goto("/pro/onboarding/documents");
 
   const decennale = page.getByRole("region", { name: "Attestation d'assurance décennale" });
   await decennale.getByLabel("Assureur").fill("Assurances Exemple");
@@ -200,6 +222,9 @@ test("SIRET inconnu ou entreprise fermée : message clair (compte artisan du see
   await page.getByLabel("Adresse e-mail").fill("artisan@example.test");
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
+  // Le dossier (ADR 0111), puis l'étape « Entreprise ».
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await page.getByRole("link", { name: "Entreprise", exact: true }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/entreprise$/);
 
   await page.getByLabel("Numéro SIRET").fill("00000003400017");

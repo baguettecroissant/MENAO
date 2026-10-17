@@ -118,3 +118,33 @@ export function firstIncompleteStep(
   const progress = onboardingProgress(a, today);
   return ONBOARDING_STEPS.find((s) => !progress[s.key])?.key ?? "formule";
 }
+
+/**
+ * État d'un document dans « Faire vérifier mon entreprise » (ADR 0111) : à ajouter, déposé
+ * (en attente de vérification), vérifié, refusé, ou à refaire (date dépassée).
+ */
+export type DocumentState = "missing" | "en_attente" | "valide" | "refuse" | "a_refaire";
+
+export function documentState(
+  type: RequiredDocumentType,
+  doc: DocumentSnapshot | undefined,
+  today: Date = new Date(),
+): DocumentState {
+  if (!doc) return "missing";
+  if (doc.status === "refuse") return "refuse";
+  if (!documentIsValid(type, doc, today)) return "a_refaire";
+  return doc.status;
+}
+
+/**
+ * Éléments du dossier à terminer avant l'envoi (ADR 0111) : entreprise, métiers et zone (un seul
+ * élément, faits à l'inscription), la charte, chaque document, puis le profil public.
+ */
+export const DOSSIER_ITEM_COUNT = 3 + REQUIRED_DOCUMENT_TYPES.length;
+
+export function dossierItemsLeft(a: ArtisanOnboardingSnapshot, today: Date = new Date()): number {
+  const p = onboardingProgress(a, today);
+  const items = [p.entreprise && p.metiers && p.zone, p.charte, p.profil];
+  const documents = REQUIRED_DOCUMENT_TYPES.map((t) => documentIsValid(t, a.documents[t], today));
+  return [...items, ...documents].filter((done) => !done).length;
+}
