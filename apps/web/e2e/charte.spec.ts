@@ -31,6 +31,8 @@ test("artisan déjà inscrit : charte demandée à l'entrée de l'espace pro, pu
   await page.mouse.move(box.x + 150, box.y + 40, { steps: 8 });
   await page.mouse.move(box.x + 280, box.y + 100, { steps: 8 });
   await page.mouse.up();
+  // Engagement de l'artisan (ADR 0117), certifié avec la même signature.
+  await page.getByRole("checkbox", { name: /certifie sur l'honneur/ }).click();
   await page.getByRole("checkbox", { name: /accepte la Charte qualité Menao/ }).click();
   await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
 

@@ -12,6 +12,8 @@ const valide = {
   siret: "000 000 018 00010",
   signature: "M 10 10 L 200 80 L 400 40",
   agree: true,
+  engagementVersion: "B1",
+  engagement: true,
 };
 
 describe("charterAcceptanceSchema", () => {
@@ -34,6 +36,8 @@ describe("charterAcceptanceSchema", () => {
       ["signature", "", messages.charterSignature],
       ["signature", "<script>", messages.charterSignature],
       ["agree", false, messages.charterAgree],
+      ["engagement", false, messages.engagementAgree],
+      ["engagementVersion", "B0", messages.charterOutdated],
       ["name", " ", messages.charterName],
     ] as const) {
       const r = charterAcceptanceSchema.safeParse({ ...valide, [champ]: valeur });

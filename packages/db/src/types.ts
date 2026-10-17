@@ -298,6 +298,7 @@ export type Database = {
           artisan_id: string;
           company: string;
           created_at: string;
+          engagement_version: string | null;
           id: string;
           rules_count: number;
           signature_path: string;
@@ -312,6 +313,7 @@ export type Database = {
           artisan_id: string;
           company: string;
           created_at?: string;
+          engagement_version?: string | null;
           id?: string;
           rules_count: number;
           signature_path: string;
@@ -325,6 +327,7 @@ export type Database = {
           artisan_id?: string;
           company?: string;
           created_at?: string;
+          engagement_version?: string | null;
           id?: string;
           rules_count?: number;
           signature_path?: string;
@@ -3052,6 +3055,7 @@ export type Database = {
       accept_artisan_charter: {
         Args: {
           p_company: string;
+          p_engagement_version?: string;
           p_ip?: string;
           p_rules_count: number;
           p_signature_path: string;

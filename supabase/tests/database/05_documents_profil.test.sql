@@ -22,8 +22,8 @@ update public.artisans set
 where user_id = 'd1d1d1d1-0000-4000-8000-000000000001';
 
 -- Charte qualité signée (ADR 0104) : testée à part (51_charte_qualite).
-insert into public.artisan_charter_acceptances (artisan_id, version, rules_count, signer_name, company, siret, signature_path)
-select id, 'V5', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 200 80 L 400 40'
+insert into public.artisan_charter_acceptances (artisan_id, version, rules_count, signer_name, company, siret, signature_path, engagement_version)
+select id, 'V5', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 200 80 L 400 40', 'B1'
 from public.artisans where user_id = 'd1d1d1d1-0000-4000-8000-000000000001';
 insert into public.artisan_trades (artisan_id, trade_code)
   select id, 'peintre' from public.artisans where user_id = 'd1d1d1d1-0000-4000-8000-000000000001';

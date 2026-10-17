@@ -14,7 +14,8 @@ import { getOnboardingContext } from "./context";
 export type CharterDestination = "onboarding" | "espace";
 
 /**
- * Signature de la charte qualité (ADR 0104) : contrôlée ici, puis enregistrée par la base.
+ * Signature de la charte qualité (ADR 0104) et de l'engagement de l'artisan (ADR 0117) : contrôlée
+ * ici, puis enregistrée par la base.
  * Pendant l'inscription, ou pour un artisan déjà inscrit à qui l'espace pro la demande (ADR 0109).
  */
 export async function acceptCharter(
@@ -30,6 +31,8 @@ export async function acceptCharter(
     siret: text(formData, "siret") ?? "",
     signature: text(formData, "signature") ?? "",
     agree: text(formData, "agree") === "on",
+    engagementVersion: text(formData, "engagementVersion"),
+    engagement: text(formData, "engagement") === "on",
   });
   if (!parsed.success) {
     const { formErrors, fieldErrors } = z.flattenError(parsed.error);
@@ -50,6 +53,7 @@ export async function acceptCharter(
     p_company: c.company,
     p_siret: c.siret,
     p_signature_path: c.signature,
+    p_engagement_version: c.engagementVersion,
     ...(forwarded ? { p_ip: forwarded.split(",")[0]?.trim() } : {}),
   });
   if (error) {

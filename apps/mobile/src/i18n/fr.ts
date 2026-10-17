@@ -218,7 +218,8 @@ export const fr = {
     profileTitle: "Votre entreprise, vos métiers, votre zone",
     profileTodo: "À compléter sur le site MENAO",
     charterTitle: "Charte qualité MENAO",
-    charterHint: (rules: number) => `${rules} règles à lire et cocher, puis une signature`,
+    charterHint: (rules: number) =>
+      `${rules} règles à cocher et votre engagement à certifier, puis une signature`,
     profilTitle: "Votre photo et votre présentation",
     profilHint: "Ce que les clients verront sur votre fiche",
     documents: {
@@ -1728,6 +1729,7 @@ export const fr = {
       company: "indique ton entreprise",
       siret: "saisis un SIRET à 14 chiffres",
       signature: "signe dans le cadre",
+      engagement: "certifie ton engagement d'artisan",
       agree: "coche l'acceptation de la charte",
     },
     submit: "Signer et rejoindre Menao",
@@ -1739,6 +1741,8 @@ export const fr = {
       rules: "Règles acceptées",
       rulesValue: (total: number, first: string, last: string) =>
         `${total} / ${total} (${first} à ${last})`,
+      engagement: "Engagement de l'artisan",
+      engagementValue: (version: string) => `Certifié (version ${version})`,
       level: "Niveau de départ",
     },
     signedOn: (date: string, time: string) => `${date} à ${time}`,
