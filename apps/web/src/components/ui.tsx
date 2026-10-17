@@ -1,4 +1,4 @@
-import { ChevronDown, CircleAlert, CircleCheck, Info } from "lucide-react";
+import { ChevronDown, CircleAlert, CircleCheck, Info, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -407,6 +407,16 @@ export function StatusBadge({
       className={`inline-flex items-center gap-1.5 rounded-chip px-2 py-1 text-xs font-medium ${styles}`}
     >
       <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+      {children}
+    </span>
+  );
+}
+
+/** Badge « Assuré et vérifié » (ADR 0119) : fiche publique et cartes des résultats. */
+export function VerifiedBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-chip bg-primary-soft px-2 py-1 text-xs font-medium text-primary-strong">
+      <ShieldCheck aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={2.2} />
       {children}
     </span>
   );

@@ -973,6 +973,7 @@ export const fr = {
           ? `${communes.slice(0, 3).join(", ")} et ${communes.length - 3} autre${communes.length > 4 ? "s" : ""}`
           : communes.join(", "),
       distance: (km: number) => `à ${km.toLocaleString("fr-FR")} km`,
+      verified: "Assuré et vérifié",
       availableNow: "Dispo immédiate",
       availableFrom: (date: string) => `Disponible à partir du ${date}`,
       paused: "Indisponible pour le moment",
@@ -1093,6 +1094,9 @@ export const fr = {
       zone: "Zone d'intervention",
       insurance: "Assurance décennale",
       insuranceValue: "Vérifiée par Menao",
+      insuranceRcPro: "Assurance",
+      insuranceRcProValue: "RC Pro vérifiée par Menao",
+      verifiedBadge: "Assuré et vérifié",
       responseTime: {
         "1h": "Répond en moins d'1\u00a0h",
         "3h": "Répond en moins de 3\u00a0h",
@@ -1102,9 +1106,17 @@ export const fr = {
       about: (name: string) => `À propos de ${name}`,
       expertise: "Expertises",
       guarantees: "Garanties & Assurances",
+      verifiedTitle: "Assuré et vérifié par Menao",
+      verifiedDetail: (exempt: boolean) =>
+        exempt
+          ? "Responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe Menao."
+          : "Décennale, responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe Menao.",
       decennaleTitle: "Assurance décennale vérifiée",
       decennaleUntil: (date: string, insurer: string | null) =>
         `Valable jusqu'au ${date}${insurer ? ` · ${insurer}` : ""}`,
+      decennaleExemptTitle: "Activité non soumise à la décennale",
+      decennaleExemptDetail: "Déclaration vérifiée par l'équipe Menao",
+      rcProTitle: "Responsabilité civile professionnelle vérifiée",
       certificationTitle: (label: string) => `Certifié ${label}`,
       certificationDetail: (numero: string, date: string) =>
         `N° ${numero} · valable jusqu'au ${date}`,
@@ -2461,6 +2473,10 @@ export const fr = {
       ctaHint: "Le bouton que voient les particuliers pour vous envoyer leur demande.",
       tipsTitle: "Pour une fiche plus convaincante",
       tips: {
+        assure_verifie: {
+          text: "Obtenez le badge «\u00a0Assuré et vérifié\u00a0» : décennale (si vos métiers y sont soumis), RC Pro et attestation URSSAF validées et à jour.",
+          action: "Voir mes documents",
+        },
         photo_profil: {
           text: "Ajoutez une photo de vous ou votre logo : les particuliers choisissent plus volontiers un visage.",
           action: "Ajouter ma photo",

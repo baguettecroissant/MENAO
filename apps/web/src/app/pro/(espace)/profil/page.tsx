@@ -66,6 +66,7 @@ export default async function MyPublicProfilePage() {
     workTypeCount: profile.work_types.length,
     // Domaines RGE lus dans l'annuaire officiel (ADR 0118) : comptent comme une certification.
     certificationCount: (certifications ?? 0) + profile.rge.length,
+    verified: profile.verified,
   });
   return (
     <PublicProfileScreen

@@ -3651,6 +3651,7 @@ export type Database = {
           distance_km: number;
           experience_years: number;
           specialties: Json;
+          verified: boolean;
           zone_city: string;
           zone_communes: string[];
           zone_mode: Database["public"]["Enums"]["zone_mode"];
@@ -3822,6 +3823,7 @@ export type Database = {
           display_name: string;
           experience_years: number;
           specialties: Json;
+          verified: boolean;
           zone_city: string;
           zone_communes: string[];
           zone_mode: Database["public"]["Enums"]["zone_mode"];

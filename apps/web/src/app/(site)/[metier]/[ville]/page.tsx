@@ -188,6 +188,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                     <ArtisanResultCard
                       key={a.artisan_id}
                       artisanId={a.artisan_id}
+                      verified={a.verified}
                       name={a.display_name}
                       photoUrl={a.avatarUrl}
                       tradeLabel={trade.label}

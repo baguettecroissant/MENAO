@@ -25,9 +25,16 @@ const profileSchema = z.object({
   }),
   trades: z.array(labeled),
   work_types: z.array(labeled.extend({ trade: z.string() })),
+  // Badge « Assuré et vérifié » (ADR 0119) et métiers non soumis à la décennale (ADR 0116).
+  verified: z.boolean().catch(false),
+  decennale_exempt: z.boolean().catch(false),
   decennale: z
     .object({ valid_until: z.string().nullable(), insurer: z.string().nullable() })
     .nullable(),
+  rc_pro: z
+    .object({ valid_until: z.string().nullable(), insurer: z.string().nullable() })
+    .nullable()
+    .catch(null),
   certifications: z.array(
     z.object({ type: z.string(), numero: z.string(), valid_until: z.string() }),
   ),

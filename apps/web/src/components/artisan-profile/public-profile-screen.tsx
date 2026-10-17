@@ -12,6 +12,7 @@ const t = fr.pro.publicProfile;
 
 /** Étape de « Mon dossier » où suivre chaque conseil. */
 const TIP_HREF: Record<ProfileTip, string> = {
+  assure_verifie: "/pro/onboarding/documents",
   photo_profil: "/pro/onboarding/profil",
   realisations: "/pro/onboarding/profil",
   presentation: "/pro/onboarding/profil",
