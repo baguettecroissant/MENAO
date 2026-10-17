@@ -4,6 +4,8 @@ import {
   CHARTER_SCORE_WEIGHTS,
   CHARTER_SECTIONS,
   CHARTER_TEXT,
+  ENGAGEMENT_DRAFT,
+  ENGAGEMENT_TEXT,
   type CharterIcon,
   type CharterSection,
 } from "@menao/core";
@@ -313,6 +315,49 @@ export function PromisesSection({ index }: { index: number }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/**
+ * Engagement de l'artisan (ADR 0117), signé avec la charte. `children` : la case à cocher du
+ * formulaire de signature ; sans, la relecture de l'engagement signé.
+ */
+export function EngagementBlock({ children }: { children?: ReactNode }) {
+  const E = ENGAGEMENT_TEXT;
+  return (
+    <div
+      id="engagement-artisan"
+      role="group"
+      aria-labelledby="h-eng-artisan"
+      className="flex scroll-mt-24 flex-col gap-3 rounded-input border-[1.5px] border-border bg-background p-4"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <ShieldCheck aria-hidden="true" className="size-5 text-primary" strokeWidth={2.2} />
+        <h3 id="h-eng-artisan" className="text-lg font-bold tracking-tight">
+          {E.title}
+        </h3>
+        {ENGAGEMENT_DRAFT && (
+          <span className="rounded-pill bg-warning-soft px-2.5 py-1 text-xs font-bold text-warning">
+            {E.draft}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-muted-foreground">{E.why}</p>
+      <p className="text-sm font-semibold">{E.intro}</p>
+      <ul className="flex flex-col gap-2 text-sm">
+        {E.items.map((item) => (
+          <li key={item} className="flex items-start gap-2">
+            <Check
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0 text-primary"
+              strokeWidth={3}
+            />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+      {children}
+    </div>
   );
 }
 

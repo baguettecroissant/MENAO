@@ -4,13 +4,16 @@ import {
   CHARTER_SECTIONS,
   CHARTER_TEXT,
   CHARTER_VERSION,
+  ENGAGEMENT_DRAFT,
+  ENGAGEMENT_TEXT,
+  ENGAGEMENT_VERSION,
   isValidSiret,
   normalizeSiret,
 } from "@menao/core";
 import { charterAcceptanceSchema } from "@menao/validation";
 import { router } from "expo-router";
 import { Check } from "lucide-react-native";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SignaturePad } from "@/components/pro/signature-pad";
 import { fr } from "@/i18n/fr";
@@ -68,6 +71,7 @@ function CharterForm({
   const [siret, setSiret] = useState(defaults.siret);
   const [signature, setSignature] = useState("");
   const [agree, setAgree] = useState(false);
+  const [engagement, setEngagement] = useState(false);
   const [tried, setTried] = useState(false);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -81,6 +85,7 @@ function CharterForm({
     company.trim() ? null : t.missing.company,
     isValidSiret(normalizeSiret(siret)) ? null : t.missing.siret,
     signature ? null : t.missing.signature,
+    engagement ? null : t.missing.engagement,
     agree ? null : t.missing.agree,
   ].filter(Boolean);
   const missing = tried && gaps.length > 0 ? `${t.missingPrefix}${gaps.join(", ")}.` : invalid;
@@ -96,6 +101,8 @@ function CharterForm({
       siret,
       signature,
       agree,
+      engagementVersion: ENGAGEMENT_VERSION,
+      engagement,
     });
     if (!parsed.success) return setInvalid(parsed.error.issues[0]?.message ?? fr.errors.generic);
     setInvalid(null);
@@ -185,6 +192,13 @@ function CharterForm({
             onChangeText={setSiret}
             keyboardType="number-pad"
           />
+          <EngagementBlock>
+            <Checkbox
+              label={ENGAGEMENT_TEXT.agreeTitle}
+              checked={engagement}
+              onChange={setEngagement}
+            />
+          </EngagementBlock>
           <Text style={styles.label}>{t.signature}</Text>
           <SignaturePad onChange={setSignature} />
           <Checkbox label={T.agreeTitle} checked={agree} onChange={setAgree} />
@@ -195,6 +209,28 @@ function CharterForm({
         </View>
       </Card>
     </Screen>
+  );
+}
+
+/** Engagement de l'artisan (ADR 0117), signé avec la charte, comme sur le site. */
+function EngagementBlock({ children }: { children: ReactNode }) {
+  const E = ENGAGEMENT_TEXT;
+  return (
+    <View style={styles.engagement}>
+      <Text role="heading" style={styles.ruleTitle}>
+        {E.title}
+      </Text>
+      {ENGAGEMENT_DRAFT ? <Text style={styles.draft}>{E.draft}</Text> : null}
+      <Body muted>{E.why}</Body>
+      <Text style={styles.ruleTitle}>{E.intro}</Text>
+      {E.items.map((item) => (
+        <View key={item} style={styles.engagementItem}>
+          <Check size={14} color={colors.primary} strokeWidth={3} />
+          <Text style={[styles.ruleBody, styles.engagementText]}>{item}</Text>
+        </View>
+      ))}
+      {children}
+    </View>
   );
 }
 
@@ -224,6 +260,7 @@ function CharterDone({ acceptance }: { acceptance: CharterAcceptanceRow }) {
         CHARTER_RULES.at(-1)?.code ?? "",
       ),
     ],
+    [t.recap.engagement, t.recap.engagementValue(ENGAGEMENT_VERSION)],
     [t.recap.level, T.startLevel],
   ];
   return (
@@ -302,6 +339,27 @@ const styles = StyleSheet.create({
   },
   progress: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
   label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  engagement: {
+    gap: spacing(2),
+    padding: spacing(3),
+    borderRadius: radius.input,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  draft: {
+    alignSelf: "flex-start",
+    overflow: "hidden",
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(1),
+    borderRadius: radius.pill,
+    backgroundColor: colors["warning-soft"],
+    color: colors.warning,
+    fontFamily: font.bold,
+    fontSize: 12,
+  },
+  engagementItem: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2) },
+  engagementText: { flex: 1 },
   done: { alignItems: "center", gap: spacing(3), paddingTop: spacing(4) },
   badge: {
     width: 56,

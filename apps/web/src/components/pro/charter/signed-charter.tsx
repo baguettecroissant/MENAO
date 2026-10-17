@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   CharterHero,
   CheerSection,
+  EngagementBlock,
   PromisesSection,
   RuleContent,
   SectionExtras,
@@ -53,6 +54,7 @@ export function SignedCharter({ backHref }: { backHref: string }) {
         </section>
       ))}
       <PromisesSection index={CHARTER_SECTIONS.length + 1} />
+      <EngagementBlock />
       <CheerSection />
     </div>
   );

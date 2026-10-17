@@ -3284,7 +3284,8 @@ export const fr = {
         profileTitle: "Votre entreprise, vos métiers, votre zone",
         edit: "Modifier",
         charterTitle: "Charte qualité MENAO",
-        charterHint: (rules: number) => `${rules} règles à lire et cocher, puis une signature`,
+        charterHint: (rules: number) =>
+          `${rules} règles à cocher et votre engagement à certifier, puis une signature`,
         profilTitle: "Votre photo et votre présentation",
         profilHint: "Ce que les clients verront sur votre fiche",
         documentHints: {
@@ -3358,6 +3359,7 @@ export const fr = {
           company: "indique ton entreprise",
           siret: "saisis un SIRET à 14 chiffres",
           signature: "signe dans le cadre",
+          engagement: "certifie ton engagement d’artisan",
           agree: "coche l’acceptation de la charte",
         },
         submit: "Signer et rejoindre Menao",
@@ -3369,6 +3371,8 @@ export const fr = {
           rulesValue: (total: number, first: string, last: string) =>
             `${total} / ${total} (${first} à ${last})`,
           level: "Niveau de départ",
+          engagement: "Engagement de l'artisan",
+          engagementValue: (version: string) => `Certifié (version ${version})`,
         },
         signedOn: (date: string, time: string) => `${date} à ${time}`,
         next: "Continuer : mes documents",
@@ -4807,6 +4811,10 @@ export const fr = {
       charterSigned: (date: string, version: string, name: string) =>
         `Signée le ${date} (version ${version}) par ${name}.`,
       charterIdentity: (company: string, siret: string) => `${company} · SIRET ${siret}`,
+      engagementSigned: (version: string | null) =>
+        version
+          ? `Engagement de l'artisan certifié avec la charte (version ${version}).`
+          : "Engagement de l'artisan non signé : signature antérieure à l'engagement.",
       charterSignature: "Tracé de la signature",
       charterMissing: "Charte qualité non signée.",
       documents: "Documents",

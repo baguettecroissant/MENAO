@@ -1,5 +1,6 @@
 import {
   CHARTER_VERSION,
+  ENGAGEMENT_VERSION,
   charterChecklistComplete,
   isValidSiret,
   normalizeSiret,
@@ -7,7 +8,10 @@ import {
 import { z } from "zod";
 import { messages } from "./messages";
 
-/** Signature de la charte qualité (ADR 0104) : toutes les règles cochées, identité, tracé, accord. */
+/**
+ * Signature de la charte qualité (ADR 0104) : toutes les règles cochées, identité, tracé, accord,
+ * et engagement de l'artisan certifié (ADR 0117).
+ */
 export const charterAcceptanceSchema = z.object({
   version: z.literal(CHARTER_VERSION, { error: messages.charterOutdated }),
   rules: z
@@ -35,5 +39,8 @@ export const charterAcceptanceSchema = z.object({
     .min(10, { error: messages.charterSignature })
     .max(20000, { error: messages.charterSignature }),
   agree: z.literal(true, { error: messages.charterAgree }),
+  // Engagement de l'artisan (ADR 0117), signé avec la charte.
+  engagementVersion: z.literal(ENGAGEMENT_VERSION, { error: messages.charterOutdated }),
+  engagement: z.literal(true, { error: messages.engagementAgree }),
 });
 export type CharterAcceptance = z.output<typeof charterAcceptanceSchema>;

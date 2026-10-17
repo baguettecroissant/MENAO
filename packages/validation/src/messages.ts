@@ -15,6 +15,7 @@ export const messages = {
   charterSiret: "Saisis un SIRET à 14 chiffres.",
   charterSignature: "Signe dans le cadre.",
   charterAgree: "Coche l’acceptation de la charte.",
+  engagementAgree: "Coche la certification de ton engagement d’artisan.",
   cgvRequired: "Vous devez accepter les conditions générales de vente artisans.",
   phoneRequired: "Le téléphone est obligatoire pour un compte professionnel.",
   tradeRequired: "Choisissez au moins un métier.",

@@ -25,22 +25,22 @@ select throws_ok(
   'Étapes incomplètes : entreprise, metiers, zone, charte, documents, profil',
   'envoi du dossier : la charte fait partie des étapes manquantes');
 select throws_ok(
-  $$ select public.accept_artisan_charter('V4', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 200 80') $$,
+  $$ select public.accept_artisan_charter('V4', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 200 80', p_engagement_version => 'B1') $$,
   '22023', 'Cette version de la charte n''est plus en vigueur.', 'version périmée refusée');
 select throws_ok(
-  $$ select public.accept_artisan_charter('V5', 24, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 200 80') $$,
+  $$ select public.accept_artisan_charter('V5', 24, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 200 80', p_engagement_version => 'B1') $$,
   '22023', 'Toutes les règles de la charte doivent être validées.', 'règles non toutes validées : refus');
 select throws_ok(
-  $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '000000018', 'M 10 10 L 200 80') $$,
+  $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '000000018', 'M 10 10 L 200 80', p_engagement_version => 'B1') $$,
   '23514', null, 'SIRET mal formé : refus');
 select throws_ok(
-  $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', '<script>') $$,
+  $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', '<script>', p_engagement_version => 'B1') $$,
   '23514', null, 'tracé de signature invalide : refus');
 select lives_ok(
-  $$ select public.accept_artisan_charter('V5', 25, ' Alex Exemple ', 'EXEMPLE', '0000 0001 8000 10', 'M 10 10 L 200 80 L 400 40') $$,
+  $$ select public.accept_artisan_charter('V5', 25, ' Alex Exemple ', 'EXEMPLE', '0000 0001 8000 10', 'M 10 10 L 200 80 L 400 40', p_engagement_version => 'B1') $$,
   'signature acceptée');
 select lives_ok(
-  $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 20 20') $$,
+  $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '00000001800010', 'M 10 10 L 20 20', p_engagement_version => 'B1') $$,
   'seconde signature de la même version : sans effet');
 select results_eq(
   $$ select version, rules_count::int, signer_name, siret, signature_path from public.artisan_charter_acceptances $$,
@@ -69,7 +69,7 @@ select pg_temp.connecter('c5100000-0000-4000-8000-000000000003', 'particulier');
 set local role authenticated;
 select is((select count(*)::int from public.artisan_charter_acceptances), 0, 'particulier : aucune signature visible');
 select throws_ok(
-  $$ select public.accept_artisan_charter('V5', 25, 'Camille', 'X', '00000001800010', 'M 10 10 L 200 80') $$,
+  $$ select public.accept_artisan_charter('V5', 25, 'Camille', 'X', '00000001800010', 'M 10 10 L 200 80', p_engagement_version => 'B1') $$,
   '42501', null, 'particulier : pas de signature');
 reset role;
 

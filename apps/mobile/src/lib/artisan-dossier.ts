@@ -1,5 +1,6 @@
 import {
   CHARTER_VERSION,
+  ENGAGEMENT_VERSION,
   canSubmitOnboarding,
   dossierItemsLeft,
   onboardingProgress,
@@ -64,6 +65,7 @@ export async function loadDossier(): Promise<Dossier | null> {
       .select("id")
       .eq("artisan_id", artisan.id)
       .eq("version", CHARTER_VERSION)
+      .eq("engagement_version", ENGAGEMENT_VERSION)
       .maybeSingle(),
     supabase.from("subscriptions").select("status").eq("artisan_id", artisan.id).maybeSingle(),
   ]);

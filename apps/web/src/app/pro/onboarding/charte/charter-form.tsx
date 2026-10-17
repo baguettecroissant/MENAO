@@ -1,12 +1,20 @@
 "use client";
 
-import { CHARTER_RULES, CHARTER_SECTIONS, CHARTER_TEXT, CHARTER_VERSION } from "@menao/core";
+import {
+  CHARTER_RULES,
+  CHARTER_SECTIONS,
+  CHARTER_TEXT,
+  CHARTER_VERSION,
+  ENGAGEMENT_TEXT,
+  ENGAGEMENT_VERSION,
+} from "@menao/core";
 import { ArrowRight, Check, Hand } from "lucide-react";
-import { useActionState, useState, type FormEvent } from "react";
+import { useActionState, useState, type FormEvent, type ReactNode } from "react";
 import {
   CHARTER_TOTAL,
   CharterHero,
   CheerSection,
+  EngagementBlock,
   PrincipleCard,
   PromisesSection,
   RuleContent,
@@ -30,7 +38,8 @@ const inputClass =
 
 /**
  * Charte qualité à lire et signer (ADR 0104), d'après la maquette V5 : chaque règle est cochée,
- * puis l'artisan signe avec son nom, son entreprise, son SIRET et un tracé. Les erreurs sont
+ * l'artisan certifie son engagement (ADR 0117), puis signe avec son nom, son entreprise, son SIRET
+ * et un tracé. Les erreurs sont
  * listées en une phrase avant l'envoi ; la base refait les contrôles.
  */
 export function CharterForm({
@@ -50,6 +59,7 @@ export function CharterForm({
   const [company, setCompany] = useState(defaults.company);
   const [siret, setSiret] = useState(defaults.siret);
   const [agree, setAgree] = useState(false);
+  const [engagement, setEngagement] = useState(false);
   const [signature, setSignature] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
 
@@ -71,6 +81,7 @@ export function CharterForm({
     const s = siret.replace(/\s/g, "");
     if (s.length !== 14 || /\D/.test(s)) missing.push(t.missing.siret);
     if (!signature) missing.push(t.missing.signature);
+    if (!engagement) missing.push(t.missing.engagement);
     if (!agree) missing.push(t.missing.agree);
     if (missing.length) {
       event.preventDefault();
@@ -206,6 +217,13 @@ export function CharterForm({
         ))}
         <input type="hidden" name="signature" value={signature} />
         {agree && <input type="hidden" name="agree" value="on" />}
+        <input type="hidden" name="engagementVersion" value={ENGAGEMENT_VERSION} />
+        {engagement && <input type="hidden" name="engagement" value="on" />}
+        <EngagementBlock>
+          <CheckButton checked={engagement} onToggle={() => setEngagement((v) => !v)}>
+            <b>{ENGAGEMENT_TEXT.agreeTitle}</b>
+          </CheckButton>
+        </EngagementBlock>
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           <label className="flex flex-col gap-1.5 text-sm font-bold">
             {t.name}
@@ -245,30 +263,10 @@ export function CharterForm({
           </label>
         </div>
         <SignaturePad onChange={setSignature} />
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={agree}
-          onClick={() => setAgree((v) => !v)}
-          className={`flex w-full items-start gap-3 rounded-input border-[1.5px] p-3 text-left ${
-            agree
-              ? "border-primary bg-[#f7f8ff]"
-              : "border-border bg-surface hover:border-primary/40"
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-[7px] border-2 ${
-              agree ? "border-primary bg-primary" : "border-[#a9b0c6] bg-surface"
-            }`}
-          >
-            {agree && <Check className="size-4 text-white" strokeWidth={3.2} />}
-          </span>
-          <span className="flex flex-col gap-1">
-            <b>{T.agreeTitle}</b>
-            <span className="text-sm text-muted-foreground">{T.agreeText}</span>
-          </span>
-        </button>
+        <CheckButton checked={agree} onToggle={() => setAgree((v) => !v)}>
+          <b>{T.agreeTitle}</b>
+          <span className="text-sm text-muted-foreground">{T.agreeText}</span>
+        </CheckButton>
         <p role="alert" className="text-sm font-semibold text-danger">
           {error}
         </p>
@@ -300,6 +298,39 @@ export function CharterForm({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Case à cocher de la signature (acceptation de la charte, engagement de l'artisan). */
+function CheckButton({
+  checked,
+  onToggle,
+  children,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={onToggle}
+      className={`flex w-full items-start gap-3 rounded-input border-[1.5px] p-3 text-left ${
+        checked ? "border-primary bg-[#f7f8ff]" : "border-border bg-surface hover:border-primary/40"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-[7px] border-2 ${
+          checked ? "border-primary bg-primary" : "border-[#a9b0c6] bg-surface"
+        }`}
+      >
+        {checked && <Check className="size-4 text-white" strokeWidth={3.2} />}
+      </span>
+      <span className="flex flex-col gap-1">{children}</span>
+    </button>
   );
 }
 

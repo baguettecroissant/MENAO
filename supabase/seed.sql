@@ -169,10 +169,10 @@ insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked
 values ('b0000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000014', 'valide', 'CHARTE EXEMPLE',
   now(), true, true, 'communes', now());
 
--- Charte qualité (ADR 0104) signée par les autres artisans du jeu de données : ils ouvrent leur
+-- Charte qualité (ADR 0104) et engagement (ADR 0117) signés par les autres artisans du jeu de données : ils ouvrent leur
 -- espace pro sans passer par la signature.
-insert into public.artisan_charter_acceptances (artisan_id, version, rules_count, signer_name, company, siret, signature_path)
+insert into public.artisan_charter_acceptances (artisan_id, version, rules_count, signer_name, company, siret, signature_path, engagement_version)
 select a.id, 'V5', 25, 'Signataire Exemple', coalesce(a.raison_sociale, 'ENTREPRISE EXEMPLE'),
-  coalesce(a.siret, '00000001800010'), 'M 10 10 L 200 80 L 400 40'
+  coalesce(a.siret, '00000001800010'), 'M 10 10 L 200 80 L 400 40', 'B1'
 from public.artisans a
 where a.id <> 'b0000000-0000-4000-8000-000000000014';

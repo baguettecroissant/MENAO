@@ -23,7 +23,7 @@ select set_config('request.headers', '{"x-forwarded-for":"198.51.100.20"}', true
 set local role authenticated;
 select lives_ok(
   $$ select public.accept_artisan_charter('V5', 25, 'Alex Exemple', 'EXEMPLE', '00000056200017',
-       'M 10 10 L 200 80', '203.0.113.7') $$,
+       'M 10 10 L 200 80', '203.0.113.7', p_engagement_version => 'B1') $$,
   'signature depuis le site avec l''adresse du visiteur');
 reset role;
 
@@ -33,7 +33,7 @@ select set_config('request.headers', '{"x-forwarded-for":"203.0.113.8, 10.0.0.1"
 set local role authenticated;
 select lives_ok(
   $$ select public.accept_artisan_charter('V5', 25, 'Sam Exemple', 'EXEMPLE', '00000057000010',
-       'M 10 10 L 200 80') $$,
+       'M 10 10 L 200 80', p_engagement_version => 'B1') $$,
   'signature depuis l''application, sans adresse transmise');
 reset role;
 
@@ -43,7 +43,7 @@ select set_config('request.headers', '{}', true);
 set local role authenticated;
 select lives_ok(
   $$ select public.accept_artisan_charter('V5', 25, 'Lou Exemple', 'EXEMPLE', '00000058800012',
-       'M 10 10 L 200 80', 'pas-une-adresse') $$,
+       'M 10 10 L 200 80', 'pas-une-adresse', p_engagement_version => 'B1') $$,
   'adresse invalide ignorée');
 reset role;
 

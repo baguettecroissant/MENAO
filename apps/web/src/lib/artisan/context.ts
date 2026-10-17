@@ -1,6 +1,7 @@
 import "server-only";
 import {
   CHARTER_VERSION,
+  ENGAGEMENT_VERSION,
   artisanVisibility,
   canSubmitOnboarding,
   subscriptionGrantsAccess,
@@ -76,12 +77,13 @@ export const getOnboardingContext = cache(async () => {
       .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end")
       .eq("artisan_id", artisan.id)
       .maybeSingle(),
-    // Charte qualité signée dans sa version en vigueur (ADR 0104).
+    // Charte qualité et engagement de l'artisan signés dans leur version en vigueur (ADR 0104, 0117).
     supabase
       .from("artisan_charter_acceptances")
       .select("version, signer_name, company, siret, accepted_at")
       .eq("artisan_id", artisan.id)
       .eq("version", CHARTER_VERSION)
+      .eq("engagement_version", ENGAGEMENT_VERSION)
       .maybeSingle(),
   ]);
   const subscription = subscriptionRow.data;

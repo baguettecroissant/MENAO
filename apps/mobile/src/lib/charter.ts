@@ -1,4 +1,4 @@
-import { CHARTER_RULE_COUNT, CHARTER_VERSION } from "@menao/core";
+import { CHARTER_RULE_COUNT, CHARTER_VERSION, ENGAGEMENT_VERSION } from "@menao/core";
 import type { CharterAcceptance } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
@@ -31,14 +31,15 @@ async function currentAcceptance(artisanId: string) {
     .select("signer_name, company, siret, accepted_at")
     .eq("artisan_id", artisanId)
     .eq("version", CHARTER_VERSION)
+    .eq("engagement_version", ENGAGEMENT_VERSION)
     .maybeSingle();
   return data;
 }
 
 /**
  * Charte qualité à signer avant l'espace artisan (ADR 0109), comme sur le site : artisan validé
- * (ou suspendu) sans signature de la version en vigueur. En cas d'erreur de lecture, on ne
- * bloque pas l'espace.
+ * (ou suspendu) sans signature de la version en vigueur, engagement de l'artisan compris
+ * (ADR 0117). En cas d'erreur de lecture, on ne bloque pas l'espace.
  */
 export async function charterRequired(): Promise<boolean> {
   const artisan = await myArtisan();
@@ -76,6 +77,7 @@ export async function signCharter(input: CharterAcceptance): Promise<string | nu
     p_company: input.company,
     p_siret: input.siret,
     p_signature_path: input.signature,
+    p_engagement_version: input.engagementVersion,
   });
   if (!error) return null;
   return error.code === "22023" ? fr.proCharter.outdated : fr.errors.generic;

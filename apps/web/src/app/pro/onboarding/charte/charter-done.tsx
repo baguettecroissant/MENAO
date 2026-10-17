@@ -1,4 +1,4 @@
-import { CHARTER_RULES, CHARTER_TEXT } from "@menao/core";
+import { CHARTER_RULES, CHARTER_TEXT, ENGAGEMENT_VERSION } from "@menao/core";
 import { ArrowRight } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -46,6 +46,7 @@ export function CharterDone({
         CHARTER_RULES.at(-1)?.code ?? "",
       ),
     ],
+    [t.recap.engagement, t.recap.engagementValue(ENGAGEMENT_VERSION)],
     [t.recap.level, T.startLevel],
   ];
   return (

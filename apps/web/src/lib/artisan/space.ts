@@ -1,6 +1,7 @@
 import "server-only";
 import {
   CHARTER_VERSION,
+  ENGAGEMENT_VERSION,
   MONITORED_DOCUMENT_TYPES,
   artisanVisibility,
   availabilityStatus,
@@ -47,12 +48,14 @@ export const requireProSpace = cache(async () => {
   ) {
     redirect("/pro/onboarding");
   }
-  // Artisan inscrit avant la charte, ou nouvelle version de la charte : signature d'abord.
+  // Artisan inscrit avant la charte, ou nouvelle version de la charte ou de l'engagement de
+  // l'artisan (ADR 0117) : signature d'abord.
   const { data: charter } = await supabase
     .from("artisan_charter_acceptances")
     .select("id")
     .eq("artisan_id", artisan.id)
     .eq("version", CHARTER_VERSION)
+    .eq("engagement_version", ENGAGEMENT_VERSION)
     .maybeSingle();
   if (!charter) redirect("/pro/charte");
 

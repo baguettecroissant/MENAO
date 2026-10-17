@@ -90,7 +90,9 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
     // Charte qualité signée (ADR 0104), dernière version.
     supabase
       .from("artisan_charter_acceptances")
-      .select("version, signer_name, company, siret, signature_path, accepted_at")
+      .select(
+        "version, engagement_version, signer_name, company, siret, signature_path, accepted_at",
+      )
       .eq("artisan_id", id)
       .order("accepted_at", { ascending: false })
       .limit(1)
@@ -248,6 +250,9 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
             </p>
             <p className="text-sm text-muted-foreground">
               {t.charterIdentity(charter.data.company, charter.data.siret)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t.engagementSigned(charter.data.engagement_version)}
             </p>
             <svg
               viewBox="0 0 600 150"
