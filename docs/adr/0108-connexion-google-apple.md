@@ -37,7 +37,7 @@
 - **Google Cloud** : identifiant OAuth de type « Application Web », avec l'adresse de retour `https://<projet>.supabase.co/auth/v1/callback`, et l'écran de consentement au nom de MENAO (domaine menao.fr). Il sert aussi à l'application.
 - **Apple Developer** :
   - Services ID et clé « Sign in with Apple » ;
-  - le secret client (un jeton signé) **expire au bout de 6 mois** et doit être renouvelé dans Supabase ;
+  - le secret client (un jeton signé) **expire au bout de 6 mois** et doit être renouvelé dans Supabase. Il se fabrique sur le Mac avec `scripts/apple-client-secret.mjs` (clé `.p8`, Team ID, Key ID, Services ID), sans envoi sur le réseau ;
   - déclarer menao.fr et `notifications@menao.fr` dans le service de relais des adresses masquées. Sinon, les e-mails envoyés aux adresses `@privaterelay.appleid.com` sont rejetés.
 - **Supabase** (Auth > Providers) : activer Google et Apple, et coller les identifiants. Les secrets ne sont jamais dans le dépôt (règle 1).
 - **Vercel** : `NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple`, puis redéployer.
