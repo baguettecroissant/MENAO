@@ -107,7 +107,7 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   // Vue côte à côte (ADR 0120) : saisie de l'artisan, fiche de l'entreprise, points à contrôler.
   const kbis = page.getByRole("listitem", { name: "Kbis ou extrait INSEE/RNE de moins de 3 mois" });
   await expect(kbis.getByText("À contrôler")).toBeVisible();
-  await expect(kbis.getByText("Fiche de l'entreprise")).toBeVisible();
+  await expect(kbis.getByText("Fiche de l'entreprise", { exact: true })).toBeVisible();
   // Un motif de la liste est exigé pour refuser un document.
   await kbis.getByRole("button", { name: "Refuser le document" }).click();
   await expect(kbis.getByRole("alert")).toContainText("Choisissez un motif de refus.");

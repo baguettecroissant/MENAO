@@ -19,7 +19,7 @@
   - puis la décision.
 
   Sur téléphone, les deux colonnes s'empilent.
-- **PDF intégrés** : la politique de sécurité (CSP) des pages `/admin` autorise les cadres venant du stockage Supabase seulement (`documentFrames`, règle `next.config` propre au back-office). Le reste du site garde `frame-src 'none'`. Les documents restent privés, lus par URL signée de 5 minutes.
+- **PDF intégrés** : la politique de sécurité (CSP) autorise les cadres venant du stockage Supabase seulement (`frame-src` : Supabase, au lieu de `'none'`, ADR 0103). La règle vaut pour tout le site : lors d'une navigation interne, par exemple de `/connexion` au back-office, la page garde la politique du premier document chargé, si bien qu'une règle propre à `/admin` ne s'appliquerait pas. Aucun autre cadre n'est permis, et le site ne peut toujours pas être intégré ailleurs (`frame-ancestors 'none'`). Les documents restent privés, lus par URL signée de 5 minutes.
 - **Motifs de refus en liste** (`DOCUMENT_REFUSAL_CODES`, `documentRefusalSchema`) :
   - motifs : illisible, incomplet, expiré, mauvais document, nom différent, SIRET différent, dates différentes, couverture insuffisante, code de sécurité URSSAF invalide, autre ;
   - la précision est obligatoire pour « autre » ;
