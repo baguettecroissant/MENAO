@@ -1,3 +1,5 @@
+# Toute règle ajoutée ici (et dans apps/mobile/.gitignore, supabase/.gitignore) doit aussi aller
+# dans .easignore : quand il existe, EAS (builds de l'application) ne lit plus les .gitignore.
 node_modules/
 .pnpm-store/
 .turbo/
