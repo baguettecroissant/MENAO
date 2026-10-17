@@ -56,7 +56,7 @@ export type VisibilityCondition = "validation" | "abonnement" | "paiements";
  * peut encaisser (spec F-14). Miroir SQL : app.artisan_is_visible.
  */
 export function artisanVisibility(a: {
-  status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu";
+  status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu" | "radie";
   subscriptionActive: boolean;
   connectChargesEnabled: boolean;
 }): { visible: boolean; missing: VisibilityCondition[] } {

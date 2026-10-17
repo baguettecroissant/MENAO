@@ -469,6 +469,17 @@ describe("contenu des notifications (F-41)", () => {
     expect(never.preview).toBe("Vous n'avez pas encore confirmé votre planning sur MENAO.");
   });
 
+  it("radiation : motif cité, accès aux chantiers et factures, contact", () => {
+    const radie = notificationContent("compte_radie", { motif: "Faux documents" }, ctx);
+    expect(radie.subject).toBe("Votre compte MENAO a été radié");
+    expect(radie.quote).toBe("Faux documents");
+    expect(radie.paragraphs[2]).toContain("chantiers en cours");
+    expect(radie.cta).toEqual({
+      label: "Écrire à l'équipe MENAO",
+      url: "https://menao.example/contact",
+    });
+  });
+
   it("relances de l'inscription artisan : texte selon l'étape et l'état du dossier", () => {
     const url = "https://menao.example/pro/onboarding";
     const first = notificationContent("inscription_relance", { etape: 1, pret: false }, ctx);

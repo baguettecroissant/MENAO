@@ -26,7 +26,7 @@ export type DossierDocument = {
 };
 
 export type Dossier = {
-  status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu";
+  status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu" | "radie";
   refusalReason: string | null;
   snapshot: ArtisanOnboardingSnapshot;
   documents: DossierDocument[];

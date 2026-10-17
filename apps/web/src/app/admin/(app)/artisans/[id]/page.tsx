@@ -19,6 +19,7 @@ import { requireAdmin } from "@/lib/admin/guard";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { documentLogoUrl } from "@/lib/documents/logo";
 import { DecisionForm, DocumentReview } from "./review-forms";
+import { RadiationForm } from "./radiation-form";
 import { SuspensionForm } from "./suspension-form";
 
 const t = fr.admin.detail;
@@ -471,6 +472,14 @@ export default async function AdminArtisanPage({ params }: PageProps<"/admin/art
           artisanId={artisan.id}
           status={artisan.status}
           suspensionReason={artisan.suspension_reason}
+        />
+      </Section>
+
+      <Section title={fr.admin.radiation.title}>
+        <RadiationForm
+          artisanId={artisan.id}
+          radiatedAt={artisan.radiated_at}
+          reason={artisan.radiation_reason}
         />
       </Section>
 

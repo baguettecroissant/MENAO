@@ -719,6 +719,8 @@ export type Database = {
           paused: boolean;
           planning_updated_at: string | null;
           presentation: string | null;
+          radiated_at: string | null;
+          radiation_reason: string | null;
           radius_km: number | null;
           raison_sociale: string | null;
           refusal_reason: string | null;
@@ -769,6 +771,8 @@ export type Database = {
           paused?: boolean;
           planning_updated_at?: string | null;
           presentation?: string | null;
+          radiated_at?: string | null;
+          radiation_reason?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
@@ -818,6 +822,8 @@ export type Database = {
           paused?: boolean;
           planning_updated_at?: string | null;
           presentation?: string | null;
+          radiated_at?: string | null;
+          radiation_reason?: string | null;
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
@@ -3199,6 +3205,10 @@ export type Database = {
           ville: string;
         }[];
       };
+      admin_radiate_artisan: {
+        Args: { p_artisan_id: string; p_reason: string };
+        Returns: undefined;
+      };
       admin_reactivate_account: { Args: { p_user_id: string }; Returns: undefined };
       admin_reactivate_artisan: { Args: { p_artisan_id: string }; Returns: undefined };
       admin_references: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -3927,7 +3937,7 @@ export type Database = {
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
       appointment_status: "planifie" | "annule";
-      artisan_status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu";
+      artisan_status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu" | "radie";
       callback_mode: "des_que_possible" | "plage";
       certification_type:
         | "rge"
@@ -4026,7 +4036,8 @@ export type Database = {
         | "badge_debloque"
         | "niveau_atteint"
         | "planning_relance"
-        | "inscription_relance";
+        | "inscription_relance"
+        | "compte_radie";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -4173,7 +4184,7 @@ export const Constants = {
     Enums: {
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
       appointment_status: ["planifie", "annule"],
-      artisan_status: ["brouillon", "en_verification", "valide", "refuse", "suspendu"],
+      artisan_status: ["brouillon", "en_verification", "valide", "refuse", "suspendu", "radie"],
       callback_mode: ["des_que_possible", "plage"],
       certification_type: [
         "rge",
@@ -4276,6 +4287,7 @@ export const Constants = {
         "niveau_atteint",
         "planning_relance",
         "inscription_relance",
+        "compte_radie",
       ],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],

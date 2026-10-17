@@ -358,6 +358,9 @@ export function DashboardScreen() {
         ) : (
           <>
             {data.suspended ? <Notice tone="error">{t.suspended}</Notice> : null}
+            {data.radiated ? (
+              <Notice tone="error">{t.radiated(data.radiated.reason)}</Notice>
+            ) : null}
             <PushPrompt />
             <View style={styles.kpis}>
               <Kpi

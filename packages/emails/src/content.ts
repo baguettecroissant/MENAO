@@ -50,6 +50,7 @@ export const NOTIFICATION_TYPES = [
   "niveau_atteint",
   "planning_relance",
   "inscription_relance",
+  "compte_radie",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -1071,6 +1072,22 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Voir les échéances", url: link("/admin/surveillance") },
+      };
+    }
+    case "compte_radie": {
+      // Radiation (ADR 0114) : exclusion définitive décidée par l'équipe, motif cité, contact.
+      return {
+        subject: "Votre compte MENAO a été radié",
+        preview: "L'équipe MENAO a décidé de vous retirer du réseau.",
+        title: "Votre compte a été radié",
+        paragraphs: [
+          hello(ctx.firstName),
+          "L'équipe MENAO a décidé de vous retirer définitivement du réseau, pour ce motif :",
+          "Votre profil n'apparaît plus auprès des particuliers. Vous gardez l'accès à vos chantiers en cours et à vos factures.",
+          "Pour toute question, écrivez à l'équipe MENAO.",
+        ],
+        quote: text(data, "motif"),
+        cta: { label: "Écrire à l'équipe MENAO", url: link("/contact") },
       };
     }
     case "compte_suspendu": {
