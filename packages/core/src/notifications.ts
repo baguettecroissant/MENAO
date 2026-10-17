@@ -7,7 +7,14 @@
 
 export const OPTIONAL_NOTIFICATIONS = {
   activite: ["chantier_nouveautes", "nouveaux_messages"],
-  rappels: ["rdv_rappel", "avis_relance", "levee_relance", "acompte_relance", "planning_relance"],
+  rappels: [
+    "rdv_rappel",
+    "avis_relance",
+    "levee_relance",
+    "acompte_relance",
+    "planning_relance",
+    "inscription_relance",
+  ],
 } as const;
 export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;
 export type EmailPreferences = Record<EmailPreferenceKey, boolean>;

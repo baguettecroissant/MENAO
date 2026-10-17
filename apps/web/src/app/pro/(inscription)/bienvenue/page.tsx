@@ -124,6 +124,7 @@ export default async function ArtisanWelcomePage() {
           {t.cta}
           <ArrowRight aria-hidden="true" className="size-5" />
         </ButtonLink>
+        <p className="mt-2 text-center text-sm text-muted-foreground">{t.later}</p>
       </div>
     </main>
   );

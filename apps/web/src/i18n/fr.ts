@@ -3256,6 +3256,7 @@ export const fr = {
         profil: "Votre photo et votre présentation",
         duration: "Environ 5 minutes, en photo depuis votre téléphone",
         cta: "Faire vérifier mon entreprise",
+        later: "Pas le temps maintenant ? Nous vous enverrons un rappel par e-mail.",
         sirene: {
           not_found:
             "Nous n'avons pas trouvé votre SIRET auprès de l'INSEE : vérifiez-le à l'étape « Entreprise ».",
