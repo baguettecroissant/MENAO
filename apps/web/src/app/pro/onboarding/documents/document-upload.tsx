@@ -25,6 +25,7 @@ export function DocumentUpload({
       accept="application/pdf,image/jpeg,image/png"
       hint={fr.pro.onboarding.upload.fileHintDocument}
       submitLabel={label}
+      camera
     >
       {(errors) => (
         <>

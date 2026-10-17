@@ -5,7 +5,7 @@ import {
   documentIsValid,
   expiryStatus,
 } from "@menao/core";
-import { Alert, Card } from "@/components/ui";
+import { Alert, ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { DocumentUpload } from "./document-upload";
@@ -21,7 +21,18 @@ const chip = {
   en_attente: "bg-primary-soft text-primary",
 } as const;
 
-export default async function DocumentsStepPage() {
+/**
+ * Documents du dossier (F-14, F-51). Avec `?type=`, une seule pièce, ouverte depuis « Faire
+ * vérifier mon entreprise » (ADR 0111) ; sans, toutes (renouvellements d'un artisan validé).
+ */
+export default async function DocumentsStepPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
+  const { type: only } = await searchParams;
+  const types = REQUIRED_DOCUMENT_TYPES.filter((type) => !only || type === only);
+  const focused = types.length === 1;
   const { supabase, userId, artisan, documents } = await getOnboardingContext();
   const onboarding = artisan.status === "brouillon" || artisan.status === "refuse";
   // Artisan validé ou suspendu : renouvellement des documents surveillés (F-51).
@@ -36,11 +47,13 @@ export default async function DocumentsStepPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-muted-foreground">{t.intro}</p>
+      <p className="text-muted-foreground">
+        {focused ? fr.pro.onboarding.documents.photoHint : t.intro}
+      </p>
       {artisan.status === "en_verification" && (
         <Alert tone="success">{fr.pro.onboarding.upload.status.locked}</Alert>
       )}
-      {REQUIRED_DOCUMENT_TYPES.map((type) => {
+      {types.map((type) => {
         const rows = documents
           .filter((d) => d.type === type)
           .sort((a, b) => (a.status === "valide" ? -1 : b.status === "valide" ? 1 : 0));
@@ -131,6 +144,11 @@ export default async function DocumentsStepPage() {
           </Card>
         );
       })}
+      {focused && (
+        <ButtonLink href="/pro/onboarding" variant="outline" block>
+          {t.backToDossier}
+        </ButtonLink>
+      )}
     </div>
   );
 }

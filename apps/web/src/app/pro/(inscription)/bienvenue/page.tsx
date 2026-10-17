@@ -1,5 +1,14 @@
 import { REQUIRED_DOCUMENT_TYPES } from "@menao/core";
-import { ArrowRight, Camera, CircleCheck, Clock, FileText, MapPin, PenLine } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  CircleCheck,
+  Clock,
+  FileText,
+  MapPin,
+  PenLine,
+  UserRound,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { Alert, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -84,7 +93,6 @@ export default async function ArtisanWelcomePage() {
           <Clock aria-hidden="true" className="size-3.5" />
           {t.toVerify}
         </span>
-        <p className="text-[0.8125rem] text-muted-foreground">{t.photoLater}</p>
       </section>
 
       <section className="flex flex-col gap-3 rounded-card bg-primary-softer p-5">
@@ -100,6 +108,10 @@ export default async function ArtisanWelcomePage() {
               {documents[type]}
             </li>
           ))}
+          <li className="flex items-center gap-2.5">
+            <UserRound aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
+            {t.profil}
+          </li>
         </ul>
         <p className="flex items-center gap-2 text-sm font-medium text-primary-strong">
           <Camera aria-hidden="true" className="size-4 shrink-0" />

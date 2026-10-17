@@ -4,6 +4,7 @@ import { CHARTER_RULE_COUNT } from "@menao/core";
 import { charterAcceptanceSchema, messages } from "@menao/validation";
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
@@ -40,6 +41,8 @@ export async function acceptCharter(
 
   const { supabase } = await getOnboardingContext();
   const c = parsed.data;
+  // Adresse IP du visiteur (ADR 0111) : la base, appelée par le serveur, ne voit que la sienne.
+  const forwarded = (await headers()).get("x-forwarded-for");
   const { error } = await supabase.rpc("accept_artisan_charter", {
     p_version: c.version,
     p_rules_count: CHARTER_RULE_COUNT,
@@ -47,6 +50,7 @@ export async function acceptCharter(
     p_company: c.company,
     p_siret: c.siret,
     p_signature_path: c.signature,
+    ...(forwarded ? { p_ip: forwarded.split(",")[0]?.trim() } : {}),
   });
   if (error) {
     return { error: error.code === "22023" ? messages.charterOutdated : fr.errors.generic };

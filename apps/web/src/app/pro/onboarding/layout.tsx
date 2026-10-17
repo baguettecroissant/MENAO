@@ -10,13 +10,12 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { getProShell } from "@/lib/artisan/space";
 import { signOut } from "@/lib/auth/actions";
 import { getShellAccount } from "@/lib/client/shell";
-import { Stepper } from "./stepper";
-import { SubmitReminder } from "./submit-reminder";
+import { OnboardingHeader } from "./onboarding-header";
 
 export const metadata: Metadata = { title: `${fr.pro.onboarding.title} — MENAO` };
 
 export default async function OnboardingLayout({ children }: { children: ReactNode }) {
-  const { progress, artisan, documents, canSubmit } = await getOnboardingContext();
+  const { artisan, documents } = await getOnboardingContext();
   // F-51 : documents surveillés arrivant à échéance (ou expirés) sans renouvellement déposé.
   const toRenew =
     artisan.status === "valide" || artisan.status === "suspendu"
@@ -29,28 +28,16 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
   // Artisan validé : « Mon dossier » dans la coque de l'espace pro (ADR 0035), menu latéral compris.
   const validated = artisan.status === "valide" || artisan.status === "suspendu";
   const inProSpace = validated && (await getShellAccount())?.account.role === "artisan";
+  const signOutButton = inProSpace ? null : (
+    <form action={signOut}>
+      <button type="submit" className="min-h-touch font-medium underline-offset-2 hover:underline">
+        {fr.mySpace.signOut}
+      </button>
+    </form>
+  );
   const content = (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-2xl font-medium tracking-tight">
-            {inProSpace ? fr.pro.space.file : fr.pro.onboarding.title}
-          </h1>
-          {!inProSpace && (
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="min-h-touch font-medium underline-offset-2 hover:underline"
-              >
-                {fr.mySpace.signOut}
-              </button>
-            </form>
-          )}
-        </div>
-        <p className="text-muted-foreground">
-          {inProSpace ? fr.pro.onboarding.fileIntro : fr.pro.onboarding.intro}
-        </p>
-      </div>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
+      <OnboardingHeader inProSpace={inProSpace} actions={signOutButton} />
       {artisan.status === "brouillon" && artisan.refusal_reason && (
         <Alert tone="error">{fr.pro.onboarding.status.complement(artisan.refusal_reason)}</Alert>
       )}
@@ -64,10 +51,6 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
           )}
         </Alert>
       )}
-      {(artisan.status === "brouillon" || artisan.status === "refuse") && canSubmit && (
-        <SubmitReminder />
-      )}
-      <Stepper progress={progress} />
       {children}
     </main>
   );

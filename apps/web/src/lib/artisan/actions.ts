@@ -106,7 +106,7 @@ export async function saveCompany(_prev: FormState, formData: FormData): Promise
       : snapshot.raisonSociale,
   }).entreprise;
   refresh();
-  if (done) redirect("/pro/onboarding/metiers");
+  if (done) redirect("/pro/onboarding" as Route);
   return { success: t.saved };
 }
 
@@ -134,7 +134,7 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
   if (error) return { error: fr.errors.generic };
 
   refresh();
-  redirect("/pro/onboarding/zone");
+  redirect("/pro/onboarding" as Route);
 }
 
 export async function addCertification(_prev: FormState, formData: FormData): Promise<FormState> {

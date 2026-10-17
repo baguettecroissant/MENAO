@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  DOSSIER_ITEM_COUNT,
   ONBOARDING_STEPS,
   canSubmitOnboarding,
   documentIsValid,
+  documentState,
+  dossierItemsLeft,
   firstIncompleteStep,
   onboardingProgress,
   type ArtisanOnboardingSnapshot,
@@ -198,5 +201,62 @@ describe("profil public et envoi en vérification", () => {
   it("étape « formule » terminée avec un abonnement actif", () => {
     expect(onboardingProgress(complet, today).formule).toBe(false);
     expect(onboardingProgress({ ...complet, subscriptionActive: true }, today).formule).toBe(true);
+  });
+});
+
+describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
+  it("état de chaque document", () => {
+    expect(documentState("kbis", undefined, today)).toBe("missing");
+    expect(
+      documentState(
+        "kbis",
+        { status: "en_attente", dateEmission: "2026-09-20", dateFin: null },
+        today,
+      ),
+    ).toBe("en_attente");
+    expect(
+      documentState("kbis", { status: "valide", dateEmission: "2026-06-01", dateFin: null }, today),
+    ).toBe("a_refaire");
+    expect(
+      documentState(
+        "rc_pro",
+        { status: "refuse", dateEmission: null, dateFin: "2027-06-30" },
+        today,
+      ),
+    ).toBe("refuse");
+    expect(
+      documentState(
+        "decennale",
+        { status: "valide", dateEmission: null, dateFin: "2027-06-30" },
+        today,
+      ),
+    ).toBe("valide");
+  });
+
+  it("compte les éléments restant avant l'envoi", () => {
+    expect(DOSSIER_ITEM_COUNT).toBe(7);
+    expect(dossierItemsLeft(vide, today)).toBe(7);
+    const profilFait = {
+      ...entrepriseOk,
+      tradeCount: 1,
+      zoneMode: "rayon" as const,
+      hasBaseLocation: true,
+      radiusKm: 20,
+      charterAccepted: true,
+    };
+    expect(dossierItemsLeft(profilFait, today)).toBe(5);
+    const complet = {
+      ...profilFait,
+      hasAvatar: true,
+      presentationLength: 120,
+      documents: {
+        kbis: { status: "en_attente" as const, dateEmission: "2026-09-20", dateFin: null },
+        decennale: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-06-30" },
+        rc_pro: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-06-30" },
+        identite: { status: "en_attente" as const, dateEmission: null, dateFin: null },
+      },
+    };
+    expect(dossierItemsLeft(complet, today)).toBe(0);
+    expect(canSubmitOnboarding(complet, today)).toBe(true);
   });
 });
