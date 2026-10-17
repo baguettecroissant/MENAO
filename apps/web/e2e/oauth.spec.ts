@@ -1,3 +1,4 @@
+import { fakeSiret, mockCompanySearch } from "./fixtures";
 import { expect, test } from "./test";
 
 // Connexion avec Google ou Apple pour les clients (ADR 0108). Le fournisseur n'est pas joint en
@@ -74,4 +75,73 @@ test("compte Google à finaliser : CGU acceptées, puis espace client", async ({
   // Une fois finalisé, la page renvoie à l'espace.
   await page.goto("/finaliser-compte");
   await expect(page).toHaveURL(/\/mon-espace$/);
+});
+
+test("inscription artisan avec Google : choix gardés, compte artisan créé au retour", async ({
+  page,
+  request,
+}) => {
+  expect(SERVICE_KEY).not.toBe("");
+  const email = `e2e-google-pro-${Date.now()}@example.test`;
+  await mockCompanySearch(page, fakeSiret("active"));
+  let authorize: URL | null = null;
+  await page.route(`${SUPABASE_URL}/auth/v1/authorize**`, async (route) => {
+    authorize = new URL(route.request().url());
+    await route.fulfill({ contentType: "text/html", body: "<p>Page du fournisseur</p>" });
+  });
+
+  // Parcours (ADR 0110) jusqu'au compte, puis Google.
+  await page.goto("/pro/inscription");
+  await page.getByRole("button", { name: "Commencer" }).click();
+  await page.getByRole("checkbox", { name: "Électricien" }).check();
+  await page.getByRole("button", { name: "Continuer · 1 métier" }).click();
+  await page.getByRole("searchbox", { name: "Nom de l'entreprise ou SIRET" }).fill("menuiserie");
+  await page.getByRole("button", { name: /MENUISERIE EXEMPLE/ }).click();
+  await page
+    .getByRole("group", { name: "Êtes-vous Dominique Exemple ?" })
+    .getByRole("radio", { name: "Non" })
+    .check();
+  await expect(page.getByText("le dirigeant signera l'engagement")).toBeVisible();
+  await page
+    .getByRole("group", { name: "Votre entreprise facture-t-elle la TVA ?" })
+    .getByRole("radio", { name: "Non" })
+    .check();
+  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+  await page.getByRole("button", { name: "Continuer avec Google" }).click();
+  await expect(page.getByText("Page du fournisseur")).toBeVisible();
+  expect((authorize as URL | null)?.searchParams.get("redirect_to")).toBe(
+    "http://localhost:3000/auth/confirm?next=%2Fpro%2Ffinaliser",
+  );
+
+  // Retour de Google simulé : compte « à finaliser » créé par l'API d'administration.
+  const created = await request.post(`${SUPABASE_URL}/auth/v1/admin/users`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    data: {
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: "Lou Exemple" },
+      app_metadata: { signup_pending: true },
+    },
+  });
+  expect(created.status(), await created.text()).toBe(200);
+  await page.goto("/connexion?next=/pro/finaliser");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByLabel("Mot de passe").fill(password);
+  await page.getByRole("button", { name: "Me connecter" }).click();
+
+  // Le parcours reprend au compte, avec les choix gardés dans le navigateur.
+  await expect(page).toHaveURL(/\/pro\/finaliser$/);
+  await expect(page.getByRole("heading", { name: "Finalisez votre compte" })).toBeVisible();
+  await expect(page.getByLabel("Prénom")).toHaveValue("Lou");
+  await page.getByLabel("Téléphone portable").fill("06 39 98 00 05");
+  await page.getByLabel(/J'accepte les conditions générales d'utilisation/).check();
+  await page.getByLabel(/J'accepte les conditions générales de vente/).check();
+  await page.getByRole("button", { name: "Créer mon profil" }).click();
+
+  await expect(page).toHaveURL(/\/pro\/bienvenue$/);
+  await expect(page.getByRole("heading", { name: "Votre profil est créé" })).toBeVisible();
+  await expect(page.getByText("Électricien", { exact: true })).toBeVisible();
+  await expect(page.getByText(/20 km autour de/)).toBeVisible();
 });

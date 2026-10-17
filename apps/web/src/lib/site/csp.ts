@@ -69,6 +69,8 @@ export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: 
       supabase,
       realtime,
       "https://data.geopf.fr",
+      // Recherche de l'entreprise à l'inscription artisan (ADR 0110).
+      "https://recherche-entreprises.api.gouv.fr",
       "https://*.ingest.de.sentry.io",
       "https://*.ingest.sentry.io",
       ...(preview ? [...live, "wss://ws-us3.pusher.com"] : []),

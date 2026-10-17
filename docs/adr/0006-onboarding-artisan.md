@@ -1,6 +1,6 @@
 # ADR 0006 — Inscription et onboarding artisan (F-14, partie 1)
 
-- Statut : accepté (choix A, B, C validés le 9 octobre 2026)
+- Statut : accepté (choix A, B, C validés le 9 octobre 2026) ; inscription refaite en un seul parcours par l'ADR 0110
 - Date : 9 octobre 2026
 
 ## Décisions

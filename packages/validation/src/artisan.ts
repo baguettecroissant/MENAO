@@ -1,21 +1,11 @@
-import { isValidSiret, normalizeSiret } from "@menao/core";
+import { ZONE_RADIUS_OPTIONS_KM, isValidSiret, normalizeSiret } from "@menao/core";
 import { z } from "zod";
-import { signUpSchema } from "./auth";
 import { messages } from "./messages";
 
 export const siretSchema = z
   .string({ error: messages.siretInvalid })
   .transform(normalizeSiret)
   .refine(isValidSiret, { error: messages.siretInvalid });
-
-/** Inscription artisan (F-14) : téléphone et SIRET obligatoires, CGV artisans en plus. */
-export const artisanSignUpSchema = signUpSchema
-  .extend({
-    siret: siretSchema,
-    acceptCgv: z.literal(true, { error: messages.cgvRequired }),
-  })
-  .refine((v) => v.phone !== undefined, { path: ["phone"], error: messages.phoneRequired });
-export type ArtisanSignUp = z.output<typeof artisanSignUpSchema>;
 
 const optionalText = (max: number) =>
   z
@@ -39,9 +29,14 @@ const uniqueCodes = z
   .max(100, { error: messages.tooMany })
   .transform((v) => [...new Set(v)]);
 
+/** Métiers choisis : au moins un, sans doublon. */
+export const tradeCodesSchema = uniqueCodes.refine((v) => v.length > 0, {
+  error: messages.tradeRequired,
+});
+
 /** Étape 2 — métiers, spécialités, expérience. */
 export const tradesStepSchema = z.object({
-  tradeCodes: uniqueCodes.refine((v) => v.length > 0, { error: messages.tradeRequired }),
+  tradeCodes: tradeCodesSchema,
   workTypeCodes: uniqueCodes,
   experienceYears: z.coerce
     .number({ error: messages.experienceInvalid })
@@ -78,25 +73,27 @@ export const certificationSchema = (today: Date = new Date()) =>
   });
 export type Certification = z.output<ReturnType<typeof certificationSchema>>;
 
-export const RADIUS_OPTIONS_KM = [10, 20, 30, 50, 75, 100] as const;
+export const RADIUS_OPTIONS_KM = ZONE_RADIUS_OPTIONS_KM;
 const MAX_COMMUNES = 200;
 const inseeCode = z.string().regex(/^(\d{5}|2[AB]\d{3})$/);
 
+/** Zone en rayon : adresse de base (Géoplateforme ou siège de l'entreprise) et rayon. */
+export const radiusZoneSchema = z.object({
+  mode: z.literal("rayon"),
+  baseLabel: z.string().trim().min(1, { error: messages.zoneAddressRequired }).max(300),
+  baseCitycode: inseeCode,
+  // France métropolitaine, Corse et DROM (boîte englobante large).
+  lon: z.coerce.number().min(-63).max(56),
+  lat: z.coerce.number().min(-22).max(52),
+  radiusKm: z.coerce.number().refine((v) => (RADIUS_OPTIONS_KM as readonly number[]).includes(v), {
+    error: messages.radiusInvalid,
+  }),
+});
+export type RadiusZone = z.output<typeof radiusZoneSchema>;
+
 /** Étape 3 — zone d'intervention : adresse de base + rayon, ou liste de communes. */
 export const zoneStepSchema = z.discriminatedUnion("mode", [
-  z.object({
-    mode: z.literal("rayon"),
-    baseLabel: z.string().trim().min(1, { error: messages.zoneAddressRequired }).max(300),
-    baseCitycode: inseeCode,
-    // France métropolitaine, Corse et DROM (boîte englobante large).
-    lon: z.coerce.number().min(-63).max(56),
-    lat: z.coerce.number().min(-22).max(52),
-    radiusKm: z.coerce
-      .number()
-      .refine((v) => (RADIUS_OPTIONS_KM as readonly number[]).includes(v), {
-        error: messages.radiusInvalid,
-      }),
-  }),
+  radiusZoneSchema,
   z.object({
     mode: z.literal("communes"),
     communes: z

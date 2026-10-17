@@ -1,4 +1,10 @@
-import { homePathForRole, roleFromAppMetadata, signupPending } from "@menao/core";
+import {
+  ARTISAN_SIGNUP_FINALIZE_PATH,
+  ARTISAN_WELCOME_PATH,
+  homePathForRole,
+  roleFromAppMetadata,
+  signupPending,
+} from "@menao/core";
 import { safeRedirectPath } from "@menao/validation";
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
@@ -26,10 +32,14 @@ const PROTECTED_PREFIXES = [
   "/nouveau-mot-de-passe",
   "/admin",
   "/finaliser-compte",
+  ARTISAN_SIGNUP_FINALIZE_PATH,
+  ARTISAN_WELCOME_PATH,
 ];
 // Compte Google ou Apple à finaliser (ADR 0108) : ramené à cette page tant que les CGU ne sont
-// pas acceptées, depuis les espaces protégés et la recherche.
+// pas acceptées, depuis les espaces protégés et la recherche. Depuis l'inscription artisan, la
+// finalisation a sa propre page (ADR 0110).
 const COMPLETE_SIGNUP = "/finaliser-compte";
+const SIGNUP_PAGES = [COMPLETE_SIGNUP, ARTISAN_SIGNUP_FINALIZE_PATH];
 // Recherche (F-05 à F-07) : accessible avec une session anonyme (ADR 0012).
 const SEARCH_PREFIX = "/recherche";
 const GUEST_ONLY = ["/connexion", "/inscription", "/pro/inscription"];
@@ -56,7 +66,7 @@ export async function proxy(request: NextRequest) {
   if (
     claims &&
     signupPending(claims.app_metadata) &&
-    pathname !== COMPLETE_SIGNUP &&
+    !SIGNUP_PAGES.includes(pathname) &&
     (isProtected || pathname.startsWith(`${SEARCH_PREFIX}/`))
   ) {
     const url = new URL(COMPLETE_SIGNUP, request.url);
@@ -94,6 +104,8 @@ export const config = {
     "/inscription/:path*",
     "/auth/:path*",
     "/pro/inscription",
+    "/pro/finaliser",
+    "/pro/bienvenue",
     "/pro/onboarding/:path*",
     "/pro/charte",
     "/pro/tableau-de-bord",

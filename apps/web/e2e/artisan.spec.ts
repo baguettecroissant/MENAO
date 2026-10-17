@@ -1,6 +1,6 @@
 import { expect, test } from "./test";
-import { dates, fakeSiret, files, mockGeocoding } from "./fixtures";
-import { authLinkFor } from "./mailpit";
+import { dates, fakeSiret, files, mockCompanySearch, mockGeocoding } from "./fixtures";
+import { authCodeFor } from "./mailpit";
 
 // Données fictives uniquement (domaine .test, tranche ARCEP fiction, SIRET du faux serveur Sirene).
 const password = "mot-de-passe-e2e-artisan";
@@ -17,53 +17,53 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   const email = `e2e-pro-${Date.now()}@example.test`;
   const nextYear = `${new Date().getFullYear() + 1}-06-30`;
 
+  const siret = fakeSiret("active");
+  await mockCompanySearch(page, siret);
+
+  // Inscription en un seul parcours (ADR 0110) : métiers, entreprise, zone, compte, code.
   await page.goto("/pro");
   await page.getByRole("link", { name: "Créer mon compte pro" }).first().click();
   await expect(page).toHaveURL(/\/pro\/inscription$/);
-  await page.getByLabel("Prénom").fill("Dominique");
-  await page.getByLabel("Nom", { exact: true }).fill("Exemple");
-  await page.getByLabel("Numéro SIRET").fill(fakeSiret("active"));
-  await page.getByLabel("Téléphone").fill("06 39 98 00 04");
-  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByRole("button", { name: "Commencer" }).click();
+
+  await page.getByRole("checkbox", { name: "Menuisier" }).check();
+  await page.getByRole("button", { name: "Continuer · 1 métier" }).click();
+
+  await page.getByRole("searchbox", { name: "Nom de l'entreprise ou SIRET" }).fill("menuiserie");
+  await page.getByRole("button", { name: /MENUISERIE EXEMPLE/ }).click();
+  await expect(page.getByText("1 Rue de l'Exemple 06000 Nice")).toBeVisible();
+  await page.getByRole("radio", { name: "Oui, c'est moi" }).check();
+  await page
+    .getByRole("group", { name: "Votre entreprise facture-t-elle la TVA ?" })
+    .getByRole("radio", { name: "Oui" })
+    .check();
+  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+
+  await expect(page.getByText("Depuis Nice")).toBeVisible();
+  await page.getByRole("radio", { name: "30 km" }).check();
+  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+
+  // Le dirigeant reconnu n'a pas à retaper son nom.
+  await expect(page.getByLabel("Prénom")).toHaveValue("Dominique");
+  await expect(page.getByLabel("Nom", { exact: true })).toHaveValue("Exemple");
+  await page.getByLabel("E-mail professionnel").fill(email);
   await page.getByLabel("Mot de passe").fill(password);
+  await page.getByLabel("Téléphone portable").fill("06 39 98 00 04");
   await page.getByLabel(/J'accepte les conditions générales d'utilisation/).check();
   await page.getByLabel(/J'accepte les conditions générales de vente/).check();
-  await page.getByRole("button", { name: "Créer mon compte pro" }).click();
-  await expect(page).toHaveURL(/\/verifier-email$/);
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
 
-  await page.goto(await authLinkFor(request, email));
-  await expect(page).toHaveURL(/\/pro\/onboarding\/entreprise$/);
-
-  // Étape 1 — entreprise
-  await page.getByRole("button", { name: "Vérifier mon SIRET auprès de l'INSEE" }).click();
-  await expect(page.getByRole("main").getByRole("status")).toHaveText(
-    "Entreprise trouvée et active.",
-  );
+  await page.getByLabel("Code reçu par e-mail").fill(await authCodeFor(request, email));
+  await page.getByRole("button", { name: "Valider" }).click();
+  await expect(page).toHaveURL(/\/pro\/bienvenue$/);
+  await expect(page.getByRole("heading", { name: "Votre profil est créé" })).toBeVisible();
+  // Raison sociale vérifiée auprès de l'INSEE (faux serveur Sirene) dès la création du compte.
   await expect(page.getByText("MENUISERIE EXEMPLE")).toBeVisible();
-  await expect(page.getByText("SARL")).toBeVisible();
-  await page.getByLabel("Oui").check();
-  await expect(page.getByText(/^FR\d{11}$/)).toBeVisible();
-  await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding\/metiers$/);
+  await expect(page.getByText("Menuisier", { exact: true })).toBeVisible();
+  await expect(page.getByText(/30 km autour de 1 Rue de l'Exemple 06000 Nice/)).toBeVisible();
+  await page.getByRole("link", { name: "Faire vérifier mon entreprise" }).click();
 
-  // Étape 2 — certification puis métiers
-  await page.getByLabel("Type").selectOption("rge");
-  await page.getByLabel("Numéro", { exact: true }).fill("E-00000");
-  await page.getByLabel("Date de fin de validité").fill(nextYear);
-  await page.getByRole("button", { name: "Ajouter la certification" }).click();
-  await expect(page.getByText(/RGE · E-00000 · valable jusqu'au 30 juin/)).toBeVisible();
-
-  await page.getByLabel("Menuisier").check();
-  await page.getByLabel("Fenêtres").check();
-  await page.getByLabel("Années d'expérience").fill("8");
-  await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
-  await expect(page).toHaveURL(/\/pro\/onboarding\/zone$/);
-
-  // Étape 3 — zone en rayon, puis en communes
-  await page.getByRole("combobox", { name: "Adresse de départ" }).fill("1 rue de l'exemple");
-  await page.getByRole("option", { name: "1 Rue de l'Exemple 06000 Nice" }).click();
-  await page.getByLabel("Rayon d'intervention").selectOption("30");
-  await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
+  // Entreprise, métiers et zone sont déjà faits : l'inscription reprend à la charte.
   await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
   const stepper = page.getByRole("navigation", { name: "Étapes de l'inscription" });
   for (const step of ["Entreprise", "Métiers", "Zone d'intervention"]) {
@@ -72,7 +72,21 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     ).toBeVisible();
   }
 
-  await page.goto("/pro/onboarding/zone");
+  // Les étapes restent modifiables : certification et spécialité, puis zone en communes.
+  await page.goto("/pro/onboarding/entreprise");
+  await expect(page.getByText(/^FR\d{11}$/)).toBeVisible();
+  await page.goto("/pro/onboarding/metiers");
+  await page.getByLabel("Type").selectOption("rge");
+  await page.getByLabel("Numéro", { exact: true }).fill("E-00000");
+  await page.getByLabel("Date de fin de validité").fill(nextYear);
+  await page.getByRole("button", { name: "Ajouter la certification" }).click();
+  await expect(page.getByText(/RGE · E-00000 · valable jusqu'au 30 juin/)).toBeVisible();
+  await expect(page.getByLabel("Menuisier")).toBeChecked();
+  await page.getByLabel("Fenêtres").check();
+  await page.getByLabel("Années d'expérience").fill("8");
+  await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/zone$/);
+
   await page.getByLabel("Une liste de communes").check();
   await page.getByRole("combobox", { name: "Ajouter une commune" }).fill("nic");
   await page.getByRole("option", { name: "Nice (06000)" }).click();

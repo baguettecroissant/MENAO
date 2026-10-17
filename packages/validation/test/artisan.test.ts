@@ -1,49 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   RADIUS_OPTIONS_KM,
-  artisanSignUpSchema,
   certificationSchema,
   companyStepSchema,
   tradesStepSchema,
   zoneStepSchema,
 } from "../src/artisan";
 import { messages } from "../src/messages";
-
-// Données fictives : SIRET inexistant dans Sirene (vérifié : 404), domaine .test, numéro ARCEP fiction.
-const signup = {
-  firstName: "Camille",
-  lastName: "Exemple",
-  phone: "06 39 98 00 02",
-  email: "pro@example.test",
-  password: "correct-horse-battery",
-  siret: "000 000 018 00010",
-  acceptTerms: true,
-  acceptCgv: true,
-  marketingOptIn: false,
-};
-
-describe("artisanSignUpSchema", () => {
-  it("accepte une inscription valide et normalise SIRET et téléphone", () => {
-    const r = artisanSignUpSchema.parse(signup);
-    expect(r.siret).toBe("00000001800010");
-    expect(r.phone).toBe("+33639980002");
-  });
-
-  it("téléphone obligatoire", () => {
-    const r = artisanSignUpSchema.safeParse({ ...signup, phone: "" });
-    expect(r.error?.issues[0]?.message).toBe(messages.phoneRequired);
-  });
-
-  it("SIRET avec mauvaise clé refusé", () => {
-    const r = artisanSignUpSchema.safeParse({ ...signup, siret: "00000001800011" });
-    expect(r.error?.issues[0]?.message).toBe(messages.siretInvalid);
-  });
-
-  it("CGV artisans obligatoires", () => {
-    const r = artisanSignUpSchema.safeParse({ ...signup, acceptCgv: false });
-    expect(r.error?.issues[0]?.message).toBe(messages.cgvRequired);
-  });
-});
 
 describe("companyStepSchema", () => {
   it("nom commercial optionnel, choix de TVA obligatoire", () => {
