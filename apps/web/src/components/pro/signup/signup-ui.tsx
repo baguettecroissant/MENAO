@@ -102,7 +102,8 @@ export function ChoiceGroup<T extends string | number | boolean>({
               value={String(option.value)}
               checked={value === option.value}
               onChange={() => onChange(option.value)}
-              className="peer sr-only"
+              // Invisible mais posé sur tout le bouton : le clic ou le toucher l'atteint directement.
+              className="peer absolute inset-0 z-10 m-0 size-full cursor-pointer opacity-0"
             />
             <span
               className={`flex min-h-[3.25rem] cursor-pointer items-center justify-center rounded-input border-[1.5px] border-border-strong bg-surface px-3 text-center text-[0.9375rem] font-semibold transition-colors peer-checked:border-primary peer-checked:bg-primary-softer peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:border-primary`}
