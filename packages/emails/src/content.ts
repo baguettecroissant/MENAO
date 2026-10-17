@@ -49,6 +49,7 @@ export const NOTIFICATION_TYPES = [
   "badge_debloque",
   "niveau_atteint",
   "planning_relance",
+  "inscription_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -472,6 +473,81 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Mettre à jour mon planning", url: link("/pro/agenda/disponibilites") },
+      };
+    }
+    case "inscription_relance": {
+      // Inscription artisan abandonnée (ADR 0112) : trois relances au plus (J+1, J+3, J+7), vers
+      // « Faire vérifier mon entreprise ». Le texte suit l'état du dossier.
+      const etape = integer(data, "etape") ?? 1;
+      const cta = { label: "Reprendre mon inscription", url: link("/pro/onboarding") };
+      if (data.complement === true) {
+        return {
+          subject: "Votre dossier MENAO attend vos compléments",
+          preview: "Ajoutez les éléments demandés pour que l'équipe vérifie votre entreprise.",
+          title: "Votre dossier attend vos compléments",
+          paragraphs: [
+            hello(ctx.firstName),
+            "L'équipe MENAO vous a demandé des compléments pour vérifier votre entreprise. Le détail est indiqué dans votre dossier.",
+            "Ajoutez-les, puis renvoyez votre dossier : nous le vérifions dès sa réception.",
+          ],
+          quote: null,
+          cta: { label: "Compléter mon dossier", url: link("/pro/onboarding") },
+        };
+      }
+      if (data.pret === true) {
+        return {
+          subject: "Votre dossier MENAO est prêt : envoyez-le",
+          preview: "Tout est prêt : il ne reste qu'à envoyer votre dossier à l'équipe MENAO.",
+          title: "Il ne reste qu'à envoyer votre dossier",
+          paragraphs: [
+            hello(ctx.firstName),
+            "Votre dossier est complet. Il ne reste qu'à l'envoyer à l'équipe MENAO pour qu'elle vérifie votre entreprise.",
+            "Une fois votre entreprise vérifiée, votre profil peut apparaître auprès des clients de votre secteur.",
+          ],
+          quote: null,
+          cta: { label: "Envoyer mon dossier", url: link("/pro/onboarding") },
+        };
+      }
+      if (etape >= 3) {
+        return {
+          subject: "Dernier rappel : votre profil MENAO attend sa vérification",
+          preview: "Les clients ne voient que les artisans vérifiés.",
+          title: "Votre profil attend sa vérification",
+          paragraphs: [
+            hello(ctx.firstName),
+            "Votre profil MENAO est créé, mais votre entreprise n'est pas encore vérifiée : les clients de votre secteur ne le voient pas.",
+            "Ajoutez vos documents et signez la charte qualité : tout est enregistré au fur et à mesure, vous reprenez là où vous en étiez.",
+            "C'est notre dernier rappel. Votre inscription reste accessible depuis votre espace pro.",
+          ],
+          quote: null,
+          cta,
+        };
+      }
+      if (etape === 2) {
+        return {
+          subject: "Vos documents en photo, depuis votre téléphone",
+          preview: "Kbis, assurances, pièce d'identité : une photo suffit.",
+          title: "Vos documents en photo",
+          paragraphs: [
+            hello(ctx.firstName),
+            "Pour faire vérifier votre entreprise, une photo de chaque document suffit : Kbis, attestations d'assurance décennale et de responsabilité civile, pièce d'identité.",
+            "Prenez-les depuis votre téléphone, un document à la fois. Vous pouvez vous arrêter et reprendre plus tard.",
+          ],
+          quote: null,
+          cta,
+        };
+      }
+      return {
+        subject: "Votre inscription MENAO n'est pas terminée",
+        preview: "Votre profil est créé : faites vérifier votre entreprise.",
+        title: "Votre inscription n'est pas terminée",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Votre profil MENAO est créé. Il reste à faire vérifier votre entreprise : vos documents en photo et la charte qualité, en quelques minutes.",
+          "Tout est enregistré au fur et à mesure : vous reprenez là où vous en étiez.",
+        ],
+        quote: null,
+        cta,
       };
     }
     case "niveau_atteint": {

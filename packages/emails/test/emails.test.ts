@@ -469,6 +469,28 @@ describe("contenu des notifications (F-41)", () => {
     expect(never.preview).toBe("Vous n'avez pas encore confirmé votre planning sur MENAO.");
   });
 
+  it("relances de l'inscription artisan : texte selon l'étape et l'état du dossier", () => {
+    const url = "https://menao.example/pro/onboarding";
+    const first = notificationContent("inscription_relance", { etape: 1, pret: false }, ctx);
+    expect(first.subject).toBe("Votre inscription MENAO n'est pas terminée");
+    expect(first.cta).toEqual({ label: "Reprendre mon inscription", url });
+    expect(notificationContent("inscription_relance", { etape: 2 }, ctx).subject).toBe(
+      "Vos documents en photo, depuis votre téléphone",
+    );
+    const last = notificationContent("inscription_relance", { etape: 3 }, ctx);
+    expect(last.subject).toBe("Dernier rappel : votre profil MENAO attend sa vérification");
+    expect(last.paragraphs.at(-1)).toContain("dernier rappel");
+    const ready = notificationContent("inscription_relance", { etape: 2, pret: true }, ctx);
+    expect(ready.subject).toBe("Votre dossier MENAO est prêt : envoyez-le");
+    expect(ready.cta).toEqual({ label: "Envoyer mon dossier", url });
+    const more = notificationContent("inscription_relance", { etape: 1, complement: true }, ctx);
+    expect(more.subject).toBe("Votre dossier MENAO attend vos compléments");
+    // Données absentes ou inattendues : première relance.
+    expect(notificationContent("inscription_relance", { etape: "x" }, ctx).subject).toBe(
+      first.subject,
+    );
+  });
+
   it("relance « Paiement en attente » : acompte à régler, lien vers le chantier", () => {
     const data = { ...ids, titre: "Prises", artisan: "Jean" };
     const reminder = notificationContent("acompte_relance", data, ctx);
