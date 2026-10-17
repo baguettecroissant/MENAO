@@ -13,10 +13,10 @@ import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadDossier } from "@/lib/artisan-dossier";
+import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
 import { pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Card, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDocument;
@@ -38,7 +38,7 @@ function monthsAgo(months: number): string {
 export default function DocumentScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
   const type = REQUIRED_DOCUMENT_TYPES.find((value) => value === params.type);
-  const [dossier] = useFocusData(loadDossier);
+  const [dossier, reload] = useFocusData(loadDossier);
   if (!type) {
     return (
       <Screen header={<TopBar />}>
@@ -47,16 +47,68 @@ export default function DocumentScreen() {
     );
   }
   const locked = dossier?.status === "en_verification";
+  const draft = dossier?.status === "brouillon" || dossier?.status === "refuse";
+  const exempt = type === "decennale" && dossier?.snapshot.decennaleExempt === true;
   return (
     <Screen header={<TopBar />}>
       <Title>{d.documents[type]}</Title>
-      <Body muted>{t.photoHint}</Body>
-      {locked ? <Notice tone="info">{t.locked}</Notice> : <DocumentForm type={type} />}
+      {exempt ? null : <Body muted>{t.photoHint}</Body>}
+      {locked ? (
+        <Notice tone="info">{t.locked}</Notice>
+      ) : (
+        <>
+          {type === "decennale" && draft ? (
+            <ExemptChoice exempt={exempt} onChange={reload} />
+          ) : null}
+          {exempt || !dossier ? null : (
+            <DocumentForm type={type} trades={type === "decennale" ? dossier.trades : []} />
+          )}
+        </>
+      )}
     </Screen>
   );
 }
 
-function DocumentForm({ type }: { type: RequiredDocumentType }) {
+/** « Non soumis » à la décennale (ADR 0116) : déclaré par l'artisan, vérifié par l'équipe. */
+function ExemptChoice({ exempt, onChange }: { exempt: boolean; onChange: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  async function toggle() {
+    setBusy(true);
+    setFailure(await setDecennaleExempt(!exempt));
+    await onChange();
+    setBusy(false);
+  }
+  return (
+    <Card tone="soft">
+      {exempt ? (
+        <Notice tone="info">{t.exemptDeclared}</Notice>
+      ) : (
+        <>
+          <Text style={styles.exemptTitle}>{t.exemptTitle}</Text>
+          <Body muted>{t.exemptText}</Body>
+        </>
+      )}
+      {failure ? <Notice tone="error">{failure}</Notice> : null}
+      <Button
+        label={exempt ? t.exemptCancel : t.exemptDeclare}
+        variant="secondary"
+        onPress={toggle}
+        loading={busy}
+      />
+    </Card>
+  );
+}
+
+function DocumentForm({
+  type,
+  trades,
+}: {
+  type: RequiredDocumentType;
+  trades: { code: string; label: string }[];
+}) {
+  // Décennale : métiers couverts, tous cochés au départ (ADR 0116).
+  const [covered, setCovered] = useState(() => new Set(trades.map((trade) => trade.code)));
   const [photo, setPhoto] = useState<PickedPhoto | null>(null);
   const [values, setValues] = useState({
     dateEmission: null as string | null,
@@ -85,6 +137,7 @@ function DocumentForm({ type }: { type: RequiredDocumentType }) {
       assureur: values.assureur,
       numero: values.numero,
       couverture: values.couverture,
+      coveredTrades: type === "decennale" ? [...covered] : [],
     });
     const fieldErrors: Record<string, string | undefined> = parsed.success
       ? {}
@@ -166,6 +219,27 @@ function DocumentForm({ type }: { type: RequiredDocumentType }) {
           error={errors.couverture}
         />
       ) : null}
+      {type === "decennale" && trades.length > 0 ? (
+        <View style={styles.coverage}>
+          <Text style={styles.exemptTitle}>{t.coverageLegend}</Text>
+          {trades.map((trade) => (
+            <Checkbox
+              key={trade.code}
+              label={trade.label}
+              checked={covered.has(trade.code)}
+              onChange={(checked) =>
+                setCovered((current) => {
+                  const next = new Set(current);
+                  if (checked) next.add(trade.code);
+                  else next.delete(trade.code);
+                  return next;
+                })
+              }
+            />
+          ))}
+          <Body muted>{t.coverageHint}</Body>
+        </View>
+      ) : null}
       {type === "urssaf" ? (
         <>
           <DateTimeFields
@@ -210,4 +284,6 @@ const styles = StyleSheet.create({
   },
   added: { fontFamily: font.medium, fontSize: 14, color: colors.success },
   buttons: { gap: spacing(2.5) },
+  coverage: { gap: spacing(2) },
+  exemptTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
 });

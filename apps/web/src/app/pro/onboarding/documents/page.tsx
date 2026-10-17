@@ -8,6 +8,7 @@ import {
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { setDecennaleExempt } from "@/lib/artisan/actions";
 import { DocumentUpload } from "./document-upload";
 
 const t = fr.pro.onboarding.documents;
@@ -33,7 +34,14 @@ export default async function DocumentsStepPage({
   const { type: only } = await searchParams;
   const types = REQUIRED_DOCUMENT_TYPES.filter((type) => !only || type === only);
   const focused = types.length === 1;
-  const { supabase, userId, artisan, documents } = await getOnboardingContext();
+  const { supabase, userId, artisan, documents, tradeCodes } = await getOnboardingContext();
+  // Métiers déclarés, proposés avec la décennale (ADR 0116).
+  const { data: trades } = await supabase
+    .from("trades")
+    .select("code, label")
+    .in("code", tradeCodes.length ? tradeCodes : ["-"])
+    .order("sort_order");
+  const exempt = artisan.decennale_non_soumis;
   const onboarding = artisan.status === "brouillon" || artisan.status === "refuse";
   // Artisan validé ou suspendu : renouvellement des documents surveillés (F-51).
   const renewal = artisan.status === "valide" || artisan.status === "suspendu";
@@ -69,9 +77,17 @@ export default async function DocumentsStepPage({
                   {t.types[type]}
                 </h2>
                 <span
-                  className={`rounded-chip px-3 py-1 text-sm ${chip[current?.status ?? "missing"]}`}
+                  className={`rounded-chip px-3 py-1 text-sm ${
+                    !current && type === "decennale" && exempt
+                      ? chip.en_attente
+                      : chip[current?.status ?? "missing"]
+                  }`}
                 >
-                  {current ? t.statuses[current.status] : t.missing}
+                  {current
+                    ? t.statuses[current.status]
+                    : type === "decennale" && exempt
+                      ? fr.pro.onboarding.dossier.states.exempt
+                      : t.missing}
                 </span>
               </div>
               {[current, pending]
@@ -133,10 +149,32 @@ export default async function DocumentsStepPage({
                     </div>
                   );
                 })}
-              {canUpload && (
+              {type === "decennale" && onboarding && (
+                <div className="flex flex-col gap-2 rounded-card bg-primary-softer p-4 text-sm">
+                  {exempt ? (
+                    <Alert tone="info">{t.exemptDeclared}</Alert>
+                  ) : (
+                    <>
+                      <p className="font-semibold">{t.exemptTitle}</p>
+                      <p className="text-muted-foreground">{t.exemptText}</p>
+                    </>
+                  )}
+                  <form action={setDecennaleExempt}>
+                    <input type="hidden" name="value" value={exempt ? "non" : "oui"} />
+                    <button
+                      type="submit"
+                      className="min-h-touch font-semibold text-primary-strong underline underline-offset-4"
+                    >
+                      {exempt ? t.exemptCancel : t.exemptDeclare}
+                    </button>
+                  </form>
+                </div>
+              )}
+              {canUpload && !(type === "decennale" && exempt) && (
                 <DocumentUpload
                   type={type}
                   userId={userId}
+                  trades={type === "decennale" ? (trades ?? []) : undefined}
                   label={renewal ? t.renew : current ? t.replace : t.send}
                 />
               )}

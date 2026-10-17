@@ -48,6 +48,8 @@ type DocumentInput = {
   numero?: string | null;
   assureur?: string | null;
   couverture?: string | null;
+  /** Décennale : métiers couverts selon l'artisan (ADR 0116). */
+  coveredTrades?: unknown;
 };
 
 export type ProcessUploadStatus =
@@ -383,6 +385,16 @@ async function saveDocument(
     numero: shortText(doc.numero, 60),
     assureur: shortText(doc.assureur, 120),
     couverture: shortText(doc.couverture, 200),
+    covered_trades:
+      doc.type === "decennale" && Array.isArray(doc.coveredTrades)
+        ? [
+            ...new Set(
+              doc.coveredTrades.filter(
+                (c): c is string => typeof c === "string" && /^[a-z0-9-]{1,60}$/.test(c),
+              ),
+            ),
+          ].slice(0, 30)
+        : null,
   });
   if (error) {
     await admin.storage.from("artisan-documents").remove([path]);

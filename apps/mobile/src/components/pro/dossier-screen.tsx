@@ -1,8 +1,8 @@
 import {
   CHARTER_RULE_COUNT,
-  DOSSIER_ITEM_COUNT,
   REQUIRED_DOCUMENT_TYPES,
   documentState,
+  dossierItemCount,
   type DocumentState,
 } from "@menao/core";
 import { router, type Href } from "expo-router";
@@ -72,7 +72,8 @@ export function DossierScreen() {
 
   const { progress, snapshot } = dossier;
   const editable = dossier.status === "brouillon" || dossier.status === "refuse";
-  const done = DOSSIER_ITEM_COUNT - dossier.itemsLeft;
+  const total = dossierItemCount(snapshot);
+  const done = total - dossier.itemsLeft;
   const profileDone = progress.entreprise && progress.metiers && progress.zone;
 
   async function submit() {
@@ -116,17 +117,17 @@ export function DossierScreen() {
       <View style={styles.progress}>
         <View style={styles.progressRow}>
           <Text style={styles.progressText}>{t.progressLabel}</Text>
-          <Text style={styles.progressText}>{t.progress(done, DOSSIER_ITEM_COUNT)}</Text>
+          <Text style={styles.progressText}>{t.progress(done, total)}</Text>
         </View>
         <View
           role="progressbar"
           aria-label={t.progressLabel}
           aria-valuemin={0}
-          aria-valuemax={DOSSIER_ITEM_COUNT}
+          aria-valuemax={total}
           aria-valuenow={done}
           style={styles.track}
         >
-          <View style={[styles.bar, { width: `${(done / DOSSIER_ITEM_COUNT) * 100}%` }]} />
+          <View style={[styles.bar, { width: `${(done / total) * 100}%` }]} />
         </View>
       </View>
 
@@ -147,6 +148,20 @@ export function DossierScreen() {
           href="/pro-charte"
         />
         {REQUIRED_DOCUMENT_TYPES.map((type) => {
+          // « Non soumis » à la décennale (ADR 0116) : pas exigée, l'équipe le vérifie.
+          if (type === "decennale" && snapshot.decennaleExempt) {
+            return (
+              <Row
+                key={type}
+                icon={FileText}
+                title={t.documents[type]}
+                hint={t.exemptHint}
+                tone="pending"
+                status={t.states.exempt}
+                href={{ pathname: "/pro-document", params: { type } }}
+              />
+            );
+          }
           const state = documentState(type, snapshot.documents[type]);
           const refused = dossier.documents.find((d) => d.type === type && d.status === "refuse");
           return (

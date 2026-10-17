@@ -57,7 +57,14 @@ export type ArtisanOnboardingSnapshot = {
   connectChargesEnabled: boolean;
   /** Charte qualité signée dans sa version en cours (CHARTER_VERSION). */
   charterAccepted: boolean;
+  /** Métiers déclarés non soumis à la décennale (ADR 0116) : elle n'est pas exigée. */
+  decennaleExempt: boolean;
 };
+
+/** Documents exigés : les cinq, sans la décennale pour un artisan « non soumis » (ADR 0116). */
+export function requiredDocumentTypes(a: { decennaleExempt: boolean }): RequiredDocumentType[] {
+  return REQUIRED_DOCUMENT_TYPES.filter((type) => type !== "decennale" || !a.decennaleExempt);
+}
 
 function isoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -107,7 +114,7 @@ export function onboardingProgress(
     metiers: a.tradeCount > 0,
     zone,
     charte: a.charterAccepted,
-    documents: REQUIRED_DOCUMENT_TYPES.every((t) => documentIsValid(t, a.documents[t], today)),
+    documents: requiredDocumentTypes(a).every((t) => documentIsValid(t, a.documents[t], today)),
     profil: a.hasAvatar && a.presentationLength >= PRESENTATION_MIN_LENGTH,
     paiements: a.connectChargesEnabled,
     formule: a.subscriptionActive,
@@ -150,13 +157,15 @@ export function documentState(
 
 /**
  * Éléments du dossier à terminer avant l'envoi (ADR 0111) : entreprise, métiers et zone (un seul
- * élément, faits à l'inscription), la charte, chaque document, puis le profil public.
+ * élément, faits à l'inscription), la charte, chaque document exigé, puis le profil public.
  */
-export const DOSSIER_ITEM_COUNT = 3 + REQUIRED_DOCUMENT_TYPES.length;
+export function dossierItemCount(a: { decennaleExempt: boolean }): number {
+  return 3 + requiredDocumentTypes(a).length;
+}
 
 export function dossierItemsLeft(a: ArtisanOnboardingSnapshot, today: Date = new Date()): number {
   const p = onboardingProgress(a, today);
   const items = [p.entreprise && p.metiers && p.zone, p.charte, p.profil];
-  const documents = REQUIRED_DOCUMENT_TYPES.map((t) => documentIsValid(t, a.documents[t], today));
+  const documents = requiredDocumentTypes(a).map((t) => documentIsValid(t, a.documents[t], today));
   return [...items, ...documents].filter((done) => !done).length;
 }
