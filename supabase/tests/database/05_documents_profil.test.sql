@@ -133,8 +133,8 @@ reset role;
 select pg_temp.connecter('d4d4d4d4-0000-4000-8000-000000000004', 'admin', 'aal2');
 set local role authenticated;
 select ok((select count(*) from public.artisan_documents where artisan_id in (
-  select id from public.artisans where user_id in ('d1d1d1d1-0000-4000-8000-000000000001', 'd2d2d2d2-0000-4000-8000-000000000002'))) = 5,
-  'admin : voit les documents des artisans');
+  select id from public.artisans where user_id in ('d1d1d1d1-0000-4000-8000-000000000001', 'd2d2d2d2-0000-4000-8000-000000000002'))) = 6,
+  'admin : voit les documents des artisans (5 de A1, 1 de A2)');
 reset role;
 
 -- ---------- Visiteur ----------
