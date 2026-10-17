@@ -1,9 +1,11 @@
 // Edge Function sirene-check (F-14) : vérifie le SIRET de l'artisan connecté auprès de
-// l'API Sirene (INSEE) et enregistre le résultat sur sa fiche.
+// l'API Sirene (INSEE) et enregistre le résultat sur sa fiche, puis lit ses qualifications RGE
+// dans l'annuaire de l'ADEME (ADR 0118).
 // Aucune donnée personnelle dans les journaux (CLAUDE.md règle 11).
 import { createClient } from "@supabase/supabase-js";
 import { isValidSiret } from "../../../packages/core/src/siret.ts";
 import { parseSireneEtablissement } from "../../../packages/core/src/sirene.ts";
+import { refreshRge } from "../_shared/rge.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -94,6 +96,10 @@ Deno.serve(async (req) => {
     console.error(`sirene-check : enregistrement impossible (${recordError.code})`);
     return respond({ status: "unavailable" }, 503);
   }
+
+  // Qualifications RGE du même SIRET (ADR 0118) : sans effet sur la réponse si l'annuaire ne
+  // répond pas ; la lecture quotidienne ou « Actualiser » prendront le relais.
+  if (result.active) await refreshRge(admin, artisan.id, artisan.siret);
 
   return respond({ status: result.active ? "ok" : "inactive" });
 });

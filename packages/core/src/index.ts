@@ -11,6 +11,7 @@ export * from "./project";
 export * from "./audio";
 export * from "./matching";
 export * from "./requests";
+export * from "./rge";
 export * from "./chantier-state";
 export * from "./appointment";
 export * from "./ics";

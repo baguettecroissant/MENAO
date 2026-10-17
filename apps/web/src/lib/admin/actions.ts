@@ -1,10 +1,13 @@
 "use server";
 
 import { reviewModerationSchema } from "@menao/validation";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
+import { invokeRgeCheck } from "@/lib/rge";
 import { requireAdmin, requireStaff } from "./guard";
 
 const t = fr.admin.detail;
@@ -40,6 +43,16 @@ export async function verifyCertification(formData: FormData): Promise<void> {
     p_verified: text(formData, "verified") === "true",
   });
   refresh(text(formData, "artisanId"));
+}
+
+/** Nouvelle lecture de l'annuaire RGE pour un artisan (ADR 0118), « Revérifier le RGE ». */
+export async function adminRefreshRge(formData: FormData): Promise<void> {
+  const id = z.uuid().safeParse(text(formData, "artisanId"));
+  if (!id.success) return;
+  const { supabase } = await requireAdmin();
+  const status = await invokeRgeCheck(supabase, { artisanId: id.data });
+  refresh(id.data);
+  redirect(`/admin/artisans/${id.data}?rge=${status}` as Route);
 }
 
 /** Décision sur le dossier : valider, refuser (message), demander un complément (message). */

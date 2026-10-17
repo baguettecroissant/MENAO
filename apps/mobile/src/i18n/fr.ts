@@ -682,6 +682,9 @@ export const fr = {
     certificationTitle: (label: string) => `Certifié ${label}`,
     certificationDetail: (numero: string, date: string) =>
       `N° ${numero} · valable jusqu'au ${date}`,
+    rgeTitle: "Reconnu Garant de l'Environnement (RGE)",
+    rgeDetail: (domains: string) =>
+      `Vérifié dans l'annuaire officiel des entreprises RGE : ${domains}`,
     score: "Score MENAO",
     scoreEmpty:
       "Pas encore de score : cet artisan vient de rejoindre MENAO. Le score sera calculé à partir des avis vérifiés de ses clients.",

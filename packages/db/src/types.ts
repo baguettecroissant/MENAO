@@ -535,6 +535,63 @@ export type Database = {
           },
         ];
       };
+      artisan_rge_qualifications: {
+        Row: {
+          artisan_id: string;
+          code_qualification: string;
+          created_at: string;
+          date_debut: string | null;
+          date_fin: string;
+          domaine: string;
+          id: string;
+          meta_domaine: string | null;
+          nom_certificat: string | null;
+          nom_qualification: string;
+          organisme: string;
+          particulier: boolean | null;
+          url_certificat: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          code_qualification: string;
+          created_at?: string;
+          date_debut?: string | null;
+          date_fin: string;
+          domaine: string;
+          id?: string;
+          meta_domaine?: string | null;
+          nom_certificat?: string | null;
+          nom_qualification: string;
+          organisme: string;
+          particulier?: boolean | null;
+          url_certificat?: string | null;
+        };
+        Update: {
+          artisan_id?: string;
+          code_qualification?: string;
+          created_at?: string;
+          date_debut?: string | null;
+          date_fin?: string;
+          domaine?: string;
+          id?: string;
+          meta_domaine?: string | null;
+          nom_certificat?: string | null;
+          nom_qualification?: string;
+          organisme?: string;
+          particulier?: boolean | null;
+          url_certificat?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_rge_qualifications_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_scores: {
         Row: {
           artisan_id: string;
@@ -731,6 +788,7 @@ export type Database = {
           radius_km: number | null;
           raison_sociale: string | null;
           refusal_reason: string | null;
+          rge_checked_at: string | null;
           siren: string | null;
           sirene_active: boolean | null;
           sirene_checked_at: string | null;
@@ -784,6 +842,7 @@ export type Database = {
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
+          rge_checked_at?: string | null;
           siren?: never;
           sirene_active?: boolean | null;
           sirene_checked_at?: string | null;
@@ -836,6 +895,7 @@ export type Database = {
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
+          rge_checked_at?: string | null;
           siren?: never;
           sirene_active?: boolean | null;
           sirene_checked_at?: string | null;
@@ -3814,6 +3874,7 @@ export type Database = {
         };
         Returns: string;
       };
+      record_rge_qualifications: { Args: { p_artisan_id: string; p_rows: Json }; Returns: number };
       record_sirene_result: {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
@@ -3839,6 +3900,13 @@ export type Database = {
       report_message: { Args: { p_message_id: string; p_reason: string }; Returns: string };
       report_review: { Args: { p_reason: string; p_review_id: string }; Returns: string };
       request_account_deletion: { Args: { p_message?: string }; Returns: string };
+      rge_refresh_candidates: {
+        Args: { p_limit?: number };
+        Returns: {
+          artisan_id: string;
+          siret: string;
+        }[];
+      };
       save_project_criteria: {
         Args: {
           p_adresse: string;

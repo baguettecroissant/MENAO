@@ -31,6 +31,12 @@ const profileSchema = z.object({
   certifications: z.array(
     z.object({ type: z.string(), numero: z.string(), valid_until: z.string() }),
   ),
+  // Domaines RGE lus dans l'annuaire officiel de l'ADEME (ADR 0118), encore valides.
+  rge: z
+    .array(
+      z.object({ domain: z.string(), category: z.string().nullable(), valid_until: z.string() }),
+    )
+    .catch([]),
   photos: z.array(z.string()),
   // Score MENAO (F-28) : moyennes des avis publiés ; null tant qu'aucun avis n'est publié.
   score: z

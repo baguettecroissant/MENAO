@@ -146,7 +146,9 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
           </Card>
         ) : null}
 
-        {profile.decennale?.valid_until || profile.certifications.length > 0 ? (
+        {profile.decennale?.valid_until ||
+        profile.certifications.length > 0 ||
+        profile.rge.length > 0 ? (
           <Card>
             <Text role="heading" style={styles.heading}>
               {t.guarantees}
@@ -167,6 +169,12 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
                 detail={t.certificationDetail(c.numero, formatLongDate(c.valid_until))}
               />
             ))}
+            {profile.rge.length > 0 ? (
+              <Guarantee
+                title={t.rgeTitle}
+                detail={t.rgeDetail(profile.rge.map((q) => q.domain).join(", "))}
+              />
+            ) : null}
           </Card>
         ) : null}
 
