@@ -25,6 +25,11 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "fr.menao.app",
     supportsTablet: false,
+    infoPlist: {
+      // Chiffrement standard seulement (HTTPS, trousseau de l'iPhone) : exempté des règles
+      // d'exportation, aucune déclaration à chaque build ni à la soumission.
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     package: "fr.menao.app",
