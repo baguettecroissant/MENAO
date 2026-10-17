@@ -1,0 +1,57 @@
+# Archive envoyée aux serveurs de build d'Expo (EAS) pour l'application mobile.
+# ATTENTION : quand ce fichier existe, EAS ne lit plus aucun .gitignore. Il reprend donc
+# toutes leurs règles (secrets et clés compris), à garder synchronisées, puis exclut ce qui ne
+# sert pas à l'application. Les exclusions locales de .git/info/exclude ne sont pas lues par EAS.
+
+# --- Règles de .gitignore ---
+node_modules/
+.pnpm-store/
+.turbo/
+.next/
+out/
+dist/
+build/
+coverage/
+.expo/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.vercel
+supabase/.temp/
+supabase/.branches/
+.DS_Store
+*.log
+playwright-report/
+test-results/
+next-env.d.ts
+
+# --- Règles de apps/mobile/.gitignore ---
+expo-env.d.ts
+apps/mobile/web-build/
+apps/mobile/ios/
+apps/mobile/android/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+credentials.json
+
+# --- Règles de supabase/.gitignore ---
+.env.keys
+.env.local
+
+# --- Fichiers locaux hors Git (.git/info/exclude) ---
+.claude/
+medias/
+apps/web/src/app/apercu-*/
+apps/web/public/apercu-*/
+apps/mobile/app/apercu-*.tsx
+
+# --- Inutile pour construire l'application ---
+supabase/
+docs/
+apps/web/public/
+apps/web/e2e/
+apps/mobile/store/
