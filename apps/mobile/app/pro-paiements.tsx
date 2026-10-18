@@ -1,16 +1,13 @@
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { openHostedPage } from "@/lib/hosted";
 import { loadPayments, refreshConnect, startConnect } from "@/lib/payments";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Card, Notice, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Body, Card, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 
 const t = fr.proPayments;
-const { colors } = theme;
 
 /**
  * Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site : démarrer, compléter
@@ -46,15 +43,9 @@ export default function PaymentsScreen() {
     setBusy(false);
   }
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen header={<TopBar />}>
+    <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       {message ? <Notice tone="error">{message}</Notice> : null}
       {data === null ? (
@@ -69,12 +60,3 @@ export default function PaymentsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
-});

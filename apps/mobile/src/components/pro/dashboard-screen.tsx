@@ -20,9 +20,7 @@ import {
 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import {
-  ActivityIndicator,
   Image,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -47,7 +45,7 @@ import { requestStart } from "@/lib/pro-requests";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
-import { Body, Button, Card, Notice } from "@/ui";
+import { Body, Button, Card, Notice, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDashboard;
@@ -96,14 +94,14 @@ function Kpi({
   );
   const style = [styles.kpi, wide && styles.kpiWide];
   return href ? (
-    <Pressable
+    <Tappable
       role="link"
       aria-label={`${label} : ${value}`}
       onPress={() => router.push(href)}
-      style={({ pressed }) => [...style, pressed && styles.pressed]}
+      style={style}
     >
       {body}
-    </Pressable>
+    </Tappable>
   ) : (
     <View style={style}>{body}</View>
   );
@@ -138,15 +136,15 @@ function SectionHead({ title, link }: { title: string; link?: { label: string; h
         {title}
       </Text>
       {link ? (
-        <Pressable
+        <Tappable
           role="link"
           hitSlop={8}
           onPress={() => router.push(link.href)}
-          style={({ pressed }) => [styles.sectionLink, pressed && styles.pressed]}
+          style={styles.sectionLink}
         >
           <Text style={styles.sectionLinkText}>{link.label}</Text>
           <ArrowRight size={14} color={colors["primary-strong"]} />
-        </Pressable>
+        </Tappable>
       ) : null}
     </View>
   );
@@ -161,11 +159,11 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 function AppointmentCard({ appointment: a }: { appointment: Dashboard["appointments"][number] }) {
   const { day, time } = formatDayAndTime(a.startsAt);
   return (
-    <Pressable
+    <Tappable
       role="link"
       aria-label={t.appointment(t.kinds[a.kind], day, time, a.title)}
       onPress={() => router.push(`/pro-chantier/${a.chantierId}`)}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={styles.card}
     >
       <View style={[styles.band, a.kind === "demarrage" && styles.bandStart]}>
         <View style={styles.bandKind}>
@@ -189,7 +187,7 @@ function AppointmentCard({ appointment: a }: { appointment: Dashboard["appointme
           </View>
         ) : null}
       </View>
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -202,13 +200,13 @@ function RequestCard({ request: r, now }: { request: Dashboard["requests"][numbe
   const place = [r.code_postal, r.ville_nom].filter(Boolean).join(" ");
   const left = timeLeft(new Date(r.expires_at), now);
   return (
-    <Pressable
+    <Tappable
       role="link"
       aria-label={[title, place, r.urgence ? fr.proRequests.urgent : null]
         .filter(Boolean)
         .join(", ")}
       onPress={() => router.push(`/opportunite/${r.request_id}`)}
-      style={({ pressed }) => [styles.card, styles.request, pressed && styles.pressed]}
+      style={[styles.card, styles.request]}
     >
       <View style={styles.requestText}>
         <Text style={styles.cardTitle}>{title}</Text>
@@ -230,7 +228,7 @@ function RequestCard({ request: r, now }: { request: Dashboard["requests"][numbe
         ) : null}
       </View>
       {r.photoUrl ? <Image source={{ uri: r.photoUrl }} style={styles.thumb} alt="" /> : null}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -260,12 +258,12 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
       <SectionHead title={t.shortcuts} />
       <View style={styles.tiles}>
         {items.map(({ icon: Icon, label, href, badge }) => (
-          <Pressable
+          <Tappable
             key={label}
             role="link"
             aria-label={badge ? `${label}, ${badge}` : label}
             onPress={() => router.push(href)}
-            style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+            style={styles.tile}
           >
             <View style={styles.tileIcon}>
               <Icon size={20} color={colors.primary} />
@@ -278,7 +276,7 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
                 <Text style={styles.tileBadgeText}>{badge}</Text>
               </View>
             ) : null}
-          </Pressable>
+          </Tappable>
         ))}
       </View>
     </View>
@@ -310,13 +308,7 @@ export function DashboardScreen() {
     reloadGrade();
   }
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton />;
   const now = new Date();
   const appointments = data ? (
     <View style={styles.section}>
@@ -490,14 +482,7 @@ const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 const styles = StyleSheet.create({
   urssaf: { gap: theme.spacing(2) },
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(7), paddingBottom: spacing(10) },
-  pressed: { opacity: 0.85 },
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
   kpi: {
     flexGrow: 1,

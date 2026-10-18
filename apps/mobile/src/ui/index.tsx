@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,7 +12,13 @@ import {
   type TextInputProps,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { fr } from "@/i18n/fr";
+import { haptic } from "@/lib/haptics";
+import { Skeleton, Tappable } from "./motion";
 import { theme } from "./theme";
+
+export { Skeleton, Tappable } from "./motion";
+export { toast, ToastHost } from "./toast";
 
 const { colors, radius, font, spacing } = theme;
 
@@ -29,6 +36,7 @@ export function Screen({
   header,
   band,
   footer,
+  onRefresh,
 }: {
   children: ReactNode;
   centered?: boolean;
@@ -37,8 +45,21 @@ export function Screen({
   band?: ReactNode;
   /** Bas d'écran fixe (bouton d'action principal), au-dessus de la marge du bas du téléphone. */
   footer?: ReactNode;
+  /** « Tirer pour actualiser » : recharge les données de l'écran. */
+  onRefresh?: () => Promise<unknown>;
 }) {
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
+  async function refresh() {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    haptic.select();
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }
   return (
     <SafeAreaView style={styles.safe} edges={band ? ["left", "right"] : ["top", "left", "right"]}>
       {band}
@@ -46,6 +67,17 @@ export function Screen({
       <ScrollView
         contentContainerStyle={[styles.screen, centered && styles.centered]}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+              accessibilityLabel={fr.nav.refreshing}
+            />
+          ) : undefined
+        }
       >
         {children}
       </ScrollView>
@@ -53,6 +85,28 @@ export function Screen({
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing(3) }]}>{footer}</View>
       ) : null}
     </SafeAreaView>
+  );
+}
+
+/**
+ * Écran en cours de premier chargement : la forme du contenu en blocs gris qui pulsent, plutôt
+ * qu'un rond qui tourne (perçu plus rapide), avec la barre de retour pour pouvoir repartir.
+ */
+export function ScreenSkeleton({ header, cards = 3 }: { header?: ReactNode; cards?: number }) {
+  return (
+    <Screen header={header}>
+      <View role="progressbar" aria-label={fr.nav.loading} aria-busy style={styles.skeleton}>
+        <Skeleton width="60%" height={28} />
+        <Skeleton width="85%" height={14} />
+        {Array.from({ length: cards }, (_, i) => (
+          <View key={i} style={styles.card}>
+            <Skeleton width="45%" height={18} />
+            <Skeleton height={14} />
+            <Skeleton width="70%" height={14} />
+          </View>
+        ))}
+      </View>
+    </Screen>
   );
 }
 
@@ -173,17 +227,17 @@ export function Button({
         ? colors.danger
         : colors["primary-strong"];
   return (
-    <Pressable
+    <Tappable
       role="button"
       aria-disabled={inactive}
       aria-busy={loading}
       onPress={onPress}
       disabled={inactive}
-      style={({ pressed }) => [
+      scaleTo={0.98}
+      style={[
         styles.button,
         variant === "primary" && styles.buttonPrimary,
         variant === "secondary" && styles.buttonSecondary,
-        pressed && styles.pressed,
         inactive && styles.disabled,
       ]}
     >
@@ -208,7 +262,7 @@ export function Button({
           {Icon ? <Icon size={18} color={labelColor} /> : null}
         </View>
       )}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -270,7 +324,10 @@ export function Checkbox({
         role="checkbox"
         aria-checked={checked}
         aria-label={label}
-        onPress={() => onChange(!checked)}
+        onPress={() => {
+          haptic.select();
+          onChange(!checked);
+        }}
         style={styles.checkboxRow}
       >
         <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
@@ -389,6 +446,7 @@ const styles = StyleSheet.create({
   buttonLabelDanger: { color: colors.danger },
   buttonLabelOther: { color: colors["primary-strong"] },
   pressed: { opacity: 0.85 },
+  skeleton: { gap: spacing(3) },
   disabled: { opacity: 0.5 },
   field: { gap: spacing(1.5) },
   label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },

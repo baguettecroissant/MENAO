@@ -1,12 +1,12 @@
 import { isAwaitingQuote, isJournalOpen, type ChantierStatus } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { ArtisanChantierCard } from "@/components/pro/chantier-row";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadArtisanChantiers } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Screen, Title } from "@/ui";
+import { Body, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuickActions;
@@ -21,13 +21,7 @@ export default function ChooseChantierScreen() {
   const photo = action === "photo";
   const [rows] = useFocusData(loadArtisanChantiers);
 
-  if (rows === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (rows === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const list = (rows ?? []).filter((r) =>
     photo ? isJournalOpen(r.status as ChantierStatus) : isAwaitingQuote(r.status as ChantierStatus),
   );
@@ -57,12 +51,6 @@ export default function ChooseChantierScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   empty: {
     borderRadius: radius.card,
     borderWidth: 1,

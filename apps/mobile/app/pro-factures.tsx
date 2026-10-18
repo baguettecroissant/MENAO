@@ -2,7 +2,6 @@ import { FileDown, FileText } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -16,7 +15,7 @@ import { formatCents, formatDay } from "@/lib/format";
 import { sharePdf } from "@/lib/pdf";
 import { loadArtisanInvoices, shareInvoicesCsv } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Title } from "@/ui";
+import { Body, Button, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -33,13 +32,7 @@ export default function ArtisanInvoicesScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
-  if (invoices === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (invoices === undefined) return <ScreenSkeleton header={<TopBar />} />;
 
   async function exportCsv() {
     setFailure(null);
@@ -94,14 +87,14 @@ export default function ArtisanInvoicesScreen() {
           <EmptyState illustration="documents">{t.empty}</EmptyState>
         ) : null}
         {(invoices ?? []).map((invoice) => (
-          <Pressable
+          <Tappable
             key={invoice.id}
             role="button"
             aria-label={t.view(invoice.numero)}
             aria-busy={busy === invoice.id}
             disabled={busy !== null}
             onPress={() => share(invoice.id, invoice.numero)}
-            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            style={styles.card}
           >
             <View style={styles.cardText}>
               <View style={styles.row}>
@@ -125,7 +118,7 @@ export default function ArtisanInvoicesScreen() {
                 <FileDown size={16} color={colors["muted-foreground"]} />
               )}
             </View>
-          </Pressable>
+          </Tappable>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -134,12 +127,6 @@ export default function ArtisanInvoicesScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
   head: { gap: spacing(2), marginBottom: spacing(1) },
@@ -153,7 +140,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing(4),
   },
-  pressed: { opacity: 0.85 },
   cardText: { flex: 1, gap: spacing(1) },
   row: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   numero: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },

@@ -40,7 +40,7 @@ import { fr } from "@/i18n/fr";
 import { formatClock, formatDay, formatDayMonth } from "@/lib/format";
 import { deleteBlockedSlot, loadAgendaWeek } from "@/lib/pro-agenda";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, LinkText, Notice, Title } from "@/ui";
+import { Body, Button, LinkText, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAgenda;
@@ -128,13 +128,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
     blocked ? { tone: "success", text: t.block.added } : null,
   );
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton />;
 
   const today = data?.today ?? parisToday();
   const days = weekDates(monday);
@@ -179,30 +173,30 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
         {data === null ? <Notice tone="error">{t.error}</Notice> : null}
 
         <View style={styles.weekNav}>
-          <Pressable
+          <Tappable
             role="button"
             aria-label={t.previousWeek}
             onPress={() => setMonday(addDays(monday, -7))}
-            style={({ pressed }) => [styles.navButton, pressed && styles.pressed]}
+            style={styles.navButton}
           >
             <ChevronLeft size={20} color={colors.foreground} />
-          </Pressable>
-          <Pressable
+          </Tappable>
+          <Tappable
             role="button"
             aria-label={t.nextWeek}
             onPress={() => setMonday(addDays(monday, 7))}
-            style={({ pressed }) => [styles.navButton, pressed && styles.pressed]}
+            style={styles.navButton}
           >
             <ChevronRight size={20} color={colors.foreground} />
-          </Pressable>
+          </Tappable>
           {!thisWeek ? (
-            <Pressable
+            <Tappable
               role="button"
               onPress={() => setMonday(mondayOf(today))}
-              style={({ pressed }) => [styles.todayButton, pressed && styles.pressed]}
+              style={styles.todayButton}
             >
               <Text style={styles.todayText}>{t.thisWeek}</Text>
-            </Pressable>
+            </Tappable>
           ) : null}
           {current === null && data !== null ? <ActivityIndicator color={colors.primary} /> : null}
         </View>
@@ -350,14 +344,14 @@ function AgendaRow({ item, onFree }: { item: Placed; onFree: () => Promise<void>
   const chantierId = item.chantierId;
   if (chantierId) {
     return (
-      <Pressable
+      <Tappable
         role="link"
         aria-label={describe(item)}
         onPress={() => router.push(`/pro-chantier/${chantierId}`)}
-        style={({ pressed }) => [...rowStyle, pressed && styles.pressed]}
+        style={rowStyle}
       >
         {body}
-      </Pressable>
+      </Tappable>
     );
   }
   return (
@@ -389,12 +383,6 @@ function AgendaRow({ item, onFree }: { item: Placed; onFree: () => Promise<void>
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   topBar: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
   head: { gap: spacing(2), marginBottom: spacing(1) },
   weekNav: { flexDirection: "row", alignItems: "center", gap: spacing(2) },

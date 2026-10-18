@@ -1,10 +1,11 @@
 import { Camera } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { theme } from "@/ui/theme";
+import { Tappable } from "@/ui";
 
 const t = fr.proDashboard.photo;
 const { colors, font, radius, spacing } = theme;
@@ -52,16 +53,16 @@ export function PhotoNudge() {
           {error}
         </Text>
       ) : null}
-      <Pressable
+      <Tappable
         role="button"
         aria-label={t.add}
         disabled={sending}
         onPress={add}
-        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+        style={styles.button}
       >
         {sending ? <ActivityIndicator color={colors["primary-foreground"]} /> : null}
         <Text style={styles.buttonText}>{sending ? t.sending : t.add}</Text>
-      </Pressable>
+      </Tappable>
     </View>
   );
 }
@@ -104,5 +105,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   buttonText: { fontFamily: font.medium, fontSize: 15, color: colors["primary-foreground"] },
-  pressed: { opacity: 0.85 },
 });

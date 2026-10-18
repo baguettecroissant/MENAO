@@ -1,7 +1,7 @@
 import { ZONE_RADIUS_OPTIONS_KM } from "@menao/core";
 import { MapPin, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
 import { Segmented } from "@/components/segmented";
@@ -16,7 +16,7 @@ import {
 } from "@/lib/geo";
 import { loadZone, saveZone, type Zone } from "@/lib/my-company";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proZone;
@@ -30,15 +30,9 @@ type Message = { tone: "error" | "success"; text: string } | null;
  */
 export default function ZoneScreen() {
   const [zone, reload] = useFocusData(loadZone);
-  if (zone === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (zone === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen header={<TopBar />}>
+    <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       <Body muted>{t.lead}</Body>
       {zone === null ? (
@@ -83,7 +77,7 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
           : (fields.communes ?? fields.radiusKm ?? result.error ?? fr.errors.generic);
       return setMessage({ tone: "error", text });
     }
-    setMessage({ tone: "success", text: t.saved });
+    toast.success(t.saved);
     setEditingBase(false);
     // Rechargée d'abord : la carte passe à l'adresse enregistrée sans revenir à l'ancienne.
     await onSaved();
@@ -177,12 +171,6 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   base: {
     flexDirection: "row",
     alignItems: "center",

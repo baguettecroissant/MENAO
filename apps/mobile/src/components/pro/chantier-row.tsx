@@ -1,11 +1,12 @@
 import type { ChantierStatus } from "@menao/core";
 import { CalendarDays, MapPin } from "lucide-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
 import { fr } from "@/i18n/fr";
 import { formatDayAndTime } from "@/lib/format";
 import type { ArtisanChantierRow } from "@/lib/pro-chantiers";
 import { theme } from "@/ui/theme";
+import { Tappable } from "@/ui";
 
 const t = fr.proChantiers;
 const { colors, font, radius, spacing } = theme;
@@ -43,11 +44,11 @@ export function ArtisanChantierCard({
         ? formatDayAndTime(r.start_at)
         : null;
   return (
-    <Pressable
+    <Tappable
       role="link"
       aria-label={[t.status[status], r.title, place].filter(Boolean).join(", ")}
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={styles.card}
     >
       <StatusPill text={t.status[status]} tone={tone(status)} />
       <Text style={styles.title}>{r.title}</Text>
@@ -67,7 +68,7 @@ export function ArtisanChantierCard({
           </Text>
         </View>
       ) : null}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -81,7 +82,6 @@ const styles = StyleSheet.create({
     padding: spacing(4),
     boxShadow: "0 1px 3px rgba(17, 23, 40, 0.06)",
   },
-  pressed: { opacity: 0.85 },
   title: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
   row: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   meta: {

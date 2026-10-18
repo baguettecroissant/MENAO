@@ -2,15 +2,7 @@ import type { EmailPreferences } from "@menao/core";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -27,7 +19,7 @@ import {
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Checkbox, Notice, Title } from "@/ui";
+import { Body, Button, Card, Checkbox, Notice, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -58,13 +50,7 @@ export function NotificationCenter() {
     if (items) markNotificationsRead().then(refresh);
   }, [items, refresh]);
 
-  if (items === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (items === undefined) return <ScreenSkeleton />;
   const now = new Date();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
@@ -181,12 +167,6 @@ function Preferences() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   head: { gap: spacing(2) },

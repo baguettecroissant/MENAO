@@ -2,7 +2,7 @@ import { timeLeft } from "@menao/core";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Clock } from "lucide-react-native";
 import { useCallback } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand } from "@/components/header-band";
 import { ClientReputationCard } from "@/components/pro/client-reputation-card";
@@ -11,11 +11,11 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadOpportunity } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen } from "@/ui";
+import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proRequests;
-const { colors, spacing } = theme;
+const { spacing } = theme;
 
 /**
  * Opportunité (F-17), comme sur le site (maquette « Vue d'une opportunité ») : client, adresse,
@@ -27,15 +27,9 @@ const { colors, spacing } = theme;
 export default function OpportunityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadOpportunity(id), [id]);
-  const [opportunity] = useFocusData(load);
+  const [opportunity] = useFocusData(load, undefined, `opportunite:${id}`);
 
-  if (opportunity === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (opportunity === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (opportunity === null) {
     return (
       <Screen header={<TopBar />}>
@@ -105,12 +99,6 @@ export default function OpportunityScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   actions: { gap: spacing(1) },
   expertise: { paddingBottom: spacing(3) },

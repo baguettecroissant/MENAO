@@ -9,7 +9,7 @@ import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { deletePortfolioPhoto, loadPortfolio, type PortfolioPhoto } from "@/lib/portfolio";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Card, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proPublicProfile;
@@ -22,15 +22,9 @@ const { colors, font, radius, spacing } = theme;
  */
 export default function PublicProfileScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
-  if (dossier === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (dossier === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen header={<TopBar />}>
+    <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       <PhotoCard hasPhoto={Boolean(dossier?.avatarPath)} onSaved={reload} />
       <PresentationCard initial={dossier?.presentation ?? ""} onSaved={reload} />
@@ -61,7 +55,7 @@ function PhotoCard({ hasPhoto, onSaved }: { hasPhoto: boolean; onSaved: () => vo
       });
     }
     forgetProfileSummary();
-    setMessage({ tone: "success", text: t.photoDone });
+    toast.success(t.photoDone);
     onSaved();
   }
 
@@ -148,7 +142,7 @@ function PortfolioCard() {
     setProgress(null);
     if (sent > 0) {
       forgetProfileSummary();
-      if (sent === chosen.length) setMessage({ tone: "success", text: t.portfolioDone(sent) });
+      if (sent === chosen.length) toast.success(t.portfolioDone(sent));
     }
     await reload();
   }
@@ -209,12 +203,6 @@ function PortfolioCard() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   heading: {
     fontFamily: font.bold,
     fontSize: 17,

@@ -1,7 +1,7 @@
 import { claimableReward } from "@menao/core";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { BadgeIcon } from "@/components/grade/badge-icon";
 import { LevelCard } from "@/components/grade/level-card";
@@ -12,7 +12,7 @@ import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
 import { loadGrade, type GradeView } from "@/lib/grade";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen } from "@/ui";
+import { Button, Notice, Screen, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.grade;
@@ -204,12 +204,12 @@ function BadgeGrid({ badges, onOpen }: { badges: Badge[]; onOpen: (badge: Badge)
   return (
     <View style={styles.grid}>
       {badges.map((b) => (
-        <Pressable
+        <Tappable
           key={b.code}
           role="button"
           aria-label={b.label}
           onPress={() => onOpen(b)}
-          style={({ pressed }) => [styles.badge, pressed && styles.pressed]}
+          style={styles.badge}
         >
           <BadgeIcon code={b.code} unlocked={Boolean(b.unlocked_at)} />
           <Text style={styles.badgeLabel} numberOfLines={2}>
@@ -222,7 +222,7 @@ function BadgeGrid({ badges, onOpen }: { badges: Badge[]; onOpen: (badge: Badge)
               />
             </View>
           )}
-        </Pressable>
+        </Tappable>
       ))}
     </View>
   );
@@ -287,7 +287,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(2),
     paddingVertical: spacing(3),
   },
-  pressed: { opacity: 0.85 },
   badgeLabel: {
     minHeight: 32,
     fontFamily: font.medium,

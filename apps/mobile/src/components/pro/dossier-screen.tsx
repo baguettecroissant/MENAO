@@ -16,12 +16,12 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { loadDossier, submitDossier } from "@/lib/artisan-dossier";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen } from "@/ui";
+import { Body, Button, Notice, Screen, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDossier;
@@ -54,16 +54,10 @@ export function DossierScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (dossier === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (dossier === undefined) return <ScreenSkeleton />;
   if (dossier === null) {
     return (
-      <Screen>
+      <Screen onRefresh={reload}>
         <TabHeader title={t.title} />
         <Notice tone="error">{fr.errors.generic}</Notice>
       </Screen>
@@ -231,24 +225,18 @@ function Row({
   );
   if (!href) return <View style={styles.row}>{content}</View>;
   return (
-    <Pressable
+    <Tappable
       role="link"
       aria-label={`${title}, ${status}`}
       onPress={() => router.push(href)}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={styles.row}
     >
       {content}
-    </Pressable>
+    </Tappable>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   progress: { gap: spacing(2) },
   progressRow: { flexDirection: "row", justifyContent: "space-between" },
   progressText: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },
@@ -270,7 +258,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  pressed: { opacity: 0.85 },
   icon: {
     width: 40,
     height: 40,

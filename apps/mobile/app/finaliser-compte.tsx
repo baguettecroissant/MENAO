@@ -2,7 +2,7 @@ import { completeSignupSchema } from "@menao/validation";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
@@ -10,7 +10,17 @@ import { signOut } from "@/lib/auth";
 import { siteLinks } from "@/lib/env";
 import { completeOAuthSignup, loadSignupProfile, type SignupProfile } from "@/lib/oauth";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Checkbox, LinkText, Notice, Screen, TextField, Title } from "@/ui";
+import {
+  Body,
+  Button,
+  Checkbox,
+  LinkText,
+  Notice,
+  Screen,
+  ScreenSkeleton,
+  TextField,
+  Title,
+} from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.completeSignup;
@@ -24,13 +34,7 @@ type Field = "firstName" | "lastName" | "phone" | "acceptTerms";
  */
 export default function CompleteSignupScreen() {
   const [profile] = useFocusData(loadSignupProfile);
-  if (profile === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (profile === undefined) return <ScreenSkeleton />;
   return (
     <Screen>
       <Title>{t.title}</Title>
@@ -140,12 +144,6 @@ function CompleteSignupForm({ profile }: { profile: SignupProfile | null }) {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
   form: { gap: theme.spacing(4) },
   links: { gap: theme.spacing(2) },
 });

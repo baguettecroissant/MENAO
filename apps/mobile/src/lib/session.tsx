@@ -1,6 +1,7 @@
 import { appSpaceForRole, roleFromAppMetadata, type AppSpace, type Role } from "@menao/core";
 import type { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { setScreenCacheOwner } from "./screen-cache";
 import { supabase } from "./supabase";
 
 type SessionState = {
@@ -32,10 +33,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
+      setScreenCacheOwner(data.session?.user.id ?? null);
       setSession(data.session);
       setLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+      // Données des écrans gardées en mémoire : oubliées avant d'afficher un autre compte.
+      setScreenCacheOwner(next?.user.id ?? null);
       setSession(next);
       setLoading(false);
     });

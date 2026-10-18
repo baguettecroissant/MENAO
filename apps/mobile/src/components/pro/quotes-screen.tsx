@@ -1,14 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
 import { Segmented } from "@/components/segmented";
@@ -17,7 +9,7 @@ import { fr } from "@/i18n/fr";
 import { formatCents, formatDay, formatDayMonthNumeric, formatTime } from "@/lib/format";
 import { loadArtisanQuotes, type ArtisanQuote } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
-import { LinkText, Notice } from "@/ui";
+import { LinkText, Notice, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -42,13 +34,7 @@ export function ArtisanQuotesScreen() {
   const [tab, setTab] = useState<"a-envoyer" | "envoyes">("a-envoyer");
   const [refreshing, setRefreshing] = useState(false);
 
-  if (rows === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (rows === undefined) return <ScreenSkeleton />;
   const list = (rows ?? []).filter((q) =>
     tab === "a-envoyer" ? q.status === "brouillon" : q.status !== "brouillon",
   );
@@ -90,7 +76,7 @@ export function ArtisanQuotesScreen() {
           </EmptyState>
         ) : (
           list.map((q) => (
-            <Pressable
+            <Tappable
               key={q.quote_id}
               role="link"
               onPress={() =>
@@ -100,7 +86,7 @@ export function ArtisanQuotesScreen() {
                     : `/pro-chantier/${q.chantier_id}`,
                 )
               }
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              style={styles.card}
             >
               <View style={styles.cardHead}>
                 <Text style={styles.title}>{q.title}</Text>
@@ -139,7 +125,7 @@ export function ArtisanQuotesScreen() {
                   />
                 )}
               </View>
-            </Pressable>
+            </Tappable>
           ))
         )}
       </ScrollView>
@@ -149,12 +135,6 @@ export function ArtisanQuotesScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
   count: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   card: {
@@ -165,7 +145,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing(4),
   },
-  pressed: { opacity: 0.85 },
   cardHead: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3) },
   title: { flex: 1, fontFamily: font.medium, fontSize: 16, color: colors.foreground },
   amount: { fontFamily: font.medium, fontSize: 15, color: colors.primary },

@@ -10,7 +10,7 @@ import { fr } from "@/i18n/fr";
 import { loadNeedSummary, type NeedSummary } from "@/lib/project";
 import { loadSendContext, type SendContext } from "@/lib/requests";
 import { useSession } from "@/lib/session";
-import { Notice, Screen } from "@/ui";
+import { Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const r = fr.request;
@@ -50,13 +50,7 @@ function AccountScreen({ projectId, artisanIds }: { projectId: string; artisanId
     };
   }, [projectId]);
 
-  if (summary === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (summary === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const step = <AccountStep projectId={projectId} artisanIds={artisanIds} />;
   return summary ? (
     <Screen

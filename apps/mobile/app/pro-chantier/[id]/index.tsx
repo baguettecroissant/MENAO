@@ -2,7 +2,7 @@ import { ARTISAN_CANCELLABLE_STATUSES, type ChantierStatus } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { NotebookPen } from "lucide-react-native";
 import { useCallback } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand, whenMeta } from "@/components/header-band";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
@@ -13,7 +13,7 @@ import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { loadArtisanChantier, loadArtisanFollowUp } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen } from "@/ui";
+import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAppointment;
@@ -52,18 +52,12 @@ export default function ArtisanChantierScreen() {
       : null;
     return { chantier, followUp };
   }, [id]);
-  const [loaded, reload] = useFocusData(load);
+  const [loaded, reload] = useFocusData(load, undefined, `pro-chantier:${id}`);
 
-  if (loaded === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (loaded === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (loaded === null) {
     return (
-      <Screen header={<TopBar />}>
+      <Screen onRefresh={reload} header={<TopBar />}>
         <Notice tone="error">{fr.proChantiers.notFound}</Notice>
       </Screen>
     );
@@ -206,12 +200,6 @@ export default function ArtisanChantierScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   head: {
     flexDirection: "row",
     alignItems: "center",

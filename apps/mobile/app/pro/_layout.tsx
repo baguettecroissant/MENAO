@@ -5,6 +5,7 @@ import { CenterTabButton } from "@/components/center-tab-button";
 import { QuickActions } from "@/components/pro/quick-actions";
 import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
+import { haptic } from "@/lib/haptics";
 import { charterRequired } from "@/lib/charter";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
@@ -36,7 +37,7 @@ export default function ProLayout() {
   if (charter === "a_signer") return <Redirect href="/pro-charte" />;
   return (
     <>
-      <Tabs screenOptions={tabBarOptions}>
+      <Tabs screenOptions={tabBarOptions} screenListeners={{ tabPress: () => haptic.select() }}>
         <Tabs.Screen
           name="index"
           options={{

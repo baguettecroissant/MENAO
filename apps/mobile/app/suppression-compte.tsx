@@ -1,15 +1,13 @@
 import { ACCOUNT_DELETION_MESSAGE_MAX_LENGTH, accountDeletionSchema } from "@menao/validation";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { z } from "zod";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadDeletionRequest, requestAccountDeletion } from "@/lib/account";
 import { formatDay } from "@/lib/format";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Body, Button, Checkbox, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
 
 const t = fr.account.deletion;
 
@@ -27,13 +25,7 @@ export default function AccountDeletionScreen() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  if (pendingSince === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (pendingSince === undefined) return <ScreenSkeleton header={<TopBar />} />;
 
   async function submit() {
     const parsed = accountDeletionSchema.safeParse({ confirm, message });
@@ -55,6 +47,7 @@ export default function AccountDeletionScreen() {
   if (pendingSince) {
     return (
       <Screen
+        onRefresh={reload}
         header={<TopBar />}
         footer={<Button label={t.back} variant="secondary" onPress={() => router.back()} />}
       >
@@ -92,12 +85,3 @@ export default function AccountDeletionScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

@@ -7,7 +7,7 @@ import {
 import { problemReportSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { z } from "zod";
 import { RadioGroup } from "@/components/radio-group";
 import { TopBar } from "@/components/top-bar";
@@ -15,7 +15,7 @@ import { fr } from "@/i18n/fr";
 import { loadReportContext, reportProblem } from "@/lib/disputes";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.dispute;
@@ -38,13 +38,7 @@ export default function ReportProblemScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (detail === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (detail === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (detail === null) {
     return (
       <Screen header={<TopBar />}>
@@ -110,11 +104,5 @@ export default function ReportProblemScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
   head: { gap: theme.spacing(1) },
 });

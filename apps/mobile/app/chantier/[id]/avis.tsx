@@ -10,7 +10,7 @@ import { reviewSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Check, CircleCheck, MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { PersonRow } from "@/components/chantier/parts";
 import { HeaderBand } from "@/components/header-band";
@@ -21,7 +21,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadReviewState, submitReview } from "@/lib/reviews";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, TextField } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.clientReview;
@@ -50,16 +50,10 @@ export default function ReviewScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (state === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (state === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (state === null) {
     return (
-      <Screen header={<TopBar />}>
+      <Screen onRefresh={reload} header={<TopBar />}>
         <Notice tone="error">{fr.chantier.notFound}</Notice>
       </Screen>
     );
@@ -222,12 +216,6 @@ export default function ReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   intro: { alignItems: "center", gap: spacing(3) },
   badge: {
     width: 48,

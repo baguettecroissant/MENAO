@@ -1,10 +1,11 @@
 import { router, type Href } from "expo-router";
 import { ChevronRight, FileText } from "lucide-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
 import type { DocumentRow } from "@/lib/document-rows";
 import { theme } from "@/ui/theme";
+import { Tappable } from "@/ui";
 
 const t = fr.proDocuments;
 const d = fr.proDossier;
@@ -100,14 +101,14 @@ function Row({
   );
   if (!href) return <View style={styles.row}>{content}</View>;
   return (
-    <Pressable
+    <Tappable
       role="link"
       aria-label={`${title}, ${status}`}
       onPress={() => router.push(href)}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={styles.row}
     >
       {content}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -123,7 +124,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  pressed: { opacity: 0.85 },
   icon: {
     width: 40,
     height: 40,

@@ -4,7 +4,7 @@ import { receptionConsentsSchema, reservesSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { ConsentList, type ConsentItem } from "@/components/consents";
 import { ReceptionPaper } from "@/components/documents/reception-paper";
@@ -17,7 +17,7 @@ import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadReception, startReceptionSignature } from "@/lib/reception";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, Section, TextField } from "@/ui";
+import { Body, Button, Card, Notice, Screen, ScreenSkeleton, Section, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.reception;
@@ -46,13 +46,7 @@ export default function ReceptionScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (reception === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (reception === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (reception === null) {
     return (
       <Screen header={<TopBar />}>
@@ -208,12 +202,6 @@ export default function ReceptionScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   conform: { gap: spacing(2) },
   important: {

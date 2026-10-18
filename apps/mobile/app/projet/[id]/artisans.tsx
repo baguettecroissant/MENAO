@@ -1,14 +1,14 @@
 import { joinNames } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { ArtisanTile, HelpTile, TILE_WIDTH, type CardSelection } from "@/components/artisan-card";
 import { NeedSummaryBand } from "@/components/need-summary";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadResults, type ProjectResults } from "@/lib/project";
 import { loadProjectRequests, type ProjectRequests } from "@/lib/requests";
-import { Body, Button, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.results;
@@ -42,13 +42,7 @@ export default function ProjetArtisans() {
     }, [id]),
   );
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const { results, requests } = data;
   if (results === null) {
     return (
@@ -145,12 +139,6 @@ export default function ProjetArtisans() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
   // Le carrousel déborde des marges de l'écran, les cartes restent alignées sur le texte.
   carousel: { marginHorizontal: -theme.spacing(5), flexGrow: 0 },
   carouselContent: {

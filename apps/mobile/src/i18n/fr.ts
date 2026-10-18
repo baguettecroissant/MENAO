@@ -5,6 +5,8 @@ export const fr = {
     back: "Retour",
     currentStep: "étape en cours",
     doneStep: "étape terminée",
+    loading: "Chargement",
+    refreshing: "Actualisation",
   },
   errors: {
     generic: "Une erreur est survenue. Réessayez dans quelques instants.",

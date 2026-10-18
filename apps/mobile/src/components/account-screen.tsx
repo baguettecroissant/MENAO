@@ -3,7 +3,7 @@ import { router, type Href } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { ChevronRight } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAccount, saveMarketingOptIn, shareAccountData } from "@/lib/account";
@@ -12,7 +12,18 @@ import { formatDay } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { signOut, signOutEverywhere } from "@/lib/auth";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Checkbox, LinkText, Notice, Screen, Title } from "@/ui";
+import {
+  Body,
+  Button,
+  Card,
+  Checkbox,
+  LinkText,
+  Notice,
+  Screen,
+  Tappable,
+  Title,
+  toast,
+} from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.account;
@@ -21,12 +32,7 @@ const { colors, font, radius, spacing } = theme;
 /** Ligne des paramètres : intitulé, détail, chevron ; ouvre l'écran correspondant. */
 function SettingsRow({ label, detail, href }: { label: string; detail?: string; href: Href }) {
   return (
-    <Pressable
-      role="link"
-      aria-label={label}
-      onPress={() => router.push(href)}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-    >
+    <Tappable role="link" aria-label={label} onPress={() => router.push(href)} style={styles.row}>
       <View style={styles.rowText}>
         <Text style={styles.rowLabel}>{label}</Text>
         {detail ? (
@@ -36,7 +42,7 @@ function SettingsRow({ label, detail, href }: { label: string; detail?: string; 
         ) : null}
       </View>
       <ChevronRight size={18} color={colors["muted-foreground"]} />
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -52,7 +58,7 @@ export function AccountScreen() {
   const [account] = useFocusData(loadAccount);
   const [leaving, setLeaving] = useState<"here" | "everywhere" | null>(null);
   const [optIn, setOptIn] = useState<boolean | null>(null);
-  const [optInNotice, setOptInNotice] = useState<{ tone: "success" | "error"; text: string }>();
+  const [optInNotice, setOptInNotice] = useState<{ tone: "error"; text: string }>();
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);
   const roleLabel =
@@ -72,10 +78,7 @@ export function AccountScreen() {
       setOptIn(!value);
       setOptInNotice({ tone: "error", text: error });
     } else {
-      setOptInNotice({
-        tone: "success",
-        text: value ? t.communications.subscribed : t.communications.unsubscribed,
-      });
+      toast.success(value ? t.communications.subscribed : t.communications.unsubscribed);
     }
   }
 
@@ -242,7 +245,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  pressed: { opacity: 0.7 },
   rowText: { flex: 1, gap: 2 },
   rowLabel: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   rowDetail: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },

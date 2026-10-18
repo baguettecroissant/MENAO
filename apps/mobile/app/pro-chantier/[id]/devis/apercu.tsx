@@ -1,6 +1,5 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { QuotePaper } from "@/components/documents/quote-paper";
 import { HeaderBand, whenMeta } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
@@ -8,8 +7,7 @@ import { fr } from "@/i18n/fr";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuoteSendContext } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, LinkText, Notice, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 
 const t = fr.proQuote;
 const STEPS = [
@@ -24,13 +22,7 @@ export default function QuotePreviewScreen() {
   const [context] = useFocusData(load);
   const [pdfFailed, setPdfFailed] = useState(false);
 
-  if (context === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (context === undefined) return <ScreenSkeleton />;
   // Pas encore de ligne enregistrée : retour à l'éditeur.
   if (context === null) return <Redirect href={`/pro-chantier/${id}/devis`} />;
 
@@ -59,12 +51,3 @@ export default function QuotePreviewScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

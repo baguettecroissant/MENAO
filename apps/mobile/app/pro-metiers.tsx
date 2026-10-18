@@ -2,7 +2,7 @@ import { parisToday, validRgeDomains } from "@menao/core";
 import { CERTIFICATION_TYPES, type CertificationType } from "@menao/validation";
 import { Trash2 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { CheckRow, ChoiceGroup } from "@/components/pro-signup/signup-parts";
 import { TopBar } from "@/components/top-bar";
@@ -18,7 +18,7 @@ import {
   type TradesData,
 } from "@/lib/my-company";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Card, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proTrades;
@@ -32,15 +32,9 @@ type Message = { tone: "error" | "success"; text: string } | null;
  */
 export default function TradesScreen() {
   const [data, reload] = useFocusData(loadTrades);
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen header={<TopBar />}>
+    <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       {data === null ? (
         <Notice tone="error">{t.loadError}</Notice>
@@ -87,7 +81,7 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
     setErrors(result.ok ? {} : (result.fields ?? {}));
     if (!result.ok && result.error) setMessage({ tone: "error", text: result.error });
     if (result.ok) {
-      setMessage({ tone: "success", text: t.saved });
+      toast.success(t.saved);
       await onSaved();
     }
   }
@@ -273,12 +267,6 @@ function CertificationsCard({
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   heading: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
   subheading: { fontFamily: font.medium, fontSize: 14, color: colors["muted-foreground"] },
   list: { gap: spacing(2) },

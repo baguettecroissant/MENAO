@@ -2,7 +2,7 @@ import { TICKET_MESSAGE_MAX_LENGTH } from "@menao/core";
 import { ticketMessageSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { StatusPill } from "@/components/chantier/parts";
 import { PhotoViewer } from "@/components/photo-viewer";
@@ -13,7 +13,7 @@ import { formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Card, LinkText, Notice, Screen, TextField, Title } from "@/ui";
+import { Button, Card, LinkText, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.dispute;
@@ -34,16 +34,10 @@ export default function TicketScreen() {
   const [pending, setPending] = useState(false);
   const [viewing, setViewing] = useState<number | null>(null);
 
-  if (ticket === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (ticket === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (ticket === null) {
     return (
-      <Screen header={<TopBar />}>
+      <Screen onRefresh={reload} header={<TopBar />}>
         <Notice tone="error">{t.notFound}</Notice>
       </Screen>
     );
@@ -187,12 +181,6 @@ function TicketPhotoUpload({ ticketId, onAdded }: { ticketId: string; onAdded: (
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   head: { gap: spacing(2) },
   section: { gap: spacing(3) },
   heading: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },

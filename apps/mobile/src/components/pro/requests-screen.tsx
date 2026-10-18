@@ -2,16 +2,7 @@ import { timeLeft } from "@menao/core";
 import { router } from "expo-router";
 import { Clock, MapPin } from "lucide-react-native";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
 import { TopBar } from "@/components/top-bar";
@@ -19,7 +10,7 @@ import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Title } from "@/ui";
+import { Body, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -41,13 +32,7 @@ export function RequestsScreen() {
   const [rows, reload] = useFocusData(loadInbox);
   const [refreshing, setRefreshing] = useState(false);
 
-  if (rows === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (rows === undefined) return <ScreenSkeleton />;
   const now = new Date();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
@@ -79,12 +64,12 @@ export function RequestsScreen() {
           const title = [r.trade_label, r.summary].filter(Boolean).join(" — ");
           const place = [r.code_postal, r.ville_nom].filter(Boolean).join(" ");
           return (
-            <Pressable
+            <Tappable
               key={r.request_id}
               role="link"
               aria-label={[t.status[r.status], title, place].filter(Boolean).join(", ")}
               onPress={() => router.push(`/opportunite/${r.request_id}`)}
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              style={styles.card}
             >
               <View style={styles.cardText}>
                 <View style={styles.tags}>
@@ -113,7 +98,7 @@ export function RequestsScreen() {
               {r.photoUrl ? (
                 <Image source={{ uri: r.photoUrl }} style={styles.thumb} alt="" />
               ) : null}
-            </Pressable>
+            </Tappable>
           );
         })}
       </ScrollView>
@@ -124,12 +109,6 @@ export function RequestsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   topBar: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
   head: { gap: spacing(2), marginBottom: spacing(1) },
   card: {
@@ -141,7 +120,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing(4),
   },
-  pressed: { opacity: 0.85 },
   cardText: { flex: 1, gap: spacing(1.5) },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   title: { fontFamily: font.medium, fontSize: 16, lineHeight: 22, color: colors.foreground },
