@@ -27,12 +27,13 @@ import { useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { ProgressRing } from "@/components/progress-ring";
+import { SettingsRow, SettingsSection } from "@/components/settings-list";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { loadProfileHub, type ProfileHub } from "@/lib/profile-hub";
-import type { HubRow, HubStatus, HubTone } from "@/lib/profile-hub-status";
+import type { HubRow, HubStatus } from "@/lib/profile-hub-status";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, ScreenSkeleton, Tappable, toast } from "@/ui";
@@ -99,13 +100,6 @@ const TIP_HREF: Record<ProfileTip, Href> = {
   presentation: "/pro-profil-public",
   specialites: "/pro-metiers",
   certifications: "/pro-metiers",
-};
-
-const TONE: Record<HubTone, string> = {
-  success: colors.success,
-  warning: colors.warning,
-  danger: colors.danger,
-  neutral: colors["muted-foreground"],
 };
 
 /**
@@ -177,15 +171,22 @@ export function ProfileHubContent({
         />
       </Animated.View>
       {SECTIONS.map((section, index) => (
-        <Animated.View key={section.key} entering={enter(4 + index)} style={styles.section}>
-          <Text role="heading" style={styles.sectionTitle}>
-            {t.sections[section.key]}
-          </Text>
-          <View style={styles.group}>
-            {section.rows.map((row, i) => (
-              <HubLine key={row.key} row={row} first={i === 0} status={statusOf(row.key, hub)} />
-            ))}
-          </View>
+        <Animated.View key={section.key} entering={enter(4 + index)}>
+          <SettingsSection title={t.sections[section.key]}>
+            {section.rows.map((row) => {
+              const status = statusOf(row.key, hub);
+              return (
+                <SettingsRow
+                  key={row.key}
+                  icon={row.icon}
+                  label={t.rows[row.key]}
+                  value={status?.text}
+                  tone={status?.tone}
+                  href={row.href}
+                />
+              );
+            })}
+          </SettingsSection>
         </Animated.View>
       ))}
       <Button
@@ -322,33 +323,6 @@ function Strength({ hub }: { hub: ProfileHub }) {
   );
 }
 
-function HubLine({ row, status, first }: { row: Row; status: HubStatus; first: boolean }) {
-  const label = t.rows[row.key];
-  const Icon = row.icon;
-  return (
-    <Tappable
-      role="link"
-      aria-label={status ? `${label}, ${status.text}` : label}
-      onPress={() => router.push(row.href)}
-      scaleTo={0.985}
-      style={[styles.row, !first && styles.rowBorder]}
-    >
-      <View style={styles.rowIcon}>
-        <Icon size={18} color={colors["primary-strong"]} />
-      </View>
-      <Text style={styles.rowLabel} numberOfLines={2}>
-        {label}
-      </Text>
-      {status ? (
-        <Text style={[styles.rowStatus, { color: TONE[status.tone] }]} numberOfLines={1}>
-          {status.text}
-        </Text>
-      ) : null}
-      <ChevronRight size={18} color={colors["subtle-foreground"]} />
-    </Tappable>
-  );
-}
-
 const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
   avatarWrap: { width: 76, height: 76 },
@@ -419,38 +393,4 @@ const styles = StyleSheet.create({
   strengthText: { flex: 1, gap: 2 },
   strengthTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
   strengthHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  section: { gap: spacing(2) },
-  sectionTitle: {
-    fontFamily: font.medium,
-    fontSize: 13,
-    color: colors["muted-foreground"],
-    marginLeft: spacing(1),
-  },
-  group: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    overflow: "hidden",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(3),
-    minHeight: 52,
-    paddingHorizontal: spacing(3.5),
-    paddingVertical: spacing(2.5),
-    backgroundColor: colors.surface,
-  },
-  rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
-  rowIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rowLabel: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  rowStatus: { maxWidth: "45%", fontFamily: font.medium, fontSize: 13 },
 });

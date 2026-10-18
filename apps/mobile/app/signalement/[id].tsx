@@ -13,7 +13,17 @@ import { formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Card, LinkText, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
+import {
+  Button,
+  Card,
+  LinkText,
+  Notice,
+  Screen,
+  ScreenSkeleton,
+  TextField,
+  Title,
+  toast,
+} from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.dispute;
@@ -162,7 +172,7 @@ function TicketPhotoUpload({ ticketId, onAdded }: { ticketId: string; onAdded: (
     const status = await uploadPhoto({ purpose: "ticket_photo", ticketId }, photo);
     setBusy(false);
     if (status === "ok") {
-      setNotice({ tone: "success", text: t.photoAdded });
+      toast.success(t.photoAdded);
       onAdded();
     } else {
       setNotice({
