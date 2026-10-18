@@ -16,7 +16,8 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
 import { DemoVideo } from "@/components/pro-landing/demo-video";
@@ -29,6 +30,7 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { ButtonLink, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { seoCatalog } from "@/lib/site/catalog";
 import { createPublicClient } from "@/lib/supabase/public";
 
 const t = fr.pro.landing;
@@ -63,10 +65,13 @@ const avantagesOf = (value: unknown): string[] =>
  * chiffre ni témoignage inventé (F-01) ; les illustrations portent des valeurs d'exemple.
  */
 export default async function ProLandingPage() {
-  const { data: plans } = await createPublicClient()
-    .from("plans")
-    .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte")
-    .order("ordre");
+  const [{ data: plans }, { trades }] = await Promise.all([
+    createPublicClient()
+      .from("plans")
+      .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte")
+      .order("ordre"),
+    seoCatalog(),
+  ]);
   const base = plans?.find((p) => p.ouverte) ?? plans?.[0];
 
   return (
@@ -424,6 +429,32 @@ export default async function ProLandingPage() {
             <p className="mx-auto max-w-3xl text-center text-xs text-muted-foreground">
               {t.plansNote}
             </p>
+          </div>
+        </section>
+      )}
+
+      {/* Par métier (ADR 0134) */}
+      {trades.length > 0 && (
+        <section aria-labelledby="pro-trades" className="pt-16 sm:pt-24">
+          <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 sm:px-6">
+            <SectionHeading
+              id="pro-trades"
+              eyebrow={fr.pro.tradeLanding.byTradeEyebrow}
+              title={fr.pro.tradeLanding.byTradeTitle}
+              subtitle={fr.pro.tradeLanding.byTradeSubtitle}
+            />
+            <ul className="flex flex-wrap justify-center gap-2.5">
+              {trades.map((trade) => (
+                <li key={trade.code}>
+                  <Link
+                    href={`/pro/${trade.code}` as Route}
+                    className="inline-flex min-h-11 items-center rounded-pill border border-border bg-surface px-4 text-[0.9375rem] shadow-card transition hover:border-primary/40 hover:text-primary-strong hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none"
+                  >
+                    {trade.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}

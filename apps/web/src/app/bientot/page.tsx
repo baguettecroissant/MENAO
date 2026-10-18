@@ -2,17 +2,23 @@ import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Logo, LogoMark } from "@/components/brand/logo";
+import { JsonLd } from "@/components/site/json-ld";
 import { fr } from "@/i18n/fr";
+import { prelaunchIndexing } from "@/lib/site/seo";
+import { organizationJsonLd } from "@/lib/site/structured-data";
 import { frenchSpacing } from "@/lib/site/typography";
 import { AccessForm } from "./access-form";
 import { TeaserVideo } from "./teaser-video";
 
 const t = fr.prelaunch;
 
+// Servie à l'adresse « / » par la réécriture du pré-lancement : seule page indexable en production
+// pendant cette période (ADR 0134), sous l'adresse canonique de l'accueil.
 export const metadata: Metadata = {
-  title: t.metaTitle,
+  title: { absolute: t.metaTitle },
   description: t.metaDescription,
-  robots: { index: false, follow: false },
+  alternates: { canonical: "/" },
+  robots: prelaunchIndexing ? { index: true, follow: false } : { index: false, follow: false },
 };
 
 /**
@@ -23,6 +29,7 @@ export default function PrelaunchPage() {
   if (!process.env.PRELAUNCH_ACCESS_CODE) notFound();
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden bg-background">
+      {prelaunchIndexing && <JsonLd data={organizationJsonLd()} />}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[38rem] bg-[linear-gradient(160deg,#e4eafd_0%,#f1f4fe_55%,#f9f7f0_100%)]"

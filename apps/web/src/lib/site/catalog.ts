@@ -31,3 +31,22 @@ export const seoCatalog = unstable_cache(
   ["seo-catalog"],
   { revalidate: 3600 },
 );
+
+/**
+ * Artisans visibles d'un métier dans une commune (page métier × ville, F-02), mis en cache une
+ * heure : partagés entre la page, ses métadonnées et le sitemap. Une page sans artisan n'est pas
+ * indexée (ADR 0134).
+ */
+export const cityArtisans = unstable_cache(
+  async (tradeCode: string, codeInsee: string) => {
+    const supabase = createPublicClient();
+    const { data } = await supabase.rpc("public_artisans_for_commune", {
+      p_trade_code: tradeCode,
+      p_code_insee: codeInsee,
+      p_limit: 12,
+    });
+    return data ?? [];
+  },
+  ["city-artisans"],
+  { revalidate: 3600 },
+);

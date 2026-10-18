@@ -8,6 +8,53 @@ export const fr = {
     description:
       "Trouvez l'artisan du bâtiment qu'il vous faut : devis, signature, paiement sécurisé et suivi de chantier.",
   },
+  /**
+   * Identité de MENAO dans les données structurées (Google, assistants IA, ADR 0134) : uniquement
+   * des faits affichés ailleurs sur le site.
+   */
+  structuredData: {
+    organizationDescription:
+      "MENAO met en relation les particuliers avec des artisans du bâtiment vérifiés (entreprise active, assurance décennale et RC Pro contrôlées), et leur fournit un outil pour le devis, la signature, le paiement sécurisé et le suivi du chantier. Aucune commission n'est prise sur les chantiers.",
+    area: "Alpes-Maritimes",
+    knowsAbout: [
+      "Travaux de rénovation",
+      "Artisans du bâtiment",
+      "Assurance décennale",
+      "Devis de travaux",
+      "Suivi de chantier",
+    ],
+  },
+  /** llms.txt et llms-full.txt (ADR 0134) : résumé de MENAO pour les assistants IA. */
+  llms: {
+    intro:
+      "MENAO est disponible d'abord dans les Alpes-Maritimes. Le site est en français. Les espaces des clients, des artisans et de l'équipe sont privés et ne doivent pas être explorés.",
+    clients: "Pour les particuliers",
+    pros: "Pour les artisans",
+    trades: "Métiers",
+    about: "À propos",
+    full: "Version complète",
+    fullLink:
+      "Ces liens, avec les faits clés, le fonctionnement et les questions fréquentes, en un seul texte",
+    keyFacts: "Faits clés",
+    howItWorksClient: "Comment ça marche pour un particulier",
+    howItWorksPro: "Comment ça marche pour un artisan",
+    faq: "Questions fréquentes",
+    communes: "Communes couvertes",
+    links: {
+      search: "décrire son projet et recevoir la réponse d'artisans vérifiés",
+      howItWorks: "le parcours d'un projet, de la demande à la réception du chantier",
+      guarantees: "vérification des artisans, paiements sécurisés, avis",
+      faq: "projets, paiements, confiance et artisans",
+      ranking: "comment les artisans sont présentés et classés",
+      pro: "demandes près de chez soi, devis, signature, paiements et factures, sans commission",
+      proSignUp: "inscription et vérification de l'entreprise",
+      about: "mission et engagements de MENAO",
+      contact: "écrire à l'équipe MENAO",
+    },
+    tradeLink: (trade: string) =>
+      `trouver un ${trade.toLowerCase()} vérifié dans les Alpes-Maritimes`,
+    proTradeLink: (trade: string) => `page des artisans ${trade.toLowerCase()}s`,
+  },
   /** Page introuvable (404) et erreur inattendue, aux couleurs MENAO. */
   notFound: {
     code: "Erreur 404",
@@ -20,7 +67,8 @@ export const fr = {
   },
   /** Page d'attente du mode pré-lancement (ADR 0101) et accès des testeurs. */
   prelaunch: {
-    metaTitle: "MENAO arrive bientôt",
+    // Seule page indexable pendant le pré-lancement (ADR 0134) : la marque et ce qu'elle propose.
+    metaTitle: "MENAO — Artisans du bâtiment vérifiés, bientôt dans les Alpes-Maritimes",
     metaDescription:
       "Artisans du bâtiment vérifiés, devis, signature, paiement sécurisé et suivi de chantier dans un seul outil. Lancement prochain dans les Alpes-Maritimes.",
     badge: "Bientôt disponible",
@@ -91,6 +139,7 @@ export const fr = {
     legal: "Informations légales",
     faq: "Questions fréquentes",
     contact: "Contact",
+    about: "À propos",
     legalNotice: "Mentions légales",
     terms: "Conditions générales d'utilisation",
     termsPro: "CGV artisans",
@@ -362,6 +411,54 @@ export const fr = {
     noContact: "Les coordonnées des artisans sont communiquées quand ils acceptent votre demande.",
   },
   pages: {
+    /** « À propos » (ADR 0134) : qui est MENAO, pour les visiteurs, Google et les assistants IA. */
+    about: {
+      title: "À propos de MENAO",
+      metaDescription:
+        "MENAO met en relation les particuliers avec des artisans du bâtiment vérifiés dans les Alpes-Maritimes, et fournit un outil complet : devis, signature, paiement sécurisé et suivi de chantier, sans commission.",
+      eyebrow: "À propos",
+      heroTitle: "Rendre les travaux",
+      heroAccent: "simples et sûrs",
+      intro:
+        "MENAO réunit en un seul endroit les particuliers qui ont un projet et les artisans du bâtiment vérifiés qui peuvent le réaliser, du premier contact à la réception du chantier.",
+      missionTitle: "Notre mission",
+      mission: [
+        "Trouver un artisan de confiance, comparer des devis, suivre l'avancement et payer en toute sécurité : ces étapes sont souvent longues et incertaines. MENAO les réunit dans un outil simple, pour les particuliers comme pour les artisans.",
+        "Les particuliers décrivent leur projet et reçoivent la réponse d'artisans vérifiés. Les artisans reçoivent des demandes près de chez eux et disposent d'un outil complet pour leurs devis, leurs factures et le suivi de leurs chantiers.",
+      ],
+      commitmentsTitle: "Nos engagements",
+      commitments: [
+        {
+          title: "Des artisans vérifiés",
+          text: "Entreprise active, Kbis récent, assurance décennale, RC Pro et identité du dirigeant contrôlés par l'équipe MENAO, puis surveillés jusqu'à leur échéance.",
+        },
+        {
+          title: "Aucune commission sur les chantiers",
+          text: "Les paiements vont directement sur le compte de l'artisan, via Stripe. MENAO ne prélève rien sur les chantiers et ne détient jamais l'argent des clients.",
+        },
+        {
+          title: "Des réponses rapides",
+          text: "Jusqu'à 3 artisans par demande, qui ont chacun 48 heures pour répondre.",
+        },
+        {
+          title: "Des avis vérifiés",
+          text: "Seuls les clients ayant réalisé un chantier via MENAO peuvent noter un artisan, une fois les travaux réceptionnés.",
+        },
+      ],
+      areaTitle: "Où intervient MENAO ?",
+      area: "MENAO démarre dans les Alpes-Maritimes : Nice, Cannes, Antibes, Grasse, Menton et les communes voisines.",
+      tradesLink: "Voir les métiers",
+      moreTitle: "En savoir plus",
+      more: [
+        { href: "/comment-ca-marche", label: "Comment ça marche" },
+        { href: "/garanties", label: "Garanties et confiance" },
+        { href: "/criteres-de-classement", label: "Critères de classement des artisans" },
+        { href: "/faq", label: "Questions fréquentes" },
+        { href: "/pro", label: "MENAO pour les artisans" },
+        { href: "/contact", label: "Nous contacter" },
+      ],
+      cta: "Trouver un artisan",
+    },
     howItWorks: {
       title: "Comment ça marche ?",
       metaDescription:
@@ -3017,6 +3114,61 @@ export const fr = {
       submit: "Envoyer à l'équipe MENAO",
       sent: "Merci ! L'équipe MENAO a bien reçu votre signalement.",
     },
+    /**
+     * Pages Espace Pro par métier (ADR 0134) : acquisition des artisans sur Google et dans les
+     * assistants IA (« chantiers de plombier dans les Alpes-Maritimes »). Aucun chiffre inventé.
+     */
+    tradeLanding: {
+      metaTitle: (trade: string) =>
+        `Artisan ${trade.toLowerCase()} dans les Alpes-Maritimes : trouvez des chantiers`,
+      metaDescription: (trade: string) =>
+        `Artisan ${trade.toLowerCase()} dans les Alpes-Maritimes ? Recevez les demandes des particuliers de votre zone, sans commission : devis, signature, paiement et suivi de chantier dans une seule app.`,
+      eyebrow: "Espace Pro · Alpes-Maritimes",
+      breadcrumb: "Espace Pro",
+      audience: (trade: string) => `Artisans ${trade.toLowerCase()}s des Alpes-Maritimes`,
+      title: (trade: string) => `Artisan ${trade.toLowerCase()} : des chantiers près de chez vous`,
+      subtitle: (trade: string) =>
+        `MENAO vous transmet les demandes des particuliers qui cherchent un ${trade.toLowerCase()} vérifié dans votre zone. Vous gardez 100\u00a0% de vos chantiers : aucune commission, et chaque paiement arrive directement sur votre compte.`,
+      signUp: "Créer mon compte pro",
+      more: "Découvrir l'Espace Pro",
+      worksEyebrow: "Vos chantiers",
+      worksTitle: (trade: string) =>
+        `Les travaux que demandent les clients d'un ${trade.toLowerCase()}`,
+      worksSubtitle:
+        "Les prestations que les particuliers peuvent décrire sur MENAO pour ce métier.",
+      citiesEyebrow: "Votre zone",
+      citiesTitle: "Les communes où MENAO démarre",
+      citiesSubtitle:
+        "Vous choisissez votre zone d'intervention : un rayon autour de votre adresse, ou une liste de communes.",
+      clientPage: (trade: string) => `Voir la page ${trade.toLowerCase()} côté particuliers`,
+      faqTitle: (trade: string) => `Questions fréquentes des artisans ${trade.toLowerCase()}s`,
+      faq: (trade: string) => [
+        {
+          q: `Combien coûte MENAO pour un artisan ${trade.toLowerCase()} ?`,
+          a: "Le même prix pour tous les métiers : un abonnement mensuel fixe, sans engagement de durée, et aucune commission ni marge sur vos chantiers. Les formules sont détaillées sur la page Espace Pro.",
+        },
+        {
+          q: "Que faut-il pour m'inscrire ?",
+          a: "Votre numéro SIRET, un Kbis de moins de 3 mois, vos attestations d'assurance décennale (si votre activité y est soumise) et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF et une pièce d'identité. L'équipe MENAO vérifie votre entreprise et vos documents avant de vous rendre visible.",
+        },
+        {
+          q: "Combien d'artisans reçoivent la même demande ?",
+          a: "Trois au plus. Vous avez 48\u00a0h pour l'accepter ou la refuser ; l'adresse exacte et les coordonnées du client vous sont transmises dès que vous acceptez.",
+        },
+        {
+          q: "Comment suis-je payé ?",
+          a: "Vos clients règlent l'acompte puis le solde en ligne, par carte bancaire, sur votre compte Stripe à votre nom. MENAO ne détient jamais l'argent de vos chantiers.",
+        },
+      ],
+      ctaTitle: "Prêt à recevoir vos premières demandes de chantier ?",
+      ctaText:
+        "Créez votre profil en quelques minutes : l'équipe MENAO vérifie votre entreprise, puis les demandes de votre zone arrivent dans votre espace.",
+      proTeaser: (trade: string) =>
+        `Vous êtes ${trade.toLowerCase()} ? Recevez les demandes des particuliers de votre zone`,
+      byTradeEyebrow: "Par métier",
+      byTradeTitle: "MENAO pour votre métier",
+      byTradeSubtitle: "Les travaux demandés et les réponses aux questions de chaque métier.",
+    },
     landing: {
       // Encart « Espace Pro » de l'accueil.
       teaser:
@@ -3253,7 +3405,7 @@ export const fr = {
         },
         {
           q: "Que faut-il pour m'inscrire ?",
-          a: "Votre numéro SIRET, un Kbis de moins de 3 mois, vos attestations d'assurance décennale et de responsabilité civile professionnelle, une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
+          a: "Votre numéro SIRET, un Kbis de moins de 3 mois, vos attestations d'assurance décennale et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF, une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
         },
         {
           q: "Qui vérifie mon dossier ?",

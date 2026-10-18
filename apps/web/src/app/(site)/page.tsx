@@ -3,6 +3,7 @@ import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { GuaranteeSection } from "@/components/site/guarantees";
 import { HomeHero } from "@/components/site/home-hero";
+import { JsonLd } from "@/components/site/json-ld";
 import {
   PaymentVisual,
   ProgressVisual,
@@ -18,6 +19,7 @@ import { TrustSection } from "@/components/site/trust-section";
 import { ButtonLink, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
+import { organizationJsonLd } from "@/lib/site/structured-data";
 import { createPublicClient } from "@/lib/supabase/public";
 
 const t = fr.home;
@@ -49,6 +51,8 @@ export default async function HomePage() {
 
   return (
     <main className="bg-surface">
+      {/* Identité de MENAO pour Google et les assistants IA (ADR 0134). */}
+      <JsonLd data={organizationJsonLd()} />
       <HomeHero verifiedArtisans={artisans} />
       <TrustSection />
 
