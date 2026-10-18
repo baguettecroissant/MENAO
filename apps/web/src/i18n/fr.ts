@@ -25,12 +25,51 @@ export const fr = {
     ],
   },
   /** llms.txt et llms-full.txt (ADR 0134) : résumé de MENAO pour les assistants IA. */
+  /** Rubrique Guides (ADR 0135). */
+  guides: {
+    metaTitle: "Guides travaux : conseils pratiques et règles à connaître",
+    metaDescription:
+      "Choisir un artisan, lire un devis, vérifier une assurance décennale, comprendre la TVA des travaux : des guides clairs, avec leurs sources officielles.",
+    eyebrow: "Guides",
+    title: "Les guides",
+    accent: "pour réussir vos travaux",
+    subtitle:
+      "Des réponses claires aux questions que l'on se pose avant, pendant et après un chantier, avec les sources officielles.",
+    breadcrumb: "Guides",
+    audiences: {
+      particuliers: "Pour les particuliers",
+      artisans: "Pour les artisans",
+    } as Record<"particuliers" | "artisans", string>,
+    audienceTag: {
+      particuliers: "Particuliers",
+      artisans: "Artisans",
+    } as Record<"particuliers" | "artisans", string>,
+    read: "Lire le guide",
+    draft: "Brouillon en relecture : non publié",
+    updated: (date: string) => `Mis à jour le ${date}`,
+    minutes: (n: number) => `${n} min de lecture`,
+    byline: "Par l'équipe MENAO",
+    essentials: "L'essentiel",
+    toc: "Sommaire",
+    faqTitle: "Questions fréquentes",
+    sourcesTitle: "Sources",
+    sourcesNote:
+      "Ce guide donne une information générale à jour à sa date de mise à jour. Il ne remplace pas un conseil personnalisé (juridique, fiscal ou d'assurance).",
+    relatedTitle: "À lire aussi",
+    newTab: "(nouvel onglet)",
+    proCta: {
+      title: "Recevez des chantiers près de chez vous",
+      text: "Devis, signature, paiement et suivi de chantier dans une seule app, sans commission.",
+      action: "Créer mon compte pro",
+    },
+  },
   llms: {
     intro:
       "MENAO est disponible d'abord dans les Alpes-Maritimes. Le site est en français. Les espaces des clients, des artisans et de l'équipe sont privés et ne doivent pas être explorés.",
     clients: "Pour les particuliers",
     pros: "Pour les artisans",
     trades: "Métiers",
+    guides: "Guides",
     about: "À propos",
     full: "Version complète",
     fullLink:
@@ -140,6 +179,7 @@ export const fr = {
     faq: "Questions fréquentes",
     contact: "Contact",
     about: "À propos",
+    guides: "Guides",
     legalNotice: "Mentions légales",
     terms: "Conditions générales d'utilisation",
     termsPro: "CGV artisans",

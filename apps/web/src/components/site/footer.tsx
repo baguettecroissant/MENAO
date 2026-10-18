@@ -4,6 +4,7 @@ import { LockKeyhole, MapPin } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
+import { visibleGuides } from "@/lib/site/guides";
 
 const t = fr.footer;
 
@@ -19,6 +20,7 @@ export async function SiteFooter() {
         { href: "/garanties", label: fr.nav.guarantees },
         { href: "/mon-espace", label: t.mySpace },
         { href: "/faq", label: t.faq },
+        ...(visibleGuides().length > 0 ? [{ href: "/guides", label: t.guides }] : []),
         { href: "/a-propos", label: t.about },
         { href: "/contact", label: t.contact },
       ],
