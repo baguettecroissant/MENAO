@@ -1662,8 +1662,11 @@ export const fr = {
       profile: "Profil",
       account: "Mon compte",
       tools: "Pilotage",
+      // Back-office par pôle (ADR 0133).
+      verification: "Vérification",
+      support: "Support",
       money: "Argent",
-      control: "Contrôle",
+      settings: "Réglages",
     },
     help: "Aide et support",
     toDo: (n: number) => (n === 1 ? "1 élément à traiter" : `${n} éléments à traiter`),
@@ -3998,6 +4001,19 @@ export const fr = {
       todo: {
         title: "À traiter maintenant",
         empty: "Rien à traiter : tout est à jour.",
+        // File triée par urgence, filtres par pôle (ADR 0133).
+        severities: { urgent: "Urgent", important: "Important", a_faire: "À faire" },
+        poles: {
+          all: "Tout",
+          verification: "Vérification",
+          support: "Support",
+          activite: "Activité",
+          argent: "Argent",
+          technique: "Technique",
+        },
+        filters: "Filtrer par pôle",
+        emptyPole: "Rien à traiter dans ce pôle.",
+        before: (date: string) => `avant le ${date}`,
         dossiers: (n: number) => (n > 1 ? `${n} dossiers à vérifier` : "1 dossier à vérifier"),
         oldest: (ago: string) => `Le plus ancien a été envoyé ${ago}.`,
         open: (name: string) => `Ouvrir le dossier de ${name}`,
@@ -5145,6 +5161,37 @@ export const fr = {
       noHistory: "Aucune décision pour le moment.",
       decision: "Décision sur le dossier",
       decisionNotPending: "Ce dossier n'est pas en attente de vérification.",
+      // Fiche réorganisée (ADR 0133) : en-tête fixe, navigation, ce qui reste à vérifier.
+      nav: "Sections de la fiche",
+      navItems: {
+        verifier: "À vérifier",
+        documents: "Documents",
+        decision: "Décision",
+        entreprise: "Entreprise",
+        profil: "Profil",
+        abonnement: "Abonnement",
+        activite: "Activité",
+        historique: "Historique",
+      },
+      decide: "Décider",
+      checklist: {
+        title: "Ce qui reste à vérifier",
+        ready: "Tout est vérifié : le dossier peut être validé.",
+        readyValidated: "Rien à vérifier pour le moment.",
+        pendingDocuments: (n: number) =>
+          n > 1 ? `${n} documents déposés à vérifier` : "1 document déposé à vérifier",
+        missingDocuments: (n: number) =>
+          n > 1 ? `${n} documents manquants ou à refaire` : "1 document manquant ou à refaire",
+        refusedDocuments: (n: number) =>
+          n > 1
+            ? `${n} documents refusés, en attente d'un nouveau dépôt`
+            : "1 document refusé, en attente d'un nouveau dépôt",
+        pendingCertifications: (n: number) =>
+          n > 1 ? `${n} certifications à vérifier` : "1 certification à vérifier",
+        siretUnchecked: "SIRET pas encore vérifié auprès de l'INSEE",
+        siretInactive: "Entreprise inactive dans Sirene",
+        charterMissing: "Charte qualité pas encore signée",
+      },
       validate: "Valider le dossier",
       validateHint:
         "Possible quand les documents obligatoires sont validés et en cours de validité.",

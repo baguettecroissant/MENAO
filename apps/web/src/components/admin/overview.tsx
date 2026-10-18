@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { fr } from "@/i18n/fr";
 import type { ActivityItem, Overview } from "@/lib/admin/overview";
 import { formatDayTime, formatTimeAgo } from "@/lib/format";
@@ -39,63 +38,6 @@ const euros = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
 });
 const percentOrDash = (value: number | null) => (value === null ? "—" : fr.review.percent(value));
-
-// ---------------------------------------------------------------------------
-// À traiter maintenant
-// ---------------------------------------------------------------------------
-
-type Tone = "danger" | "warning" | "primary";
-const TONES: Record<Tone, string> = {
-  danger: "bg-danger-soft text-danger",
-  warning: "bg-warning-soft text-warning",
-  primary: "bg-primary-softer text-primary-strong",
-};
-
-/** Carte du bloc « À traiter maintenant » : ce qui attend, pourquoi, et où le traiter. */
-export function TodoCard({
-  icon: Icon,
-  tone,
-  title,
-  hint,
-  action,
-  children,
-}: {
-  icon: LucideIcon;
-  tone: Tone;
-  title: string;
-  hint: string;
-  action?: { href: string; label: string };
-  children?: ReactNode;
-}) {
-  return (
-    <article
-      aria-label={title}
-      className="flex h-full flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card"
-    >
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={`inline-flex size-10 shrink-0 items-center justify-center rounded-xl ${TONES[tone]}`}
-        >
-          <Icon className="size-5" />
-        </span>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 className="font-medium">{title}</h3>
-          <p className="text-sm text-muted-foreground">{hint}</p>
-        </div>
-      </div>
-      {children}
-      {action && (
-        <Link
-          href={action.href as Route}
-          className="mt-auto self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
-        >
-          {action.label} →
-        </Link>
-      )}
-    </article>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Activité en direct

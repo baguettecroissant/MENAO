@@ -1,5 +1,6 @@
 import {
   REQUIRED_DOCUMENT_TYPES,
+  adminReviewChecklist,
   artisanVisibility,
   chantiersByStage,
   documentIsValid,
@@ -188,6 +189,70 @@ export default async function AdminArtisanPage({
   });
   const p = profile.data;
   const name = artisan.nom_commercial ?? artisan.raison_sociale ?? artisan.siret ?? artisan.id;
+  // « Ce qui reste à vérifier » (ADR 0133) : mêmes règles que le dossier (`@menao/core`).
+  const checklist = adminReviewChecklist({
+    documents: docs,
+    decennaleExempt: artisan.decennale_non_soumis,
+    validated: artisan.status === "valide" || artisan.status === "suspendu",
+    certifications: certifications.data ?? [],
+    siretVerified: artisan.sirene_checked_at !== null,
+    sireneActive: artisan.sirene_active,
+    charterSigned: charter.data !== null,
+  });
+  const checklistItems = [
+    checklist.pendingDocuments > 0 && t.checklist.pendingDocuments(checklist.pendingDocuments),
+    checklist.refusedDocuments > 0 && t.checklist.refusedDocuments(checklist.refusedDocuments),
+    checklist.missingDocuments > 0 && t.checklist.missingDocuments(checklist.missingDocuments),
+    checklist.pendingCertifications > 0 &&
+      t.checklist.pendingCertifications(checklist.pendingCertifications),
+    checklist.siret === "unchecked" && t.checklist.siretUnchecked,
+    checklist.siret === "inactive" && t.checklist.siretInactive,
+    !checklist.charterSigned && t.checklist.charterMissing,
+  ].filter((item): item is string => Boolean(item));
+  const navItems: { id: string; label: string }[] = [
+    { id: "a-verifier", label: t.navItems.verifier },
+    { id: "documents", label: t.navItems.documents },
+    ...(pending ? [{ id: "decision", label: t.navItems.decision }] : []),
+    { id: "entreprise", label: t.navItems.entreprise },
+    { id: "profil", label: t.navItems.profil },
+    { id: "abonnement", label: t.navItems.abonnement },
+    { id: "activite", label: t.navItems.activite },
+    ...(pending ? [] : [{ id: "decision", label: t.navItems.decision }]),
+    { id: "historique", label: t.navItems.historique },
+  ];
+
+  const documentsSection = (
+    <Section id="documents" title={t.documents}>
+      <DocumentsSection
+        documents={docs}
+        urlByPath={urlByPath}
+        reviewable={reviewable}
+        artisanId={artisan.id}
+        decennaleExempt={artisan.decennale_non_soumis}
+        company={{
+          name: artisan.raison_sociale,
+          siret: artisan.siret,
+          signer: charter.data?.signer_name ?? null,
+          address:
+            [artisan.adresse_ligne, artisan.adresse_code_postal, artisan.adresse_commune]
+              .filter(Boolean)
+              .join(" ") || null,
+        }}
+        declaredTrades={declaredTrades}
+        tradeLabel={(code) => label(tradeRef.data, code)}
+        reviewerName={reviewerName}
+      />
+    </Section>
+  );
+  const decisionSection = (
+    <Section id="decision" title={t.decision}>
+      {pending ? (
+        <DecisionForm artisanId={artisan.id} canValidate={allDocsValid} />
+      ) : (
+        <p>{t.decisionNotPending}</p>
+      )}
+    </Section>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -197,17 +262,66 @@ export default async function AdminArtisanPage({
       >
         ← {t.back}
       </Link>
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-medium tracking-tight">{name}</h1>
-        <span className="rounded-chip bg-primary-soft px-3 py-1 text-sm text-primary">
-          {(artisan.status === "suspendu" &&
-            t.suspensionReasons[artisan.suspension_reason as keyof typeof t.suspensionReasons]) ||
-            fr.admin.status[artisan.status]}
-        </span>
+      {/* En-tête fixe sous la barre du haut (ADR 0133) : statut, décision et sections à portée. */}
+      <div className="sticky top-16 z-20 -mx-4 flex flex-col gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-medium tracking-tight">{name}</h1>
+          <span className="rounded-chip bg-primary-soft px-3 py-1 text-sm text-primary">
+            {(artisan.status === "suspendu" &&
+              t.suspensionReasons[artisan.suspension_reason as keyof typeof t.suspensionReasons]) ||
+              fr.admin.status[artisan.status]}
+          </span>
+          {artisan.siret && (
+            <span className="font-mono text-sm text-muted-foreground">{artisan.siret}</span>
+          )}
+          {pending && (
+            <a
+              href="#decision"
+              className="ml-auto inline-flex min-h-10 items-center rounded-pill bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+            >
+              {t.decide}
+            </a>
+          )}
+        </div>
+        <nav aria-label={t.nav}>
+          <ul className="flex gap-1 overflow-x-auto text-sm">
+            {navItems.map((item) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  className="inline-flex min-h-8 items-center rounded-pill px-3 whitespace-nowrap text-muted-foreground hover:bg-surface hover:text-foreground"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
 
+      <Section id="a-verifier" title={t.checklist.title}>
+        {checklistItems.length === 0 ? (
+          <p className="text-success">{pending ? t.checklist.ready : t.checklist.readyValidated}</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {checklistItems.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <span
+                  aria-hidden="true"
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-warning"
+                />
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      {documentsSection}
+      {pending && decisionSection}
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <Section title={t.company}>
+        <Section id="entreprise" title={t.company}>
           <dl className="grid gap-2">
             <Info label={fr.pro.onboarding.company.raisonSociale} value={artisan.raison_sociale} />
             <Info label="SIRET" value={artisan.siret} />
@@ -391,29 +505,7 @@ export default async function AdminArtisanPage({
         )}
       </Section>
 
-      <Section title={t.documents}>
-        <DocumentsSection
-          documents={docs}
-          urlByPath={urlByPath}
-          reviewable={reviewable}
-          artisanId={artisan.id}
-          decennaleExempt={artisan.decennale_non_soumis}
-          company={{
-            name: artisan.raison_sociale,
-            siret: artisan.siret,
-            signer: charter.data?.signer_name ?? null,
-            address:
-              [artisan.adresse_ligne, artisan.adresse_code_postal, artisan.adresse_commune]
-                .filter(Boolean)
-                .join(" ") || null,
-          }}
-          declaredTrades={declaredTrades}
-          tradeLabel={(code) => label(tradeRef.data, code)}
-          reviewerName={reviewerName}
-        />
-      </Section>
-
-      <Section title={t.profile}>
+      <Section id="profil" title={t.profile}>
         <div className="flex flex-col gap-4">
           {p?.avatar_path && (
             <Image
@@ -473,7 +565,7 @@ export default async function AdminArtisanPage({
         })()}
       </Section>
 
-      <Section title={t.subscription}>
+      <Section id="abonnement" title={t.subscription}>
         {subscription.data ? (
           <p>
             {[
@@ -494,7 +586,7 @@ export default async function AdminArtisanPage({
         )}
       </Section>
 
-      <Section title={fr.admin.activity.title}>
+      <Section id="activite" title={fr.admin.activity.title}>
         {activity &&
           (() => {
             const a = fr.admin.activity;
@@ -563,13 +655,7 @@ export default async function AdminArtisanPage({
         />
       </Section>
 
-      <Section title={t.decision}>
-        {pending ? (
-          <DecisionForm artisanId={artisan.id} canValidate={allDocsValid} />
-        ) : (
-          <p>{t.decisionNotPending}</p>
-        )}
-      </Section>
+      {!pending && decisionSection}
 
       <Section title={sc.artisanSection}>
         {(spotChecks.data ?? []).length === 0 ? (
@@ -601,7 +687,7 @@ export default async function AdminArtisanPage({
         )}
       </Section>
 
-      <Section title={t.history}>
+      <Section id="historique" title={t.history}>
         {(reviews.data ?? []).length === 0 ? (
           <p className="text-muted-foreground">{t.noHistory}</p>
         ) : (
@@ -623,9 +709,10 @@ export default async function AdminArtisanPage({
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
   return (
-    <Card>
+    // Marge de défilement : la section ne passe pas sous l'en-tête fixe (ADR 0133).
+    <Card id={id} className="scroll-mt-44">
       <section aria-label={title} className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{title}</h2>
         {children}
