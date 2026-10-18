@@ -25,6 +25,10 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/onboarding\/documents$/, () => "/pro-documents"],
   [/^\/pro\/onboarding\/profil$/, () => "/pro-profil-public"],
   [/^\/pro\/onboarding\/paiements$/, () => "/pro-paiements"],
+  // Entreprise, métiers et zone (ADR 0125).
+  [/^\/pro\/onboarding\/entreprise$/, () => "/pro-entreprise"],
+  [/^\/pro\/onboarding\/metiers$/, () => "/pro-metiers"],
+  [/^\/pro\/onboarding\/zone$/, () => "/pro-zone"],
   [/^\/pro\/bienvenue$/, () => "/pro-bienvenue"],
   [/^\/pro\/demandes$/, () => "/pro-demandes"],
   [new RegExp(`^/pro/demandes/${UUID}$`), (id) => `/opportunite/${id}`],

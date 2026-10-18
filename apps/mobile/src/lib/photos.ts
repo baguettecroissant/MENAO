@@ -8,7 +8,14 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert, Platform } from "react-native";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
-import { AVATAR_MAX_SIDE, fitWithin, PHOTO_MAX_SIDE, uploadId, type UploadStatus } from "./uploads";
+import {
+  AVATAR_MAX_SIDE,
+  fitWithin,
+  LOGO_MAX_SIDE,
+  PHOTO_MAX_SIDE,
+  uploadId,
+  type UploadStatus,
+} from "./uploads";
 
 /** Qualité JPEG des photos réduites, comme sur le site. */
 const JPEG_QUALITY = 0.85;
@@ -21,12 +28,13 @@ export type PickedPhoto = { uri: string; pdf?: { name: string } };
 
 /**
  * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40),
- * signalement (F-42), photo de profil, photo de réalisation (ADR 0124), ou document du dossier
- * de l'artisan avec ses dates (F-14, ADR 0113).
+ * signalement (F-42), photo de profil, photo de réalisation (ADR 0124), logo des documents
+ * (ADR 0125), ou document du dossier de l'artisan avec ses dates (F-14, ADR 0113).
  */
 export type PhotoTarget =
   | { purpose: "avatar" }
   | { purpose: "portfolio" }
+  | { purpose: "logo" }
   | { purpose: "document"; document: DocumentMetadata }
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
@@ -114,7 +122,7 @@ export async function pickDocumentFile(): Promise<{ photos: PickedPhoto[] } | { 
  * le site : fichier léger, photos HEIC de l'iPhone converties, métadonnées (dont la position GPS)
  * retirées.
  */
-async function toJpeg(uri: string, maxSide: number): Promise<string> {
+async function toJpeg(uri: string, maxSide: number, png = false): Promise<string> {
   const context = ImageManipulator.manipulate(uri);
   const original = await context.renderAsync();
   context.release();
@@ -126,7 +134,9 @@ async function toJpeg(uri: string, maxSide: number): Promise<string> {
     resizing.release();
     original.release();
   }
-  const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: JPEG_QUALITY });
+  const saved = await image.saveAsync(
+    png ? { format: SaveFormat.PNG } : { format: SaveFormat.JPEG, compress: JPEG_QUALITY },
+  );
   image.release();
   return saved.uri;
 }
@@ -161,7 +171,16 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
     // PDF envoyé tel quel (vérifié d'après son contenu par process-upload) ; photo réduite.
     jpeg = photo.pdf
       ? photo.uri
-      : await toJpeg(photo.uri, target.purpose === "avatar" ? AVATAR_MAX_SIDE : PHOTO_MAX_SIDE);
+      : await toJpeg(
+          photo.uri,
+          target.purpose === "avatar"
+            ? AVATAR_MAX_SIDE
+            : target.purpose === "logo"
+              ? LOGO_MAX_SIDE
+              : PHOTO_MAX_SIDE,
+          // Logo : PNG, pour garder un fond transparent.
+          target.purpose === "logo",
+        );
     bytes = await readBytes(jpeg);
   } catch {
     return "unreadable";
@@ -172,7 +191,11 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
   }
   const path = `${userId}/${uploadId()}`;
   const { error: uploadError } = await supabase.storage.from("uploads").upload(path, bytes, {
-    contentType: photo.pdf ? "application/pdf" : "image/jpeg",
+    contentType: photo.pdf
+      ? "application/pdf"
+      : target.purpose === "logo"
+        ? "image/png"
+        : "image/jpeg",
     upsert: false,
   });
   removeCopy(jpeg);

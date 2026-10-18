@@ -138,6 +138,7 @@ export function DossierScreen() {
           hint={profileDone ? undefined : t.profileTodo}
           tone={profileDone ? "done" : "todo"}
           status={profileDone ? t.states.done : t.states.todo}
+          href="/pro-entreprise"
         />
         <Row
           icon={PenLine}
