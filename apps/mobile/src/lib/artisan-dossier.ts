@@ -24,6 +24,7 @@ export type DossierDocument = {
   type: RequiredDocumentType;
   status: DocumentSnapshot["status"];
   refusal_reason: string | null;
+  date_fin: string | null;
 };
 
 export type Dossier = {
@@ -116,6 +117,7 @@ export async function loadDossier(): Promise<Dossier | null> {
       type: d.type,
       status: d.status,
       refusal_reason: d.refusal_reason,
+      date_fin: d.date_fin,
     })),
     presentation,
     avatarPath,
