@@ -14,6 +14,7 @@ import { PushNotifications } from "@/components/push-notifications";
 import { kv } from "@/lib/kv";
 import { SessionProvider, useSession } from "@/lib/session";
 import { UnreadProvider } from "@/lib/unread";
+import { ToastHost } from "@/ui";
 
 // L'écran de démarrage (logo MENAO) reste affiché jusqu'au chargement des polices et de la session.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -48,6 +49,7 @@ function Root({ ready }: { ready: boolean }) {
       <Stack screenOptions={{ headerShown: false }} />
       <PushNotifications />
       <SignupGate />
+      <ToastHost />
     </>
   );
 }

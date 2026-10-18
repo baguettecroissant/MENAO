@@ -14,7 +14,7 @@ import { charterAcceptanceSchema } from "@menao/validation";
 import { router } from "expo-router";
 import { Check } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SignaturePad } from "@/components/pro/signature-pad";
 import { fr } from "@/i18n/fr";
 import {
@@ -24,7 +24,17 @@ import {
   type CharterState,
 } from "@/lib/charter";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
+import {
+  Body,
+  Button,
+  Card,
+  Checkbox,
+  Notice,
+  Screen,
+  ScreenSkeleton,
+  TextField,
+  Title,
+} from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proCharter;
@@ -40,16 +50,10 @@ const PARIS = "Europe/Paris";
  */
 export default function CharterScreen() {
   const [state, reload] = useFocusData(loadCharterState);
-  if (state === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (state === undefined) return <ScreenSkeleton />;
   if (state === null) {
     return (
-      <Screen>
+      <Screen onRefresh={reload}>
         <Notice tone="error">{t.error}</Notice>
       </Screen>
     );
@@ -289,12 +293,6 @@ function CharterDone({ acceptance }: { acceptance: CharterAcceptanceRow }) {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   hero: { gap: spacing(2) },
   eyebrow: {
     fontFamily: font.bold,

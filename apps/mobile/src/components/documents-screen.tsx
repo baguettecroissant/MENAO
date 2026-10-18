@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DocumentsCard } from "@/components/chantier/dossier";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { loadMyDocuments } from "@/lib/chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice } from "@/ui";
+import { Notice, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -21,13 +21,7 @@ export function DocumentsScreen() {
   const [sections, reload] = useFocusData(loadMyDocuments);
   const [refreshing, setRefreshing] = useState(false);
 
-  if (sections === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (sections === undefined) return <ScreenSkeleton />;
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <ScrollView
@@ -63,11 +57,5 @@ export function DocumentsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
 });

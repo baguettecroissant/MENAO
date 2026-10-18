@@ -1,4 +1,3 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AbsencesManager } from "@/components/availability/absences-manager";
 import { CalendarSync } from "@/components/availability/calendar-sync";
 import { HoursEditor } from "@/components/availability/hours-editor";
@@ -8,8 +7,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAvailability } from "@/lib/pro-availability";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Body, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 
 const t = fr.proAvailability;
 
@@ -21,15 +19,9 @@ const t = fr.proAvailability;
 export default function AvailabilityScreen() {
   const [data, reload] = useFocusData(loadAvailability);
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen header={<TopBar />}>
+    <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       <Body muted>{t.intro}</Body>
       {data === null ? (
@@ -52,12 +44,3 @@ export default function AvailabilityScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

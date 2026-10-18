@@ -3,15 +3,7 @@ import type { QuoteLineInput } from "@menao/validation";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { Mic, Plus, Save } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand, whenMeta } from "@/components/header-band";
 import { BottomSheet } from "@/components/bottom-sheet";
@@ -23,7 +15,7 @@ import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteDraft, saveQuoteDraft, type QuoteDraft } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen } from "@/ui";
+import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuote;
@@ -40,13 +32,7 @@ export default function QuoteEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuoteDraft(id), [id]);
   const [draft] = useFocusData(load);
-  if (draft === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (draft === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (draft === null) {
     return (
       <Screen header={<TopBar />}>
@@ -268,12 +254,6 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   statusRow: {
     flexDirection: "row",
     alignItems: "center",

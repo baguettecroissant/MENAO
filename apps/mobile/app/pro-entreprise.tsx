@@ -2,7 +2,7 @@ import { frenchVatNumber } from "@menao/core";
 import { router, type Href } from "expo-router";
 import { ChevronRight, ImagePlus, MapPin, Wrench, type LucideIcon } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -18,7 +18,18 @@ import {
 } from "@/lib/my-company";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, TextField, Title } from "@/ui";
+import {
+  Body,
+  Button,
+  Card,
+  Notice,
+  Screen,
+  ScreenSkeleton,
+  Tappable,
+  TextField,
+  Title,
+  toast,
+} from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proCompany;
@@ -33,15 +44,9 @@ type Message = { tone: "error" | "success" | "info"; text: string } | null;
  */
 export default function CompanyScreen() {
   const [company, reload] = useFocusData(loadCompany);
-  if (company === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (company === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen header={<TopBar />}>
+    <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       <Body muted>{t.lead}</Body>
       {company === null ? (
@@ -78,7 +83,7 @@ function SiretCard({ company, onChange }: { company: Company; onChange: () => Pr
     setError(result.ok ? undefined : result.fields?.siret);
     if (!result.ok && result.error) setMessage({ tone: "error", text: result.error });
     if (result.ok) {
-      setMessage({ tone: "success", text: t.saved });
+      toast.success(t.saved);
       await onChange();
     }
   }
@@ -155,7 +160,7 @@ function CompanyCard({ company, onSaved }: { company: Company; onSaved: () => Pr
     setErrors(result.ok ? {} : (result.fields ?? {}));
     if (!result.ok && result.error) setMessage({ tone: "error", text: result.error });
     if (result.ok) {
-      setMessage({ tone: "success", text: t.saved });
+      toast.success(t.saved);
       await onSaved();
     }
   }
@@ -226,7 +231,7 @@ function LogoCard({
         text: fr.search.upload[status] ?? fr.search.upload.unavailable,
       });
     }
-    setMessage({ tone: "success", text: t.logoDone });
+    toast.success(t.logoDone);
     await onChange();
   }
 
@@ -235,9 +240,8 @@ function LogoCard({
     setBusy("remove");
     const ok = await removeLogo();
     setBusy(null);
-    setMessage(
-      ok ? { tone: "success", text: t.logoRemoved } : { tone: "error", text: fr.errors.generic },
-    );
+    if (ok) toast.success(t.logoRemoved);
+    else setMessage({ tone: "error", text: fr.errors.generic });
     await onChange();
   }
 
@@ -289,12 +293,7 @@ function LinkRow({
   href: Href;
 }) {
   return (
-    <Pressable
-      role="link"
-      aria-label={title}
-      onPress={() => router.push(href)}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-    >
+    <Tappable role="link" aria-label={title} onPress={() => router.push(href)} style={styles.row}>
       <View style={styles.icon}>
         <Icon size={20} color={colors["primary-strong"]} />
       </View>
@@ -303,17 +302,11 @@ function LinkRow({
         <Text style={styles.rowHint}>{hint}</Text>
       </View>
       <ChevronRight size={20} color={colors["muted-foreground"]} />
-    </Pressable>
+    </Tappable>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   heading: {
     fontFamily: font.bold,
     fontSize: 17,
@@ -340,7 +333,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  pressed: { opacity: 0.85 },
   icon: {
     width: 40,
     height: 40,

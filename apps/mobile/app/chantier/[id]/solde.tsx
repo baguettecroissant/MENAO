@@ -1,7 +1,7 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Check, CircleDashed, Lock, MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { HeaderBand } from "@/components/header-band";
 import { StepTabs } from "@/components/step-tabs";
 import { TopBar } from "@/components/top-bar";
@@ -10,7 +10,7 @@ import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadBalance, startBalancePayment } from "@/lib/reception";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen } from "@/ui";
+import { Body, Button, Card, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.balance;
@@ -31,13 +31,7 @@ export default function BalanceScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (balance === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (balance === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (balance === null) {
     return (
       <Screen header={<TopBar />}>
@@ -123,12 +117,6 @@ export default function BalanceScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   summary: { gap: spacing(3) },
   line: {
     flexDirection: "row",

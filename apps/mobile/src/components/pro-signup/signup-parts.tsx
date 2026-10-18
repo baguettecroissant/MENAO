@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Body } from "@/ui";
 import { theme } from "@/ui/theme";
+import { haptic } from "@/lib/haptics";
 
 const { colors, font, radius, spacing } = theme;
 
@@ -114,7 +115,10 @@ export function ChoiceGroup<T extends string | number | boolean>({
               role="radio"
               aria-checked={selected}
               aria-label={option.label}
-              onPress={() => onChange(option.value)}
+              onPress={() => {
+                haptic.select();
+                onChange(option.value);
+              }}
               style={({ pressed }) => [
                 styles.option,
                 { flexBasis: columns === 3 ? "30%" : "45%" },
@@ -149,7 +153,10 @@ export function CheckRow({
       role="checkbox"
       aria-checked={checked}
       aria-label={label}
-      onPress={onToggle}
+      onPress={() => {
+        haptic.select();
+        onToggle();
+      }}
       style={({ pressed }) => [styles.row, checked && styles.rowOn, pressed && styles.pressed]}
     >
       <View style={[styles.box, checked && styles.boxOn]}>

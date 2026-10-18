@@ -3,7 +3,7 @@ import { signatureConsentsSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { ConsentList, type ConsentItem } from "@/components/consents";
 import { HeaderBand } from "@/components/header-band";
@@ -16,7 +16,7 @@ import { openHostedPage } from "@/lib/hosted";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuote, startQuoteSignature } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
@@ -40,13 +40,7 @@ export default function QuoteSignatureScreen() {
   const [pending, setPending] = useState(false);
   const [pdfFailed, setPdfFailed] = useState(false);
 
-  if (quote === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (quote === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (quote === null) {
     return (
       <Screen header={<TopBar />}>
@@ -163,12 +157,6 @@ export default function QuoteSignatureScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   summary: { gap: spacing(1.5) },
   summaryTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   summaryText: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },

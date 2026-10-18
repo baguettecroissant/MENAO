@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAccount, saveProfile, type AccountDetails } from "@/lib/account";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, TextField, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Button, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
 
 const t = fr.account.profile;
 
@@ -14,13 +12,7 @@ const t = fr.account.profile;
 export default function AccountProfileScreen() {
   const [account] = useFocusData(loadAccount);
   const { role } = useSession();
-  if (account === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (account === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (account === null) {
     return (
       <Screen header={<TopBar />}>
@@ -88,12 +80,3 @@ function ProfileForm({ account, pro }: { account: AccountDetails; pro: boolean }
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

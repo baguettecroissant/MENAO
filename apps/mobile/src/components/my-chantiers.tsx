@@ -2,14 +2,7 @@ import { clientPendingActions, isChantierFinished, type ChantierStatus } from "@
 import { router, useFocusEffect } from "expo-router";
 import { FileText, HardHat } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
 import { StatusPill } from "@/components/chantier/parts";
@@ -18,7 +11,7 @@ import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar, loadMyChantiers, type MyChantiers } from "@/lib/chantiers";
 import { formatDateNumeric } from "@/lib/format";
-import { Body, Card, LinkText, Notice } from "@/ui";
+import { Body, Card, LinkText, Notice, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -44,13 +37,7 @@ export function MyChantiersScreen() {
     }, [load]),
   );
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton />;
   const chantiers = data?.chantiers ?? [];
   const requests = data?.requests ?? [];
   const active = chantiers.filter((c) => !isChantierFinished(c.status as ChantierStatus));
@@ -185,12 +172,6 @@ export function MyChantiersScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   counts: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   // Puces blanches bordées de la maquette (« 1 chantier en cours », « 1 document à signer »).

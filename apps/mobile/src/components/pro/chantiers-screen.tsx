@@ -1,13 +1,13 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArtisanChantierCard } from "@/components/pro/chantier-row";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { loadArtisanChantiers } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice } from "@/ui";
+import { Notice, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -22,13 +22,7 @@ export function ArtisanChantiersScreen() {
   const [rows, reload] = useFocusData(loadArtisanChantiers);
   const [refreshing, setRefreshing] = useState(false);
 
-  if (rows === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (rows === undefined) return <ScreenSkeleton />;
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <ScrollView
@@ -62,11 +56,5 @@ export function ArtisanChantiersScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
 });

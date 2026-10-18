@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 import { theme } from "@/ui/theme";
+import { haptic } from "@/lib/haptics";
 
 const { colors, radius } = theme;
 const SIZE = 56;
@@ -23,7 +24,10 @@ export function CenterTabButton({
       <Pressable
         role="button"
         aria-label={label}
-        onPress={onPress}
+        onPress={() => {
+          haptic.tap();
+          onPress();
+        }}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <Icon size={26} color={colors["primary-foreground"]} />

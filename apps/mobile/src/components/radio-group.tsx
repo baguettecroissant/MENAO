@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { theme } from "@/ui/theme";
+import { haptic } from "@/lib/haptics";
 
 const { colors, font, radius, spacing } = theme;
 
@@ -28,7 +29,10 @@ export function RadioGroup<V extends string>({
               key={option.value}
               role="radio"
               aria-checked={selected}
-              onPress={() => onChange(option.value)}
+              onPress={() => {
+                haptic.select();
+                onChange(option.value);
+              }}
               style={[styles.option, selected && styles.optionOn]}
             >
               <View style={[styles.radio, selected && styles.radioOn]}>

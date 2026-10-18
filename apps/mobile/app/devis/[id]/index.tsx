@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { QuotePaper } from "@/components/documents/quote-paper";
 import { TopBar } from "@/components/top-bar";
@@ -9,7 +9,7 @@ import { formatCents, formatDay } from "@/lib/format";
 import { sharePdf, type PdfTarget } from "@/lib/pdf";
 import { loadQuote, type ClientQuote } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, LinkText, Notice, Screen, Section, Title } from "@/ui";
+import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Section, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
@@ -54,13 +54,7 @@ export default function QuoteScreen() {
     setPdfFailed(!ok);
   }
 
-  if (quote === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (quote === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (quote === null) {
     return (
       <Screen header={<TopBar />}>
@@ -166,12 +160,6 @@ export default function QuoteScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   head: { gap: spacing(2) },
   status: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(3) },
   validity: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },

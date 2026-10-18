@@ -1,13 +1,13 @@
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { setStatusBarStyle } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArtisanProfileView } from "@/components/artisan-profile";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadArtisanPage, type ArtisanPage } from "@/lib/requests";
-import { Button, Notice, Screen } from "@/ui";
+import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, spacing } = theme;
@@ -42,13 +42,7 @@ export default function ArtisanFiche() {
     }, []),
   );
 
-  if (page === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (page === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (page === null) {
     return (
       <Screen header={<TopBar />}>
@@ -77,12 +71,6 @@ export default function ArtisanFiche() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   safe: { flex: 1, backgroundColor: colors.background },
   footer: {
     paddingHorizontal: spacing(5),

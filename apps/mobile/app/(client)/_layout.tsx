@@ -10,6 +10,7 @@ import {
 import { CenterTabButton } from "@/components/center-tab-button";
 import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
+import { haptic } from "@/lib/haptics";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { theme } from "@/ui/theme";
@@ -27,7 +28,7 @@ export default function ClientLayout() {
   if (space === "artisan") return <Redirect href="/pro" />;
   if (space === "equipe") return <Redirect href="/equipe" />;
   return (
-    <Tabs screenOptions={tabBarOptions}>
+    <Tabs screenOptions={tabBarOptions} screenListeners={{ tabPress: () => haptic.select() }}>
       <Tabs.Screen
         name="accueil"
         options={{

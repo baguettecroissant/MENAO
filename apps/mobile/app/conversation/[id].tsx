@@ -1,7 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Fragment, useCallback, useEffect, useRef } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,7 +19,7 @@ import { loadConversation, markConversationRead, subscribeToConversation } from 
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, Screen } from "@/ui";
+import { Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.messages;
@@ -58,16 +57,10 @@ export default function ConversationScreen() {
     if (lastId) markConversationRead(id).then(refresh);
   }, [id, lastId, refresh]);
 
-  if (conversation === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (conversation === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (conversation === null) {
     return (
-      <Screen header={<TopBar />}>
+      <Screen onRefresh={reload} header={<TopBar />}>
         <Notice tone="error">{t.notFound}</Notice>
       </Screen>
     );
@@ -132,12 +125,6 @@ export default function ConversationScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   header: {
     gap: spacing(2),
     paddingHorizontal: spacing(5),

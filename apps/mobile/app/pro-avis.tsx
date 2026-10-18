@@ -1,15 +1,7 @@
 import { router } from "expo-router";
 import { Info } from "lucide-react-native";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill } from "@/components/chantier/parts";
 import { ReviewCard } from "@/components/pro/review-card";
@@ -20,7 +12,7 @@ import { formatLongDate } from "@/lib/dates";
 import { formatDay } from "@/lib/format";
 import { loadMyReviews } from "@/lib/pro-reviews";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Card, Notice, Title } from "@/ui";
+import { Body, Card, Notice, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -36,13 +28,7 @@ export default function MyReviews() {
   const [data, reload] = useFocusData(loadMyReviews);
   const [refreshing, setRefreshing] = useState(false);
 
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const reviews = data?.reviews ?? [];
   const toAnswer = reviews.filter((r) => r.status === "publie" && r.reply === null).length;
   return (
@@ -141,12 +127,6 @@ export default function MyReviews() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   head: { gap: spacing(2) },

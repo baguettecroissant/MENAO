@@ -1,6 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { InvoicePaper } from "@/components/documents/invoice-paper";
 import { QuotePaper } from "@/components/documents/quote-paper";
 import { ReceptionPaper } from "@/components/documents/reception-paper";
@@ -9,8 +8,7 @@ import { fr } from "@/i18n/fr";
 import { loadDocumentPreview, type DocumentType } from "@/lib/document-preview";
 import { sharePdf } from "@/lib/pdf";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Button, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 
 const t = fr.documentPreview;
 const TYPES: readonly string[] = ["devis", "facture", "pv"] satisfies DocumentType[];
@@ -31,13 +29,7 @@ export default function DocumentScreen() {
   const [downloading, setDownloading] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  if (doc === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (doc === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (doc === null) {
     return (
       <Screen header={<TopBar />}>
@@ -89,12 +81,3 @@ export default function DocumentScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

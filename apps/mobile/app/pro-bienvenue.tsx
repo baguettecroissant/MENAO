@@ -1,10 +1,10 @@
 import { router } from "expo-router";
 import { Camera, CircleCheck, Clock, FileText, MapPin } from "lucide-react-native";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { loadWelcome } from "@/lib/artisan-signup";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen } from "@/ui";
+import { Body, Button, Card, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proSignup.welcome;
@@ -28,13 +28,7 @@ function initials(name: string): string {
  */
 export default function ArtisanWelcomeScreen() {
   const [data] = useFocusData(loadWelcome);
-  if (data === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (data === undefined) return <ScreenSkeleton />;
   const name = data?.name ?? t.companyFallback;
   return (
     <Screen
@@ -94,12 +88,6 @@ export default function ArtisanWelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   success: {
     width: 56,
     height: 56,

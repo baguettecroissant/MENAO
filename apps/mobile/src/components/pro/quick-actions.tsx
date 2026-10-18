@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fr } from "@/i18n/fr";
 import { theme } from "@/ui/theme";
+import { Tappable } from "@/ui";
 
 const t = fr.proQuickActions;
 const { colors, font, radius, spacing } = theme;
@@ -39,7 +40,7 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
           {t.title}
         </Text>
         {ACTIONS.map(({ icon: Icon, label, detail, href }) => (
-          <Pressable
+          <Tappable
             key={label}
             role="link"
             aria-label={label}
@@ -47,7 +48,7 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
               onClose();
               router.push(href);
             }}
-            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+            style={styles.row}
           >
             <View style={styles.icon}>
               <Icon size={20} color={colors.primary} />
@@ -57,15 +58,11 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
               <Text style={styles.detail}>{detail}</Text>
             </View>
             <ChevronRight size={18} color={colors["muted-foreground"]} />
-          </Pressable>
+          </Tappable>
         ))}
-        <Pressable
-          role="button"
-          onPress={onClose}
-          style={({ pressed }) => [styles.close, pressed && styles.pressed]}
-        >
+        <Tappable role="button" onPress={onClose} style={styles.close}>
           <Text style={styles.closeText}>{t.close}</Text>
-        </Pressable>
+        </Tappable>
       </View>
     </Modal>
   );
@@ -104,7 +101,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing(3.5),
   },
-  pressed: { opacity: 0.85 },
   icon: {
     width: 40,
     height: 40,

@@ -1,7 +1,6 @@
 import { AI_CONFIDENCE_THRESHOLD } from "@menao/core";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { CriteriaReview } from "@/components/criteria-review";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -11,8 +10,7 @@ import {
   type ProjectForReview,
   type ProjectPhoto,
 } from "@/lib/project";
-import { Notice, Screen } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Notice, Screen, ScreenSkeleton } from "@/ui";
 
 /** Critères d'un projet analysé (F-07), et ses photos (F-05). */
 export default function ProjetCriteres() {
@@ -33,13 +31,7 @@ export default function ProjetCriteres() {
     };
   }, [id]);
 
-  if (loaded === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (loaded === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (loaded.project === null) {
     return (
       <Screen header={<TopBar title={fr.review.title} />}>
@@ -55,12 +47,3 @@ export default function ProjetCriteres() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

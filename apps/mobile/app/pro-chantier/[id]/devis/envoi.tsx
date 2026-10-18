@@ -8,7 +8,7 @@ import { sendQuoteSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { User, Wrench } from "lucide-react-native";
 import { useCallback, useState, type ReactNode } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { DetailBlock } from "@/components/pro/request-blocks";
@@ -18,7 +18,7 @@ import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteSendContext, sendQuote } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Checkbox, Notice, Screen, TextField } from "@/ui";
+import { Body, Button, Checkbox, Notice, Screen, ScreenSkeleton, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuote;
@@ -53,13 +53,7 @@ export default function QuoteSendScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (context === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
+  if (context === undefined) return <ScreenSkeleton />;
   if (context === null) return <Redirect href={`/pro-chantier/${id}/devis`} />;
 
   const ctx = context;
@@ -225,12 +219,6 @@ export default function QuoteSendScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-  },
   section: { gap: spacing(3) },
   heading: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   options: { gap: spacing(3) },

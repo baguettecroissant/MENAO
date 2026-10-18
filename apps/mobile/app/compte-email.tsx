@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { changeEmail, loadAccount } from "@/lib/account";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.account.email;
@@ -19,16 +19,10 @@ export default function AccountEmailScreen() {
   const [state, setState] = useState<Awaited<ReturnType<typeof changeEmail>>>({});
   const [pending, setPending] = useState(false);
 
-  if (account === undefined) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
+  if (account === undefined) return <ScreenSkeleton header={<TopBar />} />;
   if (account === null) {
     return (
-      <Screen header={<TopBar />}>
+      <Screen onRefresh={reload} header={<TopBar />}>
         <Title>{t.title}</Title>
         <Notice tone="error">{fr.account.errors.unavailable}</Notice>
       </Screen>
@@ -78,11 +72,5 @@ export default function AccountEmailScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background,
-  },
   email: { fontFamily: theme.font.medium, fontSize: 16, color: theme.colors.foreground },
 });
