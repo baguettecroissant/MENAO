@@ -584,7 +584,7 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     expect(more.cta.label).toBe("Compléter mon dossier");
   });
 
-  it("échéance d'un document : J-30, J-7 (urgent), suspension annoncée pour les assurances", () => {
+  it("échéance d'un document : J-30, J-15, J-7 (urgent), suspension annoncée pour les assurances", () => {
     const soon = notificationContent(
       "document_a_renouveler",
       { document: "decennale", date_fin: "2026-10-29", jours: 20 },
@@ -594,6 +594,14 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
       "Votre attestation d'assurance décennale expire le jeudi 29 octobre (dans 20\u00a0jours)",
     );
     expect(soon.title).toBe("Pensez à renouveler votre document");
+    // J-15 (ADR 0122) : relance simple, pas encore « urgente ».
+    const mid = notificationContent(
+      "document_a_renouveler",
+      { document: "urssaf", date_fin: "2026-10-24", jours: 15 },
+      pro,
+    );
+    expect(mid.subject.startsWith("Votre ")).toBe(true);
+    expect(mid.title).toBe("Pensez à renouveler votre document");
     expect(soon.paragraphs[2]).toContain("votre profil sera suspendu automatiquement");
     expect(soon.cta).toEqual({
       label: "Déposer le nouveau document",
@@ -622,7 +630,7 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
       { document: "decennale", date_fin: "2026-10-29", jours: 20, entreprise: "I.P.M" },
       { ...ctx, firstName: "Alex" },
     );
-    expect(team.subject).toBe("Assurance à renouveler : I.P.M");
+    expect(team.subject).toBe("Document à renouveler : I.P.M");
     expect(team.paragraphs[1]).toBe(
       "I.P.M doit renouveler son attestation d'assurance décennale, qui expire le jeudi 29 octobre (dans 20\u00a0jours).",
     );
