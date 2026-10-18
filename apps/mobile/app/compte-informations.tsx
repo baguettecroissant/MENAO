@@ -4,7 +4,7 @@ import { fr } from "@/i18n/fr";
 import { loadAccount, saveProfile, type AccountDetails } from "@/lib/account";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
+import { Button, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
 
 const t = fr.account.profile;
 
@@ -39,8 +39,11 @@ function ProfileForm({ account, pro }: { account: AccountDetails; pro: boolean }
 
   async function submit() {
     setPending(true);
-    setState(await saveProfile(values, pro));
+    const result = await saveProfile(values, pro);
     setPending(false);
+    // Confirmation en bas de l'écran ; les erreurs restent près des champs.
+    if (result.success) toast.success(result.success);
+    setState(result.success ? {} : result);
   }
 
   return (
@@ -49,7 +52,6 @@ function ProfileForm({ account, pro }: { account: AccountDetails; pro: boolean }
       footer={<Button label={t.save} onPress={submit} loading={pending} />}
     >
       <Title>{t.title}</Title>
-      {state.success ? <Notice tone="success">{state.success}</Notice> : null}
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       <TextField
         label={t.firstName}

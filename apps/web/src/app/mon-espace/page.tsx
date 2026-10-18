@@ -1,14 +1,17 @@
 import {
+  clientTodos,
   homePathForRole,
   isChantierFinished,
   roleFromAppMetadata,
   type ChantierStatus,
+  type PaymentStatus,
 } from "@menao/core";
 import { FileText, HardHat, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { AppDownloadModal } from "@/components/app-shell/app-download-modal";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
+import { ClientTodoList } from "@/components/chantier/client-todo-list";
 import { DraftSearches } from "@/components/project/draft-searches";
 import { PendingRequests } from "@/components/project/my-requests";
 import { ButtonLink, Tag } from "@/components/ui";
@@ -37,20 +40,33 @@ export default async function MySpacePage() {
   const home = homePathForRole(role);
   if (home !== "/mon-espace") redirect(home as Route);
 
-  const [{ data: chantierRows }, { data: requestRows }, { data: draftRows }, { data: cancelled }] =
-    await Promise.all([
-      supabase.rpc("particulier_chantiers"),
-      supabase.rpc("particulier_requests"),
-      // Recherches commencées sans demande envoyée (ADR 0040).
-      supabase
-        .from("projects")
-        .select("id, status, summary, description, ville_nom, created_at, trades(label)")
-        .in("status", ["brouillon", "criteres_valides"])
-        .order("created_at", { ascending: false })
-        .limit(10),
-      // Demandes annulées par le client lui-même (motif renseigné).
-      supabase.from("requests").select("id").not("cancellation_reason", "is", null),
-    ]);
+  const [
+    { data: chantierRows },
+    { data: requestRows },
+    { data: draftRows },
+    { data: cancelled },
+    { data: reviews },
+    { data: lifts },
+  ] = await Promise.all([
+    supabase.rpc("particulier_chantiers"),
+    supabase.rpc("particulier_requests"),
+    // Recherches commencées sans demande envoyée (ADR 0040).
+    supabase
+      .from("projects")
+      .select("id, status, summary, description, ville_nom, created_at, trades(label)")
+      .in("status", ["brouillon", "criteres_valides"])
+      .order("created_at", { ascending: false })
+      .limit(10),
+    // Demandes annulées par le client lui-même (motif renseigné).
+    supabase.from("requests").select("id").not("cancellation_reason", "is", null),
+    // « À faire maintenant » (ADR 0132) : avis déjà laissés et levées de réserves signalées.
+    supabase.from("reviews").select("chantier_id").eq("particulier_id", data.claims.sub),
+    supabase
+      .from("receptions")
+      .select("chantier_id")
+      .not("lift_signaled_at", "is", null)
+      .is("lifted_at", null),
+  ]);
   const drafts = draftRows ?? [];
   const cancelledByClient = new Set((cancelled ?? []).map((r) => r.id));
   const chantiers = chantierRows ?? [];
@@ -59,6 +75,26 @@ export default async function MySpacePage() {
   const finished = chantiers.filter((c) => isChantierFinished(c.status as ChantierStatus));
   const pending = requests.filter((r) => !r.chantier_id);
   const toSign = active.filter((c) => c.status === "devis_envoye" && c.quote_status === "envoye");
+  // Mêmes règles que l'accueil de l'application (`clientTodos`, @menao/core).
+  const reviewed = new Set((reviews ?? []).map((r) => r.chantier_id));
+  const liftSignaled = new Set((lifts ?? []).map((r) => r.chantier_id));
+  const todos = clientTodos(
+    chantiers.map((c) => ({
+      chantier_id: c.chantier_id,
+      title: c.title,
+      artisan_name: c.artisan_name,
+      quote_total_ttc_cents: c.quote_total_ttc_cents,
+      status: c.status as ChantierStatus,
+      quoteId: c.quote_id,
+      quoteStatus: c.quote_status,
+      depositCents: c.deposit_cents,
+      depositStatus: c.deposit_status as PaymentStatus | null,
+      balanceCents: c.balance_cents,
+      balanceStatus: c.balance_status as PaymentStatus | null,
+      liftSignaled: liftSignaled.has(c.chantier_id),
+      reviewed: reviewed.has(c.chantier_id),
+    })),
+  );
 
   // Photos : première photo du projet de chaque chantier et de chaque demande en attente.
   const pendingProjects = [...new Set(pending.map((r) => r.project_id))];
@@ -93,6 +129,7 @@ export default async function MySpacePage() {
 
   const inProgress = (
     <>
+      <ClientTodoList todos={todos} hasActive={active.length > 0} />
       <section aria-labelledby="en-cours" className="flex flex-col gap-4">
         <h2 id="en-cours" className="text-lg font-medium">
           {t.inProgress}

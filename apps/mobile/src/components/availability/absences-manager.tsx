@@ -8,7 +8,7 @@ import { fr } from "@/i18n/fr";
 import { formatDayMonthShort } from "@/lib/format";
 import type { AgendaAbsence } from "@/lib/pro-agenda";
 import { addAbsence, deleteAbsence, type AbsenceErrors } from "@/lib/pro-availability";
-import { Button, Card, Chip, Notice, TextField } from "@/ui";
+import { Button, Card, Chip, Notice, TextField, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAvailability.absences;
@@ -38,8 +38,11 @@ export function AbsencesManager({
     setRemoving(id);
     const result = await deleteAbsence(id);
     setRemoving(null);
-    setOutcome(result);
-    if ("success" in result) onChanged();
+    if ("success" in result) {
+      toast.success(result.success);
+      setOutcome(null);
+      onChanged();
+    } else setOutcome(result);
   }
 
   return (
@@ -87,7 +90,6 @@ export function AbsencesManager({
         })
       )}
       {outcome && "error" in outcome ? <Notice tone="error">{outcome.error}</Notice> : null}
-      {outcome && "success" in outcome ? <Notice tone="success">{outcome.success}</Notice> : null}
       <AddAbsenceForm
         today={today}
         onAdded={() => {
@@ -121,8 +123,9 @@ function AddAbsenceForm({ today, onAdded }: { today: string; onAdded: () => void
       return;
     }
     setErrors({});
-    setOutcome(result);
+    setOutcome("success" in result ? null : result);
     if ("success" in result) {
+      toast.success(result.success);
       setStartsOn(null);
       setEndsOn(null);
       setLabel("");

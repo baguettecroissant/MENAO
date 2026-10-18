@@ -2708,6 +2708,24 @@ export const fr = {
   },
   account: {
     title: "Mon compte",
+    // Organisation en sections (refonte, comme « Mon profil », ADR 0132).
+    sections: {
+      account: "Mon compte",
+      help: "Aide",
+      data: "Données et sécurité",
+    },
+    rows: {
+      profile: "Mes informations",
+      email: "Adresse e-mail",
+      emailPending: "Changement en attente",
+      password: "Mot de passe",
+      notifications: "Notifications",
+      marketing: "Actualités et conseils MENAO par e-mail",
+      export: "Télécharger mes données",
+      signOutAll: "Déconnecter tous mes appareils",
+      deletion: "Supprimer mon compte",
+      deletionPending: (date: string) => `Demandée le ${date}`,
+    },
     signedInAs: "Connecté en tant que",
     particulier: "Particulier",
     artisan: "Artisan",

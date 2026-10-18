@@ -19,7 +19,7 @@ import {
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Checkbox, Notice, ScreenSkeleton, Title } from "@/ui";
+import { Body, Button, Card, Checkbox, Notice, ScreenSkeleton, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -125,7 +125,7 @@ function Preferences() {
   const load = useCallback(() => loadEmailPreferences(userId), [userId]);
   const [initial] = useFocusData(load);
   const [edited, setEdited] = useState<EmailPreferences | null>(null);
-  const [status, setStatus] = useState<"saved" | "error" | null>(null);
+  const [status, setStatus] = useState<"error" | null>(null);
   const [pending, setPending] = useState(false);
   const prefs = edited ?? initial;
   if (!prefs) return null;
@@ -136,7 +136,8 @@ function Preferences() {
     setPending(true);
     const failed = await saveEmailPreferences(prefs);
     setPending(false);
-    setStatus(failed ? "error" : "saved");
+    setStatus(failed ? "error" : null);
+    if (!failed) toast.success(t.saved);
   }
 
   return (
@@ -157,7 +158,6 @@ function Preferences() {
             }}
           />
         ))}
-        {status === "saved" ? <Notice tone="success">{t.saved}</Notice> : null}
         {status === "error" ? <Notice tone="error">{fr.errors.generic}</Notice> : null}
         <Button label={t.save} variant="secondary" onPress={save} loading={pending} />
       </View>

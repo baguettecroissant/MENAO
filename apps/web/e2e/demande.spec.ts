@@ -315,6 +315,12 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
 
   // Signature du devis (F-13) : cases à cocher, prestataire (faux DocuSeal), webhook, devis signé.
   await page.goto("/mon-espace");
+  // « À faire maintenant » (ADR 0132) : le devis à signer, avec son montant.
+  await expect(
+    page
+      .getByRole("region", { name: "À faire maintenant" })
+      .getByRole("link", { name: /^Signer le devis, / }),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Voir et signer le devis" }).click();
   await expect(page.getByText(/N° DEVIS-\d{4}-0001-v2/)).toBeVisible();
   await page.getByRole("link", { name: "Signer le devis" }).click();

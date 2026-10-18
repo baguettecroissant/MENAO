@@ -78,17 +78,15 @@ function PhotoCard({ hasPhoto, onSaved }: { hasPhoto: boolean; onSaved: () => vo
 function PresentationCard({ initial, onSaved }: { initial: string; onSaved: () => void }) {
   const [value, setValue] = useState(initial);
   const [error, setError] = useState<string | undefined>();
-  const [saved, setSaved] = useState(false);
   const [sending, setSending] = useState(false);
 
   async function save() {
     setSending(true);
-    setSaved(false);
     const failure = await savePresentation(value);
     setSending(false);
     setError(failure ?? undefined);
     if (!failure) {
-      setSaved(true);
+      toast.success(t.saved);
       onSaved();
     }
   }
@@ -105,7 +103,6 @@ function PresentationCard({ initial, onSaved }: { initial: string; onSaved: () =
         hint={t.presentationHint(PRESENTATION_MIN_LENGTH, value.trim().length)}
         error={error}
       />
-      {saved ? <Notice tone="success">{t.saved}</Notice> : null}
       <Button label={t.save} onPress={save} loading={sending} />
     </Card>
   );

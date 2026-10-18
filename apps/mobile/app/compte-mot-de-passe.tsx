@@ -4,7 +4,7 @@ import { useState } from "react";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { changePassword } from "@/lib/account";
-import { Button, LinkText, Notice, Screen, TextField, Title } from "@/ui";
+import { Button, LinkText, Notice, Screen, TextField, Title, toast } from "@/ui";
 
 const t = fr.account.password;
 
@@ -23,8 +23,9 @@ export default function AccountPasswordScreen() {
     setPending(true);
     const result = await changePassword(currentPassword, password);
     setPending(false);
-    setState(result);
+    setState(result.success ? {} : result);
     if (result.success) {
+      toast.success(result.success);
       setCurrentPassword("");
       setPassword("");
     }
@@ -36,7 +37,6 @@ export default function AccountPasswordScreen() {
       footer={<Button label={t.submit} onPress={submit} loading={pending} />}
     >
       <Title>{t.title}</Title>
-      {state.success ? <Notice tone="success">{state.success}</Notice> : null}
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       <TextField
         label={t.current}

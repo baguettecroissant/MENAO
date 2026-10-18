@@ -17,16 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useCallback, useState, type ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ClientDashboard } from "@/components/client-dashboard";
 import { LogoMark } from "@/components/logo";
@@ -40,7 +31,7 @@ import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useTrades } from "@/lib/trades";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, IconTile, LinkText, Notice, Section } from "@/ui";
+import { Body, Button, Card, IconTile, LinkText, Notice, Section, Skeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
@@ -156,15 +147,10 @@ function ClientHome() {
         counters.length > 0 ? (
           <View style={styles.tags}>
             {counters.map(({ icon: Icon, label, onPress }) => (
-              <Pressable
-                key={label}
-                role="link"
-                onPress={onPress}
-                style={({ pressed }) => [styles.tag, pressed && styles.pressed]}
-              >
+              <Tappable key={label} role="link" onPress={onPress} style={styles.tag}>
                 <Icon size={14} color={colors["primary-foreground"]} />
                 <Text style={styles.tagText}>{label}</Text>
-              </Pressable>
+              </Tappable>
             ))}
           </View>
         ) : (
@@ -175,7 +161,14 @@ function ClientHome() {
     >
       <PushPrompt />
       {home === undefined ? (
-        <ActivityIndicator color={colors.primary} />
+        // Premier chargement : la forme de l'accueil plutôt qu'un rond qui tourne (ADR 0128).
+        <View aria-busy role="progressbar" aria-label={fr.nav.loading} style={styles.skeleton}>
+          <Skeleton width="45%" height={20} />
+          <Skeleton height={64} />
+          <Skeleton height={64} />
+          <Skeleton width="55%" height={20} />
+          <Skeleton height={96} />
+        </View>
       ) : home === null ? (
         <Notice tone="error">{t.error}</Notice>
       ) : (
@@ -378,6 +371,7 @@ function Steps() {
 }
 
 const styles = StyleSheet.create({
+  skeleton: { gap: spacing(3) },
   page: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: spacing(8) },
   hero: {
