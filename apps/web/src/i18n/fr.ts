@@ -1903,6 +1903,8 @@ export const fr = {
       reception: "Merci\u00a0! Votre signature du PV est en cours d'enregistrement.",
       paiement: "Merci\u00a0! Votre paiement est en cours de confirmation.",
       annule: "Le paiement n'a pas été effectué.",
+      connect: "Merci\u00a0! L'état de votre compte de paiement est en cours de mise à jour.",
+      connect_expire: "Le lien Stripe a expiré : reprenez la configuration depuis l'application.",
     },
     redirecting: "Retour à l'application MENAO…",
     open: "Ouvrir l'application MENAO",

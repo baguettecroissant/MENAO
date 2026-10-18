@@ -67,4 +67,19 @@ describe("retour dans l'application après une page hébergée (ADR 0060)", () =
       `/mon-espace/chantiers/${ID}`,
     );
   });
+
+  it("compte de paiement de l'artisan : retour de Stripe dans l'application (ADR 0124)", () => {
+    expect(appDeepLink({ screen: "paiements", id: ID, state: "connect" })).toBe(
+      `menao://paiements/${ID}?retour=connect`,
+    );
+    expect(appReturnSitePath({ screen: "paiements", id: ID, state: "connect" })).toBe(
+      "/pro/onboarding/paiements?retour=1",
+    );
+    expect(appReturnSitePath({ screen: "paiements", id: ID, state: "connect_expire" })).toBe(
+      "/pro/onboarding/paiements?lien=expire",
+    );
+    expect(
+      parseAppReturn(new URLSearchParams({ ecran: "paiements", id: ID, etat: "connect" })),
+    ).toEqual({ screen: "paiements", id: ID, state: "connect" });
+  });
 });

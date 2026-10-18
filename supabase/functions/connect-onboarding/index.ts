@@ -3,6 +3,9 @@
 // Stripe porte le risque de pertes ; MENAO ne détient aucun fonds (ADR 0011).
 // action « link » : crée le compte si besoin et renvoie le lien d'inscription Stripe ;
 // action « refresh » : relit l'état du compte (au retour de Stripe, sans attendre le webhook).
+// Depuis l'application (`app: true`), la fin de l'inscription Stripe passe par la page de retour du
+// site, qui rouvre l'application sur l'écran des paiements (ADR 0060, 0124).
+import { appReturnUrl } from "../../../packages/core/src/app-return.ts";
 import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
 import { saveConnectAccount } from "../_shared/connect.ts";
@@ -17,7 +20,11 @@ Deno.serve(async (req) => {
   if (artisan.status !== "valide" && artisan.status !== "suspendu")
     return json({ status: "not_validated" }, 403);
 
-  const body = (await req.json().catch(() => ({}))) as { action?: string; origin?: string };
+  const body = (await req.json().catch(() => ({}))) as {
+    action?: string;
+    origin?: string;
+    app?: unknown;
+  };
   const { data: allowed } = await admin.rpc("consume_rate_limit", {
     p_key: `connect-onboarding:${user.id}`,
     p_max: 30,
@@ -66,11 +73,16 @@ Deno.serve(async (req) => {
     }
 
     const origin = returnOrigin(body.origin);
+    const app = body.app === true;
     const link = await stripe.accountLinks.create({
       account: accountId,
       type: "account_onboarding",
-      refresh_url: `${origin}/pro/onboarding/paiements?lien=expire`,
-      return_url: `${origin}/pro/onboarding/paiements?retour=1`,
+      refresh_url: app
+        ? appReturnUrl(origin, { screen: "paiements", id: artisan.id, state: "connect_expire" })
+        : `${origin}/pro/onboarding/paiements?lien=expire`,
+      return_url: app
+        ? appReturnUrl(origin, { screen: "paiements", id: artisan.id, state: "connect" })
+        : `${origin}/pro/onboarding/paiements?retour=1`,
     });
     return json({ status: "ok", url: link.url });
   } catch (error) {

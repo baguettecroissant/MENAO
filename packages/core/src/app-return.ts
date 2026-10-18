@@ -7,11 +7,22 @@
 export const APP_SCHEME = "menao";
 export const APP_RETURN_PATH = "/retour-application";
 
-export const APP_RETURN_SCREENS = ["devis", "chantier"] as const;
+/** Devis et chantier (particulier) ; compte de paiement Stripe de l'artisan (ADR 0124). */
+export const APP_RETURN_SCREENS = ["devis", "chantier", "paiements"] as const;
 export type AppReturnScreen = (typeof APP_RETURN_SCREENS)[number];
 
-/** Fin de la signature du devis ou du PV, paiement terminé, ou paiement abandonné. */
-export const APP_RETURN_STATES = ["signature", "reception", "paiement", "annule"] as const;
+/**
+ * Fin de la signature du devis ou du PV, paiement terminé, paiement abandonné ; fin de
+ * l'inscription Stripe de l'artisan, ou lien Stripe expiré (ADR 0124).
+ */
+export const APP_RETURN_STATES = [
+  "signature",
+  "reception",
+  "paiement",
+  "annule",
+  "connect",
+  "connect_expire",
+] as const;
 export type AppReturnState = (typeof APP_RETURN_STATES)[number];
 
 export type AppReturn = { screen: AppReturnScreen; id: string; state: AppReturnState };
@@ -44,6 +55,9 @@ export function appDeepLink(target: AppReturn): string {
 
 /** Page équivalente du site, pour qui a ouvert le lien hors de l'application. */
 export function appReturnSitePath(target: AppReturn): string {
+  if (target.screen === "paiements") {
+    return `/pro/onboarding/paiements?${target.state === "connect" ? "retour=1" : "lien=expire"}`;
+  }
   if (target.screen === "devis") {
     const base = `/mon-espace/devis/${target.id}`;
     if (target.state === "signature") return `${base}?signature=terminee`;

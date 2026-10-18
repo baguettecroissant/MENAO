@@ -14,6 +14,7 @@ import {
   TrendingDown,
   TrendingUp,
   UserRound,
+  Wallet,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
@@ -45,7 +46,7 @@ import { requestStart } from "@/lib/pro-requests";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
-import { Button, Notice } from "@/ui";
+import { Body, Button, Card, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDashboard;
@@ -250,6 +251,7 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
     // Documents et fiche de l'artisan (ADR 0123).
     { icon: FolderCheck, label: t.myDocuments, href: "/pro-documents" },
     { icon: UserRound, label: t.myProfile, href: "/pro-profil-public" },
+    { icon: Wallet, label: t.myPayments, href: "/pro-paiements" },
   ];
   return (
     <View style={styles.section}>
@@ -400,6 +402,28 @@ export function DashboardScreen() {
                   }
                 />
               </View>
+            ) : null}
+            {data.visibility?.visible ? (
+              <Notice tone="success">{t.visible}</Notice>
+            ) : data.visibility ? (
+              <Card>
+                <View style={styles.visibility}>
+                  <Text style={styles.visibilityTitle}>{t.hiddenTitle}</Text>
+                  {data.visibility.missing.includes("paiements") ? (
+                    <>
+                      <Body muted>{t.hiddenPayments}</Body>
+                      <Button
+                        label={t.activatePayments}
+                        variant="secondary"
+                        onPress={() => router.push("/pro-paiements")}
+                      />
+                    </>
+                  ) : null}
+                  {data.visibility.missing.includes("abonnement") ? (
+                    <Body muted>{t.hiddenSignup}</Body>
+                  ) : null}
+                </View>
+              </Card>
             ) : null}
             <PushPrompt />
             <View style={styles.kpis}>
@@ -576,6 +600,8 @@ const styles = StyleSheet.create({
     padding: spacing(6),
   },
   tiles: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
+  visibility: { gap: spacing(2.5) },
+  visibilityTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
   tile: {
     flexGrow: 1,
     flexBasis: "40%",

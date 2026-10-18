@@ -21,11 +21,12 @@ export type PickedPhoto = { uri: string; pdf?: { name: string } };
 
 /**
  * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40),
- * signalement (F-42), photo de profil, ou document du dossier de l'artisan avec ses dates
- * (F-14, ADR 0113).
+ * signalement (F-42), photo de profil, photo de réalisation (ADR 0124), ou document du dossier
+ * de l'artisan avec ses dates (F-14, ADR 0113).
  */
 export type PhotoTarget =
   | { purpose: "avatar" }
+  | { purpose: "portfolio" }
   | { purpose: "document"; document: DocumentMetadata }
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }

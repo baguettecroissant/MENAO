@@ -3,6 +3,8 @@
 /** Une présentation développée et quelques photos rassurent les particuliers. */
 export const PROFILE_GOOD_PRESENTATION_LENGTH = 300;
 export const PROFILE_GOOD_PHOTO_COUNT = 3;
+/** Photos de réalisations au plus (miroir de MAX_PORTFOLIO_PHOTOS dans process-upload). */
+export const PORTFOLIO_MAX_PHOTOS = 12;
 
 export type ProfileTip =
   | "assure_verifie"
