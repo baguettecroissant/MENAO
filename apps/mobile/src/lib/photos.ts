@@ -1,6 +1,7 @@
 import { MAX_UPLOAD_BYTES } from "@menao/core";
 import type { DocumentMetadata } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -12,8 +13,11 @@ import { AVATAR_MAX_SIDE, fitWithin, PHOTO_MAX_SIDE, uploadId, type UploadStatus
 /** Qualité JPEG des photos réduites, comme sur le site. */
 const JPEG_QUALITY = 0.85;
 
-/** Photo choisie dans la photothèque ou prise avec l'appareil photo. */
-export type PickedPhoto = { uri: string };
+/**
+ * Photo choisie dans la photothèque ou prise avec l'appareil photo ; ou fichier PDF choisi dans
+ * les fichiers du téléphone (documents du dossier, ADR 0123), envoyé tel quel.
+ */
+export type PickedPhoto = { uri: string; pdf?: { name: string } };
 
 /**
  * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40),
@@ -83,6 +87,28 @@ export async function pickPhotos(
 }
 
 /**
+ * Fichier choisi dans les fichiers du téléphone (iCloud Drive, Fichiers, pièces jointes
+ * enregistrées) : PDF, ou photo JPEG/PNG. Comme le site, qui accepte ces trois formats pour les
+ * documents du dossier (ADR 0123). Liste vide si l'utilisateur annule.
+ */
+export async function pickDocumentFile(): Promise<{ photos: PickedPhoto[] } | { error: string }> {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ["application/pdf", "image/jpeg", "image/png"],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+    if (result.canceled) return { photos: [] };
+    const asset = result.assets[0];
+    if (!asset) return { photos: [] };
+    const pdf = asset.mimeType === "application/pdf" || /\.pdf$/i.test(asset.name);
+    return { photos: [{ uri: asset.uri, ...(pdf ? { pdf: { name: asset.name } } : {}) }] };
+  } catch {
+    return { error: fr.photos.failed };
+  }
+}
+
+/**
  * Photo réduite (2 000 px au plus, 512 px pour la photo de profil) et réencodée en JPEG, comme sur
  * le site : fichier léger, photos HEIC de l'iPhone converties, métadonnées (dont la position GPS)
  * retirées.
@@ -120,8 +146,9 @@ function removeCopy(uri: string) {
 }
 
 /**
- * Envoi d'une photo, comme sur le site : réduite sur le téléphone, déposée dans
- * « uploads/<user_id>/<uuid> », puis vérifiée, rangée et enregistrée par process-upload.
+ * Envoi d'une photo, comme sur le site : réduite sur le téléphone (un PDF est envoyé tel quel),
+ * déposée dans « uploads/<user_id>/<uuid> », puis vérifiée, rangée et enregistrée par
+ * process-upload.
  */
 export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Promise<UploadStatus> {
   const { data } = await supabase.auth.getSession();
@@ -130,7 +157,10 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
   let jpeg: string;
   let bytes: Uint8Array;
   try {
-    jpeg = await toJpeg(photo.uri, target.purpose === "avatar" ? AVATAR_MAX_SIDE : PHOTO_MAX_SIDE);
+    // PDF envoyé tel quel (vérifié d'après son contenu par process-upload) ; photo réduite.
+    jpeg = photo.pdf
+      ? photo.uri
+      : await toJpeg(photo.uri, target.purpose === "avatar" ? AVATAR_MAX_SIDE : PHOTO_MAX_SIDE);
     bytes = await readBytes(jpeg);
   } catch {
     return "unreadable";
@@ -140,9 +170,10 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
     return bytes.byteLength === 0 ? "unreadable" : "too_large";
   }
   const path = `${userId}/${uploadId()}`;
-  const { error: uploadError } = await supabase.storage
-    .from("uploads")
-    .upload(path, bytes, { contentType: "image/jpeg", upsert: false });
+  const { error: uploadError } = await supabase.storage.from("uploads").upload(path, bytes, {
+    contentType: photo.pdf ? "application/pdf" : "image/jpeg",
+    upsert: false,
+  });
   removeCopy(jpeg);
   if (uploadError) return "unavailable";
 

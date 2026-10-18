@@ -34,6 +34,8 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/factures")).toBe("/pro-factures");
     expect(appRouteForSitePath("/pro/onboarding")).toBe("/pro");
     expect(appRouteForSitePath("/pro/bienvenue")).toBe("/pro-bienvenue");
+    expect(appRouteForSitePath("/pro/onboarding/documents")).toBe("/pro-documents");
+    expect(appRouteForSitePath("/pro/onboarding/profil")).toBe("/pro-profil-public");
   });
 
   it("ignore les paramètres et la barre finale", () => {
@@ -43,7 +45,6 @@ describe("liens des notifications vers les écrans de l'application", () => {
 
   it("laisse sur le site les pages sans écran dans l'application", () => {
     expect(appRouteForSitePath(`/mon-espace/chantiers/${ID}/signaler/plus`)).toBeNull();
-    expect(appRouteForSitePath("/pro/onboarding/documents")).toBeNull();
     expect(appRouteForSitePath("/mon-espace/chantiers/pas-un-identifiant")).toBeNull();
   });
 });

@@ -6,7 +6,7 @@ import {
 } from "@menao/core";
 import { documentMetadataSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
-import { Camera, ImageIcon } from "lucide-react-native";
+import { Camera, FileText, ImageIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
@@ -14,7 +14,7 @@ import { DateTimeFields } from "@/components/date-time-fields";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
-import { pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
+import { pickDocumentFile, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -32,8 +32,10 @@ function monthsAgo(months: number): string {
 }
 
 /**
- * Un document du dossier, en photo (ADR 0113) : appareil photo ou photothèque, puis les mêmes
- * champs et contrôles que le site (documentMetadataSchema), envoi par process-upload.
+ * Un document du dossier, en photo ou en PDF (ADR 0113, 0123) : appareil photo, photothèque ou
+ * fichiers du téléphone, puis les mêmes champs et contrôles que le site (documentMetadataSchema),
+ * envoi par process-upload. Pendant l'inscription, ou pour renouveler un document surveillé d'un
+ * artisan validé (F-51).
  */
 export default function DocumentScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
@@ -48,13 +50,20 @@ export default function DocumentScreen() {
   }
   const locked = dossier?.status === "en_verification";
   const draft = dossier?.status === "brouillon" || dossier?.status === "refuse";
+  const validated = dossier?.status === "valide" || dossier?.status === "suspendu";
   const exempt = type === "decennale" && dossier?.snapshot.decennaleExempt === true;
+  // Kbis : demandé à l'inscription seulement (pas de renouvellement, F-51).
+  const kbisDone = type === "kbis" && validated;
   return (
     <Screen header={<TopBar />}>
       <Title>{d.documents[type]}</Title>
-      {exempt ? null : <Body muted>{t.photoHint}</Body>}
+      {exempt || kbisDone || locked ? null : <Body muted>{t.photoHint}</Body>}
       {locked ? (
         <Notice tone="info">{t.locked}</Notice>
+      ) : dossier?.status === "radie" ? (
+        <Notice tone="info">{t.radiated}</Notice>
+      ) : kbisDone ? (
+        <Notice tone="info">{t.kbisDone}</Notice>
       ) : (
         <>
           {type === "decennale" && draft ? (
@@ -122,9 +131,9 @@ function DocumentForm({
   const [sending, setSending] = useState(false);
   const insurance = type === "decennale" || type === "rc_pro";
 
-  async function pick(source: "camera" | "library") {
+  async function pick(source: "camera" | "library" | "file") {
     setFailure(null);
-    const picked = await pickPhotos(source, 1);
+    const picked = source === "file" ? await pickDocumentFile() : await pickPhotos(source, 1);
     if ("error" in picked) return setFailure(picked.error);
     if (picked.photos[0]) setPhoto(picked.photos[0]);
   }
@@ -161,10 +170,17 @@ function DocumentForm({
   return (
     <>
       {photo ? (
-        <View style={styles.preview}>
-          <Image source={{ uri: photo.uri }} style={styles.image} resizeMode="cover" alt="" />
-          <Text style={styles.added}>{t.added}</Text>
-        </View>
+        photo.pdf ? (
+          <View style={styles.file}>
+            <FileText size={22} color={colors["primary-strong"]} />
+            <Text style={[styles.added, styles.fileName]}>{t.fileReady(photo.pdf.name)}</Text>
+          </View>
+        ) : (
+          <View style={styles.preview}>
+            <Image source={{ uri: photo.uri }} style={styles.image} resizeMode="cover" alt="" />
+            <Text style={styles.added}>{t.added}</Text>
+          </View>
+        )
       ) : null}
       <View style={styles.buttons}>
         <Button label={photo ? t.replace : t.take} icon={Camera} onPress={() => pick("camera")} />
@@ -173,6 +189,12 @@ function DocumentForm({
           icon={ImageIcon}
           variant="secondary"
           onPress={() => pick("library")}
+        />
+        <Button
+          label={t.chooseFile}
+          icon={FileText}
+          variant="secondary"
+          onPress={() => pick("file")}
         />
       </View>
       {errors.photo ? <Notice tone="error">{errors.photo}</Notice> : null}
@@ -282,8 +304,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     backgroundColor: colors["primary-softer"],
   },
+  fileName: { flex: 1 },
   added: { fontFamily: font.medium, fontSize: 14, color: colors.success },
   buttons: { gap: spacing(2.5) },
+  file: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2.5),
+    padding: spacing(4),
+    borderRadius: radius.card,
+    backgroundColor: colors["primary-softer"],
+  },
   coverage: { gap: spacing(2) },
   exemptTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
 });

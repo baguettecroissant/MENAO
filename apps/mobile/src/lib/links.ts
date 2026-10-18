@@ -21,6 +21,9 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/tableau-de-bord$/, () => "/pro"],
   // Dossier (« Faire vérifier mon entreprise », ADR 0113) : l'accueil de l'espace pro.
   [/^\/pro\/onboarding$/, () => "/pro"],
+  // Documents (relances avant échéance) et fiche de l'artisan (ADR 0123).
+  [/^\/pro\/onboarding\/documents$/, () => "/pro-documents"],
+  [/^\/pro\/onboarding\/profil$/, () => "/pro-profil-public"],
   [/^\/pro\/bienvenue$/, () => "/pro-bienvenue"],
   [/^\/pro\/demandes$/, () => "/pro-demandes"],
   [new RegExp(`^/pro/demandes/${UUID}$`), (id) => `/opportunite/${id}`],

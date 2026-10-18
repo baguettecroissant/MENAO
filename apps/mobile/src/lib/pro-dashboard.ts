@@ -1,11 +1,13 @@
 import {
   clientsAwaitingQuote,
+  documentsToRenew,
   monthToDateRevenue,
   requestsAwaitingAnswer,
   revenueTrend,
   upcomingAgenda,
   type AgendaKind,
   type ChantierStatus,
+  type MonitoredDocumentType,
   type RevenueTrend,
 } from "@menao/core";
 import { loadInbox, type InboxItem } from "./pro-requests";
@@ -17,6 +19,8 @@ export type Dashboard = {
   suspended: boolean;
   radiated: { reason: string | null } | null;
   urssafMissing: boolean;
+  /** Documents arrivant à échéance sans renouvellement déposé (F-51), comme sur le site. */
+  documentsToRenew: MonitoredDocumentType[];
   awaitingClients: number;
   revenue: { cents: number; trend: RevenueTrend; previousMonth: string };
   responseTime: { minutes: number | null; responses: number };
@@ -58,7 +62,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     supabase
       .from("artisans")
-      .select("status, radiation_reason, artisan_documents(type, status)")
+      .select("status, radiation_reason, artisan_documents(type, status, date_fin)")
       .eq("user_id", userId)
       .maybeSingle(),
     countReviewsToAnswer(),
@@ -87,6 +91,10 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       !artisan.data.artisan_documents.some(
         (d) => d.type === "urssaf" && (d.status === "valide" || d.status === "en_attente"),
       ),
+    documentsToRenew:
+      artisan.data?.status === "valide" || artisan.data?.status === "suspendu"
+        ? documentsToRenew(artisan.data.artisan_documents, now)
+        : [],
     awaitingClients: clientsAwaitingQuote(rows),
     revenue: {
       cents: revenue.currentCents,

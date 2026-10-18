@@ -30,6 +30,21 @@ export function expiryStatus(dateFin: string | null, today: Date = new Date()): 
   return "ok";
 }
 
+/**
+ * Documents surveillés à renouveler (F-51) : un document validé arrive à échéance (30 jours) ou
+ * est expiré, sans renouvellement déposé. Même règle sur le site et dans l'application.
+ */
+export function documentsToRenew(
+  documents: readonly { type: string; status: string; date_fin: string | null }[],
+  today: Date = new Date(),
+): MonitoredDocumentType[] {
+  return MONITORED_DOCUMENT_TYPES.filter((type) => {
+    const current = documents.find((d) => d.type === type && d.status === "valide");
+    const pending = documents.some((d) => d.type === type && d.status === "en_attente");
+    return current !== undefined && !pending && expiryStatus(current.date_fin, today) !== "ok";
+  });
+}
+
 /** Date limite (AAAA-MM-JJ) des échéances à surveiller : aujourd'hui + 30 jours. */
 export function expiryWatchLimit(today: Date = new Date()): string {
   return new Date(today.getTime() + EXPIRY_WARNING_DAYS * DAY_MS).toISOString().slice(0, 10);

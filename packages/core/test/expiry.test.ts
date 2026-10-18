@@ -4,6 +4,7 @@ import {
   EXPIRY_WARNING_DAYS,
   MONITORED_DOCUMENT_TYPES,
   daysUntil,
+  documentsToRenew,
   expiryStatus,
   expiryWatchLimit,
 } from "../src/expiry";
@@ -39,5 +40,18 @@ describe("suivi des échéances (F-51)", () => {
 
   it("date limite de surveillance : aujourd'hui + 30 jours", () => {
     expect(expiryWatchLimit(today)).toBe("2026-11-08");
+  });
+
+  it("documents à renouveler : échéance proche ou dépassée, sans renouvellement déposé", () => {
+    const docs = [
+      { type: "decennale", status: "valide", date_fin: "2026-10-30" },
+      { type: "rc_pro", status: "valide", date_fin: "2026-10-20" },
+      { type: "rc_pro", status: "en_attente", date_fin: "2027-10-20" },
+      { type: "identite", status: "valide", date_fin: "2030-01-01" },
+      { type: "urssaf", status: "valide", date_fin: "2026-10-01" },
+      { type: "kbis", status: "valide", date_fin: null },
+    ];
+    expect(documentsToRenew(docs, today)).toEqual(["decennale", "urssaf"]);
+    expect(documentsToRenew([], today)).toEqual([]);
   });
 });
