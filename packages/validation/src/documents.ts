@@ -84,3 +84,38 @@ export const presentationSchema = z
   .trim()
   .min(PRESENTATION_MIN_LENGTH, { error: messages.presentationTooShort })
   .max(2000, { error: messages.tooLong });
+
+/**
+ * Motifs de refus d'un document, choisis dans une liste par l'équipe (ADR 0120). Le code est
+ * gardé en base ; l'artisan reçoit le libellé du motif, suivi de la précision s'il y en a une.
+ */
+export const DOCUMENT_REFUSAL_CODES = [
+  "illisible",
+  "incomplet",
+  "expire",
+  "mauvais_document",
+  "nom_different",
+  "siret_different",
+  "dates_differentes",
+  "couverture_insuffisante",
+  "code_securite_invalide",
+  "autre",
+] as const;
+export type DocumentRefusalCode = (typeof DOCUMENT_REFUSAL_CODES)[number];
+
+/** Refus d'un document : motif de la liste ; précision obligatoire pour « autre ». */
+export const documentRefusalSchema = z
+  .object({
+    code: z.enum(DOCUMENT_REFUSAL_CODES, { error: messages.refusalCode }),
+    detail: z
+      .string()
+      .trim()
+      .max(300, { error: messages.tooLong })
+      .optional()
+      .transform((v) => v || undefined),
+  })
+  .refine((r) => r.code !== "autre" || r.detail !== undefined, {
+    error: messages.refusalDetail,
+    path: ["detail"],
+  });
+export type DocumentRefusal = z.output<typeof documentRefusalSchema>;

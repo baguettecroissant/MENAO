@@ -21,7 +21,8 @@ import { requireAdmin } from "@/lib/admin/guard";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { documentLogoUrl } from "@/lib/documents/logo";
 import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
-import { DecisionForm, DocumentReview } from "./review-forms";
+import { DocumentsSection } from "./documents-section";
+import { DecisionForm } from "./review-forms";
 import { RadiationForm } from "./radiation-form";
 import { SuspensionForm } from "./suspension-form";
 
@@ -78,7 +79,7 @@ export default async function AdminArtisanPage({
     supabase
       .from("artisan_documents")
       .select(
-        "id, type, storage_path, status, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason",
+        "id, type, storage_path, mime_type, status, created_at, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason, verified_at, verified_by",
       )
       .eq("artisan_id", id),
     supabase
@@ -88,7 +89,7 @@ export default async function AdminArtisanPage({
       .order("sort_order"),
     supabase
       .from("artisan_reviews")
-      .select("id, decision, message, created_at")
+      .select("id, decision, message, created_at, admin_id")
       .eq("artisan_id", id)
       .order("created_at", { ascending: false }),
     supabase.from("trades").select("code, label"),
@@ -129,6 +130,28 @@ export default async function AdminArtisanPage({
       )
     : { data: [] };
   const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+  // Auteurs des décisions (documents, dossier) : historique (ADR 0120).
+  const deciderIds = [
+    ...new Set(
+      [...docs.map((d) => d.verified_by), ...(reviews.data ?? []).map((r) => r.admin_id)].filter(
+        (v): v is string => Boolean(v),
+      ),
+    ),
+  ];
+  const { data: deciders } = deciderIds.length
+    ? await supabase
+        .from("profiles")
+        .select("user_id, first_name, last_name")
+        .in("user_id", deciderIds)
+    : { data: [] };
+  const deciderNames = new Map(
+    (deciders ?? []).map((d) => [
+      d.user_id,
+      [d.first_name, d.last_name].filter(Boolean).join(" ") || null,
+    ]),
+  );
+  const reviewerName = (userId: string | null) =>
+    userId ? (deciderNames.get(userId) ?? null) : null;
   const publicUrl = (bucket: string, path: string) =>
     supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   const declaredTrades = (trades.data ?? []).map((tr) => tr.trade_code);
@@ -360,77 +383,25 @@ export default async function AdminArtisanPage({
       </Section>
 
       <Section title={t.documents}>
-        <ul className="flex flex-col gap-4">
-          {REQUIRED_DOCUMENT_TYPES.map((type) => {
-            const rows = docs.filter((x) => x.type === type && x.status !== "remplace");
-            return (
-              <li
-                key={type}
-                aria-label={docT.types[type]}
-                className="flex flex-col gap-3 rounded-button border border-border p-3"
-              >
-                <span className="font-medium">{docT.types[type]}</span>
-                {type === "decennale" && artisan.decennale_non_soumis && (
-                  <p className="text-sm font-medium text-warning">{t.decennaleExempt}</p>
-                )}
-                {rows.length === 0 && <span className="text-sm">{t.docMissing}</span>}
-                {rows.map((d) => {
-                  const url = urlByPath.get(d.storage_path);
-                  return (
-                    <div key={d.id} className="flex flex-col gap-2">
-                      <p className="text-sm">
-                        <span className="font-medium">
-                          {docT.statuses[d.status as keyof typeof docT.statuses]}
-                        </span>
-                        {" · "}
-                        <span className="text-muted-foreground">
-                          {[
-                            d.assureur,
-                            d.numero,
-                            d.couverture,
-                            d.date_emission && docT.issuedOn(day.format(new Date(d.date_emission))),
-                            d.date_fin && docT.validUntil(day.format(new Date(d.date_fin))),
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                        {url && (
-                          <>
-                            {" "}
-                            ·{" "}
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="font-medium text-primary underline"
-                            >
-                              {docT.view}
-                            </a>
-                          </>
-                        )}
-                      </p>
-                      {type === "decennale" && d.covered_trades && (
-                        <CoveredTrades
-                          covered={d.covered_trades}
-                          declared={declaredTrades}
-                          labelOf={(code) => label(tradeRef.data, code)}
-                        />
-                      )}
-                      {d.refusal_reason && (
-                        <p className="text-sm text-danger">
-                          {docT.refusedBecause(d.refusal_reason)}
-                        </p>
-                      )}
-                      {reviewable && d.status === "en_attente" && (
-                        <DocumentReview documentId={d.id} artisanId={artisan.id} />
-                      )}
-                    </div>
-                  );
-                })}
-              </li>
-            );
-          })}
-        </ul>
+        <DocumentsSection
+          documents={docs}
+          urlByPath={urlByPath}
+          reviewable={reviewable}
+          artisanId={artisan.id}
+          decennaleExempt={artisan.decennale_non_soumis}
+          company={{
+            name: artisan.raison_sociale,
+            siret: artisan.siret,
+            signer: charter.data?.signer_name ?? null,
+            address:
+              [artisan.adresse_ligne, artisan.adresse_code_postal, artisan.adresse_commune]
+                .filter(Boolean)
+                .join(" ") || null,
+          }}
+          declaredTrades={declaredTrades}
+          tradeLabel={(code) => label(tradeRef.data, code)}
+          reviewerName={reviewerName}
+        />
       </Section>
 
       <Section title={t.profile}>
@@ -600,6 +571,7 @@ export default async function AdminArtisanPage({
               <li key={r.id}>
                 <span className="font-medium">{t.decisions[r.decision]}</span> ·{" "}
                 {dateTime.format(new Date(r.created_at))}
+                {reviewerName(r.admin_id) && ` · ${t.decidedBy(reviewerName(r.admin_id) ?? "")}`}
                 {r.message && (
                   <span className="block text-sm text-muted-foreground">{r.message}</span>
                 )}
@@ -629,33 +601,6 @@ function Info({ label, value }: { label: string; value: string | null | false | 
       <dt className="text-muted-foreground">{label} :</dt>
       <dd className="font-medium">{value || "—"}</dd>
     </div>
-  );
-}
-
-/** Décennale : métiers couverts selon l'artisan, et métiers déclarés non couverts (ADR 0116). */
-function CoveredTrades({
-  covered,
-  declared,
-  labelOf,
-}: {
-  covered: string[];
-  declared: string[];
-  labelOf: (code: string) => string;
-}) {
-  const uncovered = declared.filter((code) => !covered.includes(code));
-  return (
-    <>
-      {covered.length > 0 && (
-        <p className="text-sm text-muted-foreground">
-          {t.coverage(covered.map(labelOf).join(", "))}
-        </p>
-      )}
-      {uncovered.length > 0 && (
-        <p className="text-sm font-medium text-warning">
-          {t.uncovered(uncovered.map(labelOf).join(", "))}
-        </p>
-      )}
-    </>
   );
 }
 

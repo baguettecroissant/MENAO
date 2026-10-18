@@ -1,6 +1,6 @@
 "use server";
 
-import { reviewModerationSchema } from "@menao/validation";
+import { documentRefusalSchema, reviewModerationSchema } from "@menao/validation";
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -23,11 +23,30 @@ export async function reviewDocument(_prev: FormState, formData: FormData): Prom
   const status = z.enum(["valide", "refuse"]).safeParse(text(formData, "status"));
   if (!id.success || !status.success) return { error: t.error };
 
+  // Refus : motif de la liste et précision (ADR 0120), composés en un message pour l'artisan.
+  let refusal: { p_code: string; p_reason: string } | null = null;
+  if (status.data === "refuse") {
+    const parsed = documentRefusalSchema.safeParse({
+      code: text(formData, "code") ?? "",
+      detail: text(formData, "detail") ?? undefined,
+    });
+    if (!parsed.success) {
+      const { formErrors, fieldErrors } = z.flattenError(parsed.error);
+      return {
+        error: formErrors[0] ?? Object.values(fieldErrors).flat()[0] ?? t.error,
+        fieldErrors: fieldErrors as Record<string, string[] | undefined>,
+      };
+    }
+    const { code, detail } = parsed.data;
+    const label = code === "autre" ? null : t.refusalReasons[code];
+    refusal = { p_code: code, p_reason: [label, detail].filter(Boolean).join(" ") };
+  }
+
   const { supabase } = await requireAdmin();
   const { error } = await supabase.rpc("admin_review_document", {
     p_document_id: id.data,
     p_status: status.data,
-    p_reason: text(formData, "reason") ?? undefined,
+    ...(refusal ?? {}),
   });
   if (error) return { error: error.code === "22023" ? t.error : fr.errors.generic };
   refresh(text(formData, "artisanId"));
