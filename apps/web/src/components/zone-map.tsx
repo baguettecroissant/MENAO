@@ -5,12 +5,12 @@ import { planIgnTileUrl } from "@menao/validation";
 import { useEffect, useRef, useState } from "react";
 import { fr } from "@/i18n/fr";
 
-const t = fr.pro.signUp.zone;
+const t = fr.zoneMap;
 
 /**
- * Aperçu de la zone d'intervention sur le Plan IGN (ADR 0126) : la carte s'éloigne quand le rayon
- * grandit, le cercle reste à l'échelle. Le quadrillage de fond reste visible tant que les tuiles
- * chargent, ou si elles ne chargent pas.
+ * Aperçu de la zone d'intervention sur le Plan IGN (ADR 0126, 0127), à l'inscription et sur l'écran
+ * « Zone » : la carte s'éloigne quand le rayon grandit, le cercle reste à l'échelle. Le quadrillage
+ * de fond reste visible tant que les tuiles chargent, ou si elles ne chargent pas.
  */
 export function ZoneMap({
   lon,
@@ -21,7 +21,8 @@ export function ZoneMap({
   lon: number;
   lat: number;
   radiusKm: number;
-  label: string;
+  /** Nom du lieu sous le point ; aucun quand l'adresse est affichée juste au-dessus. */
+  label?: string;
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -68,11 +69,13 @@ export function ZoneMap({
         />
       )}
       <div className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-surface bg-primary" />
-      <span className="absolute top-[calc(50%+14px)] left-1/2 -translate-x-1/2 rounded-pill bg-surface px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap shadow-sm">
-        {label}
-      </span>
+      {label && (
+        <span className="absolute top-[calc(50%+14px)] left-1/2 max-w-[80%] -translate-x-1/2 truncate rounded-pill bg-surface px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap shadow-sm">
+          {label}
+        </span>
+      )}
       <span className="absolute right-1.5 bottom-1 rounded-sm bg-surface/80 px-1 text-[10px] text-muted-foreground">
-        {t.mapCredit}
+        {t.credit}
       </span>
     </div>
   );

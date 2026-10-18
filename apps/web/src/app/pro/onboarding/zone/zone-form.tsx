@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Autocomplete } from "@/components/autocomplete";
 import { Alert, Button, RadioGroup, SelectField } from "@/components/ui";
+import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
 import { saveZone } from "@/lib/artisan/actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -27,6 +28,8 @@ export function ZoneForm({
     baseLabel: string | null;
     baseCitycode: string | null;
     hasBaseLocation: boolean;
+    /** Coordonnées de l'adresse enregistrée (my_artisan_base_point), pour la carte. */
+    basePoint: { lon: number; lat: number } | null;
     radiusKm: number | null;
     communes: Commune[];
   };
@@ -36,6 +39,8 @@ export function ZoneForm({
   // L'adresse existante est conservée tant qu'aucune nouvelle n'est choisie (coordonnées côté serveur).
   const [address, setAddress] = useState<AddressSuggestion | null>(null);
   const [communes, setCommunes] = useState<Commune[]>(initial.communes);
+  const [radiusKm, setRadiusKm] = useState(String(initial.radiusKm ?? 30));
+  const point = address ?? initial.basePoint;
   const errors = state.fieldErrors ?? {};
 
   return (
@@ -76,7 +81,8 @@ export function ZoneForm({
           <SelectField
             label={t.radius}
             name="radiusKm"
-            defaultValue={String(initial.radiusKm ?? 30)}
+            value={radiusKm}
+            onChange={(event) => setRadiusKm(event.target.value)}
             errors={errors.radiusKm}
           >
             {radiusOptions.map((km) => (
@@ -85,6 +91,7 @@ export function ZoneForm({
               </option>
             ))}
           </SelectField>
+          {point && <ZoneMap lon={point.lon} lat={point.lat} radiusKm={Number(radiusKm)} />}
         </div>
       ) : (
         <div className="flex flex-col gap-4">

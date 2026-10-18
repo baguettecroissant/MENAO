@@ -1896,6 +1896,11 @@ export const fr = {
     backToQuote: "Retour au devis",
   },
   /** Page de retour après une signature ou un paiement ouverts depuis l'application (ADR 0060). */
+  /** Aperçu de la zone d'intervention sur le Plan IGN (ADR 0126, 0127). */
+  zoneMap: {
+    // Source du Plan IGN, exigée par la Licence Ouverte.
+    credit: "© IGN",
+  },
   appReturn: {
     title: "Retour à l'application",
     states: {
@@ -3231,8 +3236,6 @@ export const fr = {
         radius: "Jusqu'à quelle distance ?",
         km: (km: number) => `${km} km`,
         summary: (km: number, place: string) => `Jusqu'à ${km} km autour de ${place}.`,
-        // Source du Plan IGN, exigée par la Licence Ouverte (ADR 0126).
-        mapCredit: "© IGN",
         communesLater:
           "Vous préférez une liste de communes ? Vous pourrez la choisir depuis votre espace.",
       },

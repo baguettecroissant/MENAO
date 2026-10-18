@@ -5,14 +5,14 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { theme } from "@/ui/theme";
 
-const t = fr.proSignup.zone;
+const t = fr.zoneMap;
 const { colors, font, radius, spacing } = theme;
 const HEIGHT = 180;
 const BORDER = 1;
 
 /**
- * Aperçu de la zone d'intervention sur le Plan IGN (ADR 0126), comme sur le site : la carte
- * s'éloigne quand le rayon grandit, le cercle reste à l'échelle.
+ * Aperçu de la zone d'intervention sur le Plan IGN (ADR 0126, 0127), à l'inscription et sur l'écran
+ * « Zone », comme sur le site : la carte s'éloigne quand le rayon grandit, le cercle reste à l'échelle.
  */
 export function ZoneMap({
   lon,
@@ -23,7 +23,8 @@ export function ZoneMap({
   lon: number;
   lat: number;
   radiusKm: number;
-  label: string;
+  /** Nom du lieu sous le point ; aucun quand l'adresse est affichée juste au-dessus. */
+  label?: string;
 }) {
   const [width, setWidth] = useState(0);
   // Tuiles et cercle placés à l'intérieur de la bordure.
@@ -60,10 +61,12 @@ export function ZoneMap({
         />
       ) : null}
       <View style={styles.pin} />
-      <Text style={styles.label} numberOfLines={1}>
-        {label}
-      </Text>
-      <Text style={styles.credit}>{t.mapCredit}</Text>
+      {label ? (
+        <Text style={styles.label} numberOfLines={1}>
+          {label}
+        </Text>
+      ) : null}
+      <Text style={styles.credit}>{t.credit}</Text>
     </View>
   );
 }

@@ -5,10 +5,10 @@ import { ArrowRight, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Autocomplete } from "@/components/autocomplete";
 import { Button } from "@/components/ui";
+import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
 import { searchAddresses, type AddressSuggestion } from "@/lib/geo/geoplateforme";
 import { ChoiceGroup, LinkButton, StepFooter, StepTitle } from "./signup-ui";
-import { ZoneMap } from "./zone-map";
 
 const t = fr.pro.signUp.zone;
 

@@ -303,6 +303,8 @@ export type Zone = {
   radiusKm: number | null;
   baseLabel: string | null;
   hasBase: boolean;
+  /** Coordonnées de l'adresse enregistrée (my_artisan_base_point), pour la carte (ADR 0127). */
+  basePoint: { lon: number; lat: number } | null;
   communes: { code: string; nom: string }[];
 };
 
@@ -315,16 +317,16 @@ export async function loadZone(): Promise<Zone | null> {
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (!a) return null;
-  const { data: communes } = await supabase
-    .from("artisan_zones")
-    .select("code_insee, nom")
-    .eq("artisan_id", a.id)
-    .order("nom");
+  const [{ data: communes }, { data: points }] = await Promise.all([
+    supabase.from("artisan_zones").select("code_insee, nom").eq("artisan_id", a.id).order("nom"),
+    supabase.rpc("my_artisan_base_point"),
+  ]);
   return {
     mode: a.zone_mode,
     radiusKm: a.radius_km,
     baseLabel: a.base_label,
     hasBase: a.base_location !== null,
+    basePoint: points?.[0] ?? null,
     communes: (communes ?? []).map((c) => ({ code: c.code_insee, nom: c.nom })),
   };
 }

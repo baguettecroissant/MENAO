@@ -3715,6 +3715,13 @@ export type Database = {
           zone_radius_km: number;
         }[];
       };
+      my_artisan_base_point: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          lat: number;
+          lon: number;
+        }[];
+      };
       my_charter_score: {
         Args: Record<PropertyKey, never>;
         Returns: {
