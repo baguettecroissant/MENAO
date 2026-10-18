@@ -1,4 +1,5 @@
 import "server-only";
+import { parisToday, spotCheckPeriod } from "@menao/core";
 import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -61,6 +62,8 @@ export type ActivityItem = { occurredAt: string; kind: string; details: Record<s
 /** Éléments nommés du bloc « À traiter maintenant », en plus des compteurs. */
 export type Todo = {
   dossiers: { id: string; name: string }[];
+  /** Contrôles aléatoires du mois encore à faire (ADR 0121). */
+  spotChecks: number;
   expiringRequests: {
     id: string;
     projectId: string;
@@ -90,7 +93,7 @@ export async function getActivity(supabase: Client, limit = 40): Promise<Activit
 }
 
 export async function getTodo(supabase: Client): Promise<Todo> {
-  const [dossiers, expiring] = await Promise.all([
+  const [dossiers, expiring, spotChecks] = await Promise.all([
     supabase
       .from("artisans")
       .select("id, raison_sociale, nom_commercial, siret")
@@ -105,12 +108,18 @@ export async function getTodo(supabase: Client): Promise<Todo> {
       .lte("expires_at", new Date(Date.now() + 12 * 3_600_000).toISOString())
       .order("expires_at")
       .limit(5),
+    supabase
+      .from("artisan_spot_checks")
+      .select("id", { count: "exact", head: true })
+      .eq("period", spotCheckPeriod(parisToday()))
+      .is("result", null),
   ]);
   return {
     dossiers: (dossiers.data ?? []).map((a) => ({
       id: a.id,
       name: a.nom_commercial ?? a.raison_sociale ?? a.siret ?? a.id,
     })),
+    spotChecks: spotChecks.count ?? 0,
     expiringRequests: (expiring.data ?? []).map((r) => ({
       id: r.id,
       projectId: r.project_id,

@@ -74,6 +74,32 @@ export async function adminRefreshRge(formData: FormData): Promise<void> {
   redirect(`/admin/artisans/${id.data}?rge=${status}` as Route);
 }
 
+/** Tirage du mois des contrôles aléatoires (ADR 0121), lancé par un admin. */
+export async function drawSpotChecks(): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase.rpc("admin_draw_spot_checks");
+  revalidatePath("/admin", "layout");
+  redirect(`/admin/controles?tirage=${error ? "erreur" : (data ?? 0)}` as Route);
+}
+
+/** Résultat d'un contrôle aléatoire : conforme, ou non conforme avec une note (ADR 0121). */
+export async function completeSpotCheck(_prev: FormState, formData: FormData): Promise<FormState> {
+  const s = fr.admin.spotChecks;
+  const id = z.uuid().safeParse(text(formData, "spotCheckId"));
+  const result = z.enum(["conforme", "non_conforme"]).safeParse(text(formData, "result"));
+  if (!id.success || !result.success) return { error: s.error };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_complete_spot_check", {
+    p_id: id.data,
+    p_result: result.data,
+    p_note: text(formData, "note") ?? undefined,
+    p_insurer_called: text(formData, "insurerCalled") === "on",
+  });
+  if (error) return { error: error.code === "22023" ? s.error : fr.errors.generic };
+  revalidatePath("/admin", "layout");
+  return { success: s.saved };
+}
+
 /** Décision sur le dossier : valider, refuser (message), demander un complément (message). */
 export async function decideArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = z.uuid().safeParse(text(formData, "artisanId"));

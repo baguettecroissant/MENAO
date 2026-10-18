@@ -27,6 +27,8 @@ import { RadiationForm } from "./radiation-form";
 import { SuspensionForm } from "./suspension-form";
 
 const t = fr.admin.detail;
+const sc = fr.admin.spotChecks;
+const month = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
 const docT = fr.pro.onboarding.documents;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
 const dateTime = new Intl.DateTimeFormat("fr-FR", {
@@ -63,6 +65,7 @@ export default async function AdminArtisanPage({
     subscription,
     charter,
     rgeRows,
+    spotChecks,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -115,6 +118,12 @@ export default async function AdminArtisanPage({
       .select("id, organisme, nom_certificat, nom_qualification, domaine, date_fin, url_certificat")
       .eq("artisan_id", id)
       .order("domaine"),
+    // Contrôles aléatoires du dossier (ADR 0121).
+    supabase
+      .from("artisan_spot_checks")
+      .select("id, period, result, note, insurer_called, checked_at")
+      .eq("artisan_id", id)
+      .order("period", { ascending: false }),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
   const [logoUrl, activity] = await Promise.all([
@@ -559,6 +568,36 @@ export default async function AdminArtisanPage({
           <DecisionForm artisanId={artisan.id} canValidate={allDocsValid} />
         ) : (
           <p>{t.decisionNotPending}</p>
+        )}
+      </Section>
+
+      <Section title={sc.artisanSection}>
+        {(spotChecks.data ?? []).length === 0 ? (
+          <p className="text-muted-foreground">{sc.artisanNone}</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {(spotChecks.data ?? []).map((c) => (
+              <li key={c.id} className="flex flex-col gap-1">
+                <span>
+                  <span className="font-medium">
+                    {month.format(new Date(`${c.period}T00:00:00Z`))}
+                  </span>
+                  {" · "}
+                  {c.result ? (sc.results[c.result] ?? c.result) : sc.pending}
+                  {c.insurer_called ? ` · ${sc.insurerCalled}` : ""}
+                </span>
+                {c.note && <span className="text-sm text-muted-foreground">{c.note}</span>}
+                {c.result === null && (
+                  <Link
+                    href={`/admin/controles#controle-${c.id}` as Route}
+                    className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {sc.artisanAction} →
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </Section>
 
