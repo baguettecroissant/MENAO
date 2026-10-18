@@ -252,11 +252,39 @@ export const fr = {
     privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
     after: "Une fois votre entreprise vérifiée, MENAO vous écrit pour la suite.",
   },
+  /** « Mes documents » (ADR 0123), comme la page des documents du site. */
+  proDocuments: {
+    title: "Mes documents",
+    lead: "Vos documents obligatoires. Renouvelez-les avant leur échéance pour rester visible des particuliers.",
+    validUntil: (date: string) => `Valable jusqu'au ${date}`,
+    expiresIn: (n: number) =>
+      n <= 0 ? "Expire aujourd'hui" : n === 1 ? "Expire demain" : `Expire dans ${n} jours`,
+    expired: "Expiré : déposez un nouveau document",
+    pending: "Nouveau document envoyé, en cours de vérification",
+    refused: (motif: string | null) => (motif ? `Refusé : ${motif}` : "Refusé"),
+    kbisDone: "Le Kbis n'est plus demandé une fois le dossier validé.",
+    states: {
+      valide: "Vérifié",
+      bientot: "À renouveler",
+      urgent: "Urgent",
+      expire: "Expiré",
+      en_attente: "Envoyé",
+      refuse: "Refusé",
+      missing: "À ajouter",
+      exempt: "Non soumis",
+    },
+    error: "Vos documents n'ont pas pu être chargés. Réessayez.",
+  },
   /** Un document du dossier, en photo (ADR 0113) : mêmes champs et contrôles que le site. */
   proDocument: {
-    photoHint: "Une photo nette, à plat et bien éclairée.",
+    photoHint:
+      "Une photo nette, à plat et bien éclairée, ou le fichier PDF reçu de votre assureur.",
     take: "Prendre en photo",
     choose: "Choisir dans mes photos",
+    chooseFile: "Choisir un fichier (PDF)",
+    fileReady: (name: string) => `Fichier prêt à envoyer : ${name}`,
+    kbisDone: "Le Kbis n'est plus demandé une fois le dossier validé : rien à envoyer.",
+    radiated: "Votre compte est radié : les documents ne peuvent plus être changés.",
     replace: "Reprendre la photo",
     added: "Photo prête à envoyer",
     dateEmission: "Date de l'extrait",
@@ -283,7 +311,7 @@ export const fr = {
     exemptCancel: "Annuler : je dépose mon attestation décennale",
     send: "Envoyer le document",
     sent: "Document envoyé : l'équipe MENAO le vérifie.",
-    photoRequired: "Ajoutez une photo du document.",
+    photoRequired: "Ajoutez une photo ou un fichier PDF du document.",
     locked:
       "Votre dossier est en cours de vérification : les documents ne peuvent plus être changés.",
     current: (state: string) => `État : ${state}`,
@@ -1350,6 +1378,9 @@ export const fr = {
     urssafMissing:
       "Ajoutez votre attestation de vigilance URSSAF : elle est désormais demandée à tous les artisans MENAO.",
     urssafAdd: "Ajouter mon attestation URSSAF",
+    // Documents à renouveler (F-51), comme le tableau de bord du site (ADR 0123).
+    toRenew: (documents: string) => `Pensez à renouveler : ${documents}.`,
+    renew: "Renouveler",
     radiated: (motif: string | null) =>
       `Votre compte a été radié du réseau MENAO${motif ? ` : ${motif}` : ""}. Votre profil n'apparaît plus. Vous gardez l'accès à vos chantiers en cours et à vos factures.`,
     awaitingQuote: "En attente de devis",
@@ -1379,6 +1410,8 @@ export const fr = {
     allRequests: "Toutes mes demandes",
     seeAll: "Tout voir",
     shortcuts: "Raccourcis",
+    myDocuments: "Mes documents",
+    myProfile: "Ma photo et ma présentation",
     toAnswer: (n: number) => `${n} à répondre`,
   },
   /** Demandes reçues par l'artisan (F-16, F-17) : mêmes textes que l'espace pro du site. */

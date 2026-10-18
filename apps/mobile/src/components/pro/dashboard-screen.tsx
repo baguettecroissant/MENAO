@@ -6,12 +6,14 @@ import {
   CalendarDays,
   Clock,
   FileText,
+  FolderCheck,
   MapPin,
   Minus,
   ReceiptText,
   Star,
   TrendingDown,
   TrendingUp,
+  UserRound,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
@@ -230,7 +232,10 @@ function RequestCard({ request: r, now }: { request: Dashboard["requests"][numbe
   );
 }
 
-/** Raccourcis vers les écrans de gestion : devis, factures, avis (à répondre), disponibilités. */
+/**
+ * Raccourcis vers les écrans de gestion : devis, factures, avis (à répondre), disponibilités,
+ * documents, photo et présentation.
+ */
 function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
   const items: { icon: LucideIcon; label: string; href: Href; badge?: string }[] = [
     { icon: FileText, label: fr.proQuotes.open, href: "/pro/devis" },
@@ -242,6 +247,9 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
       badge: reviewsToAnswer > 0 ? t.toAnswer(reviewsToAnswer) : undefined,
     },
     { icon: CalendarClock, label: fr.proAvailability.title, href: "/pro-disponibilites" },
+    // Documents et fiche de l'artisan (ADR 0123).
+    { icon: FolderCheck, label: t.myDocuments, href: "/pro-documents" },
+    { icon: UserRound, label: t.myProfile, href: "/pro-profil-public" },
   ];
   return (
     <View style={styles.section}>
@@ -369,6 +377,26 @@ export function DashboardScreen() {
                   variant="secondary"
                   onPress={() =>
                     router.push({ pathname: "/pro-document", params: { type: "urssaf" } })
+                  }
+                />
+              </View>
+            ) : null}
+            {data.documentsToRenew.length > 0 ? (
+              <View style={styles.urssaf}>
+                <Notice tone="error">
+                  {t.toRenew(
+                    data.documentsToRenew.map((type) => fr.proDossier.documents[type]).join(", "),
+                  )}
+                </Notice>
+                <Button
+                  label={t.renew}
+                  variant="secondary"
+                  onPress={() =>
+                    router.push(
+                      data.documentsToRenew.length === 1
+                        ? { pathname: "/pro-document", params: { type: data.documentsToRenew[0] } }
+                        : "/pro-documents",
+                    )
                   }
                 />
               </View>

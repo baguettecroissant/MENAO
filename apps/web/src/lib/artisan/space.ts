@@ -2,11 +2,10 @@ import "server-only";
 import {
   CHARTER_VERSION,
   ENGAGEMENT_VERSION,
-  MONITORED_DOCUMENT_TYPES,
   artisanVisibility,
   availabilityStatus,
   clientsAwaitingQuote,
-  expiryStatus,
+  documentsToRenew as toRenew,
   homePathForRole,
   parisToday,
   requestsAwaitingAnswer,
@@ -88,11 +87,7 @@ export const requireProSpace = cache(async () => {
     label: a.label,
   }));
   // F-51 : documents surveillés arrivant à échéance (ou expirés) sans renouvellement déposé.
-  const documentsToRenew = MONITORED_DOCUMENT_TYPES.filter((type) => {
-    const current = documents?.find((d) => d.type === type && d.status === "valide");
-    const pending = documents?.some((d) => d.type === type && d.status === "en_attente");
-    return current && !pending && expiryStatus(current.date_fin) !== "ok";
-  });
+  const documentsToRenew = toRenew(documents ?? []);
   // Attestation URSSAF demandée depuis le 17 octobre 2026 (ADR 0115) : un artisan validé avant
   // n'est pas suspendu, il est invité à l'ajouter.
   const urssafMissing = !documents?.some((d) => d.type === "urssaf");
