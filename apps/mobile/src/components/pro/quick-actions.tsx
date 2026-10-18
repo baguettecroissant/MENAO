@@ -1,10 +1,18 @@
 import { router, type Href } from "expo-router";
-import { Camera, CalendarX, ChevronRight, FilePen, type LucideIcon } from "lucide-react-native";
+import {
+  CalendarDays,
+  CalendarClock,
+  Camera,
+  CalendarX,
+  ChevronRight,
+  FilePen,
+  type LucideIcon,
+} from "lucide-react-native";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fr } from "@/i18n/fr";
-import { theme } from "@/ui/theme";
 import { Tappable } from "@/ui";
+import { theme } from "@/ui/theme";
 
 const t = fr.proQuickActions;
 const { colors, font, radius, spacing } = theme;
@@ -23,11 +31,19 @@ const ACTIONS: { icon: LucideIcon; label: string; detail: string; href: Href }[]
     detail: t.photoDetail,
     href: { pathname: "/pro-choisir", params: { action: "photo" } },
   },
+  {
+    icon: CalendarClock,
+    label: t.availability,
+    detail: t.availabilityDetail,
+    href: "/pro-disponibilites",
+  },
+  { icon: CalendarDays, label: t.agenda, detail: t.agendaDetail, href: "/pro-agenda" },
 ];
 
 /**
  * Menu du bouton (+) de l'artisan, comme la barre d'onglets des maquettes : créer un devis,
- * bloquer un créneau, ajouter une photo au suivi d'un chantier.
+ * bloquer un créneau, ajouter une photo au suivi d'un chantier, gérer ses disponibilités, ouvrir
+ * l'agenda (ADR 0130). Montée simple de la feuille, sans effet ajouté (choix de l'utilisateur).
  */
 export function QuickActions({ open, onClose }: { open: boolean; onClose: () => void }) {
   const insets = useSafeAreaInsets();

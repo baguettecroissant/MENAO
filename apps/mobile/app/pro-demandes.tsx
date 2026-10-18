@@ -1,4 +1,6 @@
-import { RequestsScreen } from "@/components/pro/requests-screen";
+import { Redirect } from "expo-router";
 
-/** Demandes reçues par l'artisan (F-16, F-17), ouvertes depuis le tableau de bord. */
-export default RequestsScreen;
+/** Ancienne adresse des demandes : elles sont désormais un onglet (ADR 0130). */
+export default function ProDemandes() {
+  return <Redirect href="/pro/demandes" />;
+}

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
@@ -29,7 +29,7 @@ const STATUS_TONE: Record<ArtisanQuote["status"], Tone> = {
  * Devis de l'artisan, comme sur le site (maquettes « Devis – Aucun » et « Devis envoyés ») :
  * brouillons à envoyer (vers la préparation du devis) et devis envoyés (vers le chantier).
  */
-export function ArtisanQuotesScreen() {
+export function ArtisanQuotesScreen({ switcher }: { switcher?: ReactNode }) {
   const [rows, reload] = useFocusData(loadArtisanQuotes);
   const [tab, setTab] = useState<"a-envoyer" | "envoyes">("a-envoyer");
   const [refreshing, setRefreshing] = useState(false);
@@ -57,6 +57,7 @@ export function ArtisanQuotesScreen() {
         }
       >
         <TabHeader title={t.title} subtitle={t.subtitle}>
+          {switcher}
           <LinkText label={fr.proInvoices.open} onPress={() => router.push("/pro-factures")} />
         </TabHeader>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}

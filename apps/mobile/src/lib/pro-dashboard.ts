@@ -1,6 +1,9 @@
 import {
+  artisanTodo,
   artisanVisibility,
   clientsAwaitingQuote,
+  isAwaitingQuote,
+  laterAppointments,
   documentsToRenew,
   monthToDateRevenue,
   requestsAwaitingAnswer,
@@ -12,6 +15,7 @@ import {
   type MonitoredDocumentType,
   type RevenueTrend,
   type SubscriptionStatus,
+  type TodoItem,
 } from "@menao/core";
 import { loadInbox, type InboxItem } from "./pro-requests";
 import { countReviewsToAnswer } from "./pro-reviews";
@@ -42,6 +46,10 @@ export type Dashboard = {
   requests: InboxItem[];
   /** Avis publiés sans réponse (F-28), comme le compteur du menu du site. */
   reviewsToAnswer: number;
+  /** « À faire maintenant » (ADR 0130) : ce qui attend une action, du plus urgent au moins urgent. */
+  todo: TodoItem[];
+  /** Rendez-vous des jours suivants (ceux du jour sont dans « À faire »). */
+  later: Dashboard["appointments"];
 };
 
 /**
@@ -93,37 +101,72 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     startAt: c.start_at as string | null,
     particulierId: c.particulier_id,
   }));
+  const appointments = upcomingAgenda(rows, now, 8).map(({ kind, at, row }) => ({
+    kind,
+    chantierId: row.chantier_id,
+    startsAt: at,
+    title: row.title,
+    place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
+  }));
+  const awaiting = requestsAwaitingAnswer(inbox, now);
+  const status = artisan.data?.status;
+  const urssafMissing =
+    status === "valide" &&
+    !(artisan.data?.artisan_documents ?? []).some(
+      (d) => d.type === "urssaf" && (d.status === "valide" || d.status === "en_attente"),
+    );
+  const renew =
+    status === "valide" || status === "suspendu"
+      ? documentsToRenew(artisan.data?.artisan_documents ?? [], now)
+      : [];
+  const visibility =
+    status === "valide" && artisan.data
+      ? (() => {
+          const v = artisanVisibility({
+            status: "valide",
+            subscriptionActive: subscriptionGrantsAccess(
+              (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+            ),
+            connectChargesEnabled: artisan.data.connect_charges_enabled,
+          });
+          return {
+            visible: v.visible,
+            missing: v.missing.filter((m) => m !== "validation"),
+          };
+        })()
+      : null;
+  const todo = artisanTodo(
+    {
+      requests: awaiting.map((r) => ({
+        id: r.request_id,
+        expiresAt: r.expires_at,
+        title: r.summary || r.trade_label,
+        place: [r.code_postal, r.ville_nom].filter(Boolean).join(" "),
+      })),
+      appointments: appointments.map((a) => ({ ...a, at: a.startsAt })),
+      quotesToSend: rows
+        .filter((c) => isAwaitingQuote(c.status))
+        .map((c) => ({
+          chantierId: c.chantier_id,
+          title: c.title,
+          place: [c.code_postal, c.ville_nom].filter(Boolean).join(" "),
+        })),
+      documentsToRenew: renew,
+      urssafMissing,
+      paymentsMissing: visibility?.missing.includes("paiements") ?? false,
+      reviewsToAnswer,
+    },
+    now,
+  );
   return {
     firstName: profile.data?.first_name ?? null,
     suspended: artisan.data?.status === "suspendu",
     // Radiation (ADR 0114) : l'espace reste accessible, le profil n'apparaît plus.
     radiated: artisan.data?.status === "radie" ? { reason: artisan.data.radiation_reason } : null,
     // Attestation URSSAF demandée depuis le 17 octobre 2026 (ADR 0115) : invitation à l'ajouter.
-    urssafMissing:
-      artisan.data?.status === "valide" &&
-      !artisan.data.artisan_documents.some(
-        (d) => d.type === "urssaf" && (d.status === "valide" || d.status === "en_attente"),
-      ),
-    documentsToRenew:
-      artisan.data?.status === "valide" || artisan.data?.status === "suspendu"
-        ? documentsToRenew(artisan.data.artisan_documents, now)
-        : [],
-    visibility:
-      artisan.data?.status === "valide"
-        ? (() => {
-            const v = artisanVisibility({
-              status: "valide",
-              subscriptionActive: subscriptionGrantsAccess(
-                (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
-              ),
-              connectChargesEnabled: artisan.data.connect_charges_enabled,
-            });
-            return {
-              visible: v.visible,
-              missing: v.missing.filter((m) => m !== "validation"),
-            };
-          })()
-        : null,
+    urssafMissing,
+    documentsToRenew: renew,
+    visibility,
     awaitingClients: clientsAwaitingQuote(rows),
     revenue: {
       cents: revenue.currentCents,
@@ -134,14 +177,13 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       minutes: response?.[0]?.minutes ?? null,
       responses: response?.[0]?.responses ?? 0,
     },
-    appointments: upcomingAgenda(rows, now).map(({ kind, at, row }) => ({
-      kind,
-      chantierId: row.chantier_id,
-      startsAt: at,
-      title: row.title,
-      place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
-    })),
-    requests: requestsAwaitingAnswer(inbox, now).slice(0, 3),
+    appointments: appointments.slice(0, 4),
+    requests: awaiting.slice(0, 3),
     reviewsToAnswer,
+    todo,
+    later: laterAppointments(
+      appointments.map((a) => ({ ...a, at: a.startsAt })),
+      now,
+    ).slice(0, 4),
   };
 }
