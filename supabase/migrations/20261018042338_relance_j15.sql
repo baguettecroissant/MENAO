@@ -4,6 +4,13 @@
 -- (miroir de EXPIRY_REMINDER_DAYS) : une relance par seuil, l'équipe en copie pour les documents
 -- dont l'expiration suspend l'artisan. Le SMS à J-7 n'est pas mis en place (coût).
 
+-- Dernier seuil relancé : 30, 15 ou 7 jours.
+alter table public.artisan_documents
+  drop constraint artisan_documents_renewal_reminder_days_check;
+alter table public.artisan_documents
+  add constraint artisan_documents_renewal_reminder_days_check
+  check (renewal_reminder_days in (30, 15, 7));
+
 create or replace function app.remind_expiring_documents(p_today date default (now() at time zone 'Europe/Paris')::date)
 returns integer
 language plpgsql
