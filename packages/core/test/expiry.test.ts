@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  EXPIRY_REMINDER_DAYS,
   EXPIRY_URGENT_DAYS,
   EXPIRY_WARNING_DAYS,
   MONITORED_DOCUMENT_TYPES,
@@ -7,6 +8,7 @@ import {
   documentsToRenew,
   expiryStatus,
   expiryWatchLimit,
+  reminderThreshold,
 } from "../src/expiry";
 
 const today = new Date("2026-10-09T12:00:00Z");
@@ -53,5 +55,17 @@ describe("suivi des échéances (F-51)", () => {
     ];
     expect(documentsToRenew(docs, today)).toEqual(["decennale", "urssaf"]);
     expect(documentsToRenew([], today)).toEqual([]);
+  });
+
+  it("relances à J-30, J-15 et J-7 : seuil atteint (ADR 0122)", () => {
+    expect(EXPIRY_REMINDER_DAYS).toEqual([30, 15, 7]);
+    expect(reminderThreshold(31)).toBeNull();
+    expect(reminderThreshold(30)).toBe(30);
+    expect(reminderThreshold(16)).toBe(30);
+    expect(reminderThreshold(15)).toBe(15);
+    expect(reminderThreshold(8)).toBe(15);
+    expect(reminderThreshold(7)).toBe(7);
+    expect(reminderThreshold(0)).toBe(7);
+    expect(reminderThreshold(-1)).toBeNull();
   });
 });

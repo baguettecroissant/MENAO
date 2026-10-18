@@ -1032,7 +1032,7 @@ export function notificationContent(
       };
     }
     case "document_a_renouveler": {
-      // F-51 : relances à J-30 puis J-7 (spec F-41).
+      // F-51 : relances à J-30, J-15 puis J-7 (ADR 0122) ; « urgent » à 7 jours ou moins.
       const type = text(data, "document") ?? "";
       const doc = DOCUMENTS[type] ?? "document";
       const insurance = SUSPENDING.includes(type);
@@ -1059,13 +1059,14 @@ export function notificationContent(
       };
     }
     case "document_a_renouveler_equipe": {
-      // F-51 : copie à l'équipe (assurances seulement), pour le suivi des échéances.
+      // F-51 : copie à l'équipe (documents dont l'expiration suspend l'artisan : assurances,
+      // attestation URSSAF), pour le suivi des échéances.
       const doc = DOCUMENTS[text(data, "document") ?? ""] ?? "document";
       const entreprise = text(data, "entreprise") ?? "Un artisan";
       return {
-        subject: `Assurance à renouveler : ${entreprise}`,
+        subject: `Document à renouveler : ${entreprise}`,
         preview: `${entreprise} : ${doc}, échéance ${deadline(data)}.`,
-        title: "Assurance à renouveler",
+        title: "Document à renouveler",
         paragraphs: [
           hello(ctx.firstName),
           `${entreprise} doit renouveler son ${doc}, qui expire ${deadline(data)}.`,
