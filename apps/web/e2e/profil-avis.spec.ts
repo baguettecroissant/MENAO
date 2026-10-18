@@ -11,8 +11,19 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
   const nav = page.getByRole("navigation", { name: "Navigation de l'espace pro" });
 
+  // « Mon profil » (ADR 0131) : jauge de la fiche et rubriques avec leur état.
+  await nav.getByRole("link", { name: "Mon profil" }).click();
+  await expect(page).toHaveURL(/\/pro\/mon-profil$/);
+  await expect(page.getByRole("heading", { name: "Lou Valide", level: 1 })).toBeVisible();
+  await expect(page.getByText(/^Fiche complète à \d+ %$/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Documents, / })).toHaveAttribute(
+    "href",
+    "/pro/onboarding/documents",
+  );
+  await expect(page.getByRole("link", { name: /^Avis clients, Aucun avis$/ })).toBeVisible();
+
   // Fiche telle que la voient les particuliers, avec les conseils pour la compléter.
-  await nav.getByRole("link", { name: "Ma fiche publique" }).click();
+  await nav.getByRole("link", { name: "Ma fiche" }).click();
   await expect(page).toHaveURL(/\/pro\/profil$/);
   await expect(page.getByRole("heading", { name: "Ma fiche publique", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Lou - Électricien", level: 2 })).toBeVisible();

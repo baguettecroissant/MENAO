@@ -100,9 +100,17 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await proPage.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await proPage.getByRole("button", { name: "Me connecter" }).click();
   await expect(proPage).toHaveURL(/\/pro\/tableau-de-bord$/);
-  await expect(proPage.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-  await expect(proPage.getByText("Bonjour Noé !")).toBeVisible();
-  await proPage.getByRole("link", { name: "Toutes mes demandes" }).click();
+  // Accueil « À faire maintenant » (ADR 0131) : la nouvelle demande y figure.
+  await expect(proPage.getByRole("heading", { level: 1, name: "Bonjour Noé !" })).toBeVisible();
+  await expect(
+    proPage.getByRole("region", { name: "À faire maintenant" }).getByRole("link", {
+      name: /^Nouvelle demande, /,
+    }),
+  ).toBeVisible();
+  await proPage
+    .getByRole("navigation", { name: "Navigation de l'espace pro" })
+    .getByRole("link", { name: /^Demandes/ })
+    .click();
   await expect(proPage.getByRole("heading", { name: "Mes demandes" })).toBeVisible();
   await proPage
     .getByRole("link", { name: /Dominique/ })
