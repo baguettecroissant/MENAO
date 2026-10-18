@@ -49,11 +49,12 @@ function SettingsRow({ label, detail, href }: { label: string; detail?: string; 
 /**
  * Compte de l'utilisateur, comme « Mon compte » sur le site (F-08, ADR 0039 et 0083) :
  * informations, adresse e-mail, mot de passe, communications, export des données, suppression du
- * compte (Apple 5.1.1 v), déconnexion de tous les appareils. S'y ajoutent l'abonnement (artisans,
+ * compte (Apple 5.1.1 v), déconnexion de tous les appareils. Pour l'artisan, c'est « Identité et
+ * connexion », ouvert depuis « Mon profil » (ADR 0129). S'y ajoutent l'abonnement (artisans,
  * sans lien d'achat), l'aide (particuliers seulement : aucun lien vers le site pour les artisans,
  * règle 10), le légal et la déconnexion.
  */
-export function AccountScreen() {
+export function AccountScreen({ title = t.title }: { title?: string }) {
   const { session, role } = useSession();
   const [account] = useFocusData(loadAccount);
   const [leaving, setLeaving] = useState<"here" | "everywhere" | null>(null);
@@ -98,7 +99,7 @@ export function AccountScreen() {
 
   return (
     <Screen header={<TopBar />}>
-      <Title>{t.title}</Title>
+      <Title>{title}</Title>
       <Card>
         {name ? <Text style={styles.name}>{name}</Text> : <Body muted>{t.signedInAs}</Body>}
         <Text style={styles.email}>{account?.email || session?.user.email}</Text>
@@ -151,13 +152,6 @@ export function AccountScreen() {
         />
       </Card>
 
-      {role === "artisan" && (
-        <Card>
-          <Text style={styles.heading}>{fr.grade.title}</Text>
-          <Body muted>{fr.grade.subtitle}</Body>
-          <LinkText label={fr.grade.title} onPress={() => router.push("/pro-grade")} />
-        </Card>
-      )}
       {(role === "artisan" || role === "artisan_en_attente") && (
         <Card>
           <Text style={styles.heading}>{t.subscription}</Text>

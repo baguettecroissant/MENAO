@@ -2535,6 +2535,140 @@ export const fr = {
     previous: "Photo précédente",
     next: "Photo suivante",
   },
+  /**
+   * « Mon profil » de l'artisan (ADR 0129), ouvert par la photo de l'en-tête : la fiche,
+   * l'entreprise, la conformité, l'argent et le compte, avec l'état de chaque rubrique. Jamais
+   * d'abonnement ni de lien vers le site (règle 10).
+   */
+  proHub: {
+    title: "Mon profil",
+    seeProfile: "Voir ma fiche",
+    changePhoto: "Changer ma photo de profil",
+    photoTitle: "Photo de profil",
+    photoDone: "Photo de profil mise à jour.",
+    strength: (percent: number) => `Fiche complète à ${percent} %`,
+    complete: "Votre fiche est complète",
+    completeHint: "Elle donne aux particuliers toutes les raisons de vous choisir.",
+    tips: {
+      assure_verifie: "Faites valider votre décennale et votre RC Pro",
+      photo_profil: "Ajoutez une photo de profil",
+      realisations: "Ajoutez des photos de vos réalisations",
+      presentation: "Développez votre présentation",
+      specialites: "Précisez vos spécialités",
+      certifications: "Ajoutez une certification",
+    },
+    verified: "Assuré et vérifié",
+    score: (percent: number, count: number) =>
+      `Score ${percent}\u00a0% · ${count === 1 ? "1 avis" : `${count} avis`}`,
+    status: {
+      brouillon: "Dossier à compléter",
+      en_verification: "Dossier en vérification",
+      refuse: "Dossier à corriger",
+      suspendu: "Profil suspendu",
+      radie: "Entreprise radiée",
+    },
+    dossier: "Faire vérifier mon entreprise",
+    dossierLeft: (n: number) => (n === 1 ? "1 étape restante" : `${n} étapes restantes`),
+    dossierSent: "Dossier envoyé : l'équipe MENAO le vérifie.",
+    sections: {
+      profile: "Ma fiche",
+      company: "Mon entreprise",
+      compliance: "Conformité",
+      money: "Argent",
+      account: "Mon compte",
+    },
+    rows: {
+      photo: "Photo et présentation",
+      portfolio: "Réalisations",
+      reviews: "Avis clients",
+      grade: "Mon grade",
+      company: "Entreprise et SIRET",
+      trades: "Métiers et certifications",
+      zone: "Zone d'intervention",
+      availability: "Disponibilités",
+      documents: "Documents",
+      charter: "Charte qualité",
+      payments: "Paiements",
+      invoices: "Factures",
+      identity: "Identité et connexion",
+      notifications: "Notifications",
+      help: "Aide et contact",
+    },
+    values: {
+      upToDate: "À jour",
+      toComplete: "À compléter",
+      photos: (n: number) => (n === 0 ? "Aucune photo" : n === 1 ? "1 photo" : `${n} photos`),
+      toAnswer: (n: number) => `${n} à répondre`,
+      reviews: (n: number) => (n === 0 ? "Aucun avis" : n === 1 ? "1 avis" : `${n} avis`),
+      level: (n: number) => `Niveau ${n}`,
+      verifiedCompany: "Vérifiée",
+      toVerify: "À vérifier",
+      trades: (n: number, rge: boolean) =>
+        `${n === 1 ? "1 métier" : `${n} métiers`}${rge ? " · RGE" : ""}`,
+      radius: (km: number) => `${km} km`,
+      communes: (n: number) => (n === 1 ? "1 commune" : `${n} communes`),
+      toDefine: "À définir",
+      paused: "En pause",
+      from: (date: string) => `Dès le ${date}`,
+      available: "Disponible",
+      toRenew: (n: number) => (n === 1 ? "1 à renouveler" : `${n} à renouveler`),
+      refused: (n: number) => (n === 1 ? "1 refusé" : `${n} refusés`),
+      inReview: "En vérification",
+      signed: "Signée",
+      toSign: "À signer",
+      active: "Activés",
+      toActivate: "À activer",
+    },
+    signOut: "Se déconnecter",
+    loadError: "Votre profil n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
+  },
+  /** « Voir ma fiche » : la fiche telle que la voient les particuliers (ADR 0129). */
+  proMyPage: {
+    title: "Ma fiche",
+    preview: "Aperçu : votre fiche telle que la voient les particuliers.",
+    edit: "Modifier ma fiche",
+    unavailable: "Votre fiche n'a pas pu être chargée. Réessayez.",
+  },
+  /**
+   * Aide de l'artisan dans l'application (ADR 0129) : questions fréquentes et contact par
+   * e-mail, sans lien vers le site (règle 10).
+   */
+  help: {
+    title: "Aide et contact",
+    lead: "Les réponses aux questions les plus courantes. Une autre question ? Écrivez-nous.",
+    faq: [
+      {
+        q: "Comment recevoir plus de demandes ?",
+        a: "Complétez votre fiche (photo, réalisations, présentation), gardez vos documents à jour et répondez vite : les particuliers voient votre délai de réponse.",
+      },
+      {
+        q: "Pourquoi mon profil n'est-il pas visible ?",
+        a: "Votre profil devient visible une fois votre dossier vérifié par l'équipe MENAO. L'accueil vous indique ce qui manque encore.",
+      },
+      {
+        q: "Comment suis-je payé ?",
+        a: "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
+      },
+      {
+        q: "Un document arrive à échéance : que faire ?",
+        a: "Prenez le nouveau document en photo depuis « Mon profil », rubrique Documents. Nous vous prévenons 30, 15 puis 7 jours avant l'échéance.",
+      },
+      {
+        q: "Comment changer ma zone ou mes métiers ?",
+        a: "Depuis « Mon profil » : Zone d'intervention, ou Métiers et certifications.",
+      },
+      {
+        q: "Comment supprimer mon compte ?",
+        a: "Depuis « Mon profil » : Identité et connexion, puis Supprimer mon compte.",
+      },
+    ],
+    contactTitle: "Écrire à l'équipe MENAO",
+    contactText: "Nous vous répondons par e-mail.",
+    email: "contact@menao.fr",
+    write: "Écrire un e-mail",
+    subject: "Question depuis l'application MENAO",
+    noMail: "Aucune application d'e-mail n'est configurée. Écrivez-nous à contact@menao.fr.",
+  },
   account: {
     title: "Mon compte",
     signedInAs: "Connecté en tant que",
