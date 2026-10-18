@@ -1,6 +1,7 @@
 import {
   Award,
   CalendarClock,
+  ClipboardCheck,
   CalendarDays,
   ClipboardList,
   FileText,
@@ -29,7 +30,7 @@ import { fr } from "@/i18n/fr";
 
 export type Space = "client" | "pro" | "admin";
 export type BadgeKey =
-  "actions" | "messages" | "requests" | "quotes" | "reviews" | "dossiers" | "tickets";
+  "actions" | "messages" | "requests" | "quotes" | "reviews" | "dossiers" | "controles" | "tickets";
 export type Badges = Partial<Record<BadgeKey, number>>;
 
 export type NavItem = {
@@ -137,6 +138,13 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           badge: "dossiers",
         },
         { href: "/admin/surveillance", label: fr.admin.nav.watch, icon: CalendarClock },
+        // Contrôle aléatoire de 5 % des dossiers chaque mois (ADR 0121).
+        {
+          href: "/admin/controles",
+          label: fr.admin.nav.spotChecks,
+          icon: ClipboardCheck,
+          badge: "controles",
+        },
         {
           href: "/admin/tickets",
           label: fr.admin.nav.tickets,

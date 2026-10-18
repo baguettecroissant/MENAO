@@ -637,6 +637,54 @@ export type Database = {
           },
         ];
       };
+      artisan_spot_checks: {
+        Row: {
+          artisan_id: string;
+          checked_at: string | null;
+          checked_by: string | null;
+          created_at: string;
+          drawn_at: string;
+          id: string;
+          insurer_called: boolean;
+          note: string | null;
+          period: string;
+          result: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          checked_at?: string | null;
+          checked_by?: string | null;
+          created_at?: string;
+          drawn_at?: string;
+          id?: string;
+          insurer_called?: boolean;
+          note?: string | null;
+          period: string;
+          result?: string | null;
+        };
+        Update: {
+          artisan_id?: string;
+          checked_at?: string | null;
+          checked_by?: string | null;
+          created_at?: string;
+          drawn_at?: string;
+          id?: string;
+          insurer_called?: boolean;
+          note?: string | null;
+          period?: string;
+          result?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_spot_checks_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_trades: {
         Row: {
           artisan_id: string;
@@ -3196,6 +3244,10 @@ export type Database = {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
         Returns: undefined;
       };
+      admin_complete_spot_check: {
+        Args: { p_id: string; p_insurer_called?: boolean; p_note?: string; p_result: string };
+        Returns: undefined;
+      };
       admin_decide_artisan: {
         Args: {
           p_artisan_id: string;
@@ -3204,6 +3256,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_draw_spot_checks: { Args: Record<PropertyKey, never>; Returns: number };
       admin_log_account_action: {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;

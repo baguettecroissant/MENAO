@@ -3805,6 +3805,7 @@ export const fr = {
       people: "Personnes",
       artisans: "Dossiers artisans",
       watch: "À surveiller",
+      spotChecks: "Contrôles aléatoires",
       tickets: "Dossiers et messages",
       payments: "Paiements",
       subscriptions: "Abonnements",
@@ -3812,6 +3813,48 @@ export const fr = {
       journal: "Journal d'audit",
       ai: "Suivi de l'IA",
       signOut: "Me déconnecter",
+    },
+    // Contrôle aléatoire des dossiers (ADR 0121).
+    spotChecks: {
+      title: "Contrôles aléatoires",
+      intro: (rate: number) =>
+        `Chaque mois, ${rate}\u00a0% des artisans validés sont tirés au sort pour une nouvelle vérification de leur dossier. En cas de doute sur une assurance, appelez l'assureur.`,
+      month: (label: string) => `Contrôles de ${label}`,
+      target: (done: number, total: number, target: number) =>
+        `${done} fait${done > 1 ? "s" : ""} sur ${total} tiré${total > 1 ? "s" : ""} (objectif du mois : ${target})`,
+      empty:
+        "Aucun dossier tiré ce mois-ci pour l'instant. Le tirage a lieu automatiquement le 1er du mois.",
+      draw: "Lancer le tirage du mois",
+      drawn: (n: number) =>
+        n === 0
+          ? "L'objectif du mois est déjà atteint : aucun nouveau dossier tiré."
+          : n > 1
+            ? `${n} dossiers tirés au sort.`
+            : "1 dossier tiré au sort.",
+      checklist: [
+        "Décennale (ou métiers non soumis), RC Pro et attestation URSSAF en vigueur et cohérentes",
+        "Entreprise toujours active (SIRET) et dirigeant inchangé",
+        "Assurance douteuse : appeler l'assureur pour confirmer le contrat",
+      ],
+      drawnOn: (date: string) => `Tiré le ${date}`,
+      open: (name: string) => `Ouvrir le dossier de ${name}`,
+      pending: "À faire",
+      results: { conforme: "Conforme", non_conforme: "Non conforme" } as Record<string, string>,
+      checkedBy: (date: string, name: string | null) =>
+        name ? `Contrôlé le ${date} par ${name}` : `Contrôlé le ${date}`,
+      insurerCalled: "Assureur appelé",
+      note: "Note",
+      noteHint: "Obligatoire si le dossier n'est pas conforme.",
+      markConforme: "Conforme",
+      markNonConforme: "Non conforme",
+      saved: "Résultat enregistré.",
+      error: "Résultat non enregistré : une note est obligatoire pour un contrôle non conforme.",
+      previous: "Mois précédents",
+      noPrevious: "Aucun contrôle les mois précédents.",
+      artisanSection: "Contrôles aléatoires",
+      artisanPending: "Ce dossier a été tiré au sort ce mois-ci : contrôle à faire.",
+      artisanAction: "Faire le contrôle",
+      artisanNone: "Jamais tiré au sort.",
     },
     overview: {
       title: "Vue d'ensemble",
@@ -3827,6 +3870,10 @@ export const fr = {
         oldest: (ago: string) => `Le plus ancien a été envoyé ${ago}.`,
         open: (name: string) => `Ouvrir le dossier de ${name}`,
         dossiersAction: "Voir tous les dossiers",
+        spotChecks: (n: number) =>
+          n > 1 ? `${n} contrôles aléatoires à faire` : "1 contrôle aléatoire à faire",
+        spotChecksHint: "Dossiers tirés au sort ce mois-ci : revérifier les documents en vigueur.",
+        spotChecksAction: "Faire les contrôles",
         late: (n: number) => (n > 1 ? `${n} tickets en retard` : "1 ticket en retard"),
         lateHint: "Réponse promise sous 7 jours, délai dépassé.",
         lateAction: "Répondre",
@@ -4545,8 +4592,12 @@ export const fr = {
         "artisan.complement": "Complément demandé",
         "artisan.suspendu": "Fiche artisan suspendue",
         "artisan.reactive": "Fiche artisan réactivée",
-        "artisan.suspendu_auto": "Fiche suspendue : assurance expirée",
-        "artisan.reactive_auto": "Fiche réactivée : assurances à jour",
+        "artisan.suspendu_auto": "Fiche suspendue : document obligatoire expiré",
+        "artisan.reactive_auto": "Fiche réactivée : documents obligatoires à jour",
+        "artisan.radie": "Artisan radié",
+        "artisan.controle_tire": "Contrôle aléatoire : dossier tiré au sort",
+        "artisan.controle_conforme": "Contrôle aléatoire : conforme",
+        "artisan.controle_non_conforme": "Contrôle aléatoire : non conforme",
         "document.valide": "Document validé",
         "document.refuse": "Document refusé",
         "certification.verifiee": "Certification vérifiée",

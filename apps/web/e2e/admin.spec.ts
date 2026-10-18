@@ -135,6 +135,22 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
     "Dossier validé",
   );
 
+  // Contrôle aléatoire (ADR 0121) : tirage du mois, puis résultat d'un dossier tiré au sort.
+  await page.goto("/admin/controles");
+  await expect(page.getByRole("heading", { level: 1, name: "Contrôles aléatoires" })).toBeVisible();
+  await page.getByRole("button", { name: "Lancer le tirage du mois" }).click();
+  await expect(
+    page.getByText(/dossiers? tirés? au sort\.|objectif du mois est déjà atteint/),
+  ).toBeVisible();
+  const drawn = page
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("button", { name: "Conforme", exact: true }) })
+    .first();
+  const drawnName = await drawn.getAttribute("aria-label");
+  await drawn.getByLabel("Assureur appelé").check();
+  await drawn.getByRole("button", { name: "Conforme", exact: true }).click();
+  await expect(page.getByRole("listitem", { name: drawnName ?? "" })).toContainText("Contrôlé le");
+
   // Côté artisan : dossier validé. Déconnexion depuis le menu du compte (ADR 0035).
   await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("button", { name: "Me déconnecter" }).click();

@@ -1,5 +1,6 @@
 import { timeLeft } from "@menao/core";
 import {
+  ClipboardCheck,
   CreditCard,
   FileClock,
   Hourglass,
@@ -69,6 +70,20 @@ export function OverviewScreen({
             ))}
           </ul>
         </TodoCard>
+      ),
+    });
+  }
+  if (todo.spotChecks > 0) {
+    cards.push({
+      key: "controles",
+      node: (
+        <TodoCard
+          icon={ClipboardCheck}
+          tone="primary"
+          title={todoT.spotChecks(todo.spotChecks)}
+          hint={todoT.spotChecksHint}
+          action={{ href: "/admin/controles", label: todoT.spotChecksAction }}
+        />
       ),
     });
   }

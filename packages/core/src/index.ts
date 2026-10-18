@@ -18,6 +18,7 @@ export * from "./ics";
 export * from "./quote";
 export * from "./legal-forms";
 export * from "./signature";
+export * from "./spot-check";
 export * from "./payment";
 export * from "./invoice";
 export * from "./chantier-follow-up";
