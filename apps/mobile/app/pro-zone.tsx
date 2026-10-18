@@ -6,6 +6,7 @@ import { AutocompleteField } from "@/components/autocomplete-field";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
 import { Segmented } from "@/components/segmented";
 import { TopBar } from "@/components/top-bar";
+import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
 import {
   searchCommunes,
@@ -61,6 +62,7 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
   const [communes, setCommunes] = useState(zone.communes);
   const [message, setMessage] = useState<Message>(null);
   const [busy, setBusy] = useState(false);
+  const point = base ?? zone.basePoint;
 
   async function save() {
     setMessage(null);
@@ -82,9 +84,10 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
       return setMessage({ tone: "error", text });
     }
     setMessage({ tone: "success", text: t.saved });
-    setBase(null);
     setEditingBase(false);
+    // Rechargée d'abord : la carte passe à l'adresse enregistrée sans revenir à l'ancienne.
     await onSaved();
+    setBase(null);
   }
 
   function addCommune(c: CommuneSuggestion) {
@@ -131,6 +134,9 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
             onChange={setRadiusKm}
             columns={3}
           />
+          {point && radiusKm !== null ? (
+            <ZoneMap lon={point.lon} lat={point.lat} radiusKm={radiusKm} />
+          ) : null}
         </>
       ) : (
         <>

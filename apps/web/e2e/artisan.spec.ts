@@ -100,6 +100,8 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
 
   await page.goto("/pro/onboarding/zone");
+  // Rayon choisi à l'inscription : carte de l'adresse enregistrée (ADR 0127).
+  await expect(page.locator('img[src^="https://data.geopf.fr/wmts"]').first()).toBeAttached();
   await page.getByLabel("Une liste de communes").check();
   await page.getByRole("combobox", { name: "Ajouter une commune" }).fill("nic");
   await page.getByRole("option", { name: "Nice (06000)" }).click();

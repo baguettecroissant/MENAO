@@ -3,12 +3,12 @@ import { MapPin } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
+import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
 import { searchStartAddress, type AddressSuggestion } from "@/lib/geo";
 import { Card, LinkText } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ChoiceGroup, Muted, StepTitle } from "./signup-parts";
-import { ZoneMap } from "./zone-map";
 
 const t = fr.proSignup.zone;
 const { colors, font, radius, spacing } = theme;
