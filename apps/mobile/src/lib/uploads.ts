@@ -21,6 +21,8 @@ export type UploadStatus =
 export const PHOTO_MAX_SIDE = 2000;
 /** Côté de la photo de profil, comme sur le site. */
 export const AVATAR_MAX_SIDE = 512;
+/** Côté du logo des documents, comme sur le site (PNG gardé pour la transparence, ADR 0125). */
+export const LOGO_MAX_SIDE = 600;
 
 /** Dimensions de la photo réduite (proportions gardées), ou null si elle est déjà assez petite. */
 export function fitWithin(

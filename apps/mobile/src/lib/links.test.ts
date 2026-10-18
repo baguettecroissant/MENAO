@@ -37,6 +37,9 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/onboarding/documents")).toBe("/pro-documents");
     expect(appRouteForSitePath("/pro/onboarding/profil")).toBe("/pro-profil-public");
     expect(appRouteForSitePath("/pro/onboarding/paiements")).toBe("/pro-paiements");
+    expect(appRouteForSitePath("/pro/onboarding/entreprise")).toBe("/pro-entreprise");
+    expect(appRouteForSitePath("/pro/onboarding/metiers")).toBe("/pro-metiers");
+    expect(appRouteForSitePath("/pro/onboarding/zone")).toBe("/pro-zone");
   });
 
   it("ignore les paramètres et la barre finale", () => {

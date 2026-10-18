@@ -1,0 +1,200 @@
+import { ZONE_RADIUS_OPTIONS_KM } from "@menao/core";
+import { MapPin, X } from "lucide-react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { AutocompleteField } from "@/components/autocomplete-field";
+import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
+import { Segmented } from "@/components/segmented";
+import { TopBar } from "@/components/top-bar";
+import { fr } from "@/i18n/fr";
+import {
+  searchCommunes,
+  searchStartAddress,
+  type AddressSuggestion,
+  type CommuneSuggestion,
+} from "@/lib/geo";
+import { loadZone, saveZone, type Zone } from "@/lib/my-company";
+import { useFocusData } from "@/lib/use-focus-data";
+import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
+import { theme } from "@/ui/theme";
+
+const t = fr.proZone;
+const { colors, font, radius, spacing } = theme;
+
+type Message = { tone: "error" | "success"; text: string } | null;
+
+/**
+ * Zone d'intervention (ADR 0125), comme l'étape « Zone » du site : un rayon autour d'une adresse
+ * de départ (gardée si seul le rayon change), ou une liste de communes (set_artisan_zone).
+ */
+export default function ZoneScreen() {
+  const [zone, reload] = useFocusData(loadZone);
+  if (zone === undefined) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+  return (
+    <Screen header={<TopBar />}>
+      <Title>{t.title}</Title>
+      <Body muted>{t.lead}</Body>
+      {zone === null ? (
+        <Notice tone="error">{t.loadError}</Notice>
+      ) : (
+        <ZoneForm zone={zone} onSaved={reload} />
+      )}
+    </Screen>
+  );
+}
+
+function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> }) {
+  const [mode, setMode] = useState<"rayon" | "communes">(zone.mode ?? "rayon");
+  const [radiusKm, setRadiusKm] = useState<number | null>(
+    zone.radiusKm !== null && (ZONE_RADIUS_OPTIONS_KM as readonly number[]).includes(zone.radiusKm)
+      ? zone.radiusKm
+      : null,
+  );
+  const [base, setBase] = useState<AddressSuggestion | null>(null);
+  const [editingBase, setEditingBase] = useState(!zone.hasBase);
+  const [communes, setCommunes] = useState(zone.communes);
+  const [message, setMessage] = useState<Message>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setMessage(null);
+    if (mode === "rayon") {
+      if (!base && !zone.hasBase) return setMessage({ tone: "error", text: t.addressRequired });
+      if (radiusKm === null) return setMessage({ tone: "error", text: t.radius });
+    }
+    setBusy(true);
+    const result = await saveZone(
+      mode === "rayon" ? { mode, radiusKm: radiusKm ?? 0, base } : { mode, communes },
+    );
+    setBusy(false);
+    if (!result.ok) {
+      const fields = result.fields ?? {};
+      const text =
+        fields.baseLabel || fields.lon || fields.lat || fields.baseCitycode
+          ? t.addressRequired
+          : (fields.communes ?? fields.radiusKm ?? result.error ?? fr.errors.generic);
+      return setMessage({ tone: "error", text });
+    }
+    setMessage({ tone: "success", text: t.saved });
+    setBase(null);
+    setEditingBase(false);
+    await onSaved();
+  }
+
+  function addCommune(c: CommuneSuggestion) {
+    setCommunes((current) =>
+      current.some((x) => x.code === c.code) ? current : [...current, { code: c.code, nom: c.nom }],
+    );
+  }
+
+  return (
+    <Card>
+      <Segmented
+        label={t.mode}
+        value={mode}
+        options={[
+          { value: "rayon", label: t.modeRadius },
+          { value: "communes", label: t.modeCommunes },
+        ]}
+        onChange={setMode}
+      />
+      {mode === "rayon" ? (
+        <>
+          {!editingBase && (base || zone.baseLabel) ? (
+            <View style={styles.base}>
+              <MapPin size={18} color={colors["primary-strong"]} />
+              <Text style={styles.baseText}>{t.current(base?.label ?? zone.baseLabel ?? "")}</Text>
+              <LinkText label={t.change} onPress={() => setEditingBase(true)} />
+            </View>
+          ) : (
+            <AutocompleteField<AddressSuggestion>
+              label={t.address}
+              hint={t.addressHint}
+              search={searchStartAddress}
+              itemLabel={(a) => a.label}
+              onSelect={(a) => {
+                setBase(a);
+                setEditingBase(false);
+              }}
+            />
+          )}
+          <ChoiceGroup<number>
+            legend={t.radius}
+            value={radiusKm}
+            options={ZONE_RADIUS_OPTIONS_KM.map((km) => ({ value: km, label: t.km(km) }))}
+            onChange={setRadiusKm}
+            columns={3}
+          />
+        </>
+      ) : (
+        <>
+          {communes.length === 0 ? (
+            <Body muted>{t.communesEmpty}</Body>
+          ) : (
+            <View style={styles.chips}>
+              {communes.map((c) => (
+                <View key={c.code} style={styles.chip}>
+                  <Text style={styles.chipText}>{c.nom}</Text>
+                  <Pressable
+                    role="button"
+                    aria-label={t.communeRemove(c.nom)}
+                    onPress={() =>
+                      setCommunes((current) => current.filter((x) => x.code !== c.code))
+                    }
+                    hitSlop={8}
+                  >
+                    <X size={14} color={colors["primary-strong"]} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+          <AutocompleteField<CommuneSuggestion>
+            label={t.communes}
+            hint={t.communesHint}
+            search={searchCommunes}
+            itemLabel={(c) => (c.postcode ? `${c.nom} (${c.postcode})` : c.nom)}
+            onSelect={addCommune}
+          />
+        </>
+      )}
+      {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+      <Button label={t.save} onPress={save} loading={busy} />
+    </Card>
+  );
+}
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  base: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2),
+    padding: spacing(3),
+    borderRadius: radius.input,
+    backgroundColor: colors["primary-softer"],
+  },
+  baseText: { flex: 1, fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(1.5),
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(1.5),
+    borderRadius: radius.pill,
+    backgroundColor: colors["primary-softer"],
+  },
+  chipText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
+});

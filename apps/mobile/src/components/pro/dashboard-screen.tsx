@@ -2,6 +2,7 @@ import { timeLeft } from "@menao/core";
 import { router, type Href } from "expo-router";
 import {
   ArrowRight,
+  Building2,
   CalendarClock,
   CalendarDays,
   Clock,
@@ -251,6 +252,7 @@ function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
     // Documents et fiche de l'artisan (ADR 0123).
     { icon: FolderCheck, label: t.myDocuments, href: "/pro-documents" },
     { icon: UserRound, label: t.myProfile, href: "/pro-profil-public" },
+    { icon: Building2, label: t.myCompany, href: "/pro-entreprise" },
     { icon: Wallet, label: t.myPayments, href: "/pro-paiements" },
   ];
   return (
