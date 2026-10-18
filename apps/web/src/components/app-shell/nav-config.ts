@@ -129,14 +129,16 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       ],
     },
   ],
+  // Back-office par pôle (ADR 0133) : pilotage, vérification des artisans, support, activité de la
+  // plateforme, argent (lecture seule), réglages.
   admin: [
     {
       label: fr.appShell.sections.tools,
+      items: [{ href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true }],
+    },
+    {
+      label: fr.appShell.sections.verification,
       items: [
-        { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
-        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
-        { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
-        { href: "/admin/personnes", label: fr.admin.nav.people, icon: Users },
         {
           href: "/admin/artisans",
           label: fr.admin.nav.artisans,
@@ -151,6 +153,11 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           icon: ClipboardCheck,
           badge: "controles",
         },
+      ],
+    },
+    {
+      label: fr.appShell.sections.support,
+      items: [
         {
           href: "/admin/tickets",
           label: fr.admin.nav.tickets,
@@ -158,6 +165,14 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           badge: "tickets",
           support: true,
         },
+        { href: "/admin/personnes", label: fr.admin.nav.people, icon: Users },
+      ],
+    },
+    {
+      label: fr.appShell.sections.activity,
+      items: [
+        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
+        { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
       ],
     },
     {
@@ -170,7 +185,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
     },
     {
       // Listes de référence, journal d'audit et suivi de l'IA (ADR 0052).
-      label: fr.appShell.sections.control,
+      label: fr.appShell.sections.settings,
       items: [
         { href: "/admin/referentiels", label: fr.admin.nav.references, icon: ListTree },
         { href: "/admin/journal", label: fr.admin.nav.journal, icon: ScrollText },
