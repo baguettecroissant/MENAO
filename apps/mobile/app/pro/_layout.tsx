@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from "expo-router";
-import { ClipboardList, Inbox, LayoutGrid, MessageCircle, Plus } from "lucide-react-native";
+import { ClipboardList, Inbox, LayoutGrid, MessageCircle } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { CenterTabButton } from "@/components/center-tab-button";
 import { QuickActions } from "@/components/pro/quick-actions";
@@ -63,7 +63,7 @@ export default function ProLayout() {
             title: fr.tabs.quickActions,
             tabBarButton: () => (
               <CenterTabButton
-                icon={Plus}
+                brand
                 label={fr.tabs.quickActions}
                 onPress={() => setActions(true)}
               />

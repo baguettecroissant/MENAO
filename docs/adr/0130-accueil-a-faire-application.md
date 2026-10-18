@@ -26,6 +26,7 @@
   - Les rendez-vous affichés plus bas sont ceux des jours suivants (`laterAppointments`), ceux du jour étant dans la liste.
   - Les raccourcis ne gardent que l'activité : agenda, devis, factures, disponibilités. Le reste est dans « Mon profil ».
 - **Menu (+)** : en plus du devis, du créneau bloqué et de la photo de chantier, « Mes disponibilités » et « Mon agenda ». La feuille garde la montée simple d'iOS : un ressort et une apparition en cascade ont été essayés puis retirés, jugés « too much » par l'utilisateur.
+- **Bouton du centre** : le logo MENAO blanc dans le rond bleu, avec une petite pastille « + » qui garde le sens « créer » (idée de l'utilisateur). VoiceOver lit toujours « Actions rapides ».
 - **Aucun lien vers l'abonnement ni vers le site** (CLAUDE.md règle 10). L'inscription non finalisée reste une simple information.
 
 ## Conséquences
