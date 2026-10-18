@@ -19,6 +19,7 @@ export async function SiteFooter() {
         { href: "/garanties", label: fr.nav.guarantees },
         { href: "/mon-espace", label: t.mySpace },
         { href: "/faq", label: t.faq },
+        { href: "/a-propos", label: t.about },
         { href: "/contact", label: t.contact },
       ],
     },

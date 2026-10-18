@@ -1,16 +1,19 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, CircleCheck, MapPin } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, ChevronRight, CircleCheck, MapPin } from "lucide-react";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { GuaranteeSection } from "@/components/site/guarantees";
+import { JsonLd } from "@/components/site/json-ld";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { TradeHero } from "@/components/site/trade-hero";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { shareImage } from "@/lib/site/images";
+import { absoluteUrl } from "@/lib/site/seo";
+import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
 
 const t = fr.seo;
 const steps = fr.site.clientSteps;
@@ -70,6 +73,25 @@ export default async function TradePage({ params }: PageProps<"/[metier]">) {
 
   return (
     <main className="bg-background">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Service",
+              name: t.tradeTitle(trade.label),
+              serviceType: trade.label,
+              areaServed: { "@type": "AdministrativeArea", name: fr.structuredData.area },
+              provider: { "@type": "Organization", "@id": ORGANIZATION_ID, name: fr.meta.name },
+              url: absoluteUrl(`/${trade.code}`),
+            },
+            breadcrumbJsonLd([
+              { name: t.breadcrumbHome, path: "/" },
+              { name: trade.label, path: `/${trade.code}` },
+            ]),
+          ],
+        }}
+      />
       <TradeHero
         id="trade-title"
         code={trade.code}
@@ -155,6 +177,21 @@ export default async function TradePage({ params }: PageProps<"/[metier]">) {
         <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 sm:px-6">
           <SectionHeading id="trade-faq" eyebrow={fr.home.faqEyebrow} title={fr.home.faqTitle} />
           <FaqList items={faq} />
+          <Link
+            href={`/pro/${trade.code}` as Route}
+            className="group flex items-center gap-4 rounded-card border border-primary-soft bg-primary-softer px-5 py-4 transition hover:border-primary/40 hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-primary shadow-card">
+              <BriefcaseBusiness aria-hidden="true" className="size-5" />
+            </span>
+            <span className="flex-1 text-[0.9375rem] font-medium">
+              {fr.pro.tradeLanding.proTeaser(trade.label)}
+            </span>
+            <ArrowRight
+              aria-hidden="true"
+              className="size-4 text-primary transition-transform group-hover:translate-x-0.5"
+            />
+          </Link>
         </div>
         <FaqJsonLd items={faq} />
       </section>

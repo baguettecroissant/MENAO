@@ -11,8 +11,9 @@ import { Steps } from "@/components/site/steps";
 import { TradeHero } from "@/components/site/trade-hero";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { seoCatalog } from "@/lib/site/catalog";
+import { cityArtisans, seoCatalog } from "@/lib/site/catalog";
 import { absoluteUrl } from "@/lib/site/seo";
+import { ORGANIZATION_ID } from "@/lib/site/structured-data";
 import { createPublicClient } from "@/lib/supabase/public";
 import { shareImage } from "@/lib/site/images";
 
@@ -45,10 +46,14 @@ export async function generateMetadata({
   const title = t.cityMetaTitle(data.trade.label, data.commune.nom, data.commune.departement);
   const description = t.cityDescription(data.trade.label, data.commune.nom);
   const path = `/${data.trade.code}/${data.commune.slug}`;
+  // Garde-fou (ADR 0134) : sans artisan, la page reste utile au visiteur mais n'est pas indexée
+  // (contenu trop proche des autres communes) ; ses liens restent suivis.
+  const artisans = await cityArtisans(data.trade.code, data.commune.code_insee);
   return {
     title,
     description,
     alternates: { canonical: path },
+    ...(artisans.length === 0 ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title,
       description,
@@ -71,12 +76,8 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
   const { trade, commune, trades, communes } = data;
 
   const supabase = createPublicClient();
-  const { data: rows } = await supabase.rpc("public_artisans_for_commune", {
-    p_trade_code: trade.code,
-    p_code_insee: commune.code_insee,
-    p_limit: 12,
-  });
-  const artisans = (rows ?? []).map((r) => ({
+  const rows = await cityArtisans(trade.code, commune.code_insee);
+  const artisans = rows.map((r) => ({
     ...r,
     avatarUrl: r.avatar_path
       ? supabase.storage.from("avatars").getPublicUrl(r.avatar_path).data.publicUrl
@@ -98,7 +99,12 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         name: title,
         serviceType: trade.label,
         areaServed: { "@type": "City", name: commune.nom },
-        provider: { "@type": "Organization", name: "MENAO", url: absoluteUrl("/") },
+        provider: {
+          "@type": "Organization",
+          "@id": ORGANIZATION_ID,
+          name: "MENAO",
+          url: absoluteUrl("/"),
+        },
         url: absoluteUrl(path),
       },
       ...(artisans.length

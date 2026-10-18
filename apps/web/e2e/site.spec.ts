@@ -90,6 +90,51 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(page.getByText("Votre message est envoyé")).toBeVisible();
 });
 
+test("fondations SEO : Espace Pro par métier, À propos, llms.txt, pages ville sans artisan (ADR 0134)", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/plombier");
+  await page.getByRole("link", { name: /^Vous êtes plombier \?/ }).click();
+  await expect(page).toHaveURL(/\/pro\/plombier$/);
+  await expect(
+    page.getByRole("heading", {
+      name: "Artisan plombier : des chantiers près de chez vous",
+      level: 1,
+    }),
+  ).toBeVisible();
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/pro\/plombier$/);
+  const proLd = (await page.locator('script[type="application/ld+json"]').allTextContents()).join();
+  expect(proLd).toContain('"@type":"BreadcrumbList"');
+  expect(proLd).toContain('"@type":"FAQPage"');
+  expect((await page.goto("/pro/astronaute"))?.status()).toBe(404);
+
+  // Identité de MENAO (Organization) sur l'accueil, page À propos dans le pied de page.
+  await page.goto("/");
+  const homeLd = (
+    await page.locator('script[type="application/ld+json"]').allTextContents()
+  ).join();
+  expect(homeLd).toContain('"@type":"Organization"');
+  await page.getByRole("contentinfo").getByRole("link", { name: "À propos" }).click();
+  await expect(page).toHaveURL(/\/a-propos$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Rendre les travaux");
+
+  // Grasse : aucun plombier du seed n'y intervient, la page n'est ni indexée ni dans le sitemap.
+  await page.goto("/plombier/grasse");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, follow");
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  expect(sitemap).toContain("/pro/plombier</loc>");
+  expect(sitemap).toContain("/a-propos</loc>");
+  expect(sitemap).not.toContain("/plombier/grasse</loc>");
+
+  const llms = await request.get("/llms.txt");
+  expect(llms.headers()["content-type"]).toContain("text/markdown");
+  const text = await llms.text();
+  expect(text).toMatch(/^# MENAO/);
+  expect(text).toContain("/pro/plombier)");
+  expect(await (await request.get("/llms-full.txt")).text()).toContain("## Questions fréquentes");
+});
+
 test("retour dans l'application après une signature ou un paiement (ADR 0060)", async ({
   page,
 }) => {
