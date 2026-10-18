@@ -83,8 +83,20 @@ export async function mockCompanySearch(page: Page, siret: string) {
   });
 }
 
-/** Remplace la Géoplateforme (géocodage BAN) par des réponses fictives. */
+// Image PNG transparente de 1 × 1 pixel, à la place des tuiles du Plan IGN.
+const BLANK_TILE = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
+
+/**
+ * Remplace la Géoplateforme (géocodage BAN) par des réponses fictives, et ses tuiles du Plan IGN
+ * (aperçu de la zone, ADR 0126) par une image vide : la CI ne dépend pas du service.
+ */
 export async function mockGeocoding(page: Page) {
+  await page.route("https://data.geopf.fr/wmts**", (route) =>
+    route.fulfill({ contentType: "image/png", body: BLANK_TILE }),
+  );
   await page.route("https://data.geopf.fr/geocodage/**", async (route) => {
     const url = new URL(route.request().url());
     const municipality = url.searchParams.get("type") === "municipality";

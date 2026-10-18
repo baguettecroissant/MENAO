@@ -1,4 +1,4 @@
-import { fakeSiret, mockCompanySearch } from "./fixtures";
+import { fakeSiret, mockCompanySearch, mockGeocoding } from "./fixtures";
 import { expect, test } from "./test";
 
 // Connexion avec Google ou Apple pour les clients (ADR 0108). Le fournisseur n'est pas joint en
@@ -84,6 +84,7 @@ test("inscription artisan avec Google : choix gardés, compte artisan créé au 
   expect(SERVICE_KEY).not.toBe("");
   const email = `e2e-google-pro-${Date.now()}@example.test`;
   await mockCompanySearch(page, fakeSiret("active"));
+  await mockGeocoding(page);
   let authorize: URL | null = null;
   await page.route(`${SUPABASE_URL}/auth/v1/authorize**`, async (route) => {
     authorize = new URL(route.request().url());

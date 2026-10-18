@@ -7,6 +7,29 @@ import { z } from "zod";
  */
 export const GEOPLATEFORME_SEARCH_URL = "https://data.geopf.fr/geocodage/search";
 
+/**
+ * Tuiles du Plan IGN (Géoplateforme, WMTS en projection Web Mercator « PM ») : gratuites, sans clé,
+ * sous Licence Ouverte Etalab 2.0, source « IGN » citée sous la carte. Aperçu de la zone d'intervention
+ * (ADR 0126) ; la position des tuiles vient de zoneMapView (@menao/core).
+ */
+export const PLAN_IGN_TILE_URL = "https://data.geopf.fr/wmts";
+
+export function planIgnTileUrl({ z, x, y }: { z: number; x: number; y: number }): string {
+  const query = new URLSearchParams({
+    SERVICE: "WMTS",
+    REQUEST: "GetTile",
+    VERSION: "1.0.0",
+    LAYER: "GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2",
+    STYLE: "normal",
+    TILEMATRIXSET: "PM",
+    FORMAT: "image/png",
+    TILEMATRIX: String(z),
+    TILEROW: String(y),
+    TILECOL: String(x),
+  });
+  return `${PLAN_IGN_TILE_URL}?${query}`;
+}
+
 const featureCollection = z.object({
   features: z.array(
     z.object({

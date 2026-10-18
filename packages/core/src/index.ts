@@ -38,6 +38,7 @@ export * from "./agenda";
 export * from "./profile";
 export * from "./app-return";
 export * from "./overview";
+export * from "./zone-map";
 export * from "./webhook";
 export * from "./reference";
 export * from "./ai-runs";

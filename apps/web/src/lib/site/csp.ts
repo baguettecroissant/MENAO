@@ -60,6 +60,8 @@ export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: 
       "data:",
       "blob:",
       supabase,
+      // Tuiles du Plan IGN, aperçu de la zone d'intervention (ADR 0126).
+      "https://data.geopf.fr",
       ...(preview ? [...live, "https://vercel.com"] : []),
     ],
     ["font-src", "'self'", ...live],

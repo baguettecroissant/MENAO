@@ -8,11 +8,9 @@ import { Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { searchAddresses, type AddressSuggestion } from "@/lib/geo/geoplateforme";
 import { ChoiceGroup, LinkButton, StepFooter, StepTitle } from "./signup-ui";
+import { ZoneMap } from "./zone-map";
 
 const t = fr.pro.signUp.zone;
-
-/** Taille du cercle de l'illustration selon le rayon (part de la hauteur du cadre). */
-const CIRCLE: Record<number, number> = { 10: 30, 20: 42, 30: 54, 50: 68, 75: 84, 100: 96 };
 
 /** Étape « zone » : rayon autour du siège (ou d'une autre adresse de départ). */
 export function ZoneStep({
@@ -28,7 +26,6 @@ export function ZoneStep({
   const base = draft.base;
   const fromSeat = base !== null && draft.company?.citycode === base.citycode;
   const place = base ? (fromSeat && draft.company?.city ? draft.company.city : base.label) : "";
-  const size = CIRCLE[draft.radiusKm] ?? 42;
 
   return (
     <>
@@ -65,19 +62,12 @@ export function ZoneStep({
       )}
 
       {base && (
-        <div
-          aria-hidden="true"
-          className="relative h-52 overflow-hidden rounded-card border border-border bg-primary-softer [background-image:repeating-linear-gradient(0deg,transparent_0_34px,rgb(255_255_255/0.9)_34px_37px),repeating-linear-gradient(90deg,transparent_0_46px,rgb(255_255_255/0.9)_46px_49px)]"
-        >
-          <div
-            className="absolute top-1/2 left-1/2 aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-primary/15 transition-[height] duration-300"
-            style={{ height: `${size}%` }}
-          />
-          <div className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-surface bg-primary" />
-          <span className="absolute top-[calc(50%+14px)] left-1/2 -translate-x-1/2 rounded-pill bg-surface px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap">
-            {fromSeat && draft.company?.city ? draft.company.city : t.address}
-          </span>
-        </div>
+        <ZoneMap
+          lon={base.lon}
+          lat={base.lat}
+          radiusKm={draft.radiusKm}
+          label={fromSeat && draft.company?.city ? draft.company.city : t.address}
+        />
       )}
 
       <ChoiceGroup<number>
