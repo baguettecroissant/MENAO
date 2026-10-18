@@ -1,3 +1,4 @@
+import { PORTFOLIO_MAX_PHOTOS } from "@menao/core";
 import Image from "next/image";
 import { ButtonLink, Card } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
@@ -7,7 +8,7 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { PresentationForm } from "./presentation-form";
 
 const t = fr.pro.onboarding.profile;
-const MAX_PHOTOS = 12;
+const MAX_PHOTOS = PORTFOLIO_MAX_PHOTOS;
 
 export default async function ProfileStepPage() {
   const { supabase, userId, artisan, avatarPath, photos } = await getOnboardingContext();

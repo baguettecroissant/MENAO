@@ -252,6 +252,54 @@ export const fr = {
     privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
     after: "Une fois votre entreprise vérifiée, MENAO vous écrit pour la suite.",
   },
+  /** Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site. */
+  proPayments: {
+    title: "Paiements",
+    intro:
+      "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
+    fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
+    notValidated:
+      "La configuration des paiements sera disponible dès que l'équipe MENAO aura validé votre dossier.",
+    start: "Configurer mes paiements avec Stripe",
+    resume: "Reprendre la configuration Stripe",
+    complete: "Compléter mes informations sur Stripe",
+    active:
+      "Votre compte de paiement est actif : vous pouvez recevoir les paiements de vos clients.",
+    payoutsPending:
+      "Les virements vers votre compte bancaire seront activés dès que Stripe aura terminé ses vérifications.",
+    dashboard: "Ouvrir mon tableau de bord Stripe",
+    linkExpired: "Le lien Stripe a expiré : reprenez la configuration.",
+    dueTitle: "Stripe attend encore quelques informations pour activer vos paiements :",
+    duePayoutsTitle: "Pour activer les virements vers votre banque, Stripe attend encore :",
+    deadline: (date: string) => `À fournir avant le ${date}.`,
+    verifying:
+      "Stripe vérifie les informations transmises. Rien à faire de votre côté pour l'instant : revenez un peu plus tard pour voir où en est votre compte.",
+    verifyingItems: "En cours de vérification :",
+    check: "Actualiser l'état de mon compte",
+    refused:
+      "Stripe a refusé l'ouverture de ce compte de paiement. Contactez l'équipe MENAO pour trouver une solution.",
+    groups: {
+      banque: "Coordonnées bancaires (IBAN) pour recevoir vos paiements",
+      identite: "Pièce d'identité du représentant légal",
+      representant: "Informations sur le représentant légal (nom, date de naissance, coordonnées)",
+      adresse: "Adresse de l'entreprise ou du représentant",
+      entreprise: "Informations sur l'entreprise (raison sociale, SIREN, téléphone)",
+      justificatif_entreprise:
+        "Justificatif d'entreprise (par exemple un extrait Kbis ou un avis de situation INSEE)",
+      personnes: "Dirigeants et bénéficiaires effectifs",
+      activite: "Description de votre activité",
+      conditions: "Acceptation des conditions d'utilisation de Stripe",
+      autre: "Autres informations demandées par Stripe",
+    },
+    errors: {
+      not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
+      no_account: "Aucun compte de paiement pour le moment.",
+      rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
+      unavailable: "Stripe est momentanément indisponible. Réessayez dans quelques minutes.",
+      forbidden: "Cette action est réservée aux comptes professionnels.",
+    } as Record<string, string>,
+    loadError: "L'état de votre compte de paiement n'a pas pu être chargé. Réessayez.",
+  },
   /** « Mes documents » (ADR 0123), comme la page des documents du site. */
   proDocuments: {
     title: "Mes documents",
@@ -329,6 +377,18 @@ export const fr = {
       `${min} caractères au moins (${length} pour l'instant) : votre expérience, vos spécialités, votre façon de travailler.`,
     save: "Enregistrer la présentation",
     saved: "Présentation enregistrée.",
+    // Photos de réalisations (ADR 0124), comme sur le site.
+    portfolioTitle: "Photos de réalisations",
+    portfolioHint: (max: number) =>
+      `Jusqu'à ${max} photos de chantiers terminés (sans personne ni adresse visible).`,
+    portfolioEmpty: "Aucune photo pour le moment.",
+    portfolioAdd: "Ajouter des photos",
+    portfolioFull: (max: number) => `${max} photos au plus : retirez-en une pour en ajouter.`,
+    portfolioSending: (done: number, total: number) => `Envoi de la photo ${done} sur ${total}…`,
+    portfolioDone: (n: number) => (n > 1 ? `${n} photos ajoutées.` : "Photo ajoutée."),
+    portfolioPhoto: (n: number) => `Réalisation ${n}`,
+    portfolioDelete: (n: number) => `Retirer la réalisation ${n}`,
+    portfolioDeleteError: "La photo n'a pas pu être retirée. Réessayez.",
   },
   // Barres d'onglets des maquettes (ADR 0084) : client « Accueil · Chantiers · (Recherche) ·
   // Documents · Messages », artisan « Accueil · Chantiers · (+) · Devis · Messages ».
@@ -1412,6 +1472,14 @@ export const fr = {
     shortcuts: "Raccourcis",
     myDocuments: "Mes documents",
     myProfile: "Ma photo et ma présentation",
+    myPayments: "Paiements",
+    // Visibilité (ADR 0124) : sans parler d'abonnement ni de prix (règles d'Apple, règle 10).
+    visible: "Votre profil est visible des particuliers : vous recevez leurs demandes.",
+    hiddenTitle: "Votre profil n'est pas encore visible des particuliers",
+    hiddenPayments: "Activez vos paiements pour recevoir l'argent de vos chantiers.",
+    hiddenSignup:
+      "Votre inscription n'est pas encore finalisée : l'équipe MENAO vous a envoyé la marche à suivre par e-mail.",
+    activatePayments: "Activer mes paiements",
     toAnswer: (n: number) => `${n} à répondre`,
   },
   /** Demandes reçues par l'artisan (F-16, F-17) : mêmes textes que l'espace pro du site. */

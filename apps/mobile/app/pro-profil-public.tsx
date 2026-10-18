@@ -1,22 +1,24 @@
-import { PRESENTATION_MIN_LENGTH } from "@menao/core";
-import { Camera } from "lucide-react-native";
+import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH } from "@menao/core";
+import { Camera, ImagePlus, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadDossier, savePresentation } from "@/lib/artisan-dossier";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
+import { deletePortfolioPhoto, loadPortfolio, type PortfolioPhoto } from "@/lib/portfolio";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proPublicProfile;
-const { colors, font, spacing } = theme;
+const { colors, font, radius, spacing } = theme;
 
 /**
- * Photo de profil et présentation de la fiche (ADR 0113), comme sur le site : photo recadrée au
- * carré et réduite à 512 px, présentation de 100 caractères au moins.
+ * Photo de profil, présentation et photos de réalisations de la fiche (ADR 0113, 0124), comme sur
+ * le site : photo recadrée au carré et réduite à 512 px, présentation de 100 caractères au moins,
+ * 12 photos de réalisations au plus.
  */
 export default function PublicProfileScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
@@ -32,6 +34,7 @@ export default function PublicProfileScreen() {
       <Title>{t.title}</Title>
       <PhotoCard hasPhoto={Boolean(dossier?.avatarPath)} onSaved={reload} />
       <PresentationCard initial={dossier?.presentation ?? ""} onSaved={reload} />
+      <PortfolioCard />
     </Screen>
   );
 }
@@ -114,6 +117,97 @@ function PresentationCard({ initial, onSaved }: { initial: string; onSaved: () =
   );
 }
 
+/** Photos de réalisations : ajout (appareil photo ou photothèque) et retrait, 12 au plus. */
+function PortfolioCard() {
+  const [photos, reload] = useFocusData(loadPortfolio);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const list = photos ?? [];
+  const remaining = PORTFOLIO_MAX_PHOTOS - list.length;
+
+  async function add() {
+    setMessage(null);
+    const source = await choosePhotoSource(t.portfolioTitle);
+    if (!source) return;
+    const picked = await pickPhotos(source, Math.max(remaining, 1));
+    if ("error" in picked) return setMessage({ tone: "error", text: picked.error });
+    const chosen = picked.photos.slice(0, remaining);
+    let sent = 0;
+    for (const [index, photo] of chosen.entries()) {
+      setProgress(t.portfolioSending(index + 1, chosen.length));
+      const status = await uploadPhoto({ purpose: "portfolio" }, photo);
+      if (status !== "ok") {
+        setMessage({
+          tone: "error",
+          text: fr.search.upload[status] ?? fr.search.upload.unavailable,
+        });
+        break;
+      }
+      sent += 1;
+    }
+    setProgress(null);
+    if (sent > 0) {
+      forgetProfileSummary();
+      if (sent === chosen.length) setMessage({ tone: "success", text: t.portfolioDone(sent) });
+    }
+    await reload();
+  }
+
+  async function remove(photo: PortfolioPhoto) {
+    setMessage(null);
+    const ok = await deletePortfolioPhoto(photo);
+    if (!ok) setMessage({ tone: "error", text: t.portfolioDeleteError });
+    forgetProfileSummary();
+    await reload();
+  }
+
+  return (
+    <Card>
+      <Text style={styles.heading}>{t.portfolioTitle}</Text>
+      <Body muted>{t.portfolioHint(PORTFOLIO_MAX_PHOTOS)}</Body>
+      {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+      {photos === undefined ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : list.length === 0 ? (
+        <Body muted>{t.portfolioEmpty}</Body>
+      ) : (
+        <View style={styles.grid}>
+          {list.map((photo, index) => (
+            <View key={photo.id} style={styles.tile}>
+              <Image
+                source={{ uri: photo.url }}
+                style={styles.thumb}
+                alt={t.portfolioPhoto(index + 1)}
+              />
+              <Pressable
+                role="button"
+                aria-label={t.portfolioDelete(index + 1)}
+                onPress={() => remove(photo)}
+                hitSlop={8}
+                style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
+              >
+                <X size={16} color={colors["primary-foreground"]} />
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      )}
+      {progress ? <Body muted>{progress}</Body> : null}
+      {remaining > 0 ? (
+        <Button
+          label={t.portfolioAdd}
+          icon={ImagePlus}
+          variant="secondary"
+          onPress={add}
+          loading={progress !== null}
+        />
+      ) : (
+        <Body muted>{t.portfolioFull(PORTFOLIO_MAX_PHOTOS)}</Body>
+      )}
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
@@ -127,4 +221,24 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     marginBottom: spacing(1),
   },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  tile: { width: "31%", aspectRatio: 1 },
+  thumb: {
+    width: "100%",
+    height: "100%",
+    borderRadius: radius.input,
+    backgroundColor: colors["primary-softer"],
+  },
+  remove: {
+    position: "absolute",
+    top: spacing(1),
+    right: spacing(1),
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(17, 23, 40, 0.7)",
+  },
+  pressed: { opacity: 0.8 },
 });

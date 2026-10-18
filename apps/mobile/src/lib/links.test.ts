@@ -36,6 +36,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/bienvenue")).toBe("/pro-bienvenue");
     expect(appRouteForSitePath("/pro/onboarding/documents")).toBe("/pro-documents");
     expect(appRouteForSitePath("/pro/onboarding/profil")).toBe("/pro-profil-public");
+    expect(appRouteForSitePath("/pro/onboarding/paiements")).toBe("/pro-paiements");
   });
 
   it("ignore les paramètres et la barre finale", () => {

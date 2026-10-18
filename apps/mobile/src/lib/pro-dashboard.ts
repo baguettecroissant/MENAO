@@ -1,14 +1,17 @@
 import {
+  artisanVisibility,
   clientsAwaitingQuote,
   documentsToRenew,
   monthToDateRevenue,
   requestsAwaitingAnswer,
   revenueTrend,
+  subscriptionGrantsAccess,
   upcomingAgenda,
   type AgendaKind,
   type ChantierStatus,
   type MonitoredDocumentType,
   type RevenueTrend,
+  type SubscriptionStatus,
 } from "@menao/core";
 import { loadInbox, type InboxItem } from "./pro-requests";
 import { countReviewsToAnswer } from "./pro-reviews";
@@ -21,6 +24,11 @@ export type Dashboard = {
   urssafMissing: boolean;
   /** Documents arrivant à échéance sans renouvellement déposé (F-51), comme sur le site. */
   documentsToRenew: MonitoredDocumentType[];
+  /**
+   * Visibilité auprès des particuliers d'un artisan validé (ADR 0124) : ce qui manque, sans
+   * jamais parler d'abonnement dans l'application (règles d'Apple, CLAUDE.md règle 10).
+   */
+  visibility: { visible: boolean; missing: ("abonnement" | "paiements")[] } | null;
   awaitingClients: number;
   revenue: { cents: number; trend: RevenueTrend; previousMonth: string };
   responseTime: { minutes: number | null; responses: number };
@@ -54,6 +62,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     profile,
     artisan,
     reviewsToAnswer,
+    subscription,
   ] = await Promise.all([
     loadInbox(),
     supabase.rpc("artisan_chantiers"),
@@ -62,10 +71,14 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     supabase
       .from("artisans")
-      .select("status, radiation_reason, artisan_documents(type, status, date_fin)")
+      .select(
+        "status, radiation_reason, connect_charges_enabled, artisan_documents(type, status, date_fin)",
+      )
       .eq("user_id", userId)
       .maybeSingle(),
     countReviewsToAnswer(),
+    // Abonnement de l'artisan (lecture limitée à son compte, RLS).
+    supabase.from("subscriptions").select("status").maybeSingle(),
   ]);
   if (inbox === null) return null;
   const now = new Date();
@@ -95,6 +108,22 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       artisan.data?.status === "valide" || artisan.data?.status === "suspendu"
         ? documentsToRenew(artisan.data.artisan_documents, now)
         : [],
+    visibility:
+      artisan.data?.status === "valide"
+        ? (() => {
+            const v = artisanVisibility({
+              status: "valide",
+              subscriptionActive: subscriptionGrantsAccess(
+                (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+              ),
+              connectChargesEnabled: artisan.data.connect_charges_enabled,
+            });
+            return {
+              visible: v.visible,
+              missing: v.missing.filter((m) => m !== "validation"),
+            };
+          })()
+        : null,
     awaitingClients: clientsAwaitingQuote(rows),
     revenue: {
       cents: revenue.currentCents,
