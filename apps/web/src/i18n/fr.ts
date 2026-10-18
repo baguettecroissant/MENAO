@@ -3231,6 +3231,8 @@ export const fr = {
         radius: "Jusqu'à quelle distance ?",
         km: (km: number) => `${km} km`,
         summary: (km: number, place: string) => `Jusqu'à ${km} km autour de ${place}.`,
+        // Source du Plan IGN, exigée par la Licence Ouverte (ADR 0126).
+        mapCredit: "© IGN",
         communesLater:
           "Vous préférez une liste de communes ? Vous pourrez la choisir depuis votre espace.",
       },

@@ -4,6 +4,7 @@ import {
   communeSearchParams,
   geoplateformeSearchUrl,
   parseGeoFeatures,
+  planIgnTileUrl,
   toAddressSuggestions,
   toCommuneSuggestions,
 } from "../src/geo";
@@ -48,5 +49,13 @@ describe("géocodage Géoplateforme", () => {
   it("ignore une réponse inattendue", () => {
     expect(parseGeoFeatures({ erreur: true })).toEqual([]);
     expect(parseGeoFeatures(null)).toEqual([]);
+  });
+
+  it("construit l'adresse d'une tuile du Plan IGN (ADR 0126)", () => {
+    expect(planIgnTileUrl({ z: 8, x: 128, y: 93 })).toBe(
+      "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0" +
+        "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM" +
+        "&FORMAT=image%2Fpng&TILEMATRIX=8&TILEROW=93&TILECOL=128",
+    );
   });
 });

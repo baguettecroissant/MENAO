@@ -8,12 +8,10 @@ import { searchStartAddress, type AddressSuggestion } from "@/lib/geo";
 import { Card, LinkText } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ChoiceGroup, Muted, StepTitle } from "./signup-parts";
+import { ZoneMap } from "./zone-map";
 
 const t = fr.proSignup.zone;
 const { colors, font, radius, spacing } = theme;
-
-/** Taille du cercle de l'illustration selon le rayon (part de la hauteur du cadre). */
-const CIRCLE: Record<number, number> = { 10: 30, 20: 42, 30: 54, 50: 68, 75: 84, 100: 96 };
 
 /** Étape « zone » : rayon autour du siège, ou d'une autre adresse de départ. */
 export function ZoneStep({
@@ -27,7 +25,6 @@ export function ZoneStep({
   const base = draft.base;
   const fromSeat = base !== null && draft.company?.citycode === base.citycode;
   const place = base ? (fromSeat && draft.company?.city ? draft.company.city : base.label) : "";
-  const size = CIRCLE[draft.radiusKm] ?? 42;
 
   return (
     <>
@@ -60,10 +57,12 @@ export function ZoneStep({
         />
       )}
       {base ? (
-        <View style={styles.map} aria-hidden>
-          <View style={[styles.circle, { height: `${size}%` }]} />
-          <View style={styles.pin} />
-        </View>
+        <ZoneMap
+          lon={base.lon}
+          lat={base.lat}
+          radiusKm={draft.radiusKm}
+          label={fromSeat && draft.company?.city ? draft.company.city : t.address}
+        />
       ) : null}
       <ChoiceGroup<number>
         legend={t.radius}
@@ -91,30 +90,4 @@ const styles = StyleSheet.create({
   baseText: { flex: 1, gap: 2 },
   baseTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
   baseHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  map: {
-    height: 180,
-    borderRadius: radius.card,
-    backgroundColor: colors["primary-softer"],
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  circle: {
-    position: "absolute",
-    aspectRatio: 1,
-    borderRadius: 999,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: "rgba(72,105,246,0.15)",
-  },
-  pin: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 3,
-    borderColor: colors.surface,
-    backgroundColor: colors.primary,
-  },
 });
