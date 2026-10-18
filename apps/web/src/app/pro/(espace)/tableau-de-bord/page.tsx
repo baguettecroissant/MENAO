@@ -1,24 +1,28 @@
 import {
+  artisanTodo,
   clientsAwaitingQuote,
+  isAwaitingQuote,
+  laterAppointments,
   levelProgress,
   monthToDateRevenue,
   requestsAwaitingAnswer,
   revenueTrend,
   upcomingAgenda,
+  type ChantierStatus,
 } from "@menao/core";
 import { parseGrade } from "@menao/validation";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
 import { fr } from "@/i18n/fr";
-import { artisanActivity, requireProSpace } from "@/lib/artisan/space";
+import { artisanActivity, getProShell, requireProSpace } from "@/lib/artisan/space";
 import { formatMonthName } from "@/lib/format";
-
-const t = fr.pro.onboarding.requests;
-const dayShort = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: "UTC" });
 
 export const metadata: Metadata = { title: `${fr.pro.dashboard.title} — MENAO` };
 
-/** Tableau de bord artisan (F-16) : chantiers et demandes de l'artisan connecté. */
+/**
+ * Tableau de bord artisan (F-16) : indicateurs, « À faire maintenant » (ADR 0131, comme
+ * l'application) et rendez-vous des jours suivants.
+ */
 export default async function DashboardPage() {
   const {
     supabase,
@@ -41,26 +45,25 @@ export default async function DashboardPage() {
             : onboarding.status.suspendu,
         ]
       : []),
-    ...(urssafMissing && status !== "radie" ? [onboarding.documents.urssafMissing] : []),
-    ...(documentsToRenew.length
-      ? [
-          onboarding.documents.expiringBanner(
-            documentsToRenew.map((type) => onboarding.documents.types[type]).join(", "),
-          ),
-        ]
-      : []),
   ];
   // Mêmes lectures que les compteurs du menu (mises en cache pour la requête).
-  const [{ chantiers, inbox }, { data: payments }, { data: response }, { data: gradeData }] =
-    await Promise.all([
-      artisanActivity(),
-      // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
-      supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
-      // Temps de réponse moyen (F-10), sur les 6 derniers mois.
-      supabase.rpc("my_response_stats"),
-      // F-24 : carte « Mon grade MENAO ».
-      supabase.rpc("artisan_grade"),
-    ]);
+  const [
+    { chantiers, inbox },
+    { data: payments },
+    { data: response },
+    { data: gradeData },
+    { badges },
+  ] = await Promise.all([
+    artisanActivity(),
+    // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
+    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+    // Temps de réponse moyen (F-10), sur les 6 derniers mois.
+    supabase.rpc("my_response_stats"),
+    // F-24 : carte « Mon grade MENAO ».
+    supabase.rpc("artisan_grade"),
+    // Compteurs du menu (mis en cache) : avis sans réponse.
+    getProShell(),
+  ]);
   const grade = parseGrade(gradeData);
   const gradeLevels =
     grade?.levels.map((l) => ({
@@ -84,11 +87,36 @@ export default async function DashboardPage() {
     startAt: c.start_at as string | null,
     particulierId: c.particulier_id,
   }));
-  const latest = requestsAwaitingAnswer(inbox, now).slice(0, 3);
-  const paths = latest.map((r) => r.photo_path).filter((p): p is string => Boolean(p));
-  const { data: signed } = paths.length
-    ? await supabase.storage.from("project-photos").createSignedUrls(paths, 3600)
-    : { data: [] };
+  const appointments = upcomingAgenda(rows, now, 8).map(({ kind, at, row }) => ({
+    kind,
+    chantierId: row.chantier_id,
+    startsAt: at,
+    title: row.title,
+    place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
+  }));
+  const todo = artisanTodo(
+    {
+      requests: requestsAwaitingAnswer(inbox, now).map((r) => ({
+        id: r.request_id,
+        expiresAt: r.expires_at,
+        title: r.summary || r.trade_label,
+        place: [r.code_postal, r.ville_nom].filter(Boolean).join(" "),
+      })),
+      appointments: appointments.map((a) => ({ ...a, at: a.startsAt })),
+      quotesToSend: rows
+        .filter((c) => isAwaitingQuote(c.status as ChantierStatus))
+        .map((c) => ({
+          chantierId: c.chantier_id,
+          title: c.title,
+          place: [c.code_postal, c.ville_nom].filter(Boolean).join(" "),
+        })),
+      documentsToRenew,
+      urssafMissing: urssafMissing && status !== "radie",
+      paymentsMissing: visibility.missing.includes("paiements"),
+      reviewsToAnswer: badges.reviews,
+    },
+    now,
+  );
 
   return (
     <DashboardView
@@ -118,28 +146,11 @@ export default async function DashboardPage() {
         minutes: response?.[0]?.minutes ?? null,
         responses: response?.[0]?.responses ?? 0,
       }}
-      appointments={upcomingAgenda(rows, now).map(({ kind, at, row }) => ({
-        kind,
-        chantierId: row.chantier_id,
-        startsAt: at,
-        title: row.title,
-        place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
-      }))}
-      requests={latest.map((r) => ({
-        requestId: r.request_id,
-        title: r.summary || r.trade_label,
-        place: [r.code_postal, r.ville_nom].filter(Boolean).join(" "),
-        start:
-          r.date_mode === "date" && r.date_souhaitee
-            ? t.startWish(dayShort.format(new Date(`${r.date_souhaitee}T00:00:00Z`)))
-            : r.date_mode === "des_que_possible"
-              ? t.startAsap
-              : t.startUnknown,
-        urgent: r.urgence,
-        thumbUrl: r.photo_path
-          ? (signed?.find((s) => s.path === r.photo_path)?.signedUrl ?? null)
-          : null,
-      }))}
+      appointments={laterAppointments(
+        appointments.map((a) => ({ ...a, at: a.startsAt })),
+        now,
+      ).slice(0, 4)}
+      todo={todo}
     />
   );
 }

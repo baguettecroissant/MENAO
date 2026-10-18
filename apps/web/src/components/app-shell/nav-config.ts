@@ -17,7 +17,6 @@ import {
   Repeat,
   ScrollText,
   Send,
-  Settings,
   ShieldCheck,
   Sparkles,
   Star,
@@ -94,12 +93,13 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       ],
     },
   ],
+  // Même organisation que l'application (ADR 0130, 0131) : l'activité, puis le profil ; le compte
+  // et l'aide dans le menu de la photo.
   pro: [
     {
       label: fr.appShell.sections.activity,
       items: [
         { href: "/pro/tableau-de-bord", label: fr.pro.space.dashboard, icon: LayoutGrid },
-        { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
         { href: "/pro/demandes", label: fr.pro.space.requests, icon: Inbox, badge: "requests" },
         { href: "/pro/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
         { href: "/pro/devis", label: fr.pro.space.quotes, icon: FileText, badge: "quotes" },
@@ -109,17 +109,23 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           icon: MessageCircle,
           badge: "messages",
         },
+        { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
         { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
-        { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
-        { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
       ],
     },
     {
-      label: fr.appShell.sections.account,
+      label: fr.appShell.sections.profile,
       items: [
-        { href: "/pro/onboarding", label: fr.pro.space.file, icon: UserRound },
+        // « Mon profil » regroupe entreprise, métiers, zone, documents et paiements (ADR 0131).
+        {
+          href: "/pro/mon-profil",
+          label: fr.pro.space.myProfile,
+          icon: UserRound,
+          also: ["/pro/onboarding"],
+        },
         { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
-        { href: "/compte", label: fr.account.proNav, icon: Settings },
+        { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
+        { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
       ],
     },
   ],
@@ -183,7 +189,9 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
     { href: "/contact", label: fr.appShell.help },
   ],
   pro: [
-    { href: "/compte", label: fr.account.title },
+    { href: "/pro/mon-profil", label: fr.pro.space.myProfile },
+    { href: "/pro/profil", label: fr.pro.space.publicProfile },
+    { href: "/compte", label: fr.pro.hub.rows.identity },
     { href: "/notifications", label: fr.clientApp.notifications },
     { href: "/echanges", label: fr.exchanges.title },
     { href: "/contact", label: fr.appShell.help },

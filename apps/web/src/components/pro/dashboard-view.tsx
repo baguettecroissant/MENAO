@@ -1,4 +1,4 @@
-import type { RevenueTrend } from "@menao/core";
+import type { RevenueTrend, TodoItem } from "@menao/core";
 import {
   ArrowRight,
   CalendarDays,
@@ -14,6 +14,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BadgeIcon } from "@/components/pro/grade/badge-icon";
+import { TodoList } from "@/components/pro/todo-list";
 import { Alert, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatDayLong, formatDuration, formatTime } from "@/lib/format";
@@ -48,7 +49,8 @@ export function DashboardView({
   revenue,
   responseTime,
   appointments,
-  requests,
+  requests = [],
+  todo,
   grade = null,
   missingPhoto = false,
 }: {
@@ -62,7 +64,12 @@ export function DashboardView({
   /** Temps de réponse moyen aux demandes (6 derniers mois). */
   responseTime: { minutes: number | null; responses: number };
   appointments: DashboardAppointment[];
-  requests: DashboardRequest[];
+  requests?: DashboardRequest[];
+  /**
+   * « À faire maintenant » (ADR 0131) : remplace les dernières demandes et les alertes de
+   * documents ; `appointments` ne contient alors que les jours suivants. Absent dans les aperçus.
+   */
+  todo?: TodoItem[];
   /** « Mon grade MENAO » (F-24) : niveau, points, avancement, dernier badge, badge à fêter. */
   grade?: {
     level: number;
@@ -181,9 +188,15 @@ export function DashboardView({
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-1">
           <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.title}
+            {todo ? t.greeting(firstName) : t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.greeting(firstName)}</p>
+          <p className="text-sm text-muted-foreground">
+            {todo
+              ? todo.length > 0
+                ? t.todoCount(todo.length)
+                : t.allDone
+              : t.greeting(firstName)}
+          </p>
         </div>
         {notices.map((notice) => (
           <Alert key={notice} tone="error">
@@ -216,6 +229,7 @@ export function DashboardView({
             detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
           />
         </div>
+        {todo && <TodoList items={todo} />}
         {missingPhoto && (
           <Link
             href="/pro/onboarding/profil"
@@ -266,8 +280,10 @@ export function DashboardView({
             <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
           </Link>
         )}
-        {/* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */}
-        {appointments.length > 0 ? (
+        {todo ? (
+          appointmentSection
+        ) : /* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */
+        appointments.length > 0 ? (
           <>
             {appointmentSection}
             {requestSection}
