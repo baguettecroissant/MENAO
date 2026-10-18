@@ -1,11 +1,23 @@
 import "server-only";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "./catalog";
+import { publishedGuides } from "./guides";
 import { absoluteUrl } from "./seo";
 
 const t = fr.llms;
 const link = (label: string, path: string, detail?: string) =>
   `- [${label}](${absoluteUrl(path)})${detail ? `: ${detail}` : ""}`;
+
+/** Guides publiés (ADR 0135), jamais les brouillons. */
+function guideLinks(): string[] {
+  const guides = publishedGuides();
+  if (guides.length === 0) return [];
+  return [
+    "",
+    `## ${t.guides}`,
+    ...guides.map((g) => link(g.title, `/guides/${g.slug}`, g.description)),
+  ];
+}
 
 /** Liens principaux, communs aux deux fichiers. */
 async function sections(): Promise<string[]> {
@@ -27,6 +39,7 @@ async function sections(): Promise<string[]> {
       (trade) =>
         `${link(trade.label, `/${trade.code}`, t.tradeLink(trade.label))} ([${t.proTradeLink(trade.label)}](${absoluteUrl(`/pro/${trade.code}`)}))`,
     ),
+    ...guideLinks(),
     "",
     `## ${t.about}`,
     link(fr.footer.about, "/a-propos", t.links.about),
