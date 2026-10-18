@@ -1,10 +1,19 @@
 import { router, type Href } from "expo-router";
-import { Camera, CalendarX, ChevronRight, FilePen, type LucideIcon } from "lucide-react-native";
+import {
+  CalendarDays,
+  CalendarClock,
+  Camera,
+  CalendarX,
+  ChevronRight,
+  FilePen,
+  type LucideIcon,
+} from "lucide-react-native";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, FadeInDown, ReduceMotion, SlideInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fr } from "@/i18n/fr";
-import { theme } from "@/ui/theme";
 import { Tappable } from "@/ui";
+import { theme } from "@/ui/theme";
 
 const t = fr.proQuickActions;
 const { colors, font, radius, spacing } = theme;
@@ -23,52 +32,75 @@ const ACTIONS: { icon: LucideIcon; label: string; detail: string; href: Href }[]
     detail: t.photoDetail,
     href: { pathname: "/pro-choisir", params: { action: "photo" } },
   },
+  {
+    icon: CalendarClock,
+    label: t.availability,
+    detail: t.availabilityDetail,
+    href: "/pro-disponibilites",
+  },
+  { icon: CalendarDays, label: t.agenda, detail: t.agendaDetail, href: "/pro-agenda" },
 ];
 
 /**
  * Menu du bouton (+) de l'artisan, comme la barre d'onglets des maquettes : créer un devis,
- * bloquer un créneau, ajouter une photo au suivi d'un chantier.
+ * bloquer un créneau, ajouter une photo au suivi d'un chantier, gérer ses disponibilités, ouvrir
+ * l'agenda. La feuille monte avec un ressort et les actions apparaissent en cascade (ADR 0130).
  */
 export function QuickActions({ open, onClose }: { open: boolean; onClose: () => void }) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} aria-label={t.close} role="button" onPress={onClose} />
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing(4) }]}>
+    <Modal visible={open} transparent animationType="none" onRequestClose={onClose}>
+      <Animated.View
+        entering={FadeIn.duration(180).reduceMotion(ReduceMotion.System)}
+        style={styles.backdropWrap}
+      >
+        <Pressable style={styles.backdrop} aria-label={t.close} role="button" onPress={onClose} />
+      </Animated.View>
+      <Animated.View
+        entering={SlideInDown.springify().damping(20).reduceMotion(ReduceMotion.System)}
+        style={[styles.sheet, { paddingBottom: insets.bottom + spacing(4) }]}
+      >
         <View style={styles.handle} />
         <Text role="heading" style={styles.title}>
           {t.title}
         </Text>
-        {ACTIONS.map(({ icon: Icon, label, detail, href }) => (
-          <Tappable
+        {ACTIONS.map(({ icon: Icon, label, detail, href }, index) => (
+          <Animated.View
             key={label}
-            role="link"
-            aria-label={label}
-            onPress={() => {
-              onClose();
-              router.push(href);
-            }}
-            style={styles.row}
+            entering={FadeInDown.delay(80 + index * 45)
+              .duration(260)
+              .reduceMotion(ReduceMotion.System)}
           >
-            <View style={styles.icon}>
-              <Icon size={20} color={colors.primary} />
-            </View>
-            <View style={styles.texts}>
-              <Text style={styles.label}>{label}</Text>
-              <Text style={styles.detail}>{detail}</Text>
-            </View>
-            <ChevronRight size={18} color={colors["muted-foreground"]} />
-          </Tappable>
+            <Tappable
+              role="link"
+              aria-label={label}
+              onPress={() => {
+                onClose();
+                router.push(href);
+              }}
+              style={styles.row}
+            >
+              <View style={styles.icon}>
+                <Icon size={20} color={colors.primary} />
+              </View>
+              <View style={styles.texts}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={styles.detail}>{detail}</Text>
+              </View>
+              <ChevronRight size={18} color={colors["muted-foreground"]} />
+            </Tappable>
+          </Animated.View>
         ))}
         <Tappable role="button" onPress={onClose} style={styles.close}>
           <Text style={styles.closeText}>{t.close}</Text>
         </Tappable>
-      </View>
+      </Animated.View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  backdropWrap: { flex: 1 },
   backdrop: { flex: 1, backgroundColor: `${colors.foreground}66` },
   sheet: {
     gap: spacing(2),

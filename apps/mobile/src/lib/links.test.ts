@@ -20,10 +20,11 @@ describe("liens des notifications vers les écrans de l'application", () => {
 
   it("ouvre les écrans de l'espace artisan, sans renvoi vers le site", () => {
     expect(appRouteForSitePath("/pro/tableau-de-bord")).toBe("/pro");
-    expect(appRouteForSitePath("/pro/demandes")).toBe("/pro-demandes");
+    expect(appRouteForSitePath("/pro/demandes")).toBe("/pro/demandes");
     expect(appRouteForSitePath(`/pro/demandes/${ID}`)).toBe(`/opportunite/${ID}`);
     expect(appRouteForSitePath("/pro/chantiers")).toBe("/pro/chantiers");
-    expect(appRouteForSitePath("/pro/devis")).toBe("/pro/devis");
+    expect(appRouteForSitePath("/pro/devis")).toBe("/pro/chantiers?vue=devis");
+    expect(appRouteForSitePath("/pro/profil")).toBe("/pro-ma-fiche");
     expect(appRouteForSitePath("/pro/agenda")).toBe("/pro-agenda");
     expect(appRouteForSitePath(`/pro/chantiers/${ID}`)).toBe(`/pro-chantier/${ID}`);
     expect(appRouteForSitePath(`/pro/chantiers/${ID}/devis`)).toBe(`/pro-chantier/${ID}/devis`);

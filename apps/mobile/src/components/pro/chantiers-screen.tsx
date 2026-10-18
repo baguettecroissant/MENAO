@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArtisanChantierCard } from "@/components/pro/chantier-row";
@@ -18,7 +18,7 @@ const { colors, spacing } = theme;
  * Onglet « Chantiers » de l'artisan (F-18), comme sur le site et la barre d'onglets des maquettes :
  * état, lieu, client, rendez-vous ou démarrage de chaque chantier.
  */
-export function ArtisanChantiersScreen() {
+export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
   const [rows, reload] = useFocusData(loadArtisanChantiers);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -39,7 +39,9 @@ export function ArtisanChantiersScreen() {
           />
         }
       >
-        <TabHeader title={t.title} subtitle={t.subtitle} />
+        <TabHeader title={t.title} subtitle={t.subtitle}>
+          {switcher}
+        </TabHeader>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
         {rows?.length === 0 ? <EmptyState illustration="chantiers">{t.empty}</EmptyState> : null}
         {(rows ?? []).map((r) => (

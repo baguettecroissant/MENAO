@@ -1,26 +1,19 @@
-import { timeLeft } from "@menao/core";
 import { router, type Href } from "expo-router";
 import {
   ArrowRight,
-  Building2,
   CalendarClock,
   CalendarDays,
   Clock,
   FileText,
-  FolderCheck,
   MapPin,
   Minus,
   ReceiptText,
-  Star,
   TrendingDown,
   TrendingUp,
-  UserRound,
-  Wallet,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import {
-  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -31,21 +24,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { StatusPill } from "@/components/chantier/parts";
 import { GradeCard } from "@/components/grade/grade-card";
 import { NewBadgeModal } from "@/components/grade/new-badge-modal";
 import { PhotoNudge } from "@/components/pro/photo-nudge";
+import { TodoList } from "@/components/pro/todo-list";
 import { PushPrompt } from "@/components/push-prompt";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
 import { loadGrade, markBadgesSeen } from "@/lib/grade";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
-import { requestStart } from "@/lib/pro-requests";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
-import { Body, Button, Card, Notice, ScreenSkeleton, Tappable } from "@/ui";
+import { Notice, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDashboard;
@@ -192,66 +184,19 @@ function AppointmentCard({ appointment: a }: { appointment: Dashboard["appointme
 }
 
 /**
- * Demande de devis (maquette « Dashboard ») : titre, lieu, début souhaité, badge « Urgent »,
- * temps restant pour répondre et première photo du projet.
+ * Raccourcis vers les écrans d'activité : agenda, devis, factures, disponibilités. Tout ce qui
+ * concerne la fiche, l'entreprise, les documents et les paiements est dans « Mon profil » (ADR 0129).
  */
-function RequestCard({ request: r, now }: { request: Dashboard["requests"][number]; now: Date }) {
-  const title = r.summary || r.trade_label;
-  const place = [r.code_postal, r.ville_nom].filter(Boolean).join(" ");
-  const left = timeLeft(new Date(r.expires_at), now);
-  return (
-    <Tappable
-      role="link"
-      aria-label={[title, place, r.urgence ? fr.proRequests.urgent : null]
-        .filter(Boolean)
-        .join(", ")}
-      onPress={() => router.push(`/opportunite/${r.request_id}`)}
-      style={[styles.card, styles.request]}
-    >
-      <View style={styles.requestText}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        {place ? (
-          <View style={styles.row}>
-            <MapPin size={14} color={colors.primary} />
-            <Text style={styles.meta}>{place}</Text>
-          </View>
-        ) : null}
-        <View style={styles.chips}>
-          <StatusPill text={requestStart(r)} tone="primary" />
-          {r.urgence ? <StatusPill text={fr.proRequests.urgent} tone="danger" dot /> : null}
-        </View>
-        {left ? (
-          <View style={styles.row}>
-            <Clock size={13} color={colors["muted-foreground"]} />
-            <Text style={styles.meta}>{fr.proRequests.timeLeft(left.hours, left.minutes)}</Text>
-          </View>
-        ) : null}
-      </View>
-      {r.photoUrl ? <Image source={{ uri: r.photoUrl }} style={styles.thumb} alt="" /> : null}
-    </Tappable>
-  );
-}
-
-/**
- * Raccourcis vers les écrans de gestion : devis, factures, avis (à répondre), disponibilités,
- * documents, photo et présentation.
- */
-function Shortcuts({ reviewsToAnswer }: { reviewsToAnswer: number }) {
+function Shortcuts() {
   const items: { icon: LucideIcon; label: string; href: Href; badge?: string }[] = [
-    { icon: FileText, label: fr.proQuotes.open, href: "/pro/devis" },
-    { icon: ReceiptText, label: fr.proInvoices.open, href: "/pro-factures" },
+    { icon: CalendarDays, label: t.agenda, href: "/pro-agenda" },
     {
-      icon: Star,
-      label: fr.proReviews.title,
-      href: "/pro-avis",
-      badge: reviewsToAnswer > 0 ? t.toAnswer(reviewsToAnswer) : undefined,
+      icon: FileText,
+      label: fr.proQuotes.open,
+      href: { pathname: "/pro/chantiers", params: { vue: "devis" } },
     },
+    { icon: ReceiptText, label: fr.proInvoices.open, href: "/pro-factures" },
     { icon: CalendarClock, label: fr.proAvailability.title, href: "/pro-disponibilites" },
-    // Documents et fiche de l'artisan (ADR 0123).
-    { icon: FolderCheck, label: t.myDocuments, href: "/pro-documents" },
-    { icon: UserRound, label: t.myProfile, href: "/pro-profil-public" },
-    { icon: Building2, label: t.myCompany, href: "/pro-entreprise" },
-    { icon: Wallet, label: t.myPayments, href: "/pro-paiements" },
   ];
   return (
     <View style={styles.section}>
@@ -309,31 +254,17 @@ export function DashboardScreen() {
   }
 
   if (data === undefined) return <ScreenSkeleton />;
-  const now = new Date();
+  // Rendez-vous des jours suivants : ceux du jour sont dans « À faire maintenant ».
   const appointments = data ? (
     <View style={styles.section}>
       <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro-agenda" }} />
-      {data.appointments.length === 0 ? (
+      {data.later.length === 0 ? (
         <View style={[styles.card, styles.empty]}>
           <Text style={styles.emptyText}>{t.noUpcoming}</Text>
           <Arc style={styles.emptyArc} />
         </View>
       ) : (
-        data.appointments.map((a) => (
-          <AppointmentCard key={`${a.kind}-${a.chantierId}`} appointment={a} />
-        ))
-      )}
-    </View>
-  ) : null;
-  const requests = data ? (
-    <View style={styles.section}>
-      <SectionHead title={t.latestRequests} link={{ label: t.seeAll, href: "/pro-demandes" }} />
-      {data.requests.length === 0 ? (
-        <View style={styles.dashed}>
-          <Text style={styles.emptyText}>{t.noRequests}</Text>
-        </View>
-      ) : (
-        data.requests.map((r) => <RequestCard key={r.request_id} request={r} now={now} />)
+        data.later.map((a) => <AppointmentCard key={`${a.kind}-${a.chantierId}`} appointment={a} />)
       )}
     </View>
   ) : null;
@@ -355,7 +286,12 @@ export function DashboardScreen() {
           />
         }
       >
-        <TabHeader title={t.title} subtitle={t.greeting(data?.firstName ?? null)} />
+        <TabHeader
+          title={t.greeting(data?.firstName ?? null)}
+          subtitle={
+            data ? (data.todo.length > 0 ? t.todoCount(data.todo.length) : t.allDone) : undefined
+          }
+        />
 
         {data === null ? (
           <Notice tone="error">{t.error}</Notice>
@@ -365,59 +301,9 @@ export function DashboardScreen() {
             {data.radiated ? (
               <Notice tone="error">{t.radiated(data.radiated.reason)}</Notice>
             ) : null}
-            {data.urssafMissing ? (
-              <View style={styles.urssaf}>
-                <Notice tone="info">{t.urssafMissing}</Notice>
-                <Button
-                  label={t.urssafAdd}
-                  variant="secondary"
-                  onPress={() =>
-                    router.push({ pathname: "/pro-document", params: { type: "urssaf" } })
-                  }
-                />
-              </View>
-            ) : null}
-            {data.documentsToRenew.length > 0 ? (
-              <View style={styles.urssaf}>
-                <Notice tone="error">
-                  {t.toRenew(
-                    data.documentsToRenew.map((type) => fr.proDossier.documents[type]).join(", "),
-                  )}
-                </Notice>
-                <Button
-                  label={t.renew}
-                  variant="secondary"
-                  onPress={() =>
-                    router.push(
-                      data.documentsToRenew.length === 1
-                        ? { pathname: "/pro-document", params: { type: data.documentsToRenew[0] } }
-                        : "/pro-documents",
-                    )
-                  }
-                />
-              </View>
-            ) : null}
-            {data.visibility?.visible ? (
-              <Notice tone="success">{t.visible}</Notice>
-            ) : data.visibility ? (
-              <Card>
-                <View style={styles.visibility}>
-                  <Text style={styles.visibilityTitle}>{t.hiddenTitle}</Text>
-                  {data.visibility.missing.includes("paiements") ? (
-                    <>
-                      <Body muted>{t.hiddenPayments}</Body>
-                      <Button
-                        label={t.activatePayments}
-                        variant="secondary"
-                        onPress={() => router.push("/pro-paiements")}
-                      />
-                    </>
-                  ) : null}
-                  {data.visibility.missing.includes("abonnement") ? (
-                    <Body muted>{t.hiddenSignup}</Body>
-                  ) : null}
-                </View>
-              </Card>
+            {/* Inscription non finalisée : aucune action possible dans l'application (règle 10). */}
+            {data.visibility && data.visibility.missing.includes("abonnement") ? (
+              <Notice tone="info">{t.hiddenSignup}</Notice>
             ) : null}
             <PushPrompt />
             <View style={styles.kpis}>
@@ -440,7 +326,7 @@ export function DashboardScreen() {
                       : t.responseDetail(data.responseTime.responses)}
                   </Text>
                 }
-                href="/pro-demandes"
+                href="/pro/demandes"
               />
               <Kpi
                 wide
@@ -450,21 +336,11 @@ export function DashboardScreen() {
                 href="/pro-factures"
               />
             </View>
+            <TodoList items={data.todo} />
             {profile && !profile.avatarUrl ? <PhotoNudge /> : null}
             {grade ? <GradeCard grade={grade} /> : null}
-            {/* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */}
-            {data.appointments.length > 0 ? (
-              <>
-                {appointments}
-                {requests}
-              </>
-            ) : (
-              <>
-                {requests}
-                {appointments}
-              </>
-            )}
-            <Shortcuts reviewsToAnswer={data.reviewsToAnswer} />
+            {appointments}
+            <Shortcuts />
           </>
         )}
       </ScrollView>
@@ -480,7 +356,6 @@ export function DashboardScreen() {
 const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 
 const styles = StyleSheet.create({
-  urssaf: { gap: theme.spacing(2) },
   safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(5), gap: spacing(7), paddingBottom: spacing(10) },
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
@@ -560,15 +435,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: colors["muted-foreground"],
   },
-  request: { flexDirection: "row", gap: spacing(3), padding: spacing(4) },
-  requestText: { flex: 1, gap: spacing(2) },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  thumb: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-soft"],
-  },
   empty: { paddingHorizontal: spacing(6), paddingVertical: spacing(10) },
   emptyText: {
     fontFamily: font.regular,
@@ -578,17 +444,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   emptyArc: { position: "absolute", right: -6, bottom: 8, width: 80, height: 48 },
-  dashed: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-    padding: spacing(6),
-  },
   tiles: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
-  visibility: { gap: spacing(2.5) },
-  visibilityTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
   tile: {
     flexGrow: 1,
     flexBasis: "40%",

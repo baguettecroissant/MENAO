@@ -1,6 +1,7 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import {
+  inboxGroups,
   CLIENT_CANCEL_REASONS,
   joinNames,
   MAX_ARTISANS_PER_REQUEST,
@@ -92,5 +93,21 @@ describe("joinNames", () => {
     expect(joinNames(["Noé"])).toBe("Noé");
     expect(joinNames(["Noé", "Inès"])).toBe("Noé et Inès");
     expect(joinNames(["Noé", "Inès", "Lou"])).toBe("Noé, Inès et Lou");
+  });
+});
+
+describe("onglet « Demandes » (ADR 0130)", () => {
+  it("à traiter d'abord, l'échéance la plus proche en tête ; puis les autres dans leur ordre", () => {
+    const now = new Date("2026-10-18T08:00:00Z");
+    const rows = [
+      { id: "acceptee", status: "acceptee", expires_at: "2026-10-17T08:00:00Z" },
+      { id: "loin", status: "envoyee", expires_at: "2026-10-19T20:00:00Z" },
+      { id: "expiree", status: "envoyee", expires_at: "2026-10-18T07:00:00Z" },
+      { id: "proche", status: "envoyee", expires_at: "2026-10-18T12:00:00Z" },
+      { id: "refusee", status: "refusee", expires_at: "2026-10-19T08:00:00Z" },
+    ];
+    const { open, done } = inboxGroups(rows, now);
+    expect(open.map((r) => r.id)).toEqual(["proche", "loin"]);
+    expect(done.map((r) => r.id)).toEqual(["acceptee", "expiree", "refusee"]);
   });
 });

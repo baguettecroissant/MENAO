@@ -57,6 +57,21 @@ export function requestsAwaitingAnswer<T extends { status: string; expires_at: s
   return rows.filter((r) => r.status === "envoyee" && new Date(r.expires_at) > now);
 }
 
+/**
+ * Onglet « Demandes » (ADR 0130) : d'abord celles à traiter, l'échéance la plus proche en tête,
+ * puis les autres (acceptées, refusées, expirées, annulées) dans leur ordre d'origine.
+ */
+export function inboxGroups<T extends { status: string; expires_at: string }>(
+  rows: readonly T[],
+  now: Date,
+): { open: T[]; done: T[] } {
+  const open = requestsAwaitingAnswer(rows, now).sort(
+    (a, b) => Date.parse(a.expires_at) - Date.parse(b.expires_at),
+  );
+  const ids = new Set(open);
+  return { open, done: rows.filter((r) => !ids.has(r)) };
+}
+
 /** Temps de réponse moyen (F-10) : publié à partir de 3 réponses, sur les 180 derniers jours. */
 export const RESPONSE_TIME_MIN_RESPONSES = 3;
 export const RESPONSE_TIME_WINDOW_DAYS = 180;

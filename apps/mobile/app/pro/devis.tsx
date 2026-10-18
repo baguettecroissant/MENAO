@@ -1,4 +1,6 @@
-import { ArtisanQuotesScreen } from "@/components/pro/quotes-screen";
+import { Redirect } from "expo-router";
 
-/** Onglet « Devis » de l'artisan (F-19 à F-21) : devis à envoyer et devis envoyés. */
-export default ArtisanQuotesScreen;
+/** Ancien onglet « Devis » : les devis sont dans l'onglet Chantiers (ADR 0130). */
+export default function DevisTab() {
+  return <Redirect href={{ pathname: "/pro/chantiers", params: { vue: "devis" } }} />;
+}
