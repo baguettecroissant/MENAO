@@ -11,6 +11,18 @@ export type MonitoredDocumentType = (typeof MONITORED_DOCUMENT_TYPES)[number];
 export const EXPIRY_WARNING_DAYS = 30;
 export const EXPIRY_URGENT_DAYS = 7;
 
+/**
+ * Relances de l'artisan avant l'expiration de chaque document : J-30, J-15 et J-7 (cahier des
+ * charges du CEO, ADR 0122). Une seule relance par seuil ; miroir de app.remind_expiring_documents.
+ */
+export const EXPIRY_REMINDER_DAYS = [30, 15, 7] as const;
+
+/** Seuil de relance atteint à ce nombre de jours restants (le plus proche), ou null. */
+export function reminderThreshold(daysLeft: number): (typeof EXPIRY_REMINDER_DAYS)[number] | null {
+  if (daysLeft < 0 || daysLeft > EXPIRY_REMINDER_DAYS[0]) return null;
+  return [...EXPIRY_REMINDER_DAYS].reverse().find((t) => daysLeft <= t) ?? null;
+}
+
 export type ExpiryStatus = "ok" | "bientot" | "urgent" | "expire";
 
 const DAY_MS = 86_400_000;
