@@ -11,4 +11,11 @@ describe("dates du calendrier", () => {
   it("affiche la date en toutes lettres", () => {
     expect(formatLongDate("2026-10-25")).toBe("25 octobre 2026");
   });
+
+  it("affiche aussi le jour d'un horodatage, à l'heure de Paris", () => {
+    // Une vérification Sirene renvoie un horodatage complet (plantage de « Mon entreprise »).
+    expect(formatLongDate("2026-10-17T12:34:56.789+00:00")).toBe("17 octobre 2026");
+    expect(formatLongDate("2026-10-17T22:30:00Z")).toBe("18 octobre 2026");
+    expect(formatLongDate("pas une date")).toBe("pas une date");
+  });
 });
