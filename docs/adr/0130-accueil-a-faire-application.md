@@ -25,7 +25,7 @@
   - Les alertes « URSSAF », « documents à renouveler » et « activer les paiements » deviennent des lignes de la liste.
   - Les rendez-vous affichés plus bas sont ceux des jours suivants (`laterAppointments`), ceux du jour étant dans la liste.
   - Les raccourcis ne gardent que l'activité : agenda, devis, factures, disponibilités. Le reste est dans « Mon profil ».
-- **Menu (+)** : en plus du devis, du créneau bloqué et de la photo de chantier, « Mes disponibilités » et « Mon agenda ». La feuille monte avec un ressort et les actions apparaissent en cascade.
+- **Menu (+)** : en plus du devis, du créneau bloqué et de la photo de chantier, « Mes disponibilités » et « Mon agenda ». La feuille garde la montée simple d'iOS : un ressort et une apparition en cascade ont été essayés puis retirés, jugés « too much » par l'utilisateur.
 - **Aucun lien vers l'abonnement ni vers le site** (CLAUDE.md règle 10). L'inscription non finalisée reste une simple information.
 
 ## Conséquences
