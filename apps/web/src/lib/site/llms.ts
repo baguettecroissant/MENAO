@@ -33,6 +33,7 @@ async function sections(): Promise<string[]> {
     `## ${t.pros}`,
     link(fr.nav.pro, "/pro", t.links.pro),
     link(fr.footer.proSignUp, "/pro/inscription", t.links.proSignUp),
+    link(fr.footer.partners, "/partenaires", t.links.partners),
     "",
     `## ${t.trades}`,
     ...trades.map(

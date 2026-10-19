@@ -21,3 +21,4 @@ export * from "./redirect";
 export * from "./request";
 export * from "./review";
 export * from "./referral";
+export * from "./partner-dashboard";

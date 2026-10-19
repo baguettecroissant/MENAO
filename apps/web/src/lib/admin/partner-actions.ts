@@ -131,3 +131,17 @@ export async function cancelPartnerCommission(
   if (partnerId && UUID.test(partnerId)) revalidatePath(`${PATH}/${partnerId}`);
   return { success: t.commissions.cancelDone };
 }
+
+/** Lien de l'espace partenaire (ADR 0139) : créé ou renouvelé ; l'ancien ne répond plus. */
+export async function renewPartnerDashboard(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = text(formData, "partner") ?? "";
+  if (!UUID.test(id)) return { error: fr.errors.generic };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_renew_partner_dashboard", { p_id: id });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
+  revalidatePath(`${PATH}/${id}`);
+  return { success: t.space.renewed };
+}

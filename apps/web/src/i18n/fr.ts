@@ -63,6 +63,50 @@ export const fr = {
       action: "Créer mon compte pro",
     },
   },
+  /** Espace partenaire par lien privé (ADR 0139). */
+  partnerSpace: {
+    metaTitle: "Espace partenaire — MENAO",
+    eyebrow: "Espace partenaire",
+    suspended:
+      "Votre partenariat est suspendu : vos liens ne sont plus attribués. Contactez l'équipe MENAO.",
+    resultsTitle: "Vos résultats",
+    projects: "Demandes de travaux",
+    projectsHint: "arrivées par vos liens",
+    qualified: "Demandes qualifiées",
+    qualifiedHint: "acceptées par un artisan",
+    artisans: "Artisans inscrits",
+    artisansHint: "arrivés par vos liens",
+    paying: "Abonnés payants",
+    payingHint: "premier paiement fait",
+    moneyTitle: "Vos primes",
+    pending: "En attente",
+    pendingHint: (days: number) => `Délai de validation de ${days} jours`,
+    validated: "À facturer",
+    validatedHint: "Envoyez-nous votre facture",
+    paid: "Payées",
+    ratesTitle: "Vos montants",
+    rateDemande: (amount: string) => `${amount} par demande qualifiée`,
+    rateAbonne: (amount: string) => `${amount} par artisan devenu abonné payant`,
+    rateNotSet: "Montant communiqué par l'équipe MENAO",
+    invoice: (email: string) =>
+      `Pour être payé, envoyez votre facture à ${email}, avec le montant « À facturer ». Paiement par virement.`,
+    linksTitle: "Vos liens",
+    linkClients: "Pour vos clients et visiteurs (demande de travaux)",
+    linkPros: "Pour les artisans (inscription)",
+    kitTitle: "Votre kit",
+    kitLead:
+      "À coller sur votre site. Aucun cookie, aucun traceur : vos visiteurs ne sont jamais suivis.",
+    kitLink: "Lien texte",
+    kitButton: "Bouton",
+    kitWidget: "Widget (formulaire intégré)",
+    kitIframe: "Widget sans script (iframe seule)",
+    copy: "Copier",
+    copied: "Copié",
+    disclosure:
+      "Créateur de contenu ? Signalez le partenariat avec la mention « Publicité » ou « Collaboration commerciale » (loi du 9 juin 2023).",
+    privateLink:
+      "Ce lien est personnel : ne le partagez pas. L'équipe MENAO peut le renouveler à tout moment.",
+  },
   /** Widget intégré chez les partenaires (ADR 0138). */
   widget: {
     metaTitle: "MENAO — trouver un artisan du bâtiment vérifié",
@@ -103,6 +147,7 @@ export const fr = {
       ranking: "comment les artisans sont présentés et classés",
       pro: "demandes près de chez soi, devis, signature, paiements et factures, sans commission",
       proSignUp: "inscription et vérification de l'entreprise",
+      partners: "programme partenaires : recommander MENAO contre une prime fixe",
       about: "mission et engagements de MENAO",
       contact: "écrire à l'équipe MENAO",
     },
@@ -196,6 +241,7 @@ export const fr = {
     contact: "Contact",
     about: "À propos",
     guides: "Guides",
+    partners: "Devenir partenaire",
     legalNotice: "Mentions légales",
     terms: "Conditions générales d'utilisation",
     termsPro: "CGV artisans",
@@ -468,6 +514,86 @@ export const fr = {
   },
   pages: {
     /** « À propos » (ADR 0134) : qui est MENAO, pour les visiteurs, Google et les assistants IA. */
+    /** Programme Partenaires, page publique (ADR 0139). */
+    partners: {
+      title: "Devenir partenaire MENAO",
+      metaTitle: "Devenir partenaire MENAO : recommandez des artisans vérifiés",
+      metaDescription:
+        "Agences, syndics, notaires, assureurs, comptables, négoces, créateurs de contenu : recommandez MENAO et recevez une prime pour chaque demande qualifiée et chaque artisan abonné.",
+      eyebrow: "Programme partenaires",
+      heroTitle: "Recommandez des artisans vérifiés,",
+      heroAccent: "soyez récompensé",
+      intro:
+        "Proposez MENAO à vos clients ou à votre audience : vous recevez une prime fixe pour chaque demande de travaux qualifiée et pour chaque artisan devenu abonné.",
+      audienceTitle: "Pour qui ?",
+      audiences: [
+        "Agences immobilières et syndics",
+        "Notaires et assureurs",
+        "Experts-comptables et négoces",
+        "Créateurs de contenu sur la maison et les travaux",
+      ],
+      stepsEyebrow: "Comment ça marche",
+      stepsTitle: "Quatre étapes, aucun traceur",
+      steps: [
+        {
+          title: "Candidatez",
+          text: "Le programme est réservé aux professionnels : un numéro SIRET est demandé.",
+        },
+        {
+          title: "Intégrez votre lien",
+          text: "Un simple lien, un bouton ou notre widget à coller sur votre site, en une ligne.",
+        },
+        {
+          title: "Suivez vos résultats",
+          text: "Votre espace partenaire montre vos demandes, vos artisans et vos primes.",
+        },
+        {
+          title: "Facturez vos primes",
+          text: "Après un délai de validation, vous facturez MENAO et êtes payé par virement.",
+        },
+      ],
+      rulesTitle: "Ce qui est récompensé",
+      rules: [
+        {
+          title: "Une demande qualifiée",
+          text: "Un visiteur arrivé par votre lien décrit son projet, et au moins un artisan accepte sa demande.",
+        },
+        {
+          title: "Un artisan abonné",
+          text: "Un artisan arrivé par votre lien s'inscrit, puis fait son premier paiement après son essai.",
+        },
+      ],
+      amounts: "Les montants des primes vous sont communiqués avec votre inscription.",
+      trustTitle: "Transparence",
+      trust: [
+        "Aucun cookie ni traceur : vos visiteurs ne sont jamais suivis.",
+        "Vous ne voyez jamais les coordonnées des clients ni des artisans.",
+        "Les créateurs de contenu signalent le partenariat (« Publicité » ou « Collaboration commerciale »).",
+      ],
+      formTitle: "Candidater",
+      formLead: "L'équipe MENAO étudie votre candidature et revient vers vous par e-mail.",
+      company: "Nom de l'entreprise",
+      siret: "SIRET",
+      email: "E-mail professionnel",
+      website: "Site web (facultatif)",
+      message: "Votre activité et votre audience",
+      submit: "Envoyer ma candidature",
+      sent: "Candidature envoyée. L'équipe MENAO vous répond par e-mail.",
+      subject: (company: string) => `Candidature partenaire : ${company}`,
+      body: (fields: { company: string; siret: string; website: string; message: string }) =>
+        [
+          `Entreprise : ${fields.company}`,
+          `SIRET : ${fields.siret}`,
+          `Site web : ${fields.website || "non renseigné"}`,
+          "",
+          fields.message,
+        ].join("\n"),
+      errors: {
+        company: "Indiquez le nom de votre entreprise.",
+        message: "Présentez votre activité en quelques mots (1 700 caractères au plus).",
+        website: "Adresse de site invalide.",
+      },
+    },
     about: {
       title: "À propos de MENAO",
       metaDescription:
@@ -4863,6 +4989,16 @@ export const fr = {
         amount: "Montant invalide.",
         days: "Délai de validation : entre 0 et 180 jours.",
         cap: "Plafond : un nombre entier positif, ou vide.",
+      },
+      space: {
+        title: "Espace partenaire",
+        lead: "Lien privé à transmettre au partenaire : ses chiffres, ses montants, ses liens et son kit, sans compte à créer.",
+        none: "Aucun lien pour l'instant.",
+        link: "Lien de l'espace partenaire",
+        create: "Créer le lien",
+        renew: "Renouveler le lien",
+        renewHint: "Renouveler désactive l'ancien lien.",
+        renewed: "Nouveau lien créé.",
       },
       kit: {
         title: "Kit partenaire",

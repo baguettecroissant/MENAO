@@ -4,7 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui";
 
-/** Extrait de code à copier (kit partenaire, ADR 0138) ; reste sélectionnable si la copie échoue. */
+/** Extrait à copier (kit et espace partenaire, ADR 0138, 0139) ; reste sélectionnable si la copie échoue. */
 export function CopySnippet({
   id,
   label,

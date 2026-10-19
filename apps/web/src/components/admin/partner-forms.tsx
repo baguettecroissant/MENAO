@@ -6,6 +6,7 @@ import { fr } from "@/i18n/fr";
 import {
   cancelPartnerCommission,
   markPartnerCommissionsPaid,
+  renewPartnerDashboard,
   savePartner,
   savePartnerSettings,
 } from "@/lib/admin/partner-actions";
@@ -264,6 +265,24 @@ export function CancelCommissionForm({
       </div>
       {error && <FieldError id={`${id}-erreur`}>{error}</FieldError>}
       {state.error && <FieldError>{state.error}</FieldError>}
+    </form>
+  );
+}
+
+/** Création ou renouvellement du lien de l'espace partenaire (ADR 0139). */
+export function RenewDashboardForm({ partnerId, exists }: { partnerId: string; exists: boolean }) {
+  const [state, action, pending] = useActionState(renewPartnerDashboard, initialFormState);
+  return (
+    <form action={action} className="flex flex-col gap-2">
+      <input type="hidden" name="partner" value={partnerId} />
+      {state.success && <Alert tone="success">{state.success}</Alert>}
+      {state.error && <Alert tone="error">{state.error}</Alert>}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" variant="secondary" block={false} disabled={pending}>
+          {exists ? t.space.renew : t.space.create}
+        </Button>
+        {exists && <span className="text-xs text-muted-foreground">{t.space.renewHint}</span>}
+      </div>
     </form>
   );
 }
