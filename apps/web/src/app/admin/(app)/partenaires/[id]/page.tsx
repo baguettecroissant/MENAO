@@ -18,11 +18,13 @@ import {
 } from "@/components/admin/partner-forms";
 import { BannerKit } from "@/components/banner-kit";
 import { CopySnippet } from "@/components/copy-snippet";
+import { Pagination } from "@/components/admin/list-controls";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
+import { parsePage } from "@/lib/admin/follow-up";
 import { getPartner, getPartnerFunnel, type PartnerCommission } from "@/lib/admin/partners";
 import { formatDay } from "@/lib/format";
 
@@ -57,20 +59,25 @@ function detail(c: PartnerCommission): string {
  * Fiche d'un partenaire (F-59, ADR 0136) : liens à diffuser, chiffres, commissions (virement,
  * annulation) et coordonnées. Réservé aux admins.
  */
-export default async function AdminPartnerPage({ params }: PageProps<"/admin/partenaires/[id]">) {
+export default async function AdminPartnerPage({
+  params,
+  searchParams,
+}: PageProps<"/admin/partenaires/[id]">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
+  const page = parsePage((await searchParams).page);
   const { supabase } = await requireAdmin();
   const [data, funnel] = await Promise.all([
-    getPartner(supabase, id),
+    getPartner(supabase, id, page),
     getPartnerFunnel(supabase, id),
   ]);
   if (!data) notFound();
-  const { partner, commissions, projects, artisans } = data;
+  const { partner, commissions, commissionCount, allCommissions, projects, artisans } = data;
   const links = partnerLinks(env.NEXT_PUBLIC_SITE_URL, partner.code);
   const kit = partnerSnippets(env.NEXT_PUBLIC_SITE_URL, partner.code);
-  const totals = partnerTotals(commissions);
-  const payable = commissions.filter((c) => c.status === "validee");
+  // Totaux et virement sur toutes les commissions ; le tableau n'en montre qu'une page.
+  const totals = partnerTotals(allCommissions);
+  const payable = allCommissions.filter((c) => c.status === "validee");
   const rates = funnel ? partnerFunnelRates(funnel) : null;
 
   return (
@@ -235,7 +242,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
         />
       </Card>
 
-      <Card className="flex flex-col gap-4 overflow-x-auto">
+      <Card id="commissions" className="flex scroll-mt-24 flex-col gap-4 overflow-x-auto">
         <CardTitle
           title={k.title}
           action={
@@ -257,7 +264,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
             <PayCommissionsForm partnerId={partner.id} commissionIds={payable.map((c) => c.id)} />
           </div>
         )}
-        {commissions.length === 0 ? (
+        {commissionCount === 0 ? (
           <p className="text-sm text-muted-foreground">{k.empty}</p>
         ) : (
           <table className="w-full min-w-[40rem] text-left text-sm">
@@ -310,6 +317,13 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
             </tbody>
           </table>
         )}
+        <Pagination
+          page={page}
+          total={commissionCount}
+          hrefFor={(p) =>
+            `/admin/partenaires/${partner.id}${p > 1 ? `?page=${p}` : ""}#commissions` as Route
+          }
+        />
       </Card>
 
       <Card className="flex flex-col gap-4">

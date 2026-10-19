@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
+import { PAGE_SIZE } from "./follow-up";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
@@ -36,10 +37,15 @@ const artisanReferralSchema = z.object({
 });
 export type ArtisanReferral = z.infer<typeof artisanReferralSchema>;
 
-/** Les 200 parrainages les plus récents, avec le parrain, le filleul et le mois offert de chacun. */
-export async function listReferrals(supabase: Client, filter: ReferralFilter) {
-  const { data } = await supabase.rpc("admin_referrals", { p_filter: filter });
-  return data ?? [];
+/**
+ * Parrainages, les plus récents d'abord, 50 par page (ADR 0146) : parrain, filleul et mois offert
+ * de chacun.
+ */
+export async function listReferrals(supabase: Client, filter: ReferralFilter, page: number) {
+  const { data, count } = await supabase
+    .rpc("admin_referrals", { p_filter: filter }, { count: "exact" })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+  return { rows: data ?? [], total: count ?? 0 };
 }
 
 export async function getReferralSummary(supabase: Client): Promise<ReferralSummary | null> {

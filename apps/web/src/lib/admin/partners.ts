@@ -2,16 +2,21 @@ import "server-only";
 import type { Database } from "@menao/db";
 import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
+import { PAGE_SIZE } from "./follow-up";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 export type PartnerRow = Database["public"]["Tables"]["partners"]["Row"];
 export type PartnerCommission = Database["public"]["Tables"]["partner_commissions"]["Row"];
 export type PartnerSettings = Database["public"]["Tables"]["partner_settings"]["Row"];
 
-/** Liste du back-office avec les chiffres clés (F-59, ADR 0136). */
-export async function listPartners(supabase: Client) {
-  const { data } = await supabase.rpc("admin_partners");
-  return data ?? [];
+const range = (page: number) => [(page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1] as const;
+
+/** Liste du back-office avec les chiffres clés (F-59, ADR 0136), 50 par page (ADR 0146). */
+export async function listPartners(supabase: Client, page: number) {
+  const { data, count } = await supabase
+    .rpc("admin_partners", undefined, { count: "exact" })
+    .range(...range(page));
+  return { rows: data ?? [], total: count ?? 0 };
 }
 
 export async function getPartnerSettings(supabase: Client): Promise<PartnerSettings | null> {
@@ -19,32 +24,48 @@ export async function getPartnerSettings(supabase: Client): Promise<PartnerSetti
   return data;
 }
 
-/** Fiche d'un partenaire, ses attributions et ses commissions (les plus récentes d'abord). */
-export async function getPartner(supabase: Client, id: string) {
-  const [{ data: partner }, { data: commissions }, { count: projects }, { count: artisans }] =
-    await Promise.all([
-      supabase.from("partners").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("partner_commissions")
-        .select("*")
-        .eq("partner_id", id)
-        .order("created_at", { ascending: false })
-        .limit(500),
-      supabase
-        .from("partner_attributions")
-        .select("id", { count: "exact", head: true })
-        .eq("partner_id", id)
-        .not("project_id", "is", null),
-      supabase
-        .from("partner_attributions")
-        .select("id", { count: "exact", head: true })
-        .eq("partner_id", id)
-        .not("artisan_id", "is", null),
-    ]);
+/**
+ * Fiche d'un partenaire, ses attributions et ses commissions : une page de 50 (les plus récentes
+ * d'abord, ADR 0146), et le statut et le montant de toutes pour les totaux et le virement.
+ */
+export async function getPartner(supabase: Client, id: string, page = 1) {
+  const [
+    { data: partner },
+    { data: commissions, count: commissionCount },
+    { data: allCommissions },
+    { count: projects },
+    { count: artisans },
+  ] = await Promise.all([
+    supabase.from("partners").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("partner_commissions")
+      .select("*", { count: "exact" })
+      .eq("partner_id", id)
+      .order("created_at", { ascending: false })
+      .order("id")
+      .range(...range(page)),
+    supabase
+      .from("partner_commissions")
+      .select("id, status, amount_cents")
+      .eq("partner_id", id)
+      .limit(10000),
+    supabase
+      .from("partner_attributions")
+      .select("id", { count: "exact", head: true })
+      .eq("partner_id", id)
+      .not("project_id", "is", null),
+    supabase
+      .from("partner_attributions")
+      .select("id", { count: "exact", head: true })
+      .eq("partner_id", id)
+      .not("artisan_id", "is", null),
+  ]);
   if (!partner) return null;
   return {
     partner,
     commissions: commissions ?? [],
+    commissionCount: commissionCount ?? 0,
+    allCommissions: allCommissions ?? [],
     projects: projects ?? 0,
     artisans: artisans ?? 0,
   };

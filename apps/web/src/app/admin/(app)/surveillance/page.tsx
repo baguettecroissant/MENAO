@@ -2,6 +2,7 @@ import { MONITORED_DOCUMENT_TYPES, daysUntil, expiryStatus, expiryWatchLimit } f
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ShowMoreTable } from "@/components/admin/show-more";
 import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -112,9 +113,10 @@ function RowsTable({
   status?: (row: Row) => ReactNode;
 }) {
   if (rows.length === 0) return <p className="text-muted-foreground">{empty}</p>;
+  // Par lots de 20 lignes (ADR 0146) : la page reste courte même avec beaucoup d'échéances.
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
+    <ShowMoreTable
+      head={
         <thead className="text-muted-foreground">
           <tr>
             <th scope="col" className="py-2 pr-4">
@@ -133,24 +135,22 @@ function RowsTable({
             )}
           </tr>
         </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.key} className="border-t border-border">
-              <td className="py-3 pr-4">
-                <Link
-                  href={`/admin/artisans/${row.artisanId}` as Route}
-                  className="font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  {row.artisan}
-                </Link>
-              </td>
-              <td className="py-3 pr-4">{row.label}</td>
-              <td className="py-3 pr-4">{row.dateFin ? day.format(new Date(row.dateFin)) : "—"}</td>
-              {status && <td className="py-3">{status(row)}</td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      }
+      rows={rows.map((row) => (
+        <tr key={row.key} className="border-t border-border">
+          <td className="py-3 pr-4">
+            <Link
+              href={`/admin/artisans/${row.artisanId}` as Route}
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              {row.artisan}
+            </Link>
+          </td>
+          <td className="py-3 pr-4">{row.label}</td>
+          <td className="py-3 pr-4">{row.dateFin ? day.format(new Date(row.dateFin)) : "—"}</td>
+          {status && <td className="py-3">{status(row)}</td>}
+        </tr>
+      ))}
+    />
   );
 }

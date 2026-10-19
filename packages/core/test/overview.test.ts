@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { CHANTIER_STATUSES } from "../src/chantier-state";
 import {
+  ACTIVITY_CATEGORIES,
+  activityKinds,
   CHANTIER_STAGES,
   chantierStage,
   chantiersByStage,
   churnRate,
   PROJECT_FILTERS,
+  parseActivityCategory,
   parseChantierStage,
   parseProjectFilter,
   percent,
@@ -101,5 +104,26 @@ describe("listes du back-office : filtres (F-53)", () => {
     expect(parseChantierStage("litige")).toBe("litige");
     expect(parseChantierStage("inconnue")).toBeNull();
     expect(parseChantierStage(["devis"])).toBeNull();
+  });
+});
+
+describe("activité du back-office : catégories (ADR 0146)", () => {
+  it("chaque type d'événement appartient à une seule catégorie", () => {
+    const kinds = ACTIVITY_CATEGORIES.filter((c) => c !== "tout").flatMap(
+      (c) => activityKinds(c) ?? [],
+    );
+    expect(new Set(kinds).size).toBe(kinds.length);
+    expect(kinds).toHaveLength(12);
+  });
+
+  it("« tout » : aucun filtre ; une catégorie : ses types d'événements", () => {
+    expect(activityKinds("tout")).toBeNull();
+    expect(activityKinds("dossiers")).toEqual(["dossier_envoye", "dossier_decision"]);
+  });
+
+  it("catégorie inconnue dans l'adresse : tout", () => {
+    expect(parseActivityCategory("demandes")).toBe("demandes");
+    expect(parseActivityCategory("autre")).toBe("tout");
+    expect(parseActivityCategory(undefined)).toBe("tout");
   });
 });

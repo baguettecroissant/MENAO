@@ -1,10 +1,11 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { FilterChips, listHref } from "@/components/admin/list-controls";
+import { FilterChips, Pagination, listHref } from "@/components/admin/list-controls";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { CancelReferralForm } from "@/components/admin/referral-forms";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
 import {
   REFERRAL_FILTERS,
@@ -29,10 +30,12 @@ const TONES = { en_attente: "primary", recompense: "success", annule: "neutral" 
 export default async function AdminReferralsPage({
   searchParams,
 }: PageProps<"/admin/parrainages">) {
-  const filter = parseReferralFilter((await searchParams).statut);
+  const params = await searchParams;
+  const filter = parseReferralFilter(params.statut);
+  const page = parsePage(params.page);
   const { supabase } = await requireAdmin();
-  const [rows, summary] = await Promise.all([
-    listReferrals(supabase, filter),
+  const [{ rows, total }, summary] = await Promise.all([
+    listReferrals(supabase, filter, page),
     getReferralSummary(supabase),
   ]);
   const counts = summary && {
@@ -166,10 +169,12 @@ export default async function AdminReferralsPage({
             </table>
           </div>
         )}
-        <p className="text-xs text-muted-foreground">
-          {rows.length >= 200 ? `${t.limit} ` : ""}
-          {t.cancelHint}
-        </p>
+        <Pagination
+          page={page}
+          total={total}
+          hrefFor={(p) => listHref(PATH, { statut: filter === "tous" ? null : filter, page: p })}
+        />
+        <p className="text-xs text-muted-foreground">{t.cancelHint}</p>
       </Card>
     </div>
   );

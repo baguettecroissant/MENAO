@@ -3588,7 +3588,7 @@ export type Database = {
       };
       add_ticket_message: { Args: { p_body: string; p_ticket_id: string }; Returns: string };
       admin_activity: {
-        Args: { p_limit?: number };
+        Args: { p_kinds?: string[]; p_limit?: number; p_offset?: number };
         Returns: {
           details: Json;
           kind: string;

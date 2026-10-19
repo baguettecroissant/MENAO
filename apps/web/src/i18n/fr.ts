@@ -4368,6 +4368,7 @@ export const fr = {
     badge: "Back-office",
     nav: {
       overview: "Vue d'ensemble",
+      activity: "Activité",
       requests: "Demandes",
       chantiers: "Chantiers",
       people: "Personnes",
@@ -4383,6 +4384,34 @@ export const fr = {
       journal: "Journal d'audit",
       ai: "Suivi de l'IA",
       signOut: "Me déconnecter",
+    },
+    // Toute l'activité, page par page et par catégorie (ADR 0146).
+    activityLog: {
+      title: "Activité",
+      intro:
+        "Tout ce qui se passe sur MENAO, du plus récent au plus ancien : recherches, demandes, chantiers, dossiers, support, avis et abonnements.",
+      filtersLabel: "Filtrer l'activité",
+      categories: {
+        tout: "Tout",
+        recherches: "Recherches",
+        demandes: "Demandes",
+        chantiers: "Chantiers",
+        dossiers: "Dossiers artisans",
+        support: "Support",
+        avis: "Avis",
+        abonnements: "Abonnements",
+      } as Record<
+        | "tout"
+        | "recherches"
+        | "demandes"
+        | "chantiers"
+        | "dossiers"
+        | "support"
+        | "avis"
+        | "abonnements",
+        string
+      >,
+      limit: "Les 5 000 derniers événements sont consultables.",
     },
     // Contrôle aléatoire des dossiers (ADR 0121).
     spotChecks: {
@@ -4500,6 +4529,7 @@ export const fr = {
       },
       activity: {
         title: "Activité en direct",
+        seeAll: "Voir toute l'activité",
         empty: "Aucune activité pour le moment.",
         recherche: "Nouvelle recherche",
         demande_envoyee: (artisan: string) => `Demande envoyée à ${artisan}`,
@@ -4756,11 +4786,18 @@ export const fr = {
             ? "1 résultat"
             : `${n.toLocaleString("fr-FR")} résultats`,
       empty: "Aucun résultat pour ces critères.",
+      // Tableaux affichés par lots (ADR 0146).
+      showMore: (next: number, remaining: number) =>
+        `Afficher ${next} de plus (${remaining.toLocaleString("fr-FR")} restant${remaining > 1 ? "s" : ""})`,
       pagination: {
         label: "Pagination",
         previous: "Précédents",
         next: "Suivants",
         page: (n: number, total: number) => `Page ${n} sur ${total}`,
+        // Pages sans total (activité, ADR 0146).
+        pageOnly: (n: number) => `Page ${n}`,
+        newer: "Plus récentes",
+        older: "Plus anciennes",
       },
       none: "—",
       name: "Nom",
@@ -5190,7 +5227,6 @@ export const fr = {
       rewardedOn: (date: string) => `Récompensé le ${date}`,
       cancelled: (reason: string) => `Annulé : ${reason}`,
       empty: "Aucun parrainage pour l'instant.",
-      limit: "Les 200 plus récents sont affichés.",
       cancelReason: "Motif de l'annulation",
       cancel: "Annuler",
       cancelHint: "Seulement avant la récompense ; aucun mois ne sera offert.",

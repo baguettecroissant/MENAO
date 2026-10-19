@@ -80,8 +80,16 @@ export async function getOverview(supabase: Client): Promise<Overview | null> {
   return parsed.success ? parsed.data : null;
 }
 
-export async function getActivity(supabase: Client, limit = 40): Promise<ActivityItem[]> {
-  const { data } = await supabase.rpc("admin_activity", { p_limit: limit });
+export async function getActivity(
+  supabase: Client,
+  limit = 10,
+  { offset = 0, kinds = null }: { offset?: number; kinds?: readonly string[] | null } = {},
+): Promise<ActivityItem[]> {
+  const { data } = await supabase.rpc("admin_activity", {
+    p_limit: limit,
+    p_offset: offset,
+    ...(kinds ? { p_kinds: [...kinds] } : {}),
+  });
   return (data ?? []).map((row) => ({
     occurredAt: row.occurred_at,
     kind: row.kind,
@@ -91,6 +99,25 @@ export async function getActivity(supabase: Client, limit = 40): Promise<Activit
         : {},
   }));
 }
+
+/**
+ * Page de l'activité (ADR 0146) : une ligne de plus que la page indique qu'il en reste d'autres,
+ * sans compter tout l'historique.
+ */
+export async function getActivityPage(
+  supabase: Client,
+  { page, kinds }: { page: number; kinds: readonly string[] | null },
+) {
+  const items = await getActivity(supabase, ACTIVITY_PAGE_SIZE + 1, {
+    offset: (page - 1) * ACTIVITY_PAGE_SIZE,
+    kinds,
+  });
+  return { items: items.slice(0, ACTIVITY_PAGE_SIZE), hasNext: items.length > ACTIVITY_PAGE_SIZE };
+}
+
+/** 50 événements par page ; 5 000 au plus en remontant (borne de la base). */
+export const ACTIVITY_PAGE_SIZE = 50;
+export const ACTIVITY_MAX_PAGES = 100;
 
 export async function getTodo(supabase: Client): Promise<Todo> {
   const [dossiers, expiring, spotChecks] = await Promise.all([
