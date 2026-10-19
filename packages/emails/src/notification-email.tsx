@@ -118,9 +118,23 @@ export function NotificationEmail({
                   borderRadius: 8,
                   margin: "0 0 16px",
                   padding: "10px 14px",
+                  // Paragraphes d'une réponse de l'équipe conservés.
+                  whiteSpace: "pre-line",
                 }}
               >
                 {quoted(content.quote)}
+              </Text>
+            )}
+            {content.postscript && (
+              <Text
+                style={{
+                  fontSize: 15,
+                  lineHeight: "22px",
+                  color: colors.foreground,
+                  margin: "0 0 12px",
+                }}
+              >
+                {typo(content.postscript)}
               </Text>
             )}
             <Section style={{ textAlign: "center", paddingTop: 8 }}>

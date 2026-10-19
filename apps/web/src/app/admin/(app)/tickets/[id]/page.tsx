@@ -150,6 +150,13 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
                   ticketId={ticket.id}
                   label={t.dispute.replyLabel}
                   submit={t.dispute.replySubmit}
+                  hint={
+                    ticket.user_id
+                      ? t.dispute.replyToAccount
+                      : ticket.contact_email
+                        ? t.dispute.replyByEmail(ticket.contact_email)
+                        : undefined
+                  }
                 />
               )}
               {open && dispute && <DisputeDecision ticketId={ticket.id} />}

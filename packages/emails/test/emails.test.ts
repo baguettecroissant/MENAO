@@ -380,6 +380,27 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  it("réponse à un déclarant sans compte (ADR 0140) : le texte dans l'e-mail, lien vers Contact", () => {
+    const reply = notificationContent(
+      "reponse_contact",
+      {
+        titre: "Candidature partenaire : Agence Exemple",
+        message: "Bonjour, merci pour votre candidature.",
+      },
+      ctx,
+    );
+    expect(reply.subject).toBe("Réponse de l'équipe MENAO à votre message");
+    expect(reply.title).toBe("L'équipe MENAO vous a répondu");
+    expect(reply.quote).toBe("Bonjour, merci pour votre candidature.");
+    expect(reply.paragraphs.slice(1)).toEqual([
+      `Voici la réponse de l'équipe MENAO à votre message ${quoted("Candidature partenaire : Agence Exemple")} :`,
+    ]);
+    expect(reply.cta).toEqual({ label: "Nous écrire", url: "https://menao.example/contact" });
+    expect(reply.postscript).toBe(
+      "Pour poursuivre l'échange, écrivez-nous depuis la page Contact, en reprenant l'objet de ce message.",
+    );
+  });
+
   it("réponse de l'équipe à un autre échange (contact, dossier) : lien vers « Mes échanges »", () => {
     const ticket = "8f14e45f-ceea-4e7a-9b1a-3a5d1c2b7e90";
     const reply = notificationContent(

@@ -1731,9 +1731,10 @@ export type Database = {
           send_after: string;
           sent_at: string | null;
           status: Database["public"]["Enums"]["notification_status"];
+          ticket_id: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           updated_at: string;
-          user_id: string;
+          user_id: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -1752,9 +1753,10 @@ export type Database = {
           send_after?: string;
           sent_at?: string | null;
           status?: Database["public"]["Enums"]["notification_status"];
+          ticket_id?: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           updated_at?: string;
-          user_id: string;
+          user_id?: string | null;
         };
         Update: {
           attempts?: number;
@@ -1772,11 +1774,20 @@ export type Database = {
           send_after?: string;
           sent_at?: string | null;
           status?: Database["public"]["Enums"]["notification_status"];
+          ticket_id?: string | null;
           type?: Database["public"]["Enums"]["notification_type"];
           updated_at?: string;
-          user_id?: string;
+          user_id?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "notifications_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       partner_attributions: {
         Row: {
@@ -4570,7 +4581,8 @@ export type Database = {
         | "niveau_atteint"
         | "planning_relance"
         | "inscription_relance"
-        | "compte_radie";
+        | "compte_radie"
+        | "reponse_contact";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -4826,6 +4838,7 @@ export const Constants = {
         "planning_relance",
         "inscription_relance",
         "compte_radie",
+        "reponse_contact",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
