@@ -7,9 +7,9 @@ export const assuranceDecennale: Guide = {
   metaTitle: "Assurance décennale : ce qu'elle couvre et comment la vérifier",
   description:
     "Garantie décennale, attestation d'assurance, dommages-ouvrage : ce que couvrent les 10 ans qui suivent la réception des travaux, et comment contrôler l'attestation d'un artisan.",
-  publishedAt: "2026-10-18",
-  updatedAt: "2026-10-18",
-  draft: true,
+  publishedAt: "2026-10-19",
+  updatedAt: "2026-10-19",
+  draft: false,
   essentials: [
     "Pendant 10 ans après la réception des travaux, l'artisan doit réparer les dommages qui compromettent la solidité de l'ouvrage ou le rendent impropre à son usage.",
     "Il doit être assuré avant d'ouvrir le chantier et joindre son attestation d'assurance à ses devis et à ses factures.",

@@ -8,9 +8,9 @@ export const factureElectroniqueArtisans: Guide = {
   metaTitle: "Facture électronique : ce qui change pour les artisans du bâtiment",
   description:
     "Réception depuis le 1er septembre 2026, émission et e-reporting au 1er septembre 2027 : le calendrier de la facturation électronique pour les artisans, micro-entrepreneurs compris.",
-  publishedAt: "2026-10-18",
-  updatedAt: "2026-10-18",
-  draft: true,
+  publishedAt: "2026-10-19",
+  updatedAt: "2026-10-19",
+  draft: false,
   essentials: [
     "Depuis le 1er septembre 2026, toute entreprise, micro-entrepreneurs compris, doit pouvoir recevoir des factures électroniques.",
     "Au 1er septembre 2027, les PME, TPE et micro-entreprises devront émettre des factures électroniques pour leurs clients professionnels.",

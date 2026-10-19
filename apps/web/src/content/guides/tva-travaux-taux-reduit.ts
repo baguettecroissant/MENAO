@@ -8,9 +8,9 @@ export const tvaTravauxTauxReduit: Guide = {
   metaTitle: "TVA à 5,5 % ou 10 % sur les travaux : conditions et mention",
   description:
     "Travaux dans un logement de plus de 2 ans : quand s'appliquent les taux de TVA de 10 % et 5,5 %, ce qui reste à 20 %, et la mention à certifier sur le devis depuis le 1er mars 2025.",
-  publishedAt: "2026-10-18",
-  updatedAt: "2026-10-18",
-  draft: true,
+  publishedAt: "2026-10-19",
+  updatedAt: "2026-10-19",
+  draft: false,
   essentials: [
     "10 % pour les travaux d'amélioration, de transformation, d'aménagement et d'entretien d'un logement achevé depuis plus de 2 ans.",
     "5,5 % pour les travaux de rénovation énergétique : isolation, chauffage aux énergies renouvelables, ventilation double flux…",
