@@ -1953,6 +1953,8 @@ export type Database = {
           montant_demande_centimes: number | null;
           nom: string;
           notes: string | null;
+          page_message: string | null;
+          page_publique: boolean;
           siret: string;
           status: Database["public"]["Enums"]["partner_status"];
           updated_at: string;
@@ -1969,6 +1971,8 @@ export type Database = {
           montant_demande_centimes?: number | null;
           nom: string;
           notes?: string | null;
+          page_message?: string | null;
+          page_publique?: boolean;
           siret: string;
           status?: Database["public"]["Enums"]["partner_status"];
           updated_at?: string;
@@ -1984,6 +1988,8 @@ export type Database = {
           montant_demande_centimes?: number | null;
           nom?: string;
           notes?: string | null;
+          page_message?: string | null;
+          page_publique?: boolean;
           siret?: string;
           status?: Database["public"]["Enums"]["partner_status"];
           updated_at?: string;
@@ -3722,6 +3728,10 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_save_partner_page: {
+        Args: { p_id: string; p_message?: string; p_publique: boolean };
+        Returns: undefined;
+      };
       admin_save_partner_settings: {
         Args: {
           p_delai_validation_jours: number;
@@ -4274,6 +4284,7 @@ export type Database = {
         Returns: string;
       };
       partner_dashboard: { Args: { p_token: string }; Returns: Json };
+      partner_page: { Args: { p_code: string }; Returns: Json };
       public_artisans_for_commune: {
         Args: { p_code_insee: string; p_limit?: number; p_trade_code: string };
         Returns: {

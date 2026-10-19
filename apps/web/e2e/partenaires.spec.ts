@@ -105,6 +105,28 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   expect((await space.goto(new URL(spaceLink).pathname))?.status()).toBe(404);
   await outsider.close();
 
+  // Page co-marquée (ADR 0142) : hors ligne par défaut, puis en ligne avec le message, aussitôt
+  // (le cache de la page est vidé à l'enregistrement).
+  const landing = await browser.newContext();
+  const lp = await landing.newPage();
+  expect((await lp.goto("/partenaires/agence-e2e"))?.status()).toBe(404);
+  await admin.getByLabel("Page en ligne").check();
+  await admin
+    .getByLabel(/^Message de recommandation/)
+    .fill("Nous travaillons avec MENAO pour vos travaux.");
+  await admin.getByRole("button", { name: "Enregistrer la page" }).click();
+  await expect(admin.getByText("Page enregistrée.")).toBeVisible();
+  await expect(admin.getByLabel("Adresse de la page")).toHaveValue(/\/partenaires\/agence-e2e$/);
+  await lp.goto("/partenaires/agence-e2e");
+  await expect(
+    lp.getByRole("heading", { name: "Agence Exemple E2E vous recommande MENAO", level: 1 }),
+  ).toBeVisible();
+  await expect(lp.getByText("Nous travaillons avec MENAO pour vos travaux.")).toBeVisible();
+  await expect(lp.getByText(/ne reçoit jamais vos coordonnées/)).toBeVisible();
+  await expect(lp.getByRole("textbox", { name: "Décrivez votre projet" })).toBeVisible();
+  await expect(lp.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await landing.close();
+
   // Export des commissions à payer : CSV pour tableur, réservé aux admins.
   const csv = await admin.request.get("/admin/partenaires/export");
   expect(csv.status()).toBe(200);

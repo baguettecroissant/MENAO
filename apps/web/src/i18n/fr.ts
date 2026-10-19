@@ -90,6 +90,7 @@ export const fr = {
     rateNotSet: "Montant communiqué par l'équipe MENAO",
     invoice: (email: string) =>
       `Pour être payé, envoyez votre facture à ${email}, avec le montant « À facturer ». Paiement par virement.`,
+    pageLink: "Votre page de recommandation (à envoyer à vos clients)",
     linksTitle: "Vos liens",
     linkClients: "Pour vos clients et visiteurs (demande de travaux)",
     linkPros: "Pour les artisans (inscription)",
@@ -106,6 +107,22 @@ export const fr = {
       "Créateur de contenu ? Signalez le partenariat avec la mention « Publicité » ou « Collaboration commerciale » (loi du 9 juin 2023).",
     privateLink:
       "Ce lien est personnel : ne le partagez pas. L'équipe MENAO peut le renouveler à tout moment.",
+  },
+  /** Page co-marquée d'un partenaire (ADR 0142). */
+  partnerPage: {
+    metaTitle: (nom: string) => `${nom} vous recommande MENAO`,
+    metaDescription: (nom: string) =>
+      `${nom} vous recommande MENAO pour trouver des artisans du bâtiment vérifiés près de chez vous. Gratuit et sans engagement.`,
+    eyebrow: (nom: string) => `Recommandé par ${nom}`,
+    title: (nom: string) => `${nom} vous recommande MENAO`,
+    lead: "Des artisans du bâtiment vérifiés près de chez vous : décrivez votre projet, jusqu'à 3 artisans vous répondent sous 48\u00a0h.",
+    messageFrom: (nom: string) => `Le mot de ${nom}`,
+    formTitle: "Décrivez votre projet",
+    formLead:
+      "Quelques phrases suffisent : MENAO vous présente les artisans vérifiés qui interviennent chez vous.",
+    transparency: (nom: string) =>
+      `${nom} est partenaire de MENAO et peut être rémunéré lorsque votre demande aboutit grâce à cette page. ${nom} ne reçoit jamais vos coordonnées.`,
+    guarantees: "Nos garanties",
   },
   /** Bannières du kit partenaire (ADR 0141), dans le back-office et l'espace partenaire. */
   partnerBanners: {
@@ -5001,6 +5018,18 @@ export const fr = {
         amount: "Montant invalide.",
         days: "Délai de validation : entre 0 et 180 jours.",
         cap: "Plafond : un nombre entier positif, ou vide.",
+      },
+      page: {
+        title: "Page de recommandation",
+        lead: "Une page « <Partenaire> vous recommande MENAO » avec son message et le formulaire de demande. Les demandes lui sont attribuées. Non indexée par Google.",
+        publique: "Page en ligne",
+        message: "Message de recommandation (facultatif, 400 caractères au plus)",
+        messageHint:
+          "Affiché sur la page, signé du nom du partenaire. Ex. : « Nous travaillons avec MENAO pour vous trouver des artisans vérifiés. »",
+        link: "Adresse de la page",
+        offline: "Page hors ligne : elle répond « introuvable ».",
+        save: "Enregistrer la page",
+        saved: "Page enregistrée.",
       },
       space: {
         title: "Espace partenaire",

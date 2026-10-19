@@ -101,6 +101,9 @@ export default async function PartnerSpacePage({
 
         <Card className="flex flex-col gap-4">
           <CardTitle title={t.linksTitle} />
+          {dashboard.page_publique && (
+            <CopySnippet id="lien-page" label={t.pageLink} value={links.page} {...copy} />
+          )}
           <CopySnippet id="lien-clients" label={t.linkClients} value={links.clients} {...copy} />
           <CopySnippet id="lien-pros" label={t.linkPros} value={links.pros} {...copy} />
         </Card>

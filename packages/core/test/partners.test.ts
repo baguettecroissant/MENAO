@@ -36,10 +36,11 @@ describe("code partenaire (F-59)", () => {
 });
 
 describe("liens partenaire", () => {
-  it("lien particuliers et lien pros, sans barre finale en double", () => {
+  it("lien particuliers, lien pros et page co-marquée, sans barre finale en double", () => {
     expect(partnerLinks("https://menao.fr/", "agence-nice")).toEqual({
       clients: "https://menao.fr/p/agence-nice",
       pros: "https://menao.fr/p/agence-nice/pro",
+      page: "https://menao.fr/partenaires/agence-nice",
     });
   });
 });
