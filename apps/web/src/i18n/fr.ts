@@ -899,7 +899,7 @@ export const fr = {
       rankingEyebrow: "Classement",
       rankingTitle: "Aucune place ne s'achète.",
       rankingText:
-        "Les artisans sont classés selon leur score MENAO (avis des clients, respect des délais, réactivité, planning à jour, chantiers menés à terme, ancienneté), puis leur disponibilité et leur distance. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
+        "Les artisans disponibles tout de suite passent en premier, puis viennent leur score MENAO (avis des clients, respect des délais, réactivité, planning à jour, chantiers menés à terme, ancienneté) et leur distance. Une place est réservée à un nouvel artisan, le temps qu'il se fasse connaître. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
       rankingLink: "Lire les critères de classement",
     },
     faq: {
@@ -4341,10 +4341,11 @@ export const fr = {
     ],
     orderTitle: "Dans quel ordre ?",
     order: [
-      "D'abord le score MENAO, de 0 à 100, calculé selon la charte qualité des artisans : notes des clients en fin de chantier (40 %), devis envoyé dans les 72 h suivant la demande (20 %), réponse aux demandes et aux messages des clients sous 24 h (15 %), planning tenu à jour chaque semaine (10 %), chantiers menés à terme sans annulation par l'artisan (10 %), ancienneté et badges obtenus (5 %). Les mesures portent sur les 6 à 12 derniers mois. Un artisan sans historique part d'une valeur neutre sur chaque critère, remplacée peu à peu par ses résultats réels.",
-      "Puis les artisans disponibles immédiatement, puis selon leur date de disponibilité.",
-      "Ensuite, les artisans les plus proches du chantier.",
+      "D'abord les artisans disponibles immédiatement, puis les autres.",
+      "Dans chacun de ces deux groupes, le score MENAO, de 0 à 100, calculé selon la charte qualité des artisans : notes des clients en fin de chantier (40 %), devis envoyé dans les 72 h suivant la demande (20 %), réponse aux demandes et aux messages des clients sous 24 h (15 %), planning tenu à jour chaque semaine (10 %), chantiers menés à terme sans annulation par l'artisan (10 %), ancienneté et badges obtenus (5 %). Les mesures portent sur les 6 à 12 derniers mois. Un artisan sans historique part d'une valeur neutre sur chaque critère, remplacée peu à peu par ses résultats réels.",
+      "Ensuite, la date de disponibilité, puis les artisans les plus proches du chantier.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
+      "Place réservée aux nouveaux artisans : un artisan validé depuis moins de 90 jours, ou qui a mené moins de 3 chantiers à terme, n'a pas encore d'historique. Quand aucun d'eux ne figure parmi les 5 premiers, l'un d'eux est présenté en 3e position, choisi parmi ceux qui remplissent les conditions ci-dessus : d'abord parmi les disponibles immédiatement, puis par un tirage propre à chaque projet. Cette place ne dépend d'aucun paiement.",
       "Exception, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier, cet artisan est présenté en premier (mention « Déjà venu chez vous »), s'il remplit les conditions ci-dessus.",
     ],
     paidTitle: "Mise en avant payante",
@@ -4354,7 +4355,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 15 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 19 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",

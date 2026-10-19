@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_SEARCH_RESULTS,
+  type MatchCandidate,
+  NEWCOMER,
   TICKET_RESPONSE_DAYS,
   availability,
+  isNewcomer,
+  rankCandidates,
   specialtiesPreview,
   ticketDueDate,
 } from "../src/matching";
@@ -45,5 +49,114 @@ describe("résultats de recherche (F-09)", () => {
     expect(ticketDueDate(new Date("2026-10-09T10:00:00Z")).toISOString()).toBe(
       "2026-10-16T10:00:00.000Z",
     );
+  });
+});
+
+describe("ordre des artisans proposés et place des nouveaux (ADR 0151)", () => {
+  const candidate = (id: string, over: Partial<MatchCandidate> = {}): MatchCandidate => ({
+    id,
+    availableNow: true,
+    availableFrom: null,
+    score: 80,
+    distanceKm: null,
+    draw: id,
+    newcomer: false,
+    ...over,
+  });
+  const ids = (list: MatchCandidate[]) => list.map((c) => c.id);
+
+  it("règle du nouvel artisan : moins de 90 jours ou moins de 3 chantiers menés à terme", () => {
+    expect(NEWCOMER).toEqual({ days: 90, completedChantiers: 3, position: 3 });
+    expect(isNewcomer(null, 0)).toBe(true);
+    expect(isNewcomer(10, 8)).toBe(true);
+    expect(isNewcomer(200, 2)).toBe(true);
+    expect(isNewcomer(90, 3)).toBe(false);
+    expect(isNewcomer(400, 12)).toBe(false);
+  });
+
+  it("disponibles tout de suite d'abord, puis score, date de disponibilité, distance et tirage", () => {
+    const ranked = rankCandidates([
+      candidate("complet-excellent", {
+        availableNow: false,
+        availableFrom: "2026-11-10",
+        score: 95,
+      }),
+      candidate("libre-moyen", { score: 72 }),
+      candidate("libre-bon", { score: 90 }),
+      candidate("complet-bientot", { availableNow: false, availableFrom: "2026-10-25", score: 60 }),
+      candidate("libre-bon-proche", { score: 90, distanceKm: 3 }),
+    ]);
+    expect(ids(ranked)).toEqual([
+      "libre-bon-proche",
+      "libre-bon",
+      "libre-moyen",
+      "complet-excellent",
+      "complet-bientot",
+    ]);
+  });
+
+  it("aucun nouveau parmi les 5 premiers : le premier nouveau prend la 3e place", () => {
+    const established = [95, 92, 90, 88, 86, 84].map((score, i) =>
+      candidate(`ancien-${i + 1}`, { score }),
+    );
+    const ranked = rankCandidates([
+      ...established,
+      candidate("nouveau", { score: 70, newcomer: true }),
+    ]);
+    expect(ids(ranked)).toEqual([
+      "ancien-1",
+      "ancien-2",
+      "nouveau",
+      "ancien-3",
+      "ancien-4",
+      "ancien-5",
+      "ancien-6",
+    ]);
+    expect(ranked).toHaveLength(MAX_SEARCH_RESULTS + 2);
+  });
+
+  it("un nouveau déjà parmi les 5 premiers : ordre inchangé", () => {
+    const list = [
+      candidate("ancien-1", { score: 95 }),
+      candidate("nouveau-bien-place", { score: 91, newcomer: true }),
+      candidate("ancien-2", { score: 90 }),
+      candidate("ancien-3", { score: 88 }),
+      candidate("ancien-4", { score: 86 }),
+      candidate("ancien-5", { score: 84 }),
+      candidate("nouveau-loin", { score: 70, newcomer: true }),
+    ];
+    expect(ids(rankCandidates(list))).toEqual(ids(list));
+  });
+
+  it("plusieurs nouveaux hors des 5 premiers : un disponible, puis le tirage du projet", () => {
+    const established = [95, 92, 90, 88, 86].map((score, i) =>
+      candidate(`ancien-${i + 1}`, { score }),
+    );
+    const ranked = rankCandidates([
+      ...established,
+      candidate("nouveau-complet", {
+        score: 75,
+        newcomer: true,
+        availableNow: false,
+        availableFrom: "2026-11-01",
+        draw: "0",
+      }),
+      candidate("nouveau-b", { score: 71, newcomer: true, draw: "b" }),
+      candidate("nouveau-a", { score: 69, newcomer: true, draw: "a" }),
+    ]);
+    expect(ranked[NEWCOMER.position - 1]?.id).toBe("nouveau-a");
+    expect(ids(ranked).slice(MAX_SEARCH_RESULTS)).toEqual([
+      "ancien-5",
+      "nouveau-b",
+      "nouveau-complet",
+    ]);
+  });
+
+  it("peu d'artisans : rien à réserver", () => {
+    const list = [
+      candidate("ancien", { score: 90 }),
+      candidate("nouveau", { score: 70, newcomer: true }),
+    ];
+    expect(ids(rankCandidates(list))).toEqual(["ancien", "nouveau"]);
   });
 });
