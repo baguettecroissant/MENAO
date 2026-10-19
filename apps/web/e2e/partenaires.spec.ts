@@ -123,7 +123,7 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   ).toBeVisible();
   await expect(lp.getByText("Nous travaillons avec MENAO pour vos travaux.")).toBeVisible();
   await expect(lp.getByText(/ne reçoit jamais vos coordonnées/)).toBeVisible();
-  await expect(lp.getByLabel("Décrivez votre projet")).toBeVisible();
+  await expect(lp.getByRole("textbox", { name: "Décrivez votre projet" })).toBeVisible();
   await expect(lp.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await landing.close();
 
