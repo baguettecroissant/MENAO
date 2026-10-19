@@ -4,6 +4,7 @@ import {
   commissionsCsv,
   eurosToCents,
   normalizePartnerCode,
+  partnerBanners,
   partnerLinks,
   partnerSnippets,
   partnerTotals,
@@ -162,5 +163,31 @@ describe("kit partenaire (F-59, lot 2)", () => {
     const plombier = partnerSnippets("https://menao.fr", "agence-nice", "plombier");
     expect(plombier.widget).toContain('data-metier="plombier"');
     expect(plombier.iframe).toContain("/widget?p=agence-nice&amp;metier=plombier");
+  });
+});
+
+describe("bannières du kit (ADR 0141)", () => {
+  const banners = partnerBanners("https://menao.fr/", "agence-nice");
+
+  it("formats standards : 4 pour les particuliers, 2 pour les artisans", () => {
+    expect(banners.map((b) => `${b.audience} ${b.width}x${b.height}`)).toEqual([
+      "particuliers 728x90",
+      "particuliers 300x250",
+      "particuliers 160x600",
+      "particuliers 320x50",
+      "artisans 728x90",
+      "artisans 300x250",
+    ]);
+  });
+
+  it("image servie par MENAO, lien partenaire selon le public, dimensions et texte alternatif", () => {
+    const [client] = banners;
+    expect(client?.src).toBe("https://menao.fr/bannieres/menao-particuliers-728x90.svg");
+    expect(client?.html).toBe(
+      '<a href="https://menao.fr/p/agence-nice"><img src="https://menao.fr/bannieres/menao-particuliers-728x90.svg" width="728" height="90" alt="MENAO : trouvez un artisan du bâtiment vérifié" loading="lazy" style="border:0;max-width:100%;height:auto"></a>',
+    );
+    const pro = banners.find((b) => b.audience === "artisans");
+    expect(pro?.html).toContain('href="https://menao.fr/p/agence-nice/pro"');
+    expect(pro?.html).not.toMatch(/<script|onclick/i);
   });
 });

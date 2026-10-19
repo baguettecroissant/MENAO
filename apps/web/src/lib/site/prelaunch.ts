@@ -26,6 +26,8 @@ const OPEN = [
   "calendrier",
   // Espace partenaire par lien privé (ADR 0139) : utilisable avant le lancement.
   "espace-partenaire",
+  // Bannières du kit (ADR 0141) : aperçus de l'espace partenaire et images déjà collées.
+  "bannieres",
   "\\.well-known",
   "favicon\\.ico",
   "icon\\.svg",
