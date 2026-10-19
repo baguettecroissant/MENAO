@@ -6,8 +6,9 @@ import {
   CancelCommissionForm,
   PartnerForm,
   PayCommissionsForm,
+  RenewDashboardForm,
 } from "@/components/admin/partner-forms";
-import { CopySnippet } from "@/components/admin/copy-snippet";
+import { CopySnippet } from "@/components/copy-snippet";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { env } from "@/env";
@@ -113,6 +114,22 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
             </div>
           ))}
         </dl>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <CardTitle title={t.space.title} description={t.space.lead} />
+        {partner.dashboard_token ? (
+          <CopySnippet
+            id="lien-espace"
+            label={t.space.link}
+            value={`${env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "")}/espace-partenaire/${partner.dashboard_token}`}
+            copyLabel={t.kit.copy}
+            copiedLabel={t.kit.copied}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">{t.space.none}</p>
+        )}
+        <RenewDashboardForm partnerId={partner.id} exists={Boolean(partner.dashboard_token)} />
       </Card>
 
       <Card className="flex flex-col gap-4">

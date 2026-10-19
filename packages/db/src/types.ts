@@ -1936,6 +1936,7 @@ export type Database = {
           contact_email: string;
           created_at: string;
           created_by: string | null;
+          dashboard_token: string | null;
           id: string;
           montant_abonne_centimes: number | null;
           montant_demande_centimes: number | null;
@@ -1951,6 +1952,7 @@ export type Database = {
           contact_email: string;
           created_at?: string;
           created_by?: string | null;
+          dashboard_token?: string | null;
           id?: string;
           montant_abonne_centimes?: number | null;
           montant_demande_centimes?: number | null;
@@ -1965,6 +1967,7 @@ export type Database = {
           contact_email?: string;
           created_at?: string;
           created_by?: string | null;
+          dashboard_token?: string | null;
           id?: string;
           montant_abonne_centimes?: number | null;
           montant_demande_centimes?: number | null;
@@ -3684,6 +3687,7 @@ export type Database = {
         Args: { p_code: string; p_kind: string; p_label: string };
         Returns: undefined;
       };
+      admin_renew_partner_dashboard: { Args: { p_id: string }; Returns: string };
       admin_review_document: {
         Args: {
           p_code?: string;
@@ -4258,6 +4262,7 @@ export type Database = {
         };
         Returns: string;
       };
+      partner_dashboard: { Args: { p_token: string }; Returns: Json };
       public_artisans_for_commune: {
         Args: { p_code_insee: string; p_limit?: number; p_trade_code: string };
         Returns: {

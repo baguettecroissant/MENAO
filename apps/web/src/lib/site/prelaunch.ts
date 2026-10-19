@@ -24,6 +24,8 @@ const OPEN = [
   "videos",
   "icons",
   "calendrier",
+  // Espace partenaire par lien privé (ADR 0139) : utilisable avant le lancement.
+  "espace-partenaire",
   "\\.well-known",
   "favicon\\.ico",
   "icon\\.svg",

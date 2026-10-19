@@ -1,6 +1,6 @@
 "use server";
 
-import { messages } from "@menao/validation";
+import { messages, siretSchema } from "@menao/validation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
@@ -40,4 +40,46 @@ export async function sendContactMessage(_prev: FormState, formData: FormData): 
   const { data: auth } = await supabase.auth.getClaims();
   const follow = Boolean(auth && !auth.claims.is_anonymous);
   return { success: fr.pages.contact.sent, ...(follow ? { values: { suivi: "1" } } : {}) };
+}
+
+const partnerApplicationSchema = z.object({
+  company: z.string().trim().min(2, { error: fr.pages.partners.errors.company }).max(120),
+  siret: z
+    .string()
+    .transform((v) => v.replace(/\s/g, ""))
+    .pipe(siretSchema),
+  email: contactSchema.shape.email,
+  website: z
+    .string()
+    .trim()
+    .max(200)
+    .refine((v) => v === "" || /^https?:\/\/[^\s]+\.[^\s]+$/i.test(v), {
+      error: fr.pages.partners.errors.website,
+    }),
+  message: z
+    .string()
+    .trim()
+    .min(10, { error: fr.pages.partners.errors.message })
+    .max(1700, { error: fr.pages.partners.errors.message }),
+});
+
+/**
+ * Candidature au programme Partenaires (F-59, ADR 0139) : professionnels seulement (SIRET
+ * vérifié), envoyée à l'équipe comme un message de contact (ticket), avec les mêmes limites.
+ */
+export async function applyAsPartner(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = Object.fromEntries(
+    ["company", "siret", "email", "website", "message"].map((k) => [k, text(formData, k) ?? ""]),
+  );
+  const parsed = partnerApplicationSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const p = fr.pages.partners;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("send_contact_message", {
+    p_email: parsed.data.email,
+    p_subject: p.subject(parsed.data.company).slice(0, 150),
+    p_message: p.body(parsed.data),
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  return { success: p.sent };
 }

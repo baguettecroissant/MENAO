@@ -75,6 +75,27 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   await expect(row.getByRole("cell").nth(1)).toHaveText("1");
   await expect(row.getByRole("cell").nth(2)).toHaveText("0");
 
+  // Espace partenaire (ADR 0139) : lien privé créé par l'admin, lu sans compte, renouvelable.
+  await row.getByRole("link", { name: "Agence Exemple E2E" }).click();
+  await admin.getByRole("button", { name: "Créer le lien" }).click();
+  await expect(admin.getByText("Nouveau lien créé.")).toBeVisible();
+  const spaceLink = await admin.getByLabel("Lien de l'espace partenaire").inputValue();
+  expect(spaceLink).toMatch(/\/espace-partenaire\/[0-9a-f]{48}$/);
+  const outsider = await browser.newContext();
+  const space = await outsider.newPage();
+  await space.goto(new URL(spaceLink).pathname);
+  await expect(space.getByRole("heading", { name: "Agence Exemple E2E", level: 1 })).toBeVisible();
+  const results = space.getByRole("region", { name: "Vos résultats" });
+  await expect(results.getByText("Demandes de travaux")).toBeVisible();
+  await expect(results.getByRole("definition").first()).toHaveText("1");
+  // Intl sépare le montant et « € » par une espace fine insécable.
+  await expect(space.getByText(/^10,00\s€ par demande qualifiée$/)).toBeVisible();
+  await expect(space.getByLabel("Lien texte")).toHaveValue(/\/p\/agence-e2e"/);
+  await admin.getByRole("button", { name: "Renouveler le lien" }).click();
+  await expect(admin.getByText("Nouveau lien créé.")).toBeVisible();
+  expect((await space.goto(new URL(spaceLink).pathname))?.status()).toBe(404);
+  await outsider.close();
+
   // Export des commissions à payer : CSV pour tableur, réservé aux admins.
   const csv = await admin.request.get("/admin/partenaires/export");
   expect(csv.status()).toBe(200);
@@ -109,4 +130,28 @@ test("widget partenaire : seule page intégrable, ouvre la recherche pré-rempli
   await expect(popup.getByRole("button", { name: /Plomberie/, pressed: true })).toBeVisible();
   const cookies = await page.context().cookies();
   expect(cookies.filter((c) => /agence-widget/.test(`${c.name}${c.value}`))).toEqual([]);
+});
+
+test("devenir partenaire : page publique et candidature envoyée à l'équipe (ADR 0139)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Devenir partenaire" }).click();
+  await expect(page).toHaveURL(/\/partenaires$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Recommandez des artisans vérifiés",
+  );
+  await page.getByRole("button", { name: "Envoyer ma candidature" }).click();
+  await expect(page.getByText("Numéro SIRET invalide (14 chiffres).")).toBeVisible();
+  await page.getByLabel("Nom de l'entreprise").fill("Agence Candidate E2E");
+  await page.getByLabel("SIRET").fill("732 829 320 00074");
+  await page.getByLabel("E-mail professionnel").fill(`candidat-${Date.now()}@example.test`);
+  await page.getByLabel("Site web (facultatif)").fill("https://agence.example.test");
+  await page
+    .getByLabel("Votre activité et votre audience")
+    .fill("Agence immobilière à Nice, 300 biens en gestion.");
+  await page.getByRole("button", { name: "Envoyer ma candidature" }).click();
+  await expect(
+    page.getByText("Candidature envoyée. L'équipe MENAO vous répond par e-mail."),
+  ).toBeVisible();
 });

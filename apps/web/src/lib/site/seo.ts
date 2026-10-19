@@ -63,6 +63,7 @@ export const STATIC_PAGES = [
   "/comment-ca-marche",
   "/garanties",
   "/a-propos",
+  "/partenaires",
   "/pro",
   "/faq",
   "/contact",
