@@ -623,7 +623,7 @@ Cinq photos de couverture pour les guides, générées le **2026-10-19** avec l'
 | D2 | `devis-travaux-mentions-obligatoires` | [devis-travaux-mentions-obligatoires.webp](../../apps/web/public/images/guides/devis-travaux-mentions-obligatoires.webp), -960, -640 | [Prompt exact](#prompt-d2-devis-travaux) | 239,514 |
 | D3 | `assurance-decennale` | [assurance-decennale.webp](../../apps/web/public/images/guides/assurance-decennale.webp), -960, -640 | [Prompt exact](#prompt-d3-assurance-decennale) | 264,984 |
 | D4 | `tva-travaux-taux-reduit` | [tva-travaux-taux-reduit.webp](../../apps/web/public/images/guides/tva-travaux-taux-reduit.webp), -960, -640 | [Prompt exact](#prompt-d4-tva-renovation) | 204,234 |
-| D5 | `facture-electronique-artisans` | [facture-electronique-artisans.webp](../../apps/web/public/images/guides/facture-electronique-artisans.webp), -960, -640 | [Prompt exact](#prompt-d5-facture-electronique) | 215,134 |
+| D5 | `facture-electronique-artisans` | [facture-electronique-artisans,webp](,,/,,/apps/web/public/images/guides/facture-electronique-artisans,webp), -960, -640 | [Prompt exact](#prompt-d5-facture-electronique) | 211,156 |
 
 - **WebP qualité 82**, sans métadonnées ; versions -960 et -640 au même cadrage.
 - **D5 est un montage** : l'écran du portable, noir à la génération, montre le vrai écran Factures de l'espace pro (données fictives : JF Plomberie, factures F-2026-0039 à 0043), incrusté en perspective (outil hors Git `medias/mockups-site/outils/incruster.py`).
