@@ -70,6 +70,33 @@ export const factureElectroniqueArtisans: Guide = {
       type: "p",
       text: "Les travaux réalisés pour des particuliers ne donnent pas lieu à une facture électronique : vous leur remettez une facture comme aujourd'hui. Mais à partir du 1er septembre 2027, les données de ces ventes devront être transmises à l'administration par votre plateforme agréée : c'est l'**e-reporting**. Il porte sur des données de transaction et, dans certains cas, sur des données de paiement.",
     },
+    {
+      type: "flow",
+      caption: "Le circuit de vos factures à partir du 1er septembre 2027",
+      rows: [
+        {
+          label: "Client professionnel",
+          steps: [
+            "Votre facture électronique",
+            "Votre plateforme agréée",
+            "La plateforme de votre client",
+            "Votre client",
+          ],
+        },
+        {
+          label: "Client particulier",
+          steps: ["Votre facture, comme aujourd'hui", "Votre client"],
+        },
+        {
+          label: "E-reporting",
+          steps: [
+            "Les données de vos ventes aux particuliers",
+            "Votre plateforme agréée",
+            "L'administration fiscale",
+          ],
+        },
+      ],
+    },
     { type: "h2", id: "preparer", text: "Comment se préparer" },
     {
       type: "list",

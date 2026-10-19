@@ -1,6 +1,6 @@
 # ADR 0148 — Allègement et textes du site vitrine
 
-- Statut : accepté
+- Statut : accepté, modifié par l'ADR 0150 (téléphone du bandeau remplacé par les badges des stores)
 - Date : 19 octobre 2026
 - Lot 3 de l'audit du site vitrine du 19 octobre 2026. Modifie l'ADR 0147.
 

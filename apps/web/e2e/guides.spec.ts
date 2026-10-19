@@ -82,3 +82,18 @@ test("guides : couvertures et images de partage présentes (ADR 0149)", async ({
     }
   }
 });
+
+test("guides : schémas affichés (ADR 0150)", async ({ page }) => {
+  for (const guide of GUIDES) {
+    const figures = guide.body.flatMap((b) =>
+      b.type === "periods" || b.type === "decision" || b.type === "flow" || b.type === "document"
+        ? [b.caption]
+        : [],
+    );
+    if (figures.length === 0) continue;
+    await page.goto(`/guides/${guide.slug}`);
+    for (const caption of figures) {
+      await expect(page.getByRole("figure", { name: caption }), caption).toBeVisible();
+    }
+  }
+});

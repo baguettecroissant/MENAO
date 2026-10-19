@@ -24,6 +24,36 @@ export const tvaTravauxTauxReduit: Guide = {
   body: [
     { type: "h2", id: "taux", text: "Quel taux pour quels travaux ?" },
     {
+      type: "decision",
+      caption: "Trouver le taux de TVA de vos travaux en trois questions",
+      steps: [
+        {
+          question: "Le logement est-il à usage d'habitation et achevé depuis plus de 2 ans ?",
+          answer: "Non",
+          result: "20 %",
+          next: "Oui",
+        },
+        {
+          question: "Les travaux reviennent-ils à produire un immeuble neuf ?",
+          answer: "Oui",
+          result: "20 %",
+          next: "Non",
+        },
+        {
+          question: "S'agit-il de travaux de rénovation énergétique ?",
+          answer: "Oui",
+          result: "5,5 %",
+          next: "Non",
+        },
+      ],
+      otherwise: {
+        answer: "Non",
+        result: "10 %",
+        detail: "Amélioration, transformation, aménagement et entretien du logement",
+      },
+      note: "Restent à 20 % : les équipements que vous achetez vous-même (leur pose par l'artisan bénéficie du taux réduit) et les chaudières pouvant utiliser des combustibles fossiles.",
+    },
+    {
       type: "table",
       caption: "Taux de TVA des travaux dans un logement",
       head: ["Taux", "Travaux concernés"],

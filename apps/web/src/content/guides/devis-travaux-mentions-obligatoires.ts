@@ -47,6 +47,42 @@ export const devisTravauxMentionsObligatoires: Guide = {
       ],
     },
     {
+      type: "document",
+      caption: "Les mentions obligatoires, zone par zone, sur un devis",
+      title: "Devis",
+      zones: [
+        {
+          title: "L'en-tête",
+          shape: "header",
+          items: ["Date de rédaction", "Nom et adresse de l'entreprise", "Votre nom"],
+        },
+        { title: "Le chantier", items: ["Lieu d'intervention", "Nature exacte des travaux"] },
+        {
+          title: "Le détail",
+          shape: "table",
+          items: [
+            "Quantités et prix des produits et de la main-d'œuvre",
+            "Taux horaire et décompte du temps",
+            "Frais de déplacement, s'il y en a",
+          ],
+        },
+        { title: "Les totaux", shape: "totals", items: ["Total HT et TTC", "Taux de TVA"] },
+        {
+          title: "Les conditions",
+          items: [
+            "Durée de validité de l'offre",
+            "Devis gratuit ou payant",
+            "Pièces ou appareils remplacés que vous pouvez conserver",
+          ],
+        },
+        {
+          title: "Votre signature",
+          shape: "signature",
+          items: ["« Bon pour travaux » ou « bon pour accord » : vous n'êtes engagé qu'en signant"],
+        },
+      ],
+    },
+    {
       type: "p",
       text: "Si l'entreprise est soumise à l'assurance décennale, le devis indique aussi les coordonnées de son assureur et la zone géographique couverte, et l'attestation d'assurance y est jointe. Vérifiez aussi que le numéro SIRET de l'entreprise y figure : il vous permet de contrôler qu'elle est active (voir [nos 8 vérifications avant de signer](/guides/choisir-un-artisan)).",
     },

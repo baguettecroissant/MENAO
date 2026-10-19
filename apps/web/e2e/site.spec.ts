@@ -153,3 +153,29 @@ test("retour dans l'application après une signature ou un paiement (ADR 0060)",
     `/mon-espace/chantiers/${id}?paiement=termine`,
   );
 });
+
+test("badges App Store et Google Play : pied de page, accueil et page Pro (ADR 0150)", async ({
+  page,
+  request,
+}) => {
+  for (const badge of ["/images/stores/app-store-fr.svg", "/images/stores/google-play-fr.png"]) {
+    expect((await request.get(badge)).status(), badge).toBe(200);
+  }
+  await page.goto("/");
+  const app = page.getByRole("region", { name: "Suivez tous vos chantiers, depuis votre poche." });
+  await expect(app.getByRole("link", { name: "Télécharger dans l'App Store" })).toHaveAttribute(
+    "href",
+    /^https:\/\/apps\.apple\.com\//,
+  );
+  await expect(app.getByRole("link", { name: "Disponible sur Google Play" })).toHaveAttribute(
+    "href",
+    /^https:\/\/play\.google\.com\//,
+  );
+  await expect(
+    page.getByRole("contentinfo").getByRole("link", { name: "Télécharger dans l'App Store" }),
+  ).toBeVisible();
+  await page.goto("/pro");
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Disponible sur Google Play" }).first(),
+  ).toBeVisible();
+});

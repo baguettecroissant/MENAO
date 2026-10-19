@@ -1,4 +1,5 @@
 import { ArrowRight, Signature, Wallet } from "lucide-react";
+import { AppSection } from "@/components/site/app-section";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { GuaranteeSection } from "@/components/site/guarantees";
@@ -32,7 +33,7 @@ export const revalidate = 3600;
 
 /**
  * Accueil (F-01) : bandeau et section confiance de la maquette « Homepage », puis le parcours en
- * quatre étapes, l'espace client, les garanties, tous les métiers, les questions fréquentes,
+ * quatre étapes, l'espace client, l'application, les garanties, tous les métiers, les questions fréquentes,
  * l'encart artisans et l'appel final. Aucun chiffre ni témoignage inventé.
  */
 export default async function HomePage() {
@@ -135,6 +136,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* L'application et ses badges des stores (ADR 0150). */}
+      <AppSection id="home-app" />
 
       <GuaranteeSection id="home-guarantees" />
 

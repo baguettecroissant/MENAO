@@ -12,6 +12,53 @@ export type GuideBlock =
       caption: string;
       head: readonly string[];
       rows: readonly (readonly string[])[];
+    }
+  /*
+   * Schémas (ADR 0150), dessinés en HTML à partir de ces données : lisibles par les lecteurs
+   * d'écran et traduisibles. Ils reprennent ce que dit le guide, sans rien y ajouter.
+   */
+  | {
+      /** Frise : des durées comptées depuis un même point de départ (en années). */
+      type: "periods";
+      caption: string;
+      start: string;
+      ticks: readonly { at: number; label: string }[];
+      bars: readonly {
+        label: string;
+        from: number;
+        to: number;
+        detail: string;
+        tone: "strong" | "soft";
+      }[];
+    }
+  | {
+      /**
+       * Arbre de décision : des questions successives. `answer` mène à `result`, `next` passe à la
+       * question suivante (ou à `otherwise` après la dernière).
+       */
+      type: "decision";
+      caption: string;
+      steps: readonly { question: string; answer: string; result: string; next: string }[];
+      otherwise: { answer: string; result: string; detail: string };
+      note?: string;
+    }
+  | {
+      /** Circuit : des chaînes d'étapes reliées par des flèches, une par cas. */
+      type: "flow";
+      caption: string;
+      rows: readonly { label: string; steps: readonly string[] }[];
+    }
+  | {
+      /** Document annoté : les zones d'un document et ce qu'elles doivent contenir. */
+      type: "document";
+      caption: string;
+      title: string;
+      /** `shape` : allure de la zone sur la feuille (lignes de texte par défaut). */
+      zones: readonly {
+        title: string;
+        items: readonly string[];
+        shape?: "header" | "table" | "totals" | "signature";
+      }[];
     };
 
 export type Guide = {

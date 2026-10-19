@@ -25,6 +25,7 @@ import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
 import { AppNotification, LaptopMockup, PhoneMockup } from "@/components/site/device-mockups";
+import { StoreBadges } from "@/components/site/store-badges";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { ButtonLink, StatusBadge, Tag, TextLink } from "@/components/ui";
@@ -126,6 +127,8 @@ export default async function ProLandingPage() {
                   </li>
                 ))}
               </ul>
+              {/* L'application dans les stores (ADR 0150). */}
+              <StoreBadges className="pt-1" />
               <TextLink
                 href="/connexion"
                 className="self-start text-sm text-white underline decoration-white/40 hover:decoration-white"

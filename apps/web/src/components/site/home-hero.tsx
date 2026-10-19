@@ -3,11 +3,10 @@ import type { Route } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
-import { APP_SCREENS } from "@/lib/site/app-screens";
 import { HERO_IMAGE, HERO_SRCSET } from "@/lib/site/images";
-import { PhoneMockup } from "./device-mockups";
 import { HeroSearchInput } from "./hero-search-input";
 import { HomeNav } from "./home-nav";
+import { StoreBadges } from "./store-badges";
 
 const t = fr.home;
 const SHORTCUTS = ["electricien", "plombier", "macon", "peintre", "terrassier"];
@@ -15,8 +14,8 @@ const TAG_ICONS = [BadgeCheck, ShieldCheck, Clock];
 
 /**
  * Bandeau de l'accueil (maquette « Homepage ») : photo plein cadre arrondie, navigation en
- * verre dépoli, titre, recherche, raccourcis métiers, et l'accueil de l'application dans un
- * téléphone (ADR 0147). Aucun chiffre ni témoignage inventé (spec F-01).
+ * verre dépoli, titre, recherche, raccourcis métiers et badges des stores (ADR 0150, à la place du
+ * téléphone de l'ADR 0147, jugé trop chargé). Aucun chiffre ni témoignage inventé (spec F-01).
  */
 export function HomeHero() {
   return (
@@ -127,16 +126,15 @@ export function HomeHero() {
                 </Link>
               </li>
             </ul>
+            {/* Badges des stores sous les raccourcis, jusqu'au grand écran (ADR 0150). */}
+            <div className="animate-menao-rise pt-2 [animation-delay:480ms] lg:hidden">
+              <StoreBadges />
+            </div>
           </div>
 
-          {/* L'application dans un téléphone (ADR 0147) : l'accueil client. Il sort du bas du
-              bandeau, sous les visages de la photo ; masqué sur mobile. */}
-          <div className="pointer-events-none absolute right-[4%] -bottom-[23%] hidden w-[15rem] animate-menao-rise [animation-delay:500ms] lg:block xl:right-[6%] xl:w-[16rem]">
-            <PhoneMockup
-              screen={APP_SCREENS.clientAccueil}
-              alt={fr.site.mockups.screens.clientAccueil}
-              priority
-            />
+          {/* Badges des stores, discrets : en bas à droite sur grand écran (ADR 0150). */}
+          <div className="absolute right-6 bottom-6 hidden animate-menao-rise [animation-delay:480ms] lg:block">
+            <StoreBadges />
           </div>
         </div>
       </div>
