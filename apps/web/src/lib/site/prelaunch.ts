@@ -28,6 +28,8 @@ const OPEN = [
   "espace-partenaire",
   // Bannières du kit (ADR 0141) : aperçus de l'espace partenaire et images déjà collées.
   "bannieres",
+  // Badge des artisans (ADR 0144) : image déjà collée sur leur site.
+  "badge",
   "\\.well-known",
   "favicon\\.ico",
   "icon\\.svg",

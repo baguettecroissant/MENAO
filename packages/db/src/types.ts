@@ -947,6 +947,7 @@ export type Database = {
           experience_years: number | null;
           forme_juridique_code: string | null;
           id: string;
+          indexable: boolean;
           is_dirigeant: boolean | null;
           logo_path: string | null;
           nom_commercial: string | null;
@@ -964,6 +965,7 @@ export type Database = {
           sirene_checked_at: string | null;
           sirene_partial: boolean;
           siret: string | null;
+          slug: string | null;
           status: Database["public"]["Enums"]["artisan_status"];
           stripe_account_id: string | null;
           stripe_customer_id: string | null;
@@ -1001,6 +1003,7 @@ export type Database = {
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
+          indexable?: boolean;
           is_dirigeant?: boolean | null;
           logo_path?: string | null;
           nom_commercial?: string | null;
@@ -1018,6 +1021,7 @@ export type Database = {
           sirene_checked_at?: string | null;
           sirene_partial?: boolean;
           siret?: string | null;
+          slug?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
@@ -1054,6 +1058,7 @@ export type Database = {
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           id?: string;
+          indexable?: boolean;
           is_dirigeant?: boolean | null;
           logo_path?: string | null;
           nom_commercial?: string | null;
@@ -1071,6 +1076,7 @@ export type Database = {
           sirene_checked_at?: string | null;
           sirene_partial?: boolean;
           siret?: string | null;
+          slug?: string | null;
           status?: Database["public"]["Enums"]["artisan_status"];
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
@@ -3926,6 +3932,7 @@ export type Database = {
           vat_rate_bp: number;
         }[];
       };
+      artisan_public_page: { Args: { p_slug: string }; Returns: Json };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
       artisan_public_reviews: {
         Args: { p_artisan_id: string; p_limit?: number };
@@ -4307,6 +4314,15 @@ export type Database = {
       };
       partner_dashboard: { Args: { p_token: string }; Returns: Json };
       partner_page: { Args: { p_code: string }; Returns: Json };
+      public_artisan_pages: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_id: string;
+          indexable: boolean;
+          slug: string;
+          updated_at: string;
+        }[];
+      };
       public_artisans_for_commune: {
         Args: { p_code_insee: string; p_limit?: number; p_trade_code: string };
         Returns: {
