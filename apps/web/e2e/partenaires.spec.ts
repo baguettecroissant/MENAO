@@ -65,7 +65,7 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement.");
-  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await visitor.close();
 

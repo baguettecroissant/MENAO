@@ -23,7 +23,7 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
   await mockGeocoding(page);
   await page.goto("/recherche");
 
-  const submit = page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" });
+  const submit = page.getByRole("button", { name: "Trouver mon artisan" });
   await expect(submit).toBeDisabled();
 
   // Dictée : le texte transcrit est inséré dans le champ.
@@ -119,7 +119,7 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Je suis hésitant, il faudrait rafraîchir le salon.");
-  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await expect(
     page.getByRole("region", { name: "Artisan recherché" }).getByLabel("Métier"),
@@ -130,7 +130,7 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
   await page.goto("/recherche");
   await page.getByLabel("Décrivez votre projet").fill("Panne de chaudière.");
   await page.getByRole("button", { name: "Plomberie" }).click();
-  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await expect(page.getByText("Nous n'avons pas pu analyser votre description")).toBeVisible();
   // Le métier choisi avec les puces est conservé.
@@ -168,7 +168,7 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
 test("une session anonyme n'ouvre pas l'espace client", async ({ page }) => {
   await page.goto("/recherche");
   await page.getByLabel("Décrivez votre projet").fill("Fuite dans la cuisine à Nice.");
-  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await page.goto("/mon-espace");
   await expect(page).toHaveURL(/\/connexion/);

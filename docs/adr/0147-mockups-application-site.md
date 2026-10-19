@@ -1,6 +1,6 @@
 # ADR 0147 — Mockups de l'application sur le site vitrine
 
-- Statut : accepté
+- Statut : accepté, modifié par l'ADR 0148 (bandeau de l'accueil, mentions retirées)
 - Date : 19 octobre 2026
 - Lot 1 de l'audit du site vitrine du 19 octobre 2026 (mockups et produit à l'écran).
 

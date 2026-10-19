@@ -9,6 +9,12 @@ export type AppScreen = { src: string; top: string; bottom: string; darkTop?: bo
 const BEIGE = "#f8f7f1";
 
 export const APP_SCREENS = {
+  clientAccueil: {
+    src: "/images/app/client-accueil.webp",
+    top: "#4869f6",
+    bottom: "#ffffff",
+    darkTop: true,
+  },
   clientRecherche: { src: "/images/app/client-recherche.webp", top: BEIGE, bottom: BEIGE },
   clientArtisans: { src: "/images/app/client-artisans.webp", top: "#ffffff", bottom: "#ffffff" },
   clientFiche: { src: "/images/app/client-fiche.webp", top: BEIGE, bottom: BEIGE },

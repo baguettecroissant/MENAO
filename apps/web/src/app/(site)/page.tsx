@@ -24,14 +24,8 @@ import { organizationJsonLd } from "@/lib/site/structured-data";
 const t = fr.home;
 const steps = fr.site.clientSteps;
 const faq = fr.pages.faq;
-// Questions les plus posées par les particuliers, reprises de la page FAQ.
-const HOME_FAQ = [
-  faq.project.items[0]!,
-  faq.project.items[1]!,
-  faq.trust.items[0]!,
-  faq.payments.items[0]!,
-  faq.project.items[2]!,
-];
+// Trois questions parmi les plus posées, reprises de la page FAQ (les autres : « Toutes les questions »).
+const HOME_FAQ = [faq.project.items[0]!, faq.trust.items[0]!, faq.payments.items[0]!];
 
 // Page statique régénérée toutes les heures (métiers).
 export const revalidate = 3600;
@@ -86,8 +80,9 @@ export default async function HomePage() {
             title={t.space.title}
             subtitle={t.space.subtitle}
           />
-          <div className="reveal-group grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <article className="grid grid-cols-1 items-center gap-8 rounded-hero border border-border bg-background p-6 sm:p-8 md:grid-cols-2 lg:col-span-2">
+          {/* Carrousel horizontal sur mobile, grille sur grand écran (ADR 0148). */}
+          <div className="reveal-group -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
+            <article className="grid w-[85%] shrink-0 snap-center grid-cols-1 items-center gap-8 rounded-hero border border-border bg-background p-6 sm:w-[70%] sm:p-8 md:grid-cols-2 lg:col-span-2 lg:w-auto">
               <div className="flex flex-col gap-4">
                 <Tag className="self-start">
                   <Signature aria-hidden="true" className="size-3.5" />
@@ -102,7 +97,7 @@ export default async function HomePage() {
               </div>
               <QuoteSignVisual />
             </article>
-            <article className="flex flex-col gap-6 rounded-hero bg-primary-soft p-6 sm:p-8">
+            <article className="flex w-[85%] shrink-0 snap-center flex-col gap-6 rounded-hero bg-primary-soft p-6 sm:w-[70%] sm:p-8 lg:w-auto">
               <div className="flex flex-col gap-3">
                 <span className="inline-flex items-center gap-1 self-start rounded-chip bg-surface px-2.5 py-1 text-xs font-medium text-primary-strong">
                   <Wallet aria-hidden="true" className="size-3.5" />
@@ -126,7 +121,7 @@ export default async function HomePage() {
             ].map((card) => (
               <article
                 key={card.key}
-                className="flex flex-col gap-6 rounded-hero border border-border bg-background p-6 sm:p-7"
+                className="flex w-[85%] shrink-0 snap-center flex-col gap-6 rounded-hero border border-border bg-background p-6 sm:w-[70%] sm:p-7 lg:w-auto"
               >
                 <div className="flex flex-col gap-2">
                   <h3 className="text-lg font-medium">{card.copy.title}</h3>
@@ -152,7 +147,7 @@ export default async function HomePage() {
             title={t.tradesTitle}
             subtitle={t.tradesSubtitle}
           />
-          <ul className="reveal-group grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="reveal-group grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
             {trades.map((trade) => (
               <li key={trade.code}>
                 <TradeTile

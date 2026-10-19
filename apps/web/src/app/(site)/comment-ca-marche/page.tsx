@@ -139,7 +139,6 @@ export default function HowItWorksPage() {
               </li>
             ))}
           </ol>
-          <p className="text-center text-xs text-muted-foreground">{fr.site.mockups.caption}</p>
         </div>
       </section>
 

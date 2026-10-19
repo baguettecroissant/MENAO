@@ -23,16 +23,20 @@ export function TrustSection() {
           </h2>
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>
-        <dl className="reveal-group grid w-full grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <dl className="reveal-group grid w-full grid-cols-3 divide-x divide-border">
           {t.stats.map((stat, i) => {
             const Icon = STAT_ICONS[i] ?? BadgeCheck;
             return (
-              <div key={stat.label} className="flex flex-col items-center gap-2 py-5 sm:py-0">
-                <Icon aria-hidden="true" strokeWidth={1.75} className="size-7 text-primary" />
-                <dd className="text-[2rem] leading-none font-medium text-primary">
+              <div key={stat.label} className="flex flex-col items-center gap-1.5 px-1 sm:gap-2">
+                <Icon
+                  aria-hidden="true"
+                  strokeWidth={1.75}
+                  className="size-6 text-primary sm:size-7"
+                />
+                <dd className="text-[1.625rem] leading-none font-medium text-primary sm:text-[2rem]">
                   <CountUp value={stat.value} />
                 </dd>
-                <dt className="text-sm font-medium">{stat.label}</dt>
+                <dt className="text-xs font-medium text-balance sm:text-sm">{stat.label}</dt>
               </div>
             );
           })}
