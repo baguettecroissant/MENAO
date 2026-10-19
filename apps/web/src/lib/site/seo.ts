@@ -52,6 +52,8 @@ export const PRIVATE_PATHS = [
   "/calendrier/",
   // Liens partenaires (F-59) : simples redirections.
   "/p/",
+  // Espace partenaire par lien privé (ADR 0139) : jamais exploré, en plus du noindex de la page.
+  "/espace-partenaire/",
 ] as const;
 
 export const absoluteUrl = (path: string) =>
