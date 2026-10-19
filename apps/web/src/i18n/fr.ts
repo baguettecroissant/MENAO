@@ -107,6 +107,18 @@ export const fr = {
     privateLink:
       "Ce lien est personnel : ne le partagez pas. L'équipe MENAO peut le renouveler à tout moment.",
   },
+  /** Bannières du kit partenaire (ADR 0141), dans le back-office et l'espace partenaire. */
+  partnerBanners: {
+    title: "Bannières",
+    lead: "Images aux formats standards, hébergées par MENAO, déjà reliées à vos liens. Collez le code tel quel.",
+    audiences: {
+      particuliers: "Pour vos visiteurs (demande de travaux)",
+      artisans: "Pour les artisans (inscription)",
+    } as Record<"particuliers" | "artisans", string>,
+    size: (width: number, height: number) => `${width} × ${height}`,
+    preview: (width: number, height: number) => `Aperçu de la bannière ${width} × ${height}`,
+    download: "Télécharger l'image",
+  },
   /** Widget intégré chez les partenaires (ADR 0138). */
   widget: {
     metaTitle: "MENAO — trouver un artisan du bâtiment vérifié",

@@ -1,4 +1,4 @@
-import { partnerLinks, partnerSnippets, partnerTotals } from "@menao/core";
+import { partnerBanners, partnerLinks, partnerSnippets, partnerTotals } from "@menao/core";
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -8,6 +8,7 @@ import {
   PayCommissionsForm,
   RenewDashboardForm,
 } from "@/components/admin/partner-forms";
+import { BannerKit } from "@/components/banner-kit";
 import { CopySnippet } from "@/components/copy-snippet";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
@@ -152,6 +153,15 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
           />
         ))}
         <p className="text-xs text-muted-foreground">{t.kit.disclosure}</p>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <CardTitle title={fr.partnerBanners.title} description={fr.partnerBanners.lead} />
+        <BannerKit
+          banners={partnerBanners(env.NEXT_PUBLIC_SITE_URL, partner.code)}
+          copyLabel={t.kit.copy}
+          copiedLabel={t.kit.copied}
+        />
       </Card>
 
       <Card className="flex flex-col gap-4 overflow-x-auto">

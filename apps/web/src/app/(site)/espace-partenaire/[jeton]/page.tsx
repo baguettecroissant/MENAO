@@ -1,7 +1,8 @@
-import { partnerLinks, partnerSnippets } from "@menao/core";
+import { partnerBanners, partnerLinks, partnerSnippets } from "@menao/core";
 import { parsePartnerDashboard } from "@menao/validation";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BannerKit } from "@/components/banner-kit";
 import { CopySnippet } from "@/components/copy-snippet";
 import { PageHero } from "@/components/site/page-hero";
 import { Alert, Card, CardTitle } from "@/components/ui";
@@ -111,6 +112,11 @@ export default async function PartnerSpacePage({
           <CopySnippet id="kit-widget" label={t.kitWidget} value={kit.widget} {...copy} />
           <CopySnippet id="kit-iframe" label={t.kitIframe} value={kit.iframe} {...copy} />
           <p className="text-xs text-muted-foreground">{t.disclosure}</p>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <CardTitle title={fr.partnerBanners.title} description={fr.partnerBanners.lead} />
+          <BannerKit banners={partnerBanners(site, dashboard.code)} {...copy} />
         </Card>
 
         <p className="text-xs text-muted-foreground">{t.privateLink}</p>

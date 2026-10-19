@@ -91,6 +91,15 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(space.getByText(/^10,00\s€ par demande qualifiée$/)).toBeVisible();
   await expect(space.getByLabel("Lien texte")).toHaveValue(/\/p\/agence-e2e"/);
+  // Bannières du kit (ADR 0141) : aperçus, code relié au lien partenaire, image servie par MENAO.
+  await expect(space.getByRole("img", { name: "Aperçu de la bannière 160 × 600" })).toBeVisible();
+  await expect(space.locator("#banniere-particuliers-728x90")).toHaveValue(
+    /href="[^"]*\/p\/agence-e2e"><img src="[^"]*\/bannieres\/menao-particuliers-728x90\.svg"/,
+  );
+  await expect(space.locator("#banniere-artisans-300x250")).toHaveValue(/\/p\/agence-e2e\/pro"/);
+  const banner = await space.request.get("/bannieres/menao-particuliers-300x250.svg");
+  expect(banner.status()).toBe(200);
+  expect(banner.headers()["content-type"]).toContain("image/svg+xml");
   await admin.getByRole("button", { name: "Renouveler le lien" }).click();
   await expect(admin.getByText("Nouveau lien créé.")).toBeVisible();
   expect((await space.goto(new URL(spaceLink).pathname))?.status()).toBe(404);

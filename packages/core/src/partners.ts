@@ -48,6 +48,42 @@ export function partnerSnippets(siteUrl: string, code: string, tradeCode?: strin
   };
 }
 
+/** Bannières du kit (ADR 0141) : formats standards, SVG servis par le site (`/bannieres`). */
+export const PARTNER_BANNERS = [
+  { id: "particuliers-728x90", audience: "particuliers", width: 728, height: 90 },
+  { id: "particuliers-300x250", audience: "particuliers", width: 300, height: 250 },
+  { id: "particuliers-160x600", audience: "particuliers", width: 160, height: 600 },
+  { id: "particuliers-320x50", audience: "particuliers", width: 320, height: 50 },
+  { id: "artisans-728x90", audience: "artisans", width: 728, height: 90 },
+  { id: "artisans-300x250", audience: "artisans", width: 300, height: 250 },
+] as const;
+
+const BANNER_ALT = {
+  particuliers: "MENAO : trouvez un artisan du bâtiment vérifié",
+  artisans: "MENAO pour les artisans : des chantiers près de chez vous, sans commission",
+} as const;
+
+/**
+ * Bannières à coller chez le partenaire : image hébergée par MENAO (sans cookie) dans un lien
+ * partenaire (demande de travaux pour les particuliers, inscription pour les artisans).
+ */
+export function partnerBanners(siteUrl: string, code: string) {
+  const site = siteUrl.replace(/\/+$/, "");
+  const links = partnerLinks(site, code);
+  return PARTNER_BANNERS.map((banner) => {
+    const src = `${site}/bannieres/menao-${banner.id}.svg`;
+    const href = banner.audience === "artisans" ? links.pros : links.clients;
+    return {
+      ...banner,
+      src,
+      html:
+        `<a href="${escapeAttr(href)}"><img src="${escapeAttr(src)}" width="${banner.width}" ` +
+        `height="${banner.height}" alt="${BANNER_ALT[banner.audience]}" loading="lazy" ` +
+        `style="border:0;max-width:100%;height:auto"></a>`,
+    };
+  });
+}
+
 /** Montant négocié avec le partenaire, sinon le montant par défaut, sinon 0 (non réglé). */
 export function commissionAmountCents(override: number | null, fallback: number | null): number {
   return override ?? fallback ?? 0;
