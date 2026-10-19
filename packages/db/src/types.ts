@@ -4198,11 +4198,11 @@ export type Database = {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
       };
+      record_subscription_payment: { Args: { p_stripe_subscription_id: string }; Returns: boolean };
       record_ticket_photo: {
         Args: { p_storage_path: string; p_ticket_id: string; p_user_id: string };
         Returns: string;
       };
-      record_subscription_payment: { Args: { p_stripe_subscription_id: string }; Returns: boolean };
       record_webhook_failure: { Args: { p_error: string; p_event_id: string }; Returns: undefined };
       register_push_token: {
         Args: { p_platform: Database["public"]["Enums"]["push_platform"]; p_token: string };
