@@ -101,8 +101,10 @@ insert into public.chantiers (id, project_id, request_id, artisan_id, particulie
 select ('c7540000-0000-4000-8000-0000000000' || p.n)::uuid, r.project_id, r.id, r.artisan_id, r.particulier_id, 'Chantier'
 from (values ('01'), ('08')) as p (n)
 join public.requests r on r.project_id = ('c7530000-0000-4000-8000-0000000000' || p.n)::uuid;
-insert into public.quotes (chantier_id, artisan_id, status)
-values ('c7540000-0000-4000-8000-000000000001', 'c7510000-0000-4000-8000-000000000001', 'envoye');
+insert into public.quotes (chantier_id, artisan_id, status, numero, sent_at, valid_until, start_date,
+  duration_days, payment_schedule, document)
+values ('c7540000-0000-4000-8000-000000000001', 'c7510000-0000-4000-8000-000000000001', 'envoye',
+  'DEVIS-2026-7501', now(), current_date + 30, current_date + 40, 5, '[]'::jsonb, '{}'::jsonb);
 insert into public.appointments (chantier_id, starts_at)
 values ('c7540000-0000-4000-8000-000000000008', now() + interval '10 days');
 update public.partner_commissions set validate_after = now() - interval '1 minute'
