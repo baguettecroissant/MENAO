@@ -11,7 +11,7 @@ const t = fr.search;
 const FEATURE_ICONS = [Sparkles, Clock, ShieldCheck, BadgePercent];
 
 export const metadata: Metadata = {
-  title: `${fr.nav.findArtisanBtp} — MENAO`,
+  title: `${fr.nav.describeProject} — MENAO`,
   description: fr.meta.description,
   alternates: { canonical: "/recherche" },
 };

@@ -242,7 +242,7 @@ export const fr = {
     guarantees: "Garanties & Confiance",
     myClientSpace: "Mon espace client",
     findArtisan: "Trouver un artisan",
-    findArtisanBtp: "Trouver un artisan du BTP",
+    describeProject: "Décrire mon projet",
     closeMenu: "Fermer le menu",
     menu: "Menu",
     main: "Navigation principale",
@@ -285,7 +285,7 @@ export const fr = {
     heroFree: "MENAO est 100\u00a0% gratuit.",
     heroSubtitle: "De la mise en relation avec votre artisan à la réception du chantier.",
     searchLabel: "Décrivez votre besoin",
-    searchPlaceholder: "Décrivez en détail votre besoin …",
+    searchPlaceholder: "Ex. : fuite sous l'évier de la cuisine, à Antibes",
     // Exemples qui s'écrivent dans la barre de recherche de l'accueil (F-01).
     searchExamples: [
       "Fuite sous l'évier de la cuisine, à Nice…",
@@ -301,15 +301,14 @@ export const fr = {
     space: {
       eyebrow: "Votre espace client",
       title: "Tout votre chantier, au même endroit.",
-      subtitle:
-        "Devis, signature, paiements, photos et messages : fini les papiers éparpillés et les relances au téléphone.",
+      subtitle: "Devis, signature, paiements, photos et messages, sans papiers ni relances.",
       quote: {
         title: "Signez votre devis en ligne",
-        text: "Le devis détaillé de votre artisan arrive dans votre espace. Demandez une modification, refusez-le ou signez-le en quelques clics, avec un code de confirmation.",
+        text: "Le devis arrive dans votre espace : demandez une modification, refusez-le ou signez-le en quelques clics.",
       },
       payment: {
         title: "Payez en toute sécurité",
-        text: "Acompte puis solde par carte, via Stripe, directement à votre artisan. MENAO ne touche jamais votre argent.",
+        text: "Acompte et solde par carte, versés directement à votre artisan. MENAO ne touche jamais votre argent.",
       },
       progress: {
         title: "Suivez l'avancement",
@@ -317,25 +316,24 @@ export const fr = {
       },
       reception: {
         title: "Réceptionnez sereinement",
-        text: "Vous signez le procès-verbal, avec ou sans réserves. Avec des réserves, le solde attend leur levée.",
+        text: "Procès-verbal signé en ligne ; avec des réserves, le solde attend leur levée.",
       },
       review: {
         title: "Donnez votre avis",
-        text: "Votre avis vérifié guide les prochains clients, et votre artisan peut y répondre.",
+        text: "Votre avis vérifié guide les prochains clients.",
       },
     },
     tradesEyebrow: "Métiers",
     tradesTitle: "Tous les métiers du bâtiment.",
-    tradesSubtitle:
-      "Rénovation, aménagement, entretien : des artisans vérifiés pour chaque corps de métier, dans les Alpes-Maritimes.",
+    tradesSubtitle: "Des artisans vérifiés pour chaque corps de métier, dans les Alpes-Maritimes.",
     faqEyebrow: "Questions fréquentes",
     faqTitle: "Vos questions, nos réponses.",
     faqMore: "Toutes les questions",
   },
   trust: {
-    title: "Des artisans du BTP qualifiés et de confiance",
+    title: "Des artisans du bâtiment vérifiés",
     subtitle:
-      "Choisir MENAO, c'est choisir un artisan vérifié pour vous garantir un travail de qualité",
+      "Chaque artisan est contrôlé avant d'apparaître : entreprise active, décennale, RC Pro, identité.",
     stats: [
       { value: "100\u00a0%", label: "Artisans vérifiés" },
       { value: "0\u00a0%", label: "Commission sur vos chantiers" },
@@ -346,10 +344,11 @@ export const fr = {
   },
   site: {
     breadcrumb: "Fil d'Ariane",
-    // Mockups : vrais écrans de l'application, personnes et données fictives (ADR 0147).
+    // Mockups : vrais écrans de l'application (ADR 0147).
     mockups: {
-      caption: "Écrans réels de l'application MENAO · personnes et données fictives",
       screens: {
+        clientAccueil:
+          "Application MENAO : l'accueil de Camille, avec la recherche de projet et son chantier de salle de bain en cours",
         clientRecherche:
           "Application MENAO : un particulier décrit son projet de salle de bain, l'assistant en déduit le métier",
         clientArtisans:
@@ -370,11 +369,6 @@ export const fr = {
         webPro:
           "Espace pro MENAO sur ordinateur : le tableau de bord avec les nouvelles demandes, la visite du jour et les devis à envoyer",
       },
-      accepted: {
-        title: "Demande acceptée",
-        text: "Julien Ferrand passera mardi à 13\u00a0h\u00a030 voir votre salle de bain.",
-        time: "maintenant",
-      },
       deposit: {
         title: "Acompte reçu",
         text: "1 456,29 € versés sur votre compte pour la salle de bain de Camille.",
@@ -385,13 +379,13 @@ export const fr = {
     home: "Accueil",
     clientSteps: {
       eyebrow: "Comment ça marche",
-      title: "Votre projet entre de bonnes mains, en 4 étapes.",
+      title: "Votre projet entre de bonnes mains.",
       subtitle:
         "Décrivez vos travaux : MENAO trouve les artisans vérifiés de votre secteur. Vous gardez la main à chaque étape.",
       items: [
         {
           title: "Décrivez votre projet",
-          text: "À l'écrit ou en dictant, avec vos photos. Notre assistant IA en déduit le métier, les travaux et les délais.",
+          text: "À l'écrit ou à la voix, avec vos photos. L'assistant en déduit le métier, les travaux et les délais.",
         },
         {
           title: "Choisissez vos artisans",
@@ -403,7 +397,7 @@ export const fr = {
         },
         {
           title: "Suivez jusqu'à la réception",
-          text: "Acompte, photos de l'avancement, procès-verbal de réception et solde : tout se passe dans votre espace.",
+          text: "Acompte, photos, réception et solde : tout se passe dans votre espace.",
         },
       ],
       cta: "Décrire mon projet",
@@ -715,32 +709,32 @@ export const fr = {
       client: [
         {
           title: "Décrivez votre projet",
-          text: "Avec vos mots, à l'écrit ou à la voix, et quelques photos. Notre assistant IA en déduit le métier, les travaux, le lieu et les délais : vous vérifiez et corrigez si besoin.",
+          text: "Avec vos mots, à l'écrit ou à la voix, et quelques photos. L'assistant en déduit le métier, le lieu et les délais ; vous corrigez si besoin.",
           tag: "Recherche assistée par IA",
         },
         {
           title: "Choisissez jusqu'à 3 artisans",
-          text: "MENAO vous présente jusqu'à 5 artisans vérifiés qui interviennent chez vous, classés selon des critères publics. Vous envoyez votre demande à 3 d'entre eux au plus.",
+          text: "Jusqu'à 5 artisans vérifiés qui interviennent chez vous, classés selon des critères publics. Vous en sollicitez 3 au plus.",
           tag: "Artisans vérifiés",
         },
         {
           title: "Rencontrez votre artisan",
-          text: "Chaque artisan a 48\u00a0h pour accepter. Dès qu'il accepte, vous échangez vos coordonnées et il fixe un rendez-vous pour découvrir votre chantier.",
+          text: "Chaque artisan a 48\u00a0h pour accepter. Vous échangez alors vos coordonnées et il vient voir votre chantier.",
           tag: "Réponse sous 48\u00a0h",
         },
         {
           title: "Signez votre devis en ligne",
-          text: "Le devis détaillé arrive dans votre espace. Vous pouvez demander une modification, le refuser ou le signer électroniquement, avec un code de confirmation.",
+          text: "Le devis détaillé arrive dans votre espace : demandez une modification, refusez-le ou signez-le en ligne.",
           tag: "Signature électronique",
         },
         {
           title: "Réglez l'acompte, suivez les travaux",
-          text: "L'acompte se règle par carte, directement à l'artisan via Stripe. Il confirme la date de démarrage, puis partage photos et nouvelles du chantier.",
+          text: "L'acompte se règle par carte, directement à l'artisan. Il confirme le démarrage, puis partage photos et nouvelles.",
           tag: "Paiement sécurisé",
         },
         {
           title: "Réceptionnez, réglez le solde, notez",
-          text: "À la fin des travaux, vous signez le procès-verbal de réception, avec ou sans réserves. Le solde se règle une fois tout conforme, puis vous laissez votre avis.",
+          text: "Vous signez le procès-verbal de réception, réglez le solde une fois tout conforme, puis laissez votre avis.",
           tag: "Avis vérifié",
         },
       ],
@@ -1090,7 +1084,7 @@ export const fr = {
     features: [
       {
         title: "Accompagnement par IA",
-        body: "Trouvez les meilleurs artisans pour votre projet grâce à une recherche intelligente.",
+        body: "Une demande claire du premier coup, des artisans qui interviennent chez vous.",
       },
       {
         title: "Réponse sous 48 h",
@@ -1110,7 +1104,7 @@ export const fr = {
       "Afin d'obtenir de meilleurs résultats, donnez un maximum de détails sur votre besoin ou votre projet.",
     helpEnough: "Avec ces informations, nous avons de quoi trouver votre artisan idéal !",
     tradesLegend: "Vous savez déjà quel artisan il vous faut ?",
-    submit: "Trouver mon artisan du BTP idéal",
+    submit: "Trouver mon artisan",
     analyzing: "Analyse de votre projet en cours",
     uploadingPhotos: "Envoi de vos photos…",
     analysis: {
@@ -3468,7 +3462,7 @@ export const fr = {
         titleLead: "Remplissez votre agenda.",
         titleAccent: "Gardez 100\u00a0% de vos chantiers.",
         subtitle:
-          "MENAO vous envoie les demandes des particuliers de votre zone, déjà qualifiées. Devis, signature, acompte, suivi et facture tiennent dans une seule app, et chaque paiement arrive directement sur votre compte. Aucune commission, jamais.",
+          "Les demandes des particuliers de votre zone, déjà qualifiées. Devis, signature, paiements et factures dans une seule app, et chaque paiement arrive directement sur votre compte. Aucune commission, jamais.",
         signUp: "Créer mon compte pro",
         plans: "Voir les formules",
         signIn: "J'ai déjà un compte",
@@ -3513,12 +3507,12 @@ export const fr = {
         items: [
           {
             title: "Chercher des clients",
-            text: "Appels, relances, devis restés sans réponse : chaque heure passée à prospecter est une heure de chantier en moins.",
+            text: "Appels, relances, devis sans réponse : une heure de prospection, c'est une heure de chantier en moins.",
             solution: "Les demandes de votre zone viennent à vous, déjà qualifiées.",
           },
           {
             title: "Payer pour travailler",
-            text: "Commission sur chaque chantier, contacts achetés sans garantie : vos marges fondent avant même le premier coup de pinceau.",
+            text: "Commissions et contacts achetés sans garantie : vos marges fondent avant le premier coup de pinceau.",
             solution: "Un abonnement fixe. Pas de commission, pas de contact à l'unité.",
           },
           {
@@ -3536,19 +3530,19 @@ export const fr = {
         items: [
           {
             title: "Créez votre profil pro",
-            text: "SIRET, assurances, métiers, zone d'intervention et photos de réalisations. Nous vérifions votre entreprise et vos assurances avant de vous rendre visible.",
+            text: "SIRET, assurances, métiers, zone et réalisations. Nous vérifions votre entreprise avant de vous rendre visible.",
           },
           {
             title: "Recevez des demandes qualifiées",
-            text: "Chaque projet est précisé avec l'aide de l'IA : besoin, photos, commune, délais. Une demande va à trois artisans au plus, et vous avez 48\u00a0h pour l'accepter.",
+            text: "Besoin, photos, commune et délais précisés avec l'IA. Trois artisans au plus par demande, et 48\u00a0h pour accepter.",
           },
           {
             title: "Envoyez votre devis en quelques minutes",
-            text: "Fixez le rendez-vous, puis dictez votre devis à la voix : MENAO le met en forme avec les mentions obligatoires. Votre client le signe en ligne.",
+            text: "Fixez le rendez-vous, dictez votre devis : MENAO le met en forme avec les mentions obligatoires, votre client le signe en ligne.",
           },
           {
             title: "Encaissez, suivez, facturez",
-            text: "Acompte et solde payés directement sur votre compte, suivi du chantier en photos, procès-verbal de réception signé, factures émises automatiquement.",
+            text: "Paiements directs sur votre compte, suivi en photos, réception signée et factures automatiques.",
           },
         ],
       },
@@ -3559,7 +3553,7 @@ export const fr = {
         voice: {
           tag: "Dictée du devis",
           title: "Vous dictez, MENAO rédige le devis.",
-          text: "Décrivez les travaux à voix haute, sur le chantier ou dans le camion : chaque fourniture et chaque prestation devient une ligne, avec quantité, unité et prix. TVA, totaux et mentions obligatoires suivent. Vous relisez, vous envoyez.",
+          text: "Décrivez les travaux à voix haute, sur le chantier ou dans le camion : chaque prestation devient une ligne chiffrée, avec TVA, totaux et mentions obligatoires. Vous relisez, vous envoyez.",
           promise: "MENAO n'invente aucun prix : seuls ceux que vous dictez sont repris.",
           // Illustration (valeurs d'exemple).
           recording: "Dictée en cours",

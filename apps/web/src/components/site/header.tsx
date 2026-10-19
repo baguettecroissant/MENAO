@@ -58,7 +58,7 @@ export function SiteHeader() {
             {t.myClientSpace}
           </ButtonLink>
           <ButtonLink href="/recherche" size="sm">
-            {t.findArtisanBtp}
+            {t.describeProject}
             <Search aria-hidden="true" className="size-4" />
           </ButtonLink>
         </div>
@@ -95,7 +95,7 @@ export function SiteHeader() {
               {t.myClientSpace}
             </ButtonLink>
             <ButtonLink href="/recherche" block>
-              {t.findArtisanBtp}
+              {t.describeProject}
               <Search aria-hidden="true" className="size-4" />
             </ButtonLink>
           </div>

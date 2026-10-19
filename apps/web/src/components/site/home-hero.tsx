@@ -5,7 +5,7 @@ import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import { APP_SCREENS } from "@/lib/site/app-screens";
 import { HERO_IMAGE, HERO_SRCSET } from "@/lib/site/images";
-import { AppNotification, PhoneMockup } from "./device-mockups";
+import { PhoneMockup } from "./device-mockups";
 import { HeroSearchInput } from "./hero-search-input";
 import { HomeNav } from "./home-nav";
 
@@ -15,8 +15,8 @@ const TAG_ICONS = [BadgeCheck, ShieldCheck, Clock];
 
 /**
  * Bandeau de l'accueil (maquette « Homepage ») : photo plein cadre arrondie, navigation en
- * verre dépoli, titre, recherche, raccourcis métiers, et l'application dans un téléphone avec
- * une notification (ADR 0147). Aucun chiffre ni témoignage inventé (spec F-01).
+ * verre dépoli, titre, recherche, raccourcis métiers, et l'accueil de l'application dans un
+ * téléphone (ADR 0147). Aucun chiffre ni témoignage inventé (spec F-01).
  */
 export function HomeHero() {
   return (
@@ -129,21 +129,15 @@ export function HomeHero() {
             </ul>
           </div>
 
-          {/* L'application en situation (ADR 0147) : vrai écran, données fictives. Le téléphone sort
-              du bas du bandeau, sous les visages de la photo ; masqué sur mobile. */}
+          {/* L'application dans un téléphone (ADR 0147) : l'accueil client. Il sort du bas du
+              bandeau, sous les visages de la photo ; masqué sur mobile. */}
           <div className="pointer-events-none absolute right-[4%] -bottom-[23%] hidden w-[15rem] animate-menao-rise [animation-delay:500ms] lg:block xl:right-[6%] xl:w-[16rem]">
             <PhoneMockup
-              screen={APP_SCREENS.clientArtisans}
-              alt={fr.site.mockups.screens.clientArtisans}
+              screen={APP_SCREENS.clientAccueil}
+              alt={fr.site.mockups.screens.clientAccueil}
               priority
             />
           </div>
-          <AppNotification
-            title={fr.site.mockups.accepted.title}
-            text={fr.site.mockups.accepted.text}
-            time={fr.site.mockups.accepted.time}
-            className="absolute right-[calc(4%+13.5rem)] bottom-[26%] hidden animate-menao-rise [animation-delay:800ms] lg:flex xl:right-[calc(6%+14.5rem)]"
-          />
         </div>
       </div>
     </section>

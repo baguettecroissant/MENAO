@@ -35,7 +35,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement.");
-  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
@@ -721,7 +721,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page
     .getByLabel("Décrivez votre projet")
     .fill("Nouvelle fuite sous le lavabo de la salle de bain, à réparer.");
-  await page.getByRole("button", { name: "Trouver mon artisan du BTP idéal" }).click();
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
   const rehireProjectId = new URL(page.url()).pathname.split("/").pop() ?? "";
   // Critères et artisans gardent le menu latéral : le client reste dans son espace, retour compris.

@@ -151,7 +151,6 @@ export default async function ProLandingPage() {
                 time={m.deposit.time}
                 className="absolute -top-2 left-[4%] hidden animate-menao-float sm:flex"
               />
-              <p className="mt-6 max-w-[62%] text-xs text-white/70 lg:mt-8">{m.caption}</p>
             </div>
           </div>
         </div>
@@ -389,7 +388,6 @@ export default async function ProLandingPage() {
                 className="mx-auto w-full max-w-[16rem]"
               />
             </div>
-            <p className="text-center text-xs text-muted-foreground">{m.caption}</p>
           </div>
         </div>
       </section>
