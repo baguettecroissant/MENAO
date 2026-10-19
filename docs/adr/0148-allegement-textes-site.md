@@ -20,7 +20,7 @@
   - le bandeau montre l'accueil client de l'application (« Bonjour Camille ! », la recherche, le chantier en cours), seul, avec sa barre d'état bleue ;
   - les mentions sous les mockups sont retirées partout.
 - **Textes** :
-  - **titre de l'accueil et de la recherche** : « Vos travaux, avec un artisan vérifié près de chez vous » ;
+  - **titre de l'accueil et de la recherche** : inchangé, à la demande de l'utilisateur ;
   - **bloc confiance** : « Des artisans du bâtiment vérifiés », puis « Chaque artisan est contrôlé avant d'apparaître : entreprise active, décennale, RC Pro, identité. » ;
   - **recherche** : « Une demande claire du premier coup, des artisans qui interviennent chez vous » remplace « Trouvez les meilleurs artisans » ;
   - **exemple dans le champ de recherche** : « Ex. : fuite sous l'évier de la cuisine, à Antibes » ;

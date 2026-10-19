@@ -279,9 +279,9 @@ export const fr = {
     ranking: "Critères de classement",
   },
   home: {
-    title: "Vos travaux, avec un artisan vérifié près de chez vous",
-    heroTitleStart: "Vos travaux, avec un artisan",
-    heroTitleAccent: "vérifié près de chez vous",
+    title: "Trouvez l'artisan pro du BTP dont vous avez besoin",
+    heroTitleStart: "Trouvez l'artisan pro du BTP dont",
+    heroTitleAccent: "vous avez besoin",
     heroFree: "MENAO est 100\u00a0% gratuit.",
     heroSubtitle: "De la mise en relation avec votre artisan à la réception du chantier.",
     searchLabel: "Décrivez votre besoin",
@@ -1070,8 +1070,8 @@ export const fr = {
   search: {
     rehire: (name: string) =>
       `Nouvelle demande pour ${name} : décrivez vos travaux, ${name} vous sera proposé en premier s'il intervient pour ce besoin.`,
-    titleStart: "Vos travaux, avec un artisan",
-    titleAccent: "vérifié près de chez vous",
+    titleStart: "Trouvez l'artisan du BTP dont",
+    titleAccent: "vous avez besoin",
     tagline: "Recherche rapide et intelligente",
     label: "Décrivez votre projet",
     placeholder:
