@@ -13,14 +13,13 @@ import {
 } from "@/components/site/journey-visuals";
 import { ProTeaser } from "@/components/site/pro-teaser";
 import { SectionHeading } from "@/components/site/section-heading";
-import { Steps } from "@/components/site/steps";
+import { ScreenSteps } from "@/components/site/screen-steps";
 import { TradeTile } from "@/components/site/trade-tile";
 import { TrustSection } from "@/components/site/trust-section";
 import { ButtonLink, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { organizationJsonLd } from "@/lib/site/structured-data";
-import { createPublicClient } from "@/lib/supabase/public";
 
 const t = fr.home;
 const steps = fr.site.clientSteps;
@@ -34,7 +33,7 @@ const HOME_FAQ = [
   faq.project.items[2]!,
 ];
 
-// Page statique régénérée toutes les heures (métiers, nombre d'artisans vérifiés).
+// Page statique régénérée toutes les heures (métiers).
 export const revalidate = 3600;
 
 /**
@@ -43,17 +42,13 @@ export const revalidate = 3600;
  * l'encart artisans et l'appel final. Aucun chiffre ni témoignage inventé.
  */
 export default async function HomePage() {
-  const [{ trades }, { data: stats }] = await Promise.all([
-    seoCatalog(),
-    createPublicClient().rpc("public_stats"),
-  ]);
-  const artisans = (stats as { artisans?: number } | null)?.artisans ?? 0;
+  const { trades } = await seoCatalog();
 
   return (
     <main className="bg-surface">
       {/* Identité de MENAO pour Google et les assistants IA (ADR 0134). */}
       <JsonLd data={organizationJsonLd()} />
-      <HomeHero verifiedArtisans={artisans} />
+      <HomeHero />
       <TrustSection />
 
       {/* Comment ça marche */}
@@ -65,7 +60,11 @@ export default async function HomePage() {
             title={steps.title}
             subtitle={steps.subtitle}
           />
-          <Steps items={steps.items} />
+          {/* Chaque étape illustrée par l'écran correspondant de l'application (ADR 0147). */}
+          <ScreenSteps
+            items={steps.items}
+            screens={["clientRecherche", "clientFiche", "clientDevis", "clientSuivi"]}
+          />
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
             <ButtonLink href="/recherche" size="lg">
               {steps.cta}

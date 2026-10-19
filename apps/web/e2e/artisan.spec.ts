@@ -116,7 +116,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
 
   // Étape 4 — charte qualité (ADR 0104) : 25 règles cochées, tracé de signature, accord
   await expect(page.getByRole("heading", { name: /Rejoindre Menao/ })).toBeVisible();
-  await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
+  await page.getByRole("button", { name: /Signer et rejoindre MENAO/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Pour signer" })).toContainText(
     "coche les 25 règle(s) restante(s)",
   );
@@ -137,7 +137,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   // Engagement de l'artisan (ADR 0117), certifié avec la même signature.
   await page.getByRole("checkbox", { name: /certifie sur l'honneur/ }).click();
   await page.getByRole("checkbox", { name: /accepte la Charte qualité Menao/ }).click();
-  await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
+  await page.getByRole("button", { name: /Signer et rejoindre MENAO/ }).click();
   await expect(page.getByRole("heading", { name: /Tu fais partie de Menao/ })).toBeVisible();
   await expect(page.getByText("25 / 25 (R1.1 à R6.2)")).toBeVisible();
   await page.getByRole("link", { name: /Continuer : mes documents/ }).click();

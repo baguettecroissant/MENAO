@@ -1,16 +1,11 @@
 import {
-  CalendarCheck,
   Camera,
   Check,
   CircleCheck,
   CreditCard,
   LockKeyhole,
   MailCheck,
-  Mic,
-  Phone,
-  ShieldCheck,
   Signature,
-  Sparkles,
   Star,
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
@@ -234,118 +229,6 @@ export function ReviewVisual() {
             </li>
           ))}
         </ul>
-      </div>
-    </div>
-  );
-}
-
-/** Projet décrit avec ses mots et ses photos, puis analysé par l'assistant. */
-export function DescribeVisual() {
-  return (
-    <div role="img" aria-label={t.describeLabel} className="flex w-full flex-col gap-3">
-      <div
-        aria-hidden="true"
-        className="rounded-card border-2 border-primary/60 bg-surface text-foreground p-4 shadow-raised"
-      >
-        <p className="text-sm leading-relaxed">{t.describeText}</p>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 rounded-pill bg-background px-3 py-1.5 text-xs text-muted-foreground">
-            <Camera className="size-3.5" />
-            {t.describePhotos}
-          </span>
-          <span className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <Mic className="size-4" />
-          </span>
-        </div>
-      </div>
-      <div aria-hidden="true" className="rounded-card bg-surface text-foreground p-4 shadow-raised">
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-primary-strong">
-          <Sparkles className="size-3.5" />
-          {t.describeAnalysis}
-        </p>
-        <ul className="mt-3 flex flex-wrap gap-1.5">
-          {t.describeChips.map((chip) => (
-            <li
-              key={chip}
-              className="rounded-chip bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary-strong"
-            >
-              {chip}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/** Sélection de deux artisans vérifiés parmi ceux proposés. */
-export function ChooseVisual() {
-  return (
-    <div
-      role="img"
-      aria-label={t.chooseLabel}
-      className="w-full rounded-card bg-surface text-foreground p-4 shadow-raised"
-    >
-      <div aria-hidden="true" className="flex flex-col gap-2.5">
-        <p className="text-xs font-semibold text-muted-foreground">{t.chooseTitle}</p>
-        {t.chooseRows.map((row) => (
-          <div
-            key={row.initial}
-            className={`flex items-center gap-3 rounded-input border px-3 py-2.5 ${
-              row.selected ? "border-primary bg-primary-softer" : "border-border"
-            }`}
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dfe6fe_0%,#b9c7fc_55%,#8ea4fb_100%)] text-sm font-medium text-primary-strong">
-              {row.initial}
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-sm font-medium">{row.detail}</span>
-              <span className="inline-flex items-center gap-1 text-xs text-success">
-                <ShieldCheck className="size-3" />
-                {t.chooseVerified}
-              </span>
-            </span>
-            <span
-              className={`flex size-5 shrink-0 items-center justify-center rounded-md border-2 ${
-                row.selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border-strong"
-              }`}
-            >
-              {row.selected && <Check className="size-3.5" />}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Demande acceptée et rendez-vous de visite du chantier. */
-export function MeetVisual() {
-  return (
-    <div role="img" aria-label={t.meetLabel} className="flex w-full flex-col gap-3">
-      <p
-        aria-hidden="true"
-        className="inline-flex items-center gap-2 self-start rounded-pill bg-success px-3.5 py-2 text-sm font-medium text-white shadow-raised"
-      >
-        <CircleCheck className="size-4" />
-        {t.meetAccepted}
-      </p>
-      <div aria-hidden="true" className="rounded-card bg-surface text-foreground p-4 shadow-raised">
-        <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary">
-            <CalendarCheck className="size-5" />
-          </span>
-          <span className="flex flex-col">
-            <span className="text-sm font-medium">{t.meetTitle}</span>
-            <span className="text-xs text-muted-foreground">{t.meetDetail}</span>
-          </span>
-        </div>
-        <p className="mt-3 inline-flex items-center gap-1.5 rounded-chip bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary-strong">
-          <Phone className="size-3.5" />
-          {t.meetShared}
-        </p>
       </div>
     </div>
   );

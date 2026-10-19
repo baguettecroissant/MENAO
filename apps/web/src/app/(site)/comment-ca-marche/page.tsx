@@ -1,22 +1,15 @@
 import type { Metadata } from "next";
 import { ArrowRight, Check, CircleCheck, CircleX, X } from "lucide-react";
-import type { ReactNode } from "react";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
-import {
-  ChooseVisual,
-  DescribeVisual,
-  MeetVisual,
-  PaymentVisual,
-  ProgressVisual,
-  QuoteSignVisual,
-  ReceptionVisual,
-} from "@/components/site/journey-visuals";
+import { PhoneMockup } from "@/components/site/device-mockups";
+import { ProgressVisual } from "@/components/site/journey-visuals";
 import { PageHero } from "@/components/site/page-hero";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { ButtonLink, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { APP_SCREENS, type AppScreenKey } from "@/lib/site/app-screens";
 
 const t = fr.pages.howItWorks;
 const faq = fr.pages.faq;
@@ -26,13 +19,14 @@ const FAQ = [
   faq.payments.items[0]!,
   faq.trust.items[2]!,
 ];
-const STEP_VISUALS: ReactNode[] = [
-  <DescribeVisual key="describe" />,
-  <ChooseVisual key="choose" />,
-  <MeetVisual key="meet" />,
-  <QuoteSignVisual key="quote" />,
-  <PaymentVisual key="payment" />,
-  <ReceptionVisual key="reception" />,
+// Une étape, un écran réel de l'application (ADR 0147).
+const STEP_SCREENS: readonly AppScreenKey[] = [
+  "clientRecherche",
+  "clientArtisans",
+  "clientRdv",
+  "clientDevis",
+  "clientAcompte",
+  "clientAvis",
 ];
 
 export const metadata: Metadata = {
@@ -130,14 +124,22 @@ export default function HowItWorksPage() {
                   </h3>
                   <p className="leading-relaxed text-pretty text-muted-foreground">{step.text}</p>
                 </div>
+                {/* Le téléphone sort du bas de l'encart : seul le haut de l'écran compte. */}
                 <div
-                  className={`rounded-card bg-background px-5 py-8 sm:px-8 ${i % 2 ? "lg:order-1" : ""}`}
+                  className={`relative h-80 overflow-hidden rounded-card bg-[linear-gradient(180deg,var(--color-primary-soft)_0%,var(--color-primary-softer)_100%)] px-6 pt-8 sm:h-96 ${i % 2 ? "lg:order-1" : ""}`}
                 >
-                  <div className="mx-auto w-full max-w-sm">{STEP_VISUALS[i]}</div>
+                  {STEP_SCREENS[i] && (
+                    <PhoneMockup
+                      screen={APP_SCREENS[STEP_SCREENS[i]]}
+                      alt={fr.site.mockups.screens[STEP_SCREENS[i]]}
+                      className="mx-auto w-full max-w-[15rem]"
+                    />
+                  )}
                 </div>
               </li>
             ))}
           </ol>
+          <p className="text-center text-xs text-muted-foreground">{fr.site.mockups.caption}</p>
         </div>
       </section>
 

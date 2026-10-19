@@ -37,7 +37,7 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
   await page.getByRole("link", { name: "Voir le profil de Noé" }).click();
   await expect(page.getByRole("heading", { name: "Noé", level: 1 })).toBeVisible();
   // Garanties (ADR 0119) : badge, décennale et RC Pro vérifiées, certification.
-  await expect(page.getByText("Assuré et vérifié par Menao")).toBeVisible();
+  await expect(page.getByText("Assuré et vérifié par MENAO")).toBeVisible();
   await expect(
     page.getByRole("listitem").filter({ hasText: "Assurance décennale vérifiée" }),
   ).toContainText(/Valable jusqu'au .* · Assurances Exemple/);

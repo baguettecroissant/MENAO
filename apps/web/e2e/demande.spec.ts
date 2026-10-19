@@ -789,7 +789,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await capture(page, "client-avis-merci");
   await page.getByRole("link", { name: "Voir la fiche de Noé" }).click();
   // (80 + 100 + 100 + 100) / 4 = 95 %.
-  const menaoScore = page.getByRole("region", { name: "Score Menao" });
+  const menaoScore = page.getByRole("region", { name: "Score MENAO" });
   await expect(menaoScore.getByText(/^95\s%$/)).toBeVisible();
   await expect(menaoScore.getByText("Calculé sur 1 avis vérifié")).toBeVisible();
   const latestReviews = page.getByRole("region", { name: "Derniers avis clients" });
