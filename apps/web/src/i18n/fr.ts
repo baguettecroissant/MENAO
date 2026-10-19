@@ -282,7 +282,7 @@ export const fr = {
     title: "Trouvez l'artisan pro du BTP dont vous avez besoin",
     heroTitleStart: "Trouvez l'artisan pro du BTP dont",
     heroTitleAccent: "vous avez besoin",
-    heroFree: "Menao est 100\u00a0% gratuit.",
+    heroFree: "MENAO est 100\u00a0% gratuit.",
     heroSubtitle: "De la mise en relation avec votre artisan à la réception du chantier.",
     searchLabel: "Décrivez votre besoin",
     searchPlaceholder: "Décrivez en détail votre besoin …",
@@ -297,9 +297,6 @@ export const fr = {
     searchSubmit: "Lancer la recherche",
     shortcuts: "Raccourcis par métier",
     moreTrades: "Plus de métiers",
-    verifiedBadgeTitle: "Artisans vérifiés",
-    verifiedBadgeCount: (n: number) => `${n} artisan${n > 1 ? "s" : ""} pro`,
-    verifiedBadgeText: "Contrôlés par Menao",
     heroTags: ["Artisan vérifié", "Décennale contrôlée", "Réponse sous 48\u00a0h"],
     space: {
       eyebrow: "Votre espace client",
@@ -338,7 +335,7 @@ export const fr = {
   trust: {
     title: "Des artisans du BTP qualifiés et de confiance",
     subtitle:
-      "Choisir Menao, c'est choisir un artisan vérifié pour vous garantir un travail de qualité",
+      "Choisir MENAO, c'est choisir un artisan vérifié pour vous garantir un travail de qualité",
     stats: [
       { value: "100\u00a0%", label: "Artisans vérifiés" },
       { value: "0\u00a0%", label: "Commission sur vos chantiers" },
@@ -349,6 +346,42 @@ export const fr = {
   },
   site: {
     breadcrumb: "Fil d'Ariane",
+    // Mockups : vrais écrans de l'application, personnes et données fictives (ADR 0147).
+    mockups: {
+      caption: "Écrans réels de l'application MENAO · personnes et données fictives",
+      screens: {
+        clientRecherche:
+          "Application MENAO : un particulier décrit son projet de salle de bain, l'assistant en déduit le métier",
+        clientArtisans:
+          "Application MENAO : deux artisans plombiers vérifiés sélectionnés, avec leur photo, leur expérience et leur disponibilité",
+        clientFiche:
+          "Application MENAO : la fiche d'un plombier vérifié, avec sa photo, son expérience et sa zone d'intervention",
+        clientRdv:
+          "Application MENAO : le chantier avec le rendez-vous planifié et l'artisan choisi",
+        clientDevis:
+          "Application MENAO : le devis détaillé, ligne par ligne, avec le total TTC et le bouton Signer le devis",
+        clientAcompte: "Application MENAO : l'acompte à régler en ligne pour démarrer le chantier",
+        clientSuivi:
+          "Application MENAO : le suivi du chantier avec les photos et les nouvelles de l'artisan",
+        clientAvis:
+          "Application MENAO : l'avis du client noté sur la qualité, les délais et la communication",
+        proAccueil:
+          "Application MENAO pour les artisans : l'accueil avec les clients en attente de devis, l'encaissé du mois et les choses à faire",
+        webPro:
+          "Espace pro MENAO sur ordinateur : le tableau de bord avec les nouvelles demandes, la visite du jour et les devis à envoyer",
+      },
+      accepted: {
+        title: "Demande acceptée",
+        text: "Julien Ferrand passera mardi à 13\u00a0h\u00a030 voir votre salle de bain.",
+        time: "maintenant",
+      },
+      deposit: {
+        title: "Acompte reçu",
+        text: "1 456,29 € versés sur votre compte pour la salle de bain de Camille.",
+        time: "maintenant",
+      },
+      example: "Exemple de fiche",
+    },
     home: "Accueil",
     clientSteps: {
       eyebrow: "Comment ça marche",
@@ -448,28 +481,6 @@ export const fr = {
       receptionSign: "Signer le procès-verbal",
       reviewLabel: "Illustration : le formulaire d'avis, ouvert après la réception du chantier.",
       reviewBadge: "Avis vérifié",
-      describeLabel:
-        "Illustration : un projet décrit avec ses mots et ses photos, puis analysé par l'assistant MENAO.",
-      describeText:
-        "Je voudrais remplacer ma baignoire par une douche à l'italienne, dans un appartement à Nice.",
-      describePhotos: "2 photos",
-      describeAnalysis: "Analyse de l'assistant",
-      describeChips: ["Plombier", "Salle de bain", "Nice", "Dès que possible"],
-      chooseLabel:
-        "Illustration : la sélection de deux artisans vérifiés parmi ceux proposés par MENAO.",
-      chooseTitle: "Jusqu'à 3 artisans",
-      chooseRows: [
-        { initial: "A", detail: "Plombier · à 3\u00a0km", selected: true },
-        { initial: "B", detail: "Plombier · à 6\u00a0km", selected: true },
-        { initial: "C", detail: "Plombier · à 9\u00a0km", selected: false },
-      ],
-      chooseVerified: "Vérifié",
-      meetLabel:
-        "Illustration : une demande acceptée par l'artisan et le rendez-vous de visite du chantier.",
-      meetAccepted: "Demande acceptée",
-      meetTitle: "Rendez-vous fixé",
-      meetDetail: "Visite du chantier par votre artisan",
-      meetShared: "Coordonnées partagées",
     },
   },
   tradeDomains: {
@@ -1087,11 +1098,11 @@ export const fr = {
       },
       {
         title: "Artisans vérifiés",
-        body: "Entreprise, identité et assurances contrôlées par Menao avant toute mise en relation.",
+        body: "Entreprise, identité et assurances contrôlées par MENAO avant toute mise en relation.",
       },
       {
         title: "100 % gratuit",
-        body: "Trouvez votre artisan et suivez vos demandes en toute sérénité. Menao est gratuit pour vous.",
+        body: "Trouvez votre artisan et suivez vos demandes en toute sérénité. MENAO est gratuit pour vous.",
       },
     ],
     helpEmpty: "Décrivez vos travaux avec vos mots, ou dictez-les.",
@@ -1197,7 +1208,7 @@ export const fr = {
         description: "Quel type d'artisan conviendrait le mieux à votre besoin ?",
         label: "Métier",
         placeholder: "Choisissez un métier",
-        help: "Si vous ne connaissez pas le type d'artisan, indiquez simplement les informations sur votre projet : Menao se charge de vous trouver l'artisan correspondant à votre besoin.",
+        help: "Si vous ne connaissez pas le type d'artisan, indiquez simplement les informations sur votre projet : MENAO se charge de vous trouver l'artisan correspondant à votre besoin.",
       },
       site: {
         title: "Informations sur le chantier",
@@ -1341,18 +1352,18 @@ export const fr = {
       back: "Retour",
       accountTitle: "Dernière étape avant d'envoyer votre demande",
       accountIntro:
-        "Créez votre espace Menao pour envoyer votre demande. Vous pourrez ensuite suivre l'intégralité de vos travaux depuis votre tableau de bord : réponses des artisans, devis, planning et échanges.",
+        "Créez votre espace MENAO pour envoyer votre demande. Vous pourrez ensuite suivre l'intégralité de vos travaux depuis votre tableau de bord : réponses des artisans, devis, planning et échanges.",
       personalTitle: "Informations personnelles",
       personalIntro:
-        "Menao a besoin d'en savoir un peu plus sur vous avant de vous mettre en relation avec un artisan.",
+        "MENAO a besoin d'en savoir un peu plus sur vous avant de vous mettre en relation avec un artisan.",
       phoneHint: "Recommandé pour être rappelé rapidement par l'artisan.",
-      spaceTitle: "Créer mon espace client Menao",
+      spaceTitle: "Créer mon espace client MENAO",
       spaceIntro:
-        "Votre espace client Menao vous permettra de rechercher des artisans, d'échanger avec eux, de suivre vos chantiers et de recevoir vos devis.",
+        "Votre espace client MENAO vous permettra de rechercher des artisans, d'échanger avec eux, de suivre vos chantiers et de recevoir vos devis.",
       passwordHint: "Doit contenir au moins 12 caractères.",
-      free: "La création d'espace client Menao et la mise en relation avec un artisan sont 100 % gratuites.",
+      free: "La création d'espace client MENAO et la mise en relation avec un artisan sont 100 % gratuites.",
       signUpSubmit: "Créer mon espace et continuer",
-      haveAccountTitle: "Vous avez déjà un espace Menao ?",
+      haveAccountTitle: "Vous avez déjà un espace MENAO ?",
       haveAccountText: "Connectez-vous et accédez à vos demandes et à vos chantiers.",
       haveAccountButton: "Me connecter à mon espace",
       signInTitle: "Me connecter à mon espace",
@@ -1373,7 +1384,7 @@ export const fr = {
       messageCount: (n: number) => `${n.toLocaleString("fr-FR")} / 10 000 caractères max.`,
       contactTitle: "Vérifiez vos coordonnées",
       contactIntro:
-        "Vous suivrez l'évolution du projet dans votre espace Menao ; l'artisan pourra aussi vous contacter par téléphone ou par e-mail. Vérifiez qu'elles sont exactes : elles ne sont transmises qu'aux artisans qui acceptent votre demande.",
+        "Vous suivrez l'évolution du projet dans votre espace MENAO ; l'artisan pourra aussi vous contacter par téléphone ou par e-mail. Vérifiez qu'elles sont exactes : elles ne sont transmises qu'aux artisans qui acceptent votre demande.",
       email: "E-mail",
       phone: "Téléphone",
       callbackTitle: "Quand souhaitez-vous être recontacté ?",
@@ -1393,8 +1404,8 @@ export const fr = {
       sentTitle: (names: string) => `Votre demande est envoyée à ${names}\u00a0!`,
       sentText: (names: string, many: boolean) =>
         many
-          ? `${names} ont bien reçu votre demande dans leur espace Menao. Chacun a 48 heures pour l'accepter.`
-          : `${names} a bien reçu votre demande dans son espace Menao. Il a 48 heures pour l'accepter.`,
+          ? `${names} ont bien reçu votre demande dans leur espace MENAO. Chacun a 48 heures pour l'accepter.`
+          : `${names} a bien reçu votre demande dans son espace MENAO. Il a 48 heures pour l'accepter.`,
       reminder: "Rappel",
       sentCallbackAsap: "Vous avez demandé à être rappelé dès que possible.",
       sentCallbackRange: (from: string, to: string) =>
@@ -1415,9 +1426,9 @@ export const fr = {
       experienceValue: (years: number) => (years <= 1 ? `${years} an` : `${years} ans`),
       zone: "Zone d'intervention",
       insurance: "Assurance décennale",
-      insuranceValue: "Vérifiée par Menao",
+      insuranceValue: "Vérifiée par MENAO",
       insuranceRcPro: "Assurance",
-      insuranceRcProValue: "RC Pro vérifiée par Menao",
+      insuranceRcProValue: "RC Pro vérifiée par MENAO",
       verifiedBadge: "Assuré et vérifié",
       responseTime: {
         "1h": "Répond en moins d'1\u00a0h",
@@ -1428,25 +1439,25 @@ export const fr = {
       about: (name: string) => `À propos de ${name}`,
       expertise: "Expertises",
       guarantees: "Garanties & Assurances",
-      verifiedTitle: "Assuré et vérifié par Menao",
+      verifiedTitle: "Assuré et vérifié par MENAO",
       verifiedDetail: (exempt: boolean) =>
         exempt
-          ? "Responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe Menao."
-          : "Décennale, responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe Menao.",
+          ? "Responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe MENAO."
+          : "Décennale, responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe MENAO.",
       decennaleTitle: "Assurance décennale vérifiée",
       decennaleUntil: (date: string, insurer: string | null) =>
         `Valable jusqu'au ${date}${insurer ? ` · ${insurer}` : ""}`,
       decennaleExemptTitle: "Activité non soumise à la décennale",
-      decennaleExemptDetail: "Déclaration vérifiée par l'équipe Menao",
+      decennaleExemptDetail: "Déclaration vérifiée par l'équipe MENAO",
       rcProTitle: "Responsabilité civile professionnelle vérifiée",
       certificationTitle: (label: string) => `Certifié ${label}`,
       certificationDetail: (numero: string, date: string) =>
         `N° ${numero} · valable jusqu'au ${date}`,
       rgeTitle: "Reconnu Garant de l'Environnement (RGE)",
       rgeDetail: "Vérifié dans l'annuaire officiel des entreprises RGE",
-      score: "Score Menao",
+      score: "Score MENAO",
       scoreEmpty:
-        "Pas encore de score : cet artisan vient de rejoindre Menao. Le score sera calculé à partir des avis vérifiés de ses clients.",
+        "Pas encore de score : cet artisan vient de rejoindre MENAO. Le score sera calculé à partir des avis vérifiés de ses clients.",
       recent: "Chantiers récents",
       recentEmpty: "Aucune photo de chantier pour l'instant.",
       reviews: "Derniers avis clients",
@@ -2445,9 +2456,9 @@ export const fr = {
     },
     /** Charte qualité demandée à un artisan déjà inscrit (ADR 0109), en tutoiement comme la charte. */
     charterRenewal: {
-      title: "Charte qualité Menao",
+      title: "Charte qualité MENAO",
       intro:
-        "Nouveau : la charte qualité Menao. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
+        "Nouveau : la charte qualité MENAO. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
       continue: "Accéder à mon espace pro",
     },
     /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan. */
@@ -3331,7 +3342,7 @@ export const fr = {
       },
       list: {
         title: "Devis",
-        subtitle: "Suivez vos devis Menao.",
+        subtitle: "Suivez vos devis MENAO.",
         toSend: "Devis à envoyer",
         sent: "Devis envoyés",
         emptyToSend: "Vous n'avez aucun devis à envoyer.",
@@ -3622,18 +3633,6 @@ export const fr = {
         title: "Votre réputation se construit sur vos chantiers.",
         subtitle:
           "Pas sur un budget publicitaire : les particuliers découvrent votre fiche vérifiée, vos spécialités et vos disponibilités, classées selon des critères publics.",
-        card: {
-          label:
-            "Illustration : la carte d'un artisan telle que la voient les particuliers dans les résultats de recherche.",
-          name: "Votre prénom",
-          trade: "Plombier · Chauffagiste",
-          zone: "20 km autour de Nice",
-          specialties: ["Recherche de fuite", "Chauffe-eau"],
-          more: "+2",
-          verified: "Vérifié par MENAO",
-          checks: ["Kbis", "Décennale", "RC Pro"],
-          reviews: "Avis vérifiés uniquement",
-        },
         items: [
           {
             title: "Trois artisans au plus par demande",
@@ -3918,11 +3917,11 @@ export const fr = {
         summary: "Sommaire de la charte",
         progressTitle: "Ta progression",
         progressCount: (n: number, total: number) => `${n} règle(s) validée(s) sur ${total}`,
-        navPromises: "Ce que Menao fait pour toi",
+        navPromises: "Ce que MENAO fait pour toi",
         navSignature: "Signature",
         validated: "Validé",
         ruleLabel: (code: string, title: string) => `Règle ${code} : ${title}`,
-        scoreLabel: "Critères du score Menao",
+        scoreLabel: "Critères du score MENAO",
         dockSuffix: "règles validées",
         dockTodo: " · coche chaque règle pour pouvoir signer",
         dockDone: " · toutes les règles sont validées",
@@ -3948,7 +3947,7 @@ export const fr = {
           engagement: "certifie ton engagement d’artisan",
           agree: "coche l’acceptation de la charte",
         },
-        submit: "Signer et rejoindre Menao",
+        submit: "Signer et rejoindre MENAO",
         recap: {
           company: "Entreprise",
           siret: "SIRET",

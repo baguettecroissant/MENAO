@@ -3,7 +3,9 @@ import type { Route } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
+import { APP_SCREENS } from "@/lib/site/app-screens";
 import { HERO_IMAGE, HERO_SRCSET } from "@/lib/site/images";
+import { AppNotification, PhoneMockup } from "./device-mockups";
 import { HeroSearchInput } from "./hero-search-input";
 import { HomeNav } from "./home-nav";
 
@@ -13,10 +15,10 @@ const TAG_ICONS = [BadgeCheck, ShieldCheck, Clock];
 
 /**
  * Bandeau de l'accueil (maquette « Homepage ») : photo plein cadre arrondie, navigation en
- * verre dépoli, titre, recherche, raccourcis métiers, encart « artisans vérifiés ».
- * Aucun chiffre ni témoignage inventé (spec F-01) : le nombre d'artisans vient de la base.
+ * verre dépoli, titre, recherche, raccourcis métiers, et l'application dans un téléphone avec
+ * une notification (ADR 0147). Aucun chiffre ni témoignage inventé (spec F-01).
  */
-export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
+export function HomeHero() {
   return (
     <section className="px-2 pt-2 sm:px-4 sm:pt-4">
       <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[#0f1b4d]">
@@ -127,26 +129,21 @@ export function HomeHero({ verifiedArtisans }: { verifiedArtisans: number }) {
             </ul>
           </div>
 
-          <div className="absolute right-6 bottom-6 hidden animate-menao-rise items-center gap-3 rounded-2xl border border-white/40 bg-white/15 py-2.5 pr-5 pl-2.5 text-white shadow-raised backdrop-blur-md [animation-delay:600ms] lg:flex">
-            <span className="flex -space-x-2">
-              {[BadgeCheck, ShieldCheck, Clock].map((Icon, i) => (
-                <span
-                  key={i}
-                  className="inline-flex size-9 items-center justify-center rounded-full border-2 border-white/70 bg-primary"
-                >
-                  <Icon aria-hidden="true" className="size-4" />
-                </span>
-              ))}
-            </span>
-            <span className="flex flex-col">
-              <span className="text-sm font-medium">
-                {verifiedArtisans > 0
-                  ? t.verifiedBadgeCount(verifiedArtisans)
-                  : t.verifiedBadgeTitle}
-              </span>
-              <span className="text-xs text-white/80">{t.verifiedBadgeText}</span>
-            </span>
+          {/* L'application en situation (ADR 0147) : vrai écran, données fictives. Le téléphone sort
+              du bas du bandeau, sous les visages de la photo ; masqué sur mobile. */}
+          <div className="pointer-events-none absolute right-[4%] -bottom-[23%] hidden w-[15rem] animate-menao-rise [animation-delay:500ms] lg:block xl:right-[6%] xl:w-[16rem]">
+            <PhoneMockup
+              screen={APP_SCREENS.clientArtisans}
+              alt={fr.site.mockups.screens.clientArtisans}
+              priority
+            />
           </div>
+          <AppNotification
+            title={fr.site.mockups.accepted.title}
+            text={fr.site.mockups.accepted.text}
+            time={fr.site.mockups.accepted.time}
+            className="absolute right-[calc(4%+13.5rem)] bottom-[26%] hidden animate-menao-rise [animation-delay:800ms] lg:flex xl:right-[calc(6%+14.5rem)]"
+          />
         </div>
       </div>
     </section>

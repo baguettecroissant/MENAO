@@ -10,7 +10,7 @@ test("artisan déjà inscrit : charte demandée à l'entrée de l'espace pro, pu
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
   await expect(page).toHaveURL(/\/pro\/charte$/);
-  await expect(page.getByText("Nouveau : la charte qualité Menao.")).toBeVisible();
+  await expect(page.getByText("Nouveau : la charte qualité MENAO.")).toBeVisible();
 
   // Toute page de l'espace pro ramène à la charte tant qu'elle n'est pas signée.
   await page.goto("/pro/demandes");
@@ -34,7 +34,7 @@ test("artisan déjà inscrit : charte demandée à l'entrée de l'espace pro, pu
   // Engagement de l'artisan (ADR 0117), certifié avec la même signature.
   await page.getByRole("checkbox", { name: /certifie sur l'honneur/ }).click();
   await page.getByRole("checkbox", { name: /accepte la Charte qualité Menao/ }).click();
-  await page.getByRole("button", { name: /Signer et rejoindre Menao/ }).click();
+  await page.getByRole("button", { name: /Signer et rejoindre MENAO/ }).click();
 
   await expect(page.getByRole("heading", { name: /Tu fais partie de Menao/ })).toBeVisible();
   await page.getByRole("link", { name: /Accéder à mon espace pro/ }).click();

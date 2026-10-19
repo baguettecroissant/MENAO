@@ -24,16 +24,17 @@ import { DemoVideo } from "@/components/pro-landing/demo-video";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
-import { HeroPreview } from "@/components/pro-landing/hero-preview";
-import { ProfileCardPreview } from "@/components/pro-landing/profile-card-preview";
+import { AppNotification, LaptopMockup, PhoneMockup } from "@/components/site/device-mockups";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { ButtonLink, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { APP_SCREENS, WEB_SCREENS } from "@/lib/site/app-screens";
 import { seoCatalog } from "@/lib/site/catalog";
 import { createPublicClient } from "@/lib/supabase/public";
 
 const t = fr.pro.landing;
+const m = fr.site.mockups;
 
 export const metadata: Metadata = {
   title: `${t.metaTitle} — MENAO`,
@@ -132,7 +133,26 @@ export default async function ProLandingPage() {
                 {t.hero.signIn}
               </TextLink>
             </div>
-            <HeroPreview />
+            {/* L'espace pro sur ordinateur et l'application (ADR 0147) : vrais écrans, données
+                fictives. */}
+            <div className="relative mx-auto w-full max-w-xl pt-6 pb-10 lg:pb-14">
+              <LaptopMockup
+                src={WEB_SCREENS.pro}
+                alt={m.screens.webPro}
+                className="w-[92%]"
+                priority
+              />
+              <div className="absolute right-0 bottom-0 w-[30%]">
+                <PhoneMockup screen={APP_SCREENS.proAccueil} alt={m.screens.proAccueil} priority />
+              </div>
+              <AppNotification
+                title={m.deposit.title}
+                text={m.deposit.text}
+                time={m.deposit.time}
+                className="absolute -top-2 left-[4%] hidden animate-menao-float sm:flex"
+              />
+              <p className="mt-6 max-w-[62%] text-xs text-white/70 lg:mt-8">{m.caption}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -357,8 +377,19 @@ export default async function ProLandingPage() {
               {t.fairness.criteria}
             </TextLink>
           </div>
-          <div className="px-6 pb-4 sm:px-16 lg:order-first">
-            <ProfileCardPreview />
+          {/* Fiche d'exemple, telle que la voient les particuliers dans l'application (ADR 0147). */}
+          <div className="flex flex-col gap-3 lg:order-first">
+            <div className="relative h-[28rem] overflow-hidden rounded-hero bg-[linear-gradient(180deg,var(--color-primary-soft)_0%,var(--color-primary-softer)_100%)] px-8 pt-10">
+              <span className="absolute top-5 left-5 z-10 rounded-pill bg-surface px-3 py-1 text-xs font-medium text-primary-strong shadow-card">
+                {m.example}
+              </span>
+              <PhoneMockup
+                screen={APP_SCREENS.clientFiche}
+                alt={m.screens.clientFiche}
+                className="mx-auto w-full max-w-[16rem]"
+              />
+            </div>
+            <p className="text-center text-xs text-muted-foreground">{m.caption}</p>
           </div>
         </div>
       </section>

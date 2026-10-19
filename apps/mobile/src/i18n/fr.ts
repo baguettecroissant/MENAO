@@ -1997,7 +1997,7 @@ export const fr = {
    */
   proCharter: {
     intro:
-      "Nouveau : la charte qualité Menao. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
+      "Nouveau : la charte qualité MENAO. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
     ruleLabel: (code: string, title: string) => `Règle ${code} : ${title}`,
     progress: (n: number, total: number) => `${n} / ${total} règles validées`,
     name: "Nom et prénom",
@@ -2017,7 +2017,7 @@ export const fr = {
       engagement: "certifie ton engagement d'artisan",
       agree: "coche l'acceptation de la charte",
     },
-    submit: "Signer et rejoindre Menao",
+    submit: "Signer et rejoindre MENAO",
     outdated: "Cette version de la charte n'est plus en vigueur : relance l'application.",
     recap: {
       company: "Entreprise",
@@ -2116,7 +2116,7 @@ export const fr = {
   /** Devis de l'artisan : mêmes textes que l'espace pro du site. */
   proQuotes: {
     title: "Devis",
-    subtitle: "Suivez vos devis Menao.",
+    subtitle: "Suivez vos devis MENAO.",
     open: "Mes devis",
     toSend: "Devis à envoyer",
     sent: "Devis envoyés",
