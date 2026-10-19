@@ -37,3 +37,71 @@ export function specialtiesPreview(
 export function ticketDueDate(createdAt: Date): Date {
   return new Date(createdAt.getTime() + TICKET_RESPONSE_DAYS * 86_400_000);
 }
+
+/**
+ * Place réservée aux nouveaux artisans (ADR 0151). Un artisan est « nouveau » pendant ses 90
+ * premiers jours après la validation de son dossier, ou tant qu'il a moins de 3 chantiers menés à
+ * terme. Si aucun nouveau ne figure parmi les MAX_SEARCH_RESULTS premiers, l'un d'eux prend la
+ * 3e place : il reçoit ses premières demandes, donc ses premiers avis. Mêmes règles en base
+ * (app.artisan_is_newcomer, public.match_artisans).
+ */
+export const NEWCOMER = { days: 90, completedChantiers: 3, position: 3 } as const;
+
+export function isNewcomer(
+  daysSinceValidation: number | null,
+  completedChantiers: number,
+): boolean {
+  return (
+    daysSinceValidation === null ||
+    daysSinceValidation < NEWCOMER.days ||
+    completedChantiers < NEWCOMER.completedChantiers
+  );
+}
+
+export type MatchCandidate = {
+  id: string;
+  availableNow: boolean;
+  /** AAAA-MM-JJ, null si aucune date. */
+  availableFrom: string | null;
+  /** Score de la charte (ADR 0105), de 0 à 100. */
+  score: number;
+  distanceKm: number | null;
+  /** Tirage propre au projet (md5 du projet et de l'artisan en base). */
+  draw: string;
+  newcomer: boolean;
+};
+
+const nullsLast = (a: number | null, b: number | null) =>
+  a === b ? 0 : a === null ? 1 : b === null ? -1 : a - b;
+const nullsFirst = (a: string | null, b: string | null) =>
+  a === b ? 0 : a === null ? -1 : b === null ? 1 : a < b ? -1 : 1;
+const byDraw = (a: MatchCandidate, b: MatchCandidate) =>
+  a.draw < b.draw ? -1 : a.draw > b.draw ? 1 : 0;
+
+/** Ordre au mérite : disponibles tout de suite d'abord, puis score, date de disponibilité, distance, tirage. */
+function byMerit(a: MatchCandidate, b: MatchCandidate): number {
+  return (
+    Number(b.availableNow) - Number(a.availableNow) ||
+    b.score - a.score ||
+    nullsFirst(a.availableFrom, b.availableFrom) ||
+    nullsLast(a.distanceKm, b.distanceKm) ||
+    byDraw(a, b)
+  );
+}
+
+/** Ordre des artisans proposés pour une demande, place des nouveaux comprise (ADR 0151). */
+export function rankCandidates<T extends MatchCandidate>(candidates: readonly T[]): T[] {
+  const merit = [...candidates].sort(byMerit);
+  if (merit.slice(0, MAX_SEARCH_RESULTS).some((c) => c.newcomer)) return merit;
+  // Le nouveau retenu : disponible tout de suite d'abord, puis le tirage (rotation entre projets).
+  const chosen = merit
+    .filter((c) => c.newcomer)
+    .sort((a, b) => Number(b.availableNow) - Number(a.availableNow) || byDraw(a, b))[0];
+  if (!chosen) return merit;
+  const others = merit.filter((c) => c !== chosen);
+  return [
+    ...others.slice(0, NEWCOMER.position - 1),
+    chosen,
+    ...others.slice(NEWCOMER.position - 1),
+  ];
+}
