@@ -11,6 +11,10 @@ export const factureElectroniqueArtisans: Guide = {
   publishedAt: "2026-10-19",
   updatedAt: "2026-10-19",
   draft: false,
+  cover: {
+    alt: "Un artisan consulte ses factures dans l'espace pro MENAO, sur son ordinateur.",
+    position: "50% 5%",
+  },
   essentials: [
     "Depuis le 1er septembre 2026, toute entreprise, micro-entrepreneurs compris, doit pouvoir recevoir des factures électroniques.",
     "Au 1er septembre 2027, les PME, TPE et micro-entreprises devront émettre des factures électroniques pour leurs clients professionnels.",

@@ -10,6 +10,10 @@ export const devisTravauxMentionsObligatoires: Guide = {
   publishedAt: "2026-10-19",
   updatedAt: "2026-10-19",
   draft: false,
+  cover: {
+    alt: "Des personnes examinent un dossier posé sur une table.",
+    position: "50% 0%",
+  },
   essentials: [
     "Le devis est obligatoire pour les travaux et dépannages du bâtiment : maçonnerie, plomberie, électricité, peinture, couverture, serrurerie…",
     "Il doit être daté, détaillé poste par poste, avec les totaux hors taxes et toutes taxes comprises, le taux de TVA et sa durée de validité.",

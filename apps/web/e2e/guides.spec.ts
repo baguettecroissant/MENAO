@@ -1,4 +1,5 @@
 import { GUIDES } from "../src/content/guides";
+import { guideCover, guideShareImage } from "../src/lib/site/images";
 import { expect, test } from "./test";
 
 // Rubrique Guides (ADR 0135). Hors production, les brouillons sont visibles pour la relecture,
@@ -19,14 +20,20 @@ test("guides : sommaire, article, brouillon non indexé, absent du sitemap", asy
     "Comment choisir un artisan du bâtiment",
   );
   await expect(page.getByRole("heading", { name: "L'essentiel" })).toBeVisible();
+  const choisir = GUIDES.find((g) => g.slug === "choisir-un-artisan");
+  if (choisir?.cover) {
+    await expect(page.getByRole("img", { name: choisir.cover.alt })).toHaveAttribute(
+      "src",
+      guideCover(choisir.slug).src,
+    );
+  }
   await expect(page.getByRole("heading", { name: "Sources" })).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
     /\/guides\/choisir-un-artisan$/,
   );
 
-  const draft = GUIDES.find((g) => g.slug === "choisir-un-artisan");
-  if (draft?.draft) {
+  if (choisir?.draft) {
     await expect(page.getByText("Brouillon en relecture : non publié")).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",
@@ -59,5 +66,19 @@ test("guides : intertitres uniques et liens internes valides", async ({ request 
   }
   for (const href of internal) {
     expect((await request.get(href, { maxRedirects: 0 })).status(), href).toBe(200);
+  }
+});
+
+test("guides : couvertures et images de partage présentes (ADR 0149)", async ({ request }) => {
+  for (const guide of GUIDES) {
+    if (!guide.cover) continue;
+    const cover = guideCover(guide.slug);
+    const files = [
+      ...cover.srcSet.split(", ").map((entry) => entry.split(" ")[0] ?? ""),
+      guideShareImage(guide.slug, guide.cover.alt).url,
+    ];
+    for (const file of files) {
+      expect((await request.get(file)).status(), file).toBe(200);
+    }
   }
 });
