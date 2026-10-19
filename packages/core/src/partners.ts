@@ -13,10 +13,14 @@ export function normalizePartnerCode(raw: unknown): string | null {
   return PARTNER_CODE_PATTERN.test(code) ? code : null;
 }
 
-/** Liens à donner au partenaire : recherche pour les particuliers, inscription pour les pros. */
+/**
+ * Liens à donner au partenaire : recherche pour les particuliers, inscription pour les pros, et
+ * page de recommandation co-marquée (ADR 0142), en ligne si un admin l'a activée.
+ */
 export function partnerLinks(siteUrl: string, code: string) {
-  const base = `${siteUrl.replace(/\/+$/, "")}/p/${code}`;
-  return { clients: base, pros: `${base}/pro` };
+  const site = siteUrl.replace(/\/+$/, "");
+  const base = `${site}/p/${code}`;
+  return { clients: base, pros: `${base}/pro`, page: `${site}/partenaires/${code}` };
 }
 
 const escapeAttr = (value: string) =>

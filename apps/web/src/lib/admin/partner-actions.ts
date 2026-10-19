@@ -54,6 +54,9 @@ export async function savePartner(_prev: FormState, formData: FormData): Promise
   }
   revalidatePath(PATH);
   if (!id && data) redirect(`${PATH}/${data}` as Route);
+  // Statut changé : la page co-marquée en cache suit (partenaire suspendu = plus de page).
+  const pageCode = normalizePartnerCode(values.code);
+  if (pageCode) revalidatePath(`/partenaires/${pageCode}`);
   return { success: t.saved };
 }
 
@@ -144,4 +147,25 @@ export async function renewPartnerDashboard(
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
   revalidatePath(`${PATH}/${id}`);
   return { success: t.space.renewed };
+}
+
+/** Page co-marquée (ADR 0142) : mise en ligne ou retrait, et message de recommandation. */
+export async function savePartnerPage(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = text(formData, "partner") ?? "";
+  if (!UUID.test(id)) return { error: fr.errors.generic };
+  const message = text(formData, "message")?.trim() ?? "";
+  const values = { message, publique: formData.get("publique") === "on" ? "on" : "" };
+  if (message.length > 400) return { fieldErrors: { message: [t.page.message] }, values };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_save_partner_page", {
+    p_id: id,
+    p_publique: values.publique === "on",
+    p_message: message || undefined,
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  revalidatePath(`${PATH}/${id}`);
+  // Page publique en cache (ADR 0142) : mise à jour immédiate, même après un « introuvable ».
+  const code = normalizePartnerCode(text(formData, "code"));
+  if (code) revalidatePath(`/partenaires/${code}`);
+  return { success: t.page.saved };
 }

@@ -8,6 +8,7 @@ import {
   markPartnerCommissionsPaid,
   renewPartnerDashboard,
   savePartner,
+  savePartnerPage,
   savePartnerSettings,
 } from "@/lib/admin/partner-actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -283,6 +284,69 @@ export function RenewDashboardForm({ partnerId, exists }: { partnerId: string; e
         </Button>
         {exists && <span className="text-xs text-muted-foreground">{t.space.renewHint}</span>}
       </div>
+    </form>
+  );
+}
+
+/** Page co-marquée du partenaire (ADR 0142) : en ligne ou non, message de recommandation. */
+export function PartnerPageForm({
+  partnerId,
+  code,
+  publique,
+  message,
+}: {
+  partnerId: string;
+  code: string;
+  publique: boolean;
+  message: string | null;
+}) {
+  const [state, action, pending] = useActionState(savePartnerPage, initialFormState);
+  const p = t.page;
+  const v = state.values;
+  const error = state.fieldErrors?.message?.[0];
+  return (
+    <form action={action} noValidate className="flex flex-col gap-3">
+      <input type="hidden" name="partner" value={partnerId} />
+      <input type="hidden" name="code" value={code} />
+      {state.success && <Alert tone="success">{state.success}</Alert>}
+      {state.error && <Alert tone="error">{state.error}</Alert>}
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <input
+          type="checkbox"
+          name="publique"
+          defaultChecked={v ? v.publique === "on" : publique}
+          className="size-4 accent-primary"
+        />
+        {p.publique}
+      </label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="page-message" className="text-sm font-medium">
+          {p.message}
+        </label>
+        <textarea
+          id="page-message"
+          name="message"
+          rows={3}
+          maxLength={400}
+          defaultValue={v?.message ?? message ?? ""}
+          aria-invalid={error ? true : undefined}
+          aria-describedby="page-message-aide"
+          className={`${inputClasses} py-3`}
+        />
+        <p id="page-message-aide" className="text-xs text-muted-foreground">
+          {p.messageHint}
+        </p>
+        {error && <FieldError>{error}</FieldError>}
+      </div>
+      <Button
+        type="submit"
+        variant="secondary"
+        block={false}
+        disabled={pending}
+        className="self-start"
+      >
+        {p.save}
+      </Button>
     </form>
   );
 }

@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import {
   CancelCommissionForm,
   PartnerForm,
+  PartnerPageForm,
   PayCommissionsForm,
   RenewDashboardForm,
 } from "@/components/admin/partner-forms";
@@ -115,6 +116,27 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
             </div>
           ))}
         </dl>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <CardTitle title={t.page.title} description={t.page.lead} />
+        {partner.page_publique ? (
+          <CopySnippet
+            id="lien-page"
+            label={t.page.link}
+            value={links.page}
+            copyLabel={t.kit.copy}
+            copiedLabel={t.kit.copied}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">{t.page.offline}</p>
+        )}
+        <PartnerPageForm
+          partnerId={partner.id}
+          code={partner.code}
+          publique={partner.page_publique}
+          message={partner.page_message}
+        />
       </Card>
 
       <Card className="flex flex-col gap-4">
