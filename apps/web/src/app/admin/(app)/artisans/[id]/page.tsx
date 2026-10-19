@@ -5,6 +5,7 @@ import {
   chantiersByStage,
   documentIsValid,
   parisToday,
+  partnerLinks,
   requestRates,
   rgeConfirmation,
   subscriptionGrantsAccess,
@@ -15,11 +16,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Alert, Card } from "@/components/ui";
+import { Alert, Card, StatusBadge } from "@/components/ui";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { adminRefreshRge, verifyCertification } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getArtisanActivity } from "@/lib/admin/people";
+import { getArtisanReferral, type ArtisanReferral } from "@/lib/admin/referrals";
 import { documentLogoUrl } from "@/lib/documents/logo";
 import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
 import { DocumentsSection } from "./documents-section";
@@ -127,9 +130,10 @@ export default async function AdminArtisanPage({
       .order("period", { ascending: false }),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
-  const [logoUrl, activity] = await Promise.all([
+  const [logoUrl, activity, referral] = await Promise.all([
     documentLogoUrl(supabase, artisan.logo_path),
     getArtisanActivity(supabase, artisan.id),
+    getArtisanReferral(supabase, artisan.id),
   ]);
 
   const docs = documents.data ?? [];
@@ -217,6 +221,7 @@ export default async function AdminArtisanPage({
     { id: "profil", label: t.navItems.profil },
     { id: "abonnement", label: t.navItems.abonnement },
     { id: "activite", label: t.navItems.activite },
+    { id: "parrainage", label: t.navItems.parrainage },
     ...(pending ? [] : [{ id: "decision", label: t.navItems.decision }]),
     { id: "historique", label: t.navItems.historique },
   ];
@@ -639,6 +644,54 @@ export default async function AdminArtisanPage({
         </div>
       </Section>
 
+      <Section id="parrainage" title={t.referral.title}>
+        {referral && (
+          <>
+            <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              <Info label={t.referral.code} value={referral.code ?? t.referral.noCode} />
+              {referral.code && (
+                <Info
+                  label={t.referral.link}
+                  value={partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros}
+                />
+              )}
+              <Info
+                label={t.referral.months}
+                value={t.referral.monthsValue(referral.mois_poses, referral.mois_en_attente)}
+              />
+            </dl>
+            <div className="flex flex-col gap-1 text-sm">
+              <h3 className="font-medium">{t.referral.referrer}</h3>
+              {referral.parrain ? (
+                <ReferralPerson person={referral.parrain} />
+              ) : (
+                <p className="text-muted-foreground">{t.referral.noReferrer}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1 text-sm">
+              <h3 className="font-medium">{t.referral.referred(referral.filleuls.length)}</h3>
+              {referral.filleuls.length > 0 ? (
+                <ul className="flex flex-col gap-1">
+                  {referral.filleuls.map((f) => (
+                    <li key={f.id}>
+                      <ReferralPerson person={f} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">{t.referral.noReferred}</p>
+              )}
+            </div>
+          </>
+        )}
+        <Link
+          href={"/admin/parrainages" as Route}
+          className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+        >
+          {t.referral.seeAll} →
+        </Link>
+      </Section>
+
       <Section title={fr.admin.suspension.title}>
         <SuspensionForm
           artisanId={artisan.id}
@@ -718,6 +771,26 @@ function Section({ id, title, children }: { id?: string; title: string; children
         {children}
       </section>
     </Card>
+  );
+}
+
+/** Parrain ou filleul : lien vers sa fiche, statut du parrainage et date d'inscription. */
+function ReferralPerson({ person }: { person: NonNullable<ArtisanReferral["parrain"]> }) {
+  const r = fr.admin.referrals;
+  const tones = { en_attente: "primary", recompense: "success", annule: "neutral" } as const;
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <Link
+        href={`/admin/artisans/${person.id}` as Route}
+        className="font-medium text-primary underline-offset-2 hover:underline"
+      >
+        {person.nom}
+      </Link>
+      <StatusBadge tone={tones[person.status]}>{r.status[person.status]}</StatusBadge>
+      <span className="text-xs text-muted-foreground">
+        {t.referral.since(day.format(new Date(person.created_at)))}
+      </span>
+    </span>
   );
 }
 
