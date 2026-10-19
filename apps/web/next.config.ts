@@ -12,12 +12,13 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
 const VERCEL_HOST = "menao-web.vercel.app";
 
 // CSP appliquée (ADR 0103) : voir src/lib/site/csp.ts.
-const csp = contentSecurityPolicy({
+const cspOptions = {
   supabaseUrl,
   dev: process.env.NODE_ENV !== "production",
   preview: (process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV) === "preview",
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-});
+};
+const csp = contentSecurityPolicy(cspOptions);
 
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
@@ -27,6 +28,18 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), geolocation=(), microphone=(self)" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Content-Security-Policy", value: csp },
+];
+
+// Widget des partenaires (ADR 0138) : seule page affichable dans un cadre, sur un site en HTTPS
+// (frame-ancestors), sans X-Frame-Options.
+const widgetHeaders = [
+  ...securityHeaders.filter(
+    (h) => h.key !== "X-Frame-Options" && h.key !== "Content-Security-Policy",
+  ),
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy({ ...cspOptions, embeddable: true }),
+  },
 ];
 
 const nextConfig: NextConfig = {
@@ -44,7 +57,10 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   typedRoutes: true,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path((?!widget(?:/|$)).*)", headers: securityHeaders },
+      { source: "/widget/:path*", headers: widgetHeaders },
+    ];
   },
   // Mode pré-lancement (ADR 0101) : page d'attente sans le cookie des testeurs.
   async rewrites() {

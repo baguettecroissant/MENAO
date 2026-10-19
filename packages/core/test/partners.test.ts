@@ -5,6 +5,7 @@ import {
   eurosToCents,
   normalizePartnerCode,
   partnerLinks,
+  partnerSnippets,
   partnerTotals,
 } from "../src/partners";
 
@@ -133,5 +134,33 @@ describe("montant saisi en euros", () => {
   it("invalide : négatif, plus de 2 décimales, texte", () => {
     for (const bad of ["-5", "12,345", "douze", "1e3"])
       expect(eurosToCents(bad), bad).toBe(Number.NaN);
+  });
+});
+
+describe("kit partenaire (F-59, lot 2)", () => {
+  const kit = partnerSnippets("https://menao.fr/", "agence-nice");
+
+  it("lien texte et bouton vers le lien partenaire, sans traceur", () => {
+    expect(kit.link).toBe(
+      '<a href="https://menao.fr/p/agence-nice">Trouver un artisan du bâtiment vérifié</a>',
+    );
+    expect(kit.button).toContain('href="https://menao.fr/p/agence-nice"');
+    expect(kit.button).toContain("Trouver un artisan vérifié");
+    expect(kit.button).not.toMatch(/<script|onclick/i);
+  });
+
+  it("widget : conteneur et script ; iframe seule en repli", () => {
+    expect(kit.widget).toBe(
+      '<div data-menao-widget data-partenaire="agence-nice"></div>\n<script src="https://menao.fr/widget.js" async></script>',
+    );
+    expect(kit.iframe).toContain('src="https://menao.fr/widget?p=agence-nice"');
+    expect(kit.iframe).toContain('title="MENAO : trouver un artisan du bâtiment vérifié"');
+    expect(kit.iframe).toContain('loading="lazy"');
+  });
+
+  it("métier facultatif dans le widget", () => {
+    const plombier = partnerSnippets("https://menao.fr", "agence-nice", "plombier");
+    expect(plombier.widget).toContain('data-metier="plombier"');
+    expect(plombier.iframe).toContain("/widget?p=agence-nice&amp;metier=plombier");
   });
 });

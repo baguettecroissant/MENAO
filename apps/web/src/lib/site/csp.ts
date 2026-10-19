@@ -5,7 +5,7 @@
  * et des nonces imposeraient un rendu dynamique de chaque page (fin des pages statiques, spec §4.4).
  * La politique ferme tout le reste : origines de scripts, d'images et de connexions limitées à
  * celles que le site utilise, aucun cadre hors du stockage Supabase (PDF du back-office, ADR 0120)
- * et aucune inclusion du site ailleurs, aucun plugin,
+ * et aucune inclusion du site ailleurs (sauf le widget des partenaires, ADR 0138), aucun plugin,
  * envois de formulaires limités au site, aux pages de paiement et de signature, et à la connexion
  * avec Google ou Apple.
  */
@@ -17,6 +17,11 @@ export type CspOptions = {
   preview: boolean;
   /** DSN Sentry : les violations y sont signalées. */
   sentryDsn?: string;
+  /**
+   * Page intégrable chez les partenaires (widget, ADR 0138) : affichable dans un cadre sur tout
+   * site en HTTPS. Partout ailleurs, le site ne s'affiche jamais dans un cadre.
+   */
+  embeddable?: boolean;
 };
 
 // Pages externes atteintes après l'envoi d'un formulaire (redirection d'une Server Action sans
@@ -45,7 +50,13 @@ export function sentryReportUri(dsn: string | undefined): string | null {
   }
 }
 
-export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: CspOptions) {
+export function contentSecurityPolicy({
+  supabaseUrl,
+  dev,
+  preview,
+  sentryDsn,
+  embeddable = false,
+}: CspOptions) {
   const supabase = supabaseUrl.replace(/\/+$/, "");
   const realtime = supabase.replace(/^http/, "ws");
   const live = preview ? ["https://vercel.live"] : [];
@@ -83,7 +94,7 @@ export function contentSecurityPolicy({ supabaseUrl, dev, preview, sentryDsn }: 
     // côte dans le back-office. Sur tout le site : lors d'une navigation interne, la page garde la
     // politique du premier document chargé (une règle propre à /admin ne s'appliquerait pas).
     ["frame-src", supabase, ...live],
-    ["frame-ancestors", "'none'"],
+    ["frame-ancestors", ...(embeddable ? ["https:"] : ["'none'"])],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],
     ["manifest-src", "'self'"],

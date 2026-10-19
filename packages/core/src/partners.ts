@@ -19,6 +19,35 @@ export function partnerLinks(siteUrl: string, code: string) {
   return { clients: base, pros: `${base}/pro` };
 }
 
+const escapeAttr = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+/**
+ * Kit du partenaire (F-59, lot 2, ADR 0138) : extraits à coller sur son site. Lien texte, bouton
+ * (styles en ligne, sans script), widget (conteneur et script qui crée l'iframe à la bonne hauteur)
+ * et iframe seule en repli. Aucun traceur : le code partenaire suit l'adresse.
+ */
+export function partnerSnippets(siteUrl: string, code: string, tradeCode?: string) {
+  const site = siteUrl.replace(/\/+$/, "");
+  const { clients } = partnerLinks(site, code);
+  const href = escapeAttr(clients);
+  const widgetUrl = `${site}/widget?p=${code}${tradeCode ? `&metier=${tradeCode}` : ""}`;
+  return {
+    link: `<a href="${href}">Trouver un artisan du bâtiment vérifié</a>`,
+    button:
+      `<a href="${href}" style="display:inline-block;padding:12px 22px;border-radius:999px;` +
+      `background:#4869f6;color:#ffffff;font:600 16px/1.2 system-ui,sans-serif;text-decoration:none">` +
+      `Trouver un artisan vérifié</a>`,
+    widget:
+      `<div data-menao-widget data-partenaire="${escapeAttr(code)}"` +
+      `${tradeCode ? ` data-metier="${escapeAttr(tradeCode)}"` : ""}></div>\n` +
+      `<script src="${escapeAttr(site)}/widget.js" async></script>`,
+    iframe:
+      `<iframe src="${escapeAttr(widgetUrl)}" title="MENAO : trouver un artisan du bâtiment vérifié" ` +
+      `loading="lazy" style="width:100%;max-width:480px;height:460px;border:0"></iframe>`,
+  };
+}
+
 /** Montant négocié avec le partenaire, sinon le montant par défaut, sinon 0 (non réglé). */
 export function commissionAmountCents(override: number | null, fallback: number | null): number {
   return override ?? fallback ?? 0;
