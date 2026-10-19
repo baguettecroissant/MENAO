@@ -2,7 +2,9 @@ import { profileTips } from "@menao/core";
 import type { Metadata } from "next";
 import { formatProfileDay } from "@/components/artisan-profile/profile-view";
 import { PublicProfileScreen } from "@/components/artisan-profile/public-profile-screen";
+import { WebPresence } from "@/components/pro/web-presence";
 import type { PublicReview } from "@/components/review/review-list";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
 import { parseArtisanProfile, publicUrl } from "@/lib/project/artisans";
@@ -22,21 +24,28 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 export default async function MyPublicProfilePage() {
   const space = await requireProSpace();
   const { supabase } = space;
-  const [{ data }, { data: reviewRows }, { count: certifications }] = await Promise.all([
-    supabase.rpc("my_public_profile"),
-    supabase
-      .from("reviews")
-      .select("id, author_name, score, comment, experience_on, created_at, reply")
-      .eq("artisan_id", space.artisanId)
-      .eq("status", "publie")
-      .order("created_at", { ascending: false })
-      .limit(20),
-    // Certifications déclarées, même en cours de vérification (la fiche n'affiche que les vérifiées).
-    supabase
-      .from("certifications")
-      .select("id", { count: "exact", head: true })
-      .eq("artisan_id", space.artisanId),
-  ]);
+  const [{ data }, { data: reviewRows }, { count: certifications }, { data: page }] =
+    await Promise.all([
+      supabase.rpc("my_public_profile"),
+      supabase
+        .from("reviews")
+        .select("id, author_name, score, comment, experience_on, created_at, reply")
+        .eq("artisan_id", space.artisanId)
+        .eq("status", "publie")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      // Certifications déclarées, même en cours de vérification (la fiche n'affiche que les vérifiées).
+      supabase
+        .from("certifications")
+        .select("id", { count: "exact", head: true })
+        .eq("artisan_id", space.artisanId),
+      // Adresse publique et choix pour Google (ADR 0144).
+      supabase
+        .from("artisans")
+        .select("slug, indexable, nom_commercial, raison_sociale, sirene_partial")
+        .eq("id", space.artisanId)
+        .single(),
+    ]);
   const profile = parseArtisanProfile(data);
   if (!profile) {
     return (
@@ -77,6 +86,23 @@ export default async function MyPublicProfilePage() {
       tips={tips}
       structurallyVisible={space.visibility.visible}
       availability={space.availability}
+      webPresence={
+        page && (
+          <WebPresence
+            siteUrl={env.NEXT_PUBLIC_SITE_URL}
+            slug={page.slug}
+            // Même règle que la fiche publique : jamais la raison sociale en diffusion partielle.
+            name={
+              page.nom_commercial ||
+              (!page.sirene_partial && page.raison_sociale) ||
+              profile.display_name
+            }
+            visible={space.visibility.visible}
+            indexable={page.indexable}
+            verified={profile.verified}
+          />
+        )
+      }
     />
   );
 }

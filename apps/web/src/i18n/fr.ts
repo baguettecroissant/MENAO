@@ -540,6 +540,20 @@ export const fr = {
     otherTrades: (city: string) => `Autres artisans à ${city}`,
     breadcrumbHome: "Accueil",
     noContact: "Les coordonnées des artisans sont communiquées quand ils acceptent votre demande.",
+    // Fiche publique d'un artisan, indexée par Google (F-61, ADR 0144).
+    artisan: {
+      metaTitle: (name: string, trade: string, city: string | null) =>
+        `${name}${trade ? `, ${trade.toLowerCase()}` : ""}${city ? ` à ${city}` : ""} — MENAO`,
+      descriptionLead: (name: string, trade: string, city: string | null) =>
+        `${name}${trade ? `, ${trade.toLowerCase()}` : ""}${city ? ` à ${city}` : ""}, sur MENAO.`,
+      descriptionFallback: (name: string) =>
+        `Fiche de ${name} sur MENAO : zone d'intervention, expertises, assurances vérifiées et avis de clients. Décrivez votre projet, c'est gratuit.`,
+      requestHint: (name: string) =>
+        `Décrivez vos travaux en quelques minutes : vous choisirez ensuite les artisans à solliciter, dont ${name} s'il intervient chez vous.`,
+      nearbyTitle: (trade: string) => `Trouver un ${trade.toLowerCase()} près de chez vous`,
+      nearbyCity: (trade: string, city: string) => `${trade} à ${city}`,
+      allTrade: (trade: string) => `Tous les artisans ${trade.toLowerCase()}s vérifiés`,
+    },
   },
   pages: {
     /** « À propos » (ADR 0134) : qui est MENAO, pour les visiteurs, Google et les assistants IA. */
@@ -2909,6 +2923,33 @@ export const fr = {
       },
     },
     publicProfile: {
+      // Adresse publique de la fiche, choix pour Google et badge pour son site (F-61, ADR 0144).
+      web: {
+        title: "Votre fiche sur internet",
+        lead: "Votre fiche a sa propre adresse : partagez-la, mettez-la sur vos devis, vos réseaux ou votre site.",
+        hidden:
+          "Votre fiche aura son adresse publique dès que vous serez visible des particuliers (dossier validé, abonnement et paiements actifs).",
+        link: "Adresse de votre fiche",
+        open: "Ouvrir ma fiche",
+        google: "Afficher ma fiche dans Google",
+        googleHint:
+          "Recommandé : les particuliers qui cherchent un artisan près de chez eux vous trouvent plus facilement. Votre fiche ne montre jamais votre téléphone, votre e-mail ni votre adresse.",
+        googleOff:
+          "Votre fiche reste accessible par son adresse, mais Google ne la propose plus. Le retrait peut prendre quelques semaines.",
+        save: "Enregistrer",
+        saved: "Choix enregistré.",
+        badgeTitle: "Badge pour votre site",
+        badgeLead:
+          "Collez ce code sur votre site : le badge renvoie vers votre fiche et se met à jour tout seul.",
+        badgeVerified:
+          "Il affiche « Assuré et vérifié par MENAO » tant que vos documents sont à jour.",
+        badgeNeutral:
+          "Il affichera « Assuré et vérifié par MENAO » dès que votre décennale, votre RC Pro et votre attestation URSSAF seront vérifiées et à jour.",
+        badgePreview: "Aperçu du badge",
+        badgeCode: "Code du badge",
+        copy: "Copier",
+        copied: "Copié",
+      },
       title: "Ma fiche publique",
       previewTitle: "Aperçu de votre fiche",
       previewVisible:
@@ -5591,6 +5632,13 @@ export const fr = {
       radie: "Radié",
     },
     detail: {
+      // Fiche publique et choix de l'artisan pour Google (F-61, ADR 0144).
+      publicPage: {
+        link: "Fiche publique",
+        none: "Pas encore d'adresse (fixée à la validation du dossier)",
+        googleLabel: "Moteurs de recherche",
+        google: (on: boolean) => (on ? "Dans Google" : "Retirée de Google par l'artisan"),
+      },
       // Parrainage de l'artisan sur sa fiche (F-60, ADR 0143).
       referral: {
         title: "Parrainage",

@@ -2,6 +2,7 @@ import type { AvailabilityStatus, ProfileTip } from "@menao/core";
 import { ArrowRight, Eye, EyeOff, Lightbulb, PartyPopper } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { PublicReview } from "@/components/review/review-list";
 import { TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -37,6 +38,7 @@ export function PublicProfileScreen({
   tips,
   structurallyVisible,
   availability,
+  webPresence,
 }: {
   profile: ArtisanProfile;
   avatar: string | null;
@@ -46,6 +48,8 @@ export function PublicProfileScreen({
   /** Validé, abonné, paiements actifs (hors pause et congés). */
   structurallyVisible: boolean;
   availability: AvailabilityStatus;
+  /** « Votre fiche sur internet » (ADR 0144), sous les conseils. */
+  webPresence?: ReactNode;
 }) {
   const status = availability.kind;
   const visible = structurallyVisible && status !== "pause" && status !== "conges";
@@ -164,6 +168,7 @@ export function PublicProfileScreen({
             <p className="text-sm text-success">{t.tipsDone}</p>
           )}
         </section>
+        {webPresence && <div className="mt-6">{webPresence}</div>}
       </div>
 
       <ProfileBody profile={profile} photos={photos} reviews={reviews} canReport={false} />

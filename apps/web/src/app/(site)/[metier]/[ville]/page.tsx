@@ -11,6 +11,7 @@ import { Steps } from "@/components/site/steps";
 import { TradeHero } from "@/components/site/trade-hero";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { artisanPages } from "@/lib/site/artisans";
 import { cityArtisans, seoCatalog } from "@/lib/site/catalog";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID } from "@/lib/site/structured-data";
@@ -76,9 +77,15 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
   const { trade, commune, trades, communes } = data;
 
   const supabase = createPublicClient();
-  const rows = await cityArtisans(trade.code, commune.code_insee);
+  const [rows, pages] = await Promise.all([
+    cityArtisans(trade.code, commune.code_insee),
+    artisanPages(),
+  ]);
+  // Fiche publique de chaque artisan (ADR 0144) : lien de la carte et des données structurées.
+  const slugs = new Map(pages.map((p) => [p.artisan_id, p.slug]));
   const artisans = rows.map((r) => ({
     ...r,
+    pagePath: slugs.has(r.artisan_id) ? `/artisans/${slugs.get(r.artisan_id)}` : null,
     avatarUrl: r.avatar_path
       ? supabase.storage.from("avatars").getPublicUrl(r.avatar_path).data.publicUrl
       : null,
@@ -118,6 +125,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                 item: {
                   "@type": "LocalBusiness",
                   name: a.display_name,
+                  ...(a.pagePath ? { url: absoluteUrl(a.pagePath) } : {}),
                   areaServed: { "@type": "City", name: commune.nom },
                   ...(a.avatarUrl ? { image: a.avatarUrl } : {}),
                 },
@@ -194,6 +202,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                     <ArtisanResultCard
                       key={a.artisan_id}
                       artisanId={a.artisan_id}
+                      href={a.pagePath}
                       verified={a.verified}
                       name={a.display_name}
                       photoUrl={a.avatarUrl}

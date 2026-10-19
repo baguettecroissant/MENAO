@@ -1,6 +1,7 @@
 import {
   REQUIRED_DOCUMENT_TYPES,
   adminReviewChecklist,
+  artisanPageUrl,
   artisanVisibility,
   chantiersByStage,
   documentIsValid,
@@ -565,6 +566,21 @@ export default async function AdminArtisanPage({
               <p className="text-sm text-muted-foreground">
                 {t.connect(artisan.connect_charges_enabled, artisan.connect_payouts_enabled)}
               </p>
+              {/* Fiche publique et choix de l'artisan pour Google (ADR 0144). */}
+              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                <Info
+                  label={t.publicPage.link}
+                  value={
+                    artisan.slug
+                      ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug)
+                      : t.publicPage.none
+                  }
+                />
+                <Info
+                  label={t.publicPage.googleLabel}
+                  value={t.publicPage.google(artisan.indexable)}
+                />
+              </dl>
             </>
           );
         })()}
