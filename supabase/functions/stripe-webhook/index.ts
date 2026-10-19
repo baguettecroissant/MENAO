@@ -6,6 +6,7 @@ import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts"
 import { paymentStatusFromCheckout } from "../../../packages/core/src/payment.ts";
 import { webhookErrorCode } from "../../../packages/core/src/webhook.ts";
 import {
+  invoiceSubscriptionId,
   paidSubscriptionInvoice,
   subscriptionFromStripe,
   subscriptionGrantsAccess,
@@ -14,6 +15,7 @@ import {
 } from "../../../packages/core/src/billing.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { saveConnectAccount } from "../_shared/connect.ts";
+import { applyFreeMonths } from "../_shared/referral.ts";
 import { env } from "../_shared/env.ts";
 import { stripeClient } from "../_shared/stripe.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -80,8 +82,13 @@ Deno.serve(async (req) => {
       const snapshot = subscriptionFromStripe(subscription);
       if (snapshot) await saveSubscription(admin, snapshot);
     }
-    // Premier paiement réel de l'abonnement (F-59) : prime du prescripteur éventuel.
-    if (event.type === "invoice.paid" && !event.account) {
+    // Facture d'abonnement payée : premier paiement réel (prime du prescripteur, F-59 ; mois
+    // offerts du parrainage, F-60), puis pose des mois offerts en attente (même à 0 €).
+    const paidSubscription =
+      event.type === "invoice.paid" && !event.account
+        ? invoiceSubscriptionId(event.data.object)
+        : null;
+    if (paidSubscription) {
       const paid = paidSubscriptionInvoice(event.data.object);
       if (paid) {
         const { error } = await admin.rpc("record_subscription_payment", {
@@ -89,6 +96,7 @@ Deno.serve(async (req) => {
         });
         if (error) throw error;
       }
+      await applyFreeMonths(admin, stripe, paidSubscription);
     }
     // Paiement d'un chantier, sur le compte connecté de l'artisan (ADR 0011, ADR 0023).
     if (event.account && event.type.startsWith("checkout.session.")) {

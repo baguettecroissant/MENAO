@@ -27,6 +27,7 @@ import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { ButtonLink, StatusBadge, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { HubLineStatus } from "@/lib/artisan/profile-hub";
+import { ReferralCard } from "./referral-card";
 
 const t = fr.pro.hub;
 
@@ -106,6 +107,8 @@ export type ProfileHubData = {
   strength: { percent: number; next: ProfileTip | null };
   statuses: Record<ProfileHubRow, HubLineStatus>;
   subscriptionActive: boolean;
+  /** Parrainage (F-60) : artisans validés seulement. */
+  referral: { link: string; code: string; joined: number; monthsEarned: number } | null;
 };
 
 /**
@@ -161,6 +164,8 @@ export function ProfileHubView({ hub }: { hub: ProfileHubData }) {
             {t.seeProfile}
           </ButtonLink>
         </div>
+
+        {hub.referral && <ReferralCard {...hub.referral} />}
 
         <div className="grid gap-6 lg:grid-cols-2">
           {SECTIONS.map((section) => (

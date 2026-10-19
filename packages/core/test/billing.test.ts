@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   TRIAL_DAYS,
+  REFERRAL_COUPON_ID,
   commissionComparison,
+  freeMonthAction,
+  invoiceSubscriptionId,
   paidSubscriptionInvoice,
   subscriptionFromStripe,
   subscriptionGrantsAccess,
@@ -152,5 +155,57 @@ describe("paidSubscriptionInvoice (F-59 : premier paiement réel)", () => {
     expect(paidSubscriptionInvoice(invoice({}))).toBeNull();
     expect(paidSubscriptionInvoice({ object: "charge" })).toBeNull();
     expect(paidSubscriptionInvoice(null)).toBeNull();
+  });
+});
+
+describe("parrainage : mois offerts (F-60)", () => {
+  it("abonnement de toute facture payée, même à 0 € (mois offert consommé)", () => {
+    expect(
+      invoiceSubscriptionId({
+        object: "invoice",
+        status: "paid",
+        amount_paid: 0,
+        parent: { subscription_details: { subscription: "sub_1" } },
+      }),
+    ).toBe("sub_1");
+    expect(
+      invoiceSubscriptionId({ object: "invoice", status: "open", subscription: "sub_1" }),
+    ).toBeNull();
+    expect(invoiceSubscriptionId({ object: "invoice", status: "paid" })).toBeNull();
+  });
+
+  const sub = (discounts: unknown[], metadata: Record<string, string> = {}) => ({
+    object: "subscription",
+    id: "sub_1",
+    discounts,
+    metadata,
+  });
+  const referral = { id: "di_ref", source: { type: "coupon", coupon: REFERRAL_COUPON_ID } };
+  const other = { id: "di_other", source: { type: "coupon", coupon: "lancement" } };
+
+  it("aucun mois offert en cours : appliquer, en gardant les autres remises", () => {
+    expect(freeMonthAction(sub([other]), "g1")).toEqual({ action: "apply", keep: ["di_other"] });
+    expect(freeMonthAction(sub([]), "g1")).toEqual({ action: "apply", keep: [] });
+  });
+
+  it("mois offert déjà posé pour ce crédit (nouvel essai du webhook) : déjà appliqué", () => {
+    expect(freeMonthAction(sub([referral], { menao_free_month_grant: "g1" }), "g1")).toEqual({
+      action: "already_applied",
+    });
+  });
+
+  it("un autre mois offert attend la prochaine facture : patienter (pas de cumul perdu)", () => {
+    expect(freeMonthAction(sub([referral], { menao_free_month_grant: "g0" }), "g1")).toEqual({
+      action: "wait",
+    });
+  });
+
+  it("ancien format de remise (coupon objet) reconnu", () => {
+    const legacy = { id: "di_old", coupon: { id: REFERRAL_COUPON_ID } };
+    expect(freeMonthAction(sub([legacy]), "g1")).toEqual({ action: "wait" });
+  });
+
+  it("abonnement illisible : patienter", () => {
+    expect(freeMonthAction(null, "g1")).toEqual({ action: "wait" });
   });
 });

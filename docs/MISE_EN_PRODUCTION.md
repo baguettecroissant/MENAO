@@ -87,6 +87,8 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 
 - [ ] **Stripe, mode réel** : `scripts/stripe-setup.mjs` avec la clé réelle et `--webhook-url https://ffidtbwxiyqybyfdqmkj.supabase.co/functions/v1/stripe-webhook`.
   - Le script synchronise aussi la liste des événements du webhook : le relancer (staging et production) après l'ajout d'un événement, par exemple `invoice.paid` pour le programme Partenaires (F-59, ADR 0136).
+  - Il crée aussi le coupon du parrainage `menao-parrainage-1-mois` (F-60, ADR 0137) : sans lui, les mois offerts ne peuvent pas être posés.
+- [ ] **Parrainage** (ADR 0137) : inscrire les conditions du parrainage dans les CGV artisans [TODO(legal)].
 - [ ] **Programme Partenaires** (ADR 0136) : régler les montants par défaut dans le back-office (Argent → Partenaires) avant de créer le premier partenaire ; faire relire le contrat partenaire (mention « Publicité » ou « Collaboration commerciale », facturation des commissions) [TODO(legal)].
   - Il crée les produits et prix (150, 500 et 1 500 € HT par mois, ADR 0010), la TVA à 20 %, le portail client et les webhooks (abonnements et Connect).
   - Copier ensuite les valeurs écrites dans les secrets des fonctions.

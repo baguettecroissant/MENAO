@@ -424,6 +424,52 @@ export type Database = {
           },
         ];
       };
+      artisan_free_months: {
+        Row: {
+          applied_at: string | null;
+          artisan_id: string;
+          created_at: string;
+          id: string;
+          referral_id: string | null;
+          status: Database["public"]["Enums"]["free_month_status"];
+          stripe_subscription_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          applied_at?: string | null;
+          artisan_id: string;
+          created_at?: string;
+          id?: string;
+          referral_id?: string | null;
+          status?: Database["public"]["Enums"]["free_month_status"];
+          stripe_subscription_id?: string | null;
+        };
+        Update: {
+          applied_at?: string | null;
+          artisan_id?: string;
+          created_at?: string;
+          id?: string;
+          referral_id?: string | null;
+          status?: Database["public"]["Enums"]["free_month_status"];
+          stripe_subscription_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_free_months_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_free_months_referral_id_fkey";
+            columns: ["referral_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_referrals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_hours: {
         Row: {
           artisan_id: string;
@@ -493,6 +539,76 @@ export type Database = {
           {
             foreignKeyName: "artisan_photos_artisan_id_fkey";
             columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      artisan_referral_codes: {
+        Row: {
+          artisan_id: string;
+          code: string;
+          created_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          code: string;
+          created_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          code?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_referral_codes_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      artisan_referrals: {
+        Row: {
+          created_at: string;
+          id: string;
+          referred_artisan_id: string;
+          referrer_artisan_id: string;
+          rewarded_at: string | null;
+          status: Database["public"]["Enums"]["referral_status"];
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          referred_artisan_id: string;
+          referrer_artisan_id: string;
+          rewarded_at?: string | null;
+          status?: Database["public"]["Enums"]["referral_status"];
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          referred_artisan_id?: string;
+          referrer_artisan_id?: string;
+          rewarded_at?: string | null;
+          status?: Database["public"]["Enums"]["referral_status"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_referrals_referred_artisan_id_fkey";
+            columns: ["referred_artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_referrals_referrer_artisan_id_fkey";
+            columns: ["referrer_artisan_id"];
             isOneToOne: false;
             referencedRelation: "artisans";
             referencedColumns: ["id"];
@@ -3947,8 +4063,19 @@ export type Database = {
       delete_artisan_blocked_slot: { Args: { p_id: string }; Returns: undefined };
       disable_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: undefined };
       forget_push_tokens: { Args: { p_tokens: string[] }; Returns: undefined };
+      free_month_candidates: {
+        Args: { p_stripe_subscription_id: string };
+        Returns: {
+          grant_id: string;
+          stripe_subscription_id: string;
+        }[];
+      };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
+      mark_free_month_applied: {
+        Args: { p_grant_id: string; p_stripe_subscription_id: string };
+        Returns: undefined;
+      };
       mark_notifications_read: { Args: { p_ids?: string[] }; Returns: number };
       match_artisans: {
         Args: { p_limit?: number; p_project_id: string };
@@ -4015,6 +4142,7 @@ export type Database = {
         }[];
       };
       my_public_profile: { Args: Record<PropertyKey, never>; Returns: Json };
+      my_referral: { Args: Record<PropertyKey, never>; Returns: Json };
       my_response_stats: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4386,6 +4514,7 @@ export type Database = {
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite" | "urssaf";
+      free_month_status: "a_appliquer" | "applique";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       message_kind: "texte" | "photo" | "fichier";
       notification_channel: "email" | "sms" | "push";
@@ -4452,6 +4581,7 @@ export type Database = {
       quote_status: "brouillon" | "envoye" | "signe" | "refuse" | "revision_demandee" | "remplace";
       quote_unit: "u" | "h" | "jour" | "m" | "ml" | "m2" | "m3" | "kg" | "l" | "forfait";
       reception_status: "en_signature" | "signe";
+      referral_status: "en_attente" | "recompense" | "annule";
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
       request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
       review_decision: "valide" | "refuse" | "complement";
@@ -4639,6 +4769,7 @@ export const Constants = {
       dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite", "urssaf"],
+      free_month_status: ["a_appliquer", "applique"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       message_kind: ["texte", "photo", "fichier"],
       notification_channel: ["email", "sms", "push"],
@@ -4706,6 +4837,7 @@ export const Constants = {
       quote_status: ["brouillon", "envoye", "signe", "refuse", "revision_demandee", "remplace"],
       quote_unit: ["u", "h", "jour", "m", "ml", "m2", "m3", "kg", "l", "forfait"],
       reception_status: ["en_signature", "signe"],
+      referral_status: ["en_attente", "recompense", "annule"],
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
       request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
       review_decision: ["valide", "refuse", "complement"],

@@ -108,3 +108,49 @@ export function paidSubscriptionInvoice(
         : null;
   return subscription ? { stripeSubscriptionId: subscription, amountPaidCents: amount } : null;
 }
+
+/** Coupon Stripe « 1 mois offert » du parrainage (F-60), créé par `pnpm stripe:setup`. */
+export const REFERRAL_COUPON_ID = "menao-parrainage-1-mois";
+
+/** Abonnement d'une facture payée, quel que soit son montant (un mois offert donne 0 €). */
+export function invoiceSubscriptionId(input: unknown): string | null {
+  if (!isObj(input) || input.object !== "invoice" || input.status !== "paid") return null;
+  const parent = isObj(input.parent) ? input.parent : {};
+  const details = isObj(parent.subscription_details) ? parent.subscription_details : {};
+  if (typeof details.subscription === "string") return details.subscription;
+  return typeof input.subscription === "string" ? input.subscription : null;
+}
+
+/** Coupon d'une remise Stripe : `source.coupon` (API récente) ou `coupon` (ancien format). */
+function discountCoupon(discount: unknown): string | null {
+  if (!isObj(discount)) return null;
+  const source = isObj(discount.source) ? discount.source : {};
+  if (typeof source.coupon === "string") return source.coupon;
+  if (isObj(source.coupon) && typeof source.coupon.id === "string") return source.coupon.id;
+  if (typeof discount.coupon === "string") return discount.coupon;
+  if (isObj(discount.coupon) && typeof discount.coupon.id === "string") return discount.coupon.id;
+  return null;
+}
+
+/**
+ * Mois offert à poser sur un abonnement (F-60, ADR 0137), lu avec ses remises développées :
+ * - aucun mois offert en attente : l'appliquer, en gardant les autres remises ;
+ * - le mois offert en attente est ce crédit (nouvel essai du webhook) : déjà appliqué ;
+ * - un autre mois offert attend la prochaine facture : patienter, il sera posé après elle.
+ * Le crédit en cours est noté dans les métadonnées de l'abonnement (`menao_free_month_grant`).
+ */
+export function freeMonthAction(
+  subscription: unknown,
+  grantId: string,
+): { action: "apply"; keep: string[] } | { action: "already_applied" } | { action: "wait" } {
+  if (!isObj(subscription) || subscription.object !== "subscription") return { action: "wait" };
+  const discounts = Array.isArray(subscription.discounts) ? subscription.discounts : [];
+  if (discounts.some((d) => discountCoupon(d) === REFERRAL_COUPON_ID)) {
+    const metadata = isObj(subscription.metadata) ? subscription.metadata : {};
+    return metadata.menao_free_month_grant === grantId
+      ? { action: "already_applied" }
+      : { action: "wait" };
+  }
+  const keep = discounts.flatMap((d) => (isObj(d) && typeof d.id === "string" ? [d.id] : []));
+  return { action: "apply", keep };
+}

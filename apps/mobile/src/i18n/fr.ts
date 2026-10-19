@@ -157,6 +157,9 @@ export const fr = {
       oauthTitle: "Finalisez votre compte",
       oauthLead: "Vous êtes connecté. Complétez vos informations pour créer votre profil.",
       oauthSubmit: "Créer mon profil",
+      referralToggle: "J'ai un code de parrainage",
+      referralLabel: "Code de parrainage (facultatif)",
+      referralHint: "Le code d'un artisan MENAO qui vous a recommandé.",
       notYou: "Ce n'est pas vous ? Se déconnecter",
       clientAccount:
         "Ce compte est déjà un compte client MENAO. Pour votre activité, créez un compte pro avec une autre adresse e-mail.",
@@ -2578,6 +2581,22 @@ export const fr = {
    * d'abonnement ni de lien vers le site (règle 10).
    */
   proHub: {
+    /**
+     * Parrainage (F-60, ADR 0137) : le code seulement. Ni lien vers le site ni mention de
+     * l'abonnement (CLAUDE.md règle 10).
+     */
+    referral: {
+      title: "Parrainez un confrère",
+      lead: "Un confrère artisan saisit votre code en créant son compte MENAO.",
+      codeLabel: "Votre code de parrainage",
+      share: "Partager mon code",
+      shareMessage: (code: string) =>
+        `Je t'invite sur MENAO, l'outil des artisans du bâtiment. Mon code de parrainage : ${code}, à saisir en créant ton compte.`,
+      joined: (n: number) =>
+        n === 0
+          ? "Aucun confrère inscrit pour l'instant"
+          : `${n} confrère${n > 1 ? "s" : ""} inscrit${n > 1 ? "s" : ""}`,
+    },
     title: "Mon profil",
     seeProfile: "Voir ma fiche",
     changePhoto: "Changer ma photo de profil",
