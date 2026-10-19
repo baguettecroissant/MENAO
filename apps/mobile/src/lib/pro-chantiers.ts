@@ -1,4 +1,10 @@
-import { journalSummary, paymentProgress, type JournalSummary } from "@menao/core";
+import {
+  cancelReport,
+  journalSummary,
+  paymentProgress,
+  type ArtisanCancelReason,
+  type JournalSummary,
+} from "@menao/core";
 import type { Database } from "@menao/db";
 import { parseArtisanChantierDetail, type ArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
@@ -143,11 +149,15 @@ export async function saveAppointmentNotes(
 /** F-18 « Annuler le chantier » : la demande est annulée, le particulier retrouve une place. */
 export async function cancelArtisanChantier(
   chantierId: string,
+  cause: ArtisanCancelReason,
   reason: string,
 ): Promise<string | null> {
+  // Signalement (ADR 0145) : pour l'équipe seulement ; il annule la prime d'un partenaire en attente.
+  const report = cancelReport(cause);
   const { error } = await supabase.rpc("artisan_cancel_chantier", {
     p_chantier_id: chantierId,
     p_reason: reason,
+    ...(report ? { p_report: report } : {}),
   });
   return error ? rpcError(error) : null;
 }

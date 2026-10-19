@@ -4,7 +4,7 @@ import { PartnerForm, PartnerSettingsForm } from "@/components/admin/partner-for
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
-import { getPartnerSettings, listPartners } from "@/lib/admin/partners";
+import { commissionsToReview, getPartnerSettings, listPartners } from "@/lib/admin/partners";
 
 const t = fr.admin.partners;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -18,9 +18,10 @@ export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
  */
 export default async function AdminPartnersPage() {
   const { supabase } = await requireAdmin();
-  const [partners, settings] = await Promise.all([
+  const [partners, settings, toReview] = await Promise.all([
     listPartners(supabase),
     getPartnerSettings(supabase),
+    commissionsToReview(supabase),
   ]);
   const amountsNotSet =
     settings !== null &&
@@ -34,6 +35,7 @@ export default async function AdminPartnersPage() {
         <p className="text-sm text-muted-foreground">{t.intro}</p>
       </div>
       {amountsNotSet && <Alert tone="info">{t.settings.notSet}</Alert>}
+      {toReview > 0 && <Alert tone="info">{t.quality.listToReview(toReview)}</Alert>}
 
       <Card className="flex flex-col gap-4 overflow-x-auto">
         <CardTitle

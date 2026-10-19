@@ -1,6 +1,8 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import {
+  ARTISAN_CANCEL_REASONS,
+  cancelReport,
   inboxGroups,
   CLIENT_CANCEL_REASONS,
   joinNames,
@@ -109,5 +111,24 @@ describe("onglet « Demandes » (ADR 0130)", () => {
     const { open, done } = inboxGroups(rows, now);
     expect(open.map((r) => r.id)).toEqual(["proche", "loin"]);
     expect(done.map((r) => r.id)).toEqual(["acceptee", "expiree", "refusee"]);
+  });
+});
+
+describe("annulation par l'artisan : signalement (ADR 0145)", () => {
+  it("motifs proposés, « autre » en dernier", () => {
+    expect(ARTISAN_CANCEL_REASONS).toEqual([
+      "client_injoignable",
+      "client_absent",
+      "fausse_demande",
+      "autre",
+    ]);
+  });
+
+  it("seuls les trois premiers sont des signalements, comme en base", () => {
+    expect(cancelReport("autre")).toBeNull();
+    expect(cancelReport("client_absent")).toBe("client_absent");
+    expect(ARTISAN_CANCEL_REASONS.filter((r) => cancelReport(r) !== null)).toEqual(
+      Constants.public.Enums.artisan_report_kind,
+    );
   });
 });

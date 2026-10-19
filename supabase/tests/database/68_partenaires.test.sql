@@ -1,8 +1,8 @@
 -- Programme Partenaires (F-59, ADR 0136) : partenaires réservés aux admins (lecture et écriture),
 -- attribution des projets par la clé serveur seulement, attribution des inscriptions d'artisans,
 -- commission à la première acceptation d'un artisan, à la première facture payée, garde-fous
--- (partenaire lui-même, plafond mensuel), validation après délai, paiement et annulation
--- journalisés. Données fictives.
+-- (partenaire lui-même, plafond mensuel), validation après délai (avec un vrai contact, ADR 0145),
+-- paiement et annulation journalisés. Données fictives.
 begin;
 create extension if not exists pgtap with schema extensions;
 select * from no_plan();
@@ -72,7 +72,7 @@ select lives_ok(
        'Part68.Agence@example.test', 'actif', 2500) $$,
   'partenaire créé (code et e-mail normalisés, montant négocié)');
 select lives_ok(
-  $$ select public.admin_save_partner('comptable-exemple', 'Cabinet Exemple', '00000068000033',
+  $$ select public.admin_save_partner('comptable-exemple', 'Cabinet Exemple', '00000069000016',
        'part68.comptable@example.test', 'actif') $$,
   'second partenaire créé');
 select throws_ok(
@@ -81,7 +81,7 @@ select throws_ok(
   '22023', 'Ce code est déjà utilisé.', 'code déjà utilisé : refusé');
 select is((select siret from public.partners where code = 'agence-exemple'), '73282932000074', 'SIRET sans espaces');
 select lives_ok(
-  $$ select public.admin_save_partner('nouveau-code', 'Cabinet Exemple', '00000068000033',
+  $$ select public.admin_save_partner('nouveau-code', 'Cabinet Exemple', '00000069000016',
        'part68.comptable@example.test', 'actif', null, 6000, 'Prime négociée',
        (select id from public.partners where code = 'comptable-exemple')) $$,
   'modification du partenaire');
@@ -114,7 +114,7 @@ insert into public.requests (id, project_id, artisan_id, particulier_id, contact
   ('c6830000-0000-4000-8000-000000000002', 'c6820000-0000-4000-8000-000000000001',
    'c6810000-0000-4000-8000-000000000002', 'c6800000-0000-4000-8000-000000000001', '+33600000068'),
   ('c6830000-0000-4000-8000-000000000003', 'c6820000-0000-4000-8000-000000000002',
-   'c6810000-0000-4000-8000-000000000001', 'c6800000-0000-4000-8000-000000000004', '+33600000068');
+   'c6810000-0000-4000-8000-000000000001', 'c6800000-0000-4000-8000-000000000004', '+33600000069');
 select is_empty($$ select 1 from public.partner_commissions $$, 'demande envoyée : pas encore de commission');
 update public.requests set status = 'acceptee', responded_at = now()
 where id = 'c6830000-0000-4000-8000-000000000001';
@@ -189,6 +189,13 @@ select results_eq(
   'prime du prescripteur en attente, au montant négocié');
 
 -- ---------- Validation après le délai ----------
+-- Vrai contact sur le projet A (ADR 0145) : la visite a eu lieu hier, sans annulation.
+insert into public.chantiers (id, project_id, request_id, artisan_id, particulier_id, title) values
+  ('c6840000-0000-4000-8000-000000000001', 'c6820000-0000-4000-8000-000000000001',
+   'c6830000-0000-4000-8000-000000000001', 'c6810000-0000-4000-8000-000000000001',
+   'c6800000-0000-4000-8000-000000000001', 'Projet A');
+insert into public.appointments (chantier_id, starts_at) values
+  ('c6840000-0000-4000-8000-000000000001', now() - interval '1 day');
 update public.partner_commissions set validate_after = now() - interval '1 minute' where status = 'en_attente';
 select is(app.validate_partner_commissions(), 2, 'deux commissions arrivées à échéance');
 select is((select status::text from public.partner_commissions where project_id = 'c6820000-0000-4000-8000-000000000001'),

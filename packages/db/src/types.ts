@@ -1241,6 +1241,53 @@ export type Database = {
           },
         ];
       };
+      chantier_reports: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at: string;
+          kind: Database["public"]["Enums"]["artisan_report_kind"];
+          project_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          created_at?: string;
+          kind: Database["public"]["Enums"]["artisan_report_kind"];
+          project_id: string;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          kind?: Database["public"]["Enums"]["artisan_report_kind"];
+          project_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chantier_reports_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chantier_reports_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: true;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chantier_reports_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chantier_transitions: {
         Row: {
           event: Database["public"]["Enums"]["chantier_event"];
@@ -1857,6 +1904,7 @@ export type Database = {
           partner_id: string;
           payout_reference: string | null;
           project_id: string | null;
+          review_reason: string | null;
           status: Database["public"]["Enums"]["partner_commission_status"];
           updated_at: string;
           validate_after: string;
@@ -1874,6 +1922,7 @@ export type Database = {
           partner_id: string;
           payout_reference?: string | null;
           project_id?: string | null;
+          review_reason?: string | null;
           status?: Database["public"]["Enums"]["partner_commission_status"];
           updated_at?: string;
           validate_after: string;
@@ -1890,6 +1939,7 @@ export type Database = {
           partner_id?: string;
           payout_reference?: string | null;
           project_id?: string | null;
+          review_reason?: string | null;
           status?: Database["public"]["Enums"]["partner_commission_status"];
           updated_at?: string;
           validate_after?: string;
@@ -1954,6 +2004,7 @@ export type Database = {
         Row: {
           code: string;
           contact_email: string;
+          contact_phone: string | null;
           created_at: string;
           created_by: string | null;
           dashboard_token: string | null;
@@ -1964,6 +2015,7 @@ export type Database = {
           notes: string | null;
           page_message: string | null;
           page_publique: boolean;
+          plafond_demandes_mois: number | null;
           siret: string;
           status: Database["public"]["Enums"]["partner_status"];
           updated_at: string;
@@ -1972,6 +2024,7 @@ export type Database = {
         Insert: {
           code: string;
           contact_email: string;
+          contact_phone?: string | null;
           created_at?: string;
           created_by?: string | null;
           dashboard_token?: string | null;
@@ -1982,6 +2035,7 @@ export type Database = {
           notes?: string | null;
           page_message?: string | null;
           page_publique?: boolean;
+          plafond_demandes_mois?: number | null;
           siret: string;
           status?: Database["public"]["Enums"]["partner_status"];
           updated_at?: string;
@@ -1989,6 +2043,7 @@ export type Database = {
         Update: {
           code?: string;
           contact_email?: string;
+          contact_phone?: string | null;
           created_at?: string;
           created_by?: string | null;
           dashboard_token?: string | null;
@@ -1999,6 +2054,7 @@ export type Database = {
           notes?: string | null;
           page_message?: string | null;
           page_publique?: boolean;
+          plafond_demandes_mois?: number | null;
           siret?: string;
           status?: Database["public"]["Enums"]["partner_status"];
           updated_at?: string;
@@ -3592,6 +3648,7 @@ export type Database = {
           ville: string;
         }[];
       };
+      admin_clear_commission_review: { Args: { p_id: string }; Returns: undefined };
       admin_close_dispute: {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
         Returns: undefined;
@@ -3634,6 +3691,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_partner_funnel: { Args: { p_partner_id: string }; Returns: Json };
       admin_partners: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -3746,11 +3804,13 @@ export type Database = {
         Args: {
           p_code: string;
           p_contact_email: string;
+          p_contact_phone?: string;
           p_id?: string;
           p_montant_abonne_centimes?: number;
           p_montant_demande_centimes?: number;
           p_nom: string;
           p_notes?: string;
+          p_plafond_demandes_mois?: number;
           p_siret: string;
           p_status: Database["public"]["Enums"]["partner_status"];
         };
@@ -3856,7 +3916,11 @@ export type Database = {
         }[];
       };
       artisan_cancel_chantier: {
-        Args: { p_chantier_id: string; p_reason: string };
+        Args: {
+          p_chantier_id: string;
+          p_reason: string;
+          p_report?: Database["public"]["Enums"]["artisan_report_kind"];
+        };
         Returns: undefined;
       };
       artisan_chantier_detail: { Args: { p_chantier_id: string }; Returns: Json };
@@ -4529,6 +4593,7 @@ export type Database = {
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
       appointment_status: "planifie" | "annule";
+      artisan_report_kind: "client_injoignable" | "client_absent" | "fausse_demande";
       artisan_status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu" | "radie";
       callback_mode: "des_que_possible" | "plage";
       certification_type:
@@ -4782,6 +4847,7 @@ export const Constants = {
     Enums: {
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
       appointment_status: ["planifie", "annule"],
+      artisan_report_kind: ["client_injoignable", "client_absent", "fausse_demande"],
       artisan_status: ["brouillon", "en_verification", "valide", "refuse", "suspendu", "radie"],
       callback_mode: ["des_que_possible", "plage"],
       certification_type: [

@@ -1,4 +1,9 @@
-import { CHANTIER_MESSAGE_MAX_LENGTH, LIFT_MESSAGE_MAX_LENGTH, RESERVES_LIMITS } from "@menao/core";
+import {
+  ARTISAN_CANCEL_REASONS,
+  CHANTIER_MESSAGE_MAX_LENGTH,
+  LIFT_MESSAGE_MAX_LENGTH,
+  RESERVES_LIMITS,
+} from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -14,8 +19,12 @@ export const appointmentSchema = z.object({
   time: z.string().regex(TIME, { error: messages.appointmentTime }),
 });
 
-/** F-18 : annulation du chantier, avec un message facultatif pour le client. */
+/**
+ * F-18 : annulation du chantier. Motif obligatoire (signalement pour l'équipe, ADR 0145, ou
+ * « autre ») et message facultatif pour le client.
+ */
 export const cancelChantierSchema = z.object({
+  cause: z.enum(ARTISAN_CANCEL_REASONS, { error: messages.cancelCauseRequired }),
   reason: z.string().trim().max(500, { error: messages.tooLong }),
 });
 

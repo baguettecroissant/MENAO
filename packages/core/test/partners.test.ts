@@ -5,6 +5,7 @@ import {
   eurosToCents,
   normalizePartnerCode,
   partnerBanners,
+  partnerFunnelRates,
   partnerLinks,
   partnerSnippets,
   partnerTotals,
@@ -190,5 +191,19 @@ describe("bannières du kit (ADR 0141)", () => {
     const pro = banners.find((b) => b.audience === "artisans");
     expect(pro?.html).toContain('href="https://menao.fr/p/agence-nice/pro"');
     expect(pro?.html).not.toMatch(/<script|onclick/i);
+  });
+});
+
+describe("taux de transformation d'un partenaire (ADR 0145)", () => {
+  it("part des demandes attribuées arrivées à chaque étape, en pourcentage entier", () => {
+    expect(
+      partnerFunnelRates({ demandes: 12, envoyees: 9, acceptees: 6, contact: 4, signees: 1 }),
+    ).toEqual({ envoyees: 75, acceptees: 50, contact: 33, signees: 8 });
+  });
+
+  it("sans demande : pas de taux", () => {
+    expect(
+      partnerFunnelRates({ demandes: 0, envoyees: 0, acceptees: 0, contact: 0, signees: 0 }),
+    ).toEqual({ envoyees: null, acceptees: null, contact: null, signees: null });
   });
 });

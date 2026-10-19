@@ -5,6 +5,7 @@ import { Alert, Button, Field, FieldError, SelectField, inputClasses } from "@/c
 import { fr } from "@/i18n/fr";
 import {
   cancelPartnerCommission,
+  clearCommissionReview,
   markPartnerCommissionsPaid,
   renewPartnerDashboard,
   savePartner,
@@ -25,6 +26,8 @@ type PartnerValues = {
   nom: string;
   siret: string;
   contact_email: string;
+  contact_phone: string | null;
+  plafond_demandes_mois: number | null;
   status: "actif" | "suspendu";
   montant_demande_centimes: number | null;
   montant_abonne_centimes: number | null;
@@ -81,6 +84,16 @@ export function PartnerForm({ partner }: { partner?: PartnerValues }) {
           required
         />
         <Field
+          label={f.phone}
+          name="phone"
+          type="tel"
+          hint={f.phoneHint}
+          defaultValue={v?.phone ?? partner?.contact_phone ?? ""}
+          maxLength={20}
+          autoComplete="off"
+          errors={errors.phone}
+        />
+        <Field
           label={f.montantDemande}
           name="montantDemande"
           inputMode="decimal"
@@ -95,6 +108,14 @@ export function PartnerForm({ partner }: { partner?: PartnerValues }) {
           hint={f.montantHint}
           defaultValue={v?.montantAbonne ?? eurosInput(partner?.montant_abonne_centimes)}
           errors={errors.montantAbonne}
+        />
+        <Field
+          label={f.plafond}
+          name="plafond"
+          inputMode="numeric"
+          hint={f.plafondHint}
+          defaultValue={v?.plafond ?? partner?.plafond_demandes_mois?.toString() ?? ""}
+          errors={errors.plafond}
         />
         {partner && (
           <SelectField label={f.status} name="status" defaultValue={v?.status ?? partner.status}>
@@ -265,6 +286,28 @@ export function CancelCommissionForm({
         </Button>
       </div>
       {error && <FieldError id={`${id}-erreur`}>{error}</FieldError>}
+      {state.error && <FieldError>{state.error}</FieldError>}
+    </form>
+  );
+}
+
+/** « Valider quand même » une prime à vérifier (ADR 0145) ; la validation normale suit. */
+export function ClearReviewForm({
+  partnerId,
+  commissionId,
+}: {
+  partnerId: string;
+  commissionId: string;
+}) {
+  const [state, action, pending] = useActionState(clearCommissionReview, initialFormState);
+  if (state.success) return <p className="text-xs text-muted-foreground">{state.success}</p>;
+  return (
+    <form action={action} className="flex flex-col gap-1">
+      <input type="hidden" name="partner" value={partnerId} />
+      <input type="hidden" name="commission" value={commissionId} />
+      <Button type="submit" variant="secondary" size="sm" block={false} disabled={pending}>
+        {t.review.clear}
+      </Button>
       {state.error && <FieldError>{state.error}</FieldError>}
     </form>
   );

@@ -1,9 +1,16 @@
-import { partnerBanners, partnerLinks, partnerSnippets, partnerTotals } from "@menao/core";
+import {
+  partnerBanners,
+  partnerFunnelRates,
+  partnerLinks,
+  partnerSnippets,
+  partnerTotals,
+} from "@menao/core";
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import {
   CancelCommissionForm,
+  ClearReviewForm,
   PartnerForm,
   PartnerPageForm,
   PayCommissionsForm,
@@ -12,15 +19,16 @@ import {
 import { BannerKit } from "@/components/banner-kit";
 import { CopySnippet } from "@/components/copy-snippet";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
-import { Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
+import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
-import { getPartner, type PartnerCommission } from "@/lib/admin/partners";
+import { getPartner, getPartnerFunnel, type PartnerCommission } from "@/lib/admin/partners";
 import { formatDay } from "@/lib/format";
 
 const t = fr.admin.partners;
 const k = t.commissions;
+const q = t.quality;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const TONES = {
@@ -35,7 +43,7 @@ export const metadata: Metadata = { title: `${t.editTitle} — ${fr.admin.title}
 function detail(c: PartnerCommission): string {
   switch (c.status) {
     case "en_attente":
-      return k.validateAfter(formatDay(c.validate_after));
+      return c.review_reason ?? k.validateAfter(formatDay(c.validate_after));
     case "validee":
       return c.validated_at ? k.validatedOn(formatDay(c.validated_at)) : "";
     case "payee":
@@ -53,13 +61,17 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const { supabase } = await requireAdmin();
-  const data = await getPartner(supabase, id);
+  const [data, funnel] = await Promise.all([
+    getPartner(supabase, id),
+    getPartnerFunnel(supabase, id),
+  ]);
   if (!data) notFound();
   const { partner, commissions, projects, artisans } = data;
   const links = partnerLinks(env.NEXT_PUBLIC_SITE_URL, partner.code);
   const kit = partnerSnippets(env.NEXT_PUBLIC_SITE_URL, partner.code);
   const totals = partnerTotals(commissions);
   const payable = commissions.filter((c) => c.status === "validee");
+  const rates = funnel ? partnerFunnelRates(funnel) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -96,6 +108,43 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
           tone={totals.validee.count > 0 ? "warning" : "default"}
         />
       </SummaryTiles>
+
+      {funnel && (
+        <Card className="flex flex-col gap-4">
+          <CardTitle title={q.title} description={q.lead} />
+          {funnel.a_verifier > 0 && <Alert tone="info">{q.toReview(funnel.a_verifier)}</Alert>}
+          {funnel.demandes === 0 ? (
+            <p className="text-sm text-muted-foreground">{q.empty}</p>
+          ) : (
+            <dl className="grid gap-3 text-sm sm:grid-cols-5">
+              {(
+                [
+                  ["demandes", funnel.demandes, null],
+                  ["envoyees", funnel.envoyees, rates?.envoyees],
+                  ["acceptees", funnel.acceptees, rates?.acceptees],
+                  ["contact", funnel.contact, rates?.contact],
+                  ["signees", funnel.signees, rates?.signees],
+                ] as const
+              ).map(([key, value, rate]) => (
+                <div
+                  key={key}
+                  className="flex flex-col gap-1 rounded-input border border-border p-3"
+                >
+                  <dt className="text-xs text-muted-foreground">{q.steps[key]}</dt>
+                  <dd className="text-xl font-medium tabular-nums">
+                    {value.toLocaleString("fr-FR")}
+                    {rate != null && (
+                      <span className="ml-2 text-sm font-normal text-muted-foreground">
+                        {q.rate(rate)}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-3">
         <CardTitle title={t.links.title} description={t.links.note} />
@@ -240,10 +289,18 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
                     {euros.format(c.amount_cents / 100)}
                   </td>
                   <td className="px-3 py-3">
-                    <StatusBadge tone={TONES[c.status]}>{k.status[c.status]}</StatusBadge>
+                    <span className="flex flex-wrap gap-1.5">
+                      <StatusBadge tone={TONES[c.status]}>{k.status[c.status]}</StatusBadge>
+                      {c.status === "en_attente" && c.review_reason && (
+                        <StatusBadge tone="danger">{t.review.badge}</StatusBadge>
+                      )}
+                    </span>
                   </td>
                   <td className="flex flex-col gap-2 py-3 pl-3 text-muted-foreground">
                     {detail(c)}
+                    {c.status === "en_attente" && c.review_reason && (
+                      <ClearReviewForm partnerId={partner.id} commissionId={c.id} />
+                    )}
                     {(c.status === "en_attente" || c.status === "validee") && (
                       <CancelCommissionForm partnerId={partner.id} commissionId={c.id} />
                     )}
