@@ -26,12 +26,15 @@ export function NeedForm({
   initialText = "",
   initialTrade = null,
   rehire = null,
+  partnerCode = null,
 }: {
   trades: { code: string; label: string }[];
   initialText?: string;
   initialTrade?: string | null;
   /** « Redemander un devis » : artisan d'un chantier précédent, proposé en premier. */
   rehire?: { artisanId: string; chantierId: string; name: string } | null;
+  /** Programme Partenaires (F-59) : code lu dans l'adresse (`?p=`), transmis avec la demande. */
+  partnerCode?: string | null;
 }) {
   const router = useRouter();
   const [text, setText] = useState(initialText);
@@ -73,6 +76,7 @@ export function NeedForm({
       ...(rehire
         ? { preferredArtisanId: rehire.artisanId, fromChantierId: rehire.chantierId }
         : {}),
+      ...(partnerCode ? { partnerCode } : {}),
     });
     if (result.status !== "ok" || !("projectId" in result)) {
       setPhase("idle");

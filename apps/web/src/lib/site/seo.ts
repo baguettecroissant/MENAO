@@ -50,6 +50,8 @@ export const PRIVATE_PATHS = [
   "/auth/",
   "/connexion",
   "/calendrier/",
+  // Liens partenaires (F-59) : simples redirections.
+  "/p/",
 ] as const;
 
 export const absoluteUrl = (path: string) =>

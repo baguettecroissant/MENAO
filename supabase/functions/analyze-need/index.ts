@@ -20,6 +20,7 @@ import {
   type NeedReferentials,
   type RawNeedAnalysis,
 } from "../../../packages/core/src/project.ts";
+import { normalizePartnerCode } from "../../../packages/core/src/partners.ts";
 import {
   llmConfig,
   logAiRuns,
@@ -338,6 +339,7 @@ Deno.serve(
       preferredArtisanId?: unknown;
       fromChantierId?: unknown;
       projectId?: unknown;
+      partnerCode?: unknown;
     } | null;
     const description = typeof body?.description === "string" ? body.description.trim() : "";
     if (description.length === 0 || description.length > PROJECT_TEXT_MAX_LENGTH) {
@@ -479,6 +481,17 @@ Deno.serve(
         .select("id")
         .single();
       if (error || !project) throw error ?? new Error("projet non créé");
+
+      // Programme Partenaires (F-59) : projet arrivé par un lien partenaire (code lu dans
+      // l'adresse, sans traceur). Un code inconnu ou une erreur n'empêche jamais le projet.
+      const partnerCode = normalizePartnerCode(body?.partnerCode);
+      if (partnerCode) {
+        const { error: partnerError } = await admin.rpc("attribute_project_partner", {
+          p_project_id: project.id,
+          p_code: partnerCode,
+        });
+        if (partnerError) console.error("analyze-need : attribution partenaire impossible");
+      }
 
       await logAiRuns(
         admin,

@@ -1662,6 +1662,204 @@ export type Database = {
         };
         Relationships: [];
       };
+      partner_attributions: {
+        Row: {
+          artisan_id: string | null;
+          created_at: string;
+          id: string;
+          partner_id: string;
+          project_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id?: string | null;
+          created_at?: string;
+          id?: string;
+          partner_id: string;
+          project_id?: string | null;
+        };
+        Update: {
+          artisan_id?: string | null;
+          created_at?: string;
+          id?: string;
+          partner_id?: string;
+          project_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_attributions_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_attributions_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_attributions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_commissions: {
+        Row: {
+          amount_cents: number;
+          artisan_id: string | null;
+          cancel_reason: string | null;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["partner_commission_kind"];
+          paid_at: string | null;
+          partner_id: string;
+          payout_reference: string | null;
+          project_id: string | null;
+          status: Database["public"]["Enums"]["partner_commission_status"];
+          updated_at: string;
+          validate_after: string;
+          validated_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          artisan_id?: string | null;
+          cancel_reason?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["partner_commission_kind"];
+          paid_at?: string | null;
+          partner_id: string;
+          payout_reference?: string | null;
+          project_id?: string | null;
+          status?: Database["public"]["Enums"]["partner_commission_status"];
+          updated_at?: string;
+          validate_after: string;
+          validated_at?: string | null;
+        };
+        Update: {
+          amount_cents?: number;
+          artisan_id?: string | null;
+          cancel_reason?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["partner_commission_kind"];
+          paid_at?: string | null;
+          partner_id?: string;
+          payout_reference?: string | null;
+          project_id?: string | null;
+          status?: Database["public"]["Enums"]["partner_commission_status"];
+          updated_at?: string;
+          validate_after?: string;
+          validated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_commissions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_settings: {
+        Row: {
+          delai_validation_jours: number;
+          id: boolean;
+          montant_abonne_centimes: number | null;
+          montant_demande_centimes: number | null;
+          plafond_demandes_mois: number | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          delai_validation_jours?: number;
+          id?: boolean;
+          montant_abonne_centimes?: number | null;
+          montant_demande_centimes?: number | null;
+          plafond_demandes_mois?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          delai_validation_jours?: number;
+          id?: boolean;
+          montant_abonne_centimes?: number | null;
+          montant_demande_centimes?: number | null;
+          plafond_demandes_mois?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      partners: {
+        Row: {
+          code: string;
+          contact_email: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          montant_abonne_centimes: number | null;
+          montant_demande_centimes: number | null;
+          nom: string;
+          notes: string | null;
+          siret: string;
+          status: Database["public"]["Enums"]["partner_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          contact_email: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          montant_abonne_centimes?: number | null;
+          montant_demande_centimes?: number | null;
+          nom: string;
+          notes?: string | null;
+          siret: string;
+          status?: Database["public"]["Enums"]["partner_status"];
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          contact_email?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          montant_abonne_centimes?: number | null;
+          montant_demande_centimes?: number | null;
+          nom?: string;
+          notes?: string | null;
+          siret?: string;
+          status?: Database["public"]["Enums"]["partner_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       payments: {
         Row: {
           amount_cents: number;
@@ -2783,6 +2981,7 @@ export type Database = {
           created_at: string;
           current_period_end: string | null;
           ended_at: string | null;
+          first_paid_at: string | null;
           id: string;
           plan_code: string | null;
           status: string;
@@ -2798,6 +2997,7 @@ export type Database = {
           created_at?: string;
           current_period_end?: string | null;
           ended_at?: string | null;
+          first_paid_at?: string | null;
           id?: string;
           plan_code?: string | null;
           status: string;
@@ -2812,6 +3012,7 @@ export type Database = {
           created_at?: string;
           current_period_end?: string | null;
           ended_at?: string | null;
+          first_paid_at?: string | null;
           id?: string;
           plan_code?: string | null;
           status?: string;
@@ -3217,6 +3418,10 @@ export type Database = {
           total: number;
         }[];
       };
+      admin_cancel_partner_commission: {
+        Args: { p_id: string; p_reason: string };
+        Returns: undefined;
+      };
       admin_chantier_counts: { Args: { p_query?: string }; Returns: Json };
       admin_chantiers: {
         Args: {
@@ -3261,6 +3466,10 @@ export type Database = {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;
       };
+      admin_mark_commissions_paid: {
+        Args: { p_ids: string[]; p_reference: string };
+        Returns: number;
+      };
       admin_moderate_message: {
         Args: { p_hide: boolean; p_message_id: string; p_reason: string };
         Returns: undefined;
@@ -3278,6 +3487,23 @@ export type Database = {
         Returns: undefined;
       };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_partners: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisans: number;
+          code: string;
+          created_at: string;
+          id: string;
+          nom: string;
+          paid_cents: number;
+          paying: number;
+          pending_cents: number;
+          projects: number;
+          qualified: number;
+          status: Database["public"]["Enums"]["partner_status"];
+          validated_cents: number;
+        }[];
+      };
       admin_payment_counts: { Args: { p_query?: string }; Returns: Json };
       admin_payment_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_payments: {
@@ -3348,6 +3574,29 @@ export type Database = {
           p_document_id: string;
           p_reason?: string;
           p_status: Database["public"]["Enums"]["document_status"];
+        };
+        Returns: undefined;
+      };
+      admin_save_partner: {
+        Args: {
+          p_code: string;
+          p_contact_email: string;
+          p_id?: string;
+          p_montant_abonne_centimes?: number;
+          p_montant_demande_centimes?: number;
+          p_nom: string;
+          p_notes?: string;
+          p_siret: string;
+          p_status: Database["public"]["Enums"]["partner_status"];
+        };
+        Returns: string;
+      };
+      admin_save_partner_settings: {
+        Args: {
+          p_delai_validation_jours: number;
+          p_montant_abonne_centimes?: number;
+          p_montant_demande_centimes?: number;
+          p_plafond_demandes_mois?: number;
         };
         Returns: undefined;
       };
@@ -3597,6 +3846,10 @@ export type Database = {
       artisan_signal_reserves_lifted: {
         Args: { p_chantier_id: string; p_message: string };
         Returns: undefined;
+      };
+      attribute_project_partner: {
+        Args: { p_code: string; p_project_id: string };
+        Returns: boolean;
       };
       chantier_appointment: {
         Args: { p_chantier_id: string };
@@ -3945,6 +4198,7 @@ export type Database = {
         Args: { p_artisan_id: string; p_result: Json; p_siret: string };
         Returns: undefined;
       };
+      record_subscription_payment: { Args: { p_stripe_subscription_id: string }; Returns: boolean };
       record_ticket_photo: {
         Args: { p_storage_path: string; p_ticket_id: string; p_user_id: string };
         Returns: string;
@@ -4183,6 +4437,9 @@ export type Database = {
         | "planning_relance"
         | "inscription_relance"
         | "compte_radie";
+      partner_commission_kind: "demande_qualifiee" | "abonne_payant";
+      partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
+      partner_status: "actif" | "suspendu";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -4434,6 +4691,9 @@ export const Constants = {
         "inscription_relance",
         "compte_radie",
       ],
+      partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
+      partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
+      partner_status: ["actif", "suspendu"],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
       project_date_mode: ["des_que_possible", "date", "inconnue"],

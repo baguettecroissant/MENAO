@@ -1,0 +1,114 @@
+/**
+ * Programme Partenaires (F-59, ADR 0136) : codes, liens, montants et export des commissions.
+ * Fichier autonome (aucun import) : il est aussi importé par l'Edge Function analyze-need.
+ */
+
+/** 3 à 32 caractères : minuscules, chiffres et tirets, sans tiret au début ni à la fin. */
+export const PARTNER_CODE_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$/;
+
+/** Code lu dans une adresse (`?p=`) ou saisi : normalisé, ou null s'il est mal formé. */
+export function normalizePartnerCode(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const code = raw.trim().toLowerCase();
+  return PARTNER_CODE_PATTERN.test(code) ? code : null;
+}
+
+/** Liens à donner au partenaire : recherche pour les particuliers, inscription pour les pros. */
+export function partnerLinks(siteUrl: string, code: string) {
+  const base = `${siteUrl.replace(/\/+$/, "")}/p/${code}`;
+  return { clients: base, pros: `${base}/pro` };
+}
+
+/** Montant négocié avec le partenaire, sinon le montant par défaut, sinon 0 (non réglé). */
+export function commissionAmountCents(override: number | null, fallback: number | null): number {
+  return override ?? fallback ?? 0;
+}
+
+/**
+ * Montant saisi en euros (« 15,50 », « 15.5 », « 1 000 ») en centimes. Champ vide : null ;
+ * saisie invalide : NaN (à signaler au formulaire).
+ */
+export function eurosToCents(raw: string | undefined): number | null {
+  const value = (raw ?? "").replace(/[\s\u00a0\u202f]/g, "").replace(",", ".");
+  if (value === "") return null;
+  if (!/^\d+(?:\.\d{1,2})?$/.test(value)) return Number.NaN;
+  return Math.round(Number(value) * 100);
+}
+
+export const COMMISSION_STATUSES = ["en_attente", "validee", "payee", "annulee"] as const;
+export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
+export type CommissionKind = "demande_qualifiee" | "abonne_payant";
+
+/** Nombre et montant des commissions d'un partenaire, par statut. */
+export function partnerTotals(
+  rows: readonly { status: CommissionStatus; amount_cents: number }[],
+): Record<CommissionStatus, { count: number; cents: number }> {
+  const totals = Object.fromEntries(
+    COMMISSION_STATUSES.map((s) => [s, { count: 0, cents: 0 }]),
+  ) as Record<CommissionStatus, { count: number; cents: number }>;
+  for (const row of rows) {
+    totals[row.status].count += 1;
+    totals[row.status].cents += row.amount_cents;
+  }
+  return totals;
+}
+
+const KIND_LABELS: Record<CommissionKind, string> = {
+  demande_qualifiee: "Demande qualifiée",
+  abonne_payant: "Abonné payant",
+};
+const STATUS_LABELS: Record<CommissionStatus, string> = {
+  en_attente: "En attente",
+  validee: "Validée",
+  payee: "Payée",
+  annulee: "Annulée",
+};
+
+export type CommissionExportRow = {
+  partner: string;
+  siret: string;
+  kind: CommissionKind;
+  status: CommissionStatus;
+  amountCents: number;
+  createdAt: string;
+  validatedAt: string | null;
+  reference: string | null;
+};
+
+/** Champ CSV : formule de tableur neutralisée, guillemets si besoin. */
+function csvField(value: string): string {
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return /[;"\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+
+const euros = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
+const day = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
+
+/** Export des commissions pour les virements (tableur français : « ; » et virgule décimale). */
+export function commissionsCsv(rows: readonly CommissionExportRow[]): string {
+  const head = [
+    "Partenaire",
+    "SIRET",
+    "Type",
+    "Statut",
+    "Montant (EUR)",
+    "Créée le",
+    "Validée le",
+    "Référence de paiement",
+  ];
+  const lines = rows.map((r) =>
+    [
+      r.partner,
+      r.siret,
+      KIND_LABELS[r.kind],
+      STATUS_LABELS[r.status],
+      euros(r.amountCents),
+      day(r.createdAt),
+      day(r.validatedAt),
+      r.reference ?? "",
+    ]
+      .map(csvField)
+      .join(";"),
+  );
+  return [head.join(";"), ...lines].join("\r\n");
+}

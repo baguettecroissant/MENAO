@@ -55,7 +55,21 @@ const nextConfig: NextConfig = {
     };
   },
   async redirects() {
-    if (!siteUrl || new URL(siteUrl).host === VERCEL_HOST) return [];
+    // Programme Partenaires (F-59, ADR 0136) : liens courts sans fonction serveur ni traceur ; le
+    // code suit l'adresse jusqu'à la demande de travaux ou l'inscription artisan.
+    const partnerLinks = [
+      {
+        source: "/p/:code([a-z0-9-]{3,32})",
+        destination: "/recherche?p=:code",
+        permanent: false,
+      },
+      {
+        source: "/p/:code([a-z0-9-]{3,32})/pro",
+        destination: "/pro/inscription?p=:code",
+        permanent: false,
+      },
+    ];
+    if (!siteUrl || new URL(siteUrl).host === VERCEL_HOST) return partnerLinks;
     return [
       {
         source: "/:path*",
@@ -63,6 +77,7 @@ const nextConfig: NextConfig = {
         destination: `${siteUrl}/:path*`,
         permanent: true,
       },
+      ...partnerLinks,
     ];
   },
 };
