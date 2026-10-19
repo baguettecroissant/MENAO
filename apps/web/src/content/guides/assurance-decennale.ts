@@ -64,6 +64,21 @@ export const assuranceDecennale: Guide = {
       type: "p",
       text: "Toutes partent de la **réception des travaux**, le moment où vous acceptez l'ouvrage, avec ou sans réserves. D'où l'importance de la faire par écrit, avec un procès-verbal daté.",
     },
+    {
+      type: "periods",
+      caption: "Durée des trois garanties, comptée depuis la réception des travaux",
+      start: "Réception des travaux : point de départ des trois garanties",
+      ticks: [
+        { at: 1, label: "1 an" },
+        { at: 2, label: "2 ans" },
+        { at: 10, label: "10 ans" },
+      ],
+      bars: [
+        { label: "Parfait achèvement", from: 0, to: 1, detail: "1 an", tone: "strong" },
+        { label: "Bon fonctionnement", from: 0, to: 2, detail: "2 ans au moins", tone: "strong" },
+        { label: "Décennale", from: 0, to: 10, detail: "10 ans", tone: "strong" },
+      ],
+    },
     { type: "h2", id: "obligation", text: "Une assurance obligatoire pour l'artisan" },
     {
       type: "p",

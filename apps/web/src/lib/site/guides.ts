@@ -30,6 +30,20 @@ const textOf = (g: Guide): string =>
           return [b.title, b.text];
         case "table":
           return [...b.head, ...b.rows.flat()];
+        case "periods":
+          return [b.start, ...b.bars.flatMap((bar) => [bar.label, bar.detail])];
+        case "decision":
+          return [
+            ...b.steps.flatMap((step) => [step.question, step.answer, step.result, step.next]),
+            b.otherwise.answer,
+            b.otherwise.result,
+            b.otherwise.detail,
+            b.note ?? "",
+          ];
+        case "flow":
+          return b.rows.flatMap((row) => [row.label, ...row.steps]);
+        case "document":
+          return [b.title, ...b.zones.flatMap((zone) => [zone.title, ...zone.items])];
       }
     }),
     ...g.faq.flatMap((f) => [f.q, f.a]),

@@ -5,10 +5,14 @@ import { Logo } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { visibleGuides } from "@/lib/site/guides";
+import { StoreBadges } from "./store-badges";
 
 const t = fr.footer;
 
-/** Pied de page : parcours particulier et artisan, métiers (F-02), aide et pages légales (F-03). */
+/**
+ * Pied de page : parcours particulier et artisan, métiers (F-02), aide et pages légales (F-03),
+ * badges des stores (ADR 0150).
+ */
 export async function SiteFooter() {
   const { trades } = await seoCatalog();
   const columns = [
@@ -70,6 +74,8 @@ export async function SiteFooter() {
               {t.stripe}
             </li>
           </ul>
+          {/* Application dans les stores (ADR 0150). */}
+          <StoreBadges className="pt-2" />
         </div>
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title} className="flex flex-col gap-3">

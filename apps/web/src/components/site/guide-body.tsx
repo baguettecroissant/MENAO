@@ -1,9 +1,13 @@
 import { CircleAlert, Sparkles } from "lucide-react";
 import type { GuideBlock } from "@/content/guides";
 import { frenchSpacing } from "@/lib/site/typography";
+import { DecisionFigure, DocumentFigure, FlowFigure, PeriodsFigure } from "./guide-figures";
 import { RichText } from "./rich-text";
 
-/** Corps d'un guide (ADR 0135) : intertitres ancrés, paragraphes, listes, tableaux, encadrés. */
+/**
+ * Corps d'un guide (ADR 0135) : intertitres ancrés, paragraphes, listes, tableaux, encadrés et
+ * schémas (ADR 0150).
+ */
 export function GuideBody({ blocks }: { blocks: readonly GuideBlock[] }) {
   return (
     <div className="flex flex-col gap-5 text-[1.0625rem] leading-relaxed text-foreground/90">
@@ -81,6 +85,14 @@ export function GuideBody({ blocks }: { blocks: readonly GuideBlock[] }) {
                 </table>
               </div>
             );
+          case "periods":
+            return <PeriodsFigure key={i} block={block} />;
+          case "decision":
+            return <DecisionFigure key={i} block={block} />;
+          case "flow":
+            return <FlowFigure key={i} block={block} />;
+          case "document":
+            return <DocumentFigure key={i} block={block} />;
           case "callout": {
             const menao = block.tone === "menao";
             const Icon = menao ? Sparkles : CircleAlert;
