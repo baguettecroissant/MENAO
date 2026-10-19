@@ -63,6 +63,22 @@ export const fr = {
       action: "Créer mon compte pro",
     },
   },
+  /** Widget intégré chez les partenaires (ADR 0138). */
+  widget: {
+    metaTitle: "MENAO — trouver un artisan du bâtiment vérifié",
+    frameTitle: "MENAO : trouver un artisan du bâtiment vérifié",
+    title: "Trouvez un artisan du bâtiment vérifié",
+    lead: "Décrivez votre projet : jusqu'à 3 artisans vérifiés vous répondent sous 48\u00a0h.",
+    trade: "Métier",
+    anyTrade: "Je ne sais pas encore",
+    description: "Votre projet",
+    placeholder: "Ex. : fuite sous l'évier de la cuisine, à Nice",
+    submit: "Décrire mon projet sur MENAO",
+    opensNewTab: "(ouvre MENAO dans un nouvel onglet)",
+    reassurance: ["Gratuit pour vous", "Artisans vérifiés", "Sans engagement"],
+    poweredBy: "Service proposé par MENAO",
+    partner: "Lien partenaire",
+  },
   llms: {
     intro:
       "MENAO est disponible d'abord dans les Alpes-Maritimes. Le site est en français. Les espaces des clients, des artisans et de l'équipe sont privés et ne doivent pas être explorés.",
@@ -4847,6 +4863,18 @@ export const fr = {
         amount: "Montant invalide.",
         days: "Délai de validation : entre 0 et 180 jours.",
         cap: "Plafond : un nombre entier positif, ou vide.",
+      },
+      kit: {
+        title: "Kit partenaire",
+        lead: "Extraits à transmettre au partenaire, à coller sur son site. Aucun cookie, aucun traceur.",
+        link: "Lien texte",
+        button: "Bouton",
+        widget: "Widget (formulaire intégré, hauteur automatique)",
+        iframe: "Widget sans script (iframe seule)",
+        copy: "Copier",
+        copied: "Copié",
+        disclosure:
+          "Un créateur de contenu doit signaler le partenariat (« Publicité » ou « Collaboration commerciale »), loi du 9 juin 2023.",
       },
       back: "Tous les partenaires",
     },

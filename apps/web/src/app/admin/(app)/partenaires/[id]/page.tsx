@@ -1,4 +1,4 @@
-import { partnerLinks, partnerTotals } from "@menao/core";
+import { partnerLinks, partnerSnippets, partnerTotals } from "@menao/core";
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -7,6 +7,7 @@ import {
   PartnerForm,
   PayCommissionsForm,
 } from "@/components/admin/partner-forms";
+import { CopySnippet } from "@/components/admin/copy-snippet";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { env } from "@/env";
@@ -53,6 +54,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
   if (!data) notFound();
   const { partner, commissions, projects, artisans } = data;
   const links = partnerLinks(env.NEXT_PUBLIC_SITE_URL, partner.code);
+  const kit = partnerSnippets(env.NEXT_PUBLIC_SITE_URL, partner.code);
   const totals = partnerTotals(commissions);
   const payable = commissions.filter((c) => c.status === "validee");
 
@@ -111,6 +113,28 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
             </div>
           ))}
         </dl>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <CardTitle title={t.kit.title} description={t.kit.lead} />
+        {(
+          [
+            ["kit-lien", t.kit.link, kit.link],
+            ["kit-bouton", t.kit.button, kit.button],
+            ["kit-widget", t.kit.widget, kit.widget],
+            ["kit-iframe", t.kit.iframe, kit.iframe],
+          ] as const
+        ).map(([id, label, value]) => (
+          <CopySnippet
+            key={id}
+            id={id}
+            label={label}
+            value={value}
+            copyLabel={t.kit.copy}
+            copiedLabel={t.kit.copied}
+          />
+        ))}
+        <p className="text-xs text-muted-foreground">{t.kit.disclosure}</p>
       </Card>
 
       <Card className="flex flex-col gap-4 overflow-x-auto">

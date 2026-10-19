@@ -82,3 +82,31 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   expect(await csv.text()).toContain("Partenaire;SIRET;Type;Statut;Montant (EUR)");
   await staff.close();
 });
+
+test("widget partenaire : seule page intégrable, ouvre la recherche pré-remplie (ADR 0138)", async ({
+  page,
+  request,
+}) => {
+  const response = await page.goto("/widget?p=agence-widget&metier=plombier");
+  const headers = response?.headers() ?? {};
+  expect(headers["content-security-policy"]).toContain("frame-ancestors https:");
+  expect(headers["x-frame-options"]).toBeUndefined();
+  const home = await request.get("/");
+  expect(home.headers()["x-frame-options"]).toBe("DENY");
+  expect(home.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+
+  const script = await request.get("/widget.js");
+  expect(script.status()).toBe(200);
+  expect(await script.text()).toContain("menao:widget-height");
+
+  await expect(page.getByLabel("Métier")).toHaveValue("plombier");
+  await page.getByLabel("Votre projet").fill("Fuite sous l'évier de la cuisine à Nice");
+  const [popup] = await Promise.all([
+    page.waitForEvent("popup"),
+    page.getByRole("button", { name: /Décrire mon projet sur MENAO/ }).click(),
+  ]);
+  await expect(popup).toHaveURL(/\/recherche\?p=agence-widget&metier=plombier&q=Fuite/);
+  await expect(popup.getByRole("button", { name: /Plomberie/, pressed: true })).toBeVisible();
+  const cookies = await page.context().cookies();
+  expect(cookies.filter((c) => /agence-widget/.test(`${c.name}${c.value}`))).toEqual([]);
+});
