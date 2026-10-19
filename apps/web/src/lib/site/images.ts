@@ -45,3 +45,20 @@ export function shareImage(tradeCode?: string) {
   const file = tradeCode && TRADE_IMAGES[tradeCode] ? tradeCode : "menao";
   return { url: `/images/og/${file}.jpg`, width: 1200, height: 630, alt: "MENAO" };
 }
+
+/** Couverture d'un guide (ADR 0149) : WebP 1 536 × 1 024 et versions réduites, même cadrage. */
+export function guideCover(slug: string) {
+  const src = `/images/guides/${slug}.webp`;
+  const size = (w: number) => src.replace(/\.webp$/, `-${w}.webp`);
+  return {
+    src,
+    srcSet: `${size(640)} 640w, ${size(960)} 960w, ${src} 1536w`,
+    width: 1536,
+    height: 1024,
+  };
+}
+
+/** Image de partage d'un guide (1200 × 630), recadrée dans sa couverture. */
+export function guideShareImage(slug: string, alt: string) {
+  return { url: `/images/og/guides/${slug}.jpg`, width: 1200, height: 630, alt };
+}

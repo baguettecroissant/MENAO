@@ -610,3 +610,83 @@ Style: authentic editorial / documentary photography, photorealistic, natural da
 ```
 
 </details>
+
+## Série du 2026-10-19 : couvertures des guides (ADR 0149)
+
+**images générées par IA, personnes fictives**
+
+Cinq photos de couverture pour les guides, générées le **2026-10-19** avec l'outil intégré `image_gen` (modèle non exposé par l'outil), sur le plan de l'audit du site vitrine. Dimensions natives **1536 × 1024**, sans agrandissement (2400 × 1600 avaient été demandés). Les personnes sont fictives : elles ne sont présentées ni comme l'équipe MENAO, ni comme des artisans inscrits, ni comme des clients.
+
+| Repère | Guide | Fichiers (1536, 960 et 640 px de large) | Prompt exact | Poids (Ko) |
+|---|---|---|---|---:|
+| D1 | `choisir-un-artisan` | [choisir-un-artisan.webp](../../apps/web/public/images/guides/choisir-un-artisan.webp), -960, -640 | [Prompt exact](#prompt-d1-choisir-un-artisan) | 283,878 |
+| D2 | `devis-travaux-mentions-obligatoires` | [devis-travaux-mentions-obligatoires.webp](../../apps/web/public/images/guides/devis-travaux-mentions-obligatoires.webp), -960, -640 | [Prompt exact](#prompt-d2-devis-travaux) | 239,514 |
+| D3 | `assurance-decennale` | [assurance-decennale.webp](../../apps/web/public/images/guides/assurance-decennale.webp), -960, -640 | [Prompt exact](#prompt-d3-assurance-decennale) | 264,984 |
+| D4 | `tva-travaux-taux-reduit` | [tva-travaux-taux-reduit.webp](../../apps/web/public/images/guides/tva-travaux-taux-reduit.webp), -960, -640 | [Prompt exact](#prompt-d4-tva-renovation) | 204,234 |
+| D5 | `facture-electronique-artisans` | [facture-electronique-artisans.webp](../../apps/web/public/images/guides/facture-electronique-artisans.webp), -960, -640 | [Prompt exact](#prompt-d5-facture-electronique) | 215,134 |
+
+- **WebP qualité 82**, sans métadonnées ; versions -960 et -640 au même cadrage.
+- **D5 est un montage** : l'écran du portable, noir à la génération, montre le vrai écran Factures de l'espace pro (données fictives : JF Plomberie, factures F-2026-0039 à 0043), incrusté en perspective (outil hors Git `medias/mockups-site/outils/incruster.py`).
+- **Images de partage** `apps/web/public/images/og/guides/<slug>.jpg` (1200 × 630, JPEG qualité 82) : recadrages des couvertures.
+- Les PNG originaux, le manifeste et les prompts sont conservés hors du dépôt avec la série complète (B1 à B8 non utilisées à ce jour).
+- **Contrôle visuel** : visages, mains, gestes et cadrage revus ; aucun texte, logo ni marque visible repéré.
+
+<a id="prompt-d1-choisir-un-artisan"></a>
+
+### D1 — choisir-un-artisan
+
+```text
+Use case: photorealistic-natural.
+Asset type: editorial cover photograph for a MENAO renovation advice guide. Single photograph, landscape 3:2. Request native 2400 x 1600 pixels if supported, otherwise the best native landscape 3:2 resolution; do not add borders.
+Visual direction: exceptionally realistic candid documentary photography in the South of France, 35–50 mm full-frame lens at f/4, natural diffused daylight, neutral subtly warm color, understated cool blue shadows. Honest unpolished atmosphere, realistic skin pores and imperfections, natural expressions, physically believable hands and objects. Realistic plaster, wood, tile and fabric textures. All people are fictional adults and are editorial illustrations, not actual MENAO customers or testimonials. Workwear is plain navy, no visible branding. No text, letters, numerals, logos, brand names, watermark, captions, labels, overlays, readable signage, recognizable products, children, collage, CGI or plastic skin. Keep the principal scene safely framed with generous margins for responsive cropping.
+
+Subject: a woman homeowner aged about 40 and a male craftsperson aged about 50 in plain navy work clothes discussing a renovation project in her lived-in home near Nice. A few real wood and ceramic tile samples lie on a wooden table between them. Natural attentive faces and small relaxed gestures; no handshake, no sales pose, nobody facing the camera. The homeowner points toward a material sample with a relaxed natural hand while the craftsperson listens. Mediterranean domestic interior, pale plaster walls, soft window light. Medium-wide horizontal composition showing both people and the samples; neither face at an edge. No documents, certificates or screens.
+```
+
+<a id="prompt-d2-devis-travaux"></a>
+
+### D2 — devis-travaux-mentions-obligatoires
+
+```text
+Use case: photorealistic-natural.
+Asset type: editorial cover photograph for a MENAO renovation advice guide. Single photograph, landscape 3:2. Request native 2400 x 1600 pixels if supported, otherwise the best native landscape 3:2 resolution; do not add borders.
+Visual direction: exceptionally realistic candid documentary photography in the South of France, 35–50 mm full-frame lens at f/4, natural diffused daylight, neutral subtly warm color, understated cool blue shadows. Honest unpolished atmosphere, realistic skin pores and imperfections, natural expressions, physically believable hands and objects. Realistic plaster, wood, tile and fabric textures. All people are fictional adults and are editorial illustrations, not actual MENAO customers or testimonials. Workwear is plain navy, no visible branding. No text, letters, numerals, logos, brand names, watermark, captions, labels, overlays, readable signage, recognizable products, children, collage, CGI or plastic skin. Keep the principal scene safely framed with generous margins for responsive cropping.
+
+Subject: close editorial view across a warm wooden table as a craftsperson in plain navy clothing and a woman homeowner review a completely blank paper folder together. Their torsos and partial faces are visible softly in the background. Main focus on realistic relaxed hands, a plain unbranded pen lying on the table, a neat open folder containing genuinely blank white sheets with NO marks, rules, writing, letters or numbers at all. One hand rests flat beside the folder and another gently indicates a blank part of the sheet. No pen touching paper, no staged signature, no handshake. Domestic renovation consultation in natural window light near Nice; physical paper edges and finger joints must be plausible. Close horizontal composition, quietly professional.
+```
+
+<a id="prompt-d3-assurance-decennale"></a>
+
+### D3 — assurance-decennale
+
+```text
+Use case: photorealistic-natural.
+Asset type: editorial cover photograph for a MENAO renovation advice guide. Single photograph, landscape 3:2. Request native 2400 x 1600 pixels if supported, otherwise the best native landscape 3:2 resolution; do not add borders.
+Visual direction: exceptionally realistic candid documentary photography in the South of France, 35–50 mm full-frame lens at f/4, natural diffused daylight, neutral subtly warm color, understated cool blue shadows. Honest unpolished atmosphere, realistic skin pores and imperfections, natural expressions, physically believable hands and objects. Realistic plaster, wood, tile and fabric textures. All people are fictional adults and are editorial illustrations, not actual MENAO customers or testimonials. Workwear is plain navy, no visible branding. No text, letters, numerals, logos, brand names, watermark, captions, labels, overlays, readable signage, recognizable products, children, collage, CGI or plastic skin. Keep the principal scene safely framed with generous margins for responsive cropping.
+
+Subject: an experienced male craftsperson aged about 45, in plain navy work clothing and appropriate plain work gloves and safety footwear, carefully inspecting the junction of a smooth plaster facade wall and a recently renewed ground-level terrace at a Mediterranean house. He crouches naturally on stable level ground, checking the detail of the wall-to-terrace connection visually with one hand resting gently near it, no dangerous activity or power tool. The facade, tile joints, terrace edge and body anatomy must be physically coherent. This is inspection of actual building work, NOT an insurance document or fake certificate. No paperwork, no emblem, no signature, no badges. Medium horizontal photograph emphasizing the craftsperson's attentive face and construction detail; natural diffused daylight.
+```
+
+<a id="prompt-d4-tva-renovation"></a>
+
+### D4 — tva-travaux-taux-reduit
+
+```text
+Use case: photorealistic-natural.
+Asset type: editorial cover photograph for a MENAO renovation advice guide. Single photograph, landscape 3:2. Request native 2400 x 1600 pixels if supported, otherwise the best native landscape 3:2 resolution; do not add borders.
+Visual direction: exceptionally realistic candid documentary photography in the South of France, 35–50 mm full-frame lens at f/4, natural diffused daylight, neutral subtly warm color, understated cool blue shadows. Honest unpolished atmosphere, realistic skin pores and imperfections, natural expressions, physically believable hands and objects. Realistic plaster, wood, tile and fabric textures. All people are fictional adults and are editorial illustrations, not actual MENAO customers or testimonials. Workwear is plain navy, no visible branding. No text, letters, numerals, logos, brand names, watermark, captions, labels, overlays, readable signage, recognizable products, children, collage, CGI or plastic skin. Keep the principal scene safely framed with generous margins for responsive cropping.
+
+Subject: a female window installer aged about 40 in plain navy workwear, protective gloves and clear safety glasses, finishing installation of a double-glazed window inside an older apartment in Nice. The sturdy white window frame is already secured in the masonry opening; she calmly checks the seated frame and seal by hand. No lifting of a heavy unsupported pane, no unstable platform, no power tool. Both gloved hands contact physically plausible parts of the frame. Window hinges, handle, frame thickness and reflections must be coherent. Subtle evidence of renovation around the opening, old plaster texture, traditional pale walls. Warm natural diffused daylight through the glass, medium-wide horizontal composition, authentic work rather than a posed portrait. No labels or printed tape.
+```
+
+<a id="prompt-d5-facture-electronique"></a>
+
+### D5 — facture-electronique-artisans
+
+```text
+Use case: photorealistic-natural.
+Asset type: editorial cover photograph for a MENAO renovation advice guide. Single photograph, landscape 3:2. Request native 2400 x 1600 pixels if supported, otherwise the best native landscape 3:2 resolution; do not add borders.
+Visual direction: exceptionally realistic candid documentary photography in the South of France, 35–50 mm full-frame lens at f/4, natural diffused daylight, neutral subtly warm color, understated cool blue shadows. Honest unpolished atmosphere, realistic skin pores and imperfections, natural expressions, physically believable hands and objects. Realistic plaster, wood, tile and fabric textures. All people are fictional adults and are editorial illustrations, not actual MENAO customers or testimonials. Workwear is plain navy, no visible branding. No text, letters, numerals, logos, brand names, watermark, captions, labels, overlays, readable signage, recognizable products, children, collage, CGI or plastic skin. Keep the principal scene safely framed with generous margins for responsive cropping.
+
+Subject: a male craftsperson aged about 55 in plain navy work clothes sitting at a simple desk in a modest tidy workshop office, handling routine administration on an unbranded laptop. Three-quarter side view shows his natural face, relaxed hands on a physically plausible keyboard, and the screen angled sufficiently toward the camera to be visible. The screen is completely black and blank, no interface, no text, no icons, no reflections that resemble symbols. Keyboard keys have no readable letters or numbers. A plain closed folder sits nearby; no paperwork with marks. Everyday understated office atmosphere, wood shelving and neutral workshop items softly blurred, natural diffuse window light. Horizontal editorial photography, no triumph pose, no handshake, no luxury executive office.
+```

@@ -27,6 +27,13 @@ export type Guide = {
   updatedAt: string;
   /** Brouillon : visible hors production pour la relecture, jamais indexé ni listé en production. */
   draft: boolean;
+  /**
+   * Couverture (ADR 0149) : `public/images/guides/<slug>.webp` (1 536 × 1 024, versions -960 et -640)
+   * et l'image de partage `public/images/og/guides/<slug>.jpg`. Photos générées par IA, personnes
+   * fictives (docs/images/photos-generees.md). `position` : cadrage (object-position) quand l'image
+   * est recadrée.
+   */
+  cover?: { alt: string; position: string };
   /** « L'essentiel » : les réponses clés, en tête d'article. */
   essentials: readonly string[];
   body: readonly GuideBlock[];

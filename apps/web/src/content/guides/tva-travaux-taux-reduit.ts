@@ -11,6 +11,10 @@ export const tvaTravauxTauxReduit: Guide = {
   publishedAt: "2026-10-19",
   updatedAt: "2026-10-19",
   draft: false,
+  cover: {
+    alt: "Une professionnelle intervient sur une fenêtre dans un logement.",
+    position: "50% 20%",
+  },
   essentials: [
     "10 % pour les travaux d'amélioration, de transformation, d'aménagement et d'entretien d'un logement achevé depuis plus de 2 ans.",
     "5,5 % pour les travaux de rénovation énergétique : isolation, chauffage aux énergies renouvelables, ventilation double flux…",

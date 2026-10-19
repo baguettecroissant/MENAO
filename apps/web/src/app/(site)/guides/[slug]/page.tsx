@@ -12,7 +12,7 @@ import { StatusBadge, Tag } from "@/components/ui";
 import type { Guide } from "@/content/guides";
 import { fr } from "@/i18n/fr";
 import { findGuide, readingMinutes, tableOfContents, visibleGuides } from "@/lib/site/guides";
-import { shareImage } from "@/lib/site/images";
+import { guideCover, guideShareImage, shareImage } from "@/lib/site/images";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
 import { frenchSpacing } from "@/lib/site/typography";
@@ -28,6 +28,10 @@ export function generateStaticParams() {
 
 const dayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
 const formatDay = (iso: string) => dayFormat.format(new Date(`${iso}T00:00:00Z`));
+
+/** Image de partage : recadrée dans la couverture du guide, sinon celle de MENAO. */
+const guideImage = (guide: Guide) =>
+  guide.cover ? guideShareImage(guide.slug, guide.cover.alt) : shareImage();
 
 export async function generateMetadata({ params }: PageProps<"/guides/[slug]">): Promise<Metadata> {
   const guide = findGuide((await params).slug);
@@ -49,9 +53,9 @@ export async function generateMetadata({ params }: PageProps<"/guides/[slug]">):
       siteName: "MENAO",
       publishedTime: guide.publishedAt,
       modifiedTime: guide.updatedAt,
-      images: [shareImage()],
+      images: [guideImage(guide)],
     },
-    twitter: { card: "summary_large_image", images: [shareImage().url] },
+    twitter: { card: "summary_large_image", images: [guideImage(guide).url] },
   };
 }
 
@@ -66,7 +70,7 @@ function articleJsonLd(guide: Guide) {
         description: guide.description,
         url,
         mainEntityOfPage: url,
-        image: absoluteUrl(shareImage().url),
+        image: absoluteUrl(guideImage(guide).url),
         datePublished: guide.publishedAt,
         dateModified: guide.updatedAt,
         inLanguage: "fr-FR",
@@ -123,6 +127,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
     .sort((a, b) => Number(b.audience === guide.audience) - Number(a.audience === guide.audience))
     .slice(0, 3);
   const pro = guide.audience === "artisans";
+  const cover = guide.cover && guideCover(guide.slug);
   // Autres guides puis liens du guide, sans doublon.
   const related = [
     ...others.map((g) => ({ href: `/guides/${g.slug}`, label: g.title })),
@@ -142,23 +147,42 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
               { label: guide.title },
             ]}
           />
-          <div className="flex flex-wrap items-center gap-2">
-            <Tag>{t.audienceTag[guide.audience]}</Tag>
-            {guide.draft && <StatusBadge tone="warning">{t.draft}</StatusBadge>}
+          {/* Couverture à droite du titre sur grand écran, sous le titre sur mobile : jamais recadrée. */}
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-12">
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Tag>{t.audienceTag[guide.audience]}</Tag>
+                {guide.draft && <StatusBadge tone="warning">{t.draft}</StatusBadge>}
+              </div>
+              <h1 className="max-w-4xl text-[2rem] leading-[1.1] font-medium tracking-tight text-balance sm:text-[2.75rem]">
+                {frenchSpacing(guide.title)}
+              </h1>
+              <p className="max-w-3xl text-lg text-pretty text-muted-foreground">
+                {frenchSpacing(guide.description)}
+              </p>
+              <p className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-subtle-foreground">
+                <span>{t.byline}</span>
+                <span aria-hidden="true">·</span>
+                <time dateTime={guide.updatedAt}>{t.updated(formatDay(guide.updatedAt))}</time>
+                <span aria-hidden="true">·</span>
+                <span>{t.minutes(readingMinutes(guide))}</span>
+              </p>
+            </div>
+            {cover && guide.cover && (
+              // eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4)
+              <img
+                src={cover.src}
+                srcSet={cover.srcSet}
+                sizes="(min-width: 1024px) 28rem, 100vw"
+                width={cover.width}
+                height={cover.height}
+                alt={guide.cover.alt}
+                fetchPriority="high"
+                decoding="async"
+                className="aspect-[3/2] w-full rounded-hero bg-primary-softer object-cover shadow-card"
+              />
+            )}
           </div>
-          <h1 className="max-w-4xl text-[2rem] leading-[1.1] font-medium tracking-tight text-balance sm:text-[2.75rem]">
-            {frenchSpacing(guide.title)}
-          </h1>
-          <p className="max-w-3xl text-lg text-pretty text-muted-foreground">
-            {frenchSpacing(guide.description)}
-          </p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-subtle-foreground">
-            <span>{t.byline}</span>
-            <span aria-hidden="true">·</span>
-            <time dateTime={guide.updatedAt}>{t.updated(formatDay(guide.updatedAt))}</time>
-            <span aria-hidden="true">·</span>
-            <span>{t.minutes(readingMinutes(guide))}</span>
-          </p>
         </div>
       </header>
 

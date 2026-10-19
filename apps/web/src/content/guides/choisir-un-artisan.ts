@@ -10,6 +10,10 @@ export const choisirUnArtisan: Guide = {
   publishedAt: "2026-10-19",
   updatedAt: "2026-10-19",
   draft: false,
+  cover: {
+    alt: "Un artisan et une cliente discutent de matériaux pour des travaux.",
+    position: "50% 35%",
+  },
   essentials: [
     "Vérifiez que l'entreprise existe et qu'elle est active grâce à son numéro SIRET, sur l'Annuaire des Entreprises, le service officiel et gratuit de l'État.",
     "Demandez l'attestation d'assurance décennale : elle doit être jointe au devis et couvrir l'activité qui correspond à vos travaux.",

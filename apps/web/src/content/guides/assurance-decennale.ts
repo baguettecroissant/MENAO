@@ -10,6 +10,10 @@ export const assuranceDecennale: Guide = {
   publishedAt: "2026-10-19",
   updatedAt: "2026-10-19",
   draft: false,
+  cover: {
+    alt: "Un professionnel inspecte la façade d'un logement.",
+    position: "50% 40%",
+  },
   essentials: [
     "Pendant 10 ans après la réception des travaux, l'artisan doit réparer les dommages qui compromettent la solidité de l'ouvrage ou le rendent impropre à son usage.",
     "Il doit être assuré avant d'ouvrir le chantier et joindre son attestation d'assurance à ses devis et à ses factures.",
