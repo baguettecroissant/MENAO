@@ -1,8 +1,10 @@
 import type { Database } from "@menao/db";
 import type { Route } from "next";
 import Link from "next/link";
+import { Pagination, listHref } from "@/components/admin/list-controls";
 import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { PAGE_SIZE, parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
 
 type Status = Database["public"]["Enums"]["artisan_status"];
@@ -23,15 +25,20 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", {
 export default async function AdminArtisansPage({ searchParams }: PageProps<"/admin/artisans">) {
   const params = await searchParams;
   const status = STATUSES.find((s) => s === params.statut) ?? "en_verification";
+  const page = parsePage(params.page);
   const { supabase } = await requireAdmin();
 
-  const { data: artisans } = await supabase
+  // 50 dossiers par page (ADR 0146), les plus anciens envois d'abord.
+  const { data: artisans, count } = await supabase
     .from("artisans")
     .select(
       "id, raison_sociale, nom_commercial, siret, submitted_at, ape_eligible, artisan_trades(trade_code)",
+      { count: "exact" },
     )
     .eq("status", status)
-    .order("submitted_at", { ascending: true, nullsFirst: false });
+    .order("submitted_at", { ascending: true, nullsFirst: false })
+    .order("id")
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   const { data: trades } = await supabase.from("trades").select("code, label");
   const tradeLabel = new Map((trades ?? []).map((tr) => [tr.code, tr.label]));
 
@@ -57,7 +64,10 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
           ))}
         </ul>
       </nav>
-      <Card>
+      <Card className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground" role="status">
+          {fr.admin.followUp.results(count ?? 0)}
+        </p>
         {!artisans?.length ? (
           <p className="text-muted-foreground">{t.empty}</p>
         ) : (
@@ -119,6 +129,11 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
             </table>
           </div>
         )}
+        <Pagination
+          page={page}
+          total={count ?? 0}
+          hrefFor={(p) => listHref("/admin/artisans", { statut: status, page: p })}
+        />
       </Card>
     </div>
   );

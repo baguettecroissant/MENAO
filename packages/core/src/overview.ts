@@ -113,3 +113,40 @@ export function churnRate(c: { lost: number; atStart: number }): number | null {
 export function searchConversion(c: { searches: number; sent: number }): number | null {
   return percent(c.sent, c.searches);
 }
+
+/**
+ * Catégories de l'activité du back-office (ADR 0146) : types d'événements renvoyés par
+ * `admin_activity`, regroupés pour le filtre de la page « Activité ».
+ */
+const ACTIVITY_KINDS = {
+  recherches: ["recherche"],
+  demandes: [
+    "demande_envoyee",
+    "demande_acceptee",
+    "demande_refusee",
+    "demande_expiree",
+    "demande_annulee",
+  ],
+  chantiers: ["chantier"],
+  dossiers: ["dossier_envoye", "dossier_decision"],
+  support: ["ticket"],
+  avis: ["avis"],
+  abonnements: ["abonnement"],
+} as const;
+
+export const ACTIVITY_CATEGORIES = [
+  "tout",
+  ...(Object.keys(ACTIVITY_KINDS) as (keyof typeof ACTIVITY_KINDS)[]),
+] as const;
+export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
+
+/** Types d'événements d'une catégorie ; rien pour « tout » (aucun filtre). */
+export function activityKinds(category: ActivityCategory): readonly string[] | null {
+  return category === "tout" ? null : ACTIVITY_KINDS[category];
+}
+
+export function parseActivityCategory(value: unknown): ActivityCategory {
+  return typeof value === "string" && (ACTIVITY_CATEGORIES as readonly string[]).includes(value)
+    ? (value as ActivityCategory)
+    : "tout";
+}

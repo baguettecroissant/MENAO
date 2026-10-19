@@ -1,8 +1,10 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { Pagination } from "@/components/admin/list-controls";
 import { PartnerForm, PartnerSettingsForm } from "@/components/admin/partner-forms";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
 import { commissionsToReview, getPartnerSettings, listPartners } from "@/lib/admin/partners";
 
@@ -16,10 +18,11 @@ export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
  * Programme Partenaires (F-59, ADR 0136) : partenaires et chiffres clés, réglages du programme,
  * création d'un partenaire, export des commissions à payer. Réservé aux admins.
  */
-export default async function AdminPartnersPage() {
+export default async function AdminPartnersPage({ searchParams }: PageProps<"/admin/partenaires">) {
+  const page = parsePage((await searchParams).page);
   const { supabase } = await requireAdmin();
-  const [partners, settings, toReview] = await Promise.all([
-    listPartners(supabase),
+  const [{ rows: partners, total }, settings, toReview] = await Promise.all([
+    listPartners(supabase, page),
     getPartnerSettings(supabase),
     commissionsToReview(supabase),
   ]);
@@ -117,6 +120,11 @@ export default async function AdminPartnersPage() {
             </tbody>
           </table>
         )}
+        <Pagination
+          page={page}
+          total={total}
+          hrefFor={(p) => (p > 1 ? `/admin/partenaires?page=${p}` : "/admin/partenaires") as Route}
+        />
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

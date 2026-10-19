@@ -1,9 +1,11 @@
 import { SPOT_CHECK_RATE, parisToday, spotCheckPeriod, spotCheckTarget } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { Pagination } from "@/components/admin/list-controls";
 import { Alert, Button, Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { drawSpotChecks } from "@/lib/admin/actions";
+import { PAGE_SIZE, parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
 import { SpotCheckForm } from "./spot-check-form";
 
@@ -40,23 +42,26 @@ type Row = {
 export default async function SpotChecksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tirage?: string }>;
+  searchParams: Promise<{ tirage?: string; page?: string }>;
 }) {
   const { supabase } = await requireAdmin();
-  const { tirage } = await searchParams;
+  const { tirage, page: rawPage } = await searchParams;
+  const page = parsePage(rawPage);
   const period = spotCheckPeriod(parisToday());
   const select =
     "id, period, drawn_at, result, note, insurer_called, checked_at, checked_by, artisans(id, raison_sociale, nom_commercial)";
 
   const [current, previous, { count: validated }] = await Promise.all([
     supabase.from("artisan_spot_checks").select(select).eq("period", period).order("drawn_at"),
+    // Contrôles des mois précédents : 50 par page (ADR 0146).
     supabase
       .from("artisan_spot_checks")
-      .select(select)
+      .select(select, { count: "exact" })
       .lt("period", period)
       .order("period", { ascending: false })
       .order("drawn_at")
-      .limit(120),
+      .order("id")
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     supabase.from("artisans").select("id", { count: "exact", head: true }).eq("status", "valide"),
   ]);
   const rows = (current.data ?? []) as Row[];
@@ -196,6 +201,11 @@ export default async function SpotChecksPage({
               ))}
             </ul>
           )}
+          <Pagination
+            page={page}
+            total={previous.count ?? 0}
+            hrefFor={(p) => `/admin/controles${p > 1 ? `?page=${p}` : ""}#precedents` as Route}
+          />
         </section>
       </Card>
     </div>

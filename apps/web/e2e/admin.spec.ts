@@ -33,13 +33,22 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
     .getByRole("region", { name: "À traiter maintenant" })
     .getByRole("article", { name: /dossiers? à vérifier$/ });
   await expect(dossiers).toBeVisible();
-  await expect(
-    page
-      .getByRole("region", { name: "Activité en direct" })
-      .getByText("Dossier envoyé par PEINTURE DOSSIER EXEMPLE"),
-  ).toBeVisible();
+  const activity = page.getByRole("region", { name: "Activité en direct" });
+  await expect(activity.getByRole("listitem").first()).toBeVisible();
   await expect(page.getByRole("region", { name: "Demandes" })).toBeVisible();
   await capture(page, "admin-vue-ensemble");
+
+  // Toute l'activité, page par page et par catégorie (ADR 0146) : la vue d'ensemble n'en montre
+  // que les 10 derniers événements.
+  await activity.getByRole("link", { name: "Voir toute l'activité" }).click();
+  await expect(page).toHaveURL(/\/admin\/activite$/);
+  await expect(page.getByRole("heading", { name: "Activité", level: 1 })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Filtrer l'activité" })
+    .getByRole("link", { name: "Dossiers artisans" })
+    .click();
+  await expect(page).toHaveURL(/\/admin\/activite\?categorie=dossiers$/);
+  await expect(page.getByText("Dossier envoyé par PEINTURE DOSSIER EXEMPLE")).toBeVisible();
 
   // Alertes de l'équipe (ADR 0050) : la cloche du back-office, dossier envoyé par le seed.
   await page.getByRole("link", { name: /^Notifications/ }).click();

@@ -339,6 +339,13 @@ export function OverviewScreen({
             {t.activity.title}
           </h2>
           <ActivityFeed items={activity} now={now} />
+          {/* Les 10 derniers événements ; l'historique complet est paginé (ADR 0146). */}
+          <Link
+            href={"/admin/activite" as Route}
+            className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {t.activity.seeAll} →
+          </Link>
         </section>
         <section aria-labelledby="chiffres" className="flex flex-col gap-3">
           <div className="flex flex-col gap-0.5">

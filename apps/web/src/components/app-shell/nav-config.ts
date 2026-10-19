@@ -1,4 +1,5 @@
 import {
+  Activity,
   Award,
   CalendarClock,
   ClipboardCheck,
@@ -136,7 +137,11 @@ export const NAV: Record<Space, readonly NavSection[]> = {
   admin: [
     {
       label: fr.appShell.sections.tools,
-      items: [{ href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true }],
+      items: [
+        { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
+        // Toute l'activité, page par page (ADR 0146).
+        { href: "/admin/activite", label: fr.admin.nav.activity, icon: Activity },
+      ],
     },
     {
       label: fr.appShell.sections.verification,

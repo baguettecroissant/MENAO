@@ -145,6 +145,42 @@ export function Pagination({
   );
 }
 
+/**
+ * Pages sans total connu (activité, ADR 0146) : « plus récentes » et « plus anciennes ». La page
+ * suivante existe si la base a renvoyé une ligne de plus que la taille de la page.
+ */
+export function PagerLinks({
+  page,
+  hasNext,
+  hrefFor,
+}: {
+  page: number;
+  hasNext: boolean;
+  hrefFor: (page: number) => Route;
+}) {
+  if (page <= 1 && !hasNext) return null;
+  const link = "text-sm font-medium text-primary underline-offset-2 hover:underline";
+  return (
+    <nav aria-label={t.pagination.label} className="flex items-center justify-between gap-4">
+      {page > 1 ? (
+        <Link href={hrefFor(page - 1)} className={link}>
+          ← {t.pagination.newer}
+        </Link>
+      ) : (
+        <span />
+      )}
+      <p className="text-sm text-muted-foreground">{t.pagination.pageOnly(page)}</p>
+      {hasNext ? (
+        <Link href={hrefFor(page + 1)} className={link}>
+          {t.pagination.older} →
+        </Link>
+      ) : (
+        <span />
+      )}
+    </nav>
+  );
+}
+
 /** Section d'une fiche du back-office (demande, chantier). */
 export function DetailSection({
   title,
