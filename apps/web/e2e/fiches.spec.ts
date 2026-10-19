@@ -26,10 +26,9 @@ test("fiche publique : lien depuis la page ville, données structurées, badge, 
   expect(jsonLd).toContain('"name":"Noé Plomberie"');
   const main = await page.getByRole("main").innerText();
   expect(main).not.toMatch(/@|\+33|Rue de l'Exemple|SIRET/i);
-  await expect(page.getByRole("link", { name: "Décrire mon projet" })).toHaveAttribute(
-    "href",
-    "/recherche?metier=plombier",
-  );
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }),
+  ).toHaveAttribute("href", "/recherche?metier=plombier");
   await expect(
     page
       .getByRole("navigation", { name: "Trouver un plombier près de chez vous" })
