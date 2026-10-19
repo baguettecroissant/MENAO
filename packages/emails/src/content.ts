@@ -51,6 +51,7 @@ export const NOTIFICATION_TYPES = [
   "planning_relance",
   "inscription_relance",
   "compte_radie",
+  "reponse_contact",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -60,8 +61,10 @@ export type EmailContent = {
   preview: string;
   title: string;
   paragraphs: string[];
-  /** Message libre d'un utilisateur (motif d'annulation), affiché en citation. */
+  /** Message libre (motif d'annulation, réponse de l'équipe), affiché en citation. */
   quote: string | null;
+  /** Phrase affichée après la citation, avant le bouton. */
+  postscript?: string;
   cta: { label: string; url: string };
 };
 
@@ -951,6 +954,23 @@ export function notificationContent(
         },
       };
     }
+    case "reponse_contact": {
+      // Réponse de l'équipe à un déclarant sans compte (page Contact, candidature partenaire,
+      // ADR 0140) : pas d'espace où la lire, donc son texte est dans l'e-mail.
+      return {
+        subject: "Réponse de l'équipe MENAO à votre message",
+        preview: `À propos de ${quoted(text(data, "titre") ?? "votre message")}.`,
+        title: "L'équipe MENAO vous a répondu",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Voici la réponse de l'équipe MENAO à votre message ${quoted(text(data, "titre") ?? "votre message")} :`,
+        ],
+        quote: text(data, "message"),
+        postscript:
+          "Pour poursuivre l'échange, écrivez-nous depuis la page Contact, en reprenant l'objet de ce message.",
+        cta: { label: "Nous écrire", url: link("/contact") },
+      };
+    }
     case "dossier_valide": {
       // F-50 : dossier validé ; visible seulement avec un abonnement et des paiements actifs (F-14).
       const missing = [
@@ -1231,6 +1251,7 @@ export function plainText(content: EmailContent): string {
     "",
     ...content.paragraphs.flatMap((p) => [p, ""]),
     ...(content.quote ? [quoted(content.quote), ""] : []),
+    ...(content.postscript ? [content.postscript, ""] : []),
     `${content.cta.label} : ${content.cta.url}`,
     "",
     "—",

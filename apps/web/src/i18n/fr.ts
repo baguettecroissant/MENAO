@@ -5338,6 +5338,10 @@ export const fr = {
         reporter: "Déclarant",
         support: "Équipe MENAO",
         replyLabel: "Réponse au déclarant",
+        replyToAccount:
+          "Le déclarant reçoit votre réponse dans son espace (« Mes échanges avec MENAO »), avec une notification.",
+        replyByEmail: (email: string) =>
+          `Le déclarant n'a pas de compte : votre réponse lui est envoyée par e-mail à ${email}.`,
         replySubmit: "Répondre",
         decisionLegend: "Décision",
         outcomes: {

@@ -2,7 +2,7 @@
 
 import { TICKET_MESSAGE_MAX_LENGTH } from "@menao/core";
 import { useActionState, useCallback, useState } from "react";
-import { Alert, Button, FieldError, inputClasses } from "@/components/ui";
+import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
 import { initialFormState } from "@/lib/auth/form";
 import { addTicketMessage } from "@/lib/disputes/actions";
 import { useActionSuccess } from "@/lib/use-action-success";
@@ -12,10 +12,13 @@ export function TicketReplyForm({
   ticketId,
   label,
   submit,
+  hint,
 }: {
   ticketId: string;
   label: string;
   submit: string;
+  /** Précision sous le champ (back-office : où part la réponse). */
+  hint?: string;
 }) {
   const [body, setBody] = useState("");
   const [state, formAction, pending] = useActionState(
@@ -40,10 +43,13 @@ export function TicketReplyForm({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
+        aria-describedby={
+          [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(" ") || undefined
+        }
         className={`${inputClasses} min-h-24 py-3`}
       />
       {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
+      {hint && <Hint id={`${id}-hint`}>{hint}</Hint>}
       <Button type="submit" block={false} disabled={pending} className="self-end">
         {submit}
       </Button>
