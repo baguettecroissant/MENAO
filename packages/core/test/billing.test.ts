@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   TRIAL_DAYS,
   commissionComparison,
+  paidSubscriptionInvoice,
   subscriptionFromStripe,
   subscriptionGrantsAccess,
 } from "../src/billing";
@@ -118,5 +119,38 @@ describe("simulation de la page Espace Pro", () => {
         subscriptionCents: 15_000,
       }),
     ).toEqual({ commissionCents: 5_000, monthlySavingCents: -10_000, yearlySavingCents: -120_000 });
+  });
+});
+
+describe("paidSubscriptionInvoice (F-59 : premier paiement réel)", () => {
+  const invoice = (extra: Record<string, unknown>) => ({
+    object: "invoice",
+    id: "in_1",
+    status: "paid",
+    amount_paid: 18000,
+    ...extra,
+  });
+
+  it("abonnement lu dans parent.subscription_details (API récente)", () => {
+    expect(
+      paidSubscriptionInvoice(
+        invoice({ parent: { subscription_details: { subscription: "sub_123" } } }),
+      ),
+    ).toEqual({ stripeSubscriptionId: "sub_123", amountPaidCents: 18000 });
+  });
+
+  it("ancien champ « subscription » encore accepté", () => {
+    expect(paidSubscriptionInvoice(invoice({ subscription: "sub_456" }))).toEqual({
+      stripeSubscriptionId: "sub_456",
+      amountPaidCents: 18000,
+    });
+  });
+
+  it("facture à 0 € (essai), non payée, sans abonnement ou mal formée : ignorée", () => {
+    expect(paidSubscriptionInvoice(invoice({ subscription: "sub_1", amount_paid: 0 }))).toBeNull();
+    expect(paidSubscriptionInvoice(invoice({ subscription: "sub_1", status: "open" }))).toBeNull();
+    expect(paidSubscriptionInvoice(invoice({}))).toBeNull();
+    expect(paidSubscriptionInvoice({ object: "charge" })).toBeNull();
+    expect(paidSubscriptionInvoice(null)).toBeNull();
   });
 });

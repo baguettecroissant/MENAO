@@ -86,3 +86,25 @@ export function commissionComparison(input: {
   const monthlySavingCents = commissionCents - input.subscriptionCents;
   return { commissionCents, monthlySavingCents, yearlySavingCents: monthlySavingCents * 12 };
 }
+
+/**
+ * Facture d'abonnement réellement payée (F-59) : premier paiement après l'essai, qui déclenche la
+ * prime du prescripteur. Abonnement lu dans `parent.subscription_details` (API Stripe récente) ou
+ * dans l'ancien champ `subscription`. Facture à 0 € (essai) ou non payée : null.
+ */
+export function paidSubscriptionInvoice(
+  input: unknown,
+): { stripeSubscriptionId: string; amountPaidCents: number } | null {
+  if (!isObj(input) || input.object !== "invoice" || input.status !== "paid") return null;
+  const amount = input.amount_paid;
+  if (typeof amount !== "number" || amount <= 0) return null;
+  const parent = isObj(input.parent) ? input.parent : {};
+  const details = isObj(parent.subscription_details) ? parent.subscription_details : {};
+  const subscription =
+    typeof details.subscription === "string"
+      ? details.subscription
+      : typeof input.subscription === "string"
+        ? input.subscription
+        : null;
+  return subscription ? { stripeSubscriptionId: subscription, amountPaidCents: amount } : null;
+}

@@ -38,6 +38,8 @@ const WEBHOOK_EVENTS = [
   "customer.subscription.deleted",
   "customer.subscription.paused",
   "customer.subscription.resumed",
+  // Premier paiement réel après l'essai : prime des prescripteurs (F-59).
+  "invoice.paid",
 ];
 
 function encode(params, prefix = "") {

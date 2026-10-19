@@ -19,10 +19,12 @@ export type ArtisanSignupProfile = z.output<typeof artisanSignupProfileSchema>;
 
 /**
  * Choix du parcours sous la forme lue par la base (`app.apply_artisan_signup`) : objet « signup »
- * des métadonnées d'inscription, ou paramètre de `complete_artisan_oauth_signup`.
+ * des métadonnées d'inscription, ou paramètre de `complete_artisan_oauth_signup`. Le code d'un
+ * lien partenaire (F-59) y est joint s'il y en a un.
  */
-export function artisanSignupMetadata(profile: ArtisanSignupProfile) {
+export function artisanSignupMetadata(profile: ArtisanSignupProfile, partnerCode?: string | null) {
   return {
+    ...(partnerCode ? { partner_code: partnerCode } : {}),
     trade_codes: profile.tradeCodes,
     assujetti_tva: profile.assujettiTva,
     is_dirigeant: profile.isDirigeant,

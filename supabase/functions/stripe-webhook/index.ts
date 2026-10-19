@@ -6,6 +6,7 @@ import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts"
 import { paymentStatusFromCheckout } from "../../../packages/core/src/payment.ts";
 import { webhookErrorCode } from "../../../packages/core/src/webhook.ts";
 import {
+  paidSubscriptionInvoice,
   subscriptionFromStripe,
   subscriptionGrantsAccess,
   type SubscriptionSnapshot,
@@ -78,6 +79,16 @@ Deno.serve(async (req) => {
     if (subscription) {
       const snapshot = subscriptionFromStripe(subscription);
       if (snapshot) await saveSubscription(admin, snapshot);
+    }
+    // Premier paiement réel de l'abonnement (F-59) : prime du prescripteur éventuel.
+    if (event.type === "invoice.paid" && !event.account) {
+      const paid = paidSubscriptionInvoice(event.data.object);
+      if (paid) {
+        const { error } = await admin.rpc("record_subscription_payment", {
+          p_stripe_subscription_id: paid.stripeSubscriptionId,
+        });
+        if (error) throw error;
+      }
     }
     // Paiement d'un chantier, sur le compte connecté de l'artisan (ADR 0011, ADR 0023).
     if (event.account && event.type.startsWith("checkout.session.")) {

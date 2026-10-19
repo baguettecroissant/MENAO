@@ -6,6 +6,7 @@ import {
   ARTISAN_WELCOME_PATH,
   LEGAL_DOCUMENT_VERSIONS,
   isOAuthProvider,
+  normalizePartnerCode,
 } from "@menao/core";
 import {
   artisanAccountSchema,
@@ -48,6 +49,8 @@ const legalVersions = () =>
 export async function signUpArtisan(input: {
   profile: unknown;
   account: unknown;
+  /** Lien partenaire suivi (F-59), revérifié par la base. */
+  partnerCode?: unknown;
 }): Promise<ArtisanSignupState> {
   const profile = artisanSignupProfileSchema.safeParse(input.profile);
   if (!profile.success) return { profileInvalid: true, error: fr.errors.generic };
@@ -69,7 +72,7 @@ export async function signUpArtisan(input: {
         siret: profile.data.siret,
         marketing_opt_in: a.marketingOptIn,
         legal: legalVersions(),
-        signup: artisanSignupMetadata(profile.data),
+        signup: artisanSignupMetadata(profile.data, normalizePartnerCode(input.partnerCode)),
       },
     },
   });
@@ -117,11 +120,22 @@ export async function resendArtisanEmailCode(email: string): Promise<ArtisanSign
   return { codeSentTo: parsed.data };
 }
 
-/** Google ou Apple depuis l'inscription artisan : retour sur la finalisation artisan. */
+/**
+ * Google ou Apple depuis l'inscription artisan : retour sur la finalisation artisan. Le code d'un
+ * lien partenaire (F-59) suit l'adresse de retour ; rien d'autre n'est repris de « next ».
+ */
 export async function continueAsArtisanWithProvider(formData: FormData): Promise<void> {
   const provider = formData.get("provider");
   if (!isOAuthProvider(provider)) redirect("/connexion?erreur=oauth");
-  await redirectToProvider(provider, ARTISAN_SIGNUP_FINALIZE_PATH);
+  const next = formData.get("next");
+  const partnerCode =
+    typeof next === "string"
+      ? normalizePartnerCode(new URL(next, "http://x").searchParams.get("p"))
+      : null;
+  await redirectToProvider(
+    provider,
+    partnerCode ? `${ARTISAN_SIGNUP_FINALIZE_PATH}?p=${partnerCode}` : ARTISAN_SIGNUP_FINALIZE_PATH,
+  );
 }
 
 /**
@@ -132,6 +146,7 @@ export async function continueAsArtisanWithProvider(formData: FormData): Promise
 export async function completeArtisanOAuthSignup(input: {
   profile: unknown;
   account: unknown;
+  partnerCode?: unknown;
 }): Promise<ArtisanSignupState> {
   const profile = artisanSignupProfileSchema.safeParse(input.profile);
   if (!profile.success) return { profileInvalid: true, error: fr.errors.generic };
@@ -147,7 +162,7 @@ export async function completeArtisanOAuthSignup(input: {
     p_marketing_opt_in: a.marketingOptIn,
     p_legal: legalVersions(),
     p_siret: profile.data.siret,
-    p_signup: artisanSignupMetadata(profile.data),
+    p_signup: artisanSignupMetadata(profile.data, normalizePartnerCode(input.partnerCode)),
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
   await supabase.auth.refreshSession();

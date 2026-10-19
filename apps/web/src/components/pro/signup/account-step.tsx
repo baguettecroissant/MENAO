@@ -15,6 +15,7 @@ import {
   signUpArtisan,
   type ArtisanSignupState,
 } from "@/lib/auth/artisan-signup-actions";
+import { usePartnerCode } from "@/lib/partners/use-partner-code";
 import { StepFooter, StepTitle } from "./signup-ui";
 
 const t = fr.pro.signUp.account;
@@ -78,6 +79,8 @@ export function AccountStep({
   const errors = state.fieldErrors ?? {};
   // Le dirigeant qui s'est reconnu à l'étape « entreprise » n'a pas à retaper son nom.
   const manager = draft.isDirigeant ? draft.company?.managers[0] : undefined;
+  // Lien partenaire suivi (F-59) : lu dans l'adresse, transmis avec le compte.
+  const partnerCode = usePartnerCode();
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -86,8 +89,12 @@ export function AccountStep({
       // La finalisation Google ou Apple redirige en cas de succès : elle ne renvoie alors rien.
       const result = (
         oauth
-          ? await completeArtisanOAuthSignup({ profile: profilePayload(draft), account })
-          : await signUpArtisan({ profile: profilePayload(draft), account })
+          ? await completeArtisanOAuthSignup({
+              profile: profilePayload(draft),
+              account,
+              partnerCode,
+            })
+          : await signUpArtisan({ profile: profilePayload(draft), account, partnerCode })
       ) as ArtisanSignupState | undefined;
       if (!result) return;
       if (result.codeSentTo) return onCodeSent(result.codeSentTo);
@@ -102,7 +109,13 @@ export function AccountStep({
         title={oauth ? t.oauthTitle : t.title}
         lead={oauth ? t.oauthLead(oauth.providerLabel, oauth.email) : t.lead}
       />
-      {!oauth && <OAuthButtons providers={providers} action={continueAsArtisanWithProvider} />}
+      {!oauth && (
+        <OAuthButtons
+          providers={providers}
+          action={continueAsArtisanWithProvider}
+          next={partnerCode ? `?p=${partnerCode}` : null}
+        />
+      )}
 
       <form id="artisan-account" onSubmit={submit} className="flex flex-col gap-5" noValidate>
         {state.error && <Alert tone="error">{state.error}</Alert>}
