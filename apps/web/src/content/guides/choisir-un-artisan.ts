@@ -7,9 +7,9 @@ export const choisirUnArtisan: Guide = {
   metaTitle: "Choisir un artisan du bâtiment : 8 vérifications avant de signer",
   description:
     "Numéro SIRET, assurance décennale, devis détaillé, avis, acompte, paiement : les vérifications à faire avant de confier vos travaux à un artisan, avec les sources officielles.",
-  publishedAt: "2026-10-18",
-  updatedAt: "2026-10-18",
-  draft: true,
+  publishedAt: "2026-10-19",
+  updatedAt: "2026-10-19",
+  draft: false,
   essentials: [
     "Vérifiez que l'entreprise existe et qu'elle est active grâce à son numéro SIRET, sur l'Annuaire des Entreprises, le service officiel et gratuit de l'État.",
     "Demandez l'attestation d'assurance décennale : elle doit être jointe au devis et couvrir l'activité qui correspond à vos travaux.",

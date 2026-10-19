@@ -7,9 +7,9 @@ export const devisTravauxMentionsObligatoires: Guide = {
   metaTitle: "Devis de travaux : mentions obligatoires et points à vérifier",
   description:
     "Ce que doit contenir un devis de travaux du bâtiment, à quel moment il vous engage, la différence entre acompte et arrhes, et les points à vérifier avant de signer.",
-  publishedAt: "2026-10-18",
-  updatedAt: "2026-10-18",
-  draft: true,
+  publishedAt: "2026-10-19",
+  updatedAt: "2026-10-19",
+  draft: false,
   essentials: [
     "Le devis est obligatoire pour les travaux et dépannages du bâtiment : maçonnerie, plomberie, électricité, peinture, couverture, serrurerie…",
     "Il doit être daté, détaillé poste par poste, avec les totaux hors taxes et toutes taxes comprises, le taux de TVA et sa durée de validité.",
