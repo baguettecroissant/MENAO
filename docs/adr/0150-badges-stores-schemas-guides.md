@@ -2,7 +2,7 @@
 
 - Statut : accepté
 - Date : 19 octobre 2026
-- Lot 5 de l'audit du site vitrine du 19 octobre 2026 (contenus vivants), avec les badges App Store et Google Play demandés par l'utilisateur.
+- Lot 5 de l'audit du site vitrine du 19 octobre 2026 (contenus vivants), avec les badges App Store et Google Play demandés par l'utilisateur. Modifie l'ADR 0148 (bandeau de l'accueil).
 
 ## Contexte
 - **Constat de l'audit** :
@@ -13,7 +13,8 @@
 - **Choix de l'utilisateur** :
   - badges visibles tout de suite, avec les futurs liens ;
   - téléchargement des badges officiels ;
-  - badges dans le pied de page, dans une section de l'application sur l'accueil et dans la page Pro.
+  - badges dans le pied de page, dans une section de l'application sur l'accueil et dans la page Pro ;
+  - puis le téléphone du bandeau de l'accueil retiré (« trop chargé »), remplacé par des badges discrets.
 
 ## Décision
 - **Badges** :
@@ -24,6 +25,7 @@
   - les liens sont dans `lib/site/stores.ts`. `NEXT_PUBLIC_APP_STORE_URL` et `NEXT_PUBLIC_PLAY_STORE_URL` les remplacent au besoin ;
   - la fenêtre de l'espace client et le lien `/application` du QR code ne changent pas : ils n'apparaissent qu'une fois les variables renseignées.
 - **Emplacements** :
+  - **bandeau de l'accueil**, à la place du téléphone (modifie l'ADR 0148) : en bas à droite sur grand écran, sous les raccourcis des métiers sur mobile et tablette ;
   - **pied de page**, sous la zone et le paiement Stripe ;
   - **accueil**, une section de l'application après l'espace client : les textes de la fenêtre « Suivez tous vos chantiers, depuis votre poche » (maquette), trois vrais écrans en éventail (accueil, devis, suivi de chantier) et les badges ;
   - **page Pro**, dans le bandeau, sous les arguments.
