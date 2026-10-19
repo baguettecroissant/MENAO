@@ -36,6 +36,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000013'::uuid, 'admin3@example.test', 'admin', 'Charlie', 'Admin', null),
   -- Quatrième admin, réservé au test e2e du programme Partenaires (F-59).
   ('a0000000-0000-4000-8000-000000000015'::uuid, 'admin4@example.test', 'admin', 'Dany', 'Admin', null),
+  -- Cinquième admin, réservé au test e2e des parrainages dans le back-office (F-60).
+  ('a0000000-0000-4000-8000-000000000016'::uuid, 'admin5@example.test', 'admin', 'Ely', 'Admin', null),
   -- Artisan validé sans abonnement (test e2e de l'abonnement, F-15).
   ('a0000000-0000-4000-8000-000000000009'::uuid, 'abonnement@example.test', 'artisan', 'Alix', 'Abonne', null),
   -- Artisan validé et abonné, compte Stripe Connect à finaliser (test e2e de la visibilité).

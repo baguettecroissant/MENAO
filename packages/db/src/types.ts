@@ -574,6 +574,7 @@ export type Database = {
       };
       artisan_referrals: {
         Row: {
+          cancel_reason: string | null;
           created_at: string;
           id: string;
           referred_artisan_id: string;
@@ -583,6 +584,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          cancel_reason?: string | null;
           created_at?: string;
           id?: string;
           referred_artisan_id: string;
@@ -591,6 +593,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["referral_status"];
         };
         Update: {
+          cancel_reason?: string | null;
           created_at?: string;
           id?: string;
           referred_artisan_id?: string;
@@ -3536,6 +3539,7 @@ export type Database = {
       };
       admin_ai_summary: { Args: { p_days?: number }; Returns: Json };
       admin_artisan_activity: { Args: { p_artisan_id: string }; Returns: Json };
+      admin_artisan_referral: { Args: { p_artisan_id: string }; Returns: Json };
       admin_audit_counts: { Args: { p_query?: string }; Returns: Json };
       admin_audit_log: {
         Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
@@ -3558,6 +3562,7 @@ export type Database = {
         Args: { p_id: string; p_reason: string };
         Returns: undefined;
       };
+      admin_cancel_referral: { Args: { p_id: string; p_reason: string }; Returns: undefined };
       admin_chantier_counts: { Args: { p_query?: string }; Returns: Json };
       admin_chantiers: {
         Args: {
@@ -3700,6 +3705,23 @@ export type Database = {
       admin_reactivate_account: { Args: { p_user_id: string }; Returns: undefined };
       admin_reactivate_artisan: { Args: { p_artisan_id: string }; Returns: undefined };
       admin_references: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_referral_summary: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_referrals: {
+        Args: { p_filter?: string };
+        Returns: {
+          cancel_reason: string;
+          created_at: string;
+          id: string;
+          referred: string;
+          referred_id: string;
+          referred_month: Database["public"]["Enums"]["free_month_status"];
+          referrer: string;
+          referrer_id: string;
+          referrer_month: Database["public"]["Enums"]["free_month_status"];
+          rewarded_at: string;
+          status: Database["public"]["Enums"]["referral_status"];
+        }[];
+      };
       admin_rename_reference: {
         Args: { p_code: string; p_kind: string; p_label: string };
         Returns: undefined;

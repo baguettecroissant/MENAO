@@ -4327,6 +4327,7 @@ export const fr = {
       payments: "Paiements",
       subscriptions: "Abonnements",
       partners: "Partenaires",
+      referrals: "Parrainages",
       references: "Métiers et travaux",
       journal: "Journal d'audit",
       ai: "Suivi de l'IA",
@@ -5055,6 +5056,61 @@ export const fr = {
       },
       back: "Tous les partenaires",
     },
+    // Parrainages entre artisans dans le back-office (F-60, ADR 0137 et 0143).
+    referrals: {
+      title: "Parrainages",
+      intro:
+        "Artisans inscrits avec le code d'un confrère. Au premier paiement du filleul, un mois est offert à chacun.",
+      how: "Chaque artisan validé reçoit un code de 8 caractères à sa première visite de « Mon profil », avec le lien menao.fr/p/<code>/pro. Le confrère qui s'inscrit par ce lien, ou en saisissant le code, devient son filleul.",
+      summary: {
+        pending: "En attente",
+        pendingHint: "Filleul inscrit, pas encore de paiement",
+        rewarded: "Récompensés",
+        rewardedHint: "Premier paiement du filleul reçu",
+        months: "Mois offerts posés",
+        monthsHint: (n: number) =>
+          n === 0 ? "Aucun mois en attente de pose" : `${n} en attente de la prochaine facture`,
+        cancelled: "Annulés",
+        cancelledHint: "Abus écartés avant la récompense",
+      },
+      filtersLabel: "Filtrer les parrainages",
+      filters: {
+        tous: "Tous",
+        en_attente: "En attente",
+        recompense: "Récompensés",
+        annule: "Annulés",
+      } as Record<"tous" | "en_attente" | "recompense" | "annule", string>,
+      status: {
+        en_attente: "En attente",
+        recompense: "Récompensé",
+        annule: "Annulé",
+      } as Record<"en_attente" | "recompense" | "annule", string>,
+      columns: {
+        date: "Inscription",
+        referrer: "Parrain",
+        referred: "Filleul",
+        status: "Statut",
+        months: "Mois offerts",
+        action: "Action",
+      },
+      month: {
+        applique: "posé",
+        a_appliquer: "en attente",
+      } as Record<"applique" | "a_appliquer", string>,
+      monthOf: (who: string, state: string) => `${who} : ${state}`,
+      referrerShort: "Parrain",
+      referredShort: "Filleul",
+      noMonth: "Aucun avant le premier paiement",
+      rewardedOn: (date: string) => `Récompensé le ${date}`,
+      cancelled: (reason: string) => `Annulé : ${reason}`,
+      empty: "Aucun parrainage pour l'instant.",
+      limit: "Les 200 plus récents sont affichés.",
+      cancelReason: "Motif de l'annulation",
+      cancel: "Annuler",
+      cancelHint: "Seulement avant la récompense ; aucun mois ne sera offert.",
+      cancelDone: "Parrainage annulé.",
+      errors: { reason: "Indiquez le motif de l'annulation." },
+    },
     subscriptions: {
       title: "Abonnements des artisans",
       intro:
@@ -5535,6 +5591,23 @@ export const fr = {
       radie: "Radié",
     },
     detail: {
+      // Parrainage de l'artisan sur sa fiche (F-60, ADR 0143).
+      referral: {
+        title: "Parrainage",
+        code: "Code de parrainage",
+        noCode:
+          "Pas encore de code : il est créé à sa première visite de « Mon profil », une fois le dossier validé.",
+        link: "Lien",
+        referrer: "Parrainé par",
+        noReferrer: "Inscrit sans parrain",
+        referred: (n: number) => `Filleul${n > 1 ? "s" : ""} (${n})`,
+        noReferred: "Aucun filleul pour l'instant",
+        months: "Mois offerts",
+        monthsValue: (applied: number, pending: number) =>
+          `${applied} posé${applied > 1 ? "s" : ""}, ${pending} en attente`,
+        since: (date: string) => `inscrit le ${date}`,
+        seeAll: "Tous les parrainages",
+      },
       coverage: (trades: string) => `Métiers couverts selon l'artisan : ${trades}`,
       uncovered: (trades: string) => `Non couverts : ${trades} (à vérifier)`,
       decennaleExempt:
@@ -5693,6 +5766,7 @@ export const fr = {
         profil: "Profil",
         abonnement: "Abonnement",
         activite: "Activité",
+        parrainage: "Parrainage",
         historique: "Historique",
       },
       decide: "Décider",

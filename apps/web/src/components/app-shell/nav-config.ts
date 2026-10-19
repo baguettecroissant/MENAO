@@ -5,6 +5,7 @@ import {
   CalendarDays,
   ClipboardList,
   FileText,
+  Gift,
   Handshake,
   HardHat,
   IdCard,
@@ -184,6 +185,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/admin/abonnements", label: fr.admin.nav.subscriptions, icon: Repeat },
         // Programme Partenaires (F-59, ADR 0136).
         { href: "/admin/partenaires", label: fr.admin.nav.partners, icon: Handshake },
+        // Parrainages entre artisans (F-60, ADR 0143).
+        { href: "/admin/parrainages", label: fr.admin.nav.referrals, icon: Gift },
       ],
     },
     {
