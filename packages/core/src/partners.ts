@@ -122,6 +122,28 @@ export function partnerTotals(
   return totals;
 }
 
+/** Demandes attribuées à un partenaire, étape par étape (ADR 0145). */
+export type PartnerFunnel = {
+  demandes: number;
+  envoyees: number;
+  acceptees: number;
+  /** Visite passée sans annulation, ou devis envoyé : la règle de validation des primes. */
+  contact: number;
+  signees: number;
+};
+
+/** Part des demandes attribuées arrivées à chaque étape, en pourcentage entier (rien sans demande). */
+export function partnerFunnelRates(funnel: PartnerFunnel) {
+  const rate = (n: number) =>
+    funnel.demandes > 0 ? Math.round((n / funnel.demandes) * 100) : null;
+  return {
+    envoyees: rate(funnel.envoyees),
+    acceptees: rate(funnel.acceptees),
+    contact: rate(funnel.contact),
+    signees: rate(funnel.signees),
+  };
+}
+
 const KIND_LABELS: Record<CommissionKind, string> = {
   demande_qualifiee: "Demande qualifiée",
   abonne_payant: "Abonné payant",

@@ -27,6 +27,25 @@ export const CLIENT_CANCEL_REASONS = [
 ] as const;
 export type ClientCancelReason = (typeof CLIENT_CANCEL_REASONS)[number];
 
+/**
+ * Motif d'annulation d'un chantier par l'artisan (F-18), avant tout devis signé. Les trois premiers
+ * sont des signalements (ADR 0145) : lus par l'équipe seule, jamais par le client, ils annulent la
+ * prime d'un partenaire encore en attente sur la demande.
+ */
+export const ARTISAN_CANCEL_REASONS = [
+  "client_injoignable",
+  "client_absent",
+  "fausse_demande",
+  "autre",
+] as const;
+export type ArtisanCancelReason = (typeof ARTISAN_CANCEL_REASONS)[number];
+export type ArtisanReport = Exclude<ArtisanCancelReason, "autre">;
+
+/** Signalement transmis à la base, ou rien pour « Autre raison ». */
+export function cancelReport(reason: ArtisanCancelReason): ArtisanReport | null {
+  return reason === "autre" ? null : reason;
+}
+
 export const CALLBACK_MODES = ["des_que_possible", "plage"] as const;
 export const REQUEST_MESSAGE_MAX_LENGTH = 10_000;
 

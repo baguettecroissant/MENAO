@@ -3054,6 +3054,16 @@ export const fr = {
       cancelTitle: "Annuler le chantier",
       cancelIntro:
         "Le client sera informé de l'annulation et pourra contacter un autre artisan. Cette action est définitive.",
+      // Motif de l'annulation (ADR 0145) : pour l'équipe, jamais montré au client.
+      cancelCauseLegend: "Pourquoi annulez-vous ?",
+      cancelCauses: {
+        client_injoignable: "Je n'arrive pas à joindre le client",
+        client_absent: "Le client n'était pas là au rendez-vous",
+        fausse_demande: "La demande n'est pas sérieuse",
+        autre: "Autre raison",
+      } as Record<"client_injoignable" | "client_absent" | "fausse_demande" | "autre", string>,
+      cancelCauseHint:
+        "Votre réponse reste entre vous et l'équipe MENAO : le client ne la voit pas.",
       cancelReason: "Message pour le client",
       cancelReasonNote: "(facultatif)",
       cancelConfirm: "Annuler le chantier",
@@ -4982,6 +4992,12 @@ export const fr = {
         montantDemande: "Prime par demande qualifiée (€)",
         montantAbonne: "Prime par abonné payant (€)",
         montantHint: "Vide : montant par défaut du programme.",
+        // Garde-fous (ADR 0145).
+        phone: "Téléphone du partenaire",
+        phoneHint: "Facultatif. Repère les demandes qu'il déposerait lui-même.",
+        plafond: "Plafond de demandes rémunérées par mois",
+        plafondHint:
+          "Facultatif. Vide : plafond des réglages. Conseillé pour un nouveau partenaire.",
         notes: "Notes internes",
       },
       status: { actif: "Actif", suspendu: "Suspendu" } as Record<"actif" | "suspendu", string>,
@@ -5011,12 +5027,41 @@ export const fr = {
         montantDemande: "Prime par défaut par demande qualifiée (€)",
         montantAbonne: "Prime par défaut par abonné payant (€)",
         delai: "Délai de validation (jours)",
-        delaiHint: "Une commission devient payable après ce délai, si rien ne l'annule.",
+        delaiHint:
+          "Une demande qualifiée devient payable après ce délai s'il y a eu une visite ou un devis, et si rien ne l'annule.",
         plafond: "Plafond de demandes rémunérées par partenaire et par mois",
-        plafondHint: "Vide : sans plafond.",
+        plafondHint:
+          "Vide : sans plafond. Un plafond peut aussi être fixé sur la fiche d'un partenaire.",
         notSet: "Montants par défaut non réglés : les commissions sont enregistrées à 0 €.",
         save: "Enregistrer les réglages",
         saved: "Réglages enregistrés.",
+      },
+      // Qualité des demandes (ADR 0145) : entonnoir et primes « à vérifier ».
+      quality: {
+        title: "Qualité des demandes",
+        lead: "Une prime n'est validée qu'avec un vrai contact : visite passée sans annulation, ou devis envoyé.",
+        steps: {
+          demandes: "Demandes attribuées",
+          envoyees: "Envoyées à un artisan",
+          acceptees: "Rendez-vous fixé",
+          contact: "Visite passée ou devis envoyé",
+          signees: "Devis signé",
+        },
+        rate: (n: number) => `${n} %`,
+        empty: "Aucune demande attribuée pour l'instant.",
+        toReview: (n: number) =>
+          n === 1
+            ? "1 prime à vérifier : elle ne sera pas validée sans votre décision."
+            : `${n} primes à vérifier : elles ne seront pas validées sans votre décision.`,
+        listToReview: (n: number) =>
+          n === 1
+            ? "1 prime à vérifier chez vos partenaires (fiche du partenaire, « Commissions »)."
+            : `${n} primes à vérifier chez vos partenaires (fiche du partenaire, « Commissions »).`,
+      },
+      review: {
+        badge: "À vérifier",
+        clear: "Valider quand même",
+        cleared: "Signal levé : la prime suit la validation normale (délai, visite ou devis).",
       },
       commissions: {
         title: "Commissions",

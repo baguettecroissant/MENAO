@@ -1,6 +1,6 @@
 "use server";
 
-import { appointmentInputError, chantierStartInputError } from "@menao/core";
+import { appointmentInputError, cancelReport, chantierStartInputError } from "@menao/core";
 import {
   appointmentNotesSchema,
   appointmentSchema,
@@ -97,13 +97,16 @@ export async function cancelChantier(
   formData: FormData,
 ): Promise<FormState> {
   if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
-  const values = { reason: text(formData, "reason") ?? "" };
+  const values = { cause: text(formData, "cause") ?? "", reason: text(formData, "reason") ?? "" };
   const parsed = cancelChantierSchema.safeParse(values);
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
   const { supabase } = await requireArtisan();
+  // Signalement (ADR 0145) : pour l'équipe seulement ; il annule la prime d'un partenaire en attente.
+  const report = cancelReport(parsed.data.cause);
   const { error } = await supabase.rpc("artisan_cancel_chantier", {
     p_chantier_id: chantierId,
     p_reason: parsed.data.reason,
+    ...(report ? { p_report: report } : {}),
   });
   if (error) return { ...rpcError(error), values };
   revalidatePath("/pro", "layout");

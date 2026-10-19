@@ -25,14 +25,27 @@ function optionalCents(formData: FormData, name: string) {
 export async function savePartner(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = text(formData, "id");
   const values = Object.fromEntries(
-    ["code", "nom", "siret", "email", "status", "montantDemande", "montantAbonne", "notes"].map(
-      (k) => [k, text(formData, k) ?? ""],
-    ),
+    [
+      "code",
+      "nom",
+      "siret",
+      "email",
+      "phone",
+      "status",
+      "montantDemande",
+      "montantAbonne",
+      "plafond",
+      "notes",
+    ].map((k) => [k, text(formData, k) ?? ""]),
   );
   const demande = optionalCents(formData, "montantDemande");
   const abonne = optionalCents(formData, "montantAbonne");
   if ("invalid" in demande) return { fieldErrors: { montantDemande: [t.errors.amount] }, values };
   if ("invalid" in abonne) return { fieldErrors: { montantAbonne: [t.errors.amount] }, values };
+  const plafond = values.plafond?.trim() ? Number(values.plafond) : undefined;
+  if (plafond !== undefined && (!Number.isInteger(plafond) || plafond < 1 || plafond > 10000)) {
+    return { fieldErrors: { plafond: [t.errors.cap] }, values };
+  }
   const status = values.status === "suspendu" ? "suspendu" : "actif";
   const code = id ? values.code : normalizePartnerCode(values.code);
   if (!id && !code) return { fieldErrors: { code: [t.fields.codeHint] }, values };
@@ -48,6 +61,8 @@ export async function savePartner(_prev: FormState, formData: FormData): Promise
     p_montant_abonne_centimes: abonne.cents,
     p_notes: values.notes || undefined,
     p_id: id && UUID.test(id) ? id : undefined,
+    p_contact_phone: values.phone?.trim() || undefined,
+    p_plafond_demandes_mois: plafond,
   });
   if (error) {
     return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
@@ -133,6 +148,22 @@ export async function cancelPartnerCommission(
   revalidatePath(PATH);
   if (partnerId && UUID.test(partnerId)) revalidatePath(`${PATH}/${partnerId}`);
   return { success: t.commissions.cancelDone };
+}
+
+/** Prime « à vérifier » jugée correcte (ADR 0145) : le signal est levé, journalisé. */
+export async function clearCommissionReview(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = text(formData, "commission") ?? "";
+  const partnerId = text(formData, "partner");
+  if (!UUID.test(id)) return { error: fr.errors.generic };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_clear_commission_review", { p_id: id });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic };
+  revalidatePath(PATH);
+  if (partnerId && UUID.test(partnerId)) revalidatePath(`${PATH}/${partnerId}`);
+  return { success: t.review.cleared };
 }
 
 /** Lien de l'espace partenaire (ADR 0139) : créé ou renouvelé ; l'ancien ne répond plus. */

@@ -40,6 +40,7 @@ export const messages = {
   timeInvalid: "Heure invalide.",
   timeRange: "L'heure de fin doit être après l'heure de début.",
   refusalReasonRequired: "Choisissez un motif de refus.",
+  cancelCauseRequired: "Choisissez le motif de l'annulation.",
   presentationTooShort: "Présentez-vous en au moins 100 caractères.",
   appointmentDate: "Choisissez la date du rendez-vous.",
   appointmentTime: "Choisissez l'heure d'arrivée estimée.",

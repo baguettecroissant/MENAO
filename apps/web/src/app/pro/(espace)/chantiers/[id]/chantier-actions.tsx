@@ -1,12 +1,13 @@
 "use client";
 
+import { ARTISAN_CANCEL_REASONS } from "@menao/core";
 import { Calendar, Clock, NotebookPen, Plus } from "lucide-react";
 import { useActionState, useCallback, useState, type MouseEvent } from "react";
 import { SlotWarnings } from "@/components/agenda/slot-warnings";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
 import { PhotoUpload } from "@/components/pro/chantier-journal-forms";
-import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
+import { Alert, Button, FieldError, Hint, RadioGroup, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import {
@@ -147,6 +148,7 @@ export function NotesBlock({ chantierId, notes }: { chantierId: string; notes: s
 /** « Annuler le chantier » (maquette, lien rouge) : confirmation dans un tiroir. */
 export function CancelChantierButton({ chantierId }: { chantierId: string }) {
   const [open, setOpen] = useState(false);
+  const [cause, setCause] = useState("");
   const close = useCallback(() => setOpen(false), []);
   const [state, formAction, pending] = useActionState(
     cancelChantier.bind(null, chantierId),
@@ -162,6 +164,16 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
         <form action={formAction} className="flex flex-col gap-4" noValidate>
           <p className="text-sm text-muted-foreground">{t.cancelIntro}</p>
           {state.error && <Alert tone="error">{state.error}</Alert>}
+          {/* Motif (ADR 0145) : lu par l'équipe MENAO seulement, jamais par le client. */}
+          <RadioGroup
+            legend={t.cancelCauseLegend}
+            name="cause"
+            value={cause}
+            onChange={setCause}
+            errors={state.fieldErrors?.cause}
+            options={ARTISAN_CANCEL_REASONS.map((r) => ({ value: r, label: t.cancelCauses[r] }))}
+          />
+          <Hint>{t.cancelCauseHint}</Hint>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="cancel-reason" className="text-sm font-medium">
               {t.cancelReason}{" "}

@@ -27,12 +27,20 @@ describe("rendez-vous (F-17, F-18)", () => {
 });
 
 describe("annulation, notes, expertise (F-17, F-18)", () => {
-  it("motif d'annulation facultatif, 500 caractères au plus", () => {
-    expect(cancelChantierSchema.parse({ reason: "  Client injoignable  " })).toEqual({
-      reason: "Client injoignable",
+  it("motif d'annulation obligatoire, message au client facultatif (500 caractères au plus)", () => {
+    expect(
+      cancelChantierSchema.parse({ cause: "client_injoignable", reason: "  Désolé  " }),
+    ).toEqual({ cause: "client_injoignable", reason: "Désolé" });
+    expect(cancelChantierSchema.parse({ cause: "autre", reason: "" })).toEqual({
+      cause: "autre",
+      reason: "",
     });
-    expect(cancelChantierSchema.parse({ reason: "" })).toEqual({ reason: "" });
-    expect(cancelChantierSchema.safeParse({ reason: "x".repeat(501) }).success).toBe(false);
+    const missing = cancelChantierSchema.safeParse({ cause: "", reason: "" });
+    expect(missing.success).toBe(false);
+    expect(missing.error?.issues[0]?.message).toBe("Choisissez le motif de l'annulation.");
+    expect(
+      cancelChantierSchema.safeParse({ cause: "autre", reason: "x".repeat(501) }).success,
+    ).toBe(false);
   });
 
   it("notes privées : 5 000 caractères au plus", () => {

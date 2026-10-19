@@ -1,5 +1,6 @@
 import "server-only";
 import type { Database } from "@menao/db";
+import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -63,4 +64,35 @@ export async function commissionsForExport(
   if (partnerId) query = query.eq("partner_id", partnerId);
   const { data } = await query;
   return data ?? [];
+}
+
+const count = z.number().int().nonnegative();
+const funnelSchema = z.object({
+  demandes: count,
+  envoyees: count,
+  acceptees: count,
+  contact: count,
+  signees: count,
+  a_verifier: count,
+});
+export type PartnerFunnelData = z.infer<typeof funnelSchema>;
+
+/** Entonnoir du partenaire et primes à vérifier (ADR 0145). */
+export async function getPartnerFunnel(
+  supabase: Client,
+  id: string,
+): Promise<PartnerFunnelData | null> {
+  const { data } = await supabase.rpc("admin_partner_funnel", { p_partner_id: id });
+  const parsed = funnelSchema.safeParse(data);
+  return parsed.success ? parsed.data : null;
+}
+
+/** Primes « à vérifier » de tous les partenaires : bandeau de la liste. */
+export async function commissionsToReview(supabase: Client): Promise<number> {
+  const { count: total } = await supabase
+    .from("partner_commissions")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "en_attente")
+    .not("review_reason", "is", null);
+  return total ?? 0;
 }

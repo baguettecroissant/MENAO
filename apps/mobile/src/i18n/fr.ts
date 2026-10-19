@@ -1730,6 +1730,15 @@ export const fr = {
     cancelTitle: "Annuler le chantier",
     cancelIntro:
       "Le client sera informé de l'annulation et pourra contacter un autre artisan. Cette action est définitive.",
+    // Motif de l'annulation (ADR 0145) : pour l'équipe, jamais montré au client.
+    cancelCauseLegend: "Pourquoi annulez-vous ?",
+    cancelCauses: {
+      client_injoignable: "Je n'arrive pas à joindre le client",
+      client_absent: "Le client n'était pas là au rendez-vous",
+      fausse_demande: "La demande n'est pas sérieuse",
+      autre: "Autre raison",
+    } as Record<"client_injoignable" | "client_absent" | "fausse_demande" | "autre", string>,
+    cancelCauseHint: "Votre réponse reste entre vous et l'équipe MENAO : le client ne la voit pas.",
     cancelReason: "Message pour le client (facultatif)",
     cancelConfirm: "Annuler le chantier",
     cancelled: (date: string) => `Chantier annulé le ${date}.`,
