@@ -27,11 +27,7 @@ export function seoDescription(text: string | null | undefined, fallback: string
 }
 
 const escapeXml = (value: string) =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export const ARTISAN_BADGE_SIZE = { width: 232, height: 64 } as const;
 
