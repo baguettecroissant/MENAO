@@ -11,11 +11,13 @@ import {
   ChevronRight,
   Eye,
   FolderCheck,
+  Gift,
   IdCard,
   Images,
   LifeBuoy,
   MapPin,
   ReceiptText,
+  Share2,
   ShieldCheck,
   Star,
   UserRound,
@@ -24,7 +26,7 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Share, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { ProgressRing } from "@/components/progress-ring";
 import { SettingsRow, SettingsSection } from "@/components/settings-list";
@@ -170,8 +172,13 @@ export function ProfileHubContent({
           onPress={() => router.push("/pro-ma-fiche")}
         />
       </Animated.View>
+      {hub.referral ? (
+        <Animated.View entering={enter(4)}>
+          <ReferralCard code={hub.referral.code} joined={hub.referral.joined} />
+        </Animated.View>
+      ) : null}
       {SECTIONS.map((section, index) => (
-        <Animated.View key={section.key} entering={enter(4 + index)}>
+        <Animated.View key={section.key} entering={enter(5 + index)}>
           <SettingsSection title={t.sections[section.key]}>
             {section.rows.map((row) => {
               const status = statusOf(row.key, hub);
@@ -323,7 +330,80 @@ function Strength({ hub }: { hub: ProfileHub }) {
   );
 }
 
+/**
+ * Parrainage (F-60, ADR 0137) : le code à partager. Ni lien vers le site ni mention de
+ * l'abonnement dans l'application (CLAUDE.md règle 10).
+ */
+function ReferralCard({ code, joined }: { code: string; joined: number }) {
+  const r = t.referral;
+  return (
+    <View style={styles.referral} accessibilityRole="summary">
+      <View style={styles.referralHead}>
+        <View style={styles.referralIcon}>
+          <Gift size={20} color={colors.primary} />
+        </View>
+        <View style={styles.referralText}>
+          <Text style={styles.referralTitle}>{r.title}</Text>
+          <Text style={styles.referralLead}>{r.lead}</Text>
+        </View>
+      </View>
+      <View
+        style={styles.referralCodeBox}
+        accessible
+        accessibilityLabel={`${r.codeLabel} : ${code}`}
+      >
+        <Text style={styles.referralCodeLabel}>{r.codeLabel}</Text>
+        <Text style={styles.referralCode} selectable>
+          {code.toUpperCase()}
+        </Text>
+      </View>
+      <Button
+        label={r.share}
+        icon={Share2}
+        variant="secondary"
+        onPress={() => Share.share({ message: r.shareMessage(code.toUpperCase()) })}
+      />
+      <Text style={styles.referralJoined}>{r.joined(joined)}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  referral: {
+    gap: spacing(3),
+    padding: spacing(4),
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors["primary-soft"],
+    backgroundColor: colors["primary-softer"],
+  },
+  referralHead: { flexDirection: "row", gap: spacing(3), alignItems: "flex-start" },
+  referralIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  referralText: { flex: 1, gap: 2 },
+  referralTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
+  referralLead: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  referralCodeBox: {
+    alignItems: "center",
+    gap: 2,
+    paddingVertical: spacing(3),
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+  },
+  referralCodeLabel: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  referralCode: {
+    fontFamily: font.bold,
+    fontSize: 24,
+    letterSpacing: 3,
+    color: colors["primary-strong"],
+  },
+  referralJoined: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },
   header: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
   avatarWrap: { width: 76, height: 76 },
   avatar: {

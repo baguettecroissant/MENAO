@@ -150,6 +150,23 @@ if (!taxRate) {
   console.log("Taux de TVA créé");
 }
 
+// 2 bis. Coupon du parrainage (F-60, ADR 0137) : 100 % sur une facture, posé par stripe-webhook.
+// TODO(legal) : conditions du parrainage à inscrire dans les CGV artisans.
+const REFERRAL_COUPON_ID = "menao-parrainage-1-mois";
+const coupons = await stripe("GET", "coupons", { limit: 100 });
+if (coupons.data.some((coupon) => coupon.id === REFERRAL_COUPON_ID)) {
+  console.log("Coupon du parrainage : déjà en place");
+} else {
+  await stripe("POST", "coupons", {
+    id: REFERRAL_COUPON_ID,
+    name: "Parrainage MENAO : 1 mois offert",
+    percent_off: 100,
+    duration: "once",
+    metadata: { menao: "parrainage" },
+  });
+  console.log("Coupon du parrainage créé");
+}
+
 // 3. Portail client
 const open = Object.values(prices).filter((p) => p.ouverte);
 const portalParams = {

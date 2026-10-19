@@ -5,6 +5,7 @@ import {
   LEGAL_DOCUMENT_VERSIONS,
   authErrorKind,
   emptySignupDraft,
+  normalizePartnerCode,
   parseSignupDraft,
   type ArtisanSignupDraft,
 } from "@menao/core";
@@ -76,6 +77,8 @@ const welcomeUrl = `${env.siteUrl}/auth/confirm?next=${encodeURIComponent(ARTISA
 export async function signUpArtisan(
   profile: ArtisanSignupProfile,
   account: ArtisanAccount,
+  /** Code de parrainage saisi (F-60), revérifié par la base. */
+  referralCode: string | null = null,
 ): Promise<string | null> {
   const { error } = await supabase.auth.signUp({
     email: account.email,
@@ -90,7 +93,7 @@ export async function signUpArtisan(
         siret: profile.siret,
         marketing_opt_in: account.marketingOptIn,
         legal: legalVersions(),
-        signup: artisanSignupMetadata(profile),
+        signup: artisanSignupMetadata(profile, normalizePartnerCode(referralCode)),
       },
     },
   });
@@ -126,6 +129,7 @@ export async function resendArtisanCode(email: string): Promise<string | null> {
 export async function completeArtisanOAuth(
   profile: ArtisanSignupProfile,
   account: ArtisanOAuthAccount,
+  referralCode: string | null = null,
 ): Promise<string | null> {
   const { error } = await supabase.rpc("complete_artisan_oauth_signup", {
     p_first_name: account.firstName,
@@ -134,7 +138,7 @@ export async function completeArtisanOAuth(
     p_marketing_opt_in: account.marketingOptIn,
     p_legal: legalVersions(),
     p_siret: profile.siret,
-    p_signup: artisanSignupMetadata(profile),
+    p_signup: artisanSignupMetadata(profile, normalizePartnerCode(referralCode)),
   });
   if (error) return error.code === "22023" ? error.message : fr.errors.generic;
   await supabase.auth.refreshSession();

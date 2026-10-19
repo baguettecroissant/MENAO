@@ -79,12 +79,17 @@ export function AccountStep({
   const errors = state.fieldErrors ?? {};
   // Le dirigeant qui s'est reconnu à l'étape « entreprise » n'a pas à retaper son nom.
   const manager = draft.isDirigeant ? draft.company?.managers[0] : undefined;
-  // Lien partenaire suivi (F-59) : lu dans l'adresse, transmis avec le compte.
-  const partnerCode = usePartnerCode();
+  // Lien partenaire ou de parrainage suivi (F-59, F-60) : lu dans l'adresse, transmis avec le
+  // compte ; sinon, code de parrainage saisi (facultatif).
+  const linkCode = usePartnerCode();
+  const [referralOpen, setReferralOpen] = useState(false);
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const account = accountFields(new FormData(e.currentTarget));
+    const formData = new FormData(e.currentTarget);
+    const account = accountFields(formData);
+    const typed = formData.get("referralCode");
+    const partnerCode = linkCode ?? (typeof typed === "string" ? typed : null);
     startTransition(async () => {
       // La finalisation Google ou Apple redirige en cas de succès : elle ne renvoie alors rien.
       const result = (
@@ -113,7 +118,7 @@ export function AccountStep({
         <OAuthButtons
           providers={providers}
           action={continueAsArtisanWithProvider}
-          next={partnerCode ? `?p=${partnerCode}` : null}
+          next={linkCode ? `?p=${linkCode}` : null}
         />
       )}
 
@@ -165,6 +170,26 @@ export function AccountStep({
           hint={t.phoneHint}
           errors={errors.phone}
         />
+        {linkCode ? (
+          <p className="text-sm text-muted-foreground">{t.referralApplied(linkCode)}</p>
+        ) : referralOpen ? (
+          <Field
+            label={t.referralLabel}
+            name="referralCode"
+            autoComplete="off"
+            autoCapitalize="none"
+            maxLength={32}
+            hint={t.referralHint}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setReferralOpen(true)}
+            className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {t.referralToggle}
+          </button>
+        )}
         <div className="flex flex-col gap-3">
           <CheckboxField name="acceptTerms" required errors={errors.acceptTerms}>
             {s.acceptTermsBefore}

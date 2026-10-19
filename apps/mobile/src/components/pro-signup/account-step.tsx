@@ -71,6 +71,9 @@ export function AccountStep({
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptCgv, setAcceptCgv] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  // Parrainage (F-60) : code facultatif, revérifié par la base.
+  const [referralOpen, setReferralOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -97,12 +100,12 @@ export function AccountStep({
     setFailure(null);
     setPending(true);
     if (oauth) {
-      const error = await completeArtisanOAuth(profile.data, parsed.data);
+      const error = await completeArtisanOAuth(profile.data, parsed.data, referralCode || null);
       setPending(false);
       return error ? setFailure(error) : onDone();
     }
     const account = artisanAccountSchema.parse(input);
-    const error = await signUpArtisan(profile.data, account);
+    const error = await signUpArtisan(profile.data, account, referralCode || null);
     setPending(false);
     if (error) return setFailure(error);
     onCodeSent(account.email);
@@ -166,6 +169,18 @@ export function AccountStep({
         hint={t.phoneHint}
         error={errors.phone}
       />
+      {referralOpen ? (
+        <TextField
+          label={t.referralLabel}
+          value={referralCode}
+          onChangeText={setReferralCode}
+          autoCapitalize="none"
+          autoCorrect={false}
+          hint={t.referralHint}
+        />
+      ) : (
+        <LinkText label={t.referralToggle} onPress={() => setReferralOpen(true)} />
+      )}
       <Checkbox
         label={a.acceptTerms}
         checked={acceptTerms}

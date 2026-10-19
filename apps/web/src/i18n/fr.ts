@@ -2361,6 +2361,20 @@ export const fr = {
      * entreprise, conformité, argent et compte, avec l'état de chaque rubrique.
      */
     hub: {
+      /** Parrainage entre artisans (F-60, ADR 0137). */
+      referral: {
+        title: "Parrainez un confrère",
+        lead: "Un mois offert pour vous deux dès son premier paiement.",
+        linkLabel: "Votre lien de parrainage",
+        copy: "Copier le lien",
+        copied: "Lien copié",
+        codeHint: (code: string) => `Ou donnez-lui votre code ${code}, à saisir à son inscription.`,
+        joined: (n: number) =>
+          n === 0
+            ? "Aucun confrère inscrit pour l'instant"
+            : `${n} confrère${n > 1 ? "s" : ""} inscrit${n > 1 ? "s" : ""}`,
+        earned: (n: number) => `${n} mois offert${n > 1 ? "s" : ""} gagné${n > 1 ? "s" : ""}`,
+      },
       title: "Mon profil",
       lead: "Tout ce qui concerne votre fiche, votre entreprise et votre compte, avec ce qui reste à faire.",
       seeProfile: "Voir ma fiche",
@@ -3571,6 +3585,11 @@ export const fr = {
         oauthTitle: "Finalisez votre compte",
         oauthLead: (provider: string, email: string | null) =>
           `Vous êtes connecté avec ${provider}${email ? ` (${email})` : ""}. Complétez vos informations pour créer votre profil.`,
+        referralToggle: "J'ai un code de parrainage",
+        referralLabel: "Code de parrainage (facultatif)",
+        referralHint:
+          "Le code d'un artisan MENAO qui vous a recommandé : un mois offert pour vous deux.",
+        referralApplied: (code: string) => `Code de parrainage ou partenaire appliqué : ${code}`,
         oauthSubmit: "Créer mon profil",
         notYou: "Ce n'est pas vous ? Se déconnecter",
       },

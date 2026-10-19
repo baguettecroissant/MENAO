@@ -1,5 +1,5 @@
 import { parisToday, profileStrength, type ProfileTip } from "@menao/core";
-import { parseArtisanProfile, parseGrade } from "@menao/validation";
+import { parseArtisanProfile, parseGrade, parseReferral, type Referral } from "@menao/validation";
 import { loadDossier, type Dossier } from "./artisan-dossier";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { hubStatuses, type HubRow, type HubStatus } from "./profile-hub-status";
@@ -26,25 +26,35 @@ export type ProfileHub = {
   /** Éléments du dossier encore à terminer avant l'envoi (dossier en brouillon). */
   itemsLeft: number;
   statuses: Record<HubRow, HubStatus>;
+  /** Parrainage (F-60) : code à partager, artisans validés seulement. */
+  referral: Referral | null;
 };
 
 export async function loadProfileHub(): Promise<ProfileHub | null> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
-  const [dossier, { data: page }, reviewsToAnswer, { data: grade }, certifications, account] =
-    await Promise.all([
-      loadDossier(),
-      supabase.rpc("my_public_profile"),
-      countReviewsToAnswer(),
-      supabase.rpc("artisan_grade"),
-      // Les siennes seulement (RLS), même en cours de vérification.
-      supabase.from("certifications").select("id", { count: "exact", head: true }),
-      supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("user_id", auth.user.id)
-        .maybeSingle(),
-    ]);
+  const [
+    dossier,
+    { data: page },
+    reviewsToAnswer,
+    { data: grade },
+    certifications,
+    account,
+    { data: referral },
+  ] = await Promise.all([
+    loadDossier(),
+    supabase.rpc("my_public_profile"),
+    countReviewsToAnswer(),
+    supabase.rpc("artisan_grade"),
+    // Les siennes seulement (RLS), même en cours de vérification.
+    supabase.from("certifications").select("id", { count: "exact", head: true }),
+    supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("user_id", auth.user.id)
+      .maybeSingle(),
+    supabase.rpc("my_referral"),
+  ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
 
@@ -88,6 +98,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       availableFrom: profile.available_from,
       today: parisToday(),
     }),
+    referral: parseReferral(referral),
   };
 }
 

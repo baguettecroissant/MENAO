@@ -1,12 +1,14 @@
 import {
+  partnerLinks,
   profileHubStatuses,
   profileStrength,
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "@menao/core";
-import { parseArtisanProfile, parseGrade } from "@menao/validation";
+import { parseArtisanProfile, parseGrade, parseReferral } from "@menao/validation";
 import type { Metadata } from "next";
 import { ProfileHubView } from "@/components/pro/profile-hub-view";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { hubStatusTexts } from "@/lib/artisan/profile-hub";
@@ -21,12 +23,16 @@ export const metadata: Metadata = { title: `${fr.pro.hub.title} — MENAO` };
  */
 export default async function MyProfilePage() {
   const space = await requireProSpace();
-  const [ctx, shell, { data: page }, { data: gradeData }] = await Promise.all([
-    getOnboardingContext(),
-    getProShell(),
-    space.supabase.rpc("my_public_profile"),
-    space.supabase.rpc("artisan_grade"),
-  ]);
+  const [ctx, shell, { data: page }, { data: gradeData }, { data: referralData }] =
+    await Promise.all([
+      getOnboardingContext(),
+      getProShell(),
+      space.supabase.rpc("my_public_profile"),
+      space.supabase.rpc("artisan_grade"),
+      // Parrainage (F-60) : code créé à la première visite d'un artisan validé.
+      space.supabase.rpc("my_referral"),
+    ]);
+  const referral = parseReferral(referralData);
   const profile = parseArtisanProfile(page);
   if (!profile) {
     return (
@@ -81,6 +87,12 @@ export default async function MyProfilePage() {
         subscriptionActive: subscriptionGrantsAccess(
           (ctx.subscription?.status as SubscriptionStatus | undefined) ?? null,
         ),
+        referral: referral && {
+          link: partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros,
+          code: referral.code,
+          joined: referral.joined,
+          monthsEarned: referral.months_earned,
+        },
       }}
     />
   );
