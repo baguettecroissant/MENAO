@@ -129,6 +129,13 @@ test("paiements Stripe Connect : configuration, compte actif, artisan visible", 
   await page.goto("/pro/onboarding/paiements");
   await expect(page.getByText("Votre compte de paiement est actif")).toBeVisible();
   await expect(main.getByText("Stripe attend encore", { exact: false })).toHaveCount(0);
+  // « Votre argent » (ADR 0152) : solde et virements lus chez Stripe (stripe-mock en CI).
+  const money = main.getByRole("region", { name: "Votre argent" });
+  await expect(money.getByText("Disponible", { exact: true })).toBeVisible();
+  await expect(money.getByText("Encaissé via MENAO ce mois-ci")).toBeVisible();
+  await expect(
+    money.getByText("Les chiffres de Stripe sont momentanément indisponibles"),
+  ).toHaveCount(0);
   await page.goto("/pro/onboarding");
   await expect(page.getByText("Votre profil est visible des particuliers")).toBeVisible();
 });

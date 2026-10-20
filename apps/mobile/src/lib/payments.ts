@@ -1,7 +1,10 @@
 import {
+  collectedTotals,
   connectAccountStatus,
   connectRequirementGroups,
+  parisToday,
   type ConnectAccountStatus,
+  type ConnectOverview,
   type ConnectRequirementGroup,
 } from "@menao/core";
 import { FunctionsHttpError } from "@supabase/supabase-js";
@@ -21,7 +24,32 @@ export type Payments = {
   due: ConnectRequirementGroup[];
   pending: ConnectRequirementGroup[];
   deadline: string | null;
+  /** Compte actif : solde et virements lus chez Stripe, encaissé via MENAO (ADR 0152). */
+  money: Money | null;
 };
+
+export type Money = {
+  /** Null si Stripe ne répond pas : l'écran le dit, sans bloquer le reste. */
+  overview: ConnectOverview | null;
+  collected: { monthCents: number; yearCents: number };
+};
+
+/** Solde, virements et frais du mois (connect-overview), avec l'encaissé via MENAO. */
+async function loadMoney(): Promise<Money> {
+  const [overview, payments] = await Promise.all([
+    supabase.functions.invoke<{ status: string; overview?: ConnectOverview }>("connect-overview", {
+      body: {},
+    }),
+    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+  ]);
+  return {
+    overview: overview.data?.overview ?? null,
+    collected: collectedTotals(
+      (payments.data ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
+      parisToday(),
+    ),
+  };
+}
 
 export async function loadPayments(): Promise<Payments | null> {
   const { data: auth } = await supabase.auth.getUser();
@@ -34,20 +62,23 @@ export async function loadPayments(): Promise<Payments | null> {
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (!a) return null;
+  const status = connectAccountStatus({
+    hasAccount: a.stripe_account_id !== null,
+    chargesEnabled: a.connect_charges_enabled,
+    detailsSubmitted: a.connect_details_submitted,
+    requirementsDue: a.connect_requirements_due,
+    requirementsPending: a.connect_requirements_pending,
+    disabledReason: a.connect_disabled_reason,
+  });
+  const validated = a.status === "valide" || a.status === "suspendu";
   return {
-    validated: a.status === "valide" || a.status === "suspendu",
-    status: connectAccountStatus({
-      hasAccount: a.stripe_account_id !== null,
-      chargesEnabled: a.connect_charges_enabled,
-      detailsSubmitted: a.connect_details_submitted,
-      requirementsDue: a.connect_requirements_due,
-      requirementsPending: a.connect_requirements_pending,
-      disabledReason: a.connect_disabled_reason,
-    }),
+    validated,
+    status,
     payoutsEnabled: a.connect_payouts_enabled,
     due: connectRequirementGroups(a.connect_requirements_due),
     pending: connectRequirementGroups(a.connect_requirements_pending),
     deadline: a.connect_requirements_deadline,
+    money: validated && status === "actif" ? await loadMoney() : null,
   };
 }
 

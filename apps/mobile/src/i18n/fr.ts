@@ -406,6 +406,51 @@ export const fr = {
     check: "Actualiser l'état de mon compte",
     refused:
       "Stripe a refusé l'ouverture de ce compte de paiement. Contactez l'équipe MENAO pour trouver une solution.",
+    // Aperçu du compte Stripe, en lecture seule (ADR 0152), comme sur le site.
+    overview: {
+      title: "Votre argent",
+      available: "Disponible",
+      availableHint: "Prêt à être viré sur votre compte bancaire",
+      pending: "En cours",
+      pendingHint: "Paiements reçus, bientôt disponibles",
+      nextPayout: "Prochain virement",
+      nextPayoutOn: (date: string) => `Arrive le ${date}`,
+      noPayout: "Aucun virement prévu",
+      fees: "Frais Stripe ce mois-ci",
+      collectedMonth: "Encaissé via MENAO ce mois-ci",
+      collectedYear: (amount: string) => `${amount} depuis le 1er janvier`,
+      bank: (name: string | null, last4: string) =>
+        `Virements vers ${name ?? "votre compte bancaire"} •••• ${last4}`,
+      schedule: {
+        daily: "Virement automatique chaque jour ouvré",
+        weekly: (day: string) => `Virement automatique chaque semaine, le ${day}`,
+        monthly: (day: number) => `Virement automatique chaque mois, le ${day === 1 ? "1er" : day}`,
+        manual: "Virements manuels, depuis votre tableau de bord Stripe",
+      },
+      delay: (days: number) =>
+        `Un paiement devient disponible ${days} jour${days > 1 ? "s" : ""} après son encaissement.`,
+      weekdays: {
+        monday: "lundi",
+        tuesday: "mardi",
+        wednesday: "mercredi",
+        thursday: "jeudi",
+        friday: "vendredi",
+        saturday: "samedi",
+        sunday: "dimanche",
+      } as Record<string, string>,
+      recent: "Derniers virements",
+      status: {
+        pending: "Prévu",
+        in_transit: "En route",
+        paid: "Versé",
+        failed: "Échoué",
+        canceled: "Annulé",
+      },
+      readOnly:
+        "Chiffres lus chez Stripe. Virements, remboursements et coordonnées bancaires se gèrent dans votre tableau de bord Stripe.",
+      unavailable:
+        "Les chiffres de Stripe sont momentanément indisponibles. Vous les retrouvez dans votre tableau de bord Stripe.",
+    },
     groups: {
       banque: "Coordonnées bancaires (IBAN) pour recevoir vos paiements",
       identite: "Pièce d'identité du représentant légal",

@@ -1,8 +1,15 @@
-import { connectAccountStatus, connectRequirementGroups } from "@menao/core";
+import {
+  type ConnectOverview,
+  collectedTotals,
+  connectAccountStatus,
+  connectRequirementGroups,
+  parisToday,
+} from "@menao/core";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { formatDay } from "@/lib/format";
+import { ConnectOverviewPanel } from "./connect-overview";
 import { ConnectStatusPanel } from "./connect-status";
 
 const t = fr.pro.onboarding.connect;
@@ -45,25 +52,49 @@ export default async function PaymentsStepPage({
     requirementsPending: artisan.connect_requirements_pending,
     disabledReason: artisan.connect_disabled_reason,
   });
+  // Compte actif : solde, virements et encaissé via MENAO (ADR 0152), lus en parallèle.
+  const money =
+    status === "actif"
+      ? await Promise.all([
+          supabase.functions.invoke<{ status: string; overview?: ConnectOverview }>(
+            "connect-overview",
+            { method: "POST", body: {} },
+          ),
+          supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+        ]).then(([overview, payments]) => ({
+          overview: overview.data?.overview ?? null,
+          collected: collectedTotals(
+            (payments.data ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
+            parisToday(),
+          ),
+        }))
+      : null;
   return (
-    <Card>
-      <section aria-labelledby="paiements" className="flex flex-col gap-4">
-        <h2 id="paiements" className="text-lg font-medium">
-          {fr.pro.onboarding.steps.paiements}
-        </h2>
-        {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
-        <ConnectStatusPanel
-          status={status}
-          payoutsEnabled={artisan.connect_payouts_enabled}
-          due={connectRequirementGroups(artisan.connect_requirements_due)}
-          pending={connectRequirementGroups(artisan.connect_requirements_pending)}
-          deadline={
-            artisan.connect_requirements_deadline
-              ? formatDay(artisan.connect_requirements_deadline)
-              : null
-          }
-        />
-      </section>
-    </Card>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <section aria-labelledby="paiements" className="flex flex-col gap-4">
+          <h2 id="paiements" className="text-lg font-medium">
+            {fr.pro.onboarding.steps.paiements}
+          </h2>
+          {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
+          <ConnectStatusPanel
+            status={status}
+            payoutsEnabled={artisan.connect_payouts_enabled}
+            due={connectRequirementGroups(artisan.connect_requirements_due)}
+            pending={connectRequirementGroups(artisan.connect_requirements_pending)}
+            deadline={
+              artisan.connect_requirements_deadline
+                ? formatDay(artisan.connect_requirements_deadline)
+                : null
+            }
+          />
+        </section>
+      </Card>
+      {money && (
+        <Card>
+          <ConnectOverviewPanel overview={money.overview} collected={money.collected} />
+        </Card>
+      )}
+    </div>
   );
 }
