@@ -460,6 +460,10 @@ verify_jwt = true
 [functions.connect-onboarding]
 verify_jwt = true
 
+# Aperçu du compte Stripe de l'artisan, en lecture seule (ADR 0152).
+[functions.connect-overview]
+verify_jwt = true
+
 [functions.stripe-webhook]
 verify_jwt = false
 

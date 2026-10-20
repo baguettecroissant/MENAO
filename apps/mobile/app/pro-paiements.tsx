@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MoneyPanel } from "@/components/pro/money-panel";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -12,7 +13,8 @@ const t = fr.proPayments;
 /**
  * Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site : démarrer, compléter
  * ce que Stripe attend encore (avec la date limite), patienter pendant sa vérification, ou compte
- * actif. Stripe s'ouvre dans la fenêtre sécurisée du téléphone, puis l'état est relu au retour.
+ * actif, avec « Votre argent » (solde et virements, ADR 0152). Stripe s'ouvre dans la fenêtre
+ * sécurisée du téléphone, puis l'état est relu au retour.
  * Paiements directs sur le compte de l'artisan, sans commission MENAO (CLAUDE.md règle 12).
  */
 export default function PaymentsScreen() {
@@ -55,7 +57,10 @@ export default function PaymentsScreen() {
           <Body>{t.notValidated}</Body>
         </Card>
       ) : (
-        <PaymentsPanel data={data} busy={busy} onStripe={openStripe} onCheck={check} />
+        <>
+          <PaymentsPanel data={data} busy={busy} onStripe={openStripe} onCheck={check} />
+          {data.money ? <MoneyPanel data={data.money} /> : null}
+        </>
       )}
     </Screen>
   );
