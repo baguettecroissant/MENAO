@@ -4,7 +4,7 @@ import { OverviewScreen } from "@/components/admin/overview-screen";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
-import { getActivity, getOverview, getTodo } from "@/lib/admin/overview";
+import { getActivity, getNewArtisans, getOverview, getTodo } from "@/lib/admin/overview";
 
 export const metadata: Metadata = { title: `${fr.admin.overview.title} — ${fr.admin.title}` };
 
@@ -16,10 +16,11 @@ export default async function AdminOverviewPage({ searchParams }: PageProps<"/ad
   const { supabase } = await requireAdmin();
   const { pole: raw } = await searchParams;
   const pole = (ADMIN_POLES as readonly string[]).includes(String(raw)) ? (raw as AdminPole) : null;
-  const [overview, activity, todo] = await Promise.all([
+  const [overview, activity, todo, newArtisans] = await Promise.all([
     getOverview(supabase),
     getActivity(supabase),
     getTodo(supabase),
+    getNewArtisans(supabase),
   ]);
   if (!overview) return <Alert tone="error">{fr.errors.generic}</Alert>;
   return (
@@ -27,6 +28,7 @@ export default async function AdminOverviewPage({ searchParams }: PageProps<"/ad
       overview={overview}
       activity={activity}
       todo={todo}
+      newArtisans={newArtisans}
       now={new Date()}
       pole={pole}
     />

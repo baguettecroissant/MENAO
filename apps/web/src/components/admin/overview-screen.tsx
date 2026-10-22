@@ -1,5 +1,7 @@
 import {
   ADMIN_QUEUE_SEVERITIES,
+  SUPPORT_ALERT_DAYS,
+  SUPPORT_ALERT_REQUESTS,
   adminQueue,
   adminQueuePoles,
   timeLeft,
@@ -12,6 +14,7 @@ import {
   ClipboardCheck,
   CreditCard,
   FileClock,
+  HeartHandshake,
   Hourglass,
   MessagesSquare,
   Scale,
@@ -25,7 +28,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { fr } from "@/i18n/fr";
-import type { ActivityItem, Overview, Todo } from "@/lib/admin/overview";
+import type { ActivityItem, NewArtisans, Overview, Todo } from "@/lib/admin/overview";
 import { formatDay, formatTimeAgo } from "@/lib/format";
 import { LiveRefresh } from "./live-refresh";
 import { ActivityFeed, KeyFigures } from "./overview";
@@ -48,7 +51,13 @@ const SEVERITY_TONE: Record<AdminQueueSeverity, string> = {
 };
 
 /** Ce qu'affiche chaque élément de la file : titre, raison, action et détails éventuels. */
-function entry(kind: AdminQueueKind, o: Overview, todo: Todo, now: Date): Entry {
+function entry(
+  kind: AdminQueueKind,
+  o: Overview,
+  todo: Todo,
+  now: Date,
+  newArtisans: NewArtisans | null,
+): Entry {
   switch (kind) {
     case "dossiers":
       return {
@@ -161,6 +170,14 @@ function entry(kind: AdminQueueKind, o: Overview, todo: Todo, now: Date): Entry 
         hint: todoT.unpaidHint,
         action: { href: "/admin/abonnements?file=impayes", label: todoT.unpaidAction },
       };
+    case "accompagnements":
+      return {
+        icon: HeartHandshake,
+        title: todoT.support(newArtisans?.a_accompagner ?? 0),
+        hint: todoT.supportHint(SUPPORT_ALERT_REQUESTS, SUPPORT_ALERT_DAYS),
+        // Objet des tickets créés par l'alerte : « Accompagnement : <artisan> ».
+        action: { href: "/admin/tickets?q=Accompagnement", label: todoT.supportAction },
+      };
     case "notifications":
       return {
         icon: TriangleAlert,
@@ -190,6 +207,7 @@ export function OverviewScreen({
   overview,
   activity,
   todo,
+  newArtisans = null,
   now,
   pole = null,
   basePath = "/admin",
@@ -197,6 +215,8 @@ export function OverviewScreen({
   overview: Overview;
   activity: ActivityItem[];
   todo: Todo;
+  /** Nouveaux artisans (ADR 0160), absents si la fonction n'est pas encore déployée. */
+  newArtisans?: NewArtisans | null;
   now: Date;
   /** Pôle choisi dans les filtres (`?pole=`), ou tous. */
   pole?: AdminPole | null;
@@ -213,6 +233,7 @@ export function OverviewScreen({
       assurances: o.documents.assurances_7j,
       paiements_echoues: o.paiements.echoues_7j,
       impayes: o.abonnements.impayes,
+      accompagnements: newArtisans?.a_accompagner ?? 0,
       dossiers: o.artisans.en_verification,
       controles: todo.spotChecks,
       renouvellements: o.documents.renouvellements,
@@ -220,6 +241,7 @@ export function OverviewScreen({
     {
       demandes_expirent: todo.expiringRequests[0]?.expiresAt ?? null,
       suppressions: o.tickets.suppression_echeance,
+      accompagnements: newArtisans?.echeance ?? null,
     },
   );
   const poles = adminQueuePoles(queue);
@@ -285,7 +307,7 @@ export function OverviewScreen({
                 </h3>
                 <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
                   {items.map((item) => {
-                    const e = entry(item.kind, o, todo, now);
+                    const e = entry(item.kind, o, todo, now, newArtisans);
                     const deadline = deadlineText(item, now);
                     return (
                       <li key={item.kind} className="border-t border-border first:border-t-0">
@@ -354,7 +376,7 @@ export function OverviewScreen({
             </h2>
             <p className="text-xs text-muted-foreground">{t.figures.intro}</p>
           </div>
-          <KeyFigures overview={o} />
+          <KeyFigures overview={o} newArtisans={newArtisans} />
         </section>
       </div>
     </div>

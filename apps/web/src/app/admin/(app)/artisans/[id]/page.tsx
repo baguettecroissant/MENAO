@@ -137,13 +137,21 @@ export default async function AdminArtisanPage({
       .order("period", { ascending: false }),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
-  const [logoUrl, activity, referral, { data: scoreData }] = await Promise.all([
-    documentLogoUrl(supabase, artisan.logo_path),
-    getArtisanActivity(supabase, artisan.id),
-    getArtisanReferral(supabase, artisan.id),
-    // Score MENAO (ADR 0155).
-    supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id }),
-  ]);
+  const [logoUrl, activity, referral, { data: scoreData }, { data: starterMonth }] =
+    await Promise.all([
+      documentLogoUrl(supabase, artisan.logo_path),
+      getArtisanActivity(supabase, artisan.id),
+      getArtisanReferral(supabase, artisan.id),
+      // Score MENAO (ADR 0155).
+      supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id }),
+      // Mois offert de démarrage (ADR 0160).
+      supabase
+        .from("artisan_free_months")
+        .select("created_at, applied_at")
+        .eq("artisan_id", artisan.id)
+        .eq("reason", "demarrage")
+        .maybeSingle(),
+    ]);
   const menaoScore = menaoScorePartsSchema.safeParse(scoreData).data ?? null;
 
   const docs = documents.data ?? [];
@@ -618,6 +626,14 @@ export default async function AdminArtisanPage({
           </p>
         ) : (
           <p className="text-muted-foreground">{t.noSubscription}</p>
+        )}
+        {starterMonth && (
+          <p className="text-sm">
+            {t.starterMonth(
+              starterMonth.applied_at ? day.format(new Date(starterMonth.applied_at)) : null,
+              day.format(new Date(starterMonth.created_at)),
+            )}
+          </p>
         )}
       </Section>
 

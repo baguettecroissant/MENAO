@@ -1,7 +1,10 @@
 import {
   CHANTIER_STAGES,
+  FIRST_CHANTIER_COHORT_DAYS,
+  FIRST_CHANTIER_DAYS,
   chantiersByStage,
   churnRate,
+  firstChantierRate,
   requestRates,
   searchConversion,
 } from "@menao/core";
@@ -28,7 +31,7 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 import { fr } from "@/i18n/fr";
-import type { ActivityItem, Overview } from "@/lib/admin/overview";
+import type { ActivityItem, NewArtisans, Overview } from "@/lib/admin/overview";
 import { formatDayTime, formatTimeAgo } from "@/lib/format";
 
 const t = fr.admin.overview;
@@ -266,7 +269,13 @@ function FiguresCard({ title, rows, note }: { title: string; rows: Figure[]; not
   );
 }
 
-export function KeyFigures({ overview: o }: { overview: Overview }) {
+export function KeyFigures({
+  overview: o,
+  newArtisans = null,
+}: {
+  overview: Overview;
+  newArtisans?: NewArtisans | null;
+}) {
   const f = t.figures;
   const rates = requestRates({
     accepted: o.demandes.acceptees_30j,
@@ -340,6 +349,42 @@ export function KeyFigures({ overview: o }: { overview: Overview }) {
           { label: f.artisans.signups, value: count(o.artisans.inscrits_30j) },
         ]}
       />
+      {newArtisans && (
+        <FiguresCard
+          title={f.newArtisans.title}
+          note={f.newArtisans.note(
+            FIRST_CHANTIER_DAYS,
+            FIRST_CHANTIER_DAYS,
+            FIRST_CHANTIER_DAYS + FIRST_CHANTIER_COHORT_DAYS,
+          )}
+          rows={[
+            {
+              label: f.newArtisans.firstChantier(FIRST_CHANTIER_DAYS),
+              value:
+                newArtisans.cohorte > 0
+                  ? f.newArtisans.firstChantierValue(
+                      percentOrDash(
+                        firstChantierRate({
+                          cohort: newArtisans.cohorte,
+                          withChantier: newArtisans.premier_chantier,
+                        }),
+                      ),
+                      newArtisans.premier_chantier,
+                      newArtisans.cohorte,
+                    )
+                  : "—",
+              emphasis: true,
+            },
+            {
+              label: f.newArtisans.toSupport,
+              value: count(newArtisans.a_accompagner),
+              href: "/admin/tickets?q=Accompagnement",
+              emphasis: newArtisans.a_accompagner > 0,
+            },
+            { label: f.newArtisans.starterMonths, value: count(newArtisans.mois_demarrage) },
+          ]}
+        />
+      )}
       <FiguresCard
         title={f.subscriptions.title}
         rows={[

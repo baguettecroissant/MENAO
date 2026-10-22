@@ -1425,12 +1425,8 @@ export const fr = {
       insuranceRcPro: "Assurance",
       insuranceRcProValue: "RC Pro vérifiée par MENAO",
       verifiedBadge: "Assuré et vérifié",
-      responseTime: {
-        "1h": "Répond en moins d'1\u00a0h",
-        "3h": "Répond en moins de 3\u00a0h",
-        "24h": "Répond dans la journée",
-        "48h": "Répond sous 48\u00a0h",
-      },
+      // Badge du temps de réponse moyen (ADR 0160), absent au-delà de 2 h.
+      fastResponse: "Répond en moyenne en moins de 2\u00a0h",
       about: (name: string) => `À propos de ${name}`,
       expertise: "Expertises",
       guarantees: "Garanties & Assurances",
@@ -4632,6 +4628,12 @@ export const fr = {
         unpaidHint:
           "Stripe relance l'artisan. Sans paiement à la fin des relances, son profil n'est plus visible.",
         unpaidAction: "Voir les impayés",
+        // Nouveaux artisans jamais choisis (ADR 0160).
+        support: (n: number) =>
+          n > 1 ? `${n} nouveaux artisans à accompagner` : "1 nouvel artisan à accompagner",
+        supportHint: (requests: number, days: number) =>
+          `Au moins ${requests} demandes en ${days} jours sans être choisi : l'appeler pour l'aider (profil, photos, prix, délai d'envoi des devis).`,
+        supportAction: "Voir les tickets",
         webhooks: (n: number) =>
           n > 1
             ? `${n} notifications Stripe ou DocuSeal en échec`
@@ -4719,6 +4721,17 @@ export const fr = {
           pending: "Dossiers à vérifier",
           suspended: "Suspendus",
           signups: "Inscriptions",
+        },
+        // Nouveaux artisans (ADR 0160) : indicateur clé de fidélisation.
+        newArtisans: {
+          title: "Nouveaux artisans",
+          note: (firstDays: number, from: number, to: number) =>
+            `Part des artisans validés il y a ${from} à ${to} jours dont un premier devis a été signé sous ${firstDays} jours.`,
+          firstChantier: (days: number) => `Premier chantier sous ${days} jours`,
+          firstChantierValue: (rate: string, n: number, total: number) =>
+            `${rate} (${n} sur ${total})`,
+          toSupport: "À accompagner",
+          starterMonths: "Mois offerts de démarrage",
         },
         subscriptions: {
           title: "Abonnements des artisans",
@@ -5678,6 +5691,8 @@ export const fr = {
         particulier_a_verifier:
           "Demande retenue : correspondance avec un artisan inscrit (recoupement automatique)",
         faux_particulier: "Faux particulier signalé par un artisan",
+        accompagnement:
+          "Nouvel artisan à accompagner : demandes reçues sans être choisi (alerte automatique)",
       },
       dispute: {
         chantier: (title: string, status: string) => `Chantier : ${title} (${status})`,
@@ -6098,6 +6113,11 @@ export const fr = {
       } as Record<string, string>,
       trialUntil: (date: string) => `essai jusqu'au ${date}`,
       cancelAt: (date: string) => `résiliation programmée le ${date}`,
+      // Mois offert de démarrage (ADR 0160) : aucun devis signé pendant les 2 premiers mois payants.
+      starterMonth: (applied: string | null, granted: string) =>
+        applied
+          ? `Mois offert de démarrage (aucun chantier sur les 2 premiers mois payants) : posé dans Stripe le ${applied}.`
+          : `Mois offert de démarrage (aucun chantier sur les 2 premiers mois payants) : accordé le ${granted}, posé dans Stripe à la prochaine facture.`,
       history: "Historique des décisions",
       noHistory: "Aucune décision pour le moment.",
       decision: "Décision sur le dossier",

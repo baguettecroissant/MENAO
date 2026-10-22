@@ -11,9 +11,10 @@ import {
   REQUEST_RESPONSE_HOURS,
   RESPONSE_TIME_MIN_RESPONSES,
   RESPONSE_TIME_WINDOW_DAYS,
+  FAST_RESPONSE_MINUTES,
   remainingSlots,
   requestDeadline,
-  responseTimeBucket,
+  respondsFast,
   timeLeft,
 } from "../src/requests";
 
@@ -65,16 +66,14 @@ describe("temps de réponse moyen (F-10)", () => {
     expect(RESPONSE_TIME_WINDOW_DAYS).toBe(180);
   });
 
-  it("tranches : moins d'1 h, moins de 3 h, dans la journée, sous 48 h ; au-delà, rien", () => {
-    expect(responseTimeBucket(0)).toBe("1h");
-    expect(responseTimeBucket(59)).toBe("1h");
-    expect(responseTimeBucket(60)).toBe("3h");
-    expect(responseTimeBucket(179)).toBe("3h");
-    expect(responseTimeBucket(180)).toBe("24h");
-    expect(responseTimeBucket(24 * 60 - 1)).toBe("24h");
-    expect(responseTimeBucket(24 * 60)).toBe("48h");
-    expect(responseTimeBucket(48 * 60 - 1)).toBe("48h");
-    expect(responseTimeBucket(48 * 60)).toBeNull();
+  it("badge « moins de 2 h » : sous 120 minutes de moyenne, sinon rien (ADR 0160)", () => {
+    expect(FAST_RESPONSE_MINUTES).toBe(120);
+    expect(respondsFast(0)).toBe(true);
+    expect(respondsFast(119)).toBe(true);
+    expect(respondsFast(120)).toBe(false);
+    expect(respondsFast(24 * 60)).toBe(false);
+    // Moins de 3 réponses : temps non publié, pas de badge.
+    expect(respondsFast(null)).toBe(false);
   });
 });
 

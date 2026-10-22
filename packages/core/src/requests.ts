@@ -106,18 +106,15 @@ export function inboxGroups<T extends { status: string; expires_at: string }>(
 export const RESPONSE_TIME_MIN_RESPONSES = 3;
 export const RESPONSE_TIME_WINDOW_DAYS = 180;
 
-export type ResponseTimeBucket = "1h" | "3h" | "24h" | "48h";
-
 /**
- * Tranche affichée sur la fiche (« Répond en moins de 3 h ») ; au-delà de 48 h, délai de réponse
- * aux demandes, rien n'est affiché (données anciennes ou atypiques).
+ * Badge « Répond en moyenne en moins de 2 h » (ADR 0160, d'après « Mettre en avant les nouveaux
+ * artisans ») : une information, pas une garantie ; il disparaît dès que la moyenne dépasse 2 h.
  */
-export function responseTimeBucket(minutes: number): ResponseTimeBucket | null {
-  if (minutes < 60) return "1h";
-  if (minutes < 3 * 60) return "3h";
-  if (minutes < 24 * 60) return "24h";
-  if (minutes < 48 * 60) return "48h";
-  return null;
+export const FAST_RESPONSE_MINUTES = 120;
+
+/** Temps de réponse publié (au moins 3 réponses) sous les 2 h. */
+export function respondsFast(minutes: number | null): boolean {
+  return minutes !== null && minutes < FAST_RESPONSE_MINUTES;
 }
 
 /** « Noé », « Noé et Inès », « Noé, Inès et Lou » (sans Intl.ListFormat, absent de Hermes). */
