@@ -20,6 +20,7 @@ const TYPES = [
   "recompense",
   "demande_sans_reponse",
   "faux_particulier",
+  "invitation_artisan",
 ] as const;
 const tone = { ouvert: "primary", en_cours: "success", resolu: "neutral" } as const;
 

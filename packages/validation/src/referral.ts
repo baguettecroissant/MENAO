@@ -1,5 +1,6 @@
 import { REFERRAL_STEPS, REWARD_SIZES, WELCOME_GIFT_ITEMS } from "@menao/core";
 import { z } from "zod";
+import { normalizePhone } from "./auth";
 import { messages } from "./messages";
 
 /**
@@ -100,3 +101,58 @@ export const welcomeGiftChoiceSchema = z
     size: value.item === "tshirt" ? (value.size ?? null) : null,
   }));
 export type WelcomeGiftChoice = z.infer<typeof welcomeGiftChoiceSchema>;
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, { error: messages.tooLong })
+    .transform((value) => value || null);
+
+/**
+ * « Invitez votre artisan de confiance » (ADR 0162), mêmes règles qu'en base (`invite_artisan`) :
+ * nom de l'artisan ou de son entreprise, téléphone (normalisé en +33…) ou e-mail, l'un des deux au
+ * moins ; métier, ville, contact et message facultatifs.
+ */
+export const artisanInvitationSchema = z
+  .object({
+    company: z
+      .string({ error: messages.invitationCompanyRequired })
+      .trim()
+      .min(2, { error: messages.invitationCompanyRequired })
+      .max(120, { error: messages.tooLong }),
+    contact_name: optionalText(120),
+    phone: z
+      .string()
+      .trim()
+      .transform((value, ctx) => {
+        if (!value) return null;
+        const e164 = normalizePhone(value);
+        if (!e164) ctx.addIssue({ code: "custom", message: messages.phoneInvalid });
+        return e164;
+      }),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .transform((value, ctx) => {
+        if (!value) return null;
+        if (!z.email().safeParse(value).success || value.length > 254) {
+          ctx.addIssue({ code: "custom", message: messages.emailInvalid });
+        }
+        return value;
+      }),
+    trade_code: optionalText(60),
+    city: optionalText(100),
+    message: optionalText(500),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.phone && !value.email) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["phone"],
+        message: messages.invitationContactRequired,
+      });
+    }
+  });
+export type ArtisanInvitation = z.infer<typeof artisanInvitationSchema>;

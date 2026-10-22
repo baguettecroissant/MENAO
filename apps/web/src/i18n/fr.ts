@@ -1681,6 +1681,32 @@ export const fr = {
     advice:
       "En cas de problème, prévenez d'abord l'artisan par la messagerie, puis signalez-le à l'équipe MENAO depuis cette page.",
   },
+  // « Invitez votre artisan de confiance » (ADR 0162).
+  inviteArtisan: {
+    title: "Invitez votre artisan de confiance",
+    intro:
+      "Un artisan vous a donné satisfaction et n'est pas encore sur MENAO ? Donnez-nous ses coordonnées : l'équipe MENAO le contacte de votre part pour lui présenter MENAO.",
+    company: "Nom de l'artisan ou de son entreprise",
+    contactName: "Personne à contacter",
+    phone: "Téléphone",
+    email: "E-mail",
+    contactHint: "Le téléphone ou l'e-mail, au moins l'un des deux.",
+    trade: "Métier",
+    tradeChoose: "Choisir un métier",
+    city: "Ville",
+    message: "Ce que vous avez apprécié",
+    optional: "(facultatif)",
+    submit: "Envoyer l'invitation",
+    sent: "Merci ! L'équipe MENAO va contacter cet artisan de votre part.",
+    privacy:
+      "Ces coordonnées servent seulement à contacter cet artisan ; elles sont effacées sous 12 mois s'il ne rejoint pas MENAO.",
+    listTitle: "Vos invitations",
+    sentOn: (date: string) => `Envoyée le ${date}`,
+    status: { envoyee: "Transmise à l'équipe MENAO", inscrit: "Inscrit sur MENAO" },
+    // Carte de l'accueil « Mes chantiers ».
+    cardText: "Un artisan vous a donné satisfaction et n'est pas encore sur MENAO ?",
+    cardAction: "Inviter un artisan",
+  },
   clientCancel: {
     reasonsLegend: "Pourquoi annulez-vous ?",
     reasons: {
@@ -2319,6 +2345,7 @@ export const fr = {
       recompense: "Récompense MENAO",
       demande_sans_reponse: "Demande sans réponse",
       faux_particulier: "Signalement d'un faux particulier",
+      invitation_artisan: "Invitation d'un artisan",
     },
     statuses: { ouvert: "En attente de réponse", en_cours: "Réponse de l'équipe", resolu: "Clos" },
     untitled: "Sans objet",
@@ -5728,6 +5755,8 @@ export const fr = {
         faux_particulier: "Faux particulier signalé par un artisan",
         accompagnement:
           "Nouvel artisan à accompagner : demandes reçues sans être choisi (alerte automatique)",
+        invitation_artisan:
+          "Invitation d'un artisan par un client : le rappeler (« Un de vos clients vous recommande »)",
       },
       dispute: {
         chantier: (title: string, status: string) => `Chantier : ${title} (${status})`,
@@ -5792,6 +5821,12 @@ export const fr = {
             {
               label: "Envoi en préparation",
               body: "Bonjour,\n\nVotre envoi est en préparation : nous l'expédions à l'adresse indiquée et vous prévenons dès son départ.\n\nL'équipe MENAO",
+            },
+          ],
+          invitation_artisan: [
+            {
+              label: "Artisan contacté",
+              body: "Bonjour,\n\nMerci pour votre recommandation ! Nous avons contacté l'artisan de votre part pour lui présenter MENAO. Nous vous tiendrons au courant s'il nous rejoint.\n\nL'équipe MENAO",
             },
           ],
           dossier_recherche: [

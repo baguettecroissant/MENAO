@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  artisanInvitationSchema,
   parseReferral,
   parseReferralRows,
   parseWelcomeGift,
@@ -99,5 +100,42 @@ describe("cadeau de bienvenue du filleul (ADR 0154)", () => {
       "Indiquez le nom du destinataire.",
       "Indiquez la commune.",
     ]);
+  });
+});
+
+describe("invitation d'un artisan (ADR 0162)", () => {
+  const base = {
+    company: "  Élec Exemple ",
+    contact_name: "",
+    phone: "06 12 34 56 78",
+    email: "",
+    trade_code: "electricien",
+    city: "Nice",
+    message: "",
+  };
+
+  it("normalise le téléphone, vide les champs facultatifs", () => {
+    expect(artisanInvitationSchema.parse(base)).toEqual({
+      company: "Élec Exemple",
+      contact_name: null,
+      phone: "+33612345678",
+      email: null,
+      trade_code: "electricien",
+      city: "Nice",
+      message: null,
+    });
+  });
+
+  it("téléphone ou e-mail obligatoire, formats vérifiés", () => {
+    expect(artisanInvitationSchema.safeParse({ ...base, phone: "" }).success).toBe(false);
+    expect(
+      artisanInvitationSchema.safeParse({ ...base, phone: "", email: "Contact@Elec.Example" }).data
+        ?.email,
+    ).toBe("contact@elec.example");
+    expect(artisanInvitationSchema.safeParse({ ...base, phone: "12" }).success).toBe(false);
+    expect(artisanInvitationSchema.safeParse({ ...base, email: "pas-un-email" }).success).toBe(
+      false,
+    );
+    expect(artisanInvitationSchema.safeParse({ ...base, company: "E" }).success).toBe(false);
   });
 });

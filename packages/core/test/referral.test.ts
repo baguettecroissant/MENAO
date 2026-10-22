@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  ARTISAN_INVITATIONS_PER_PERIOD,
+  ARTISAN_INVITATION_PERIOD_DAYS,
+  ARTISAN_INVITATION_RETENTION_MONTHS,
   REFERRAL_MONTHS_PER_YEAR,
   REFERRAL_PARTNERS_SHOWN,
   REFERRAL_STEPS,
@@ -49,5 +52,13 @@ describe("réseau du parrain (ADR 0161)", () => {
     expect(whatsAppShareUrl("Rejoins MENAO : https://menao.fr/pros?parrain=ab12cd34 & co")).toBe(
       "https://wa.me/?text=Rejoins%20MENAO%20%3A%20https%3A%2F%2Fmenao.fr%2Fpros%3Fparrain%3Dab12cd34%20%26%20co",
     );
+  });
+});
+
+describe("invitation d'un artisan par un particulier (ADR 0162)", () => {
+  it("5 invitations sur 30 jours, coordonnées effacées après 12 mois", () => {
+    expect(ARTISAN_INVITATIONS_PER_PERIOD).toBe(5);
+    expect(ARTISAN_INVITATION_PERIOD_DAYS).toBe(30);
+    expect(ARTISAN_INVITATION_RETENTION_MONTHS).toBe(12);
   });
 });
