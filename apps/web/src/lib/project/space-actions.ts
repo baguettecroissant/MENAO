@@ -1,6 +1,6 @@
 "use server";
 
-import { clientCancelSchema } from "@menao/validation";
+import { artisanInvitationSchema, clientCancelSchema } from "@menao/validation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
@@ -78,4 +78,36 @@ export async function cancelChantier(
   if (error) return { ...rpcError(error), values };
   revalidatePath("/mon-espace", "layout");
   return { success: t.chantier.done };
+}
+
+const INVITATION_FIELDS = [
+  "company",
+  "contact_name",
+  "phone",
+  "email",
+  "trade_code",
+  "city",
+  "message",
+] as const;
+
+/** « Invitez votre artisan de confiance » (ADR 0162) : ticket pour l'équipe MENAO. */
+export async function inviteArtisan(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = Object.fromEntries(
+    INVITATION_FIELDS.map((name) => [name, text(formData, name) ?? ""]),
+  ) as Record<(typeof INVITATION_FIELDS)[number], string>;
+  const parsed = artisanInvitationSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("invite_artisan", {
+    p_company: parsed.data.company,
+    p_contact_name: parsed.data.contact_name ?? "",
+    p_phone: parsed.data.phone ?? "",
+    p_email: parsed.data.email ?? "",
+    p_trade_code: parsed.data.trade_code ?? "",
+    p_city: parsed.data.city ?? "",
+    p_message: parsed.data.message ?? "",
+  });
+  if (error) return { ...rpcError(error), values };
+  revalidatePath("/mon-espace/inviter-un-artisan");
+  return { success: fr.inviteArtisan.sent };
 }

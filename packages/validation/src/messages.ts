@@ -111,4 +111,6 @@ export const messages = {
   googleUrlInvalid: "Indiquez le lien de la fiche Google de l'entreprise.",
   googleRatingInvalid: "Note Google entre 1 et 5.",
   googleCountInvalid: "Nombre d'avis Google invalide.",
+  invitationCompanyRequired: "Indiquez le nom de l'artisan ou de son entreprise.",
+  invitationContactRequired: "Indiquez le téléphone ou l'e-mail de l'artisan.",
 } as const;

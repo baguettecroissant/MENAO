@@ -5,6 +5,7 @@ import {
   ClipboardCheck,
   CreditCard,
   FilePen,
+  HeartHandshake,
   ShieldCheck,
   Star,
 } from "lucide-react-native";
@@ -216,11 +217,29 @@ export function ClientDashboard({ home }: { home: ClientHome }) {
           </Card>
         </Section>
       )}
+
+      {/* « Invitez votre artisan de confiance » (ADR 0162). */}
+      <Card>
+        <View style={styles.invite}>
+          <View style={styles.icon}>
+            <HeartHandshake size={20} color={colors["primary-strong"]} />
+          </View>
+          <View style={styles.rowText}>
+            <Text style={styles.strong}>{fr.inviteArtisan.title}</Text>
+            <Text style={styles.meta}>{fr.inviteArtisan.cardText}</Text>
+          </View>
+        </View>
+        <LinkText
+          label={fr.inviteArtisan.cardAction}
+          onPress={() => router.push("/inviter-artisan")}
+        />
+      </Card>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  invite: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
   list: { gap: spacing(2.5) },
   row: {
     flexDirection: "row",

@@ -512,6 +512,80 @@ export type Database = {
           },
         ];
       };
+      artisan_invitations: {
+        Row: {
+          artisan_id: string | null;
+          city: string | null;
+          company: string;
+          contact_name: string | null;
+          created_at: string;
+          email: string | null;
+          id: string;
+          joined_at: string | null;
+          message: string | null;
+          particulier_id: string;
+          phone: string | null;
+          status: Database["public"]["Enums"]["artisan_invitation_status"];
+          ticket_id: string | null;
+          trade_code: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id?: string | null;
+          city?: string | null;
+          company: string;
+          contact_name?: string | null;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          joined_at?: string | null;
+          message?: string | null;
+          particulier_id: string;
+          phone?: string | null;
+          status?: Database["public"]["Enums"]["artisan_invitation_status"];
+          ticket_id?: string | null;
+          trade_code?: string | null;
+        };
+        Update: {
+          artisan_id?: string | null;
+          city?: string | null;
+          company?: string;
+          contact_name?: string | null;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          joined_at?: string | null;
+          message?: string | null;
+          particulier_id?: string;
+          phone?: string | null;
+          status?: Database["public"]["Enums"]["artisan_invitation_status"];
+          ticket_id?: string | null;
+          trade_code?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_invitations_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_invitations_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_invitations_trade_code_fkey";
+            columns: ["trade_code"];
+            isOneToOne: false;
+            referencedRelation: "trades";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       artisan_photos: {
         Row: {
           artisan_id: string;
@@ -4336,6 +4410,18 @@ export type Database = {
         Args: { p_now?: string; p_stripe_subscription_id: string };
         Returns: boolean;
       };
+      invite_artisan: {
+        Args: {
+          p_city: string;
+          p_company: string;
+          p_contact_name: string;
+          p_email: string;
+          p_message: string;
+          p_phone: string;
+          p_trade_code: string;
+        };
+        Returns: string;
+      };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
       mark_free_month_applied: {
@@ -4758,6 +4844,7 @@ export type Database = {
     Enums: {
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
       appointment_status: "planifie" | "annule";
+      artisan_invitation_status: "envoyee" | "inscrit";
       artisan_report_kind: "client_injoignable" | "client_absent" | "fausse_demande";
       artisan_status: "brouillon" | "en_verification" | "valide" | "refuse" | "suspendu" | "radie";
       callback_mode: "des_que_possible" | "plage";
@@ -4904,7 +4991,8 @@ export type Database = {
         | "demande_sans_reponse"
         | "particulier_a_verifier"
         | "faux_particulier"
-        | "accompagnement";
+        | "accompagnement"
+        | "invitation_artisan";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes";
@@ -5024,6 +5112,7 @@ export const Constants = {
     Enums: {
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
       appointment_status: ["planifie", "annule"],
+      artisan_invitation_status: ["envoyee", "inscrit"],
       artisan_report_kind: ["client_injoignable", "client_absent", "fausse_demande"],
       artisan_status: ["brouillon", "en_verification", "valide", "refuse", "suspendu", "radie"],
       callback_mode: ["des_que_possible", "plage"],
@@ -5183,6 +5272,7 @@ export const Constants = {
         "particulier_a_verifier",
         "faux_particulier",
         "accompagnement",
+        "invitation_artisan",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],

@@ -6,7 +6,7 @@ import {
   type ChantierStatus,
   type PaymentStatus,
 } from "@menao/core";
-import { FileText, HardHat, Search } from "lucide-react";
+import { FileText, HardHat, HeartHandshake, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { AppDownloadModal } from "@/components/app-shell/app-download-modal";
@@ -240,6 +240,31 @@ export default async function MySpacePage() {
             {finished.length > 0 && done}
           </>
         )}
+        {/* « Invitez votre artisan de confiance » (ADR 0162). */}
+        <section
+          aria-labelledby="inviter"
+          className="flex flex-col gap-3 rounded-card border border-primary-soft bg-primary-softer p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+        >
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-primary shadow-card">
+              <HeartHandshake aria-hidden="true" className="size-5" />
+            </span>
+            <div className="flex flex-col gap-0.5">
+              <h2 id="inviter" className="font-medium">
+                {fr.inviteArtisan.title}
+              </h2>
+              <p className="text-sm text-muted-foreground">{fr.inviteArtisan.cardText}</p>
+            </div>
+          </div>
+          <ButtonLink
+            href="/mon-espace/inviter-un-artisan"
+            variant="secondary"
+            size="md"
+            className="shrink-0 self-start sm:self-center"
+          >
+            {fr.inviteArtisan.cardAction}
+          </ButtonLink>
+        </section>
       </div>
     </main>
   );

@@ -33,6 +33,7 @@ const THREADED: readonly string[] = [
   "recompense",
   "demande_sans_reponse",
   "faux_particulier",
+  "invitation_artisan",
 ];
 
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };

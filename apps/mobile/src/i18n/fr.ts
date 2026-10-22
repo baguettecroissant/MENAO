@@ -2256,6 +2256,29 @@ export const fr = {
     back: "Retour",
   },
   /** « Je pense que ce n'est pas un vrai particulier » (ADR 0157) : mêmes textes que le site. */
+  // « Invitez votre artisan de confiance » (ADR 0162), comme sur le site.
+  inviteArtisan: {
+    title: "Invitez votre artisan de confiance",
+    intro:
+      "Un artisan vous a donné satisfaction et n'est pas encore sur MENAO ? Donnez-nous ses coordonnées : l'équipe MENAO le contacte de votre part pour lui présenter MENAO.",
+    company: "Nom de l'artisan ou de son entreprise",
+    contactName: "Personne à contacter (facultatif)",
+    phone: "Téléphone",
+    email: "E-mail",
+    contactHint: "Le téléphone ou l'e-mail, au moins l'un des deux.",
+    city: "Ville (facultatif)",
+    message: "Ce que vous avez apprécié (facultatif)",
+    submit: "Envoyer l'invitation",
+    sent: "Merci ! L'équipe MENAO va contacter cet artisan de votre part.",
+    another: "Inviter un autre artisan",
+    back: "Retour",
+    privacy:
+      "Ces coordonnées servent seulement à contacter cet artisan ; elles sont effacées sous 12 mois s'il ne rejoint pas MENAO.",
+    listTitle: "Vos invitations",
+    status: { envoyee: "Transmise à l'équipe MENAO", inscrit: "Inscrit sur MENAO" },
+    cardText: "Un artisan vous a donné satisfaction et n'est pas encore sur MENAO ?",
+    cardAction: "Inviter un artisan",
+  },
   proFakeClient: {
     open: "Je pense que ce n'est pas un vrai particulier",
     title: "Signaler un faux particulier",

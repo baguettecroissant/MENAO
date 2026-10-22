@@ -56,3 +56,12 @@ export const REFERRAL_PARTNERS_SHOWN = 6;
 export function whatsAppShareUrl(message: string): string {
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
+
+/**
+ * « Invitez votre artisan de confiance » (ADR 0162) : un particulier invite un artisan qui n'est
+ * pas sur MENAO, 5 fois au plus sur 30 jours ; les coordonnées d'un artisan resté hors de MENAO
+ * sont effacées 12 mois après l'invitation.
+ */
+export const ARTISAN_INVITATIONS_PER_PERIOD = 5;
+export const ARTISAN_INVITATION_PERIOD_DAYS = 30;
+export const ARTISAN_INVITATION_RETENTION_MONTHS = 12;
