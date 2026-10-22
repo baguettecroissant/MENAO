@@ -136,10 +136,15 @@ as $$
       -- Note Google en base (sinon 3 sur 5), avis MENAO pesant n / (n + 5).
       (case when f.avis_menao > 0
         then f.avis_menao::numeric / (f.avis_menao + 5) * least(greatest(f.note_menao, 1), 5)
-          + 5.0 / (f.avis_menao + 5) * coalesce(least(greatest(f.note_google, 1), 5), 3)
-        else coalesce(least(greatest(f.note_google, 1), 5), 3)
+          + 5.0 / (f.avis_menao + 5) * f.base_avis
+        else f.base_avis
       end) / 5 * 40 as p_avis
-    from f
+    from (
+      -- greatest() ignore les valeurs nulles : sans note Google, la base est explicitement 3.
+      select f0.*, case when f0.note_google is null then 3
+        else least(greatest(f0.note_google, 1), 5) end as base_avis
+      from f f0
+    ) f
   )
   select
     round(p.p_verifie + p.p_experience + p.p_diplomes + p.p_profil + p.p_reactivite + p.p_avis)::smallint,
