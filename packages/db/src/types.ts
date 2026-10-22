@@ -4802,7 +4802,9 @@ export type Database = {
         | "planning_relance"
         | "inscription_relance"
         | "compte_radie"
-        | "reponse_contact";
+        | "reponse_contact"
+        | "demande_relance"
+        | "demande_sans_reponse";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -4834,7 +4836,8 @@ export type Database = {
         | "message"
         | "litige"
         | "suppression_compte"
-        | "recompense";
+        | "recompense"
+        | "demande_sans_reponse";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes";
@@ -5071,6 +5074,8 @@ export const Constants = {
         "inscription_relance",
         "compte_radie",
         "reponse_contact",
+        "demande_relance",
+        "demande_sans_reponse",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
@@ -5104,6 +5109,7 @@ export const Constants = {
         "litige",
         "suppression_compte",
         "recompense",
+        "demande_sans_reponse",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],

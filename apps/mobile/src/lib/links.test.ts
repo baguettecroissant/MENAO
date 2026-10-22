@@ -31,6 +31,9 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath(`/pro/messages/${ID}`)).toBe(`/conversation/${ID}`);
     expect(appRouteForSitePath("/pro/avis")).toBe("/pro-avis");
     expect(appRouteForSitePath("/pro/grade")).toBe("/pro-grade");
+    expect(appRouteForSitePath("/recherche/22222222-2222-4222-8222-222222222222/artisans")).toBe(
+      "/projet/22222222-2222-4222-8222-222222222222/artisans",
+    );
     expect(appRouteForSitePath("/pro/agenda/disponibilites")).toBe("/pro-disponibilites");
     expect(appRouteForSitePath("/pro/factures")).toBe("/pro-factures");
     expect(appRouteForSitePath("/pro/onboarding")).toBe("/pro");
