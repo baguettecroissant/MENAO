@@ -1,3 +1,4 @@
+import { depositAboveAdvice } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -64,6 +65,8 @@ export default function QuoteScreen() {
   }
 
   const deposit = quote.data.schedule[0];
+  // Conseil au client (ADR 0158) : acompte de plus de 30 %.
+  const advisedDeposit = depositAboveAdvice(quote.data.schedule);
   const name = quote.data.numero ?? "devis";
   const footer =
     quote.status === "envoye" ? (
@@ -87,6 +90,13 @@ export default function QuoteScreen() {
         </View>
       </View>
 
+      {advisedDeposit !== null &&
+      (quote.status === "envoye" ||
+        (quote.status === "signe" &&
+          quote.deposit?.status !== "paye" &&
+          quote.deposit?.status !== "en_cours")) ? (
+        <Notice tone="info">{t.depositAdvice(advisedDeposit)}</Notice>
+      ) : null}
       {quote.status === "envoye" && retour === "signature" ? (
         <Notice tone="info">{t.signatureReturned}</Notice>
       ) : null}

@@ -1466,6 +1466,8 @@ export const fr = {
     refuse: "Refuser le devis",
     sign: "Signer le devis",
     signedNotice: (date: string) => `Vous avez signé ce devis le ${date}.`,
+    depositAdvice: (percent: number) =>
+      `Conseil MENAO : l'acompte demandé est de ${percent} %. Nous vous conseillons de ne pas verser plus de 30 % du montant avant le début des travaux. N'hésitez pas à en parler avec l'artisan.`,
     payDeposit: (amount: string) => `Payer l'acompte (${amount})`,
     depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
     depositInvoice: (numero: string) => `Télécharger la facture d'acompte ${numero}`,

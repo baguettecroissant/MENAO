@@ -82,3 +82,17 @@ export function revenueTrend(currentCents: number, previousCents: number): Reven
   if (percent === 0) return { kind: "stable", percent: 0 };
   return { kind: percent > 0 ? "hausse" : "baisse", percent: Math.abs(percent) };
 }
+
+/**
+ * Conseil au client (ADR 0158, plan anti-problèmes A6) : ne pas verser plus de 30 % d'acompte
+ * avant le début des travaux. Pourcentage de la tranche à la signature au-delà de ce seuil, sinon
+ * null.
+ */
+export const DEPOSIT_ADVICE_MAX_PERCENT = 30;
+
+export function depositAboveAdvice(
+  schedule: readonly { percent: number; trigger: "signature" | "reception" }[],
+): number | null {
+  const deposit = schedule.find((s) => s.trigger === "signature")?.percent ?? 0;
+  return deposit > DEPOSIT_ADVICE_MAX_PERCENT ? deposit : null;
+}

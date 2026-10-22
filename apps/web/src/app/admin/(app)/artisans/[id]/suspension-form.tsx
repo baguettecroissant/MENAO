@@ -68,7 +68,8 @@ export function SuspensionForm({
             {t.suspend}
           </Button>
         </form>
-      ) : status === "suspendu" && suspensionReason === "decision_admin" ? (
+      ) : status === "suspendu" &&
+        (suspensionReason === "decision_admin" || suspensionReason === "plaintes") ? (
         <form action={reactivate} className="flex flex-col gap-2">
           <input type="hidden" name="artisanId" value={artisanId} />
           <Button

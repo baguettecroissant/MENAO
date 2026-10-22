@@ -561,6 +561,27 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("abonnement impayé (ADR 0158) : J+3, J+7, puis profil retiré à J+15", () => {
+    const first = notificationContent("abonnement_impaye", { etape: 1 }, ctx);
+    expect(first.subject).toBe("Le paiement de votre abonnement MENAO a échoué");
+    expect(first.cta).toEqual({
+      label: "Mettre à jour mon paiement",
+      url: "https://menao.example/pro/onboarding/formule",
+    });
+    expect(notificationContent("abonnement_impaye", { etape: 2 }, ctx).subject).toBe(
+      "Rappel : le paiement de votre abonnement MENAO a échoué",
+    );
+    const last = notificationContent("abonnement_impaye", { etape: 3 }, ctx);
+    expect(last.subject).toBe("Votre profil MENAO n'apparaît plus dans les recherches");
+    expect(last.paragraphs[2]).toContain("redevient visible automatiquement");
+  });
+
+  it("suspension pour deux plaintes de clients (ADR 0158)", () => {
+    const content = notificationContent("compte_suspendu", { par: "plaintes" }, ctx);
+    expect(content.subject).toBe("Votre profil MENAO est suspendu le temps d'une vérification");
+    expect(content.paragraphs[1]).toContain("Deux de vos clients");
+  });
+
   it("demande sans réponse (ADR 0156) : d'autres artisans proposés au client", () => {
     const projectId = "22222222-2222-4222-8222-222222222222";
     const data = { project_id: projectId, titre: "Douche", ville: "Nice", tous_refus: false };

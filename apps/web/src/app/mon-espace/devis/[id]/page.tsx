@@ -1,3 +1,4 @@
+import { depositAboveAdvice } from "@menao/core";
 import { quoteDocumentModel, quotePdfData, type QuoteDocument } from "@menao/documents";
 import { ArrowLeft, Eye } from "lucide-react";
 import type { Metadata, Route } from "next";
@@ -78,6 +79,8 @@ export default async function ClientQuotePage({
   const artisan = data.issuer.tradeName ?? data.issuer.name;
   const logoUrl = await documentLogoUrl(supabase, doc.issuer.logo_path);
 
+  // Conseil au client (ADR 0158) : acompte de plus de 30 %.
+  const advisedDeposit = depositAboveAdvice(data.schedule);
   return (
     <main className="bg-background">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
@@ -141,6 +144,13 @@ export default async function ClientQuotePage({
             )}
           </Alert>
         )}
+        {advisedDeposit !== null &&
+          (quote.status === "envoye" ||
+            (quote.status === "signe" &&
+              deposit?.status !== "paye" &&
+              deposit?.status !== "en_cours")) && (
+            <Alert tone="info">{t.depositAdvice(advisedDeposit)}</Alert>
+          )}
         <QuotePaper
           model={quoteDocumentModel(data)}
           label={t.document}

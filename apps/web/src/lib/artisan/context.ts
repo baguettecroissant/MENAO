@@ -74,7 +74,9 @@ export const getOnboardingContext = cache(async () => {
     supabase.from("profiles").select("avatar_path").eq("user_id", auth.claims.sub).single(),
     supabase
       .from("subscriptions")
-      .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end")
+      .select(
+        "plan_code, status, trial_end, current_period_end, cancel_at_period_end, past_due_since",
+      )
       .eq("artisan_id", artisan.id)
       .maybeSingle(),
     // Charte qualité et engagement de l'artisan signés dans leur version en vigueur (ADR 0104, 0117).
@@ -125,6 +127,7 @@ export const getOnboardingContext = cache(async () => {
     decennaleExempt: artisan.decennale_non_soumis,
     subscriptionActive: subscriptionGrantsAccess(
       (subscription?.status as SubscriptionStatus | undefined) ?? null,
+      subscription?.past_due_since ?? null,
     ),
   };
 

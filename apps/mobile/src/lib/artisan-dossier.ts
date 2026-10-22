@@ -68,7 +68,11 @@ export async function loadDossier(): Promise<Dossier | null> {
       .eq("version", CHARTER_VERSION)
       .eq("engagement_version", ENGAGEMENT_VERSION)
       .maybeSingle(),
-    supabase.from("subscriptions").select("status").eq("artisan_id", artisan.id).maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("status, past_due_since")
+      .eq("artisan_id", artisan.id)
+      .maybeSingle(),
   ]);
 
   // Par type : le document validé s'il existe, sinon celui en cours d'examen (« remplace » ignoré).
@@ -103,6 +107,7 @@ export async function loadDossier(): Promise<Dossier | null> {
     hasAvatar: avatarPath !== null,
     subscriptionActive: subscriptionGrantsAccess(
       (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+      subscription.data?.past_due_since ?? null,
     ),
     connectChargesEnabled: artisan.connect_charges_enabled,
     charterAccepted: charter.data !== null,

@@ -1237,6 +1237,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      blocked_identities: {
+        Row: {
+          artisan_id: string | null;
+          created_at: string;
+          id: string;
+          kind: string;
+          value: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          value: string;
+        };
+        Update: {
+          artisan_id?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          value?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blocked_identities_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       certifications: {
         Row: {
           artisan_id: string;
@@ -3267,6 +3300,7 @@ export type Database = {
           ended_at: string | null;
           first_paid_at: string | null;
           id: string;
+          past_due_since: string | null;
           plan_code: string | null;
           status: string;
           stripe_customer_id: string;
@@ -3283,6 +3317,7 @@ export type Database = {
           ended_at?: string | null;
           first_paid_at?: string | null;
           id?: string;
+          past_due_since?: string | null;
           plan_code?: string | null;
           status: string;
           stripe_customer_id: string;
@@ -3298,6 +3333,7 @@ export type Database = {
           ended_at?: string | null;
           first_paid_at?: string | null;
           id?: string;
+          past_due_since?: string | null;
           plan_code?: string | null;
           status?: string;
           stripe_customer_id?: string;
@@ -4804,7 +4840,8 @@ export type Database = {
         | "compte_radie"
         | "reponse_contact"
         | "demande_relance"
-        | "demande_sans_reponse";
+        | "demande_sans_reponse"
+        | "abonnement_impaye";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -5076,6 +5113,7 @@ export const Constants = {
         "reponse_contact",
         "demande_relance",
         "demande_sans_reponse",
+        "abonnement_impaye",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
