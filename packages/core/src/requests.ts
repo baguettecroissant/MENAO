@@ -2,8 +2,8 @@
 
 /** Décision des fondateurs (2026-10-09) : « 3 devis en 72 h », demande envoyée à 3 artisans au plus. */
 export const MAX_ARTISANS_PER_REQUEST = 3;
-/** Délai de réponse de l'artisan (F-11). */
-export const REQUEST_RESPONSE_HOURS = 48;
+/** Délai de réponse de l'artisan (F-11) : 72 h, décision des associés du 22 octobre 2026 (ADR 0153 ; 48 h auparavant). */
+export const REQUEST_RESPONSE_HOURS = 72;
 
 export const REQUEST_STATUSES = ["envoyee", "acceptee", "refusee", "expiree", "annulee"] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];

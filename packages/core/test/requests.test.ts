@@ -18,9 +18,9 @@ import {
 } from "../src/requests";
 
 describe("demandes de chantier (F-11, F-17)", () => {
-  it("paramètres validés : 3 artisans, 48 h", () => {
+  it("paramètres validés : 3 artisans, 72 h (décision du 22 octobre 2026)", () => {
     expect(MAX_ARTISANS_PER_REQUEST).toBe(3);
-    expect(REQUEST_RESPONSE_HOURS).toBe(48);
+    expect(REQUEST_RESPONSE_HOURS).toBe(72);
     expect(REFUSAL_REASONS).toEqual(["planning_complet", "hors_expertise", "hors_zone", "autre"]);
   });
 
@@ -33,12 +33,12 @@ describe("demandes de chantier (F-11, F-17)", () => {
   it("échéance de réponse et temps restant", () => {
     const sent = new Date("2026-10-09T10:00:00Z");
     const deadline = requestDeadline(sent);
-    expect(deadline.toISOString()).toBe("2026-10-11T10:00:00.000Z");
+    expect(deadline.toISOString()).toBe("2026-10-12T10:00:00.000Z");
     expect(timeLeft(deadline, new Date("2026-10-10T09:30:00Z"))).toEqual({
-      hours: 24,
+      hours: 48,
       minutes: 30,
     });
-    expect(timeLeft(deadline, new Date("2026-10-12T00:00:00Z"))).toBeNull();
+    expect(timeLeft(deadline, new Date("2026-10-12T12:00:00Z"))).toBeNull();
   });
 });
 

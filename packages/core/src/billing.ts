@@ -3,8 +3,8 @@
  * Fichier autonome (aucun import) : il est aussi importé par l'Edge Function stripe-webhook.
  */
 
-/** 3 mois offerts (business plan) : période d'essai Stripe de 90 jours. */
-export const TRIAL_DAYS = 90;
+/** 2 mois offerts (décision des associés du 22 octobre 2026, ADR 0153) : essai Stripe de 60 jours. */
+export const TRIAL_DAYS = 60;
 
 export const SUBSCRIPTION_STATUSES = [
   "trialing",

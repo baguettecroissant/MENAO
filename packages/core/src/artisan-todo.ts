@@ -3,7 +3,7 @@
  * artisan) : une seule liste, triée par urgence, de ce qui attend une action. Chaque élément mène
  * à l'écran qui la règle.
  *
- * Ordre : demandes dont le délai de 48 h expire dans moins de 12 h, rendez-vous du jour, autres
+ * Ordre : demandes dont le délai de réponse (72 h) expire dans moins de 12 h, rendez-vous du jour, autres
  * demandes (échéance la plus proche d'abord), devis à envoyer, documents (échéance, attestation
  * URSSAF manquante), paiements à activer, avis à répondre.
  */

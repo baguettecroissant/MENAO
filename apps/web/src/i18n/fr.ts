@@ -115,7 +115,7 @@ export const fr = {
       `${nom} vous recommande MENAO pour trouver des artisans du bâtiment vérifiés près de chez vous. Gratuit et sans engagement.`,
     eyebrow: (nom: string) => `Recommandé par ${nom}`,
     title: (nom: string) => `${nom} vous recommande MENAO`,
-    lead: "Des artisans du bâtiment vérifiés près de chez vous : décrivez votre projet, jusqu'à 3 artisans vous répondent sous 48\u00a0h.",
+    lead: "Des artisans du bâtiment vérifiés près de chez vous : décrivez votre projet, jusqu'à 3 artisans vous répondent sous 72\u00a0h.",
     messageFrom: (nom: string) => `Le mot de ${nom}`,
     formTitle: "Décrivez votre projet",
     formLead:
@@ -141,7 +141,7 @@ export const fr = {
     metaTitle: "MENAO — trouver un artisan du bâtiment vérifié",
     frameTitle: "MENAO : trouver un artisan du bâtiment vérifié",
     title: "Trouvez un artisan du bâtiment vérifié",
-    lead: "Décrivez votre projet : jusqu'à 3 artisans vérifiés vous répondent sous 48\u00a0h.",
+    lead: "Décrivez votre projet : jusqu'à 3 artisans vérifiés vous répondent sous 72\u00a0h.",
     trade: "Métier",
     anyTrade: "Je ne sais pas encore",
     description: "Votre projet",
@@ -297,7 +297,7 @@ export const fr = {
     searchSubmit: "Lancer la recherche",
     shortcuts: "Raccourcis par métier",
     moreTrades: "Plus de métiers",
-    heroTags: ["Artisan vérifié", "Décennale contrôlée", "Réponse sous 48\u00a0h"],
+    heroTags: ["Artisan vérifié", "Décennale contrôlée", "Réponse sous 72\u00a0h"],
     space: {
       eyebrow: "Votre espace client",
       title: "Tout votre chantier, au même endroit.",
@@ -337,7 +337,7 @@ export const fr = {
     stats: [
       { value: "100\u00a0%", label: "Artisans vérifiés" },
       { value: "0\u00a0%", label: "Commission sur vos chantiers" },
-      { value: "48\u00a0h", label: "Pour vous répondre" },
+      { value: "72\u00a0h", label: "Pour vous répondre" },
     ],
     tradesLabel: "Métiers du bâtiment",
     allTrades: "Voir tous les métiers",
@@ -393,7 +393,7 @@ export const fr = {
         },
         {
           title: "Signez votre devis en ligne",
-          text: "L'artisan accepte sous 48\u00a0h, vient voir votre chantier, puis vous envoie son devis détaillé.",
+          text: "L'artisan accepte sous 72\u00a0h, vient voir votre chantier, puis vous envoie son devis détaillé.",
         },
         {
           title: "Suivez jusqu'à la réception",
@@ -437,7 +437,7 @@ export const fr = {
     proTeaser: {
       eyebrow: "Vous êtes artisan ?",
       title: "Des chantiers près de chez vous. Sans commission.",
-      text: "Demandes qualifiées, devis dictés, signature et paiements dans une seule app. Abonnement fixe, 3 mois offerts.",
+      text: "Demandes qualifiées, devis dictés, signature et paiements dans une seule app. Abonnement fixe, 2 mois offerts.",
       action: "Découvrir l'Espace Pro",
       points: ["Demandes qualifiées", "Paiements sur votre compte", "Zéro commission"],
     },
@@ -497,7 +497,7 @@ export const fr = {
   seo: {
     tradeTitle: (trade: string) => `${trade} dans les Alpes-Maritimes`,
     tradeIntro: (trade: string) =>
-      `Des artisans ${trade.toLowerCase()}s vérifiés par MENAO, près de chez vous. Décrivez votre projet : jusqu'à 3 artisans vous répondent sous 48\u00a0h.`,
+      `Des artisans ${trade.toLowerCase()}s vérifiés par MENAO, près de chez vous. Décrivez votre projet : jusqu'à 3 artisans vous répondent sous 72\u00a0h.`,
     tradeMetaDescription: (trade: string) =>
       `Trouvez un ${trade.toLowerCase()} vérifié dans les Alpes-Maritimes : entreprise, assurance décennale et RC Pro contrôlées par MENAO. Nice, Cannes, Antibes, Grasse, Menton…`,
     tradeEyebrow: "Alpes-Maritimes",
@@ -520,14 +520,14 @@ export const fr = {
       },
       {
         q: "Sous quel délai un artisan me répond-il ?",
-        a: "Chaque artisan sollicité a 48 heures pour accepter votre demande. Dès qu'il accepte, vous échangez vos coordonnées et il fixe un rendez-vous pour voir votre chantier.",
+        a: "Chaque artisan sollicité a 72 heures pour accepter votre demande. Dès qu'il accepte, vous échangez vos coordonnées et il fixe un rendez-vous pour voir votre chantier.",
       },
     ],
     cityTitle: (trade: string, city: string) => `${trade} à ${city}`,
     cityMetaTitle: (trade: string, city: string, dep: string) =>
       `${trade} à ${city} (${dep}) : artisans vérifiés — MENAO`,
     cityDescription: (trade: string, city: string) =>
-      `Artisans ${trade.toLowerCase()}s vérifiés par MENAO à ${city} : entreprise, assurance décennale et RC Pro contrôlées. Décrivez votre projet, jusqu'à 3 artisans vous répondent sous 48\u00a0h.`,
+      `Artisans ${trade.toLowerCase()}s vérifiés par MENAO à ${city} : entreprise, assurance décennale et RC Pro contrôlées. Décrivez votre projet, jusqu'à 3 artisans vous répondent sous 72\u00a0h.`,
     cityIntro: (trade: string, city: string) =>
       `MENAO vérifie chaque artisan avant de le proposer : entreprise en activité, identité du dirigeant, assurance décennale et responsabilité civile professionnelle. Voici les artisans ${trade.toLowerCase()}s qui interviennent à ${city}.`,
     artisansTitle: (trade: string, city: string) => `Artisans ${trade.toLowerCase()}s à ${city}`,
@@ -668,7 +668,7 @@ export const fr = {
         },
         {
           title: "Des réponses rapides",
-          text: "Jusqu'à 3 artisans par demande, qui ont chacun 48 heures pour répondre.",
+          text: "Jusqu'à 3 artisans par demande, qui ont chacun 72 heures pour répondre.",
         },
         {
           title: "Des avis vérifiés",
@@ -719,8 +719,8 @@ export const fr = {
         },
         {
           title: "Rencontrez votre artisan",
-          text: "Chaque artisan a 48\u00a0h pour accepter. Vous échangez alors vos coordonnées et il vient voir votre chantier.",
-          tag: "Réponse sous 48\u00a0h",
+          text: "Chaque artisan a 72\u00a0h pour accepter. Vous échangez alors vos coordonnées et il vient voir votre chantier.",
+          tag: "Réponse sous 72\u00a0h",
         },
         {
           title: "Signez votre devis en ligne",
@@ -771,7 +771,7 @@ export const fr = {
         },
         {
           title: "Recevez des demandes qualifiées",
-          text: "Des projets précisés par l'IA, dans votre zone : vous avez 48\u00a0h pour accepter.",
+          text: "Des projets précisés par l'IA, dans votre zone : vous avez 72\u00a0h pour accepter.",
         },
         {
           title: "Devis, signature, paiements",
@@ -779,7 +779,7 @@ export const fr = {
         },
       ],
       proCta: "Découvrir l'Espace Pro",
-      proNote: "Abonnement fixe, zéro commission, 3 mois offerts.",
+      proNote: "Abonnement fixe, zéro commission, 2 mois offerts.",
       faqTitle: "Questions fréquentes",
     },
     guarantees: {
@@ -921,7 +921,7 @@ export const fr = {
           },
           {
             q: "Combien d'artisans puis-je contacter ?",
-            a: "Jusqu'à 3 artisans par projet, parmi les 5 au plus que MENAO vous présente. Si l'un d'eux refuse ou ne répond pas sous 48 heures, vous pouvez en choisir un autre.",
+            a: "Jusqu'à 3 artisans par projet, parmi les 5 au plus que MENAO vous présente. Si l'un d'eux refuse ou ne répond pas sous 72 heures, vous pouvez en choisir un autre.",
           },
           {
             q: "Quand l'artisan reçoit-il mes coordonnées ?",
@@ -992,7 +992,7 @@ export const fr = {
           },
           {
             q: "Combien coûte MENAO pour un artisan ?",
-            a: "La formule Base coûte 150\u00a0€ HT par mois, avec 3 mois offerts et sans commission sur vos chantiers. Tous les détails sont dans l'Espace Pro.",
+            a: "La formule Base coûte 150\u00a0€ HT par mois, avec 2 mois offerts et sans commission sur vos chantiers. Tous les détails sont dans l'Espace Pro.",
           },
           {
             q: "Comment l'artisan est-il payé ?",
@@ -1087,8 +1087,8 @@ export const fr = {
         body: "Une demande claire du premier coup, des artisans qui interviennent chez vous.",
       },
       {
-        title: "Réponse sous 48 h",
-        body: "Les artisans que vous choisissez ont 48 heures pour accepter votre demande.",
+        title: "Réponse sous 72 h",
+        body: "Les artisans que vous choisissez ont 72 heures pour accepter votre demande.",
       },
       {
         title: "Artisans vérifiés",
@@ -1120,7 +1120,7 @@ export const fr = {
         "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
         "Vous payez l'artisan directement, par paiement sécurisé : MENAO ne prend aucune commission sur vos travaux.",
         "Devis, signature, paiement et suivi du chantier : tout se passe au même endroit.",
-        "Votre demande part à 3 artisans au plus, qui ont 48 heures pour vous répondre.",
+        "Votre demande part à 3 artisans au plus, qui ont 72 heures pour vous répondre.",
       ],
     },
     privacy:
@@ -1391,15 +1391,15 @@ export const fr = {
       to: "Jusqu'à",
       submit: (n: number) =>
         n <= 1 ? "Envoyer ma demande" : `Envoyer ma demande aux ${n} artisans`,
-      deadline: "Chaque artisan a 48 heures pour vous répondre.",
+      deadline: "Chaque artisan a 72 heures pour vous répondre.",
       transferError:
         "Nous n'avons pas pu rattacher votre projet à votre compte. Recommencez votre recherche depuis l'accueil.",
       notParticulier: "Connectez-vous avec un compte particulier pour envoyer une demande.",
       sentTitle: (names: string) => `Votre demande est envoyée à ${names}\u00a0!`,
       sentText: (names: string, many: boolean) =>
         many
-          ? `${names} ont bien reçu votre demande dans leur espace MENAO. Chacun a 48 heures pour l'accepter.`
-          : `${names} a bien reçu votre demande dans son espace MENAO. Il a 48 heures pour l'accepter.`,
+          ? `${names} ont bien reçu votre demande dans leur espace MENAO. Chacun a 72 heures pour l'accepter.`
+          : `${names} a bien reçu votre demande dans son espace MENAO. Il a 72 heures pour l'accepter.`,
       reminder: "Rappel",
       sentCallbackAsap: "Vous avez demandé à être rappelé dès que possible.",
       sentCallbackRange: (from: string, to: string) =>
@@ -3434,7 +3434,7 @@ export const fr = {
         },
         {
           q: "Combien d'artisans reçoivent la même demande ?",
-          a: "Trois au plus. Vous avez 48\u00a0h pour l'accepter ou la refuser ; l'adresse exacte et les coordonnées du client vous sont transmises dès que vous acceptez.",
+          a: "Trois au plus. Vous avez 72\u00a0h pour l'accepter ou la refuser ; l'adresse exacte et les coordonnées du client vous sont transmises dès que vous acceptez.",
         },
         {
           q: "Comment suis-je payé ?",
@@ -3456,7 +3456,7 @@ export const fr = {
         "MENAO met en relation les artisans du bâtiment vérifiés avec des particuliers. Devis, signature, paiement et suivi de chantier dans un seul outil. Abonnement mensuel, zéro commission.",
       metaTitle: "Espace Pro : des chantiers près de chez vous, zéro commission",
       metaDescription:
-        "Recevez les demandes qualifiées des particuliers de votre zone. Devis dictés, signature, acompte et facture dans une seule app. Abonnement fixe, aucune commission, 3 mois offerts.",
+        "Recevez les demandes qualifiées des particuliers de votre zone. Devis dictés, signature, acompte et facture dans une seule app. Abonnement fixe, aucune commission, 2 mois offerts.",
       hero: {
         eyebrow: "Espace Pro · Alpes-Maritimes",
         titleLead: "Remplissez votre agenda.",
@@ -3469,7 +3469,7 @@ export const fr = {
         proofs: [
           "0\u00a0% de commission",
           "Paiements versés sur votre compte",
-          "3 mois offerts, sans engagement",
+          "2 mois offerts, sans engagement",
         ],
       },
       video: {
@@ -3489,7 +3489,7 @@ export const fr = {
         requestSummary: "Fuite sous l'évier de la cuisine, 3 photos jointes",
         requestQualified: "Qualifiée par l'IA",
         requestShared: "3 artisans au plus",
-        requestDeadline: "Réponse attendue sous 48 h",
+        requestDeadline: "Réponse attendue sous 72 h",
         quote: "Devis",
         quoteNumber: "DEVIS-2026-0012",
         quoteSigned: "Signé en ligne",
@@ -3534,7 +3534,7 @@ export const fr = {
           },
           {
             title: "Recevez des demandes qualifiées",
-            text: "Besoin, photos, commune et délais précisés avec l'IA. Trois artisans au plus par demande, et 48\u00a0h pour accepter.",
+            text: "Besoin, photos, commune et délais précisés avec l'IA. Trois artisans au plus par demande, et 72\u00a0h pour accepter.",
           },
           {
             title: "Envoyez votre devis en quelques minutes",
@@ -3645,12 +3645,12 @@ export const fr = {
       },
       plansEyebrow: "Formules",
       plansTitle: "Un abonnement fixe, aucune commission.",
-      plansSubtitle: "Commencez avec 3 mois offerts. Sans engagement de durée.",
+      plansSubtitle: "Commencez avec 2 mois offerts. Sans engagement de durée.",
       perMonth: "HT / mois",
-      trial: "3 mois offerts",
+      trial: "2 mois offerts",
       open: "Disponible",
       soon: "Bientôt disponible",
-      start: "Commencer avec 3 mois offerts",
+      start: "Commencer avec 2 mois offerts",
       plansNote:
         "Prix hors taxes, par mois. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
       faqEyebrow: "Questions fréquentes",
@@ -3658,7 +3658,7 @@ export const fr = {
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "La formule Base coûte 150 € HT par mois, avec 3 mois offerts à l'inscription. Les formules Premium et Entreprise arrivent prochainement.",
+          a: "La formule Base coûte 150 € HT par mois, avec 2 mois offerts à l'inscription. Les formules Premium et Entreprise arrivent prochainement.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -3670,7 +3670,7 @@ export const fr = {
         },
         {
           q: "Combien d'artisans reçoivent la même demande ?",
-          a: "Trois au plus. Vous avez 48\u00a0h pour l'accepter ou la refuser ; passé ce délai, la demande expire et le particulier peut choisir un autre artisan. L'adresse exacte et les coordonnées du client vous sont transmises dès que vous acceptez.",
+          a: "Trois au plus. Vous avez 72\u00a0h pour l'accepter ou la refuser ; passé ce délai, la demande expire et le particulier peut choisir un autre artisan. L'adresse exacte et les coordonnées du client vous sont transmises dès que vous acceptez.",
         },
         {
           q: "Que faut-il pour m'inscrire ?",
@@ -3692,7 +3692,7 @@ export const fr = {
       finalTitle: "Votre prochain chantier vous attend.",
       finalText:
         "Créez votre profil en quelques minutes : l'équipe MENAO s'occupe de la vérification.",
-      finalReassurance: ["3 mois offerts", "Sans engagement", "Sans commission"],
+      finalReassurance: ["2 mois offerts", "Sans engagement", "Sans commission"],
     },
     /** Inscription artisan en un seul parcours (ADR 0110). */
     signUp: {
@@ -4147,7 +4147,7 @@ export const fr = {
         empty:
           "Vous n'avez pas encore reçu de demande. Elles apparaîtront ici dès qu'un particulier vous contactera.",
         backToList: "Toutes mes demandes",
-        subtitle: "Les particuliers qui vous ont choisi : répondez sous 48 heures.",
+        subtitle: "Les particuliers qui vous ont choisi : répondez sous 72 heures.",
         startWish: (date: string) => `Début souhaité le ${date}`,
         startAsap: "Début dès que possible",
         startUnknown: "Date de début inconnue",
@@ -4213,12 +4213,12 @@ export const fr = {
       },
       plans: {
         intro:
-          "Choisissez votre formule. Les 3 premiers mois sont offerts : aucun prélèvement avant la fin de la période d'essai, résiliable à tout moment.",
+          "Choisissez votre formule. Les 2 premiers mois sont offerts : aucun prélèvement avant la fin de la période d'essai, résiliable à tout moment.",
         notValidated:
           "Le choix de la formule sera disponible dès que l'équipe MENAO aura validé votre dossier.",
         perMonth: "HT / mois",
         priceHt: (euros: string) => `${euros} €`,
-        trialBadge: "3 mois offerts",
+        trialBadge: "2 mois offerts",
         choose: (nom: string) => `Choisir la formule ${nom}`,
         soon: "Bientôt disponible",
         current: "Votre abonnement",

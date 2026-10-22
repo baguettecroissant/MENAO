@@ -28,7 +28,7 @@ const TONE: Record<InboxItem["status"], Tone> = {
 };
 
 /**
- * Demandes reçues par l'artisan (F-16, F-17), comme sur le site : à traiter sous 48 heures, avec le
+ * Demandes reçues par l'artisan (F-16, F-17), comme sur le site : à traiter sous 72 heures, avec le
  * temps restant, le début souhaité et la première photo du projet. Onglet « Demandes » (ADR 0130) :
  * celles à traiter d'abord, l'échéance la plus proche en tête, puis celles déjà traitées.
  */
