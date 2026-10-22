@@ -24,10 +24,10 @@ insert into public.subscriptions (artisan_id, stripe_customer_id, stripe_subscri
 insert into public.artisan_trades (artisan_id, trade_code) values
   ('e8410000-0000-4000-8000-000000000001', 'plombier'),
   ('e8410000-0000-4000-8000-000000000002', 'electricien');
-insert into public.artisan_referrals (id, referrer_artisan_id, referred_artisan_id, status, created_at) values
-  ('e8420000-0000-4000-8000-000000000002', 'e8410000-0000-4000-8000-000000000001', 'e8410000-0000-4000-8000-000000000002', 'en_attente', now() - interval '3 days'),
-  ('e8420000-0000-4000-8000-000000000003', 'e8410000-0000-4000-8000-000000000001', 'e8410000-0000-4000-8000-000000000003', 'en_attente', now() - interval '2 days'),
-  ('e8420000-0000-4000-8000-000000000004', 'e8410000-0000-4000-8000-000000000001', 'e8410000-0000-4000-8000-000000000004', 'annule', now() - interval '1 day');
+insert into public.artisan_referrals (id, referrer_artisan_id, referred_artisan_id, status, cancel_reason, created_at) values
+  ('e8420000-0000-4000-8000-000000000002', 'e8410000-0000-4000-8000-000000000001', 'e8410000-0000-4000-8000-000000000002', 'en_attente', null, now() - interval '3 days'),
+  ('e8420000-0000-4000-8000-000000000003', 'e8410000-0000-4000-8000-000000000001', 'e8410000-0000-4000-8000-000000000003', 'en_attente', null, now() - interval '2 days'),
+  ('e8420000-0000-4000-8000-000000000004', 'e8410000-0000-4000-8000-000000000001', 'e8410000-0000-4000-8000-000000000004', 'annule', 'Même entreprise que le parrain', now() - interval '1 day');
 
 create function pg_temp.connecter(uid uuid, app_role text) returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(

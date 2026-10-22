@@ -2601,7 +2601,7 @@ export const fr = {
         capped: (cap: number) =>
           `Plafond de ${cap} mois offerts atteint cette année : merci pour vos recommandations\u00a0!`,
         // Réseau du parrain (ADR 0161) : QR code, WhatsApp, score de fidélité, suivi des filleuls.
-        qrAlt: "QR code de votre lien de parrainage",
+        qrAlt: "QR code de parrainage",
         qrHint: "À faire scanner par un confrère, sur un chantier ou chez un fournisseur.",
         whatsApp: "Envoyer par WhatsApp",
         shareMessage: (link: string, code: string) =>
