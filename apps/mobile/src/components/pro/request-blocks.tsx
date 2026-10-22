@@ -132,6 +132,7 @@ export function RequestBlocks({
             ? r.adresse
             : [r.code_postal, r.ville_nom].filter(Boolean).join(" ")}
         </Text>
+        {r.hors_zone ? <Text style={styles.outside}>{t.outsideZone}</Text> : null}
         {accepted && r.lat !== null && r.lon !== null ? (
           <Pressable
             role="link"
@@ -206,6 +207,17 @@ const styles = StyleSheet.create({
   photos: { flexDirection: "row", gap: spacing(2) },
   photo: { width: 96, height: 96, borderRadius: radius.input },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  outside: {
+    fontFamily: font.regular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.warning,
+    backgroundColor: colors["warning-soft"],
+    borderRadius: radius.input,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(2),
+    overflow: "hidden",
+  },
   note: {
     fontFamily: font.regular,
     fontSize: 12,

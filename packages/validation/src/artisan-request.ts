@@ -25,6 +25,8 @@ export const requestDetailSchema = z.object({
     .nullable()
     .catch(null),
   trade: z.string().nullable(),
+  // Demande venue de la zone élargie (ADR 0165).
+  hors_zone: z.boolean().catch(false),
   lieu_type: z.enum(["appartement", "maison", "jardin", "entreprise"]).nullable(),
   surface: z.enum(["moins_10", "10_20", "20_50", "plus_50"]).nullable(),
   rooms: z.array(z.string()),

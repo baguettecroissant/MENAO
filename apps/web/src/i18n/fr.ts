@@ -1298,6 +1298,15 @@ export const fr = {
           ? "Nous avons trouvé 1 artisan vérifié qui correspond à votre projet."
           : `Nous avons trouvé ${n} artisans vérifiés qui correspondent à votre projet.`,
       noneTitle: "Aucun artisan disponible pour l'instant",
+      // Zone élargie (ADR 0165) : artisans dont la zone s'arrête un peu avant le chantier.
+      wider: {
+        emptyTitle: "Aucun artisan dans votre secteur pour l'instant",
+        emptyLead:
+          "Ces artisans vérifiés interviennent habituellement un peu plus loin : ils peuvent accepter votre demande ou la décliner.",
+        title: "Un peu plus loin",
+        lead: "Les artisans de votre secteur ont déjà reçu votre demande. Ces artisans vérifiés interviennent habituellement un peu plus loin : ils peuvent accepter votre demande ou la décliner.",
+        badge: "Un peu hors de sa zone",
+      },
       none: "Aucun artisan vérifié ne couvre encore votre secteur pour ce métier. Envoyez-nous votre dossier : nous cherchons pour vous.",
       summary: "Votre projet",
       edit: "Modifier",
@@ -4305,6 +4314,9 @@ export const fr = {
           `À contacter de préférence entre ${from} et ${to}`,
         address: "Adresse",
         openMap: "Ouvrir la carte",
+        // Zone élargie (ADR 0165).
+        outsideZone:
+          "Un peu hors de votre zone habituelle : le client n'avait plus d'artisan disponible plus près. Vous pouvez décliner sans pénalité (motif « Hors zone »).",
         description: "Description du chantier",
         // Demande reformulée par l'IA et budget approximatif (ADR 0163).
         brief: "La demande en bref",

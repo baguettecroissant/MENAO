@@ -1,4 +1,4 @@
-import { joinNames } from "@menao/core";
+import { MAX_SEARCH_RESULTS, joinNames, showWiderZone } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
@@ -68,6 +68,17 @@ export default function ProjetArtisans() {
     return requests.slots > 0 ? "selectable" : "none";
   }
 
+  // Zone élargie (ADR 0165) : plus aucun artisan de la zone à contacter.
+  const wider = showWiderZone({
+    inZoneToContact: results.artisans.filter((a) => !requests.requested.has(a.id)).length,
+    slots: requests.slots,
+    nearby: results.nearby.length,
+  })
+    ? results.nearby.slice(0, MAX_SEARCH_RESULTS)
+    : [];
+  const shown = [...results.artisans, ...wider];
+  const empty = results.artisans.length === 0;
+
   const send = (artisanIds: string[]) =>
     router.push({
       pathname: "/projet/[id]/envoyer",
@@ -88,12 +99,15 @@ export default function ProjetArtisans() {
         ) : undefined
       }
     >
-      <Title>{results.artisans.length ? t.title : t.noneTitle}</Title>
-      <Body muted>{results.artisans.length ? t.found(results.artisans.length) : t.none}</Body>
+      <Title>{!empty ? t.title : wider.length ? t.wider.emptyTitle : t.noneTitle}</Title>
+      <Body muted>
+        {!empty ? t.found(results.artisans.length) : wider.length ? t.wider.emptyLead : t.none}
+      </Body>
+      {!empty && wider.length > 0 ? <Notice tone="info">{t.wider.lead}</Notice> : null}
       {requests.pendingNames.length > 0 && (
         <Notice tone="success">{s.sentBanner(joinNames(requests.pendingNames))}</Notice>
       )}
-      {results.artisans.length > 0 &&
+      {shown.length > 0 &&
         (requests.slots > 0 ? (
           <Body muted>{s.hint}</Body>
         ) : (
@@ -109,7 +123,7 @@ export default function ProjetArtisans() {
         style={styles.carousel}
         contentContainerStyle={styles.carouselContent}
       >
-        {results.artisans.map((artisan) => (
+        {shown.map((artisan) => (
           <ArtisanTile
             key={artisan.id}
             artisan={artisan}

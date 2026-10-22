@@ -90,6 +90,11 @@ export function ArtisanTile({
               {distance ? ` · ${distance}` : ""}
             </Text>
           </View>
+          {artisan.outsideZone ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{t.wider.badge}</Text>
+            </View>
+          ) : null}
           {artisan.score !== null ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{t.score(artisan.score)}</Text>
