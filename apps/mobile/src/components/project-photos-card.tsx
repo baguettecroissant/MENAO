@@ -17,9 +17,12 @@ const t = fr.review.photos;
 export function ProjectPhotosCard({
   projectId,
   initial,
+  advise = false,
 }: {
   projectId: string;
   initial: ProjectPhoto[];
+  /** Description encore vague (ADR 0163) : photos conseillées tant qu'il n'y en a aucune. */
+  advise?: boolean;
 }) {
   const [photos, setPhotos] = useState(initial);
   const [errors, setErrors] = useState<string[]>([]);
@@ -57,6 +60,7 @@ export function ProjectPhotosCard({
         {t.title}
       </Text>
       <Body muted>{t.description}</Body>
+      {advise && photos.length === 0 ? <Notice tone="info">{t.advice}</Notice> : null}
       {errors.map((message) => (
         <Notice key={message} tone="error">
           {message}

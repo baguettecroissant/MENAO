@@ -7,6 +7,19 @@ export type LieuType = (typeof LIEU_TYPES)[number];
 export const SURFACE_TRANCHES = ["moins_10", "10_20", "20_50", "plus_50"] as const;
 export type SurfaceTranche = (typeof SURFACE_TRANCHES)[number];
 
+/**
+ * Budget approximatif (lot 7 du plan V1.1, ADR 0163), en euros TTC : facultatif, donné par le
+ * particulier ou repris de sa description ; jamais estimé par l'IA.
+ */
+export const BUDGET_TRANCHES = [
+  "moins_1000",
+  "1000_5000",
+  "5000_15000",
+  "15000_50000",
+  "plus_50000",
+] as const;
+export type BudgetTranche = (typeof BUDGET_TRANCHES)[number];
+
 export const DATE_SOUHAIT_MODES = ["des_que_possible", "date", "inconnue"] as const;
 export type DateSouhaitMode = (typeof DATE_SOUHAIT_MODES)[number];
 
@@ -39,6 +52,25 @@ export function needHelpLevel(text: string): "vide" | "insuffisant" | "suffisant
   return words < 12 ? "insuffisant" : "suffisant";
 }
 
+/**
+ * Photos conseillées (ADR 0163) : sans photo, quand la description reste vague (peu détaillée,
+ * travaux non identifiés ou analyse peu sûre). Un conseil, jamais une obligation.
+ */
+export function photosAdvised(p: {
+  description: string;
+  photoCount: number;
+  workTypeCount: number;
+  /** Confiance de l'analyse IA, null sans analyse. */
+  confidence: number | null;
+}): boolean {
+  if (p.photoCount > 0) return false;
+  return (
+    needHelpLevel(p.description) !== "suffisant" ||
+    p.workTypeCount === 0 ||
+    (p.confidence !== null && p.confidence < AI_CONFIDENCE_THRESHOLD)
+  );
+}
+
 /** F-07 : la recherche d'artisans exige au moins un métier et une ville. */
 export function canSearchArtisans(p: {
   tradeCode: string | null;
@@ -53,6 +85,8 @@ export function canSearchArtisans(p: {
 
 /** En dessous de ce seuil (ou sans métier identifié), on interroge le modèle de secours. */
 export const AI_CONFIDENCE_THRESHOLD = 0.7;
+/** Demande reformulée pour l'artisan : 800 caractères au plus (colonne `artisan_brief`). */
+export const ARTISAN_BRIEF_MAX_LENGTH = 800;
 const MAX_DATE_YEARS_AHEAD = 2;
 
 /** Réponse du modèle, telle que décrite par needAnalysisJsonSchema (spec F-06). */
@@ -68,6 +102,8 @@ export type RawNeedAnalysis = {
   date_souhaitee: string | null;
   urgence: boolean;
   resume: string | null;
+  budget_tranche: string | null;
+  brief_artisan: string | null;
   confiance: number;
 };
 
@@ -90,6 +126,9 @@ export type NeedCriteria = {
   dateSouhaitee: string | null;
   urgence: boolean;
   summary: string | null;
+  budget: BudgetTranche | null;
+  /** Demande reformulée pour l'artisan (ADR 0163), quelques phrases neutres. */
+  artisanBrief: string | null;
   confiance: number;
 };
 
@@ -112,6 +151,8 @@ export function needAnalysisJsonSchema(ref: NeedReferentials) {
     date_souhaitee: nullable({ type: "string", format: "date" }),
     urgence: { type: "boolean" },
     resume: nullable({ type: "string" }),
+    budget_tranche: nullable({ type: "string", enum: [...BUDGET_TRANCHES] }),
+    brief_artisan: nullable({ type: "string" }),
     confiance: { type: "number" },
   };
   return {
@@ -181,6 +222,8 @@ export function normalizeNeedAnalysis(
     dateSouhaitee: date,
     urgence,
     summary: cleanText(raw.resume, 300),
+    budget: pick(raw.budget_tranche, BUDGET_TRANCHES),
+    artisanBrief: cleanText(raw.brief_artisan, ARTISAN_BRIEF_MAX_LENGTH),
     confiance: Number.isFinite(raw.confiance) ? Math.min(1, Math.max(0, raw.confiance)) : 0,
   };
 }

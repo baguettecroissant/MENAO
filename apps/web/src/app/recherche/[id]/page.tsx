@@ -1,4 +1,4 @@
-import { AI_CONFIDENCE_THRESHOLD, parisToday } from "@menao/core";
+import { AI_CONFIDENCE_THRESHOLD, parisToday, photosAdvised } from "@menao/core";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -26,7 +26,7 @@ export default async function ProjectReviewPage({
   const { data: project } = await supabase
     .from("projects")
     .select(
-      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
+      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
     )
     .eq("id", id)
     .maybeSingle();
@@ -61,6 +61,7 @@ export default async function ProjectReviewPage({
     roomCodes: project.room_codes,
     workTypeCodes: project.work_type_codes,
     surface: project.surface,
+    budget: project.budget,
     ville: project.ville_code_insee
       ? {
           code: project.ville_code_insee,
@@ -120,6 +121,12 @@ export default async function ProjectReviewPage({
           }))}
           rooms={rooms.data ?? []}
           photos={photoRows.map((p, i) => ({ id: p.id, url: signed?.[i]?.signedUrl ?? null }))}
+          advisePhotos={photosAdvised({
+            description: project.description,
+            photoCount: photoRows.length,
+            workTypeCount: project.work_type_codes.length,
+            confidence: project.ai_confidence,
+          })}
           today={parisToday()}
         />
       </div>
