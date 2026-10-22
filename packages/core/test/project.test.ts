@@ -9,7 +9,9 @@ import {
   completeCriteria,
   needAnalysisJsonSchema,
   ARTISAN_BRIEF_MAX_LENGTH,
+  BUDGET_MINIMUM_OPTIONS,
   BUDGET_TRANCHES,
+  budgetMeetsMinimum,
   photosAdvised,
   needHelpLevel,
   normalizeNeedAnalysis,
@@ -309,5 +311,24 @@ describe("photos conseillées quand la description reste vague (ADR 0163)", () =
         confidence: 0.2,
       }),
     ).toBe(false);
+  });
+});
+
+describe("budget minimum de l'artisan (ADR 0164)", () => {
+  it("à partir de 1 000, 5 000, 15 000 ou 50 000 €", () => {
+    expect(BUDGET_MINIMUM_OPTIONS).toEqual([
+      "1000_5000",
+      "5000_15000",
+      "15000_50000",
+      "plus_50000",
+    ]);
+  });
+
+  it("budget inférieur écarté ; sans budget ou sans minimum, toujours proposé", () => {
+    expect(budgetMeetsMinimum("1000_5000", "5000_15000")).toBe(false);
+    expect(budgetMeetsMinimum("5000_15000", "5000_15000")).toBe(true);
+    expect(budgetMeetsMinimum("plus_50000", "5000_15000")).toBe(true);
+    expect(budgetMeetsMinimum(null, "plus_50000")).toBe(true);
+    expect(budgetMeetsMinimum("moins_1000", null)).toBe(true);
   });
 });

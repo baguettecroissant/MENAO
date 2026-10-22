@@ -20,6 +20,27 @@ export const BUDGET_TRANCHES = [
 ] as const;
 export type BudgetTranche = (typeof BUDGET_TRANCHES)[number];
 
+/**
+ * Budget minimum réglé par l'artisan (ADR 0164) : à partir de 1 000, 5 000, 15 000 ou 50 000 €.
+ * Une demande ne lui est pas proposée si son budget annoncé est inférieur ; une demande sans budget
+ * reste proposée à tous. Même règle dans `match_artisans`.
+ */
+export const BUDGET_MINIMUM_OPTIONS = [
+  "1000_5000",
+  "5000_15000",
+  "15000_50000",
+  "plus_50000",
+] as const satisfies readonly BudgetTranche[];
+export type BudgetMinimum = (typeof BUDGET_MINIMUM_OPTIONS)[number];
+
+export function budgetMeetsMinimum(
+  budget: BudgetTranche | null,
+  minimum: BudgetMinimum | null,
+): boolean {
+  if (!budget || !minimum) return true;
+  return BUDGET_TRANCHES.indexOf(budget) >= BUDGET_TRANCHES.indexOf(minimum);
+}
+
 export const DATE_SOUHAIT_MODES = ["des_que_possible", "date", "inconnue"] as const;
 export type DateSouhaitMode = (typeof DATE_SOUHAIT_MODES)[number];
 

@@ -1,4 +1,11 @@
-import { DIPLOMES_METIER, parisToday, validRgeDomains, type DiplomeMetier } from "@menao/core";
+import {
+  BUDGET_MINIMUM_OPTIONS,
+  DIPLOMES_METIER,
+  parisToday,
+  validRgeDomains,
+  type BudgetMinimum,
+  type DiplomeMetier,
+} from "@menao/core";
 import { CERTIFICATION_TYPES, type CertificationType } from "@menao/validation";
 import { Trash2 } from "lucide-react-native";
 import { useState } from "react";
@@ -56,6 +63,7 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
     data.experienceYears === null ? "" : String(data.experienceYears),
   );
   const [diploma, setDiploma] = useState<DiplomeMetier | "">(data.diploma ?? "");
+  const [budgetMinimum, setBudgetMinimum] = useState<BudgetMinimum | "">(data.budgetMinimum ?? "");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState<Message>(null);
   const [busy, setBusy] = useState(false);
@@ -75,6 +83,7 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
       workTypeCodes: [...workTypes],
       experienceYears: experience,
       diploma,
+      budgetMinimum,
       allowedWorkTypes: data.trades
         .filter((tr) => trades.has(tr.code))
         .flatMap((tr) => tr.workTypes.map((w) => w.code)),
@@ -135,6 +144,16 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
           ...DIPLOMES_METIER.map((d) => ({ value: d, label: fr.diplomesMetier[d] })),
         ]}
         onChange={setDiploma}
+      />
+      <ChoiceGroup<BudgetMinimum | "">
+        legend={t.budgetMinimum}
+        hint={t.budgetMinimumHint}
+        value={budgetMinimum}
+        options={[
+          { value: "", label: t.budgetMinimumAll },
+          ...BUDGET_MINIMUM_OPTIONS.map((b) => ({ value: b, label: t.budgetMinimumOptions[b] })),
+        ]}
+        onChange={setBudgetMinimum}
       />
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
       <Button label={t.save} onPress={save} loading={busy} />
