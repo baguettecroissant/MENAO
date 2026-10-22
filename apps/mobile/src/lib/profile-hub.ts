@@ -1,11 +1,18 @@
 import { parisToday, profileStrength, type ProfileTip } from "@menao/core";
-import { parseArtisanProfile, parseGrade, parseReferral, type Referral } from "@menao/validation";
+import {
+  parseArtisanProfile,
+  parseGrade,
+  parseReferral,
+  type Referral,
+  type WelcomeGift,
+} from "@menao/validation";
 import { loadDossier, type Dossier } from "./artisan-dossier";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { hubStatuses, type HubRow, type HubStatus } from "./profile-hub-status";
 import { publicUrl } from "./project";
 import type { ArtisanPage } from "./requests";
 import { supabase } from "./supabase";
+import { loadWelcomeGift } from "./welcome-gift";
 
 /**
  * « Mon profil » de l'artisan (ADR 0129) : en-tête (photo, nom, entreprise, badges, score), jauge
@@ -28,6 +35,8 @@ export type ProfileHub = {
   statuses: Record<HubRow, HubStatus>;
   /** Parrainage (F-60) : code à partager, artisans validés seulement. */
   referral: Referral | null;
+  /** Cadeau de bienvenue du filleul (ADR 0154). */
+  welcomeGift: WelcomeGift | null;
 };
 
 export async function loadProfileHub(): Promise<ProfileHub | null> {
@@ -41,6 +50,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     certifications,
     account,
     { data: referral },
+    welcomeGift,
   ] = await Promise.all([
     loadDossier(),
     supabase.rpc("my_public_profile"),
@@ -54,6 +64,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       .eq("user_id", auth.user.id)
       .maybeSingle(),
     supabase.rpc("my_referral"),
+    loadWelcomeGift(),
   ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
@@ -99,6 +110,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       today: parisToday(),
     }),
     referral: parseReferral(referral),
+    welcomeGift,
   };
 }
 

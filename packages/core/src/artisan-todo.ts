@@ -5,7 +5,8 @@
  *
  * Ordre : demandes dont le délai de réponse (72 h) expire dans moins de 12 h, rendez-vous du jour, autres
  * demandes (échéance la plus proche d'abord), devis à envoyer, documents (échéance, attestation
- * URSSAF manquante), paiements à activer, avis à répondre.
+ * URSSAF manquante), paiements à activer, avis à répondre, cadeau de bienvenue du parrainage à
+ * choisir (ADR 0154).
  */
 import type { AgendaKind } from "./appointment";
 import type { MonitoredDocumentType } from "./expiry";
@@ -36,7 +37,8 @@ export type TodoItem =
   | { kind: "documents"; types: MonitoredDocumentType[] }
   | { kind: "urssaf" }
   | { kind: "paiements" }
-  | { kind: "avis"; count: number };
+  | { kind: "avis"; count: number }
+  | { kind: "cadeau" };
 
 export type TodoInput = {
   /** Demandes encore ouvertes (statut « envoyée », non expirées). */
@@ -54,6 +56,8 @@ export type TodoInput = {
   urssafMissing: boolean;
   paymentsMissing: boolean;
   reviewsToAnswer: number;
+  /** Filleul validé dont le cadeau de bienvenue n'est pas encore choisi (ADR 0154). */
+  welcomeGiftToChoose?: boolean;
 };
 
 const RANK: Record<TodoItem["kind"] | "demande_urgente", number> = {
@@ -65,6 +69,7 @@ const RANK: Record<TodoItem["kind"] | "demande_urgente", number> = {
   urssaf: 4,
   paiements: 5,
   avis: 6,
+  cadeau: 7,
 };
 
 export function artisanTodo(input: TodoInput, now: Date = new Date()): TodoItem[] {
@@ -114,6 +119,9 @@ export function artisanTodo(input: TodoInput, now: Date = new Date()): TodoItem[
   }
   if (input.reviewsToAnswer > 0) {
     items.push({ item: { kind: "avis", count: input.reviewsToAnswer }, rank: RANK.avis, at: 0 });
+  }
+  if (input.welcomeGiftToChoose) {
+    items.push({ item: { kind: "cadeau" }, rank: RANK.cadeau, at: 0 });
   }
 
   return items.sort((a, b) => a.rank - b.rank || a.at - b.at).map(({ item }) => item);

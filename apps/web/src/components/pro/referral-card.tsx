@@ -1,5 +1,6 @@
 "use client";
 
+import { REFERRAL_MONTHS_PER_YEAR, referralProgress } from "@menao/core";
 import { Check, Copy, Gift } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui";
@@ -8,21 +9,23 @@ import { fr } from "@/i18n/fr";
 const t = fr.pro.hub.referral;
 
 /**
- * Parrainage (F-60, ADR 0137) dans « Mon profil » sur le site : lien à copier, code à dicter et
- * bilan. Le site peut parler du mois offert ; l'application, jamais (CLAUDE.md règle 10).
+ * Parrainage (F-60, ADR 0137 et 0154) dans « Mon profil » sur le site : lien à copier, code à
+ * dicter et bilan, dont les mois offerts de l'année (12 au plus). Le site peut parler du mois
+ * offert ; l'application, jamais (CLAUDE.md règle 10).
  */
 export function ReferralCard({
   link,
   code,
   joined,
-  monthsEarned,
+  monthsThisYear,
 }: {
   link: string;
   code: string;
   joined: number;
-  monthsEarned: number;
+  monthsThisYear: number;
 }) {
   const [copied, setCopied] = useState(false);
+  const progress = referralProgress(monthsThisYear);
   async function copy() {
     try {
       await navigator.clipboard.writeText(link);
@@ -71,8 +74,16 @@ export function ReferralCard({
       <p className="text-xs text-muted-foreground">{t.codeHint(code)}</p>
       <p className="text-sm font-medium" aria-live="polite">
         {t.joined(joined)}
-        {monthsEarned > 0 && <span className="text-success"> · {t.earned(monthsEarned)}</span>}
+        {progress.earned > 0 && !progress.capped && (
+          <span className="text-success">
+            {" · "}
+            {t.thisYear(progress.earned, REFERRAL_MONTHS_PER_YEAR)}
+          </span>
+        )}
       </p>
+      {progress.capped && (
+        <p className="text-sm text-success">{t.capped(REFERRAL_MONTHS_PER_YEAR)}</p>
+      )}
     </section>
   );
 }

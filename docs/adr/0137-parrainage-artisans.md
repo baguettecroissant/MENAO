@@ -1,6 +1,6 @@
 # ADR 0137 — Parrainage entre artisans : un mois offert à chacun
 
-- Statut : accepté
+- Statut : accepté, modifié par l'ADR 0154 (parrainage V2)
 - Date : 19 octobre 2026
 - Suite de l'ADR 0136 (programme Partenaires). Fin du lot 1.
 

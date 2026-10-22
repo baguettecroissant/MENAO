@@ -102,4 +102,10 @@ export const messages = {
   passwordUnchanged: "Choisissez un mot de passe différent de l'actuel.",
   deletionConfirmRequired: "Cochez la case pour confirmer votre demande.",
   cancelReasonRequired: "Choisissez le motif de votre annulation.",
+  welcomeGiftRequired: "Choisissez votre cadeau.",
+  welcomeGiftSizeRequired: "Choisissez la taille du t-shirt.",
+  welcomeGiftRecipientRequired: "Indiquez le nom du destinataire.",
+  welcomeGiftAddressRequired: "Indiquez l'adresse de livraison.",
+  postalCodeInvalid: "Indiquez un code postal à 5 chiffres.",
+  welcomeGiftCityRequired: "Indiquez la commune.",
 } as const;

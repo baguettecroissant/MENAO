@@ -1,6 +1,6 @@
 # ADR 0143 — Parrainages dans le back-office
 
-- Statut : accepté
+- Statut : accepté, modifié par l'ADR 0154 (parrainage V2)
 - Date : 19 octobre 2026
 - Suite de l'ADR 0137 (parrainage entre artisans), qui laissait le back-office pour plus tard.
 

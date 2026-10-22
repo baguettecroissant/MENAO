@@ -1,7 +1,7 @@
 import { expect, test } from "./test";
 import { totp } from "./totp";
 
-// Parrainage entre artisans (F-60, ADR 0137 et 0143). Comptes fictifs du seed : valide@example.test,
+// Parrainage entre artisans (F-60, ADR 0137, 0143 et 0154). Comptes fictifs du seed : valide@example.test,
 // admin5@example.test.
 test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, suivi dans le back-office", async ({
   page,
@@ -18,8 +18,12 @@ test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, s
   const card = page.getByRole("region", { name: "Parrainez un confrère" });
   await expect(card).toBeVisible();
   await expect(
-    card.getByText("Un mois offert pour vous deux dès son premier paiement."),
+    card.getByText(
+      "Un mois offert pour vous dès son premier paiement, jusqu'à 12 par an. Votre confrère reçoit un cadeau de bienvenue.",
+    ),
   ).toBeVisible();
+  // Inscrit sans parrain : aucun cadeau de bienvenue à choisir.
+  await expect(page.getByRole("region", { name: "Votre cadeau de bienvenue" })).toHaveCount(0);
   const link = await card.getByLabel("Votre lien de parrainage").inputValue();
   expect(link).toMatch(/\/p\/[a-z0-9]{8}\/pro$/);
   const code = link.split("/").at(-2) ?? "";
@@ -54,6 +58,7 @@ test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, s
     .click();
   await expect(admin.getByRole("heading", { name: "Parrainages", level: 1 })).toBeVisible();
   await expect(admin.getByText("Mois offerts posés")).toBeVisible();
+  await expect(admin.getByText("Cadeaux à envoyer")).toBeVisible();
   await admin.getByRole("link", { name: /^Annulés/ }).click();
   await expect(admin).toHaveURL(/\/admin\/parrainages\?statut=annule$/);
 

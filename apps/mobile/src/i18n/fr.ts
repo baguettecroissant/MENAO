@@ -159,7 +159,8 @@ export const fr = {
       oauthSubmit: "Créer mon profil",
       referralToggle: "J'ai un code de parrainage",
       referralLabel: "Code de parrainage (facultatif)",
-      referralHint: "Le code d'un artisan MENAO qui vous a recommandé.",
+      referralHint:
+        "Le code d'un artisan MENAO qui vous a recommandé. Un cadeau de bienvenue vous attend à la validation de votre dossier.",
       notYou: "Ce n'est pas vous ? Se déconnecter",
       clientAccount:
         "Ce compte est déjà un compte client MENAO. Pour votre activité, créez un compte pro avec une autre adresse e-mail.",
@@ -1629,6 +1630,9 @@ export const fr = {
       avis: (n: number) => (n === 1 ? "1 avis à répondre" : `${n} avis à répondre`),
       avisHint: "Une réponse rassure vos futurs clients.",
       respond: "Répondre",
+      cadeau: "Votre cadeau de bienvenue",
+      cadeauHint: "Offert grâce à votre parrain : t-shirt ou casquette MENAO.",
+      choose: "Choisir",
       add: "Ajouter",
       activate: "Activer",
       renew: "Renouveler",
@@ -2650,6 +2654,33 @@ export const fr = {
         n === 0
           ? "Aucun confrère inscrit pour l'instant"
           : `${n} confrère${n > 1 ? "s" : ""} inscrit${n > 1 ? "s" : ""}`,
+    },
+    /** Cadeau de bienvenue du filleul (F-60, ADR 0154), carte et écran « Votre cadeau ». */
+    welcomeGift: {
+      title: "Votre cadeau de bienvenue",
+      lead: (referrer: string) =>
+        `${referrer} vous a recommandé MENAO. Choisissez votre cadeau : nous vous l'envoyons.`,
+      choose: "Choisir mon cadeau",
+      itemLegend: "Votre cadeau",
+      items: { tshirt: "T-shirt MENAO", casquette: "Casquette MENAO" } as Record<
+        "tshirt" | "casquette",
+        string
+      >,
+      sizeLegend: "Taille du t-shirt",
+      delivery: "Adresse de livraison",
+      checkAddress: "Modifier l'adresse",
+      recipient: "Destinataire",
+      address: "Adresse",
+      postalCode: "Code postal",
+      city: "Commune",
+      submit: "Recevoir mon cadeau",
+      note: "Envoi organisé par l'équipe MENAO, qui vous recontacte si besoin.",
+      done: "C'est noté : l'équipe MENAO prépare votre cadeau.",
+      summary: (item: string, size: string | null) => (size ? `${item}, taille ${size}` : item),
+      pending: "En préparation par l'équipe MENAO.",
+      sent: (date: string) => `Envoyé le ${date}.`,
+      unavailable: "Aucun cadeau de bienvenue à choisir pour le moment.",
+      back: "Retour",
     },
     title: "Mon profil",
     seeProfile: "Voir ma fiche",

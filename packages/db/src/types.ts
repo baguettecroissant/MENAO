@@ -844,6 +844,71 @@ export type Database = {
           },
         ];
       };
+      artisan_welcome_gifts: {
+        Row: {
+          adresse_code_postal: string | null;
+          adresse_commune: string | null;
+          adresse_ligne: string | null;
+          artisan_id: string;
+          chosen_at: string | null;
+          created_at: string;
+          item: Database["public"]["Enums"]["welcome_gift_item"] | null;
+          recipient: string | null;
+          referral_id: string | null;
+          size: string | null;
+          ticket_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          adresse_code_postal?: string | null;
+          adresse_commune?: string | null;
+          adresse_ligne?: string | null;
+          artisan_id: string;
+          chosen_at?: string | null;
+          created_at?: string;
+          item?: Database["public"]["Enums"]["welcome_gift_item"] | null;
+          recipient?: string | null;
+          referral_id?: string | null;
+          size?: string | null;
+          ticket_id?: string | null;
+        };
+        Update: {
+          adresse_code_postal?: string | null;
+          adresse_commune?: string | null;
+          adresse_ligne?: string | null;
+          artisan_id?: string;
+          chosen_at?: string | null;
+          created_at?: string;
+          item?: Database["public"]["Enums"]["welcome_gift_item"] | null;
+          recipient?: string | null;
+          referral_id?: string | null;
+          size?: string | null;
+          ticket_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_welcome_gifts_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_welcome_gifts_referral_id_fkey";
+            columns: ["referral_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_referrals";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_welcome_gifts_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_work_types: {
         Row: {
           artisan_id: string;
@@ -3775,6 +3840,7 @@ export type Database = {
         Returns: {
           cancel_reason: string;
           created_at: string;
+          gift: string;
           id: string;
           referred: string;
           referred_id: string;
@@ -4111,6 +4177,17 @@ export type Database = {
           storage_path: string;
         }[];
       };
+      choose_welcome_gift: {
+        Args: {
+          p_adresse_code_postal: string;
+          p_adresse_commune: string;
+          p_adresse_ligne: string;
+          p_item: string;
+          p_recipient: string;
+          p_size: string;
+        };
+        Returns: undefined;
+      };
       claim_notifications: {
         Args: { p_limit?: number };
         Returns: {
@@ -4270,6 +4347,7 @@ export type Database = {
       };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
+      my_welcome_gift: { Args: Record<PropertyKey, never>; Returns: Json };
       particulier_cancel_chantier: {
         Args: {
           p_chantier_id: string;
@@ -4730,6 +4808,7 @@ export type Database = {
         | "suppression_compte"
         | "recompense";
       value_for_money: "excellent" | "convenable" | "trop_cher";
+      welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes";
     };
     CompositeTypes: {
@@ -4989,6 +5068,7 @@ export const Constants = {
         "recompense",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
+      welcome_gift_item: ["tshirt", "casquette"],
       zone_mode: ["rayon", "communes"],
     },
   },

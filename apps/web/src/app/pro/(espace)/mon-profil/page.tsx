@@ -5,7 +5,12 @@ import {
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "@menao/core";
-import { parseArtisanProfile, parseGrade, parseReferral } from "@menao/validation";
+import {
+  parseArtisanProfile,
+  parseGrade,
+  parseReferral,
+  parseWelcomeGift,
+} from "@menao/validation";
 import type { Metadata } from "next";
 import { ProfileHubView } from "@/components/pro/profile-hub-view";
 import { env } from "@/env";
@@ -23,15 +28,23 @@ export const metadata: Metadata = { title: `${fr.pro.hub.title} — MENAO` };
  */
 export default async function MyProfilePage() {
   const space = await requireProSpace();
-  const [ctx, shell, { data: page }, { data: gradeData }, { data: referralData }] =
-    await Promise.all([
-      getOnboardingContext(),
-      getProShell(),
-      space.supabase.rpc("my_public_profile"),
-      space.supabase.rpc("artisan_grade"),
-      // Parrainage (F-60) : code créé à la première visite d'un artisan validé.
-      space.supabase.rpc("my_referral"),
-    ]);
+  const [
+    ctx,
+    shell,
+    { data: page },
+    { data: gradeData },
+    { data: referralData },
+    { data: giftData },
+  ] = await Promise.all([
+    getOnboardingContext(),
+    getProShell(),
+    space.supabase.rpc("my_public_profile"),
+    space.supabase.rpc("artisan_grade"),
+    // Parrainage (F-60) : code créé à la première visite d'un artisan validé.
+    space.supabase.rpc("my_referral"),
+    // Cadeau de bienvenue du filleul (ADR 0154).
+    space.supabase.rpc("my_welcome_gift"),
+  ]);
   const referral = parseReferral(referralData);
   const profile = parseArtisanProfile(page);
   if (!profile) {
@@ -91,8 +104,9 @@ export default async function MyProfilePage() {
           link: partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros,
           code: referral.code,
           joined: referral.joined,
-          monthsEarned: referral.months_earned,
+          monthsThisYear: referral.months_this_year,
         },
+        welcomeGift: parseWelcomeGift(giftData),
       }}
     />
   );

@@ -673,8 +673,38 @@ export default async function AdminArtisanPage({
               )}
               <Info
                 label={t.referral.months}
-                value={t.referral.monthsValue(referral.mois_poses, referral.mois_en_attente)}
+                value={t.referral.monthsValue(
+                  referral.mois_poses,
+                  referral.mois_en_attente,
+                  referral.mois_annee,
+                )}
               />
+              {referral.cadeau && (
+                <div className="flex flex-wrap gap-x-2">
+                  <dt className="text-muted-foreground">{t.referral.gift} :</dt>
+                  <dd className="font-medium">
+                    {t.referral.giftValue(
+                      fr.admin.referrals.gift[referral.cadeau.status],
+                      referral.cadeau.item &&
+                        fr.pro.hub.welcomeGift.summary(
+                          fr.pro.hub.welcomeGift.items[referral.cadeau.item],
+                          referral.cadeau.size,
+                        ),
+                    )}
+                    {referral.cadeau.ticket_id && (
+                      <>
+                        {" · "}
+                        <Link
+                          href={`/admin/tickets/${referral.cadeau.ticket_id}` as Route}
+                          className="font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          {t.referral.giftTicket}
+                        </Link>
+                      </>
+                    )}
+                  </dd>
+                </div>
+              )}
             </dl>
             <div className="flex flex-col gap-1 text-sm">
               <h3 className="font-medium">{t.referral.referrer}</h3>

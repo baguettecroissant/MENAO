@@ -20,6 +20,7 @@ import {
 import { loadInbox, type InboxItem } from "./pro-requests";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
+import { loadWelcomeGift } from "./welcome-gift";
 
 export type Dashboard = {
   firstName: string | null;
@@ -71,6 +72,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     artisan,
     reviewsToAnswer,
     subscription,
+    welcomeGift,
   ] = await Promise.all([
     loadInbox(),
     supabase.rpc("artisan_chantiers"),
@@ -87,6 +89,8 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     countReviewsToAnswer(),
     // Abonnement de l'artisan (lecture limitée à son compte, RLS).
     supabase.from("subscriptions").select("status").maybeSingle(),
+    // Cadeau de bienvenue du filleul à choisir (ADR 0154).
+    loadWelcomeGift(),
   ]);
   if (inbox === null) return null;
   const now = new Date();
@@ -155,6 +159,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       urssafMissing,
       paymentsMissing: visibility?.missing.includes("paiements") ?? false,
       reviewsToAnswer,
+      welcomeGiftToChoose: welcomeGift?.status === "a_choisir",
     },
     now,
   );

@@ -1,23 +1,85 @@
 import { describe, expect, it } from "vitest";
-import { parseReferral } from "../src/referral";
+import { parseReferral, parseWelcomeGift, welcomeGiftChoiceSchema } from "../src/referral";
 
 describe("bilan du parrainage (F-60)", () => {
   it("réponse attendue", () => {
-    expect(parseReferral({ code: "k7m2qx9a", joined: 2, rewarded: 1, months_earned: 1 })).toEqual({
-      code: "k7m2qx9a",
-      joined: 2,
-      rewarded: 1,
-      months_earned: 1,
-    });
+    expect(
+      parseReferral({
+        code: "k7m2qx9a",
+        joined: 2,
+        rewarded: 1,
+        months_earned: 1,
+        months_this_year: 1,
+      }),
+    ).toEqual({ code: "k7m2qx9a", joined: 2, rewarded: 1, months_earned: 1, months_this_year: 1 });
   });
 
   it("artisan pas encore validé (null) ou réponse inattendue : null", () => {
+    const base = { joined: 0, rewarded: 0, months_earned: 0, months_this_year: 0 };
     expect(parseReferral(null)).toBeNull();
+    expect(parseReferral({ ...base, code: "TROP-LONG-CODE" })).toBeNull();
+    expect(parseReferral({ ...base, code: "k7m2qx9a", joined: -1 })).toBeNull();
     expect(
-      parseReferral({ code: "TROP-LONG-CODE", joined: 0, rewarded: 0, months_earned: 0 }),
+      parseReferral({ code: "k7m2qx9a", joined: 0, rewarded: 0, months_earned: 0 }),
     ).toBeNull();
-    expect(
-      parseReferral({ code: "k7m2qx9a", joined: -1, rewarded: 0, months_earned: 0 }),
-    ).toBeNull();
+  });
+});
+
+describe("cadeau de bienvenue du filleul (ADR 0154)", () => {
+  const gift = {
+    status: "a_choisir",
+    item: null,
+    size: null,
+    address: {
+      recipient: "Prénom Nom",
+      ligne: "2 avenue",
+      code_postal: "06400",
+      commune: "Cannes",
+    },
+    referrer: "PARRAIN EXEMPLE",
+    sent_at: null,
+  };
+
+  it("réponse de la base", () => {
+    expect(parseWelcomeGift(gift)).toEqual(gift);
+    expect(parseWelcomeGift({ ...gift, status: "envoye", item: "tshirt", size: "L" })?.size).toBe(
+      "L",
+    );
+  });
+
+  it("aucun cadeau ou réponse inattendue : null", () => {
+    expect(parseWelcomeGift(null)).toBeNull();
+    expect(parseWelcomeGift({ ...gift, item: "veste" })).toBeNull();
+  });
+
+  const choice = {
+    item: "tshirt",
+    size: "M",
+    recipient: " Prénom Nom ",
+    ligne: "2 avenue de l'Exemple",
+    code_postal: "06400",
+    commune: "Cannes",
+  };
+
+  it("t-shirt avec sa taille, champs nettoyés", () => {
+    expect(welcomeGiftChoiceSchema.parse(choice)).toEqual({ ...choice, recipient: "Prénom Nom" });
+  });
+
+  it("casquette : la taille est ignorée", () => {
+    expect(welcomeGiftChoiceSchema.parse({ ...choice, item: "casquette" }).size).toBeNull();
+  });
+
+  it("refus : t-shirt sans taille, cadeau inconnu, code postal, champs vides", () => {
+    const issues = (value: object) =>
+      welcomeGiftChoiceSchema.safeParse(value).error?.issues.map((i) => i.message) ?? [];
+    expect(issues({ ...choice, size: null })).toEqual(["Choisissez la taille du t-shirt."]);
+    expect(issues({ ...choice, item: "veste" })).toEqual(["Choisissez votre cadeau."]);
+    expect(issues({ ...choice, code_postal: "6400" })).toEqual([
+      "Indiquez un code postal à 5 chiffres.",
+    ]);
+    expect(issues({ ...choice, recipient: "  ", commune: "" })).toEqual([
+      "Indiquez le nom du destinataire.",
+      "Indiquez la commune.",
+    ]);
   });
 });

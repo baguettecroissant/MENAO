@@ -6,6 +6,7 @@ import {
   Clock,
   FileClock,
   FilePen,
+  Gift,
   Inbox,
   PartyPopper,
   Star,
@@ -125,6 +126,16 @@ function line(item: TodoItem): Line {
         detail: t.todo.avisHint,
         accessory: t.todo.respond,
         href: "/pro-avis",
+      };
+    case "cadeau":
+      return {
+        key: "cadeau",
+        icon: Gift,
+        tone: "primary",
+        title: t.todo.cadeau,
+        detail: t.todo.cadeauHint,
+        accessory: t.todo.choose,
+        href: "/pro-cadeau",
       };
   }
 }
