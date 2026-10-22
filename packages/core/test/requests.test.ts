@@ -28,6 +28,8 @@ describe("demandes de chantier (F-11, F-17)", () => {
     expect(remainingSlots(["envoyee", "acceptee"])).toBe(1);
     expect(remainingSlots(["refusee", "expiree", "annulee"])).toBe(3);
     expect(remainingSlots(["envoyee", "envoyee", "acceptee", "envoyee"])).toBe(0);
+    // Demande en vérification (ADR 0157) : elle occupe une place.
+    expect(remainingSlots(["a_verifier", "refusee"])).toBe(2);
   });
 
   it("échéance de réponse et temps restant", () => {

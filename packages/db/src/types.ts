@@ -4133,6 +4133,10 @@ export type Database = {
         Args: { p_message: string; p_request_id: string; p_trade_code: string };
         Returns: string;
       };
+      artisan_report_fake_client: {
+        Args: { p_detail?: string; p_request_id: string };
+        Returns: string;
+      };
       artisan_request_detail: { Args: { p_request_id: string }; Returns: Json };
       artisan_reschedule_appointment: {
         Args: { p_chantier_id: string; p_date: string; p_time: string };
@@ -4658,6 +4662,10 @@ export type Database = {
         Args: { p_activite: boolean; p_rappels: boolean };
         Returns: undefined;
       };
+      staff_review_held_requests: {
+        Args: { p_project_id: string; p_reason?: string; p_release: boolean };
+        Returns: number;
+      };
       staff_set_ticket_status: {
         Args: { p_status: Database["public"]["Enums"]["ticket_status"]; p_ticket_id: string };
         Returns: undefined;
@@ -4822,7 +4830,7 @@ export type Database = {
       reception_status: "en_signature" | "signe";
       referral_status: "en_attente" | "recompense" | "annule";
       refusal_reason: "planning_complet" | "hors_expertise" | "hors_zone" | "autre";
-      request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee";
+      request_status: "envoyee" | "acceptee" | "refusee" | "expiree" | "annulee" | "a_verifier";
       review_decision: "valide" | "refuse" | "complement";
       review_status: "publie" | "masque";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
@@ -4837,7 +4845,9 @@ export type Database = {
         | "litige"
         | "suppression_compte"
         | "recompense"
-        | "demande_sans_reponse";
+        | "demande_sans_reponse"
+        | "particulier_a_verifier"
+        | "faux_particulier";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes";
@@ -5094,7 +5104,7 @@ export const Constants = {
       reception_status: ["en_signature", "signe"],
       referral_status: ["en_attente", "recompense", "annule"],
       refusal_reason: ["planning_complet", "hors_expertise", "hors_zone", "autre"],
-      request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee"],
+      request_status: ["envoyee", "acceptee", "refusee", "expiree", "annulee", "a_verifier"],
       review_decision: ["valide", "refuse", "complement"],
       review_status: ["publie", "masque"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
@@ -5110,6 +5120,8 @@ export const Constants = {
         "suppression_compte",
         "recompense",
         "demande_sans_reponse",
+        "particulier_a_verifier",
+        "faux_particulier",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],

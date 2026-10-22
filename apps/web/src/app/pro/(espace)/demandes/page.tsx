@@ -19,6 +19,7 @@ const statusTone = {
   refusee: "danger",
   expiree: "neutral",
   annulee: "neutral",
+  a_verifier: "neutral",
 } as const;
 
 /** Demandes reçues (F-16, F-17), maquette « Dashboard – Dernières demandes de devis ». */

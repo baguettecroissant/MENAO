@@ -5,7 +5,18 @@ export const MAX_ARTISANS_PER_REQUEST = 3;
 /** Délai de réponse de l'artisan (F-11) : 72 h, décision des associés du 22 octobre 2026 (ADR 0153 ; 48 h auparavant). */
 export const REQUEST_RESPONSE_HOURS = 72;
 
-export const REQUEST_STATUSES = ["envoyee", "acceptee", "refusee", "expiree", "annulee"] as const;
+/**
+ * « a_verifier » : demande retenue par le recoupement automatique (ADR 0157), invisible des
+ * artisans tant que l'équipe ne l'a pas transmise.
+ */
+export const REQUEST_STATUSES = [
+  "envoyee",
+  "acceptee",
+  "refusee",
+  "expiree",
+  "annulee",
+  "a_verifier",
+] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
 /** Motifs de refus (F-17). */
@@ -49,7 +60,7 @@ export function cancelReport(reason: ArtisanCancelReason): ArtisanReport | null 
 export const CALLBACK_MODES = ["des_que_possible", "plage"] as const;
 export const REQUEST_MESSAGE_MAX_LENGTH = 10_000;
 
-const ACTIVE: readonly RequestStatus[] = ["envoyee", "acceptee"];
+const ACTIVE: readonly RequestStatus[] = ["envoyee", "acceptee", "a_verifier"];
 
 /** Nombre d'artisans encore sollicitables pour un projet (refus et expirations libèrent une place). */
 export function remainingSlots(statuses: readonly RequestStatus[]): number {

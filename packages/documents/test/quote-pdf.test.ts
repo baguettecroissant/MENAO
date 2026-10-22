@@ -122,6 +122,8 @@ describe("contenu du devis (F-20)", () => {
     expect(m.scheduleNote).toBeNull();
     expect(m.mentions).toContain("Devis reçu avant l'exécution des travaux.");
     expect(m.mentions.some((x) => x.startsWith("Taux réduit de TVA"))).toBe(true);
+    // Devis envoyé (ADR 0157) : mention confidentielle au nom du client.
+    expect(m.confidential).toBe("Confidentiel – établi pour Camille Exemple, usage personnel");
   });
 
   it("aperçu (brouillon) : numéro, validité et dates fixés à l'envoi", () => {
@@ -141,6 +143,7 @@ describe("contenu du devis (F-20)", () => {
     );
     expect(m.scheduleLines).toEqual([]);
     expect(m.scheduleNote).toBe("Précisé à l'envoi du devis.");
+    expect(m.confidential).toBeNull();
   });
 
   it("franchise en base : pas de TVA, mention de l'article 293 B ; assurance incomplète signalée", () => {

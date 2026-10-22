@@ -13,6 +13,7 @@ import { takeTicket } from "@/lib/admin/ticket-actions";
 import { getTicketDetail } from "@/lib/admin/tickets";
 import { formatDay, formatDayTimeInline } from "@/lib/format";
 import { DisputeDecision } from "../dispute-decision";
+import { HeldRequestsDecision } from "../held-requests-decision";
 import { ModerateMessage } from "../moderate-message";
 import { ModerateReview } from "../moderate-review";
 import { TicketNoteForm } from "./note-form";
@@ -31,6 +32,7 @@ const THREADED: readonly string[] = [
   "suppression_compte",
   "recompense",
   "demande_sans_reponse",
+  "faux_particulier",
 ];
 
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
@@ -101,6 +103,13 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
               </div>
             )}
           </DetailSection>
+
+          {ticket.type === "particulier_a_verifier" && ticket.project_id && (
+            <DetailSection title={t.heldRequests.title}>
+              <p className="text-sm text-muted-foreground">{t.heldRequests.intro}</p>
+              {open && <HeldRequestsDecision projectId={ticket.project_id} />}
+            </DetailSection>
+          )}
 
           {review && (
             <DetailSection title={t.review.title}>

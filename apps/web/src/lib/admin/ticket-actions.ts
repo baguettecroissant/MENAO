@@ -39,3 +39,32 @@ export async function addTicketNote(_prev: FormState, formData: FormData): Promi
   refresh(id.data);
   return { success: "ok" };
 }
+
+/**
+ * Demandes retenues par le recoupement automatique (ADR 0157) : transmises aux artisans (délai de
+ * 72 h à partir de maintenant) ou bloquées avec un motif interne. Décision journalisée en base.
+ */
+export async function reviewHeldRequests(_prev: FormState, formData: FormData): Promise<FormState> {
+  const projectId = z.uuid().safeParse(text(formData, "projectId"));
+  const release = text(formData, "decision") === "release";
+  const reason = (text(formData, "reason") ?? "").trim();
+  if (!projectId.success) return { error: fr.errors.generic };
+  const t = fr.admin.tickets.heldRequests;
+  if (!release && !reason) {
+    return { fieldErrors: { reason: [fr.admin.referrals.errors.reason] }, values: { reason } };
+  }
+  const { supabase } = await requireStaff();
+  const { data, error } = await supabase.rpc("staff_review_held_requests", {
+    p_project_id: projectId.data,
+    p_release: release,
+    p_reason: reason,
+  });
+  if (error) {
+    return {
+      error: error.code === "22023" ? error.message : fr.errors.generic,
+      values: { reason },
+    };
+  }
+  revalidatePath("/admin/tickets", "layout");
+  return { success: release ? t.released(data ?? 1) : t.blocked };
+}

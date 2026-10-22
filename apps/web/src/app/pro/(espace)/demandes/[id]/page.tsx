@@ -4,6 +4,7 @@ import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { DetailHeader, StickyActions } from "@/components/pro/detail";
 import { ExpertiseButton } from "@/components/pro/expertise-button";
+import { FakeClientReport } from "@/components/pro/fake-client-report";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -102,6 +103,7 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
             <StatusBadge tone="neutral">{t.status[r.status]}</StatusBadge>
           </div>
         )}
+        <FakeClientReport requestId={r.id} />
       </div>
 
       {open && (

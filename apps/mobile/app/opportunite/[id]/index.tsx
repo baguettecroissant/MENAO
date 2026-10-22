@@ -11,7 +11,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadOpportunity } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Button, LinkText, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proRequests;
@@ -94,6 +94,10 @@ export default function OpportunityScreen() {
       </View>
       <RequestBlocks detail={r} photoUrls={photoUrls} variant="opportunite" />
       {reputation ? <ClientReputationCard reputation={reputation} /> : null}
+      <LinkText
+        label={fr.proFakeClient.open}
+        onPress={() => router.push(`/opportunite/${id}/faux-particulier`)}
+      />
     </Screen>
   );
 }

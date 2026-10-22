@@ -1096,7 +1096,10 @@ export const fr = {
       refusee: "Refusée",
       expiree: "Sans réponse",
       annulee: "Annulée",
+      a_verifier: "En cours de vérification",
     },
+    verificationHint:
+      "L'équipe MENAO vérifie votre demande avant de la transmettre à l'artisan : vous serez prévenu de sa réponse.",
     timeLeft: (h: number, m: number) =>
       `Réponse attendue sous ${h} h ${String(m).padStart(2, "0")}`,
     yourArtisans: "Vos artisans",
@@ -1732,6 +1735,7 @@ export const fr = {
       refusee: "Refusée",
       expiree: "Expirée",
       annulee: "Annulée",
+      a_verifier: "En vérification",
     },
     client: "Client",
     contactAfter:
@@ -2252,6 +2256,17 @@ export const fr = {
     message: "Précisions (facultatif)",
     submit: "Envoyer à l'équipe MENAO",
     sent: "Merci ! L'équipe MENAO a bien reçu votre signalement.",
+    back: "Retour",
+  },
+  /** « Je pense que ce n'est pas un vrai particulier » (ADR 0157) : mêmes textes que le site. */
+  proFakeClient: {
+    open: "Je pense que ce n'est pas un vrai particulier",
+    title: "Signaler un faux particulier",
+    intro:
+      "Un professionnel qui se fait passer pour un particulier pour connaître vos prix ? Dites-le-nous : l'équipe MENAO vérifie la demande, en toute discrétion.",
+    detail: "Ce qui vous fait penser cela (facultatif)",
+    submit: "Envoyer le signalement",
+    sent: "Merci : l'équipe MENAO va vérifier cette demande.",
     back: "Retour",
   },
   /** Agenda de l'artisan (F-44) : mêmes textes que l'espace pro du site. */

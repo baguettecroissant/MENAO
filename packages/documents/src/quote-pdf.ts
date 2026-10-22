@@ -208,9 +208,27 @@ export async function renderQuotePdf(
   }
   c.y = boxTop - 106;
 
-  // Pied de page et filigrane d'aperçu sur toutes les pages.
+  // Pied de page et filigrane (aperçu, ou devis confidentiel au nom du client) sur toutes les pages.
   const pages = doc.getPages();
   pages.forEach((page, i) => {
+    if (m.confidential) {
+      page.drawText(m.confidential, {
+        x: PAGE.margin,
+        y: 32,
+        size: 7,
+        font: fonts.bold,
+        color: COLOR.muted,
+      });
+      page.drawText(m.confidential, {
+        x: 90,
+        y: 230,
+        size: 18,
+        font: fonts.bold,
+        color: COLOR.primary,
+        opacity: 0.06,
+        rotate: degrees(40),
+      });
+    }
     page.drawText(m.footer, {
       x: PAGE.margin,
       y: 22,
