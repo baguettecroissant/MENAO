@@ -1,4 +1,4 @@
-import { MAX_SEARCH_RESULTS, parisToday } from "@menao/core";
+import { MAX_SEARCH_RESULTS, parisToday, photosAdvised } from "@menao/core";
 import type { Database } from "@menao/db";
 import { projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
@@ -72,6 +72,8 @@ export type ProjectForReview = {
   description: string;
   analyzed: boolean;
   lowConfidence: boolean;
+  /** Description encore vague, sans photo (ADR 0163) : photos conseillées. */
+  advisePhotos: boolean;
   criteria: Criteria;
 };
 
@@ -80,7 +82,7 @@ export async function loadProject(id: string, confidenceThreshold: number) {
   const { data: p } = await supabase
     .from("projects")
     .select(
-      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
+      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee, project_photos(count)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -90,12 +92,19 @@ export async function loadProject(id: string, confidenceThreshold: number) {
     description: p.description,
     analyzed: p.analyzed_at !== null,
     lowConfidence: p.ai_confidence !== null && p.ai_confidence < confidenceThreshold,
+    advisePhotos: photosAdvised({
+      description: p.description,
+      photoCount: p.project_photos[0]?.count ?? 0,
+      workTypeCount: p.work_type_codes.length,
+      confidence: p.ai_confidence,
+    }),
     criteria: {
       tradeCode: p.trade_code,
       lieuType: p.lieu_type,
       roomCodes: p.room_codes,
       workTypeCodes: p.work_type_codes,
       surface: p.surface,
+      budget: p.budget,
       // Ville et adresse déjà enregistrées : leurs coordonnées restent en base (lon et lat nuls).
       ville: p.ville_code_insee
         ? {
@@ -186,6 +195,7 @@ export async function saveAndValidateCriteria(
     p_room_codes: c.roomCodes,
     p_work_type_codes: c.workTypeCodes,
     p_surface: c.surface,
+    p_budget: c.budget,
     p_ville_code_insee: c.ville?.code ?? null,
     p_ville_nom: c.ville?.nom ?? null,
     p_code_postal: c.ville?.codePostal ?? null,

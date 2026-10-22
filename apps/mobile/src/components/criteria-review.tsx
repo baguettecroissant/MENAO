@@ -33,6 +33,7 @@ import { theme } from "@/ui/theme";
 const r = fr.review;
 const LIEUX = ["appartement", "maison", "jardin", "entreprise"] as const;
 const SURFACES = ["moins_10", "10_20", "20_50", "plus_50"] as const;
+const BUDGETS = ["moins_1000", "1000_5000", "5000_15000", "15000_50000", "plus_50000"] as const;
 const DATE_MODES = ["des_que_possible", "date", "inconnue"] as const;
 
 /** Bascule d'un code dans une liste (puces à choix multiple). */
@@ -128,6 +129,7 @@ export function CriteriaReview({
     ...(criteria.workTypeCodes ?? []).map((code) => labelOf(workTypes, code)),
     ...(criteria.roomCodes ?? []).map((code) => labelOf(rooms, code)),
     criteria.surface ? fr.surfaces[criteria.surface] : null,
+    criteria.budget ? fr.budgets[criteria.budget] : null,
   ].filter((tag): tag is string => Boolean(tag));
   const dateTag =
     criteria.dateMode === "date" && criteria.dateSouhaitee
@@ -227,6 +229,17 @@ export function CriteriaReview({
             />
           ))}
         </View>
+        <Text style={styles.label}>{r.budget}</Text>
+        <View style={styles.chips}>
+          {BUDGETS.map((budget) => (
+            <Chip
+              key={budget}
+              label={fr.budgets[budget]}
+              selected={draft.budget === budget}
+              onPress={() => set({ budget: draft.budget === budget ? null : budget })}
+            />
+          ))}
+        </View>
       </EditableCard>
 
       <EditableCard
@@ -317,7 +330,7 @@ export function CriteriaReview({
         )}
       </EditableCard>
 
-      <ProjectPhotosCard projectId={project.id} initial={photos} />
+      <ProjectPhotosCard projectId={project.id} initial={photos} advise={project.advisePhotos} />
 
       {failure && <Notice tone="error">{failure}</Notice>}
       <Button label={r.submit} icon={Search} onPress={submit} loading={saving} disabled={!ready} />

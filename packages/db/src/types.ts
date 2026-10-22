@@ -2518,6 +2518,8 @@ export type Database = {
           ai_confidence: number | null;
           ai_model: string | null;
           analyzed_at: string | null;
+          artisan_brief: string | null;
+          budget: Database["public"]["Enums"]["project_budget"] | null;
           code_postal: string | null;
           created_at: string;
           criteria_validated_at: string | null;
@@ -2548,6 +2550,8 @@ export type Database = {
           ai_confidence?: number | null;
           ai_model?: string | null;
           analyzed_at?: string | null;
+          artisan_brief?: string | null;
+          budget?: Database["public"]["Enums"]["project_budget"] | null;
           code_postal?: string | null;
           created_at?: string;
           criteria_validated_at?: string | null;
@@ -2577,6 +2581,8 @@ export type Database = {
           ai_confidence?: number | null;
           ai_model?: string | null;
           analyzed_at?: string | null;
+          artisan_brief?: string | null;
+          budget?: Database["public"]["Enums"]["project_budget"] | null;
           code_postal?: string | null;
           created_at?: string;
           criteria_validated_at?: string | null;
@@ -4733,6 +4739,7 @@ export type Database = {
       save_project_criteria: {
         Args: {
           p_adresse: string;
+          p_budget?: Database["public"]["Enums"]["project_budget"];
           p_code_postal: string;
           p_date_mode: Database["public"]["Enums"]["project_date_mode"];
           p_date_souhaitee: string;
@@ -4961,6 +4968,7 @@ export type Database = {
       partner_status: "actif" | "suspendu";
       payment_kind: "acompte" | "solde";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
+      project_budget: "moins_1000" | "1000_5000" | "5000_15000" | "15000_50000" | "plus_50000";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
@@ -5241,6 +5249,7 @@ export const Constants = {
       partner_status: ["actif", "suspendu"],
       payment_kind: ["acompte", "solde"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
+      project_budget: ["moins_1000", "1000_5000", "5000_15000", "15000_50000", "plus_50000"],
       project_date_mode: ["des_que_possible", "date", "inconnue"],
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],

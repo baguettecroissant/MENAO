@@ -1,6 +1,6 @@
 import type { RequestDetail } from "@menao/validation";
 import * as WebBrowser from "expo-web-browser";
-import { Calendar, MapPin, MessageSquare, User, Wrench } from "lucide-react-native";
+import { Calendar, MapPin, MessageSquare, Sparkles, User, Wrench } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { PhotoViewer } from "@/components/photo-viewer";
@@ -85,6 +85,7 @@ export function RequestBlocks({
     ...r.work_types,
     ...r.rooms,
     ...(r.surface ? [fr.surfaces[r.surface]] : []),
+    ...(r.budget ? [t.budget(fr.budgets[r.budget])] : []),
   ];
   const wished =
     r.date_mode === "date" && r.date_souhaitee
@@ -145,6 +146,13 @@ export function RequestBlocks({
         ) : null}
       </DetailBlock>
 
+      {r.artisan_brief ? (
+        <DetailBlock icon={icon(Sparkles)} title={t.brief}>
+          <Text style={styles.text}>{r.artisan_brief}</Text>
+          <Text style={styles.note}>{t.briefNote}</Text>
+        </DetailBlock>
+      ) : null}
+
       <DetailBlock
         icon={icon(Wrench)}
         title={variant === "rendez-vous" ? fr.proAppointment.reminder : t.description}
@@ -198,6 +206,12 @@ const styles = StyleSheet.create({
   photos: { flexDirection: "row", gap: spacing(2) },
   photo: { width: 96, height: 96, borderRadius: radius.input },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  note: {
+    fontFamily: font.regular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors["muted-foreground"],
+  },
   // Puces bleu clair des maquettes (« En appartement », « Installation de prises »).
   tag: {
     overflow: "hidden",

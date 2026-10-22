@@ -4,6 +4,13 @@ import { messages } from "./messages";
 // Valeurs reprises de @menao/core (project.ts) : le paquet de validation ne dépend que de Zod.
 const LIEU_TYPES = ["appartement", "maison", "jardin", "entreprise"] as const;
 const SURFACE_TRANCHES = ["moins_10", "10_20", "20_50", "plus_50"] as const;
+const BUDGET_TRANCHES = [
+  "moins_1000",
+  "1000_5000",
+  "5000_15000",
+  "15000_50000",
+  "plus_50000",
+] as const;
 const DATE_MODES = ["des_que_possible", "date", "inconnue"] as const;
 const code = z.string().regex(/^[a-z0-9-]{1,60}$/);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: messages.dateInvalid });
@@ -32,6 +39,8 @@ export function projectCriteriaSchema(today: string) {
       roomCodes: z.array(code).max(20, { error: messages.tooMany }),
       workTypeCodes: z.array(code).max(20, { error: messages.tooMany }),
       surface: z.enum(SURFACE_TRANCHES).nullable(),
+      // Budget approximatif (ADR 0163), facultatif.
+      budget: z.enum(BUDGET_TRANCHES).nullable().default(null),
       ville: z
         .object({
           code: z.string().regex(/^[0-9][0-9AB][0-9]{3}$/),

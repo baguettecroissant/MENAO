@@ -53,6 +53,7 @@ export async function saveProjectCriteria(
     p_lat: c.adresse?.lat ?? null,
     p_date_mode: c.dateMode,
     p_date_souhaitee: c.dateSouhaitee,
+    p_budget: c.budget,
   };
   const { error } = await supabase.rpc("save_project_criteria", args as SaveArgs);
   if (error) return { ok: false, error: sqlError(error) };

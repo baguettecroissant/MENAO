@@ -1,4 +1,13 @@
-import { Calendar, Mail, MapPin, MessageSquare, PhoneCall, User, Wrench } from "lucide-react";
+import {
+  Calendar,
+  Mail,
+  MapPin,
+  MessageSquare,
+  PhoneCall,
+  Sparkles,
+  User,
+  Wrench,
+} from "lucide-react";
 import { Tag, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { RequestDetail } from "@/lib/artisan/requests";
@@ -29,6 +38,7 @@ export function RequestBlocks({
     ...r.work_types,
     ...r.rooms,
     ...(r.surface ? [s.surfacesShort[r.surface]] : []),
+    ...(r.budget ? [t.budget(s.budgets[r.budget])] : []),
   ];
   const wished =
     r.date_mode === "date" && r.date_souhaitee
@@ -97,6 +107,13 @@ export function RequestBlocks({
           </a>
         )}
       </DetailBlock>
+
+      {r.artisan_brief && (
+        <DetailBlock icon={<Sparkles />} title={t.brief}>
+          <p className="text-sm leading-relaxed">{r.artisan_brief}</p>
+          <p className="text-xs text-muted-foreground">{t.briefNote}</p>
+        </DetailBlock>
+      )}
 
       <ExpandableBlock
         icon={<Wrench />}

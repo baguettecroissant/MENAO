@@ -46,6 +46,8 @@ const rawAnalysisSchema = z.object({
   date_souhaitee: z.string().nullable(),
   urgence: z.boolean(),
   resume: z.string().nullable(),
+  budget_tranche: z.string().nullable(),
+  brief_artisan: z.string().nullable(),
   confiance: z.number().min(0).max(1),
 });
 
@@ -70,6 +72,8 @@ Règles :
 - date_souhaitee : AAAA-MM-JJ si une date ou une échéance précise est donnée (calcule les dates relatives à partir de la date du jour) ; jamais dans le passé ; sinon null.
 - urgence : vrai si le particulier exprime une urgence (fuite active, panne, mise en sécurité).
 - resume : une phrase neutre de 200 caractères au plus décrivant les travaux, sans nom, téléphone, e-mail ni adresse précise.
+- budget_tranche : moins_1000, 1000_5000, 5000_15000, 15000_50000 ou plus_50000 (euros TTC), seulement si le particulier indique lui-même un budget ou un montant maximal. N'estime jamais un budget : sinon null.
+- brief_artisan : la demande reformulée pour l'artisan qui la reçoit, en 2 à 4 phrases neutres et précises (600 caractères au plus) : nature des travaux, lieu et pièces, dimensions ou quantités données, contraintes et souhaits exprimés, puis ce qui reste à préciser lors de la visite. N'invente aucun détail absent du texte ; sans nom, téléphone, e-mail ni adresse précise.
 - confiance : de 0 à 1, ta certitude sur le métier et les travaux.
 
 Le texte peut venir d'une dictée vocale et contenir des erreurs de transcription du vocabulaire du bâtiment (par exemple « play-cote » pour placo, « ragrèche » pour ragréage) : interprète-les.
@@ -197,6 +201,7 @@ type EditedProject = {
   room_codes: string[];
   work_type_codes: string[];
   surface: NeedCriteria["surface"];
+  budget: NeedCriteria["budget"];
   ville_code_insee: string | null;
   adresse: string | null;
   date_mode: NeedCriteria["dateMode"];
@@ -253,7 +258,8 @@ async function updateProject(
   description: string,
   best: Attempt,
 ): Promise<CompletedSection[] | null> {
-  const patch: Record<string, unknown> = { description };
+  // Sans nouvelle analyse, l'ancienne reformulation ne correspond plus au texte : retirée.
+  const patch: Record<string, unknown> = { description, artisan_brief: null };
   let completed: CompletedSection[] = [];
   if (best) {
     const c = best.criteria;
@@ -287,6 +293,10 @@ async function updateProject(
       ai_confidence: Math.round(c.confiance * 100) / 100,
       analyzed_at: new Date().toISOString(),
       summary: c.summary,
+      // Demande reformulée pour l'artisan (ADR 0163), renouvelée avec la description ; budget
+      // repris du texte seulement s'il n'a pas encore été choisi.
+      artisan_brief: c.artisanBrief,
+      budget: edited.budget ?? c.budget,
       urgence: c.urgence,
       trade_code: done.tradeCode,
       lieu_type: done.lieuType,
@@ -355,7 +365,7 @@ Deno.serve(
       const { data } = await admin
         .from("projects")
         .select(
-          "id, status, trade_code, lieu_type, room_codes, work_type_codes, surface, ville_code_insee, adresse, date_mode, date_souhaitee",
+          "id, status, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, adresse, date_mode, date_souhaitee",
         )
         .eq("id", body.projectId)
         .eq("user_id", user.id)
@@ -467,6 +477,8 @@ Deno.serve(
           ai_confidence: c ? Math.round(c.confiance * 100) / 100 : null,
           analyzed_at: best ? new Date().toISOString() : null,
           summary: c?.summary ?? null,
+          artisan_brief: c?.artisanBrief ?? null,
+          budget: c?.budget ?? null,
           trade_code: c?.tradeCode ?? tradeHint,
           lieu_type: c?.lieuType ?? null,
           room_codes: c?.roomCodes ?? [],

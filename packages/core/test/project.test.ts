@@ -8,6 +8,9 @@ import {
   canSearchArtisans,
   completeCriteria,
   needAnalysisJsonSchema,
+  ARTISAN_BRIEF_MAX_LENGTH,
+  BUDGET_TRANCHES,
+  photosAdvised,
   needHelpLevel,
   normalizeNeedAnalysis,
   parisToday,
@@ -38,6 +41,13 @@ describe("règles de la recherche (F-05, F-07)", () => {
   it("référentiels de la spec", () => {
     expect(LIEU_TYPES).toEqual(["appartement", "maison", "jardin", "entreprise"]);
     expect(SURFACE_TRANCHES).toEqual(["moins_10", "10_20", "20_50", "plus_50"]);
+    expect(BUDGET_TRANCHES).toEqual([
+      "moins_1000",
+      "1000_5000",
+      "5000_15000",
+      "15000_50000",
+      "plus_50000",
+    ]);
     expect(MAX_PROJECT_PHOTOS).toBe(10);
     expect(PROJECT_TEXT_MAX_LENGTH).toBe(5000);
   });
@@ -80,6 +90,9 @@ describe("normalisation de l'analyse IA (F-06)", () => {
     date_souhaitee: "2026-10-20",
     urgence: false,
     resume: "Réparer une fuite sous l'évier de la cuisine.",
+    budget_tranche: "moins_1000",
+    brief_artisan:
+      "Fuite sous l'évier de la cuisine d'un appartement à Nice.   Intervention souhaitée avant le 20 octobre.",
     confiance: 0.92,
   };
 
@@ -91,7 +104,24 @@ describe("normalisation de l'analyse IA (F-06)", () => {
     expect(c.ville).toBe("Nice");
     expect(c.dateMode).toBe("date");
     expect(c.dateSouhaitee).toBe("2026-10-20");
+    expect(c.budget).toBe("moins_1000");
+    expect(c.artisanBrief).toBe(
+      "Fuite sous l'évier de la cuisine d'un appartement à Nice. Intervention souhaitée avant le 20 octobre.",
+    );
     expect(analysisNeedsFallback(c)).toBe(false);
+  });
+
+  it("budget hors liste écarté, résumé pour l'artisan borné (ADR 0163)", () => {
+    const c = normalizeNeedAnalysis(
+      { ...raw, budget_tranche: "un peu", brief_artisan: "x".repeat(900) },
+      ref,
+      "2026-10-09",
+    );
+    expect(c.budget).toBeNull();
+    expect(c.artisanBrief).toHaveLength(ARTISAN_BRIEF_MAX_LENGTH);
+    expect(
+      normalizeNeedAnalysis({ ...raw, brief_artisan: "  " }, ref, "2026-10-09").artisanBrief,
+    ).toBeNull();
   });
 
   it("refuse les dates passées et les valeurs hors liste", () => {
@@ -160,6 +190,8 @@ describe("description modifiée : la nouvelle analyse complète les critères (F
     dateSouhaitee: null,
     urgence: true,
     summary: "Réparer une fuite sous l'évier de la cuisine.",
+    budget: null,
+    artisanBrief: null,
     confiance: 0.93,
   };
   const nice = { villeCode: "06088", adresse: "1 Rue de l'Exemple 06000 Nice" };
@@ -253,5 +285,29 @@ describe("date du jour à Paris", () => {
   it("bascule à minuit heure de Paris, pas UTC", () => {
     expect(parisToday(new Date("2026-10-09T21:30:00Z"))).toBe("2026-10-09");
     expect(parisToday(new Date("2026-10-09T22:30:00Z"))).toBe("2026-10-10");
+  });
+});
+
+describe("photos conseillées quand la description reste vague (ADR 0163)", () => {
+  const precise =
+    "Remplacer le mitigeur de la douche et reprendre le joint silicone autour du receveur qui fuit";
+  it("conseillées sans photo si le texte est court, les travaux inconnus ou l'analyse peu sûre", () => {
+    const base = { description: precise, photoCount: 0, workTypeCount: 2, confidence: 0.9 };
+    expect(photosAdvised(base)).toBe(false);
+    expect(photosAdvised({ ...base, description: "refaire ma salle de bains" })).toBe(true);
+    expect(photosAdvised({ ...base, workTypeCount: 0 })).toBe(true);
+    expect(photosAdvised({ ...base, confidence: 0.5 })).toBe(true);
+    expect(photosAdvised({ ...base, confidence: null })).toBe(false);
+  });
+
+  it("jamais demandées quand il y a déjà une photo", () => {
+    expect(
+      photosAdvised({
+        description: "salle de bains",
+        photoCount: 1,
+        workTypeCount: 0,
+        confidence: 0.2,
+      }),
+    ).toBe(false);
   });
 });

@@ -30,6 +30,15 @@ describe("critères de recherche (F-07)", () => {
     expect(projectCriteriaSchema(today).safeParse(base).success).toBe(true);
   });
 
+  it("budget approximatif : une tranche connue, sinon refusé (ADR 0163)", () => {
+    expect(projectCriteriaSchema(today).parse({ ...base, budget: "5000_15000" }).budget).toBe(
+      "5000_15000",
+    );
+    expect(projectCriteriaSchema(today).safeParse({ ...base, budget: "beaucoup" }).success).toBe(
+      false,
+    );
+  });
+
   it("tout est facultatif à l'enregistrement d'une carte", () => {
     const parsed = projectCriteriaSchema(today).parse({
       tradeCode: null,
@@ -43,6 +52,8 @@ describe("critères de recherche (F-07)", () => {
       dateSouhaitee: null,
     });
     expect(parsed.dateSouhaitee).toBeNull();
+    // Budget facultatif (ADR 0163) : absent, il vaut null.
+    expect(parsed.budget).toBeNull();
   });
 
   it("date passée interdite, date obligatoire si « Préciser une date »", () => {

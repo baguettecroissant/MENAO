@@ -817,6 +817,8 @@ export const fr = {
     lieu: "Où seront réalisés les travaux ?",
     rooms: "Pièce des travaux",
     surface: "Surface estimée des travaux",
+    // Budget approximatif (ADR 0163), facultatif.
+    budget: "Budget approximatif (facultatif)",
     address: "Adresse",
     addressHelp: "Préciser votre adresse permet de trouver un artisan proche de chez vous.",
     city: "Votre ville",
@@ -845,6 +847,9 @@ export const fr = {
       alt: (index: number) => `Photo ${index} du chantier`,
       delete: (index: number) => `Supprimer la photo ${index}`,
       limit: "Vous avez atteint la limite de 10 photos.",
+      // Description encore vague (ADR 0163) : un conseil, jamais une obligation.
+      advice:
+        "Votre demande est encore peu détaillée : ajoutez quelques photos, les artisans comprendront mieux vos travaux et vous répondront plus vite.",
     },
     submit: "Trouver l'artisan idéal",
     submitHint: "Renseignez au moins le métier et la ville pour lancer la recherche.",
@@ -1743,6 +1748,11 @@ export const fr = {
     address: "Adresse",
     openMap: "Ouvrir la carte",
     description: "Description du chantier",
+    // Demande reformulée par l'IA et budget approximatif (ADR 0163).
+    brief: "La demande en bref",
+    briefNote:
+      "Résumé rédigé par l'IA de MENAO à partir de la demande du client : vérifiez les détails avec lui.",
+    budget: (label: string) => `Budget : ${label}`,
     message: "Message personnalisé",
     date: "Date de début souhaitée",
     dateAsap: "Dès que possible",
@@ -2649,6 +2659,14 @@ export const fr = {
     "10_20": "10 à 20 m²",
     "20_50": "20 à 50 m²",
     plus_50: "> 50 m²",
+  },
+  // Budget approximatif, en euros TTC (ADR 0163).
+  budgets: {
+    moins_1000: "Moins de 1\u00a0000\u00a0€",
+    "1000_5000": "1\u00a0000 à 5\u00a0000\u00a0€",
+    "5000_15000": "5\u00a0000 à 15\u00a0000\u00a0€",
+    "15000_50000": "15\u00a0000 à 50\u00a0000\u00a0€",
+    plus_50000: "Plus de 50\u00a0000\u00a0€",
   },
   guest: {
     spaceTitle: "Votre espace MENAO",

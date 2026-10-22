@@ -18,6 +18,12 @@ export const requestDetailSchema = z.object({
   message: z.string().nullable(),
   description: z.string(),
   summary: z.string().nullable(),
+  // Demande reformulée par l'IA et budget approximatif (ADR 0163), absents des anciennes réponses.
+  artisan_brief: z.string().nullable().catch(null),
+  budget: z
+    .enum(["moins_1000", "1000_5000", "5000_15000", "15000_50000", "plus_50000"])
+    .nullable()
+    .catch(null),
   trade: z.string().nullable(),
   lieu_type: z.enum(["appartement", "maison", "jardin", "entreprise"]).nullable(),
   surface: z.enum(["moins_10", "10_20", "20_50", "plus_50"]).nullable(),

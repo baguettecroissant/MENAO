@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BUDGET_TRANCHES,
   canSearchArtisans,
   LIEU_TYPES,
   MAX_PROJECT_PHOTOS,
@@ -68,6 +69,7 @@ export function CriteriaReview({
   workTypes,
   rooms,
   photos,
+  advisePhotos,
   today,
 }: {
   projectId: string;
@@ -78,6 +80,8 @@ export function CriteriaReview({
   workTypes: (Labeled & { trade: string })[];
   rooms: Labeled[];
   photos: { id: string; url: string | null }[];
+  /** Description encore vague, sans photo (ADR 0163) : photos conseillées. */
+  advisePhotos: boolean;
   today: string;
 }) {
   const router = useRouter();
@@ -195,6 +199,7 @@ export function CriteriaReview({
     ...saved.workTypeCodes.map((c) => label(workTypes, c)),
     ...saved.roomCodes.map((c) => label(rooms, c)),
     saved.surface ? fr.search.surfacesShort[saved.surface] : null,
+    saved.budget ? fr.search.budgets[saved.budget] : null,
   ].filter((v): v is string => Boolean(v));
 
   return (
@@ -332,6 +337,25 @@ export function CriteriaReview({
             ))}
           </Select>
         </Subsection>
+        <Subsection title={t.site.budget} description={t.site.budgetHelp}>
+          <label htmlFor="budget" className="sr-only">
+            {t.site.budget}
+          </label>
+          <Select
+            id="budget"
+            value={draft.budget ?? ""}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, budget: (e.target.value || null) as Criteria["budget"] }))
+            }
+          >
+            <option value="">{t.site.budgetPlaceholder}</option>
+            {BUDGET_TRANCHES.map((b) => (
+              <option key={b} value={b}>
+                {fr.search.budgets[b]}
+              </option>
+            ))}
+          </Select>
+        </Subsection>
       </EditableCard>
 
       <EditableCard
@@ -407,6 +431,7 @@ export function CriteriaReview({
       <PhotosCard
         projectId={projectId}
         photos={photos}
+        advise={advisePhotos}
         onChange={() => router.refresh()}
         {...cardProps("photos")}
       />
@@ -677,6 +702,7 @@ function AddressEditor({
 function PhotosCard({
   projectId,
   photos,
+  advise,
   onChange,
   editing,
   locked,
@@ -685,6 +711,7 @@ function PhotosCard({
 }: {
   projectId: string;
   photos: { id: string; url: string | null }[];
+  advise: boolean;
   onChange: () => void;
   editing: boolean;
   locked: boolean;
@@ -761,6 +788,11 @@ function PhotosCard({
           !editing && <EditButton title={t.photos.title} onClick={onEdit} disabled={locked} />
         }
       />
+      {advise && photos.length === 0 && (
+        <div className="mt-3">
+          <Alert tone="info">{t.photos.advice}</Alert>
+        </div>
+      )}
       {errors.map((message) => (
         <div key={message} className="mt-3">
           <Alert tone="error">{message}</Alert>
