@@ -120,7 +120,7 @@ begin
       and not exists (select 1 from merite x where x.nouveau and x.rang <= 5)
     order by m.dispo desc, m.tirage
     limit 1
-  )
+  ),
   -- Hors de leur zone : après tous ceux de la zone, les plus proches d'abord.
   proches as (
     select c.*, row_number() over (
