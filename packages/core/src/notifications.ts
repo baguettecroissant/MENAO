@@ -14,6 +14,8 @@ export const OPTIONAL_NOTIFICATIONS = {
     "acompte_relance",
     "planning_relance",
     "inscription_relance",
+    // Proposition de parrainer un confrère (ADR 0161).
+    "parrainage_suggestion",
   ],
 } as const;
 export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;

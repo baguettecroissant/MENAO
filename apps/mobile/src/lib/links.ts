@@ -41,6 +41,8 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/factures$/, () => "/pro-factures"],
   [/^\/pro\/avis$/, () => "/pro-avis"],
   [/^\/pro\/grade$/, () => "/pro-grade"],
+  // « Mon profil » du site (parrainage, ADR 0161) : « Mon profil » de l'application.
+  [/^\/pro\/mon-profil$/, () => "/compte"],
   // « Ma fiche publique » du site : « Voir ma fiche » de l'application (ADR 0129).
   [/^\/pro\/profil$/, () => "/pro-ma-fiche"],
   [/^\/pro\/agenda$/, () => "/pro-agenda"],

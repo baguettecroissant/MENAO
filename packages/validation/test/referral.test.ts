@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { parseReferral, parseWelcomeGift, welcomeGiftChoiceSchema } from "../src/referral";
+import {
+  parseReferral,
+  parseReferralRows,
+  parseWelcomeGift,
+  welcomeGiftChoiceSchema,
+} from "../src/referral";
+
+describe("filleuls du parrain (ADR 0161)", () => {
+  it("lignes attendues, lignes inattendues ignorées", () => {
+    const row = {
+      id: "r1",
+      nom: "Élec Exemple",
+      created_at: "2026-10-01T08:00:00Z",
+      etape: "valide",
+    };
+    expect(parseReferralRows([row, { ...row, etape: "?" }, null])).toEqual([row]);
+    expect(parseReferralRows(null)).toEqual([]);
+  });
+});
 
 describe("bilan du parrainage (F-60)", () => {
   it("réponse attendue", () => {

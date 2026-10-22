@@ -55,6 +55,7 @@ export const NOTIFICATION_TYPES = [
   "demande_relance",
   "demande_sans_reponse",
   "abonnement_impaye",
+  "parrainage_suggestion",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -984,6 +985,35 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Mettre à jour mon paiement", url: link("/pro/onboarding/formule") },
+      };
+    }
+    // Proposition de parrainer un confrère (ADR 0161) : premier chantier signé, début du 3e mois,
+    // avis 5 étoiles. L'objet et l'aperçu, repris par l'application, ne parlent pas de
+    // l'abonnement (règle 10) ; l'e-mail, si.
+    case "parrainage_suggestion": {
+      const moment = text(data, "moment");
+      return {
+        subject:
+          moment === "premier_chantier"
+            ? "Bravo pour ce chantier !"
+            : moment === "avis_5_etoiles"
+              ? "Un nouvel avis 5 étoiles, bravo !"
+              : "Un confrère mérite aussi des clients ?",
+        preview:
+          "Vous connaissez un artisan qui mérite aussi des clients ? Parrainez-le sur MENAO.",
+        title: "Parrainez un confrère",
+        paragraphs: [
+          hello(ctx.firstName),
+          moment === "premier_chantier"
+            ? "Bravo pour ce chantier signé grâce à MENAO !"
+            : moment === "avis_5_etoiles"
+              ? "Un client vient de vous laisser un avis 5 étoiles : bravo pour ce travail !"
+              : "Merci de votre confiance depuis votre arrivée sur MENAO.",
+          "Vous connaissez un artisan qui mérite aussi des clients ? Envoyez-lui votre lien ou votre code de parrainage : il reçoit un cadeau de bienvenue à la validation de son dossier.",
+          "Pour vous, 1 mois d'abonnement offert dès son premier paiement, jusqu'à 12 par an.",
+        ],
+        quote: null,
+        cta: { label: "Parrainer un confrère", url: link("/pro/mon-profil#parrainage") },
       };
     }
     // Aucune demande sans réponse (ADR 0156) : relances de l'artisan à 24 h et 48 h.

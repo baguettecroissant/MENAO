@@ -55,6 +55,22 @@ const profileSchema = z.object({
     .object({ rating: z.number(), count: z.number(), url: z.string() })
     .nullable()
     .catch(null),
+  // Réseau du parrainage (ADR 0161) : filleuls visibles (« Artisans partenaires ») et parrain
+  // visible (« Recommandé par »), avec l'adresse de leur fiche publique.
+  partners: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        trade: z.string().nullable(),
+        slug: z.string().nullable(),
+      }),
+    )
+    .catch([]),
+  recommended_by: z
+    .object({ id: z.string(), name: z.string(), slug: z.string().nullable() })
+    .nullable()
+    .catch(null),
   // Avis des clients MENAO (F-28) : moyennes des avis publiés ; null tant qu'aucun avis n'est publié.
   score: z
     .object({

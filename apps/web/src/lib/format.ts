@@ -123,3 +123,8 @@ export function formatTimeAgo(iso: string, now: Date = new Date()): string {
   if (minutes < 30 * 24 * 60) return `il y a ${Math.floor(minutes / (24 * 60))} j`;
   return `le ${formatDateNumeric(iso)}`;
 }
+
+/** Numéro français au format international (+33…) → « 06 12 34 56 78 » ; autres numéros tels quels. */
+export function formatPhone(e164: string): string {
+  return e164.replace(/^\+33(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/, "0$1 $2 $3 $4 $5");
+}

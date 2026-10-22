@@ -31,6 +31,21 @@ describe("parseArtisanProfile", () => {
     expect(parsed?.score).toBeNull();
   });
 
+  it("réseau du parrainage (ADR 0161) : partenaires et parrain, vides par défaut", () => {
+    expect(parseArtisanProfile(profile)?.partners).toEqual([]);
+    expect(parseArtisanProfile(profile)?.recommended_by).toBeNull();
+    const parsed = parseArtisanProfile({
+      ...profile,
+      partners: [
+        { id: "a1", name: "Élec Exemple", trade: "Électricien", slug: "elec-exemple-nice" },
+      ],
+      recommended_by: { id: "a2", name: "Plomberie Exemple", slug: null },
+    });
+    expect(parsed?.partners).toHaveLength(1);
+    expect(parsed?.recommended_by?.name).toBe("Plomberie Exemple");
+    expect(parseArtisanProfile({ ...profile, partners: "?" })?.partners).toEqual([]);
+  });
+
   it("refuse une fiche incomplète", () => {
     expect(parseArtisanProfile({ id: "x" })).toBeNull();
     expect(parseArtisanProfile(null)).toBeNull();

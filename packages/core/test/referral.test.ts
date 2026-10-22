@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { REFERRAL_MONTHS_PER_YEAR, WELCOME_GIFT_ITEMS, referralProgress } from "../src/referral";
+import {
+  REFERRAL_MONTHS_PER_YEAR,
+  REFERRAL_PARTNERS_SHOWN,
+  REFERRAL_STEPS,
+  REFERRAL_SUGGESTION_COOLDOWN_DAYS,
+  REFERRAL_SUGGESTION_MOMENTS,
+  WELCOME_GIFT_ITEMS,
+  referralProgress,
+  whatsAppShareUrl,
+} from "../src/referral";
 
 describe("parrainage V2 (F-60, ADR 0154)", () => {
   it("plafond de 12 mois offerts par an pour le parrain", () => {
@@ -21,5 +30,24 @@ describe("parrainage V2 (F-60, ADR 0154)", () => {
 
   it("cadeau de bienvenue du filleul : t-shirt ou casquette", () => {
     expect(WELCOME_GIFT_ITEMS).toEqual(["tshirt", "casquette"]);
+  });
+});
+
+describe("réseau du parrain (ADR 0161)", () => {
+  it("étapes des filleuls, moments des propositions, partenaires affichés", () => {
+    expect(REFERRAL_STEPS).toEqual(["inscription", "valide", "abonne", "annule"]);
+    expect(REFERRAL_SUGGESTION_MOMENTS).toEqual([
+      "premier_chantier",
+      "trois_mois",
+      "avis_5_etoiles",
+    ]);
+    expect(REFERRAL_SUGGESTION_COOLDOWN_DAYS).toBe(7);
+    expect(REFERRAL_PARTNERS_SHOWN).toBe(6);
+  });
+
+  it("message WhatsApp déjà rédigé, encodé dans le lien", () => {
+    expect(whatsAppShareUrl("Rejoins MENAO : https://menao.fr/pros?parrain=ab12cd34 & co")).toBe(
+      "https://wa.me/?text=Rejoins%20MENAO%20%3A%20https%3A%2F%2Fmenao.fr%2Fpros%3Fparrain%3Dab12cd34%20%26%20co",
+    );
   });
 });

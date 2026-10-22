@@ -929,6 +929,11 @@ export const fr = {
     // « Répond en moyenne en moins de 2 h » (ADR 0160), absent au-delà.
     responseLabel: "Répond en moyenne",
     fastResponse: "En moins de 2\u00a0h",
+    // Réseau du parrainage (ADR 0161).
+    recommendedBy: (name: string) => `Recommandé par ${name}`,
+    partners: "Artisans partenaires",
+    partnersHint: (name: string) =>
+      `Des artisans recommandés par ${name}, souvent d'autres métiers.`,
     verified: "Avis vérifié",
     seeMore: "Voir plus",
     seeLess: "Voir moins",
@@ -2688,6 +2693,16 @@ export const fr = {
         n === 0
           ? "Aucun confrère inscrit pour l'instant"
           : `${n} confrère${n > 1 ? "s" : ""} inscrit${n > 1 ? "s" : ""}`,
+      // Suivi des filleuls et score de fidélité (ADR 0161), sans parler de l'abonnement (règle 10).
+      loyalty: (n: number) => `Score de fidélité : ${n}`,
+      loyaltyHint: "Un point par parrainage validé.",
+      listTitle: "Vos filleuls",
+      steps: {
+        inscription: "Inscription en cours",
+        valide: "Dossier validé",
+        abonne: "Parrainage validé",
+        annule: "Non retenu",
+      },
     },
     /** Cadeau de bienvenue du filleul (F-60, ADR 0154), carte et écran « Votre cadeau ». */
     welcomeGift: {

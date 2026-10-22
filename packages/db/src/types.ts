@@ -4411,6 +4411,15 @@ export type Database = {
       };
       my_public_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       my_referral: { Args: Record<PropertyKey, never>; Returns: Json };
+      my_referrals: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          created_at: string;
+          etape: string;
+          id: string;
+          nom: string;
+        }[];
+      };
       my_response_stats: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4858,7 +4867,8 @@ export type Database = {
         | "reponse_contact"
         | "demande_relance"
         | "demande_sans_reponse"
-        | "abonnement_impaye";
+        | "abonnement_impaye"
+        | "parrainage_suggestion";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -5135,6 +5145,7 @@ export const Constants = {
         "demande_relance",
         "demande_sans_reponse",
         "abonnement_impaye",
+        "parrainage_suggestion",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

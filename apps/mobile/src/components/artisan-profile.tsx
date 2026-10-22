@@ -4,6 +4,7 @@ import {
   Check,
   ChevronLeft,
   Clock,
+  HeartHandshake,
   MapPin,
   ShieldCheck,
   Star,
@@ -85,6 +86,12 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
           <BadgeCheck size={18} color={colors.primary} />
         </View>
         {profile.company_name ? <Text style={styles.meta}>{profile.company_name}</Text> : null}
+        {profile.recommended_by ? (
+          <View style={styles.recommended}>
+            <HeartHandshake size={14} color={colors.primary} />
+            <Text style={styles.meta}>{t.recommendedBy(profile.recommended_by.name)}</Text>
+          </View>
+        ) : null}
         <View style={styles.badges}>
           {profile.verified ? (
             <View style={styles.badge}>
@@ -283,6 +290,24 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
             <Body muted>{t.reviewsEmpty}</Body>
           )}
         </Card>
+
+        {profile.partners.length ? (
+          <Card>
+            <Text role="heading" style={styles.heading}>
+              {t.partners}
+            </Text>
+            <Body muted>{t.partnersHint(profile.display_name)}</Body>
+            {profile.partners.map((partner) => (
+              <View key={partner.id} style={styles.partner}>
+                <HeartHandshake size={16} color={colors["primary-strong"]} />
+                <View style={styles.partnerText}>
+                  <Text style={styles.strong}>{partner.name}</Text>
+                  {partner.trade ? <Text style={styles.meta}>{partner.trade}</Text> : null}
+                </View>
+              </View>
+            ))}
+          </Card>
+        ) : null}
       </View>
     </>
   );
@@ -452,6 +477,16 @@ const styles = StyleSheet.create({
   body: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
   more: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
   strong: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  recommended: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
+  partner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2.5),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing(2.5),
+  },
+  partnerText: { flex: 1, gap: spacing(0.5) },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(1.5) },
   tag: {
     borderRadius: radius.chip,

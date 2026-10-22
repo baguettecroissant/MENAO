@@ -11,6 +11,7 @@ describe("préférences de notification (F-41)", () => {
     expect(notificationCategory("planning_relance")).toBe("rappels");
     expect(notificationCategory("inscription_relance")).toBe("rappels");
     expect(notificationCategory("levee_relance")).toBe("rappels");
+    expect(notificationCategory("parrainage_suggestion")).toBe("rappels");
     for (const type of ["devis_recu", "acompte_paye", "pv_signe", "litige_ouvert", "avis_recu"]) {
       expect(notificationCategory(type)).toBe("transactionnel");
     }

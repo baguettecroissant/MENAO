@@ -1,5 +1,5 @@
 import type { ProfileHubRow, ProfileHubTone, ProfileTip } from "@menao/core";
-import type { WelcomeGift } from "@menao/validation";
+import type { ReferralRow, WelcomeGift } from "@menao/validation";
 import {
   Award,
   BadgeCheck,
@@ -15,6 +15,7 @@ import {
   Images,
   LifeBuoy,
   MapPin,
+  QrCode,
   ReceiptText,
   Star,
   UserRound,
@@ -33,7 +34,14 @@ import { WelcomeGiftCard } from "./welcome-gift-card";
 
 const t = fr.pro.hub;
 
-type RowKey = ProfileHubRow | "subscription" | "invoices" | "identity" | "notifications" | "help";
+type RowKey =
+  | ProfileHubRow
+  | "businessCards"
+  | "subscription"
+  | "invoices"
+  | "identity"
+  | "notifications"
+  | "help";
 type Row = { key: RowKey; icon: LucideIcon; href: string };
 
 /** Rubriques de « Mon profil », dans l'ordre de l'application (ADR 0129, 0131). */
@@ -45,6 +53,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
       { key: "portfolio", icon: Images, href: "/pro/onboarding/profil" },
       { key: "reviews", icon: Star, href: "/pro/avis" },
       { key: "grade", icon: Award, href: "/pro/grade" },
+      // Cartes de visite à donner aux clients (ADR 0161).
+      { key: "businessCards", icon: QrCode, href: "/pro/cartes-de-visite" },
     ],
   },
   {
@@ -109,8 +119,16 @@ export type ProfileHubData = {
   strength: { percent: number; next: ProfileTip | null };
   statuses: Record<ProfileHubRow, HubLineStatus>;
   subscriptionActive: boolean;
-  /** Parrainage (F-60) : artisans validés seulement. */
-  referral: { link: string; code: string; joined: number; monthsThisYear: number } | null;
+  /** Parrainage (F-60, ADR 0161) : artisans validés seulement. */
+  referral: {
+    link: string;
+    code: string;
+    joined: number;
+    rewarded: number;
+    monthsThisYear: number;
+    qr: { size: number; path: string };
+    referrals: ReferralRow[];
+  } | null;
   /** Cadeau de bienvenue du filleul (ADR 0154). */
   welcomeGift: WelcomeGift | null;
 };
@@ -201,7 +219,13 @@ function statusOf(key: RowKey, hub: ProfileHubData): HubLineStatus {
       ? { text: t.values.subscriptionActive, tone: "success" }
       : { text: t.values.subscriptionToChoose, tone: "warning" };
   }
-  if (key === "invoices" || key === "identity" || key === "notifications" || key === "help") {
+  if (
+    key === "businessCards" ||
+    key === "invoices" ||
+    key === "identity" ||
+    key === "notifications" ||
+    key === "help"
+  ) {
     return null;
   }
   return hub.statuses[key];
