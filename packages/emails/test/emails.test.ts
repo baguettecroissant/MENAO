@@ -533,6 +533,49 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("relances d'une demande sans réponse (ADR 0156) : à 24 h, puis dernier rappel à 48 h", () => {
+    const requestId = "11111111-1111-4111-8111-111111111111";
+    const data = {
+      request_id: requestId,
+      etape: 1,
+      titre: "Fuite sous l'évier",
+      ville: "Nice",
+      client: "Camille",
+      expire_le: "2026-10-24T08:00:00Z",
+    };
+    const first = notificationContent("demande_relance", data, ctx);
+    expect(first.subject).toBe("Une demande attend votre réponse");
+    expect(first.paragraphs[1]).toBe(
+      `Camille attend votre réponse pour son projet ${quoted("Fuite sous l'évier")} à Nice.`,
+    );
+    expect(first.paragraphs[2]).toContain("avant le samedi 24 octobre à 10h00");
+    expect(first.cta).toEqual({
+      label: "Répondre à la demande",
+      url: `https://menao.example/pro/demandes/${requestId}`,
+    });
+    expect(notificationContent("demande_relance", { ...data, etape: 2 }, ctx).subject).toBe(
+      "Dernier rappel : une demande attend votre réponse",
+    );
+    expect(notificationContent("demande_relance", {}, ctx).cta.url).toBe(
+      "https://menao.example/pro/demandes",
+    );
+  });
+
+  it("demande sans réponse (ADR 0156) : d'autres artisans proposés au client", () => {
+    const projectId = "22222222-2222-4222-8222-222222222222";
+    const data = { project_id: projectId, titre: "Douche", ville: "Nice", tous_refus: false };
+    const content = notificationContent("demande_sans_reponse", data, ctx);
+    expect(content.paragraphs[1]).toContain("n'ont pas répondu dans les 72 heures");
+    expect(content.paragraphs[2]).toContain("du secteur de Nice");
+    expect(content.cta).toEqual({
+      label: "Choisir d'autres artisans",
+      url: `https://menao.example/recherche/${projectId}/artisans`,
+    });
+    expect(
+      notificationContent("demande_sans_reponse", { ...data, tous_refus: true }, ctx).paragraphs[1],
+    ).toContain("n'ont pas pu donner suite");
+  });
+
   it("relance « Paiement en attente » : acompte à régler, lien vers le chantier", () => {
     const data = { ...ids, titre: "Prises", artisan: "Jean" };
     const reminder = notificationContent("acompte_relance", data, ctx);

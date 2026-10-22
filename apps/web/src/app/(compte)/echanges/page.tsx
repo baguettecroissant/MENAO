@@ -18,6 +18,7 @@ const TYPES = [
   "message",
   "expertise",
   "recompense",
+  "demande_sans_reponse",
 ] as const;
 const tone = { ouvert: "primary", en_cours: "success", resolu: "neutral" } as const;
 

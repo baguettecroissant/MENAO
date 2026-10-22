@@ -52,6 +52,8 @@ export const NOTIFICATION_TYPES = [
   "inscription_relance",
   "compte_radie",
   "reponse_contact",
+  "demande_relance",
+  "demande_sans_reponse",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -951,6 +953,62 @@ export function notificationContent(
           url: link(
             ticketId ? `/${dispute ? "signalements" : "echanges"}/${ticketId}` : "/mon-espace",
           ),
+        },
+      };
+    }
+    // Aucune demande sans réponse (ADR 0156) : relances de l'artisan à 24 h et 48 h.
+    case "demande_relance": {
+      const client = text(data, "client") ?? "Un particulier";
+      const ville = text(data, "ville");
+      const expiry = moment(text(data, "expire_le"));
+      const requestId = uuid(data, "request_id");
+      const last = data.etape === 2;
+      return {
+        subject: last
+          ? "Dernier rappel : une demande attend votre réponse"
+          : "Une demande attend votre réponse",
+        preview: expiry
+          ? `Répondez avant le ${expiry.day} à ${expiry.time}.`
+          : "Fixez un rendez-vous ou refusez la demande.",
+        title: last ? "Dernier rappel avant l'expiration" : "Une demande attend votre réponse",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${client} attend votre réponse pour son projet ${quoted(titre)}${ville ? ` à ${ville}` : ""}.`,
+          expiry
+            ? `Sans réponse avant le ${expiry.day} à ${expiry.time}, la demande expirera et le client se tournera vers d'autres artisans.`
+            : "Sans réponse, la demande expirera et le client se tournera vers d'autres artisans.",
+          "Fixez un rendez-vous ou refusez la demande : une réponse rapide compte dans votre score MENAO.",
+        ],
+        quote: null,
+        cta: {
+          label: "Répondre à la demande",
+          url: link(requestId ? `/pro/demandes/${requestId}` : "/pro/demandes"),
+        },
+      };
+    }
+    // Plus aucun artisan n'attend de répondre (ADR 0156) : d'autres artisans peuvent recevoir la demande.
+    case "demande_sans_reponse": {
+      const projectId = uuid(data, "project_id");
+      const ville = text(data, "ville");
+      const allRefused = data.tous_refus === true;
+      return {
+        subject: "Votre demande : d'autres artisans peuvent vous répondre",
+        preview: allRefused
+          ? "Les artisans contactés n'ont pas pu donner suite."
+          : "Les artisans contactés n'ont pas répondu à temps.",
+        title: "Trouvons un autre artisan",
+        paragraphs: [
+          hello(ctx.firstName),
+          allRefused
+            ? `Les artisans contactés pour votre projet ${quoted(titre)} n'ont pas pu donner suite.`
+            : `Les artisans contactés pour votre projet ${quoted(titre)} n'ont pas répondu dans les 72 heures.`,
+          `D'autres artisans vérifiés${ville ? ` du secteur de ${ville}` : ""} peuvent recevoir votre demande : choisissez-les en un clic, sans tout ressaisir.`,
+          "L'équipe MENAO est prévenue et peut aussi vous aider à trouver le bon artisan.",
+        ],
+        quote: null,
+        cta: {
+          label: "Choisir d'autres artisans",
+          url: link(projectId ? `/recherche/${projectId}/artisans` : "/mon-espace"),
         },
       };
     }

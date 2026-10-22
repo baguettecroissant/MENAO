@@ -2294,6 +2294,7 @@ export const fr = {
       message: "Message signalé",
       expertise: "Expertise signalée",
       recompense: "Récompense MENAO",
+      demande_sans_reponse: "Demande sans réponse",
     },
     statuses: { ouvert: "En attente de réponse", en_cours: "Réponse de l'équipe", resolu: "Clos" },
     untitled: "Sans objet",
@@ -5625,7 +5626,9 @@ export const fr = {
         avis: "Avis signalé",
         message: "Message signalé",
         litige: "Litige sur un chantier",
-        recompense: "Récompense de niveau à expédier (tenue MENAO)",
+        recompense: "Récompense à expédier (tenue de niveau ou cadeau de bienvenue)",
+        demande_sans_reponse:
+          "Demande sans réponse : aucun artisan n'a accepté (72 h écoulées ou refus)",
       },
       dispute: {
         chantier: (title: string, status: string) => `Chantier : ${title} (${status})`,
