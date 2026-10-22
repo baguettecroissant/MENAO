@@ -160,6 +160,11 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
                   ticketId={ticket.id}
                   label={t.dispute.replyLabel}
                   submit={t.dispute.replySubmit}
+                  templates={{
+                    label: t.templates.label,
+                    choose: t.templates.choose,
+                    items: [...(t.templates.byType[ticket.type] ?? []), ...t.templates.common],
+                  }}
                   hint={
                     ticket.user_id
                       ? t.dispute.replyToAccount

@@ -24,6 +24,8 @@ const OPEN = [
   "videos",
   "icons",
   "calendrier",
+  // Santé du service (ADR 0159) : interrogée par l'outil de surveillance externe.
+  "sante",
   // Espace partenaire par lien privé (ADR 0139) : utilisable avant le lancement.
   "espace-partenaire",
   // Bannières du kit (ADR 0141) : aperçus de l'espace partenaire et images déjà collées.

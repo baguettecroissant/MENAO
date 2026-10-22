@@ -21,6 +21,8 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 - [ ] **Resend** : offre adaptée au volume. L'offre gratuite est limitée à 100 e-mails par jour, en tout.
 - [ ] **Apple Developer** (compte particulier choisi) et **Google Play Console** : nécessaires pour l'app (phase E) et pour « Se connecter avec Apple ».
 - [ ] **Sentry** : projet ou environnement de production.
+- [ ] **Surveillance externe** de `/sante` et page d'état : voir `docs/EXPLOITATION.md` (§ 2).
+- [ ] **Test de restauration** d'une sauvegarde de production avant l'ouverture : voir `docs/EXPLOITATION.md` (§ 1).
 
 ### Juridique (Toi, avec l'avocat)
 - [ ] Valider les points marqués `TODO(legal)` dans le code (`git grep "TODO(legal)"`), une quarantaine aujourd'hui. Les principaux :

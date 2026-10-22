@@ -5699,6 +5699,59 @@ export const fr = {
         decisionLabel: "Explication de la décision (envoyée aux deux parties)",
         decide: "Clore le litige",
       },
+      // Réponses types du SAV (ADR 0159) : préremplissent la réponse, toujours relue avant l'envoi.
+      templates: {
+        label: "Réponse type",
+        choose: "Choisir une réponse type (facultatif)",
+        common: [
+          {
+            label: "Accusé de réception",
+            body: "Bonjour,\n\nMerci pour votre message : l'équipe MENAO l'a bien reçu et revient vers vous très vite.\n\nBonne journée,\nL'équipe MENAO",
+          },
+          {
+            label: "Demande réglée",
+            body: "Bonjour,\n\nNous espérons que votre demande est réglée. Si besoin, répondez simplement à ce message.\n\nBonne journée,\nL'équipe MENAO",
+          },
+        ],
+        byType: {
+          demande_sans_reponse: [
+            {
+              label: "Proposer d'autres artisans",
+              body: "Bonjour,\n\nLes artisans contactés n'ont pas pu donner suite à votre demande. D'autres artisans vérifiés de votre secteur peuvent la recevoir : choisissez-les depuis votre projet, sans tout ressaisir. Si aucun ne vous convient, répondez-nous et nous chercherons avec vous, y compris un peu plus loin.\n\nL'équipe MENAO",
+            },
+          ],
+          litige: [
+            {
+              label: "Prise en charge du signalement",
+              body: "Bonjour,\n\nNous avons bien reçu votre signalement. L'équipe qualité contacte l'autre partie sous 48 h pour recueillir sa version, puis revient vers vous pour chercher une solution amiable.\n\nL'équipe MENAO",
+            },
+          ],
+          faux_particulier: [
+            {
+              label: "Remercier l'artisan",
+              body: "Bonjour,\n\nMerci pour votre signalement. L'équipe MENAO vérifie cette demande en toute discrétion et prendra les mesures nécessaires si elle se confirme.\n\nL'équipe MENAO",
+            },
+          ],
+          suppression_compte: [
+            {
+              label: "Suppression en cours",
+              body: "Bonjour,\n\nNous avons bien reçu votre demande de suppression de compte. Elle sera traitée dans un délai d'un mois au plus, et nous vous confirmerons ici sa réalisation. Certaines données, comme les factures, sont conservées pendant la durée prévue par la loi.\n\nL'équipe MENAO",
+            },
+          ],
+          recompense: [
+            {
+              label: "Envoi en préparation",
+              body: "Bonjour,\n\nVotre envoi est en préparation : nous l'expédions à l'adresse indiquée et vous prévenons dès son départ.\n\nL'équipe MENAO",
+            },
+          ],
+          dossier_recherche: [
+            {
+              label: "Recherche en cours",
+              body: "Bonjour,\n\nNous avons bien reçu votre dossier. Nous recherchons un artisan vérifié pour votre projet et revenons vers vous dans les meilleurs délais.\n\nL'équipe MENAO",
+            },
+          ],
+        } as Record<string, readonly { label: string; body: string }[]>,
+      },
       // Demandes retenues par le recoupement automatique (ADR 0157).
       heldRequests: {
         title: "Demandes retenues",
