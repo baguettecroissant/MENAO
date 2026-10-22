@@ -22,9 +22,10 @@ export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;
 
 /**
  * Notifications envoyées par e-mail seulement, jamais affichées dans l'application ni en push :
- * le paiement de l'abonnement artisan (CLAUDE.md règle 10, ADR 0158).
+ * le paiement de l'abonnement artisan (CLAUDE.md règle 10, ADR 0158) et le mois offert de
+ * démarrage (ADR 0166).
  */
-export const WEB_ONLY_NOTIFICATIONS: readonly string[] = ["abonnement_impaye"];
+export const WEB_ONLY_NOTIFICATIONS: readonly string[] = ["abonnement_impaye", "mois_offert"];
 export type EmailPreferences = Record<EmailPreferenceKey, boolean>;
 
 /** Catégorie d'une notification : facultative (activité, rappels) ou transactionnelle. */

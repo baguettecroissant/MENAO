@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { emailPreferences, notificationCategory } from "../src/notifications";
+import {
+  emailPreferences,
+  notificationCategory,
+  WEB_ONLY_NOTIFICATIONS,
+} from "../src/notifications";
 
 describe("préférences de notification (F-41)", () => {
   it("catégories : activité, rappels, sinon transactionnelle", () => {
@@ -28,5 +32,11 @@ describe("préférences de notification (F-41)", () => {
       activite: true,
       rappels: false,
     });
+  });
+});
+
+describe("notifications réservées au web (règle 10)", () => {
+  it("paiement de l'abonnement et mois offert : jamais dans l'application ni en push", () => {
+    expect(WEB_ONLY_NOTIFICATIONS).toEqual(["abonnement_impaye", "mois_offert"]);
   });
 });
