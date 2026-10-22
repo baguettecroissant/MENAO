@@ -318,6 +318,9 @@ export const fr = {
     hint: "Cochez vos métiers puis, si vous le souhaitez, vos spécialités.",
     specialties: (trade: string) => `Spécialités : ${trade}`,
     experience: "Années d'expérience",
+    diploma: "Votre diplôme du métier (le plus élevé)",
+    diplomaNone: "Aucun",
+    diplomaHint: "Facultatif : il compte dans votre Score MENAO et s'affiche sur votre fiche.",
     save: "Enregistrer mes métiers",
     saved: "Métiers enregistrés.",
     certifications: "Certifications et qualifications",
@@ -868,6 +871,7 @@ export const fr = {
         : communes.join(", "),
     distance: (km: string) => `à ${km} km`,
     verified: "Assuré et vérifié",
+    score: (n: number) => `Score MENAO ${n}/100`,
     availableNow: "Dispo immédiate",
     availableFrom: (date: string) => `Disponible à partir du ${date}`,
     more: (n: number) => `+${n}`,
@@ -960,15 +964,31 @@ export const fr = {
     rgeDetail: (domains: string) =>
       `Vérifié dans l'annuaire officiel des entreprises RGE : ${domains}`,
     score: "Score MENAO",
+    scoreOutOf: "/ 100",
+    scoreParts: {
+      verifie: "Assuré et vérifié",
+      experience: "Expérience",
+      diplomes: "Diplômes et qualifications",
+      profil: "Profil complet",
+      reactivite: "Réactivité",
+      avis: "Avis des clients",
+    },
+    scorePoints: (points: string, max: number) => `${points} / ${max}`,
+    scoreTotal: (score: number) => `Score MENAO : ${score} sur 100`,
+    clientReviews: "Avis des clients",
     scoreEmpty:
-      "Pas encore de score : cet artisan vient de rejoindre MENAO. Le score sera calculé à partir des avis vérifiés de ses clients.",
+      "Pas encore d'avis MENAO : cet artisan vient de rejoindre la plateforme. Ses clients pourront le noter après la réception de leur chantier.",
+    google: (rating: string, count: number) => `Note Google : ${rating}/5 (${count} avis)`,
+    googleLink: "Voir la fiche Google",
+    diplomaTitle: (label: string) => `Diplôme : ${label}`,
+    diplomaDetail: "Déclaré par l'artisan",
     scoreRows: {
       quality: "Qualité des prestations",
       delays: "Respect des délais",
       communication: "Communication",
       value_for_money: "Rapport qualité/prix",
     },
-    scoreGlobal: "Score global",
+    scoreGlobal: "Note globale",
     scoreBasis: (n: number) =>
       n <= 1 ? "Calculé sur 1 avis vérifié" : `Calculé sur ${n} avis vérifiés`,
     recent: "Chantiers récents",
@@ -2083,15 +2103,22 @@ export const fr = {
     continue: "Accéder à mon espace pro",
     error: "La charte n'a pas pu être chargée.",
   },
-  /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan : mêmes textes que le site. */
+  /** Score MENAO de l'artisan (ADR 0155), avec les points à gagner : mêmes textes que le site. */
   proScore: {
     title: "Votre score MENAO",
     outOf: "/ 100",
     intro:
-      "Calculé selon la charte qualité, il détermine votre place quand un client cherche un artisan.",
-    value: (v: number) => `${Math.round(v)} / 100`,
-    weight: (w: number) => `${w}\u00a0%`,
-    criterion: (label: string, weight: string, value: string) => `${label} (${weight}) : ${value}`,
+      "Affiché sur votre fiche, il détermine aussi votre place quand un client cherche un artisan.",
+    tipsTitle: "Pour gagner des points",
+    tips: {
+      verifie: "Faites valider votre décennale, votre RC Pro et votre attestation URSSAF",
+      diplome: "Indiquez votre diplôme du métier",
+      qualification: "Ajoutez une qualification (Qualibat, Qualifelec…)",
+      profil: "Complétez votre fiche : photo, réalisations, présentation, spécialités",
+    },
+    tipPoints: (n: number) => `+${n} point${n > 1 ? "s" : ""}`,
+    progressHint:
+      "Vos avis et votre réactivité feront progresser votre score au fil de vos chantiers.",
     planningUpdated: (date: string) => `Planning confirmé le ${date}.`,
     planningNever: "Planning jamais confirmé.",
     planningHint: "Confirmez-le chaque semaine, même sans changement.",
@@ -2427,10 +2454,10 @@ export const fr = {
   /** « Mes avis » de l'artisan (F-28) : mêmes textes que l'espace pro du site. */
   proReviews: {
     title: "Mes avis",
-    subtitle: "Les avis de vos clients après la réception de leur chantier, et votre score MENAO.",
+    subtitle: "Les avis de vos clients après la réception de leur chantier, et leur note moyenne.",
     open: "Voir mes avis",
-    scoreTitle: "Votre score MENAO",
-    scoreEmpty: "Votre score apparaîtra avec votre premier avis publié.",
+    scoreTitle: "La note de vos clients",
+    scoreEmpty: "Votre note apparaîtra avec votre premier avis publié.",
     toAnswer: (n: number) =>
       n === 0
         ? "Vous avez répondu à tous vos avis."
@@ -2932,5 +2959,16 @@ export const fr = {
   staff: {
     title: "Back-office MENAO",
     text: "Le back-office de l'équipe MENAO est disponible sur le site, depuis un ordinateur.",
+  },
+  /** Diplômes du métier (ADR 0155), comme sur le site. */
+  diplomesMetier: {
+    cap: "CAP",
+    bep: "BEP",
+    bac_pro: "Bac pro",
+    bp: "Brevet professionnel (BP)",
+    bts: "BTS",
+    brevet_maitrise: "Brevet de maîtrise",
+    titre_pro: "Titre professionnel",
+    autre: "Autre diplôme du bâtiment",
   },
 } as const;

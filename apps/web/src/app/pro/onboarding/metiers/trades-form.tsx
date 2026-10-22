@@ -1,7 +1,8 @@
 "use client";
 
+import { DIPLOMES_METIER } from "@menao/core";
 import { useActionState, useState } from "react";
-import { Alert, Button, CheckboxField, Field } from "@/components/ui";
+import { Alert, Button, CheckboxField, Field, SelectField } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { saveTrades } from "@/lib/artisan/actions";
 import { initialFormState } from "@/lib/auth/form";
@@ -15,6 +16,8 @@ export function TradesForm(props: {
   selectedTrades: string[];
   selectedWorkTypes: string[];
   experienceYears: number | null;
+  /** Diplôme du métier déclaré (Score MENAO, ADR 0155). */
+  diploma: string | null;
 }) {
   const [state, action, pending] = useActionState(saveTrades, initialFormState);
   const [selected, setSelected] = useState(new Set(props.selectedTrades));
@@ -89,6 +92,22 @@ export function TradesForm(props: {
           defaultValue={props.experienceYears ?? ""}
           errors={errors.experienceYears}
         />
+      </div>
+      <div className="max-w-sm">
+        <SelectField
+          label={t.diploma}
+          name="diploma"
+          defaultValue={props.diploma ?? ""}
+          hint={t.diplomaHint}
+          errors={errors.diploma}
+        >
+          <option value="">{t.diplomaNone}</option>
+          {DIPLOMES_METIER.map((d) => (
+            <option key={d} value={d}>
+              {fr.diplomesMetier[d]}
+            </option>
+          ))}
+        </SelectField>
       </div>
       <Button type="submit" disabled={pending}>
         {fr.pro.onboarding.saveAndContinue}

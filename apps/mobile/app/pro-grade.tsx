@@ -6,7 +6,7 @@ import { BottomSheet } from "@/components/bottom-sheet";
 import { BadgeIcon } from "@/components/grade/badge-icon";
 import { LevelCard } from "@/components/grade/level-card";
 import { HeaderBand } from "@/components/header-band";
-import { CharterScoreCard } from "@/components/pro/charter-score-card";
+import { MenaoScoreCard } from "@/components/pro/menao-score-card";
 import { Segmented } from "@/components/segmented";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
@@ -51,7 +51,7 @@ export default function GradeScreen() {
   return (
     <Screen band={band}>
       <LevelCard xp={grade.xp} levels={grade.levels} />
-      <CharterScoreCard />
+      <MenaoScoreCard />
       {claimable ? (
         <View style={styles.claim}>
           <Text style={styles.claimTitle}>{t.rewardReady}</Text>

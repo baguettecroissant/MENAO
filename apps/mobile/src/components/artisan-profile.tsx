@@ -11,16 +11,17 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { MenaoScore } from "@/components/menao-score";
 import { PhotoViewer } from "@/components/photo-viewer";
 import { ScoreBreakdown } from "@/components/score-breakdown";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
 import { goBack } from "@/lib/navigation";
 import type { ArtisanPage, PublicReview } from "@/lib/requests";
-import { Body, Card } from "@/ui";
+import { Body, Card, LinkText } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ArtisanPlaceholder } from "@/components/artisan-placeholder";
 
@@ -33,7 +34,8 @@ const ABOUT_LINES = 6;
 /**
  * Fiche publique d'un artisan (F-10), d'après la maquette « Fiche artisan » et comme sur le site :
  * grande photo et retour, identité et disponibilité, informations (expérience, zone, temps de
- * réponse), présentation, expertises, garanties, score MENAO, chantiers récents et derniers avis.
+ * réponse), présentation, expertises, garanties, Score MENAO (ADR 0155), avis des clients,
+ * chantiers récents et derniers avis.
  * Jamais de téléphone ni d'e-mail avant l'acceptation de la demande.
  */
 export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
@@ -158,6 +160,7 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
         profile.decennale_exempt ||
         profile.decennale?.valid_until ||
         profile.rc_pro?.valid_until ||
+        profile.diplome ||
         profile.certifications.length > 0 ||
         profile.rge.length > 0 ? (
           <Card>
@@ -188,6 +191,12 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
                   formatLongDate(profile.rc_pro.valid_until),
                   profile.rc_pro.insurer,
                 )}
+              />
+            ) : null}
+            {profile.diplome ? (
+              <Guarantee
+                title={t.diplomaTitle(fr.diplomesMetier[profile.diplome])}
+                detail={t.diplomaDetail}
               />
             ) : null}
             {profile.certifications.map((c) => (
@@ -221,11 +230,32 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
           <Text role="heading" style={styles.heading}>
             {t.score}
           </Text>
+          {profile.menao_score ? <MenaoScore score={profile.menao_score} /> : null}
+        </Card>
+
+        <Card>
+          <Text role="heading" style={styles.heading}>
+            {t.clientReviews}
+          </Text>
           {profile.score ? (
             <ScoreBreakdown score={profile.score} />
           ) : (
             <Body muted>{t.scoreEmpty}</Body>
           )}
+          {profile.google ? (
+            <View style={styles.google}>
+              <Text style={styles.strong}>
+                {t.google(
+                  profile.google.rating.toLocaleString("fr-FR", { minimumFractionDigits: 1 }),
+                  profile.google.count,
+                )}
+              </Text>
+              <LinkText
+                label={t.googleLink}
+                onPress={() => profile.google && Linking.openURL(profile.google.url)}
+              />
+            </View>
+          ) : null}
         </Card>
 
         {page.photoUrls.length > 0 ? (
@@ -433,6 +463,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(1.5),
   },
   tagText: { fontFamily: font.regular, fontSize: 13, color: colors.foreground },
+  google: {
+    gap: spacing(1),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing(3),
+  },
   guarantee: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2.5) },
   guaranteeText: { flex: 1, gap: spacing(0.5) },
   arc: { position: "absolute", right: -6, top: 6, width: 72, height: 44 },

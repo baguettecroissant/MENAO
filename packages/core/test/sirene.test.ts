@@ -18,6 +18,7 @@ function reponse(
         denominationUniteLegale: "ELECTRICITE EXEMPLE",
         categorieJuridiqueUniteLegale: "5499",
         activitePrincipaleUniteLegale: "43.21A",
+        dateCreationUniteLegale: "2014-03-01",
         ...overrides.ul,
       },
       adresseEtablissement: {
@@ -56,6 +57,7 @@ describe("parseSireneEtablissement", () => {
       raisonSociale: "ELECTRICITE EXEMPLE",
       formeJuridiqueCode: "5499",
       apeCode: "43.21A",
+      dateCreation: "2014-03-01",
       adresse: {
         ligne: "12 AV DES EXEMPLES",
         codePostal: "06000",
@@ -125,4 +127,13 @@ describe("parseSireneEtablissement", () => {
       expect(parseSireneEtablissement(input)).toBeNull();
     },
   );
+
+  it("date de création absente ou mal formée : null", () => {
+    expect(
+      parseSireneEtablissement(reponse({ ul: { dateCreationUniteLegale: null } }))?.dateCreation,
+    ).toBeNull();
+    expect(
+      parseSireneEtablissement(reponse({ ul: { dateCreationUniteLegale: "2014" } }))?.dateCreation,
+    ).toBeNull();
+  });
 });

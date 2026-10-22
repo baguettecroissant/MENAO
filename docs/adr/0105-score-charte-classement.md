@@ -1,6 +1,6 @@
 # ADR 0105 — Score MENAO de la charte qualité pour le classement des artisans
 
-- Statut : accepté (remplace le critère de tri de l'ADR 0030), ordre du classement modifié par l'ADR 0151
+- Statut : accepté (remplace le critère de tri de l'ADR 0030), ordre du classement modifié par l'ADR 0151, score remplacé par le Score MENAO sur 100 (ADR 0155)
 - Date : 15 octobre 2026
 
 ## Contexte

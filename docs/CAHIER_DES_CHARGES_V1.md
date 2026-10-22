@@ -248,13 +248,13 @@ Extraire les valeurs exactes depuis Figma (connecteur Figma de Claude Code) dans
   2. métier correspondant ;
   3. adresse du chantier dans leur zone d'intervention (PostGIS) ;
   4. pas en pause / congés ;
-  5. tri : score MENAO, disponibilité, distance, puis mise en avant selon la formule. **La mise en avant payante doit être signalée** (mention « Mis en avant ») et expliquée dans la page des critères de classement.
+  5. tri : disponibilité, Score MENAO sur 100 (ADR 0155), date de disponibilité, distance, puis mise en avant selon la formule. **La mise en avant payante doit être signalée** (mention « Mis en avant ») et expliquée dans la page des critères de classement.
 - Maximum 5 résultats affichés en V1 (configurable).
 - État vide et état de chargement (squelettes) conformes aux maquettes.
 
 ### F-10 Fiche artisan
 - En-tête : photo, nom + métier, badge disponibilité, expérience, zone d'intervention, temps de réponse moyen, bouton « Envoyer une demande ».
-- À propos, Expertises (puces), **Garanties & Assurances** (décennale vérifiée avec date de validité, certifications type Qualifelec/RGE avec numéro), **Score MENAO** (qualité, délais, communication, rapport qualité/prix, recommandation, score global), Chantiers récents (photos, galerie en modale), Derniers avis (« Avis vérifié »).
+- À propos, Expertises (puces), **Garanties & Assurances** (décennale vérifiée avec date de validité, certifications type Qualifelec/RGE avec numéro), **Score MENAO** sur 100 et ses critères (ADR 0155), **Avis des clients** (qualité, délais, communication, rapport qualité/prix, note globale) et note Google vérifiée, Chantiers récents (photos, galerie en modale), Derniers avis (« Avis vérifié »).
 - Version « scroll » : en-tête compacte collante avec le bouton d'action.
 - Fil d'Ariane : Vérification des critères › Sélection d'artisan › Nom.
 - Ne jamais afficher téléphone ni e-mail de l'artisan avant une demande acceptée.
@@ -412,7 +412,7 @@ Les maquettes demandent l'avis **avant** le PV. **Ordre retenu pour la V1 : 1. S
 - Avis possible uniquement après un chantier **réceptionné** sur MENAO (marqué « Avis vérifié »), un avis par chantier.
 - Écran de remerciement. Rappel push si non laissé sous 3 jours (une seule relance).
 - L'artisan peut **répondre publiquement** une fois. Signalement d'avis possible ; modération dans le back-office. Les avis négatifs ne sont **jamais** masqués pour cette seule raison.
-- Score MENAO = moyenne pondérée des critères, recalculée par fonction SQL.
+- Note des clients = moyenne pondérée des critères, recalculée par fonction SQL. Elle compte dans le Score MENAO sur 100 (ADR 0155).
 
 ---
 
@@ -690,4 +690,4 @@ Le web est livré et utilisable avant l'app (phases 0 à 5), conformément à la
 - **Décennale** : assurance obligatoire couvrant les dommages graves pendant 10 ans après la réception.
 - **RLS** : Row Level Security, règles Postgres qui limitent les lignes visibles par chaque utilisateur.
 - **Compte connecté (Stripe Connect)** : compte Stripe de l'artisan rattaché à la plateforme MENAO ; c'est sur ce compte, et non chez MENAO, que le client paie.
-- **Score MENAO** : note agrégée de l'artisan calculée à partir des avis vérifiés.
+- **Score MENAO** : score sur 100 de l'artisan (ADR 0155) : badge « Assuré et vérifié » (20), expérience (10), diplôme et qualification (10), fiche complète (10), réactivité (10) et avis des clients (40).

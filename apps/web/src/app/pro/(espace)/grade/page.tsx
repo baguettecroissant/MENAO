@@ -1,10 +1,10 @@
 import { parseGrade } from "@menao/validation";
 import type { Metadata } from "next";
 import { GradeScreen } from "@/components/pro/grade/grade-screen";
-import { CharterScoreCard } from "@/components/pro/score/charter-score-card";
+import { MenaoScoreCard } from "@/components/pro/score/menao-score-card";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { myCharterScore } from "@/lib/artisan/score";
+import { myMenaoScore } from "@/lib/artisan/score";
 import { requireProSpace } from "@/lib/artisan/space";
 
 export const metadata: Metadata = { title: `${fr.pro.grade.title} — MENAO` };
@@ -28,7 +28,7 @@ export default async function GradePage() {
       .select("phone")
       .eq("user_id", claims?.claims.sub ?? "")
       .maybeSingle(),
-    myCharterScore(supabase),
+    myMenaoScore(supabase),
   ]);
   const grade = parseGrade(data);
   if (!grade) {
@@ -41,7 +41,7 @@ export default async function GradePage() {
   return (
     <GradeScreen
       grade={grade}
-      scoreCard={score ? <CharterScoreCard score={score} /> : null}
+      scoreCard={score ? <MenaoScoreCard score={score} /> : null}
       delivery={{
         firstName,
         address: artisan?.adresse_ligne ?? "",

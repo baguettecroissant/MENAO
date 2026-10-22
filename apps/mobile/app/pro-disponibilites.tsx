@@ -2,7 +2,7 @@ import { AbsencesManager } from "@/components/availability/absences-manager";
 import { CalendarSync } from "@/components/availability/calendar-sync";
 import { HoursEditor } from "@/components/availability/hours-editor";
 import { StatusCard } from "@/components/availability/status-card";
-import { CharterScoreCard } from "@/components/pro/charter-score-card";
+import { PlanningCard } from "@/components/pro/menao-score-card";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAvailability } from "@/lib/pro-availability";
@@ -37,7 +37,7 @@ export default function AvailabilityScreen() {
           />
           <HoursEditor initial={data.hours} onSaved={reload} />
           <AbsencesManager absences={data.absences} today={data.today} onChanged={reload} />
-          <CharterScoreCard />
+          <PlanningCard />
           <CalendarSync feed={data.feed} onChanged={reload} />
         </>
       )}

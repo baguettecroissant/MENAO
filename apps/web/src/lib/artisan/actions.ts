@@ -6,6 +6,7 @@ import {
   UPLOAD_PURPOSES,
   certificationSchema,
   companyStepSchema,
+  diplomaSchema,
   documentMetadataSchema,
   messages,
   presentationSchema,
@@ -126,6 +127,9 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
     experienceYears: text(formData, "experienceYears") ?? "",
   });
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  // Diplôme du métier déclaré (Score MENAO, ADR 0155), facultatif.
+  const diploma = diplomaSchema.safeParse(text(formData, "diploma") ?? "");
+  if (!diploma.success) return { fieldErrors: { diploma: [fr.errors.generic] } };
 
   const { supabase } = await getOnboardingContext();
   // Spécialités d'un métier décoché : ignorées plutôt que refusées.
@@ -141,6 +145,10 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
     p_experience_years: parsed.data.experienceYears,
   });
   if (error) return { error: fr.errors.generic };
+  const { error: diplomaError } = await supabase.rpc("set_artisan_diploma", {
+    p_diplome: diploma.data ?? "",
+  });
+  if (diplomaError) return { error: fr.errors.generic };
 
   refresh();
   redirect("/pro/onboarding" as Route);

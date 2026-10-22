@@ -90,6 +90,11 @@ export function ArtisanTile({
               {distance ? ` · ${distance}` : ""}
             </Text>
           </View>
+          {artisan.score !== null ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{t.score(artisan.score)}</Text>
+            </View>
+          ) : null}
           {artisan.verified ? (
             <View style={styles.badge}>
               <ShieldCheck size={13} color={colors["primary-strong"]} />

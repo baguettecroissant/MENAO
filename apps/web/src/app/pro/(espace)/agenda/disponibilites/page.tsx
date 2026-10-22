@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { AvailabilityScreen } from "@/components/agenda/availability-screen";
-import { CharterScoreCard } from "@/components/pro/score/charter-score-card";
+import { PlanningCard } from "@/components/pro/score/menao-score-card";
 import { fr } from "@/i18n/fr";
 import { artisanHours, calendarFeed } from "@/lib/artisan/agenda";
-import { myCharterScore } from "@/lib/artisan/score";
+import { myMenaoScore } from "@/lib/artisan/score";
 import { requireProSpace } from "@/lib/artisan/space";
 import { SITE_URL } from "@/lib/site/seo";
 
@@ -18,7 +18,7 @@ export default async function AvailabilityPage() {
   const [hours, feed, score] = await Promise.all([
     artisanHours(),
     calendarFeed(),
-    myCharterScore(space.supabase),
+    myMenaoScore(space.supabase),
   ]);
   return (
     <AvailabilityScreen
@@ -31,7 +31,7 @@ export default async function AvailabilityPage() {
       absences={space.absences}
       feedUrl={feed ? `${SITE_URL}/calendrier/${feed.token}.ics` : null}
       feedLastReadAt={feed?.last_read_at ?? null}
-      scoreCard={score ? <CharterScoreCard score={score} /> : null}
+      scoreCard={score ? <PlanningCard updatedAt={score.planning_updated_at} /> : null}
     />
   );
 }

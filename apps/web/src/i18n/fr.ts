@@ -1,4 +1,4 @@
-import { FORMES_JURIDIQUES } from "@menao/core";
+import { FORMES_JURIDIQUES, type DiplomeMetier } from "@menao/core";
 
 /** Textes de l'interface, centralisés (CLAUDE.md : pas de chaînes en dur dispersées). */
 export const fr = {
@@ -899,7 +899,7 @@ export const fr = {
       rankingEyebrow: "Classement",
       rankingTitle: "Aucune place ne s'achète.",
       rankingText:
-        "Les artisans disponibles tout de suite passent en premier, puis viennent leur score MENAO (avis des clients, respect des délais, réactivité, planning à jour, chantiers menés à terme, ancienneté) et leur distance. Une place est réservée à un nouvel artisan, le temps qu'il se fasse connaître. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
+        "Les artisans disponibles tout de suite passent en premier, puis viennent leur Score MENAO sur 100 (vérifications, expérience, diplômes, profil, réactivité et avis des clients) et leur distance. Une place est réservée à un nouvel artisan, le temps qu'il se fasse connaître. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
       rankingLink: "Lire les critères de classement",
     },
     faq: {
@@ -1287,6 +1287,7 @@ export const fr = {
       edit: "Modifier",
       ranking: "Comment les artisans sont-ils classés ?",
       knownArtisan: "Déjà venu chez vous",
+      score: (n: number) => `Score MENAO ${n}/100`,
       knownUnavailable: (name: string) =>
         `${name} n'est pas disponible pour cette demande (métier, zone d'intervention ou congés) : voici d'autres artisans vérifiés.`,
       viewProfile: (name: string) => `Voir le profil de ${name}`,
@@ -1450,8 +1451,24 @@ export const fr = {
       rgeTitle: "Reconnu Garant de l'Environnement (RGE)",
       rgeDetail: "Vérifié dans l'annuaire officiel des entreprises RGE",
       score: "Score MENAO",
+      scoreOutOf: "/ 100",
+      scoreParts: {
+        verifie: "Assuré et vérifié",
+        experience: "Expérience",
+        diplomes: "Diplômes et qualifications",
+        profil: "Profil complet",
+        reactivite: "Réactivité",
+        avis: "Avis des clients",
+      },
+      scorePoints: (points: string, max: number) => `${points} / ${max}`,
+      scoreHow: "Comment est-il calculé ?",
+      clientReviews: "Avis des clients",
       scoreEmpty:
-        "Pas encore de score : cet artisan vient de rejoindre MENAO. Le score sera calculé à partir des avis vérifiés de ses clients.",
+        "Pas encore d'avis MENAO : cet artisan vient de rejoindre la plateforme. Ses clients pourront le noter après la réception de leur chantier.",
+      google: (rating: string, count: number) => `Note Google : ${rating}/5 (${count} avis)`,
+      googleLink: "Voir la fiche Google",
+      diplomaTitle: (label: string) => `Diplôme : ${label}`,
+      diplomaDetail: "Déclaré par l'artisan",
       recent: "Chantiers récents",
       recentEmpty: "Aucune photo de chantier pour l'instant.",
       reviews: "Derniers avis clients",
@@ -1462,7 +1479,7 @@ export const fr = {
         communication: "Communication",
         value_for_money: "Rapport qualité/prix",
       },
-      scoreGlobal: "Score global",
+      scoreGlobal: "Note globale",
       scoreBasis: (n: number) =>
         n <= 1 ? "Calculé sur 1 avis vérifié" : `Calculé sur ${n} avis vérifiés`,
       verified: "Avis vérifié",
@@ -2455,14 +2472,22 @@ export const fr = {
         "Nouveau : la charte qualité MENAO. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
       continue: "Accéder à mon espace pro",
     },
-    /** Score MENAO de la charte qualité (ADR 0105), vu par l'artisan. */
+    /** Score MENAO de l'artisan (ADR 0155), critère par critère, avec les points à gagner. */
     score: {
       title: "Votre score MENAO",
       outOf: "/ 100",
       intro:
-        "Calculé selon la charte qualité, il détermine votre place quand un client cherche un artisan.",
-      value: (v: number) => `${Math.round(v)} / 100`,
-      weight: (w: number) => `${w} %`,
+        "Affiché sur votre fiche, il détermine aussi votre place quand un client cherche un artisan.",
+      tipsTitle: "Pour gagner des points",
+      tips: {
+        verifie: "Faites valider votre décennale, votre RC Pro et votre attestation URSSAF",
+        diplome: "Indiquez votre diplôme du métier",
+        qualification: "Ajoutez une qualification (Qualibat, Qualifelec…)",
+        profil: "Complétez votre fiche : photo, réalisations, présentation, spécialités",
+      },
+      tipPoints: (n: number) => `+${n} point${n > 1 ? "s" : ""}`,
+      progressHint:
+        "Vos avis et votre réactivité feront progresser votre score au fil de vos chantiers.",
       planningUpdated: (date: string) => `Planning confirmé le ${date}.`,
       planningNever: "Planning jamais confirmé.",
       planningHint: "Confirmez-le chaque semaine, même sans changement.",
@@ -3037,9 +3062,9 @@ export const fr = {
     reviews: {
       title: "Mes avis",
       subtitle:
-        "Les avis de vos clients après la réception de leur chantier, et votre score MENAO.",
-      scoreTitle: "Votre score MENAO",
-      scoreEmpty: "Votre score apparaîtra avec votre premier avis publié.",
+        "Les avis de vos clients après la réception de leur chantier, et leur note moyenne.",
+      scoreTitle: "La note de vos clients",
+      scoreEmpty: "Votre note apparaîtra avec votre premier avis publié.",
       toAnswer: (n: number) =>
         n === 0
           ? "Vous avez répondu à tous vos avis."
@@ -3663,7 +3688,7 @@ export const fr = {
           },
           {
             title: "Un classement transparent",
-            text: "Score MENAO (avis des clients, délais, réactivité), disponibilité, puis distance : nos critères sont publics, et une mise en avant est toujours signalée comme telle.",
+            text: "Disponibilité, Score MENAO (vérifications, expérience, avis des clients, réactivité), puis distance : nos critères sont publics, et une mise en avant est toujours signalée comme telle.",
           },
           {
             title: "Des pros vérifiés",
@@ -4055,6 +4080,9 @@ export const fr = {
         hint: "Cochez vos métiers puis, si vous le souhaitez, vos spécialités.",
         specialties: "Spécialités",
         experience: "Années d'expérience",
+        diploma: "Votre diplôme du métier (le plus élevé)",
+        diplomaNone: "Aucun diplôme du métier",
+        diplomaHint: "Facultatif : il compte dans votre Score MENAO et s'affiche sur votre fiche.",
         certifications: "Certifications et qualifications",
         certificationsHint:
           "Qualibat, Qualifelec, QualiPAC… L'équipe MENAO les vérifie avant de les afficher sur votre fiche.",
@@ -4417,7 +4445,7 @@ export const fr = {
     orderTitle: "Dans quel ordre ?",
     order: [
       "D'abord les artisans disponibles immédiatement, puis les autres.",
-      "Dans chacun de ces deux groupes, le score MENAO, de 0 à 100, calculé selon la charte qualité des artisans : notes des clients en fin de chantier (40 %), devis envoyé dans les 72 h suivant la demande (20 %), réponse aux demandes et aux messages des clients sous 24 h (15 %), planning tenu à jour chaque semaine (10 %), chantiers menés à terme sans annulation par l'artisan (10 %), ancienneté et badges obtenus (5 %). Les mesures portent sur les 6 à 12 derniers mois. Un artisan sans historique part d'une valeur neutre sur chaque critère, remplacée peu à peu par ses résultats réels.",
+      "Dans chacun de ces deux groupes, le Score MENAO, sur 100, affiché sur la fiche de chaque artisan : badge « Assuré et vérifié » (20 points) ; expérience dans le métier, déclarée ou selon l'âge de l'entreprise (10) ; diplôme du métier déclaré et qualification vérifiée, comme RGE ou Qualibat (10) ; fiche complète, avec photo, réalisations, présentation et spécialités (10) ; réactivité, c'est-à-dire temps de réponse moyen aux demandes et devis envoyés dans les 72 h (10) ; avis des clients (40). Pour les avis, la note Google vérifiée par l'équipe MENAO sert de base, ou 3 sur 5 sans fiche Google ; les avis MENAO comptent de plus en plus avec leur nombre (la moitié du poids à 5 avis, 80 % à 20 avis). Un artisan sans demande part d'une réactivité neutre, remplacée par ses résultats réels.",
       "Ensuite, la date de disponibilité, puis les artisans les plus proches du chantier.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
       "Place réservée aux nouveaux artisans : un artisan validé depuis moins de 90 jours, ou qui a mené moins de 3 chantiers à terme, n'a pas encore d'historique. Quand aucun d'eux ne figure parmi les 5 premiers, l'un d'eux est présenté en 3e position, choisi parmi ceux qui remplissent les conditions ci-dessus : d'abord parmi les disponibles immédiatement, puis par un tirage propre à chaque projet. Cette place ne dépend d'aucun paiement.",
@@ -4430,7 +4458,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 19 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 22 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",
@@ -5834,6 +5862,25 @@ export const fr = {
       trades: "Métiers et spécialités",
       experience: (n: number | null) =>
         n === null ? "Expérience non renseignée" : `${n} ans d'expérience`,
+      diploma: (label: string | null) =>
+        label ? `Diplôme déclaré : ${label}` : "Aucun diplôme déclaré",
+      // Score MENAO de l'artisan et avis Google relevés par l'équipe (ADR 0155).
+      menaoScore: {
+        title: "Score MENAO",
+        googleTitle: "Avis Google",
+        googleIntro:
+          "Relevez sur la fiche Google de l'entreprise sa note et son nombre d'avis : ils servent de base au critère « Avis des clients » et s'affichent sur la fiche avec un lien vers leur source.",
+        url: "Lien de la fiche Google",
+        rating: "Note sur 5",
+        count: "Nombre d'avis",
+        save: "Enregistrer",
+        clear: "Retirer les avis Google",
+        saved: "Avis Google enregistrés.",
+        cleared: "Avis Google retirés.",
+        current: (rating: string, count: number, date: string) =>
+          `${rating}/5, ${count} avis, relevés le ${date}`,
+        none: "Aucun avis Google saisi.",
+      },
       zone: "Zone d'intervention",
       zoneRayon: (label: string | null, km: number | null) =>
         `${km ?? "?"} km autour de ${label ?? "?"}`,
@@ -5973,6 +6020,7 @@ export const fr = {
         decision: "Décision",
         entreprise: "Entreprise",
         profil: "Profil",
+        score: "Score MENAO",
         abonnement: "Abonnement",
         activite: "Activité",
         parrainage: "Parrainage",
@@ -6015,6 +6063,17 @@ export const fr = {
         "Action impossible : vérifiez que les conditions sont remplies (documents validés, message renseigné).",
     },
   },
+  /** Diplômes du métier (ADR 0155). */
+  diplomesMetier: {
+    cap: "CAP",
+    bep: "BEP",
+    bac_pro: "Bac pro",
+    bp: "Brevet professionnel (BP)",
+    bts: "BTS",
+    brevet_maitrise: "Brevet de maîtrise",
+    titre_pro: "Titre professionnel",
+    autre: "Autre diplôme du bâtiment",
+  } as Record<DiplomeMetier, string>,
   certificationTypes: {
     rge: "RGE",
     qualifelec: "Qualifelec",
