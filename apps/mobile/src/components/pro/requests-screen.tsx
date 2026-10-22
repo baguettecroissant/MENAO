@@ -25,6 +25,7 @@ const TONE: Record<InboxItem["status"], Tone> = {
   refusee: "danger",
   expiree: "neutral",
   annulee: "neutral",
+  a_verifier: "warning",
 };
 
 /**

@@ -81,6 +81,11 @@ export type QuoteDocumentModel = {
   scheduleNote: string | null;
   mentions: string[];
   footer: string;
+  /**
+   * Devis envoyé (ADR 0157) : « Confidentiel – établi pour [client], usage personnel », en pied de
+   * page et en filigrane sur chaque page. Null pour l'aperçu d'un brouillon.
+   */
+  confidential: string | null;
 };
 
 export const QUOTE_TEXTS = {
@@ -132,6 +137,7 @@ export const QUOTE_TEXTS = {
     `${name}${siret ? ` · SIRET ${siret}` : ""} · Devis établi avec MENAO`,
   page: (n: number, total: number) => `Page ${n} / ${total}`,
   watermark: "APERÇU",
+  confidential: (client: string) => `Confidentiel – établi pour ${client}, usage personnel`,
 };
 const T = QUOTE_TEXTS;
 
@@ -216,5 +222,6 @@ export function quoteDocumentModel(d: QuotePdfData): QuoteDocumentModel {
       ...(issuer.vatExempt ? [T.vatExempt] : reduced ? [T.reducedVat] : []),
     ].map(winAnsi),
     footer: winAnsi(T.footer(issuer.name, issuer.siret)),
+    confidential: d.preview ? null : winAnsi(T.confidential(d.client.name)),
   };
 }

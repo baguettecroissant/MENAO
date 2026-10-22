@@ -122,3 +122,12 @@ export async function reportExpertise(
   });
   return error ? sqlError(error) : null;
 }
+
+/** « Je pense que ce n'est pas un vrai particulier » (ADR 0157), comme sur le site : ticket pour l'équipe. */
+export async function reportFakeClient(requestId: string, detail: string): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_report_fake_client", {
+    p_request_id: requestId,
+    p_detail: detail.trim().slice(0, 1000),
+  });
+  return error ? sqlError(error) : null;
+}

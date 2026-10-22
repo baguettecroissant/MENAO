@@ -153,6 +153,23 @@ export async function reportExpertise(
   return { success: fr.pro.expertise.sent };
 }
 
+/** « Je pense que ce n'est pas un vrai particulier » (ADR 0157) : ticket pour l'équipe. */
+export async function reportFakeClient(
+  requestId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
+  const detail = (text(formData, "detail") ?? "").trim().slice(0, 1000);
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_report_fake_client", {
+    p_request_id: requestId,
+    p_detail: detail,
+  });
+  if (error) return { ...rpcError(error), values: { detail } };
+  return { success: fr.pro.fakeClient.sent };
+}
+
 /** Date et heure de démarrage saisies : format (Zod), puis à venir et au plus un an (@menao/core). */
 async function saveChantierStart(chantierId: string, formData: FormData): Promise<FormState> {
   if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };

@@ -16,6 +16,7 @@ const TONE: Record<RequestRow["status"], Tone> = {
   refusee: "danger",
   expiree: "neutral",
   annulee: "neutral",
+  a_verifier: "warning",
 };
 
 /**
@@ -90,7 +91,8 @@ export function RequestGroup({
                 </View>
               </View>
               {left && <Text style={styles.meta}>{t.timeLeft(left.hours, left.minutes)}</Text>}
-              {r.status === "envoyee" && (
+              {r.status === "a_verifier" && <Text style={styles.meta}>{t.verificationHint}</Text>}
+              {(r.status === "envoyee" || r.status === "a_verifier") && (
                 <LinkText
                   label={fr.clientCancel.open}
                   onPress={() =>

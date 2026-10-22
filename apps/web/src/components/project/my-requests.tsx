@@ -18,6 +18,7 @@ const tone = {
   refusee: "danger",
   expiree: "neutral",
   annulee: "neutral",
+  a_verifier: "warning",
 } as const;
 
 /**
@@ -113,7 +114,10 @@ export function PendingRequests({
                           {t.timeLeft(left.hours, left.minutes)}
                         </p>
                       )}
-                      {r.status === "envoyee" && (
+                      {r.status === "a_verifier" && (
+                        <p className="text-xs text-muted-foreground">{t.verificationHint}</p>
+                      )}
+                      {(r.status === "envoyee" || r.status === "a_verifier") && (
                         <CancelRequestButton
                           requestId={r.request_id}
                           artisanName={r.artisan_name}

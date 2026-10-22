@@ -42,7 +42,8 @@ insert into public.projects (id, user_id, status, description, summary, trade_co
   location, criteria_validated_at) values
   ('d4000000-0000-4000-8000-000000000001', 'd1000000-0000-4000-8000-000000000001', 'criteres_valides',
    'Fuite sous l''évier. Appelez-moi au 06 12 34 56 78.', 'Réparer une fuite.', 'plombier', '06088', 'Nice',
-   '1 Rue de l''Exemple 06000 Nice', 'SRID=4326;POINT(7.26 43.70)', now()),
+   -- À distance du point de base d'un artisan du jeu de données (recoupement de l'ADR 0157).
+   '1 Rue de l''Exemple 06000 Nice', 'SRID=4326;POINT(7.2655 43.7031)', now()),
   ('d4000000-0000-4000-8000-000000000002', 'd1000000-0000-4000-8000-000000000001', 'criteres_valides',
    'Autre fuite', null, 'plombier', '06088', 'Nice', null, null, now());
 insert into storage.objects (bucket_id, name) values

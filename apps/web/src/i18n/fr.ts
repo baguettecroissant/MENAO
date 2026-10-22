@@ -1603,7 +1603,10 @@ export const fr = {
       refusee: "Refusée",
       expiree: "Sans réponse",
       annulee: "Annulée",
+      a_verifier: "En cours de vérification",
     },
+    verificationHint:
+      "L'équipe MENAO vérifie votre demande avant de la transmettre à l'artisan : vous serez prévenu de sa réponse.",
     timeLeft: (h: number, m: number) =>
       `Réponse attendue sous ${h} h ${String(m).padStart(2, "0")}`,
     yourArtisans: "Vos artisans",
@@ -2312,6 +2315,7 @@ export const fr = {
       expertise: "Expertise signalée",
       recompense: "Récompense MENAO",
       demande_sans_reponse: "Demande sans réponse",
+      faux_particulier: "Signalement d'un faux particulier",
     },
     statuses: { ouvert: "En attente de réponse", en_cours: "Réponse de l'équipe", resolu: "Clos" },
     untitled: "Sans objet",
@@ -3450,6 +3454,17 @@ export const fr = {
       submit: "Envoyer à l'équipe MENAO",
       sent: "Merci ! L'équipe MENAO a bien reçu votre signalement.",
     },
+    /** « Je pense que ce n'est pas un vrai particulier » (ADR 0157), sur chaque demande. */
+    fakeClient: {
+      open: "Je pense que ce n'est pas un vrai particulier",
+      title: "Signaler un faux particulier",
+      intro:
+        "Un professionnel qui se fait passer pour un particulier pour connaître vos prix ? Dites-le-nous : l'équipe MENAO vérifie la demande, en toute discrétion.",
+      detail: "Ce qui vous fait penser cela",
+      detailNote: "(facultatif)",
+      submit: "Envoyer le signalement",
+      sent: "Merci : l'équipe MENAO va vérifier cette demande.",
+    },
     /**
      * Pages Espace Pro par métier (ADR 0134) : acquisition des artisans sur Google et dans les
      * assistants IA (« chantiers de plombier dans les Alpes-Maritimes »). Aucun chiffre inventé.
@@ -4218,6 +4233,7 @@ export const fr = {
           refusee: "Refusée",
           expiree: "Expirée",
           annulee: "Annulée",
+          a_verifier: "En vérification",
         },
         client: "Client",
         contactAfter:
@@ -5657,6 +5673,9 @@ export const fr = {
         recompense: "Récompense à expédier (tenue de niveau ou cadeau de bienvenue)",
         demande_sans_reponse:
           "Demande sans réponse : aucun artisan n'a accepté (72 h écoulées ou refus)",
+        particulier_a_verifier:
+          "Demande retenue : correspondance avec un artisan inscrit (recoupement automatique)",
+        faux_particulier: "Faux particulier signalé par un artisan",
       },
       dispute: {
         chantier: (title: string, status: string) => `Chantier : ${title} (${status})`,
@@ -5677,6 +5696,18 @@ export const fr = {
         },
         decisionLabel: "Explication de la décision (envoyée aux deux parties)",
         decide: "Clore le litige",
+      },
+      // Demandes retenues par le recoupement automatique (ADR 0157).
+      heldRequests: {
+        title: "Demandes retenues",
+        intro:
+          "Le recoupement automatique a trouvé une correspondance avec un artisan inscrit : le détail est dans les notes internes. Vérifiez avant de transmettre.",
+        release: "Transmettre aux artisans",
+        block: "Bloquer la demande",
+        reasonLabel: "Motif du blocage (interne)",
+        released: (n: number) =>
+          n > 1 ? `${n} demandes transmises aux artisans.` : "Demande transmise à l'artisan.",
+        blocked: "Demande bloquée.",
       },
       reportedMessage: {
         title: "Message concerné",
