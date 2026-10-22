@@ -1425,6 +1425,11 @@ export const fr = {
       insuranceRcPro: "Assurance",
       insuranceRcProValue: "RC Pro vérifiée par MENAO",
       verifiedBadge: "Assuré et vérifié",
+      // Réseau du parrainage (ADR 0161).
+      recommendedBy: "Recommandé par",
+      partners: "Artisans partenaires",
+      partnersHint: (name: string) =>
+        `Des artisans recommandés par ${name}, souvent d'autres métiers.`,
       // Badge du temps de réponse moyen (ADR 0160), absent au-delà de 2 h.
       fastResponse: "Répond en moyenne en moins de 2\u00a0h",
       about: (name: string) => `À propos de ${name}`,
@@ -2595,6 +2600,22 @@ export const fr = {
           `${n} mois offert${n > 1 ? "s" : ""} sur ${cap} cette année`,
         capped: (cap: number) =>
           `Plafond de ${cap} mois offerts atteint cette année : merci pour vos recommandations\u00a0!`,
+        // Réseau du parrain (ADR 0161) : QR code, WhatsApp, score de fidélité, suivi des filleuls.
+        qrAlt: "QR code de votre lien de parrainage",
+        qrHint: "À faire scanner par un confrère, sur un chantier ou chez un fournisseur.",
+        whatsApp: "Envoyer par WhatsApp",
+        shareMessage: (link: string, code: string) =>
+          `Je t'invite sur MENAO, l'outil des artisans du bâtiment : des demandes de particuliers, et devis, signature et paiement au même endroit. Inscris-toi avec mon lien : ${link} (ou mon code ${code}).`,
+        loyalty: (n: number) => `Score de fidélité : ${n}`,
+        loyaltyHint: "Un point par confrère devenu abonné.",
+        listTitle: "Vos filleuls",
+        joinedOn: (date: string) => `Inscrit le ${date}`,
+        steps: {
+          inscription: "Inscription en cours",
+          valide: "Dossier validé, en période d'essai",
+          abonne: "Abonné : parrainage validé",
+          annule: "Non retenu",
+        },
       },
       /** Cadeau de bienvenue du filleul (F-60, ADR 0154). */
       welcomeGift: {
@@ -2668,6 +2689,7 @@ export const fr = {
         identity: "Identité et connexion",
         notifications: "Notifications",
         help: "Aide et contact",
+        businessCards: "Cartes de visite clients",
       },
       values: {
         upToDate: "À jour",
@@ -2983,6 +3005,19 @@ export const fr = {
           disabled: "Abonnement désactivé.",
         },
       },
+    },
+    // Cartes de visite à donner aux clients, avec le QR code de la fiche (ADR 0161).
+    businessCards: {
+      title: "Cartes de visite pour vos clients",
+      intro:
+        "Donnez une carte à chaque client, y compris ceux trouvés hors MENAO : le QR code mène à votre fiche, avec vos réalisations et vos avis vérifiés.",
+      printHint:
+        "10 cartes de 85 × 55 mm par feuille A4 : imprimez à 100 %, sans mise à l'échelle.",
+      print: "Imprimer la planche",
+      back: "Mon profil",
+      unavailable: "Vos cartes seront disponibles quand votre fiche sera visible des particuliers.",
+      qrAlt: "QR code de votre fiche MENAO",
+      scan: "Mes réalisations et mes avis vérifiés",
     },
     publicProfile: {
       // Adresse publique de la fiche, choix pour Google et badge pour son site (F-61, ADR 0144).

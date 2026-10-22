@@ -9,6 +9,7 @@ import {
   parseArtisanProfile,
   parseGrade,
   parseReferral,
+  parseReferralRows,
   parseWelcomeGift,
 } from "@menao/validation";
 import type { Metadata } from "next";
@@ -19,6 +20,7 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { hubStatusTexts } from "@/lib/artisan/profile-hub";
 import { getProShell, requireProSpace } from "@/lib/artisan/space";
 import { publicUrl } from "@/lib/project/artisans";
+import { qrSvg } from "@/lib/qr";
 
 export const metadata: Metadata = { title: `${fr.pro.hub.title} — MENAO` };
 
@@ -35,6 +37,7 @@ export default async function MyProfilePage() {
     { data: gradeData },
     { data: referralData },
     { data: giftData },
+    { data: referralRows },
   ] = await Promise.all([
     getOnboardingContext(),
     getProShell(),
@@ -44,8 +47,11 @@ export default async function MyProfilePage() {
     space.supabase.rpc("my_referral"),
     // Cadeau de bienvenue du filleul (ADR 0154).
     space.supabase.rpc("my_welcome_gift"),
+    // Suivi de chaque filleul (ADR 0161).
+    space.supabase.rpc("my_referrals"),
   ]);
   const referral = parseReferral(referralData);
+  const referralLink = referral ? partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros : null;
   const profile = parseArtisanProfile(page);
   if (!profile) {
     return (
@@ -101,12 +107,18 @@ export default async function MyProfilePage() {
           (ctx.subscription?.status as SubscriptionStatus | undefined) ?? null,
           ctx.subscription?.past_due_since ?? null,
         ),
-        referral: referral && {
-          link: partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros,
-          code: referral.code,
-          joined: referral.joined,
-          monthsThisYear: referral.months_this_year,
-        },
+        referral:
+          referral && referralLink
+            ? {
+                link: referralLink,
+                code: referral.code,
+                joined: referral.joined,
+                rewarded: referral.rewarded,
+                monthsThisYear: referral.months_this_year,
+                qr: qrSvg(referralLink),
+                referrals: parseReferralRows(referralRows),
+              }
+            : null,
         welcomeGift: parseWelcomeGift(giftData),
       }}
     />

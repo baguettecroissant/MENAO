@@ -6,12 +6,14 @@ import {
   Clock,
   ExternalLink,
   GraduationCap,
+  HeartHandshake,
   Leaf,
   MapPin,
   ShieldCheck,
   Star,
 } from "lucide-react";
 import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { ReviewList, type PublicReview } from "@/components/review/review-list";
@@ -93,6 +95,14 @@ export function ProfileHeader({
             )}
           </div>
         </div>
+        {profile.recommended_by && (
+          <p className="-mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <HeartHandshake aria-hidden="true" className="size-4 shrink-0 text-primary" />
+            <span>
+              {t.recommendedBy} <ArtisanName artisan={profile.recommended_by} />
+            </span>
+          </p>
+        )}
         <dl className="grid grid-cols-1 divide-y divide-border rounded-input border border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <InfoBox icon={<Briefcase />} label={t.experience}>
             {profile.experience_years !== null ? t.experienceValue(profile.experience_years) : "—"}
@@ -167,6 +177,29 @@ export function ProfileBody({
             </p>
           )}
         </Section>
+        {profile.partners.length > 0 && (
+          <Section title={t.partners}>
+            <p className="text-sm text-muted-foreground">{t.partnersHint(profile.display_name)}</p>
+            <ul className="grid gap-2 xl:grid-cols-2">
+              {profile.partners.map((partner) => (
+                <li
+                  key={partner.id}
+                  className="flex items-center gap-3 rounded-input border border-border p-3"
+                >
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
+                    <HeartHandshake aria-hidden="true" className="size-4" />
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <ArtisanName artisan={partner} className="text-sm break-words" />
+                    {partner.trade && (
+                      <span className="text-xs text-muted-foreground">{partner.trade}</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
       </div>
 
       <div className="flex flex-col gap-5">
@@ -332,6 +365,26 @@ function InfoBox({
       </dt>
       <dd className="text-sm font-medium">{children}</dd>
     </div>
+  );
+}
+
+/** Nom d'un artisan du réseau (ADR 0161), lié à sa fiche publique quand elle existe. */
+function ArtisanName({
+  artisan,
+  className = "",
+}: {
+  artisan: { name: string; slug: string | null };
+  className?: string;
+}) {
+  return artisan.slug ? (
+    <Link
+      href={`/artisans/${artisan.slug}` as Route}
+      className={`font-medium text-primary-strong underline-offset-2 hover:underline ${className}`}
+    >
+      {artisan.name}
+    </Link>
+  ) : (
+    <span className={`font-medium text-foreground ${className}`}>{artisan.name}</span>
   );
 }
 

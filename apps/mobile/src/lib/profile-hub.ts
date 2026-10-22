@@ -3,7 +3,9 @@ import {
   parseArtisanProfile,
   parseGrade,
   parseReferral,
+  parseReferralRows,
   type Referral,
+  type ReferralRow,
   type WelcomeGift,
 } from "@menao/validation";
 import { loadDossier, type Dossier } from "./artisan-dossier";
@@ -35,6 +37,8 @@ export type ProfileHub = {
   statuses: Record<HubRow, HubStatus>;
   /** Parrainage (F-60) : code à partager, artisans validés seulement. */
   referral: Referral | null;
+  /** Suivi de chaque filleul (ADR 0161). */
+  referrals: ReferralRow[];
   /** Cadeau de bienvenue du filleul (ADR 0154). */
   welcomeGift: WelcomeGift | null;
 };
@@ -51,6 +55,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     account,
     { data: referral },
     welcomeGift,
+    { data: referralRows },
   ] = await Promise.all([
     loadDossier(),
     supabase.rpc("my_public_profile"),
@@ -65,6 +70,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       .maybeSingle(),
     supabase.rpc("my_referral"),
     loadWelcomeGift(),
+    supabase.rpc("my_referrals"),
   ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
@@ -110,6 +116,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       today: parisToday(),
     }),
     referral: parseReferral(referral),
+    referrals: parseReferralRows(referralRows),
     welcomeGift,
   };
 }

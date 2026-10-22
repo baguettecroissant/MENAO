@@ -1,4 +1,4 @@
-import { REWARD_SIZES, WELCOME_GIFT_ITEMS } from "@menao/core";
+import { REFERRAL_STEPS, REWARD_SIZES, WELCOME_GIFT_ITEMS } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -19,6 +19,26 @@ export type Referral = z.infer<typeof referralSchema>;
 export function parseReferral(data: unknown): Referral | null {
   const parsed = referralSchema.safeParse(data);
   return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Filleuls du parrain (ADR 0161), réponse de `my_referrals` : nom public, date d'inscription et
+ * étape. Les lignes inattendues sont ignorées.
+ */
+const referralRowSchema = z.object({
+  id: z.string(),
+  nom: z.string(),
+  created_at: z.string(),
+  etape: z.enum(REFERRAL_STEPS),
+});
+export type ReferralRow = z.infer<typeof referralRowSchema>;
+
+export function parseReferralRows(data: unknown): ReferralRow[] {
+  if (!Array.isArray(data)) return [];
+  return data.flatMap((row) => {
+    const parsed = referralRowSchema.safeParse(row);
+    return parsed.success ? [parsed.data] : [];
+  });
 }
 
 /**
