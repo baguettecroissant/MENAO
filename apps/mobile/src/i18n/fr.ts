@@ -581,7 +581,7 @@ export const fr = {
     greeting: "Bonjour !",
     subtitle: "Besoin d'un artisan du bâtiment ?",
     searchPlaceholder: "Décrivez votre projet…",
-    tags: ["Artisans vérifiés", "Décennale contrôlée", "Réponse sous 48\u00a0h"],
+    tags: ["Artisans vérifiés", "Décennale contrôlée", "Réponse sous 72\u00a0h"],
     tradesTitle: "Trouvez votre artisan",
     tradesText: "Des artisans vérifiés pour chaque corps de métier, dans les Alpes-Maritimes.",
     allTrades: "Tous les métiers",
@@ -597,7 +597,7 @@ export const fr = {
       },
       {
         title: "Signez votre devis en ligne",
-        text: "L'artisan accepte sous 48\u00a0h, vient voir votre chantier, puis vous envoie son devis.",
+        text: "L'artisan accepte sous 72\u00a0h, vient voir votre chantier, puis vous envoie son devis.",
       },
       {
         title: "Suivez jusqu'à la réception",
@@ -707,8 +707,8 @@ export const fr = {
         body: "Trouvez les meilleurs artisans pour votre projet grâce à une recherche intelligente.",
       },
       {
-        title: "Réponse sous 48\u00a0h",
-        body: "Les artisans que vous choisissez ont 48 heures pour accepter votre demande.",
+        title: "Réponse sous 72\u00a0h",
+        body: "Les artisans que vous choisissez ont 72 heures pour accepter votre demande.",
       },
       {
         title: "Artisans vérifiés",
@@ -738,7 +738,7 @@ export const fr = {
         "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
         "Vous payez l'artisan directement, par paiement sécurisé : MENAO ne prend aucune commission sur vos travaux.",
         "Devis, signature, paiement et suivi du chantier : tout se passe au même endroit.",
-        "Votre demande part à 3 artisans au plus, qui ont 48\u00a0heures pour vous répondre.",
+        "Votre demande part à 3 artisans au plus, qui ont 72\u00a0heures pour vous répondre.",
       ],
     },
     errors: {
@@ -1022,7 +1022,7 @@ export const fr = {
     to: "Jusqu'à",
     timePlaceholder: "09:00",
     submit: (n: number) => (n <= 1 ? "Envoyer ma demande" : `Envoyer ma demande aux ${n} artisans`),
-    deadline: "Chaque artisan a 48 heures pour vous répondre.",
+    deadline: "Chaque artisan a 72 heures pour vous répondre.",
     transferError:
       "Nous n'avons pas pu rattacher votre projet à votre compte. Recommencez votre recherche depuis l'accueil.",
     notParticulier: "Connectez-vous avec un compte particulier pour envoyer une demande.",
@@ -1032,8 +1032,8 @@ export const fr = {
     title: (names: string) => `Votre demande est envoyée à ${names}\u00a0!`,
     text: (names: string, many: boolean) =>
       many
-        ? `${names} ont bien reçu votre demande. Chaque artisan a 48 heures pour l'accepter.`
-        : `${names} a bien reçu votre demande et a 48 heures pour l'accepter.`,
+        ? `${names} ont bien reçu votre demande. Chaque artisan a 72 heures pour l'accepter.`
+        : `${names} a bien reçu votre demande et a 72 heures pour l'accepter.`,
     reminder: "Rappel",
     callbackAsap: "Vous avez demandé à être rappelé dès que possible.",
     callbackRange: (from: string, to: string) =>
@@ -1689,7 +1689,7 @@ export const fr = {
   /** Demandes reçues par l'artisan (F-16, F-17) : mêmes textes que l'espace pro du site. */
   proRequests: {
     title: "Mes demandes",
-    subtitle: "Les particuliers qui vous ont choisi : répondez sous 48 heures.",
+    subtitle: "Les particuliers qui vous ont choisi : répondez sous 72 heures.",
     // Onglet « Demandes » (ADR 0130).
     openTitle: (n: number) => `À traiter (${n})`,
     doneTitle: "Déjà traitées",

@@ -12,7 +12,7 @@ import { useUnread } from "@/lib/unread";
 import { theme } from "@/ui/theme";
 
 /**
- * Espace artisan (F-16, ADR 0084 puis 0130) : accueil « À faire maintenant », demandes (48 h pour
+ * Espace artisan (F-16, ADR 0084 puis 0130) : accueil « À faire maintenant », demandes (72 h pour
  * répondre, avec leur pastille), (+) actions rapides, chantiers (et leurs devis), messages.
  * L'agenda s'ouvre depuis l'accueil et le (+), « Mon profil » depuis la photo de l'en-tête. Aucun
  * lien vers l'abonnement ni vers le site (CLAUDE.md règle 10). Charte qualité en vigueur signée

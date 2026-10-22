@@ -11,8 +11,8 @@ import {
 } from "../src/billing";
 
 describe("abonnement (F-15)", () => {
-  it("3 mois offerts : essai de 90 jours", () => {
-    expect(TRIAL_DAYS).toBe(90);
+  it("2 mois offerts : essai de 60 jours (décision du 22 octobre 2026)", () => {
+    expect(TRIAL_DAYS).toBe(60);
   });
 
   it.each([

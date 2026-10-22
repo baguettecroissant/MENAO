@@ -22,7 +22,7 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
 
   const base = page.getByRole("region", { name: "Base" });
   await expect(base.getByText("150 €")).toBeVisible();
-  await expect(base.getByText("3 mois offerts")).toBeVisible();
+  await expect(base.getByText("2 mois offerts")).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Premium" }).getByText("Bientôt disponible"),
   ).toBeVisible();
@@ -36,7 +36,7 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
 
   // Stripe confirme l'abonnement en essai : webhook signé
   const now = Math.floor(Date.now() / 1000);
-  const trialEnd = now + 90 * 86_400;
+  const trialEnd = now + 60 * 86_400;
   const event = {
     id: `evt_e2e_${now}`,
     object: "event",

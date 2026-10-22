@@ -263,7 +263,7 @@ Extraire les valeurs exactes depuis Figma (connecteur Figma de Claude Code) dans
 - Écran « Envoyez votre demande de chantier à [Prénom] » : artisan sélectionné + résumé du besoin, message personnalisé (éditeur simple, 10 000 caractères max, optionnel), coordonnées (e-mail, téléphone), préférence de rappel (Dès que possible / Indiquer une plage horaire « à partir de / jusqu'à »).
 - Confirmation : « Votre demande est envoyée à [Prénom] ! » + rappel de la plage horaire + bouton « Suivre ma demande depuis mon espace ».
 - **[À VALIDER]** Envoi à un seul artisan (maquettes) ou à plusieurs (jusqu'à 3). V1 : un seul, paramétrable `MAX_ARTISANS_PER_REQUEST`.
-- L'artisan a **48 h** pour répondre ; sinon relance, puis proposition au particulier d'en choisir un autre.
+- L'artisan a **72 h** pour répondre (décision des associés du 22 octobre 2026, ADR 0153 ; 48 h auparavant) ; sinon relance, puis proposition au particulier d'en choisir un autre.
 
 ### F-12 Mes chantiers (particulier)
 - Listes « en cours » et « terminés ». Carte de chantier : photo, titre, adresse, statut, stepper, artisan, prochaine intervention, action attendue (« Voir et signer le devis », « Payer maintenant »), « Ajouter à mon agenda » (Google, Outlook, Apple via fichier .ics).
@@ -367,7 +367,7 @@ Implémentée dans `packages/core/chantier-state.ts` **et** protégée en base (
 ```
 demande_envoyee
   ├─(artisan refuse)──────────────► refusee
-  ├─(48 h sans réponse)───────────► expiree
+  ├─(72 h sans réponse)───────────► expiree
   └─(artisan fixe un RDV)─────────► rdv_planifie
 rdv_planifie ──(devis envoyé)─────► devis_envoye
 devis_envoye
@@ -583,7 +583,7 @@ Règles :
 | `stripe-webhook` | Abonnements, paiements, virements reçus, comptes Connect, litiges |
 | `payments-*` | Création des paiements sur le compte de l'artisan, déclenchement des versements, remboursements |
 | `notify` | Envoi push/e-mail/SMS selon F-41 |
-| Tâches `pg_cron` | Expiration des demandes (48 h), versements d'acompte (J-2), alerte avant la limite de 90 jours, rappels RDV, relances avis/réserves, expiration des documents, recalcul des scores |
+| Tâches `pg_cron` | Expiration des demandes (72 h), versements d'acompte (J-2), alerte avant la limite de 90 jours, rappels RDV, relances avis/réserves, expiration des documents, recalcul des scores |
 
 Tous les webhooks vérifient la signature de l'émetteur et sont **idempotents** (table `webhook_events` avec identifiant unique).
 

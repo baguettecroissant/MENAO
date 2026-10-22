@@ -76,9 +76,9 @@ select is(
     'Merci de me rappeler au 06 12 34 56 78', '+33612345678', 'plage', '09:00', '12:00'),
   2, 'demande envoyée à 2 artisans (doublon retiré)');
 select results_eq(
-  $$ select status::text, (expires_at - created_at) = interval '48 hours' from public.requests order by artisan_id $$,
+  $$ select status::text, (expires_at - created_at) = interval '72 hours' from public.requests order by artisan_id $$,
   $$ values ('envoyee'::text, true), ('envoyee'::text, true) $$,
-  'demandes envoyées, réponse attendue sous 48 h');
+  'demandes envoyées, réponse attendue sous 72 h');
 select is((select status::text from public.projects where id = 'd4000000-0000-4000-8000-000000000001'),
   'demande_envoyee', 'projet en « demande envoyée »');
 select throws_ok(
@@ -182,7 +182,7 @@ select throws_ok(
        null, '+33612345678', 'des_que_possible', null, null) $$,
   '42501', null, 'e-mail non confirmé : envoi refusé');
 
--- ---------- Expiration (48 h) ----------
+-- ---------- Expiration (72 h) ----------
 reset role;
 update public.requests set expires_at = now() - interval '1 minute'
 where artisan_id = 'd3000000-0000-4000-8000-000000000004';
