@@ -45,7 +45,7 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Mes avis", level: 1 })).toBeVisible();
   await expect(page.getByText("Aucun avis pour le moment.")).toBeVisible();
   await expect(
-    page.getByText("Votre score apparaîtra avec votre premier avis publié."),
+    page.getByText("Votre note apparaîtra avec votre premier avis publié."),
   ).toBeVisible();
   await expect(page.getByRole("region", { name: "Comment ça marche" })).toBeVisible();
   await page.getByRole("link", { name: "Voir ma fiche publique" }).click();

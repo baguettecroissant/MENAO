@@ -118,6 +118,7 @@ export default async function ProjectResultsPage({
                     href={`/recherche/${id}/artisans/${a.artisan_id}`}
                     artisanId={a.artisan_id}
                     verified={a.verified}
+                    score={a.menao_score}
                     name={a.display_name}
                     photoUrl={a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null}
                     tradeLabel={tradeLabel}

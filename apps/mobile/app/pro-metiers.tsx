@@ -1,4 +1,4 @@
-import { parisToday, validRgeDomains } from "@menao/core";
+import { DIPLOMES_METIER, parisToday, validRgeDomains, type DiplomeMetier } from "@menao/core";
 import { CERTIFICATION_TYPES, type CertificationType } from "@menao/validation";
 import { Trash2 } from "lucide-react-native";
 import { useState } from "react";
@@ -55,6 +55,7 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
   const [experience, setExperience] = useState(
     data.experienceYears === null ? "" : String(data.experienceYears),
   );
+  const [diploma, setDiploma] = useState<DiplomeMetier | "">(data.diploma ?? "");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState<Message>(null);
   const [busy, setBusy] = useState(false);
@@ -73,6 +74,7 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
       tradeCodes: [...trades],
       workTypeCodes: [...workTypes],
       experienceYears: experience,
+      diploma,
       allowedWorkTypes: data.trades
         .filter((tr) => trades.has(tr.code))
         .flatMap((tr) => tr.workTypes.map((w) => w.code)),
@@ -123,6 +125,16 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
         onChangeText={setExperience}
         keyboardType="number-pad"
         error={errors.experienceYears}
+      />
+      <ChoiceGroup<DiplomeMetier | "">
+        legend={t.diploma}
+        hint={t.diplomaHint}
+        value={diploma}
+        options={[
+          { value: "", label: t.diplomaNone },
+          ...DIPLOMES_METIER.map((d) => ({ value: d, label: fr.diplomesMetier[d] })),
+        ]}
+        onChange={setDiploma}
       />
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
       <Button label={t.save} onPress={save} loading={busy} />

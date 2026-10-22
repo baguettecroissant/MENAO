@@ -223,6 +223,8 @@ export type MatchedArtisan = {
   specialties: { code: string; label: string }[];
   /** Badge « Assuré et vérifié » (ADR 0119). */
   verified: boolean;
+  /** Score MENAO sur 100 (ADR 0155). */
+  score: number | null;
 };
 
 export type ProjectResults = {
@@ -319,6 +321,7 @@ export async function matchArtisans(
     },
     specialties: specialtiesSchema.catch([]).parse(row.specialties),
     verified: row.verified === true,
+    score: typeof row.menao_score === "number" ? row.menao_score : null,
   }));
 }
 

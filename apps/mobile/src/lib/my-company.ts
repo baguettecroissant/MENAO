@@ -1,3 +1,4 @@
+import type { DiplomeMetier } from "@menao/core";
 import {
   certificationSchema,
   companyStepSchema,
@@ -179,6 +180,8 @@ export type TradesData = {
   selectedTrades: string[];
   selectedWorkTypes: string[];
   experienceYears: number | null;
+  /** Diplôme du métier déclaré (Score MENAO, ADR 0155). */
+  diploma: DiplomeMetier | null;
   certifications: { id: string; type: CertificationType; numero: string; dateFin: string }[];
   rgeDomains: { domain: string; endsOn: string }[];
   rgeCheckedAt: string | null;
@@ -189,7 +192,7 @@ export async function loadTrades(): Promise<TradesData | null> {
   if (!auth.user) return null;
   const { data: artisan } = await supabase
     .from("artisans")
-    .select("id, experience_years, rge_checked_at")
+    .select("id, experience_years, diplome_metier, rge_checked_at")
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (!artisan) return null;
@@ -224,6 +227,7 @@ export async function loadTrades(): Promise<TradesData | null> {
     selectedTrades: (mine.data ?? []).map((m) => m.trade_code),
     selectedWorkTypes: (myWorkTypes.data ?? []).map((m) => m.work_type_code),
     experienceYears: artisan.experience_years,
+    diploma: artisan.diplome_metier,
     certifications: (certifications.data ?? []).map((c) => ({
       id: c.id,
       type: c.type,
@@ -235,11 +239,15 @@ export async function loadTrades(): Promise<TradesData | null> {
   };
 }
 
-/** Métiers, spécialités (seulement celles des métiers cochés) et années d'expérience. */
+/**
+ * Métiers, spécialités (seulement celles des métiers cochés), années d'expérience et diplôme du
+ * métier déclaré (vide : aucun).
+ */
 export async function saveTrades(input: {
   tradeCodes: string[];
   workTypeCodes: string[];
   experienceYears: string;
+  diploma: DiplomeMetier | "";
   allowedWorkTypes: string[];
 }): Promise<SaveResult> {
   const parsed = tradesStepSchema.safeParse(input);
@@ -250,7 +258,11 @@ export async function saveTrades(input: {
     p_work_type_codes: parsed.data.workTypeCodes.filter((code) => allowed.has(code)),
     p_experience_years: parsed.data.experienceYears,
   });
-  return error ? { ok: false, error: fr.errors.generic } : { ok: true };
+  if (error) return { ok: false, error: fr.errors.generic };
+  const { error: diplomaError } = await supabase.rpc("set_artisan_diploma", {
+    p_diplome: input.diploma,
+  });
+  return diplomaError ? { ok: false, error: fr.errors.generic } : { ok: true };
 }
 
 export async function addCertification(input: {

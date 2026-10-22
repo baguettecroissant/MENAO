@@ -12,11 +12,14 @@ import {
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "@menao/core";
+import { menaoScorePartsSchema } from "@menao/validation";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { GoogleReviewsForm } from "@/components/admin/google-reviews-form";
+import { MenaoScore } from "@/components/artisan-profile/menao-score";
 import { Alert, Card, StatusBadge } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
@@ -25,6 +28,7 @@ import { requireAdmin } from "@/lib/admin/guard";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { getArtisanReferral, type ArtisanReferral } from "@/lib/admin/referrals";
 import { documentLogoUrl } from "@/lib/documents/logo";
+import { formatDay } from "@/lib/format";
 import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
 import { DocumentsSection } from "./documents-section";
 import { DecisionForm } from "./review-forms";
@@ -131,11 +135,14 @@ export default async function AdminArtisanPage({
       .order("period", { ascending: false }),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
-  const [logoUrl, activity, referral] = await Promise.all([
+  const [logoUrl, activity, referral, { data: scoreData }] = await Promise.all([
     documentLogoUrl(supabase, artisan.logo_path),
     getArtisanActivity(supabase, artisan.id),
     getArtisanReferral(supabase, artisan.id),
+    // Score MENAO (ADR 0155).
+    supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id }),
   ]);
+  const menaoScore = menaoScorePartsSchema.safeParse(scoreData).data ?? null;
 
   const docs = documents.data ?? [];
   const { data: signed } = docs.length
@@ -220,6 +227,7 @@ export default async function AdminArtisanPage({
     ...(pending ? [{ id: "decision", label: t.navItems.decision }] : []),
     { id: "entreprise", label: t.navItems.entreprise },
     { id: "profil", label: t.navItems.profil },
+    { id: "score", label: t.navItems.score },
     { id: "abonnement", label: t.navItems.abonnement },
     { id: "activite", label: t.navItems.activite },
     { id: "parrainage", label: t.navItems.parrainage },
@@ -377,6 +385,9 @@ export default async function AdminArtisanPage({
               .join(", ")}
           </p>
           <p className="text-sm">{t.experience(artisan.experience_years)}</p>
+          <p className="text-sm">
+            {t.diploma(artisan.diplome_metier ? fr.diplomesMetier[artisan.diplome_metier] : null)}
+          </p>
         </Section>
 
         <Section title={t.zone}>
@@ -605,6 +616,35 @@ export default async function AdminArtisanPage({
         ) : (
           <p className="text-muted-foreground">{t.noSubscription}</p>
         )}
+      </Section>
+
+      <Section id="score" title={t.menaoScore.title}>
+        {menaoScore && <MenaoScore score={menaoScore} />}
+        <div className="flex flex-col gap-2 border-t border-border pt-4">
+          <h3 className="font-medium">{t.menaoScore.googleTitle}</h3>
+          <p className="text-sm text-muted-foreground">{t.menaoScore.googleIntro}</p>
+          <p className="text-sm">
+            {artisan.google_checked_at && artisan.google_rating !== null
+              ? t.menaoScore.current(
+                  artisan.google_rating.toLocaleString("fr-FR"),
+                  artisan.google_review_count ?? 0,
+                  formatDay(artisan.google_checked_at),
+                )
+              : t.menaoScore.none}
+          </p>
+          <GoogleReviewsForm
+            artisanId={artisan.id}
+            current={
+              artisan.google_url && artisan.google_rating !== null && artisan.google_review_count
+                ? {
+                    url: artisan.google_url,
+                    rating: artisan.google_rating,
+                    count: artisan.google_review_count,
+                  }
+                : null
+            }
+          />
+        </div>
       </Section>
 
       <Section id="activite" title={fr.admin.activity.title}>

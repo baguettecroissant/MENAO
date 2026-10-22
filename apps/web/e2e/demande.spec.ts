@@ -788,10 +788,14 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   ).toBeVisible();
   await capture(page, "client-avis-merci");
   await page.getByRole("link", { name: "Voir la fiche de Noé" }).click();
+  // Score MENAO sur 100 (ADR 0155) avec ses critères, puis la note des clients :
   // (80 + 100 + 100 + 100) / 4 = 95 %.
   const menaoScore = page.getByRole("region", { name: "Score MENAO" });
-  await expect(menaoScore.getByText(/^95\s%$/)).toBeVisible();
-  await expect(menaoScore.getByText("Calculé sur 1 avis vérifié")).toBeVisible();
+  await expect(menaoScore.getByText("/ 100", { exact: true })).toBeVisible();
+  await expect(menaoScore.getByText("Avis des clients", { exact: true })).toBeVisible();
+  const clientReviews = page.getByRole("region", { name: "Avis des clients" });
+  await expect(clientReviews.getByText(/^95\s%$/)).toBeVisible();
+  await expect(clientReviews.getByText("Calculé sur 1 avis vérifié")).toBeVisible();
   const latestReviews = page.getByRole("region", { name: "Derniers avis clients" });
   await expect(latestReviews.getByText("Dominique T.")).toBeVisible();
   await expect(latestReviews.getByText("Avis vérifié")).toBeVisible();

@@ -1007,10 +1007,16 @@ export type Database = {
           connect_requirements_pending: string[];
           connect_updated_at: string | null;
           created_at: string;
+          date_creation_entreprise: string | null;
           decennale_non_soumis: boolean;
           default_deposit_percent: number;
+          diplome_metier: Database["public"]["Enums"]["diplome_metier"] | null;
           experience_years: number | null;
           forme_juridique_code: string | null;
+          google_checked_at: string | null;
+          google_rating: number | null;
+          google_review_count: number | null;
+          google_url: string | null;
           id: string;
           indexable: boolean;
           is_dirigeant: boolean | null;
@@ -1063,10 +1069,16 @@ export type Database = {
           connect_requirements_pending?: string[];
           connect_updated_at?: string | null;
           created_at?: string;
+          date_creation_entreprise?: string | null;
           decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
+          diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
+          google_checked_at?: string | null;
+          google_rating?: number | null;
+          google_review_count?: number | null;
+          google_url?: string | null;
           id?: string;
           indexable?: boolean;
           is_dirigeant?: boolean | null;
@@ -1118,10 +1130,16 @@ export type Database = {
           connect_requirements_pending?: string[];
           connect_updated_at?: string | null;
           created_at?: string;
+          date_creation_entreprise?: string | null;
           decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
+          diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
+          google_checked_at?: string | null;
+          google_rating?: number | null;
+          google_review_count?: number | null;
+          google_url?: string | null;
           id?: string;
           indexable?: boolean;
           is_dirigeant?: boolean | null;
@@ -3666,6 +3684,7 @@ export type Database = {
       };
       admin_ai_summary: { Args: { p_days?: number }; Returns: Json };
       admin_artisan_activity: { Args: { p_artisan_id: string }; Returns: Json };
+      admin_artisan_menao_score: { Args: { p_artisan_id: string }; Returns: Json };
       admin_artisan_referral: { Args: { p_artisan_id: string }; Returns: Json };
       admin_audit_counts: { Args: { p_query?: string }; Returns: Json };
       admin_audit_log: {
@@ -3904,6 +3923,10 @@ export type Database = {
           label: string;
           tag: string;
         }[];
+      };
+      admin_set_google_reviews: {
+        Args: { p_artisan_id: string; p_count: number; p_rating: number; p_url: string };
+        Returns: undefined;
       };
       admin_set_platform_setting: { Args: { p_key: string; p_value: Json }; Returns: undefined };
       admin_set_reference_active: {
@@ -4282,6 +4305,7 @@ export type Database = {
           display_name: string;
           distance_km: number;
           experience_years: number;
+          menao_score: number;
           specialties: Json;
           verified: boolean;
           zone_city: string;
@@ -4326,6 +4350,7 @@ export type Database = {
           unread: number;
         }[];
       };
+      my_menao_score: { Args: Record<PropertyKey, never>; Returns: Json };
       my_notifications: {
         Args: { p_limit?: number };
         Returns: {
@@ -4609,6 +4634,7 @@ export type Database = {
         Returns: undefined;
       };
       set_artisan_available_from: { Args: { p_date?: string }; Returns: undefined };
+      set_artisan_diploma: { Args: { p_diplome: string }; Returns: undefined };
       set_artisan_hours: { Args: { p_hours: Json }; Returns: undefined };
       set_artisan_paused: { Args: { p_paused: boolean }; Returns: undefined };
       set_artisan_trades: {
@@ -4719,6 +4745,8 @@ export type Database = {
         | "annule";
       chantier_update_kind: "message" | "photo";
       client_cancel_reason: "plus_besoin" | "autre_artisan" | "delai" | "budget" | "autre";
+      diplome_metier:
+        "cap" | "bep" | "bac_pro" | "bp" | "bts" | "brevet_maitrise" | "titre_pro" | "autre";
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite" | "urssaf";
@@ -4977,6 +5005,16 @@ export const Constants = {
       ],
       chantier_update_kind: ["message", "photo"],
       client_cancel_reason: ["plus_besoin", "autre_artisan", "delai", "budget", "autre"],
+      diplome_metier: [
+        "cap",
+        "bep",
+        "bac_pro",
+        "bp",
+        "bts",
+        "brevet_maitrise",
+        "titre_pro",
+        "autre",
+      ],
       dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite", "urssaf"],

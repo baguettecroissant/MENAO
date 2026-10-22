@@ -9,8 +9,8 @@ const t = fr.search.results;
 
 /**
  * Carte artisan des résultats (maquettes « Cartes alignées ») : photo, prénom, métier et
- * expérience, zone, badge « Assuré et vérifié », disponibilité, spécialités, puis sélection pour
- * la demande (F-11).
+ * expérience, zone, Score MENAO (ADR 0155), badge « Assuré et vérifié », disponibilité,
+ * spécialités, puis sélection pour la demande (F-11).
  */
 export function ArtisanResultCard({
   href = null,
@@ -27,6 +27,7 @@ export function ArtisanResultCard({
   selection,
   known = false,
   verified = false,
+  score = null,
   headingLevel = 2,
   className = "",
 }: {
@@ -48,6 +49,8 @@ export function ArtisanResultCard({
   known?: boolean;
   /** Badge « Assuré et vérifié » (ADR 0119). */
   verified?: boolean;
+  /** Score MENAO sur 100 (ADR 0155). */
+  score?: number | null;
   headingLevel?: 2 | 3;
   /** Largeur dans le carrousel des résultats sur téléphone. */
   className?: string;
@@ -86,6 +89,7 @@ export function ArtisanResultCard({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {known && <StatusBadge tone="primary">{t.knownArtisan}</StatusBadge>}
+          {score !== null && <StatusBadge tone="primary">{t.score(score)}</StatusBadge>}
           {verified && <VerifiedBadge>{t.verified}</VerifiedBadge>}
           {availableFrom ? (
             <StatusBadge tone="neutral">{t.availableFrom(availableFrom)}</StatusBadge>

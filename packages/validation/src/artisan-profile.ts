@@ -1,4 +1,6 @@
+import { DIPLOMES_METIER } from "@menao/core";
 import { z } from "zod";
+import { menaoScorePartsSchema } from "./menao-score";
 
 const labeled = z.object({ code: z.string(), label: z.string() });
 
@@ -45,7 +47,15 @@ const profileSchema = z.object({
     )
     .catch([]),
   photos: z.array(z.string()),
-  // Score MENAO (F-28) : moyennes des avis publiés ; null tant qu'aucun avis n'est publié.
+  // Score MENAO sur 100 (ADR 0155) : total et points de chaque critère.
+  menao_score: menaoScorePartsSchema.nullable().catch(null),
+  // Diplôme du métier déclaré par l'artisan ; avis Google vérifiés par l'équipe (source affichée).
+  diplome: z.enum(DIPLOMES_METIER).nullable().catch(null),
+  google: z
+    .object({ rating: z.number(), count: z.number(), url: z.string() })
+    .nullable()
+    .catch(null),
+  // Avis des clients MENAO (F-28) : moyennes des avis publiés ; null tant qu'aucun avis n'est publié.
   score: z
     .object({
       review_count: z.number(),

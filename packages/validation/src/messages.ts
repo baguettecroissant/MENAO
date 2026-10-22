@@ -108,4 +108,7 @@ export const messages = {
   welcomeGiftAddressRequired: "Indiquez l'adresse de livraison.",
   postalCodeInvalid: "Indiquez un code postal à 5 chiffres.",
   welcomeGiftCityRequired: "Indiquez la commune.",
+  googleUrlInvalid: "Indiquez le lien de la fiche Google de l'entreprise.",
+  googleRatingInvalid: "Note Google entre 1 et 5.",
+  googleCountInvalid: "Nombre d'avis Google invalide.",
 } as const;

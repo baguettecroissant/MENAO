@@ -52,4 +52,5 @@ export * from "./admin-queue";
 export * from "./admin-review";
 export * from "./partners";
 export * from "./referral";
+export * from "./menao-score";
 export * from "./artisan-page";

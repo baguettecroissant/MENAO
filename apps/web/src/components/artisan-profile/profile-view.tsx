@@ -4,17 +4,21 @@ import {
   Briefcase,
   CircleCheck,
   Clock,
+  ExternalLink,
+  GraduationCap,
   Leaf,
   MapPin,
   ShieldCheck,
   Star,
 } from "lucide-react";
+import type { Route } from "next";
 import type { ReactNode } from "react";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { ReviewList, type PublicReview } from "@/components/review/review-list";
-import { StatusBadge, Tag, VerifiedBadge } from "@/components/ui";
+import { StatusBadge, Tag, TextLink, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ArtisanProfile } from "@/lib/project/artisans";
+import { MenaoScore } from "./menao-score";
 import { PhotoGallery } from "./photo-gallery";
 
 const t = fr.search.profile;
@@ -115,8 +119,8 @@ export function ProfileHeader({
 }
 
 /**
- * Contenu de la fiche (F-10) : présentation, chantiers récents et avis ; spécialités, garanties
- * et assurances, score MENAO.
+ * Contenu de la fiche (F-10) : présentation, chantiers récents et avis ; Score MENAO sur 100
+ * (ADR 0155), spécialités, garanties et assurances, note des clients.
  */
 export function ProfileBody({
   profile,
@@ -168,6 +172,14 @@ export function ProfileBody({
       </div>
 
       <div className="flex flex-col gap-5">
+        {profile.menao_score && (
+          <Section title={t.score}>
+            <MenaoScore score={profile.menao_score} />
+            <TextLink href={"/criteres-de-classement" as Route} className="self-start text-sm">
+              {t.scoreHow}
+            </TextLink>
+          </Section>
+        )}
         {profile.work_types.length > 0 && (
           <Section title={t.expertise}>
             <ul className="flex flex-wrap gap-1.5">
@@ -208,6 +220,14 @@ export function ProfileBody({
                 )}
               </Guarantee>
             )}
+            {profile.diplome && (
+              <Guarantee
+                icon={<GraduationCap />}
+                title={t.diplomaTitle(fr.diplomesMetier[profile.diplome])}
+              >
+                {t.diplomaDetail}
+              </Guarantee>
+            )}
             {profile.certifications.map((c) => (
               <Guarantee
                 key={`${c.type}-${c.numero}`}
@@ -235,7 +255,7 @@ export function ProfileBody({
             )}
           </ul>
         </Section>
-        <Section title={t.score}>
+        <Section title={t.clientReviews}>
           {profile.score ? (
             <ScoreBreakdown score={profile.score} />
           ) : (
@@ -244,13 +264,32 @@ export function ProfileBody({
               {t.scoreEmpty}
             </p>
           )}
+          {profile.google && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3 text-sm">
+              <span className="font-medium">
+                {t.google(
+                  profile.google.rating.toLocaleString("fr-FR", { minimumFractionDigits: 1 }),
+                  profile.google.count,
+                )}
+              </span>
+              <a
+                href={profile.google.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline"
+              >
+                {t.googleLink}
+                <ExternalLink aria-hidden="true" className="size-3.5" />
+              </a>
+            </p>
+          )}
         </Section>
       </div>
     </div>
   );
 }
 
-/** Score MENAO (F-28) : barres par critère, score global et nombre d'avis. */
+/** Note des clients (F-28) : barres par critère, note globale et nombre d'avis. */
 export function ScoreBreakdown({ score }: { score: NonNullable<ArtisanProfile["score"]> }) {
   return (
     <>

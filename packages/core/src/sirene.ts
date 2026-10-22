@@ -14,6 +14,8 @@ export type SireneEtablissement = {
   raisonSociale: string | null;
   formeJuridiqueCode: string | null;
   apeCode: string | null;
+  /** Date de création de l'entreprise (AAAA-MM-JJ) : ancienneté du Score MENAO (ADR 0155). */
+  dateCreation: string | null;
   adresse: {
     ligne: string | null;
     codePostal: string | null;
@@ -33,6 +35,11 @@ function str(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const v = value.trim();
   return v === "" || v === "[ND]" ? null : v;
+}
+
+/** Date au format AAAA-MM-JJ, sinon null. */
+function isoDate(value: string | null): string | null {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
 export function parseSireneEtablissement(body: unknown): SireneEtablissement | null {
@@ -78,6 +85,7 @@ export function parseSireneEtablissement(body: unknown): SireneEtablissement | n
     raisonSociale,
     formeJuridiqueCode: str(ul.categorieJuridiqueUniteLegale),
     apeCode: str(ul.activitePrincipaleUniteLegale) ?? str(periode.activitePrincipaleEtablissement),
+    dateCreation: isoDate(str(ul.dateCreationUniteLegale)),
     adresse: {
       ligne: voie || null,
       codePostal: str(adr.codePostalEtablissement),
