@@ -924,21 +924,11 @@ export const fr = {
     experience: "Expérience",
     experienceValue: (years: number) => (years <= 1 ? `${years} an` : `${years} ans`),
     zone: "Zone d'intervention",
-    responseTime: {
-      "1h": "Répond en moins d'1\u00a0h",
-      "3h": "Répond en moins de 3\u00a0h",
-      "24h": "Répond dans la journée",
-      "48h": "Répond sous 48\u00a0h",
-    },
     unavailable: "Indisponible pour le moment",
-    // Cartes d'informations de la fiche (maquette « Fiche artisan ») : valeur courte.
-    responseLabel: "Temps de réponse",
-    responseShort: {
-      "1h": "< 1\u00a0h",
-      "3h": "< 3\u00a0h",
-      "24h": "Dans la journée",
-      "48h": "< 48\u00a0h",
-    },
+    // Cartes d'informations de la fiche (maquette « Fiche artisan ») : valeur courte. Badge
+    // « Répond en moyenne en moins de 2 h » (ADR 0160), absent au-delà.
+    responseLabel: "Répond en moyenne",
+    fastResponse: "En moins de 2\u00a0h",
     verified: "Avis vérifié",
     seeMore: "Voir plus",
     seeLess: "Voir moins",

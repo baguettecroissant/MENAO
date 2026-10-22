@@ -57,6 +57,16 @@ const overviewSchema = z.object({
 });
 export type Overview = z.infer<typeof overviewSchema>;
 
+/** Nouveaux artisans (ADR 0160) : premier chantier sous 60 jours, artisans à accompagner. */
+const newArtisansSchema = z.object({
+  cohorte: n,
+  premier_chantier: n,
+  a_accompagner: n,
+  echeance: z.string().nullable(),
+  mois_demarrage: n,
+});
+export type NewArtisans = z.infer<typeof newArtisansSchema>;
+
 export type ActivityItem = { occurredAt: string; kind: string; details: Record<string, unknown> };
 
 /** Éléments nommés du bloc « À traiter maintenant », en plus des compteurs. */
@@ -78,6 +88,12 @@ export async function getOverview(supabase: Client): Promise<Overview | null> {
   if (error) return null;
   const parsed = overviewSchema.safeParse(data);
   return parsed.success ? parsed.data : null;
+}
+
+export async function getNewArtisans(supabase: Client): Promise<NewArtisans | null> {
+  const { data, error } = await supabase.rpc("admin_new_artisans");
+  if (error) return null;
+  return newArtisansSchema.safeParse(data).data ?? null;
 }
 
 export async function getActivity(

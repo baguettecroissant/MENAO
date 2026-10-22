@@ -83,7 +83,8 @@ Deno.serve(async (req) => {
       if (snapshot) await saveSubscription(admin, snapshot);
     }
     // Facture d'abonnement payée : premier paiement réel (prime du prescripteur, F-59 ; mois
-    // offerts du parrainage, F-60), puis pose des mois offerts en attente (même à 0 €).
+    // offerts du parrainage, F-60), mois offert de démarrage (ADR 0160), puis pose des mois
+    // offerts en attente (même à 0 €).
     const paidSubscription =
       event.type === "invoice.paid" && !event.account
         ? invoiceSubscriptionId(event.data.object)
@@ -96,6 +97,10 @@ Deno.serve(async (req) => {
         });
         if (error) throw error;
       }
+      const { error: starterError } = await admin.rpc("grant_starter_month", {
+        p_stripe_subscription_id: paidSubscription,
+      });
+      if (starterError) throw starterError;
       await applyFreeMonths(admin, stripe, paidSubscription);
     }
     // Paiement d'un chantier, sur le compte connecté de l'artisan (ADR 0011, ADR 0023).

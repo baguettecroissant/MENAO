@@ -1,4 +1,4 @@
-import { availability, parisToday, responseTimeBucket } from "@menao/core";
+import { availability, parisToday, respondsFast } from "@menao/core";
 import {
   BadgeCheck,
   Briefcase,
@@ -68,8 +68,6 @@ export function ProfileHeader({
   /** Niveau du titre : h2 dans l'aperçu de l'artisan, dont la page a son propre titre. */
   titleAs?: "h1" | "h2";
 }) {
-  const response =
-    profile.response_minutes !== null ? responseTimeBucket(profile.response_minutes) : null;
   const zone =
     profile.zone.mode === "rayon" && profile.zone.radius_km
       ? r.zoneRadius(profile.zone.radius_km, profile.zone.city)
@@ -87,10 +85,10 @@ export function ProfileHeader({
           <div className="flex flex-wrap items-center gap-2">
             {profile.verified && <VerifiedBadge>{t.verifiedBadge}</VerifiedBadge>}
             <AvailabilityBadge profile={profile} />
-            {response && (
+            {respondsFast(profile.response_minutes) && (
               <Tag>
                 <Clock aria-hidden="true" className="size-3.5" />
-                {t.responseTime[response]}
+                {t.fastResponse}
               </Tag>
             )}
           </div>

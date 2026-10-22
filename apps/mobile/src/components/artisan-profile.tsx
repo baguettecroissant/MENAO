@@ -1,4 +1,4 @@
-import { availability, parisToday, responseTimeBucket, reviewStars } from "@menao/core";
+import { availability, parisToday, respondsFast, reviewStars } from "@menao/core";
 import {
   BadgeCheck,
   Check,
@@ -46,8 +46,7 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
     { paused: profile.paused, availableFrom: profile.available_from },
     parisToday(),
   );
-  const response =
-    profile.response_minutes !== null ? responseTimeBucket(profile.response_minutes) : null;
+  const fast = respondsFast(profile.response_minutes);
   const zone =
     profile.zone.mode === "rayon" && profile.zone.radius_km
       ? fr.results.zoneRadius(profile.zone.radius_km, profile.zone.city)
@@ -118,9 +117,7 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
             />
           ) : null}
           <Fact icon={MapPin} label={t.zone} value={zone} />
-          {response ? (
-            <Fact icon={Clock} label={t.responseLabel} value={t.responseShort[response]} />
-          ) : null}
+          {fast ? <Fact icon={Clock} label={t.responseLabel} value={t.fastResponse} /> : null}
         </ScrollView>
       </View>
 

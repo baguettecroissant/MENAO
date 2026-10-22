@@ -430,6 +430,7 @@ export type Database = {
           artisan_id: string;
           created_at: string;
           id: string;
+          reason: Database["public"]["Enums"]["free_month_reason"];
           referral_id: string | null;
           status: Database["public"]["Enums"]["free_month_status"];
           stripe_subscription_id: string | null;
@@ -440,6 +441,7 @@ export type Database = {
           artisan_id: string;
           created_at?: string;
           id?: string;
+          reason?: Database["public"]["Enums"]["free_month_reason"];
           referral_id?: string | null;
           status?: Database["public"]["Enums"]["free_month_status"];
           stripe_subscription_id?: string | null;
@@ -449,6 +451,7 @@ export type Database = {
           artisan_id?: string;
           created_at?: string;
           id?: string;
+          reason?: Database["public"]["Enums"]["free_month_reason"];
           referral_id?: string | null;
           status?: Database["public"]["Enums"]["free_month_status"];
           stripe_subscription_id?: string | null;
@@ -3810,6 +3813,7 @@ export type Database = {
         Args: { p_code: string; p_kind: string; p_up: boolean };
         Returns: undefined;
       };
+      admin_new_artisans: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_partner_funnel: { Args: { p_partner_id: string }; Returns: Json };
       admin_partners: {
@@ -4328,6 +4332,10 @@ export type Database = {
           stripe_subscription_id: string;
         }[];
       };
+      grant_starter_month: {
+        Args: { p_now?: string; p_stripe_subscription_id: string };
+        Returns: boolean;
+      };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
       mark_free_month_applied: {
@@ -4794,6 +4802,7 @@ export type Database = {
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite" | "urssaf";
+      free_month_reason: "parrainage" | "demarrage";
       free_month_status: "a_appliquer" | "applique";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       message_kind: "texte" | "photo" | "fichier";
@@ -4884,7 +4893,8 @@ export type Database = {
         | "recompense"
         | "demande_sans_reponse"
         | "particulier_a_verifier"
-        | "faux_particulier";
+        | "faux_particulier"
+        | "accompagnement";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes";
@@ -5068,6 +5078,7 @@ export const Constants = {
       dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite", "urssaf"],
+      free_month_reason: ["parrainage", "demarrage"],
       free_month_status: ["a_appliquer", "applique"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       message_kind: ["texte", "photo", "fichier"],
@@ -5160,6 +5171,7 @@ export const Constants = {
         "demande_sans_reponse",
         "particulier_a_verifier",
         "faux_particulier",
+        "accompagnement",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],
