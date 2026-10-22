@@ -1,4 +1,5 @@
 import type { ProfileHubRow, ProfileHubTone, ProfileTip } from "@menao/core";
+import type { WelcomeGift } from "@menao/validation";
 import {
   Award,
   BadgeCheck,
@@ -28,6 +29,7 @@ import { ButtonLink, StatusBadge, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { HubLineStatus } from "@/lib/artisan/profile-hub";
 import { ReferralCard } from "./referral-card";
+import { WelcomeGiftCard } from "./welcome-gift-card";
 
 const t = fr.pro.hub;
 
@@ -108,7 +110,9 @@ export type ProfileHubData = {
   statuses: Record<ProfileHubRow, HubLineStatus>;
   subscriptionActive: boolean;
   /** Parrainage (F-60) : artisans validés seulement. */
-  referral: { link: string; code: string; joined: number; monthsEarned: number } | null;
+  referral: { link: string; code: string; joined: number; monthsThisYear: number } | null;
+  /** Cadeau de bienvenue du filleul (ADR 0154). */
+  welcomeGift: WelcomeGift | null;
 };
 
 /**
@@ -165,6 +169,7 @@ export function ProfileHubView({ hub }: { hub: ProfileHubData }) {
           </ButtonLink>
         </div>
 
+        {hub.welcomeGift && <WelcomeGiftCard gift={hub.welcomeGift} />}
         {hub.referral && <ReferralCard {...hub.referral} />}
 
         <div className="grid gap-6 lg:grid-cols-2">

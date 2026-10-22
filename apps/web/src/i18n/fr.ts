@@ -2551,10 +2551,10 @@ export const fr = {
      * entreprise, conformité, argent et compte, avec l'état de chaque rubrique.
      */
     hub: {
-      /** Parrainage entre artisans (F-60, ADR 0137). */
+      /** Parrainage entre artisans (F-60, ADR 0137 et 0154). */
       referral: {
         title: "Parrainez un confrère",
-        lead: "Un mois offert pour vous deux dès son premier paiement.",
+        lead: "Un mois offert pour vous dès son premier paiement, jusqu'à 12 par an. Votre confrère reçoit un cadeau de bienvenue.",
         linkLabel: "Votre lien de parrainage",
         copy: "Copier le lien",
         copied: "Lien copié",
@@ -2563,7 +2563,33 @@ export const fr = {
           n === 0
             ? "Aucun confrère inscrit pour l'instant"
             : `${n} confrère${n > 1 ? "s" : ""} inscrit${n > 1 ? "s" : ""}`,
-        earned: (n: number) => `${n} mois offert${n > 1 ? "s" : ""} gagné${n > 1 ? "s" : ""}`,
+        thisYear: (n: number, cap: number) =>
+          `${n} mois offert${n > 1 ? "s" : ""} sur ${cap} cette année`,
+        capped: (cap: number) =>
+          `Plafond de ${cap} mois offerts atteint cette année : merci pour vos recommandations\u00a0!`,
+      },
+      /** Cadeau de bienvenue du filleul (F-60, ADR 0154). */
+      welcomeGift: {
+        title: "Votre cadeau de bienvenue",
+        lead: (referrer: string) =>
+          `${referrer} vous a recommandé MENAO. Choisissez votre cadeau : nous vous l'envoyons.`,
+        itemLegend: "Votre cadeau",
+        items: { tshirt: "T-shirt MENAO", casquette: "Casquette MENAO" } as Record<
+          "tshirt" | "casquette",
+          string
+        >,
+        sizeLegend: "Taille du t-shirt",
+        delivery: "Adresse de livraison",
+        recipient: "Destinataire",
+        address: "Adresse",
+        postalCode: "Code postal",
+        city: "Commune",
+        submit: "Recevoir mon cadeau",
+        note: "Envoi organisé par l'équipe MENAO, qui vous recontacte si besoin.",
+        done: "C'est noté : l'équipe MENAO prépare votre cadeau.",
+        summary: (item: string, size: string | null) => (size ? `${item}, taille ${size}` : item),
+        pending: "En préparation par l'équipe MENAO.",
+        sent: (date: string) => `Envoyé le ${date}.`,
       },
       title: "Mon profil",
       lead: "Tout ce qui concerne votre fiche, votre entreprise et votre compte, avec ce qui reste à faire.",
@@ -2674,6 +2700,9 @@ export const fr = {
         avis: (n: number) => (n === 1 ? "1 avis à répondre" : `${n} avis à répondre`),
         avisHint: "Une réponse rassure vos futurs clients.",
         respond: "Répondre",
+        cadeau: "Votre cadeau de bienvenue",
+        cadeauHint: "Offert grâce à votre parrain : t-shirt ou casquette MENAO.",
+        choose: "Choisir",
         add: "Ajouter",
         activate: "Activer",
         renew: "Renouveler",
@@ -3803,7 +3832,7 @@ export const fr = {
         referralToggle: "J'ai un code de parrainage",
         referralLabel: "Code de parrainage (facultatif)",
         referralHint:
-          "Le code d'un artisan MENAO qui vous a recommandé : un mois offert pour vous deux.",
+          "Le code d'un artisan MENAO qui vous a recommandé : un cadeau de bienvenue vous attend à la validation de votre dossier.",
         referralApplied: (code: string) => `Code de parrainage ou partenaire appliqué : ${code}`,
         oauthSubmit: "Créer mon profil",
         notYou: "Ce n'est pas vous ? Se déconnecter",
@@ -5223,7 +5252,7 @@ export const fr = {
     referrals: {
       title: "Parrainages",
       intro:
-        "Artisans inscrits avec le code d'un confrère. Au premier paiement du filleul, un mois est offert à chacun.",
+        "Artisans inscrits avec le code d'un confrère. Au premier paiement du filleul, le parrain gagne un mois offert (12 par an au plus). Le filleul reçoit un cadeau de bienvenue à la validation de son dossier : sa demande arrive dans les tickets (« Récompense »).",
       how: "Chaque artisan validé reçoit un code de 8 caractères à sa première visite de « Mon profil », avec le lien menao.fr/p/<code>/pro. Le confrère qui s'inscrit par ce lien, ou en saisissant le code, devient son filleul.",
       summary: {
         pending: "En attente",
@@ -5233,8 +5262,9 @@ export const fr = {
         months: "Mois offerts posés",
         monthsHint: (n: number) =>
           n === 0 ? "Aucun mois en attente de pose" : `${n} en attente de la prochaine facture`,
-        cancelled: "Annulés",
-        cancelledHint: "Abus écartés avant la récompense",
+        gifts: "Cadeaux à envoyer",
+        giftsHint: (n: number) =>
+          n === 0 ? "Aucun cadeau à choisir" : `${n} à choisir par les filleuls`,
       },
       filtersLabel: "Filtrer les parrainages",
       filters: {
@@ -5253,23 +5283,30 @@ export const fr = {
         referrer: "Parrain",
         referred: "Filleul",
         status: "Statut",
-        months: "Mois offerts",
+        months: "Récompenses",
         action: "Action",
       },
       month: {
         applique: "posé",
         a_appliquer: "en attente",
       } as Record<"applique" | "a_appliquer", string>,
-      monthOf: (who: string, state: string) => `${who} : ${state}`,
+      monthOf: (who: string, state: string) => `${who} : mois ${state}`,
+      gift: {
+        a_choisir: "cadeau à choisir",
+        a_envoyer: "cadeau à envoyer",
+        envoye: "cadeau envoyé",
+      } as Record<"a_choisir" | "a_envoyer" | "envoye", string>,
+      capped: "plafond de 12 mois atteint",
       referrerShort: "Parrain",
       referredShort: "Filleul",
-      noMonth: "Aucun avant le premier paiement",
+      noMonth: "Aucune pour l'instant",
       rewardedOn: (date: string) => `Récompensé le ${date}`,
       cancelled: (reason: string) => `Annulé : ${reason}`,
       empty: "Aucun parrainage pour l'instant.",
       cancelReason: "Motif de l'annulation",
       cancel: "Annuler",
-      cancelHint: "Seulement avant la récompense ; aucun mois ne sera offert.",
+      cancelHint:
+        "Seulement avant la récompense ; aucun mois ne sera offert et le cadeau pas encore choisi est retiré.",
       cancelDone: "Parrainage annulé.",
       errors: { reason: "Indiquez le motif de l'annulation." },
     },
@@ -5772,8 +5809,11 @@ export const fr = {
         referred: (n: number) => `Filleul${n > 1 ? "s" : ""} (${n})`,
         noReferred: "Aucun filleul pour l'instant",
         months: "Mois offerts",
-        monthsValue: (applied: number, pending: number) =>
-          `${applied} posé${applied > 1 ? "s" : ""}, ${pending} en attente`,
+        monthsValue: (applied: number, pending: number, thisYear: number) =>
+          `${applied} posé${applied > 1 ? "s" : ""}, ${pending} en attente (${thisYear} sur 12 cette année)`,
+        gift: "Cadeau de bienvenue",
+        giftValue: (state: string, item: string | null) => (item ? `${item} : ${state}` : state),
+        giftTicket: "Voir la demande",
         since: (date: string) => `inscrit le ${date}`,
         seeAll: "Tous les parrainages",
       },

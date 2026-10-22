@@ -1,7 +1,8 @@
 -- Parrainage entre artisans (F-60, ADR 0137) : code réservé aux artisans validés, stable ;
 -- inscription avec le code d'un parrain validé (jamais le sien) ; codes distincts de ceux des
--- partenaires ; au premier paiement du filleul, un mois offert à chacun, une seule fois ; mois
--- à poser par la clé serveur seulement ; lecture limitée au parrain, au filleul et aux admins.
+-- partenaires ; au premier paiement du filleul, un mois offert au parrain (V2, ADR 0154), une
+-- seule fois ; mois à poser par la clé serveur seulement ; lecture limitée au parrain, au filleul
+-- et aux admins.
 -- Données fictives.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -73,42 +74,42 @@ select lives_ok($$ select app.apply_artisan_signup('c6910000-0000-4000-8000-0000
 select is_empty($$ select 1 from public.artisan_referrals where referrer_artisan_id = 'c6910000-0000-4000-8000-000000000003' $$,
   'code d''un artisan non validé : aucun parrainage');
 
--- ---------- Premier paiement du filleul : un mois offert à chacun ----------
+-- ---------- Premier paiement du filleul : un mois offert au parrain (ADR 0154) ----------
 insert into public.subscriptions (artisan_id, stripe_customer_id, stripe_subscription_id, status) values
   ('c6910000-0000-4000-8000-000000000001', 'cus_parr69_a', 'sub_parr69_parrain', 'active'),
   ('c6910000-0000-4000-8000-000000000002', 'cus_parr69_b', 'sub_parr69_filleul', 'active');
 select ok(public.record_subscription_payment('sub_parr69_filleul'), 'premier paiement du filleul');
 select is((select status::text from public.artisan_referrals where referred_artisan_id = 'c6910000-0000-4000-8000-000000000002'),
   'recompense', 'parrainage récompensé');
-select is((select count(*)::int from public.artisan_free_months where status = 'a_appliquer'
-           and artisan_id in ('c6910000-0000-4000-8000-000000000001', 'c6910000-0000-4000-8000-000000000002')),
-  2, 'un mois offert au filleul, un au parrain');
+select results_eq(
+  $$ select artisan_id from public.artisan_free_months where status = 'a_appliquer'
+     and artisan_id in ('c6910000-0000-4000-8000-000000000001', 'c6910000-0000-4000-8000-000000000002') $$,
+  $$ values ('c6910000-0000-4000-8000-000000000001'::uuid) $$,
+  'un mois offert au parrain, aucun au filleul');
 select ok(not public.record_subscription_payment('sub_parr69_filleul'), 'paiements suivants : sans effet');
 select is((select count(*)::int from public.artisan_free_months
            where artisan_id in ('c6910000-0000-4000-8000-000000000001', 'c6910000-0000-4000-8000-000000000002')),
-  2, 'jamais de mois offert en double');
+  1, 'jamais de mois offert en double');
 select is(public.record_subscription_payment('sub_parr69_parrain'), true, 'premier paiement du parrain lui-même');
 select is((select count(*)::int from public.artisan_free_months where artisan_id = 'c6910000-0000-4000-8000-000000000001'),
   1, 'le paiement du parrain ne crée pas de mois offert');
 
 -- ---------- Mois à poser sur les abonnements (clé serveur) ----------
 select results_eq(
-  $$ select stripe_subscription_id from public.free_month_candidates('sub_parr69_filleul') order by 1 $$,
-  $$ values ('sub_parr69_filleul'), ('sub_parr69_parrain') $$,
-  'facture du filleul : mois du filleul et du parrain à poser');
+  $$ select stripe_subscription_id from public.free_month_candidates('sub_parr69_filleul') $$,
+  $$ values ('sub_parr69_parrain') $$,
+  'facture du filleul : mois du parrain à poser');
 select results_eq(
   $$ select stripe_subscription_id from public.free_month_candidates('sub_parr69_parrain') $$,
   $$ values ('sub_parr69_parrain') $$,
   'facture du parrain : son propre mois seulement');
 select lives_ok(
   $$ select public.mark_free_month_applied(
-       (select grant_id from public.free_month_candidates('sub_parr69_filleul')
-        where stripe_subscription_id = 'sub_parr69_filleul'), 'sub_parr69_filleul') $$,
-  'mois du filleul posé');
-select results_eq(
-  $$ select stripe_subscription_id from public.free_month_candidates('sub_parr69_filleul') $$,
-  $$ values ('sub_parr69_parrain') $$,
-  'reste le mois du parrain');
+       (select grant_id from public.free_month_candidates('sub_parr69_parrain')), 'sub_parr69_parrain') $$,
+  'mois du parrain posé');
+select is_empty(
+  $$ select 1 from public.free_month_candidates('sub_parr69_filleul') $$,
+  'plus aucun mois à poser');
 
 -- ---------- Droits ----------
 select pg_temp.connecter('c6900000-0000-4000-8000-000000000001', 'artisan');

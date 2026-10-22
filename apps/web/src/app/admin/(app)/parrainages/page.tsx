@@ -24,8 +24,9 @@ export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
 const TONES = { en_attente: "primary", recompense: "success", annule: "neutral" } as const;
 
 /**
- * Parrainages entre artisans (F-60, ADR 0137 et 0143) : chiffres clés, liste avec le parrain, le
- * filleul et le mois offert de chacun, annulation d'un abus avant la récompense. Réservé aux admins.
+ * Parrainages entre artisans (F-60, ADR 0137, 0143 et 0154) : chiffres clés, liste avec le parrain,
+ * le filleul et leurs récompenses (mois offert du parrain, cadeau de bienvenue du filleul),
+ * annulation d'un abus avant la récompense. Réservé aux admins.
  */
 export default async function AdminReferralsPage({
   searchParams,
@@ -79,9 +80,9 @@ export default async function AdminReferralsPage({
             hint={t.summary.monthsHint(summary.mois_en_attente)}
           />
           <SummaryTile
-            label={t.summary.cancelled}
-            value={count(summary.annule)}
-            hint={t.summary.cancelledHint}
+            label={t.summary.gifts}
+            value={count(summary.cadeaux_a_envoyer)}
+            hint={t.summary.giftsHint(summary.cadeaux_a_choisir)}
           />
         </SummaryTiles>
       )}
@@ -143,18 +144,7 @@ export default async function AdminReferralsPage({
                       )}
                     </td>
                     <td className="py-3 pr-4">
-                      {row.referrer_month || row.referred_month ? (
-                        <ul className="flex flex-col gap-0.5">
-                          {row.referrer_month && (
-                            <li>{t.monthOf(t.referrerShort, t.month[row.referrer_month])}</li>
-                          )}
-                          {row.referred_month && (
-                            <li>{t.monthOf(t.referredShort, t.month[row.referred_month])}</li>
-                          )}
-                        </ul>
-                      ) : (
-                        <span className="text-muted-foreground">{t.noMonth}</span>
-                      )}
+                      <Rewards row={row} />
                     </td>
                     <td className="py-3">
                       {row.status === "en_attente" ? (
@@ -177,5 +167,37 @@ export default async function AdminReferralsPage({
         <p className="text-xs text-muted-foreground">{t.cancelHint}</p>
       </Card>
     </div>
+  );
+}
+
+type RewardRow = {
+  status: "en_attente" | "recompense" | "annule";
+  referrer_month: "applique" | "a_appliquer" | null;
+  referred_month: "applique" | "a_appliquer" | null;
+  gift: string | null;
+};
+
+/**
+ * Récompenses d'un parrainage : mois du parrain (ou plafond annuel atteint), mois du filleul
+ * (parrainages d'avant le 22 octobre 2026) et cadeau de bienvenue du filleul (ADR 0154).
+ */
+function Rewards({ row }: { row: RewardRow }) {
+  const gift = row.gift && row.gift in t.gift ? t.gift[row.gift as keyof typeof t.gift] : null;
+  const items = [
+    row.referrer_month
+      ? t.monthOf(t.referrerShort, t.month[row.referrer_month])
+      : row.status === "recompense"
+        ? `${t.referrerShort} : ${t.capped}`
+        : null,
+    row.referred_month ? t.monthOf(t.referredShort, t.month[row.referred_month]) : null,
+    gift ? `${t.referredShort} : ${gift}` : null,
+  ].filter((item): item is string => item !== null);
+  if (items.length === 0) return <span className="text-muted-foreground">{t.noMonth}</span>;
+  return (
+    <ul className="flex flex-col gap-0.5">
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
   );
 }

@@ -1,4 +1,5 @@
 import type { ProfileTip } from "@menao/core";
+import type { WelcomeGift } from "@menao/validation";
 import Constants from "expo-constants";
 import { router, type Href } from "expo-router";
 import {
@@ -33,6 +34,7 @@ import { SettingsRow, SettingsSection } from "@/components/settings-list";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth";
+import { formatDay } from "@/lib/format";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { loadProfileHub, type ProfileHub } from "@/lib/profile-hub";
 import type { HubRow, HubStatus } from "@/lib/profile-hub-status";
@@ -172,6 +174,11 @@ export function ProfileHubContent({
           onPress={() => router.push("/pro-ma-fiche")}
         />
       </Animated.View>
+      {hub.welcomeGift ? (
+        <Animated.View entering={enter(4)}>
+          <WelcomeGiftCard gift={hub.welcomeGift} />
+        </Animated.View>
+      ) : null}
       {hub.referral ? (
         <Animated.View entering={enter(4)}>
           <ReferralCard code={hub.referral.code} joined={hub.referral.joined} />
@@ -327,6 +334,41 @@ function Strength({ hub }: { hub: ProfileHub }) {
       </View>
       {next ? <ChevronRight size={20} color={colors["muted-foreground"]} /> : null}
     </Tappable>
+  );
+}
+
+/**
+ * Cadeau de bienvenue du filleul (ADR 0154) : à choisir sur l'écran « Votre cadeau », puis l'état
+ * de l'envoi.
+ */
+function WelcomeGiftCard({ gift }: { gift: WelcomeGift }) {
+  const g = t.welcomeGift;
+  return (
+    <View style={styles.referral} accessibilityRole="summary">
+      <View style={styles.referralHead}>
+        <View style={styles.referralIcon}>
+          <Gift size={20} color={colors.primary} />
+        </View>
+        <View style={styles.referralText}>
+          <Text style={styles.referralTitle}>{g.title}</Text>
+          <Text style={styles.referralLead}>
+            {gift.status === "a_choisir"
+              ? g.lead(gift.referrer)
+              : [
+                  gift.item ? g.summary(g.items[gift.item], gift.size) : null,
+                  gift.status === "envoye" && gift.sent_at
+                    ? g.sent(formatDay(gift.sent_at))
+                    : g.pending,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+          </Text>
+        </View>
+      </View>
+      {gift.status === "a_choisir" ? (
+        <Button label={g.choose} icon={Gift} onPress={() => router.push("/pro-cadeau")} />
+      ) : null}
+    </View>
   );
 }
 

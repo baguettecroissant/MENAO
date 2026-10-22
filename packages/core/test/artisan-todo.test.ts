@@ -118,6 +118,13 @@ describe("accueil « À faire maintenant » (ADR 0130)", () => {
     ]);
   });
 
+  it("cadeau de bienvenue à choisir : en dernier (ADR 0154)", () => {
+    expect(artisanTodo({ ...empty, reviewsToAnswer: 1, welcomeGiftToChoose: true }, now)).toEqual([
+      { kind: "avis", count: 1 },
+      { kind: "cadeau" },
+    ]);
+  });
+
   it("rendez-vous suivants : ceux d'après aujourd'hui seulement", () => {
     const list = [
       { at: inHours(4), id: "aujourdhui" },

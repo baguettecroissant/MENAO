@@ -10,7 +10,7 @@ import {
   upcomingAgenda,
   type ChantierStatus,
 } from "@menao/core";
-import { parseGrade } from "@menao/validation";
+import { parseGrade, parseWelcomeGift } from "@menao/validation";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
 import { fr } from "@/i18n/fr";
@@ -53,6 +53,7 @@ export default async function DashboardPage() {
     { data: response },
     { data: gradeData },
     { badges },
+    { data: giftData },
   ] = await Promise.all([
     artisanActivity(),
     // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
@@ -63,6 +64,8 @@ export default async function DashboardPage() {
     supabase.rpc("artisan_grade"),
     // Compteurs du menu (mis en cache) : avis sans réponse.
     getProShell(),
+    // Cadeau de bienvenue du filleul à choisir (ADR 0154).
+    supabase.rpc("my_welcome_gift"),
   ]);
   const grade = parseGrade(gradeData);
   const gradeLevels =
@@ -114,6 +117,7 @@ export default async function DashboardPage() {
       urssafMissing: urssafMissing && status !== "radie",
       paymentsMissing: visibility.missing.includes("paiements"),
       reviewsToAnswer: badges.reviews,
+      welcomeGiftToChoose: parseWelcomeGift(giftData)?.status === "a_choisir",
     },
     now,
   );

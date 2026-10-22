@@ -1,4 +1,5 @@
 import "server-only";
+import { WELCOME_GIFT_ITEMS } from "@menao/core";
 import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
 import { PAGE_SIZE } from "./follow-up";
@@ -24,6 +25,8 @@ const summarySchema = z.object({
   annule: n,
   mois_poses: n,
   mois_en_attente: n,
+  cadeaux_a_choisir: n,
+  cadeaux_a_envoyer: n,
 });
 export type ReferralSummary = z.infer<typeof summarySchema>;
 
@@ -34,12 +37,22 @@ const artisanReferralSchema = z.object({
   filleuls: z.array(linkedArtisan),
   mois_poses: n,
   mois_en_attente: n,
+  mois_annee: n,
+  // Cadeau de bienvenue du filleul (ADR 0154).
+  cadeau: z
+    .object({
+      status: z.enum(["a_choisir", "a_envoyer", "envoye"]),
+      item: z.enum(WELCOME_GIFT_ITEMS).nullable(),
+      size: z.string().nullable(),
+      ticket_id: z.string().nullable(),
+    })
+    .nullable(),
 });
 export type ArtisanReferral = z.infer<typeof artisanReferralSchema>;
 
 /**
- * Parrainages, les plus récents d'abord, 50 par page (ADR 0146) : parrain, filleul et mois offert
- * de chacun.
+ * Parrainages, les plus récents d'abord, 50 par page (ADR 0146) : parrain, filleul, mois offert
+ * de chacun et cadeau de bienvenue du filleul (ADR 0154).
  */
 export async function listReferrals(supabase: Client, filter: ReferralFilter, page: number) {
   const { data, count } = await supabase
@@ -54,7 +67,7 @@ export async function getReferralSummary(supabase: Client): Promise<ReferralSumm
   return parsed.success ? parsed.data : null;
 }
 
-/** Fiche d'un artisan : son code, son parrain, ses filleuls et ses mois offerts. */
+/** Fiche d'un artisan : son code, son parrain, ses filleuls, ses mois offerts et son cadeau. */
 export async function getArtisanReferral(
   supabase: Client,
   artisanId: string,
