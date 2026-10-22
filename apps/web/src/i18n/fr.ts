@@ -2181,6 +2181,8 @@ export const fr = {
     payDeposit: (amount: string) => `Payer l'acompte (${amount})`,
     depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
     depositInvoice: (numero: string) => `Facture d'acompte ${numero} (PDF)`,
+    depositAdvice: (percent: number) =>
+      `Conseil MENAO : l'acompte demandé est de ${percent} %. Nous vous conseillons de ne pas verser plus de 30 % du montant avant le début des travaux. N'hésitez pas à en parler avec l'artisan.`,
     depositInProgress:
       "Votre paiement de l'acompte est en cours de confirmation par Stripe (virement ou prélèvement en attente).",
     paymentReturned:
@@ -5887,6 +5889,7 @@ export const fr = {
       suspensionReasons: {
         documents_expires: "Suspendu automatiquement : assurance expirée",
         decision_admin: "Suspendu par décision MENAO",
+        plaintes: "Suspendu automatiquement : 2 plaintes de clients en 12 mois (enquête en cours)",
       },
       company: "Entreprise",
       contact: "Dirigeant",

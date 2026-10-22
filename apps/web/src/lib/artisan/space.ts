@@ -66,7 +66,11 @@ export const requireProSpace = cache(async () => {
         .select("first_name, last_name, avatar_path")
         .eq("user_id", auth.claims.sub)
         .single(),
-      supabase.from("subscriptions").select("status").eq("artisan_id", artisan.id).maybeSingle(),
+      supabase
+        .from("subscriptions")
+        .select("status, past_due_since")
+        .eq("artisan_id", artisan.id)
+        .maybeSingle(),
       supabase
         .from("artisan_documents")
         .select("type, status, date_fin")
@@ -109,6 +113,7 @@ export const requireProSpace = cache(async () => {
       status: artisan.status,
       subscriptionActive: subscriptionGrantsAccess(
         (subscription?.status as SubscriptionStatus | undefined) ?? null,
+        subscription?.past_due_since ?? null,
       ),
       connectChargesEnabled: artisan.connect_charges_enabled,
     }),

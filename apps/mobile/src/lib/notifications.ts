@@ -1,4 +1,4 @@
-import { emailPreferences, type EmailPreferences } from "@menao/core";
+import { WEB_ONLY_NOTIFICATIONS, emailPreferences, type EmailPreferences } from "@menao/core";
 import { notificationContent, type NotificationType } from "@menao/emails/content";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
@@ -20,21 +20,24 @@ export type NotificationItem = {
 export async function loadNotifications(): Promise<NotificationItem[] | null> {
   const { data, error } = await supabase.rpc("my_notifications", { p_limit: 50 });
   if (error) return null;
-  return (data ?? []).map((n) => {
-    const content = notificationContent(
-      n.type as NotificationType,
-      (n.data ?? {}) as Record<string, unknown>,
-      { siteUrl: "", firstName: null },
-    );
-    return {
-      id: n.notification_id,
-      title: content.subject,
-      preview: content.preview,
-      link: content.cta.url || "/",
-      createdAt: n.created_at,
-      unread: n.read_at === null,
-    };
-  });
+  // Paiement de l'abonnement : jamais dans l'application (règle 10).
+  return (data ?? [])
+    .filter((n) => !WEB_ONLY_NOTIFICATIONS.includes(n.type))
+    .map((n) => {
+      const content = notificationContent(
+        n.type as NotificationType,
+        (n.data ?? {}) as Record<string, unknown>,
+        { siteUrl: "", firstName: null },
+      );
+      return {
+        id: n.notification_id,
+        title: content.subject,
+        preview: content.preview,
+        link: content.cta.url || "/",
+        createdAt: n.created_at,
+        unread: n.read_at === null,
+      };
+    });
 }
 
 /** Centre affiché : toutes les notifications sont marquées lues (elles restent signalées à l'écran). */

@@ -1,6 +1,12 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
-import { PAYMENT_KINDS, PAYMENT_STATUSES, paymentStatusFromCheckout } from "../src/payment";
+import {
+  DEPOSIT_ADVICE_MAX_PERCENT,
+  depositAboveAdvice,
+  PAYMENT_KINDS,
+  PAYMENT_STATUSES,
+  paymentStatusFromCheckout,
+} from "../src/payment";
 
 describe("paiements des chantiers (F-31)", () => {
   it("paiement immédiat (carte) : payé dès la fin du Checkout", () => {
@@ -74,5 +80,25 @@ describe("encaissé ce mois et évolution (tableau de bord F-16)", () => {
     expect(revenueTrend(48600, 0)).toEqual({ kind: "nouveau", deltaCents: 48600 });
     expect(revenueTrend(0, 0)).toBeNull();
     expect(revenueTrend(0, 10000)).toEqual({ kind: "baisse", percent: 100 });
+  });
+});
+
+describe("conseil sur l'acompte (ADR 0158)", () => {
+  it("au-delà de 30 % à la signature : le pourcentage, sinon rien", () => {
+    expect(DEPOSIT_ADVICE_MAX_PERCENT).toBe(30);
+    expect(
+      depositAboveAdvice([
+        { percent: 30, trigger: "signature" },
+        { percent: 70, trigger: "reception" },
+      ]),
+    ).toBeNull();
+    expect(
+      depositAboveAdvice([
+        { percent: 40, trigger: "signature" },
+        { percent: 60, trigger: "reception" },
+      ]),
+    ).toBe(40);
+    expect(depositAboveAdvice([{ percent: 100, trigger: "reception" }])).toBeNull();
+    expect(depositAboveAdvice([])).toBeNull();
   });
 });

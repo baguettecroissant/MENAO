@@ -88,7 +88,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       .maybeSingle(),
     countReviewsToAnswer(),
     // Abonnement de l'artisan (lecture limitée à son compte, RLS).
-    supabase.from("subscriptions").select("status").maybeSingle(),
+    supabase.from("subscriptions").select("status, past_due_since").maybeSingle(),
     // Cadeau de bienvenue du filleul à choisir (ADR 0154).
     loadWelcomeGift(),
   ]);
@@ -130,6 +130,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
             status: "valide",
             subscriptionActive: subscriptionGrantsAccess(
               (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+              subscription.data?.past_due_since ?? null,
             ),
             connectChargesEnabled: artisan.data.connect_charges_enabled,
           });

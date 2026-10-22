@@ -99,6 +99,7 @@ export default async function MyProfilePage() {
         statuses: hubStatusTexts(statuses),
         subscriptionActive: subscriptionGrantsAccess(
           (ctx.subscription?.status as SubscriptionStatus | undefined) ?? null,
+          ctx.subscription?.past_due_since ?? null,
         ),
         referral: referral && {
           link: partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros,

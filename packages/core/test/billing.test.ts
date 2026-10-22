@@ -28,6 +28,13 @@ describe("abonnement (F-15)", () => {
   ] as const)("statut %s → accès %s", (status, access) => {
     expect(subscriptionGrantsAccess(status)).toBe(access);
   });
+
+  it("impayé (ADR 0158) : accès pendant 15 jours, puis profil retiré", () => {
+    const now = new Date("2026-10-22T10:00:00Z");
+    expect(subscriptionGrantsAccess("past_due", "2026-10-08T10:00:01Z", now)).toBe(true);
+    expect(subscriptionGrantsAccess("past_due", "2026-10-07T10:00:00Z", now)).toBe(false);
+    expect(subscriptionGrantsAccess("active", "2026-01-01T00:00:00Z", now)).toBe(true);
+  });
 });
 
 describe("subscriptionFromStripe", () => {

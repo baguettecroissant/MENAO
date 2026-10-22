@@ -54,6 +54,7 @@ export const NOTIFICATION_TYPES = [
   "reponse_contact",
   "demande_relance",
   "demande_sans_reponse",
+  "abonnement_impaye",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -956,6 +957,35 @@ export function notificationContent(
         },
       };
     }
+    // Abonnement impayé (ADR 0158) : J+3, J+7, puis profil retiré des recherches à J+15. E-mail
+    // seulement : jamais dans l'application (règle 10).
+    case "abonnement_impaye": {
+      const step = data.etape === 3 ? 3 : data.etape === 2 ? 2 : 1;
+      return {
+        subject:
+          step === 3
+            ? "Votre profil MENAO n'apparaît plus dans les recherches"
+            : step === 2
+              ? "Rappel : le paiement de votre abonnement MENAO a échoué"
+              : "Le paiement de votre abonnement MENAO a échoué",
+        preview:
+          step === 3
+            ? "Mettez à jour votre moyen de paiement pour être de nouveau visible."
+            : "Mettez à jour votre moyen de paiement pour continuer à recevoir des demandes.",
+        title: step === 3 ? "Votre profil est retiré des recherches" : "Paiement refusé",
+        paragraphs: [
+          hello(ctx.firstName),
+          step === 3
+            ? "Le paiement de votre abonnement est en échec depuis 15 jours : votre profil n'apparaît plus dans les recherches des particuliers. Vos chantiers en cours ne changent pas."
+            : "Le dernier paiement de votre abonnement MENAO n'a pas pu être effectué, par exemple à cause d'une carte expirée ou d'un plafond atteint.",
+          step === 3
+            ? "Dès que le paiement passe, votre profil redevient visible automatiquement."
+            : "Mettez à jour votre moyen de paiement : sans paiement 15 jours après l'échec, votre profil n'apparaîtra plus dans les recherches.",
+        ],
+        quote: null,
+        cta: { label: "Mettre à jour mon paiement", url: link("/pro/onboarding/formule") },
+      };
+    }
     // Aucune demande sans réponse (ADR 0156) : relances de l'artisan à 24 h et 48 h.
     case "demande_relance": {
       const client = text(data, "client") ?? "Un particulier";
@@ -1171,6 +1201,22 @@ export function notificationContent(
       };
     }
     case "compte_suspendu": {
+      // Deux plaintes de clients en 12 mois (ADR 0158) : suspension le temps de l'enquête.
+      if (text(data, "par") === "plaintes") {
+        return {
+          subject: "Votre profil MENAO est suspendu le temps d'une vérification",
+          preview: "Deux clients ont signalé un problème : l'équipe qualité examine la situation.",
+          title: "Votre profil est suspendu",
+          paragraphs: [
+            hello(ctx.firstName),
+            "Deux de vos clients ont signalé un problème sur un chantier ces derniers mois. Comme le prévoit la charte qualité, votre profil est suspendu le temps que l'équipe qualité examine la situation.",
+            "Vous n'apparaissez plus dans les recherches des particuliers. Vos chantiers en cours ne changent pas.",
+            "L'équipe MENAO vous contacte pour recueillir votre version. Vous pouvez aussi lui écrire dès maintenant.",
+          ],
+          quote: null,
+          cta: { label: "Écrire à l'équipe MENAO", url: link("/contact") },
+        };
+      }
       // Suspension décidée par l'équipe (ADR 0047) : motif cité, contact.
       if (text(data, "par") === "equipe") {
         return {

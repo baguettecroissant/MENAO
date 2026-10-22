@@ -108,7 +108,9 @@ export default async function AdminArtisanPage({
     supabase.from("work_types").select("code, label"),
     supabase
       .from("subscriptions")
-      .select("plan_code, status, trial_end, current_period_end, cancel_at_period_end, plans(nom)")
+      .select(
+        "plan_code, status, trial_end, current_period_end, cancel_at_period_end, past_due_since, plans(nom)",
+      )
       .eq("artisan_id", id)
       .maybeSingle(),
     // Charte qualité signée (ADR 0104), dernière version.
@@ -566,6 +568,7 @@ export default async function AdminArtisanPage({
             status: artisan.status,
             subscriptionActive: subscriptionGrantsAccess(
               (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+              subscription.data?.past_due_since ?? null,
             ),
             connectChargesEnabled: artisan.connect_charges_enabled,
           });

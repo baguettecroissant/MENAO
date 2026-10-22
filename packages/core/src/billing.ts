@@ -18,12 +18,24 @@ export const SUBSCRIPTION_STATUSES = [
 ] as const;
 export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 
+/** Impayé (ADR 0158) : relances à J+3 et J+7, profil retiré des recherches à J+15. */
+export const UNPAID_GRACE_DAYS = 15;
+
 /**
- * Abonnement qui donne accès au service : essai, actif, ou impayé en cours de relance par
- * Stripe (délai de grâce). Impayé définitif, résilié ou incomplet : pas d'accès.
+ * Abonnement qui donne accès au service : essai, actif, ou impayé depuis moins de 15 jours
+ * (relances de Stripe et de MENAO). Au-delà, impayé définitif, résilié ou incomplet : pas d'accès.
+ * Même règle en base (`app.artisan_subscription_active`). Sans date de début d'impayé connue,
+ * l'impayé compte comme récent.
  */
-export function subscriptionGrantsAccess(status: SubscriptionStatus | null): boolean {
-  return status === "trialing" || status === "active" || status === "past_due";
+export function subscriptionGrantsAccess(
+  status: SubscriptionStatus | null,
+  pastDueSince: string | null = null,
+  now: Date = new Date(),
+): boolean {
+  if (status === "trialing" || status === "active") return true;
+  if (status !== "past_due") return false;
+  if (!pastDueSince) return true;
+  return now.getTime() - Date.parse(pastDueSince) < UNPAID_GRACE_DAYS * 86_400_000;
 }
 
 export type SubscriptionSnapshot = {
