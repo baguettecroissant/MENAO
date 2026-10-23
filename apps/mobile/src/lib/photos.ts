@@ -157,14 +157,16 @@ function removeCopy(uri: string) {
 }
 
 /**
- * Envoi d'une photo, comme sur le site : réduite sur le téléphone (un PDF est envoyé tel quel),
- * déposée dans « uploads/<user_id>/<uuid> », puis vérifiée, rangée et enregistrée par
- * process-upload.
+ * Dépôt d'une photo dans « uploads/<user_id>/<uuid> », comme sur le site : réduite sur le
+ * téléphone (un PDF est déposé tel quel). Renvoie le chemin du fichier brut, ou le motif d'échec.
  */
-export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Promise<UploadStatus> {
+export async function depositPhoto(
+  purpose: PhotoTarget["purpose"],
+  photo: PickedPhoto,
+): Promise<{ path: string } | { status: UploadStatus }> {
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;
-  if (!userId) return "forbidden";
+  if (!userId) return { status: "forbidden" };
   let jpeg: string;
   let bytes: Uint8Array;
   try {
@@ -173,34 +175,33 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
       ? photo.uri
       : await toJpeg(
           photo.uri,
-          target.purpose === "avatar"
+          purpose === "avatar"
             ? AVATAR_MAX_SIDE
-            : target.purpose === "logo"
+            : purpose === "logo"
               ? LOGO_MAX_SIDE
               : PHOTO_MAX_SIDE,
           // Logo : PNG, pour garder un fond transparent.
-          target.purpose === "logo",
+          purpose === "logo",
         );
     bytes = await readBytes(jpeg);
   } catch {
-    return "unreadable";
+    return { status: "unreadable" };
   }
   if (bytes.byteLength === 0 || bytes.byteLength > MAX_UPLOAD_BYTES) {
     removeCopy(jpeg);
-    return bytes.byteLength === 0 ? "unreadable" : "too_large";
+    return { status: bytes.byteLength === 0 ? "unreadable" : "too_large" };
   }
   const path = `${userId}/${uploadId()}`;
   const { error: uploadError } = await supabase.storage.from("uploads").upload(path, bytes, {
-    contentType: photo.pdf
-      ? "application/pdf"
-      : target.purpose === "logo"
-        ? "image/png"
-        : "image/jpeg",
+    contentType: photo.pdf ? "application/pdf" : purpose === "logo" ? "image/png" : "image/jpeg",
     upsert: false,
   });
   removeCopy(jpeg);
-  if (uploadError) return "unavailable";
+  return uploadError ? { status: "unavailable" } : { path };
+}
 
+/** Vérification, rangement et enregistrement par process-upload d'un fichier déjà déposé. */
+export async function processDeposit(target: PhotoTarget, path: string): Promise<UploadStatus> {
   const { data: result, error } = await supabase.functions.invoke<{ status: UploadStatus }>(
     "process-upload",
     { body: { ...target, path } },
@@ -212,4 +213,22 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
     return payload?.status ?? "unavailable";
   }
   return error || !result ? "unavailable" : result.status;
+}
+
+/**
+ * Retire un fichier brut de « uploads » qui ne sera pas envoyé : document remplacé ou abandonné
+ * après sa lecture automatique (ADR 0176).
+ */
+export async function discardDeposit(path: string): Promise<void> {
+  await supabase.storage.from("uploads").remove([path]);
+}
+
+/**
+ * Envoi d'une photo, comme sur le site : réduite sur le téléphone (un PDF est envoyé tel quel),
+ * déposée dans « uploads/<user_id>/<uuid> », puis vérifiée, rangée et enregistrée par
+ * process-upload.
+ */
+export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Promise<UploadStatus> {
+  const deposit = await depositPhoto(target.purpose, photo);
+  return "path" in deposit ? processDeposit(target, deposit.path) : deposit.status;
 }

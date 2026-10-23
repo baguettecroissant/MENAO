@@ -1,6 +1,11 @@
 "use server";
 
-import { onboardingProgress } from "@menao/core";
+import {
+  REQUIRED_DOCUMENT_TYPES,
+  onboardingProgress,
+  type DocumentPrefill,
+  type DocumentReadingWarning,
+} from "@menao/core";
 import {
   RADIUS_OPTIONS_KM,
   UPLOAD_PURPOSES,
@@ -303,6 +308,27 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
 
   refresh();
   return { success: t.upload.status.ok };
+}
+
+export type DocumentReadResult =
+  | { status: "ok"; fields: DocumentPrefill; warnings: DocumentReadingWarning[] }
+  | { status: "unavailable" };
+
+/**
+ * Lecture automatique d'un document déjà déposé dans « uploads » (ADR 0176), par l'Edge Function
+ * read-document : champs à pré-remplir et alertes. En cas d'échec, l'artisan remplit les champs.
+ */
+export async function readDocument(path: string, type: string): Promise<DocumentReadResult> {
+  const documentType = REQUIRED_DOCUMENT_TYPES.find((value) => value === type);
+  if (!documentType || typeof path !== "string" || !path) return { status: "unavailable" };
+  const { supabase } = await getOnboardingContext();
+  const { data, error } = await supabase.functions.invoke<{
+    status: string;
+    fields?: DocumentPrefill;
+    warnings?: DocumentReadingWarning[];
+  }>("read-document", { method: "POST", body: { path, type: documentType } });
+  if (error || data?.status !== "ok") return { status: "unavailable" };
+  return { status: "ok", fields: data.fields ?? {}, warnings: data.warnings ?? [] };
 }
 
 export async function savePresentation(_prev: FormState, formData: FormData): Promise<FormState> {

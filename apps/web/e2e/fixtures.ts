@@ -146,6 +146,8 @@ export const dates = {
   yesterday: isoDay(-1),
   inTwoWeeks: isoDay(14),
   nextYear: isoDay(365),
+  /** Date de fin lue sur un document par le faux serveur d'IA (mock-ai.mjs). */
+  inTenYears: isoDay(3650),
 };
 
 /** Fichiers fictifs pour les dépôts. */

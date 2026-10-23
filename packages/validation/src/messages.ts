@@ -25,6 +25,8 @@ export const messages = {
   experienceInvalid: "Nombre d'années invalide.",
   dateInvalid: "Date invalide.",
   dateExpired: "Cette date est déjà passée.",
+  dateToday:
+    "C'est la date du jour : indiquez la date de fin de validité inscrite sur le document.",
   zoneAddressRequired: "Choisissez une adresse dans la liste proposée.",
   radiusInvalid: "Choisissez un rayon dans la liste.",
   communesRequired: "Ajoutez au moins une commune.",

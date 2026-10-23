@@ -478,6 +478,10 @@ verify_jwt = true
 [functions.quote-from-voice]
 verify_jwt = true
 
+# Lecture automatique des documents du dossier (ADR 0176) : artisan connecté.
+[functions.read-document]
+verify_jwt = true
+
 # PDF du devis (F-20) : utilisateur connecté ; l'accès est décidé par quote_document.
 [functions.generate-pdf]
 verify_jwt = true

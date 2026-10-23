@@ -2,28 +2,47 @@ import {
   KBIS_MAX_AGE_MONTHS,
   REQUIRED_DOCUMENT_TYPES,
   URSSAF_MAX_AGE_MONTHS,
+  prefillUpdates,
+  type DocumentPrefill,
+  type DocumentReadingWarning,
   type RequiredDocumentType,
 } from "@menao/core";
 import { documentMetadataSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { Camera, FileText, ImageIcon } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
-import { pickDocumentFile, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
+import { readDocument } from "@/lib/document-reading";
+import {
+  depositPhoto,
+  discardDeposit,
+  pickDocumentFile,
+  pickPhotos,
+  processDeposit,
+  type PickedPhoto,
+} from "@/lib/photos";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDocument;
+const r = fr.proDocument.reading;
 const d = fr.proDossier;
 const { colors, font, radius, spacing } = theme;
 
 const isoDay = (date: Date) => date.toISOString().slice(0, 10);
+/** Date de fin : à partir de demain (celle du jour est refusée, ADR 0176). */
+const tomorrow = () => isoDay(new Date(Date.now() + 86_400_000));
+
+type Reading =
+  | { step: "reading" }
+  | { step: "done"; filled: boolean; warnings: DocumentReadingWarning[] }
+  | { step: "failed" };
 function monthsAgo(months: number): string {
   const now = new Date();
   return isoDay(
@@ -129,13 +148,74 @@ function DocumentForm({
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [reading, setReading] = useState<Reading | null>(null);
   const insurance = type === "decennale" || type === "rc_pro";
+  // Document déposé dès qu'il est choisi, pour sa lecture automatique (ADR 0176), puis réutilisé
+  // à l'envoi ; retiré s'il est remplacé ou si l'écran est quitté sans l'envoyer.
+  const deposit = useRef<{ photo: PickedPhoto; path: Promise<string | null> } | null>(null);
+  const lastRead = useRef<DocumentPrefill>({});
+  // Valeurs à jour pour la lecture, qui se termine après plusieurs attentes.
+  const current = useRef(values);
+  useEffect(() => {
+    current.current = values;
+  }, [values]);
+
+  useEffect(
+    () => () => {
+      void deposit.current?.path.then((path) => (path ? discardDeposit(path) : undefined));
+    },
+    [],
+  );
 
   async function pick(source: "camera" | "library" | "file") {
     setFailure(null);
     const picked = source === "file" ? await pickDocumentFile() : await pickPhotos(source, 1);
     if ("error" in picked) return setFailure(picked.error);
-    if (picked.photos[0]) setPhoto(picked.photos[0]);
+    const chosen = picked.photos[0];
+    if (!chosen) return;
+    setPhoto(chosen);
+    await read(chosen);
+  }
+
+  async function read(chosen: PickedPhoto) {
+    const previous = deposit.current;
+    const path = depositPhoto("document", chosen).then((result) =>
+      "path" in result ? result.path : null,
+    );
+    deposit.current = { photo: chosen, path };
+    void previous?.path.then((old) => (old ? discardDeposit(old) : undefined));
+    setReading({ step: "reading" });
+    const deposited = await path;
+    if (deposit.current?.photo !== chosen) return;
+    if (!deposited) return setReading(null);
+    const result = await readDocument(deposited, type);
+    if (deposit.current?.photo !== chosen) return;
+    if (result.status !== "ok") return setReading({ step: "failed" });
+    // Champs vides (ou remplis par la lecture précédente) seulement : la saisie est gardée.
+    const updates = prefillUpdates(current.current, result.fields, lastRead.current);
+    lastRead.current = result.fields;
+    const next = { ...current.current, ...updates };
+    setValues(next);
+    // Dates lues contrôlées tout de suite, comme à l'envoi : document expiré, Kbis trop ancien…
+    const parsed = documentMetadataSchema().safeParse({
+      type,
+      ...next,
+      dateEmission: next.dateEmission ?? "",
+      dateFin: next.dateFin ?? "",
+    });
+    const dateErrors = parsed.success
+      ? {}
+      : (z.flattenError(parsed.error).fieldErrors as Record<string, string[] | undefined>);
+    setErrors((errs) => ({
+      ...errs,
+      ...("dateEmission" in updates ? { dateEmission: dateErrors.dateEmission?.[0] } : {}),
+      ...("dateFin" in updates ? { dateFin: dateErrors.dateFin?.[0] } : {}),
+    }));
+    setReading({
+      step: "done",
+      filled: Object.keys(result.fields).length > 0,
+      warnings: result.warnings,
+    });
   }
 
   async function send() {
@@ -160,7 +240,15 @@ function DocumentForm({
     if (!parsed.success || !photo) return;
     setSending(true);
     setFailure(null);
-    const status = await uploadPhoto({ purpose: "document", document: parsed.data }, photo);
+    // Le document déposé pour sa lecture, ou un nouveau dépôt s'il a échoué.
+    const reused = deposit.current?.photo === photo ? await deposit.current.path : null;
+    const deposited = reused ? { path: reused } : await depositPhoto("document", photo);
+    const status =
+      "path" in deposited
+        ? await processDeposit({ purpose: "document", document: parsed.data }, deposited.path)
+        : deposited.status;
+    // process-upload a retiré le fichier brut, envoyé ou refusé : un nouvel essai le redépose.
+    if ("path" in deposited) deposit.current = null;
     setSending(false);
     if (status !== "ok")
       return setFailure(fr.search.upload[status] ?? fr.search.upload.unavailable);
@@ -198,6 +286,24 @@ function DocumentForm({
         />
       </View>
       {errors.photo ? <Notice tone="error">{errors.photo}</Notice> : null}
+      {reading?.step === "reading" ? <Notice tone="info">{r.reading}</Notice> : null}
+      {reading?.step === "failed" ? <Notice tone="info">{r.failed}</Notice> : null}
+      {reading?.step === "done" ? (
+        <>
+          {reading.warnings.map((warning) => (
+            <Notice key={warning} tone="error">
+              {warning === "autre_document"
+                ? r.otherDocument(d.documents[type])
+                : r.warnings[warning]}
+            </Notice>
+          ))}
+          {reading.filled ? (
+            <Notice tone="success">{r.done}</Notice>
+          ) : reading.warnings.length === 0 ? (
+            <Notice tone="info">{r.empty}</Notice>
+          ) : null}
+        </>
+      ) : null}
 
       {type === "kbis" ? (
         <DateTimeFields
@@ -225,7 +331,7 @@ function DocumentForm({
           />
           <DateTimeFields
             date={values.dateFin}
-            minDate={isoDay(new Date())}
+            minDate={tomorrow()}
             onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
             dateLabel={t.dateFin}
             error={errors.dateFin}
@@ -284,7 +390,7 @@ function DocumentForm({
       {type === "identite" ? (
         <DateTimeFields
           date={values.dateFin}
-          minDate={isoDay(new Date())}
+          minDate={tomorrow()}
           onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
           dateLabel={t.dateFinIdentite}
           error={errors.dateFin}

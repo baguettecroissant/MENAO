@@ -82,3 +82,11 @@ export async function resizeImage(
     ),
   );
 }
+
+/**
+ * Retire un fichier brut de « uploads » quand il ne sera pas envoyé : document remplacé après sa
+ * lecture automatique (ADR 0176). Sans conséquence si process-upload l'a déjà retiré.
+ */
+export async function discardRaw(path: string): Promise<void> {
+  await createClient().storage.from("uploads").remove([path]);
+}

@@ -1,16 +1,35 @@
 "use client";
 
-import { MAX_UPLOAD_BYTES } from "@menao/core";
-import type { UploadPurpose } from "@menao/validation";
+import {
+  DOCUMENT_PREFILL_FIELDS,
+  MAX_UPLOAD_BYTES,
+  READABLE_IMAGE_MAX_BYTES,
+  prefillUpdates,
+  type DocumentPrefill,
+  type DocumentReadingWarning,
+  type ReadableDocumentType,
+} from "@menao/core";
+import { documentMetadataSchema, type UploadPurpose } from "@menao/validation";
 import { Camera, FileUp } from "lucide-react";
-import { useActionState, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { z } from "zod";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { processUpload } from "@/lib/artisan/actions";
+import { processUpload, readDocument } from "@/lib/artisan/actions";
 import type { FormState } from "@/lib/auth/form";
-import { resizeImage, uploadRaw } from "@/lib/upload/client";
+import { discardRaw, resizeImage, uploadRaw } from "@/lib/upload/client";
 
 const t = fr.pro.onboarding.upload;
+const r = fr.pro.onboarding.documents.reading;
+/** Photo d'un document trop lourde pour être lue : réduite avant l'envoi (ADR 0176). */
+const DOCUMENT_PHOTO_MAX_SIDE = 2400;
+
+type Reading =
+  | { step: "reading" }
+  | { step: "done"; filled: boolean; warnings: DocumentReadingWarning[] }
+  | { step: "failed" };
+
+const fileKey = (file: File) => `${file.name}:${file.size}:${file.lastModified}`;
 
 type UploadFormProps = {
   purpose: UploadPurpose;
@@ -34,6 +53,11 @@ type UploadFormProps = {
    * fichier », en gros boutons, au lieu du champ fichier.
    */
   camera?: boolean;
+  /**
+   * Document du dossier (ADR 0176) : déposé dès qu'il est choisi, lu par l'IA, et ses champs
+   * pré-remplis ; l'artisan les vérifie avant l'envoi.
+   */
+  readAs?: ReadableDocumentType;
 };
 
 /**
@@ -54,18 +78,27 @@ export function UploadForm({
   fileLabel = t.file,
   formId = purpose,
   camera = false,
+  readAs,
 }: UploadFormProps) {
+  const form = useRef<HTMLFormElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [chosen, setChosen] = useState<string | null>(null);
-  const [state, action, pending] = useActionState(async (prev: FormState, formData: FormData) => {
-    // Photo prise ou fichier choisi : le champ rempli, s'il y en a un.
-    const file = formData
-      .getAll("file")
-      .find((value): value is File => value instanceof File && value.size > 0);
-    if (!file) return { fieldErrors: { file: [t.fileRequired] } };
-    if (file.size > MAX_UPLOAD_BYTES) return { fieldErrors: { file: [t.fileTooLarge] } };
+  // Document déposé pour sa lecture, réutilisé à l'envoi s'il n'a pas été remplacé.
+  const upload = useRef<{ key: string; path: Promise<string | null> } | null>(null);
+  const lastRead = useRef<DocumentPrefill>({});
+  const [reading, setReading] = useState<Reading | null>(null);
+  const [readErrors, setReadErrors] = useState<Record<string, string[] | undefined>>({});
 
+  // Page quittée sans envoyer le document lu : son fichier brut est retiré.
+  useEffect(
+    () => () => {
+      void upload.current?.path.then((path) => (path ? discardRaw(path) : undefined));
+    },
+    [],
+  );
+
+  async function prepare(file: File): Promise<string | null | "invalid_type"> {
     let blob: Blob = file;
     if (resizeTo) {
       try {
@@ -74,26 +107,106 @@ export function UploadForm({
           square,
         });
       } catch {
-        return { error: t.status.invalid_type };
+        return "invalid_type";
       }
+    } else if (readAs && file.type !== "application/pdf" && file.size > READABLE_IMAGE_MAX_BYTES) {
+      // Photo très lourde : réduite pour être lue (elle reste nette pour l'équipe MENAO).
+      blob = await resizeImage(file, DOCUMENT_PHOTO_MAX_SIDE, { quality: 0.9 }).catch(() => file);
     }
-    const path = await uploadRaw(userId, blob);
+    return uploadRaw(userId, blob);
+  }
+
+  /** Champs du document remplis avec ce qui a été lu, sans écraser la saisie de l'artisan. */
+  function fill(type: ReadableDocumentType, fields: DocumentPrefill) {
+    const input = (name: string) =>
+      form.current?.elements.namedItem(name) as HTMLInputElement | null;
+    const current = Object.fromEntries(
+      DOCUMENT_PREFILL_FIELDS[type].map((field) => [field, input(field)?.value ?? ""]),
+    );
+    const updates = prefillUpdates(current, fields, lastRead.current);
+    for (const [name, value] of Object.entries(updates)) {
+      const element = input(name);
+      if (element) element.value = value;
+    }
+    lastRead.current = fields;
+    // Dates lues contrôlées tout de suite, comme à l'envoi : document expiré, Kbis trop ancien…
+    const parsed = documentMetadataSchema().safeParse({ type, ...current, ...updates });
+    const dateErrors = parsed.success ? {} : z.flattenError(parsed.error).fieldErrors;
+    setReadErrors(
+      Object.fromEntries(
+        (["dateEmission", "dateFin"] as const)
+          .filter((field) => field in updates)
+          .map((field) => [field, (dateErrors as Record<string, string[] | undefined>)[field]]),
+      ),
+    );
+  }
+
+  async function read(file: File) {
+    setChosen(file.name);
+    if (!readAs) return;
+    const key = fileKey(file);
+    const previous = upload.current;
+    const prepared = prepare(file).then((path) => (path === "invalid_type" ? null : path));
+    upload.current = { key, path: prepared };
+    if (previous) {
+      void previous.path.then((path) => {
+        if (path) void discardRaw(path);
+      });
+    }
+    setReading({ step: "reading" });
+    const path = await prepared;
+    if (upload.current?.key !== key) return;
+    if (!path) return setReading(null);
+    const result = await readDocument(path, readAs);
+    if (upload.current?.key !== key) return;
+    if (result.status !== "ok") return setReading({ step: "failed" });
+    fill(readAs, result.fields);
+    setReading({
+      step: "done",
+      filled: Object.keys(result.fields).length > 0,
+      warnings: result.warnings,
+    });
+  }
+
+  const [state, action, pending] = useActionState(async (prev: FormState, formData: FormData) => {
+    // Photo prise ou fichier choisi : le champ rempli, s'il y en a un.
+    const file = formData
+      .getAll("file")
+      .find((value): value is File => value instanceof File && value.size > 0);
+    if (!file) return { fieldErrors: { file: [t.fileRequired] } };
+    if (file.size > MAX_UPLOAD_BYTES) return { fieldErrors: { file: [t.fileTooLarge] } };
+    setReadErrors({});
+
+    // Document déjà déposé pour sa lecture : le même fichier, pas un second envoi.
+    const uploaded = upload.current?.key === fileKey(file) ? upload.current.path : null;
+    const path = uploaded ? await uploaded : await prepare(file);
+    if (path === "invalid_type") return { error: t.status.invalid_type };
     if (!path) return { error: t.uploadFailed };
 
     formData.delete("file");
     formData.set("path", path);
     formData.set("purpose", purpose);
-    return processUpload(prev, formData);
+    const result = await processUpload(prev, formData);
+    // Le formulaire est vidé après l'envoi (React) : le fichier sera choisi de nouveau. Le fichier
+    // brut est retiré par process-upload, ou ici si les champs ont été refusés avant son appel.
+    if (result.fieldErrors) void discardRaw(path);
+    upload.current = null;
+    lastRead.current = {};
+    setReading(null);
+    return result;
   }, {});
 
-  const errors = state.fieldErrors ?? {};
+  const errors = { ...(state.fieldErrors ?? {}), ...readErrors };
   const fileErrorId = errors.file ? `${formId}-file-error` : undefined;
+  const fields = typeof children === "function" ? children(errors) : children;
+  const expected = readAs ? fr.pro.onboarding.documents.types[readAs] : "";
 
   return (
-    <form action={action} className="flex flex-col gap-4" noValidate>
+    <form ref={form} action={action} className="flex flex-col gap-4" noValidate>
       {state.error && <Alert tone="error">{state.error}</Alert>}
       {state.success && <Alert tone="success">{state.success}</Alert>}
-      {typeof children === "function" ? children(errors) : children}
+      {/* Document lu automatiquement : le fichier d'abord, puis les champs pré-remplis. */}
+      {readAs ? null : fields}
       {camera ? (
         <div className="flex flex-col gap-2">
           <div className="grid gap-2.5 sm:grid-cols-2">
@@ -106,9 +219,9 @@ export function UploadForm({
               capture
               primary
               describedBy={`${formId}-file-hint`}
-              onPick={(name) => {
+              onPick={(file) => {
                 if (fileInput.current) fileInput.current.value = "";
-                setChosen(name);
+                void read(file);
               }}
             />
             <CameraButton
@@ -119,9 +232,9 @@ export function UploadForm({
               accept={accept}
               describedBy={[`${formId}-file-hint`, fileErrorId].filter(Boolean).join(" ")}
               invalid={Boolean(errors.file)}
-              onPick={(name) => {
+              onPick={(file) => {
                 if (cameraInput.current) cameraInput.current.value = "";
-                setChosen(name);
+                void read(file);
               }}
             />
           </div>
@@ -143,6 +256,10 @@ export function UploadForm({
             accept={accept}
             aria-invalid={errors.file ? true : undefined}
             aria-describedby={[`${formId}-file-hint`, fileErrorId].filter(Boolean).join(" ")}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file && readAs) void read(file);
+            }}
             className="rounded-button border border-border bg-surface p-2 file:mr-3 file:rounded-button file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:font-medium file:text-primary"
           />
         </div>
@@ -157,6 +274,29 @@ export function UploadForm({
           </p>
         )}
       </div>
+      {reading && (
+        <div aria-live="polite">
+          {reading.step === "reading" ? (
+            <Alert tone="info">{r.reading}</Alert>
+          ) : reading.step === "failed" ? (
+            <Alert tone="info">{r.failed}</Alert>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {reading.warnings.map((warning) => (
+                <Alert key={warning} tone="error">
+                  {warning === "autre_document" ? r.otherDocument(expected) : r.warnings[warning]}
+                </Alert>
+              ))}
+              {reading.filled ? (
+                <Alert tone="success">{r.done}</Alert>
+              ) : reading.warnings.length === 0 ? (
+                <Alert tone="info">{r.empty}</Alert>
+              ) : null}
+            </div>
+          )}
+        </div>
+      )}
+      {readAs ? fields : null}
       <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
         {pending ? t.sending : submitLabel}
       </Button>
@@ -189,7 +329,7 @@ function CameraButton({
   primary?: boolean;
   invalid?: boolean;
   describedBy?: string;
-  onPick: (name: string) => void;
+  onPick: (file: File) => void;
 }) {
   return (
     <div className="relative">
@@ -204,8 +344,8 @@ function CameraButton({
         aria-invalid={invalid ? true : undefined}
         aria-describedby={describedBy}
         onChange={(e) => {
-          const name = e.target.files?.[0]?.name;
-          if (name) onPick(name);
+          const file = e.target.files?.[0];
+          if (file) onPick(file);
         }}
         className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0"
       />

@@ -29,6 +29,7 @@ export function DocumentUpload({
       hint={fr.pro.onboarding.upload.fileHintDocument}
       submitLabel={label}
       camera
+      readAs={type}
     >
       {(errors) => (
         <>

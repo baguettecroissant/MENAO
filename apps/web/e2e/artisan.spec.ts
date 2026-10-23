@@ -186,8 +186,11 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await rcPro.getByRole("button", { name: "Déposer le document" }).click();
   await expect(rcPro.getByText("Déposé, en attente de vérification")).toBeVisible();
 
+  // Lecture automatique (ADR 0176) : la date d'expiration lue pré-remplit le champ.
   const identite = page.getByRole("region", { name: "Pièce d'identité du dirigeant" });
   await identite.getByLabel("Fichier").setInputFiles(files.pdf);
+  await expect(identite.getByText(/Document lu automatiquement/)).toBeVisible();
+  await expect(identite.getByLabel("Date d'expiration (optionnel)")).toHaveValue(dates.inTenYears);
   await identite.getByRole("button", { name: "Déposer le document" }).click();
   await expect(identite.getByText("Déposé, en attente de vérification")).toBeVisible();
 
