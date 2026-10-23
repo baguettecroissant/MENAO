@@ -9,9 +9,12 @@ import {
 } from "@menao/core";
 import {
   artisanSelectionSchema,
+  encodeLotSelection,
+  lotSelectionSchema,
   requestFormSchema,
   signInSchema,
   signUpSchema,
+  type LotSelection,
 } from "@menao/validation";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
@@ -26,13 +29,21 @@ import { sendPagePath } from "./paths";
 
 const t = fr.search.request;
 
-export type RequestContext = { projectId: string; artisanIds: string[] };
+/** Artisans choisis ; un chantier à plusieurs métiers ajoute ceux de ses lots (ADR 0170). */
+export type RequestContext = { projectId: string; artisanIds: string[]; lots?: LotSelection };
 
 function parseContext(ctx: RequestContext) {
   const projectId = z.uuid().safeParse(ctx.projectId);
+  const lots = lotSelectionSchema.safeParse(encodeLotSelection(ctx.lots ?? []));
+  if (!projectId.success || !lots.success) return null;
+  if (lots.data.some((lot) => lot.projectId === projectId.data)) return null;
+  // Seuls des artisans des autres métiers peuvent être choisis (aucun pour le métier principal).
+  if (ctx.artisanIds.length === 0 && lots.data.length > 0) {
+    return { projectId: projectId.data, artisanIds: [], lots: lots.data };
+  }
   const artisans = artisanSelectionSchema.safeParse(ctx.artisanIds);
-  return projectId.success && artisans.success
-    ? { projectId: projectId.data, artisanIds: artisans.data }
+  return artisans.success
+    ? { projectId: projectId.data, artisanIds: artisans.data, lots: lots.data }
     : null;
 }
 
@@ -72,7 +83,9 @@ export async function signUpForRequest(
     email: input.email,
     password: input.password,
     options: {
-      emailRedirectTo: confirmUrlFor(sendPagePath(context.projectId, context.artisanIds, token)),
+      emailRedirectTo: confirmUrlFor(
+        sendPagePath(context.projectId, context.artisanIds, token, context.lots),
+      ),
       data: {
         first_name: input.firstName,
         last_name: input.lastName,
@@ -106,7 +119,10 @@ export async function continueWithProviderForRequest(
     p_project_id: context.projectId,
   });
   if (error || !token) return { error: t.transferError };
-  return redirectToProvider(provider, sendPagePath(context.projectId, context.artisanIds, token));
+  return redirectToProvider(
+    provider,
+    sendPagePath(context.projectId, context.artisanIds, token, context.lots),
+  );
 }
 
 /** Connexion à un compte existant : le projet de la session anonyme lui est rattaché. */
@@ -134,7 +150,7 @@ export async function signInForRequest(
   }
   const { error: claimError } = await supabase.rpc("claim_project", { p_token: token });
   if (claimError) return { error: t.transferError, values };
-  const target = sendPagePath(context.projectId, context.artisanIds);
+  const target = sendPagePath(context.projectId, context.artisanIds, undefined, context.lots);
   // Compte Google ou Apple à finaliser (ADR 0108) : CGU d'abord, puis la page d'envoi.
   if (signupPending(data.user.app_metadata)) {
     redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
@@ -162,18 +178,40 @@ export async function sendRequest(
   const r = parsed.data;
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("send_project_requests", {
-    p_project_id: context.projectId,
-    p_artisan_ids: context.artisanIds,
+  const contact = {
     p_message: r.message,
     p_phone: r.phone,
     p_callback_mode: r.callbackMode,
     // Les types générés ne marquent pas ces paramètres comme pouvant être nuls.
     p_callback_from: r.callbackFrom as string,
     p_callback_to: r.callbackTo as string,
-  });
+  };
+  // Plusieurs métiers (ADR 0170) : un seul envoi, tout ou rien.
+  const { error } =
+    context.lots.length === 0
+      ? await supabase.rpc("send_project_requests", {
+          p_project_id: context.projectId,
+          p_artisan_ids: context.artisanIds,
+          ...contact,
+        })
+      : await supabase.rpc("send_chantier_requests", {
+          p_project_id: context.projectId,
+          p_selections: [
+            ...(context.artisanIds.length
+              ? [{ project_id: context.projectId, artisan_ids: context.artisanIds }]
+              : []),
+            ...context.lots.map((lot) => ({
+              project_id: lot.projectId,
+              artisan_ids: lot.artisanIds,
+            })),
+          ],
+          ...contact,
+        });
   if (error) {
     return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
   }
-  redirect(`/recherche/${context.projectId}/envoyee` as Route);
+  const sent = new URLSearchParams(context.lots.map((lot) => ["lot", lot.projectId]));
+  redirect(
+    `/recherche/${context.projectId}/envoyee${context.lots.length ? `?${sent}` : ""}` as Route,
+  );
 }

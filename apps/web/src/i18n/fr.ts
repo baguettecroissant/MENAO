@@ -1406,6 +1406,10 @@ export const fr = {
       submit: (n: number) =>
         n <= 1 ? "Envoyer ma demande" : `Envoyer ma demande aux ${n} artisans`,
       limit: "Vous pouvez contacter 3 artisans au plus pour ce projet.",
+      // Chantier à plusieurs métiers (ADR 0170) : un seul envoi pour tous les métiers.
+      hintLots:
+        "Sélectionnez jusqu'à 3 artisans par métier : ils recevront tous votre demande en un seul envoi.",
+      limitLots: "Vous pouvez contacter 3 artisans au plus par métier.",
       alreadySent: "Demande envoyée",
       sentBanner: (names: string) => `Votre demande est déjà envoyée à ${names}.`,
       noSlot: "Vous avez déjà contacté 3 artisans pour ce projet.",
