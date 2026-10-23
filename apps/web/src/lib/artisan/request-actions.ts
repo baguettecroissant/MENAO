@@ -13,6 +13,29 @@ function refresh() {
   revalidatePath("/pro", "layout");
 }
 
+/**
+ * « Recommander un partenaire » (ADR 0174) : un partenaire du réseau de parrainage, pour cette
+ * demande ou un autre métier du chantier ; règles vérifiées en base, le client est prévenu.
+ */
+export async function recommendPartner(
+  requestId: string,
+  projectId: string,
+  partnerId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const ids = z.array(z.uuid()).length(3).safeParse([requestId, projectId, partnerId]);
+  if (!ids.success) return { ok: false, error: fr.errors.generic };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("recommend_partner", {
+    p_request_id: requestId,
+    p_project_id: projectId,
+    p_partner_id: partnerId,
+  });
+  if (error)
+    return { ok: false, error: error.code === "22023" ? error.message : fr.errors.generic };
+  revalidatePath(`/pro/demandes/${requestId}`);
+  return { ok: true };
+}
+
 /** F-17 : refus avec motif. L'acceptation passe par le rendez-vous (chantier-actions.ts). */
 export async function refuseRequest(
   requestId: string,

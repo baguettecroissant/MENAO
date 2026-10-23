@@ -2165,6 +2165,66 @@ export type Database = {
           },
         ];
       };
+      partner_recommendations: {
+        Row: {
+          created_at: string;
+          from_artisan_id: string;
+          id: string;
+          project_id: string;
+          request_id: string;
+          status: string;
+          to_artisan_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          from_artisan_id: string;
+          id?: string;
+          project_id: string;
+          request_id: string;
+          status?: string;
+          to_artisan_id: string;
+        };
+        Update: {
+          created_at?: string;
+          from_artisan_id?: string;
+          id?: string;
+          project_id?: string;
+          request_id?: string;
+          status?: string;
+          to_artisan_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_recommendations_from_artisan_id_fkey";
+            columns: ["from_artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_recommendations_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_recommendations_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_recommendations_to_artisan_id_fkey";
+            columns: ["to_artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       partner_settings: {
         Row: {
           delai_validation_jours: number;
@@ -4656,6 +4716,17 @@ export type Database = {
       };
       partner_dashboard: { Args: { p_token: string }; Returns: Json };
       partner_page: { Args: { p_code: string }; Returns: Json };
+      partner_recommendation_options: {
+        Args: { p_request_id: string };
+        Returns: {
+          artisan_id: string;
+          display_name: string;
+          project_id: string;
+          recommended: boolean;
+          same_project: boolean;
+          trade_label: string;
+        }[];
+      };
       public_artisan_pages: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4685,6 +4756,10 @@ export type Database = {
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       quote_document: { Args: { p_quote_id: string }; Returns: Json };
       reception_document: { Args: { p_reception_id: string }; Returns: Json };
+      recommend_partner: {
+        Args: { p_partner_id: string; p_project_id: string; p_request_id: string };
+        Returns: string;
+      };
       record_chantier_photo: {
         Args: { p_chantier_id: string; p_storage_path: string; p_user_id: string };
         Returns: string;
@@ -5015,7 +5090,8 @@ export type Database = {
         | "demande_sans_reponse"
         | "abonnement_impaye"
         | "parrainage_suggestion"
-        | "mois_offert";
+        | "mois_offert"
+        | "recommandation_partenaire";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -5297,6 +5373,7 @@ export const Constants = {
         "abonnement_impaye",
         "parrainage_suggestion",
         "mois_offert",
+        "recommandation_partenaire",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

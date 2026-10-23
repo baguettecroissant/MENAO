@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { DetailHeader, StickyActions } from "@/components/pro/detail";
 import { ExpertiseButton } from "@/components/pro/expertise-button";
 import { FakeClientReport } from "@/components/pro/fake-client-report";
+import { PartnerRecommendations } from "@/components/pro/partner-recommendations";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -33,16 +34,27 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
   const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
   // En attente de réponse, ou acceptée avant la phase 3 sans rendez-vous (ADR 0016).
   const open = (r.status === "envoyee" && left !== null) || r.status === "acceptee";
-  const [{ data: signed }, { data: trades }, agenda, { data: reputation }] = await Promise.all([
-    r.photos.length
-      ? supabase.storage.from("project-photos").createSignedUrls(r.photos, 3600)
-      : Promise.resolve({ data: [] }),
-    supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
-    // F-44 : créneaux libres et avertissements du tiroir « Fixer un rendez-vous ».
-    open ? appointmentAgenda() : undefined,
-    // F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible.
-    supabase.rpc("client_reputation", { p_request_id: r.id }),
-  ]);
+  const [{ data: signed }, { data: trades }, agenda, { data: reputation }, { data: partnerRows }] =
+    await Promise.all([
+      r.photos.length
+        ? supabase.storage.from("project-photos").createSignedUrls(r.photos, 3600)
+        : Promise.resolve({ data: [] }),
+      supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+      // F-44 : créneaux libres et avertissements du tiroir « Fixer un rendez-vous ».
+      open ? appointmentAgenda() : undefined,
+      // F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible.
+      supabase.rpc("client_reputation", { p_request_id: r.id }),
+      // « Recommander un partenaire » (ADR 0174) : partenaires du réseau de parrainage.
+      supabase.rpc("partner_recommendation_options", { p_request_id: r.id }),
+    ]);
+  const partners = (partnerRows ?? []).map((o) => ({
+    projectId: o.project_id,
+    trade: o.trade_label,
+    sameProject: o.same_project,
+    artisanId: o.artisan_id,
+    name: o.display_name,
+    recommended: o.recommended,
+  }));
   const clientReputation = reputation?.[0] ?? null;
 
   return (
@@ -98,6 +110,13 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
             </dl>
           </section>
         )}
+        {partners.length > 0 && (
+          <PartnerRecommendations
+            requestId={r.id}
+            clientFirstName={r.client.first_name ?? fr.pro.partners.client}
+            options={partners}
+          />
+        )}
         {!open && (
           <div>
             <StatusBadge tone="neutral">{t.status[r.status]}</StatusBadge>
@@ -113,6 +132,7 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
             clientFirstName={r.client.first_name}
             minDate={parisToday()}
             canRefuse={r.status === "envoyee"}
+            partnersAfterRefusal={partners.some((p) => p.sameProject)}
             agenda={agenda}
           />
         </StickyActions>
