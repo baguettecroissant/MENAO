@@ -19,6 +19,7 @@ import {
   storedLotTrades,
   TRADE_ORDER,
   inWorkOrder,
+  lotStart,
   suggestedLots,
   needHelpLevel,
   normalizeNeedAnalysis,
@@ -459,6 +460,28 @@ describe("chantier à plusieurs métiers (ADR 0167)", () => {
       ]),
     ).toEqual(["carreleur", "peintre"]);
     expect(storedLotTrades("?")).toEqual([]);
+  });
+
+  it("date propre à un lot : lue sur le chantier, sinon celle du chantier (ADR 0169)", () => {
+    const lotDates = {
+      carreleur: { date_mode: "date", date_souhaitee: "2026-11-16" },
+      peintre: { date_mode: "des_que_possible", date_souhaitee: null },
+      plaquiste: { date_mode: "date", date_souhaitee: null },
+      electricien: { date_mode: "bientot" },
+    };
+    expect(lotStart(lotDates, "carreleur")).toEqual({
+      dateMode: "date",
+      dateSouhaitee: "2026-11-16",
+    });
+    expect(lotStart(lotDates, "peintre")).toEqual({
+      dateMode: "des_que_possible",
+      dateSouhaitee: null,
+    });
+    expect(lotStart(lotDates, "plaquiste")).toBeNull();
+    expect(lotStart(lotDates, "electricien")).toBeNull();
+    expect(lotStart(lotDates, "plombier")).toBeNull();
+    expect(lotStart(null, "carreleur")).toBeNull();
+    expect(lotStart([], "carreleur")).toBeNull();
   });
 
   // Descriptions types (ADR 0167) : une réparation ou un seul ouvrage ne propose aucun lot ; une

@@ -3,6 +3,7 @@ import {
   availability,
   parisToday,
   inWorkOrder,
+  lotStart,
   remainingSlots,
   showWiderZone,
   specialtiesPreview,
@@ -17,6 +18,7 @@ import { matchArtisans, publicUrl } from "@/lib/project/artisans";
 import { joinNames } from "@/lib/project/names";
 import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
+import { LotStart } from "./lot-start";
 import { SelectionBar } from "./selection-bar";
 import { TicketBlock } from "./ticket-form";
 
@@ -37,7 +39,7 @@ export default async function ProjectResultsPage({
   const { data: project } = await supabase
     .from("projects")
     .select(
-      "id, trade_code, work_type_codes, ville_code_insee, preferred_artisan_id, parent_project_id",
+      "id, trade_code, work_type_codes, ville_code_insee, preferred_artisan_id, parent_project_id, lot_dates",
     )
     .eq("id", id)
     .maybeSingle();
@@ -59,14 +61,17 @@ export default async function ProjectResultsPage({
       ? Promise.resolve({ data: [] })
       : supabase
           .from("projects")
-          .select("id, trade_code, trades(label)")
+          .select("id, trade_code, date_mode, date_souhaitee, trades(label)")
           .eq("parent_project_id", id)
           .order("created_at"),
   ]);
   const lots = await Promise.all(
     inWorkOrder(lotRows ?? [], (lot) => lot.trade_code).map(async (lot) => ({
       id: lot.id,
+      tradeCode: lot.trade_code,
       trade: lot.trades?.label ?? "",
+      dateMode: lot.date_mode,
+      dateSouhaitee: lot.date_souhaitee,
       found: (await matchArtisans(supabase, lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
     })),
   );
@@ -221,26 +226,41 @@ export default async function ProjectResultsPage({
                   )}
                 </p>
               </div>
-              <ul className="grid gap-3 @xl:grid-cols-2">
+              <ul className="grid items-start gap-3 @xl:grid-cols-2">
                 {lots.map((lot) => {
                   const lotSent = (sent.data ?? []).some((r) => r.project_id === lot.id);
                   return (
                     <li
                       key={lot.id}
-                      className="flex items-center justify-between gap-4 rounded-card border border-border bg-surface p-4 shadow-card"
+                      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card"
                     >
-                      <span className="flex min-w-0 flex-col">
-                        <span className="font-medium">{lot.trade}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {lotSent ? t.lots.sent : t.lots.found(lot.found)}
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="flex min-w-0 flex-col">
+                          <span className="font-medium">{lot.trade}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {lotSent ? t.lots.sent : t.lots.found(lot.found)}
+                          </span>
                         </span>
-                      </span>
-                      <TextLink
-                        href={`/recherche/${lot.id}/artisans` as Route}
-                        className="shrink-0 text-sm"
-                      >
-                        {t.lots.see}
-                      </TextLink>
+                        <TextLink
+                          href={`/recherche/${lot.id}/artisans` as Route}
+                          className="shrink-0 text-sm"
+                        >
+                          {t.lots.see}
+                        </TextLink>
+                      </div>
+                      {/* Date propre au métier (ADR 0169), modifiable avant l'envoi. */}
+                      {lot.tradeCode && (
+                        <LotStart
+                          projectId={id}
+                          tradeCode={lot.tradeCode}
+                          trade={lot.trade}
+                          dateMode={lot.dateMode}
+                          dateSouhaitee={lot.dateSouhaitee}
+                          own={lotStart(project.lot_dates, lot.tradeCode) !== null}
+                          editable={!lotSent}
+                          today={today}
+                        />
+                      )}
                     </li>
                   );
                 })}

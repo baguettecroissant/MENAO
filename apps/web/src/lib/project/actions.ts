@@ -1,6 +1,6 @@
 "use server";
 
-import { MAX_PROJECT_LOTS, parisToday } from "@menao/core";
+import { DATE_SOUHAIT_MODES, MAX_PROJECT_LOTS, parisToday } from "@menao/core";
 import type { Database } from "@menao/db";
 import { messages, projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
 import type { Route } from "next";
@@ -61,7 +61,6 @@ export async function saveProjectCriteria(
   return { ok: true };
 }
 
-/** « Trouver l'artisan idéal » : métier et ville obligatoires (vérifiés en base). */
 /** Autres métiers du chantier choisis par le particulier (ADR 0167), créés au lancement. */
 export async function saveProjectLots(
   projectId: string,
@@ -82,6 +81,40 @@ export async function saveProjectLots(
   return { ok: true };
 }
 
+type LotStartArgs = Database["public"]["Functions"]["set_lot_start"]["Args"];
+
+/** Date de début propre à un lot (ADR 0169) ; mode null : celle du chantier. */
+export async function saveLotStart(
+  projectId: string,
+  tradeCode: string,
+  dateMode: (typeof DATE_SOUHAIT_MODES)[number] | null,
+  date: string | null,
+): Promise<CriteriaResult> {
+  const input = z
+    .object({
+      tradeCode: z.string().regex(/^[a-z0-9-]{1,60}$/),
+      dateMode: z.enum(DATE_SOUHAIT_MODES).nullable(),
+      date: z.iso.date().nullable(),
+    })
+    .safeParse({ tradeCode, dateMode, date });
+  if (!UUID.test(projectId) || !input.success) return { ok: false, error: fr.errors.generic };
+  if (input.data.dateMode === "date" && !input.data.date) {
+    return { ok: false, error: messages.required };
+  }
+  const supabase = await createClient();
+  const args: NullableArgs<LotStartArgs> = {
+    p_project_id: projectId,
+    p_trade_code: input.data.tradeCode,
+    p_date_mode: input.data.dateMode,
+    p_date: input.data.dateMode === "date" ? input.data.date : null,
+  };
+  const { error } = await supabase.rpc("set_lot_start", args as LotStartArgs);
+  if (error) return { ok: false, error: sqlError(error) };
+  revalidatePath(`/recherche/${projectId}/artisans`);
+  return { ok: true };
+}
+
+/** « Trouver l'artisan idéal » : métier et ville obligatoires (vérifiés en base). */
 export async function launchSearch(projectId: string): Promise<CriteriaResult> {
   if (!UUID.test(projectId)) return { ok: false, error: fr.errors.generic };
   const supabase = await createClient();
