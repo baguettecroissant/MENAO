@@ -21,7 +21,15 @@ Modèle de production (Haiku 5.5, Sonnet 5.5 en secours), 2 passes de 40 cas, co
 - **Aucun métier proposé en trop**, sur les 80 analyses ; aucun pour les réparations simples ni pour les pièges.
 - **Modèle de secours** appelé dans 3 puis 5 cas.
 - **Variations entre passes** : seulement des métiers facultatifs, ou deux métiers principaux défendables (plombier ou carreleur pour une salle de bains).
-- **Défaut relevé** : pour l'aménagement de combles, l'IA prend le maçon comme métier principal. Les autres métiers du chantier restent proposés. Une précision de la consigne pourrait le corriger, mais ce serait à réévaluer avec un nouvel appel payant.
+- **Défaut relevé** : pour l'aménagement de combles, l'IA prend le maçon comme métier principal. Les autres métiers du chantier restent proposés.
+
+## Tentative de correction, abandonnée (23 octobre 2026)
+- **Formulation essayée**, dans la règle du métier principal : « un aménagement intérieur (combles, garage, sous-sol transformés en pièce à vivre) relève du plaquiste, sauf gros œuvre demandé (dalle, mur porteur, ouverture) ».
+- **Réévaluation** (2 passes, 0,048 $) :
+  - les combles passent bien au plaquiste, et la couverture des métiers attendus monte à 100 % ;
+  - mais le parquet n'a plus de métier principal (confiance 0,3 à 0,4), les volets motorisés une fois sur deux non plus, et la véranda « sur une dalle existante » passe au maçon.
+- **Bilan** : métier principal juste dans 91 % des cas, contre 96 % sans la formulation. Elle n'est donc pas retenue.
+- **Pour une nouvelle tentative** : préférer une précision limitée aux seules combles, puis réévaluer.
 
 ## Conséquences
 - **Modèle** : on garde Haiku 5.5 en principal. La comparaison avec Sonnet seul n'a pas été lancée.
