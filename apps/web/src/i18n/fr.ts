@@ -6105,6 +6105,11 @@ export const fr = {
     list: {
       title: "Dossiers artisans",
       empty: "Aucun dossier dans cette catégorie.",
+      // Nombre de dossiers par statut (onglets) et renvoi depuis un onglet vide.
+      tab: (status: string, n: number) =>
+        n === 0 ? `${status}, aucun dossier` : `${status}, ${n} dossier${n > 1 ? "s" : ""}`,
+      elsewhere: "Des dossiers attendent ailleurs :",
+      elsewhereItem: (status: string, n: number) => `${status.toLowerCase()} (${n})`,
       filters: "Filtrer par statut",
       columns: {
         company: "Entreprise",

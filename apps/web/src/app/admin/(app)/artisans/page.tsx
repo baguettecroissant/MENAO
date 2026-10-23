@@ -41,6 +41,19 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   const { data: trades } = await supabase.from("trades").select("code, label");
   const tradeLabel = new Map((trades ?? []).map((tr) => [tr.code, tr.label]));
+  // Nombre de dossiers par statut, sur chaque onglet : rien ne passe inaperçu derrière un onglet.
+  const counts = new Map(
+    await Promise.all(
+      STATUSES.map(async (s) => {
+        const { count: n } = await supabase
+          .from("artisans")
+          .select("id", { count: "exact", head: true })
+          .eq("status", s);
+        return [s, n ?? 0] as const;
+      }),
+    ),
+  );
+  const elsewhere = STATUSES.filter((s) => s !== status && (counts.get(s) ?? 0) > 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -52,13 +65,26 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
               <Link
                 href={`/admin/artisans?statut=${s}` as Route}
                 aria-current={s === status ? "page" : undefined}
-                className={`inline-flex min-h-touch items-center rounded-chip border px-4 text-sm ${
+                aria-label={t.tab(fr.admin.statuses[s], counts.get(s) ?? 0)}
+                className={`inline-flex min-h-touch items-center gap-2 rounded-chip border px-4 text-sm ${
                   s === status
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-surface"
                 }`}
               >
                 {fr.admin.statuses[s]}
+                {(counts.get(s) ?? 0) > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className={`rounded-pill px-2 text-xs font-semibold tabular-nums ${
+                      s === status
+                        ? "bg-white/20 text-primary-foreground"
+                        : "bg-primary-soft text-primary-strong"
+                    }`}
+                  >
+                    {counts.get(s)}
+                  </span>
+                )}
               </Link>
             </li>
           ))}
@@ -69,7 +95,26 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
           {fr.admin.followUp.results(count ?? 0)}
         </p>
         {!artisans?.length ? (
-          <p className="text-muted-foreground">{t.empty}</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-muted-foreground">{t.empty}</p>
+            {/* Onglet vide : les catégories où des dossiers attendent. */}
+            {elsewhere.length > 0 && (
+              <p className="text-sm">
+                {t.elsewhere}{" "}
+                {elsewhere.map((s, i) => (
+                  <span key={s}>
+                    {i > 0 && ", "}
+                    <Link
+                      href={`/admin/artisans?statut=${s}` as Route}
+                      className="font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      {t.elsewhereItem(fr.admin.statuses[s], counts.get(s) ?? 0)}
+                    </Link>
+                  </span>
+                ))}
+              </p>
+            )}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
