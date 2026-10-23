@@ -2,6 +2,7 @@ import {
   MAX_SEARCH_RESULTS,
   availability,
   parisToday,
+  inWorkOrder,
   remainingSlots,
   showWiderZone,
   specialtiesPreview,
@@ -58,12 +59,12 @@ export default async function ProjectResultsPage({
       ? Promise.resolve({ data: [] })
       : supabase
           .from("projects")
-          .select("id, trades(label)")
+          .select("id, trade_code, trades(label)")
           .eq("parent_project_id", id)
           .order("created_at"),
   ]);
   const lots = await Promise.all(
-    (lotRows ?? []).map(async (lot) => ({
+    inWorkOrder(lotRows ?? [], (lot) => lot.trade_code).map(async (lot) => ({
       id: lot.id,
       trade: lot.trades?.label ?? "",
       found: (await matchArtisans(supabase, lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
@@ -198,9 +199,28 @@ export default async function ProjectResultsPage({
 
           {lots.length > 0 && (
             <section aria-labelledby="autres-metiers" className="flex flex-col gap-3">
-              <h2 id="autres-metiers" className="text-lg font-medium">
-                {t.lots.title}
-              </h2>
+              <div className="flex flex-col gap-1">
+                <h2 id="autres-metiers" className="text-lg font-medium">
+                  {t.lots.title}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {t.lots.workOrder(
+                    inWorkOrder(
+                      [
+                        { code: project.trade_code, label: tradeLabel },
+                        ...(lotRows ?? []).map((l) => ({
+                          code: l.trade_code,
+                          label: l.trades?.label ?? "",
+                        })),
+                      ],
+                      (x) => x.code,
+                    )
+                      .map((x) => x.label)
+                      .filter(Boolean)
+                      .join(", "),
+                  )}
+                </p>
+              </div>
               <ul className="grid gap-3 @xl:grid-cols-2">
                 {lots.map((lot) => {
                   const lotSent = (sent.data ?? []).some((r) => r.project_id === lot.id);

@@ -25,19 +25,22 @@ export function RequestForm({
   names,
   email,
   phone,
+  defaultMessage = null,
 }: {
   context: RequestContext;
   names: string;
   email: string;
   phone: string | null;
+  /** Message déjà écrit pour un autre métier du même chantier (ADR 0168), repris. */
+  defaultMessage?: string | null;
 }) {
   const [state, action, pending] = useActionState(
     sendRequest.bind(null, context),
     initialFormState,
   );
   const [mode, setMode] = useState(state.values?.callbackMode ?? "des_que_possible");
-  const [withMessage, setWithMessage] = useState(Boolean(state.values?.message));
-  const [message, setMessage] = useState(state.values?.message ?? "");
+  const [withMessage, setWithMessage] = useState(Boolean(state.values?.message ?? defaultMessage));
+  const [message, setMessage] = useState(state.values?.message ?? defaultMessage ?? "");
   const errors = state.fieldErrors ?? {};
 
   return (
