@@ -3993,7 +3993,8 @@ export const fr = {
         seat: "Siège",
         activity: "Activité",
         manager: "Dirigeant",
-        notMine: "Ce n'est pas mon entreprise",
+        change: "Changer d'entreprise",
+        wrongCompany: "Ce n'est pas la bonne entreprise ?",
         closedWarning:
           "Cette entreprise est fermée selon l'INSEE : MENAO n'accepte que les entreprises en activité.",
         isManager: (name: string) => `Êtes-vous ${name} ?`,
