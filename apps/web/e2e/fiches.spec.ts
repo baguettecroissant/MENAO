@@ -26,9 +26,13 @@ test("fiche publique : lien depuis la page ville, données structurées, badge, 
   expect(jsonLd).toContain('"name":"Noé Plomberie"');
   const main = await page.getByRole("main").innerText();
   expect(main).not.toMatch(/@|\+33|Rue de l'Exemple|SIRET/i);
+  // Recherche lancée depuis la fiche (ADR 0173) : Noé y sera proposé en premier.
   await expect(
     page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }),
-  ).toHaveAttribute("href", "/recherche?metier=plombier");
+  ).toHaveAttribute(
+    "href",
+    "/recherche?metier=plombier&fiche=b0000000-0000-4000-8000-000000000011&nom=No%C3%A9",
+  );
   await expect(
     page
       .getByRole("navigation", { name: "Trouver un plombier près de chez vous" })

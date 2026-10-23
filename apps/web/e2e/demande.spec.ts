@@ -336,7 +336,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     await page.getByLabel(label).check();
   }
   await page.getByRole("button", { name: "Signer le devis" }).click();
-  await expect(page).toHaveURL(/localhost:54397\/s\/signature-\d+$/);
+  await expect(page).toHaveURL(/localhost:18397\/s\/signature-\d+$/);
   await page.getByRole("button", { name: "Signer le document" }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/devis/${UUID}\\?signature=terminee$`));
   await expect(page.getByText(/Vous avez signé ce devis le/)).toBeVisible();
@@ -557,7 +557,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     await page.getByLabel(label).check();
   }
   await page.getByRole("button", { name: "Signer le PV de réception" }).click();
-  await expect(page).toHaveURL(/localhost:54397\/s\/signature-\d+$/);
+  await expect(page).toHaveURL(/localhost:18397\/s\/signature-\d+$/);
   await page.getByRole("button", { name: "Signer le document" }).click();
   await expect(page).toHaveURL(new RegExp(`/mon-espace/chantiers/${UUID}\\?reception=signee$`));
   await expect(page.getByText("Réserves à lever", { exact: true })).toBeVisible();

@@ -49,7 +49,7 @@ pnpm --filter web dev                 # http://localhost:3000
 | `pnpm db:types` | Régénère `packages/db/src/types.ts` |
 | `pnpm exec supabase migration new <nom>` | Nouvelle migration |
 | `pnpm functions:check` | Vérifie les Edge Functions (Deno) |
-| `pnpm --filter web build && pnpm --filter web test:e2e` | Tests de bout en bout (Supabase local requis ; faux serveur Sirene lancé automatiquement, Supabase démarré avec `INSEE_API_BASE_URL=http://host.docker.internal:54399`) |
+| `pnpm --filter web build && pnpm --filter web test:e2e` | Tests de bout en bout (Supabase local requis ; faux serveur Sirene lancé automatiquement, Supabase démarré avec `INSEE_API_BASE_URL=http://host.docker.internal:18399`) |
 
 ## Stripe (abonnements, F-15)
 
@@ -65,7 +65,7 @@ Le script crée les produits, prix, TVA, portail et webhook, et écrit `STRIPE_W
 
 ## Recherche IA (F-05 à F-07)
 
-Analyse du besoin (`analyze-need`, Claude Haiku 5.5, repli Sonnet 5.5) et dictée (`transcribe`, Voxtral). Secrets des Edge Functions : `OPENROUTER_API_KEY` (tests et staging) ou, en production, `ANTHROPIC_API_KEY` et `MISTRAL_API_KEY` (prioritaires). Facultatifs : `AI_ANALYZE_MODEL`, `AI_ANALYZE_FALLBACK_MODEL`, `AI_TRANSCRIBE_MODEL`. Les sessions anonymes doivent être activées dans Auth (`enable_anonymous_sign_ins`). En e2e, `OPENROUTER_BASE_URL` et `GEOCODING_BASE_URL` pointent sur le faux serveur `apps/web/e2e/mock-ai.mjs` (port 54398). Voir l'ADR 0012.
+Analyse du besoin (`analyze-need`, Claude Haiku 5.5, repli Sonnet 5.5) et dictée (`transcribe`, Voxtral). Secrets des Edge Functions : `OPENROUTER_API_KEY` (tests et staging) ou, en production, `ANTHROPIC_API_KEY` et `MISTRAL_API_KEY` (prioritaires). Facultatifs : `AI_ANALYZE_MODEL`, `AI_ANALYZE_FALLBACK_MODEL`, `AI_TRANSCRIBE_MODEL`. Les sessions anonymes doivent être activées dans Auth (`enable_anonymous_sign_ins`). En e2e, `OPENROUTER_BASE_URL` et `GEOCODING_BASE_URL` pointent sur le faux serveur `apps/web/e2e/mock-ai.mjs` (port 18398). Voir l'ADR 0012.
 
 ## Créer un administrateur
 

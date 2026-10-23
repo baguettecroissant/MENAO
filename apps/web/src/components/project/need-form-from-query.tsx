@@ -7,8 +7,9 @@ import { NeedForm } from "./need-form";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
- * Pré-remplit la saisie depuis l'accueil (?q=…), un raccourci métier (?metier=…) ou « Redemander
- * un devis » (?artisan=…&depuis=…&nom=…, ADR 0040 : le chantier commun est vérifié par le serveur).
+ * Pré-remplit la saisie depuis l'accueil (?q=…), un raccourci métier (?metier=…), « Redemander
+ * un devis » (?artisan=…&depuis=…&nom=…, ADR 0040 : le chantier commun est vérifié par le serveur)
+ * ou la fiche publique d'un artisan (?fiche=…&nom=…, ADR 0173 : fiche vérifiée par le serveur).
  * Un lien partenaire (?p=…, F-59) est transmis avec la demande, sans être gardé dans le navigateur.
  */
 export function NeedFormFromQuery({ trades }: { trades: { code: string; label: string }[] }) {
@@ -21,14 +22,17 @@ export function NeedFormFromQuery({ trades }: { trades: { code: string; label: s
   const name = params.get("nom")?.trim().slice(0, 80) ?? "";
   const rehire =
     UUID.test(artisanId) && UUID.test(chantierId) && name ? { artisanId, chantierId, name } : null;
+  const ficheId = params.get("fiche") ?? "";
+  const fromPage = !rehire && UUID.test(ficheId) && name ? { artisanId: ficheId, name } : null;
   const partnerCode = normalizePartnerCode(params.get("p"));
   return (
     <NeedForm
-      key={`${q}|${trade}|${artisanId}`}
+      key={`${q}|${trade}|${artisanId}|${ficheId}`}
       trades={trades}
       initialText={q}
       initialTrade={trade}
       rehire={rehire}
+      fromPage={fromPage}
       partnerCode={partnerCode}
     />
   );

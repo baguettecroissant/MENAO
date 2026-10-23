@@ -5,7 +5,7 @@
 // commençant par 00008, aucune pour les autres.
 import { createServer } from "node:http";
 
-const PORT = Number(process.env.MOCK_SIRENE_PORT ?? 54399);
+const PORT = Number(process.env.MOCK_SIRENE_PORT ?? 18399);
 
 function etablissement(siret, active) {
   return {

@@ -59,3 +59,30 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
   ).toBeVisible();
   await expect(page.getByText(/Aucune\. Le classement ne dépend ni de la formule/)).toBeVisible();
 });
+
+// Recherche lancée depuis la fiche publique d'un artisan (ADR 0173) : il est proposé en premier,
+// présélectionné, sans la mention « Déjà venu chez vous » (aucun chantier commun).
+test("depuis la fiche d'Inès : proposée en premier et présélectionnée", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto("/artisans/plomberie-dispo-exemple");
+  await page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }).first().click();
+  await expect(page).toHaveURL(/\/recherche\?.*fiche=/);
+  await expect(page.getByText(/^Nouvelle demande pour Inès/)).toBeVisible();
+  await page
+    .getByLabel("Décrivez votre projet")
+    .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement.");
+  await page.getByRole("button", { name: "Trouver mon artisan" }).click();
+  await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
+  await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
+  const cards = page
+    .getByRole("main")
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("heading") });
+  await expect(cards.nth(0).getByRole("heading")).toHaveText("Inès");
+  await expect(page.getByLabel("Sélectionner Inès")).toBeChecked();
+  await expect(page.getByLabel("Sélectionner Noé")).not.toBeChecked();
+  await expect(page.getByText("Déjà venu chez vous")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Envoyer ma demande" })).toBeEnabled();
+});

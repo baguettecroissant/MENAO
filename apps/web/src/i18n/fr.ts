@@ -554,7 +554,7 @@ export const fr = {
       descriptionFallback: (name: string) =>
         `Fiche de ${name} sur MENAO : zone d'intervention, expertises, assurances vérifiées et avis de clients. Décrivez votre projet, c'est gratuit.`,
       requestHint: (name: string) =>
-        `Décrivez vos travaux en quelques minutes : vous choisirez ensuite les artisans à solliciter, dont ${name} s'il intervient chez vous.`,
+        `Décrivez vos travaux en quelques minutes : ${name} vous sera proposé en premier s'il intervient chez vous, et vous choisirez les artisans à solliciter.`,
       nearbyTitle: (trade: string) => `Trouver un ${trade.toLowerCase()} près de chez vous`,
       nearbyCity: (trade: string, city: string) => `${trade} à ${city}`,
       allTrade: (trade: string) => `Tous les artisans ${trade.toLowerCase()}s vérifiés`,
@@ -4653,7 +4653,7 @@ export const fr = {
       "Recommandations entre artisans : un artisan contacté par le particulier peut lui recommander un de ses partenaires MENAO (son parrain ou un de ses filleuls), à sa place ou pour un autre métier du chantier. Ces partenaires sont présentés à part, avec le nom de l'artisan qui les recommande, en dehors de ce classement. Une recommandation n'est jamais rémunérée et le particulier reste libre de ne pas les contacter.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
       "Place réservée aux nouveaux artisans : un artisan validé depuis moins de 90 jours, ou qui a mené moins de 3 chantiers à terme, n'a pas encore d'historique. Quand aucun d'eux ne figure parmi les 5 premiers, l'un d'eux est présenté en 3e position, choisi parmi ceux qui remplissent les conditions ci-dessus : d'abord parmi les disponibles immédiatement, puis par un tirage propre à chaque projet. Cette place ne dépend d'aucun paiement.",
-      "Exception, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier, cet artisan est présenté en premier (mention « Déjà venu chez vous »), s'il remplit les conditions ci-dessus.",
+      "Exceptions, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier (mention « Déjà venu chez vous »), ou quand il lance sa recherche depuis la fiche publique d'un artisan, cet artisan est présenté en premier et présélectionné, s'il remplit les conditions ci-dessus. Le particulier reste libre de le retirer de sa sélection, et cette place ne vaut que pour sa demande.",
     ],
     paidTitle: "Mise en avant payante",
     paid: "Aucune. Le classement ne dépend ni de la formule d'abonnement ni d'un paiement de l'artisan. Si cela devait changer, les artisans concernés seraient signalés par la mention « Mis en avant ».",
