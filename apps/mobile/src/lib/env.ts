@@ -1,4 +1,5 @@
 import { enabledOAuthProviders } from "@menao/core";
+import { encodeLotSelection, type LotSelection } from "@menao/validation";
 
 /** Variables publiques de l'application (fichier .env, préfixe EXPO_PUBLIC_, jamais de secret). */
 export const env = {
@@ -22,9 +23,16 @@ const confirmUrl = (next: string) => `${env.siteUrl}/auth/confirm?next=${encodeU
  * Lien de confirmation d'une inscription faite au moment de la demande (F-08) : il ouvre la page
  * d'envoi du site, qui rattache le projet au compte grâce au jeton (mêmes paramètres que le site).
  */
-export function requestConfirmUrl(projectId: string, artisanIds: string[], token: string): string {
+export function requestConfirmUrl(
+  projectId: string,
+  artisanIds: string[],
+  token: string,
+  lots: LotSelection = [],
+): string {
   const params = new URLSearchParams();
   for (const id of artisanIds) params.append("artisan", id);
+  // Autres métiers du chantier (ADR 0170), comme l'adresse de la page d'envoi du site.
+  for (const value of encodeLotSelection(lots)) params.append("lot", value);
   params.set("transfert", token);
   return confirmUrl(`/recherche/${projectId}/envoyer?${params}`);
 }

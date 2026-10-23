@@ -18,7 +18,11 @@
   - Si un métier est refusé, rien ne part, et le message nomme le métier (« Carreleur : … »).
 - **Sans compte** : la création du compte, la connexion et Google ou Apple gardent toute la sélection, y compris celle des autres métiers.
 - **Confirmation** : elle reprend tous les artisans contactés dans cet envoi, puis propose les métiers qui restent.
-- **Inchangé** : la page d'un métier et la fiche d'un artisan permettent toujours un envoi pour ce seul métier ; l'application aura le même parcours dans une PR suivante.
+- **Inchangé** : la page d'un métier et la fiche d'un artisan permettent toujours un envoi pour ce seul métier.
+- **Application** : même parcours que le site.
+  - L'écran des résultats montre les artisans de chaque métier, avec 3 places au plus par métier et un seul bouton d'envoi.
+  - L'écran d'envoi reçoit `lots` (« <lot>.<artisan> »).
+  - Une demande commencée sans compte garde toute la sélection jusqu'à la connexion, y compris avec Google ou Apple.
 
 ## Conséquences
 - **Migration** `20261023061330_envoi_plusieurs_metiers.sql` : fonction `send_chantier_requests`.

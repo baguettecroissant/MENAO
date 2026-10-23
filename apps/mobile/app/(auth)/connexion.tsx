@@ -8,7 +8,7 @@ import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signIn } from "@/lib/auth";
 import { closeAuth } from "@/lib/navigation";
-import { resumePendingRequest } from "@/lib/requests";
+import { resumePendingRequest, sendScreenParams } from "@/lib/requests";
 import { Body, LinkText, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
@@ -39,7 +39,7 @@ export default function SignInScreen() {
           if (pending) {
             router.replace({
               pathname: "/projet/[id]/envoyer",
-              params: { id: pending.projectId, artisans: pending.artisanIds.join(",") },
+              params: sendScreenParams(pending.projectId, pending.artisanIds, pending.lots),
             });
           } else {
             closeAuth();

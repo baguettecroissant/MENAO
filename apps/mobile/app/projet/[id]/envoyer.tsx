@@ -1,4 +1,4 @@
-import { artisanSelectionSchema } from "@menao/validation";
+import { artisanSelectionSchema, lotSelectionSchema, type LotSelection } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
@@ -17,19 +17,34 @@ const r = fr.request;
 
 /**
  * Envoi de la demande (F-11), précédé si besoin de la création du compte ou de la connexion
- * (F-08). Les artisans choisis arrivent dans l'adresse (`artisans`, séparés par des virgules).
+ * (F-08). Les artisans choisis arrivent dans l'adresse (`artisans`, séparés par des virgules), et
+ * ceux des autres métiers du chantier dans `lots` (« <lot>.<artisan> », ADR 0170).
  */
 export default function Envoyer() {
-  const { id, artisans } = useLocalSearchParams<{ id: string; artisans?: string }>();
-  const selection = artisanSelectionSchema.safeParse((artisans ?? "").split(",").filter(Boolean));
+  const { id, artisans, lots } = useLocalSearchParams<{
+    id: string;
+    artisans?: string;
+    lots?: string;
+  }>();
+  const requested = (artisans ?? "").split(",").filter(Boolean);
+  const lotValues = (lots ?? "").split(",").filter(Boolean);
+  const lotSelection = lotSelectionSchema.safeParse(lotValues);
+  // Seuls des artisans des autres métiers peuvent être choisis (aucun pour le métier principal).
+  const selection =
+    requested.length === 0 && lotValues.length > 0
+      ? { success: true as const, data: [] as string[] }
+      : artisanSelectionSchema.safeParse(requested);
+  const valid = selection.success && lotSelection.success;
   const artisanIds = selection.success ? selection.data : [];
+  const lotChoices = lotSelection.success ? lotSelection.data : [];
   const { signedIn, role } = useSession();
 
   let content;
-  if (!selection.success) content = <Notice tone="error">{r.nothingToSend}</Notice>;
-  else if (!signedIn) return <AccountScreen projectId={id} artisanIds={artisanIds} />;
-  else if (role !== "particulier") content = <Notice tone="error">{r.notParticulier}</Notice>;
-  else return <SignedInSend projectId={id} artisanIds={artisanIds} />;
+  if (!valid) content = <Notice tone="error">{r.nothingToSend}</Notice>;
+  else if (!signedIn) {
+    return <AccountScreen projectId={id} artisanIds={artisanIds} lots={lotChoices} />;
+  } else if (role !== "particulier") content = <Notice tone="error">{r.notParticulier}</Notice>;
+  else return <SignedInSend projectId={id} artisanIds={artisanIds} lots={lotChoices} />;
   return <Screen header={<TopBar />}>{content}</Screen>;
 }
 
@@ -37,7 +52,15 @@ export default function Envoyer() {
  * Création du compte ou connexion avant l'envoi (maquette « Dernière étape ») : le résumé du besoin
  * reste en haut, comme sur le formulaire d'envoi. Le projet appartient à la session anonyme (RLS).
  */
-function AccountScreen({ projectId, artisanIds }: { projectId: string; artisanIds: string[] }) {
+function AccountScreen({
+  projectId,
+  artisanIds,
+  lots,
+}: {
+  projectId: string;
+  artisanIds: string[];
+  lots: LotSelection;
+}) {
   const [summary, setSummary] = useState<NeedSummary | null | undefined>(undefined);
 
   useEffect(() => {
@@ -51,7 +74,7 @@ function AccountScreen({ projectId, artisanIds }: { projectId: string; artisanId
   }, [projectId]);
 
   if (summary === undefined) return <ScreenSkeleton header={<TopBar />} />;
-  const step = <AccountStep projectId={projectId} artisanIds={artisanIds} />;
+  const step = <AccountStep projectId={projectId} artisanIds={artisanIds} lots={lots} />;
   return summary ? (
     <Screen
       band={
@@ -69,23 +92,37 @@ function AccountScreen({ projectId, artisanIds }: { projectId: string; artisanId
 }
 
 /** Formulaire d'envoi d'un particulier connecté : artisans encore joignables et coordonnées. */
-function SignedInSend({ projectId, artisanIds }: { projectId: string; artisanIds: string[] }) {
+function SignedInSend({
+  projectId,
+  artisanIds,
+  lots,
+}: {
+  projectId: string;
+  artisanIds: string[];
+  lots: LotSelection;
+}) {
   const key = artisanIds.join(",");
+  const lotKey = JSON.stringify(lots);
   const [loaded, setLoaded] = useState<
     { context: SendContext | null; summary: NeedSummary | null } | undefined
   >(undefined);
 
   useEffect(() => {
     let active = true;
-    Promise.all([loadSendContext(projectId, key.split(",")), loadNeedSummary(projectId)]).then(
-      ([context, summary]) => {
-        if (active) setLoaded({ context, summary });
-      },
-    );
+    Promise.all([
+      loadSendContext(
+        projectId,
+        key.split(",").filter(Boolean),
+        JSON.parse(lotKey) as LotSelection,
+      ),
+      loadNeedSummary(projectId),
+    ]).then(([context, summary]) => {
+      if (active) setLoaded({ context, summary });
+    });
     return () => {
       active = false;
     };
-  }, [projectId, key]);
+  }, [projectId, key, lotKey]);
 
   if (loaded === undefined) {
     return (

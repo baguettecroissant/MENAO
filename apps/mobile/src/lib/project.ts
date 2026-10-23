@@ -5,6 +5,7 @@ import {
   MAX_SEARCH_RESULTS,
   parisToday,
   photosAdvised,
+  remainingSlots,
   storedLotTrades,
   type DateSouhaitMode,
 } from "@menao/core";
@@ -341,11 +342,16 @@ export type ProjectResults = {
     id: string;
     tradeCode: string | null;
     trade: string;
+    workTypeCodes: string[];
     found: number;
     dateMode: DateSouhaitMode;
     dateSouhaitee: string | null;
     own: boolean;
     sent: boolean;
+    /** Artisans de la zone, à cocher pour le même envoi (ADR 0170), et places restantes. */
+    artisans: MatchedArtisan[];
+    requested: Set<string>;
+    slots: number;
   }[];
   /** Métiers du chantier dans l'ordre habituel des travaux (ADR 0168). */
   workOrder: string[];
@@ -457,7 +463,7 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     matchArtisans(projectId, MAX_SEARCH_RESULTS),
     supabase
       .from("projects")
-      .select("id, trade_code, date_mode, date_souhaitee, trades(label)")
+      .select("id, trade_code, work_type_codes, date_mode, date_souhaitee, trades(label)")
       .eq("parent_project_id", projectId)
       .order("created_at"),
   ]);
@@ -466,24 +472,31 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
   const { data: sentRows } = orderedLots.length
     ? await supabase
         .from("requests")
-        .select("project_id")
+        .select("project_id, artisan_id, status")
         .in(
           "project_id",
           orderedLots.map((l) => l.id),
         )
     : { data: [] };
-  const sent = new Set((sentRows ?? []).map((r) => r.project_id));
   const lots = await Promise.all(
-    orderedLots.map(async (lot) => ({
-      id: lot.id,
-      tradeCode: lot.trade_code,
-      trade: lot.trades?.label ?? "",
-      found: (await matchArtisans(lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
-      dateMode: lot.date_mode,
-      dateSouhaitee: lot.date_souhaitee,
-      own: lot.trade_code !== null && lotStart(project.lot_dates, lot.trade_code) !== null,
-      sent: sent.has(lot.id),
-    })),
+    orderedLots.map(async (lot) => {
+      const found = (await matchArtisans(lot.id, MAX_SEARCH_RESULTS)) ?? [];
+      const rows = (sentRows ?? []).filter((r) => r.project_id === lot.id);
+      return {
+        id: lot.id,
+        tradeCode: lot.trade_code,
+        trade: lot.trades?.label ?? "",
+        workTypeCodes: lot.work_type_codes,
+        found: found.length,
+        dateMode: lot.date_mode,
+        dateSouhaitee: lot.date_souhaitee,
+        own: lot.trade_code !== null && lotStart(project.lot_dates, lot.trade_code) !== null,
+        sent: rows.length > 0,
+        artisans: found.filter((a) => !a.outsideZone),
+        requested: new Set(rows.map((r) => r.artisan_id)),
+        slots: remainingSlots(rows.map((r) => r.status)),
+      };
+    }),
   );
   return {
     tradeLabel: summary.tradeLabel,
