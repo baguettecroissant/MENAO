@@ -7,7 +7,7 @@ import {
   type ArtisanSignupDraft,
 } from "@menao/core";
 import { messages } from "@menao/validation";
-import { Building2, ChevronRight, CircleCheck } from "lucide-react-native";
+import { ArrowLeftRight, Building2, ChevronRight, CircleCheck } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
@@ -211,6 +211,7 @@ function CompanyCard({
 }) {
   const single = company.managers.length === 1 ? company.managers[0] : undefined;
   const form = legalForm(company.legalFormCode);
+  const reset = () => update({ company: null, isDirigeant: null });
   const rows: [string, string | null][] = [
     [t.siret, formatSiret(company.siret)],
     [t.seat, company.address],
@@ -238,6 +239,8 @@ function CompanyCard({
             </View>
           ) : null}
         </View>
+        {/* Changer d'entreprise, en haut de la carte, là où se pose le regard. */}
+        <Button label={t.change} variant="secondary" icon={ArrowLeftRight} onPress={reset} />
         {rows
           .filter((row): row is [string, string] => row[1] !== null)
           .map(([label, value]) => (
@@ -246,7 +249,6 @@ function CompanyCard({
               <Text style={styles.detailValue}>{value}</Text>
             </View>
           ))}
-        <LinkText label={t.notMine} onPress={() => update({ company: null, isDirigeant: null })} />
       </Card>
       <ChoiceGroup<boolean>
         legend={single ? t.isManager(managerName(single)) : t.isManagerGeneric}
@@ -257,7 +259,16 @@ function CompanyCard({
         ]}
         onChange={(isDirigeant) => update({ isDirigeant })}
       />
-      {draft.isDirigeant === false ? <Notice tone="info">{t.notManagerNote}</Notice> : null}
+      {draft.isDirigeant === false ? (
+        <>
+          <Notice tone="info">{t.notManagerNote}</Notice>
+          {/* « Non » choisi parce que l'entreprise n'est pas la bonne : on se rattrape ici. */}
+          <View style={styles.wrongCompany}>
+            <Muted>{t.wrongCompany}</Muted>
+            <LinkText label={t.change} onPress={reset} />
+          </View>
+        </>
+      ) : null}
       <ChoiceGroup<boolean>
         legend={t.vatQuestion}
         hint={t.vatHint}
@@ -309,6 +320,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardHead: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
+  wrongCompany: { gap: spacing(1) },
   cardTitle: { flex: 1, gap: 2 },
   cardName: { fontFamily: font.bold, fontSize: 18, color: colors.foreground },
   active: {
