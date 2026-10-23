@@ -22,6 +22,7 @@
   - **lot retiré** : supprimé tant qu'aucune demande n'est partie. Un lot déjà envoyé ne change plus ;
   - un lot n'a pas ses propres lots. Ses critères sont ceux du chantier : sa page de critères renvoie à celle du chantier.
 - **Tout le reste fonctionne lot par lot**, sans refonte : recherche (`match_artisans` sur le métier du lot, zone élargie et budget minimum compris), demandes avec **3 artisans au plus par métier**, devis, chantier et paiements.
+- **Session anonyme rattachée au compte** (`claim_project`) : tout le chantier passe au compte, projet principal et lots, quel que soit le lien de transfert ouvert.
 - **Limite des 2 chantiers ouverts** (ADR 0157, `app.particulier_open_projects`) : elle compte le chantier entier, projet principal et lots ensemble.
 - **Résultats** :
   - **projet principal** : sous ses artisans, « Les autres métiers de votre chantier » donne, pour chaque lot, le nombre d'artisans trouvés et un lien vers ses résultats ;

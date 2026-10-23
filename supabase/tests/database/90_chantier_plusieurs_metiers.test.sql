@@ -108,5 +108,27 @@ select is(app.particulier_open_projects('e9000000-0000-4000-8000-000000000001', 
 select is(app.particulier_open_projects('e9000000-0000-4000-8000-000000000001', pg_temp.lot('carreleur')), 0,
   'un autre lot du même chantier ne compte pas son propre chantier');
 
+-- ---------- Session anonyme rattachée au compte : tout le chantier suit ----------
+insert into auth.users (id, email, is_anonymous, raw_app_meta_data, raw_user_meta_data) values
+  ('e9000000-0000-4000-8000-000000000009', null, true, '{}', '{}');
+insert into public.projects (id, user_id, description, trade_code, ville_code_insee, ville_nom) values
+  ('e9020000-0000-4000-8000-000000000009', 'e9000000-0000-4000-8000-000000000009', 'Salle de bains', 'plombier', '06088', 'Nice');
+insert into public.projects (id, user_id, parent_project_id, description, trade_code, ville_code_insee, ville_nom) values
+  ('e9020000-0000-4000-8000-000000000019', 'e9000000-0000-4000-8000-000000000009',
+   'e9020000-0000-4000-8000-000000000009', 'Salle de bains', 'carreleur', '06088', 'Nice');
+insert into public.project_transfers (project_id, from_user_id, token_hash) values
+  ('e9020000-0000-4000-8000-000000000019', 'e9000000-0000-4000-8000-000000000009',
+   encode(extensions.digest('jeton-lot90', 'sha256'), 'hex'));
+select pg_temp.connecter('e9000000-0000-4000-8000-000000000002', 'particulier');
+set local role authenticated;
+select is(public.claim_project('jeton-lot90'), 'e9020000-0000-4000-8000-000000000019'::uuid,
+  'lien de transfert ouvert depuis un lot');
+reset role;
+select is(
+  (select count(*)::int from public.projects
+   where user_id = 'e9000000-0000-4000-8000-000000000002'
+     and id in ('e9020000-0000-4000-8000-000000000009', 'e9020000-0000-4000-8000-000000000019')),
+  2, 'le chantier et son lot passent au compte');
+
 select * from finish();
 rollback;

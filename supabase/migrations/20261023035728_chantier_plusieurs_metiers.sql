@@ -276,3 +276,49 @@ as $$
   left join auth.users u on u.id = r.particulier_id
   where r.id = p_request_id and r.artisan_id = app.my_artisan_id() and r.status <> 'a_verifier'
 $$;
+
+-- Projet d'une session anonyme rattaché au compte (F-08) : avec tous ses lots.
+create or replace function public.claim_project(p_token text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.project_transfers;
+begin
+  if not exists (select 1 from auth.users where id = auth.uid() and not is_anonymous) then
+    raise exception 'Compte requis' using errcode = '42501';
+  end if;
+  select t.* into v from public.project_transfers t
+  join auth.users u on u.id = t.from_user_id
+  where t.token_hash = encode(extensions.digest(coalesce(p_token, ''), 'sha256'), 'hex')
+    and t.used_at is null and t.expires_at > now() and u.is_anonymous
+  for update of t;
+  if not found then
+    -- Déjà transféré à ce compte (lien ouvert deux fois) : sans effet.
+    select t.* into v from public.project_transfers t
+    join public.projects p on p.id = t.project_id
+    where t.token_hash = encode(extensions.digest(coalesce(p_token, ''), 'sha256'), 'hex')
+      and t.used_at is not null and p.user_id = auth.uid();
+    if found then
+      return v.project_id;
+    end if;
+    raise exception 'Lien de transfert invalide ou expiré' using errcode = '22023';
+  end if;
+  -- Tout le chantier suit (ADR 0167) : projet principal et lots, quel que soit le lien ouvert.
+  update public.tickets set user_id = auth.uid()
+  where user_id = v.from_user_id and project_id in (
+    select p.id from public.projects p
+    where coalesce(p.parent_project_id, p.id) = (
+      select coalesce(x.parent_project_id, x.id) from public.projects x where x.id = v.project_id
+    )
+  );
+  update public.projects set user_id = auth.uid()
+  where user_id = v.from_user_id and coalesce(parent_project_id, id) = (
+    select coalesce(x.parent_project_id, x.id) from public.projects x where x.id = v.project_id
+  );
+  update public.project_transfers set used_at = now() where id = v.id;
+  return v.project_id;
+end;
+$$;
