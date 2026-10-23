@@ -1323,6 +1323,25 @@ export const fr = {
         lotOf: (trade: string) => `${trade} : un des métiers de votre chantier`,
         back: "Retour au chantier",
         workOrder: (trades: string) => `Ordre habituel des travaux : ${trades}.`,
+        // Date propre au métier (ADR 0169).
+        start: {
+          label: (when: string) => `Début souhaité : ${when}`,
+          same: "comme le reste du chantier",
+          edit: "Modifier",
+          editLabel: (trade: string) => `Modifier la date de début : ${trade}`,
+          legend: (trade: string) => `Date de début souhaitée : ${trade}`,
+          asap: "dès que possible",
+          unknown: "date inconnue",
+          options: {
+            chantier: "Comme le reste du chantier",
+            des_que_possible: "Dès que possible",
+            date: "Préciser une date de début",
+            inconnue: "Date de début inconnue",
+          },
+          pick: "Date de début",
+          save: "Enregistrer",
+          cancel: "Annuler",
+        },
       },
       // Zone élargie (ADR 0165) : artisans dont la zone s'arrête un peu avant le chantier.
       wider: {

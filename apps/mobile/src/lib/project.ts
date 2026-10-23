@@ -1,10 +1,12 @@
 import {
   inWorkOrder,
+  lotStart,
   MAX_PROJECT_LOTS,
   MAX_SEARCH_RESULTS,
   parisToday,
   photosAdvised,
   storedLotTrades,
+  type DateSouhaitMode,
 } from "@menao/core";
 import type { Database } from "@menao/db";
 import { projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
@@ -154,6 +156,29 @@ export async function saveProjectLots(
     p_project_id: projectId,
     p_trade_codes: tradeCodes,
   });
+  return error ? sqlError(error) : null;
+}
+
+type LotStartArgs = Database["public"]["Functions"]["set_lot_start"]["Args"];
+
+/**
+ * Date de début propre à un lot (ADR 0169), comme sur le site ; mode null : celle du chantier.
+ * Renvoie le message d'erreur à afficher, ou null.
+ */
+export async function saveLotStart(
+  projectId: string,
+  tradeCode: string,
+  dateMode: DateSouhaitMode | null,
+  date: string | null,
+): Promise<string | null> {
+  if (dateMode === "date" && !date) return fr.errors.generic;
+  // Les types générés ne marquent pas les paramètres SQL facultatifs comme pouvant être nuls.
+  const { error } = await supabase.rpc("set_lot_start", {
+    p_project_id: projectId,
+    p_trade_code: tradeCode,
+    p_date_mode: dateMode,
+    p_date: dateMode === "date" ? date : null,
+  } as LotStartArgs);
   return error ? sqlError(error) : null;
 }
 
@@ -308,8 +333,20 @@ export type ProjectResults = {
   summary: NeedSummary;
   /** Chantier à plusieurs métiers (ADR 0167) : projet principal d'un lot, sinon null. */
   parentId: string | null;
-  /** Autres lots du chantier (projet principal seulement), avec les artisans trouvés. */
-  lots: { id: string; trade: string; found: number }[];
+  /**
+   * Autres lots du chantier (projet principal seulement), avec les artisans trouvés et la date de
+   * début (ADR 0169) : `own` quand elle est propre au métier, `sent` quand le lot est envoyé.
+   */
+  lots: {
+    id: string;
+    tradeCode: string | null;
+    trade: string;
+    found: number;
+    dateMode: DateSouhaitMode;
+    dateSouhaitee: string | null;
+    own: boolean;
+    sent: boolean;
+  }[];
   /** Métiers du chantier dans l'ordre habituel des travaux (ADR 0168). */
   workOrder: string[];
 };
@@ -413,24 +450,39 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
   const [{ data: project }, summary, artisans, { data: lotRows }] = await Promise.all([
     supabase
       .from("projects")
-      .select("work_type_codes, parent_project_id, trade_code")
+      .select("work_type_codes, parent_project_id, trade_code, lot_dates")
       .eq("id", projectId)
       .maybeSingle(),
     loadNeedSummary(projectId),
     matchArtisans(projectId, MAX_SEARCH_RESULTS),
     supabase
       .from("projects")
-      .select("id, trade_code, trades(label)")
+      .select("id, trade_code, date_mode, date_souhaitee, trades(label)")
       .eq("parent_project_id", projectId)
       .order("created_at"),
   ]);
   if (!project || !summary || !artisans) return null;
   const orderedLots = inWorkOrder(lotRows ?? [], (lot) => lot.trade_code);
+  const { data: sentRows } = orderedLots.length
+    ? await supabase
+        .from("requests")
+        .select("project_id")
+        .in(
+          "project_id",
+          orderedLots.map((l) => l.id),
+        )
+    : { data: [] };
+  const sent = new Set((sentRows ?? []).map((r) => r.project_id));
   const lots = await Promise.all(
     orderedLots.map(async (lot) => ({
       id: lot.id,
+      tradeCode: lot.trade_code,
       trade: lot.trades?.label ?? "",
       found: (await matchArtisans(lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
+      dateMode: lot.date_mode,
+      dateSouhaitee: lot.date_souhaitee,
+      own: lot.trade_code !== null && lotStart(project.lot_dates, lot.trade_code) !== null,
+      sent: sent.has(lot.id),
     })),
   );
   return {

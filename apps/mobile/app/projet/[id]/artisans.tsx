@@ -3,6 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ArtisanTile, HelpTile, TILE_WIDTH, type CardSelection } from "@/components/artisan-card";
+import { LotStart } from "@/components/lot-start";
 import { NeedSummaryBand } from "@/components/need-summary";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -27,20 +28,20 @@ export default function ProjetArtisans() {
   const [selected, setSelected] = useState<string[]>([]);
   const [limitReached, setLimitReached] = useState(false);
 
-  // Rechargé à chaque retour sur l'écran (demande envoyée depuis la fiche d'un artisan).
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      Promise.all([loadResults(id), loadProjectRequests(id)]).then(([results, requests]) => {
-        if (!active) return;
-        setData({ results, requests });
-        setSelected((current) => current.filter((a) => !requests.requested.has(a)));
-      });
-      return () => {
-        active = false;
-      };
-    }, [id]),
-  );
+  // Rechargé à chaque retour sur l'écran (demande envoyée depuis la fiche d'un artisan) et après
+  // la modification de la date d'un lot (ADR 0169).
+  const load = useCallback(() => {
+    let active = true;
+    Promise.all([loadResults(id), loadProjectRequests(id)]).then(([results, requests]) => {
+      if (!active) return;
+      setData({ results, requests });
+      setSelected((current) => current.filter((a) => !requests.requested.has(a)));
+    });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+  useFocusEffect(load);
 
   if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const { results, requests } = data;
@@ -170,16 +171,32 @@ export default function ProjetArtisans() {
           ) : null}
           {results.lots.map((lot) => (
             <View key={lot.id} style={styles.lot}>
-              <View style={styles.lotText}>
-                <Text style={styles.lotTrade}>{lot.trade}</Text>
-                <Text style={styles.lotFound}>{t.lots.found(lot.found)}</Text>
+              <View style={styles.lotRow}>
+                <View style={styles.lotText}>
+                  <Text style={styles.lotTrade}>{lot.trade}</Text>
+                  <Text style={styles.lotFound}>
+                    {lot.sent ? t.lots.sent : t.lots.found(lot.found)}
+                  </Text>
+                </View>
+                <LinkText
+                  label={t.lots.see}
+                  onPress={() =>
+                    router.push({ pathname: "/projet/[id]/artisans", params: { id: lot.id } })
+                  }
+                />
               </View>
-              <LinkText
-                label={t.lots.see}
-                onPress={() =>
-                  router.push({ pathname: "/projet/[id]/artisans", params: { id: lot.id } })
-                }
-              />
+              {lot.tradeCode ? (
+                <LotStart
+                  projectId={id}
+                  tradeCode={lot.tradeCode}
+                  trade={lot.trade}
+                  dateMode={lot.dateMode}
+                  dateSouhaitee={lot.dateSouhaitee}
+                  own={lot.own}
+                  editable={!lot.sent}
+                  onSaved={load}
+                />
+              ) : null}
             </View>
           ))}
         </Card>
@@ -191,13 +208,16 @@ export default function ProjetArtisans() {
 const styles = StyleSheet.create({
   lotsHeading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
   lot: {
+    gap: theme.spacing(2),
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing(2.5),
+  },
+  lotRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: theme.spacing(3),
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: theme.spacing(2.5),
   },
   lotText: { flex: 1, gap: theme.spacing(0.5) },
   lotTrade: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },

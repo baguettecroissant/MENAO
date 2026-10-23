@@ -440,6 +440,24 @@ export function storedLotTrades(value: unknown): string[] {
   return trades.slice(0, MAX_PROJECT_LOTS);
 }
 
+/**
+ * Date de début propre à un lot (ADR 0169), lue dans `projects.lot_dates` du chantier ; null quand
+ * le lot reprend la date du chantier (ou valeur inattendue).
+ */
+export function lotStart(
+  lotDates: unknown,
+  tradeCode: string,
+): { dateMode: DateSouhaitMode; dateSouhaitee: string | null } | null {
+  if (!lotDates || typeof lotDates !== "object" || Array.isArray(lotDates)) return null;
+  const entry = (lotDates as Record<string, unknown>)[tradeCode];
+  if (!entry || typeof entry !== "object") return null;
+  const { date_mode: mode, date_souhaitee: date } = entry as Record<string, unknown>;
+  if (!(DATE_SOUHAIT_MODES as readonly unknown[]).includes(mode)) return null;
+  const day = typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+  if (mode === "date" && !day) return null;
+  return { dateMode: mode as DateSouhaitMode, dateSouhaitee: mode === "date" ? day : null };
+}
+
 export function analysisNeedsFallback(c: NeedCriteria): boolean {
   return c.tradeCode === null || c.confiance < AI_CONFIDENCE_THRESHOLD;
 }

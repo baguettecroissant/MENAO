@@ -2458,6 +2458,7 @@ export type Database = {
           id: string;
           lieu_type: Database["public"]["Enums"]["project_lieu_type"] | null;
           location: unknown;
+          lot_dates: NonNullable<Json>;
           lot_trades: string[];
           parent_project_id: string | null;
           preferred_artisan_id: string | null;
@@ -2493,6 +2494,7 @@ export type Database = {
           id?: string;
           lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
           location?: unknown;
+          lot_dates?: NonNullable<Json>;
           lot_trades?: string[];
           parent_project_id?: string | null;
           preferred_artisan_id?: string | null;
@@ -2527,6 +2529,7 @@ export type Database = {
           id?: string;
           lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
           location?: unknown;
+          lot_dates?: NonNullable<Json>;
           lot_trades?: string[];
           parent_project_id?: string | null;
           preferred_artisan_id?: string | null;
@@ -4742,6 +4745,15 @@ export type Database = {
         Returns: undefined;
       };
       set_decennale_non_soumis: { Args: { p_value: boolean }; Returns: undefined };
+      set_lot_start: {
+        Args: {
+          p_date: string;
+          p_date_mode: Database["public"]["Enums"]["project_date_mode"];
+          p_project_id: string;
+          p_trade_code: string;
+        };
+        Returns: undefined;
+      };
       set_notification_preferences: {
         Args: { p_activite: boolean; p_rappels: boolean };
         Returns: undefined;
