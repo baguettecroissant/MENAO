@@ -19,6 +19,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import {
   clearSignupDraft,
+  isSiretRegistered,
   loadProviderName,
   loadSignupDraft,
   saveSignupDraft,
@@ -48,6 +49,20 @@ export default function ArtisanSignupScreen() {
   const [step, setStep] = useState<Step>("intro");
   const [codeEmail, setCodeEmail] = useState<string | null>(null);
   const [oauth, setOauth] = useState<Identity | null>(null);
+  // Entreprise déjà inscrite (ADR 0175) : SIRET déjà rattaché à un compte MENAO.
+  const [takenSiret, setTakenSiret] = useState<string | null>(null);
+  const siret = draft?.company?.siret ?? null;
+  useEffect(() => {
+    if (!siret) return;
+    let active = true;
+    isSiretRegistered(siret)
+      .then((registered) => active && setTakenSiret(registered ? siret : null))
+      .catch(() => null);
+    return () => {
+      active = false;
+    };
+  }, [siret]);
+  const siretTaken = siret !== null && takenSiret === siret;
   const pending = signedIn && signupPending(session?.user.app_metadata);
   // Déjà artisan (compte existant retrouvé avec Google ou Apple, par exemple) : son espace.
   const alreadyArtisan =
@@ -141,7 +156,7 @@ export default function ArtisanSignupScreen() {
             ? t.trades.continue(current.tradeCodes.length)
             : t.continue
         }
-        disabled={!signupStepDone(step, current)}
+        disabled={!signupStepDone(step, current) || (step === "entreprise" && siretTaken)}
         onPress={() => {
           const next = steps[index + 1];
           if (next) setStep(next);
@@ -170,7 +185,9 @@ export default function ArtisanSignupScreen() {
           onChange={(tradeCodes) => update({ tradeCodes })}
         />
       ) : null}
-      {step === "entreprise" ? <CompanyStep draft={current} update={update} /> : null}
+      {step === "entreprise" ? (
+        <CompanyStep draft={current} update={update} taken={siretTaken} />
+      ) : null}
       {step === "zone" ? <ZoneStep draft={current} update={update} /> : null}
       {step === "compte" ? (
         <AccountStep

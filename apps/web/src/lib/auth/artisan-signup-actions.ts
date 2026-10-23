@@ -46,6 +46,17 @@ const legalVersions = () =>
  * qu'une intention : la base n'en déduit que artisan_en_attente (ADR 0006). Supabase envoie
  * l'e-mail de confirmation, qui porte un code à 6 chiffres et un lien.
  */
+/**
+ * Entreprise déjà inscrite (ADR 0175) : oui si ce SIRET a déjà un compte MENAO. Demandé dès
+ * l'étape « entreprise », et vérifié de nouveau avant de créer le compte.
+ */
+export async function isSiretRegistered(siret: string): Promise<boolean> {
+  if (!/^\d{14}$/.test(siret)) return false;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("siret_registered", { p_siret: siret });
+  return data === true;
+}
+
 export async function signUpArtisan(input: {
   profile: unknown;
   account: unknown;
@@ -58,6 +69,7 @@ export async function signUpArtisan(input: {
   if (!account.success) return { fieldErrors: z.flattenError(account.error).fieldErrors };
 
   const a = account.data;
+  if (await isSiretRegistered(profile.data.siret)) return { error: t.company.taken.error };
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email: a.email,
@@ -154,6 +166,7 @@ export async function completeArtisanOAuthSignup(input: {
   if (!account.success) return { fieldErrors: z.flattenError(account.error).fieldErrors };
 
   const a = account.data;
+  if (await isSiretRegistered(profile.data.siret)) return { error: t.company.taken.error };
   const supabase = await createClient();
   const { error } = await supabase.rpc("complete_artisan_oauth_signup", {
     p_first_name: a.firstName,

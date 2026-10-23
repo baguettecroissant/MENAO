@@ -4935,6 +4935,7 @@ export type Database = {
         Args: { p_project_id: string; p_trade_codes: string[] };
         Returns: undefined;
       };
+      siret_registered: { Args: { p_siret: string }; Returns: boolean };
       staff_review_held_requests: {
         Args: { p_project_id: string; p_reason?: string; p_release: boolean };
         Returns: number;

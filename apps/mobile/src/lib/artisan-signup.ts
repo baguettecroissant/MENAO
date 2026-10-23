@@ -74,12 +74,23 @@ const welcomeUrl = `${env.siteUrl}/auth/confirm?next=${encodeURIComponent(ARTISA
  * artisan_en_attente (ADR 0006). Supabase envoie l'e-mail avec le code à 6 chiffres.
  * Renvoie le message d'erreur, ou null.
  */
+/**
+ * Entreprise déjà inscrite (ADR 0175), comme sur le site : oui si ce SIRET a déjà un compte MENAO.
+ * Demandé dès l'étape « entreprise », et vérifié de nouveau avant de créer le compte.
+ */
+export async function isSiretRegistered(siret: string): Promise<boolean> {
+  if (!/^\d{14}$/.test(siret)) return false;
+  const { data } = await supabase.rpc("siret_registered", { p_siret: siret });
+  return data === true;
+}
+
 export async function signUpArtisan(
   profile: ArtisanSignupProfile,
   account: ArtisanAccount,
   /** Code de parrainage saisi (F-60), revérifié par la base. */
   referralCode: string | null = null,
 ): Promise<string | null> {
+  if (await isSiretRegistered(profile.siret)) return fr.proSignup.company.taken.error;
   const { error } = await supabase.auth.signUp({
     email: account.email,
     password: account.password,
@@ -131,6 +142,7 @@ export async function completeArtisanOAuth(
   account: ArtisanOAuthAccount,
   referralCode: string | null = null,
 ): Promise<string | null> {
+  if (await isSiretRegistered(profile.siret)) return fr.proSignup.company.taken.error;
   const { error } = await supabase.rpc("complete_artisan_oauth_signup", {
     p_first_name: account.firstName,
     p_last_name: account.lastName,
