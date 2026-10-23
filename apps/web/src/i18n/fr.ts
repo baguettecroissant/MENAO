@@ -1197,6 +1197,17 @@ export const fr = {
       noMatch: "Aucun résultat.",
       submit: "Trouver l'artisan idéal",
       submitHint: "Renseignez au moins le métier et la ville pour lancer la recherche.",
+      // Chantier à plusieurs métiers (ADR 0167).
+      lots: {
+        title: "Autres métiers du chantier",
+        suggested:
+          "Votre chantier fait souvent aussi appel à ces métiers. Cochez ceux dont vous avez besoin : vous pourrez contacter des artisans pour chacun.",
+        none: "Votre chantier demande plusieurs métiers ? Ajoutez-les : vous pourrez contacter des artisans pour chacun.",
+        add: "Ajouter un métier",
+        addPlaceholder: "Choisir un autre métier",
+        limit: "4 autres métiers au plus.",
+        independent: "Chaque artisan intervient pour son métier et établit son propre devis.",
+      },
       trade: {
         title: "Artisan recherché",
         description: "Quel type d'artisan conviendrait le mieux à votre besoin ?",
@@ -1298,6 +1309,20 @@ export const fr = {
           ? "Nous avons trouvé 1 artisan vérifié qui correspond à votre projet."
           : `Nous avons trouvé ${n} artisans vérifiés qui correspondent à votre projet.`,
       noneTitle: "Aucun artisan disponible pour l'instant",
+      // Chantier à plusieurs métiers (ADR 0167).
+      lots: {
+        title: "Les autres métiers de votre chantier",
+        found: (n: number) =>
+          n === 0
+            ? "Aucun artisan disponible pour l'instant"
+            : n === 1
+              ? "1 artisan vérifié trouvé"
+              : `${n} artisans vérifiés trouvés`,
+        see: "Voir les artisans",
+        sent: "Demande envoyée",
+        lotOf: (trade: string) => `${trade} : un des métiers de votre chantier`,
+        back: "Retour au chantier",
+      },
       // Zone élargie (ADR 0165) : artisans dont la zone s'arrête un peu avant le chantier.
       wider: {
         emptyTitle: "Aucun artisan dans votre secteur pour l'instant",
@@ -4350,6 +4375,9 @@ export const fr = {
         briefNote:
           "Résumé rédigé par l'IA de MENAO à partir de la demande du client : vérifiez les détails avec lui.",
         budget: (label: string) => `Budget : ${label}`,
+        // Chantier à plusieurs métiers (ADR 0167).
+        otherTrades: (labels: string) =>
+          `Ce chantier prévoit aussi : ${labels}. Chaque artisan établit son propre devis.`,
         message: "Message personnalisé",
         seeMore: "Voir plus",
         seeLess: "Voir moins",

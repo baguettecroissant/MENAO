@@ -13,6 +13,11 @@ import {
   BUDGET_TRANCHES,
   budgetMeetsMinimum,
   photosAdvised,
+  COMPOSITE_PROJECTS,
+  MAX_PROJECT_LOTS,
+  compositeTrades,
+  storedLotTrades,
+  suggestedLots,
   needHelpLevel,
   normalizeNeedAnalysis,
   parisToday,
@@ -95,6 +100,7 @@ describe("normalisation de l'analyse IA (F-06)", () => {
     budget_tranche: "moins_1000",
     brief_artisan:
       "Fuite sous l'évier de la cuisine d'un appartement à Nice.   Intervention souhaitée avant le 20 octobre.",
+    metiers_complementaires: [] as { metier: string; travaux: string[] }[],
     confiance: 0.92,
   };
 
@@ -156,6 +162,30 @@ describe("normalisation de l'analyse IA (F-06)", () => {
     ).toBe(true);
   });
 
+  it("métiers complémentaires : connus, autres que le principal, travaux de leur métier (ADR 0167)", () => {
+    const c = normalizeNeedAnalysis(
+      {
+        ...raw,
+        metiers_complementaires: [
+          { metier: "carreleur", travaux: ["pose-carrelage", "fuite"] },
+          { metier: "plombier", travaux: ["fuite"] },
+          { metier: "astronaute", travaux: [] },
+          { metier: "carreleur", travaux: [] },
+        ],
+      },
+      ref,
+      "2026-10-09",
+    );
+    expect(c.extraTrades).toEqual([{ tradeCode: "carreleur", workTypeCodes: ["pose-carrelage"] }]);
+    expect(
+      normalizeNeedAnalysis(
+        { ...raw, metier: null, metiers_complementaires: [{ metier: "carreleur", travaux: [] }] },
+        ref,
+        "2026-10-09",
+      ).extraTrades,
+    ).toEqual([]);
+  });
+
   it("schéma JSON compatible avec les sorties structurées", () => {
     const schema = needAnalysisJsonSchema(ref);
     expect(schema.additionalProperties).toBe(false);
@@ -194,6 +224,7 @@ describe("description modifiée : la nouvelle analyse complète les critères (F
     summary: "Réparer une fuite sous l'évier de la cuisine.",
     budget: null,
     artisanBrief: null,
+    extraTrades: [],
     confiance: 0.93,
   };
   const nice = { villeCode: "06088", adresse: "1 Rue de l'Exemple 06000 Nice" };
@@ -330,5 +361,133 @@ describe("budget minimum de l'artisan (ADR 0164)", () => {
     expect(budgetMeetsMinimum("plus_50000", "5000_15000")).toBe(true);
     expect(budgetMeetsMinimum(null, "plus_50000")).toBe(true);
     expect(budgetMeetsMinimum("moins_1000", null)).toBe(true);
+  });
+});
+
+describe("chantier à plusieurs métiers (ADR 0167)", () => {
+  const trades = [
+    "electricien",
+    "plombier",
+    "chauffagiste",
+    "macon",
+    "peintre",
+    "plaquiste",
+    "carreleur",
+    "menuisier",
+    "charpentier",
+    "couvreur",
+  ];
+
+  it("rénovation de salle de bains : les métiers habituels", () => {
+    expect(compositeTrades("Je veux refaire entièrement ma salle de bains", trades)).toEqual([
+      "plombier",
+      "carreleur",
+      "electricien",
+      "plaquiste",
+      "peintre",
+    ]);
+    expect(compositeTrades("Réfection complète de la salle d'eau", trades)).toContain("carreleur");
+  });
+
+  it("une réparation ou un seul ouvrage ne relève jamais d'un chantier composé", () => {
+    expect(compositeTrades("Fuite sous l'évier de la cuisine", trades)).toEqual([]);
+    expect(compositeTrades("Le mitigeur de la salle de bain goutte", trades)).toEqual([]);
+    expect(compositeTrades("Refaire le joint de la douche de la salle de bain", trades)).toEqual(
+      [],
+    );
+    expect(compositeTrades("Refaire la peinture de mon appartement", trades)).toEqual([]);
+    expect(compositeTrades("Rénover les volets de ma maison", trades)).toEqual([]);
+  });
+
+  it("logement entier : seulement une rénovation complète", () => {
+    expect(compositeTrades("Rénovation complète d'un appartement de 60 m²", trades)).toEqual([
+      "electricien",
+      "plombier",
+      "plaquiste",
+      "peintre",
+      "menuisier",
+    ]);
+  });
+
+  it("plusieurs sujets : métiers réunis sans doublon, seulement ceux du référentiel", () => {
+    expect(compositeTrades("Rénover la cuisine et la salle de bain", trades)).toEqual([
+      "plombier",
+      "carreleur",
+      "electricien",
+      "plaquiste",
+      "peintre",
+      "menuisier",
+    ]);
+    expect(compositeTrades("Aménager les combles", ["plaquiste"])).toEqual(["plaquiste"]);
+  });
+
+  it("chaque chantier composé ne propose que des métiers distincts", () => {
+    for (const project of COMPOSITE_PROJECTS) {
+      expect(new Set(project.trades).size).toBe(project.trades.length);
+    }
+  });
+
+  it("lots proposés : l'IA d'abord, puis le référentiel, sans le principal, 4 au plus", () => {
+    expect(MAX_PROJECT_LOTS).toBe(4);
+    expect(
+      suggestedLots(
+        "plombier",
+        [{ tradeCode: "carreleur", workTypeCodes: ["faience"] }],
+        ["plombier", "carreleur", "electricien", "plaquiste", "peintre"],
+      ),
+    ).toEqual([
+      { tradeCode: "carreleur", workTypeCodes: ["faience"] },
+      { tradeCode: "electricien", workTypeCodes: [] },
+      { tradeCode: "plaquiste", workTypeCodes: [] },
+      { tradeCode: "peintre", workTypeCodes: [] },
+    ]);
+    expect(
+      suggestedLots(null, [{ tradeCode: "carreleur", workTypeCodes: [] }], ["peintre"]),
+    ).toEqual([]);
+  });
+
+  it("lots proposés enregistrés : métiers lus, lignes inattendues ignorées", () => {
+    expect(
+      storedLotTrades([
+        { trade_code: "carreleur", work_type_codes: ["faience"] },
+        { trade_code: "Carreleur!" },
+        null,
+        { trade_code: "carreleur" },
+        { trade_code: "peintre" },
+      ]),
+    ).toEqual(["carreleur", "peintre"]);
+    expect(storedLotTrades("?")).toEqual([]);
+  });
+
+  // Descriptions types (ADR 0167) : une réparation ou un seul ouvrage ne propose aucun lot ; une
+  // vraie rénovation propose les métiers habituels.
+  const SDB = ["plombier", "carreleur", "electricien", "plaquiste", "peintre"];
+  const CUISINE = ["plombier", "electricien", "menuisier", "carreleur", "peintre"];
+  const cases: [string, string[]][] = [
+    ["Je veux refaire entièrement ma salle de bains de 6 m², douche à l'italienne", SDB],
+    ["Créer une salle d'eau dans une chambre", SDB],
+    ["Remise à neuf de la salle de bains", SDB],
+    ["Rénovation complète de ma cuisine : meubles, crédence, prises", CUISINE],
+    ["Moderniser la cuisine", CUISINE],
+    ["Aménager les combles en chambre", ["plaquiste", "electricien", "menuisier", "couvreur"]],
+    [
+      "Construire une extension de 20 m² côté jardin",
+      ["macon", "charpentier", "couvreur", "menuisier", "electricien"],
+    ],
+    [
+      "Rénovation complète d'un appartement de 70 m²",
+      ["electricien", "plombier", "plaquiste", "peintre", "menuisier"],
+    ],
+    ["Fuite sous l'évier de la cuisine", []],
+    ["Changer le chauffe-eau", []],
+    ["Repeindre le salon", []],
+    ["Remplacer une prise qui ne fonctionne plus", []],
+    ["Refaire le joint de la douche de la salle de bain", []],
+    ["Refaire la peinture de mon appartement", []],
+    ["Rénover les volets de ma maison", []],
+    ["Débouchage des toilettes", []],
+  ];
+  it.each(cases)("%s", (description, expected) => {
+    expect(compositeTrades(description, trades)).toEqual(expected);
   });
 });

@@ -1,6 +1,6 @@
 "use server";
 
-import { parisToday } from "@menao/core";
+import { MAX_PROJECT_LOTS, parisToday } from "@menao/core";
 import type { Database } from "@menao/db";
 import { messages, projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
 import type { Route } from "next";
@@ -62,6 +62,26 @@ export async function saveProjectCriteria(
 }
 
 /** « Trouver l'artisan idéal » : métier et ville obligatoires (vérifiés en base). */
+/** Autres métiers du chantier choisis par le particulier (ADR 0167), créés au lancement. */
+export async function saveProjectLots(
+  projectId: string,
+  tradeCodes: string[],
+): Promise<CriteriaResult> {
+  const codes = z
+    .array(z.string().regex(/^[a-z0-9-]{1,60}$/))
+    .max(MAX_PROJECT_LOTS)
+    .safeParse(tradeCodes);
+  if (!UUID.test(projectId) || !codes.success) return { ok: false, error: fr.errors.generic };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_project_lot_trades", {
+    p_project_id: projectId,
+    p_trade_codes: codes.data,
+  });
+  if (error) return { ok: false, error: sqlError(error) };
+  revalidatePath(`/recherche/${projectId}`);
+  return { ok: true };
+}
+
 export async function launchSearch(projectId: string): Promise<CriteriaResult> {
   if (!UUID.test(projectId)) return { ok: false, error: fr.errors.generic };
   const supabase = await createClient();

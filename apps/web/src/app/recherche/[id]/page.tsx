@@ -1,8 +1,8 @@
-import { AI_CONFIDENCE_THRESHOLD, parisToday, photosAdvised } from "@menao/core";
+import { AI_CONFIDENCE_THRESHOLD, parisToday, photosAdvised, storedLotTrades } from "@menao/core";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getShellAccount } from "@/lib/client/shell";
@@ -26,11 +26,13 @@ export default async function ProjectReviewPage({
   const { data: project } = await supabase
     .from("projects")
     .select(
-      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
+      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, parent_project_id, suggested_lots, lot_trades, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
     )
     .eq("id", id)
     .maybeSingle();
   if (!project) notFound();
+  // Lot d'un chantier à plusieurs métiers (ADR 0167) : ses critères sont ceux du chantier.
+  if (project.parent_project_id) redirect(`/recherche/${project.parent_project_id}` as Route);
 
   const [trades, workTypes, rooms, photos] = await Promise.all([
     supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
@@ -121,6 +123,8 @@ export default async function ProjectReviewPage({
           }))}
           rooms={rooms.data ?? []}
           photos={photoRows.map((p, i) => ({ id: p.id, url: signed?.[i]?.signedUrl ?? null }))}
+          suggestedLots={storedLotTrades(project.suggested_lots)}
+          lotTrades={project.lot_trades}
           advisePhotos={photosAdvised({
             description: project.description,
             photoCount: photoRows.length,

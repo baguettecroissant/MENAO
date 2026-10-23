@@ -1,4 +1,4 @@
-import { parisToday } from "@menao/core";
+import { MAX_PROJECT_LOTS, parisToday } from "@menao/core";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import {
@@ -9,6 +9,7 @@ import {
   Search,
   Sparkles,
   UserRound,
+  Users,
   Wrench,
 } from "lucide-react-native";
 import { type ReactNode, useState } from "react";
@@ -22,6 +23,7 @@ import { formatLongDate, fromIsoDate, toIsoDate } from "@/lib/dates";
 import { searchAddresses, searchCommunes } from "@/lib/geo";
 import {
   saveAndValidateCriteria,
+  saveProjectLots,
   type Criteria,
   type ProjectForReview,
   type ProjectPhoto,
@@ -72,6 +74,9 @@ export function CriteriaReview({
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  // Chantier à plusieurs métiers (ADR 0167) : enregistrés au lancement de la recherche.
+  const [lots, setLots] = useState<string[]>(project.lotTrades);
+  const [allTrades, setAllTrades] = useState(false);
   const set = (patch: Partial<Criteria>) => setDraft((current) => ({ ...current, ...patch }));
   const today = parisToday();
   const tradeWorks = workTypes.filter((w) => w.trade === draft.tradeCode);
@@ -104,6 +109,14 @@ export function CriteriaReview({
   async function submit() {
     setFailure(null);
     setSaving(true);
+    const lotError = await saveProjectLots(
+      project.id,
+      lots.filter((code) => code !== criteria.tradeCode),
+    );
+    if (lotError) {
+      setSaving(false);
+      return setFailure(lotError);
+    }
     const error = await saveAndValidateCriteria(project.id, criteria);
     setSaving(false);
     if (error) return setFailure(error);
@@ -124,6 +137,18 @@ export function CriteriaReview({
           ? Boolean(draft.ville)
           : true,
   });
+  // Autres métiers : ceux proposés d'après la description, puis ceux ajoutés.
+  const proposedLots = project.suggestedLots.filter((code) => code !== criteria.tradeCode);
+  const listedLots = [
+    ...proposedLots,
+    ...lots.filter((code) => !proposedLots.includes(code) && code !== criteria.tradeCode),
+  ];
+  const chosenLots = lots.filter((code) => code !== criteria.tradeCode);
+  const lotsFull = chosenLots.length >= MAX_PROJECT_LOTS;
+  function toggleLot(code: string) {
+    if (lots.includes(code)) return setLots(lots.filter((c) => c !== code));
+    if (!lotsFull) setLots([...lots, code]);
+  }
   const siteTags = [
     criteria.lieuType ? fr.lieux[criteria.lieuType] : null,
     ...(criteria.workTypeCodes ?? []).map((code) => labelOf(workTypes, code)),
@@ -188,6 +213,47 @@ export function CriteriaReview({
           <Body muted>{r.worksNeedTrade}</Body>
         )}
       </EditableCard>
+
+      {criteria.tradeCode ? (
+        <Card>
+          <View style={styles.cardTitle}>
+            <Users size={16} color={theme.colors.primary} />
+            <Text style={styles.heading}>{r.lots.title}</Text>
+          </View>
+          <Body muted>{proposedLots.length ? r.lots.suggested : r.lots.none}</Body>
+          {listedLots.length > 0 ? (
+            <View style={styles.chips}>
+              {listedLots.map((code) => (
+                <Chip
+                  key={code}
+                  label={labelOf(trades, code)}
+                  selected={lots.includes(code)}
+                  onPress={() => toggleLot(code)}
+                />
+              ))}
+            </View>
+          ) : null}
+          <LinkText
+            label={allTrades ? r.lots.hide : r.lots.add}
+            onPress={() => setAllTrades(!allTrades)}
+          />
+          {allTrades ? (
+            <View style={styles.chips}>
+              {trades
+                .filter((t) => t.code !== criteria.tradeCode && !listedLots.includes(t.code))
+                .map((t) => (
+                  <Chip
+                    key={t.code}
+                    label={t.label}
+                    selected={lots.includes(t.code)}
+                    onPress={() => toggleLot(t.code)}
+                  />
+                ))}
+            </View>
+          ) : null}
+          <Text style={styles.hint}>{lotsFull ? r.lots.limit : r.lots.independent}</Text>
+        </Card>
+      ) : null}
 
       <EditableCard
         icon={Wrench}

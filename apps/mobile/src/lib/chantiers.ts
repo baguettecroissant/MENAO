@@ -58,6 +58,8 @@ export async function loadMyChantiers(): Promise<MyChantiers | null> {
       .from("projects")
       .select("id, summary, description, ville_nom, created_at")
       .in("status", ["brouillon", "criteres_valides"])
+      // Les lots d'un chantier (ADR 0167) restent dans leur chantier.
+      .is("parent_project_id", null)
       .order("created_at", { ascending: false })
       .limit(10),
     supabase.from("requests").select("id").not("cancellation_reason", "is", null),

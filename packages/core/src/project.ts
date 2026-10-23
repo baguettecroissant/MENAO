@@ -125,6 +125,7 @@ export type RawNeedAnalysis = {
   resume: string | null;
   budget_tranche: string | null;
   brief_artisan: string | null;
+  metiers_complementaires: { metier: string; travaux: string[] }[];
   confiance: number;
 };
 
@@ -150,6 +151,8 @@ export type NeedCriteria = {
   budget: BudgetTranche | null;
   /** Demande reformulée pour l'artisan (ADR 0163), quelques phrases neutres. */
   artisanBrief: string | null;
+  /** Autres métiers du chantier (ADR 0167), proposés en lots au particulier. */
+  extraTrades: ExtraTrade[];
   confiance: number;
 };
 
@@ -174,6 +177,21 @@ export function needAnalysisJsonSchema(ref: NeedReferentials) {
     resume: nullable({ type: "string" }),
     budget_tranche: nullable({ type: "string", enum: [...BUDGET_TRANCHES] }),
     brief_artisan: nullable({ type: "string" }),
+    metiers_complementaires: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          metier: { type: "string", enum: ref.trades },
+          travaux: {
+            type: "array",
+            items: { type: "string", enum: ref.workTypes.map((w) => w.code) },
+          },
+        },
+        required: ["metier", "travaux"],
+        additionalProperties: false,
+      },
+    },
     confiance: { type: "number" },
   };
   return {
@@ -245,8 +263,146 @@ export function normalizeNeedAnalysis(
     summary: cleanText(raw.resume, 300),
     budget: pick(raw.budget_tranche, BUDGET_TRANCHES),
     artisanBrief: cleanText(raw.brief_artisan, ARTISAN_BRIEF_MAX_LENGTH),
+    extraTrades: normalizeExtraTrades(raw.metiers_complementaires, tradeCode, ref),
     confiance: Number.isFinite(raw.confiance) ? Math.min(1, Math.max(0, raw.confiance)) : 0,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Chantier à plusieurs métiers (ADR 0167)
+// ---------------------------------------------------------------------------
+
+/** Lots d'un chantier : 4 métiers au plus en plus du métier principal. */
+export const MAX_PROJECT_LOTS = 4;
+
+/** Métier d'un lot et ses travaux (codes du référentiel, limités à ce métier). */
+export type ExtraTrade = { tradeCode: string; workTypeCodes: string[] };
+
+/** Métiers complémentaires de l'IA : métiers connus, autres que le principal, sans doublon. */
+function normalizeExtraTrades(
+  value: unknown,
+  mainTrade: string | null,
+  ref: NeedReferentials,
+): ExtraTrade[] {
+  if (!mainTrade || !Array.isArray(value)) return [];
+  const seen = new Set<string>([mainTrade]);
+  const result: ExtraTrade[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const trade = pick((item as { metier?: unknown }).metier, ref.trades);
+    if (!trade || seen.has(trade)) continue;
+    seen.add(trade);
+    const allowed = new Set(ref.workTypes.filter((w) => w.trade === trade).map((w) => w.code));
+    const travaux = (item as { travaux?: unknown }).travaux;
+    const works = Array.isArray(travaux)
+      ? [...new Set(travaux.filter((c): c is string => typeof c === "string" && allowed.has(c)))]
+      : [];
+    result.push({ tradeCode: trade, workTypeCodes: works.slice(0, 20) });
+  }
+  return result.slice(0, MAX_PROJECT_LOTS);
+}
+
+/**
+ * Intention de rénover ou de créer (et non de réparer ou de refaire un détail) : condition des
+ * chantiers composés.
+ */
+const RENOVATION_INTENT =
+  /\b(r[ée]nov\w*|r[ée]fection|transform\w*|cr[ée]ation|cr[ée]er|constru\w*|am[ée]nag\w*|moderni\w*|remise\s+[àa]\s+neuf|refaire\s+(enti[eè]rement|compl[eè]tement|totalement|int[ée]gralement|tout|toute|[àa]\s+neuf)|tout\s+(changer|refaire|reprendre))/i;
+/** Logement entier : seulement une rénovation complète, pas un seul ouvrage. */
+const WHOLE_HOME =
+  /\b(compl[eè]te?(ment)?|total(e|ement)?|enti[eè]re(ment)?|int[ée]gral(e|ement)?|de\s+a\s+[àa]\s+z)\b/i;
+
+/**
+ * Chantiers qui font appel à plusieurs métiers : vérification fiable de l'IA. Quand la
+ * description en relève un, avec une intention de rénover ou de créer, ses métiers habituels sont
+ * proposés en lots ; le particulier choisit. Une simple réparation n'en relève jamais.
+ */
+export const COMPOSITE_PROJECTS: readonly {
+  code: string;
+  subject: RegExp;
+  /** Condition supplémentaire (logement entier). */
+  scope?: RegExp;
+  trades: readonly string[];
+}[] = [
+  {
+    code: "salle-de-bain",
+    subject: /salles?\s+(de|d['’])\s*(bains?|eau)\b/i,
+    trades: ["plombier", "carreleur", "electricien", "plaquiste", "peintre"],
+  },
+  {
+    code: "cuisine",
+    subject: /\bcuisines?\b/i,
+    trades: ["plombier", "electricien", "menuisier", "carreleur", "peintre"],
+  },
+  {
+    code: "logement",
+    subject: /\b(appartement|maison|logement|studio|pavillon)\b/i,
+    scope: WHOLE_HOME,
+    trades: ["electricien", "plombier", "plaquiste", "peintre", "menuisier"],
+  },
+  {
+    code: "combles",
+    subject: /\bcombles\b/i,
+    trades: ["plaquiste", "electricien", "menuisier", "couvreur"],
+  },
+  {
+    code: "extension",
+    subject: /\b(extension|agrandissement|v[ée]randa|sur[ée]l[ée]vation)\b/i,
+    trades: ["macon", "charpentier", "couvreur", "menuisier", "electricien"],
+  },
+];
+
+/** Métiers habituels des chantiers composés relevés dans la description (référentiel actif). */
+export function compositeTrades(description: string, available: readonly string[]): string[] {
+  if (!RENOVATION_INTENT.test(description)) return [];
+  const known = new Set(available);
+  const trades: string[] = [];
+  for (const project of COMPOSITE_PROJECTS) {
+    if (!project.subject.test(description)) continue;
+    if (project.scope && !project.scope.test(description)) continue;
+    for (const trade of project.trades) {
+      if (known.has(trade) && !trades.includes(trade)) trades.push(trade);
+    }
+  }
+  return trades;
+}
+
+/**
+ * Lots proposés au particulier : ceux de l'IA d'abord (avec leurs travaux), puis les métiers
+ * habituels du chantier composé, sans le métier principal, 4 au plus.
+ */
+export function suggestedLots(
+  mainTrade: string | null,
+  aiExtras: readonly ExtraTrade[],
+  composite: readonly string[],
+): ExtraTrade[] {
+  if (!mainTrade) return [];
+  const lots: ExtraTrade[] = [];
+  for (const lot of aiExtras) {
+    if (lot.tradeCode !== mainTrade && !lots.some((l) => l.tradeCode === lot.tradeCode)) {
+      lots.push(lot);
+    }
+  }
+  for (const trade of composite) {
+    if (trade !== mainTrade && !lots.some((l) => l.tradeCode === trade)) {
+      lots.push({ tradeCode: trade, workTypeCodes: [] });
+    }
+  }
+  return lots.slice(0, MAX_PROJECT_LOTS);
+}
+
+/** Lots proposés enregistrés (`projects.suggested_lots`) : métiers, lignes inattendues ignorées. */
+export function storedLotTrades(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const trades: string[] = [];
+  for (const item of value) {
+    const code =
+      item && typeof item === "object" ? (item as { trade_code?: unknown }).trade_code : null;
+    if (typeof code === "string" && /^[a-z0-9-]{1,60}$/.test(code) && !trades.includes(code)) {
+      trades.push(code);
+    }
+  }
+  return trades.slice(0, MAX_PROJECT_LOTS);
 }
 
 export function analysisNeedsFallback(c: NeedCriteria): boolean {

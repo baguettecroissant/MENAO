@@ -1,14 +1,14 @@
 import { MAX_SEARCH_RESULTS, joinNames, showWiderZone } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ArtisanTile, HelpTile, TILE_WIDTH, type CardSelection } from "@/components/artisan-card";
 import { NeedSummaryBand } from "@/components/need-summary";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadResults, type ProjectResults } from "@/lib/project";
 import { loadProjectRequests, type ProjectRequests } from "@/lib/requests";
-import { Body, Button, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.results;
@@ -99,6 +99,18 @@ export default function ProjetArtisans() {
         ) : undefined
       }
     >
+      {results.parentId ? <Notice tone="info">{t.lots.lotOf(results.tradeLabel)}</Notice> : null}
+      {results.parentId ? (
+        <LinkText
+          label={t.lots.back}
+          onPress={() =>
+            router.push({
+              pathname: "/projet/[id]/artisans",
+              params: { id: results.parentId ?? id },
+            })
+          }
+        />
+      ) : null}
       <Title>{!empty ? t.title : wider.length ? t.wider.emptyTitle : t.noneTitle}</Title>
       <Body muted>
         {!empty ? t.found(results.artisans.length) : wider.length ? t.wider.emptyLead : t.none}
@@ -148,11 +160,49 @@ export default function ProjetArtisans() {
           onPress={() => router.push({ pathname: "/projet/[id]/dossier", params: { id } })}
         />
       </ScrollView>
+      {results.lots.length > 0 ? (
+        <Card>
+          <Text role="heading" style={styles.lotsHeading}>
+            {t.lots.title}
+          </Text>
+          {results.lots.map((lot) => (
+            <View key={lot.id} style={styles.lot}>
+              <View style={styles.lotText}>
+                <Text style={styles.lotTrade}>{lot.trade}</Text>
+                <Text style={styles.lotFound}>{t.lots.found(lot.found)}</Text>
+              </View>
+              <LinkText
+                label={t.lots.see}
+                onPress={() =>
+                  router.push({ pathname: "/projet/[id]/artisans", params: { id: lot.id } })
+                }
+              />
+            </View>
+          ))}
+        </Card>
+      ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  lotsHeading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
+  lot: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing(3),
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing(2.5),
+  },
+  lotText: { flex: 1, gap: theme.spacing(0.5) },
+  lotTrade: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },
+  lotFound: {
+    fontFamily: theme.font.regular,
+    fontSize: 13,
+    color: theme.colors["muted-foreground"],
+  },
   // Le carrousel déborde des marges de l'écran, les cartes restent alignées sur le texte.
   carousel: { marginHorizontal: -theme.spacing(5), flexGrow: 0 },
   carouselContent: {

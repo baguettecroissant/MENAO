@@ -35,13 +35,15 @@ export default async function ProjectResultsPage({
   const supabase = await createClient();
   const { data: project } = await supabase
     .from("projects")
-    .select("id, trade_code, work_type_codes, ville_code_insee, preferred_artisan_id")
+    .select(
+      "id, trade_code, work_type_codes, ville_code_insee, preferred_artisan_id, parent_project_id",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!project) notFound();
   if (!project.trade_code || !project.ville_code_insee) redirect(`/recherche/${id}` as Route);
 
-  const [{ data: claims }, summary, artisans, sent] = await Promise.all([
+  const [{ data: claims }, summary, artisans, sent, { data: lotRows }] = await Promise.all([
     supabase.auth.getClaims(),
     getProjectSummary(supabase, id),
     // Artisan d'un chantier précédent : cherché plus loin dans le classement (ADR 0040).
@@ -51,7 +53,22 @@ export default async function ProjectResultsPage({
       project.preferred_artisan_id ? MAX_SEARCH_RESULTS + 20 : MAX_SEARCH_RESULTS,
     ),
     supabase.rpc("particulier_requests"),
+    // Chantier à plusieurs métiers (ADR 0167) : les autres lots du chantier.
+    project.parent_project_id
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from("projects")
+          .select("id, trades(label)")
+          .eq("parent_project_id", id)
+          .order("created_at"),
   ]);
+  const lots = await Promise.all(
+    (lotRows ?? []).map(async (lot) => ({
+      id: lot.id,
+      trade: lot.trades?.label ?? "",
+      found: (await matchArtisans(supabase, lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
+    })),
+  );
   const preferredId = project.preferred_artisan_id;
   // Zone élargie (ADR 0165) : artisans hors de leur zone, renvoyés après ceux de la zone.
   const inZone = (artisans ?? []).filter((a) => !a.hors_zone);
@@ -124,6 +141,14 @@ export default async function ProjectResultsPage({
         <div className="@container flex min-w-0 flex-col gap-6">
           {/* Téléphone (maquette « Résultat de recherche - in app ») : bande du besoin en haut. */}
           {summary && <ProjectSummaryBand summary={summary} />}
+          {project.parent_project_id && (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card bg-primary-softer px-4 py-3 text-sm text-primary-strong">
+              <span className="font-medium">{t.lots.lotOf(tradeLabel)}</span>
+              <TextLink href={`/recherche/${project.parent_project_id}/artisans` as Route}>
+                {t.lots.back}
+              </TextLink>
+            </p>
+          )}
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
               {results.length ? t.title : wider.length ? t.wider.emptyTitle : t.noneTitle}
@@ -169,6 +194,38 @@ export default async function ProjectResultsPage({
 
           {(results.length > 0 || wider.length > 0) && slots > 0 && (
             <SelectionBar formId="selection" slots={slots} />
+          )}
+
+          {lots.length > 0 && (
+            <section aria-labelledby="autres-metiers" className="flex flex-col gap-3">
+              <h2 id="autres-metiers" className="text-lg font-medium">
+                {t.lots.title}
+              </h2>
+              <ul className="grid gap-3 @xl:grid-cols-2">
+                {lots.map((lot) => {
+                  const lotSent = (sent.data ?? []).some((r) => r.project_id === lot.id);
+                  return (
+                    <li
+                      key={lot.id}
+                      className="flex items-center justify-between gap-4 rounded-card border border-border bg-surface p-4 shadow-card"
+                    >
+                      <span className="flex min-w-0 flex-col">
+                        <span className="font-medium">{lot.trade}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {lotSent ? t.lots.sent : t.lots.found(lot.found)}
+                        </span>
+                      </span>
+                      <TextLink
+                        href={`/recherche/${lot.id}/artisans` as Route}
+                        className="shrink-0 text-sm"
+                      >
+                        {t.lots.see}
+                      </TextLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           )}
 
           <TicketBlock projectId={id} askEmail={Boolean(claims?.claims.is_anonymous)} />

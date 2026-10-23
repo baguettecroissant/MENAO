@@ -26,6 +26,7 @@ function analysis(description, model) {
       urgence: true,
       resume: "Réparer une fuite sous l'évier de la cuisine.",
       budget_tranche: null,
+      metiers_complementaires: [],
       brief_artisan:
         "Fuite sous l'évier de la cuisine d'un appartement à Nice, à traiter en urgence. À préciser lors de la visite : origine de la fuite et état des raccords.",
       confiance: 0.93,
@@ -45,6 +46,7 @@ function analysis(description, model) {
     resume: "Travaux de peinture.",
     budget_tranche: null,
     brief_artisan: null,
+    metiers_complementaires: [],
     confiance: fallback ? 0.8 : 0.3,
   });
 }

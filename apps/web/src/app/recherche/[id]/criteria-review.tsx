@@ -4,6 +4,7 @@ import {
   BUDGET_TRANCHES,
   canSearchArtisans,
   LIEU_TYPES,
+  MAX_PROJECT_LOTS,
   MAX_PROJECT_PHOTOS,
   PROJECT_TEXT_MAX_LENGTH,
   SURFACE_TRANCHES,
@@ -19,6 +20,7 @@ import {
   Search,
   SquarePen,
   User,
+  Users,
   Wrench,
   X,
 } from "lucide-react";
@@ -34,7 +36,12 @@ import {
   type AddressSuggestion,
   type CommuneSuggestion,
 } from "@/lib/geo/geoplateforme";
-import { deleteProjectPhoto, launchSearch, saveProjectCriteria } from "@/lib/project/actions";
+import {
+  deleteProjectPhoto,
+  launchSearch,
+  saveProjectCriteria,
+  saveProjectLots,
+} from "@/lib/project/actions";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
 import { PHOTO_ACCEPT, selectPhotos, uploadProjectPhoto } from "@/lib/project/photos";
 
@@ -70,6 +77,8 @@ export function CriteriaReview({
   rooms,
   photos,
   advisePhotos,
+  suggestedLots,
+  lotTrades,
   today,
 }: {
   projectId: string;
@@ -82,6 +91,10 @@ export function CriteriaReview({
   photos: { id: string; url: string | null }[];
   /** Description encore vague, sans photo (ADR 0163) : photos conseillées. */
   advisePhotos: boolean;
+  /** Autres métiers proposés d'après la description (ADR 0167). */
+  suggestedLots: string[];
+  /** Autres métiers choisis par le particulier. */
+  lotTrades: string[];
   today: string;
 }) {
   const router = useRouter();
@@ -261,6 +274,16 @@ export function CriteriaReview({
           </div>
         )}
       </section>
+
+      {saved.tradeCode && (
+        <LotsCard
+          projectId={projectId}
+          mainTrade={saved.tradeCode}
+          trades={trades}
+          suggested={suggestedLots}
+          initial={lotTrades}
+        />
+      )}
 
       <EditableCard
         icon={<Wrench />}
@@ -451,6 +474,118 @@ export function CriteriaReview({
         {!ready && <p className="text-sm text-muted-foreground">{t.submitHint}</p>}
       </div>
     </div>
+  );
+}
+
+/**
+ * Autres métiers du chantier (ADR 0167) : ceux proposés d'après la description, cochés par le
+ * particulier, ou ajoutés par lui. Enregistrés aussitôt ; chacun devient un lot au lancement de la
+ * recherche.
+ */
+function LotsCard({
+  projectId,
+  mainTrade,
+  trades,
+  suggested,
+  initial,
+}: {
+  projectId: string;
+  mainTrade: string;
+  trades: Labeled[];
+  suggested: string[];
+  initial: string[];
+}) {
+  const [selected, setSelected] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const label = (code: string) => trades.find((tr) => tr.code === code)?.label ?? code;
+  const proposed = suggested.filter((c) => c !== mainTrade);
+  const listed = [...proposed, ...selected.filter((c) => !proposed.includes(c) && c !== mainTrade)];
+  const chosen = selected.filter((c) => c !== mainTrade);
+  const full = chosen.length >= MAX_PROJECT_LOTS;
+  const addable = trades.filter((tr) => tr.code !== mainTrade && !listed.includes(tr.code));
+
+  function save(next: string[]) {
+    const previous = selected;
+    setSelected(next);
+    startTransition(async () => {
+      const result = await saveProjectLots(projectId, next);
+      if (result.ok) return setError(null);
+      setSelected(previous);
+      setError(result.error);
+    });
+  }
+
+  return (
+    <section
+      aria-label={t.lots.title}
+      className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
+    >
+      <SectionHeading
+        icon={<Users />}
+        title={t.lots.title}
+        description={proposed.length ? t.lots.suggested : t.lots.none}
+      />
+      {listed.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {listed.map((code) => {
+            const checked = selected.includes(code);
+            return (
+              <li key={code}>
+                <label
+                  className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-pill border px-4 text-sm transition-colors ${
+                    checked
+                      ? "border-primary bg-primary-softer font-medium text-primary-strong"
+                      : "border-border bg-surface hover:bg-background"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={pending || (!checked && full)}
+                    onChange={(e) =>
+                      save(
+                        e.target.checked ? [...selected, code] : selected.filter((c) => c !== code),
+                      )
+                    }
+                    className="size-4 accent-[var(--color-primary)]"
+                  />
+                  {label(code)}
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {!full && addable.length > 0 && (
+        <div className="mt-4 flex max-w-xs flex-col gap-1.5">
+          <label htmlFor="lot-add" className="text-sm font-medium">
+            {t.lots.add}
+          </label>
+          <Select
+            id="lot-add"
+            value=""
+            disabled={pending}
+            onChange={(e) => e.target.value && save([...selected, e.target.value])}
+          >
+            <option value="">{t.lots.addPlaceholder}</option>
+            {addable.map((tr) => (
+              <option key={tr.code} value={tr.code}>
+                {tr.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+      <div className="mt-3">
+        <Hint>{full ? t.lots.limit : t.lots.independent}</Hint>
+      </div>
+      {error && (
+        <div className="mt-3">
+          <Alert tone="error">{error}</Alert>
+        </div>
+      )}
+    </section>
   );
 }
 

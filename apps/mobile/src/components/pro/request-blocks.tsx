@@ -154,6 +154,10 @@ export function RequestBlocks({
         </DetailBlock>
       ) : null}
 
+      {r.autres_metiers.length > 0 ? (
+        <Text style={styles.otherTrades}>{t.otherTrades(r.autres_metiers.join(", "))}</Text>
+      ) : null}
+
       <DetailBlock
         icon={icon(Wrench)}
         title={variant === "rendez-vous" ? fr.proAppointment.reminder : t.description}
@@ -207,6 +211,17 @@ const styles = StyleSheet.create({
   photos: { flexDirection: "row", gap: spacing(2) },
   photo: { width: 96, height: 96, borderRadius: radius.input },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  otherTrades: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["primary-strong"],
+    backgroundColor: colors["primary-softer"],
+    borderRadius: radius.card,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3),
+    overflow: "hidden",
+  },
   outside: {
     fontFamily: font.regular,
     fontSize: 12,
