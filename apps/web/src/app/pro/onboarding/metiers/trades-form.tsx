@@ -1,6 +1,6 @@
 "use client";
 
-import { DIPLOMES_METIER } from "@menao/core";
+import { BUDGET_MINIMUM_OPTIONS, DIPLOMES_METIER } from "@menao/core";
 import { useActionState, useState } from "react";
 import { Alert, Button, CheckboxField, Field, SelectField } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -18,6 +18,8 @@ export function TradesForm(props: {
   experienceYears: number | null;
   /** Diplôme du métier déclaré (Score MENAO, ADR 0155). */
   diploma: string | null;
+  /** Budget minimum des demandes (ADR 0164). */
+  budgetMinimum: string | null;
 }) {
   const [state, action, pending] = useActionState(saveTrades, initialFormState);
   const [selected, setSelected] = useState(new Set(props.selectedTrades));
@@ -105,6 +107,22 @@ export function TradesForm(props: {
           {DIPLOMES_METIER.map((d) => (
             <option key={d} value={d}>
               {fr.diplomesMetier[d]}
+            </option>
+          ))}
+        </SelectField>
+      </div>
+      <div className="max-w-sm">
+        <SelectField
+          label={t.budgetMinimum}
+          name="budgetMinimum"
+          defaultValue={props.budgetMinimum ?? ""}
+          hint={t.budgetMinimumHint}
+          errors={errors.budgetMinimum}
+        >
+          <option value="">{t.budgetMinimumAll}</option>
+          {BUDGET_MINIMUM_OPTIONS.map((b) => (
+            <option key={b} value={b}>
+              {t.budgetMinimumOptions[b]}
             </option>
           ))}
         </SelectField>

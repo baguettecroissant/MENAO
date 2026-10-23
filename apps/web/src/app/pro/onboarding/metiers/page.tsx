@@ -56,6 +56,7 @@ export default async function TradesStepPage({
           selectedWorkTypes={workTypeCodes}
           experienceYears={artisan.experience_years}
           diploma={artisan.diplome_metier}
+          budgetMinimum={artisan.budget_minimum}
         />
       </Card>
 

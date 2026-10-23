@@ -1,4 +1,4 @@
-import type { DiplomeMetier } from "@menao/core";
+import type { BudgetMinimum, DiplomeMetier } from "@menao/core";
 import {
   certificationSchema,
   companyStepSchema,
@@ -182,6 +182,8 @@ export type TradesData = {
   experienceYears: number | null;
   /** Diplôme du métier déclaré (Score MENAO, ADR 0155). */
   diploma: DiplomeMetier | null;
+  /** Budget minimum des demandes (ADR 0164). */
+  budgetMinimum: BudgetMinimum | null;
   certifications: { id: string; type: CertificationType; numero: string; dateFin: string }[];
   rgeDomains: { domain: string; endsOn: string }[];
   rgeCheckedAt: string | null;
@@ -192,7 +194,7 @@ export async function loadTrades(): Promise<TradesData | null> {
   if (!auth.user) return null;
   const { data: artisan } = await supabase
     .from("artisans")
-    .select("id, experience_years, diplome_metier, rge_checked_at")
+    .select("id, experience_years, diplome_metier, budget_minimum, rge_checked_at")
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (!artisan) return null;
@@ -228,6 +230,8 @@ export async function loadTrades(): Promise<TradesData | null> {
     selectedWorkTypes: (myWorkTypes.data ?? []).map((m) => m.work_type_code),
     experienceYears: artisan.experience_years,
     diploma: artisan.diplome_metier,
+    // « moins_1000 » est refusé en base : jamais un minimum.
+    budgetMinimum: artisan.budget_minimum === "moins_1000" ? null : artisan.budget_minimum,
     certifications: (certifications.data ?? []).map((c) => ({
       id: c.id,
       type: c.type,
@@ -248,6 +252,7 @@ export async function saveTrades(input: {
   workTypeCodes: string[];
   experienceYears: string;
   diploma: DiplomeMetier | "";
+  budgetMinimum: BudgetMinimum | "";
   allowedWorkTypes: string[];
 }): Promise<SaveResult> {
   const parsed = tradesStepSchema.safeParse(input);
@@ -262,7 +267,11 @@ export async function saveTrades(input: {
   const { error: diplomaError } = await supabase.rpc("set_artisan_diploma", {
     p_diplome: input.diploma,
   });
-  return diplomaError ? { ok: false, error: fr.errors.generic } : { ok: true };
+  if (diplomaError) return { ok: false, error: fr.errors.generic };
+  const { error: budgetError } = await supabase.rpc("set_artisan_budget_minimum", {
+    p_budget: input.budgetMinimum,
+  });
+  return budgetError ? { ok: false, error: fr.errors.generic } : { ok: true };
 }
 
 export async function addCertification(input: {

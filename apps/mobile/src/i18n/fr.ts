@@ -321,6 +321,17 @@ export const fr = {
     diploma: "Votre diplôme du métier (le plus élevé)",
     diplomaNone: "Aucun",
     diplomaHint: "Facultatif : il compte dans votre Score MENAO et s'affiche sur votre fiche.",
+    // Budget minimum des demandes (ADR 0164).
+    budgetMinimum: "Budget minimum des chantiers",
+    budgetMinimumHint:
+      "Facultatif : vous ne recevez pas les demandes dont le budget annoncé est inférieur. Celles sans budget vous restent proposées.",
+    budgetMinimumAll: "Tous les budgets",
+    budgetMinimumOptions: {
+      "1000_5000": "À partir de 1\u00a0000\u00a0€",
+      "5000_15000": "À partir de 5\u00a0000\u00a0€",
+      "15000_50000": "À partir de 15\u00a0000\u00a0€",
+      plus_50000: "À partir de 50\u00a0000\u00a0€",
+    },
     save: "Enregistrer mes métiers",
     saved: "Métiers enregistrés.",
     certifications: "Certifications et qualifications",

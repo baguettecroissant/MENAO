@@ -130,6 +130,8 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
   // Diplôme du métier déclaré (Score MENAO, ADR 0155), facultatif.
   const diploma = diplomaSchema.safeParse(text(formData, "diploma") ?? "");
   if (!diploma.success) return { fieldErrors: { diploma: [fr.errors.generic] } };
+  // Budget minimum des demandes (ADR 0164), facultatif : vérifié en base.
+  const budgetMinimum = text(formData, "budgetMinimum") ?? "";
 
   const { supabase } = await getOnboardingContext();
   // Spécialités d'un métier décoché : ignorées plutôt que refusées.
@@ -149,6 +151,10 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
     p_diplome: diploma.data ?? "",
   });
   if (diplomaError) return { error: fr.errors.generic };
+  const { error: budgetError } = await supabase.rpc("set_artisan_budget_minimum", {
+    p_budget: budgetMinimum,
+  });
+  if (budgetError) return { fieldErrors: { budgetMinimum: [fr.errors.generic] } };
 
   refresh();
   redirect("/pro/onboarding" as Route);

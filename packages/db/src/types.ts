@@ -1075,6 +1075,7 @@ export type Database = {
           base_code_insee: string | null;
           base_label: string | null;
           base_location: unknown;
+          budget_minimum: Database["public"]["Enums"]["project_budget"] | null;
           connect_charges_enabled: boolean;
           connect_details_submitted: boolean;
           connect_disabled_reason: string | null;
@@ -1137,6 +1138,7 @@ export type Database = {
           base_code_insee?: string | null;
           base_label?: string | null;
           base_location?: unknown;
+          budget_minimum?: Database["public"]["Enums"]["project_budget"] | null;
           connect_charges_enabled?: boolean;
           connect_details_submitted?: boolean;
           connect_disabled_reason?: string | null;
@@ -1198,6 +1200,7 @@ export type Database = {
           base_code_insee?: string | null;
           base_label?: string | null;
           base_location?: unknown;
+          budget_minimum?: Database["public"]["Enums"]["project_budget"] | null;
           connect_charges_enabled?: boolean;
           connect_details_submitted?: boolean;
           connect_disabled_reason?: string | null;
@@ -4784,6 +4787,7 @@ export type Database = {
         Returns: undefined;
       };
       set_artisan_available_from: { Args: { p_date?: string }; Returns: undefined };
+      set_artisan_budget_minimum: { Args: { p_budget: string }; Returns: undefined };
       set_artisan_diploma: { Args: { p_diplome: string }; Returns: undefined };
       set_artisan_hours: { Args: { p_hours: Json }; Returns: undefined };
       set_artisan_paused: { Args: { p_paused: boolean }; Returns: undefined };
