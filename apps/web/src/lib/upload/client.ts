@@ -20,6 +20,9 @@ export async function uploadRaw(userId: string, file: Blob): Promise<string | nu
  * en JPEG : fichier plus léger (spec §4.4) et sans métadonnées. L'orientation EXIF est
  * appliquée par createImageBitmap. Les métadonnées sont de toute façon retirées côté serveur.
  * Logos : PNG, pour garder la transparence (en JPEG, le fond transparent deviendrait noir).
+ * `square` (photo de profil, affichée dans un cercle) : une photo presque carrée est recadrée au
+ * centre ; un logo ou un bandeau est gardé entier, centré sur un carré avec une marge, pour que le
+ * cercle ne le coupe jamais.
  */
 export async function resizeImage(
   file: File,
@@ -27,14 +30,49 @@ export async function resizeImage(
   {
     type = "image/jpeg",
     quality = 0.85,
-  }: { type?: "image/jpeg" | "image/png"; quality?: number } = {},
+    square = false,
+  }: { type?: "image/jpeg" | "image/png"; quality?: number; square?: boolean } = {},
 ): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const context = canvas.getContext("2d");
+  const { width, height } = bitmap;
+  const ratio = width / height;
+  if (square && ratio >= 0.8 && ratio <= 1.25) {
+    const crop = Math.min(width, height);
+    canvas.width = canvas.height = Math.min(maxSide, crop);
+    context?.drawImage(
+      bitmap,
+      (width - crop) / 2,
+      (height - crop) / 2,
+      crop,
+      crop,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+  } else if (square) {
+    const side = Math.min(maxSide, Math.max(width, height));
+    canvas.width = canvas.height = side;
+    if (context && type === "image/jpeg") {
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, side, side);
+    }
+    const scale = (side * 0.88) / Math.max(width, height);
+    context?.drawImage(
+      bitmap,
+      (side - width * scale) / 2,
+      (side - height * scale) / 2,
+      width * scale,
+      height * scale,
+    );
+  } else {
+    const scale = Math.min(1, maxSide / Math.max(width, height));
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    context?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  }
   bitmap.close();
   return new Promise((resolve, reject) =>
     canvas.toBlob(

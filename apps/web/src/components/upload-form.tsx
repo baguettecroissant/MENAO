@@ -22,6 +22,8 @@ type UploadFormProps = {
   resizeTo?: number;
   /** Logos : réencodés en PNG pour garder la transparence (un JPEG reste un JPEG). */
   keepTransparency?: boolean;
+  /** Photo de profil : mise au carré, sans jamais couper un logo (resizeImage). */
+  square?: boolean;
   /** Champs complémentaires (métadonnées d'un document). */
   children?: ReactNode | ((errors: Record<string, string[] | undefined>) => ReactNode);
   fileLabel?: string;
@@ -47,6 +49,7 @@ export function UploadForm({
   hint,
   resizeTo,
   keepTransparency = false,
+  square = false,
   children,
   fileLabel = t.file,
   formId = purpose,
@@ -68,6 +71,7 @@ export function UploadForm({
       try {
         blob = await resizeImage(file, resizeTo, {
           type: keepTransparency && file.type !== "image/jpeg" ? "image/png" : "image/jpeg",
+          square,
         });
       } catch {
         return { error: t.status.invalid_type };

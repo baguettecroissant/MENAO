@@ -130,7 +130,7 @@ export default async function SpotChecksPage({
                   key={r.id}
                   id={`controle-${r.id}`}
                   aria-label={nameOf(r)}
-                  className="flex flex-col gap-3 rounded-button border border-border p-3"
+                  className="flex flex-col gap-3 rounded-input border border-border p-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {r.artisans ? (

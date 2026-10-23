@@ -219,9 +219,10 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByText("Enregistré.")).toBeVisible();
 
   const portfolio = page.getByRole("region", { name: "Photos de réalisations" });
-  await portfolio.getByLabel("Fichier").setInputFiles(files.png);
-  await portfolio.getByRole("button", { name: "Ajouter la photo" }).click();
-  await expect(page.getByRole("img", { name: "Réalisation 1" })).toBeVisible();
+  // Plusieurs photos à la fois, envoyées l'une après l'autre dès le choix.
+  await portfolio.getByLabel("Ajouter des photos").setInputFiles([files.png, files.png]);
+  await expect(portfolio.getByText("2 photos ajoutées.")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("img", { name: "Réalisation 2" })).toBeVisible();
 
   // Envoi du dossier : ensuite, documents figés
   await page.goto("/pro/onboarding");

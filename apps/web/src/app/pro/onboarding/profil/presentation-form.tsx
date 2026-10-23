@@ -36,7 +36,7 @@ export function PresentationForm({ presentation }: { presentation: string | null
         aria-describedby={["presentation-hint", "presentation-count", error && "presentation-error"]
           .filter(Boolean)
           .join(" ")}
-        className="rounded-button border border-border bg-surface p-3 aria-invalid:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="rounded-input border border-border bg-surface p-3 aria-invalid:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       />
       <p
         id="presentation-count"
