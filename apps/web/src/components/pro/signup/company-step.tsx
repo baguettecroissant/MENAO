@@ -8,7 +8,7 @@ import {
   type ArtisanSignupDraft,
 } from "@menao/core";
 import { COMPANY_SEARCH_MIN_LENGTH, messages, type CompanySuggestion } from "@menao/validation";
-import { ArrowRight, Building2, CircleCheck, ChevronRight } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, Building2, CircleCheck, ChevronRight } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Alert, Button, Field } from "@/components/ui";
@@ -309,13 +309,25 @@ function CompanyCard({
                   .join(" · ")}
               </p>
             )}
+            {company.name && (
+              <span className="mt-1 inline-flex items-center gap-1 self-start rounded-pill bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
+                <CircleCheck aria-hidden="true" className="size-3.5" />
+                {t.active}
+              </span>
+            )}
           </div>
-          {company.name && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-pill bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
-              <CircleCheck aria-hidden="true" className="size-3.5" />
-              {t.active}
-            </span>
-          )}
+          {/* Changer d'entreprise, là où se pose le regard : à côté du nom. */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            block={false}
+            onClick={onReset}
+            className="shrink-0"
+          >
+            <ArrowLeftRight aria-hidden="true" className="size-4" />
+            {t.change}
+          </Button>
         </div>
         <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
           {rows
@@ -327,7 +339,6 @@ function CompanyCard({
               </div>
             ))}
         </dl>
-        <LinkButton onClick={onReset}>{t.notMine}</LinkButton>
       </div>
 
       <ChoiceGroup<boolean>
@@ -339,7 +350,20 @@ function CompanyCard({
         ]}
         onChange={(isDirigeant) => update({ isDirigeant })}
       />
-      {draft.isDirigeant === false && <Alert tone="info">{t.notManagerNote}</Alert>}
+      {draft.isDirigeant === false && (
+        <Alert tone="info">
+          <span className="flex flex-col gap-2">
+            <span>{t.notManagerNote}</span>
+            {/* « Non » choisi parce que l'entreprise n'est pas la bonne : on se rattrape ici. */}
+            <span>
+              {t.wrongCompany}{" "}
+              <LinkButton onClick={onReset} className="min-h-0 text-sm">
+                {t.change}
+              </LinkButton>
+            </span>
+          </span>
+        </Alert>
+      )}
 
       <ChoiceGroup<boolean>
         legend={t.vatQuestion}
