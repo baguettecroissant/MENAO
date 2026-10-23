@@ -102,7 +102,12 @@ export default async function ArtisanPublicPage({ params }: PageProps<"/artisans
   const zoneNames = new Set([profile.zone.city, ...profile.zone.communes].filter(Boolean));
   // Maillage : pages métier × commune pilote de sa zone (les autres n'existent pas).
   const nearby = trade ? communes.filter((c) => zoneNames.has(c.nom)).slice(0, 8) : [];
-  const searchHref = `/recherche${trade ? `?metier=${trade.code}` : ""}`;
+  // Recherche lancée depuis la fiche (ADR 0173) : l'artisan est proposé en premier, présélectionné.
+  const searchHref = `/recherche?${new URLSearchParams({
+    ...(trade ? { metier: trade.code } : {}),
+    fiche: profile.id,
+    nom: profile.display_name,
+  })}`;
 
   // Données structurées (schema.org) : entreprise du bâtiment, sans adresse ni contact.
   const jsonLd = {

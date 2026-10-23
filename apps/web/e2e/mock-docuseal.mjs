@@ -4,7 +4,7 @@
 import { createHmac } from "node:crypto";
 import { createServer } from "node:http";
 
-const PORT = Number(process.env.MOCK_DOCUSEAL_PORT ?? 54397);
+const PORT = Number(process.env.MOCK_DOCUSEAL_PORT ?? 18397);
 const API_KEY = "cle-factice-ci";
 const WEBHOOK_SECRET = "whsec_menao_ci";
 // Le navigateur ouvre la page de signature sur l'hôte ; le webhook part vers Supabase local.

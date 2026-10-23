@@ -2,7 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = "http://localhost:3000";
 
-/** Tests de bout en bout contre l'application buildée et un Supabase local (`pnpm db:start`). */
+/**
+ * Tests de bout en bout contre l'application buildée et un Supabase local (`pnpm db:start`). Les
+ * faux serveurs écoutent sous la plage des ports éphémères de Linux (32768-60999), qu'une connexion
+ * sortante de la machine de CI pouvait occuper (EADDRINUSE).
+ */
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,
@@ -15,20 +19,20 @@ export default defineConfig({
     {
       // Faux serveur API Sirene, appelé par l'Edge Function sirene-check (Docker → hôte).
       command: "node e2e/mock-sirene.mjs",
-      url: "http://127.0.0.1:54399/",
+      url: "http://127.0.0.1:18399/",
       reuseExistingServer: !process.env.CI,
     },
     {
       // Faux OpenRouter et faux géocodage, appelés par analyze-need et transcribe (Docker → hôte).
       command: "node e2e/mock-ai.mjs",
-      url: "http://127.0.0.1:54398/",
+      url: "http://127.0.0.1:18398/",
       reuseExistingServer: !process.env.CI,
     },
     {
       // Faux DocuSeal (F-13) : API appelée par les Edge Functions (Docker → hôte), page de
       // signature ouverte par le navigateur, webhook vers signature-webhook.
       command: "node e2e/mock-docuseal.mjs",
-      url: "http://127.0.0.1:54397/",
+      url: "http://127.0.0.1:18397/",
       reuseExistingServer: !process.env.CI,
     },
     {

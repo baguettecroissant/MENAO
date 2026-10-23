@@ -92,9 +92,9 @@ jobs:
         # Les Edge Functions appellent les faux serveurs Sirene, IA et DocuSeal (lancés par
         # Playwright) et stripe-mock, tous sur l'hôte.
         env:
-          INSEE_API_BASE_URL: http://host.docker.internal:54399
+          INSEE_API_BASE_URL: http://host.docker.internal:18399
           INSEE_API_KEY: cle-factice-ci
-          RGE_API_BASE_URL: http://host.docker.internal:54399/rge/lines
+          RGE_API_BASE_URL: http://host.docker.internal:18399/rge/lines
           STRIPE_SECRET_KEY: sk_test_menaoci
           STRIPE_WEBHOOK_SECRET: whsec_menao_ci
           STRIPE_CONNECT_WEBHOOK_SECRET: whsec_menao_connect_ci
@@ -104,9 +104,9 @@ jobs:
           STRIPE_API_PROTOCOL: http
           SITE_URLS: http://localhost:3000
           OPENROUTER_API_KEY: cle-factice-ci
-          OPENROUTER_BASE_URL: http://host.docker.internal:54398
-          GEOCODING_BASE_URL: http://host.docker.internal:54398
-          DOCUSEAL_API_URL: http://host.docker.internal:54397
+          OPENROUTER_BASE_URL: http://host.docker.internal:18398
+          GEOCODING_BASE_URL: http://host.docker.internal:18398
+          DOCUSEAL_API_URL: http://host.docker.internal:18397
           DOCUSEAL_API_KEY: cle-factice-ci
           DOCUSEAL_WEBHOOK_SECRET: whsec_menao_ci
         run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,postgres-meta

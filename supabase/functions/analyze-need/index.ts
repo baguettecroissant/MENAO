@@ -124,6 +124,25 @@ async function previousProject(
   return project ?? null;
 }
 
+/**
+ * Artisan de la fiche publique d'où part la recherche (ADR 0173) : fiche en ligne et dossier
+ * validé, sinon recherche ordinaire. Sa place en tête ne vaut que pour ce projet.
+ */
+async function publicPageArtisan(
+  admin: ReturnType<typeof adminClient>,
+  artisanId: unknown,
+): Promise<string | null> {
+  if (typeof artisanId !== "string" || !UUID.test(artisanId)) return null;
+  const { data } = await admin
+    .from("artisans")
+    .select("id")
+    .eq("id", artisanId)
+    .eq("status", "valide")
+    .not("slug", "is", null)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 const point = (lon: number, lat: number) => `SRID=4326;POINT(${lon} ${lat})`;
 
 /**
@@ -234,6 +253,7 @@ Deno.serve(
       tradeHint?: unknown;
       preferredArtisanId?: unknown;
       fromChantierId?: unknown;
+      fromPublicPage?: unknown;
       projectId?: unknown;
       partnerCode?: unknown;
     } | null;
@@ -272,6 +292,11 @@ Deno.serve(
       const previous = edited
         ? null
         : await previousProject(admin, user.id, body?.preferredArtisanId, body?.fromChantierId);
+      // Recherche lancée depuis la fiche publique d'un artisan (ADR 0173) : proposé en premier.
+      const pageArtisan =
+        edited || previous || body?.fromPublicPage !== true
+          ? null
+          : await publicPageArtisan(admin, body?.preferredArtisanId);
       // Métier déjà retenu pour le projet modifié, sinon métier choisi, sinon celui du chantier
       // précédent (« Redemander un devis »).
       const hint =
@@ -358,7 +383,7 @@ Deno.serve(
           work_type_codes: c?.workTypeCodes ?? [],
           surface: c?.surface ?? null,
           ...place,
-          preferred_artisan_id: previous ? body?.preferredArtisanId : null,
+          preferred_artisan_id: previous ? body?.preferredArtisanId : pageArtisan,
           date_mode: c?.dateMode ?? "inconnue",
           date_souhaitee: c?.dateSouhaitee ?? null,
           urgence: c?.urgence ?? false,
