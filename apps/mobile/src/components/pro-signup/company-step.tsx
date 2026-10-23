@@ -8,6 +8,7 @@ import {
 } from "@menao/core";
 import { messages } from "@menao/validation";
 import { ArrowLeftRight, Building2, ChevronRight, CircleCheck } from "lucide-react-native";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
@@ -54,14 +55,24 @@ const manualCompany = (siret: string): ArtisanSignupCompany => ({
 export function CompanyStep({
   draft,
   update,
+  taken = false,
 }: {
   draft: ArtisanSignupDraft;
   update: (patch: Partial<ArtisanSignupDraft>) => void;
+  /** Entreprise déjà inscrite (ADR 0175) : l'écran bloque la suite. */
+  taken?: boolean;
 }) {
   const company = draft.company;
   return (
     <>
       <StepTitle title={t.title} lead={t.lead} />
+      {taken ? (
+        <View style={styles.taken}>
+          <Notice tone="error">{`${t.taken.title}. ${t.taken.text}`}</Notice>
+          <LinkText label={t.taken.signIn} onPress={() => router.push("/connexion")} />
+          <LinkText label={t.taken.contact} onPress={() => router.push("/aide")} />
+        </View>
+      ) : null}
       {company ? (
         <CompanyCard company={company} draft={draft} update={update} />
       ) : (
@@ -321,6 +332,7 @@ const styles = StyleSheet.create({
   },
   cardHead: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
   wrongCompany: { gap: spacing(1) },
+  taken: { gap: spacing(2) },
   cardTitle: { flex: 1, gap: 2 },
   cardName: { fontFamily: font.bold, fontSize: 18, color: colors.foreground },
   active: {

@@ -131,6 +131,15 @@ export const fr = {
         "Pas de souci : vous continuez l'inscription, et le dirigeant signera l'engagement à la fin.",
       vatQuestion: "Votre entreprise facture-t-elle la TVA ?",
       vatHint: "Répondez « Non » si vous êtes en franchise de TVA (micro-entreprise, par exemple).",
+      // Entreprise déjà inscrite (ADR 0175), comme sur le site.
+      taken: {
+        title: "Cette entreprise a déjà un compte MENAO",
+        text: "Si c'est la vôtre, connectez-vous avec l'adresse e-mail utilisée lors de l'inscription. Sinon, écrivez-nous : nous vérifierons avec vous.",
+        signIn: "Me connecter",
+        contact: "Nous écrire",
+        error:
+          "Cette entreprise a déjà un compte MENAO : connectez-vous avec l'adresse e-mail utilisée lors de l'inscription, ou écrivez-nous.",
+      },
     },
     zone: {
       title: "Où intervenez-vous ?",

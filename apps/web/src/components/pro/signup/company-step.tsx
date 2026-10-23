@@ -10,9 +10,11 @@ import {
 import { COMPANY_SEARCH_MIN_LENGTH, messages, type CompanySuggestion } from "@menao/validation";
 import { ArrowLeftRight, ArrowRight, Building2, CircleCheck, ChevronRight } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Alert, Button, Field } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { searchCompanies } from "@/lib/artisan/company-search";
+import { isSiretRegistered } from "@/lib/auth/artisan-signup-actions";
 import { ChoiceGroup, LinkButton, SearchInput, StepFooter, StepTitle } from "./signup-ui";
 
 const t = fr.pro.signUp.company;
@@ -56,11 +58,45 @@ export function CompanyStep({
   onNext: () => void;
 }) {
   const company = draft.company;
-  const ready = company !== null && draft.isDirigeant !== null && draft.assujettiTva !== null;
+  // Entreprise déjà inscrite (ADR 0175) : prévenu ici plutôt qu'un compte créé sans entreprise.
+  const [taken, setTaken] = useState<string | null>(null);
+  const siret = company?.siret ?? null;
+  useEffect(() => {
+    if (!siret) return;
+    let active = true;
+    isSiretRegistered(siret)
+      .then((registered) => active && setTaken(registered ? siret : null))
+      .catch(() => null);
+    return () => {
+      active = false;
+    };
+  }, [siret]);
+  const alreadyRegistered = siret !== null && taken === siret;
+  const ready =
+    company !== null &&
+    draft.isDirigeant !== null &&
+    draft.assujettiTva !== null &&
+    !alreadyRegistered;
 
   return (
     <>
       <StepTitle title={t.title} lead={t.lead} />
+      {alreadyRegistered && (
+        <Alert tone="error">
+          <span className="flex flex-col gap-2">
+            <span className="font-semibold">{t.taken.title}</span>
+            <span>{t.taken.text}</span>
+            <span className="flex flex-wrap gap-x-4 gap-y-1 font-medium">
+              <Link href="/connexion" className="underline underline-offset-4">
+                {t.taken.signIn}
+              </Link>
+              <Link href="/contact" className="underline underline-offset-4">
+                {t.taken.contact}
+              </Link>
+            </span>
+          </span>
+        </Alert>
+      )}
       {company ? (
         <CompanyCard
           company={company}
