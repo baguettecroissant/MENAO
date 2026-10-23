@@ -2,7 +2,7 @@
 // audio) et Géoplateforme (géocodage appelé par l'Edge Function analyze-need). Aucune requête vers
 // un vrai modèle en CI. Données entièrement fictives.
 //
-// Analyse : « fuite » → plombier à Nice, sûr ; « salle de bains » → plombier à Nice, avec le
+// Analyse : « fuite » → plombier à Nice, sûr ; « salle de bains » → plombier à Antibes, avec le
 // carreleur en métier complémentaire (ADR 0167) ; « hésitant » → peu sûr au premier modèle, sûr au
 // modèle de secours (vérifie le repli) ; « panne » → réponse invalide (vérifie le formulaire vide).
 // Dictée de devis (balise <dictee>, F-19) : deux lignes fixes, dont une sans prix dicté.
@@ -40,8 +40,8 @@ function analysis(description, model) {
       pieces: ["salle-de-bain"],
       travaux: ["sanitaires"],
       surface_tranche: "moins_10",
-      ville: "Nice",
-      code_postal: "06000",
+      ville: "Antibes",
+      code_postal: "06600",
       adresse: null,
       date_souhaitee: null,
       urgence: false,
@@ -49,7 +49,7 @@ function analysis(description, model) {
       budget_tranche: null,
       metiers_complementaires: [{ metier: "carreleur", travaux: ["faience"] }],
       brief_artisan:
-        "Rénovation complète d'une petite salle de bains d'appartement à Nice. À préciser lors de la visite : équipements à remplacer et état des évacuations.",
+        "Rénovation complète d'une petite salle de bains d'appartement à Antibes. À préciser lors de la visite : équipements à remplacer et état des évacuations.",
       confiance: 0.9,
     });
   }
@@ -100,23 +100,33 @@ function quoteLines() {
 function geocoding(url) {
   const q = url.searchParams.get("q") ?? "";
   const municipality = url.searchParams.get("type") === "municipality";
-  const features =
-    municipality && /nice/i.test(q)
-      ? [
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [7.26, 43.7] },
-            properties: {
-              label: "Nice",
-              city: "Nice",
-              citycode: "06088",
-              postcode: "06000",
-              score: 0.95,
-              type: "municipality",
-            },
+  // Nice, et Antibes pour le chantier à plusieurs métiers (ADR 0170).
+  const towns = [
+    { match: /nice/i, label: "Nice", citycode: "06088", postcode: "06000", at: [7.26, 43.7] },
+    {
+      match: /antibes/i,
+      label: "Antibes",
+      citycode: "06004",
+      postcode: "06600",
+      at: [7.1255, 43.5804],
+    },
+  ];
+  const features = municipality
+    ? towns
+        .filter((town) => town.match.test(q))
+        .map((town) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: town.at },
+          properties: {
+            label: town.label,
+            city: town.label,
+            citycode: town.citycode,
+            postcode: town.postcode,
+            score: 0.95,
+            type: "municipality",
           },
-        ]
-      : [];
+        }))
+    : [];
   return { type: "FeatureCollection", features };
 }
 

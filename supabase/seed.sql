@@ -45,7 +45,7 @@ from (values
   -- Artisans visibles (validés, en essai, paiements actifs) : résultats de recherche (F-09).
   ('a0000000-0000-4000-8000-000000000011'::uuid, 'plombier-nice@example.test', 'artisan', 'Noé', 'Exemple', null),
   ('a0000000-0000-4000-8000-000000000012'::uuid, 'plombier-dispo@example.test', 'artisan', 'Inès', 'Exemple', null),
-  -- Carreleur à Nice, réservé au test e2e du chantier à plusieurs métiers (ADR 0170).
+  -- Carreleuse à Antibes, réservée au test e2e du chantier à plusieurs métiers (ADR 0170).
   ('a0000000-0000-4000-8000-000000000017'::uuid, 'carreleur-nice@example.test', 'artisan', 'Lina', 'Exemple', null),
   -- Artisan validé inscrit avant la charte qualité, réservé au test e2e de sa signature (ADR 0109).
   ('a0000000-0000-4000-8000-000000000014'::uuid, 'charte@example.test', 'artisan', 'Maxime', 'Exemple', null),
@@ -170,23 +170,24 @@ from public.artisans a,
           ('urssaf', current_date - 30, null, null, 'URSSAF-2222', null)) as d (type, emission, fin, assureur, numero, couverture)
 where a.id in ('b0000000-0000-4000-8000-000000000011', 'b0000000-0000-4000-8000-000000000012');
 
--- Carreleur à Nice, disponible tout de suite : lot carrelage du test e2e du chantier à plusieurs
--- métiers (ADR 0170), sans autre usage.
+-- Carreleuse à Antibes, disponible tout de suite : lot carrelage du test e2e du chantier à plusieurs
+-- métiers (ADR 0170), sans autre usage. Hors de Nice, où le test de la recherche n'attend aucun
+-- carreleur ; sans adresse de base, donc jamais en zone élargie (ADR 0165).
 insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva,
   experience_years, zone_mode, presentation, submitted_at, stripe_customer_id, stripe_account_id,
   connect_charges_enabled, connect_payouts_enabled, connect_details_submitted)
 values ('b0000000-0000-4000-8000-000000000017', 'a0000000-0000-4000-8000-000000000017', 'valide',
-  'CARRELAGE NICE EXEMPLE', now(), true, true, 9, 'communes', 'Carreleuse à Nice : faïence et carrelage de sol.',
+  'CARRELAGE ANTIBES EXEMPLE', now(), true, true, 9, 'communes', 'Carreleuse à Antibes : faïence et carrelage de sol.',
   now(), 'cus_seed_carrelage', 'acct_seed_carrelage', true, true, true);
 update public.artisans set siret = '00000110200003', forme_juridique_code = '5499',
-  adresse_ligne = '2 RUE DE L''EXEMPLE', adresse_code_postal = '06000', adresse_commune = 'NICE',
-  adresse_code_insee = '06088'
+  adresse_ligne = '2 RUE DE L''EXEMPLE', adresse_code_postal = '06600', adresse_commune = 'ANTIBES',
+  adresse_code_insee = '06004'
 where id = 'b0000000-0000-4000-8000-000000000017';
 insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end) values
   ('b0000000-0000-4000-8000-000000000017', 'base', 'cus_seed_carrelage', 'sub_seed_carrelage', 'trialing', now() + interval '90 days');
 insert into public.artisan_trades (artisan_id, trade_code) values ('b0000000-0000-4000-8000-000000000017', 'carreleur');
 insert into public.artisan_work_types (artisan_id, work_type_code) values ('b0000000-0000-4000-8000-000000000017', 'faience');
-insert into public.artisan_zones (artisan_id, code_insee, nom) values ('b0000000-0000-4000-8000-000000000017', '06088', 'Nice');
+insert into public.artisan_zones (artisan_id, code_insee, nom) values ('b0000000-0000-4000-8000-000000000017', '06004', 'Antibes');
 
 -- Artisan validé sans charte signée : l'espace pro lui demande de la signer (ADR 0109).
 insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva, zone_mode, submitted_at)

@@ -3,8 +3,8 @@ import { authLinkFor } from "./mailpit";
 
 // Chantier à plusieurs métiers (ADR 0167 à 0170) : l'analyse propose le carreleur en plus du
 // plombier, le client le coche, puis choisit un artisan dans chaque métier et envoie une seule
-// demande (compte créé en chemin, sélection gardée). Seed : Noé et Inès (plombiers), Lina
-// (carreleuse à Nice, réservée à ce test).
+// demande (compte créé en chemin, sélection gardée). Seed : Noé (25 km autour de Nice) et Inès
+// (Nice et Antibes), plombiers ; Lina (carreleuse à Antibes, réservée à ce test).
 const UUID = "[0-9a-f-]{36}";
 
 test("salle de bains : plombier et carreleur contactés en un seul envoi", async ({
@@ -19,7 +19,7 @@ test("salle de bains : plombier et carreleur contactés en un seul envoi", async
   await page
     .getByLabel("Décrivez votre projet")
     .fill(
-      "Je veux refaire entièrement la salle de bains de mon appartement à Nice : douche et faïence.",
+      "Je veux refaire entièrement la salle de bains de mon appartement à Antibes : douche et faïence.",
     );
   await page.getByRole("button", { name: "Trouver mon artisan" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}$`), { timeout: 30_000 });
