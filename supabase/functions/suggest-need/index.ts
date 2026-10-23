@@ -19,20 +19,27 @@ const MAX_PER_IP_PER_HOUR = 150;
 /** Plafond de dépense, tous visiteurs confondus. */
 const MAX_PER_HOUR = 3000;
 
+/** Tâche terminée après la réponse (Supabase Edge Runtime) ; attendue ailleurs (tests). */
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
+function afterResponse(task: Promise<unknown>): Promise<unknown> | undefined {
+  if (typeof EdgeRuntime === "undefined") return task;
+  EdgeRuntime.waitUntil(task);
+}
+
+/** Les deux limites en même temps : une seule attente de la base avant l'appel au modèle. */
 async function withinLimits(admin: ReturnType<typeof adminClient>, req: Request) {
   const ipHash = (await sha256(clientIp(req))).slice(0, 32);
-  for (const [key, max] of [
-    [`suggest-need:ip:${ipHash}`, MAX_PER_IP_PER_HOUR],
-    ["suggest-need:all", MAX_PER_HOUR],
-  ] as const) {
-    const { data } = await admin.rpc("consume_rate_limit", {
-      p_key: key,
-      p_max: max,
-      p_window_seconds: 3600,
-    });
-    if (data !== true) return false;
-  }
-  return true;
+  const results = await Promise.all(
+    (
+      [
+        [`suggest-need:ip:${ipHash}`, MAX_PER_IP_PER_HOUR],
+        ["suggest-need:all", MAX_PER_HOUR],
+      ] as const
+    ).map(([key, max]) =>
+      admin.rpc("consume_rate_limit", { p_key: key, p_max: max, p_window_seconds: 3600 }),
+    ),
+  );
+  return results.every(({ data }) => data === true);
 }
 
 Deno.serve(
@@ -46,7 +53,9 @@ Deno.serve(
     }
 
     const admin = adminClient();
+    const started = Date.now();
     if (!(await withinLimits(admin, req))) return json({ status: "rate_limited" }, 429);
+    const limitsMs = Date.now() - started;
 
     const llm = llmConfig();
     if (!llm) {
@@ -60,13 +69,14 @@ Deno.serve(
       outcome: "erreur",
       latency_ms: 0,
     };
-    try {
-      const suggestion = await suggestNeed(llm, scrubPersonalData(text), run);
-      return suggestion
-        ? json({ status: "ok", ...suggestion })
-        : json({ status: "unavailable" }, 503);
-    } finally {
-      await logAiRuns(admin, [run]);
-    }
+    const suggestion = await suggestNeed(llm, scrubPersonalData(text), run);
+    // Journal écrit après la réponse : la suggestion n'attend pas la base.
+    await afterResponse(logAiRuns(admin, [run]));
+    const response = suggestion
+      ? json({ status: "ok", ...suggestion })
+      : json({ status: "unavailable" }, 503);
+    // Durées visibles dans les outils du navigateur (limites, modèle), sans contenu.
+    response.headers.set("Server-Timing", `limites;dur=${limitsMs}, ia;dur=${run.latency_ms}`);
+    return response;
   }),
 );
