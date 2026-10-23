@@ -6,7 +6,12 @@
  */
 
 export const OPTIONAL_NOTIFICATIONS = {
-  activite: ["chantier_nouveautes", "nouveaux_messages"],
+  activite: [
+    "chantier_nouveautes",
+    "nouveaux_messages",
+    // Partenaire recommandé par un artisan du chantier (ADR 0174).
+    "recommandation_partenaire",
+  ],
   rappels: [
     "rdv_rappel",
     "avis_relance",

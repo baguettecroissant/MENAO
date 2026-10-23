@@ -1357,6 +1357,13 @@ export const fr = {
       edit: "Modifier",
       ranking: "Comment les artisans sont-ils classés ?",
       knownArtisan: "Déjà venu chez vous",
+      // Partenaire recommandé par un artisan du chantier (ADR 0174), hors du classement.
+      recommended: {
+        title: "Recommandés par vos artisans",
+        lead: "Un artisan que vous avez contacté vous recommande un de ses partenaires MENAO. Il ne voit rien de votre demande tant que vous ne le contactez pas, et chacun établit son propre devis.",
+        by: (name: string) => `Recommandé par ${name}, son partenaire`,
+        someone: "un de vos artisans",
+      },
       score: (n: number) => `Score MENAO ${n}/100`,
       knownUnavailable: (name: string) =>
         `${name} n'est pas disponible pour cette demande (métier, zone d'intervention ou congés) : voici d'autres artisans vérifiés.`,
@@ -3585,6 +3592,20 @@ export const fr = {
         ],
       },
     },
+    // « Recommander un partenaire » (ADR 0174) : réseau de parrainage, le client décide.
+    partners: {
+      title: "Recommander un partenaire",
+      lead: "Vos partenaires MENAO (votre parrain et vos filleuls) qui interviennent chez ce client. Il choisit de les contacter : ils ne voient rien de sa demande avant, et chacun établit son propre devis.",
+      instead: "À votre place",
+      otherTrades: "Pour un autre métier du chantier",
+      recommend: "Recommander",
+      recommendLabel: (name: string) => `Recommander ${name}`,
+      recommended: "Recommandé",
+      sent: (client: string) => `Recommandation envoyée à ${client}.`,
+      client: "votre client",
+      afterRefusal:
+        "Après votre refus, vous pourrez recommander un de vos partenaires à votre place.",
+    },
     expertise: {
       open: "Ce chantier a besoin d'une expertise",
       title: "Ce chantier a besoin d'une expertise",
@@ -4629,6 +4650,7 @@ export const fr = {
       "D'abord les artisans disponibles immédiatement, puis les autres.",
       "Dans chacun de ces deux groupes, le Score MENAO, sur 100, affiché sur la fiche de chaque artisan : badge « Assuré et vérifié » (20 points) ; expérience dans le métier, déclarée ou selon l'âge de l'entreprise (10) ; diplôme du métier déclaré et qualification vérifiée, comme RGE ou Qualibat (10) ; fiche complète, avec photo, réalisations, présentation et spécialités (10) ; réactivité, c'est-à-dire temps de réponse moyen aux demandes et devis envoyés dans les 72 h (10) ; avis des clients (40). Pour les avis, la note Google vérifiée par l'équipe MENAO sert de base, ou 3 sur 5 sans fiche Google ; les avis MENAO comptent de plus en plus avec leur nombre (la moitié du poids à 5 avis, 80 % à 20 avis). Un artisan sans demande part d'une réactivité neutre, remplacée par ses résultats réels.",
       "Ensuite, la date de disponibilité, puis les artisans les plus proches du chantier.",
+      "Recommandations entre artisans : un artisan contacté par le particulier peut lui recommander un de ses partenaires MENAO (son parrain ou un de ses filleuls), à sa place ou pour un autre métier du chantier. Ces partenaires sont présentés à part, avec le nom de l'artisan qui les recommande, en dehors de ce classement. Une recommandation n'est jamais rémunérée et le particulier reste libre de ne pas les contacter.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
       "Place réservée aux nouveaux artisans : un artisan validé depuis moins de 90 jours, ou qui a mené moins de 3 chantiers à terme, n'a pas encore d'historique. Quand aucun d'eux ne figure parmi les 5 premiers, l'un d'eux est présenté en 3e position, choisi parmi ceux qui remplissent les conditions ci-dessus : d'abord parmi les disponibles immédiatement, puis par un tirage propre à chaque projet. Cette place ne dépend d'aucun paiement.",
       "Exception, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier, cet artisan est présenté en premier (mention « Déjà venu chez vous »), s'il remplit les conditions ci-dessus.",
@@ -4640,7 +4662,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 22 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 23 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",

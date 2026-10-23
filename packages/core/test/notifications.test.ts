@@ -9,6 +9,7 @@ describe("préférences de notification (F-41)", () => {
   it("catégories : activité, rappels, sinon transactionnelle", () => {
     expect(notificationCategory("chantier_nouveautes")).toBe("activite");
     expect(notificationCategory("nouveaux_messages")).toBe("activite");
+    expect(notificationCategory("recommandation_partenaire")).toBe("activite");
     expect(notificationCategory("rdv_rappel")).toBe("rappels");
     expect(notificationCategory("avis_relance")).toBe("rappels");
     expect(notificationCategory("acompte_relance")).toBe("rappels");

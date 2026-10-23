@@ -57,6 +57,7 @@ export const NOTIFICATION_TYPES = [
   "abonnement_impaye",
   "parrainage_suggestion",
   "mois_offert",
+  "recommandation_partenaire",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -1003,6 +1004,29 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Compléter ma fiche", url: link("/pro/mon-profil") },
+      };
+    }
+    // Partenaire recommandé par un artisan du chantier (ADR 0174) : le particulier décide de le
+    // contacter ; le partenaire ne voit rien de la demande avant.
+    case "recommandation_partenaire": {
+      const from = text(data, "artisan") ?? "Un artisan de votre chantier";
+      const partner = text(data, "partenaire") ?? "un de ses partenaires";
+      const trade = text(data, "metier");
+      const projectId = uuid(data, "project_id");
+      return {
+        subject: `${from} vous recommande un artisan`,
+        preview: `${partner}${trade ? ` (${trade.toLowerCase()})` : ""}, son partenaire sur MENAO.`,
+        title: "Un artisan recommandé pour votre chantier",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${from} vous recommande ${partner}${trade ? `, ${trade.toLowerCase()}` : ""}, son partenaire sur MENAO.`,
+          `${partner} ne voit rien de votre demande tant que vous ne la contactez pas. Chaque artisan établit son propre devis.`,
+        ],
+        quote: null,
+        cta: {
+          label: "Voir l'artisan recommandé",
+          url: link(projectId ? `/recherche/${projectId}/artisans` : "/mon-espace"),
+        },
       };
     }
     // Proposition de parrainer un confrère (ADR 0161) : premier chantier signé, début du 3e mois,

@@ -188,6 +188,9 @@ insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, str
 insert into public.artisan_trades (artisan_id, trade_code) values ('b0000000-0000-4000-8000-000000000017', 'carreleur');
 insert into public.artisan_work_types (artisan_id, work_type_code) values ('b0000000-0000-4000-8000-000000000017', 'faience');
 insert into public.artisan_zones (artisan_id, code_insee, nom) values ('b0000000-0000-4000-8000-000000000017', '06004', 'Antibes');
+-- Inès a parrainé Lina : partenaires du test e2e « Recommander un partenaire » (ADR 0174).
+insert into public.artisan_referrals (referrer_artisan_id, referred_artisan_id, status) values
+  ('b0000000-0000-4000-8000-000000000012', 'b0000000-0000-4000-8000-000000000017', 'en_attente');
 
 -- Artisan validé sans charte signée : l'espace pro lui demande de la signer (ADR 0109).
 insert into public.artisans (id, user_id, status, raison_sociale, sirene_checked_at, sirene_active, assujetti_tva, zone_mode, submitted_at)

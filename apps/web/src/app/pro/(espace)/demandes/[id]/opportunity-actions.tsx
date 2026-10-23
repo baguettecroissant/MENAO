@@ -21,12 +21,15 @@ export function OpportunityActions({
   clientFirstName,
   minDate,
   canRefuse,
+  partnersAfterRefusal = false,
   agenda,
 }: {
   requestId: string;
   clientFirstName: string | null;
   minDate: string;
   canRefuse: boolean;
+  /** Partenaires à recommander à sa place après le refus (ADR 0174). */
+  partnersAfterRefusal?: boolean;
   /** F-44 : créneaux libres proposés et avertissements. */
   agenda?: AppointmentAgenda;
 }) {
@@ -69,6 +72,9 @@ export function OpportunityActions({
         <Drawer open={panel === "refus"} onClose={close} title={t.refuse} backLabel={a.backToForm}>
           <form action={refuse} className="flex flex-col gap-4" noValidate>
             {refused.error && <Alert tone="error">{refused.error}</Alert>}
+            {partnersAfterRefusal && (
+              <p className="text-sm text-muted-foreground">{fr.pro.partners.afterRefusal}</p>
+            )}
             <RadioGroup
               legend={t.refusalLegend}
               name="reason"

@@ -30,6 +30,7 @@ export function ArtisanResultCard({
   verified = false,
   score = null,
   lotId,
+  recommendedBy,
   headingLevel = 2,
   className = "",
 }: {
@@ -57,6 +58,8 @@ export function ArtisanResultCard({
   score?: number | null;
   /** Artisan d'un autre métier du chantier, coché pour le même envoi (ADR 0170). */
   lotId?: string;
+  /** Partenaire recommandé par un artisan du chantier (ADR 0174) : son nom, null s'il est inconnu. */
+  recommendedBy?: string | null;
   headingLevel?: 2 | 3 | 4;
   /** Largeur dans le carrousel des résultats sur téléphone. */
   className?: string;
@@ -95,6 +98,11 @@ export function ArtisanResultCard({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {known && <StatusBadge tone="primary">{t.knownArtisan}</StatusBadge>}
+          {recommendedBy !== undefined && (
+            <StatusBadge tone="primary">
+              {t.recommended.by(recommendedBy ?? t.recommended.someone)}
+            </StatusBadge>
+          )}
           {outsideZone && <StatusBadge tone="neutral">{t.wider.badge}</StatusBadge>}
           {score !== null && <StatusBadge tone="primary">{t.score(score)}</StatusBadge>}
           {verified && <VerifiedBadge>{t.verified}</VerifiedBadge>}

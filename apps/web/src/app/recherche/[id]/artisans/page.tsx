@@ -65,11 +65,31 @@ export default async function ProjectResultsPage({
           .eq("parent_project_id", id)
           .order("created_at"),
   ]);
+  // Partenaires recommandés par un artisan du chantier (ADR 0174) : à part, hors du classement.
+  const { data: recRows } = await supabase
+    .from("partner_recommendations")
+    .select("project_id, to_artisan_id, request_id")
+    .in("project_id", [id, ...(lotRows ?? []).map((l) => l.id)])
+    .eq("status", "proposee");
+  const recommendedFor = async (projectId: string, pool: typeof artisans) => {
+    const recs = (recRows ?? []).filter((r) => r.project_id === projectId);
+    if (recs.length === 0) return [];
+    const rows = recs.every((r) => pool?.some((a) => a.artisan_id === r.to_artisan_id))
+      ? pool
+      : await matchArtisans(supabase, projectId, 50);
+    return recs.flatMap((rec) => {
+      const artisan = (rows ?? []).find((a) => a.artisan_id === rec.to_artisan_id && !a.hors_zone);
+      const by = (sent.data ?? []).find((r) => r.request_id === rec.request_id)?.artisan_name;
+      return artisan ? [{ artisan, by: by ?? null }] : [];
+    });
+  };
   // Un seul envoi pour tous les métiers (ADR 0170) : les artisans de chaque lot, à cocher ici.
   const lots = await Promise.all(
     inWorkOrder(lotRows ?? [], (lot) => lot.trade_code).map(async (lot) => {
       const found = (await matchArtisans(supabase, lot.id, MAX_SEARCH_RESULTS)) ?? [];
       const lotRequests = (sent.data ?? []).filter((r) => r.project_id === lot.id);
+      const recommended = await recommendedFor(lot.id, found);
+      const recommendedIds = new Set(recommended.map((r) => r.artisan.artisan_id));
       return {
         id: lot.id,
         tradeCode: lot.trade_code,
@@ -78,7 +98,8 @@ export default async function ProjectResultsPage({
         dateMode: lot.date_mode,
         dateSouhaitee: lot.date_souhaitee,
         found: found.length,
-        artisans: found.filter((a) => !a.hors_zone),
+        recommended,
+        artisans: found.filter((a) => !a.hors_zone && !recommendedIds.has(a.artisan_id)),
         requested: new Set(lotRequests.map((r) => r.artisan_id)),
         slots: remainingSlots(lotRequests.map((r) => r.status)),
         sent: lotRequests.length > 0,
@@ -100,6 +121,9 @@ export default async function ProjectResultsPage({
     preferredId && !preferred
       ? ((sent.data ?? []).find((r) => r.artisan_id === preferredId)?.artisan_name ?? null)
       : null;
+  const recommended = await recommendedFor(id, artisans);
+  const recommendedIds = new Set(recommended.map((r) => r.artisan.artisan_id));
+  const ranked = results.filter((a) => !recommendedIds.has(a.artisan_id));
   const projectRequests = (sent.data ?? []).filter((r) => r.project_id === id);
   const requested = new Set(projectRequests.map((r) => r.artisan_id));
   const slots = remainingSlots(projectRequests.map((r) => r.status));
@@ -113,7 +137,12 @@ export default async function ProjectResultsPage({
   })
     ? nearby.slice(0, MAX_SEARCH_RESULTS)
     : [];
-  const card = (a: (typeof inZone)[number], outsideZone: boolean, lot?: (typeof lots)[number]) => {
+  const card = (
+    a: (typeof inZone)[number],
+    outsideZone: boolean,
+    lot?: (typeof lots)[number],
+    recommendedBy?: string | null,
+  ) => {
     const avail = availability({ paused: false, availableFrom: a.available_from }, today);
     const specs = specialtiesPreview(a.specialties, lot?.workTypeCodes ?? project.work_type_codes);
     const done = (lot?.requested ?? requested).has(a.artisan_id);
@@ -142,7 +171,8 @@ export default async function ProjectResultsPage({
         known={!lot && a.artisan_id === preferredId}
         outsideZone={outsideZone}
         lotId={lot?.id}
-        headingLevel={lot ? 4 : 2}
+        recommendedBy={recommendedBy}
+        headingLevel={lot ? 4 : recommendedBy !== undefined ? 3 : 2}
         className="w-[16.5rem] shrink-0 snap-start sm:w-auto"
       />
     );
@@ -150,7 +180,7 @@ export default async function ProjectResultsPage({
   const selectionGroups = [
     ...((results.length > 0 || wider.length > 0) && slots > 0 ? [{ key: "", slots }] : []),
     ...lots
-      .filter((lot) => lot.artisans.length > 0 && lot.slots > 0)
+      .filter((lot) => (lot.artisans.length > 0 || lot.recommended.length > 0) && lot.slots > 0)
       .map((lot) => ({ key: lot.id, slots: lot.slots })),
   ];
   const cardList =
@@ -198,9 +228,22 @@ export default async function ProjectResultsPage({
           )}
 
           <form id="selection" method="get" action={`/recherche/${id}/envoyer`} />
-          {results.length > 0 && (
+          {recommended.length > 0 && (
+            <section aria-labelledby="recommandes" className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <h2 id="recommandes" className="text-lg font-medium">
+                  {t.recommended.title}
+                </h2>
+                <p className="text-sm text-muted-foreground">{t.recommended.lead}</p>
+              </div>
+              <ul className={cardList}>
+                {recommended.map((r) => card(r.artisan, false, undefined, r.by))}
+              </ul>
+            </section>
+          )}
+          {ranked.length > 0 && (
             // Téléphone : carrousel horizontal (F-09, maquette « in app »), la carte suivante dépasse.
-            <ul className={cardList}>{results.map((a) => card(a, false))}</ul>
+            <ul className={cardList}>{ranked.map((a) => card(a, false))}</ul>
           )}
 
           {wider.length > 0 &&
@@ -279,6 +322,12 @@ export default async function ProjectResultsPage({
                       editable={!lot.sent}
                       today={today}
                     />
+                  )}
+                  {/* Partenaires recommandés (ADR 0174), avant les artisans du classement. */}
+                  {lot.recommended.length > 0 && (
+                    <ul className={cardList}>
+                      {lot.recommended.map((r) => card(r.artisan, false, lot, r.by))}
+                    </ul>
                   )}
                   {lot.artisans.length > 0 && (
                     <ul className={cardList}>{lot.artisans.map((a) => card(a, false, lot))}</ul>
