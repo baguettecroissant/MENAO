@@ -4,9 +4,11 @@ import {
   type MatchCandidate,
   NEWCOMER,
   TICKET_RESPONSE_DAYS,
+  ZONE_WIDENING_KM,
   availability,
   isNewcomer,
   rankCandidates,
+  showWiderZone,
   specialtiesPreview,
   ticketDueDate,
 } from "../src/matching";
@@ -158,5 +160,18 @@ describe("ordre des artisans proposés et place des nouveaux (ADR 0151)", () => 
       candidate("nouveau", { score: 70, newcomer: true }),
     ];
     expect(ids(rankCandidates(list))).toEqual(["ancien", "nouveau"]);
+  });
+});
+
+describe("zone élargie (ADR 0165)", () => {
+  it("20 km au-delà de la zone de l'artisan", () => {
+    expect(ZONE_WIDENING_KM).toBe(20);
+  });
+
+  it("montrée seulement quand plus aucun artisan de la zone n'est à contacter", () => {
+    expect(showWiderZone({ inZoneToContact: 0, slots: 3, nearby: 2 })).toBe(true);
+    expect(showWiderZone({ inZoneToContact: 1, slots: 3, nearby: 2 })).toBe(false);
+    expect(showWiderZone({ inZoneToContact: 0, slots: 0, nearby: 2 })).toBe(false);
+    expect(showWiderZone({ inZoneToContact: 0, slots: 2, nearby: 0 })).toBe(false);
   });
 });

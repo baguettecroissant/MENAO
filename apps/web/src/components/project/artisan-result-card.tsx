@@ -26,6 +26,7 @@ export function ArtisanResultCard({
   moreSpecialties,
   selection,
   known = false,
+  outsideZone = false,
   verified = false,
   score = null,
   headingLevel = 2,
@@ -47,6 +48,8 @@ export function ArtisanResultCard({
   selection: "selectable" | "sent" | "none";
   /** Artisan d'un chantier précédent (« Redemander un devis ») : mis en avant et présélectionné. */
   known?: boolean;
+  /** Artisan de la zone élargie (ADR 0165). */
+  outsideZone?: boolean;
   /** Badge « Assuré et vérifié » (ADR 0119). */
   verified?: boolean;
   /** Score MENAO sur 100 (ADR 0155). */
@@ -89,6 +92,7 @@ export function ArtisanResultCard({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {known && <StatusBadge tone="primary">{t.knownArtisan}</StatusBadge>}
+          {outsideZone && <StatusBadge tone="neutral">{t.wider.badge}</StatusBadge>}
           {score !== null && <StatusBadge tone="primary">{t.score(score)}</StatusBadge>}
           {verified && <VerifiedBadge>{t.verified}</VerifiedBadge>}
           {availableFrom ? (

@@ -235,6 +235,8 @@ export type MatchedArtisan = {
   verified: boolean;
   /** Score MENAO sur 100 (ADR 0155). */
   score: number | null;
+  /** Artisan de la zone élargie (ADR 0165). */
+  outsideZone: boolean;
 };
 
 export type ProjectResults = {
@@ -242,6 +244,8 @@ export type ProjectResults = {
   city: string;
   workTypeCodes: string[];
   artisans: MatchedArtisan[];
+  /** Zone élargie (ADR 0165) : montrés seulement quand plus aucun artisan de la zone n'est à contacter. */
+  nearby: MatchedArtisan[];
   summary: NeedSummary;
 };
 
@@ -332,6 +336,7 @@ export async function matchArtisans(
     specialties: specialtiesSchema.catch([]).parse(row.specialties),
     verified: row.verified === true,
     score: typeof row.menao_score === "number" ? row.menao_score : null,
+    outsideZone: row.hors_zone === true,
   }));
 }
 
@@ -350,7 +355,8 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     tradeLabel: summary.tradeLabel,
     city: summary.city ?? "",
     workTypeCodes: project.work_type_codes,
-    artisans,
+    artisans: artisans.filter((a) => !a.outsideZone),
+    nearby: artisans.filter((a) => a.outsideZone),
     summary,
   };
 }

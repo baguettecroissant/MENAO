@@ -105,3 +105,22 @@ export function rankCandidates<T extends MatchCandidate>(candidates: readonly T[
     ...others.slice(NEWCOMER.position - 1),
   ];
 }
+
+/**
+ * Zone élargie (ADR 0165) : quand plus aucun artisan de la zone n'est à contacter pour un projet,
+ * des artisans dont la zone s'arrête à 20 km au plus du chantier sont proposés (`hors_zone` de
+ * `match_artisans`). Ils peuvent décliner « hors zone » sans pénalité.
+ */
+export const ZONE_WIDENING_KM = 20;
+
+/**
+ * Artisans de la zone élargie montrés : seulement s'il reste des places et qu'aucun artisan de la
+ * zone n'est encore à contacter (tous déjà sollicités, ou aucun).
+ */
+export function showWiderZone(c: {
+  inZoneToContact: number;
+  slots: number;
+  nearby: number;
+}): boolean {
+  return c.inZoneToContact === 0 && c.slots > 0 && c.nearby > 0;
+}

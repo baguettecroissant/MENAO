@@ -3062,6 +3062,7 @@ export type Database = {
           contact_phone: string;
           created_at: string;
           expires_at: string;
+          hors_zone: boolean;
           id: string;
           message: string | null;
           particulier_id: string;
@@ -3084,6 +3085,7 @@ export type Database = {
           contact_phone: string;
           created_at?: string;
           expires_at?: string;
+          hors_zone?: boolean;
           id?: string;
           message?: string | null;
           particulier_id: string;
@@ -3105,6 +3107,7 @@ export type Database = {
           contact_phone?: string;
           created_at?: string;
           expires_at?: string;
+          hors_zone?: boolean;
           id?: string;
           message?: string | null;
           particulier_id?: string;
@@ -4448,6 +4451,7 @@ export type Database = {
           display_name: string;
           distance_km: number;
           experience_years: number;
+          hors_zone: boolean;
           menao_score: number;
           specialties: Json;
           verified: boolean;

@@ -3,6 +3,7 @@ import {
   availability,
   parisToday,
   remainingSlots,
+  showWiderZone,
   specialtiesPreview,
 } from "@menao/core";
 import type { Metadata, Route } from "next";
@@ -52,11 +53,14 @@ export default async function ProjectResultsPage({
     supabase.rpc("particulier_requests"),
   ]);
   const preferredId = project.preferred_artisan_id;
-  const preferred = (artisans ?? []).find((a) => a.artisan_id === preferredId) ?? null;
+  // Zone élargie (ADR 0165) : artisans hors de leur zone, renvoyés après ceux de la zone.
+  const inZone = (artisans ?? []).filter((a) => !a.hors_zone);
+  const nearby = (artisans ?? []).filter((a) => a.hors_zone);
+  const preferred = inZone.find((a) => a.artisan_id === preferredId) ?? null;
   // « Redemander un devis » : l'artisan connu en tête, présélectionné, à la demande du client.
   const results = [
     ...(preferred ? [preferred] : []),
-    ...(artisans ?? []).filter((a) => a !== preferred),
+    ...inZone.filter((a) => a !== preferred),
   ].slice(0, MAX_SEARCH_RESULTS);
   const today = parisToday();
   const preferredUnavailable =
@@ -68,6 +72,46 @@ export default async function ProjectResultsPage({
   const slots = remainingSlots(projectRequests.map((r) => r.status));
   const pending = projectRequests.filter((r) => r.status === "envoyee" || r.status === "acceptee");
   const tradeLabel = summary?.trade ?? "";
+  // Plus aucun artisan de la zone à contacter : ceux d'un peu plus loin.
+  const wider = showWiderZone({
+    inZoneToContact: inZone.filter((a) => !requested.has(a.artisan_id)).length,
+    slots,
+    nearby: nearby.length,
+  })
+    ? nearby.slice(0, MAX_SEARCH_RESULTS)
+    : [];
+  const card = (a: (typeof inZone)[number], outsideZone: boolean) => {
+    const avail = availability({ paused: false, availableFrom: a.available_from }, today);
+    const specs = specialtiesPreview(a.specialties, project.work_type_codes);
+    return (
+      <ArtisanResultCard
+        key={a.artisan_id}
+        href={`/recherche/${id}/artisans/${a.artisan_id}`}
+        artisanId={a.artisan_id}
+        verified={a.verified}
+        score={a.menao_score}
+        name={a.display_name}
+        photoUrl={a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null}
+        tradeLabel={tradeLabel}
+        experienceYears={a.experience_years}
+        zone={
+          a.zone_mode === "rayon" && a.zone_radius_km
+            ? t.zoneRadius(a.zone_radius_km, a.zone_city)
+            : t.zoneCommunes(a.zone_communes)
+        }
+        distanceKm={a.distance_km}
+        availableFrom={avail.kind === "from" ? formatDay(avail.date) : null}
+        specialties={specs.shown}
+        moreSpecialties={specs.more}
+        selection={requested.has(a.artisan_id) ? "sent" : slots > 0 ? "selectable" : "none"}
+        known={a.artisan_id === preferredId}
+        outsideZone={outsideZone}
+        className="w-[16.5rem] shrink-0 snap-start sm:w-auto"
+      />
+    );
+  };
+  const cardList =
+    "-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 @xl:grid-cols-2 @3xl:grid-cols-3";
 
   return (
     <main className="bg-background">
@@ -82,10 +126,10 @@ export default async function ProjectResultsPage({
           {summary && <ProjectSummaryBand summary={summary} />}
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
-              {results.length ? t.title : t.noneTitle}
+              {results.length ? t.title : wider.length ? t.wider.emptyTitle : t.noneTitle}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {results.length ? t.found(results.length) : t.none}
+              {results.length ? t.found(results.length) : wider.length ? t.wider.emptyLead : t.none}
             </p>
           </div>
 
@@ -105,45 +149,27 @@ export default async function ProjectResultsPage({
           <form id="selection" method="get" action={`/recherche/${id}/envoyer`} />
           {results.length > 0 && (
             // Téléphone : carrousel horizontal (F-09, maquette « in app »), la carte suivante dépasse.
-            <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 @xl:grid-cols-2 @3xl:grid-cols-3">
-              {results.map((a) => {
-                const avail = availability(
-                  { paused: false, availableFrom: a.available_from },
-                  today,
-                );
-                const specs = specialtiesPreview(a.specialties, project.work_type_codes);
-                return (
-                  <ArtisanResultCard
-                    key={a.artisan_id}
-                    href={`/recherche/${id}/artisans/${a.artisan_id}`}
-                    artisanId={a.artisan_id}
-                    verified={a.verified}
-                    score={a.menao_score}
-                    name={a.display_name}
-                    photoUrl={a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null}
-                    tradeLabel={tradeLabel}
-                    experienceYears={a.experience_years}
-                    zone={
-                      a.zone_mode === "rayon" && a.zone_radius_km
-                        ? t.zoneRadius(a.zone_radius_km, a.zone_city)
-                        : t.zoneCommunes(a.zone_communes)
-                    }
-                    distanceKm={a.distance_km}
-                    availableFrom={avail.kind === "from" ? formatDay(avail.date) : null}
-                    specialties={specs.shown}
-                    moreSpecialties={specs.more}
-                    selection={
-                      requested.has(a.artisan_id) ? "sent" : slots > 0 ? "selectable" : "none"
-                    }
-                    known={a.artisan_id === preferredId}
-                    className="w-[16.5rem] shrink-0 snap-start sm:w-auto"
-                  />
-                );
-              })}
-            </ul>
+            <ul className={cardList}>{results.map((a) => card(a, false))}</ul>
           )}
 
-          {results.length > 0 && slots > 0 && <SelectionBar formId="selection" slots={slots} />}
+          {wider.length > 0 &&
+            (results.length > 0 ? (
+              <section aria-labelledby="plus-loin" className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <h2 id="plus-loin" className="text-lg font-medium">
+                    {t.wider.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">{t.wider.lead}</p>
+                </div>
+                <ul className={cardList}>{wider.map((a) => card(a, true))}</ul>
+              </section>
+            ) : (
+              <ul className={cardList}>{wider.map((a) => card(a, true))}</ul>
+            ))}
+
+          {(results.length > 0 || wider.length > 0) && slots > 0 && (
+            <SelectionBar formId="selection" slots={slots} />
+          )}
 
           <TicketBlock projectId={id} askEmail={Boolean(claims?.claims.is_anonymous)} />
 

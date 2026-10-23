@@ -96,6 +96,11 @@ export function RequestBlocks({
             ? r.adresse
             : [r.code_postal, r.ville_nom].filter(Boolean).join(" ")}
         </p>
+        {r.hors_zone && (
+          <p className="rounded-input bg-warning-soft px-3 py-2 text-xs text-warning">
+            {t.outsideZone}
+          </p>
+        )}
         {accepted && r.lat !== null && r.lon !== null && (
           <a
             href={`https://www.openstreetmap.org/?mlat=${r.lat}&mlon=${r.lon}#map=17/${r.lat}/${r.lon}`}
