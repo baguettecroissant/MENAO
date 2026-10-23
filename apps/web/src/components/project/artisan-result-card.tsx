@@ -26,6 +26,7 @@ export function ArtisanResultCard({
   moreSpecialties,
   selection,
   known = false,
+  preselected = known,
   outsideZone = false,
   verified = false,
   score = null,
@@ -47,8 +48,10 @@ export function ArtisanResultCard({
   specialties: string[];
   moreSpecialties: number;
   selection: "selectable" | "sent" | "none";
-  /** Artisan d'un chantier précédent (« Redemander un devis ») : mis en avant et présélectionné. */
+  /** Artisan d'un chantier précédent (« Redemander un devis ») : mention « Déjà venu chez vous ». */
   known?: boolean;
+  /** Coché d'office : artisan d'un chantier précédent ou de la fiche d'où part la recherche. */
+  preselected?: boolean;
   /** Artisan de la zone élargie (ADR 0165). */
   outsideZone?: boolean;
   /** Badge « Assuré et vérifié » (ADR 0119). */
@@ -132,7 +135,7 @@ export function ArtisanResultCard({
                 name={lotId ? "lot" : "artisan"}
                 value={lotId ? `${lotId}.${artisanId}` : artisanId}
                 form="selection"
-                defaultChecked={known}
+                defaultChecked={preselected}
                 // Case invisible couvrant tout le bouton : cible tactile complète, toujours accessible.
                 className="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-button opacity-0 disabled:cursor-not-allowed"
               />

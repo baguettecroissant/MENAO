@@ -26,6 +26,7 @@ export function NeedForm({
   initialText = "",
   initialTrade = null,
   rehire = null,
+  fromPage = null,
   partnerCode = null,
 }: {
   trades: { code: string; label: string }[];
@@ -33,6 +34,8 @@ export function NeedForm({
   initialTrade?: string | null;
   /** « Redemander un devis » : artisan d'un chantier précédent, proposé en premier. */
   rehire?: { artisanId: string; chantierId: string; name: string } | null;
+  /** Recherche lancée depuis la fiche publique d'un artisan (ADR 0173) : proposé en premier. */
+  fromPage?: { artisanId: string; name: string } | null;
   /** Programme Partenaires (F-59) : code lu dans l'adresse (`?p=`), transmis avec la demande. */
   partnerCode?: string | null;
 }) {
@@ -75,7 +78,9 @@ export function NeedForm({
       tradeHint,
       ...(rehire
         ? { preferredArtisanId: rehire.artisanId, fromChantierId: rehire.chantierId }
-        : {}),
+        : fromPage
+          ? { preferredArtisanId: fromPage.artisanId, fromPublicPage: true }
+          : {}),
       ...(partnerCode ? { partnerCode } : {}),
     });
     if (result.status !== "ok" || !("projectId" in result)) {
@@ -98,9 +103,9 @@ export function NeedForm({
   return (
     <>
       <form onSubmit={submit} className="flex w-full flex-col items-center gap-4" noValidate>
-        {rehire && (
+        {(rehire ?? fromPage) && (
           <div className="w-full text-left">
-            <Alert tone="info">{t.rehire(rehire.name)}</Alert>
+            <Alert tone="info">{t.rehire((rehire ?? fromPage)!.name)}</Alert>
           </div>
         )}
         {errors.map((message) => (

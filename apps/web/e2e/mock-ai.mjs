@@ -8,7 +8,7 @@
 // Dictée de devis (balise <dictee>, F-19) : deux lignes fixes, dont une sans prix dicté.
 import { createServer } from "node:http";
 
-const PORT = Number(process.env.MOCK_AI_PORT ?? 54398);
+const PORT = Number(process.env.MOCK_AI_PORT ?? 18398);
 
 function analysis(description, model) {
   const fallback = /sonnet/.test(model);
