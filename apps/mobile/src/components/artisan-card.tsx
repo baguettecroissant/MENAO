@@ -41,6 +41,7 @@ export function ArtisanTile({
   selection = "none",
   onToggle,
   otherTrade = false,
+  recommendedBy,
 }: {
   artisan: MatchedArtisan;
   tradeLabel: string;
@@ -50,6 +51,8 @@ export function ArtisanTile({
   onToggle?: () => void;
   /** Artisan d'un autre métier du chantier (ADR 0170) : le métier est lu avec son nom. */
   otherTrade?: boolean;
+  /** Partenaire recommandé par un artisan du chantier (ADR 0174) : son nom, null s'il est inconnu. */
+  recommendedBy?: string | null;
 }) {
   const avail = availability({ paused: false, availableFrom: artisan.availableFrom }, parisToday());
   const specs = specialtiesPreview(artisan.specialties, projectWorkTypes);
@@ -93,6 +96,13 @@ export function ArtisanTile({
               {distance ? ` · ${distance}` : ""}
             </Text>
           </View>
+          {recommendedBy !== undefined ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {t.recommended.by(recommendedBy ?? t.recommended.someone)}
+              </Text>
+            </View>
+          ) : null}
           {artisan.outsideZone ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{t.wider.badge}</Text>

@@ -30,5 +30,7 @@
 - **Migrations** : `type_recommandation_partenaire` (valeur d'énumération seule) et `recommander_partenaire`. Test pgTAP `93_recommander_partenaire`.
 - **Seed** : Inès a parrainé Lina, pour le test de bout en bout.
 - **Après la fusion** : `db push` sur staging, puis redéployer `notify`.
-- **Application** : la même fonction côté artisan et côté client arrive dans une PR suivante.
+- **Application** : même fonction que sur le site.
+  - Côté artisan : la carte « Recommander un partenaire » sur l'opportunité ; l'écran de refus le rappelle.
+  - Côté client : section « Recommandés par vos artisans », et les partenaires en tête du carrousel de leur métier, avec la mention « Recommandé par …, son partenaire ».
 - **Pas de nouvelle dépendance.**

@@ -12,7 +12,7 @@ import { LotStart } from "@/components/lot-start";
 import { NeedSummaryBand } from "@/components/need-summary";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadResults, type ProjectResults } from "@/lib/project";
+import { loadResults, type MatchedArtisan, type ProjectResults } from "@/lib/project";
 import { loadProjectRequests, sendScreenParams, type ProjectRequests } from "@/lib/requests";
 import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -110,7 +110,54 @@ export default function ProjetArtisans() {
     .map((lot) => ({ projectId: lot.id, artisanIds: lotSelected[lot.id] ?? [] }))
     .filter((lot) => lot.artisanIds.length > 0);
   const total = selected.length + lotChoices.reduce((n, lot) => n + lot.artisanIds.length, 0);
-  const severalTrades = results.lots.some((lot) => lot.artisans.length > 0 && lot.slots > 0);
+  const severalTrades = results.lots.some(
+    (lot) => (lot.artisans.length > 0 || lot.recommended.length > 0) && lot.slots > 0,
+  );
+
+  const rootTile = (artisan: MatchedArtisan, recommendedBy?: string | null) => (
+    <ArtisanTile
+      key={artisan.id}
+      artisan={artisan}
+      tradeLabel={results.tradeLabel}
+      projectWorkTypes={results.workTypeCodes}
+      selection={selectionOf(artisan.id)}
+      onToggle={() => toggle(artisan.id)}
+      recommendedBy={recommendedBy}
+      onOpen={() =>
+        router.push({
+          pathname: "/projet/[id]/artisan/[artisanId]",
+          params: {
+            id,
+            artisanId: artisan.id,
+            // La fiche propose l'envoi seulement si une place reste et l'artisan n'est pas sollicité.
+            canRequest: requests.slots > 0 && !requests.requested.has(artisan.id) ? "1" : "0",
+          },
+        })
+      }
+    />
+  );
+  const lotTile = (lot: Lot, artisan: MatchedArtisan, recommendedBy?: string | null) => (
+    <ArtisanTile
+      key={artisan.id}
+      artisan={artisan}
+      tradeLabel={lot.trade}
+      projectWorkTypes={lot.workTypeCodes}
+      selection={lotSelectionOf(lot, artisan.id)}
+      onToggle={() => toggleLot(lot, artisan.id)}
+      otherTrade
+      recommendedBy={recommendedBy}
+      onOpen={() =>
+        router.push({
+          pathname: "/projet/[id]/artisan/[artisanId]",
+          params: {
+            id: lot.id,
+            artisanId: artisan.id,
+            canRequest: lot.slots > 0 && !lot.requested.has(artisan.id) ? "1" : "0",
+          },
+        })
+      }
+    />
+  );
 
   // Zone élargie (ADR 0165) : plus aucun artisan de la zone à contacter.
   const wider = showWiderZone({
@@ -166,6 +213,25 @@ export default function ProjetArtisans() {
           <Notice tone="info">{s.noSlot}</Notice>
         ))}
       {limitReached === "" && <Notice tone="info">{s.limit}</Notice>}
+      {/* Partenaires recommandés par un artisan du chantier (ADR 0174), hors du classement. */}
+      {results.recommended.length > 0 ? (
+        <View style={styles.recommended}>
+          <Text role="heading" style={styles.lotsHeading}>
+            {t.recommended.title}
+          </Text>
+          <Body muted>{t.recommended.lead}</Body>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={TILE_WIDTH + GAP}
+            decelerationRate="fast"
+            style={styles.carousel}
+            contentContainerStyle={styles.carouselContent}
+          >
+            {results.recommended.map((r) => rootTile(r.artisan, r.by))}
+          </ScrollView>
+        </View>
+      ) : null}
       {/* Carrousel de la maquette « Résultat de recherche - in app », bord à bord. */}
       <ScrollView
         horizontal
@@ -175,27 +241,7 @@ export default function ProjetArtisans() {
         style={styles.carousel}
         contentContainerStyle={styles.carouselContent}
       >
-        {shown.map((artisan) => (
-          <ArtisanTile
-            key={artisan.id}
-            artisan={artisan}
-            tradeLabel={results.tradeLabel}
-            projectWorkTypes={results.workTypeCodes}
-            selection={selectionOf(artisan.id)}
-            onToggle={() => toggle(artisan.id)}
-            onOpen={() =>
-              router.push({
-                pathname: "/projet/[id]/artisan/[artisanId]",
-                params: {
-                  id,
-                  artisanId: artisan.id,
-                  // La fiche propose l'envoi seulement si une place reste et l'artisan n'est pas sollicité.
-                  canRequest: requests.slots > 0 && !requests.requested.has(artisan.id) ? "1" : "0",
-                },
-              })
-            }
-          />
-        ))}
+        {shown.map((artisan) => rootTile(artisan))}
         <HelpTile
           onPress={() => router.push({ pathname: "/projet/[id]/dossier", params: { id } })}
         />
@@ -242,7 +288,7 @@ export default function ProjetArtisans() {
                 />
               ) : null}
               {limitReached === lot.id && <Notice tone="info">{s.limitLots}</Notice>}
-              {lot.artisans.length > 0 ? (
+              {lot.artisans.length > 0 || lot.recommended.length > 0 ? (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -251,27 +297,9 @@ export default function ProjetArtisans() {
                   style={styles.carousel}
                   contentContainerStyle={styles.carouselContent}
                 >
-                  {lot.artisans.map((artisan) => (
-                    <ArtisanTile
-                      key={artisan.id}
-                      artisan={artisan}
-                      tradeLabel={lot.trade}
-                      projectWorkTypes={lot.workTypeCodes}
-                      selection={lotSelectionOf(lot, artisan.id)}
-                      onToggle={() => toggleLot(lot, artisan.id)}
-                      otherTrade
-                      onOpen={() =>
-                        router.push({
-                          pathname: "/projet/[id]/artisan/[artisanId]",
-                          params: {
-                            id: lot.id,
-                            artisanId: artisan.id,
-                            canRequest: lot.slots > 0 && !lot.requested.has(artisan.id) ? "1" : "0",
-                          },
-                        })
-                      }
-                    />
-                  ))}
+                  {/* Partenaires recommandés (ADR 0174), avant les artisans du classement. */}
+                  {lot.recommended.map((r) => lotTile(lot, r.artisan, r.by))}
+                  {lot.artisans.map((artisan) => lotTile(lot, artisan))}
                 </ScrollView>
               ) : null}
             </View>
@@ -283,6 +311,7 @@ export default function ProjetArtisans() {
 }
 
 const styles = StyleSheet.create({
+  recommended: { gap: theme.spacing(2) },
   lots: { gap: theme.spacing(3), paddingTop: theme.spacing(2) },
   lotsHeading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
   lot: {

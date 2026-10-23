@@ -6,6 +6,7 @@ import { StyleSheet, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand } from "@/components/header-band";
 import { ClientReputationCard } from "@/components/pro/client-reputation-card";
+import { PartnerRecommendations } from "@/components/pro/partner-recommendations";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -37,7 +38,7 @@ export default function OpportunityScreen() {
       </Screen>
     );
   }
-  const { detail: r, photoUrls, reputation } = opportunity;
+  const { detail: r, photoUrls, reputation, partners } = opportunity;
   if (r.chantier_id) return <Redirect href={`/pro-chantier/${r.chantier_id}`} />;
 
   const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
@@ -78,7 +79,13 @@ export default function OpportunityScreen() {
               <Button
                 label={t.refuse}
                 variant="danger"
-                onPress={() => router.push(`/opportunite/${id}/refuser`)}
+                onPress={() =>
+                  router.push({
+                    pathname: "/opportunite/[id]/refuser",
+                    // Partenaires à recommander à sa place après le refus (ADR 0174).
+                    params: { id, partenaires: partners.some((p) => p.sameProject) ? "1" : "" },
+                  })
+                }
               />
             ) : null}
           </View>
@@ -94,6 +101,13 @@ export default function OpportunityScreen() {
       </View>
       <RequestBlocks detail={r} photoUrls={photoUrls} variant="opportunite" />
       {reputation ? <ClientReputationCard reputation={reputation} /> : null}
+      {partners.length > 0 ? (
+        <PartnerRecommendations
+          requestId={r.id}
+          clientFirstName={r.client.first_name}
+          options={partners}
+        />
+      ) : null}
       <LinkText
         label={fr.proFakeClient.open}
         onPress={() => router.push(`/opportunite/${id}/faux-particulier`)}
