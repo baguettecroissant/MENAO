@@ -14,7 +14,7 @@ import { ArtisanResultCard } from "@/components/project/artisan-result-card";
 import { ProjectSummaryBand, ProjectSummaryCard } from "@/components/project/project-summary-card";
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { matchArtisans, publicUrl } from "@/lib/project/artisans";
+import { getArtisanProfile, matchArtisans, publicUrl } from "@/lib/project/artisans";
 import { joinNames } from "@/lib/project/names";
 import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
@@ -90,16 +90,28 @@ export default async function ProjectResultsPage({
   const inZone = (artisans ?? []).filter((a) => !a.hors_zone);
   const nearby = (artisans ?? []).filter((a) => a.hors_zone);
   const preferred = inZone.find((a) => a.artisan_id === preferredId) ?? null;
-  // « Redemander un devis » : l'artisan connu en tête, présélectionné, à la demande du client.
+  // « Redemander un devis » ou recherche lancée depuis sa fiche publique (ADR 0173) : l'artisan en
+  // tête, présélectionné, à la demande du client.
   const results = [
     ...(preferred ? [preferred] : []),
     ...inZone.filter((a) => a !== preferred),
   ].slice(0, MAX_SEARCH_RESULTS);
   const today = parisToday();
+  const sentName = (sent.data ?? []).find((r) => r.artisan_id === preferredId)?.artisan_name;
+  // « Déjà venu chez vous » seulement après un chantier commun (pas pour un artisan de sa fiche).
+  const [{ data: pastChantier }, preferredProfile] = preferredId
+    ? await Promise.all([
+        supabase
+          .from("chantiers")
+          .select("id")
+          .eq("artisan_id", preferredId)
+          .limit(1)
+          .maybeSingle(),
+        !preferred && !sentName ? getArtisanProfile(supabase, preferredId) : Promise.resolve(null),
+      ])
+    : [{ data: null }, null];
   const preferredUnavailable =
-    preferredId && !preferred
-      ? ((sent.data ?? []).find((r) => r.artisan_id === preferredId)?.artisan_name ?? null)
-      : null;
+    preferredId && !preferred ? (sentName ?? preferredProfile?.display_name ?? null) : null;
   const projectRequests = (sent.data ?? []).filter((r) => r.project_id === id);
   const requested = new Set(projectRequests.map((r) => r.artisan_id));
   const slots = remainingSlots(projectRequests.map((r) => r.status));
@@ -139,7 +151,8 @@ export default async function ProjectResultsPage({
         specialties={specs.shown}
         moreSpecialties={specs.more}
         selection={done ? "sent" : open ? "selectable" : "none"}
-        known={!lot && a.artisan_id === preferredId}
+        known={!lot && a.artisan_id === preferredId && pastChantier !== null}
+        preselected={!lot && a.artisan_id === preferredId}
         outsideZone={outsideZone}
         lotId={lot?.id}
         headingLevel={lot ? 4 : 2}
