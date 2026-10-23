@@ -2463,7 +2463,7 @@ export type Database = {
           preferred_artisan_id: string | null;
           room_codes: string[];
           status: Database["public"]["Enums"]["project_status"];
-          suggested_lots: Json;
+          suggested_lots: NonNullable<Json>;
           summary: string | null;
           surface: Database["public"]["Enums"]["project_surface"] | null;
           trade_code: string | null;
@@ -2498,7 +2498,7 @@ export type Database = {
           preferred_artisan_id?: string | null;
           room_codes?: string[];
           status?: Database["public"]["Enums"]["project_status"];
-          suggested_lots?: Json;
+          suggested_lots?: NonNullable<Json>;
           summary?: string | null;
           surface?: Database["public"]["Enums"]["project_surface"] | null;
           trade_code?: string | null;
@@ -2532,7 +2532,7 @@ export type Database = {
           preferred_artisan_id?: string | null;
           room_codes?: string[];
           status?: Database["public"]["Enums"]["project_status"];
-          suggested_lots?: Json;
+          suggested_lots?: NonNullable<Json>;
           summary?: string | null;
           surface?: Database["public"]["Enums"]["project_surface"] | null;
           trade_code?: string | null;
