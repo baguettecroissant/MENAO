@@ -155,7 +155,10 @@ export function RequestForm({
           disabled={pending}
           className="w-full sm:w-auto"
         >
-          {t.submit(context.artisanIds.length)}
+          {t.submit(
+            context.artisanIds.length +
+              (context.lots ?? []).reduce((n, lot) => n + lot.artisanIds.length, 0),
+          )}
           <Send aria-hidden="true" className="size-4" />
         </Button>
         <p className="text-xs text-muted-foreground">{t.deadline}</p>
