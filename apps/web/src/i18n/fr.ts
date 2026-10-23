@@ -4621,9 +4621,14 @@ export const fr = {
         presentationSave: "Enregistrer la présentation",
         portfolio: "Photos de réalisations",
         portfolioHint:
-          "Jusqu'à 12 photos de chantiers terminés (sans personne ni adresse visible).",
+          "Jusqu'à 12 photos de chantiers terminés (sans personne ni adresse visible). Vous pouvez en choisir plusieurs à la fois.",
         portfolioAlt: (n: number) => `Réalisation ${n}`,
-        portfolioAdd: "Ajouter la photo",
+        portfolioAdd: "Ajouter des photos",
+        portfolioSending: (done: number, total: number) =>
+          `Envoi de la photo ${done} sur ${total}…`,
+        portfolioDone: (n: number) => (n > 1 ? `${n} photos ajoutées.` : "Photo ajoutée."),
+        portfolioTooMany: (n: number) =>
+          `Seules les ${n} premières photos ont été envoyées : 12 au plus.`,
         portfolioDelete: "Supprimer",
         portfolioEmpty: "Aucune photo pour le moment.",
       },

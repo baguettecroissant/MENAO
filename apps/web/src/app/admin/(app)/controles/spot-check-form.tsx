@@ -26,7 +26,7 @@ export function SpotCheckForm({ spotCheckId }: { spotCheckId: string }) {
         rows={2}
         maxLength={1000}
         aria-describedby={`${noteId}-hint`}
-        className="rounded-button border border-border bg-surface p-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="rounded-input border border-border bg-surface p-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       />
       <p id={`${noteId}-hint`} className="text-xs text-muted-foreground">
         {t.noteHint}

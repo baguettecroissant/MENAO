@@ -561,7 +561,7 @@ export default async function AdminArtisanPage({
                     alt={fr.pro.onboarding.profile.portfolioAlt(i + 1)}
                     width={300}
                     height={225}
-                    className="aspect-4/3 w-full rounded-button object-cover"
+                    className="aspect-4/3 w-full rounded-input object-cover"
                   />
                 </li>
               ))}

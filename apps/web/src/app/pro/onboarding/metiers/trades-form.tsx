@@ -45,7 +45,7 @@ export function TradesForm(props: {
         <p className="text-sm text-muted-foreground">{t.hint}</p>
         <div className="grid gap-3 sm:grid-cols-2">
           {props.trades.map((trade) => (
-            <div key={trade.code} className="rounded-button border border-border p-3">
+            <div key={trade.code} className="rounded-input border border-border p-3">
               <CheckboxField
                 name="trade"
                 id={`trade-${trade.code}`}

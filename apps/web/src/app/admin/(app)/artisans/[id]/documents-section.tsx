@@ -89,7 +89,7 @@ export function DocumentsSection({
           <li
             key={type}
             aria-label={docT.types[type]}
-            className="flex flex-col gap-3 rounded-button border border-border p-3"
+            className="flex flex-col gap-3 rounded-input border border-border p-3"
           >
             <span className="font-medium">{docT.types[type]}</span>
             {type === "decennale" && decennaleExempt && (

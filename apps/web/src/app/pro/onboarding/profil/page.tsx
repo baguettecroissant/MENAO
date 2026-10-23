@@ -5,6 +5,7 @@ import { UploadForm } from "@/components/upload-form";
 import { fr } from "@/i18n/fr";
 import { deletePortfolioPhoto } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { PortfolioUpload } from "./portfolio-upload";
 import { PresentationForm } from "./presentation-form";
 
 const t = fr.pro.onboarding.profile;
@@ -45,6 +46,7 @@ export default async function ProfileStepPage() {
             hint={fr.pro.onboarding.upload.fileHintPhoto}
             submitLabel={avatarPath ? t.avatarChange : t.avatarSend}
             resizeTo={512}
+            square
           />
         </section>
       </Card>
@@ -70,7 +72,7 @@ export default async function ProfileStepPage() {
                     alt={t.portfolioAlt(index + 1)}
                     width={400}
                     height={300}
-                    className="aspect-4/3 w-full rounded-button border border-border object-cover"
+                    className="aspect-4/3 w-full rounded-input border border-border object-cover"
                   />
                   <form action={deletePortfolioPhoto}>
                     <input type="hidden" name="id" value={photo.id} />
@@ -87,14 +89,7 @@ export default async function ProfileStepPage() {
             </ul>
           )}
           {photos.length < MAX_PHOTOS && (
-            <UploadForm
-              purpose="portfolio"
-              userId={userId}
-              accept="image/jpeg,image/png"
-              hint={fr.pro.onboarding.upload.fileHintPhoto}
-              submitLabel={t.portfolioAdd}
-              resizeTo={1600}
-            />
+            <PortfolioUpload userId={userId} remaining={MAX_PHOTOS - photos.length} />
           )}
         </section>
       </Card>

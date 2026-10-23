@@ -110,7 +110,7 @@ export default async function TradesStepPage({
             {certifications.map((c) => (
               <li
                 key={c.id}
-                className="flex items-center justify-between gap-4 rounded-button border border-border px-3 py-2"
+                className="flex items-center justify-between gap-4 rounded-input border border-border px-3 py-2"
               >
                 <span>
                   <span className="font-medium">{fr.certificationTypes[c.type]}</span> · {c.numero}{" "}

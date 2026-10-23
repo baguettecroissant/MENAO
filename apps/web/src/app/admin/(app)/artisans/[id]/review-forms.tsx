@@ -92,7 +92,7 @@ export function DecisionForm({
         rows={3}
         maxLength={2000}
         aria-describedby="message-hint"
-        className="rounded-button border border-border bg-surface p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="rounded-input border border-border bg-surface p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       />
       <p id="message-hint" className="text-sm text-muted-foreground">
         {state.fieldErrors?.message?.[0] ?? t.messageHint}
