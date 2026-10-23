@@ -249,14 +249,14 @@ export default async function ProjectResultsPage({
                   className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card"
                 >
                   <div className="flex items-center justify-between gap-4">
-                    <span className="flex min-w-0 flex-col">
+                    <div className="flex min-w-0 flex-col">
                       <h3 id={`metier-${lot.id}`} className="font-medium">
                         {lot.trade}
                       </h3>
                       <span className="text-sm text-muted-foreground">
                         {lot.sent ? t.lots.sent : t.lots.found(lot.found)}
                       </span>
-                    </span>
+                    </div>
                     {/* Pas d'artisan de la zone : la page du métier propose ceux d'un peu plus loin. */}
                     {lot.artisans.length === 0 && (
                       <TextLink

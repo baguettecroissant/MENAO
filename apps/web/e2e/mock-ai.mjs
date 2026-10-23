@@ -2,7 +2,8 @@
 // audio) et Géoplateforme (géocodage appelé par l'Edge Function analyze-need). Aucune requête vers
 // un vrai modèle en CI. Données entièrement fictives.
 //
-// Analyse : « fuite » → plombier à Nice, sûr ; « hésitant » → peu sûr au premier modèle, sûr au
+// Analyse : « fuite » → plombier à Nice, sûr ; « salle de bains » → plombier à Nice, avec le
+// carreleur en métier complémentaire (ADR 0167) ; « hésitant » → peu sûr au premier modèle, sûr au
 // modèle de secours (vérifie le repli) ; « panne » → réponse invalide (vérifie le formulaire vide).
 // Dictée de devis (balise <dictee>, F-19) : deux lignes fixes, dont une sans prix dicté.
 import { createServer } from "node:http";
@@ -30,6 +31,26 @@ function analysis(description, model) {
       brief_artisan:
         "Fuite sous l'évier de la cuisine d'un appartement à Nice, à traiter en urgence. À préciser lors de la visite : origine de la fuite et état des raccords.",
       confiance: 0.93,
+    });
+  }
+  if (/salle de bains/i.test(description)) {
+    return JSON.stringify({
+      metier: "plombier",
+      lieu_type: "appartement",
+      pieces: ["salle-de-bain"],
+      travaux: ["sanitaires"],
+      surface_tranche: "moins_10",
+      ville: "Nice",
+      code_postal: "06000",
+      adresse: null,
+      date_souhaitee: null,
+      urgence: false,
+      resume: "Refaire entièrement la salle de bains.",
+      budget_tranche: null,
+      metiers_complementaires: [{ metier: "carreleur", travaux: ["faience"] }],
+      brief_artisan:
+        "Rénovation complète d'une petite salle de bains d'appartement à Nice. À préciser lors de la visite : équipements à remplacer et état des évacuations.",
+      confiance: 0.9,
     });
   }
   return JSON.stringify({
