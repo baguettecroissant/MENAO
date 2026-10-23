@@ -30,7 +30,7 @@ export function RequestForm({
   summary: NeedSummary;
 }) {
   const [values, setValues] = useState<RequestValues>({
-    message: "",
+    message: context.message,
     phone: context.phone,
     callbackMode: "des_que_possible",
     callbackFrom: "",

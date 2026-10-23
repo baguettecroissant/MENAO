@@ -1322,6 +1322,7 @@ export const fr = {
         sent: "Demande envoyée",
         lotOf: (trade: string) => `${trade} : un des métiers de votre chantier`,
         back: "Retour au chantier",
+        workOrder: (trades: string) => `Ordre habituel des travaux : ${trades}.`,
       },
       // Zone élargie (ADR 0165) : artisans dont la zone s'arrête un peu avant le chantier.
       wider: {
@@ -1457,6 +1458,13 @@ export const fr = {
         `Vous avez indiqué être joignable par téléphone entre ${from} et ${to}.`,
       sentNext: "Vous recevrez les coordonnées de chaque artisan dès qu'il accepte votre demande.",
       follow: "Suivre ma demande depuis mon espace",
+      // Chantier à plusieurs métiers (ADR 0168) : les métiers qui restent à contacter.
+      otherLots: {
+        title: "Les autres métiers de votre chantier",
+        lead: "Choisissez maintenant les artisans des autres métiers :",
+        choose: (trade: string) => `Choisir un artisan : ${trade}`,
+      },
+      workOrder: (trades: string) => `Ordre habituel des travaux : ${trades}.`,
     },
     profile: {
       breadcrumb: {
@@ -1656,6 +1664,8 @@ export const fr = {
       annulee: "Annulée",
       a_verifier: "En cours de vérification",
     },
+    // Chantier à plusieurs métiers (ADR 0168).
+    lotOf: (chantier: string) => `Un des métiers de votre chantier : ${chantier}`,
     verificationHint:
       "L'équipe MENAO vérifie votre demande avant de la transmettre à l'artisan : vous serez prévenu de sa réponse.",
     timeLeft: (h: number, m: number) =>

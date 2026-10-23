@@ -127,6 +127,7 @@ export function MyChantiersScreen() {
                 photoUrl={data?.photoByProject.get(projectId) ?? null}
                 now={now}
                 cancelledByClient={data?.cancelledByClient ?? new Set()}
+                chantier={data?.chantierOf.get(projectId) ?? null}
               />
             ))}
           </>

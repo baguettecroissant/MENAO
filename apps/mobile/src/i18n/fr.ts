@@ -897,6 +897,7 @@ export const fr = {
       see: "Voir les artisans",
       lotOf: (trade: string) => `${trade} : un des métiers de votre chantier`,
       back: "Retour au chantier",
+      workOrder: (trades: string) => `Ordre habituel des travaux : ${trades}.`,
     },
     // Zone élargie (ADR 0165), comme sur le site.
     wider: {
@@ -1105,9 +1106,18 @@ export const fr = {
     next: "Vous recevrez les coordonnées de chaque artisan dès qu'il accepte votre demande.",
     follow: "Suivre ma demande",
     home: "Revenir à l'accueil",
+    // Chantier à plusieurs métiers (ADR 0168) : les métiers qui restent à contacter.
+    otherLots: {
+      title: "Les autres métiers de votre chantier",
+      lead: "Choisissez maintenant les artisans des autres métiers :",
+      choose: (trade: string) => `Choisir un artisan : ${trade}`,
+    },
+    workOrder: (trades: string) => `Ordre habituel des travaux : ${trades}.`,
   },
   // Suivi des demandes et des chantiers (F-11, F-12) : textes repris de l'espace client du site.
   myChantiers: {
+    // Chantier à plusieurs métiers (ADR 0168).
+    lotOf: (chantier: string) => `Un des métiers de votre chantier : ${chantier}`,
     title: "Mes chantiers",
     subtitle: "Suivez vos chantiers MENAO, en toute simplicité",
     start: "Démarrer un chantier",

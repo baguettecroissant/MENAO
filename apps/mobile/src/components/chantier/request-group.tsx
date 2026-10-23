@@ -28,11 +28,14 @@ export function RequestGroup({
   photoUrl,
   now,
   cancelledByClient,
+  chantier = null,
 }: {
   items: RequestRow[];
   photoUrl: string | null;
   now: Date;
   cancelledByClient: ReadonlySet<string>;
+  /** Lot d'un chantier à plusieurs métiers (ADR 0168) : nom du chantier. */
+  chantier?: string | null;
 }) {
   const head = items[0];
   if (!head) return null;
@@ -46,6 +49,7 @@ export function RequestGroup({
       <View style={styles.body}>
         <StatusPill text={t.status[lead.status]} tone={TONE[lead.status]} />
         <Text style={styles.title}>{head.trade_label}</Text>
+        {chantier ? <Text style={styles.meta}>{fr.myChantiers.lotOf(chantier)}</Text> : null}
         {head.ville_nom ? (
           <View style={styles.row}>
             <MapPin size={14} color={colors["muted-foreground"]} />

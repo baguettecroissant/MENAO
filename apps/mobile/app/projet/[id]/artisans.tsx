@@ -165,6 +165,9 @@ export default function ProjetArtisans() {
           <Text role="heading" style={styles.lotsHeading}>
             {t.lots.title}
           </Text>
+          {results.workOrder.length > 1 ? (
+            <Text style={styles.lotFound}>{t.lots.workOrder(results.workOrder.join(", "))}</Text>
+          ) : null}
           {results.lots.map((lot) => (
             <View key={lot.id} style={styles.lot}>
               <View style={styles.lotText}>

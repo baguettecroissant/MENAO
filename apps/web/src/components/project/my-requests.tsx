@@ -31,6 +31,7 @@ export function PendingRequests({
   avatarUrls,
   now,
   cancelledByClient = new Set(),
+  chantierOf = new Map(),
 }: {
   rows: RequestRow[];
   /** Première photo de chaque projet, par identifiant de projet. */
@@ -39,6 +40,8 @@ export function PendingRequests({
   now: Date;
   /** Demandes annulées par le client lui-même (motif renseigné). */
   cancelledByClient?: ReadonlySet<string>;
+  /** Lots d'un chantier à plusieurs métiers (ADR 0168) : nom du chantier, par projet. */
+  chantierOf?: ReadonlyMap<string, string>;
 }) {
   const projectIds = [...new Set(rows.filter((r) => !r.chantier_id).map((r) => r.project_id))];
   return (
@@ -66,6 +69,11 @@ export function PendingRequests({
                 <StatusBadge tone={tone[lead.status]}>{t.status[lead.status]}</StatusBadge>
               </div>
               <h3 className="text-lg font-medium">{head.trade_label}</h3>
+              {chantierOf.has(projectId) && (
+                <p className="text-xs text-muted-foreground">
+                  {t.lotOf(chantierOf.get(projectId) ?? "")}
+                </p>
+              )}
               {head.ville_nom && (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <MapPin aria-hidden="true" className="size-3.5" />

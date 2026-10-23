@@ -9,6 +9,7 @@ import { SelectedArtisansCard } from "@/components/project/selected-artisans-car
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { matchArtisans, publicUrl } from "@/lib/project/artisans";
+import { getChantierProjects } from "@/lib/project/chantier";
 import { joinNames } from "@/lib/project/names";
 import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
@@ -80,17 +81,32 @@ export default async function SendRequestPage({
   } else if (roleFromAppMetadata(auth.claims.app_metadata) !== "particulier") {
     form = <Alert tone="error">{t.notParticulier}</Alert>;
   } else {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("phone")
-      .eq("user_id", auth.claims.sub)
-      .maybeSingle();
+    const [{ data: profile }, chantier] = await Promise.all([
+      supabase.from("profiles").select("phone").eq("user_id", auth.claims.sub).maybeSingle(),
+      getChantierProjects(supabase, id),
+    ]);
+    // Chantier à plusieurs métiers (ADR 0168) : le message déjà écrit pour un autre métier.
+    const { data: lastMessage } =
+      chantier && chantier.projects.length > 1
+        ? await supabase
+            .from("requests")
+            .select("message")
+            .in(
+              "project_id",
+              chantier.projects.map((p) => p.id),
+            )
+            .not("message", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : { data: null };
     form = (
       <RequestForm
         context={context}
         names={names}
         email={auth.claims.email ?? ""}
         phone={profile?.phone ?? null}
+        defaultMessage={lastMessage?.message ?? null}
       />
     );
   }

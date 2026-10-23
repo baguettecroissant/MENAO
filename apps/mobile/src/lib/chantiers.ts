@@ -44,6 +44,8 @@ export type MyChantiers = {
   /** Photo de couverture : par chemin (chantiers) et par projet (demandes en attente). */
   photoByPath: Map<string, string>;
   photoByProject: Map<string, string>;
+  /** Lots d'un chantier à plusieurs métiers (ADR 0168) : nom du chantier, par projet. */
+  chantierOf: Map<string, string>;
 };
 
 /**
@@ -68,13 +70,26 @@ export async function loadMyChantiers(): Promise<MyChantiers | null> {
   const pendingProjects = [
     ...new Set((requests.data ?? []).filter((r) => !r.chantier_id).map((r) => r.project_id)),
   ];
-  const { data: projectPhotos } = pendingProjects.length
-    ? await supabase
-        .from("project_photos")
-        .select("project_id, storage_path")
-        .in("project_id", pendingProjects)
-        .order("sort_order")
-    : { data: [] };
+  const [{ data: projectPhotos }, { data: lotRows }] = pendingProjects.length
+    ? await Promise.all([
+        supabase
+          .from("project_photos")
+          .select("project_id, storage_path")
+          .in("project_id", pendingProjects)
+          .order("sort_order"),
+        supabase
+          .from("projects")
+          .select("id, parent:parent_project_id(summary, trades(label))")
+          .in("id", pendingProjects)
+          .not("parent_project_id", "is", null),
+      ])
+    : [{ data: [] }, { data: [] }];
+  const chantierOf = new Map(
+    (lotRows ?? []).flatMap((lot) => {
+      const label = lot.parent?.summary ?? lot.parent?.trades?.label;
+      return label ? [[lot.id, label] as const] : [];
+    }),
+  );
   const firstPhoto = new Map<string, string>();
   for (const p of projectPhotos ?? []) {
     if (!firstPhoto.has(p.project_id)) firstPhoto.set(p.project_id, p.storage_path);
@@ -101,6 +116,7 @@ export async function loadMyChantiers(): Promise<MyChantiers | null> {
     cancelledByClient: new Set((cancelled.data ?? []).map((r) => r.id)),
     photoByPath,
     photoByProject,
+    chantierOf,
   };
 }
 

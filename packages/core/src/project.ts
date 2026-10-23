@@ -391,6 +391,41 @@ export function suggestedLots(
   return lots.slice(0, MAX_PROJECT_LOTS);
 }
 
+/**
+ * Ordre habituel des travaux d'un chantier (ADR 0168) : terrassement et gros œuvre, toiture et
+ * façade, réseaux (plomberie, chauffage, électricité), cloisons et menuiseries, revêtements,
+ * peinture, extérieurs. Indicatif : chaque artisan fixe ses dates avec le client.
+ */
+export const TRADE_ORDER = [
+  "terrassier",
+  "macon",
+  "charpentier",
+  "couvreur",
+  "facadier",
+  "plombier",
+  "chauffagiste",
+  "climaticien",
+  "electricien",
+  "plaquiste",
+  "menuisier",
+  "carreleur",
+  "peintre",
+  "serrurier",
+  "paysagiste",
+] as const;
+
+/** Éléments rangés dans l'ordre habituel des travaux ; métiers inconnus à la fin, ordre gardé. */
+export function inWorkOrder<T>(items: readonly T[], tradeOf: (item: T) => string | null): T[] {
+  const rank = (item: T) => {
+    const i = (TRADE_ORDER as readonly string[]).indexOf(tradeOf(item) ?? "");
+    return i === -1 ? TRADE_ORDER.length : i;
+  };
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index)
+    .map(({ item }) => item);
+}
+
 /** Lots proposés enregistrés (`projects.suggested_lots`) : métiers, lignes inattendues ignorées. */
 export function storedLotTrades(value: unknown): string[] {
   if (!Array.isArray(value)) return [];

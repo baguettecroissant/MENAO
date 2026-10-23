@@ -1,4 +1,5 @@
 import {
+  inWorkOrder,
   MAX_PROJECT_LOTS,
   MAX_SEARCH_RESULTS,
   parisToday,
@@ -156,6 +157,34 @@ export async function saveProjectLots(
   return error ? sqlError(error) : null;
 }
 
+/**
+ * Projets d'un chantier à plusieurs métiers (ADR 0167, 0168), projet principal et lots, dans
+ * l'ordre habituel des travaux, comme sur le site. Null si le projet est introuvable.
+ */
+export async function loadChantierProjects(projectId: string): Promise<{
+  rootId: string;
+  projects: { id: string; tradeCode: string | null; trade: string }[];
+} | null> {
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id, parent_project_id")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (!project) return null;
+  const rootId = project.parent_project_id ?? project.id;
+  const { data } = await supabase
+    .from("projects")
+    .select("id, trade_code, trades(label)")
+    .or(`id.eq.${rootId},parent_project_id.eq.${rootId}`)
+    .order("created_at");
+  const projects = (data ?? []).map((p) => ({
+    id: p.id,
+    tradeCode: p.trade_code,
+    trade: p.trades?.label ?? "",
+  }));
+  return { rootId, projects: inWorkOrder(projects, (p) => p.tradeCode) };
+}
+
 /** Photo du projet (F-05), par URL signée (1 h) du bucket privé project-photos. */
 export type ProjectPhoto = { id: string; url: string | null };
 
@@ -281,6 +310,8 @@ export type ProjectResults = {
   parentId: string | null;
   /** Autres lots du chantier (projet principal seulement), avec les artisans trouvés. */
   lots: { id: string; trade: string; found: number }[];
+  /** Métiers du chantier dans l'ordre habituel des travaux (ADR 0168). */
+  workOrder: string[];
 };
 
 /** « Résumé de mon besoin » (maquettes) : métier, ville, date souhaitée et photos du projet. */
@@ -382,20 +413,21 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
   const [{ data: project }, summary, artisans, { data: lotRows }] = await Promise.all([
     supabase
       .from("projects")
-      .select("work_type_codes, parent_project_id")
+      .select("work_type_codes, parent_project_id, trade_code")
       .eq("id", projectId)
       .maybeSingle(),
     loadNeedSummary(projectId),
     matchArtisans(projectId, MAX_SEARCH_RESULTS),
     supabase
       .from("projects")
-      .select("id, trades(label)")
+      .select("id, trade_code, trades(label)")
       .eq("parent_project_id", projectId)
       .order("created_at"),
   ]);
   if (!project || !summary || !artisans) return null;
+  const orderedLots = inWorkOrder(lotRows ?? [], (lot) => lot.trade_code);
   const lots = await Promise.all(
-    (lotRows ?? []).map(async (lot) => ({
+    orderedLots.map(async (lot) => ({
       id: lot.id,
       trade: lot.trades?.label ?? "",
       found: (await matchArtisans(lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
@@ -410,5 +442,14 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     summary,
     parentId: project.parent_project_id,
     lots,
+    workOrder: inWorkOrder(
+      [
+        { code: project.trade_code, label: summary.tradeLabel },
+        ...orderedLots.map((l) => ({ code: l.trade_code, label: l.trades?.label ?? "" })),
+      ],
+      (x) => x.code,
+    )
+      .map((x) => x.label)
+      .filter(Boolean),
   };
 }

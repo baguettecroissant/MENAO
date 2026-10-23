@@ -17,6 +17,8 @@ import {
   MAX_PROJECT_LOTS,
   compositeTrades,
   storedLotTrades,
+  TRADE_ORDER,
+  inWorkOrder,
   suggestedLots,
   needHelpLevel,
   normalizeNeedAnalysis,
@@ -489,5 +491,30 @@ describe("chantier à plusieurs métiers (ADR 0167)", () => {
   ];
   it.each(cases)("%s", (description, expected) => {
     expect(compositeTrades(description, trades)).toEqual(expected);
+  });
+});
+
+describe("ordre habituel des travaux (ADR 0168)", () => {
+  it("chaque métier une seule fois", () => {
+    expect(new Set(TRADE_ORDER).size).toBe(TRADE_ORDER.length);
+  });
+
+  it("réseaux avant cloisons, carrelage puis peinture ; métiers inconnus à la fin", () => {
+    const lots = [
+      { trade: "peintre" },
+      { trade: "inconnu" },
+      { trade: "carreleur" },
+      { trade: "electricien" },
+      { trade: "plaquiste" },
+      { trade: "plombier" },
+    ];
+    expect(inWorkOrder(lots, (l) => l.trade).map((l) => l.trade)).toEqual([
+      "plombier",
+      "electricien",
+      "plaquiste",
+      "carreleur",
+      "peintre",
+      "inconnu",
+    ]);
   });
 });

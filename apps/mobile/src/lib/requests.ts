@@ -10,7 +10,7 @@ import { fr } from "@/i18n/fr";
 import { signIn, signUpParticulier } from "./auth";
 import { requestConfirmUrl } from "./env";
 import { kv } from "./kv";
-import { matchArtisans, publicUrl, type MatchedArtisan } from "./project";
+import { loadChantierProjects, matchArtisans, publicUrl, type MatchedArtisan } from "./project";
 import { supabase } from "./supabase";
 
 /** Demande commencée sans compte : reprise à la prochaine connexion dans l'application. */
@@ -83,6 +83,8 @@ export type SendContext = {
   names: string;
   email: string;
   phone: string;
+  /** Message déjà écrit pour un autre métier du même chantier (ADR 0168), repris. */
+  message: string;
 };
 
 /**
@@ -102,16 +104,30 @@ export async function loadSendContext(
   const artisans = (matches ?? []).filter((m) => artisanIds.includes(m.id) && !already.has(m.id));
   const user = session.session?.user;
   if (!artisans.length || !user) return null;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("phone")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, chantier] = await Promise.all([
+    supabase.from("profiles").select("phone").eq("user_id", user.id).maybeSingle(),
+    loadChantierProjects(projectId),
+  ]);
+  const { data: last } =
+    chantier && chantier.projects.length > 1
+      ? await supabase
+          .from("requests")
+          .select("message")
+          .in(
+            "project_id",
+            chantier.projects.map((p) => p.id),
+          )
+          .not("message", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
   return {
     artisans,
     names: joinNames(artisans.map((a) => a.name)),
     email: user.email ?? "",
     phone: profile?.phone ?? "",
+    message: last?.message ?? "",
   };
 }
 
