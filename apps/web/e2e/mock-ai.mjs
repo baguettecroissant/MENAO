@@ -6,6 +6,8 @@
 // carreleur en métier complémentaire (ADR 0167) ; « hésitant » → peu sûr au premier modèle, sûr au
 // modèle de secours (vérifie le repli) ; « panne » → réponse invalide (vérifie le formulaire vide).
 // Dictée de devis (balise <dictee>, F-19) : deux lignes fixes, dont une sans prix dicté.
+// Suggestions pendant la saisie (balise <saisie>, ADR 0177) : « refaire ma salle de bain » → une
+// suite et deux idées ; rien pour les autres textes.
 // Lecture d'un document (photo ou PDF, ADR 0176) : le document attendu, lisible, valable encore
 // dix ans (Kbis et URSSAF émis il y a dix jours).
 import { createServer } from "node:http";
@@ -95,6 +97,19 @@ function quoteLines() {
         prix_unitaire_ht: null,
         tva: null,
       },
+    ],
+  });
+}
+
+function needSuggestion(text) {
+  if (!/refaire ma salle de bain/i.test(text)) {
+    return JSON.stringify({ reprise: null, idees: [] });
+  }
+  return JSON.stringify({
+    reprise: "ma salle de bain en remplaçant la baignoire par une douche",
+    idees: [
+      { libelle: "Surface", texte: ", d'environ … m²" },
+      { libelle: "Ville", texte: "à …" },
     ],
   });
 }
@@ -197,9 +212,11 @@ createServer(async (req, res) => {
           type: "text",
           text: document
             ? documentReading(content)
-            : text.includes("<dictee>")
-              ? quoteLines()
-              : analysis(text, body?.model ?? ""),
+            : text.includes("<saisie>")
+              ? needSuggestion(text)
+              : text.includes("<dictee>")
+                ? quoteLines()
+                : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",

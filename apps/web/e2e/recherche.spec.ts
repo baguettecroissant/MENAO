@@ -15,6 +15,24 @@ test.use({
 
 const UUID = "[0-9a-f-]{36}";
 
+test("suggestions pendant la saisie : suite de la phrase et idées (ADR 0177)", async ({ page }) => {
+  await page.goto("/recherche");
+  const description = page.getByLabel("Décrivez votre projet");
+  await description.fill("Je veux refaire ma salle de bain");
+  // Suite proposée en gris, acceptée par le bouton (ou Tab).
+  await page.getByRole("button", { name: /^Compléter avec/ }).click();
+  await expect(description).toHaveValue(
+    "Je veux refaire ma salle de bain en remplaçant la baignoire par une douche",
+  );
+  // Idée ajoutée à la fin, « … » sélectionné : la frappe le remplace.
+  await page.getByRole("button", { name: "Ajouter : Surface" }).click();
+  await page.keyboard.type("8");
+  await expect(description).toHaveValue(
+    "Je veux refaire ma salle de bain en remplaçant la baignoire par une douche, d'environ 8 m²",
+  );
+  await expect(page.getByRole("button", { name: "Ajouter : Surface" })).toHaveCount(0);
+});
+
 test("saisie, analyse, vérification des critères et lancement de la recherche", async ({
   page,
   browser,

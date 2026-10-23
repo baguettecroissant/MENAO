@@ -108,7 +108,8 @@ export async function withinHourlyLimits(
 }
 
 export type AiRun = {
-  function_name: "analyze-need" | "transcribe" | "quote-from-voice" | "read-document";
+  function_name:
+    "analyze-need" | "transcribe" | "quote-from-voice" | "read-document" | "suggest-need";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;

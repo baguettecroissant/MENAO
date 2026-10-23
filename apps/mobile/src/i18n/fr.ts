@@ -742,6 +742,14 @@ export const fr = {
     label: "Décrivez votre projet",
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
+    // Suggestions pendant la saisie (ADR 0177), comme sur le site.
+    suggestions: {
+      accept: "Compléter",
+      acceptAria: (suite: string) => `Compléter avec : ${suite}`,
+      ideas: "Précisez :",
+      ideasAria: "Idées pour préciser votre demande",
+      addIdea: (label: string) => `Ajouter : ${label}`,
+    },
     attach: "Joindre des photos",
     helpEmpty: "Décrivez vos travaux avec vos mots, ou dictez-les.",
     helpShort:

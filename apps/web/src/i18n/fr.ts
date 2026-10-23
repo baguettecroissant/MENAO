@@ -1077,6 +1077,14 @@ export const fr = {
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
     listening: "Écoute …",
+    // Suggestions pendant la saisie (ADR 0177).
+    suggestions: {
+      accept: "Compléter",
+      acceptAria: (suite: string) => `Compléter avec : ${suite}`,
+      ideas: "Précisez :",
+      ideasAria: "Idées pour préciser votre demande",
+      addIdea: (label: string) => `Ajouter : ${label}`,
+    },
     dropHere: "Déposez vos fichiers ici",
     attach: "Joindre des photos",
     moreTrades: "Afficher plus de métiers",
@@ -5870,6 +5878,7 @@ export const fr = {
         transcribe: "Transcription de la voix",
         "quote-from-voice": "Dictée des devis",
         "read-document": "Lecture des documents",
+        "suggest-need": "Suggestions de saisie",
       } as Record<string, string>,
       models: { title: "Par modèle", model: "Modèle", calls: "Appels", failures: "Échecs" },
       daily: {

@@ -1,7 +1,15 @@
 "use client";
 
-import { MAX_PROJECT_PHOTOS, PROJECT_TEXT_MAX_LENGTH, needHelpLevel } from "@menao/core";
-import { Paperclip, Search, Sparkles, X } from "lucide-react";
+import {
+  MAX_PROJECT_PHOTOS,
+  PROJECT_TEXT_MAX_LENGTH,
+  SUGGESTION_MIN_LENGTH,
+  appendIdea,
+  needHelpLevel,
+  remainingCompletion,
+  type NeedIdea,
+} from "@menao/core";
+import { ArrowRight, Paperclip, Plus, Search, Sparkles, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -9,11 +17,13 @@ import { Alert, Button, Hint } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
 import { PHOTO_ACCEPT, selectPhotos, uploadProjectPhoto } from "@/lib/project/photos";
+import { useNeedSuggestions } from "@/lib/project/suggestions";
 import { AnalysisScreen } from "./analysis-screen";
 import { DictationButton, type DictationState } from "./dictation-button";
 import { TradeChips } from "./trade-chips";
 
 const t = fr.search;
+const s = fr.search.suggestions;
 
 type AnalyzeResult = { status: "ok"; projectId: string } | { status: string };
 
@@ -50,6 +60,45 @@ export function NeedForm({
   const [dictation, setDictation] = useState<DictationState>("idle");
   const fileInput = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
+  const field = useRef<HTMLTextAreaElement>(null);
+  const mirror = useRef<HTMLDivElement>(null);
+  // Suggestions pendant la saisie (ADR 0177) : suite grisée dans le champ, idées en pastilles.
+  const suggestion = useNeedSuggestions(text, phase === "idle" && dictation !== "listening");
+  const [caretAtEnd, setCaretAtEnd] = useState(true);
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const [usedIdeas, setUsedIdeas] = useState<string[]>([]);
+  const completion =
+    suggestion && focused && caretAtEnd && dismissed !== suggestion.base
+      ? remainingCompletion(suggestion.base, suggestion.completion, text)
+      : null;
+  const ideas =
+    suggestion && text.trim().length >= SUGGESTION_MIN_LENGTH
+      ? suggestion.ideas.filter((idea) => !usedIdeas.includes(`${suggestion.base}|${idea.label}`))
+      : [];
+
+  /** Texte modifié par une suggestion, puis curseur placé (fin du texte ou endroit à compléter). */
+  function replaceText(next: string, select: [number, number] | null = null) {
+    const value = next.slice(0, PROJECT_TEXT_MAX_LENGTH);
+    setText(value);
+    requestAnimationFrame(() => {
+      const element = field.current;
+      if (!element) return;
+      element.focus();
+      const [start, end] = select ?? [value.length, value.length];
+      element.setSelectionRange(start, end);
+      setCaretAtEnd(end === value.length);
+    });
+  }
+
+  function acceptCompletion() {
+    if (completion) replaceText(text + completion);
+  }
+
+  function addIdea(idea: NeedIdea) {
+    if (suggestion) setUsedIdeas((used) => [...used, `${suggestion.base}|${idea.label}`]);
+    const next = appendIdea(text, idea.insert);
+    replaceText(next.text, next.select);
+  }
 
   const previews = useMemo(() => photos.map((p) => URL.createObjectURL(p)), [photos]);
   useEffect(() => () => previews.forEach((url) => URL.revokeObjectURL(url)), [previews]);
@@ -162,19 +211,52 @@ export function NeedForm({
             <label htmlFor="description" className="sr-only">
               {t.label}
             </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={3}
-              maxLength={PROJECT_TEXT_MAX_LENGTH}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              placeholder={dictation === "listening" ? t.listening : t.placeholder}
-              aria-describedby="description-help"
-              className="block min-h-24 w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed text-foreground placeholder:text-subtle-foreground focus:outline-none sm:min-h-20"
-            />
+            <div className="relative">
+              {/* Suite proposée, en gris derrière le texte (même police, même retour à la ligne). */}
+              <div
+                ref={mirror}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 overflow-hidden px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed break-words whitespace-pre-wrap"
+              >
+                <span className="text-transparent">{text}</span>
+                {completion && <span className="text-subtle-foreground">{completion}</span>}
+              </div>
+              <textarea
+                ref={field}
+                id="description"
+                name="description"
+                rows={3}
+                maxLength={PROJECT_TEXT_MAX_LENGTH}
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setCaretAtEnd(e.target.selectionEnd === e.target.value.length);
+                }}
+                onSelect={(e) =>
+                  setCaretAtEnd(
+                    e.currentTarget.selectionStart === e.currentTarget.value.length &&
+                      e.currentTarget.selectionEnd === e.currentTarget.value.length,
+                  )
+                }
+                onKeyDown={(e) => {
+                  if (!completion || !suggestion) return;
+                  if ((e.key === "Tab" && !e.shiftKey) || e.key === "ArrowRight") {
+                    e.preventDefault();
+                    acceptCompletion();
+                  } else if (e.key === "Escape") {
+                    setDismissed(suggestion.base);
+                  }
+                }}
+                onScroll={(e) => {
+                  if (mirror.current) mirror.current.scrollTop = e.currentTarget.scrollTop;
+                }}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                placeholder={dictation === "listening" ? t.listening : t.placeholder}
+                aria-describedby="description-help"
+                className="relative block min-h-24 w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed text-foreground placeholder:text-subtle-foreground focus:outline-none sm:min-h-20"
+              />
+            </div>
             <div className="flex items-center justify-between gap-3 px-3 pb-3">
               <label
                 className={`inline-flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/20 ${
@@ -197,6 +279,22 @@ export function NeedForm({
                   }}
                 />
               </label>
+              {completion && (
+                <button
+                  type="button"
+                  // Le champ garde le focus : la suite reste affichée jusqu'au clic.
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={acceptCompletion}
+                  aria-label={s.acceptAria(completion.trim())}
+                  className="mr-auto inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-soft px-3 text-xs font-medium text-primary-strong transition-colors hover:bg-primary hover:text-primary-foreground"
+                >
+                  <ArrowRight aria-hidden="true" className="size-3.5" />
+                  {s.accept}
+                  <kbd className="hidden rounded border border-current/30 px-1 font-sans text-[0.6875rem] sm:inline">
+                    Tab
+                  </kbd>
+                </button>
+              )}
               <DictationButton
                 onText={(spoken) =>
                   setText((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
@@ -214,6 +312,29 @@ export function NeedForm({
             </div>
           )}
         </div>
+
+        {ideas.length > 0 && (
+          <div
+            role="group"
+            aria-label={s.ideasAria}
+            className="flex w-full animate-menao-fade-up flex-wrap items-center gap-2 text-left"
+          >
+            <span className="text-xs font-medium text-muted-foreground">{s.ideas}</span>
+            {ideas.map((idea) => (
+              <button
+                key={idea.label}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => addIdea(idea)}
+                aria-label={s.addIdea(idea.label)}
+                className="inline-flex min-h-8 items-center gap-1 rounded-full border border-primary/30 bg-surface px-3 text-xs font-medium text-primary-strong transition-colors hover:border-primary hover:bg-primary-soft"
+              >
+                <Plus aria-hidden="true" className="size-3.5" />
+                {idea.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div id="description-help" aria-live="polite" className="w-full">
           {help === "suffisant" ? (

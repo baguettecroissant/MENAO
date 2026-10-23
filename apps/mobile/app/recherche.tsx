@@ -1,15 +1,25 @@
-import { MAX_PROJECT_PHOTOS, PROJECT_TEXT_MAX_LENGTH, needHelpLevel } from "@menao/core";
+import {
+  MAX_PROJECT_PHOTOS,
+  PROJECT_TEXT_MAX_LENGTH,
+  SUGGESTION_MIN_LENGTH,
+  appendIdea,
+  needHelpLevel,
+  remainingCompletion,
+  type NeedIdea,
+} from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import {
+  ArrowRight,
   BadgeCheck,
   Clock,
   Info,
   Paperclip,
+  Plus,
   Search,
   ShieldCheck,
   Sparkles,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
 import { DictationButton } from "@/components/dictation-button";
@@ -18,6 +28,7 @@ import { TopBar } from "@/components/top-bar";
 import { TradeShortcuts } from "@/components/trade-shortcuts";
 import { fr } from "@/i18n/fr";
 import { choosePhotoSource, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
+import { useNeedSuggestions } from "@/lib/need-suggestions";
 import { analyzeNeed } from "@/lib/project";
 import { useTrades } from "@/lib/trades";
 import { uploadBatch } from "@/lib/uploads";
@@ -25,6 +36,7 @@ import { Button, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
+const s = fr.search.suggestions;
 // Icônes des cartes d'avantages, dans l'ordre des textes (comme sur le site).
 const FEATURE_ICONS = [Sparkles, Clock, ShieldCheck, BadgeCheck];
 
@@ -57,6 +69,39 @@ export default function Recherche() {
   const [failure, setFailure] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const ready = description.trim().length > 0;
+  const input = useRef<TextInput>(null);
+  // Suggestions pendant la saisie (ADR 0177), comme sur le site : la suite proposée, à toucher pour
+  // l'ajouter, et des idées en pastilles pour préciser la demande.
+  const suggestion = useNeedSuggestions(description, phase === "idle");
+  const [usedIdeas, setUsedIdeas] = useState<string[]>([]);
+  const completion = suggestion
+    ? remainingCompletion(suggestion.base, suggestion.completion, description)
+    : null;
+  const ideas =
+    suggestion && description.trim().length >= SUGGESTION_MIN_LENGTH
+      ? suggestion.ideas.filter((idea) => !usedIdeas.includes(`${suggestion.base}|${idea.label}`))
+      : [];
+
+  /** Texte modifié par une suggestion, puis curseur placé (fin du texte ou endroit à compléter). */
+  function replaceText(next: string, select: [number, number] | null = null) {
+    const value = next.slice(0, PROJECT_TEXT_MAX_LENGTH);
+    setDescription(value);
+    const [start, end] = select ?? [value.length, value.length];
+    input.current?.focus();
+    setTimeout(() => {
+      // Natif : setSelection ; version web : le champ est un élément HTML.
+      const field = input.current as
+        (TextInput & { setSelectionRange?: (start: number, end: number) => void }) | null;
+      if (typeof field?.setSelection === "function") field.setSelection(start, end);
+      else field?.setSelectionRange?.(start, end);
+    }, 50);
+  }
+
+  function addIdea(idea: NeedIdea) {
+    if (suggestion) setUsedIdeas((used) => [...used, `${suggestion.base}|${idea.label}`]);
+    const next = appendIdea(description, idea.insert);
+    replaceText(next.text, next.select);
+  }
 
   async function addPhotos() {
     const source = await choosePhotoSource(fr.search.photos.add);
@@ -121,6 +166,7 @@ export default function Recherche() {
             </View>
           ) : null}
           <TextInput
+            ref={input}
             aria-label={fr.search.label}
             value={description}
             onChangeText={setDescription}
@@ -161,6 +207,40 @@ export default function Recherche() {
             />
           </View>
         </View>
+        {completion ? (
+          <Pressable
+            role="button"
+            aria-label={s.acceptAria(completion.trim())}
+            onPress={() => replaceText(description + completion)}
+            style={({ pressed }) => [styles.completion, pressed && styles.pressed]}
+          >
+            <Text style={styles.completionText} numberOfLines={2}>
+              <Text style={styles.completionEllipsis}>… </Text>
+              {completion.trim()}
+            </Text>
+            <View style={styles.completionAction}>
+              <ArrowRight size={14} color={colors["primary-strong"]} />
+              <Text style={styles.completionActionText}>{s.accept}</Text>
+            </View>
+          </Pressable>
+        ) : null}
+        {ideas.length > 0 ? (
+          <View role="group" aria-label={s.ideasAria} style={styles.ideas}>
+            <Text style={styles.ideasLabel}>{s.ideas}</Text>
+            {ideas.map((idea) => (
+              <Pressable
+                key={idea.label}
+                role="button"
+                aria-label={s.addIdea(idea.label)}
+                onPress={() => addIdea(idea)}
+                style={({ pressed }) => [styles.idea, pressed && styles.pressed]}
+              >
+                <Plus size={13} color={colors["primary-strong"]} />
+                <Text style={styles.ideaText}>{idea.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         <View aria-live="polite" style={styles.help}>
           {help === "suffisant" ? (
             <>
@@ -257,6 +337,39 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.8 },
+  completion: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    borderRadius: radius.card,
+    backgroundColor: colors["primary-softer"],
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3),
+  },
+  completionText: {
+    flex: 1,
+    fontFamily: font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
+  completionEllipsis: { color: colors["subtle-foreground"] },
+  completionAction: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
+  completionActionText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
+  ideas: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
+  ideasLabel: { fontFamily: font.medium, fontSize: 12, color: colors["muted-foreground"] },
+  idea: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(1),
+    minHeight: 34,
+    paddingHorizontal: spacing(3),
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  ideaText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
   help: { flexDirection: "row", alignItems: "flex-start", gap: spacing(1.5) },
   helpText: {
     flex: 1,
