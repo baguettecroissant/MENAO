@@ -36,6 +36,8 @@ export type Dossier = {
   documents: DossierDocument[];
   presentation: string;
   avatarPath: string | null;
+  /** Fiche proposée par Google (ADR 0144), cochée par défaut. */
+  indexable: boolean;
   itemsLeft: number;
   canSubmit: boolean;
   progress: ReturnType<typeof onboardingProgress>;
@@ -47,7 +49,7 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable",
     )
     .eq("user_id", auth.user.id)
     .maybeSingle();
@@ -126,6 +128,7 @@ export async function loadDossier(): Promise<Dossier | null> {
     })),
     presentation,
     avatarPath,
+    indexable: artisan.indexable,
     itemsLeft: dossierItemsLeft(snapshot),
     canSubmit: canSubmitOnboarding(snapshot),
     progress: onboardingProgress(snapshot),
@@ -141,6 +144,20 @@ export async function submitDossier(): Promise<string | null> {
 /** « Non soumis » à la décennale (ADR 0116), tant que le dossier n'est pas envoyé. */
 export async function setDecennaleExempt(value: boolean): Promise<string | null> {
   const { error } = await supabase.rpc("set_decennale_non_soumis", { p_value: value });
+  return error ? fr.errors.generic : null;
+}
+
+/**
+ * Fiche dans Google ou non (ADR 0144, 0171), comme sur le site : la base n'autorise que cette
+ * colonne. La fiche publique est remise en cache toutes les heures. Message d'erreur, ou null.
+ */
+export async function saveGoogleListing(value: boolean): Promise<string | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return fr.errors.generic;
+  const { error } = await supabase
+    .from("artisans")
+    .update({ indexable: value })
+    .eq("user_id", auth.user.id);
   return error ? fr.errors.generic : null;
 }
 

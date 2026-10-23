@@ -10,8 +10,9 @@ const t = fr.pro.publicProfile.web;
 
 /**
  * « Votre fiche sur internet » (F-61, ADR 0144) : adresse publique de la fiche, choix pour Google
- * et badge « Assuré et vérifié par MENAO » à coller sur son site. Site seulement : l'application
- * ne renvoie jamais vers le site (règle 10).
+ * et badge « Assuré et vérifié par MENAO » à coller sur son site. Adresse et badge sur le site
+ * seulement (l'application ne renvoie jamais vers le site, règle 10) ; le choix pour Google existe
+ * aussi dans l'application (ADR 0171).
  */
 export function WebPresence({
   siteUrl,
