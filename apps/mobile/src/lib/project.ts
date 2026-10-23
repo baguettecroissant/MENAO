@@ -1,4 +1,10 @@
-import { MAX_SEARCH_RESULTS, parisToday, photosAdvised } from "@menao/core";
+import {
+  MAX_PROJECT_LOTS,
+  MAX_SEARCH_RESULTS,
+  parisToday,
+  photosAdvised,
+  storedLotTrades,
+} from "@menao/core";
 import type { Database } from "@menao/db";
 import { projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
@@ -74,6 +80,11 @@ export type ProjectForReview = {
   lowConfidence: boolean;
   /** Description encore vague, sans photo (ADR 0163) : photos conseillées. */
   advisePhotos: boolean;
+  /** Chantier à plusieurs métiers (ADR 0167) : projet principal d'un lot, sinon null. */
+  parentId: string | null;
+  /** Autres métiers proposés d'après la description, et ceux choisis par le particulier. */
+  suggestedLots: string[];
+  lotTrades: string[];
   criteria: Criteria;
 };
 
@@ -82,7 +93,7 @@ export async function loadProject(id: string, confidenceThreshold: number) {
   const { data: p } = await supabase
     .from("projects")
     .select(
-      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee, project_photos(count)",
+      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, parent_project_id, suggested_lots, lot_trades, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee, project_photos(count)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -98,6 +109,9 @@ export async function loadProject(id: string, confidenceThreshold: number) {
       workTypeCount: p.work_type_codes.length,
       confidence: p.ai_confidence,
     }),
+    parentId: p.parent_project_id,
+    suggestedLots: storedLotTrades(p.suggested_lots),
+    lotTrades: p.lot_trades,
     criteria: {
       tradeCode: p.trade_code,
       lieuType: p.lieu_type,
@@ -124,6 +138,22 @@ export async function loadProject(id: string, confidenceThreshold: number) {
     },
   };
   return project;
+}
+
+/**
+ * Autres métiers du chantier choisis par le particulier (ADR 0167), comme sur le site : créés en
+ * lots au lancement de la recherche. Renvoie le message d'erreur à afficher, ou null.
+ */
+export async function saveProjectLots(
+  projectId: string,
+  tradeCodes: string[],
+): Promise<string | null> {
+  if (tradeCodes.length > MAX_PROJECT_LOTS) return fr.review.lots.limit;
+  const { error } = await supabase.rpc("set_project_lot_trades", {
+    p_project_id: projectId,
+    p_trade_codes: tradeCodes,
+  });
+  return error ? sqlError(error) : null;
 }
 
 /** Photo du projet (F-05), par URL signée (1 h) du bucket privé project-photos. */
@@ -247,6 +277,10 @@ export type ProjectResults = {
   /** Zone élargie (ADR 0165) : montrés seulement quand plus aucun artisan de la zone n'est à contacter. */
   nearby: MatchedArtisan[];
   summary: NeedSummary;
+  /** Chantier à plusieurs métiers (ADR 0167) : projet principal d'un lot, sinon null. */
+  parentId: string | null;
+  /** Autres lots du chantier (projet principal seulement), avec les artisans trouvés. */
+  lots: { id: string; trade: string; found: number }[];
 };
 
 /** « Résumé de mon besoin » (maquettes) : métier, ville, date souhaitée et photos du projet. */
@@ -345,12 +379,28 @@ export async function matchArtisans(
  * (`match_artisans`, 5 artisans au plus), comme sur le site. Null en cas d'erreur.
  */
 export async function loadResults(projectId: string): Promise<ProjectResults | null> {
-  const [{ data: project }, summary, artisans] = await Promise.all([
-    supabase.from("projects").select("work_type_codes").eq("id", projectId).maybeSingle(),
+  const [{ data: project }, summary, artisans, { data: lotRows }] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("work_type_codes, parent_project_id")
+      .eq("id", projectId)
+      .maybeSingle(),
     loadNeedSummary(projectId),
     matchArtisans(projectId, MAX_SEARCH_RESULTS),
+    supabase
+      .from("projects")
+      .select("id, trades(label)")
+      .eq("parent_project_id", projectId)
+      .order("created_at"),
   ]);
   if (!project || !summary || !artisans) return null;
+  const lots = await Promise.all(
+    (lotRows ?? []).map(async (lot) => ({
+      id: lot.id,
+      trade: lot.trades?.label ?? "",
+      found: (await matchArtisans(lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
+    })),
+  );
   return {
     tradeLabel: summary.tradeLabel,
     city: summary.city ?? "",
@@ -358,5 +408,7 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     artisans: artisans.filter((a) => !a.outsideZone),
     nearby: artisans.filter((a) => a.outsideZone),
     summary,
+    parentId: project.parent_project_id,
+    lots,
   };
 }

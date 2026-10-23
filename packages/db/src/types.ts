@@ -2458,9 +2458,12 @@ export type Database = {
           id: string;
           lieu_type: Database["public"]["Enums"]["project_lieu_type"] | null;
           location: unknown;
+          lot_trades: string[];
+          parent_project_id: string | null;
           preferred_artisan_id: string | null;
           room_codes: string[];
           status: Database["public"]["Enums"]["project_status"];
+          suggested_lots: Json;
           summary: string | null;
           surface: Database["public"]["Enums"]["project_surface"] | null;
           trade_code: string | null;
@@ -2490,9 +2493,12 @@ export type Database = {
           id?: string;
           lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
           location?: unknown;
+          lot_trades?: string[];
+          parent_project_id?: string | null;
           preferred_artisan_id?: string | null;
           room_codes?: string[];
           status?: Database["public"]["Enums"]["project_status"];
+          suggested_lots?: Json;
           summary?: string | null;
           surface?: Database["public"]["Enums"]["project_surface"] | null;
           trade_code?: string | null;
@@ -2521,9 +2527,12 @@ export type Database = {
           id?: string;
           lieu_type?: Database["public"]["Enums"]["project_lieu_type"] | null;
           location?: unknown;
+          lot_trades?: string[];
+          parent_project_id?: string | null;
           preferred_artisan_id?: string | null;
           room_codes?: string[];
           status?: Database["public"]["Enums"]["project_status"];
+          suggested_lots?: Json;
           summary?: string | null;
           surface?: Database["public"]["Enums"]["project_surface"] | null;
           trade_code?: string | null;
@@ -2536,6 +2545,13 @@ export type Database = {
           work_type_codes?: string[];
         };
         Relationships: [
+          {
+            foreignKeyName: "projects_parent_project_id_fkey";
+            columns: ["parent_project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "projects_preferred_artisan_id_fkey";
             columns: ["preferred_artisan_id"];
@@ -4728,6 +4744,10 @@ export type Database = {
       set_decennale_non_soumis: { Args: { p_value: boolean }; Returns: undefined };
       set_notification_preferences: {
         Args: { p_activite: boolean; p_rappels: boolean };
+        Returns: undefined;
+      };
+      set_project_lot_trades: {
+        Args: { p_project_id: string; p_trade_codes: string[] };
         Returns: undefined;
       };
       staff_review_held_requests: {

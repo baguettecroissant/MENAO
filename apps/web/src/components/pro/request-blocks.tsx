@@ -120,6 +120,12 @@ export function RequestBlocks({
         </DetailBlock>
       )}
 
+      {r.autres_metiers.length > 0 && (
+        <p className="rounded-input bg-primary-softer px-4 py-3 text-sm text-primary-strong">
+          {t.otherTrades(r.autres_metiers.join(", "))}
+        </p>
+      )}
+
       <ExpandableBlock
         icon={<Wrench />}
         title={variant === "rendez-vous" ? fr.pro.appointment.reminder : t.description}

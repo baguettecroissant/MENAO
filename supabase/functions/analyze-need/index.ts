@@ -11,10 +11,12 @@ import {
   PROJECT_TEXT_MAX_LENGTH,
   analysisNeedsFallback,
   completeCriteria,
+  compositeTrades,
   needAnalysisJsonSchema,
   normalizeNeedAnalysis,
   parisToday,
   scrubPersonalData,
+  suggestedLots,
   type CompletedSection,
   type NeedCriteria,
   type NeedReferentials,
@@ -48,6 +50,7 @@ const rawAnalysisSchema = z.object({
   resume: z.string().nullable(),
   budget_tranche: z.string().nullable(),
   brief_artisan: z.string().nullable(),
+  metiers_complementaires: z.array(z.object({ metier: z.string(), travaux: z.array(z.string()) })),
   confiance: z.number().min(0).max(1),
 });
 
@@ -64,7 +67,8 @@ function systemPrompt(ref: Referentials): string {
 
 Règles :
 - metier : le corps de métier principal parmi la liste ci-dessous (celui qui porte l'essentiel du chantier). null si le texte ne permet pas de le déterminer.
-- travaux : codes des travaux attendus, uniquement parmi ceux du métier choisi.
+- metiers_complementaires : les autres corps de métier dont le chantier aura besoin, chacun avec ses travaux (codes de son métier). Une rénovation de salle de bains demande par exemple un plombier, un carreleur, un électricien, un plaquiste et un peintre ; une réparation ponctuelle (fuite, panne, prise) n'en demande aucun. Seulement si le texte le justifie, 4 au plus, jamais le métier principal ; sinon une liste vide.
+- travaux : codes des travaux attendus du métier principal, uniquement parmi les siens.
 - pieces : codes des pièces ou zones concernées.
 - lieu_type : appartement, maison, jardin ou entreprise, seulement si c'est dit ou évident.
 - surface_tranche : moins_10, 10_20, 20_50 ou plus_50 (m²), seulement si la surface est indiquée ou se déduit clairement.
@@ -192,6 +196,9 @@ async function analyze(
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
+/** Lot proposé, tel qu'enregistré dans `projects.suggested_lots` (ADR 0167). */
+type StoredLot = { trade_code: string; work_type_codes: string[] };
+
 /** Projet modifiable (pas encore envoyé) dont la description change. */
 type EditedProject = {
   id: string;
@@ -257,9 +264,15 @@ async function updateProject(
   edited: EditedProject,
   description: string,
   best: Attempt,
+  lots: StoredLot[],
 ): Promise<CompletedSection[] | null> {
-  // Sans nouvelle analyse, l'ancienne reformulation ne correspond plus au texte : retirée.
-  const patch: Record<string, unknown> = { description, artisan_brief: null };
+  // Sans nouvelle analyse, l'ancienne reformulation ne correspond plus au texte : retirée. Les
+  // lots proposés suivent la nouvelle description ; le choix du particulier reste.
+  const patch: Record<string, unknown> = {
+    description,
+    artisan_brief: null,
+    suggested_lots: lots,
+  };
   let completed: CompletedSection[] = [];
   if (best) {
     const c = best.criteria;
@@ -433,8 +446,15 @@ Deno.serve(
       }
 
       const c = best?.criteria;
+      // Chantier à plusieurs métiers (ADR 0167) : métiers complémentaires de l'IA, puis ceux des
+      // chantiers composés relevés dans la description.
+      const lots: StoredLot[] = suggestedLots(
+        edited?.trade_code ?? c?.tradeCode ?? tradeHint,
+        c?.extraTrades ?? [],
+        compositeTrades(clean, ref.trades),
+      ).map((l) => ({ trade_code: l.tradeCode, work_type_codes: l.workTypeCodes }));
       if (edited) {
-        const completed = await updateProject(admin, edited, description, best);
+        const completed = await updateProject(admin, edited, description, best, lots);
         await logAiRuns(
           admin,
           runs.map((r) => ({ ...r, project_id: edited.id })),
@@ -479,6 +499,7 @@ Deno.serve(
           summary: c?.summary ?? null,
           artisan_brief: c?.artisanBrief ?? null,
           budget: c?.budget ?? null,
+          suggested_lots: lots,
           trade_code: c?.tradeCode ?? tradeHint,
           lieu_type: c?.lieuType ?? null,
           room_codes: c?.roomCodes ?? [],

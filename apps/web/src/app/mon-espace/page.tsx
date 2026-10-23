@@ -55,6 +55,8 @@ export default async function MySpacePage() {
       .from("projects")
       .select("id, status, summary, description, ville_nom, created_at, trades(label)")
       .in("status", ["brouillon", "criteres_valides"])
+      // Les lots d'un chantier (ADR 0167) restent dans leur chantier.
+      .is("parent_project_id", null)
       .order("created_at", { ascending: false })
       .limit(10),
     // Demandes annulées par le client lui-même (motif renseigné).

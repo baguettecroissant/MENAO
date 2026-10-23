@@ -1,5 +1,5 @@
 import { AI_CONFIDENCE_THRESHOLD } from "@menao/core";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { CriteriaReview } from "@/components/criteria-review";
 import { TopBar } from "@/components/top-bar";
@@ -23,7 +23,13 @@ export default function ProjetCriteres() {
     let active = true;
     Promise.all([loadProject(id, AI_CONFIDENCE_THRESHOLD), loadProjectPhotos(id)]).then(
       ([project, photos]) => {
-        if (active) setLoaded({ project, photos });
+        if (!active) return;
+        // Lot d'un chantier à plusieurs métiers (ADR 0167) : ses critères sont ceux du chantier.
+        if (project?.parentId) {
+          router.replace({ pathname: "/projet/[id]", params: { id: project.parentId } });
+          return;
+        }
+        setLoaded({ project, photos });
       },
     );
     return () => {
