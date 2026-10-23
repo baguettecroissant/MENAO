@@ -55,3 +55,4 @@ export * from "./referral";
 export * from "./menao-score";
 export * from "./artisan-page";
 export * from "./new-artisans";
+export * from "./document-reading";

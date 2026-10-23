@@ -4594,6 +4594,23 @@ export const fr = {
         chooseFile: "Choisir un fichier",
         photoHint: "Une photo nette, à plat et bien éclairée, ou le PDF reçu de votre assureur.",
         chosen: (name: string) => `Fichier choisi : ${name}`,
+        // Lecture automatique du document (ADR 0176).
+        reading: {
+          reading: "Lecture du document…",
+          done: "Document lu automatiquement : vérifiez les informations ci-dessous avant de l'envoyer.",
+          empty:
+            "Nous n'avons pas trouvé ces informations sur le document : complétez les champs ci-dessous.",
+          failed:
+            "Le document n'a pas pu être lu automatiquement : complétez les champs ci-dessous.",
+          otherDocument: (expected: string) =>
+            `Ce document ne semble pas être le bon (attendu : ${expected}). Vérifiez le fichier avant de l'envoyer.`,
+          warnings: {
+            illisible:
+              "Le document est difficile à lire : reprenez la photo à plat, bien éclairée et sans reflet. Un document illisible est refusé.",
+            siren_different:
+              "Le numéro SIREN inscrit sur ce document n'est pas celui de votre entreprise. Vérifiez que le document est bien à son nom.",
+          },
+        },
         backToDossier: "Retour à mon dossier",
         current: "Document en cours",
         renewal: "Renouvellement",
@@ -5852,6 +5869,7 @@ export const fr = {
         "analyze-need": "Analyse des demandes",
         transcribe: "Transcription de la voix",
         "quote-from-voice": "Dictée des devis",
+        "read-document": "Lecture des documents",
       } as Record<string, string>,
       models: { title: "Par modèle", model: "Modèle", calls: "Appels", failures: "Échecs" },
       daily: {

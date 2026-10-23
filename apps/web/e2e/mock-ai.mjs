@@ -6,6 +6,8 @@
 // carreleur en métier complémentaire (ADR 0167) ; « hésitant » → peu sûr au premier modèle, sûr au
 // modèle de secours (vérifie le repli) ; « panne » → réponse invalide (vérifie le formulaire vide).
 // Dictée de devis (balise <dictee>, F-19) : deux lignes fixes, dont une sans prix dicté.
+// Lecture d'un document (photo ou PDF, ADR 0176) : le document attendu, lisible, valable encore
+// dix ans (Kbis et URSSAF émis il y a dix jours).
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.MOCK_AI_PORT ?? 18398);
@@ -97,6 +99,21 @@ function quoteLines() {
   });
 }
 
+function documentReading(content) {
+  const expected = /Document attendu : (\w+)/.exec(JSON.stringify(content))?.[1] ?? "autre";
+  const day = (offset) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+  return JSON.stringify({
+    type_document: expected,
+    lisible: true,
+    date_emission: day(-10),
+    date_fin: day(3650),
+    assureur: "Assurances Fictives",
+    numero: "LU-0001",
+    couverture: "France métropolitaine",
+    siren: null,
+  });
+}
+
 function geocoding(url) {
   const q = url.searchParams.get("q") ?? "";
   const municipality = url.searchParams.get("type") === "municipality";
@@ -167,6 +184,9 @@ createServer(async (req, res) => {
     }
     const content = body?.messages?.[0]?.content;
     const text = typeof content === "string" ? content : JSON.stringify(content ?? "");
+    const document =
+      Array.isArray(content) &&
+      content.some((block) => block?.type === "image" || block?.type === "document");
     return send(200, {
       id: "msg_mock",
       type: "message",
@@ -175,7 +195,11 @@ createServer(async (req, res) => {
       content: [
         {
           type: "text",
-          text: text.includes("<dictee>") ? quoteLines() : analysis(text, body?.model ?? ""),
+          text: document
+            ? documentReading(content)
+            : text.includes("<dictee>")
+              ? quoteLines()
+              : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",

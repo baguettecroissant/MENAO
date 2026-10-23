@@ -38,6 +38,20 @@ describe("documentMetadataSchema", () => {
     expect(schema.safeParse({ ...ok, couverture: "" }).success).toBe(false);
   });
 
+  it("date de fin : celle du jour refusée, avec son propre message (ADR 0176)", () => {
+    const rcPro = { type: "rc_pro", assureur: "Exemple", numero: "RC-1" };
+    expect(
+      schema.safeParse({ ...rcPro, dateFin: "2026-10-09" }).error?.issues.map((i) => i.message),
+    ).toEqual([messages.dateToday]);
+    expect(
+      schema.safeParse({ ...rcPro, dateFin: "2026-10-08" }).error?.issues.map((i) => i.message),
+    ).toEqual([messages.dateExpired]);
+    expect(schema.safeParse({ ...rcPro, dateFin: "2026-10-10" }).success).toBe(true);
+    expect(
+      schema.safeParse({ type: "identite", dateFin: "2026-10-09" }).error?.issues[0]?.message,
+    ).toBe(messages.dateToday);
+  });
+
   it("RC Pro : assureur, numéro, date de fin", () => {
     expect(
       schema.safeParse({

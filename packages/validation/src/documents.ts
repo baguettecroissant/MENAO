@@ -15,7 +15,11 @@ const isoDate = z.iso.date({ error: messages.dateInvalid });
 /** Métadonnées saisies avec chaque document (F-14 étape 4). */
 export const documentMetadataSchema = (today: Date = new Date()) => {
   const day = today.toISOString().slice(0, 10);
-  const notPast = isoDate.refine((d) => d >= day, { error: messages.dateExpired });
+  // Date de fin : après aujourd'hui. Celle du jour est presque toujours la valeur par défaut du
+  // sélecteur de date, laissée par erreur (ADR 0176).
+  const notPast = isoDate
+    .refine((d) => d >= day, { error: messages.dateExpired })
+    .refine((d) => d !== day, { error: messages.dateToday });
   return z.discriminatedUnion("type", [
     z.object({
       type: z.literal("kbis"),
