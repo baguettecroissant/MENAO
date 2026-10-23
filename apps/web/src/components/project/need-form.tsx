@@ -12,7 +12,7 @@ import {
 import { ArrowRight, Paperclip, Plus, Search, Sparkles, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Hint } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
@@ -76,18 +76,24 @@ export function NeedForm({
       ? suggestion.ideas.filter((idea) => !usedIdeas.includes(`${suggestion.base}|${idea.label}`))
       : [];
 
+  // Curseur à placer dès que le champ affiche le nouveau texte, avant la frappe suivante.
+  const pendingSelection = useRef<[number, number] | null>(null);
+  useLayoutEffect(() => {
+    const selection = pendingSelection.current;
+    const element = field.current;
+    if (!selection || !element) return;
+    pendingSelection.current = null;
+    element.focus();
+    element.setSelectionRange(selection[0], selection[1]);
+  }, [text]);
+
   /** Texte modifié par une suggestion, puis curseur placé (fin du texte ou endroit à compléter). */
   function replaceText(next: string, select: [number, number] | null = null) {
     const value = next.slice(0, PROJECT_TEXT_MAX_LENGTH);
+    const selection = select ?? [value.length, value.length];
+    pendingSelection.current = selection;
     setText(value);
-    requestAnimationFrame(() => {
-      const element = field.current;
-      if (!element) return;
-      element.focus();
-      const [start, end] = select ?? [value.length, value.length];
-      element.setSelectionRange(start, end);
-      setCaretAtEnd(end === value.length);
-    });
+    setCaretAtEnd(selection[1] === value.length);
   }
 
   function acceptCompletion() {
