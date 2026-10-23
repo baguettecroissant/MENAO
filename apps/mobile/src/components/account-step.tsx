@@ -1,3 +1,4 @@
+import type { LotSelection } from "@menao/validation";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -23,9 +24,12 @@ const r = fr.request;
 export function AccountStep({
   projectId,
   artisanIds,
+  lots = [],
 }: {
   projectId: string;
   artisanIds: string[];
+  /** Artisans des autres métiers du chantier (ADR 0170), gardés jusqu'à l'envoi. */
+  lots?: LotSelection;
 }) {
   const [mode, setMode] = useState<"signUp" | "signIn">("signUp");
   const [emailSent, setEmailSent] = useState(false);
@@ -36,7 +40,7 @@ export function AccountStep({
       <Body muted>{r.accountIntro}</Body>
       {emailSent && <Notice tone="success">{r.checkEmail}</Notice>}
       <OAuthButtons
-        prepare={() => prepareProviderSignIn(projectId, artisanIds)}
+        prepare={() => prepareProviderSignIn(projectId, artisanIds, lots)}
         onSignedIn={(pending) =>
           pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
         }
@@ -49,7 +53,7 @@ export function AccountStep({
             space: { title: r.spaceTitle, intro: r.spaceIntro, free: r.free },
           }}
           onSubmit={async (input) => {
-            const error = await signUpForRequest(projectId, artisanIds, input);
+            const error = await signUpForRequest(projectId, artisanIds, input, lots);
             if (!error) {
               setEmailSent(true);
               setMode("signIn");

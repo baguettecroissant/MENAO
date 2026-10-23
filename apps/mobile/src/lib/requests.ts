@@ -1,7 +1,10 @@
 import { joinNames, remainingSlots, roleFromAppMetadata } from "@menao/core";
 import {
+  encodeLotSelection,
+  lotSelectionSchema,
   parseArtisanProfile,
   requestFormSchema,
+  type LotSelection,
   type ArtisanProfile,
   type SignIn,
   type SignUp,
@@ -15,7 +18,19 @@ import { supabase } from "./supabase";
 
 /** Demande commencée sans compte : reprise à la prochaine connexion dans l'application. */
 const PENDING_KEY = "menao.demande-en-attente";
-type Pending = { projectId: string; artisanIds: string[]; token: string };
+type Pending = { projectId: string; artisanIds: string[]; lots?: LotSelection; token: string };
+
+/**
+ * Paramètres de l'écran d'envoi : artisans choisis et, dans un chantier à plusieurs métiers, ceux
+ * des autres métiers (« <lot>.<artisan> », ADR 0170), comme l'adresse de la page d'envoi du site.
+ */
+export function sendScreenParams(projectId: string, artisanIds: string[], lots: LotSelection = []) {
+  return {
+    id: projectId,
+    artisans: artisanIds.join(","),
+    lots: encodeLotSelection(lots).join(","),
+  };
+}
 
 /** Message d'une erreur SQL : ceux des règles métier (code 22023) sont rédigés pour l'utilisateur. */
 function sqlError(error: { code?: string; message: string }): string {
@@ -80,6 +95,8 @@ export async function loadArtisanPage(artisanId: string): Promise<ArtisanPage | 
 
 export type SendContext = {
   artisans: MatchedArtisan[];
+  /** Artisans des autres métiers du chantier, envoyés en même temps (ADR 0170). */
+  lots: { projectId: string; trade: string; artisans: MatchedArtisan[] }[];
   names: string;
   email: string;
   phone: string;
@@ -94,16 +111,42 @@ export type SendContext = {
 export async function loadSendContext(
   projectId: string,
   artisanIds: string[],
+  lots: LotSelection = [],
 ): Promise<SendContext | null> {
-  const [{ data: session }, matches, { data: sent }] = await Promise.all([
+  const lotIds = lots.map((lot) => lot.projectId);
+  const [{ data: session }, matches, { data: sent }, { data: lotRows }] = await Promise.all([
     supabase.auth.getSession(),
-    matchArtisans(projectId, 20),
-    supabase.from("requests").select("artisan_id").eq("project_id", projectId),
+    artisanIds.length ? matchArtisans(projectId, 20) : Promise.resolve([]),
+    supabase
+      .from("requests")
+      .select("project_id, artisan_id")
+      .in("project_id", [projectId, ...lotIds]),
+    lotIds.length
+      ? supabase
+          .from("projects")
+          .select("id, trades(label)")
+          .in("id", lotIds)
+          .eq("parent_project_id", projectId)
+      : Promise.resolve({ data: [] }),
   ]);
-  const already = new Set((sent ?? []).map((r) => r.artisan_id));
-  const artisans = (matches ?? []).filter((m) => artisanIds.includes(m.id) && !already.has(m.id));
+  const already = new Set((sent ?? []).map((r) => `${r.project_id}:${r.artisan_id}`));
+  const pick = (id: string, ids: string[], found: MatchedArtisan[] | null) =>
+    (found ?? []).filter((m) => ids.includes(m.id) && !already.has(`${id}:${m.id}`));
+  const artisans = pick(projectId, artisanIds, matches);
+  const lotChoices = (
+    await Promise.all(
+      lots.map(async (lot) => {
+        const row = (lotRows ?? []).find((r) => r.id === lot.projectId);
+        if (!row) return null;
+        const chosen = pick(row.id, lot.artisanIds, await matchArtisans(row.id, 20));
+        return chosen.length
+          ? { projectId: row.id, trade: row.trades?.label ?? "", artisans: chosen }
+          : null;
+      }),
+    )
+  ).filter((lot) => lot !== null);
   const user = session.session?.user;
-  if (!artisans.length || !user) return null;
+  if ((!artisans.length && !lotChoices.length) || !user) return null;
   const [{ data: profile }, chantier] = await Promise.all([
     supabase.from("profiles").select("phone").eq("user_id", user.id).maybeSingle(),
     loadChantierProjects(projectId),
@@ -124,7 +167,10 @@ export async function loadSendContext(
       : { data: null };
   return {
     artisans,
-    names: joinNames(artisans.map((a) => a.name)),
+    lots: lotChoices,
+    names: joinNames([
+      ...new Set([...artisans, ...lotChoices.flatMap((lot) => lot.artisans)].map((a) => a.name)),
+    ]),
     email: user.email ?? "",
     phone: profile?.phone ?? "",
     message: last?.message ?? "",
@@ -148,12 +194,16 @@ export async function signUpForRequest(
   projectId: string,
   artisanIds: string[],
   input: SignUp,
+  lots: LotSelection = [],
 ): Promise<string | null> {
   const token = await createTransfer(projectId);
   if (!token) return fr.request.transferError;
-  const error = await signUpParticulier(input, requestConfirmUrl(projectId, artisanIds, token));
+  const error = await signUpParticulier(
+    input,
+    requestConfirmUrl(projectId, artisanIds, token, lots),
+  );
   if (error) return error;
-  const pending: Pending = { projectId, artisanIds, token };
+  const pending: Pending = { projectId, artisanIds, lots, token };
   await kv.set(PENDING_KEY, JSON.stringify(pending));
   return null;
 }
@@ -166,10 +216,11 @@ export async function signUpForRequest(
 export async function prepareProviderSignIn(
   projectId: string,
   artisanIds: string[],
+  lots: LotSelection = [],
 ): Promise<string | null> {
   const token = await createTransfer(projectId);
   if (!token) return fr.request.transferError;
-  const pending: Pending = { projectId, artisanIds, token };
+  const pending: Pending = { projectId, artisanIds, lots, token };
   await kv.set(PENDING_KEY, JSON.stringify(pending));
   return null;
 }
@@ -204,7 +255,10 @@ async function readPending(): Promise<Pending | null> {
   if (!raw) return null;
   try {
     const value = JSON.parse(raw) as Pending;
-    return value.projectId && value.token && Array.isArray(value.artisanIds) ? value : null;
+    const lots = lotSelectionSchema.safeParse(encodeLotSelection(value.lots ?? []));
+    return value.projectId && value.token && Array.isArray(value.artisanIds)
+      ? { ...value, lots: lots.success ? lots.data : [] }
+      : null;
   } catch {
     return null;
   }
@@ -224,7 +278,9 @@ export async function resumePendingRequest(): Promise<Omit<Pending, "token"> | n
     .select("id")
     .eq("id", pending.projectId)
     .maybeSingle();
-  return project ? { projectId: pending.projectId, artisanIds: pending.artisanIds } : null;
+  return project
+    ? { projectId: pending.projectId, artisanIds: pending.artisanIds, lots: pending.lots ?? [] }
+    : null;
 }
 
 export type RequestValues = {
@@ -244,6 +300,7 @@ export async function sendRequests(
   projectId: string,
   artisanIds: string[],
   values: RequestValues,
+  lots: LotSelection = [],
 ): Promise<SendOutcome> {
   const parsed = requestFormSchema.safeParse(values);
   if (!parsed.success) {
@@ -255,16 +312,30 @@ export async function sendRequests(
     return { ok: false, fieldErrors };
   }
   const r = parsed.data;
-  const { error } = await supabase.rpc("send_project_requests", {
-    p_project_id: projectId,
-    p_artisan_ids: artisanIds,
+  const contact = {
     p_message: r.message,
     p_phone: r.phone,
     p_callback_mode: r.callbackMode,
     // Les types générés ne marquent pas ces paramètres comme pouvant être nuls.
     p_callback_from: r.callbackFrom as string,
     p_callback_to: r.callbackTo as string,
-  });
+  };
+  // Plusieurs métiers (ADR 0170) : un seul envoi, tout ou rien, comme sur le site.
+  const { error } =
+    lots.length === 0
+      ? await supabase.rpc("send_project_requests", {
+          p_project_id: projectId,
+          p_artisan_ids: artisanIds,
+          ...contact,
+        })
+      : await supabase.rpc("send_chantier_requests", {
+          p_project_id: projectId,
+          p_selections: [
+            ...(artisanIds.length ? [{ project_id: projectId, artisan_ids: artisanIds }] : []),
+            ...lots.map((lot) => ({ project_id: lot.projectId, artisan_ids: lot.artisanIds })),
+          ],
+          ...contact,
+        });
   if (error) return { ok: false, error: sqlError(error) };
   return { ok: true, callbackFrom: r.callbackFrom, callbackTo: r.callbackTo };
 }

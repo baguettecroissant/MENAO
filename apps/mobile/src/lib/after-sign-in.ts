@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { closeAuth } from "./navigation";
-import { resumePendingRequest } from "./requests";
+import { resumePendingRequest, sendScreenParams } from "./requests";
 
 /**
  * Après une connexion avec Google ou Apple, ou « Finaliser mon compte » (ADR 0108) : une demande
@@ -12,7 +12,7 @@ export async function continueAfterSignIn(): Promise<void> {
   if (pending) {
     router.replace({
       pathname: "/projet/[id]/envoyer",
-      params: { id: pending.projectId, artisans: pending.artisanIds.join(",") },
+      params: sendScreenParams(pending.projectId, pending.artisanIds, pending.lots),
     });
   } else {
     closeAuth();

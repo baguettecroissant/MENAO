@@ -40,7 +40,8 @@ export function RequestForm({
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const set = (patch: Partial<RequestValues>) => setValues((current) => ({ ...current, ...patch }));
-  const count = context.artisans.length;
+  const count =
+    context.artisans.length + context.lots.reduce((n, lot) => n + lot.artisans.length, 0);
 
   async function submit() {
     setFailure(null);
@@ -49,6 +50,10 @@ export function RequestForm({
       projectId,
       context.artisans.map((a) => a.id),
       values,
+      context.lots.map((lot) => ({
+        projectId: lot.projectId,
+        artisanIds: lot.artisans.map((a) => a.id),
+      })),
     );
     setPending(false);
     if (!outcome.ok) {
@@ -93,6 +98,16 @@ export function RequestForm({
             {context.artisans.map((artisan) => (
               <SelectedArtisan key={artisan.id} artisan={artisan} tradeLabel={summary.tradeLabel} />
             ))}
+            {/* Autres métiers du chantier, envoyés en même temps (ADR 0170). */}
+            {context.lots.flatMap((lot) =>
+              lot.artisans.map((artisan) => (
+                <SelectedArtisan
+                  key={`${lot.projectId}:${artisan.id}`}
+                  artisan={artisan}
+                  tradeLabel={lot.trade}
+                />
+              )),
+            )}
           </View>
         </NeedSummaryBand>
       }

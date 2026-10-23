@@ -40,6 +40,7 @@ export function ArtisanTile({
   onOpen,
   selection = "none",
   onToggle,
+  otherTrade = false,
 }: {
   artisan: MatchedArtisan;
   tradeLabel: string;
@@ -47,6 +48,8 @@ export function ArtisanTile({
   onOpen: () => void;
   selection?: CardSelection;
   onToggle?: () => void;
+  /** Artisan d'un autre métier du chantier (ADR 0170) : le métier est lu avec son nom. */
+  otherTrade?: boolean;
 }) {
   const avail = availability({ paused: false, availableFrom: artisan.availableFrom }, parisToday());
   const specs = specialtiesPreview(artisan.specialties, projectWorkTypes);
@@ -139,7 +142,7 @@ export function ArtisanTile({
         <Pressable
           role="checkbox"
           aria-checked={selected}
-          aria-label={`${fr.selection.select} ${artisan.name}`}
+          aria-label={`${fr.selection.select} ${artisan.name}${otherTrade ? `, ${tradeLabel}` : ""}`}
           onPress={onToggle}
           hitSlop={8}
           style={({ pressed }) => [
