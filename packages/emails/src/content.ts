@@ -56,6 +56,7 @@ export const NOTIFICATION_TYPES = [
   "demande_sans_reponse",
   "abonnement_impaye",
   "parrainage_suggestion",
+  "mois_offert",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -985,6 +986,23 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Mettre à jour mon paiement", url: link("/pro/onboarding/formule") },
+      };
+    }
+    // Mois offert de démarrage (ADR 0160, ADR 0166) : e-mail et espace web seulement, jamais dans
+    // l'application ni en push (règle 10).
+    case "mois_offert": {
+      return {
+        subject: "Votre prochain mois d'abonnement MENAO est offert",
+        preview: "Pas encore de chantier signé : nous vous offrons un mois pour bien démarrer.",
+        title: "Un mois offert pour bien démarrer",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Vous n'avez pas encore signé de chantier grâce à MENAO pendant vos deux premiers mois payants : nous vous offrons le mois suivant de votre abonnement.",
+          "Il s'applique automatiquement à votre prochaine facture : vous n'avez rien à faire.",
+          "Pour décrocher vos premiers chantiers : complétez votre fiche (photos, présentation, diplômes), répondez vite aux demandes et envoyez vos devis sous 72 heures. Besoin d'un coup de main ? Écrivez-nous depuis la page Contact.",
+        ],
+        quote: null,
+        cta: { label: "Compléter ma fiche", url: link("/pro/mon-profil") },
       };
     }
     // Proposition de parrainer un confrère (ADR 0161) : premier chantier signé, début du 3e mois,
