@@ -57,6 +57,10 @@ set local role authenticated;
 select public.set_project_lot_trades('e9320000-0000-4000-8000-000000000001', array['carreleur']);
 select public.validate_project_criteria('e9320000-0000-4000-8000-000000000001');
 reset role;
+-- Identifiant du lot retenu ici : l'artisan ne lit pas les projets du particulier (RLS).
+create temp table lot93 as select pg_temp.lot() as id;
+grant select on lot93 to authenticated;
+create or replace function pg_temp.lot() returns uuid language sql as $$ select id from lot93 $$;
 insert into public.requests (id, project_id, artisan_id, particulier_id, contact_phone) values
   ('e9330000-0000-4000-8000-000000000001', 'e9320000-0000-4000-8000-000000000001', pg_temp.artisan(1),
    'e9300000-0000-4000-8000-000000000001', '+33612345678');
