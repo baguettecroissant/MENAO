@@ -1,10 +1,11 @@
 import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH } from "@menao/core";
 import { Camera, ImagePlus, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadDossier, savePresentation } from "@/lib/artisan-dossier";
+import { loadDossier, saveGoogleListing, savePresentation } from "@/lib/artisan-dossier";
+import { haptic } from "@/lib/haptics";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { deletePortfolioPhoto, loadPortfolio, type PortfolioPhoto } from "@/lib/portfolio";
 import { forgetProfileSummary } from "@/lib/profile-summary";
@@ -18,7 +19,7 @@ const { colors, font, radius, spacing } = theme;
 /**
  * Photo de profil, présentation et photos de réalisations de la fiche (ADR 0113, 0124), comme sur
  * le site : photo recadrée au carré et réduite à 512 px, présentation de 100 caractères au moins,
- * 12 photos de réalisations au plus.
+ * 12 photos de réalisations au plus. Puis le choix d'afficher la fiche dans Google (ADR 0171).
  */
 export default function PublicProfileScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
@@ -29,6 +30,7 @@ export default function PublicProfileScreen() {
       <PhotoCard hasPhoto={Boolean(dossier?.avatarPath)} onSaved={reload} />
       <PresentationCard initial={dossier?.presentation ?? ""} onSaved={reload} />
       <PortfolioCard />
+      {dossier ? <GoogleCard initial={dossier.indexable} /> : null}
     </Screen>
   );
 }
@@ -104,6 +106,41 @@ function PresentationCard({ initial, onSaved }: { initial: string; onSaved: () =
         error={error}
       />
       <Button label={t.save} onPress={save} loading={sending} />
+    </Card>
+  );
+}
+
+/**
+ * « Afficher ma fiche dans Google » (ADR 0144, 0171), enregistré aussitôt. Ni l'adresse de la fiche
+ * ni le badge : l'application ne renvoie jamais vers le site (règle 10).
+ */
+function GoogleCard({ initial }: { initial: boolean }) {
+  const [value, setValue] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+
+  async function change(next: boolean) {
+    haptic.select();
+    setValue(next);
+    const failure = await saveGoogleListing(next);
+    setError(failure);
+    if (failure) return setValue(!next);
+    toast.success(t.googleSaved);
+  }
+
+  return (
+    <Card>
+      <View style={styles.switchRow}>
+        <Text style={[styles.heading, styles.switchLabel]}>{t.google}</Text>
+        <Switch
+          accessibilityLabel={t.google}
+          value={value}
+          onValueChange={change}
+          trackColor={{ true: colors.primary, false: colors["border-strong"] }}
+          thumbColor={colors.surface}
+        />
+      </View>
+      <Body muted>{value ? t.googleHint : t.googleOff}</Body>
+      {error ? <Notice tone="error">{error}</Notice> : null}
     </Card>
   );
 }
@@ -200,6 +237,8 @@ function PortfolioCard() {
 }
 
 const styles = StyleSheet.create({
+  switchRow: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
+  switchLabel: { flex: 1 },
   heading: {
     fontFamily: font.bold,
     fontSize: 17,

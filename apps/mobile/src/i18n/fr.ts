@@ -577,6 +577,13 @@ export const fr = {
     portfolioPhoto: (n: number) => `Réalisation ${n}`,
     portfolioDelete: (n: number) => `Retirer la réalisation ${n}`,
     portfolioDeleteError: "La photo n'a pas pu être retirée. Réessayez.",
+    // Fiche dans Google (ADR 0144, 0171), comme sur le site, sans lien vers la fiche (règle 10).
+    google: "Afficher ma fiche dans Google",
+    googleHint:
+      "Recommandé : les particuliers qui cherchent un artisan près de chez eux vous trouvent plus facilement. Votre fiche ne montre jamais votre téléphone, votre e-mail ni votre adresse.",
+    googleOff:
+      "Votre fiche reste accessible par son adresse, mais Google ne la propose plus. Le retrait peut prendre quelques semaines.",
+    googleSaved: "Choix enregistré.",
   },
   // Barres d'onglets des maquettes (ADR 0084) : client « Accueil · Chantiers · (Recherche) ·
   // Documents · Messages », artisan « Accueil · Chantiers · (+) · Devis · Messages ».
