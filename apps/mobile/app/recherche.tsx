@@ -20,6 +20,10 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  House,
+  MapPin,
+  Ruler,
+  Wrench,
 } from "lucide-react-native";
 import { useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -39,6 +43,7 @@ import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
 const s = fr.search.suggestions;
+const u = fr.search.understanding;
 const p = fr.search.proposals;
 // Icônes des cartes d'avantages, dans l'ordre des textes (comme sur le site).
 const FEATURE_ICONS = [Sparkles, Clock, ShieldCheck, BadgeCheck];
@@ -112,6 +117,35 @@ export default function Recherche() {
     const next = `${proposal.text} `;
     setClosedFor(next);
     replaceText(next);
+  }
+
+  // Compréhension en direct (ADR 0179), comme sur le site.
+  const [answered, setAnswered] = useState<string[]>([]);
+  const understood =
+    suggestion && description.trim().length >= SUGGESTION_MIN_LENGTH ? suggestion.understood : null;
+  const understoodItems = understood
+    ? [
+        {
+          Icon: Wrench,
+          label: understood.trade
+            ? (trades.find((t) => t.code === understood.trade)?.label ?? null)
+            : null,
+        },
+        { Icon: House, label: understood.room },
+        { Icon: MapPin, label: understood.city },
+        { Icon: Ruler, label: understood.surface },
+        { Icon: Clock, label: understood.timing },
+      ].filter((item): item is { Icon: typeof Wrench; label: string } => Boolean(item.label))
+    : [];
+  const question =
+    understood && suggestion?.question && !answered.includes(`${suggestion.base}|q`)
+      ? suggestion.question
+      : null;
+
+  function answerQuestion(answer: NeedIdea) {
+    if (suggestion) setAnswered((done) => [...done, `${suggestion.base}|q`]);
+    const next = appendIdea(description, answer.insert);
+    replaceText(next.text, next.select);
   }
 
   function addIdea(idea: NeedIdea) {
@@ -259,6 +293,37 @@ export default function Recherche() {
               <Text style={styles.completionActionText}>{s.accept}</Text>
             </View>
           </Pressable>
+        ) : null}
+        {understoodItems.length > 0 ? (
+          <View aria-live="polite" style={styles.understood}>
+            <View style={styles.understoodTitle}>
+              <Sparkles size={13} color={colors["primary-strong"]} />
+              <Text style={styles.understoodTitleText}>{u.title}</Text>
+            </View>
+            {understoodItems.map(({ Icon, label }) => (
+              <View key={label} style={styles.badge}>
+                <Icon size={13} color={colors["primary-strong"]} />
+                <Text style={styles.badgeText}>{label}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {question ? (
+          <View role="group" aria-label={question.label} style={styles.question}>
+            <Text style={styles.questionText}>{question.label}</Text>
+            <View style={styles.answers}>
+              {question.answers.map((answer) => (
+                <Pressable
+                  key={answer.label}
+                  role="button"
+                  onPress={() => answerQuestion(answer)}
+                  style={({ pressed }) => [styles.answer, pressed && styles.proposalPressed]}
+                >
+                  <Text style={styles.answerText}>{answer.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         ) : null}
         {ideas.length > 0 ? (
           <View role="group" aria-label={s.ideasAria} style={styles.ideas}>
@@ -415,6 +480,39 @@ const styles = StyleSheet.create({
   completionEllipsis: { color: colors["subtle-foreground"] },
   completionAction: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
   completionActionText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
+  understood: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(1.5) },
+  understoodTitle: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
+  understoodTitleText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(1),
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(1),
+    borderRadius: radius.pill,
+    backgroundColor: colors["primary-soft"],
+  },
+  badgeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
+  question: {
+    gap: spacing(2.5),
+    padding: spacing(3.5),
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  questionText: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  answers: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  answer: {
+    minHeight: 36,
+    justifyContent: "center",
+    paddingHorizontal: spacing(3.5),
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
+  },
+  answerText: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
   ideas: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
   ideasLabel: { fontFamily: font.medium, fontSize: 12, color: colors["muted-foreground"] },
   idea: {

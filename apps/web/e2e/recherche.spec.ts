@@ -29,25 +29,38 @@ test("propositions instantanées : demande type choisie au clavier (ADR 0178)", 
   await expect(proposals).toHaveCount(0);
 });
 
-test("suggestions pendant la saisie : suite de la phrase et idées (ADR 0177)", async ({ page }) => {
+test("suggestions pendant la saisie : suite, compréhension, question et idées (ADR 0177, 0179)", async ({
+  page,
+}) => {
   await page.goto("/recherche");
   const description = page.getByLabel("Décrivez votre projet");
   await description.fill("Je veux refaire ma salle de bain");
   // Les demandes proposées passent d'abord ; Échap les ferme et laisse place à la suite.
   await expect(page.getByRole("listbox", { name: "Demandes proposées" })).toBeVisible();
   await description.press("Escape");
+  // Ce qui a été compris : le métier (nom du référentiel) et la pièce.
+  await expect(page.getByText("Compris :")).toBeVisible();
+  await expect(page.getByText("Plombier", { exact: true })).toBeVisible();
+  await expect(page.getByText("Salle de bain", { exact: true })).toBeVisible();
   // Suite proposée en gris, acceptée par le bouton (ou Tab).
   await page.getByRole("button", { name: /^Compléter avec/ }).click();
   await expect(description).toHaveValue(
     "Je veux refaire ma salle de bain en remplaçant la baignoire par une douche",
   );
-  // Idée ajoutée à la fin, « … » sélectionné : la frappe le remplace.
-  await page.getByRole("button", { name: "Ajouter : Surface" }).click();
-  await page.keyboard.type("8");
+  // Question qui manque, réponse en un toucher.
+  await page
+    .getByRole("group", { name: "Quelle surface environ ?" })
+    .getByRole("button", { name: "5 à 10 m²" })
+    .click();
   await expect(description).toHaveValue(
-    "Je veux refaire ma salle de bain en remplaçant la baignoire par une douche, d'environ 8 m²",
+    "Je veux refaire ma salle de bain en remplaçant la baignoire par une douche, d'environ 5 à 10 m²",
   );
-  await expect(page.getByRole("button", { name: "Ajouter : Surface" })).toHaveCount(0);
+  // Idée ajoutée à la fin, « … » sélectionné : la frappe le remplace.
+  await page.getByRole("button", { name: "Ajouter : Ville" }).click();
+  await page.keyboard.type("Nice");
+  await expect(description).toHaveValue(
+    "Je veux refaire ma salle de bain en remplaçant la baignoire par une douche, d'environ 5 à 10 m² à Nice",
+  );
 });
 
 test("saisie, analyse, vérification des critères et lancement de la recherche", async ({
