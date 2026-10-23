@@ -3,9 +3,11 @@ import {
   PROJECT_TEXT_MAX_LENGTH,
   SUGGESTION_MIN_LENGTH,
   appendIdea,
+  matchNeedPhrases,
   needHelpLevel,
   remainingCompletion,
   type NeedIdea,
+  type NeedPhrase,
 } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import {
@@ -19,7 +21,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
 import { DictationButton } from "@/components/dictation-button";
@@ -37,6 +39,7 @@ import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
 const s = fr.search.suggestions;
+const p = fr.search.proposals;
 // Icônes des cartes d'avantages, dans l'ordre des textes (comme sur le site).
 const FEATURE_ICONS = [Sparkles, Clock, ShieldCheck, BadgeCheck];
 
@@ -74,9 +77,17 @@ export default function Recherche() {
   // l'ajouter, et des idées en pastilles pour préciser la demande.
   const suggestion = useNeedSuggestions(description, phase === "idle");
   const [usedIdeas, setUsedIdeas] = useState<string[]>([]);
-  const completion = suggestion
-    ? remainingCompletion(suggestion.base, suggestion.completion, description)
-    : null;
+  // Propositions instantanées (ADR 0178), comme sur le site : demandes types dès les premiers mots.
+  const proposals = useMemo(
+    () => (phase === "idle" ? matchNeedPhrases(description) : []),
+    [phase, description],
+  );
+  const [closedFor, setClosedFor] = useState<string | null>(null);
+  const showProposals = proposals.length > 0 && closedFor !== description;
+  const completion =
+    suggestion && !showProposals
+      ? remainingCompletion(suggestion.base, suggestion.completion, description)
+      : null;
   const ideas =
     suggestion && description.trim().length >= SUGGESTION_MIN_LENGTH
       ? suggestion.ideas.filter((idea) => !usedIdeas.includes(`${suggestion.base}|${idea.label}`))
@@ -95,6 +106,12 @@ export default function Recherche() {
       if (typeof field?.setSelection === "function") field.setSelection(start, end);
       else field?.setSelectionRange?.(start, end);
     }, 50);
+  }
+
+  function chooseProposal(proposal: NeedPhrase) {
+    const next = `${proposal.text} `;
+    setClosedFor(next);
+    replaceText(next);
   }
 
   function addIdea(idea: NeedIdea) {
@@ -207,6 +224,25 @@ export default function Recherche() {
             />
           </View>
         </View>
+        {showProposals ? (
+          <View role="list" aria-label={p.label} style={styles.proposals}>
+            {proposals.map((proposal, index) => (
+              <Pressable
+                key={proposal.text}
+                role="button"
+                onPress={() => chooseProposal(proposal)}
+                style={({ pressed }) => [
+                  styles.proposal,
+                  index > 0 && styles.proposalBorder,
+                  pressed && styles.proposalPressed,
+                ]}
+              >
+                <Search size={15} color={colors["subtle-foreground"]} />
+                <Text style={styles.proposalText}>{proposal.text}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         {completion ? (
           <Pressable
             role="button"
@@ -337,6 +373,29 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.8 },
+  proposals: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    overflow: "hidden",
+  },
+  proposal: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3),
+  },
+  proposalBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  proposalPressed: { backgroundColor: colors["primary-softer"] },
+  proposalText: {
+    flex: 1,
+    fontFamily: font.regular,
+    fontSize: 15,
+    lineHeight: 21,
+    color: colors.foreground,
+  },
   completion: {
     flexDirection: "row",
     alignItems: "center",
