@@ -1077,6 +1077,8 @@ export const fr = {
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
     listening: "Écoute …",
+    // Propositions instantanées (ADR 0178).
+    proposals: { label: "Demandes proposées" },
     // Suggestions pendant la saisie (ADR 0177).
     suggestions: {
       accept: "Compléter",

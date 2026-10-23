@@ -5,9 +5,11 @@ import {
   PROJECT_TEXT_MAX_LENGTH,
   SUGGESTION_MIN_LENGTH,
   appendIdea,
+  matchNeedPhrases,
   needHelpLevel,
   remainingCompletion,
   type NeedIdea,
+  type NeedPhrase,
 } from "@menao/core";
 import { ArrowRight, Paperclip, Plus, Search, Sparkles, X } from "lucide-react";
 import type { Route } from "next";
@@ -24,6 +26,7 @@ import { TradeChips } from "./trade-chips";
 
 const t = fr.search;
 const s = fr.search.suggestions;
+const p = fr.search.proposals;
 
 type AnalyzeResult = { status: "ok"; projectId: string } | { status: string };
 
@@ -67,8 +70,13 @@ export function NeedForm({
   const [caretAtEnd, setCaretAtEnd] = useState(true);
   const [dismissed, setDismissed] = useState<string | null>(null);
   const [usedIdeas, setUsedIdeas] = useState<string[]>([]);
+  // Propositions instantanées (ADR 0178) : demandes types dès les premiers mots, sans IA.
+  const proposals = useMemo(() => (phase === "idle" ? matchNeedPhrases(text) : []), [phase, text]);
+  const [highlight, setHighlight] = useState(-1);
+  const [closedFor, setClosedFor] = useState<string | null>(null);
+  const showProposals = focused && proposals.length > 0 && closedFor !== text;
   const completion =
-    suggestion && focused && caretAtEnd && dismissed !== suggestion.base
+    suggestion && focused && caretAtEnd && !showProposals && dismissed !== suggestion.base
       ? remainingCompletion(suggestion.base, suggestion.completion, text)
       : null;
   const ideas =
@@ -94,6 +102,13 @@ export function NeedForm({
     pendingSelection.current = selection;
     setText(value);
     setCaretAtEnd(selection[1] === value.length);
+  }
+
+  function chooseProposal(proposal: NeedPhrase) {
+    const next = `${proposal.text} `;
+    setClosedFor(next);
+    setHighlight(-1);
+    replaceText(next);
   }
 
   function acceptCompletion() {
@@ -236,6 +251,7 @@ export function NeedForm({
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);
+                  setHighlight(-1);
                   setCaretAtEnd(e.target.selectionEnd === e.target.value.length);
                 }}
                 onSelect={(e) =>
@@ -245,6 +261,30 @@ export function NeedForm({
                   )
                 }
                 onKeyDown={(e) => {
+                  if (showProposals) {
+                    const count = proposals.length;
+                    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setHighlight((current) =>
+                        e.key === "ArrowDown"
+                          ? (current + 1) % count
+                          : current <= 0
+                            ? count - 1
+                            : current - 1,
+                      );
+                      return;
+                    }
+                    const chosen = proposals[highlight];
+                    if (e.key === "Enter" && chosen) {
+                      e.preventDefault();
+                      chooseProposal(chosen);
+                      return;
+                    }
+                    if (e.key === "Escape") {
+                      setClosedFor(text);
+                      return;
+                    }
+                  }
                   if (!completion || !suggestion) return;
                   if ((e.key === "Tab" && !e.shiftKey) || e.key === "ArrowRight") {
                     e.preventDefault();
@@ -260,6 +300,11 @@ export function NeedForm({
                 onBlur={() => setFocused(false)}
                 placeholder={dictation === "listening" ? t.listening : t.placeholder}
                 aria-describedby="description-help"
+                aria-autocomplete="list"
+                aria-controls={showProposals ? "need-proposals" : undefined}
+                aria-activedescendant={
+                  showProposals && highlight >= 0 ? `need-proposal-${highlight}` : undefined
+                }
                 className="relative block min-h-24 w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed text-foreground placeholder:text-subtle-foreground focus:outline-none sm:min-h-20"
               />
             </div>
@@ -310,6 +355,33 @@ export function NeedForm({
               />
             </div>
           </div>
+
+          {showProposals && (
+            <ul
+              id="need-proposals"
+              role="listbox"
+              aria-label={p.label}
+              className="absolute inset-x-0 top-full z-20 mt-2 animate-menao-fade-up overflow-hidden rounded-[1.25rem] border border-border bg-surface py-1.5 text-left shadow-raised"
+            >
+              {proposals.map((proposal, index) => (
+                <li
+                  key={proposal.text}
+                  id={`need-proposal-${index}`}
+                  role="option"
+                  aria-selected={index === highlight}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseEnter={() => setHighlight(index)}
+                  onClick={() => chooseProposal(proposal)}
+                  className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-[0.9375rem] ${
+                    index === highlight ? "bg-primary-soft text-primary-strong" : "text-foreground"
+                  }`}
+                >
+                  <Search aria-hidden="true" className="size-4 shrink-0 text-subtle-foreground" />
+                  {proposal.text}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {dragging && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-[1.25rem] border-2 border-dashed border-primary bg-primary-soft/95 text-sm font-medium text-primary-strong">

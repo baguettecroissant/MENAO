@@ -15,10 +15,27 @@ test.use({
 
 const UUID = "[0-9a-f-]{36}";
 
+test("propositions instantanées : demande type choisie au clavier (ADR 0178)", async ({ page }) => {
+  await page.goto("/recherche");
+  const description = page.getByLabel("Décrivez votre projet");
+  await description.pressSequentially("salle de b");
+  const proposals = page.getByRole("listbox", { name: "Demandes proposées" });
+  await expect(
+    proposals.getByRole("option", { name: "Rénover entièrement ma salle de bain" }),
+  ).toBeVisible();
+  await description.press("ArrowDown");
+  await description.press("Enter");
+  await expect(description).toHaveValue("Rénover entièrement ma salle de bain ");
+  await expect(proposals).toHaveCount(0);
+});
+
 test("suggestions pendant la saisie : suite de la phrase et idées (ADR 0177)", async ({ page }) => {
   await page.goto("/recherche");
   const description = page.getByLabel("Décrivez votre projet");
   await description.fill("Je veux refaire ma salle de bain");
+  // Les demandes proposées passent d'abord ; Échap les ferme et laisse place à la suite.
+  await expect(page.getByRole("listbox", { name: "Demandes proposées" })).toBeVisible();
+  await description.press("Escape");
   // Suite proposée en gris, acceptée par le bouton (ou Tab).
   await page.getByRole("button", { name: /^Compléter avec/ }).click();
   await expect(description).toHaveValue(
