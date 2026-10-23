@@ -29,6 +29,7 @@ export function ArtisanResultCard({
   outsideZone = false,
   verified = false,
   score = null,
+  lotId,
   headingLevel = 2,
   className = "",
 }: {
@@ -54,11 +55,13 @@ export function ArtisanResultCard({
   verified?: boolean;
   /** Score MENAO sur 100 (ADR 0155). */
   score?: number | null;
-  headingLevel?: 2 | 3;
+  /** Artisan d'un autre métier du chantier, coché pour le même envoi (ADR 0170). */
+  lotId?: string;
+  headingLevel?: 2 | 3 | 4;
   /** Largeur dans le carrousel des résultats sur téléphone. */
   className?: string;
 }) {
-  const Heading = headingLevel === 3 ? "h3" : "h2";
+  const Heading = headingLevel === 4 ? "h4" : headingLevel === 3 ? "h3" : "h2";
   return (
     <li
       className={`group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/30 ${className}`}
@@ -126,8 +129,8 @@ export function ArtisanResultCard({
             <label className="relative inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-button border border-primary text-sm font-medium text-primary-strong transition-colors hover:bg-primary-softer has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/25">
               <input
                 type="checkbox"
-                name="artisan"
-                value={artisanId}
+                name={lotId ? "lot" : "artisan"}
+                value={lotId ? `${lotId}.${artisanId}` : artisanId}
                 form="selection"
                 defaultChecked={known}
                 // Case invisible couvrant tout le bouton : cible tactile complète, toujours accessible.
@@ -136,11 +139,11 @@ export function ArtisanResultCard({
               <Check aria-hidden="true" className="hidden size-4 peer-checked:block" />
               <span className="peer-checked:hidden">
                 {fr.search.selection.selectShort}
-                <span className="sr-only"> {name}</span>
+                <span className="sr-only"> {lotId ? `${name}, ${tradeLabel}` : name}</span>
               </span>
               <span className="hidden peer-checked:inline">
                 {fr.search.selection.selected}
-                <span className="sr-only"> {name}</span>
+                <span className="sr-only"> {lotId ? `${name}, ${tradeLabel}` : name}</span>
               </span>
             </label>
           )}

@@ -3,6 +3,8 @@ import { messages } from "../src/messages";
 import {
   artisanSelectionSchema,
   clientCancelSchema,
+  encodeLotSelection,
+  lotSelectionSchema,
   refusalSchema,
   requestFormSchema,
 } from "../src/request";
@@ -22,6 +24,29 @@ describe("demande de chantier (F-11)", () => {
         "b0000000-0000-4000-8000-000000000014",
       ]).success,
     ).toBe(false);
+  });
+
+  it("un seul envoi pour plusieurs métiers : artisans regroupés par lot (ADR 0170)", () => {
+    const lot1 = "c0000000-0000-4000-8000-000000000001";
+    const lot2 = "c0000000-0000-4000-8000-000000000002";
+    const lots = lotSelectionSchema.parse([
+      `${lot1}.${a}`,
+      `${lot2}.${b}`,
+      `${lot1}.${b}`,
+      `${lot1}.${a}`,
+    ]);
+    expect(lots).toEqual([
+      { projectId: lot1, artisanIds: [a, b] },
+      { projectId: lot2, artisanIds: [b] },
+    ]);
+    expect(lotSelectionSchema.parse(encodeLotSelection(lots))).toEqual(lots);
+    expect(lotSelectionSchema.parse([])).toEqual([]);
+    expect(lotSelectionSchema.safeParse([a]).success).toBe(false);
+    expect(lotSelectionSchema.safeParse([`${lot1}.pas-un-artisan`]).success).toBe(false);
+    const four = [1, 2, 3, 4].map((n) => `${lot1}.b0000000-0000-4000-8000-00000000002${n}`);
+    expect(lotSelectionSchema.safeParse(four).success).toBe(false);
+    const fiveLots = [1, 2, 3, 4, 5].map((n) => `c0000000-0000-4000-8000-00000000000${n}.${a}`);
+    expect(lotSelectionSchema.safeParse(fiveLots).success).toBe(false);
   });
 
   it("préférence de rappel : plage horaire cohérente", () => {

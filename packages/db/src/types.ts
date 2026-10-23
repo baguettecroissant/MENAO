@@ -4784,6 +4784,18 @@ export type Database = {
         };
         Returns: undefined;
       };
+      send_chantier_requests: {
+        Args: {
+          p_callback_from: string;
+          p_callback_mode: Database["public"]["Enums"]["callback_mode"];
+          p_callback_to: string;
+          p_message: string;
+          p_phone: string;
+          p_project_id: string;
+          p_selections: Json;
+        };
+        Returns: number;
+      };
       send_contact_message: {
         Args: { p_email: string; p_message: string; p_subject: string };
         Returns: undefined;

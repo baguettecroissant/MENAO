@@ -61,19 +61,29 @@ export default async function ProjectResultsPage({
       ? Promise.resolve({ data: [] })
       : supabase
           .from("projects")
-          .select("id, trade_code, date_mode, date_souhaitee, trades(label)")
+          .select("id, trade_code, work_type_codes, date_mode, date_souhaitee, trades(label)")
           .eq("parent_project_id", id)
           .order("created_at"),
   ]);
+  // Un seul envoi pour tous les métiers (ADR 0170) : les artisans de chaque lot, à cocher ici.
   const lots = await Promise.all(
-    inWorkOrder(lotRows ?? [], (lot) => lot.trade_code).map(async (lot) => ({
-      id: lot.id,
-      tradeCode: lot.trade_code,
-      trade: lot.trades?.label ?? "",
-      dateMode: lot.date_mode,
-      dateSouhaitee: lot.date_souhaitee,
-      found: (await matchArtisans(supabase, lot.id, MAX_SEARCH_RESULTS))?.length ?? 0,
-    })),
+    inWorkOrder(lotRows ?? [], (lot) => lot.trade_code).map(async (lot) => {
+      const found = (await matchArtisans(supabase, lot.id, MAX_SEARCH_RESULTS)) ?? [];
+      const lotRequests = (sent.data ?? []).filter((r) => r.project_id === lot.id);
+      return {
+        id: lot.id,
+        tradeCode: lot.trade_code,
+        trade: lot.trades?.label ?? "",
+        workTypeCodes: lot.work_type_codes,
+        dateMode: lot.date_mode,
+        dateSouhaitee: lot.date_souhaitee,
+        found: found.length,
+        artisans: found.filter((a) => !a.hors_zone),
+        requested: new Set(lotRequests.map((r) => r.artisan_id)),
+        slots: remainingSlots(lotRequests.map((r) => r.status)),
+        sent: lotRequests.length > 0,
+      };
+    }),
   );
   const preferredId = project.preferred_artisan_id;
   // Zone élargie (ADR 0165) : artisans hors de leur zone, renvoyés après ceux de la zone.
@@ -103,19 +113,21 @@ export default async function ProjectResultsPage({
   })
     ? nearby.slice(0, MAX_SEARCH_RESULTS)
     : [];
-  const card = (a: (typeof inZone)[number], outsideZone: boolean) => {
+  const card = (a: (typeof inZone)[number], outsideZone: boolean, lot?: (typeof lots)[number]) => {
     const avail = availability({ paused: false, availableFrom: a.available_from }, today);
-    const specs = specialtiesPreview(a.specialties, project.work_type_codes);
+    const specs = specialtiesPreview(a.specialties, lot?.workTypeCodes ?? project.work_type_codes);
+    const done = (lot?.requested ?? requested).has(a.artisan_id);
+    const open = (lot?.slots ?? slots) > 0;
     return (
       <ArtisanResultCard
         key={a.artisan_id}
-        href={`/recherche/${id}/artisans/${a.artisan_id}`}
+        href={`/recherche/${lot?.id ?? id}/artisans/${a.artisan_id}`}
         artisanId={a.artisan_id}
         verified={a.verified}
         score={a.menao_score}
         name={a.display_name}
         photoUrl={a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null}
-        tradeLabel={tradeLabel}
+        tradeLabel={lot?.trade ?? tradeLabel}
         experienceYears={a.experience_years}
         zone={
           a.zone_mode === "rayon" && a.zone_radius_km
@@ -126,13 +138,21 @@ export default async function ProjectResultsPage({
         availableFrom={avail.kind === "from" ? formatDay(avail.date) : null}
         specialties={specs.shown}
         moreSpecialties={specs.more}
-        selection={requested.has(a.artisan_id) ? "sent" : slots > 0 ? "selectable" : "none"}
-        known={a.artisan_id === preferredId}
+        selection={done ? "sent" : open ? "selectable" : "none"}
+        known={!lot && a.artisan_id === preferredId}
         outsideZone={outsideZone}
+        lotId={lot?.id}
+        headingLevel={lot ? 4 : 2}
         className="w-[16.5rem] shrink-0 snap-start sm:w-auto"
       />
     );
   };
+  const selectionGroups = [
+    ...((results.length > 0 || wider.length > 0) && slots > 0 ? [{ key: "", slots }] : []),
+    ...lots
+      .filter((lot) => lot.artisans.length > 0 && lot.slots > 0)
+      .map((lot) => ({ key: lot.id, slots: lot.slots })),
+  ];
   const cardList =
     "-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 @xl:grid-cols-2 @3xl:grid-cols-3";
 
@@ -198,10 +218,6 @@ export default async function ProjectResultsPage({
               <ul className={cardList}>{wider.map((a) => card(a, true))}</ul>
             ))}
 
-          {(results.length > 0 || wider.length > 0) && slots > 0 && (
-            <SelectionBar formId="selection" slots={slots} />
-          )}
-
           {lots.length > 0 && (
             <section aria-labelledby="autres-metiers" className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
@@ -226,46 +242,55 @@ export default async function ProjectResultsPage({
                   )}
                 </p>
               </div>
-              <ul className="grid items-start gap-3 @xl:grid-cols-2">
-                {lots.map((lot) => {
-                  const lotSent = (sent.data ?? []).some((r) => r.project_id === lot.id);
-                  return (
-                    <li
-                      key={lot.id}
-                      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="flex min-w-0 flex-col">
-                          <span className="font-medium">{lot.trade}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {lotSent ? t.lots.sent : t.lots.found(lot.found)}
-                          </span>
-                        </span>
-                        <TextLink
-                          href={`/recherche/${lot.id}/artisans` as Route}
-                          className="shrink-0 text-sm"
-                        >
-                          {t.lots.see}
-                        </TextLink>
-                      </div>
-                      {/* Date propre au métier (ADR 0169), modifiable avant l'envoi. */}
-                      {lot.tradeCode && (
-                        <LotStart
-                          projectId={id}
-                          tradeCode={lot.tradeCode}
-                          trade={lot.trade}
-                          dateMode={lot.dateMode}
-                          dateSouhaitee={lot.dateSouhaitee}
-                          own={lotStart(project.lot_dates, lot.tradeCode) !== null}
-                          editable={!lotSent}
-                          today={today}
-                        />
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+              {lots.map((lot) => (
+                <section
+                  key={lot.id}
+                  aria-labelledby={`metier-${lot.id}`}
+                  className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex min-w-0 flex-col">
+                      <h3 id={`metier-${lot.id}`} className="font-medium">
+                        {lot.trade}
+                      </h3>
+                      <span className="text-sm text-muted-foreground">
+                        {lot.sent ? t.lots.sent : t.lots.found(lot.found)}
+                      </span>
+                    </span>
+                    {/* Pas d'artisan de la zone : la page du métier propose ceux d'un peu plus loin. */}
+                    {lot.artisans.length === 0 && (
+                      <TextLink
+                        href={`/recherche/${lot.id}/artisans` as Route}
+                        className="shrink-0 text-sm"
+                      >
+                        {t.lots.see}
+                      </TextLink>
+                    )}
+                  </div>
+                  {/* Date propre au métier (ADR 0169), modifiable avant l'envoi. */}
+                  {lot.tradeCode && (
+                    <LotStart
+                      projectId={id}
+                      tradeCode={lot.tradeCode}
+                      trade={lot.trade}
+                      dateMode={lot.dateMode}
+                      dateSouhaitee={lot.dateSouhaitee}
+                      own={lotStart(project.lot_dates, lot.tradeCode) !== null}
+                      editable={!lot.sent}
+                      today={today}
+                    />
+                  )}
+                  {lot.artisans.length > 0 && (
+                    <ul className={cardList}>{lot.artisans.map((a) => card(a, false, lot))}</ul>
+                  )}
+                </section>
+              ))}
             </section>
+          )}
+
+          {/* Une seule barre pour tous les métiers (ADR 0170) : 3 artisans au plus par métier. */}
+          {selectionGroups.length > 0 && (
+            <SelectionBar formId="selection" groups={selectionGroups} />
           )}
 
           <TicketBlock projectId={id} askEmail={Boolean(claims?.claims.is_anonymous)} />

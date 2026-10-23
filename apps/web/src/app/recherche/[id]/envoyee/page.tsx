@@ -13,12 +13,20 @@ import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.search.request;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export const metadata: Metadata = { title: fr.myRequests.title, robots: { index: false } };
 
 /** Confirmation de l'envoi (F-11), maquette « Votre demande est envoyée ». */
-export default async function RequestSentPage({ params }: PageProps<"/recherche/[id]/envoyee">) {
+export default async function RequestSentPage({
+  params,
+  searchParams,
+}: PageProps<"/recherche/[id]/envoyee">) {
   const { id } = await params;
+  // Un seul envoi pour plusieurs métiers (ADR 0170) : les lots envoyés en même temps.
+  const lotIds = ([] as string[])
+    .concat((await searchParams).lot ?? [])
+    .filter((v) => UUID.test(v));
   const supabase = await createClient();
   const [{ data }, summary, { data: last }, chantier] = await Promise.all([
     supabase.rpc("particulier_requests"),
@@ -26,19 +34,25 @@ export default async function RequestSentPage({ params }: PageProps<"/recherche/
     supabase
       .from("requests")
       .select("callback_mode, callback_from, callback_to")
-      .eq("project_id", id)
+      .in("project_id", [id, ...lotIds])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
     getChantierProjects(supabase, id),
   ]);
-  const requests = (data ?? []).filter((r) => r.project_id === id && r.status === "envoyee");
+  const sentNow = new Set([
+    id,
+    ...lotIds.filter((lot) => chantier?.projects.some((p) => p.id === lot)),
+  ]);
+  const requests = (data ?? []).filter((r) => sentNow.has(r.project_id) && r.status === "envoyee");
   if (requests.length === 0) notFound();
   const hhmm = (v: string | null) => (v ?? "").slice(0, 5).replace(":", " h ");
-  const names = joinNames(requests.map((r) => r.artisan_name));
+  const names = joinNames([...new Set(requests.map((r) => r.artisan_name))]);
   // Chantier à plusieurs métiers (ADR 0168) : les métiers pas encore contactés.
   const contacted = new Set((data ?? []).map((r) => r.project_id));
-  const others = (chantier?.projects ?? []).filter((p) => p.id !== id && !contacted.has(p.id));
+  const others = (chantier?.projects ?? []).filter(
+    (p) => !sentNow.has(p.id) && !contacted.has(p.id),
+  );
   const workOrder = (chantier?.projects ?? []).map((p) => p.trade).filter(Boolean);
 
   return (
@@ -47,7 +61,7 @@ export default async function RequestSentPage({ params }: PageProps<"/recherche/
         <aside className="flex flex-col gap-4">
           <SelectedArtisansCard
             artisans={requests.map((r) => ({
-              id: r.artisan_id,
+              id: r.request_id,
               name: r.artisan_name,
               photoUrl: r.artisan_avatar_path
                 ? publicUrl(supabase, "avatars", r.artisan_avatar_path)

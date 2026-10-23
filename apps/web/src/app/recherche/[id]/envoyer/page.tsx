@@ -1,5 +1,5 @@
 import { roleFromAppMetadata } from "@menao/core";
-import { artisanSelectionSchema } from "@menao/validation";
+import { artisanSelectionSchema, lotSelectionSchema } from "@menao/validation";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
@@ -31,8 +31,15 @@ export default async function SendRequestPage({
   const sp = await searchParams;
   if (!UUID.test(id)) notFound();
   const requested = ([] as string[]).concat(sp.artisan ?? []);
-  const selection = artisanSelectionSchema.safeParse(requested);
-  if (!selection.success) redirect(`/recherche/${id}/artisans` as Route);
+  // Chantier à plusieurs métiers (ADR 0170) : artisans des autres métiers, envoyés en même temps.
+  const lotValues = ([] as string[]).concat(sp.lot ?? []);
+  const lotSelection = lotSelectionSchema.safeParse(lotValues);
+  const selection =
+    requested.length === 0 && lotValues.length > 0
+      ? { success: true as const, data: [] as string[] }
+      : artisanSelectionSchema.safeParse(requested);
+  if (!selection.success || !lotSelection.success) redirect(`/recherche/${id}/artisans` as Route);
+  const lotIds = lotSelection.data.map((lot) => lot.projectId);
 
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
@@ -63,17 +70,54 @@ export default async function SendRequestPage({
   }
   if (project.status === "brouillon") redirect(`/recherche/${id}` as Route);
 
-  const [matches, { data: sent }] = await Promise.all([
-    matchArtisans(supabase, id, 20),
-    supabase.from("requests").select("artisan_id").eq("project_id", id),
+  const [matches, { data: sent }, { data: lotRows }] = await Promise.all([
+    selection.data.length ? matchArtisans(supabase, id, 20) : Promise.resolve([]),
+    supabase
+      .from("requests")
+      .select("project_id, artisan_id")
+      .in("project_id", [id, ...lotIds]),
+    lotIds.length
+      ? supabase
+          .from("projects")
+          .select("id, trades(label)")
+          .in("id", lotIds)
+          .eq("parent_project_id", id)
+      : Promise.resolve({ data: [] }),
   ]);
-  const already = new Set((sent ?? []).map((r) => r.artisan_id));
-  const chosen = (matches ?? []).filter(
-    (m) => selection.data.includes(m.artisan_id) && !already.has(m.artisan_id),
-  );
-  if (chosen.length === 0) redirect(`/recherche/${id}/artisans` as Route);
-  const context = { projectId: id, artisanIds: chosen.map((a) => a.artisan_id) };
-  const names = joinNames(chosen.map((a) => a.display_name));
+  const already = new Set((sent ?? []).map((r) => `${r.project_id}:${r.artisan_id}`));
+  const pick = (projectId: string, ids: string[], found: typeof matches) =>
+    (found ?? []).filter(
+      (m) => ids.includes(m.artisan_id) && !already.has(`${projectId}:${m.artisan_id}`),
+    );
+  const chosen = pick(id, selection.data, matches);
+  const lots = (
+    await Promise.all(
+      lotSelection.data.map(async (lot) => {
+        const row = (lotRows ?? []).find((r) => r.id === lot.projectId);
+        if (!row) return null;
+        const artisans = pick(
+          lot.projectId,
+          lot.artisanIds,
+          await matchArtisans(supabase, row.id, 20),
+        );
+        return artisans.length
+          ? { projectId: row.id, trade: row.trades?.label ?? "", artisans }
+          : null;
+      }),
+    )
+  ).filter((lot) => lot !== null);
+  if (chosen.length === 0 && lots.length === 0) redirect(`/recherche/${id}/artisans` as Route);
+  const context = {
+    projectId: id,
+    artisanIds: chosen.map((a) => a.artisan_id),
+    lots: lots.map((lot) => ({
+      projectId: lot.projectId,
+      artisanIds: lot.artisans.map((a) => a.artisan_id),
+    })),
+  };
+  const names = joinNames([
+    ...new Set([...chosen, ...lots.flatMap((lot) => lot.artisans)].map((a) => a.display_name)),
+  ]);
 
   let form;
   if (anonymous) {
@@ -113,6 +157,19 @@ export default async function SendRequestPage({
 
   const summary = await getProjectSummary(supabase, id);
   const r = fr.search.results;
+  const selected = (a: (typeof chosen)[number], key: string, trade?: string | null) => ({
+    id: key,
+    name: a.display_name,
+    photoUrl: a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null,
+    trade: trade
+      ? `${trade}${a.experience_years !== null ? ` · ${r.experience(a.experience_years)}` : ""}`
+      : null,
+    zone:
+      a.zone_mode === "rayon" && a.zone_radius_km
+        ? r.zoneRadius(a.zone_radius_km, a.zone_city)
+        : r.zoneCommunes(a.zone_communes),
+    availableNow: a.available_now,
+  });
 
   return (
     <main className="bg-background">
@@ -120,19 +177,12 @@ export default async function SendRequestPage({
         <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
           <SelectedArtisansCard
             editHref={`/recherche/${id}/artisans`}
-            artisans={chosen.map((a) => ({
-              id: a.artisan_id,
-              name: a.display_name,
-              photoUrl: a.avatar_path ? publicUrl(supabase, "avatars", a.avatar_path) : null,
-              trade: summary?.trade
-                ? `${summary.trade}${a.experience_years !== null ? ` · ${r.experience(a.experience_years)}` : ""}`
-                : null,
-              zone:
-                a.zone_mode === "rayon" && a.zone_radius_km
-                  ? r.zoneRadius(a.zone_radius_km, a.zone_city)
-                  : r.zoneCommunes(a.zone_communes),
-              availableNow: a.available_now,
-            }))}
+            artisans={[
+              ...chosen.map((a) => selected(a, a.artisan_id, summary?.trade)),
+              ...lots.flatMap((lot) =>
+                lot.artisans.map((a) => selected(a, `${lot.projectId}:${a.artisan_id}`, lot.trade)),
+              ),
+            ]}
           />
           {summary && (
             <>
