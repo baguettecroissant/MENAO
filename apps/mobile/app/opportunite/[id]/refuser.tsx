@@ -7,14 +7,14 @@ import { RadioGroup } from "@/components/radio-group";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { refuseRequest } from "@/lib/pro-requests";
-import { Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
 
 const t = fr.proRequests;
 const REASONS = REFUSAL_REASONS.map((value) => ({ value, label: t.reasons[value] }));
 
 /** F-17 « Refuser le chantier », comme sur le site : motif de la liste, précisé si « Autre ». */
 export default function RefuseRequestScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, partenaires } = useLocalSearchParams<{ id: string; partenaires?: string }>();
   const [reason, setReason] = useState<RefusalReason | null>(null);
   const [detail, setDetail] = useState("");
   const [errors, setErrors] = useState<{ reason?: string; detail?: string }>({});
@@ -40,6 +40,7 @@ export default function RefuseRequestScreen() {
   return (
     <Screen header={<TopBar />}>
       <Title>{t.refuse}</Title>
+      {partenaires === "1" ? <Body muted>{fr.proPartners.afterRefusal}</Body> : null}
       <RadioGroup
         legend={t.refusalLegend}
         options={REASONS}

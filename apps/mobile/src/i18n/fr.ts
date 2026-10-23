@@ -925,6 +925,13 @@ export const fr = {
         cancel: "Annuler",
       },
     },
+    // Partenaire recommandé par un artisan du chantier (ADR 0174), comme sur le site.
+    recommended: {
+      title: "Recommandés par vos artisans",
+      lead: "Un artisan que vous avez contacté vous recommande un de ses partenaires MENAO. Il ne voit rien de votre demande tant que vous ne le contactez pas, et chacun établit son propre devis.",
+      by: (name: string) => `Recommandé par ${name}, son partenaire`,
+      someone: "un de vos artisans",
+    },
     // Zone élargie (ADR 0165), comme sur le site.
     wider: {
       emptyTitle: "Aucun artisan dans votre secteur pour l'instant",
@@ -2343,6 +2350,20 @@ export const fr = {
     },
   },
   /** « Ce chantier a besoin d'une expertise » (F-17, F-18) : mêmes textes que le site. */
+  // « Recommander un partenaire » (ADR 0174), comme sur le site.
+  proPartners: {
+    title: "Recommander un partenaire",
+    lead: "Vos partenaires MENAO (votre parrain et vos filleuls) qui interviennent chez ce client. Il choisit de les contacter : ils ne voient rien de sa demande avant, et chacun établit son propre devis.",
+    instead: "À votre place",
+    otherTrades: "Pour un autre métier du chantier",
+    recommend: "Recommander",
+    recommendLabel: (name: string) => `Recommander ${name}`,
+    recommended: "Recommandé",
+    sent: (client: string) => `Recommandation envoyée à ${client}.`,
+    client: "votre client",
+    afterRefusal:
+      "Après votre refus, vous pourrez recommander un de vos partenaires à votre place.",
+  },
   proExpertise: {
     open: "Ce chantier a besoin d'une expertise",
     title: "Ce chantier a besoin d'une expertise",

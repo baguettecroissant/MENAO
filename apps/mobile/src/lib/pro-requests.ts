@@ -40,11 +40,23 @@ export async function loadInbox(): Promise<InboxItem[] | null> {
   }));
 }
 
+/** Partenaire du réseau de parrainage à recommander au client (ADR 0174). */
+export type PartnerOption = {
+  projectId: string;
+  trade: string;
+  sameProject: boolean;
+  artisanId: string;
+  name: string;
+  recommended: boolean;
+};
+
 export type Opportunity = {
   detail: RequestDetail;
   photoUrls: string[];
   /** F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible. */
   reputation: ClientReputation | null;
+  /** « Recommander un partenaire » (ADR 0174), comme sur le site. */
+  partners: PartnerOption[];
 };
 
 /**
@@ -55,9 +67,10 @@ export async function loadOpportunity(requestId: string): Promise<Opportunity | 
   const { data } = await supabase.rpc("artisan_request_detail", { p_request_id: requestId });
   const detail = parseRequestDetail(data);
   if (!detail) return null;
-  const [photos, reputation] = await Promise.all([
+  const [photos, reputation, { data: partnerRows }] = await Promise.all([
     signedPhotos(detail.photos),
     loadClientReputation(requestId),
+    supabase.rpc("partner_recommendation_options", { p_request_id: requestId }),
   ]);
   return {
     detail,
@@ -66,12 +79,37 @@ export async function loadOpportunity(requestId: string): Promise<Opportunity | 
       return url ? [url] : [];
     }),
     reputation,
+    partners: (partnerRows ?? []).map((o) => ({
+      projectId: o.project_id,
+      trade: o.trade_label,
+      sameProject: o.same_project,
+      artisanId: o.artisan_id,
+      name: o.display_name,
+      recommended: o.recommended,
+    })),
   };
 }
 
 /** Erreur SQL : message des règles métier (code 22023), sinon message générique. */
 const sqlError = (error: { code?: string; message: string }) =>
   error.code === "22023" ? error.message : fr.errors.generic;
+
+/**
+ * « Recommander un partenaire » (ADR 0174), comme sur le site : règles vérifiées en base, le
+ * client est prévenu. Renvoie le message d'erreur à afficher, ou null.
+ */
+export async function recommendPartner(
+  requestId: string,
+  projectId: string,
+  partnerId: string,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("recommend_partner", {
+    p_request_id: requestId,
+    p_project_id: projectId,
+    p_partner_id: partnerId,
+  });
+  return error ? sqlError(error) : null;
+}
 
 /** F-17 « Refuser le chantier » : motif de la liste, précisé si « Autre ». */
 export async function refuseRequest(

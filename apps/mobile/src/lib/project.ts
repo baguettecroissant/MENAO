@@ -324,11 +324,16 @@ export type MatchedArtisan = {
   outsideZone: boolean;
 };
 
+/** Partenaire recommandé par un artisan du chantier (ADR 0174) : nom de celui qui recommande. */
+export type RecommendedArtisan = { artisan: MatchedArtisan; by: string | null };
+
 export type ProjectResults = {
   tradeLabel: string;
   city: string;
   workTypeCodes: string[];
   artisans: MatchedArtisan[];
+  /** Partenaires recommandés (ADR 0174), présentés à part, hors du classement. */
+  recommended: RecommendedArtisan[];
   /** Zone élargie (ADR 0165) : montrés seulement quand plus aucun artisan de la zone n'est à contacter. */
   nearby: MatchedArtisan[];
   summary: NeedSummary;
@@ -350,6 +355,7 @@ export type ProjectResults = {
     sent: boolean;
     /** Artisans de la zone, à cocher pour le même envoi (ADR 0170), et places restantes. */
     artisans: MatchedArtisan[];
+    recommended: RecommendedArtisan[];
     requested: Set<string>;
     slots: number;
   }[];
@@ -469,6 +475,29 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
   ]);
   if (!project || !summary || !artisans) return null;
   const orderedLots = inWorkOrder(lotRows ?? [], (lot) => lot.trade_code);
+  // Partenaires recommandés par un artisan du chantier (ADR 0174), comme sur le site.
+  const [{ data: recRows }, { data: myRequests }] = await Promise.all([
+    supabase
+      .from("partner_recommendations")
+      .select("project_id, to_artisan_id, request_id")
+      .in("project_id", [projectId, ...orderedLots.map((l) => l.id)])
+      .eq("status", "proposee"),
+    supabase.rpc("particulier_requests"),
+  ]);
+  const recommendedFor = async (id: string, pool: MatchedArtisan[]) => {
+    const recs = (recRows ?? []).filter((r) => r.project_id === id);
+    if (recs.length === 0) return [];
+    const rows = recs.every((r) => pool.some((a) => a.id === r.to_artisan_id))
+      ? pool
+      : ((await matchArtisans(id, 50)) ?? []);
+    return recs.flatMap((rec) => {
+      const artisan = rows.find((a) => a.id === rec.to_artisan_id && !a.outsideZone);
+      const by = (myRequests ?? []).find((r) => r.request_id === rec.request_id)?.artisan_name;
+      return artisan ? [{ artisan, by: by ?? null }] : [];
+    });
+  };
+  const recommended = await recommendedFor(projectId, artisans);
+  const recommendedIds = new Set(recommended.map((r) => r.artisan.id));
   const { data: sentRows } = orderedLots.length
     ? await supabase
         .from("requests")
@@ -482,6 +511,8 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     orderedLots.map(async (lot) => {
       const found = (await matchArtisans(lot.id, MAX_SEARCH_RESULTS)) ?? [];
       const rows = (sentRows ?? []).filter((r) => r.project_id === lot.id);
+      const lotRecommended = await recommendedFor(lot.id, found);
+      const lotRecommendedIds = new Set(lotRecommended.map((r) => r.artisan.id));
       return {
         id: lot.id,
         tradeCode: lot.trade_code,
@@ -492,7 +523,8 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
         dateSouhaitee: lot.date_souhaitee,
         own: lot.trade_code !== null && lotStart(project.lot_dates, lot.trade_code) !== null,
         sent: rows.length > 0,
-        artisans: found.filter((a) => !a.outsideZone),
+        artisans: found.filter((a) => !a.outsideZone && !lotRecommendedIds.has(a.id)),
+        recommended: lotRecommended,
         requested: new Set(rows.map((r) => r.artisan_id)),
         slots: remainingSlots(rows.map((r) => r.status)),
       };
@@ -502,7 +534,8 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     tradeLabel: summary.tradeLabel,
     city: summary.city ?? "",
     workTypeCodes: project.work_type_codes,
-    artisans: artisans.filter((a) => !a.outsideZone),
+    artisans: artisans.filter((a) => !a.outsideZone && !recommendedIds.has(a.id)),
+    recommended,
     nearby: artisans.filter((a) => a.outsideZone),
     summary,
     parentId: project.parent_project_id,
