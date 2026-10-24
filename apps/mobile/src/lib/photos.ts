@@ -141,6 +141,32 @@ async function toJpeg(uri: string, maxSide: number, png = false): Promise<string
   return saved.uri;
 }
 
+/**
+ * Copie réduite d'une photo en JPEG, encodée en base64 (photo → description, ADR 0180) : envoyée
+ * telle quelle au modèle, jamais enregistrée. Métadonnées retirées par le réencodage.
+ */
+export async function photoBase64(uri: string, maxSide: number): Promise<string | null> {
+  try {
+    const context = ImageManipulator.manipulate(uri);
+    const original = await context.renderAsync();
+    context.release();
+    const size = fitWithin(original.width, original.height, maxSide);
+    let image = original;
+    if (size) {
+      const resizing = ImageManipulator.manipulate(original).resize(size);
+      image = await resizing.renderAsync();
+      resizing.release();
+      original.release();
+    }
+    const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.8, base64: true });
+    image.release();
+    removeCopy(saved.uri);
+    return saved.base64 ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function readBytes(uri: string): Promise<Uint8Array> {
   if (Platform.OS === "web") return new Uint8Array(await (await fetch(uri)).arrayBuffer());
   return new File(uri).bytes();

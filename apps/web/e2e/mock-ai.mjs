@@ -9,6 +9,7 @@
 // Suggestions pendant la saisie (balise <saisie>, ADR 0177, 0179) : « refaire ma salle de bain » →
 // une suite, deux idées, le métier et la pièce compris, une question sur la surface ; rien pour les
 // autres textes.
+// Photo → description (ADR 0180) : une phrase fixe.
 // Lecture d'un document (photo ou PDF, ADR 0176) : le document attendu, lisible, valable encore
 // dix ans (Kbis et URSSAF émis il y a dix jours).
 import { createServer } from "node:http";
@@ -99,6 +100,13 @@ function quoteLines() {
         tva: null,
       },
     ],
+  });
+}
+
+function photoDescription() {
+  return JSON.stringify({
+    description: "Une fissure traverse le mur de mon salon, je voudrais la faire réparer.",
+    lisible: true,
   });
 }
 
@@ -231,13 +239,15 @@ createServer(async (req, res) => {
       content: [
         {
           type: "text",
-          text: document
-            ? documentReading(content)
-            : text.includes("<saisie>")
-              ? needSuggestion(text)
-              : text.includes("<dictee>")
-                ? quoteLines()
-                : analysis(text, body?.model ?? ""),
+          text: text.includes("Photo envoyée par le particulier")
+            ? photoDescription()
+            : document
+              ? documentReading(content)
+              : text.includes("<saisie>")
+                ? needSuggestion(text)
+                : text.includes("<dictee>")
+                  ? quoteLines()
+                  : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",

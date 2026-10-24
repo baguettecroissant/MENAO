@@ -4,6 +4,7 @@ import {
   MAX_PROJECT_PHOTOS,
   PROJECT_TEXT_MAX_LENGTH,
   SUGGESTION_MIN_LENGTH,
+  appendDescription,
   appendIdea,
   matchNeedPhrases,
   needHelpLevel,
@@ -30,6 +31,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Hint } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { ensureSession, invokeFunction } from "@/lib/project/client";
+import { describeProjectPhoto } from "@/lib/project/photo-description";
 import { PHOTO_ACCEPT, selectPhotos, uploadProjectPhoto } from "@/lib/project/photos";
 import { useNeedSuggestions } from "@/lib/project/suggestions";
 import { AnalysisScreen } from "./analysis-screen";
@@ -40,6 +42,13 @@ const t = fr.search;
 const s = fr.search.suggestions;
 const p = fr.search.proposals;
 const u = fr.search.understanding;
+const ph = fr.search.photoDescription;
+
+type PhotoDraft =
+  | { step: "reading" }
+  | { step: "filled" }
+  | { step: "ready"; description: string }
+  | { step: "failed" };
 
 type AnalyzeResult = { status: "ok"; projectId: string } | { status: string };
 
@@ -169,10 +178,31 @@ export function NeedForm({
   const help = needHelpLevel(text);
   const canAddPhotos = photos.length < MAX_PROJECT_PHOTOS;
 
+  // Photo → description (ADR 0180) : tant que la description est courte, la première photo jointe
+  // est décrite par l'IA ; le texte vide est rempli, sinon la description est proposée.
+  const [photoDraft, setPhotoDraft] = useState<PhotoDraft | null>(null);
+  const currentText = useRef(text);
+  useEffect(() => {
+    currentText.current = text;
+  }, [text]);
+
+  async function describePhoto(file: File) {
+    setPhotoDraft({ step: "reading" });
+    const description = await describeProjectPhoto(file);
+    if (!description) return setPhotoDraft({ step: "failed" });
+    if (currentText.current.trim()) return setPhotoDraft({ step: "ready", description });
+    setPhotoDraft({ step: "filled" });
+    replaceText(`${description} `);
+  }
+
   function addFiles(files: File[]) {
     const selection = selectPhotos(files, photos.length, t.photos);
     setPhotos((prev) => [...prev, ...selection.accepted]);
     setErrors(selection.errors);
+    const first = selection.accepted[0];
+    if (first && needHelpLevel(text) !== "suffisant" && photoDraft?.step !== "reading") {
+      void describePhoto(first);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -432,6 +462,44 @@ export function NeedForm({
             </div>
           )}
         </div>
+
+        {photoDraft && (
+          <div aria-live="polite" className="w-full text-left">
+            {photoDraft.step === "ready" ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-[1.25rem] border border-primary/20 bg-surface px-3.5 py-2.5 text-sm shadow-card">
+                <Sparkles aria-hidden="true" className="size-4 shrink-0 text-primary" />
+                <span className="font-medium text-primary-strong">{ph.fromPhoto}</span>
+                <span className="text-foreground">{photoDraft.description}</span>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setPhotoDraft(null);
+                    replaceText(`${appendDescription(text, photoDraft.description)} `);
+                  }}
+                  className="ml-auto inline-flex min-h-8 items-center gap-1 rounded-full bg-primary-soft px-3 text-xs font-medium text-primary-strong transition-colors hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Plus aria-hidden="true" className="size-3.5" />
+                  {ph.add}
+                </button>
+              </div>
+            ) : (
+              <p
+                className={`flex items-start gap-1.5 text-xs ${
+                  photoDraft.step === "failed" ? "text-muted-foreground" : "text-primary-strong"
+                }`}
+              >
+                <Sparkles
+                  aria-hidden="true"
+                  className={`mt-px size-3.5 shrink-0 ${
+                    photoDraft.step === "reading" ? "animate-menao-pulse" : ""
+                  }`}
+                />
+                {ph[photoDraft.step]}
+              </p>
+            )}
+          </div>
+        )}
 
         {(understoodItems.length > 0 || question) && (
           <div className="flex w-full animate-menao-fade-up flex-col gap-2.5 text-left">
