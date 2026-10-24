@@ -43,7 +43,8 @@ revoke execute on function app.notification_category(public.notification_type) f
 -- Déclencheur différé : il s'exécute à la validation de l'envoi, quand toutes les demandes sont
 -- créées (un chantier à plusieurs métiers en crée pour chaque lot). La première demande de l'envoi
 -- prévient le client avec le nombre d'artisans contactés ; les suivantes trouvent la notification
--- de la même transaction. Seules les demandes transmises comptent : une demande retenue pour
+-- de la même transaction (créée depuis son début : `notifications.created_at` vaut
+-- clock_timestamp()). Seules les demandes transmises comptent : une demande retenue pour
 -- vérification (« a_verifier ») ne se révèle pas.
 create function app.requests_notify_sent()
 returns trigger
@@ -64,7 +65,7 @@ begin
   if v_root is null or exists (
     select 1 from public.notifications n
     where n.user_id = new.particulier_id and n.type = 'demande_envoyee'
-      and n.data ->> 'project_id' = v_root::text and n.created_at = now()
+      and n.data ->> 'project_id' = v_root::text and n.created_at >= now()
   ) then
     return null;
   end if;

@@ -44,12 +44,13 @@ $$;
 update public.artisans set status = 'en_verification', submitted_at = now()
 where id in ('fd200000-0000-4000-8000-000000000005', 'fd200000-0000-4000-8000-000000000006');
 select results_eq(
-  $$ select user_id, data from public.notifications where type = 'dossier_envoye' order by user_id $$,
+  $$ select user_id, data from public.notifications where type = 'dossier_envoye' and user_id::text like 'fd1%'
+     order by user_id $$,
   $$ values ('fd100000-0000-4000-8000-000000000005'::uuid, '{"renvoi": false}'::jsonb),
             ('fd100000-0000-4000-8000-000000000006', '{"renvoi": true}') $$,
   'dossier envoyé : accusé de réception, premier envoi ou dossier complété');
 update public.artisans set presentation = 'Carreleur.' where id = 'fd200000-0000-4000-8000-000000000005';
-select is((select count(*)::int from public.notifications where type = 'dossier_envoye'), 2,
+select is((select count(*)::int from public.notifications where type = 'dossier_envoye' and user_id::text like 'fd1%'), 2,
   'autre modification du dossier : pas de nouvel accusé');
 
 -- ---------- 6. Filleul validé : le parrain est prévenu ----------
