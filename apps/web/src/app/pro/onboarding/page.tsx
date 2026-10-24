@@ -9,6 +9,7 @@ import {
 import {
   Building2,
   CalendarDays,
+  Users,
   Check,
   ChevronRight,
   CreditCard,
@@ -53,10 +54,13 @@ const documentTone: Record<DocumentState, Tone> = {
  * validé, c'est « Mon dossier » (renouvellement des documents).
  */
 export default async function OnboardingIndexPage() {
-  const { artisan, progress, canSubmit, visibility, snapshot, documents } =
+  const { supabase, artisan, progress, canSubmit, visibility, snapshot, documents } =
     await getOnboardingContext();
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
   const validated = artisan.status === "valide" || artisan.status === "suspendu";
+  // Demande de la zone (ADR 0182), une fois les métiers et la zone choisis, avant la validation.
+  const zoneDemand =
+    !validated && progress.metiers && progress.zone ? await loadZoneDemand(supabase) : null;
   const left = dossierItemsLeft(snapshot);
   const total = dossierItemCount(snapshot);
   const done = total - left;
@@ -108,6 +112,28 @@ export default async function OnboardingIndexPage() {
             </ButtonLink>
           </Card>
         </>
+      )}
+
+      {zoneDemand && zoneDemand.recherches > 0 && (
+        <Card className="flex gap-3 border-primary/20 bg-primary-softer">
+          <RowIcon>
+            <Users aria-hidden="true" className="size-5" />
+          </RowIcon>
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="font-semibold">{t.zoneDemand.title}</h2>
+            <p>{t.zoneDemand.body(zoneDemand.recherches, zoneDemand.jours)}</p>
+            {zoneDemand.metiers.length > 1 && (
+              <p className="text-sm text-muted-foreground">
+                {zoneDemand.metiers
+                  .map((m) =>
+                    t.zoneDemand.trade(zoneDemand.labels[m.metier] ?? m.metier, m.recherches),
+                  )
+                  .join(" · ")}
+              </p>
+            )}
+            <p className="text-sm text-primary-strong">{t.zoneDemand.next}</p>
+          </div>
+        </Card>
       )}
 
       {editable && <p className="leading-relaxed text-muted-foreground">{d.lead}</p>}
@@ -305,4 +331,25 @@ function Row({
       </Link>
     </li>
   );
+}
+
+type ZoneDemand = {
+  jours: number;
+  recherches: number;
+  metiers: { metier: string; recherches: number }[];
+};
+
+/** Recherches des métiers de l'artisan dans sa zone (my_zone_demand) ; null en cas d'erreur. */
+async function loadZoneDemand(
+  supabase: Awaited<ReturnType<typeof getOnboardingContext>>["supabase"],
+): Promise<(ZoneDemand & { labels: Record<string, string> }) | null> {
+  const [{ data, error }, { data: trades }] = await Promise.all([
+    supabase.rpc("my_zone_demand"),
+    supabase.from("trades").select("code, label"),
+  ]);
+  if (error || !data) return null;
+  return {
+    ...(data as ZoneDemand),
+    labels: Object.fromEntries((trades ?? []).map((tr) => [tr.code, tr.label])),
+  };
 }
