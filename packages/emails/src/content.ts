@@ -58,6 +58,14 @@ export const NOTIFICATION_TYPES = [
   "parrainage_suggestion",
   "mois_offert",
   "recommandation_partenaire",
+  // Notifications ajoutées par l'audit du 24 octobre 2026 (ADR 0183).
+  "demande_envoyee",
+  "dossier_envoye",
+  "devis_relance",
+  "devis_expire",
+  "avis_reponse",
+  "demarrage_rappel",
+  "filleul_valide",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -232,6 +240,164 @@ export function notificationContent(
   };
 
   switch (type) {
+    // Demande envoyée (ADR 0183) : confirmation au client, une par envoi. 72 heures :
+    // REQUEST_RESPONSE_HOURS (@menao/core).
+    case "demande_envoyee": {
+      const nb = integer(data, "nb") ?? 0;
+      const to = nb > 1 ? `${nb} artisans` : nb === 1 ? "1 artisan" : null;
+      return {
+        subject: to ? `Votre demande a été envoyée à ${to}` : "Votre demande a bien été envoyée",
+        preview: `Réponse sous 72 heures pour ${quoted(titre)}.`,
+        title: "Demande envoyée",
+        paragraphs: [
+          hello(ctx.firstName),
+          to
+            ? `Votre demande pour ${quoted(titre)} a bien été envoyée à ${to} vérifié${nb > 1 ? "s" : ""}.`
+            : `Votre demande pour ${quoted(titre)} a bien été envoyée.`,
+          "Chaque artisan a 72 heures pour vous répondre. Vous serez prévenu dès qu'un artisan fixe un rendez-vous ; sans réponse, nous vous proposerons d'autres artisans.",
+        ],
+        quote: null,
+        cta: { label: "Suivre ma demande", url: link("/mon-espace") },
+      };
+    }
+    // Dossier envoyé (ADR 0183) : accusé de réception à l'artisan.
+    case "dossier_envoye": {
+      const again = data.renvoi === true;
+      return {
+        subject: again
+          ? "Votre dossier complété est bien reçu"
+          : "Votre dossier MENAO est bien reçu",
+        preview: "L'équipe MENAO vérifie votre entreprise et vos documents.",
+        title: "Dossier reçu",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Merci ! Votre dossier est bien arrivé : l'équipe MENAO vérifie maintenant votre entreprise et vos documents.",
+          "Vous serez prévenu par e-mail dès la fin de la vérification. D'ici là, vos documents ne peuvent plus être modifiés.",
+        ],
+        quote: null,
+        cta: { label: "Voir mon dossier", url: link("/pro/onboarding") },
+      };
+    }
+    // Devis sans réponse (ADR 0183) : relances du client 3 jours après l'envoi et 3 jours avant la
+    // fin de validité. Après cette date, le devis ne se signe plus, mais le client peut encore
+    // demander une nouvelle version.
+    case "devis_relance": {
+      const soon = text(data, "moment") === "expire_bientot";
+      const day = dateDay(text(data, "date_fin"));
+      const quoteId = uuid(data, "quote_id");
+      return {
+        subject:
+          soon && day ? `Votre devis expire le ${day}` : `Le devis de ${artisan} vous attend`,
+        preview: soon
+          ? `Le devis de ${artisan} pour ${quoted(titre)} est valable${day ? ` jusqu'au ${day}` : " encore quelques jours"}.`
+          : `${artisan} vous a envoyé un devis pour ${quoted(titre)}.`,
+        title: soon ? "Votre devis expire bientôt" : "Un devis vous attend",
+        paragraphs: soon
+          ? [
+              hello(ctx.firstName),
+              `Le devis de ${artisan} pour ${quoted(titre)} est valable${day ? ` jusqu'au ${day}` : " encore quelques jours"}.`,
+              "Passé cette date, il ne pourra plus être signé, mais vous pourrez demander une nouvelle version à l'artisan. D'ici là, vous pouvez le signer, demander une modification ou le refuser.",
+            ]
+          : [
+              hello(ctx.firstName),
+              `${artisan} vous a envoyé son devis pour ${quoted(titre)} il y a quelques jours.`,
+              "Vous pouvez le signer en ligne, demander une modification ou le refuser : l'artisan sera prévenu.",
+            ],
+        quote: null,
+        cta: {
+          label: "Voir le devis",
+          url: link(quoteId ? `/mon-espace/devis/${quoteId}` : "/mon-espace"),
+        },
+      };
+    }
+    // Devis expiré sans réponse (ADR 0183) : l'artisan est prévenu.
+    case "devis_expire": {
+      const client = text(data, "client") ?? "votre client";
+      const day = dateDay(text(data, "date_fin"));
+      return {
+        subject: `Votre devis pour ${quoted(titre)} a expiré`,
+        preview: `${client} n'a pas répondu avant la fin de validité du devis.`,
+        title: "Devis expiré",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre devis pour ${quoted(titre)} n'est plus valable${day ? ` depuis le ${day}` : ""} : ${client} ne l'a ni signé ni refusé, et ne peut plus le signer.`,
+          "Contactez-le par la messagerie MENAO : s'il est toujours intéressé, il peut vous demander une nouvelle version.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
+      };
+    }
+    // Réponse de l'artisan à un avis (ADR 0183) : le client est prévenu.
+    case "avis_reponse": {
+      const reply = text(data, "reponse");
+      return {
+        subject: `${artisan} a répondu à votre avis`,
+        preview: `Sa réponse est publiée sous votre avis, sur sa fiche MENAO.`,
+        title: "Réponse à votre avis",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} a répondu à l'avis que vous avez laissé pour ${quoted(titre)}.`,
+          "Sa réponse est publiée sous votre avis, sur sa fiche MENAO.",
+        ],
+        quote: reply,
+        cta: myChantier("Voir mon chantier"),
+      };
+    }
+    // Démarrage des travaux demain (ADR 0183) : rappel au client et à l'artisan.
+    case "demarrage_rappel": {
+      const forArtisan = text(data, "destinataire") === "artisan";
+      const start = moment(text(data, "demarrage"));
+      const client = text(data, "client");
+      const adresse = text(data, "adresse");
+      const when = start ? `demain, ${start.day} à ${start.time}` : "demain";
+      return {
+        subject: start
+          ? `Démarrage des travaux demain à ${start.time}`
+          : "Démarrage des travaux demain",
+        preview: forArtisan
+          ? `Démarrage ${when} pour ${quoted(titre)}.`
+          : `${artisan} commence les travaux ${when}.`,
+        title: "Les travaux commencent demain",
+        paragraphs: forArtisan
+          ? [
+              hello(ctx.firstName),
+              `Vous démarrez le chantier ${quoted(titre)}${client ? ` de ${client}` : ""} ${when}.`,
+              ...(adresse ? [`Adresse : ${adresse}.`] : []),
+            ]
+          : [
+              hello(ctx.firstName),
+              `${artisan} commence les travaux de ${quoted(titre)} ${when}.`,
+              "Vous suivrez l'avancement du chantier, photos à l'appui, depuis votre espace.",
+            ],
+        quote: null,
+        cta: forArtisan
+          ? {
+              label: "Voir le chantier",
+              url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+            }
+          : myChantier("Voir mon chantier"),
+      };
+    }
+    // Filleul validé (ADR 0183) : le parrain est prévenu. Rien sur l'abonnement : la notification
+    // part aussi dans l'application (règle 10).
+    case "filleul_valide": {
+      const filleul = text(data, "filleul") ?? "Votre filleul";
+      return {
+        subject: `${filleul} a rejoint MENAO`,
+        preview: "Votre parrainage a abouti : son dossier est validé.",
+        title: "Votre filleul est validé",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Bonne nouvelle : ${filleul}, que vous avez parrainé, vient d'être validé par l'équipe MENAO.`,
+          "Merci de faire grandir le réseau MENAO ! Retrouvez le suivi de vos parrainages dans votre profil.",
+        ],
+        quote: null,
+        cta: { label: "Voir mes parrainages", url: link("/pro/mon-profil#parrainage") },
+      };
+    }
     case "nouvelle_demande": {
       const client = text(data, "client") ?? "Un particulier";
       const ville = text(data, "ville");

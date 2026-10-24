@@ -11,6 +11,9 @@ export const OPTIONAL_NOTIFICATIONS = {
     "nouveaux_messages",
     // Partenaire recommandé par un artisan du chantier (ADR 0174).
     "recommandation_partenaire",
+    // Réponse de l'artisan à un avis, filleul validé (ADR 0183).
+    "avis_reponse",
+    "filleul_valide",
   ],
   rappels: [
     "rdv_rappel",
@@ -21,6 +24,9 @@ export const OPTIONAL_NOTIFICATIONS = {
     "inscription_relance",
     // Proposition de parrainer un confrère (ADR 0161).
     "parrainage_suggestion",
+    // Devis sans réponse, démarrage des travaux demain (ADR 0183).
+    "devis_relance",
+    "demarrage_rappel",
   ],
 } as const;
 export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;
