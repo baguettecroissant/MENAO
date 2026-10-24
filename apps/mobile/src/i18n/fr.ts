@@ -216,6 +216,14 @@ export const fr = {
   },
   /** « Faire vérifier mon entreprise » dans l'application (ADR 0113) : mêmes textes que le site. */
   proDossier: {
+    // Demande de la zone (ADR 0182), comme sur le site.
+    zoneDemand: {
+      title: "Des particuliers cherchent déjà",
+      body: (n: number, days: number) =>
+        `${n} recherche${n > 1 ? "s" : ""} dans vos métiers et votre zone ces ${days} derniers jours.`,
+      next: "Terminez votre dossier pour recevoir les prochaines demandes.",
+      trade: (label: string, n: number) => `${label} : ${n}`,
+    },
     title: "Faire vérifier mon entreprise",
     lead: "Ajoutez chaque élément, dans l'ordre que vous voulez. Tout est enregistré au fur et à mesure.",
     progressLabel: "Éléments terminés",

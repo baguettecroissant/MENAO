@@ -4115,6 +4115,14 @@ export const fr = {
     onboarding: {
       title: "Mon inscription",
       /** « Faire vérifier mon entreprise » : la page du dossier (ADR 0111). */
+      // Demande de la zone (ADR 0182) : des nombres, jamais une recherche ni un particulier.
+      zoneDemand: {
+        title: "Des particuliers cherchent déjà",
+        body: (n: number, days: number) =>
+          `${n} recherche${n > 1 ? "s" : ""} dans vos métiers et votre zone ces ${days} derniers jours.`,
+        next: "Terminez votre dossier pour recevoir les prochaines demandes.",
+        trade: (label: string, n: number) => `${label} : ${n}`,
+      },
       dossier: {
         title: "Faire vérifier mon entreprise",
         lead: "Ajoutez chaque élément, dans l'ordre que vous voulez. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",

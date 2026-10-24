@@ -3,6 +3,7 @@ import {
   REQUIRED_DOCUMENT_TYPES,
   documentState,
   dossierItemCount,
+  zoneDemandShown,
   type DocumentState,
 } from "@menao/core";
 import { router, type Href } from "expo-router";
@@ -13,15 +14,17 @@ import {
   Lock,
   PenLine,
   UserRound,
+  Users,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
-import { loadDossier, submitDossier } from "@/lib/artisan-dossier";
+import { loadDossier, loadZoneDemand, submitDossier } from "@/lib/artisan-dossier";
+import { useTrades } from "@/lib/trades";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, ScreenSkeleton, Tappable } from "@/ui";
+import { Body, Button, Card, Notice, Screen, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDossier;
@@ -51,6 +54,9 @@ const documentTone: Record<DocumentState, Tone> = {
  */
 export function DossierScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
+  // Demande de la zone (ADR 0182), comme sur le site.
+  const [zoneDemand] = useFocusData(loadZoneDemand);
+  const trades = useTrades();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,6 +112,28 @@ export function DossierScreen() {
         <Notice tone="error">{t.complement(dossier.refusalReason)}</Notice>
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
+      {progress.metiers && progress.zone && zoneDemand && zoneDemandShown(zoneDemand.recherches) ? (
+        <Card tone="soft">
+          <View style={styles.demandHead}>
+            <Users size={18} color={colors["primary-strong"]} />
+            <Text style={styles.demandTitle}>{t.zoneDemand.title}</Text>
+          </View>
+          <Body>{t.zoneDemand.body(zoneDemand.recherches, zoneDemand.jours)}</Body>
+          {zoneDemand.metiers.length > 1 ? (
+            <Body muted>
+              {zoneDemand.metiers
+                .map((m) =>
+                  t.zoneDemand.trade(
+                    trades.find((tr) => tr.code === m.metier)?.label ?? m.metier,
+                    m.recherches,
+                  ),
+                )
+                .join(" · ")}
+            </Body>
+          ) : null}
+          <Text style={styles.demandNext}>{t.zoneDemand.next}</Text>
+        </Card>
+      ) : null}
       {editable ? <Body muted>{t.lead}</Body> : null}
 
       <View style={styles.progress}>
@@ -237,6 +265,9 @@ function Row({
 }
 
 const styles = StyleSheet.create({
+  demandHead: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
+  demandTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
+  demandNext: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
   progress: { gap: spacing(2) },
   progressRow: { flexDirection: "row", justifyContent: "space-between" },
   progressText: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },

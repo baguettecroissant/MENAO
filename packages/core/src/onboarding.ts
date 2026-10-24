@@ -28,6 +28,15 @@ export const KBIS_MAX_AGE_MONTHS = 3;
 /** L'attestation de vigilance URSSAF vaut 6 mois à compter de son émission (ADR 0115). */
 export const URSSAF_MAX_AGE_MONTHS = 6;
 export const PRESENTATION_MIN_LENGTH = 100;
+/**
+ * Demande de la zone (ADR 0182) : montrée à l'artisan qui s'inscrit à partir de 5 recherches de
+ * ses métiers dans sa zone sur les 30 derniers jours ; en dessous, le chiffre découragerait.
+ */
+export const ZONE_DEMAND_MIN_SEARCHES = 5;
+
+export function zoneDemandShown(searches: number): boolean {
+  return searches >= ZONE_DEMAND_MIN_SEARCHES;
+}
 
 export type DocumentSnapshot = {
   status: "en_attente" | "valide" | "refuse";

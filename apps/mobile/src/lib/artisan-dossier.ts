@@ -173,3 +173,18 @@ export async function savePresentation(value: string): Promise<string | null> {
     .eq("user_id", auth.user.id);
   return error ? fr.errors.generic : null;
 }
+
+export type ZoneDemand = {
+  jours: number;
+  recherches: number;
+  metiers: { metier: string; recherches: number }[];
+};
+
+/**
+ * Recherches des métiers de l'artisan dans sa zone ces 30 derniers jours (ADR 0182), comme sur le
+ * site : des nombres seulement. null en cas d'erreur.
+ */
+export async function loadZoneDemand(): Promise<ZoneDemand | null> {
+  const { data, error } = await supabase.rpc("my_zone_demand");
+  return error || !data ? null : (data as ZoneDemand);
+}
