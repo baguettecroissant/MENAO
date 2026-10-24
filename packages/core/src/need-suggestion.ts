@@ -1,7 +1,8 @@
 /**
  * Suggestions pendant la saisie du besoin (F-05, ADR 0177) : la suite de la phrase, en gris dans
- * le champ, et des idées pour préciser la demande, en pastilles sous le champ. Schéma de la réponse
- * du modèle, nettoyage, et ajout au texte du particulier.
+ * le champ, et des idées pour préciser la demande, en pastilles sous le champ. Compréhension en
+ * direct (ADR 0179) : ce qui a été compris, et la question qui manque, avec des réponses en un
+ * toucher. Schéma de la réponse du modèle, nettoyage, et ajout au texte du particulier.
  * Fichier autonome (aucun import) : il est aussi importé par l'Edge Function suggest-need.
  */
 
@@ -18,6 +19,10 @@ export const IDEA_PLACEHOLDER = "…";
 const COMPLETION_MAX_LENGTH = 70;
 const IDEA_LABEL_MAX_LENGTH = 32;
 const IDEA_TEXT_MAX_LENGTH = 80;
+const UNDERSTOOD_MAX_LENGTH = 40;
+const QUESTION_MAX_LENGTH = 70;
+const ANSWERS_MIN = 2;
+const ANSWERS_MAX = 4;
 
 /** Réponse brute du modèle (sortie structurée, needSuggestionJsonSchema). */
 export type RawNeedSuggestion = {
@@ -27,10 +32,34 @@ export type RawNeedSuggestion = {
    */
   reprise: string | null;
   idees: { libelle: string; texte: string }[];
+  /** Ce que le texte dit déjà (rien d'autre). */
+  compris: {
+    metier: string | null;
+    piece: string | null;
+    ville: string | null;
+    surface: string | null;
+    delai: string | null;
+  };
+  /** L'information qui manque le plus, à choisir en un toucher. */
+  question: { intitule: string; reponses: { libelle: string; texte: string }[] } | null;
 };
 
 export type NeedIdea = { label: string; insert: string };
-export type NeedSuggestion = { completion: string | null; ideas: NeedIdea[] };
+/** Ce qui a été compris de la demande (ADR 0179) : métier (code), pièce, ville, surface, délai. */
+export type NeedUnderstanding = {
+  trade: string | null;
+  room: string | null;
+  city: string | null;
+  surface: string | null;
+  timing: string | null;
+};
+export type NeedQuestion = { label: string; answers: NeedIdea[] };
+export type NeedSuggestion = {
+  completion: string | null;
+  ideas: NeedIdea[];
+  understood: NeedUnderstanding;
+  question: NeedQuestion | null;
+};
 
 /** Schéma JSON de la sortie structurée du modèle. */
 export function needSuggestionJsonSchema() {
@@ -40,13 +69,33 @@ export function needSuggestionJsonSchema() {
     required: ["libelle", "texte"],
     additionalProperties: false,
   };
+  const text = { anyOf: [{ type: "string" }, { type: "null" }] };
+  const compris = {
+    type: "object" as const,
+    properties: { metier: text, piece: text, ville: text, surface: text, delai: text },
+    required: ["metier", "piece", "ville", "surface", "delai"],
+    additionalProperties: false,
+  };
+  const question = {
+    anyOf: [
+      {
+        type: "object" as const,
+        properties: { intitule: { type: "string" }, reponses: { type: "array", items: idea } },
+        required: ["intitule", "reponses"],
+        additionalProperties: false,
+      },
+      { type: "null" },
+    ],
+  };
   return {
     type: "object" as const,
     properties: {
-      reprise: { anyOf: [{ type: "string" }, { type: "null" }] },
+      reprise: text,
       idees: { type: "array" as const, items: idea },
+      compris,
+      question,
     },
-    required: ["reprise", "idees"],
+    required: ["reprise", "idees", "compris", "question"],
     additionalProperties: false,
   };
 }
@@ -153,11 +202,96 @@ function cleanIdeas(raw: RawNeedSuggestion["idees"], text: string): NeedIdea[] {
   return ideas;
 }
 
-/** Suggestion prête pour le champ, d'après la réponse du modèle et le texte envoyé. */
-export function normalizeNeedSuggestion(raw: RawNeedSuggestion, text: string): NeedSuggestion {
+const shortText = (value: string | null, max = UNDERSTOOD_MAX_LENGTH): string | null => {
+  const clean = value ? squash(value).trim() : "";
+  return clean && clean.length <= max && !/^null$/i.test(clean) ? clean : null;
+};
+const capitalized = (value: string | null) =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : null;
+
+/**
+ * Ce qui a été compris, limité à ce que le texte dit : un métier de la liste, une ville et une
+ * surface réellement écrites (jamais devinées).
+ */
+function cleanUnderstanding(
+  raw: RawNeedSuggestion["compris"],
+  text: string,
+  trades: readonly string[],
+): NeedUnderstanding {
+  const typed = comparable(text);
+  // Code du métier, ou son nom (« Carreleur », « Maçon ») : comparés sans accents ni majuscules.
+  const tradeKey = (raw.metier ?? "").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").trim();
+  const city = shortText(raw.ville);
+  const surface = shortText(raw.surface);
+  const digits = surface?.match(/\d+/g) ?? [];
+  return {
+    trade: trades.includes(tradeKey) ? tradeKey : null,
+    room: capitalized(shortText(raw.piece)),
+    city: city && typed.includes(city.toLowerCase()) ? capitalized(city) : null,
+    surface:
+      surface && digits.length > 0 && digits.every((d) => typed.includes(d)) ? surface : null,
+    timing: capitalized(shortText(raw.delai)),
+  };
+}
+
+/** Une question sur une surface ou un délai déjà donnés ne se pose pas. */
+const SURFACE_QUESTION = /surface|superficie|m²|taille|dimension/i;
+const TIMING_QUESTION = /quand|délai|date|urgen/i;
+const CITY_QUESTION = /ville|commune|où|adresse|code postal/i;
+
+/**
+ * La question qui manque : 2 à 4 réponses complètes (aucun endroit à compléter), jamais sur la
+ * ville (elle se tape) ni sur une information déjà comprise.
+ */
+function cleanQuestion(
+  raw: RawNeedSuggestion["question"],
+  understood: NeedUnderstanding,
+  text: string,
+): NeedQuestion | null {
+  if (!raw) return null;
+  const label = shortText(raw.intitule, QUESTION_MAX_LENGTH);
+  if (!label || CITY_QUESTION.test(label)) return null;
+  if ((understood.surface || WRITTEN_SURFACE.test(text)) && SURFACE_QUESTION.test(label)) {
+    return null;
+  }
+  if (understood.timing && TIMING_QUESTION.test(label)) return null;
+  const seen = new Set<string>();
+  const answers: NeedIdea[] = [];
+  for (const answer of raw.reponses) {
+    const answerLabel = shortText(answer.libelle, IDEA_LABEL_MAX_LENGTH);
+    const insert = squash(answer.texte).trim();
+    if (!answerLabel || seen.has(answerLabel.toLowerCase())) continue;
+    if (!insert || insert.length > IDEA_TEXT_MAX_LENGTH || /…|\.\.\./.test(insert)) continue;
+    seen.add(answerLabel.toLowerCase());
+    answers.push({ label: capitalized(answerLabel) ?? answerLabel, insert });
+    if (answers.length === ANSWERS_MAX) break;
+  }
+  if (answers.length < ANSWERS_MIN) return null;
+  return { label: /\?$/.test(label) ? label : `${label} ?`, answers };
+}
+
+/**
+ * Suggestion prête pour le champ, d'après la réponse du modèle et le texte envoyé. `trades` : les
+ * codes des métiers actifs, seuls acceptés comme métier compris.
+ */
+export function normalizeNeedSuggestion(
+  raw: RawNeedSuggestion,
+  text: string,
+  trades: readonly string[] = [],
+): NeedSuggestion {
+  const understood = cleanUnderstanding(raw.compris, text, trades);
+  const question = cleanQuestion(raw.question, understood, text);
+  const asked = question?.label ?? "";
   return {
     completion: cleanCompletion(raw.reprise, text),
-    ideas: cleanIdeas(raw.idees, text),
+    // Les idées ne reprennent pas le sujet de la question.
+    ideas: cleanIdeas(raw.idees, text).filter(
+      (idea) =>
+        !(SURFACE_QUESTION.test(asked) && SURFACE_IDEA.test(`${idea.label} ${idea.insert}`)) &&
+        !(TIMING_QUESTION.test(asked) && TIMING_QUESTION.test(idea.label)),
+    ),
+    understood,
+    question,
   };
 }
 

@@ -11,7 +11,19 @@ import {
   type NeedIdea,
   type NeedPhrase,
 } from "@menao/core";
-import { ArrowRight, Paperclip, Plus, Search, Sparkles, X } from "lucide-react";
+import {
+  ArrowRight,
+  Clock,
+  House,
+  MapPin,
+  Paperclip,
+  Plus,
+  Ruler,
+  Search,
+  Sparkles,
+  Wrench,
+  X,
+} from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -27,6 +39,7 @@ import { TradeChips } from "./trade-chips";
 const t = fr.search;
 const s = fr.search.suggestions;
 const p = fr.search.proposals;
+const u = fr.search.understanding;
 
 type AnalyzeResult = { status: "ok"; projectId: string } | { status: string };
 
@@ -113,6 +126,35 @@ export function NeedForm({
 
   function acceptCompletion() {
     if (completion) replaceText(text + completion);
+  }
+
+  // Compréhension en direct (ADR 0179) : ce qui a été compris, et la question qui manque.
+  const [answered, setAnswered] = useState<string[]>([]);
+  const understood =
+    suggestion && text.trim().length >= SUGGESTION_MIN_LENGTH ? suggestion.understood : null;
+  const understoodItems = understood
+    ? [
+        {
+          icon: Wrench,
+          label: understood.trade
+            ? (trades.find((trade) => trade.code === understood.trade)?.label ?? null)
+            : null,
+        },
+        { icon: House, label: understood.room },
+        { icon: MapPin, label: understood.city },
+        { icon: Ruler, label: understood.surface },
+        { icon: Clock, label: understood.timing },
+      ].filter((item): item is { icon: typeof Wrench; label: string } => Boolean(item.label))
+    : [];
+  const question =
+    understood && suggestion?.question && !answered.includes(`${suggestion.base}|q`)
+      ? suggestion.question
+      : null;
+
+  function answerQuestion(answer: NeedIdea) {
+    if (suggestion) setAnswered((done) => [...done, `${suggestion.base}|q`]);
+    const next = appendIdea(text, answer.insert);
+    replaceText(next.text, next.select);
   }
 
   function addIdea(idea: NeedIdea) {
@@ -390,6 +432,48 @@ export function NeedForm({
             </div>
           )}
         </div>
+
+        {(understoodItems.length > 0 || question) && (
+          <div className="flex w-full animate-menao-fade-up flex-col gap-2.5 text-left">
+            {understoodItems.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 text-xs" aria-live="polite">
+                <span className="inline-flex items-center gap-1 font-medium text-primary-strong">
+                  <Sparkles aria-hidden="true" className="size-3.5" />
+                  {u.title}
+                </span>
+                {understoodItems.map(({ icon: Icon, label }) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 font-medium text-primary-strong"
+                  >
+                    <Icon aria-hidden="true" className="size-3.5" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
+            {question && (
+              <div
+                role="group"
+                aria-label={question.label}
+                className="flex flex-wrap items-center gap-2 rounded-[1.25rem] border border-primary/20 bg-surface px-3.5 py-2.5 shadow-card"
+              >
+                <span className="mr-1 text-sm font-medium text-foreground">{question.label}</span>
+                {question.answers.map((answer) => (
+                  <button
+                    key={answer.label}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => answerQuestion(answer)}
+                    className="inline-flex min-h-8 items-center rounded-full border border-border-strong bg-surface px-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-strong"
+                  >
+                    {answer.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {ideas.length > 0 && (
           <div

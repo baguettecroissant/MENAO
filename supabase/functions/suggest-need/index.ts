@@ -12,12 +12,27 @@ import { llmConfig, logAiRuns, sha256, clientIp, type AiRun } from "../_shared/a
 import { adminClient, json } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 import { env } from "../_shared/env.ts";
-import { suggestNeed } from "./suggestion.ts";
+import { suggestNeed, type Trade } from "./suggestion.ts";
 
 /** Une recherche demande quelques suggestions ; large marge pour un foyer ou un bureau. */
 const MAX_PER_IP_PER_HOUR = 150;
 /** Plafond de dépense, tous visiteurs confondus. */
 const MAX_PER_HOUR = 3000;
+
+/** Métiers actifs, relus au plus toutes les 10 minutes (une instance sert plusieurs appels). */
+const TRADES_TTL_MS = 10 * 60_000;
+let tradesCache: { at: number; trades: Trade[] } | null = null;
+async function activeTrades(admin: ReturnType<typeof adminClient>): Promise<Trade[]> {
+  if (tradesCache && Date.now() - tradesCache.at < TRADES_TTL_MS) return tradesCache.trades;
+  const { data } = await admin
+    .from("trades")
+    .select("code, label")
+    .eq("active", true)
+    .order("sort_order");
+  const trades = (data ?? []) as Trade[];
+  if (trades.length) tradesCache = { at: Date.now(), trades };
+  return trades;
+}
 
 /** Tâche terminée après la réponse (Supabase Edge Runtime) ; attendue ailleurs (tests). */
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
@@ -54,7 +69,8 @@ Deno.serve(
 
     const admin = adminClient();
     const started = Date.now();
-    if (!(await withinLimits(admin, req))) return json({ status: "rate_limited" }, 429);
+    const [allowed, trades] = await Promise.all([withinLimits(admin, req), activeTrades(admin)]);
+    if (!allowed) return json({ status: "rate_limited" }, 429);
     const limitsMs = Date.now() - started;
 
     const llm = llmConfig();
@@ -69,7 +85,7 @@ Deno.serve(
       outcome: "erreur",
       latency_ms: 0,
     };
-    const suggestion = await suggestNeed(llm, scrubPersonalData(text), run);
+    const suggestion = await suggestNeed(llm, scrubPersonalData(text), run, trades);
     // Journal écrit après la réponse : la suggestion n'attend pas la base.
     await afterResponse(logAiRuns(admin, [run]));
     const response = suggestion

@@ -4,20 +4,25 @@ import {
   needSuggestionJsonSchema,
   normalizeNeedSuggestion,
   remainingCompletion,
+  type RawNeedSuggestion,
 } from "../src/need-suggestion";
 
 const text = "Je veux refaire ma salle de bain";
+const nothing: Pick<RawNeedSuggestion, "compris" | "question"> = {
+  compris: { metier: null, piece: null, ville: null, surface: null, delai: null },
+  question: null,
+};
 
 describe("suggestions pendant la saisie (ADR 0177)", () => {
-  it("schéma : reprise et idées obligatoires, rien d'autre", () => {
+  it("schéma : reprise, idées, compréhension et question obligatoires, rien d'autre", () => {
     const schema = needSuggestionJsonSchema();
-    expect(schema.required).toEqual(["reprise", "idees"]);
+    expect(schema.required).toEqual(["reprise", "idees", "compris", "question"]);
     expect(schema.additionalProperties).toBe(false);
     expect(schema.properties.idees.items.additionalProperties).toBe(false);
   });
 
   const completion = (reprise: string | null, typed = text) =>
-    normalizeNeedSuggestion({ reprise, idees: [] }, typed).completion;
+    normalizeNeedSuggestion({ ...nothing, reprise, idees: [] }, typed).completion;
 
   it("suite : la reprise des derniers mots est retirée, espace compris", () => {
     expect(completion("ma salle de bain en remplaçant la baignoire")).toBe(
@@ -67,6 +72,7 @@ describe("suggestions pendant la saisie (ADR 0177)", () => {
   it("idées : 4 au plus, distinctes, sans « + », un seul endroit à compléter", () => {
     const { ideas } = normalizeNeedSuggestion(
       {
+        ...nothing,
         reprise: null,
         idees: [
           { libelle: "+ surface", texte: ", d'environ ... m²" },
@@ -91,6 +97,7 @@ describe("suggestions pendant la saisie (ADR 0177)", () => {
     const ideas = (typed: string) =>
       normalizeNeedSuggestion(
         {
+          ...nothing,
           reprise: null,
           idees: [
             { libelle: "Surface", texte: ", d'environ … m²" },
@@ -107,6 +114,7 @@ describe("suggestions pendant la saisie (ADR 0177)", () => {
     const ideas = (typed: string) =>
       normalizeNeedSuggestion(
         {
+          ...nothing,
           reprise: null,
           idees: [
             { libelle: "Ville", texte: "à …" },
@@ -122,6 +130,7 @@ describe("suggestions pendant la saisie (ADR 0177)", () => {
   it("idées écartées : déjà écrites, chiffre inventé, trop longues ou vides", () => {
     const { ideas } = normalizeNeedSuggestion(
       {
+        ...nothing,
         reprise: null,
         idees: [
           { libelle: "Pièce", texte: "salle de bain" },
@@ -157,5 +166,141 @@ describe("suggestions pendant la saisie (ADR 0177)", () => {
       select: null,
     });
     expect(appendIdea("", "à …").text).toBe("À …");
+  });
+
+  describe("compréhension en direct (ADR 0179)", () => {
+    const trades = ["plombier", "electricien"];
+    const understand = (
+      compris: Partial<(typeof nothing)["compris"]>,
+      typed = "Refaire ma salle de bain de 8 m² à Nice",
+    ) =>
+      normalizeNeedSuggestion(
+        { ...nothing, reprise: null, idees: [], compris: { ...nothing.compris, ...compris } },
+        typed,
+        trades,
+      ).understood;
+
+    it("métier de la liste, pièce, ville et surface écrites, délai", () => {
+      expect(
+        understand({
+          metier: "plombier",
+          piece: "salle de bain",
+          ville: "nice",
+          surface: "8 m²",
+          delai: "urgent",
+        }),
+      ).toEqual({
+        trade: "plombier",
+        room: "Salle de bain",
+        city: "Nice",
+        surface: "8 m²",
+        timing: "Urgent",
+      });
+    });
+
+    it("métier écrit avec son nom plutôt que son code : reconnu", () => {
+      expect(understand({ metier: "Électricien" }).trade).toBe("electricien");
+    });
+
+    it("rien de deviné : métier hors liste, ville ou surface absentes du texte", () => {
+      expect(
+        understand(
+          { metier: "astronaute", ville: "Lyon", surface: "12 m²" },
+          "Refaire ma salle de bain",
+        ),
+      ).toEqual({ trade: null, room: null, city: null, surface: null, timing: null });
+    });
+
+    const ask = (
+      question:
+        | (typeof nothing)["question"]
+        | { intitule: string; reponses: { libelle: string; texte: string }[] },
+      typed = "Je veux refaire ma salle de bain",
+      compris: Partial<(typeof nothing)["compris"]> = {},
+    ) =>
+      normalizeNeedSuggestion(
+        {
+          ...nothing,
+          reprise: null,
+          idees: [],
+          compris: { ...nothing.compris, ...compris },
+          question,
+        },
+        typed,
+        trades,
+      ).question;
+
+    const surface = {
+      intitule: "Quelle surface environ",
+      reponses: [
+        { libelle: "moins de 5 m²", texte: ", d'environ moins de 5 m²" },
+        { libelle: "5 à 10 m²", texte: ", d'environ 5 à 10 m²" },
+        { libelle: "5 à 10 m²", texte: ", d'environ 5 à 10 m²" },
+        { libelle: "Plus de 10 m²", texte: ", de plus de 10 m²" },
+      ],
+    };
+
+    it("question : point d'interrogation ajouté, réponses distinctes", () => {
+      expect(ask(surface)).toEqual({
+        label: "Quelle surface environ ?",
+        answers: [
+          { label: "Moins de 5 m²", insert: ", d'environ moins de 5 m²" },
+          { label: "5 à 10 m²", insert: ", d'environ 5 à 10 m²" },
+          { label: "Plus de 10 m²", insert: ", de plus de 10 m²" },
+        ],
+      });
+    });
+
+    it("question écartée : déjà répondue, sur la ville, endroit à compléter, trop peu de réponses", () => {
+      expect(ask(surface, "Refaire ma salle de bain de 8 m²")).toBeNull();
+      expect(
+        ask(
+          {
+            intitule: "Pour quand ?",
+            reponses: [
+              { libelle: "Urgent", texte: ", en urgence" },
+              { libelle: "Ce mois-ci", texte: ", dans le mois" },
+            ],
+          },
+          "Refaire ma salle de bain",
+          { delai: "d'ici fin novembre" },
+        ),
+      ).toBeNull();
+      expect(
+        ask({
+          intitule: "Dans quelle ville ?",
+          reponses: [
+            { libelle: "Nice", texte: "à Nice" },
+            { libelle: "Autre", texte: "à …" },
+          ],
+        }),
+      ).toBeNull();
+      expect(
+        ask({
+          intitule: "Quel délai ?",
+          reponses: [
+            { libelle: "Date précise", texte: ", pour le …" },
+            { libelle: "Urgent", texte: ", en urgence" },
+          ],
+        }),
+      ).toBeNull();
+    });
+
+    it("les idées ne reprennent pas le sujet de la question", () => {
+      const ideas = normalizeNeedSuggestion(
+        {
+          ...nothing,
+          reprise: null,
+          question: surface,
+          idees: [
+            { libelle: "Surface", texte: ", d'environ … m²" },
+            { libelle: "Carrelage", texte: "avec un nouveau carrelage" },
+          ],
+        },
+        "Je veux refaire ma salle de bain",
+        trades,
+      ).ideas;
+      expect(ideas.map((idea) => idea.label)).toEqual(["Carrelage"]);
+    });
   });
 });

@@ -8,6 +8,14 @@ import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "./supabase";
 
+const NOTHING_UNDERSTOOD: NeedSuggestion["understood"] = {
+  trade: null,
+  room: null,
+  city: null,
+  surface: null,
+  timing: null,
+};
+
 /** Suggestion reçue, avec le texte pour lequel elle a été faite. */
 export type ActiveSuggestion = NeedSuggestion & { base: string };
 
@@ -40,7 +48,12 @@ export function useNeedSuggestions(text: string, enabled: boolean): ActiveSugges
           }
           result =
             !error && data?.status === "ok"
-              ? { completion: data.completion ?? null, ideas: data.ideas ?? [] }
+              ? {
+                  completion: data.completion ?? null,
+                  ideas: data.ideas ?? [],
+                  understood: data.understood ?? NOTHING_UNDERSTOOD,
+                  question: data.question ?? null,
+                }
               : null;
           cache.current.set(text, result);
         }
