@@ -9,9 +9,9 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_met
   ('e9800000-0000-4000-8000-000000000002', 'carte98.artisan@example.test', false, now(), '{"role":"artisan"}', '{}'),
   ('e9800000-0000-4000-8000-000000000003', 'carte98.client@example.test', false, now(), '{}', '{}');
 
-insert into public.artisans (id, user_id, status, siret, zone_mode, base_location, radius_km, nom_commercial) values
+insert into public.artisans (id, user_id, status, zone_mode, base_location, radius_km, nom_commercial) values
   ('e9810000-0000-4000-8000-000000000001', 'e9800000-0000-4000-8000-000000000002', 'valide',
-   '00000980000013', 'rayon',
+   'rayon',
    extensions.st_setsrid(extensions.st_makepoint(7.26, 43.70), 4326)::extensions.geography, 20,
    'Plomberie Fictive 98');
 insert into public.artisan_trades (artisan_id, trade_code) values
