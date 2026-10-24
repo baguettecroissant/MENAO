@@ -30,6 +30,8 @@ update public.artisans set status = 'en_verification', raison_sociale = 'NOTIF '
   sirene_active = true, sirene_checked_at = now(), assujetti_tva = false, submitted_at = now()
 where user_id in ('ae000000-0000-4000-8000-000000000001', 'ae000000-0000-4000-8000-000000000002',
   'ae000000-0000-4000-8000-000000000003', 'ae000000-0000-4000-8000-000000000006');
+-- Accusés de réception de l'envoi (ADR 0183, test 100) : hors du sujet de ce test.
+delete from public.notifications where type = 'dossier_envoye';
 -- D, E : artisans validés (rôle artisan : fiche créée ici).
 insert into public.artisans (user_id, status, raison_sociale) values
   ('ae000000-0000-4000-8000-000000000004', 'valide', 'NOTIF EXEMPLE'),

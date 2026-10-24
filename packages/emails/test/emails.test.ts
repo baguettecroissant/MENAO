@@ -609,6 +609,102 @@ describe("contenu des notifications (F-41)", () => {
     });
   });
 
+  describe("notifications ajoutées par l'audit (ADR 0183)", () => {
+    const quoteId = "33333333-3333-4333-8333-333333333333";
+    const projectId = "44444444-4444-4444-8444-444444444444";
+
+    it("demande envoyée : nombre d'artisans, délai de réponse, lien vers l'espace", () => {
+      const c = notificationContent(
+        "demande_envoyee",
+        { project_id: projectId, titre: "Refaire la salle de bain", nb: 3 },
+        ctx,
+      );
+      expect(c.subject).toBe("Votre demande a été envoyée à 3 artisans");
+      expect(c.paragraphs[1]).toBe(
+        `Votre demande pour ${quoted("Refaire la salle de bain")} a bien été envoyée à 3 artisans vérifiés.`,
+      );
+      expect(c.paragraphs[2]).toContain("72 heures");
+      expect(c.cta.url).toBe("https://menao.example/mon-espace");
+      expect(notificationContent("demande_envoyee", { nb: 1 }, ctx).subject).toBe(
+        "Votre demande a été envoyée à 1 artisan",
+      );
+    });
+
+    it("dossier envoyé : accusé de réception, renvoi après complément", () => {
+      expect(notificationContent("dossier_envoye", {}, ctx).subject).toBe(
+        "Votre dossier MENAO est bien reçu",
+      );
+      const again = notificationContent("dossier_envoye", { renvoi: true }, ctx);
+      expect(again.subject).toBe("Votre dossier complété est bien reçu");
+      expect(again.cta.url).toBe("https://menao.example/pro/onboarding");
+    });
+
+    it("devis sans réponse : relance après envoi, puis avant la fin de validité", () => {
+      const data = { ...ids, quote_id: quoteId, titre: "Prises", artisan: "Jean" };
+      const later = notificationContent("devis_relance", { ...data, moment: "sans_reponse" }, ctx);
+      expect(later.subject).toBe("Le devis de Jean vous attend");
+      expect(later.cta.url).toBe(`https://menao.example/mon-espace/devis/${quoteId}`);
+      const soon = notificationContent(
+        "devis_relance",
+        { ...data, moment: "expire_bientot", date_fin: "2026-11-05" },
+        ctx,
+      );
+      expect(soon.subject).toBe("Votre devis expire le jeudi 5 novembre");
+      expect(soon.paragraphs[2]).toContain("demander une nouvelle version");
+    });
+
+    it("devis expiré : l'artisan est prévenu, sans promettre ce qu'il ne peut pas faire", () => {
+      const c = notificationContent(
+        "devis_expire",
+        { ...ids, quote_id: quoteId, titre: "Prises", client: "Dominique", date_fin: "2026-11-05" },
+        { ...ctx, firstName: "Noé" },
+      );
+      expect(c.subject).toBe(`Votre devis pour ${quoted("Prises")} a expiré`);
+      expect(c.paragraphs[1]).toContain("depuis le jeudi 5 novembre");
+      expect(c.paragraphs[2]).toContain("il peut vous demander une nouvelle version");
+      expect(c.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    });
+
+    it("réponse à un avis : la réponse de l'artisan en citation", () => {
+      const c = notificationContent(
+        "avis_reponse",
+        { ...ids, titre: "Prises", artisan: "Jean", reponse: "Merci pour votre confiance !" },
+        ctx,
+      );
+      expect(c.subject).toBe("Jean a répondu à votre avis");
+      expect(c.quote).toBe("Merci pour votre confiance !");
+      expect(c.cta.url).toBe(`https://menao.example/mon-espace/chantiers/${ids.chantier_id}`);
+    });
+
+    it("démarrage demain : rappel au client et à l'artisan (adresse)", () => {
+      const data = { ...ids, titre: "Prises", demarrage: "2026-11-05T07:30:00Z" };
+      const client = notificationContent(
+        "demarrage_rappel",
+        { ...data, destinataire: "client", artisan: "Jean" },
+        ctx,
+      );
+      expect(client.subject).toBe("Démarrage des travaux demain à 08h30");
+      expect(client.paragraphs[1]).toBe(
+        `Jean commence les travaux de ${quoted("Prises")} demain, jeudi 5 novembre à 08h30.`,
+      );
+      const pro = notificationContent(
+        "demarrage_rappel",
+        { ...data, destinataire: "artisan", client: "Dominique", adresse: "1 rue Fictive, Nice" },
+        ctx,
+      );
+      expect(pro.paragraphs).toContain("Adresse : 1 rue Fictive, Nice.");
+      expect(pro.cta.url).toBe(`https://menao.example/pro/chantiers/${ids.chantier_id}`);
+    });
+
+    it("filleul validé : le parrain est prévenu, sans parler d'abonnement (règle 10)", () => {
+      const c = notificationContent("filleul_valide", { filleul: "Plomberie Fictive" }, ctx);
+      expect(c.subject).toBe("Plomberie Fictive a rejoint MENAO");
+      const all = [c.subject, c.preview, ...c.paragraphs].join(" ");
+      expect(all).not.toMatch(/abonnement|mois offert/i);
+      expect(c.cta.url).toBe("https://menao.example/pro/mon-profil#parrainage");
+    });
+  });
+
   it("données manquantes ou invalides : textes génériques, jamais «\u00a0undefined\u00a0»", () => {
     for (const type of NOTIFICATION_TYPES) {
       const c = notificationContent(

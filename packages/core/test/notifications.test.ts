@@ -17,6 +17,14 @@ describe("préférences de notification (F-41)", () => {
     expect(notificationCategory("inscription_relance")).toBe("rappels");
     expect(notificationCategory("levee_relance")).toBe("rappels");
     expect(notificationCategory("parrainage_suggestion")).toBe("rappels");
+    // Ajoutées par l'audit des notifications (ADR 0183).
+    expect(notificationCategory("avis_reponse")).toBe("activite");
+    expect(notificationCategory("filleul_valide")).toBe("activite");
+    expect(notificationCategory("devis_relance")).toBe("rappels");
+    expect(notificationCategory("demarrage_rappel")).toBe("rappels");
+    for (const type of ["demande_envoyee", "dossier_envoye", "devis_expire"]) {
+      expect(notificationCategory(type)).toBe("transactionnel");
+    }
     for (const type of ["devis_recu", "acompte_paye", "pv_signe", "litige_ouvert", "avis_recu"]) {
       expect(notificationCategory(type)).toBe("transactionnel");
     }

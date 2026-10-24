@@ -5094,7 +5094,14 @@ export type Database = {
         | "abonnement_impaye"
         | "parrainage_suggestion"
         | "mois_offert"
-        | "recommandation_partenaire";
+        | "recommandation_partenaire"
+        | "demande_envoyee"
+        | "dossier_envoye"
+        | "devis_relance"
+        | "devis_expire"
+        | "avis_reponse"
+        | "demarrage_rappel"
+        | "filleul_valide";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -5377,6 +5384,13 @@ export const Constants = {
         "parrainage_suggestion",
         "mois_offert",
         "recommandation_partenaire",
+        "demande_envoyee",
+        "dossier_envoye",
+        "devis_relance",
+        "devis_expire",
+        "avis_reponse",
+        "demarrage_rappel",
+        "filleul_valide",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
