@@ -2,6 +2,7 @@ import {
   MAX_PROJECT_PHOTOS,
   PROJECT_TEXT_MAX_LENGTH,
   SUGGESTION_MIN_LENGTH,
+  appendDescription,
   appendIdea,
   matchNeedPhrases,
   needHelpLevel,
@@ -25,7 +26,7 @@ import {
   Ruler,
   Wrench,
 } from "lucide-react-native";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
 import { DictationButton } from "@/components/dictation-button";
@@ -35,6 +36,7 @@ import { TradeShortcuts } from "@/components/trade-shortcuts";
 import { fr } from "@/i18n/fr";
 import { choosePhotoSource, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
 import { useNeedSuggestions } from "@/lib/need-suggestions";
+import { describeProjectPhoto } from "@/lib/photo-description";
 import { analyzeNeed } from "@/lib/project";
 import { useTrades } from "@/lib/trades";
 import { uploadBatch } from "@/lib/uploads";
@@ -44,6 +46,13 @@ import { theme } from "@/ui/theme";
 const { colors, font, radius, spacing } = theme;
 const s = fr.search.suggestions;
 const u = fr.search.understanding;
+const ph = fr.search.photoDescription;
+
+type PhotoDraft =
+  | { step: "reading" }
+  | { step: "filled" }
+  | { step: "ready"; description: string }
+  | { step: "failed" };
 const p = fr.search.proposals;
 // Icônes des cartes d'avantages, dans l'ordre des textes (comme sur le site).
 const FEATURE_ICONS = [Sparkles, Clock, ShieldCheck, BadgeCheck];
@@ -154,6 +163,23 @@ export default function Recherche() {
     replaceText(next.text, next.select);
   }
 
+  // Photo → description (ADR 0180), comme sur le site : tant que la description est courte, la
+  // première photo jointe est décrite ; le texte vide est rempli, sinon la description est proposée.
+  const [photoDraft, setPhotoDraft] = useState<PhotoDraft | null>(null);
+  const currentText = useRef(description);
+  useEffect(() => {
+    currentText.current = description;
+  }, [description]);
+
+  async function describePhoto(photo: PickedPhoto) {
+    setPhotoDraft({ step: "reading" });
+    const drafted = await describeProjectPhoto(photo);
+    if (!drafted) return setPhotoDraft({ step: "failed" });
+    if (currentText.current.trim()) return setPhotoDraft({ step: "ready", description: drafted });
+    setPhotoDraft({ step: "filled" });
+    replaceText(`${drafted} `);
+  }
+
   async function addPhotos() {
     const source = await choosePhotoSource(fr.search.photos.add);
     if (!source) return;
@@ -161,6 +187,10 @@ export default function Recherche() {
     if ("error" in picked) return setFailure(picked.error);
     setFailure(null);
     setPhotos((current) => [...current, ...picked.photos].slice(0, MAX_PROJECT_PHOTOS));
+    const first = picked.photos[0];
+    if (first && needHelpLevel(description) !== "suffisant" && photoDraft?.step !== "reading") {
+      void describePhoto(first);
+    }
   }
 
   async function submit() {
@@ -293,6 +323,38 @@ export default function Recherche() {
               <Text style={styles.completionActionText}>{s.accept}</Text>
             </View>
           </Pressable>
+        ) : null}
+        {photoDraft?.step === "ready" ? (
+          <View aria-live="polite" style={styles.question}>
+            <View style={styles.understoodTitle}>
+              <Sparkles size={14} color={colors.primary} />
+              <Text style={styles.understoodTitleText}>{ph.fromPhoto}</Text>
+            </View>
+            <Text style={styles.questionText}>{photoDraft.description}</Text>
+            <Pressable
+              role="button"
+              onPress={() => {
+                setPhotoDraft(null);
+                replaceText(`${appendDescription(description, photoDraft.description)} `);
+              }}
+              style={({ pressed }) => [styles.idea, styles.photoAdd, pressed && styles.pressed]}
+            >
+              <Plus size={13} color={colors["primary-strong"]} />
+              <Text style={styles.ideaText}>{ph.add}</Text>
+            </Pressable>
+          </View>
+        ) : photoDraft ? (
+          <View aria-live="polite" style={styles.help}>
+            <Sparkles
+              size={14}
+              color={
+                photoDraft.step === "failed" ? colors["muted-foreground"] : colors["primary-strong"]
+              }
+            />
+            <Text style={[styles.helpText, photoDraft.step !== "failed" && styles.helpEnough]}>
+              {ph[photoDraft.step]}
+            </Text>
+          </View>
         ) : null}
         {understoodItems.length > 0 ? (
           <View aria-live="polite" style={styles.understood}>
@@ -513,6 +575,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   answerText: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  photoAdd: { alignSelf: "flex-start" },
   ideas: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
   ideasLabel: { fontFamily: font.medium, fontSize: 12, color: colors["muted-foreground"] },
   idea: {

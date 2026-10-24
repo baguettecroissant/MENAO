@@ -742,6 +742,14 @@ export const fr = {
     label: "Décrivez votre projet",
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
+    // Photo → description (ADR 0180), comme sur le site.
+    photoDescription: {
+      reading: "Lecture de votre photo…",
+      filled: "Description rédigée d'après votre photo : vérifiez-la et complétez-la.",
+      failed: "Cette photo n'a pas pu être décrite : décrivez votre besoin avec vos mots.",
+      fromPhoto: "D'après votre photo :",
+      add: "Ajouter",
+    },
     // Compréhension en direct (ADR 0179), comme sur le site.
     understanding: { title: "Compris :" },
     // Propositions instantanées (ADR 0178), comme sur le site.

@@ -483,6 +483,11 @@ verify_jwt = true
 [functions.suggest-need]
 verify_jwt = false
 
+# Photo → description de la recherche (ADR 0180) : visiteur sans compte ; limites par adresse IP
+# et globale dans la fonction.
+[functions.describe-photo]
+verify_jwt = false
+
 # Lecture automatique des documents du dossier (ADR 0176) : artisan connecté.
 [functions.read-document]
 verify_jwt = true

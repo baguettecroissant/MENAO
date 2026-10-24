@@ -1077,6 +1077,14 @@ export const fr = {
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
     listening: "Écoute …",
+    // Photo → description (ADR 0180).
+    photoDescription: {
+      reading: "Lecture de votre photo…",
+      filled: "Description rédigée d'après votre photo : vérifiez-la et complétez-la.",
+      failed: "Cette photo n'a pas pu être décrite : décrivez votre besoin avec vos mots.",
+      fromPhoto: "D'après votre photo :",
+      add: "Ajouter",
+    },
     // Compréhension en direct (ADR 0179).
     understanding: { title: "Compris :" },
     // Propositions instantanées (ADR 0178).
@@ -5883,6 +5891,7 @@ export const fr = {
         "quote-from-voice": "Dictée des devis",
         "read-document": "Lecture des documents",
         "suggest-need": "Suggestions de saisie",
+        "describe-photo": "Description des photos",
       } as Record<string, string>,
       models: { title: "Par modèle", model: "Modèle", calls: "Appels", failures: "Échecs" },
       daily: {

@@ -29,6 +29,18 @@ test("propositions instantanées : demande type choisie au clavier (ADR 0178)", 
   await expect(proposals).toHaveCount(0);
 });
 
+test("photo → description : la photo jointe rédige le début de la demande (ADR 0180)", async ({
+  page,
+}) => {
+  await page.goto("/recherche");
+  await page.getByLabel("Joindre des photos").setInputFiles(files.png);
+  await expect(page.getByText("Description rédigée d'après votre photo")).toBeVisible();
+  await expect(page.getByLabel("Décrivez votre projet")).toHaveValue(
+    "Une fissure traverse le mur de mon salon, je voudrais la faire réparer. ",
+  );
+  await expect(page.getByRole("button", { name: "Retirer la photo 1" })).toBeVisible();
+});
+
 test("suggestions pendant la saisie : suite, compréhension, question et idées (ADR 0177, 0179)", async ({
   page,
 }) => {
