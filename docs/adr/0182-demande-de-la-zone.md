@@ -8,7 +8,7 @@
 - **Sur la page du dossier** (« Faire vérifier mon entreprise », site et application), dès que l'artisan a choisi ses métiers et sa zone et tant qu'il n'est pas validé, une carte s'affiche : « Des particuliers cherchent déjà ».
   - Elle donne le nombre de recherches de ses métiers dans sa zone ces 30 derniers jours, avec le détail par métier s'il en a plusieurs.
   - Elle se termine par « Terminez votre dossier pour recevoir les prochaines demandes. »
-- **Pas de carte sans recherche** : un zéro découragerait.
+- **Seuil de 5 recherches** sur les 30 derniers jours (`ZONE_DEMAND_MIN_SEARCHES`, choix de l'utilisateur du 24 octobre 2026) : en dessous, rien ne s'affiche, car un petit chiffre découragerait.
 - **Des nombres seulement**, jamais une recherche, une description ni un particulier.
 - **Formulation honnête** : on promet les prochaines demandes, pas les recherches passées, qui ne lui seront pas envoyées.
 

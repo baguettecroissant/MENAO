@@ -3,6 +3,7 @@ import {
   REQUIRED_DOCUMENT_TYPES,
   documentState,
   dossierItemCount,
+  zoneDemandShown,
   type DocumentState,
 } from "@menao/core";
 import { router, type Href } from "expo-router";
@@ -111,7 +112,7 @@ export function DossierScreen() {
         <Notice tone="error">{t.complement(dossier.refusalReason)}</Notice>
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
-      {progress.metiers && progress.zone && zoneDemand && zoneDemand.recherches > 0 ? (
+      {progress.metiers && progress.zone && zoneDemand && zoneDemandShown(zoneDemand.recherches) ? (
         <Card tone="soft">
           <View style={styles.demandHead}>
             <Users size={18} color={colors["primary-strong"]} />

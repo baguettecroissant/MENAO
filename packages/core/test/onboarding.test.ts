@@ -10,6 +10,7 @@ import {
   firstIncompleteStep,
   onboardingProgress,
   type ArtisanOnboardingSnapshot,
+  zoneDemandShown,
 } from "../src/onboarding";
 
 const today = new Date("2026-10-09T12:00:00Z");
@@ -293,5 +294,14 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
     expect(onboardingProgress({ ...etapes123, documents: sansDecennale }, today).documents).toBe(
       false,
     );
+  });
+});
+
+describe("demande de la zone (ADR 0182)", () => {
+  it("montrée à partir de 5 recherches sur 30 jours", () => {
+    expect(zoneDemandShown(0)).toBe(false);
+    expect(zoneDemandShown(4)).toBe(false);
+    expect(zoneDemandShown(5)).toBe(true);
+    expect(zoneDemandShown(12)).toBe(true);
   });
 });

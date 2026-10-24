@@ -4,6 +4,7 @@ import {
   documentState,
   dossierItemCount,
   dossierItemsLeft,
+  zoneDemandShown,
   type DocumentState,
 } from "@menao/core";
 import {
@@ -114,7 +115,7 @@ export default async function OnboardingIndexPage() {
         </>
       )}
 
-      {zoneDemand && zoneDemand.recherches > 0 && (
+      {zoneDemand && zoneDemandShown(zoneDemand.recherches) && (
         <Card className="flex gap-3 border-primary/20 bg-primary-softer">
           <RowIcon>
             <Users aria-hidden="true" className="size-5" />
