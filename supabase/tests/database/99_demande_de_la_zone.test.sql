@@ -8,13 +8,19 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_met
   ('e9900000-0000-4000-8000-000000000001', 'zone99.artisan@example.test', false, now(), '{"role":"artisan_en_attente"}', '{}'),
   ('e9900000-0000-4000-8000-000000000002', 'zone99.client@example.test', false, now(), '{}', '{}');
 
-insert into public.artisans (id, user_id, status, zone_mode, base_location, radius_km) values
-  ('e9910000-0000-4000-8000-000000000001', 'e9900000-0000-4000-8000-000000000001', 'brouillon',
-   'rayon',
-   extensions.st_setsrid(extensions.st_makepoint(7.26, 43.70), 4326)::extensions.geography, 15);
-insert into public.artisan_trades (artisan_id, trade_code) values
-  ('e9910000-0000-4000-8000-000000000001', 'plombier'),
-  ('e9910000-0000-4000-8000-000000000001', 'chauffagiste');
+-- La fiche artisan est créée avec le compte (rôle artisan_en_attente) : on complète sa zone.
+update public.artisans
+set zone_mode = 'rayon', radius_km = 15,
+  base_location = extensions.st_setsrid(extensions.st_makepoint(7.26, 43.70), 4326)::extensions.geography
+where user_id = 'e9900000-0000-4000-8000-000000000001';
+insert into public.artisan_trades (artisan_id, trade_code)
+select a.id, v.metier from public.artisans a, (values ('plombier'), ('chauffagiste')) as v(metier)
+where a.user_id = 'e9900000-0000-4000-8000-000000000001';
+select is(
+  (select count(*)::int from public.artisans where user_id = 'e9900000-0000-4000-8000-000000000001'),
+  1,
+  'fiche artisan créée avec le compte'
+);
 
 -- Dans la zone : 2 plombier, 1 chauffagiste ; hors métier, hors zone, trop ancienne : non comptées.
 insert into public.projects (user_id, description, trade_code, ville_code_insee, ville_nom, ville_location, created_at)
