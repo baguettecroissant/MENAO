@@ -81,6 +81,8 @@ export async function analyze(
   today: string,
   tradeHint: string | null,
   runs: AiRun[],
+  /** Consigne mise en cache chez le fournisseur : utile pour le modèle principal, appelé souvent. */
+  cache = true,
 ): Promise<Attempt> {
   const started = Date.now();
   const run: AiRun = { function_name: "analyze-need", model, outcome: "erreur", latency_ms: 0 };
@@ -92,7 +94,9 @@ export async function analyze(
       // Marge pour le raisonnement adaptatif du modèle de repli (Sonnet).
       max_tokens: 4000,
       thinking: reasoning.thinking,
-      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      system: [
+        { type: "text", text: system, ...(cache ? { cache_control: { type: "ephemeral" } } : {}) },
+      ],
       messages: [{ role: "user", content: userContent }],
       output_config: {
         ...(reasoning.effort ? { effort: reasoning.effort } : {}),
@@ -158,11 +162,13 @@ export async function analyzeNeed(
 ): Promise<Attempt> {
   const system = systemPrompt(ref);
   const schema = needAnalysisJsonSchema(ref);
-  const call = (model: string) =>
-    analyze(llm.client, model, system, schema, userContent, ref, today, tradeHint, runs);
-  let best = await call(llm.primary);
+  const call = (model: string, cache: boolean) =>
+    analyze(llm.client, model, system, schema, userContent, ref, today, tradeHint, runs, cache);
+  let best = await call(llm.primary, true);
   if (!best || analysisNeedsFallback(best.criteria)) {
-    const second = await call(llm.fallback);
+    // Modèle de secours sans mise en cache : appelé rarement, il ne relirait jamais le cache, dont
+    // l'écriture coûte plus cher qu'une lecture normale de la consigne.
+    const second = await call(llm.fallback, false);
     if (
       second &&
       (!best ||
