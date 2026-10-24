@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   ListTree,
+  Map as MapIcon,
   MessageCircle,
   MessagesSquare,
   ReceiptText,
@@ -141,6 +142,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
         // Toute l'activité, page par page (ADR 0146).
         { href: "/admin/activite", label: fr.admin.nav.activity, icon: Activity },
+        // Carte des artisans et de la demande, entonnoir des recherches (ADR 0181).
+        { href: "/admin/marche", label: fr.admin.nav.market, icon: MapIcon },
       ],
     },
     {

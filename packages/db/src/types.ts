@@ -3962,6 +3962,7 @@ export type Database = {
         Args: { p_ids: string[]; p_reference: string };
         Returns: number;
       };
+      admin_market: { Args: { p_days?: number }; Returns: Json };
       admin_moderate_message: {
         Args: { p_hide: boolean; p_message_id: string; p_reason: string };
         Returns: undefined;
