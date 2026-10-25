@@ -10,6 +10,8 @@ export type EmailMessage = {
   text: string;
   /** Identifiant de la notification : jamais deux envois pour la même (24 h chez Resend). */
   idempotencyKey: string;
+  /** Adresse de réponse (e-mail au comptable : la réponse va à l'artisan, F-63). */
+  replyTo?: string;
 };
 
 /** `retry` : erreur passagère (réseau, quota, serveur), à retenter plus tard. */
@@ -47,6 +49,7 @@ export class ResendProvider implements NotificationProvider {
           subject: message.subject,
           html: message.html,
           text: message.text,
+          ...(message.replyTo ? { reply_to: message.replyTo } : {}),
         }),
         signal: AbortSignal.timeout(15_000),
       });

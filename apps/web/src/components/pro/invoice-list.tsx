@@ -1,5 +1,6 @@
 import { FileDown, FileText } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { ExampleBadge, ExampleLock } from "./examples";
@@ -40,6 +41,11 @@ export function InvoiceList({
           <div className="flex flex-col gap-1.5">
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+            {!example && (
+              <TextLink href="/pro/comptable" className="self-start text-sm">
+                {fr.pro.accountant.link}
+              </TextLink>
+            )}
           </div>
           {invoices.length > 0 && (
             <ExampleLock locked={example}>

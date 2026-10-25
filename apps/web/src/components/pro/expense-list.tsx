@@ -8,7 +8,7 @@ import {
   type ExpenseRow,
   type ExpenseStatus,
 } from "@menao/core";
-import { FileDown, Plus, Search } from "lucide-react";
+import { FileDown, Plus, Search, Send } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
@@ -83,6 +83,10 @@ export function ExpenseList({
                 {t.export}
               </a>
             )}
+            <ButtonLink href="/pro/comptable" variant="secondary">
+              <Send aria-hidden="true" className="size-4" />
+              {fr.pro.accountant.link}
+            </ButtonLink>
             <EinvoiceButton />
           </div>
         </ExampleLock>

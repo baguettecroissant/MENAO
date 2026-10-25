@@ -496,6 +496,11 @@ verify_jwt = true
 [functions.read-expense]
 verify_jwt = true
 
+# Envoi au comptable (F-63, ADR 0187) : appelée par la base avec le secret de notify (envois
+# automatiques), ou par l'artisan connecté (« Envoyer maintenant »), vérifié dans la fonction.
+[functions.accountant-export]
+verify_jwt = false
+
 # PDF du devis (F-20) : utilisateur connecté ; l'accès est décidé par quote_document.
 [functions.generate-pdf]
 verify_jwt = true

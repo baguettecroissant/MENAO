@@ -6,6 +6,11 @@ import {
   type NotificationType,
 } from "./content.ts";
 import { NotificationEmail } from "./notification-email.tsx";
+import {
+  accountantExportContent,
+  accountantFooter,
+  type AccountantExportEmail,
+} from "./accountant.ts";
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
@@ -24,5 +29,23 @@ export function renderNotification(
     html:
       DOCTYPE + renderToStaticMarkup(<NotificationEmail content={content} siteUrl={ctx.siteUrl} />),
     text: plainText(content),
+  };
+}
+
+/** E-mail du comptable : export d'une période (F-63), avec le pied de page propre au comptable. */
+export function renderAccountantExport(
+  email: AccountantExportEmail,
+  siteUrl: string,
+): RenderedEmail {
+  const content = accountantExportContent(email);
+  const footer = accountantFooter(email.company);
+  return {
+    subject: content.subject,
+    html:
+      DOCTYPE +
+      renderToStaticMarkup(
+        <NotificationEmail content={content} siteUrl={siteUrl} footer={footer} />,
+      ),
+    text: plainText(content, footer),
   };
 }

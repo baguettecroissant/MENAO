@@ -119,4 +119,6 @@ export const messages = {
   amountInvalid: "Montant invalide (exemple : 435,00).",
   amountTooHigh: "Montant trop élevé.",
   dueBeforeIssue: "L'échéance ne peut pas précéder la date de la pièce.",
+  // Envoi au comptable (F-63).
+  accountantPartsRequired: "Choisissez les factures, les dépenses, ou les deux.",
 } as const;

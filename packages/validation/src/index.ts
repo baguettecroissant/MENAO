@@ -1,4 +1,5 @@
 export * from "./account";
+export * from "./accountant";
 export * from "./agenda";
 export * from "./artisan";
 export * from "./artisan-request";
