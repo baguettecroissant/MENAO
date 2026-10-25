@@ -1,5 +1,5 @@
 import type { ProfileTip } from "@menao/core";
-import type { ReferralRow, WelcomeGift } from "@menao/validation";
+import type { WelcomeGift } from "@menao/validation";
 import Constants from "expo-constants";
 import { router, type Href } from "expo-router";
 import {
@@ -19,7 +19,6 @@ import {
   MapPin,
   ReceiptText,
   Send,
-  Share2,
   ShieldCheck,
   ShoppingCart,
   Star,
@@ -29,9 +28,10 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, Share, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { ProgressRing } from "@/components/progress-ring";
+import { ShareCard } from "@/components/pro/share-card";
 import { SettingsRow, SettingsSection, SettingsSwitch } from "@/components/settings-list";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -199,14 +199,9 @@ export function ProfileHubContent({
           <WelcomeGiftCard gift={hub.welcomeGift} />
         </Animated.View>
       ) : null}
-      {hub.referral ? (
+      {hub.pageUrl || hub.referral ? (
         <Animated.View entering={enter(4)}>
-          <ReferralCard
-            code={hub.referral.code}
-            joined={hub.referral.joined}
-            rewarded={hub.referral.rewarded}
-            referrals={hub.referrals}
-          />
+          <ShareCard hub={hub} />
         </Animated.View>
       ) : null}
       {SECTIONS.map((section, index) => (
@@ -431,76 +426,8 @@ function WelcomeGiftCard({ gift }: { gift: WelcomeGift }) {
   );
 }
 
-/**
- * Parrainage (F-60, ADR 0137 et 0161) : le code à partager, le score de fidélité et le suivi de
- * chaque filleul. Ni lien vers le site ni mention de l'abonnement dans l'application (CLAUDE.md
- * règle 10).
- */
-function ReferralCard({
-  code,
-  joined,
-  rewarded,
-  referrals,
-}: {
-  code: string;
-  joined: number;
-  rewarded: number;
-  referrals: ReferralRow[];
-}) {
-  const r = t.referral;
-  return (
-    <View style={styles.referral} accessibilityRole="summary">
-      <View style={styles.referralHead}>
-        <View style={styles.referralIcon}>
-          <Gift size={20} color={colors.primary} />
-        </View>
-        <View style={styles.referralText}>
-          <Text style={styles.referralTitle}>{r.title}</Text>
-          <Text style={styles.referralLead}>{r.lead}</Text>
-        </View>
-      </View>
-      <View
-        style={styles.referralCodeBox}
-        accessible
-        accessibilityLabel={`${r.codeLabel} : ${code}`}
-      >
-        <Text style={styles.referralCodeLabel}>{r.codeLabel}</Text>
-        <Text style={styles.referralCode} selectable>
-          {code.toUpperCase()}
-        </Text>
-      </View>
-      <Button
-        label={r.share}
-        icon={Share2}
-        variant="secondary"
-        onPress={() => Share.share({ message: r.shareMessage(code.toUpperCase()) })}
-      />
-      <Text style={styles.referralJoined}>{r.joined(joined)}</Text>
-      <Text style={styles.referralJoined}>
-        {r.loyalty(rewarded)} · {r.loyaltyHint}
-      </Text>
-      {referrals.length ? (
-        <View style={styles.referralList}>
-          <Text style={styles.referralCodeLabel}>{r.listTitle}</Text>
-          {referrals.map((row) => (
-            <View key={row.id} style={styles.referralRow}>
-              <Text style={styles.referralName} numberOfLines={1}>
-                {row.nom}
-              </Text>
-              <Text
-                style={[styles.referralStep, row.etape === "abonne" && styles.referralStepDone]}
-              >
-                {r.steps[row.etape]}
-              </Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
+  // Carte du cadeau de bienvenue (ADR 0154).
   referral: {
     gap: spacing(3),
     padding: spacing(4),
@@ -521,34 +448,6 @@ const styles = StyleSheet.create({
   referralText: { flex: 1, gap: 2 },
   referralTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
   referralLead: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  referralCodeBox: {
-    alignItems: "center",
-    gap: 2,
-    paddingVertical: spacing(3),
-    borderRadius: radius.card,
-    backgroundColor: colors.surface,
-  },
-  referralCodeLabel: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  referralCode: {
-    fontFamily: font.bold,
-    fontSize: 24,
-    letterSpacing: 3,
-    color: colors["primary-strong"],
-  },
-  referralJoined: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },
-  referralList: { gap: spacing(1.5) },
-  referralRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing(3),
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing(1.5),
-  },
-  referralName: { flex: 1, fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  referralStep: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  referralStepDone: { color: colors.success },
   header: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
   avatarWrap: { width: 76, height: 76 },
   avatar: {

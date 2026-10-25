@@ -15,8 +15,13 @@ test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, s
   await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
 
   await page.goto("/pro/mon-profil");
-  const card = page.getByRole("region", { name: "Parrainez un confrère" });
+  // Carte de visite et parrainage (ADR 0191) : la carte de visite d'abord, puis l'onglet.
+  const card = page.getByRole("region", { name: "Montrer ma fiche ou parrainer un confrère" });
   await expect(card).toBeVisible();
+  await expect(
+    card.getByRole("button", { name: "QR code de votre fiche MENAO, Agrandir" }),
+  ).toBeVisible();
+  await card.getByRole("tab", { name: "Parrainage" }).click();
   await expect(
     card.getByText(
       "Un mois offert pour vous dès son premier paiement, jusqu'à 12 par an. Votre confrère reçoit un cadeau de bienvenue.",
@@ -27,7 +32,7 @@ test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, s
   const link = await card.getByLabel("Votre lien de parrainage").inputValue();
   expect(link).toMatch(/\/p\/[a-z0-9]{8}\/pro$/);
   const code = link.split("/").at(-2) ?? "";
-  await expect(card.getByText(new RegExp(`votre code ${code}`))).toBeVisible();
+  await expect(card.getByText(code.toUpperCase(), { exact: true })).toBeVisible();
   await expect(card.getByText("Aucun confrère inscrit pour l'instant")).toBeVisible();
 
   // Le confrère suit le lien : le code l'accompagne jusqu'à la création du compte, sans cookie.

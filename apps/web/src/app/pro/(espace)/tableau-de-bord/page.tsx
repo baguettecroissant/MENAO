@@ -190,7 +190,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
           quote: awaitingQuote ? `/pro/chantiers/${awaitingQuote.chantier_id}/devis` : "/pro/devis",
           block: "/pro/agenda",
           share: "/pro/profil",
-          invite: "/pro/mon-profil#parrainage",
+          invite: "/pro/mon-profil?onglet=parrainage#parrainage",
         },
       }}
     />
