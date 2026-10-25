@@ -330,6 +330,7 @@ export function exampleProfileHub(
     }),
     itemsLeft: 0,
     statuses: hubStatuses(exampleHubFacts(now), now),
+    pageUrl: null,
     referral: null,
     referrals: [],
     welcomeGift: null,

@@ -1,4 +1,4 @@
-import { parisToday, profileStrength, type ProfileTip } from "@menao/core";
+import { artisanPageUrl, parisToday, profileStrength, type ProfileTip } from "@menao/core";
 import {
   parseArtisanProfile,
   parseGrade,
@@ -9,6 +9,7 @@ import {
   type WelcomeGift,
 } from "@menao/validation";
 import { loadDossier, type Dossier } from "./artisan-dossier";
+import { env } from "./env";
 import { exampleMyPage, exampleProfileHub } from "./example-data";
 import { examplesActive } from "./examples";
 import { countReviewsToAnswer } from "./pro-reviews";
@@ -37,6 +38,8 @@ export type ProfileHub = {
   /** Éléments du dossier encore à terminer avant l'envoi (dossier en brouillon). */
   itemsLeft: number;
   statuses: Record<HubRow, HubStatus>;
+  /** Adresse de la fiche publique (carte de visite, ADR 0191), artisans validés seulement. */
+  pageUrl: string | null;
   /** Parrainage (F-60) : code à partager, artisans validés seulement. */
   referral: Referral | null;
   /** Suivi de chaque filleul (ADR 0161). */
@@ -79,6 +82,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     { data: referral },
     welcomeGift,
     { data: referralRows },
+    { data: artisan },
   ] = await Promise.all([
     loadDossier(),
     supabase.rpc("my_public_profile"),
@@ -94,6 +98,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     supabase.rpc("my_referral"),
     loadWelcomeGift(),
     supabase.rpc("my_referrals"),
+    supabase.from("artisans").select("slug").eq("user_id", auth.user.id).maybeSingle(),
   ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
@@ -138,6 +143,11 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       availableFrom: profile.available_from,
       today: parisToday(),
     }),
+    // Même règle que les cartes de visite du site : fiche publique d'un artisan validé.
+    pageUrl:
+      dossier.status === "valide" && artisan?.slug
+        ? artisanPageUrl(env.siteUrl, artisan.slug)
+        : null,
     referral: parseReferral(referral),
     referrals: parseReferralRows(referralRows),
     welcomeGift,

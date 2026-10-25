@@ -3157,7 +3157,6 @@ export const fr = {
       title: "Parrainez un confrère",
       lead: "Un confrère artisan saisit votre code en créant son compte MENAO.",
       codeLabel: "Votre code de parrainage",
-      share: "Partager mon code",
       shareMessage: (code: string) =>
         `Je t'invite sur MENAO, l'outil des artisans du bâtiment. Mon code de parrainage : ${code}, à saisir en créant ton compte.`,
       joined: (n: number) =>
@@ -3173,6 +3172,33 @@ export const fr = {
         valide: "Dossier validé",
         abonne: "Parrainage validé",
         annule: "Non retenu",
+      },
+    },
+    /**
+     * Carte de visite et parrainage (ADR 0191) : QR codes à montrer sur un chantier. Aucune
+     * mention de l'abonnement (règle 10).
+     */
+    share: {
+      label: "Montrer ma fiche ou parrainer un confrère",
+      tabs: { card: "Ma carte de visite", referral: "Parrainage" },
+      expand: "Agrandir",
+      share: "Partager",
+      card: {
+        qrLabel: "QR code de votre fiche MENAO",
+        hint: "Votre client scanne ce code avec l'appareil photo de son téléphone : il voit votre fiche et vos avis vérifiés.",
+        shareMessage: (name: string, url: string) =>
+          `${name} sur MENAO : ma fiche et mes avis vérifiés. ${url}`,
+      },
+      referral: {
+        qrLabel: "QR code de parrainage",
+        hint: "Votre confrère scanne ce code pour créer son compte MENAO, votre code déjà rempli. Ou il saisit le code à l'inscription.",
+        orCode: "ou le code",
+      },
+      fullscreen: {
+        close: "Fermer",
+        referral: "Rejoignez MENAO",
+        cardHint: "Scannez pour voir ma fiche et mes avis vérifiés.",
+        referralHint: "Scannez pour créer votre compte avec mon code.",
       },
     },
     /** Cadeau de bienvenue du filleul (F-60, ADR 0154), carte et écran « Votre cadeau ». */
