@@ -235,6 +235,26 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   );
   await page.goto("/pro/onboarding/documents");
   await expect(page.getByRole("button", { name: /Déposer|Remplacer/ })).toHaveCount(0);
+
+  // Pendant la vérification : l'espace rempli d'exemples (ADR 0184), en lecture seule.
+  await page.goto("/pro/onboarding");
+  await page.getByRole("link", { name: "Découvrir mon espace" }).click();
+  await expect(page).toHaveURL(/\/pro\/decouvrir\/tableau-de-bord$/);
+  await expect(page.getByText("Exemples pour découvrir votre espace")).toBeVisible();
+  await page.goto("/pro/decouvrir/demandes");
+  await expect(page.getByText("Exemple", { exact: true })).toHaveCount(2);
+  await page.getByRole("link", { name: /Rénovation de salle de bains/ }).click();
+  await expect(page.getByRole("heading", { name: "Rénovation de salle de bains" })).toBeVisible();
+  await expect(page.getByText("Exemple : les boutons sont désactivés.")).toBeVisible();
+  // Boutons inertes : hors de portée du clic comme du clavier.
+  await expect(page.getByRole("button", { name: "Fixer un rendez-vous" })).toHaveCount(0);
+  await page.goto("/pro/decouvrir/chantiers");
+  await page.getByRole("link", { name: /Création d'une salle d'eau/ }).click();
+  await expect(page.getByText("Évacuations posées et testées", { exact: false })).toBeVisible();
+  await page.getByRole("link", { name: "Dossier du chantier" }).click();
+  await expect(page.getByText("FAC-EXEMPLE-0001", { exact: false })).toBeVisible();
+  await page.getByRole("link", { name: "Revenir à mon dossier" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
 });
 
 test("SIRET inconnu ou entreprise fermée : message clair (compte artisan du seed)", async ({

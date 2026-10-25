@@ -31,7 +31,8 @@ import {
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
 
-export type Space = "client" | "pro" | "admin";
+// « exemples » : aperçu de l'espace pro rempli d'exemples (ADR 0184).
+export type Space = "client" | "pro" | "admin" | "exemples";
 export type BadgeKey =
   "actions" | "messages" | "requests" | "quotes" | "reviews" | "dossiers" | "controles" | "tickets";
 export type Badges = Partial<Record<BadgeKey, number>>;
@@ -58,6 +59,7 @@ export const SPACE_HOME: Record<Space, string> = {
   client: "/mon-espace",
   pro: "/pro/tableau-de-bord",
   admin: "/admin",
+  exemples: "/pro/decouvrir/tableau-de-bord",
 };
 
 /** Messages, accessibles depuis la barre du haut sur mobile (ADR 0043). */
@@ -130,6 +132,25 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
         { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
         { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
+      ],
+    },
+  ],
+  // Aperçu avec des exemples (ADR 0184) : les rubriques qui ont des exemples.
+  exemples: [
+    {
+      items: [
+        {
+          href: "/pro/decouvrir/tableau-de-bord",
+          label: fr.pro.space.dashboard,
+          icon: LayoutGrid,
+        },
+        {
+          href: "/pro/decouvrir/demandes",
+          label: fr.pro.space.requests,
+          icon: Inbox,
+          badge: "requests",
+        },
+        { href: "/pro/decouvrir/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
       ],
     },
   ],
@@ -226,6 +247,10 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
     { href: "/contact", label: fr.appShell.help },
   ],
   admin: [],
+  exemples: [
+    { href: "/compte", label: fr.pro.hub.rows.identity },
+    { href: "/contact", label: fr.appShell.help },
+  ],
 };
 
 const startsWith = (pathname: string, href: string) =>

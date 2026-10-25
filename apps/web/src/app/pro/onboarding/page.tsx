@@ -14,6 +14,7 @@ import {
   Check,
   ChevronRight,
   CreditCard,
+  Eye,
   FileText,
   Lock,
   PenLine,
@@ -134,6 +135,24 @@ export default async function OnboardingIndexPage() {
             )}
             <p className="text-sm text-primary-strong">{t.zoneDemand.next}</p>
           </div>
+        </Card>
+      )}
+
+      {/* Pendant la vérification : l'espace rempli d'exemples (ADR 0184). */}
+      {artisan.status === "en_verification" && (
+        <Card className="flex flex-col gap-4 border-primary/20 bg-primary-softer sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 gap-3">
+            <RowIcon>
+              <Eye aria-hidden="true" className="size-5" />
+            </RowIcon>
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 className="font-semibold">{fr.pro.examples.onboardingCard.title}</h2>
+              <p className="text-sm text-muted-foreground">{fr.pro.examples.onboardingCard.text}</p>
+            </div>
+          </div>
+          <ButtonLink href="/pro/decouvrir/tableau-de-bord" className="shrink-0">
+            {fr.pro.examples.onboardingCard.open}
+          </ButtonLink>
         </Card>
       )}
 

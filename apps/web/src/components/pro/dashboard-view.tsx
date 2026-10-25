@@ -53,6 +53,9 @@ export function DashboardView({
   todo,
   grade = null,
   missingPhoto = false,
+  base = "/pro",
+  agendaHref = "/pro/agenda",
+  banner = null,
 }: {
   firstName: string | null;
   /** Alertes du dossier (documents à renouveler, suspension), comme dans « Mon dossier ». */
@@ -81,15 +84,23 @@ export function DashboardView({
   } | null;
   /** Pas encore de photo de profil : carte d'invitation à en ajouter une. */
   missingPhoto?: boolean;
+  /** Début des liens vers les demandes et chantiers (pages d'exemples, ADR 0184). */
+  base?: string;
+  /** Lien « Voir l'agenda » ; aucun dans les exemples. */
+  agendaHref?: string | null;
+  /** Carte affichée sous le titre (exemples de l'espace, ADR 0184). */
+  banner?: ReactNode;
 }) {
   const appointmentSection = (
     <Section
       title={t.upcoming}
       action={
-        <TextLink href="/pro/agenda" className="inline-flex items-center gap-1 text-sm">
-          {t.openAgenda}
-          <ArrowRight aria-hidden="true" className="size-3.5" />
-        </TextLink>
+        agendaHref && (
+          <TextLink href={agendaHref as Route} className="inline-flex items-center gap-1 text-sm">
+            {t.openAgenda}
+            <ArrowRight aria-hidden="true" className="size-3.5" />
+          </TextLink>
+        )
       }
     >
       {appointments.length === 0 ? (
@@ -102,7 +113,7 @@ export function DashboardView({
           {appointments.map((a) => (
             <li key={`${a.kind}-${a.chantierId}`}>
               <Link
-                href={`/pro/chantiers/${a.chantierId}` as Route}
+                href={`${base}/chantiers/${a.chantierId}` as Route}
                 className={`block overflow-hidden ${cardLink}`}
               >
                 <div
@@ -148,7 +159,7 @@ export function DashboardView({
           {requests.map((r) => (
             <li key={r.requestId}>
               <Link
-                href={`/pro/demandes/${r.requestId}` as Route}
+                href={`${base}/demandes/${r.requestId}` as Route}
                 className={`flex gap-3 p-4 ${cardLink}`}
               >
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -177,7 +188,7 @@ export function DashboardView({
           ))}
         </ul>
       )}
-      <TextLink href="/pro/demandes" className="self-start text-sm">
+      <TextLink href={`${base}/demandes` as Route} className="self-start text-sm">
         {t.allRequests}
       </TextLink>
     </Section>
@@ -198,6 +209,7 @@ export function DashboardView({
               : t.greeting(firstName)}
           </p>
         </div>
+        {banner}
         {notices.map((notice) => (
           <Alert key={notice} tone="error">
             {notice} <TextLink href="/pro/onboarding/documents">{t.documents}</TextLink>
@@ -209,9 +221,13 @@ export function DashboardView({
           </Alert>
         )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Kpi href="/pro/chantiers" label={t.awaitingQuote} value={t.clients(awaitingClients)} />
           <Kpi
-            href="/pro/demandes"
+            href={`${base}/chantiers`}
+            label={t.awaitingQuote}
+            value={t.clients(awaitingClients)}
+          />
+          <Kpi
+            href={`${base}/demandes`}
             label={t.responseTime}
             value={responseTime.minutes === null ? "—" : formatDuration(responseTime.minutes)}
             detail={
@@ -229,7 +245,7 @@ export function DashboardView({
             detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
           />
         </div>
-        {todo && <TodoList items={todo} />}
+        {todo && <TodoList items={todo} base={base} />}
         {missingPhoto && (
           <Link
             href="/pro/onboarding/profil"

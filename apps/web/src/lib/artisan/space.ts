@@ -10,6 +10,7 @@ import {
   parisToday,
   requestsAwaitingAnswer,
   roleFromAppMetadata,
+  spaceExamplesShown,
   subscriptionGrantsAccess,
   type ChantierStatus,
   type SubscriptionStatus,
@@ -36,7 +37,7 @@ export const requireProSpace = cache(async () => {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, suspension_reason, radiation_reason, connect_charges_enabled, paused, available_from",
+      "id, status, suspension_reason, radiation_reason, connect_charges_enabled, paused, available_from, examples_hidden_at",
     )
     .eq("user_id", auth.claims.sub)
     .single();
@@ -118,6 +119,7 @@ export const requireProSpace = cache(async () => {
       connectChargesEnabled: artisan.connect_charges_enabled,
     }),
     today,
+    examplesHiddenAt: artisan.examples_hidden_at,
     paused: artisan.paused,
     availableFrom: artisan.available_from,
     absences: upcomingAbsences,
@@ -138,6 +140,19 @@ export const artisanActivity = cache(async () => {
     supabase.rpc("artisan_chantiers"),
   ]);
   return { inbox: inbox ?? [], chantiers: chantiers ?? [] };
+});
+
+/**
+ * Exemples dans l'espace (ADR 0184) : tant que l'artisan n'a reçu aucune demande ni aucun chantier
+ * et ne les a pas masqués.
+ */
+export const spaceExamples = cache(async () => {
+  const [space, { inbox, chantiers }] = await Promise.all([requireProSpace(), artisanActivity()]);
+  return spaceExamplesShown({
+    requests: inbox.length,
+    chantiers: chantiers.length,
+    hiddenAt: space.examplesHiddenAt,
+  });
 });
 
 /**

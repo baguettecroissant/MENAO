@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { exampleChantiers, exampleRequests } from "@menao/core";
 import { parseArtisanChantierDetail, parseRequestDetail } from "../src/artisan-request";
 
 // Réponse d'artisan_request_detail avant le rendez-vous : sans coordonnées ni adresse exacte.
@@ -68,5 +69,14 @@ describe("détail d'un chantier vu par l'artisan (site et application)", () => {
     expect(
       parseArtisanChantierDetail({ ...chantier, chantier: { ...chantier.chantier, status: "x" } }),
     ).toBeNull();
+  });
+});
+
+// Exemples de l'espace artisan (ADR 0184) : même forme que les réponses de la base.
+describe("exemples de l'espace artisan", () => {
+  it("chaque demande et chaque chantier d'exemple passe les contrôles du site et de l'application", () => {
+    const now = new Date("2026-10-25T09:00:00Z");
+    for (const r of exampleRequests(now)) expect(parseRequestDetail(r)).toEqual(r);
+    for (const c of exampleChantiers(now)) expect(parseArtisanChantierDetail(c)).toEqual(c);
   });
 });

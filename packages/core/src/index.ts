@@ -60,3 +60,4 @@ export * from "./need-suggestion";
 export * from "./need-phrases";
 export * from "./need-photo";
 export * from "./market-map";
+export * from "./space-examples";

@@ -1,32 +1,23 @@
-import { timeLeft } from "@menao/core";
-import { Clock, MapPin } from "lucide-react";
-import type { Metadata, Route } from "next";
-import Link from "next/link";
-import { StatusBadge, Tag } from "@/components/ui";
+import { exampleInbox } from "@menao/core";
+import type { Metadata } from "next";
 import { fr } from "@/i18n/fr";
-import { requireProSpace } from "@/lib/artisan/space";
+import { artisanActivity, requireProSpace, spaceExamples } from "@/lib/artisan/space";
+import { EXAMPLES_BASE } from "@/lib/artisan/examples";
 import { EmptyState } from "@/components/empty-state";
+import { SpaceExamplesNotice } from "@/components/pro/examples";
+import { InboxList } from "@/components/pro/inbox-list";
 
 const t = fr.pro.onboarding.requests;
-const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
-const dayShort = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: "UTC" });
 
 export const metadata: Metadata = { title: `${t.title} — MENAO` };
 
-const statusTone = {
-  envoyee: "primary",
-  acceptee: "success",
-  refusee: "danger",
-  expiree: "neutral",
-  annulee: "neutral",
-  a_verifier: "neutral",
-} as const;
-
-/** Demandes reçues (F-16, F-17), maquette « Dashboard – Dernières demandes de devis ». */
+/**
+ * Demandes reçues (F-16, F-17), maquette « Dashboard – Dernières demandes de devis ». Tant que
+ * l'artisan n'a rien reçu : demandes d'exemple (ADR 0184).
+ */
 export default async function ArtisanRequestsPage() {
   const { supabase } = await requireProSpace();
-  const { data } = await supabase.rpc("artisan_inbox");
-  const rows = data ?? [];
+  const [{ inbox: rows }, examples] = await Promise.all([artisanActivity(), spaceExamples()]);
   const now = new Date();
   const paths = rows.map((r) => r.photo_path).filter((p): p is string => Boolean(p));
   const { data: signed } = paths.length
@@ -42,62 +33,25 @@ export default async function ArtisanRequestsPage() {
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
-        {rows.length === 0 && <EmptyState illustration="demandes">{t.empty}</EmptyState>}
-        <ul className="flex flex-col gap-3">
-          {rows.map((r) => {
-            const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), now) : null;
-            const thumb = photo(r.photo_path);
-            const start =
-              r.date_mode === "date" && r.date_souhaitee
-                ? t.startWish(dayShort.format(new Date(`${r.date_souhaitee}T00:00:00Z`)))
-                : r.date_mode === "des_que_possible"
-                  ? t.startAsap
-                  : t.startUnknown;
-            return (
-              <li key={r.request_id}>
-                <Link
-                  href={`/pro/demandes/${r.request_id}` as Route}
-                  className="flex gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:p-5"
-                >
-                  <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge tone={statusTone[r.status]}>{t.status[r.status]}</StatusBadge>
-                      {r.urgence && <StatusBadge tone="danger">{t.urgent}</StatusBadge>}
-                    </div>
-                    <p className="font-medium">
-                      {[r.trade_label, r.summary].filter(Boolean).join(" — ")}
-                    </p>
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <MapPin aria-hidden="true" className="size-3.5" />
-                      {[r.code_postal, r.ville_nom].filter(Boolean).join(" ")}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Tag>{start}</Tag>
-                      {left && (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock aria-hidden="true" className="size-3.5" />
-                          {t.timeLeft(left.hours, left.minutes)}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {r.client_first_name ? `${r.client_first_name} · ` : ""}
-                      {t.received(day.format(new Date(r.created_at)))}
-                    </p>
-                  </div>
-                  {thumb && (
-                    // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire
-                    <img
-                      src={thumb}
-                      alt=""
-                      className="size-16 shrink-0 rounded-lg object-cover sm:size-20"
-                    />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {examples ? (
+          <>
+            <SpaceExamplesNotice />
+            <InboxList
+              rows={exampleInbox(now).map((r) => ({ ...r, thumbUrl: null }))}
+              now={now}
+              base={EXAMPLES_BASE}
+              example
+            />
+          </>
+        ) : (
+          <>
+            {rows.length === 0 && <EmptyState illustration="demandes">{t.empty}</EmptyState>}
+            <InboxList
+              rows={rows.map((r) => ({ ...r, thumbUrl: photo(r.photo_path) }))}
+              now={now}
+            />
+          </>
+        )}
       </div>
     </main>
   );
