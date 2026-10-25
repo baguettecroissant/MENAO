@@ -10,8 +10,12 @@ import { requireExampleViewer } from "@/lib/artisan/examples";
 export default async function ExamplesLayout({ children }: { children: ReactNode }) {
   const { account, validated } = await requireExampleViewer();
   return (
-    <AppShell space="exemples" account={account} badges={{ requests: 2 }}>
-      <ExamplesBanner validated={validated} />
+    <AppShell
+      space="exemples"
+      account={account}
+      badges={{ requests: 2, quotes: 1, messages: 1, reviews: 1 }}
+      topBanner={<ExamplesBanner validated={validated} />}
+    >
       {children}
     </AppShell>
   );

@@ -4,6 +4,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PublicReview } from "@/components/review/review-list";
+import { ExampleLock } from "@/components/pro/examples";
 import { TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ArtisanProfile } from "@/lib/project/artisans";
@@ -39,6 +40,7 @@ export function PublicProfileScreen({
   structurallyVisible,
   availability,
   webPresence,
+  example = false,
 }: {
   profile: ArtisanProfile;
   avatar: string | null;
@@ -50,6 +52,8 @@ export function PublicProfileScreen({
   availability: AvailabilityStatus;
   /** « Votre fiche sur internet » (ADR 0144), sous les conseils. */
   webPresence?: ReactNode;
+  /** Exemple (ADR 0184) : liens « Modifier » inactifs. */
+  example?: boolean;
 }) {
   const status = availability.kind;
   const visible = structurallyVisible && status !== "pause" && status !== "conges";
@@ -95,21 +99,23 @@ export function PublicProfileScreen({
                 )}
               </div>
             </div>
-            <nav aria-label={t.editLabel} className="flex flex-col gap-1 sm:items-end">
-              <p className="text-xs font-medium text-muted-foreground">{t.editLabel}</p>
-              <ul className="flex flex-wrap gap-x-4 gap-y-1 sm:justify-end">
-                {EDIT_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href as Route}
-                      className="text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <ExampleLock locked={example}>
+              <nav aria-label={t.editLabel} className="flex flex-col gap-1 sm:items-end">
+                <p className="text-xs font-medium text-muted-foreground">{t.editLabel}</p>
+                <ul className="flex flex-wrap gap-x-4 gap-y-1 sm:justify-end">
+                  {EDIT_LINKS.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href as Route}
+                        className="text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </ExampleLock>
           </div>
 
           <ProfileHeader

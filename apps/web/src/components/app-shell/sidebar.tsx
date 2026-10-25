@@ -72,7 +72,13 @@ export function SidebarContent({
           {collapsed ? <LogoMark className="size-8" /> : <Logo />}
         </Link>
         {!collapsed && (
-          <span className="rounded-chip bg-primary-soft px-2 py-1 text-xs font-medium whitespace-nowrap text-primary-strong">
+          <span
+            className={`rounded-chip px-2 py-1 text-xs font-medium whitespace-nowrap ${
+              space === "exemples"
+                ? "bg-example-soft text-example-strong"
+                : "bg-primary-soft text-primary-strong"
+            }`}
+          >
             {t.spaces[space]}
           </span>
         )}

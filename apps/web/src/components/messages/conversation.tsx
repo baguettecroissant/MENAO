@@ -48,11 +48,14 @@ export function Conversation({
   otherName,
   messages,
   closed,
+  example = false,
 }: {
   chantierId: string;
   otherName: string;
   messages: ConversationMessage[];
   closed: boolean;
+  /** Exemple (ADR 0184) : ni temps réel, ni lecture enregistrée ; saisie et signalement inactifs. */
+  example?: boolean;
 }) {
   const router = useRouter();
   const endRef = useRef<HTMLDivElement>(null);
@@ -61,6 +64,7 @@ export function Conversation({
 
   // Temps réel : seulement tant que la conversation est affichée (F-40).
   useEffect(() => {
+    if (example) return;
     const supabase = createClient();
     const channel = supabase
       .channel(`messages:${chantierId}`)
@@ -78,12 +82,12 @@ export function Conversation({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chantierId, router]);
+  }, [chantierId, router, example]);
 
   useEffect(() => {
-    void markConversationRead(chantierId);
+    if (!example) void markConversationRead(chantierId);
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [chantierId, lastId]);
+  }, [chantierId, lastId, example]);
 
   return (
     <div className="flex flex-col">
@@ -113,7 +117,7 @@ export function Conversation({
                   {m.time}
                   {m.id === lastReadMine && ` · ${t.read}`}
                 </span>
-                {!m.mine && !m.hidden && <ReportMessage messageId={m.id} />}
+                {!m.mine && !m.hidden && !example && <ReportMessage messageId={m.id} />}
               </li>
             </Fragment>
           ))}
@@ -124,6 +128,13 @@ export function Conversation({
         <p className="border-t border-border px-4 py-4 text-sm text-muted-foreground sm:px-6">
           {t.closed}
         </p>
+      ) : example ? (
+        <div className="flex flex-col gap-2 pt-3">
+          <p className="text-center text-xs text-example-strong">{fr.pro.examples.locked}</p>
+          <div inert className="opacity-60">
+            <Composer chantierId={chantierId} />
+          </div>
+        </div>
       ) : (
         <Composer chantierId={chantierId} />
       )}

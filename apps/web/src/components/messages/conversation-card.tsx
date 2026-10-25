@@ -25,11 +25,17 @@ export function ConversationCard({
   name,
   lastAt,
   unread,
+  href = `/pro/messages/${chantierId}`,
+  example = false,
 }: {
   chantierId: string;
   name: string;
   lastAt: string | null;
   unread: number;
+  /** Conversation ouverte par la carte (page d'exemple, ADR 0184). */
+  href?: string;
+  /** Exemple : envoi rapide visible mais inactif. */
+  example?: boolean;
 }) {
   const [body, setBody] = useState("");
   const [sent, setSent] = useState(false);
@@ -48,7 +54,7 @@ export function ConversationCard({
     <Card className="flex flex-col gap-4">
       <h2 className="text-base font-medium">{t.card.title(name)}</h2>
       <Link
-        href={`/pro/messages/${chantierId}` as Route}
+        href={href as Route}
         aria-label={t.card.open(name)}
         className="flex items-center gap-3 rounded-input focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
       >
@@ -73,7 +79,8 @@ export function ConversationCard({
       </Link>
       <form
         noValidate
-        className="flex items-end gap-2"
+        inert={example}
+        className={`flex items-end gap-2 ${example ? "opacity-60" : ""}`}
         onSubmit={(event) => {
           event.preventDefault();
           if (!body.trim() || pending) return;

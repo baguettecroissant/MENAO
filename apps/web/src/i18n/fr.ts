@@ -2726,8 +2726,9 @@ export const fr = {
     examples: {
       badge: "Exemple",
       banner: {
-        title: "Exemples pour découvrir votre espace",
-        text: "Demandes, chantiers et clients fictifs : rien n'est envoyé et les boutons sont désactivés.",
+        title: "Données d'exemple",
+        text: "Les demandes, chantiers et clients de cet espace sont fictifs : rien n'est envoyé et les boutons sont désactivés.",
+        more: "En savoir plus",
         backToFile: "Revenir à mon dossier",
         backToSpace: "Revenir à mon espace",
       },

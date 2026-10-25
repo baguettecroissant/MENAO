@@ -68,6 +68,43 @@ export const SPACE_MESSAGES: Partial<Record<Space, string>> = {
   pro: "/pro/messages",
 };
 
+// Même organisation que l'application (ADR 0130, 0131) : l'activité, puis le profil ; le compte
+// et l'aide dans le menu de la photo.
+const PRO_NAV: readonly NavSection[] = [
+  {
+    label: fr.appShell.sections.activity,
+    items: [
+      { href: "/pro/tableau-de-bord", label: fr.pro.space.dashboard, icon: LayoutGrid },
+      { href: "/pro/demandes", label: fr.pro.space.requests, icon: Inbox, badge: "requests" },
+      { href: "/pro/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
+      { href: "/pro/devis", label: fr.pro.space.quotes, icon: FileText, badge: "quotes" },
+      {
+        href: "/pro/messages",
+        label: fr.pro.space.messages,
+        icon: MessageCircle,
+        badge: "messages",
+      },
+      { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
+      { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
+    ],
+  },
+  {
+    label: fr.appShell.sections.profile,
+    items: [
+      // « Mon profil » regroupe entreprise, métiers, zone, documents et paiements (ADR 0131).
+      {
+        href: "/pro/mon-profil",
+        label: fr.pro.space.myProfile,
+        icon: UserRound,
+        also: ["/pro/onboarding"],
+      },
+      { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
+      { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
+      { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
+    ],
+  },
+];
+
 /**
  * Rubriques de chaque espace (ADR 0035), dans l'ordre d'usage. Les notifications passent par la
  * cloche de la barre du haut et par le menu du compte.
@@ -99,61 +136,16 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       ],
     },
   ],
-  // Même organisation que l'application (ADR 0130, 0131) : l'activité, puis le profil ; le compte
-  // et l'aide dans le menu de la photo.
-  pro: [
-    {
-      label: fr.appShell.sections.activity,
-      items: [
-        { href: "/pro/tableau-de-bord", label: fr.pro.space.dashboard, icon: LayoutGrid },
-        { href: "/pro/demandes", label: fr.pro.space.requests, icon: Inbox, badge: "requests" },
-        { href: "/pro/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
-        { href: "/pro/devis", label: fr.pro.space.quotes, icon: FileText, badge: "quotes" },
-        {
-          href: "/pro/messages",
-          label: fr.pro.space.messages,
-          icon: MessageCircle,
-          badge: "messages",
-        },
-        { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
-        { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
-      ],
-    },
-    {
-      label: fr.appShell.sections.profile,
-      items: [
-        // « Mon profil » regroupe entreprise, métiers, zone, documents et paiements (ADR 0131).
-        {
-          href: "/pro/mon-profil",
-          label: fr.pro.space.myProfile,
-          icon: UserRound,
-          also: ["/pro/onboarding"],
-        },
-        { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
-        { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
-        { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
-      ],
-    },
-  ],
-  // Aperçu avec des exemples (ADR 0184) : les rubriques qui ont des exemples.
-  exemples: [
-    {
-      items: [
-        {
-          href: "/pro/decouvrir/tableau-de-bord",
-          label: fr.pro.space.dashboard,
-          icon: LayoutGrid,
-        },
-        {
-          href: "/pro/decouvrir/demandes",
-          label: fr.pro.space.requests,
-          icon: Inbox,
-          badge: "requests",
-        },
-        { href: "/pro/decouvrir/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
-      ],
-    },
-  ],
+  pro: PRO_NAV,
+  // Exemples (ADR 0184) : les mêmes rubriques que l'espace pro, sous /pro/decouvrir.
+  exemples: PRO_NAV.map((section) => ({
+    ...section,
+    items: section.items.map((item) => ({
+      ...item,
+      href: item.href.replace(/^\/pro\//, "/pro/decouvrir/"),
+      also: undefined,
+    })),
+  })),
   // Back-office par pôle (ADR 0133) : pilotage, vérification des artisans, support, activité de la
   // plateforme, argent (lecture seule), réglages.
   admin: [

@@ -7,7 +7,12 @@
  * et numéros fictifs.
  */
 
+import { HOURS_PRESETS, agendaItemsFrom, type AgendaItem, type HoursRange } from "./agenda";
+import { REQUIRED_DOCUMENT_TYPES, type ArtisanOnboardingSnapshot } from "./onboarding";
+import type { ProfileHubFacts } from "./profile-hub";
 import { parisToday } from "./project";
+import { quoteTotals, type QuoteLineType, type QuoteUnit } from "./quote";
+import type { ValueForMoney } from "./review";
 
 const PREFIX = "00000000-0000-4000-8000-00000000e";
 
@@ -23,7 +28,10 @@ export const EXAMPLE_IDS = {
   chantierSalleDEau: `${PREFIX}203`,
   devisCuisine: `${PREFIX}301`,
   devisSalleDEau: `${PREFIX}302`,
+  devisChauffeEau: `${PREFIX}303`,
   factureAcompte: `${PREFIX}401`,
+  creneauFournisseur: `${PREFIX}601`,
+  ficheArtisan: `${PREFIX}901`,
 } as const;
 
 const EXAMPLE_ID = /^00000000-0000-4000-8000-00000000e\d{3}$/;
@@ -45,13 +53,13 @@ export function spaceExamplesShown(input: {
 }
 
 /** Photos des exemples : clés traduites en images fournies avec le site et l'application. */
-export type ExamplePhoto = "carrelage" | "plomberie";
+export type ExamplePhoto = "carrelage" | "plomberie" | "chauffage";
 export const EXAMPLE_PHOTO_PREFIX = "exemple/";
 
 export function examplePhotoKey(path: string): ExamplePhoto | null {
   if (!path.startsWith(EXAMPLE_PHOTO_PREFIX)) return null;
   const key = path.slice(EXAMPLE_PHOTO_PREFIX.length);
-  return key === "carrelage" || key === "plomberie" ? key : null;
+  return key === "carrelage" || key === "plomberie" || key === "chauffage" ? key : null;
 }
 
 const HOUR = 3_600_000;
@@ -76,6 +84,22 @@ function parisAt(now: Date, days: number, time: string): string {
 }
 
 const dateOnly = (now: Date, days: number) => parisAt(now, days, "12:00").slice(0, 10);
+
+/**
+ * Décalage en jours du n-ième jour ouvré (lundi à vendredi) après (n > 0) ou avant (n < 0)
+ * aujourd'hui : rendez-vous et démarrages des exemples ne tombent jamais un week-end.
+ */
+function workday(now: Date, n: number): number {
+  const [y, m, d] = parisToday(now).split("-").map(Number) as [number, number, number];
+  const step = n < 0 ? -1 : 1;
+  let offset = 0;
+  for (let left = Math.abs(n); left > 0;) {
+    offset += step;
+    const weekday = new Date(Date.UTC(y, m - 1, d + offset)).getUTCDay();
+    if (weekday !== 0 && weekday !== 6) left -= 1;
+  }
+  return offset;
+}
 
 type Client = { first_name: string; last_name: string; phone: string; email: string };
 
@@ -335,7 +359,7 @@ export function exampleChantiers(now: Date = new Date()): ExampleChantierDetail[
         cancelled_at: null,
       },
       appointment: {
-        starts_at: parisAt(now, 1, "10:00"),
+        starts_at: parisAt(now, workday(now, 1), "10:00"),
         status: "planifie",
         notes: "Prévoir la mesure de l'emplacement et vérifier l'évacuation.",
       },
@@ -373,7 +397,11 @@ export function exampleChantiers(now: Date = new Date()): ExampleChantierDetail[
         start_at: null,
         cancelled_at: null,
       },
-      appointment: { starts_at: parisAt(now, -5, "14:00"), status: "planifie", notes: null },
+      appointment: {
+        starts_at: parisAt(now, workday(now, -5), "14:00"),
+        status: "planifie",
+        notes: null,
+      },
     },
     {
       ...base,
@@ -403,10 +431,14 @@ export function exampleChantiers(now: Date = new Date()): ExampleChantierDetail[
         status: "en_cours",
         title: "Création d'une salle d'eau",
         created_at: iso(t - 9 * DAY),
-        start_at: parisAt(now, -1, "08:00"),
+        start_at: parisAt(now, workday(now, -1), "08:00"),
         cancelled_at: null,
       },
-      appointment: { starts_at: parisAt(now, -8, "09:30"), status: "planifie", notes: null },
+      appointment: {
+        starts_at: parisAt(now, workday(now, -7), "09:30"),
+        status: "planifie",
+        notes: null,
+      },
     },
   ];
 }
@@ -489,7 +521,7 @@ export function exampleFollowUp(now: Date = new Date()) {
       sent_at: iso(t - 6 * DAY),
       signed_at: signedAt,
       total_ttc_cents: total,
-      start_date: dateOnly(now, -1),
+      start_date: dateOnly(now, workday(now, -1)),
     },
     payments: [
       {
@@ -541,4 +573,468 @@ export function examplePayments(now: Date = new Date()) {
     amountCents: p.amount_cents,
     paidAt: p.paid_at,
   }));
+}
+
+// ---------------------------------------------------------------------------------------------
+// Autres rubriques de l'espace : devis, messages, agenda, factures, avis, grade, profil, fiche
+// ---------------------------------------------------------------------------------------------
+
+type ExampleQuoteLine = {
+  type: QuoteLineType;
+  designation: string;
+  description: string;
+  quantityMilli: number;
+  unit: QuoteUnit;
+  unitPriceHtCents: number;
+  vatRateBp: number;
+};
+
+/** Brouillon du devis « Remplacement d'un chauffe-eau » (éditeur de devis, après la visite). */
+export function exampleQuoteDraftLines(): ExampleQuoteLine[] {
+  return [
+    {
+      type: "materiel",
+      designation: "Chauffe-eau électrique 200 litres",
+      description: "Chauffe-eau vertical mural, résistance stéatite.",
+      quantityMilli: 1000,
+      unit: "u",
+      unitPriceHtCents: 68_000,
+      vatRateBp: 1000,
+    },
+    {
+      type: "main_oeuvre",
+      designation: "Dépose de l'ancien chauffe-eau et pose du nouveau",
+      description: "",
+      quantityMilli: 3000,
+      unit: "h",
+      unitPriceHtCents: 5_500,
+      vatRateBp: 1000,
+    },
+    {
+      type: "materiel",
+      designation: "Groupe de sécurité et raccords",
+      description: "",
+      quantityMilli: 1000,
+      unit: "forfait",
+      unitPriceHtCents: 4_500,
+      vatRateBp: 1000,
+    },
+    {
+      type: "autre",
+      designation: "Évacuation de l'ancien appareil",
+      description: "",
+      quantityMilli: 1000,
+      unit: "forfait",
+      unitPriceHtCents: 3_000,
+      vatRateBp: 1000,
+    },
+  ];
+}
+
+/** Ligne de la liste des devis (forme de artisan_quotes). */
+export type ExampleQuoteRow = {
+  quote_id: string;
+  chantier_id: string;
+  status: "brouillon" | "envoye" | "signe";
+  title: string;
+  client_name: string;
+  line_count: number;
+  total_ttc_cents: number;
+  numero: string | null;
+  sent_at: string | null;
+  appointment_at: string | null;
+  version: number;
+  updated_at: string;
+};
+
+/** Devis : brouillon à envoyer, devis envoyé, devis signé. */
+export function exampleQuoteRows(now: Date = new Date()): ExampleQuoteRow[] {
+  const [chauffeEau, cuisine, salleDEau] = exampleChantiers(now);
+  const sent = exampleSentQuote(now);
+  const signed = exampleFollowUp(now).quote;
+  const draft = exampleQuoteDraftLines();
+  const client = (c: ExampleChantierDetail | undefined) =>
+    [c?.client.first_name, c?.client.last_name].filter(Boolean).join(" ");
+  return [
+    {
+      quote_id: EXAMPLE_IDS.devisChauffeEau,
+      chantier_id: EXAMPLE_IDS.chantierChauffeEau,
+      status: "brouillon",
+      title: "Remplacement d'un chauffe-eau",
+      client_name: client(chauffeEau),
+      line_count: draft.length,
+      total_ttc_cents: quoteTotals(draft).totalTtcCents,
+      numero: null,
+      sent_at: null,
+      appointment_at: chauffeEau?.appointment?.starts_at ?? null,
+      version: 1,
+      updated_at: iso(now.getTime() - HOUR),
+    },
+    {
+      quote_id: EXAMPLE_IDS.devisCuisine,
+      chantier_id: EXAMPLE_IDS.chantierCuisine,
+      status: "envoye",
+      title: "Plomberie d'une cuisine",
+      client_name: client(cuisine),
+      line_count: 5,
+      total_ttc_cents: sent.total_ttc_cents,
+      numero: sent.numero,
+      sent_at: sent.sent_at,
+      appointment_at: cuisine?.appointment?.starts_at ?? null,
+      version: 1,
+      updated_at: sent.sent_at,
+    },
+    {
+      quote_id: EXAMPLE_IDS.devisSalleDEau,
+      chantier_id: EXAMPLE_IDS.chantierSalleDEau,
+      status: "signe",
+      title: "Création d'une salle d'eau",
+      client_name: client(salleDEau),
+      line_count: 9,
+      total_ttc_cents: signed.total_ttc_cents,
+      numero: signed.numero,
+      sent_at: signed.sent_at,
+      appointment_at: salleDEau?.appointment?.starts_at ?? null,
+      version: 1,
+      updated_at: signed.signed_at,
+    },
+  ];
+}
+
+/** Conversation de la liste des messages (forme de my_conversations). */
+export type ExampleConversationRow = {
+  chantier_id: string;
+  closed: boolean;
+  last_at: string;
+  last_body: string;
+  last_hidden: boolean;
+  last_kind: "texte";
+  last_mine: boolean;
+  other_avatar_path: string;
+  other_name: string;
+  title: string;
+  unread: number;
+};
+
+/** Message d'une conversation d'exemple (forme de chantier_messages). */
+export type ExampleMessage = {
+  id: string;
+  mine: boolean;
+  body: string;
+  created_at: string;
+  read: boolean;
+};
+
+/** Messages de chaque chantier d'exemple, du plus ancien au plus récent. */
+export function exampleMessages(chantierId: string, now: Date = new Date()): ExampleMessage[] {
+  const t = now.getTime();
+  const at = (hoursAgo: number) => iso(t - hoursAgo * HOUR);
+  const messages: Record<string, [mine: boolean, body: string, hoursAgo: number][]> = {
+    [EXAMPLE_IDS.chantierSalleDEau]: [
+      [false, "Bonjour, à quelle heure arrivez-vous pour le démarrage ?", 50],
+      [true, "Bonjour Thomas, je serai là à 8 h avec le matériel.", 49],
+      [true, "Les évacuations sont posées, je vous ai mis des photos dans le suivi.", 4],
+      [false, "Parfait, merci pour les photos !", 3],
+    ],
+    [EXAMPLE_IDS.chantierCuisine]: [
+      [true, "Bonjour Nathalie, je vous ai envoyé le devis suite à la visite.", 48],
+      [false, "Merci, je le regarde ce week-end.", 24],
+    ],
+    [EXAMPLE_IDS.chantierChauffeEau]: [
+      [true, "Bonjour Marc, c'est noté pour la visite, je mesurerai l'emplacement.", 22],
+      [false, "Très bien, le portail sera ouvert.", 20],
+    ],
+  };
+  return (messages[chantierId] ?? []).map(([mine, body, hoursAgo], i) => ({
+    id: `${chantierId}-${i}`,
+    mine,
+    body,
+    created_at: at(hoursAgo),
+    // Le dernier message du client n'est pas encore lu sur le chantier en cours.
+    read: mine || chantierId !== EXAMPLE_IDS.chantierSalleDEau || hoursAgo > 3,
+  }));
+}
+
+/** Conversations : une par chantier, la plus récente en premier. */
+export function exampleConversations(now: Date = new Date()): ExampleConversationRow[] {
+  return exampleChantiers(now)
+    .map((c) => {
+      const messages = exampleMessages(c.chantier.id, now);
+      const last = messages.at(-1);
+      return {
+        chantier_id: c.chantier.id,
+        closed: false,
+        last_at: last?.created_at ?? c.chantier.created_at,
+        last_body: last?.body ?? "",
+        last_hidden: false,
+        last_kind: "texte" as const,
+        last_mine: last?.mine ?? false,
+        other_avatar_path: "",
+        other_name: [c.client.first_name, c.client.last_name].filter(Boolean).join(" "),
+        title: c.chantier.title,
+        unread: messages.filter((m) => !m.mine && !m.read).length,
+      };
+    })
+    .sort((a, b) => b.last_at.localeCompare(a.last_at));
+}
+
+/** Horaires de travail des exemples : du lundi au vendredi, 8 h – 12 h et 13 h 30 – 17 h 30. */
+export const EXAMPLE_HOURS: readonly HoursRange[] = HOURS_PRESETS.semaine;
+
+/**
+ * Agenda entre deux instants : visites des trois chantiers (passées et à venir), démarrage du
+ * chantier en cours, créneau bloqué.
+ */
+export function exampleAgendaItems(from: Date, to: Date, now: Date = new Date()): AgendaItem[] {
+  const blockedDay = workday(now, 2);
+  return agendaItemsFrom({
+    chantiers: exampleChantiers(now).map((c) => ({
+      chantierId: c.chantier.id,
+      status: c.chantier.status,
+      title: c.chantier.title,
+      codePostal: c.code_postal,
+      villeNom: c.ville_nom,
+      appointmentAt: c.appointment?.starts_at ?? null,
+      startAt: c.chantier.start_at,
+    })),
+    blocked: [
+      {
+        id: EXAMPLE_IDS.creneauFournisseur,
+        startsAt: parisAt(now, blockedDay, "14:00"),
+        endsAt: parisAt(now, blockedDay, "15:30"),
+        label: "Retrait de matériel chez le fournisseur",
+      },
+    ],
+    from,
+    to,
+  });
+}
+
+/** Facture d'acompte du chantier en cours (forme de la table invoices). */
+export function exampleInvoices(now: Date = new Date()) {
+  const followUp = exampleFollowUp(now);
+  return followUp.invoices.map((invoice) => ({
+    ...invoice,
+    total_ttc_cents: followUp.payments[0]?.amount_cents ?? 0,
+    document: {
+      client: { first_name: CLIENTS.thomas.first_name, last_name: CLIENTS.thomas.last_name },
+      chantier: { title: "Création d'une salle d'eau" },
+    },
+  }));
+}
+
+/** Avis reçus (forme de la table reviews) : un sans réponse, deux avec réponse. */
+export function exampleReviews(now: Date = new Date()) {
+  const t = now.getTime();
+  const review = (
+    n: number,
+    author: string,
+    notes: [quality: number, delays: number, communication: number, cleanliness: number],
+    valueForMoney: ValueForMoney,
+    comment: string,
+    daysAgo: number,
+    reply: string | null,
+  ) => {
+    const [quality, delays, communication, cleanliness] = notes;
+    return {
+      id: `${PREFIX}7${String(n).padStart(2, "0")}`,
+      chantier_id: `${PREFIX}2${String(10 + n)}`,
+      author_name: author,
+      score: Math.round((quality + delays + communication + cleanliness) / 4),
+      quality,
+      delays,
+      communication,
+      cleanliness,
+      value_for_money: valueForMoney,
+      comment,
+      experience_on: dateOnly(now, -daysAgo - 2),
+      status: "publie" as const,
+      moderation_reason: null,
+      reply,
+      created_at: iso(t - daysAgo * DAY),
+    };
+  };
+  return [
+    review(
+      1,
+      "Claire B.",
+      [98, 95, 96, 95],
+      "excellent",
+      "Intervention rapide et soignée pour le remplacement de notre mitigeur. Artisan ponctuel, de bon conseil, et chantier laissé propre.",
+      6,
+      null,
+    ),
+    review(
+      2,
+      "Paul R.",
+      [95, 90, 96, 92],
+      "excellent",
+      "Très bon travail sur la rénovation de notre salle d'eau, délais respectés et explications claires à chaque étape. Je recommande.",
+      40,
+      "Merci beaucoup Paul, ce fut un plaisir de travailler avec vous !",
+    ),
+    review(
+      3,
+      "Sandrine L.",
+      [94, 95, 93, 90],
+      "convenable",
+      "Recherche de fuite efficace : le problème a été trouvé et réparé dans la journée, au prix annoncé sur le devis.",
+      75,
+      "Merci Sandrine pour votre confiance.",
+    ),
+  ];
+}
+
+/** Score MENAO des avis d'exemple (forme de la table artisan_scores). */
+export function exampleScore() {
+  return {
+    review_count: 3,
+    quality: 96,
+    delays: 93,
+    communication: 95,
+    value_for_money: 92,
+    global_score: 94,
+  };
+}
+
+type GradeLike = {
+  xp: number;
+  level: number;
+  levels: readonly { level: number; xp_min: number }[];
+  objectives: readonly { target: number; progress: number; achieved_at: string | null }[];
+  badges: readonly {
+    target: number;
+    progress: number;
+    unlocked_at: string | null;
+    seen: boolean;
+  }[];
+  claims: readonly unknown[];
+};
+
+/**
+ * Grade d'exemple : le vrai barème (niveaux, objectifs, badges de la base) avec une progression
+ * fictive de niveau 2 (trois objectifs atteints, deux badges débloqués, déjà vus).
+ */
+export function exampleGrade<G extends GradeLike>(grade: G, now: Date = new Date()): G {
+  const xp = (grade.levels.find((l) => l.level === 2)?.xp_min ?? 0) + 50;
+  const level = grade.levels.reduce((best, l) => (l.xp_min <= xp ? l.level : best), 1);
+  const ago = (days: number) => iso(now.getTime() - days * DAY);
+  return {
+    ...grade,
+    xp,
+    level,
+    objectives: grade.objectives.map((o, i) =>
+      i < 3
+        ? { ...o, progress: o.target, achieved_at: ago(30 - i * 7) }
+        : { ...o, progress: Math.min(o.target - 1, Math.ceil(o.target / 2)), achieved_at: null },
+    ),
+    badges: grade.badges.map((b, i) =>
+      i < 2
+        ? { ...b, progress: b.target, unlocked_at: ago(20 - i * 6), seen: true }
+        : {
+            ...b,
+            progress: Math.min(b.target - 1, Math.floor(b.target / 3)),
+            unlocked_at: null,
+            seen: true,
+          },
+    ),
+    claims: [],
+  };
+}
+
+/**
+ * Fiche publique d'exemple, au nom de l'artisan : présentation, métiers, photos, assurances
+ * vérifiées et score des avis d'exemple (forme de my_public_profile).
+ */
+export function exampleProfile(name: string | null, now: Date = new Date()) {
+  const score = exampleScore();
+  return {
+    id: EXAMPLE_IDS.ficheArtisan,
+    display_name: name ?? "Votre nom",
+    company_name: "Votre entreprise",
+    avatar_path: null,
+    experience_years: 12,
+    presentation:
+      "Plombier chauffagiste depuis 12 ans à Nice et alentours : dépannage, remplacement de chauffe-eau, création et rénovation de salles de bains. Je me déplace pour une visite avant chaque devis, je vous explique les solutions possibles et je m'engage sur les délais annoncés. Chantier protégé et laissé propre, garantie décennale.",
+    paused: false,
+    available_from: null,
+    response_minutes: 38,
+    zone: { mode: "rayon" as const, radius_km: 20, city: "Nice", communes: [] },
+    trades: [{ code: "plombier", label: "Plombier" }],
+    work_types: [
+      { code: "chauffe-eau", label: "Chauffe-eau", trade: "plombier" },
+      { code: "salle-de-bains", label: "Salle de bains", trade: "plombier" },
+      { code: "recherche-de-fuite", label: "Recherche de fuite", trade: "plombier" },
+    ],
+    verified: true,
+    decennale_exempt: false,
+    decennale: { valid_until: dateOnly(now, 200), insurer: "Assureur de l'exemple" },
+    rc_pro: { valid_until: dateOnly(now, 200), insurer: "Assureur de l'exemple" },
+    certifications: [],
+    rge: [],
+    photos: [
+      `${EXAMPLE_PHOTO_PREFIX}plomberie`,
+      `${EXAMPLE_PHOTO_PREFIX}carrelage`,
+      `${EXAMPLE_PHOTO_PREFIX}chauffage`,
+    ],
+    menao_score: null,
+    diplome: null,
+    google: null,
+    partners: [],
+    recommended_by: null,
+    score: {
+      review_count: score.review_count,
+      quality: score.quality,
+      delays: score.delays,
+      communication: score.communication,
+      value_for_money: score.value_for_money,
+      global: score.global_score,
+    },
+  };
+}
+
+/** Dossier complet et vérifié (« Mon profil » d'exemple). */
+export function exampleHubFacts(now: Date = new Date()): ProfileHubFacts {
+  const today = parisToday(now);
+  const documents = Object.fromEntries(
+    REQUIRED_DOCUMENT_TYPES.map((type) => [
+      type,
+      { status: "valide", dateEmission: dateOnly(now, -20), dateFin: dateOnly(now, 200) },
+    ]),
+  );
+  const snapshot: ArtisanOnboardingSnapshot = {
+    siretVerified: true,
+    sireneActive: true,
+    raisonSociale: "Votre entreprise",
+    assujettiTva: true,
+    tradeCount: 1,
+    zoneMode: "rayon",
+    radiusKm: 20,
+    hasBaseLocation: true,
+    communeCount: 0,
+    documents,
+    presentationLength: exampleProfile(null, now).presentation.length,
+    hasAvatar: true,
+    subscriptionActive: true,
+    connectChargesEnabled: true,
+    charterAccepted: true,
+    decennaleExempt: false,
+  };
+  return {
+    snapshot,
+    validated: true,
+    documents: REQUIRED_DOCUMENT_TYPES.map((type) => ({
+      type,
+      status: "valide",
+      date_fin: dateOnly(now, 200),
+    })),
+    photoCount: 3,
+    reviewsToAnswer: 1,
+    reviewCount: 3,
+    level: 2,
+    hasRge: false,
+    paused: false,
+    availableFrom: null,
+    today,
+  };
 }

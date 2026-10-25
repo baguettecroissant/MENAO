@@ -1,15 +1,41 @@
-import { Eye } from "lucide-react";
+import { ChevronDown, Eye } from "lucide-react";
 import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
-import { ButtonLink, StatusBadge } from "@/components/ui";
+import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { HideExamplesButton } from "./hide-examples-button";
 
 const t = fr.pro.examples;
+const backLink =
+  "inline-flex min-h-8 shrink-0 items-center rounded-pill border border-white/70 px-3 text-xs font-medium text-primary-foreground hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none";
 
-/** Pastille « Exemple » des demandes et chantiers fictifs (ADR 0184). */
+/** Pages de l'espace pro qui ont leur version d'exemple sous /pro/decouvrir (ADR 0184). */
+const EXAMPLE_PAGES = new Set([
+  "tableau-de-bord",
+  "demandes",
+  "chantiers",
+  "devis",
+  "messages",
+  "agenda",
+  "factures",
+  "mon-profil",
+  "profil",
+  "avis",
+  "grade",
+]);
+
+/** Lien d'une page de l'espace pro vers sa page d'exemple, ou null s'il n'y en a pas. */
+export function exampleHref(href: string): string | null {
+  const match = /^\/pro\/([a-z-]+)([?#].*)?$/.exec(href);
+  return match?.[1] && EXAMPLE_PAGES.has(match[1])
+    ? `/pro/decouvrir/${match[1]}${match[2] ?? ""}`
+    : null;
+}
+
+/** Pastille « Exemple » des demandes et chantiers fictifs (ADR 0184), couleur des exemples. */
 export function ExampleBadge() {
-  return <StatusBadge tone="neutral">{t.badge}</StatusBadge>;
+  return <StatusBadge tone="example">{t.badge}</StatusBadge>;
 }
 
 /**
@@ -28,7 +54,7 @@ export function ExampleLock({
   if (!locked) return children;
   return (
     <div className="flex flex-col gap-2">
-      {note && <p className="text-center text-xs text-muted-foreground">{t.locked}</p>}
+      {note && <p className="text-center text-xs text-example-strong">{t.locked}</p>}
       <div inert className="opacity-60">
         {children}
       </div>
@@ -36,27 +62,44 @@ export function ExampleLock({
   );
 }
 
-/** Bandeau des pages d'exemples : rien n'est réel, retour au dossier ou à l'espace. */
+/**
+ * Bandeau fin en haut des pages d'exemples, couleur des exemples : rien n'est réel, retour au
+ * dossier ou à l'espace. Sur téléphone, replié sur son titre.
+ */
 export function ExamplesBanner({ validated }: { validated: boolean }) {
+  const back = (
+    <Link
+      href={(validated ? "/pro/tableau-de-bord" : "/pro/onboarding") as Route}
+      className={backLink}
+    >
+      {validated ? t.banner.backToSpace : t.banner.backToFile}
+    </Link>
+  );
   return (
-    <div className="border-b border-primary/20 bg-primary-softer">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <Eye aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary-strong" />
-          <p className="text-sm">
-            <span className="font-medium text-primary-strong">{t.banner.title}</span>{" "}
-            <span className="text-muted-foreground">{t.banner.text}</span>
-          </p>
-        </div>
-        <ButtonLink
-          href={(validated ? "/pro/tableau-de-bord" : "/pro/onboarding") as Route}
-          variant="outline"
-          size="sm"
-          className="shrink-0 self-start sm:self-auto"
-        >
-          {validated ? t.banner.backToSpace : t.banner.backToFile}
-        </ButtonLink>
+    <div role="note" aria-label={t.banner.title} className="bg-example text-primary-foreground">
+      <div className="hidden items-center gap-3 px-5 py-2 text-sm sm:flex">
+        <Eye aria-hidden="true" className="size-4 shrink-0" />
+        <p className="min-w-0 flex-1">
+          <span className="font-medium">{t.banner.title}</span>
+          <span className="text-primary-foreground/90"> · {t.banner.text}</span>
+        </p>
+        {back}
       </div>
+      <details className="group sm:hidden">
+        <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          <Eye aria-hidden="true" className="size-4 shrink-0" />
+          <span className="flex-1">{t.banner.title}</span>
+          <span className="sr-only">{t.banner.more}</span>
+          <ChevronDown
+            aria-hidden="true"
+            className="size-4 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <div className="flex flex-col items-start gap-2 px-4 pb-3 text-sm">
+          <p className="text-primary-foreground/90">{t.banner.text}</p>
+          {back}
+        </div>
+      </details>
     </div>
   );
 }
@@ -64,10 +107,10 @@ export function ExamplesBanner({ validated }: { validated: boolean }) {
 /** Mention des exemples dans l'espace d'un artisan validé qui n'a encore rien reçu. */
 export function SpaceExamplesNotice() {
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-primary/20 bg-primary-softer px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+    <div className="flex flex-col gap-2 rounded-card border border-example/25 bg-example-soft px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex min-w-0 flex-1 items-start gap-3">
-        <Eye aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary-strong" />
-        <p className="text-sm text-primary-strong">{t.inSpace.text}</p>
+        <Eye aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-example-strong" />
+        <p className="text-sm text-example-strong">{t.inSpace.text}</p>
       </div>
       <div className="self-start sm:self-auto">
         <HideExamplesButton />
@@ -79,18 +122,21 @@ export function SpaceExamplesNotice() {
 /** Carte du tableau de bord vide : ouvre l'espace d'exemples. */
 export function ExamplesCard() {
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-primary/20 bg-primary-softer p-5">
+    <section className="flex flex-col gap-3 rounded-card border border-example/25 bg-example-soft p-5">
       <div className="flex items-start gap-3">
-        <Eye aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary-strong" />
+        <Eye aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-example-strong" />
         <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="font-medium text-primary-strong">{t.dashboardCard.title}</h2>
-          <p className="text-sm text-muted-foreground">{t.dashboardCard.text}</p>
+          <h2 className="font-medium text-example-strong">{t.dashboardCard.title}</h2>
+          <p className="text-sm text-example-strong/90">{t.dashboardCard.text}</p>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <ButtonLink href={"/pro/decouvrir/tableau-de-bord" as Route} size="sm">
+        <Link
+          href={"/pro/decouvrir/tableau-de-bord" as Route}
+          className="inline-flex min-h-9 items-center rounded-pill bg-example px-4 text-sm font-medium text-primary-foreground hover:bg-example-strong focus-visible:ring-4 focus-visible:ring-example/30 focus-visible:outline-none"
+        >
           {t.dashboardCard.open}
-        </ButtonLink>
+        </Link>
         <HideExamplesButton />
       </div>
     </section>

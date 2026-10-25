@@ -211,14 +211,12 @@ export function ArtisanFollowUpView({
           }
           description={c.description}
         >
-          <ExampleLock locked={example}>
-            <PersonCard
-              label={t.yourClient}
-              name={clientName}
-              phone={c.client.phone}
-              messageHref={`/pro/messages/${id}`}
-            />
-          </ExampleLock>
+          <PersonCard
+            label={t.yourClient}
+            name={clientName}
+            phone={c.client.phone}
+            messageHref={`${base}/messages/${id}`}
+          />
           {step !== null && <ChantierStepper current={step} />}
         </ChantierHero>
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">
@@ -302,14 +300,14 @@ export function ArtisanFollowUpView({
           {tab === "suivi" ? (
             <>
               {!conversation?.closed && (
-                <ExampleLock locked={example}>
-                  <ConversationCard
-                    chantierId={id}
-                    name={clientName}
-                    lastAt={conversation?.last_at ?? null}
-                    unread={conversation?.unread ?? 0}
-                  />
-                </ExampleLock>
+                <ConversationCard
+                  chantierId={id}
+                  name={clientName}
+                  lastAt={conversation?.last_at ?? null}
+                  unread={conversation?.unread ?? 0}
+                  href={`${base}/messages/${id}`}
+                  example={example}
+                />
               )}
               <JournalCard
                 summary={journal}

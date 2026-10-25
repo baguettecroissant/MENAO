@@ -96,12 +96,10 @@ export function ChantierAppointmentView({
           </ExampleLock>
         )}
         {/* F-40 : conversation du chantier avec le client. */}
-        <ExampleLock locked={example}>
-          <Link href={`/pro/messages/${c.chantier.id}` as Route} className={pill}>
-            <MessageCircle aria-hidden="true" className="size-4" />
-            {fr.messages.writeClient}
-          </Link>
-        </ExampleLock>
+        <Link href={`${base}/messages/${c.chantier.id}` as Route} className={pill}>
+          <MessageCircle aria-hidden="true" className="size-4" />
+          {fr.messages.writeClient}
+        </Link>
       </DetailHeader>
       {active && (
         <ExampleLock locked={example}>
@@ -140,20 +138,20 @@ export function ChantierAppointmentView({
 
       {(awaitingQuote || cancellable.includes(status)) && (
         <StickyActions>
-          <ExampleLock locked={example} note>
-            <div className="flex flex-col items-stretch gap-1">
-              {awaitingQuote && (
-                <ButtonLink href={`/pro/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
-                  {status === "devis_en_revision"
-                    ? fr.pro.quote.sent.edit
-                    : hasDraft
-                      ? fr.pro.quote.resume
-                      : fr.pro.quote.create}
-                </ButtonLink>
-              )}
-              {cancellable.includes(status) && <CancelChantierButton chantierId={c.chantier.id} />}
-            </div>
-          </ExampleLock>
+          {awaitingQuote && (
+            <ButtonLink href={`${base}/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
+              {status === "devis_en_revision"
+                ? fr.pro.quote.sent.edit
+                : hasDraft
+                  ? fr.pro.quote.resume
+                  : fr.pro.quote.create}
+            </ButtonLink>
+          )}
+          {cancellable.includes(status) && (
+            <ExampleLock locked={example} note>
+              <CancelChantierButton chantierId={c.chantier.id} />
+            </ExampleLock>
+          )}
         </StickyActions>
       )}
     </main>

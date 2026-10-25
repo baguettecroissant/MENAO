@@ -4,17 +4,30 @@ import { requestsAwaitingAnswer } from "../src/requests";
 import { upcomingAgenda } from "../src/appointment";
 import { clientsAwaitingQuote } from "../src/chantier-state";
 import { monthToDateRevenue } from "../src/payment";
+import { profileHubStatuses } from "../src/profile-hub";
 import { parisToday } from "../src/project";
+import { quoteTotals } from "../src/quote";
 import {
   EXAMPLE_IDS,
+  exampleAgendaItems,
   exampleChantier,
   exampleChantierRows,
   exampleChantiers,
+  exampleConversations,
   exampleFollowUp,
+  exampleGrade,
+  exampleHubFacts,
   exampleInbox,
+  exampleInvoices,
+  exampleMessages,
   examplePayments,
   examplePhotoKey,
+  exampleProfile,
+  exampleQuoteDraftLines,
+  exampleQuoteRows,
   exampleRequest,
+  exampleReviews,
+  exampleScore,
   exampleSentQuote,
   isExampleId,
   spaceExamplesShown,
@@ -23,6 +36,9 @@ import {
 // Heure d'été (UTC+2) et heure d'hiver (UTC+1).
 const SUMMER = new Date("2026-07-15T09:30:00Z");
 const WINTER = new Date("2026-11-18T09:30:00Z");
+const FRIDAY = new Date("2026-10-23T09:30:00Z");
+const SUNDAY = new Date("2026-10-25T09:30:00Z");
+const DAY = 24 * 3_600_000;
 
 describe("exemples de l'espace artisan (ADR 0184)", () => {
   it("visibles tant que l'artisan n'a rien reçu et ne les a pas masqués", () => {
@@ -49,7 +65,7 @@ describe("exemples de l'espace artisan (ADR 0184)", () => {
     expect(exampleRequest(EXAMPLE_IDS.chantierCuisine, SUMMER)).toBeNull();
   });
 
-  it("trois chantiers : rendez-vous demain à 10 h (heure de Paris), devis envoyé, travaux en cours", () => {
+  it("trois chantiers : rendez-vous le prochain jour ouvré à 10 h (heure de Paris), devis envoyé, travaux en cours", () => {
     for (const now of [SUMMER, WINTER]) {
       const rows = exampleChantierRows(now);
       expect(rows.map((r) => r.status)).toEqual(["rdv_planifie", "devis_envoye", "en_cours"]);
@@ -112,6 +128,87 @@ describe("exemples de l'espace artisan (ADR 0184)", () => {
     const quote = exampleSentQuote(SUMMER);
     expect(Number.isInteger(quote.total_ttc_cents)).toBe(true);
     expect(quote.valid_until > parisToday(SUMMER)).toBe(true);
+  });
+
+  it("rendez-vous, démarrages et créneaux jamais le week-end (vendredi, dimanche)", () => {
+    const weekday = (iso: string) =>
+      new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", weekday: "short" }).format(
+        new Date(iso),
+      );
+    for (const now of [FRIDAY, SUNDAY]) {
+      const dates = [
+        ...exampleChantiers(now).flatMap((c) => [c.appointment?.starts_at, c.chantier.start_at]),
+        ...exampleAgendaItems(
+          new Date(now.getTime() - 20 * DAY),
+          new Date(now.getTime() + 20 * DAY),
+          now,
+        ).map((i) => i.start),
+      ].filter((d): d is string => Boolean(d));
+      for (const d of dates) expect(["Sat", "Sun"]).not.toContain(weekday(d));
+    }
+    // Vendredi : rendez-vous le lundi suivant.
+    expect(parisToday(new Date(exampleChantierRows(FRIDAY)[0]?.appointment_at ?? ""))).toBe(
+      "2026-10-26",
+    );
+  });
+
+  it("devis : brouillon (total calculé depuis ses lignes), envoyé, signé", () => {
+    const rows = exampleQuoteRows(SUMMER);
+    expect(rows.map((q) => q.status)).toEqual(["brouillon", "envoye", "signe"]);
+    expect(rows[0]?.total_ttc_cents).toBe(quoteTotals(exampleQuoteDraftLines()).totalTtcCents);
+    expect(rows[0]?.total_ttc_cents).toBe(101_200);
+    for (const q of rows) expect(Number.isInteger(q.total_ttc_cents)).toBe(true);
+  });
+
+  it("messages : une conversation par chantier, non lus cohérents avec le suivi du chantier", () => {
+    const conversations = exampleConversations(SUMMER);
+    expect(conversations).toHaveLength(3);
+    const salleDEau = conversations.find((c) => c.chantier_id === EXAMPLE_IDS.chantierSalleDEau);
+    expect(salleDEau?.unread).toBe(exampleFollowUp(SUMMER).conversation.unread);
+    expect(exampleMessages(EXAMPLE_IDS.chantierCuisine, SUMMER).map((m) => m.mine)).toEqual([
+      true,
+      false,
+    ]);
+    expect(exampleMessages("inconnu", SUMMER)).toEqual([]);
+  });
+
+  it("avis, score et facture d'acompte", () => {
+    const reviews = exampleReviews(SUMMER);
+    expect(reviews.filter((r) => r.reply === null)).toHaveLength(1);
+    for (const r of reviews) {
+      expect(isExampleId(r.id)).toBe(true);
+      expect(r.comment.length).toBeGreaterThanOrEqual(50);
+    }
+    expect(exampleScore().review_count).toBe(reviews.length);
+    expect(exampleInvoices(SUMMER)[0]?.total_ttc_cents).toBe(237_600);
+  });
+
+  it("grade : vrai barème, progression fictive de niveau 2, badges déjà vus", () => {
+    const grade = {
+      xp: 0,
+      level: 1,
+      levels: [
+        { level: 1, xp_min: 0 },
+        { level: 2, xp_min: 250 },
+        { level: 3, xp_min: 600 },
+      ],
+      objectives: [0, 1, 2, 3].map(() => ({ target: 4, progress: 0, achieved_at: null })),
+      badges: [0, 1, 2].map(() => ({ target: 3, progress: 0, unlocked_at: null, seen: false })),
+      claims: [],
+    };
+    const example = exampleGrade(grade, SUMMER);
+    expect(example.level).toBe(2);
+    expect(example.objectives.filter((o) => o.achieved_at)).toHaveLength(3);
+    expect(example.badges.filter((b) => b.unlocked_at)).toHaveLength(2);
+    expect(example.badges.every((b) => b.seen)).toBe(true);
+  });
+
+  it("« Mon profil » : dossier complet, un avis à traiter", () => {
+    const statuses = profileHubStatuses(exampleHubFacts(SUMMER), SUMMER);
+    expect(statuses.company?.tone).toBe("success");
+    expect(statuses.reviews).toEqual({ code: "toAnswer", n: 1, tone: "danger" });
+    expect(exampleProfile("Alex", SUMMER).display_name).toBe("Alex");
+    expect(exampleProfile(null, SUMMER).display_name).toBe("Votre nom");
   });
 
   it("personnes et coordonnées fictives (numéros en +336000000, adresses « de l'Exemple »)", () => {

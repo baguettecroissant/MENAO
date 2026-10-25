@@ -393,7 +393,7 @@ export function StatusBadge({
   tone = "success",
 }: {
   children: ReactNode;
-  tone?: "success" | "primary" | "neutral" | "danger" | "warning";
+  tone?: "success" | "primary" | "neutral" | "danger" | "warning" | "example";
 }) {
   const styles = {
     success: "bg-success-soft text-success",
@@ -401,6 +401,8 @@ export function StatusBadge({
     neutral: "bg-background text-muted-foreground",
     danger: "bg-danger-soft text-danger",
     warning: "bg-warning-soft text-warning",
+    // Données d'exemple (ADR 0184).
+    example: "bg-example-soft text-example-strong",
   }[tone];
   return (
     <span

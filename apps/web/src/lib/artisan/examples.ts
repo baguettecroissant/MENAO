@@ -16,6 +16,7 @@ export const EXAMPLES_BASE = "/pro/decouvrir";
 const PHOTOS: Record<ExamplePhoto, string> = {
   carrelage: "/images/metiers/carreleur-400.webp",
   plomberie: "/images/metiers/plombier-400.webp",
+  chauffage: "/images/metiers/chauffagiste-400.webp",
 };
 
 /** Image fournie avec le site pour une photo d'exemple (`exemple/…`). */
