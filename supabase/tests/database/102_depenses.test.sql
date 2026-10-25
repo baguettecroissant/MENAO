@@ -9,7 +9,7 @@ select * from no_plan();
 insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values
   ('dd000000-0000-4000-8000-000000000001', 'depenses102.a@example.test', false, now(), '{"role":"artisan"}', '{}'),
   ('dd000000-0000-4000-8000-000000000002', 'depenses102.b@example.test', false, now(), '{"role":"artisan"}', '{}'),
-  ('dd000000-0000-4000-8000-000000000003', 'depenses102.c@example.test', false, now(), '{"role":"artisan_en_attente"}', '{}'),
+  ('dd000000-0000-4000-8000-000000000003', 'depenses102.c@example.test', false, now(), '{"role":"artisan"}', '{}'),
   ('dd000000-0000-4000-8000-000000000004', 'depenses102.client@example.test', false, now(), '{"role":"particulier"}', '{}'),
   ('dd000000-0000-4000-8000-000000000005', 'depenses102.admin@example.test', false, now(), '{"role":"admin"}', '{}');
 insert into public.artisans (id, user_id, status, raison_sociale, zone_mode) values

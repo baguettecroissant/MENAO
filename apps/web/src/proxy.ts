@@ -122,6 +122,7 @@ export const config = {
     "/pro/devis/:path*",
     "/pro/decouvrir/:path*",
     "/pro/factures/:path*",
+    "/pro/depenses/:path*",
     "/pro/messages/:path*",
     "/agenda/:path*",
     "/devis/:path*",
