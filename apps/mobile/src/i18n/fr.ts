@@ -1933,7 +1933,8 @@ export const fr = {
   },
   /** Demandes reçues par l'artisan (F-16, F-17) : mêmes textes que l'espace pro du site. */
   proRequests: {
-    title: "Mes demandes",
+    // Titre court : il tient sur une ligne à côté des bulles de l'en-tête.
+    title: "Demandes",
     subtitle: "Les particuliers qui vous ont choisi : répondez sous 72 heures.",
     // Onglet « Demandes » (ADR 0130).
     openTitle: (n: number) => `À traiter (${n})`,
@@ -2997,7 +2998,7 @@ export const fr = {
     emptyPhoto: "Aucun chantier en cours pour le moment.",
   },
   proChantiers: {
-    title: "Mes chantiers",
+    title: "Chantiers",
     subtitle: "Vos rendez-vous et vos chantiers en cours.",
     all: "Tous mes chantiers",
     empty:
