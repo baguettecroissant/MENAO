@@ -5,6 +5,9 @@ import { fr } from "@/i18n/fr";
 import { loadClientReputation, type ClientReputation } from "./client-ratings";
 import { formatLongDate } from "./dates";
 import { supabase } from "./supabase";
+import { isExampleId } from "@menao/core";
+import { exampleInboxItems, exampleOpportunity } from "./example-data";
+import { examplesActive } from "./examples";
 
 type InboxRow = Database["public"]["Functions"]["artisan_inbox"]["Returns"][number];
 export type InboxItem = InboxRow & { photoUrl: string | null };
@@ -30,6 +33,7 @@ async function signedPhotos(paths: readonly string[]): Promise<Map<string, strin
 
 /** Demandes reçues par l'artisan (F-16, F-17), comme sur le site (`artisan_inbox`). */
 export async function loadInbox(): Promise<InboxItem[] | null> {
+  if (examplesActive()) return exampleInboxItems();
   const { data, error } = await supabase.rpc("artisan_inbox");
   if (error) return null;
   const rows = data ?? [];
@@ -64,6 +68,7 @@ export type Opportunity = {
  * rendez-vous fixé (décision C, ADR 0014). artisan_request_detail ne renvoie que ses demandes.
  */
 export async function loadOpportunity(requestId: string): Promise<Opportunity | null> {
+  if (isExampleId(requestId)) return exampleOpportunity(requestId);
   const { data } = await supabase.rpc("artisan_request_detail", { p_request_id: requestId });
   const detail = parseRequestDetail(data);
   if (!detail) return null;

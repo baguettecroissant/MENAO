@@ -9,6 +9,7 @@ import {
   monthToDateRevenue,
   requestsAwaitingAnswer,
   revenueTrend,
+  spaceExamplesShown,
   subscriptionGrantsAccess,
   upcomingAgenda,
   type AgendaKind,
@@ -18,6 +19,8 @@ import {
   type SubscriptionStatus,
   type TodoItem,
 } from "@menao/core";
+import { exampleDashboard } from "./example-data";
+import { examplesActive } from "./examples";
 import { loadInbox, type InboxItem } from "./pro-requests";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
@@ -56,6 +59,11 @@ export type Dashboard = {
   activityInput: ReturnType<typeof activityInputFromRows>;
   /** Premier chantier qui attend un devis (raccourci « Préparer un devis »). */
   quoteChantierId: string | null;
+  /**
+   * Exemples à proposer (ADR 0184) : artisan validé qui n'a encore reçu aucune demande ni aucun
+   * chantier et ne les a pas masqués.
+   */
+  examplesShown: boolean;
 };
 
 /**
@@ -68,6 +76,14 @@ export async function loadDashboard(): Promise<Dashboard | null> {
   const { data: session } = await supabase.auth.getSession();
   const userId = session.session?.user.id;
   if (!userId) return null;
+  if (examplesActive()) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    return exampleDashboard(profile?.first_name ?? null);
+  }
   const [
     inbox,
     { data: chantiers },
@@ -88,7 +104,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     supabase
       .from("artisans")
       .select(
-        "status, radiation_reason, connect_charges_enabled, artisan_documents(type, status, date_fin)",
+        "status, radiation_reason, connect_charges_enabled, examples_hidden_at, artisan_documents(type, status, date_fin)",
       )
       .eq("user_id", userId)
       .maybeSingle(),
@@ -207,5 +223,12 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       chantiers: chantiers ?? [],
     }),
     quoteChantierId: rows.find((c) => isAwaitingQuote(c.status))?.chantier_id ?? null,
+    examplesShown:
+      status === "valide" &&
+      spaceExamplesShown({
+        requests: inbox.length,
+        chantiers: rows.length,
+        hiddenAt: artisan.data?.examples_hidden_at ?? null,
+      }),
   };
 }

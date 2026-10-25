@@ -10,6 +10,9 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
+import { SpaceExamplesNotice } from "@/components/examples";
+import { exampleChantierList } from "@/lib/example-data";
+import { loadSpaceExamplesShown } from "@/lib/examples";
 
 const t = fr.proChantiers;
 const { colors, spacing } = theme;
@@ -20,6 +23,8 @@ const { colors, spacing } = theme;
  */
 export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
   const [rows, reload] = useFocusData(loadArtisanChantiers);
+  // Rien reçu : chantiers d'exemple (ADR 0184), comme sur le site.
+  const [examples, reloadExamples] = useFocusData(loadSpaceExamplesShown);
   const [refreshing, setRefreshing] = useState(false);
 
   if (rows === undefined) return <ScreenSkeleton />;
@@ -43,7 +48,20 @@ export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
           {switcher}
         </TabHeader>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
-        {rows?.length === 0 ? <EmptyState illustration="chantiers">{t.empty}</EmptyState> : null}
+        {rows?.length === 0 && examples ? (
+          <>
+            <SpaceExamplesNotice onHidden={() => void reloadExamples()} />
+            {exampleChantierList().map((r) => (
+              <ArtisanChantierCard
+                key={r.chantier_id}
+                row={r}
+                onPress={() => router.push(`/pro-chantier/${r.chantier_id}`)}
+              />
+            ))}
+          </>
+        ) : rows?.length === 0 ? (
+          <EmptyState illustration="chantiers">{t.empty}</EmptyState>
+        ) : null}
         {(rows ?? []).map((r) => (
           <ArtisanChantierCard
             key={r.chantier_id}

@@ -1,4 +1,4 @@
-import { ARTISAN_CANCELLABLE_STATUSES, type ChantierStatus } from "@menao/core";
+import { ARTISAN_CANCELLABLE_STATUSES, type ChantierStatus, isExampleId } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { NotebookPen } from "lucide-react-native";
 import { useCallback } from "react";
@@ -15,6 +15,7 @@ import { loadArtisanChantier, loadArtisanFollowUp } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
 
 const t = fr.proAppointment;
 const { colors, font, spacing } = theme;
@@ -69,6 +70,7 @@ export default function ArtisanChantierScreen() {
         followUp={loaded.followUp}
         confirmed={demarrage === "confirme"}
         onChanged={reload}
+        example={isExampleId(id)}
       />
     );
   }
@@ -89,6 +91,8 @@ export default function ArtisanChantierScreen() {
         ? fr.proQuote.resume
         : fr.proQuote.create;
   const cancellable = CANCELLABLE.includes(status);
+  // Exemple (ADR 0184) : on navigue (devis, conversation), les actions sont inactives.
+  const example = isExampleId(id);
 
   return (
     <Screen
@@ -98,13 +102,15 @@ export default function ArtisanChantierScreen() {
           meta={whenMeta(appointment?.starts_at)}
         >
           {active ? (
-            <View style={styles.expertise}>
-              <Button
-                label={fr.proExpertise.open}
-                variant="secondary"
-                onPress={() => router.push(`/opportunite/${c.id}/expertise`)}
-              />
-            </View>
+            <ExampleLock locked={example}>
+              <View style={styles.expertise}>
+                <Button
+                  label={fr.proExpertise.open}
+                  variant="secondary"
+                  onPress={() => router.push(`/opportunite/${c.id}/expertise`)}
+                />
+              </View>
+            </ExampleLock>
           ) : null}
         </HeaderBand>
       }
@@ -115,11 +121,13 @@ export default function ArtisanChantierScreen() {
               <Button label={quoteLabel} onPress={() => router.push(`/pro-chantier/${id}/devis`)} />
             ) : null}
             {cancellable ? (
-              <Button
-                label={t.cancel}
-                variant="danger"
-                onPress={() => router.push(`/pro-chantier/${id}/annuler`)}
-              />
+              <ExampleLock locked={example} note>
+                <Button
+                  label={t.cancel}
+                  variant="danger"
+                  onPress={() => router.push(`/pro-chantier/${id}/annuler`)}
+                />
+              </ExampleLock>
             ) : null}
           </>
         ) : undefined
@@ -130,7 +138,7 @@ export default function ArtisanChantierScreen() {
           text={fr.proChantiers.status[status]}
           tone={status === "annule" || status === "devis_refuse" ? "neutral" : "primary"}
         />
-        {planned ? (
+        {planned && !example ? (
           <Pressable
             role="button"
             hitSlop={8}
@@ -155,11 +163,13 @@ export default function ArtisanChantierScreen() {
       ) : null}
 
       {data.sentQuote ? (
-        <SentQuoteBlock
-          quote={data.sentQuote}
-          deposit={data.deposit}
-          invoice={data.depositInvoice}
-        />
+        <ExampleLock locked={example}>
+          <SentQuoteBlock
+            quote={data.sentQuote}
+            deposit={data.deposit}
+            invoice={data.depositInvoice}
+          />
+        </ExampleLock>
       ) : null}
       <RequestBlocks
         detail={c}
@@ -171,21 +181,23 @@ export default function ArtisanChantierScreen() {
       {c.appointment ? (
         <DetailBlock icon={<NotebookPen size={18} color={colors.primary} />} title={t.notes}>
           {c.appointment.notes ? <Text style={styles.text}>{c.appointment.notes}</Text> : null}
-          <Pressable
-            role="button"
-            onPress={() =>
-              router.push({
-                pathname: "/pro-chantier/[id]/notes",
-                params: { id, notes: c.appointment?.notes ?? "" },
-              })
-            }
-            style={styles.notesButton}
-          >
-            <Text style={styles.link}>{c.appointment.notes ? t.editNotes : t.addNotes}</Text>
-          </Pressable>
+          {example ? null : (
+            <Pressable
+              role="button"
+              onPress={() =>
+                router.push({
+                  pathname: "/pro-chantier/[id]/notes",
+                  params: { id, notes: c.appointment?.notes ?? "" },
+                })
+              }
+              style={styles.notesButton}
+            >
+              <Text style={styles.link}>{c.appointment.notes ? t.editNotes : t.addNotes}</Text>
+            </Pressable>
+          )}
         </DetailBlock>
       ) : null}
-      {status !== "annule" ? (
+      {status !== "annule" && !example ? (
         <Pressable
           role="link"
           hitSlop={8}

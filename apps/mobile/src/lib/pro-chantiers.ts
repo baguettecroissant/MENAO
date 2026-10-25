@@ -11,6 +11,13 @@ import { fr } from "@/i18n/fr";
 import type { ChantierDocument } from "./chantiers";
 import { REVIEW_COLUMNS, toArtisanReview, type ArtisanReview } from "./pro-reviews";
 import { supabase } from "./supabase";
+import { isExampleId } from "@menao/core";
+import {
+  exampleArtisanChantier,
+  exampleArtisanFollowUp,
+  exampleChantierList,
+} from "./example-data";
+import { examplesActive } from "./examples";
 
 /** Liens signés (1 h) des fichiers d'un espace privé, par chemin ; les droits RLS s'appliquent. */
 async function signedUrls(bucket: string, paths: readonly string[]) {
@@ -28,6 +35,7 @@ export type ArtisanChantierRow =
 
 /** Chantiers de l'artisan (F-18), comme sur le site (`artisan_chantiers`). */
 export async function loadArtisanChantiers(): Promise<ArtisanChantierRow[] | null> {
+  if (examplesActive()) return exampleChantierList();
   const { data, error } = await supabase.rpc("artisan_chantiers");
   return error ? null : (data ?? []);
 }
@@ -63,6 +71,7 @@ export type ArtisanChantier = {
  * renvoie que ses chantiers.
  */
 export async function loadArtisanChantier(chantierId: string): Promise<ArtisanChantier | null> {
+  if (isExampleId(chantierId)) return exampleArtisanChantier(chantierId);
   const [{ data }, { data: sentQuote }, { data: draft }] = await Promise.all([
     supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId }),
     supabase
@@ -197,6 +206,7 @@ export async function loadArtisanFollowUp(
   chantierId: string,
   projectPhotos: readonly string[],
 ): Promise<ArtisanFollowUp> {
+  if (isExampleId(chantierId)) return exampleArtisanFollowUp();
   const [
     { data: quote },
     { data: payments },

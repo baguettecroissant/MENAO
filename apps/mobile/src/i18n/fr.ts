@@ -1766,6 +1766,32 @@ export const fr = {
     saved: "Préférences enregistrées.",
   },
   /** Tableau de bord de l'artisan (F-16) : mêmes textes que l'espace pro du site. */
+  /** Exemples de l'espace pro (ADR 0184), comme sur le site : données fictives, lecture seule. */
+  proExamples: {
+    badge: "Exemple",
+    banner: {
+      title: "Données d'exemple",
+      text: "Les demandes, chantiers et clients de cet espace sont fictifs : rien n'est envoyé et les boutons sont désactivés.",
+      quit: "Quitter",
+      more: "En savoir plus",
+    },
+    locked: "Exemple : les boutons sont désactivés.",
+    inSpace: {
+      text: "Voici des exemples pour découvrir votre espace. Ils disparaissent dès votre première demande.",
+      hide: "Masquer les exemples",
+      hideError: "Les exemples n'ont pas pu être masqués. Réessayez.",
+    },
+    dashboardCard: {
+      title: "Découvrez votre espace avec des exemples",
+      text: "Des demandes, un rendez-vous, un devis et un chantier en cours, pour voir comment tout fonctionne.",
+      open: "Voir les exemples",
+    },
+    dossierCard: {
+      title: "Découvrez votre futur espace",
+      text: "Parcourez votre espace avec des demandes et des chantiers d'exemple, en attendant de recevoir les vôtres.",
+      open: "Découvrir mon espace",
+    },
+  },
   proDashboard: {
     title: "Tableau de bord",
     /** Activité de l'artisan (ADR 0185), comme sur le site. */

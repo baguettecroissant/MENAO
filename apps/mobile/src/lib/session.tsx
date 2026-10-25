@@ -1,6 +1,7 @@
 import { appSpaceForRole, roleFromAppMetadata, type AppSpace, type Role } from "@menao/core";
 import type { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { setExamplesActive } from "./examples";
 import { setScreenCacheOwner } from "./screen-cache";
 import { supabase } from "./supabase";
 
@@ -31,15 +32,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    let currentUser: string | null = null;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
+      currentUser = data.session?.user.id ?? null;
       setScreenCacheOwner(data.session?.user.id ?? null);
       setSession(data.session);
       setLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
       // Données des écrans gardées en mémoire : oubliées avant d'afficher un autre compte.
-      setScreenCacheOwner(next?.user.id ?? null);
+      // Déconnexion ou autre compte (pas un simple rafraîchissement de la session) : on sort du
+      // mode exemples (ADR 0184).
+      const user = next?.user.id ?? null;
+      if (user !== currentUser) setExamplesActive(false);
+      currentUser = user;
+      setScreenCacheOwner(user);
       setSession(next);
       setLoading(false);
     });

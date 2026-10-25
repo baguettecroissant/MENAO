@@ -15,6 +15,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Card, Notice, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
+import { useExamplesActive } from "@/lib/examples";
 
 const t = fr.proReviews;
 const { colors, font, radius, spacing } = theme;
@@ -26,6 +27,7 @@ const { colors, font, radius, spacing } = theme;
  */
 export default function MyReviews() {
   const [data, reload] = useFocusData(loadMyReviews);
+  const examples = useExamplesActive();
   const [refreshing, setRefreshing] = useState(false);
 
   if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
@@ -73,6 +75,7 @@ export default function MyReviews() {
               review={review}
               heading={review.authorName}
               onReplied={reload}
+              example={examples}
               meta={
                 <View style={styles.meta}>
                   <Text style={styles.small}>{t.publishedOn(formatDay(review.createdAt))}</Text>

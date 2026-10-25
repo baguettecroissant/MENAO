@@ -4,6 +4,8 @@ import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { exampleInvoiceList, exampleQuoteList } from "./example-data";
+import { examplesActive } from "./examples";
 
 const t = fr.proInvoices;
 
@@ -18,6 +20,7 @@ export type ArtisanQuote = Omit<QuoteRow, "appointment_at" | "sent_at" | "numero
 
 /** Devis de l'artisan (`artisan_quotes`, droits du compte). Null en cas d'erreur. */
 export async function loadArtisanQuotes(): Promise<ArtisanQuote[] | null> {
+  if (examplesActive()) return exampleQuoteList();
   const { data, error } = await supabase.rpc("artisan_quotes");
   return error ? null : ((data ?? []) as ArtisanQuote[]);
 }
@@ -46,6 +49,7 @@ export type ArtisanInvoice = {
  * ancienne, comme sur le site. Null en cas d'erreur.
  */
 export async function loadArtisanInvoices(): Promise<ArtisanInvoice[] | null> {
+  if (examplesActive()) return exampleInvoiceList();
   const artisanId = await myArtisanId();
   if (!artisanId) return null;
   const { data, error } = await supabase

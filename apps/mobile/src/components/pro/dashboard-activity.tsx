@@ -43,14 +43,29 @@ const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
  * Raccourcis du tableau de bord (ADR 0185), comme sur le site, avec les factures et les
  * disponibilités. Aucun lien vers l'abonnement (règle 10).
  */
-export function ActivityShortcuts({ quoteHref }: { quoteHref: Href }) {
+export function ActivityShortcuts({
+  quoteHref,
+  example = false,
+}: {
+  quoteHref: Href;
+  /** Exemples (ADR 0184) : pas de raccourci vers les vrais réglages (disponibilités). */
+  example?: boolean;
+}) {
   const items: { icon: LucideIcon; label: string; href: Href }[] = [
     { icon: FilePen, label: t.shortcuts.quote, href: quoteHref },
     { icon: CalendarX2, label: t.shortcuts.block, href: "/pro-agenda" },
     { icon: Share2, label: t.shortcuts.share, href: "/pro-ma-fiche" },
     { icon: UserPlus, label: t.shortcuts.invite, href: "/compte" },
     { icon: ReceiptText, label: fr.proInvoices.open, href: "/pro-factures" },
-    { icon: CalendarClock, label: fr.proAvailability.title, href: "/pro-disponibilites" },
+    ...(example
+      ? []
+      : [
+          {
+            icon: CalendarClock,
+            label: fr.proAvailability.title,
+            href: "/pro-disponibilites" as Href,
+          },
+        ]),
   ];
   return (
     <View style={styles.tiles}>

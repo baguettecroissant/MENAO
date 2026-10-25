@@ -13,6 +13,7 @@ import { fr } from "@/i18n/fr";
 import { replyToReview, reportReview, type ArtisanReview } from "@/lib/pro-reviews";
 import { Button, Card, Notice, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
 
 const t = fr.proFollowUp;
 const r = fr.clientReview;
@@ -29,12 +30,15 @@ export function ReviewCard({
   heading,
   meta,
   onReplied,
+  example = false,
 }: {
   review: ArtisanReview;
   heading: string;
   /** Lignes sous le titre (dates, chantier, « Sans réponse »). */
   meta?: ReactNode;
   onReplied: () => void;
+  /** Exemple (ADR 0184) : réponse et signalement inactifs. */
+  example?: boolean;
 }) {
   const stars = reviewStars(review.score);
   return (
@@ -90,9 +94,11 @@ export function ReviewCard({
           <Text style={styles.text}>{review.reply}</Text>
         </View>
       ) : review.status === "publie" ? (
-        <ReplyForm reviewId={review.id} onReplied={onReplied} />
+        <ExampleLock locked={example} note>
+          <ReplyForm reviewId={review.id} onReplied={onReplied} />
+        </ExampleLock>
       ) : null}
-      {review.status === "publie" ? <ReportForm reviewId={review.id} /> : null}
+      {review.status === "publie" && !example ? <ReportForm reviewId={review.id} /> : null}
     </Card>
   );
 }
