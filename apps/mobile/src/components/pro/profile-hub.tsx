@@ -32,7 +32,7 @@ import { useState } from "react";
 import { ActivityIndicator, Image, Share, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { ProgressRing } from "@/components/progress-ring";
-import { SettingsRow, SettingsSection } from "@/components/settings-list";
+import { SettingsRow, SettingsSection, SettingsSwitch } from "@/components/settings-list";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth";
@@ -45,7 +45,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, ScreenSkeleton, Tappable, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
-import { useExamplesActive } from "@/lib/examples";
+import { setExamplesActive, useExamplesActive } from "@/lib/examples";
 
 const t = fr.proHub;
 const { colors, font, radius, spacing } = theme;
@@ -152,6 +152,14 @@ export function ProfileHubContent({
   // Exemples (ADR 0184) : « Mon profil » d'exemple ; seules les rubriques qui ont leurs exemples
   // (avis, grade, factures, fiche) s'ouvrent, les vrais réglages restent fermés.
   const example = useExamplesActive();
+
+  // Interrupteur « Afficher des données d'exemple » (ADR 0190), à tout moment : l'espace
+  // s'ouvre rempli d'exemples ; à l'arrêt, « Mon profil » relit les vraies données.
+  function toggleExamples(on: boolean) {
+    setExamplesActive(on);
+    if (on) router.dismissTo("/pro");
+    else void onChange();
+  }
   return (
     <>
       <Animated.View entering={enter(0)}>
@@ -224,6 +232,15 @@ export function ProfileHubContent({
                 line
               );
             })}
+            {section.key === "account" ? (
+              <SettingsSwitch
+                key="examples"
+                icon={Eye}
+                label={t.rows.examples}
+                value={example}
+                onChange={toggleExamples}
+              />
+            ) : null}
           </SettingsSection>
         </Animated.View>
       ))}

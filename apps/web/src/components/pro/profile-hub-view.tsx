@@ -42,7 +42,8 @@ type RowKey =
   | "invoices"
   | "identity"
   | "notifications"
-  | "help";
+  | "help"
+  | "examples";
 type Row = { key: RowKey; icon: LucideIcon; href: string };
 
 /** Rubriques de « Mon profil », dans l'ordre de l'application (ADR 0129, 0131). */
@@ -89,6 +90,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
       { key: "identity", icon: IdCard, href: "/compte" },
       { key: "notifications", icon: Bell, href: "/notifications" },
       { key: "help", icon: LifeBuoy, href: "/contact" },
+      // Données d'exemple à tout moment (ADR 0190), aussi après la validation ou le masquage.
+      { key: "examples", icon: Eye, href: "/pro/decouvrir" },
     ],
   },
 ];
@@ -221,14 +224,16 @@ export function ProfileHubView({
                 {t.sections[section.key]}
               </h2>
               <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-                {section.rows.map((row) => (
-                  <HubLine
-                    key={row.key}
-                    row={row}
-                    href={link(row.href)}
-                    status={statusOf(row.key, hub)}
-                  />
-                ))}
+                {section.rows
+                  .filter((row) => !(example && row.key === "examples"))
+                  .map((row) => (
+                    <HubLine
+                      key={row.key}
+                      row={row}
+                      href={link(row.href)}
+                      status={statusOf(row.key, hub)}
+                    />
+                  ))}
               </ul>
             </section>
           ))}
@@ -249,7 +254,8 @@ function statusOf(key: RowKey, hub: ProfileHubData): HubLineStatus {
     key === "invoices" ||
     key === "identity" ||
     key === "notifications" ||
-    key === "help"
+    key === "help" ||
+    key === "examples"
   ) {
     return null;
   }
