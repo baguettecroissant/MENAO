@@ -13,8 +13,9 @@ import {
 import { parseGrade, parseWelcomeGift } from "@menao/validation";
 import type { Metadata } from "next";
 import { DashboardView } from "@/components/pro/dashboard-view";
+import { ExamplesCard } from "@/components/pro/examples";
 import { fr } from "@/i18n/fr";
-import { artisanActivity, getProShell, requireProSpace } from "@/lib/artisan/space";
+import { artisanActivity, getProShell, requireProSpace, spaceExamples } from "@/lib/artisan/space";
 import { formatMonthName } from "@/lib/format";
 
 export const metadata: Metadata = { title: `${fr.pro.dashboard.title} — MENAO` };
@@ -54,6 +55,7 @@ export default async function DashboardPage() {
     { data: gradeData },
     { badges },
     { data: giftData },
+    examples,
   ] = await Promise.all([
     artisanActivity(),
     // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
@@ -66,6 +68,8 @@ export default async function DashboardPage() {
     getProShell(),
     // Cadeau de bienvenue du filleul à choisir (ADR 0154).
     supabase.rpc("my_welcome_gift"),
+    // Rien reçu pour l'instant : carte vers les exemples (ADR 0184).
+    spaceExamples(),
   ]);
   const grade = parseGrade(gradeData);
   const gradeLevels =
@@ -155,6 +159,7 @@ export default async function DashboardPage() {
         now,
       ).slice(0, 4)}
       todo={todo}
+      banner={examples ? <ExamplesCard /> : null}
     />
   );
 }

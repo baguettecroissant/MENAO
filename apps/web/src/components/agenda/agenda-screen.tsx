@@ -12,6 +12,7 @@ import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { AgendaAbsence, AgendaItem } from "@/lib/artisan/agenda";
 import { formatDay, formatDayMonth } from "@/lib/format";
+import { ExampleLock } from "@/components/pro/examples";
 import { AgendaTabs } from "./agenda-tabs";
 import { availabilityLabel } from "./availability-label";
 import { BlockSlotButton } from "./block-slot-button";
@@ -52,6 +53,8 @@ export function AgendaScreen({
   hours,
   items,
   absences,
+  base = "/pro",
+  example = false,
 }: {
   monday: string;
   today: string;
@@ -60,11 +63,15 @@ export function AgendaScreen({
   hours: HoursRange[];
   items: AgendaItem[];
   absences: AgendaAbsence[];
+  /** Début des liens (pages d'exemples, ADR 0184). */
+  base?: string;
+  /** Exemple : disponibilités, créneau à bloquer et onglets inactifs. */
+  example?: boolean;
 }) {
   const days = weekDates(monday);
   const sunday = days[6] ?? monday;
   const thisWeek = monday === mondayOf(today);
-  const weekHref = (date: string) => `/pro/agenda?semaine=${date}` as Route;
+  const weekHref = (date: string) => `${base}/agenda?semaine=${date}` as Route;
 
   return (
     <main className="flex-1">
@@ -74,7 +81,9 @@ export function AgendaScreen({
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </div>
-          <AgendaTabs current="agenda" />
+          <ExampleLock locked={example}>
+            <AgendaTabs current="agenda" />
+          </ExampleLock>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -91,7 +100,7 @@ export function AgendaScreen({
             </Link>
             {!thisWeek && (
               <Link
-                href="/pro/agenda"
+                href={`${base}/agenda` as Route}
                 className="inline-flex min-h-10 items-center rounded-pill border border-border bg-surface px-4 text-sm font-medium shadow-card hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
               >
                 {t.thisWeek}
@@ -99,16 +108,18 @@ export function AgendaScreen({
             )}
             <h2 className="ml-1 text-lg font-medium">{weekTitle(monday, sunday)}</h2>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/pro/agenda/disponibilites"
-              className={`inline-flex min-h-10 items-center gap-2 rounded-pill px-4 text-sm font-medium focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${STATUS_STYLES[availability.kind]}`}
-            >
-              <span aria-hidden="true" className="size-2 rounded-full bg-current" />
-              {availabilityLabel(availability)}
-            </Link>
-            <BlockSlotButton minDate={today} defaultDate={monday > today ? monday : today} />
-          </div>
+          <ExampleLock locked={example}>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/pro/agenda/disponibilites"
+                className={`inline-flex min-h-10 items-center gap-2 rounded-pill px-4 text-sm font-medium focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${STATUS_STYLES[availability.kind]}`}
+              >
+                <span aria-hidden="true" className="size-2 rounded-full bg-current" />
+                {availabilityLabel(availability)}
+              </Link>
+              <BlockSlotButton minDate={today} defaultDate={monday > today ? monday : today} />
+            </div>
+          </ExampleLock>
         </div>
 
         {hours.length === 0 && (
@@ -129,6 +140,8 @@ export function AgendaScreen({
           hours={hours}
           absences={absences}
           items={items}
+          base={base}
+          example={example}
         />
 
         <ul

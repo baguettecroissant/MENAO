@@ -9,7 +9,7 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 const parisDay = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" });
 
 /** « Aujourd'hui », « Hier » ou la date complète, à l'heure de Paris. */
-function dayLabel(iso: string, now: Date): string {
+export function dayLabel(iso: string, now: Date): string {
   const day = parisDay.format(new Date(iso));
   if (day === parisDay.format(now)) return fr.messages.today;
   if (day === parisDay.format(new Date(now.getTime() - 86_400_000))) return fr.messages.yesterday;

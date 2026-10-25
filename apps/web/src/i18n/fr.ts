@@ -2135,11 +2135,17 @@ export const fr = {
     openMenu: "Ouvrir le menu",
     closeMenu: "Fermer le menu",
     messages: (n: number) => (n === 0 ? "Messages" : `Messages : ${n} non lu${n > 1 ? "s" : ""}`),
-    spaces: { client: "Espace client", pro: "Espace pro", admin: "Back-office" },
+    spaces: {
+      client: "Espace client",
+      pro: "Espace pro",
+      admin: "Back-office",
+      exemples: "Exemples",
+    },
     nav: {
       client: "Navigation de mon espace",
       pro: "Navigation de l'espace pro",
       admin: "Navigation du back-office",
+      exemples: "Navigation des exemples",
     },
     sections: {
       activity: "Activité",
@@ -2715,6 +2721,33 @@ export const fr = {
       file: "Mon dossier",
       signOut: "Me déconnecter",
       account: "Mon compte",
+    },
+    /** Exemples de l'espace (ADR 0184) : données fictives, en lecture seule. */
+    examples: {
+      badge: "Exemple",
+      banner: {
+        title: "Données d'exemple",
+        text: "Les demandes, chantiers et clients de cet espace sont fictifs : rien n'est envoyé et les boutons sont désactivés.",
+        more: "En savoir plus",
+        backToFile: "Revenir à mon dossier",
+        backToSpace: "Revenir à mon espace",
+      },
+      inSpace: {
+        text: "Voici des exemples pour découvrir votre espace. Ils disparaissent dès votre première demande.",
+        hide: "Masquer les exemples",
+        hideError: "Les exemples n'ont pas pu être masqués. Réessayez.",
+      },
+      dashboardCard: {
+        title: "Découvrez votre espace avec des exemples",
+        text: "Des demandes, un rendez-vous, un devis et un chantier en cours, pour voir comment tout fonctionne.",
+        open: "Voir les exemples",
+      },
+      onboardingCard: {
+        title: "Découvrez votre futur espace",
+        text: "Parcourez votre espace avec des demandes et des chantiers d'exemple, en attendant de recevoir les vôtres.",
+        open: "Découvrir mon espace",
+      },
+      locked: "Exemple : les boutons sont désactivés.",
     },
     /**
      * « Mon profil » de l'artisan (ADR 0131), comme dans l'application (ADR 0129) : fiche,

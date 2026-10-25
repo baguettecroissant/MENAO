@@ -1089,6 +1089,7 @@ export type Database = {
           decennale_non_soumis: boolean;
           default_deposit_percent: number;
           diplome_metier: Database["public"]["Enums"]["diplome_metier"] | null;
+          examples_hidden_at: string | null;
           experience_years: number | null;
           forme_juridique_code: string | null;
           google_checked_at: string | null;
@@ -1152,6 +1153,7 @@ export type Database = {
           decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
           diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
+          examples_hidden_at?: string | null;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           google_checked_at?: string | null;
@@ -1214,6 +1216,7 @@ export type Database = {
           decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
           diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
+          examples_hidden_at?: string | null;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
           google_checked_at?: string | null;
@@ -4502,6 +4505,7 @@ export type Database = {
         Args: { p_now?: string; p_stripe_subscription_id: string };
         Returns: boolean;
       };
+      hide_space_examples: { Args: Record<PropertyKey, never>; Returns: undefined };
       invite_artisan: {
         Args: {
           p_city: string;

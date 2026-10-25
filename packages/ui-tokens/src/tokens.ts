@@ -26,6 +26,10 @@ export const colors = {
   "danger-soft": "#fbeaea",
   warning: "#b45309",
   "warning-soft": "#fef3c7",
+  // Données d'exemple (ADR 0184) : orange, distinct des couleurs de l'application.
+  example: "#c2410c",
+  "example-soft": "#ffedd5",
+  "example-strong": "#9a3412",
 } as const;
 
 export type ColorToken = keyof typeof colors;
@@ -87,4 +91,7 @@ export const contrastPairs: ReadonlyArray<readonly [text: ColorToken, background
   ["danger", "danger-soft"],
   ["warning", "surface"],
   ["warning", "warning-soft"],
+  ["primary-foreground", "example"],
+  ["example-strong", "example-soft"],
+  ["example-strong", "surface"],
 ];

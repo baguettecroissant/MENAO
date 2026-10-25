@@ -20,6 +20,9 @@
   --color-danger-soft: #fbeaea;
   --color-warning: #b45309;
   --color-warning-soft: #fef3c7;
+  --color-example: #c2410c;
+  --color-example-soft: #ffedd5;
+  --color-example-strong: #9a3412;
   --radius-button: 9999px;
   --radius-input: 0.75rem;
   --radius-card: 1rem;

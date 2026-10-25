@@ -28,6 +28,7 @@ import Link from "next/link";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { ButtonLink, StatusBadge, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { exampleHref } from "./examples";
 import type { HubLineStatus } from "@/lib/artisan/profile-hub";
 import { ReferralCard } from "./referral-card";
 import { WelcomeGiftCard } from "./welcome-gift-card";
@@ -137,28 +138,43 @@ export type ProfileHubData = {
  * « Mon profil » sur le site (ADR 0131), comme dans l'application (ADR 0129) : en-tête, jauge de
  * la fiche, « Voir ma fiche » et toutes les rubriques avec leur état.
  */
-export function ProfileHubView({ hub }: { hub: ProfileHubData }) {
+export function ProfileHubView({
+  hub,
+  example = false,
+}: {
+  hub: ProfileHubData;
+  /** Exemple (ADR 0184) : liens vers les pages d'exemples, les autres inactifs. */
+  example?: boolean;
+}) {
   const statusLabel = hub.status === "valide" ? null : t.status[hub.status];
   const { percent, next } = hub.strength;
+  const link = (href: string) => (example ? exampleHref(href) : href);
+  const photo = (
+    <ArtisanPhoto
+      url={hub.avatarUrl}
+      name={hub.name}
+      className="size-20 rounded-full"
+      initialsClassName="text-2xl"
+    />
+  );
   return (
     <main className="flex-1">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex items-center gap-5">
-          <Link
-            href="/pro/onboarding/profil"
-            aria-label={t.changePhoto}
-            className="relative shrink-0 rounded-full focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-          >
-            <ArtisanPhoto
-              url={hub.avatarUrl}
-              name={hub.name}
-              className="size-20 rounded-full"
-              initialsClassName="text-2xl"
-            />
-            <span className="absolute -right-0.5 -bottom-0.5 flex size-7 items-center justify-center rounded-full border border-border bg-surface text-primary-strong">
-              <Camera aria-hidden="true" className="size-3.5" />
-            </span>
-          </Link>
+          {example ? (
+            <span className="shrink-0">{photo}</span>
+          ) : (
+            <Link
+              href="/pro/onboarding/profil"
+              aria-label={t.changePhoto}
+              className="relative shrink-0 rounded-full focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+            >
+              {photo}
+              <span className="absolute -right-0.5 -bottom-0.5 flex size-7 items-center justify-center rounded-full border border-border bg-surface text-primary-strong">
+                <Camera aria-hidden="true" className="size-3.5" />
+              </span>
+            </Link>
+          )}
           <div className="flex min-w-0 flex-col gap-1.5">
             <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight">{hub.name}</h1>
             {(hub.company || hub.city) && (
@@ -180,8 +196,12 @@ export function ProfileHubView({ hub }: { hub: ProfileHubData }) {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
-          <Strength percent={percent} next={next} />
-          <ButtonLink href="/pro/profil" variant="secondary" className="self-center">
+          <Strength percent={percent} next={next} href={next ? link(TIP_HREF[next]) : null} />
+          <ButtonLink
+            href={(link("/pro/profil") ?? "/pro/profil") as Route}
+            variant="secondary"
+            className="self-center"
+          >
             <Eye aria-hidden="true" className="size-4" />
             {t.seeProfile}
           </ButtonLink>
@@ -202,7 +222,12 @@ export function ProfileHubView({ hub }: { hub: ProfileHubData }) {
               </h2>
               <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
                 {section.rows.map((row) => (
-                  <HubLine key={row.key} row={row} status={statusOf(row.key, hub)} />
+                  <HubLine
+                    key={row.key}
+                    row={row}
+                    href={link(row.href)}
+                    status={statusOf(row.key, hub)}
+                  />
                 ))}
               </ul>
             </section>
@@ -231,7 +256,15 @@ function statusOf(key: RowKey, hub: ProfileHubData): HubLineStatus {
   return hub.statuses[key];
 }
 
-function Strength({ percent, next }: { percent: number; next: ProfileTip | null }) {
+function Strength({
+  percent,
+  next,
+  href,
+}: {
+  percent: number;
+  next: ProfileTip | null;
+  href: string | null;
+}) {
   const radius = 22;
   const circumference = 2 * Math.PI * radius;
   const color = percent >= 100 ? "var(--color-success)" : "var(--color-primary)";
@@ -278,9 +311,9 @@ function Strength({ percent, next }: { percent: number; next: ProfileTip | null 
   );
   const box =
     "flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card";
-  return next ? (
+  return href ? (
     <Link
-      href={TIP_HREF[next] as Route}
+      href={href as Route}
       className={`${box} transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none`}
     >
       {content}
@@ -290,24 +323,43 @@ function Strength({ percent, next }: { percent: number; next: ProfileTip | null 
   );
 }
 
-function HubLine({ row, status }: { row: Row; status: HubLineStatus }) {
+function HubLine({
+  row,
+  href,
+  status,
+}: {
+  row: Row;
+  /** Null dans les exemples quand la rubrique n'a pas de page d'exemple. */
+  href: string | null;
+  status: HubLineStatus;
+}) {
   const label = t.rows[row.key];
+  const content = (
+    <>
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-primary-soft text-primary-strong">
+        <row.icon aria-hidden="true" className="size-[18px]" />
+      </span>
+      <span className="min-w-0 flex-1 font-medium">{label}</span>
+      {status && (
+        <span className={`shrink-0 text-sm font-medium ${TONE[status.tone]}`}>{status.text}</span>
+      )}
+    </>
+  );
+  const line = "flex min-h-13 items-center gap-3 px-4 py-2.5";
   return (
     <li className="border-t border-border first:border-t-0">
-      <Link
-        href={row.href as Route}
-        aria-label={status ? `${label}, ${status.text}` : label}
-        className="flex min-h-13 items-center gap-3 px-4 py-2.5 transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none"
-      >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-primary-soft text-primary-strong">
-          <row.icon aria-hidden="true" className="size-[18px]" />
-        </span>
-        <span className="min-w-0 flex-1 font-medium">{label}</span>
-        {status && (
-          <span className={`shrink-0 text-sm font-medium ${TONE[status.tone]}`}>{status.text}</span>
-        )}
-        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-subtle-foreground" />
-      </Link>
+      {href ? (
+        <Link
+          href={href as Route}
+          aria-label={status ? `${label}, ${status.text}` : label}
+          className={`${line} transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none`}
+        >
+          {content}
+          <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-subtle-foreground" />
+        </Link>
+      ) : (
+        <div className={line}>{content}</div>
+      )}
     </li>
   );
 }

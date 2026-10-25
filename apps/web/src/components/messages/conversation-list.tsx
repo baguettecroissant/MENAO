@@ -17,7 +17,7 @@ export function ConversationList({
   now,
 }: {
   rows: ConversationRow[];
-  basePath: "/mon-espace/messages" | "/pro/messages";
+  basePath: "/mon-espace/messages" | "/pro/messages" | "/pro/decouvrir/messages";
   avatarUrls: ReadonlyMap<string, string>;
   now: Date;
 }) {

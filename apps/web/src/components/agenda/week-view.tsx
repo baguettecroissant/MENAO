@@ -61,6 +61,8 @@ export function WeekView({
   hours,
   absences,
   items,
+  base = "/pro",
+  example = false,
 }: {
   days: string[];
   today: string;
@@ -68,6 +70,10 @@ export function WeekView({
   hours: HoursRange[];
   absences: AgendaAbsence[];
   items: AgendaItem[];
+  /** Début des liens vers les chantiers (pages d'exemples, ADR 0184). */
+  base?: string;
+  /** Exemple : pas de « Libérer » sur les créneaux bloqués. */
+  example?: boolean;
 }) {
   const placed: Placed[] = items
     .map((item) => {
@@ -185,6 +191,8 @@ export function WeekView({
                   <AgendaBlock
                     key={item.id}
                     item={item}
+                    base={base}
+                    example={example}
                     compact={columns > 1}
                     style={{
                       top: top(item.startMinutes) + 1,
@@ -247,7 +255,7 @@ export function WeekView({
                 <ul className="mt-3 flex flex-col gap-2">
                   {dayItems.map((item) => (
                     <li key={item.id}>
-                      <AgendaBlock item={item} variant="row" />
+                      <AgendaBlock item={item} variant="row" base={base} example={example} />
                     </li>
                   ))}
                 </ul>
@@ -268,12 +276,16 @@ function AgendaBlock({
   style,
   variant = "grid",
   compact = false,
+  base,
+  example,
 }: {
   item: Placed;
   style?: CSSProperties;
   variant?: "grid" | "row";
   /** Colonne étroite (événements côte à côte) : heure et titre seulement. */
   compact?: boolean;
+  base: string;
+  example: boolean;
 }) {
   const Icon = KIND_ICONS[item.kind];
   const grid = variant === "grid";
@@ -300,7 +312,7 @@ function AgendaBlock({
   if (item.chantierId) {
     return (
       <Link
-        href={`/pro/chantiers/${item.chantierId}` as Route}
+        href={`${base}/chantiers/${item.chantierId}` as Route}
         aria-label={describe(item)}
         title={describe(item)}
         style={style}
@@ -318,15 +330,17 @@ function AgendaBlock({
     >
       <span className="block min-w-0">{body}</span>
       {/* Grille : « Libérer » apparaît au survol ou au clavier ; liste mobile : toujours visible. */}
-      <RemoveButton
-        action={deleteBlockedSlot.bind(null, item.id)}
-        label={t.block.remove(describe(item))}
-        className={
-          grid
-            ? "absolute top-0.5 right-0.5 size-6 bg-surface opacity-0 shadow-card group-hover:opacity-100"
-            : "-mr-1 size-8 opacity-70 hover:opacity-100"
-        }
-      />
+      {!example && (
+        <RemoveButton
+          action={deleteBlockedSlot.bind(null, item.id)}
+          label={t.block.remove(describe(item))}
+          className={
+            grid
+              ? "absolute top-0.5 right-0.5 size-6 bg-surface opacity-0 shadow-card group-hover:opacity-100"
+              : "-mr-1 size-8 opacity-70 hover:opacity-100"
+          }
+        />
+      )}
     </div>
   );
 }

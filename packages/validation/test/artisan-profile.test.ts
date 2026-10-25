@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { exampleProfile } from "@menao/core";
 import { parseArtisanProfile } from "../src/artisan-profile";
 
 const profile = {
@@ -49,5 +50,13 @@ describe("parseArtisanProfile", () => {
   it("refuse une fiche incomplète", () => {
     expect(parseArtisanProfile({ id: "x" })).toBeNull();
     expect(parseArtisanProfile(null)).toBeNull();
+  });
+});
+
+// Fiche d'exemple de l'espace artisan (ADR 0184) : même forme que my_public_profile.
+describe("fiche d'exemple", () => {
+  it("passe les contrôles du site et de l'application", () => {
+    const profile = exampleProfile("Alex", new Date("2026-10-25T09:00:00Z"));
+    expect(parseArtisanProfile(profile)).toEqual(profile);
   });
 });

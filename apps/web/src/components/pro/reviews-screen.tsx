@@ -48,11 +48,17 @@ export function ReviewsScreen({
   reviews,
   score,
   chantierTitles,
+  base = "/pro",
+  example = false,
 }: {
   reviews: ArtisanReviewRow[];
   score: ArtisanScore | null;
   /** Titre de chaque chantier, par identifiant. */
   chantierTitles: Record<string, string>;
+  /** Début des liens (pages d'exemples, ADR 0184). */
+  base?: string;
+  /** Exemple : réponse et signalement inactifs. */
+  example?: boolean;
 }) {
   const toAnswer = reviews.filter((r) => r.status === "publie" && r.reply === null).length;
 
@@ -64,7 +70,7 @@ export function ReviewsScreen({
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </div>
-          <TextLink href="/pro/profil" className="text-sm">
+          <TextLink href={`${base}/profil` as Route} className="text-sm">
             {t.seePublic}
           </TextLink>
         </div>
@@ -104,6 +110,7 @@ export function ReviewsScreen({
                     }}
                     chantierId={review.chantier_id}
                     heading={review.author_name}
+                    example={example}
                     meta={
                       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                         <span>
@@ -117,7 +124,7 @@ export function ReviewsScreen({
                           <>
                             <span aria-hidden="true">·</span>
                             <Link
-                              href={`/pro/chantiers/${review.chantier_id}` as Route}
+                              href={`${base}/chantiers/${review.chantier_id}` as Route}
                               className="font-medium text-primary-strong underline-offset-2 hover:underline"
                             >
                               {t.chantier(title)}

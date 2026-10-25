@@ -1,5 +1,6 @@
 import { REVIEW_CRITERIA, type ValueForMoney } from "@menao/core";
 import type { ReactNode } from "react";
+import { ExampleLock } from "@/components/pro/examples";
 import { ReviewReplyForm } from "@/components/pro/review-reply-form";
 import { ReportReview } from "@/components/review/review-list";
 import { Stars } from "@/components/review/stars";
@@ -34,12 +35,15 @@ export function ReviewSection({
   chantierId,
   heading,
   meta,
+  example = false,
 }: {
   review: ChantierReview;
   chantierId: string;
   heading: string;
   /** Ligne sous le titre (date, chantier, « Sans réponse »). */
   meta?: ReactNode;
+  /** Exemple (ADR 0184) : réponse et signalement inactifs. */
+  example?: boolean;
 }) {
   const headingId = `avis-${review.id}`;
   return (
@@ -87,10 +91,16 @@ export function ReviewSection({
         </div>
       ) : (
         review.status === "publie" && (
-          <ReviewReplyForm reviewId={review.id} chantierId={chantierId} />
+          <ExampleLock locked={example} note>
+            <ReviewReplyForm reviewId={review.id} chantierId={chantierId} />
+          </ExampleLock>
         )
       )}
-      {review.status === "publie" && <ReportReview reviewId={review.id} />}
+      {review.status === "publie" && (
+        <ExampleLock locked={example}>
+          <ReportReview reviewId={review.id} />
+        </ExampleLock>
+      )}
     </section>
   );
 }

@@ -14,12 +14,15 @@ export async function AppShell({
   account,
   badges = {},
   visibility = null,
+  topBanner = null,
   children,
 }: {
   space: Space;
   account: ShellAccount | null;
   badges?: Badges;
   visibility?: Visibility | null;
+  /** Bandeau fin en haut de l'écran (données d'exemple, ADR 0184). */
+  topBanner?: ReactNode;
   children: ReactNode;
 }) {
   const collapsed = (await cookies()).get(MENU_COOKIE)?.value === "reduit";
@@ -30,6 +33,7 @@ export async function AppShell({
       badges={badges}
       visibility={visibility}
       initialCollapsed={collapsed}
+      topBanner={topBanner}
     >
       {children}
     </AppFrame>

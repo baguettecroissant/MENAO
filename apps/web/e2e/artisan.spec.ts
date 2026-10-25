@@ -235,6 +235,48 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   );
   await page.goto("/pro/onboarding/documents");
   await expect(page.getByRole("button", { name: /Déposer|Remplacer/ })).toHaveCount(0);
+
+  // Pendant la vérification : l'espace rempli d'exemples (ADR 0184), en lecture seule.
+  await page.goto("/pro/onboarding");
+  await page.getByRole("link", { name: "Découvrir mon espace" }).click();
+  await expect(page).toHaveURL(/\/pro\/decouvrir\/tableau-de-bord$/);
+  await expect(page.getByRole("note", { name: "Données d'exemple" })).toBeVisible();
+  await page.goto("/pro/decouvrir/demandes");
+  await expect(page.getByText("Exemple", { exact: true })).toHaveCount(2);
+  await page.getByRole("link", { name: /Rénovation de salle de bains/ }).click();
+  await expect(page.getByRole("heading", { name: "Rénovation de salle de bains" })).toBeVisible();
+  await expect(page.getByText("Exemple : les boutons sont désactivés.")).toBeVisible();
+  // Boutons inertes (attribut `inert`) : hors de portée du clic comme du clavier.
+  const fixAppointment = page.getByRole("button", { name: "Fixer un rendez-vous" });
+  await expect(
+    page.locator("[inert]").getByRole("button", { name: "Fixer un rendez-vous" }),
+  ).toHaveCount(1);
+  await fixAppointment.evaluate((button: HTMLElement) => button.focus());
+  await expect(fixAppointment).not.toBeFocused();
+  await page.goto("/pro/decouvrir/chantiers");
+  await page.getByRole("link", { name: /Création d'une salle d'eau/ }).click();
+  await expect(page.getByText("Évacuations posées et testées", { exact: false })).toBeVisible();
+  await page.getByRole("link", { name: "Dossier du chantier" }).click();
+  await expect(page.getByText("FAC-EXEMPLE-0001", { exact: false })).toBeVisible();
+  // Toutes les rubriques ont leurs exemples.
+  for (const [path, text] of [
+    ["devis", "Remplacement d'un chauffe-eau"],
+    ["messages", "Parfait, merci pour les photos !"],
+    ["agenda", "Mes disponibilités"],
+    ["factures", "FAC-EXEMPLE-0001"],
+    ["mon-profil", "Votre entreprise"],
+    ["profil", "Ma fiche publique"],
+    ["avis", "Claire B."],
+    ["grade", "Niv. 2"],
+  ] as const) {
+    await page.goto(`/pro/decouvrir/${path}`);
+    await expect(page.getByText(text, { exact: false }).first()).toBeVisible();
+  }
+  await page.goto("/pro/decouvrir/devis");
+  await page.getByRole("link", { name: /Remplacement d'un chauffe-eau/ }).click();
+  await expect(page.getByText("Chauffe-eau électrique 200 litres").first()).toBeVisible();
+  await page.getByRole("link", { name: "Revenir à mon dossier" }).first().click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
 });
 
 test("SIRET inconnu ou entreprise fermée : message clair (compte artisan du seed)", async ({

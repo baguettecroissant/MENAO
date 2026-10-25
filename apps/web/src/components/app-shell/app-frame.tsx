@@ -36,6 +36,7 @@ export function AppFrame({
   account,
   visibility,
   initialCollapsed,
+  topBanner = null,
   children,
 }: {
   space: Space;
@@ -43,6 +44,8 @@ export function AppFrame({
   account: ShellAccount | null;
   visibility: Visibility | null;
   initialCollapsed: boolean;
+  /** Bandeau fin au-dessus de la barre du haut (données d'exemple, ADR 0184). */
+  topBanner?: ReactNode;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -92,6 +95,7 @@ export function AppFrame({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {topBanner}
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur sm:gap-3 sm:px-5">
           <button
             type="button"

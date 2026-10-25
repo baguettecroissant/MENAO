@@ -42,7 +42,7 @@ const ICON_TONE: Record<Tone, string> = {
 const place = (...parts: string[]) => parts.filter(Boolean).join(" · ");
 
 /** Ligne affichée pour chaque élément de `artisanTodo` (@menao/core), comme dans l'application. */
-function line(item: TodoItem): Line {
+function line(item: TodoItem, base: string): Line {
   switch (item.kind) {
     case "demande":
       return {
@@ -55,7 +55,7 @@ function line(item: TodoItem): Line {
         accessoryLabel: t.todo.hoursLeftLabel(item.hoursLeft),
         clock: true,
         urgent: item.urgent,
-        href: `/pro/demandes/${item.id}`,
+        href: `${base}/demandes/${item.id}`,
       };
     case "rdv":
       return {
@@ -68,7 +68,7 @@ function line(item: TodoItem): Line {
             : t.todo.demarrage(formatTime(item.at)),
         detail: place(item.title, item.place),
         accessory: t.todo.today,
-        href: `/pro/chantiers/${item.chantierId}`,
+        href: `${base}/chantiers/${item.chantierId}`,
       };
     case "devis":
       return {
@@ -78,7 +78,7 @@ function line(item: TodoItem): Line {
         title: t.todo.devis,
         detail: place(item.title, item.place),
         accessory: t.todo.devisAction,
-        href: `/pro/chantiers/${item.chantierId}/devis`,
+        href: `${base}/chantiers/${item.chantierId}/devis`,
       };
     case "documents":
       return {
@@ -137,7 +137,14 @@ function line(item: TodoItem): Line {
  * « À faire maintenant » (ADR 0131), comme l'accueil de l'application (ADR 0130) : une liste par
  * urgence, chaque ligne mène à l'action ; « Tout est à jour » quand il ne reste rien.
  */
-export function TodoList({ items }: { items: TodoItem[] }) {
+export function TodoList({
+  items,
+  base = "/pro",
+}: {
+  items: TodoItem[];
+  /** Début des liens vers les demandes et chantiers (pages d'exemples, ADR 0184). */
+  base?: string;
+}) {
   if (items.length === 0) {
     return (
       <div className="flex items-center gap-4 rounded-card bg-success-soft p-4">
@@ -158,7 +165,7 @@ export function TodoList({ items }: { items: TodoItem[] }) {
       </h2>
       <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
         {items.map((item) => {
-          const l = line(item);
+          const l = line(item, base);
           return (
             <li key={l.key} className="border-t border-border first:border-t-0">
               <Link
