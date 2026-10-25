@@ -6,6 +6,7 @@ import {
   CalendarX,
   ChevronRight,
   FilePen,
+  ShoppingCart,
   type LucideIcon,
 } from "lucide-react-native";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
@@ -33,6 +34,7 @@ const ACTIONS: { icon: LucideIcon; label: string; detail: string; href: Href }[]
     detail: t.photoDetail,
     href: { pathname: "/pro-choisir", params: { action: "photo" } },
   },
+  { icon: ShoppingCart, label: t.expense, detail: t.expenseDetail, href: "/pro-depense/nouvelle" },
   {
     icon: CalendarClock,
     label: t.availability,
@@ -44,8 +46,8 @@ const ACTIONS: { icon: LucideIcon; label: string; detail: string; href: Href }[]
 
 /**
  * Menu du bouton (+) de l'artisan, comme la barre d'onglets des maquettes : créer un devis,
- * bloquer un créneau, ajouter une photo au suivi d'un chantier, gérer ses disponibilités, ouvrir
- * l'agenda (ADR 0130). Montée simple de la feuille, sans effet ajouté (choix de l'utilisateur).
+ * bloquer un créneau, ajouter une photo au suivi d'un chantier, ajouter une dépense (F-62), gérer
+ * ses disponibilités, ouvrir l'agenda (ADR 0130). Montée simple de la feuille, sans effet ajouté (choix de l'utilisateur).
  */
 /** Actions qui ont leurs exemples (ADR 0184). */
 const EXAMPLE_ACTIONS: readonly string[] = [t.quote, t.agenda];

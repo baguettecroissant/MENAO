@@ -40,4 +40,8 @@
 - **Site** :
   - pages `/pro/depenses` (liste, onglets, recherche), `/nouvelle` (`?chantier=` pré-choisit le chantier), `/[id]`, `/[id]/modifier` et `/export` ;
   - composants `ExpenseList`, `ExpenseForm`, `ExpenseDetailView` et `EinvoiceButton`.
-- **Application** : second lot, sur les mêmes fonctions et le même cœur métier.
+- **Application (second lot)** : mêmes fonctions, même cœur métier et mêmes contrôles (`expenseFormSchema`).
+  - Écrans `/pro-depenses` (liste, puces de statut, recherche, reste à payer, export CSV partagé), `/pro-depense/nouvelle` (`?chantier=`), `/pro-depense/[id]` (fiche, pièce ouverte dans le navigateur sécurisé) et `/pro-depense/[id]/modifier`.
+  - La pièce se prend à l'appareil photo, dans la photothèque ou parmi les fichiers (PDF). Elle est déposée dès qu'elle est choisie, lue, puis rangée à l'enregistrement ; retirée si l'écran est quitté sans enregistrer.
+  - Accès par « Mon profil » (rubrique Argent, après Factures) et par le bouton (+) : « Ajouter une dépense ».
+  - Mode exemples (ADR 0184) : les dépenses fictives s'ouvrent, l'ajout, l'export et les actions restent inactifs.
