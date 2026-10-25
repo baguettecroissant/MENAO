@@ -1,9 +1,10 @@
 import { router, useFocusEffect } from "expo-router";
-import { Bell, UserRound } from "lucide-react-native";
+import { Bell, MessageCircle, UserRound } from "lucide-react-native";
 import { useCallback, type ReactNode } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { useProfileSummary } from "@/lib/profile-summary";
+import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { theme } from "@/ui/theme";
 
@@ -12,7 +13,8 @@ const { colors, font, radius, spacing } = theme;
 /**
  * En-tête des onglets, comme les maquettes (« Dashboard », « Mes chantiers », « Devis ») : grand
  * titre et sous-titre, cloche des notifications avec sa pastille, photo du compte qui ouvre
- * « Mon compte ». `children` : contenu sous le sous-titre (compteurs, lien).
+ * « Mon compte ». Artisan : les messages, qui n'ont plus d'onglet (ADR 0188), avec leur pastille.
+ * `children` : contenu sous le sous-titre (compteurs, lien).
  */
 export function TabHeader({
   title,
@@ -23,7 +25,8 @@ export function TabHeader({
   subtitle?: string;
   children?: ReactNode;
 }) {
-  const { notifications, refresh } = useUnread();
+  const { notifications, messages, refresh } = useUnread();
+  const { space } = useSession();
   const profile = useProfileSummary();
   // Retour sur l'onglet : pastille de la cloche à jour.
   useFocusEffect(
@@ -40,6 +43,25 @@ export function TabHeader({
           </Text>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
+        {space === "artisan" ? (
+          <Pressable
+            role="link"
+            aria-label={
+              messages > 0
+                ? `${fr.tabs.messages}, ${fr.messages.unread(messages)}`
+                : fr.tabs.messages
+            }
+            onPress={() => router.push("/pro/messages")}
+            style={({ pressed }) => [styles.bell, pressed && styles.pressed]}
+          >
+            <MessageCircle size={22} color={colors.primary} />
+            {messages > 0 ? (
+              <View style={[styles.badge, styles.messagesBadge]}>
+                <Text style={styles.badgeText}>{messages > 9 ? "9+" : messages}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ) : null}
         <Pressable
           role="button"
           aria-label={fr.notificationCenter.bell(notifications)}
@@ -101,6 +123,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  messagesBadge: { backgroundColor: colors.primary },
   badgeText: { fontFamily: font.bold, fontSize: 10, color: colors["primary-foreground"] },
   // Pastille bleue pleine de la maquette (« NS ») quand il n'y a pas de photo.
   avatar: {

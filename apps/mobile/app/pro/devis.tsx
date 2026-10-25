@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 
-/** Ancien onglet « Devis » : les devis sont dans l'onglet Chantiers (ADR 0130). */
+/** Ancien onglet « Devis » : les devis sont dans l'onglet Argent (ADR 0188). */
 export default function DevisTab() {
-  return <Redirect href={{ pathname: "/pro/chantiers", params: { vue: "devis" } }} />;
+  return <Redirect href={{ pathname: "/pro/argent", params: { vue: "devis" } }} />;
 }

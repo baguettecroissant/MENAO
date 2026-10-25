@@ -22,8 +22,9 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   );
   await expect(page.getByRole("link", { name: /^Avis clients, Aucun avis$/ })).toBeVisible();
 
-  // Fiche telle que la voient les particuliers, avec les conseils pour la compléter.
-  await nav.getByRole("link", { name: "Ma fiche" }).click();
+  // « Ma vitrine » (ADR 0188) : fiche, avis et grade en onglets. Fiche telle que la voient les
+  // particuliers, avec les conseils pour la compléter.
+  await nav.getByRole("link", { name: /^Ma vitrine/ }).click();
   await expect(page).toHaveURL(/\/pro\/profil$/);
   await expect(page.getByRole("heading", { name: "Ma fiche publique", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Lou - Électricien", level: 2 })).toBeVisible();
@@ -40,7 +41,12 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   expect(await page.getByRole("main").innerText()).not.toMatch(/SIRET|00000007500010/);
 
   // « Mes avis » : pas encore d'avis, score à venir, fonctionnement expliqué.
-  await nav.getByRole("link", { name: "Avis", exact: true }).click();
+  const tabs = page.getByRole("navigation", { name: "Ma vitrine" });
+  await expect(tabs.getByRole("link", { name: "Ma fiche" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await tabs.getByRole("link", { name: "Avis", exact: true }).click();
   await expect(page).toHaveURL(/\/pro\/avis$/);
   await expect(page.getByRole("heading", { name: "Mes avis", level: 1 })).toBeVisible();
   await expect(page.getByText("Aucun avis pour le moment.")).toBeVisible();
@@ -61,8 +67,8 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await page
     .getByRole("dialog", { name: "Navigation de l'espace pro" })
-    .getByRole("link", { name: "Avis", exact: true })
+    .getByRole("link", { name: /^Ma vitrine/ })
     .click();
-  await expect(page).toHaveURL(/\/pro\/avis$/);
+  await expect(page).toHaveURL(/\/pro\/profil$/);
   if (viewport) await page.setViewportSize(viewport);
 });

@@ -10,7 +10,7 @@ import { fr } from "@/i18n/fr";
 import { formatCents, formatDay, formatDayMonthNumeric, formatTime } from "@/lib/format";
 import { loadArtisanQuotes, type ArtisanQuote } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
-import { LinkText, Notice, ScreenSkeleton, Tappable } from "@/ui";
+import { Notice, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 import { ExampleBadge } from "@/components/examples";
@@ -29,7 +29,8 @@ const STATUS_TONE: Record<ArtisanQuote["status"], Tone> = {
 
 /**
  * Devis de l'artisan, comme sur le site (maquettes « Devis – Aucun » et « Devis envoyés ») :
- * brouillons à envoyer (vers la préparation du devis) et devis envoyés (vers le chantier).
+ * brouillons à envoyer (vers la préparation du devis) et devis envoyés (vers le chantier). Dans
+ * l'onglet Argent (ADR 0188), sous les puces Devis · Factures · Dépenses (`switcher`).
  */
 export function ArtisanQuotesScreen({ switcher }: { switcher?: ReactNode }) {
   const [rows, reload] = useFocusData(loadArtisanQuotes);
@@ -58,10 +59,7 @@ export function ArtisanQuotesScreen({ switcher }: { switcher?: ReactNode }) {
           />
         }
       >
-        <TabHeader title={t.title} subtitle={t.subtitle}>
-          {switcher}
-          <LinkText label={fr.proInvoices.open} onPress={() => router.push("/pro-factures")} />
-        </TabHeader>
+        <TabHeader title={fr.tabs.money}>{switcher}</TabHeader>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
         <Segmented
           label={t.title}

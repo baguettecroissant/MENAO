@@ -1,6 +1,5 @@
 import {
   Activity,
-  Award,
   CalendarClock,
   ClipboardCheck,
   CalendarDays,
@@ -9,7 +8,6 @@ import {
   Gift,
   Handshake,
   HardHat,
-  IdCard,
   Inbox,
   LayoutDashboard,
   LayoutGrid,
@@ -17,14 +15,12 @@ import {
   Map as MapIcon,
   MessageCircle,
   MessagesSquare,
-  ReceiptText,
   Repeat,
   ScrollText,
   Send,
   ShieldCheck,
-  ShoppingCart,
   Sparkles,
-  Star,
+  Store,
   UserRound,
   Users,
   Wallet,
@@ -69,30 +65,40 @@ export const SPACE_MESSAGES: Partial<Record<Space, string>> = {
   pro: "/pro/messages",
 };
 
-// Même organisation que l'application (ADR 0130, 0131) : l'activité, puis le profil ; le compte
-// et l'aide dans le menu de la photo.
+// Menu regroupé (ADR 0188) : sept rubriques, comme l'application. « Argent » réunit devis,
+// factures et dépenses ; « Ma vitrine », fiche, avis et grade (onglets en haut de ces pages).
+// « Mon profil » (entreprise, documents, paiements) en dessous.
 const PRO_NAV: readonly NavSection[] = [
   {
-    label: fr.appShell.sections.activity,
     items: [
-      { href: "/pro/tableau-de-bord", label: fr.pro.space.dashboard, icon: LayoutGrid },
+      { href: "/pro/tableau-de-bord", label: fr.pro.space.home, icon: LayoutGrid },
       { href: "/pro/demandes", label: fr.pro.space.requests, icon: Inbox, badge: "requests" },
       { href: "/pro/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
-      { href: "/pro/devis", label: fr.pro.space.quotes, icon: FileText, badge: "quotes" },
+      { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
       {
         href: "/pro/messages",
         label: fr.pro.space.messages,
         icon: MessageCircle,
         badge: "messages",
       },
-      { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
-      { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
-      // Achats et leurs pièces, rattachés aux chantiers (F-62, ADR 0186).
-      { href: "/pro/depenses", label: fr.pro.expenses.title, icon: ShoppingCart },
+      {
+        href: "/pro/devis",
+        label: fr.pro.space.money,
+        icon: Wallet,
+        badge: "quotes",
+        also: ["/pro/factures", "/pro/depenses", "/pro/comptable"],
+      },
+      {
+        href: "/pro/profil",
+        label: fr.pro.space.storefront,
+        icon: Store,
+        badge: "reviews",
+        also: ["/pro/avis", "/pro/grade"],
+      },
     ],
   },
   {
-    label: fr.appShell.sections.profile,
+    label: fr.appShell.sections.proAccount,
     items: [
       // « Mon profil » regroupe entreprise, métiers, zone, documents et paiements (ADR 0131).
       {
@@ -101,9 +107,6 @@ const PRO_NAV: readonly NavSection[] = [
         icon: UserRound,
         also: ["/pro/onboarding"],
       },
-      { href: "/pro/profil", label: fr.pro.space.publicProfile, icon: IdCard },
-      { href: "/pro/avis", label: fr.pro.space.reviews, icon: Star, badge: "reviews" },
-      { href: "/pro/grade", label: fr.pro.space.grade, icon: Award },
     ],
   },
 ];
@@ -146,7 +149,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
     items: section.items.map((item) => ({
       ...item,
       href: item.href.replace(/^\/pro\//, "/pro/decouvrir/"),
-      also: undefined,
+      also: item.also?.map((href) => href.replace(/^\/pro\//, "/pro/decouvrir/")),
     })),
   })),
   // Back-office par pôle (ADR 0133) : pilotage, vérification des artisans, support, activité de la

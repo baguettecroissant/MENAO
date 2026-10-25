@@ -37,8 +37,10 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/chantiers$/, () => "/pro/chantiers"],
   [new RegExp(`^/pro/chantiers/${UUID}$`), (id) => `/pro-chantier/${id}`],
   [new RegExp(`^/pro/chantiers/${UUID}/devis$`), (id) => `/pro-chantier/${id}/devis`],
-  [/^\/pro\/devis$/, () => "/pro/chantiers?vue=devis"],
-  [/^\/pro\/factures$/, () => "/pro-factures"],
+  // Onglet Argent (ADR 0188) : devis, factures et dépenses.
+  [/^\/pro\/devis$/, () => "/pro/argent?vue=devis"],
+  [/^\/pro\/factures$/, () => "/pro/argent?vue=factures"],
+  [/^\/pro\/depenses$/, () => "/pro/argent?vue=depenses"],
   [/^\/pro\/avis$/, () => "/pro-avis"],
   [/^\/pro\/grade$/, () => "/pro-grade"],
   // « Mon profil » du site (parrainage, ADR 0161) : « Mon profil » de l'application.
