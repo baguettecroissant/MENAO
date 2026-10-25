@@ -18,6 +18,7 @@ import {
   LifeBuoy,
   MapPin,
   ReceiptText,
+  Send,
   Share2,
   ShieldCheck,
   ShoppingCart,
@@ -50,7 +51,7 @@ const t = fr.proHub;
 const { colors, font, radius, spacing } = theme;
 
 type Row = {
-  key: HubRow | "invoices" | "expenses" | "identity" | "notifications" | "help";
+  key: HubRow | "invoices" | "expenses" | "accountant" | "identity" | "notifications" | "help";
   icon: LucideIcon;
   href: Href;
 };
@@ -88,6 +89,7 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
       { key: "payments", icon: Wallet, href: "/pro-paiements" },
       { key: "invoices", icon: ReceiptText, href: "/pro-factures" },
       { key: "expenses", icon: ShoppingCart, href: "/pro-depenses" },
+      { key: "accountant", icon: Send, href: "/pro-comptable" },
     ],
   },
   {
@@ -244,7 +246,13 @@ export function ProfileHubContent({
 
 function statusOf(key: Row["key"], hub: ProfileHub): HubStatus {
   if (key === "identity") return hub.email ? { text: hub.email, tone: "neutral" } : null;
-  if (key === "invoices" || key === "expenses" || key === "notifications" || key === "help") {
+  if (
+    key === "invoices" ||
+    key === "expenses" ||
+    key === "accountant" ||
+    key === "notifications" ||
+    key === "help"
+  ) {
     return null;
   }
   return hub.statuses[key];

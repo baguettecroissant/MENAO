@@ -10,7 +10,6 @@ import {
   invoicePdfFilename,
   type InvoiceDocument,
 } from "../../../packages/documents/src/invoice-data.ts";
-import { renderInvoicePdf } from "../../../packages/documents/src/invoice-pdf.ts";
 import {
   quotePdfData,
   quotePdfFilename,
@@ -25,6 +24,7 @@ import {
 import { renderReceptionPdf } from "../../../packages/documents/src/reception-pdf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
+import { invoicePdfBytes } from "../_shared/invoice-pdf.ts";
 import { documentLogo } from "../_shared/logo.ts";
 import { sentQuotePdf } from "../_shared/quote-pdf.ts";
 
@@ -80,32 +80,9 @@ async function invoicePdf(supabase: SupabaseClient, invoiceId: string): Promise<
   if (!data) return json({ status: "not_found" }, 404);
 
   const doc = data as InvoiceDocument;
-  const invoice = invoicePdfData(doc);
-  const filename = invoicePdfFilename(invoice);
+  const filename = invoicePdfFilename(invoicePdfData(doc));
   // Accès vérifié ci-dessus : facture lue et conservée avec la clé serveur.
-  const admin = adminClient();
-  const storage = admin.storage.from("invoices");
-  const path = doc.pdf_path ?? `${doc.invoice.artisan_id}/${doc.invoice.id}.pdf`;
-  const { data: stored } = await storage.download(path);
-  if (stored) return pdfResponse(new Uint8Array(await stored.arrayBuffer()), filename);
-  // Copie dans un ArrayBuffer simple, type attendu par Response et par le stockage.
-  const logo = await documentLogo(admin, doc.issuer.logo_path);
-  const pdf = new Uint8Array(await renderInvoicePdf(invoice, { logo }));
-  const { error: uploadError } = await storage.upload(path, pdf, {
-    contentType: "application/pdf",
-    upsert: false,
-  });
-  if (uploadError) {
-    // Deux premières lectures simultanées : le fichier existe déjà, contenu identique.
-    console.error("generate-pdf : conservation de la facture en échec", uploadError.message);
-  } else {
-    await admin
-      .from("invoices")
-      .update({ pdf_path: path })
-      .eq("id", doc.invoice.id)
-      .is("pdf_path", null);
-  }
-  return pdfResponse(pdf, filename);
+  return pdfResponse(await invoicePdfBytes(adminClient(), doc), filename);
 }
 
 async function receptionPdf(supabase: SupabaseClient, receptionId: string): Promise<Response> {

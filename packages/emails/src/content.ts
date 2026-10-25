@@ -1587,7 +1587,7 @@ export function notificationContent(
 }
 
 /** Version texte de l'e-mail (messageries sans HTML). */
-export function plainText(content: EmailContent): string {
+export function plainText(content: EmailContent, footer: string = EMAIL_FOOTER): string {
   return [
     content.title,
     "",
@@ -1597,6 +1597,6 @@ export function plainText(content: EmailContent): string {
     `${content.cta.label} : ${content.cta.url}`,
     "",
     "—",
-    EMAIL_FOOTER,
+    footer,
   ].join("\n");
 }

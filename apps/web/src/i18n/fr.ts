@@ -3691,6 +3691,57 @@ export const fr = {
         ],
       },
     },
+    // Envoi au comptable (F-63, ADR 0187) : factures et dépenses de la période, par un lien sécurisé.
+    accountant: {
+      title: "Envoi au comptable",
+      subtitle:
+        "Chaque mois ou chaque trimestre, vos factures et vos dépenses de la période écoulée partent chez votre comptable : tableaux et pièces, par un lien de téléchargement valable 30 jours.",
+      link: "Envoi au comptable",
+      settingsTitle: "Réglages",
+      enabled: "Envoyer automatiquement à mon comptable",
+      email: "E-mail du comptable",
+      period: "Rythme",
+      periods: {
+        mensuel: { label: "Chaque mois", detail: "Le 1er du mois, pour le mois précédent" },
+        trimestriel: {
+          label: "Chaque trimestre",
+          detail: "Le 1er du trimestre, pour le trimestre précédent",
+        },
+      },
+      parts: "À envoyer",
+      invoices: "Mes factures (tableau et PDF)",
+      expenses: "Mes dépenses (tableau et pièces)",
+      save: "Enregistrer",
+      saving: "Enregistrement…",
+      saved: "Réglages enregistrés.",
+      next: (date: string) => `Prochain envoi automatique : ${date}.`,
+      off: "Envoi automatique désactivé : vous pouvez toujours envoyer à la main.",
+      sendTitle: "Envoyer maintenant",
+      sendLead: (period: string, email: string) =>
+        `Envoie tout de suite l'export de ${period} à ${email}.`,
+      saveFirst: "Enregistrez l'e-mail de votre comptable pour pouvoir lui envoyer un export.",
+      send: (period: string) => `Envoyer ${period}`,
+      sending: "Préparation et envoi…",
+      sent: (period: string) => `Export de ${period} envoyé à votre comptable.`,
+      sendErrors: {
+        echec: "L'envoi n'a pas abouti. Réessayez dans un instant.",
+        no_settings: "Enregistrez d'abord l'e-mail de votre comptable.",
+        rate_limited: "Trop d'envois en peu de temps : réessayez dans une heure.",
+        unavailable: "L'envoi est momentanément indisponible. Réessayez plus tard.",
+      },
+      historyTitle: "Derniers envois",
+      historyEmpty: "Aucun envoi pour le moment.",
+      kinds: { automatique: "Automatique", manuel: "À la main" },
+      statuses: { envoye: "Envoyé", echec: "Échec" },
+      historyLine: (date: string, recipient: string) => `${date} · ${recipient}`,
+      counts: (invoices: number | null, expenses: number | null) =>
+        [
+          invoices === null ? null : `${invoices} facture${invoices > 1 ? "s" : ""}`,
+          expenses === null ? null : `${expenses} dépense${expenses > 1 ? "s" : ""}`,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+    },
     // Dépenses de l'artisan (F-62, ADR 0186) : achats et leurs pièces, rattachés aux chantiers.
     expenses: {
       title: "Dépenses",

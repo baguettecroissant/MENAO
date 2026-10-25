@@ -28,9 +28,12 @@ const LOGO = { path: "/images/email/logo.png", width: 150, height: 42 };
 export function NotificationEmail({
   content,
   siteUrl = "",
+  footer = EMAIL_FOOTER,
 }: {
   content: EmailContent;
   siteUrl?: string;
+  /** Pied de page : par défaut celui des titulaires d'un compte MENAO. */
+  footer?: string;
 }) {
   const base = siteUrl.replace(/\/+$/, "");
   return (
@@ -175,7 +178,7 @@ export function NotificationEmail({
               margin: 0,
             }}
           >
-            {EMAIL_FOOTER}
+            {footer}
           </Text>
         </Container>
       </Body>

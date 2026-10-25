@@ -23,6 +23,102 @@ export type Database = {
   };
   public: {
     Tables: {
+      accountant_exports: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          error: string | null;
+          expenses_count: number | null;
+          id: string;
+          invoices_count: number | null;
+          kind: Database["public"]["Enums"]["accountant_export_kind"];
+          period_end: string;
+          period_start: string;
+          recipient: string;
+          status: Database["public"]["Enums"]["accountant_export_status"];
+          storage_path: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          error?: string | null;
+          expenses_count?: number | null;
+          id?: string;
+          invoices_count?: number | null;
+          kind: Database["public"]["Enums"]["accountant_export_kind"];
+          period_end: string;
+          period_start: string;
+          recipient: string;
+          status: Database["public"]["Enums"]["accountant_export_status"];
+          storage_path?: string | null;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          error?: string | null;
+          expenses_count?: number | null;
+          id?: string;
+          invoices_count?: number | null;
+          kind?: Database["public"]["Enums"]["accountant_export_kind"];
+          period_end?: string;
+          period_start?: string;
+          recipient?: string;
+          status?: Database["public"]["Enums"]["accountant_export_status"];
+          storage_path?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accountant_exports_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      accountant_settings: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          email: string;
+          enabled: boolean;
+          include_expenses: boolean;
+          include_invoices: boolean;
+          period: Database["public"]["Enums"]["accountant_period"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          email: string;
+          enabled?: boolean;
+          include_expenses?: boolean;
+          include_invoices?: boolean;
+          period?: Database["public"]["Enums"]["accountant_period"];
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          email?: string;
+          enabled?: boolean;
+          include_expenses?: boolean;
+          include_invoices?: boolean;
+          period?: Database["public"]["Enums"]["accountant_period"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accountant_settings_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ai_runs: {
         Row: {
           audio_seconds: number | null;
@@ -3998,6 +4094,18 @@ export type Database = {
         };
         Returns: string;
       };
+      accountant_exports_due: {
+        Args: { p_limit?: number; p_today?: string };
+        Returns: {
+          artisan_id: string;
+          email: string;
+          include_expenses: boolean;
+          include_invoices: boolean;
+          period: Database["public"]["Enums"]["accountant_period"];
+          period_end: string;
+          period_start: string;
+        }[];
+      };
       add_artisan_absence: {
         Args: { p_ends_on: string; p_label?: string; p_starts_on: string };
         Returns: string;
@@ -4488,6 +4596,16 @@ export type Database = {
           p_detail?: string;
           p_reason?: Database["public"]["Enums"]["refusal_reason"];
           p_request_id: string;
+        };
+        Returns: undefined;
+      };
+      artisan_save_accountant_settings: {
+        Args: {
+          p_email: string;
+          p_enabled: boolean;
+          p_include_expenses: boolean;
+          p_include_invoices: boolean;
+          p_period: Database["public"]["Enums"]["accountant_period"];
         };
         Returns: undefined;
       };
@@ -5122,6 +5240,9 @@ export type Database = {
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
     };
     Enums: {
+      accountant_export_kind: "automatique" | "manuel";
+      accountant_export_status: "envoye" | "echec";
+      accountant_period: "mensuel" | "trimestriel";
       app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
       appointment_status: "planifie" | "annule";
       artisan_invitation_status: "envoyee" | "inscrit";
@@ -5404,6 +5525,9 @@ export const Constants = {
   },
   public: {
     Enums: {
+      accountant_export_kind: ["automatique", "manuel"],
+      accountant_export_status: ["envoye", "echec"],
+      accountant_period: ["mensuel", "trimestriel"],
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
       appointment_status: ["planifie", "annule"],
       artisan_invitation_status: ["envoyee", "inscrit"],

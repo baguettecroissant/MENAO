@@ -64,3 +64,4 @@ export * from "./space-examples";
 export * from "./artisan-activity";
 export * from "./expense-reading";
 export * from "./expenses";
+export * from "./accountant";
