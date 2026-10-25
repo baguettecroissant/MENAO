@@ -9,10 +9,16 @@ import { expect, test } from "@playwright/test";
 const app = (path: string) => fileURLToPath(new URL(`../src/${path}`, import.meta.url));
 
 test("chaque page de l'espace pro passe par le filtre de session", () => {
-  const routes = readdirSync(app("app/pro/(espace)"), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => `/pro/${entry.name}`);
+  // Groupes de routes « (argent) », « (vitrine) » (ADR 0188) : sans effet sur les adresses.
+  const pages = (dir: string): string[] =>
+    readdirSync(app(dir), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .flatMap((entry) =>
+        entry.name.startsWith("(") ? pages(`${dir}/${entry.name}`) : [entry.name],
+      );
+  const routes = pages("app/pro/(espace)").map((name) => `/pro/${name}`);
   expect(routes).toContain("/pro/mon-profil");
+  expect(routes).toContain("/pro/depenses");
 
   const proxy = readFileSync(app("proxy.ts"), "utf8");
   const [protectedList = "", matcher = ""] = proxy.split("export const config");

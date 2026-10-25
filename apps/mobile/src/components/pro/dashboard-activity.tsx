@@ -56,7 +56,11 @@ export function ActivityShortcuts({
     { icon: CalendarX2, label: t.shortcuts.block, href: "/pro-agenda" },
     { icon: Share2, label: t.shortcuts.share, href: "/pro-ma-fiche" },
     { icon: UserPlus, label: t.shortcuts.invite, href: "/compte" },
-    { icon: ReceiptText, label: fr.proInvoices.open, href: "/pro-factures" },
+    {
+      icon: ReceiptText,
+      label: fr.proInvoices.open,
+      href: { pathname: "/pro/argent", params: { vue: "factures" } },
+    },
     ...(example
       ? []
       : [
@@ -298,7 +302,7 @@ export function QuotesCard({ activity }: { activity: DashboardActivity }) {
       </View>
       <Tappable
         role="link"
-        onPress={() => router.push({ pathname: "/pro/chantiers", params: { vue: "devis" } })}
+        onPress={() => router.push({ pathname: "/pro/argent", params: { vue: "devis" } })}
         style={styles.linkButton}
       >
         <Text style={styles.link}>{t.quotes.all}</Text>

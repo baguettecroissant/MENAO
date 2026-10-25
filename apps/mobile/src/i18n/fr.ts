@@ -620,7 +620,7 @@ export const fr = {
     googleSaved: "Choix enregistré.",
   },
   // Barres d'onglets des maquettes (ADR 0084) : client « Accueil · Chantiers · (Recherche) ·
-  // Documents · Messages », artisan « Accueil · Chantiers · (+) · Devis · Messages ».
+  // Documents · Messages », artisan « Accueil · Demandes · (+) · Chantiers · Argent » (ADR 0188).
   tabs: {
     home: "Accueil",
     requests: "Demandes",
@@ -631,6 +631,10 @@ export const fr = {
     messages: "Messages",
     search: "Nouvelle recherche",
     quickActions: "Actions rapides",
+    // Onglet « Argent » de l'artisan (ADR 0188) : devis, factures et dépenses.
+    money: "Argent",
+    invoices: "Factures",
+    expenses: "Dépenses",
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
   home: {

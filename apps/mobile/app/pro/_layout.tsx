@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from "expo-router";
-import { ClipboardList, Inbox, LayoutGrid, MessageCircle } from "lucide-react-native";
+import { ClipboardList, Inbox, LayoutGrid, Wallet } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { CenterTabButton } from "@/components/center-tab-button";
 import { QuickActions } from "@/components/pro/quick-actions";
@@ -12,15 +12,16 @@ import { useUnread } from "@/lib/unread";
 import { theme } from "@/ui/theme";
 
 /**
- * Espace artisan (F-16, ADR 0084 puis 0130) : accueil « À faire maintenant », demandes (72 h pour
- * répondre, avec leur pastille), (+) actions rapides, chantiers (et leurs devis), messages.
+ * Espace artisan (F-16, ADR 0084, 0130 puis 0188) : accueil « À faire maintenant », demandes (72 h
+ * pour répondre, avec leur pastille), (+) actions rapides, chantiers, argent (devis, factures,
+ * dépenses). Les messages s'ouvrent depuis l'en-tête.
  * L'agenda s'ouvre depuis l'accueil et le (+), « Mon profil » depuis la photo de l'en-tête. Aucun
  * lien vers l'abonnement ni vers le site (CLAUDE.md règle 10). Charte qualité en vigueur signée
  * d'abord (ADR 0109), comme sur le site.
  */
 export default function ProLayout() {
   const { space } = useSession();
-  const { messages, requests } = useUnread();
+  const { requests } = useUnread();
   const tabBarOptions = useTabBarOptions();
   const [actions, setActions] = useState(false);
   const [charter, setCharter] = useState<"a_verifier" | "a_signer" | "ok">("a_verifier");
@@ -77,19 +78,17 @@ export default function ProLayout() {
             tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
           }}
         />
-        {/* Ancien onglet « Devis » : renvoie vers les devis de l'onglet Chantiers (ADR 0130). */}
-        <Tabs.Screen name="devis" options={{ href: null }} />
         <Tabs.Screen
-          name="messages"
+          name="argent"
           options={{
-            title: fr.tabs.messages,
-            tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
-            tabBarBadge: messages > 0 ? messages : undefined,
-            tabBarBadgeStyle: { backgroundColor: theme.colors.primary, fontSize: 11 },
-            tabBarAccessibilityLabel:
-              messages > 0 ? `${fr.tabs.messages}, ${fr.messages.unread(messages)}` : undefined,
+            title: fr.tabs.money,
+            tabBarIcon: ({ color, size }) => <Wallet color={color} size={size} />,
           }}
         />
+        {/* Ancien onglet « Devis » : renvoie vers l'onglet Argent (ADR 0188). */}
+        <Tabs.Screen name="devis" options={{ href: null }} />
+        {/* Messages : icône de l'en-tête, avec leur pastille (ADR 0188). */}
+        <Tabs.Screen name="messages" options={{ href: null }} />
       </Tabs>
       <QuickActions open={actions} onClose={() => setActions(false)} />
     </>

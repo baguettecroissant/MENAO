@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
-import { Alert, StatusBadge, TextLink } from "@/components/ui";
+import { Alert, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatDay, formatTime } from "@/lib/format";
 import { ExampleBadge } from "./examples";
@@ -66,9 +66,6 @@ export function QuoteList({
         <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.list.title}</h1>
           <p className="text-sm text-muted-foreground">{t.list.subtitle}</p>
-          <TextLink href={`${base}/factures` as Route} className="self-start text-sm">
-            {fr.pro.invoices.link}
-          </TextLink>
         </div>
         {justSentTo !== null && <Alert tone="success">{t.list.sentNotice(justSentTo)}</Alert>}
         <nav

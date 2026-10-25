@@ -6,22 +6,24 @@ import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
 
-export type WorkView = "chantiers" | "devis";
+export const MONEY_VIEWS = ["devis", "factures", "depenses"] as const;
+export type MoneyView = (typeof MONEY_VIEWS)[number];
 
 /**
- * Puces « Chantiers » et « Devis » en tête de l'onglet Chantiers (ADR 0130) : les devis, liés à
- * un chantier, y sont regroupés depuis que les demandes ont leur propre onglet.
+ * Puces « Devis », « Factures » et « Dépenses » en tête de l'onglet Argent (ADR 0188), comme les
+ * onglets de la rubrique « Argent » du site.
  */
-export function WorkSwitcher({
+export function MoneySwitcher({
   value,
   onChange,
 }: {
-  value: WorkView;
-  onChange: (value: WorkView) => void;
+  value: MoneyView;
+  onChange: (value: MoneyView) => void;
 }) {
-  const options: { value: WorkView; label: string }[] = [
-    { value: "chantiers", label: fr.tabs.chantiers },
+  const options: { value: MoneyView; label: string }[] = [
     { value: "devis", label: fr.tabs.quotes },
+    { value: "factures", label: fr.tabs.invoices },
+    { value: "depenses", label: fr.tabs.expenses },
   ];
   return (
     <View role="tablist" style={styles.row}>
@@ -49,7 +51,7 @@ export function WorkSwitcher({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: spacing(2) },
+  row: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   chip: {
     minHeight: 40,
     paddingHorizontal: spacing(4.5),

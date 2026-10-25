@@ -2151,6 +2151,8 @@ export const fr = {
       activity: "Activité",
       profile: "Profil",
       account: "Mon compte",
+      // Rubrique « Mon profil » de l'espace pro, sous les autres (ADR 0188).
+      proAccount: "Compte",
       tools: "Pilotage",
       // Back-office par pôle (ADR 0133).
       verification: "Vérification",
@@ -2721,6 +2723,12 @@ export const fr = {
       file: "Mon dossier",
       signOut: "Me déconnecter",
       account: "Mon compte",
+      // Menu regroupé (ADR 0188) : accueil, argent (devis, factures, dépenses), vitrine.
+      home: "Accueil",
+      money: "Argent",
+      storefront: "Ma vitrine",
+      moneyTabs: { devis: "Devis", factures: "Factures", depenses: "Dépenses" },
+      storefrontTabs: { profil: "Ma fiche", avis: "Avis", grade: "Mon grade" },
     },
     /** Exemples de l'espace (ADR 0184) : données fictives, en lecture seule. */
     examples: {

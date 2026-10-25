@@ -23,7 +23,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/demandes")).toBe("/pro/demandes");
     expect(appRouteForSitePath(`/pro/demandes/${ID}`)).toBe(`/opportunite/${ID}`);
     expect(appRouteForSitePath("/pro/chantiers")).toBe("/pro/chantiers");
-    expect(appRouteForSitePath("/pro/devis")).toBe("/pro/chantiers?vue=devis");
+    expect(appRouteForSitePath("/pro/devis")).toBe("/pro/argent?vue=devis");
     expect(appRouteForSitePath("/pro/profil")).toBe("/pro-ma-fiche");
     expect(appRouteForSitePath("/pro/agenda")).toBe("/pro-agenda");
     expect(appRouteForSitePath(`/pro/chantiers/${ID}`)).toBe(`/pro-chantier/${ID}`);
@@ -35,7 +35,8 @@ describe("liens des notifications vers les écrans de l'application", () => {
       "/projet/22222222-2222-4222-8222-222222222222/artisans",
     );
     expect(appRouteForSitePath("/pro/agenda/disponibilites")).toBe("/pro-disponibilites");
-    expect(appRouteForSitePath("/pro/factures")).toBe("/pro-factures");
+    expect(appRouteForSitePath("/pro/factures")).toBe("/pro/argent?vue=factures");
+    expect(appRouteForSitePath("/pro/depenses")).toBe("/pro/argent?vue=depenses");
     expect(appRouteForSitePath("/pro/onboarding")).toBe("/pro");
     expect(appRouteForSitePath("/pro/bienvenue")).toBe("/pro-bienvenue");
     expect(appRouteForSitePath("/pro/onboarding/documents")).toBe("/pro-documents");

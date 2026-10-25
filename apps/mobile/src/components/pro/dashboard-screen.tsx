@@ -310,7 +310,7 @@ export function DashboardScreen() {
                 label={t.revenue}
                 value={formatCents(data.revenue.cents)}
                 detail={<Trend revenue={data.revenue} />}
-                href="/pro-factures"
+                href={{ pathname: "/pro/argent", params: { vue: "factures" } }}
               />
             </View>
             <ActivityShortcuts
@@ -318,7 +318,7 @@ export function DashboardScreen() {
               quoteHref={
                 data.quoteChantierId
                   ? `/pro-chantier/${data.quoteChantierId}/devis`
-                  : { pathname: "/pro/chantiers", params: { vue: "devis" } }
+                  : { pathname: "/pro/argent", params: { vue: "devis" } }
               }
             />
             <TodoList items={data.todo} />
