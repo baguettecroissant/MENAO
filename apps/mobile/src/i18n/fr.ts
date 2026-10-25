@@ -2422,17 +2422,25 @@ export const fr = {
       unavailable: "Aucune récompense à réclamer pour le moment.",
     },
   },
+  /** Briques des listes de l'espace artisan (ADR 0189), comme sur le site. */
+  proLists: {
+    more: "Plus d'actions",
+    add: "Ajouter",
+    search: "Rechercher",
+    close: "Fermer",
+  },
   /** Devis de l'artisan : mêmes textes que l'espace pro du site. */
   proQuotes: {
     title: "Devis",
-    subtitle: "Suivez vos devis MENAO.",
     open: "Mes devis",
     toSend: "Devis à envoyer",
     sent: "Devis envoyés",
+    filtersLabel: "Filtrer les devis",
+    filterToSend: "À envoyer",
+    filterSent: "Envoyés",
     emptyToSend: "Vous n'avez aucun devis à envoyer.",
     emptySent: "Vous n'avez encore envoyé aucun devis.",
     visit: (day: string, time: string) => `Visite le ${day} à ${time}`,
-    updated: (date: string) => `Modifié le ${date}`,
     sentOn: (day: string, time: string) => `Envoyé le ${day} à ${time}`,
     version: (n: number) => `Version ${n}`,
     draft: "Brouillon",
@@ -2443,21 +2451,19 @@ export const fr = {
       signe: "Signé",
       refuse: "Refusé",
       revision_demandee: "Modification demandée",
-      remplace: "Remplacé par une nouvelle version",
+      remplace: "Remplacé",
     },
+    openQuote: (title: string) => `Ouvrir le devis ${title}`,
     error: "Impossible d'afficher vos devis pour le moment. Réessayez dans quelques instants.",
   },
   /** Factures de l'artisan (F-35) : mêmes textes que l'espace pro du site. */
   proInvoices: {
     title: "Factures",
-    subtitle: "Factures émises en votre nom à chaque paiement reçu, numérotées sans interruption.",
     open: "Mes factures",
     empty: "Aucune facture pour le moment : elles sont émises à chaque paiement reçu.",
     export: "Exporter pour le comptable (CSV)",
     exportFailed: "L'export n'a pas pu être préparé. Réessayez dans un instant.",
     kinds: { acompte: "Acompte", solde: "Solde" },
-    line: (kind: string, date: string, client: string | null) =>
-      [kind, date, client].filter(Boolean).join(" · "),
     view: (numero: string) => `Partager la facture ${numero} (PDF)`,
     error: "Impossible d'afficher vos factures pour le moment. Réessayez dans quelques instants.",
     csv: {
@@ -2527,20 +2533,15 @@ export const fr = {
   // Dépenses de l'artisan (F-62, ADR 0186), comme sur le site.
   proExpenses: {
     title: "Dépenses",
-    subtitle:
-      "Vos achats et leurs factures, rattachés à vos chantiers. MENAO ne paie rien : vous suivez ce qu'il reste à payer.",
-    add: "Ajouter une dépense",
     export: "Exporter (CSV)",
     exportFailed: "L'export n'a pas pu être préparé. Réessayez dans un instant.",
     empty:
       "Aucune dépense pour le moment. Photographiez une facture ou un ticket : MENAO lit les montants pour vous.",
     noResults: "Aucune dépense ne correspond.",
     error: "Impossible d'afficher vos dépenses pour le moment. Réessayez dans quelques instants.",
+    filtersLabel: "Filtrer les dépenses",
     filters: { toutes: "Toutes", a_payer: "À payer", en_retard: "En retard", paye: "Payées" },
     searchPlaceholder: "Titre, fournisseur ou numéro",
-    toPay: (amount: string) => `À payer : ${amount}`,
-    overdue: (amount: string) => `dont ${amount} en retard`,
-    nothingToPay: "Tout est payé.",
     statuses: { a_payer: "À payer", en_retard: "En retard", paye: "Payée" },
     kinds: { facture: "Facture", ticket: "Ticket" },
     categories: {
@@ -2552,7 +2553,6 @@ export const fr = {
       autre: "Autre",
     },
     toClassify: "À classer",
-    ht: (amount: string) => `${amount} HT`,
     open: (title: string) => `Ouvrir la dépense ${title}`,
     // Bouton prévu pour la réception par la plateforme agréée (décision D13), pas encore active.
     einvoice: {
