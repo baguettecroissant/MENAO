@@ -9,7 +9,7 @@ import { loadConversations, type ConversationItem } from "@/lib/messages";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, ScreenSkeleton, Title } from "@/ui";
+import { Notice, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -56,12 +56,9 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
         }
       >
         {standalone ? (
-          <View style={styles.head}>
-            <Title>{t.title}</Title>
-            <Body muted>{artisan ? t.subtitlePro : t.subtitle}</Body>
-          </View>
+          <Title>{t.title}</Title>
         ) : (
-          <TabHeader title={t.title} subtitle={artisan ? t.subtitlePro : t.subtitle} />
+          <TabHeader title={t.title} subtitle={artisan ? undefined : t.subtitle} />
         )}
         {rows === null ? (
           <Notice tone="error">{t.error}</Notice>
@@ -84,7 +81,6 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
-  head: { gap: spacing(2) },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   list: {
     overflow: "hidden",

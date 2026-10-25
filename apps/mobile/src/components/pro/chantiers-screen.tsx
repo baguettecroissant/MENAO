@@ -44,9 +44,7 @@ export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
           />
         }
       >
-        <TabHeader title={t.title} subtitle={t.subtitle}>
-          {switcher}
-        </TabHeader>
+        <TabHeader title={t.title}>{switcher}</TabHeader>
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
         {rows?.length === 0 && examples ? (
           <>
