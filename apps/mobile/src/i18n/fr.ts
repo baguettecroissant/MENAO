@@ -1697,7 +1697,6 @@ export const fr = {
   messages: {
     title: "Messages",
     subtitle: "Vos échanges avec vos artisans, chantier par chantier.",
-    subtitlePro: "Vos échanges avec vos clients, chantier par chantier.",
     empty:
       "Aucun message pour le moment. Écrivez à votre artisan depuis la page de votre chantier (bouton « Message »).",
     emptyPro:
@@ -1851,7 +1850,6 @@ export const fr = {
     greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
     // Accueil « À faire maintenant » (ADR 0130).
     todoTitle: "À faire maintenant",
-    todoCount: (n: number) => (n === 1 ? "1 chose à faire" : `${n} choses à faire`),
     allDone: "Tout est à jour",
     allDoneHint: "Aucune action en attente. Les nouvelles demandes apparaîtront ici.",
     todo: {
@@ -1935,7 +1933,6 @@ export const fr = {
   proRequests: {
     // Titre court : il tient sur une ligne à côté des bulles de l'en-tête.
     title: "Demandes",
-    subtitle: "Les particuliers qui vous ont choisi : répondez sous 72 heures.",
     // Onglet « Demandes » (ADR 0130).
     openTitle: (n: number) => `À traiter (${n})`,
     doneTitle: "Déjà traitées",
@@ -2999,7 +2996,6 @@ export const fr = {
   },
   proChantiers: {
     title: "Chantiers",
-    subtitle: "Vos rendez-vous et vos chantiers en cours.",
     all: "Tous mes chantiers",
     empty:
       "Aucun chantier pour le moment. Fixez un rendez-vous depuis une demande pour créer votre premier chantier.",

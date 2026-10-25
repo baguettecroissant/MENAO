@@ -13,7 +13,7 @@ import { formatDay } from "@/lib/format";
 import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
+import { Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 import { ExampleBadge, SpaceExamplesNotice } from "@/components/examples";
@@ -79,14 +79,7 @@ export function RequestsScreen({ tab = false }: { tab?: boolean }) {
           />
         }
       >
-        {tab ? (
-          <TabHeader title={t.title} subtitle={t.subtitle} />
-        ) : (
-          <View style={styles.head}>
-            <Title>{t.title}</Title>
-            <Body muted>{t.subtitle}</Body>
-          </View>
-        )}
+        {tab ? <TabHeader title={t.title} /> : <Title>{t.title}</Title>}
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
         {rows?.length === 0 && examples ? (
           <>
@@ -158,7 +151,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   topBar: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
-  head: { gap: spacing(2), marginBottom: spacing(1) },
   group: {
     fontFamily: font.medium,
     fontSize: 13,

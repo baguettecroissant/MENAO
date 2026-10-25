@@ -254,12 +254,7 @@ export function DashboardScreen() {
           />
         }
       >
-        <TabHeader
-          title={t.greeting(data?.firstName ?? null)}
-          subtitle={
-            data ? (data.todo.length > 0 ? t.todoCount(data.todo.length) : t.allDone) : undefined
-          }
-        />
+        <TabHeader title={t.greeting(data?.firstName ?? null)} />
 
         {data === null ? (
           <Notice tone="error">{t.error}</Notice>
