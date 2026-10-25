@@ -172,6 +172,11 @@ export function parseEuros(input: string): number | null {
   return Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
 }
 
+/** 2250 centimes → « 22,50 », texte d'un champ de montant (lu par parseEuros). */
+export function formatEurosInput(cents: number): string {
+  return (cents / 100).toFixed(2).replace(".", ",");
+}
+
 /** « 2,5 » → 2500 millièmes ; null si invalide, nulle ou à plus de 3 décimales. */
 export function parseQuantity(input: string): number | null {
   const value = input.replace(SPACES, "").replace(",", ".");

@@ -19,6 +19,7 @@ const EXAMPLE_PAGES = new Set([
   "messages",
   "agenda",
   "factures",
+  "depenses",
   "mon-profil",
   "profil",
   "avis",

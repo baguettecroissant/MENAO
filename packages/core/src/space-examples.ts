@@ -9,6 +9,7 @@
 
 import { HOURS_PRESETS, agendaItemsFrom, type AgendaItem, type HoursRange } from "./agenda";
 import type { ActivityChantier, ActivityPayment, ActivityQuote } from "./artisan-activity";
+import type { ExpenseRow } from "./expenses";
 import { REQUIRED_DOCUMENT_TYPES, type ArtisanOnboardingSnapshot } from "./onboarding";
 import type { ProfileHubFacts } from "./profile-hub";
 import { parisToday } from "./project";
@@ -32,6 +33,11 @@ export const EXAMPLE_IDS = {
   devisChauffeEau: `${PREFIX}303`,
   factureAcompte: `${PREFIX}401`,
   creneauFournisseur: `${PREFIX}601`,
+  depenseCarrelage: `${PREFIX}551`,
+  depenseSanitaire: `${PREFIX}552`,
+  depenseCarburant: `${PREFIX}553`,
+  depenseLocation: `${PREFIX}554`,
+  depenseOutillage: `${PREFIX}555`,
   ficheArtisan: `${PREFIX}901`,
 } as const;
 
@@ -822,6 +828,119 @@ export function exampleInvoices(now: Date = new Date()) {
       chantier: { title: "Création d'une salle d'eau" },
     },
   }));
+}
+
+/**
+ * Dépenses (F-62) : deux achats du chantier de la salle d'eau (un à payer, un payé comptant), une
+ * location en retard et deux tickets à classer. Fournisseurs fictifs.
+ */
+export function exampleExpenses(now: Date = new Date()): ExpenseRow[] {
+  const salleDEau = {
+    chantier_id: EXAMPLE_IDS.chantierSalleDEau,
+    chantier_title: "Création d'une salle d'eau",
+  };
+  const aClasser = { chantier_id: null, chantier_title: null };
+  const expense = (
+    id: string,
+    title: string,
+    supplier: string,
+    reference: string | null,
+    kind: ExpenseRow["kind"],
+    category: ExpenseRow["category"],
+    issuedDays: number,
+    dueDays: number | null,
+    paidDays: number | null,
+    ht: number,
+    tva: number,
+    chantier: { chantier_id: string | null; chantier_title: string | null },
+  ): ExpenseRow => ({
+    id,
+    title,
+    supplier_name: supplier,
+    reference,
+    kind,
+    category,
+    issued_on: dateOnly(now, issuedDays),
+    due_on: dueDays === null ? null : dateOnly(now, dueDays),
+    paid_on: paidDays === null ? null : dateOnly(now, paidDays),
+    total_ht_cents: ht,
+    total_tva_cents: tva,
+    total_ttc_cents: ht + tva,
+    ...chantier,
+    document_mime: null,
+  });
+  return [
+    expense(
+      EXAMPLE_IDS.depenseCarburant,
+      "Carburant du véhicule",
+      "Station Exemple",
+      null,
+      "ticket",
+      "carburant",
+      -2,
+      null,
+      -2,
+      7_000,
+      1_400,
+      aClasser,
+    ),
+    expense(
+      EXAMPLE_IDS.depenseCarrelage,
+      "Carrelage et faïence de la salle d'eau",
+      "Négoce Exemple",
+      "FA-EX-0412",
+      "facture",
+      "materiaux",
+      -6,
+      24,
+      null,
+      112_800,
+      22_560,
+      salleDEau,
+    ),
+    expense(
+      EXAMPLE_IDS.depenseSanitaire,
+      "Receveur de douche et mitigeur thermostatique",
+      "Sanitaire Exemple",
+      "FA-EX-2981",
+      "facture",
+      "materiaux",
+      -9,
+      null,
+      -9,
+      48_650,
+      9_730,
+      salleDEau,
+    ),
+    expense(
+      EXAMPLE_IDS.depenseOutillage,
+      "Petit outillage",
+      "Quincaillerie Exemple",
+      null,
+      "ticket",
+      "outillage",
+      -14,
+      null,
+      -14,
+      3_990,
+      798,
+      aClasser,
+    ),
+    expense(
+      EXAMPLE_IDS.depenseLocation,
+      "Location d'une carotteuse",
+      "Location Exemple",
+      "LOC-EX-77",
+      "facture",
+      "location",
+      -40,
+      -10,
+      null,
+      14_500,
+      2_900,
+      aClasser,
+    ),
+  ];
 }
 
 /** Avis reçus (forme de la table reviews) : un sans réponse, deux avec réponse. */

@@ -115,4 +115,8 @@ export const messages = {
   googleCountInvalid: "Nombre d'avis Google invalide.",
   invitationCompanyRequired: "Indiquez le nom de l'artisan ou de son entreprise.",
   invitationContactRequired: "Indiquez le téléphone ou l'e-mail de l'artisan.",
+  // Dépenses de l'artisan (F-62).
+  amountInvalid: "Montant invalide (exemple : 435,00).",
+  amountTooHigh: "Montant trop élevé.",
+  dueBeforeIssue: "L'échéance ne peut pas précéder la date de la pièce.",
 } as const;

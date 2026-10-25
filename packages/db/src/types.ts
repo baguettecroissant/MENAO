@@ -1708,6 +1708,136 @@ export type Database = {
         };
         Relationships: [];
       };
+      expense_lines: {
+        Row: {
+          designation: string;
+          expense_id: string;
+          id: string;
+          position: number;
+          quantity_milli: number | null;
+          reference: string | null;
+          total_ht_cents: number | null;
+          unit: Database["public"]["Enums"]["quote_unit"] | null;
+          unit_price_ht_cents: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          designation: string;
+          expense_id: string;
+          id?: string;
+          position: number;
+          quantity_milli?: number | null;
+          reference?: string | null;
+          total_ht_cents?: number | null;
+          unit?: Database["public"]["Enums"]["quote_unit"] | null;
+          unit_price_ht_cents?: number | null;
+        };
+        Update: {
+          designation?: string;
+          expense_id?: string;
+          id?: string;
+          position?: number;
+          quantity_milli?: number | null;
+          reference?: string | null;
+          total_ht_cents?: number | null;
+          unit?: Database["public"]["Enums"]["quote_unit"] | null;
+          unit_price_ht_cents?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_lines_expense_id_fkey";
+            columns: ["expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expenses: {
+        Row: {
+          artisan_id: string;
+          category: Database["public"]["Enums"]["expense_category"] | null;
+          chantier_id: string | null;
+          created_at: string;
+          document_mime: string | null;
+          document_path: string | null;
+          due_on: string | null;
+          id: string;
+          issued_on: string;
+          kind: Database["public"]["Enums"]["expense_kind"];
+          notes: string | null;
+          origin: Database["public"]["Enums"]["expense_origin"];
+          paid_on: string | null;
+          reference: string | null;
+          supplier_name: string | null;
+          title: string;
+          total_ht_cents: number;
+          total_ttc_cents: number | null;
+          total_tva_cents: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          category?: Database["public"]["Enums"]["expense_category"] | null;
+          chantier_id?: string | null;
+          created_at?: string;
+          document_mime?: string | null;
+          document_path?: string | null;
+          due_on?: string | null;
+          id?: string;
+          issued_on: string;
+          kind?: Database["public"]["Enums"]["expense_kind"];
+          notes?: string | null;
+          origin?: Database["public"]["Enums"]["expense_origin"];
+          paid_on?: string | null;
+          reference?: string | null;
+          supplier_name?: string | null;
+          title: string;
+          total_ht_cents: number;
+          total_ttc_cents?: never;
+          total_tva_cents: number;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          category?: Database["public"]["Enums"]["expense_category"] | null;
+          chantier_id?: string | null;
+          created_at?: string;
+          document_mime?: string | null;
+          document_path?: string | null;
+          due_on?: string | null;
+          id?: string;
+          issued_on?: string;
+          kind?: Database["public"]["Enums"]["expense_kind"];
+          notes?: string | null;
+          origin?: Database["public"]["Enums"]["expense_origin"];
+          paid_on?: string | null;
+          reference?: string | null;
+          supplier_name?: string | null;
+          title?: string;
+          total_ht_cents?: number;
+          total_ttc_cents?: never;
+          total_tva_cents?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expenses_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       gamification_levels: {
         Row: {
           level: number;
@@ -4259,6 +4389,7 @@ export type Database = {
       };
       artisan_declare_finished: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_dictation: { Args: { p_chantier_id: string }; Returns: undefined };
+      artisan_delete_expense: { Args: { p_expense_id: string }; Returns: string };
       artisan_fix_appointment: {
         Args: { p_date: string; p_request_id: string; p_time: string };
         Returns: string;
@@ -4368,6 +4499,10 @@ export type Database = {
         Args: { p_chantier_id: string; p_transcript: string };
         Returns: undefined;
       };
+      artisan_save_expense: {
+        Args: { p_expense: Json; p_expense_id: string; p_lines: Json };
+        Returns: string;
+      };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
       artisan_send_quote: {
         Args: {
@@ -4378,6 +4513,10 @@ export type Database = {
           p_start_date: string;
         };
         Returns: string;
+      };
+      artisan_set_expense_paid: {
+        Args: { p_expense_id: string; p_paid_on: string };
+        Returns: boolean;
       };
       artisan_signal_reserves_lifted: {
         Args: { p_chantier_id: string; p_message: string };
@@ -5039,6 +5178,10 @@ export type Database = {
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
       document_status: "en_attente" | "valide" | "refuse" | "remplace";
       document_type: "kbis" | "decennale" | "rc_pro" | "identite" | "urssaf";
+      expense_category:
+        "materiaux" | "outillage" | "location" | "sous_traitance" | "carburant" | "autre";
+      expense_kind: "facture" | "ticket";
+      expense_origin: "manuelle" | "facture_electronique";
       free_month_reason: "parrainage" | "demarrage";
       free_month_status: "a_appliquer" | "applique";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
@@ -5328,6 +5471,16 @@ export const Constants = {
       dispute_category: ["retard", "malfacon", "comportement", "paiement", "autre"],
       document_status: ["en_attente", "valide", "refuse", "remplace"],
       document_type: ["kbis", "decennale", "rc_pro", "identite", "urssaf"],
+      expense_category: [
+        "materiaux",
+        "outillage",
+        "location",
+        "sous_traitance",
+        "carburant",
+        "autre",
+      ],
+      expense_kind: ["facture", "ticket"],
+      expense_origin: ["manuelle", "facture_electronique"],
       free_month_reason: ["parrainage", "demarrage"],
       free_month_status: ["a_appliquer", "applique"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
