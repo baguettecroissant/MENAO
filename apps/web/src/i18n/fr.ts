@@ -2868,6 +2868,7 @@ export const fr = {
         notifications: "Notifications",
         help: "Aide et contact",
         businessCards: "Cartes de visite clients",
+        examples: "Voir des données d'exemple",
       },
       values: {
         upToDate: "À jour",

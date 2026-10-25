@@ -3259,6 +3259,7 @@ export const fr = {
       identity: "Identité et connexion",
       notifications: "Notifications",
       help: "Aide et contact",
+      examples: "Afficher des données d'exemple",
     },
     values: {
       upToDate: "À jour",
