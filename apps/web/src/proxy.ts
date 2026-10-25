@@ -23,6 +23,7 @@ const PROTECTED_PREFIXES = [
   "/pro/chantiers",
   "/pro/devis",
   "/pro/factures",
+  "/pro/depenses",
   "/pro/messages",
   "/pro/decouvrir",
   "/agenda",

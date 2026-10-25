@@ -264,6 +264,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     ["messages", "Parfait, merci pour les photos !"],
     ["agenda", "Mes disponibilités"],
     ["factures", "FAC-EXEMPLE-0001"],
+    ["depenses", "Carrelage et faïence de la salle d'eau"],
     ["mon-profil", "Votre entreprise"],
     ["profil", "Ma fiche publique"],
     ["avis", "Claire B."],

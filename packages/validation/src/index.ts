@@ -11,6 +11,7 @@ export * from "./company-search";
 export * from "./chantier";
 export * from "./conversation";
 export * from "./dispute";
+export * from "./expense";
 export * from "./documents";
 export * from "./gamification";
 export * from "./geo";

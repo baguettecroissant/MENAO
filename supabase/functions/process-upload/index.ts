@@ -1,4 +1,4 @@
-// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
@@ -29,6 +29,7 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   chantier_photo: ["jpeg", "png"],
   message_attachment: ["pdf", "jpeg", "png"],
   ticket_photo: ["jpeg", "png"],
+  expense_document: ["pdf", "jpeg", "png"],
 };
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
@@ -40,7 +41,8 @@ type Purpose =
   | "project_photo"
   | "chantier_photo"
   | "message_attachment"
-  | "ticket_photo";
+  | "ticket_photo"
+  | "expense_document";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -95,6 +97,7 @@ Deno.serve(
       projectId?: string;
       chantierId?: string;
       ticketId?: string;
+      expenseId?: string;
     } | null;
     const purpose = body?.purpose as Purpose | undefined;
     const path = body?.path ?? "";
@@ -153,6 +156,9 @@ Deno.serve(
       if (!artisan) return respond("forbidden", 403);
 
       if (purpose === "logo") return await saveLogo(admin, artisan.id, file);
+      if (purpose === "expense_document") {
+        return await saveExpenseDocument(admin, artisan.id, body?.expenseId, file);
+      }
       return purpose === "portfolio"
         ? await savePortfolioPhoto(admin, artisan.id, file)
         : await saveDocument(admin, artisan, file, body?.document);
@@ -322,6 +328,38 @@ async function saveTicketPhoto(
     return status === "locked" || status === "limit"
       ? respond(status, 409)
       : respond("forbidden", 403);
+  }
+  return respond("ok");
+}
+
+// Pièce d'une dépense (F-62, ADR 0186) : facture ou ticket de l'artisan, dans un espace privé. Une
+// nouvelle pièce remplace la précédente.
+async function saveExpenseDocument(
+  admin: SupabaseClient,
+  artisanId: string,
+  expenseId: string | undefined,
+  file: CleanFile,
+) {
+  if (!expenseId || !new RegExp(`^${UUID}$`).test(expenseId)) return respond("invalid", 400);
+  const { data: expense } = await admin
+    .from("expenses")
+    .select("id, document_path")
+    .eq("id", expenseId)
+    .eq("artisan_id", artisanId)
+    .maybeSingle();
+  if (!expense) return respond("forbidden", 403);
+  const path = `${artisanId}/${expenseId}/${file.name}`;
+  await store(admin, "expense-documents", path, file);
+  const { error } = await admin
+    .from("expenses")
+    .update({ document_path: path, document_mime: MIME_TYPES[file.type] })
+    .eq("id", expenseId);
+  if (error) {
+    await admin.storage.from("expense-documents").remove([path]);
+    throw error;
+  }
+  if (expense.document_path) {
+    await admin.storage.from("expense-documents").remove([expense.document_path]);
   }
   return respond("ok");
 }

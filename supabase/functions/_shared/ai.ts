@@ -114,7 +114,8 @@ export type AiRun = {
     | "quote-from-voice"
     | "read-document"
     | "suggest-need"
-    | "describe-photo";
+    | "describe-photo"
+    | "read-expense";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;

@@ -492,6 +492,10 @@ verify_jwt = false
 [functions.read-document]
 verify_jwt = true
 
+# Lecture des factures et tickets fournisseurs (F-62, ADR 0186) : artisan connecté.
+[functions.read-expense]
+verify_jwt = true
+
 # PDF du devis (F-20) : utilisateur connecté ; l'accès est décidé par quote_document.
 [functions.generate-pdf]
 verify_jwt = true

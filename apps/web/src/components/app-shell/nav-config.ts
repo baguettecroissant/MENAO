@@ -86,6 +86,8 @@ const PRO_NAV: readonly NavSection[] = [
       },
       { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
       { href: "/pro/factures", label: fr.pro.invoices.title, icon: ReceiptText },
+      // Achats et leurs pièces, rattachés aux chantiers (F-62, ADR 0186).
+      { href: "/pro/depenses", label: fr.pro.expenses.title, icon: Wallet },
     ],
   },
   {

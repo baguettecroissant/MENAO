@@ -2,6 +2,7 @@
 // Rendus PDF : « @menao/documents/pdf », « …/invoice-pdf » et « …/reception-pdf ».
 export * from "./account-export.ts";
 export * from "./format.ts";
+export * from "./expenses-csv.ts";
 export * from "./invoice-data.ts";
 export * from "./invoice-model.ts";
 export * from "./invoices-csv.ts";
