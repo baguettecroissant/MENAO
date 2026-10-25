@@ -1,9 +1,8 @@
-import type { Route } from "next";
-import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
-import { Alert, StatusBadge } from "@/components/ui";
+import { ListFilters, ListHeader, ListPanel, ListRow, type ListTone } from "@/components/list-kit";
+import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { formatDay, formatTime } from "@/lib/format";
+import { formatTime } from "@/lib/format";
 import { ExampleBadge } from "./examples";
 
 const t = fr.pro.quote;
@@ -16,12 +15,12 @@ const dayShort = new Intl.DateTimeFormat("fr-FR", {
 
 const statusTone = {
   brouillon: "neutral",
-  envoye: "success",
+  envoye: "primary",
   signe: "success",
   refuse: "danger",
   revision_demandee: "warning",
   remplace: "neutral",
-} as const;
+} as const satisfies Record<string, ListTone>;
 
 /** Devis de la liste (ligne de artisan_quotes). */
 export type QuoteListItem = {
@@ -40,8 +39,9 @@ export type QuoteListItem = {
 };
 
 /**
- * Devis de l'artisan (maquettes « Devis – Aucun » et « Devis envoyés ») : onglets « À envoyer » et
- * « Envoyés ». Exemples (ADR 0184) : pastille « Exemple », liens vers les pages d'exemples (`base`).
+ * Devis de l'artisan, en lignes (ADR 0189) : « À envoyer » (brouillons, vers la préparation du
+ * devis) et « Envoyés » (vers le chantier). Exemples (ADR 0184) : pastille « Exemple », liens vers
+ * les pages d'exemples (`base`).
  */
 export function QuoteList({
   quotes,
@@ -57,113 +57,76 @@ export function QuoteList({
   base?: string;
   example?: boolean;
 }) {
-  const rows = quotes.filter((q) =>
-    tab === "a-envoyer" ? q.status === "brouillon" : q.status !== "brouillon",
-  );
+  const drafts = quotes.filter((q) => q.status === "brouillon");
+  const sent = quotes.filter((q) => q.status !== "brouillon");
+  const rows = tab === "a-envoyer" ? drafts : sent;
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.list.title}</h1>
-          <p className="text-sm text-muted-foreground">{t.list.subtitle}</p>
-        </div>
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+        <ListHeader title={t.list.title} />
         {justSentTo !== null && <Alert tone="success">{t.list.sentNotice(justSentTo)}</Alert>}
-        <nav
-          aria-label={t.list.title}
-          className="flex gap-1 rounded-pill bg-surface p-1 shadow-card"
-        >
-          {(
-            [
-              ["a-envoyer", t.list.toSend],
-              ["envoyes", t.list.sent],
-            ] as const
-          ).map(([value, label]) => (
-            <Link
-              key={value}
-              href={`${base}/devis${value === "envoyes" ? "?onglet=envoyes" : ""}` as Route}
-              aria-current={tab === value ? "page" : undefined}
-              className="flex min-h-10 flex-1 items-center justify-center rounded-pill text-sm text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary-soft aria-[current=page]:font-medium aria-[current=page]:text-primary-strong"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <section
-          aria-label={tab === "a-envoyer" ? t.list.toSend : t.list.sent}
-          className="flex flex-col gap-3"
-        >
-          <h2 className="text-[0.9375rem] font-medium text-foreground/80">
-            {tab === "a-envoyer" ? t.list.toSend : t.list.sent} ({rows.length})
-          </h2>
-          {rows.length === 0 ? (
-            <EmptyState illustration="devis">
-              {tab === "a-envoyer" ? t.list.emptyToSend : t.list.emptySent}
-            </EmptyState>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {rows.map((q) => (
-                <li key={q.quote_id}>
-                  <Link
-                    href={
-                      (q.status === "brouillon"
-                        ? `${base}/chantiers/${q.chantier_id}/devis`
-                        : `${base}/chantiers/${q.chantier_id}`) as Route
-                    }
-                    className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:p-5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="font-medium">{q.title}</p>
-                      {q.line_count > 0 && (
-                        <p className="shrink-0 font-medium text-primary">
-                          {euros.format(q.total_ttc_cents / 100)}
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {[
-                        q.numero && `N° ${q.numero}`,
-                        q.client_name,
-                        q.appointment_at
-                          ? t.list.visit(
-                              dayShort.format(new Date(q.appointment_at)),
-                              formatTime(q.appointment_at),
-                            )
-                          : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {example && <ExampleBadge />}
-                      {q.status === "brouillon" ? (
-                        <>
-                          <StatusBadge tone="neutral">
-                            {t.statusDraft} · {t.lineCount(q.line_count)}
-                          </StatusBadge>
-                          {q.version > 1 && (
-                            <StatusBadge tone="primary">{t.list.version(q.version)}</StatusBadge>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {t.list.updated(formatDay(q.updated_at))}
-                          </span>
-                        </>
-                      ) : (
-                        <StatusBadge tone={statusTone[q.status]}>
-                          {q.status === "envoye" && q.sent_at
-                            ? t.list.sentOn(
-                                dayShort.format(new Date(q.sent_at)),
-                                formatTime(q.sent_at),
-                              )
-                            : t.list.statuses[q.status]}
-                        </StatusBadge>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <ListFilters
+          label={t.list.filtersLabel}
+          items={[
+            {
+              href: `${base}/devis`,
+              label: t.list.filterToSend,
+              detail: String(drafts.length),
+              active: tab === "a-envoyer",
+            },
+            {
+              href: `${base}/devis?onglet=envoyes`,
+              label: t.list.filterSent,
+              detail: String(sent.length),
+              active: tab === "envoyes",
+            },
+          ]}
+        />
+        {rows.length === 0 ? (
+          <EmptyState illustration="devis">
+            {tab === "a-envoyer" ? t.list.emptyToSend : t.list.emptySent}
+          </EmptyState>
+        ) : (
+          <ListPanel label={tab === "a-envoyer" ? t.list.toSend : t.list.sent}>
+            {rows.map((q) => (
+              <ListRow
+                key={q.quote_id}
+                href={
+                  q.status === "brouillon"
+                    ? `${base}/chantiers/${q.chantier_id}/devis`
+                    : `${base}/chantiers/${q.chantier_id}`
+                }
+                label={t.list.open(q.title)}
+                title={q.title}
+                badge={example ? <ExampleBadge /> : undefined}
+                detail={[
+                  q.client_name,
+                  q.numero && `N° ${q.numero}`,
+                  q.status === "brouillon" && q.appointment_at
+                    ? t.list.visit(
+                        dayShort.format(new Date(q.appointment_at)),
+                        formatTime(q.appointment_at),
+                      )
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+                value={q.line_count > 0 ? euros.format(q.total_ttc_cents / 100) : undefined}
+                status={{
+                  text:
+                    q.status === "brouillon"
+                      ? `${t.statusDraft} · ${t.lineCount(q.line_count)}${q.version > 1 ? ` · ${t.list.version(q.version)}` : ""}`
+                      : q.status === "envoye" && q.sent_at
+                        ? t.list.sentOn(dayShort.format(new Date(q.sent_at)), formatTime(q.sent_at))
+                        : q.status === "remplace"
+                          ? t.list.replaced
+                          : t.list.statuses[q.status],
+                  tone: statusTone[q.status],
+                }}
+              />
+            ))}
+          </ListPanel>
+        )}
       </div>
     </main>
   );

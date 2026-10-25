@@ -1,12 +1,17 @@
-import { FileDown, FileText } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import { TextLink } from "@/components/ui";
+import { ListHeader, ListPanel, ListRow } from "@/components/list-kit";
+import { MoreMenu } from "@/components/more-menu";
 import { fr } from "@/i18n/fr";
-import { formatDay } from "@/lib/format";
 import { ExampleBadge, ExampleLock } from "./examples";
 
 const t = fr.pro.invoices;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const shortDate = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Europe/Paris",
+});
 
 type Snapshot = {
   client?: { first_name?: string | null; last_name?: string | null };
@@ -24,8 +29,9 @@ export type InvoiceListItem = {
 };
 
 /**
- * Factures de l'artisan (F-35) : émises en son nom à chaque paiement, export pour le comptable.
- * Exemples (ADR 0184) : pastille « Exemple », PDF et export inactifs.
+ * Factures de l'artisan (F-35), en lignes (ADR 0189) : émises en son nom à chaque paiement, une
+ * ligne par facture (PDF dans un nouvel onglet). Exporter et envoi au comptable dans « … ».
+ * Exemples (ADR 0184) : pastille « Exemple », PDF et menu inactifs.
  */
 export function InvoiceList({
   invoices,
@@ -36,82 +42,50 @@ export function InvoiceList({
 }) {
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
-            <p className="text-sm text-muted-foreground">{t.subtitle}</p>
-            {!example && (
-              <TextLink href="/pro/comptable" className="self-start text-sm">
-                {fr.pro.accountant.link}
-              </TextLink>
-            )}
-          </div>
-          {invoices.length > 0 && (
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+        <ListHeader
+          title={t.title}
+          actions={
             <ExampleLock locked={example}>
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- fichier CSV téléchargé (route), pas une page */}
-              <a
-                href="/pro/factures/export"
-                className="inline-flex min-h-touch shrink-0 items-center gap-2 self-start rounded-button border border-primary bg-surface px-5 text-[0.9375rem] font-medium text-primary-strong hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-              >
-                <FileDown aria-hidden="true" className="size-4" />
-                {t.export}
-              </a>
+              <MoreMenu
+                label={fr.pro.lists.more}
+                items={[
+                  ...(invoices.length > 0
+                    ? [{ kind: "download" as const, href: "/pro/factures/export", label: t.export }]
+                    : []),
+                  { kind: "link" as const, href: "/pro/comptable", label: fr.pro.accountant.link },
+                ]}
+              />
             </ExampleLock>
-          )}
-        </div>
+          }
+        />
         {invoices.length === 0 ? (
           <EmptyState illustration="documents">{t.empty}</EmptyState>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ListPanel label={t.title}>
             {invoices.map((invoice) => {
               const doc = invoice.document as Snapshot;
               const client = [doc.client?.first_name, doc.client?.last_name]
                 .filter(Boolean)
                 .join(" ");
-              const body = (
-                <>
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <span className="inline-flex flex-wrap items-center gap-2 font-medium">
-                      <FileText aria-hidden="true" className="size-4 text-primary" />
-                      {invoice.numero}
-                      {example && <ExampleBadge />}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {t.line(t.kinds[invoice.kind], formatDay(invoice.issued_on), client || null)}
-                    </span>
-                    {doc.chantier?.title && (
-                      <span className="truncate text-xs text-muted-foreground">
-                        {doc.chantier.title}
-                      </span>
-                    )}
-                  </span>
-                  <span className="shrink-0 font-medium text-primary">
-                    {euros.format(invoice.total_ttc_cents / 100)}
-                  </span>
-                </>
-              );
-              const card =
-                "flex items-start justify-between gap-3 rounded-card border border-border bg-surface p-4 shadow-card sm:p-5";
               return (
-                <li key={invoice.id}>
-                  {example ? (
-                    <div className={card}>{body}</div>
-                  ) : (
-                    <a
-                      href={`/factures/${invoice.id}/pdf`}
-                      target="_blank"
-                      rel="noopener"
-                      aria-label={t.view(invoice.numero)}
-                      className={`${card} transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none`}
-                    >
-                      {body}
-                    </a>
+                <ListRow
+                  key={invoice.id}
+                  href={example ? undefined : `/factures/${invoice.id}/pdf`}
+                  external
+                  label={t.view(invoice.numero)}
+                  title={client || invoice.numero}
+                  badge={example ? <ExampleBadge /> : undefined}
+                  detail={[invoice.numero, shortDate.format(new Date(invoice.issued_on))].join(
+                    " · ",
                   )}
-                </li>
+                  context={doc.chantier?.title ?? ""}
+                  value={euros.format(invoice.total_ttc_cents / 100)}
+                  status={{ text: t.kinds[invoice.kind], tone: "neutral" }}
+                />
               );
             })}
-          </ul>
+          </ListPanel>
         )}
       </div>
     </main>

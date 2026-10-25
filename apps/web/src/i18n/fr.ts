@@ -3671,6 +3671,12 @@ export const fr = {
         },
         sentNotice: (client: string | null) =>
           client ? `Votre devis a bien été envoyé à ${client}.` : "Votre devis a bien été envoyé.",
+        // Liste en lignes (ADR 0189).
+        filtersLabel: "Filtrer les devis",
+        filterToSend: "À envoyer",
+        filterSent: "Envoyés",
+        replaced: "Remplacé",
+        open: (title: string) => `Ouvrir le devis ${title}`,
       },
     },
     invoices: {
@@ -3698,6 +3704,12 @@ export const fr = {
           "Total TTC",
         ],
       },
+    },
+    // Listes de l'espace pro (ADR 0189) : menu « … » des actions secondaires.
+    lists: {
+      more: "Plus d'actions",
+      add: "Ajouter",
+      search: "Rechercher",
     },
     // Envoi au comptable (F-63, ADR 0187) : factures et dépenses de la période, par un lien sécurisé.
     accountant: {
