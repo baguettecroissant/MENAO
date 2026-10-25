@@ -39,7 +39,7 @@ export async function sharePdf(target: PdfTarget, fallbackName: string): Promise
       fileName(response.headers.get("content-disposition"), fallbackName),
     );
     file.create({ overwrite: true });
-    file.write(bytes);
+    await file.write(bytes);
     await Sharing.shareAsync(file.uri, { mimeType: "application/pdf", UTI: "com.adobe.pdf" });
     return true;
   } catch {

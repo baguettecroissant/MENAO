@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ScrollViewInstance,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
@@ -38,7 +39,7 @@ export default function ConversationScreen() {
   const artisan = useSession().space === "artisan";
   const load = useCallback(() => loadConversation(id, artisan), [id, artisan]);
   const [conversation, reload] = useFocusData(load);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const messages = conversation?.messages ?? [];
   const lastId = messages.at(-1)?.id ?? null;
   const lastReadMine = [...messages].reverse().find((m) => m.mine && m.read)?.id ?? null;

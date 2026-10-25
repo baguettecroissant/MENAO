@@ -204,7 +204,7 @@ export async function shareAccountData(): Promise<boolean> {
     );
     const file = new File(Paths.cache, `menao-mes-donnees-${parisToday()}.json`);
     file.create({ overwrite: true });
-    file.write(JSON.stringify(payload, null, 2));
+    await file.write(JSON.stringify(payload, null, 2));
     await Sharing.shareAsync(file.uri, { mimeType: "application/json", UTI: "public.json" });
     return true;
   } catch {

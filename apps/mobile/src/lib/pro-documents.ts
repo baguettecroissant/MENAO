@@ -102,7 +102,7 @@ export async function shareInvoicesCsv(): Promise<boolean> {
     );
     const file = new File(Paths.cache, t.csv.filename);
     file.create({ overwrite: true });
-    file.write(csv);
+    await file.write(csv);
     await Sharing.shareAsync(file.uri, {
       mimeType: "text/csv",
       UTI: "public.comma-separated-values-text",

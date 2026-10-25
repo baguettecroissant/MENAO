@@ -27,7 +27,7 @@ import {
   Wrench,
 } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputInstance } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
 import { DictationButton } from "@/components/dictation-button";
 import { PhotoThumbnails } from "@/components/photo-thumbnails";
@@ -86,7 +86,7 @@ export default function Recherche() {
   const [failure, setFailure] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const ready = description.trim().length > 0;
-  const input = useRef<TextInput>(null);
+  const input = useRef<TextInputInstance>(null);
   // Suggestions pendant la saisie (ADR 0177), comme sur le site : la suite proposée, à toucher pour
   // l'ajouter, et des idées en pastilles pour préciser la demande.
   const suggestion = useNeedSuggestions(description, phase === "idle");
@@ -116,7 +116,7 @@ export default function Recherche() {
     setTimeout(() => {
       // Natif : setSelection ; version web : le champ est un élément HTML.
       const field = input.current as
-        (TextInput & { setSelectionRange?: (start: number, end: number) => void }) | null;
+        (TextInputInstance & { setSelectionRange?: (start: number, end: number) => void }) | null;
       if (typeof field?.setSelection === "function") field.setSelection(start, end);
       else field?.setSelectionRange?.(start, end);
     }, 50);
