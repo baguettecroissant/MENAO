@@ -1,4 +1,4 @@
-# ADR 0191 — Carte de visite et parrainage par QR code dans l'application
+# ADR 0191 — Carte de visite et parrainage par QR code, dans l'application et sur le site
 
 - Statut : accepté. Modifie l'ADR 0137 sur un point : le QR code de parrainage.
 - Date : 25 octobre 2026
@@ -20,7 +20,12 @@
 - `toqr` (0.1.1), déjà utilisé par le site pour ses QR codes : petite bibliothèque sans dépendance. Tracé SVG (`lib/qr.ts`, même calcul que le site) rendu avec `react-native-svg`, déjà présent.
 - `components/qr-code.tsx` (QR sur fond blanc) et `components/pro/share-card.tsx` (la carte, ses onglets et le plein écran). L'ancienne carte de parrainage de `profile-hub.tsx` est retirée.
 - `loadProfileHub` lit le `slug` de l'artisan et fournit `pageUrl` (`artisanPageUrl`) quand le dossier est validé. Pas de fiche dans les exemples (ADR 0184).
-- Site inchangé : « Mon profil » y montre déjà le lien et le QR code de parrainage, et les cartes de visite à imprimer.
+- **Site, même style** (demande du même jour) : `components/pro/share-card.tsx` remplace `referral-card.tsx`.
+  - Mêmes onglets et même « ticket » ; le ticket est à gauche et les actions à droite sur ordinateur, empilés sur téléphone.
+  - Plein écran dans un `<dialog>` natif : Échap ou un clic à côté le ferment.
+  - Le site garde ce qu'il avait : lien à copier, WhatsApp, mois offerts de l'année et suivi daté des filleuls. Il ajoute le lien vers les cartes de visite à imprimer.
+  - Le tableau de bord ouvre directement l'onglet Parrainage (`/pro/mon-profil?onglet=parrainage#parrainage`).
+  - Test de bout en bout du parrainage adapté.
 
 ## Conséquences
 - Le QR code de parrainage ouvre `menao.fr/pro/inscription?p=<code>`. Tant que le site est derrière la page d'attente, le confrère tombe sur cette page.

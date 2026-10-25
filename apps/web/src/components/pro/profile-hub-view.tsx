@@ -30,7 +30,7 @@ import { ButtonLink, StatusBadge, VerifiedBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { exampleHref } from "./examples";
 import type { HubLineStatus } from "@/lib/artisan/profile-hub";
-import { ReferralCard } from "./referral-card";
+import { ShareCard } from "./share-card";
 import { WelcomeGiftCard } from "./welcome-gift-card";
 
 const t = fr.pro.hub;
@@ -123,6 +123,8 @@ export type ProfileHubData = {
   strength: { percent: number; next: ProfileTip | null };
   statuses: Record<ProfileHubRow, HubLineStatus>;
   subscriptionActive: boolean;
+  /** Carte de visite (ADR 0191) : fiche publique d'un artisan validé. */
+  card?: { url: string; qr: { size: number; path: string } } | null;
   /** Parrainage (F-60, ADR 0161) : artisans validés seulement. */
   referral: {
     link: string;
@@ -144,10 +146,13 @@ export type ProfileHubData = {
 export function ProfileHubView({
   hub,
   example = false,
+  shareTab,
 }: {
   hub: ProfileHubData;
   /** Exemple (ADR 0184) : liens vers les pages d'exemples, les autres inactifs. */
   example?: boolean;
+  /** Onglet de la carte de visite et du parrainage ouvert à l'arrivée. */
+  shareTab?: "card" | "referral";
 }) {
   const statusLabel = hub.status === "valide" ? null : t.status[hub.status];
   const { percent, next } = hub.strength;
@@ -211,7 +216,25 @@ export function ProfileHubView({
         </div>
 
         {hub.welcomeGift && <WelcomeGiftCard gift={hub.welcomeGift} />}
-        {hub.referral && <ReferralCard {...hub.referral} />}
+        {(hub.card || hub.referral) && (
+          <ShareCard
+            initialTab={shareTab}
+            card={
+              hub.card
+                ? {
+                    ...hub.card,
+                    name: hub.name,
+                    company: hub.company,
+                    city: hub.city,
+                    avatarUrl: hub.avatarUrl,
+                    verified: hub.verified,
+                    score: hub.score,
+                  }
+                : null
+            }
+            referral={hub.referral}
+          />
+        )}
 
         <div className="grid gap-6 lg:grid-cols-2">
           {SECTIONS.map((section) => (

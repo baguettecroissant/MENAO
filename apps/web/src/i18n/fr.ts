@@ -2769,7 +2769,6 @@ export const fr = {
         linkLabel: "Votre lien de parrainage",
         copy: "Copier le lien",
         copied: "Lien copié",
-        codeHint: (code: string) => `Ou donnez-lui votre code ${code}, à saisir à son inscription.`,
         joined: (n: number) =>
           n === 0
             ? "Aucun confrère inscrit pour l'instant"
@@ -2780,7 +2779,6 @@ export const fr = {
           `Plafond de ${cap} mois offerts atteint cette année : merci pour vos recommandations\u00a0!`,
         // Réseau du parrain (ADR 0161) : QR code, WhatsApp, score de fidélité, suivi des filleuls.
         qrAlt: "QR code de parrainage",
-        qrHint: "À faire scanner par un confrère, sur un chantier ou chez un fournisseur.",
         whatsApp: "Envoyer par WhatsApp",
         shareMessage: (link: string, code: string) =>
           `Je t'invite sur MENAO, l'outil des artisans du bâtiment : des demandes de particuliers, et devis, signature et paiement au même endroit. Inscris-toi avec mon lien : ${link} (ou mon code ${code}).`,
@@ -2793,6 +2791,29 @@ export const fr = {
           valide: "Dossier validé, en période d'essai",
           abonne: "Abonné : parrainage validé",
           annule: "Non retenu",
+        },
+      },
+      /** Carte de visite et parrainage (ADR 0191), comme dans l'application. */
+      share: {
+        label: "Montrer ma fiche ou parrainer un confrère",
+        tabs: { card: "Ma carte de visite", referral: "Parrainage" },
+        expand: "Agrandir",
+        close: "Fermer",
+        card: {
+          qrAlt: "QR code de votre fiche MENAO",
+          hint: "Votre client scanne ce code avec l'appareil photo de son téléphone : il voit votre fiche et vos avis vérifiés.",
+          shareMessage: (name: string, url: string) =>
+            `${name} sur MENAO : ma fiche et mes avis vérifiés. ${url}`,
+          print: "Imprimer mes cartes de visite",
+        },
+        referral: {
+          hint: "Votre confrère scanne ce code pour créer son compte MENAO, votre code déjà rempli. Ou il saisit le code à l'inscription.",
+          orCode: "ou le code",
+        },
+        fullscreen: {
+          referral: "Rejoignez MENAO",
+          cardHint: "Scannez pour voir ma fiche et mes avis vérifiés.",
+          referralHint: "Scannez pour créer votre compte avec mon code.",
         },
       },
       /** Cadeau de bienvenue du filleul (F-60, ADR 0154). */

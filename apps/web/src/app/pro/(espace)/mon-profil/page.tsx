@@ -1,4 +1,5 @@
 import {
+  artisanPageUrl,
   partnerLinks,
   profileHubStatuses,
   profileStrength,
@@ -28,7 +29,12 @@ export const metadata: Metadata = { title: `${fr.pro.hub.title} — MENAO` };
  * « Mon profil » de l'artisan sur le site (ADR 0131), comme dans l'application (ADR 0129) :
  * mêmes règles (`profileStrength`, `profileHubStatuses`), mêmes rubriques, plus l'abonnement.
  */
-export default async function MyProfilePage() {
+export default async function MyProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ onglet?: string }>;
+}) {
+  const { onglet } = await searchParams;
   const space = await requireProSpace();
   const [
     ctx,
@@ -52,6 +58,11 @@ export default async function MyProfilePage() {
   ]);
   const referral = parseReferral(referralData);
   const referralLink = referral ? partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros : null;
+  // Carte de visite (ADR 0191) : même règle que les cartes à imprimer, artisan validé.
+  const pageUrl =
+    ctx.artisan.status === "valide" && ctx.artisan.slug
+      ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, ctx.artisan.slug)
+      : null;
   const profile = parseArtisanProfile(page);
   if (!profile) {
     return (
@@ -81,6 +92,7 @@ export default async function MyProfilePage() {
 
   return (
     <ProfileHubView
+      shareTab={onglet === "parrainage" ? "referral" : "card"}
       hub={{
         name,
         company: profile.company_name,
@@ -107,6 +119,7 @@ export default async function MyProfilePage() {
           (ctx.subscription?.status as SubscriptionStatus | undefined) ?? null,
           ctx.subscription?.past_due_since ?? null,
         ),
+        card: pageUrl ? { url: pageUrl, qr: qrSvg(pageUrl) } : null,
         referral:
           referral && referralLink
             ? {
