@@ -1,8 +1,8 @@
 import { allowedVatRates, quoteTotals, type VoiceLine, isExampleId } from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { router, useLocalSearchParams, usePreventRemove } from "expo-router";
 import { Mic, Plus, Save } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand, whenMeta } from "@/components/header-band";
@@ -61,7 +61,6 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const navigation = useNavigation();
 
   const plain = lines.map(withoutKey);
   const dirty = JSON.stringify(plain) !== snapshot;
@@ -73,22 +72,21 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   // Exemple (ADR 0184) : le devis se lit, rien ne se modifie ni ne s'envoie.
   const example = isExampleId(chantierId);
 
-  // Modifications non enregistrées : confirmation avant de quitter l'éditeur.
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    return navigation.addListener("beforeRemove", (event) => {
-      if (!dirty) return;
-      event.preventDefault();
-      Alert.alert(t.leaveTitle, t.leaveText, [
-        { text: t.stay, style: "cancel" },
-        {
-          text: t.leave,
-          style: "destructive",
-          onPress: () => navigation.dispatch(event.data.action),
+  // Modifications non enregistrées : confirmation avant de quitter l'éditeur (pas sur le web).
+  const [leaving, setLeaving] = useState(false);
+  usePreventRemove(Platform.OS !== "web" && dirty && !leaving, ({ repeat }) => {
+    Alert.alert(t.leaveTitle, t.leaveText, [
+      { text: t.stay, style: "cancel" },
+      {
+        text: t.leave,
+        style: "destructive",
+        onPress: () => {
+          setLeaving(true);
+          repeat();
         },
-      ]);
-    });
-  }, [navigation, dirty]);
+      },
+    ]);
+  });
 
   async function persist(): Promise<boolean> {
     const toSave = plain;

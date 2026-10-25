@@ -11,7 +11,7 @@ export async function shareIcs(event: CalendarEvent, uid: string): Promise<boole
     if (!(await Sharing.isAvailableAsync())) return false;
     const file = new File(Paths.cache, `menao-${uid}.ics`);
     file.create({ overwrite: true });
-    file.write(buildIcs({ ...event, uid: `${uid}@menao`, stamp: new Date() }));
+    await file.write(buildIcs({ ...event, uid: `${uid}@menao`, stamp: new Date() }));
     await Sharing.shareAsync(file.uri, { mimeType: "text/calendar", UTI: "com.apple.ical.ics" });
     return true;
   } catch {
