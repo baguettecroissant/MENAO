@@ -28,6 +28,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/agenda")).toBe("/pro-agenda");
     expect(appRouteForSitePath(`/pro/chantiers/${ID}`)).toBe(`/pro-chantier/${ID}`);
     expect(appRouteForSitePath(`/pro/chantiers/${ID}/devis`)).toBe(`/pro-chantier/${ID}/devis`);
+    expect(appRouteForSitePath("/pro/messages")).toBe("/pro-messages");
     expect(appRouteForSitePath(`/pro/messages/${ID}`)).toBe(`/conversation/${ID}`);
     expect(appRouteForSitePath("/pro/avis")).toBe("/pro-avis");
     expect(appRouteForSitePath("/pro/grade")).toBe("/pro-grade");
