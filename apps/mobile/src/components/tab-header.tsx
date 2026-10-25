@@ -51,7 +51,7 @@ export function TabHeader({
                 ? `${fr.tabs.messages}, ${fr.messages.unread(messages)}`
                 : fr.tabs.messages
             }
-            onPress={() => router.push("/pro/messages")}
+            onPress={() => router.push("/pro-messages")}
             style={({ pressed }) => [styles.bell, pressed && styles.pressed]}
           >
             <MessageCircle size={22} color={colors.primary} />

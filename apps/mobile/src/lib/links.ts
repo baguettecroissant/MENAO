@@ -49,7 +49,8 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/profil$/, () => "/pro-ma-fiche"],
   [/^\/pro\/agenda$/, () => "/pro-agenda"],
   [/^\/pro\/agenda\/disponibilites$/, () => "/pro-disponibilites"],
-  [/^\/pro\/messages$/, () => "/pro/messages"],
+  // Messages de l'artisan : écran ouvert depuis la bulle de l'en-tête (ADR 0188).
+  [/^\/pro\/messages$/, () => "/pro-messages"],
   [new RegExp(`^/pro/messages/${UUID}$`), (id) => `/conversation/${id}`],
 ];
 

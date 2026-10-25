@@ -3,12 +3,13 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationRow } from "./conversation-row";
 import { TabHeader } from "@/components/tab-header";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadConversations, type ConversationItem } from "@/lib/messages";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, ScreenSkeleton } from "@/ui";
+import { Body, Notice, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -17,9 +18,10 @@ const { colors, radius, spacing } = theme;
 
 /**
  * Messages (F-40), du client avec ses artisans ou de l'artisan avec ses clients : une conversation
- * par chantier, rechargées à chaque retour.
+ * par chantier, rechargées à chaque retour. `standalone` : écran ouvert par-dessus les onglets
+ * (bulle de l'en-tête de l'artisan, ADR 0188), avec la barre de retour.
  */
-export function MessagesScreen() {
+export function MessagesScreen({ standalone = false }: { standalone?: boolean } = {}) {
   const { refresh } = useUnread();
   const artisan = useSession().space === "artisan";
   const load = useCallback(async (): Promise<ConversationItem[] | null> => {
@@ -30,10 +32,15 @@ export function MessagesScreen() {
   const [rows, reload] = useFocusData(load);
   const [refreshing, setRefreshing] = useState(false);
 
-  if (rows === undefined) return <ScreenSkeleton />;
+  if (rows === undefined) return <ScreenSkeleton header={standalone ? <TopBar /> : undefined} />;
   const now = new Date();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+      {standalone ? (
+        <View style={styles.header}>
+          <TopBar />
+        </View>
+      ) : null}
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -48,7 +55,14 @@ export function MessagesScreen() {
           />
         }
       >
-        <TabHeader title={t.title} subtitle={artisan ? t.subtitlePro : t.subtitle} />
+        {standalone ? (
+          <View style={styles.head}>
+            <Title>{t.title}</Title>
+            <Body muted>{artisan ? t.subtitlePro : t.subtitle}</Body>
+          </View>
+        ) : (
+          <TabHeader title={t.title} subtitle={artisan ? t.subtitlePro : t.subtitle} />
+        )}
         {rows === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : rows.length === 0 ? (
@@ -69,6 +83,8 @@ export function MessagesScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
+  head: { gap: spacing(2) },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   list: {
     overflow: "hidden",

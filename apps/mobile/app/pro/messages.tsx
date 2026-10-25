@@ -1,6 +1,6 @@
-import { MessagesScreen } from "@/components/messages/messages-screen";
+import { Redirect } from "expo-router";
 
-/** Onglet « Messages » de l'artisan (F-40) : une conversation par chantier avec ses clients. */
-export default function ProMessages() {
-  return <MessagesScreen />;
+/** Ancien onglet « Messages » : les messages s'ouvrent depuis la bulle de l'en-tête (ADR 0188). */
+export default function ProMessagesTab() {
+  return <Redirect href="/pro-messages" />;
 }
