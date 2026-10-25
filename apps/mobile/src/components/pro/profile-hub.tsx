@@ -20,6 +20,7 @@ import {
   ReceiptText,
   Share2,
   ShieldCheck,
+  ShoppingCart,
   Star,
   UserRound,
   Wallet,
@@ -49,7 +50,7 @@ const t = fr.proHub;
 const { colors, font, radius, spacing } = theme;
 
 type Row = {
-  key: HubRow | "invoices" | "identity" | "notifications" | "help";
+  key: HubRow | "invoices" | "expenses" | "identity" | "notifications" | "help";
   icon: LucideIcon;
   href: Href;
 };
@@ -86,6 +87,7 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
     rows: [
       { key: "payments", icon: Wallet, href: "/pro-paiements" },
       { key: "invoices", icon: ReceiptText, href: "/pro-factures" },
+      { key: "expenses", icon: ShoppingCart, href: "/pro-depenses" },
     ],
   },
   {
@@ -99,7 +101,7 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
 ];
 
 /** Rubriques qui ont leurs exemples (ADR 0184). */
-const EXAMPLE_ROWS: readonly Row["key"][] = ["reviews", "grade", "invoices"];
+const EXAMPLE_ROWS: readonly Row["key"][] = ["reviews", "grade", "invoices", "expenses"];
 
 /** Où mène le conseil de la jauge. */
 const TIP_HREF: Record<ProfileTip, Href> = {
@@ -242,7 +244,9 @@ export function ProfileHubContent({
 
 function statusOf(key: Row["key"], hub: ProfileHub): HubStatus {
   if (key === "identity") return hub.email ? { text: hub.email, tone: "neutral" } : null;
-  if (key === "invoices" || key === "notifications" || key === "help") return null;
+  if (key === "invoices" || key === "expenses" || key === "notifications" || key === "help") {
+    return null;
+  }
   return hub.statuses[key];
 }
 

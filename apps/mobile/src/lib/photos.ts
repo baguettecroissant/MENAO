@@ -29,7 +29,8 @@ export type PickedPhoto = { uri: string; pdf?: { name: string } };
 /**
  * Où ranger la photo : projet (F-05), journal du chantier (F-22), conversation (F-40),
  * signalement (F-42), photo de profil, photo de réalisation (ADR 0124), logo des documents
- * (ADR 0125), ou document du dossier de l'artisan avec ses dates (F-14, ADR 0113).
+ * (ADR 0125), document du dossier de l'artisan avec ses dates (F-14, ADR 0113), ou pièce d'une
+ * dépense (F-62).
  */
 export type PhotoTarget =
   | { purpose: "avatar" }
@@ -39,7 +40,8 @@ export type PhotoTarget =
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
   | { purpose: "message_attachment"; chantierId: string }
-  | { purpose: "ticket_photo"; ticketId: string };
+  | { purpose: "ticket_photo"; ticketId: string }
+  | { purpose: "expense_document"; expenseId: string };
 
 /**
  * « Prendre une photo » ou « Choisir dans mes photos ». La version web ouvre directement le
