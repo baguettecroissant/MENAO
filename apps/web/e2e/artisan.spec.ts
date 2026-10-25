@@ -246,8 +246,13 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("link", { name: /Rénovation de salle de bains/ }).click();
   await expect(page.getByRole("heading", { name: "Rénovation de salle de bains" })).toBeVisible();
   await expect(page.getByText("Exemple : les boutons sont désactivés.")).toBeVisible();
-  // Boutons inertes : hors de portée du clic comme du clavier.
-  await expect(page.getByRole("button", { name: "Fixer un rendez-vous" })).toHaveCount(0);
+  // Boutons inertes (attribut `inert`) : hors de portée du clic comme du clavier.
+  const fixAppointment = page.getByRole("button", { name: "Fixer un rendez-vous" });
+  await expect(
+    page.locator("[inert]").getByRole("button", { name: "Fixer un rendez-vous" }),
+  ).toHaveCount(1);
+  await fixAppointment.evaluate((button: HTMLElement) => button.focus());
+  await expect(fixAppointment).not.toBeFocused();
   await page.goto("/pro/decouvrir/chantiers");
   await page.getByRole("link", { name: /Création d'une salle d'eau/ }).click();
   await expect(page.getByText("Évacuations posées et testées", { exact: false })).toBeVisible();
