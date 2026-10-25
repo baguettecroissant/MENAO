@@ -1,6 +1,13 @@
 import {
+  EXAMPLE_IDS,
+  activityCurrentMonth,
+  activityYear,
+  activityYears,
   artisanTodo,
   clientsAwaitingQuote,
+  dashboardActivity,
+  exampleActivityInput,
+  exampleChantier,
   exampleChantierRows,
   exampleInbox,
   examplePayments,
@@ -25,9 +32,15 @@ const EXAMPLE_RESPONSE = { minutes: 38, responses: 6 };
  * Tableau de bord d'exemple (ADR 0184) : mêmes calculs que pour un vrai artisan (« À faire
  * maintenant », rendez-vous, encaissé du mois), appliqués aux demandes et chantiers d'exemple.
  */
-export default async function ExampleDashboardPage() {
+export default async function ExampleDashboardPage({
+  searchParams,
+}: PageProps<"/pro/decouvrir/tableau-de-bord">) {
+  const { annee } = await searchParams;
   const { firstName } = await requireExampleViewer();
   const now = new Date();
+  const activityInput = exampleActivityInput(now);
+  const years = activityYears(activityInput.payments, now);
+  const year = activityYear(typeof annee === "string" ? annee : null, years);
   const rows = exampleChantierRows(now).map((c) => ({
     ...c,
     appointmentAt: c.appointment_at,
@@ -80,6 +93,20 @@ export default async function ExampleDashboardPage() {
       todo={todo}
       base={EXAMPLES_BASE}
       agendaHref={null}
+      activity={{
+        data: dashboardActivity(activityInput, year, now),
+        years,
+        yearHref: (y) => `${EXAMPLES_BASE}/tableau-de-bord?annee=${y}`,
+        currentMonth: activityCurrentMonth(year, now),
+        chantierHref: (id) =>
+          exampleChantier(id, now) ? `${EXAMPLES_BASE}/chantiers/${id}` : null,
+        shortcuts: {
+          quote: `${EXAMPLES_BASE}/chantiers/${EXAMPLE_IDS.chantierChauffeEau}/devis`,
+          block: `${EXAMPLES_BASE}/agenda`,
+          share: `${EXAMPLES_BASE}/profil`,
+          invite: `${EXAMPLES_BASE}/mon-profil`,
+        },
+      }}
     />
   );
 }

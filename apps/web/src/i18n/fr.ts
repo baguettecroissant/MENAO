@@ -2891,6 +2891,52 @@ export const fr = {
     },
     dashboard: {
       title: "Tableau de bord",
+      /** Activité de l'artisan (ADR 0185) : raccourcis, chiffre d'affaires, devis, chantiers. */
+      activity: {
+        shortcuts: {
+          title: "Raccourcis",
+          quote: "Préparer un devis",
+          block: "Bloquer un créneau",
+          share: "Partager ma fiche",
+          invite: "Inviter un artisan",
+        },
+        revenue: {
+          title: "Chiffre d'affaires",
+          years: "Année",
+          year: (year: number) => `Encaissé en ${year}`,
+          upcoming: "À venir",
+          upcomingHint: "Reste à payer sur vos devis signés",
+          toCollect: "À recevoir",
+          toCollectHint: "Soldes des chantiers réceptionnés",
+          chart: (year: number) => `Encaissé chaque mois en ${year}`,
+          month: "Mois",
+          amount: "Encaissé",
+          bar: (month: string, amount: string) => `${month} : ${amount}`,
+          empty: (year: number) => `Aucun paiement reçu en ${year}.`,
+          note: "Acomptes et soldes payés par vos clients, versés directement sur votre compte.",
+        },
+        quotes: {
+          title: "Devis en attente",
+          summary: (count: number, total: string) =>
+            count === 1 ? `1 devis · ${total}` : `${count} devis · ${total}`,
+          sentOn: (day: string) => `Envoyé le ${day}`,
+          empty: "Aucun devis en attente de réponse.",
+          signRate: "Taux de signature (6 mois)",
+          average: "Devis signé moyen",
+          all: "Voir tous mes devis",
+        },
+        inProgress: {
+          title: "Chantiers en cours",
+          paid: (paid: string, total: string) => `${paid} payés sur ${total}`,
+          empty: "Aucun chantier en cours.",
+          all: "Voir mes chantiers",
+        },
+        receivables: {
+          title: "Soldes à recevoir",
+          hint: "Chantiers réceptionnés dont le solde n'est pas encore payé.",
+          empty: "Aucun solde en attente.",
+        },
+      },
       /** Artisan sans photo de profil : invitation à en ajouter une (aucun chiffre avancé). */
       photo: {
         title: "Une photo rassure vos futurs clients",

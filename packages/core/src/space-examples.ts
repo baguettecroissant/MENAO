@@ -8,6 +8,7 @@
  */
 
 import { HOURS_PRESETS, agendaItemsFrom, type AgendaItem, type HoursRange } from "./agenda";
+import type { ActivityChantier, ActivityPayment, ActivityQuote } from "./artisan-activity";
 import { REQUIRED_DOCUMENT_TYPES, type ArtisanOnboardingSnapshot } from "./onboarding";
 import type { ProfileHubFacts } from "./profile-hub";
 import { parisToday } from "./project";
@@ -1036,5 +1037,151 @@ export function exampleHubFacts(now: Date = new Date()): ProfileHubFacts {
     paused: false,
     availableFrom: null,
     today,
+  };
+}
+
+/**
+ * Activité d'exemple du tableau de bord : les chantiers d'exemple, un historique fictif de neuf
+ * chantiers terminés (un par mois, acompte puis solde), un chantier réceptionné dont le solde
+ * reste à recevoir et deux devis refusés (taux de signature).
+ */
+export function exampleActivityInput(now: Date = new Date()): {
+  payments: ActivityPayment[];
+  quotes: ActivityQuote[];
+  chantiers: ActivityChantier[];
+} {
+  const [y, m] = parisToday(now).split("-").map(Number) as [number, number];
+  const day = (monthsAgo: number, d: number) => iso(Date.UTC(y, m - 1 - monthsAgo, d, 9));
+  const history: [monthsAgo: number, totalCents: number, title: string, client: string][] = [
+    [9, 320_000, "Rénovation de salle de bains", "Hélène Vidal"],
+    [8, 185_000, "Remplacement d'un ballon d'eau chaude", "Louis Perrin"],
+    [7, 640_000, "Plomberie d'une maison neuve", "Inès Garnier"],
+    [6, 245_000, "Douche à l'italienne", "Marc Lemoine"],
+    [5, 410_000, "Rénovation de cuisine", "Julie Fontaine"],
+    [4, 158_000, "Réparation d'une fuite encastrée", "Hugo Bernard"],
+    [3, 520_000, "Salle d'eau dans les combles", "Chloé Mercier"],
+    [2, 290_000, "Remplacement des colonnes d'eau", "Antoine Robin"],
+    [1, 365_000, "Rénovation d'un WC et d'un lave-mains", "Emma Faure"],
+  ];
+  const id = (n: number) => `${PREFIX}8${String(n).padStart(2, "0")}`;
+  const past = history.map(([monthsAgo, total, title, client], i) => {
+    const deposit = Math.round(total * 0.3);
+    return {
+      chantier: {
+        chantierId: id(i),
+        status: "cloture" as const,
+        title,
+        clientName: client,
+        startAt: null,
+      },
+      quote: {
+        quoteId: id(i + 20),
+        chantierId: id(i),
+        status: "signe",
+        totalTtcCents: total,
+        sentAt: day(monthsAgo, 1),
+        title,
+        clientName: client,
+      },
+      payments: [
+        {
+          chantierId: id(i),
+          quoteId: id(i + 20),
+          kind: "acompte" as const,
+          status: "paye",
+          amountCents: deposit,
+          paidAt: day(monthsAgo, 5),
+        },
+        {
+          chantierId: id(i),
+          quoteId: id(i + 20),
+          kind: "solde" as const,
+          status: "paye",
+          amountCents: total - deposit,
+          paidAt: day(monthsAgo, 22),
+        },
+      ],
+    };
+  });
+  // Chantier réceptionné : acompte payé, solde à recevoir.
+  const received = {
+    chantierId: id(40),
+    quoteId: id(41),
+    title: "Remplacement d'un mitigeur et des joints",
+    client: "Claire Besson",
+    total: 84_000,
+  };
+  const followUp = exampleFollowUp(now);
+  const refused = (n: number, daysAgo: number, total: number): ActivityQuote => ({
+    quoteId: id(50 + n),
+    chantierId: id(60 + n),
+    status: "refuse",
+    totalTtcCents: total,
+    sentAt: iso(now.getTime() - daysAgo * DAY),
+    title: "Devis refusé",
+    clientName: null,
+  });
+  const name = (c: ExampleChantierRow) =>
+    [c.client_first_name, c.client_last_name].filter(Boolean).join(" ") || null;
+  return {
+    payments: [
+      ...past.flatMap((p) => p.payments),
+      {
+        chantierId: received.chantierId,
+        quoteId: received.quoteId,
+        kind: "acompte",
+        status: "paye",
+        amountCents: Math.round(received.total * 0.3),
+        paidAt: iso(now.getTime() - 12 * DAY),
+      },
+      ...followUp.payments.map((p) => ({
+        chantierId: EXAMPLE_IDS.chantierSalleDEau,
+        quoteId: p.quote_id,
+        kind: p.kind,
+        status: p.status,
+        amountCents: p.amount_cents,
+        paidAt: p.paid_at,
+      })),
+    ],
+    quotes: [
+      ...past.map((p) => p.quote),
+      {
+        quoteId: received.quoteId,
+        chantierId: received.chantierId,
+        status: "signe",
+        totalTtcCents: received.total,
+        sentAt: iso(now.getTime() - 20 * DAY),
+        title: received.title,
+        clientName: received.client,
+      },
+      ...exampleQuoteRows(now).map((q) => ({
+        quoteId: q.quote_id,
+        chantierId: q.chantier_id,
+        status: q.status,
+        totalTtcCents: q.total_ttc_cents,
+        sentAt: q.sent_at,
+        title: q.title,
+        clientName: q.client_name,
+      })),
+      refused(1, 40, 210_000),
+      refused(2, 95, 130_000),
+    ],
+    chantiers: [
+      ...past.map((p) => p.chantier),
+      {
+        chantierId: received.chantierId,
+        status: "receptionne",
+        title: received.title,
+        clientName: received.client,
+        startAt: null,
+      },
+      ...exampleChantierRows(now).map((c) => ({
+        chantierId: c.chantier_id,
+        status: c.status,
+        title: c.title,
+        clientName: name(c),
+        startAt: c.start_at,
+      })),
+    ],
   };
 }
