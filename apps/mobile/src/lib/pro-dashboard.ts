@@ -1,4 +1,5 @@
 import {
+  activityInputFromRows,
   artisanTodo,
   artisanVisibility,
   clientsAwaitingQuote,
@@ -51,6 +52,10 @@ export type Dashboard = {
   todo: TodoItem[];
   /** Rendez-vous des jours suivants (ceux du jour sont dans « À faire »). */
   later: Dashboard["appointments"];
+  /** Paiements, devis et chantiers pour l'activité (ADR 0185), calculée par l'écran pour l'année choisie. */
+  activityInput: ReturnType<typeof activityInputFromRows>;
+  /** Premier chantier qui attend un devis (raccourci « Préparer un devis »). */
+  quoteChantierId: string | null;
 };
 
 /**
@@ -73,10 +78,11 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     reviewsToAnswer,
     subscription,
     welcomeGift,
+    { data: quotes },
   ] = await Promise.all([
     loadInbox(),
     supabase.rpc("artisan_chantiers"),
-    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+    supabase.from("payments").select("chantier_id, quote_id, kind, status, amount_cents, paid_at"),
     supabase.rpc("my_response_stats"),
     supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     supabase
@@ -91,11 +97,15 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     supabase.from("subscriptions").select("status, past_due_since").maybeSingle(),
     // Cadeau de bienvenue du filleul à choisir (ADR 0154).
     loadWelcomeGift(),
+    // Devis (ADR 0185) : en attente de réponse, taux de signature, montant des devis signés.
+    supabase.rpc("artisan_quotes"),
   ]);
   if (inbox === null) return null;
   const now = new Date();
   const revenue = monthToDateRevenue(
-    (payments ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
+    (payments ?? [])
+      .filter((p) => p.status === "paye")
+      .map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
     now,
   );
   const rows = (chantiers ?? []).map((c) => ({
@@ -191,5 +201,11 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       appointments.map((a) => ({ ...a, at: a.startsAt })),
       now,
     ).slice(0, 4),
+    activityInput: activityInputFromRows({
+      payments: payments ?? [],
+      quotes: quotes ?? [],
+      chantiers: chantiers ?? [],
+    }),
+    quoteChantierId: rows.find((c) => isAwaitingQuote(c.status))?.chantier_id ?? null,
   };
 }

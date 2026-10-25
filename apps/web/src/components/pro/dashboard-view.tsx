@@ -1,4 +1,4 @@
-import type { RevenueTrend, TodoItem } from "@menao/core";
+import type { DashboardActivity, RevenueTrend, TodoItem } from "@menao/core";
 import {
   ArrowRight,
   CalendarDays,
@@ -14,6 +14,15 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BadgeIcon } from "@/components/pro/grade/badge-icon";
+import {
+  DashboardShortcuts,
+  InProgressCard,
+  QuotesCard,
+  ReceivablesCard,
+  RevenueCard,
+  type ChantierHref,
+  type DashboardShortcutLinks,
+} from "@/components/pro/dashboard-activity";
 import { TodoList } from "@/components/pro/todo-list";
 import { Alert, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -56,6 +65,7 @@ export function DashboardView({
   base = "/pro",
   agendaHref = "/pro/agenda",
   banner = null,
+  activity = null,
 }: {
   firstName: string | null;
   /** Alertes du dossier (documents à renouveler, suspension), comme dans « Mon dossier ». */
@@ -90,6 +100,18 @@ export function DashboardView({
   agendaHref?: string | null;
   /** Carte affichée sous le titre (exemples de l'espace, ADR 0184). */
   banner?: ReactNode;
+  /**
+   * Activité (ADR 0185) : raccourcis, chiffre d'affaires, chantiers en cours, devis en attente et
+   * soldes à recevoir, sur deux colonnes en grand écran. Absente dans les anciens aperçus.
+   */
+  activity?: {
+    data: DashboardActivity;
+    years: number[];
+    yearHref: (year: number) => string;
+    currentMonth: number | null;
+    chantierHref: ChantierHref;
+    shortcuts: DashboardShortcutLinks;
+  } | null;
 }) {
   const appointmentSection = (
     <Section
@@ -194,9 +216,65 @@ export function DashboardView({
     </Section>
   );
 
+  const todoList = todo && <TodoList items={todo} base={base} />;
+  const photoCard = missingPhoto && (
+    <Link
+      href="/pro/onboarding/profil"
+      className={`flex flex-wrap items-center gap-4 p-4 ${cardLink}`}
+    >
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
+        <Camera aria-hidden="true" className="size-5" />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="font-medium">{t.photo.title}</span>
+        <span className="text-xs text-muted-foreground">{t.photo.text}</span>
+      </span>
+      <span className="inline-flex items-center gap-1 text-sm font-medium text-primary-strong">
+        {t.photo.add}
+        <ArrowRight aria-hidden="true" className="size-3.5" />
+      </span>
+    </Link>
+  );
+  const gradeCard = grade && (
+    <Link
+      href="/pro/grade"
+      className="flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+    >
+      <BadgeIcon
+        code={grade.badge ?? "main_d_argent"}
+        unlocked={Boolean(grade.badge)}
+        className="size-11"
+      />
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex items-center gap-2">
+          <span className="font-medium">{fr.pro.grade.title}</span>
+          {grade.newBadge && (
+            <span className="rounded-pill bg-primary px-2 py-0.5 text-[0.6875rem] font-medium text-primary-foreground">
+              {fr.pro.grade.newBadgeShort}
+            </span>
+          )}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {fr.pro.grade.card(grade.level)} · {fr.pro.grade.xp(grade.xp, grade.nextXp)}
+        </span>
+        <span className="h-1.5 overflow-hidden rounded-pill bg-primary-soft">
+          <span
+            className="block h-full rounded-pill bg-primary"
+            style={{ width: `${Math.round(grade.progress * 100)}%` }}
+          />
+        </span>
+      </span>
+      <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
+    </Link>
+  );
+
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
+      <div
+        className={`mx-auto flex w-full flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10 ${
+          activity ? "max-w-5xl" : "max-w-3xl"
+        }`}
+      >
         <div className="flex flex-col gap-1">
           <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
             {todo ? t.greeting(firstName) : t.title}
@@ -220,6 +298,7 @@ export function DashboardView({
             {t.hiddenProfile} <TextLink href="/pro/onboarding">{t.completeFile}</TextLink>
           </Alert>
         )}
+        {activity && <DashboardShortcuts links={activity.shortcuts} />}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Kpi
             href={`${base}/chantiers`}
@@ -245,69 +324,53 @@ export function DashboardView({
             detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
           />
         </div>
-        {todo && <TodoList items={todo} base={base} />}
-        {missingPhoto && (
-          <Link
-            href="/pro/onboarding/profil"
-            className={`flex flex-wrap items-center gap-4 p-4 ${cardLink}`}
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
-              <Camera aria-hidden="true" className="size-5" />
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="font-medium">{t.photo.title}</span>
-              <span className="text-xs text-muted-foreground">{t.photo.text}</span>
-            </span>
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary-strong">
-              {t.photo.add}
-              <ArrowRight aria-hidden="true" className="size-3.5" />
-            </span>
-          </Link>
-        )}
-        {grade && (
-          <Link
-            href="/pro/grade"
-            className="flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-          >
-            <BadgeIcon
-              code={grade.badge ?? "main_d_argent"}
-              unlocked={Boolean(grade.badge)}
-              className="size-11"
-            />
-            <span className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="flex items-center gap-2">
-                <span className="font-medium">{fr.pro.grade.title}</span>
-                {grade.newBadge && (
-                  <span className="rounded-pill bg-primary px-2 py-0.5 text-[0.6875rem] font-medium text-primary-foreground">
-                    {fr.pro.grade.newBadgeShort}
-                  </span>
-                )}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {fr.pro.grade.card(grade.level)} · {fr.pro.grade.xp(grade.xp, grade.nextXp)}
-              </span>
-              <span className="h-1.5 overflow-hidden rounded-pill bg-primary-soft">
-                <span
-                  className="block h-full rounded-pill bg-primary"
-                  style={{ width: `${Math.round(grade.progress * 100)}%` }}
-                />
-              </span>
-            </span>
-            <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-          </Link>
-        )}
-        {todo ? (
-          appointmentSection
-        ) : /* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */
-        appointments.length > 0 ? (
-          <>
-            {appointmentSection}
-            {requestSection}
-          </>
+        {activity ? (
+          <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_22rem]">
+            <div className="flex min-w-0 flex-col gap-7">
+              {todoList}
+              <RevenueCard
+                activity={activity.data}
+                years={activity.years}
+                yearHref={activity.yearHref}
+                currentMonth={activity.currentMonth}
+              />
+              <InProgressCard
+                activity={activity.data}
+                base={base}
+                chantierHref={activity.chantierHref}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-7">
+              <QuotesCard
+                activity={activity.data}
+                base={base}
+                chantierHref={activity.chantierHref}
+              />
+              <ReceivablesCard activity={activity.data} chantierHref={activity.chantierHref} />
+              {appointmentSection}
+              {photoCard}
+              {gradeCard}
+            </div>
+          </div>
         ) : (
           <>
-            {requestSection}
-            {appointmentSection}
+            {todoList}
+            {photoCard}
+            {gradeCard}
+            {todo ? (
+              appointmentSection
+            ) : /* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */
+            appointments.length > 0 ? (
+              <>
+                {appointmentSection}
+                {requestSection}
+              </>
+            ) : (
+              <>
+                {requestSection}
+                {appointmentSection}
+              </>
+            )}
           </>
         )}
       </div>

@@ -1,6 +1,11 @@
 import {
+  activityCurrentMonth,
+  activityInputFromRows,
+  activityYear,
+  activityYears,
   artisanTodo,
   clientsAwaitingQuote,
+  dashboardActivity,
   isAwaitingQuote,
   laterAppointments,
   levelProgress,
@@ -24,7 +29,8 @@ export const metadata: Metadata = { title: `${fr.pro.dashboard.title} — MENAO`
  * Tableau de bord artisan (F-16) : indicateurs, « À faire maintenant » (ADR 0131, comme
  * l'application) et rendez-vous des jours suivants.
  */
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: PageProps<"/pro/tableau-de-bord">) {
+  const { annee } = await searchParams;
   const {
     supabase,
     firstName,
@@ -56,10 +62,11 @@ export default async function DashboardPage() {
     { badges },
     { data: giftData },
     examples,
+    { data: quotes },
   ] = await Promise.all([
     artisanActivity(),
-    // Paiements reçus (RLS : ceux des chantiers de l'artisan), pour « Encaissé ce mois ».
-    supabase.from("payments").select("amount_cents, paid_at").eq("status", "paye"),
+    // Paiements (RLS : ceux des chantiers de l'artisan) : encaissé du mois, chiffre d'affaires.
+    supabase.from("payments").select("chantier_id, quote_id, kind, status, amount_cents, paid_at"),
     // Temps de réponse moyen (F-10), sur les 6 derniers mois.
     supabase.rpc("my_response_stats"),
     // F-24 : carte « Mon grade MENAO ».
@@ -70,6 +77,8 @@ export default async function DashboardPage() {
     supabase.rpc("my_welcome_gift"),
     // Rien reçu pour l'instant : carte vers les exemples (ADR 0184).
     spaceExamples(),
+    // Devis (ADR 0185) : en attente de réponse, taux de signature, montant des devis signés.
+    supabase.rpc("artisan_quotes"),
   ]);
   const grade = parseGrade(gradeData);
   const gradeLevels =
@@ -85,15 +94,26 @@ export default async function DashboardPage() {
     .sort((a, b) => (b.unlocked_at ?? "").localeCompare(a.unlocked_at ?? ""))[0];
   const now = new Date();
   const revenue = monthToDateRevenue(
-    (payments ?? []).map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
+    (payments ?? [])
+      .filter((p) => p.status === "paye")
+      .map((p) => ({ amountCents: p.amount_cents, paidAt: p.paid_at })),
     now,
   );
+  // Activité (ADR 0185) : chiffre d'affaires de l'année choisie, devis, chantiers, soldes.
+  const activityInput = activityInputFromRows({
+    payments: payments ?? [],
+    quotes: quotes ?? [],
+    chantiers,
+  });
+  const years = activityYears(activityInput.payments, now);
+  const year = activityYear(typeof annee === "string" ? annee : null, years);
   const rows = chantiers.map((c) => ({
     ...c,
     appointmentAt: c.appointment_at as string | null,
     startAt: c.start_at as string | null,
     particulierId: c.particulier_id,
   }));
+  const awaitingQuote = rows.find((c) => isAwaitingQuote(c.status as ChantierStatus));
   const appointments = upcomingAgenda(rows, now, 8).map(({ kind, at, row }) => ({
     kind,
     chantierId: row.chantier_id,
@@ -160,6 +180,19 @@ export default async function DashboardPage() {
       ).slice(0, 4)}
       todo={todo}
       banner={examples ? <ExamplesCard /> : null}
+      activity={{
+        data: dashboardActivity(activityInput, year, now),
+        years,
+        yearHref: (y) => `/pro/tableau-de-bord?annee=${y}`,
+        currentMonth: activityCurrentMonth(year, now),
+        chantierHref: (id) => `/pro/chantiers/${id}`,
+        shortcuts: {
+          quote: awaitingQuote ? `/pro/chantiers/${awaitingQuote.chantier_id}/devis` : "/pro/devis",
+          block: "/pro/agenda",
+          share: "/pro/profil",
+          invite: "/pro/mon-profil#parrainage",
+        },
+      }}
     />
   );
 }

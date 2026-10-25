@@ -1,16 +1,12 @@
 import { router, type Href } from "expo-router";
 import {
   ArrowRight,
-  CalendarClock,
   CalendarDays,
   Clock,
-  FileText,
   MapPin,
   Minus,
-  ReceiptText,
   TrendingDown,
   TrendingUp,
-  type LucideIcon,
 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import {
@@ -24,7 +20,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { activityCurrentMonth, activityYears, dashboardActivity } from "@menao/core";
 import { GradeCard } from "@/components/grade/grade-card";
+import {
+  ActivityShortcuts,
+  InProgressCard,
+  QuotesCard,
+  ReceivablesCard,
+  RevenueCard,
+} from "@/components/pro/dashboard-activity";
 import { NewBadgeModal } from "@/components/grade/new-badge-modal";
 import { PhotoNudge } from "@/components/pro/photo-nudge";
 import { TodoList } from "@/components/pro/todo-list";
@@ -184,51 +188,6 @@ function AppointmentCard({ appointment: a }: { appointment: Dashboard["appointme
 }
 
 /**
- * Raccourcis vers les écrans d'activité : agenda, devis, factures, disponibilités. Tout ce qui
- * concerne la fiche, l'entreprise, les documents et les paiements est dans « Mon profil » (ADR 0129).
- */
-function Shortcuts() {
-  const items: { icon: LucideIcon; label: string; href: Href; badge?: string }[] = [
-    { icon: CalendarDays, label: t.agenda, href: "/pro-agenda" },
-    {
-      icon: FileText,
-      label: fr.proQuotes.open,
-      href: { pathname: "/pro/chantiers", params: { vue: "devis" } },
-    },
-    { icon: ReceiptText, label: fr.proInvoices.open, href: "/pro-factures" },
-    { icon: CalendarClock, label: fr.proAvailability.title, href: "/pro-disponibilites" },
-  ];
-  return (
-    <View style={styles.section}>
-      <SectionHead title={t.shortcuts} />
-      <View style={styles.tiles}>
-        {items.map(({ icon: Icon, label, href, badge }) => (
-          <Tappable
-            key={label}
-            role="link"
-            aria-label={badge ? `${label}, ${badge}` : label}
-            onPress={() => router.push(href)}
-            style={styles.tile}
-          >
-            <View style={styles.tileIcon}>
-              <Icon size={20} color={colors.primary} />
-            </View>
-            <Text style={styles.tileLabel} numberOfLines={2}>
-              {label}
-            </Text>
-            {badge ? (
-              <View style={styles.tileBadge}>
-                <Text style={styles.tileBadgeText}>{badge}</Text>
-              </View>
-            ) : null}
-          </Tappable>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-/**
  * Tableau de bord de l'artisan (F-16), d'après les maquettes « Dashboard » et « Dashboard avec
  * RDV » et comme sur le site : en-tête (bonjour, cloche, photo), indicateurs, rendez-vous à venir
  * (en premier dès qu'il y en a), dernières demandes et raccourcis. Aucun lien vers l'abonnement ni
@@ -243,6 +202,8 @@ export function DashboardScreen() {
   const profile = useProfileSummary();
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
+  // Année du chiffre d'affaires (ADR 0185) : l'année en cours, puis celle choisie.
+  const [year, setYear] = useState<number | null>(null);
   const newBadge = celebrated
     ? null
     : (grade?.badges.find((b) => b.unlocked_at && !b.seen) ?? null);
@@ -254,6 +215,10 @@ export function DashboardScreen() {
   }
 
   if (data === undefined) return <ScreenSkeleton />;
+  const now = new Date();
+  const years = data ? activityYears(data.activityInput.payments, now) : [];
+  const shownYear = year !== null && years.includes(year) ? year : (years[0] ?? now.getFullYear());
+  const activity = data ? dashboardActivity(data.activityInput, shownYear, now) : null;
   // Rendez-vous des jours suivants : ceux du jour sont dans « À faire maintenant ».
   const appointments = data ? (
     <View style={styles.section}>
@@ -336,11 +301,30 @@ export function DashboardScreen() {
                 href="/pro-factures"
               />
             </View>
+            <ActivityShortcuts
+              quoteHref={
+                data.quoteChantierId
+                  ? `/pro-chantier/${data.quoteChantierId}/devis`
+                  : { pathname: "/pro/chantiers", params: { vue: "devis" } }
+              }
+            />
             <TodoList items={data.todo} />
             {profile && !profile.avatarUrl ? <PhotoNudge /> : null}
-            {grade ? <GradeCard grade={grade} /> : null}
+            {activity ? (
+              <>
+                <RevenueCard
+                  activity={activity}
+                  years={years}
+                  onYear={setYear}
+                  currentMonth={activityCurrentMonth(shownYear, now)}
+                />
+                <QuotesCard activity={activity} />
+                <InProgressCard activity={activity} />
+                <ReceivablesCard activity={activity} />
+              </>
+            ) : null}
             {appointments}
-            <Shortcuts />
+            {grade ? <GradeCard grade={grade} /> : null}
           </>
         )}
       </ScrollView>
@@ -444,36 +428,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   emptyArc: { position: "absolute", right: -6, bottom: 8, width: 80, height: 48 },
-  tiles: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
-  tile: {
-    flexGrow: 1,
-    flexBasis: "40%",
-    minHeight: 104,
-    gap: spacing(2.5),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-    boxShadow: cardShadow,
-  },
-  tileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tileLabel: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  tileBadge: {
-    position: "absolute",
-    top: spacing(3),
-    right: spacing(3),
-    borderRadius: radius.pill,
-    backgroundColor: colors["danger-soft"],
-    paddingHorizontal: spacing(2),
-    paddingVertical: 2,
-  },
-  tileBadgeText: { fontFamily: font.medium, fontSize: 11, color: colors.danger },
 });
