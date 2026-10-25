@@ -1,3 +1,4 @@
+import { isExampleId } from "@menao/core";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -12,6 +13,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { LinkText, Notice, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
+import { ExampleBadge } from "@/components/examples";
 
 const t = fr.proQuotes;
 const { colors, font, radius, spacing } = theme;
@@ -107,6 +109,7 @@ export function ArtisanQuotesScreen({ switcher }: { switcher?: ReactNode }) {
                   .join(" · ")}
               </Text>
               <View style={styles.tags}>
+                {isExampleId(q.quote_id) ? <ExampleBadge /> : null}
                 {q.status === "brouillon" ? (
                   <>
                     <StatusPill text={`${t.draft} · ${t.lineCount(q.line_count)}`} tone="neutral" />

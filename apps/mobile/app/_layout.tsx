@@ -9,9 +9,12 @@ import { router, Stack, usePathname, useRootNavigationState } from "expo-router"
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PushNotifications } from "@/components/push-notifications";
 import { kv } from "@/lib/kv";
+import { BelowExamplesBanner, ExamplesBanner } from "@/components/examples";
+import { useExamplesActive } from "@/lib/examples";
 import { SessionProvider, useSession } from "@/lib/session";
 import { UnreadProvider } from "@/lib/unread";
 import { ToastHost } from "@/ui";
@@ -38,6 +41,7 @@ export default function RootLayout() {
 
 function Root({ ready }: { ready: boolean }) {
   const { loading } = useSession();
+  const examples = useExamplesActive();
   const done = ready && !loading;
   useEffect(() => {
     if (done) SplashScreen.hideAsync().catch(() => undefined);
@@ -45,8 +49,14 @@ function Root({ ready }: { ready: boolean }) {
   if (!done) return null;
   return (
     <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }} />
+      <StatusBar style={examples ? "light" : "dark"} />
+      {/* Mode exemples (ADR 0184) : bandeau orange en haut, au-dessus de tous les écrans. */}
+      <View style={rootStyles.fill}>
+        {examples ? <ExamplesBanner /> : null}
+        <BelowExamplesBanner active={examples}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </BelowExamplesBanner>
+      </View>
       <PushNotifications />
       <SignupGate />
       <ToastHost />
@@ -80,3 +90,5 @@ function SignupGate() {
 }
 
 const SIGNUP_SCREENS = ["/finaliser-compte", "/pro-inscription"];
+
+const rootStyles = StyleSheet.create({ fill: { flex: 1 } });

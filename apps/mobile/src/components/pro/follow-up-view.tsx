@@ -39,6 +39,7 @@ import {
 } from "@/lib/pro-chantiers";
 import { Body, Button, LinkText, Notice, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
 
 const t = fr.proFollowUp;
 const { colors, font, radius, spacing } = theme;
@@ -56,12 +57,15 @@ export function FollowUpView({
   followUp: f,
   confirmed,
   onChanged,
+  example = false,
 }: {
   data: ArtisanChantier;
   followUp: ArtisanFollowUp;
   /** Date de démarrage tout juste confirmée. */
   confirmed: boolean;
   onChanged: () => void;
+  /** Exemple (ADR 0184) : on navigue (conversation, onglets), les actions sont inactives. */
+  example?: boolean;
 }) {
   const [tab, setTab] = useState<"suivi" | "dossier">("suivi");
   const [justConfirmed, setJustConfirmed] = useState(false);
@@ -116,7 +120,11 @@ export function FollowUpView({
       step={step}
       footer={
         // Maquettes « Date à confirmer » et « Chantier en cours » : action principale en pied.
-        status === "acompte_paye" ? (
+        example && (status === "acompte_paye" || canDeclareFinished(status)) ? (
+          <ExampleLock locked note>
+            {status === "acompte_paye" ? null : <Button label={t.finish} onPress={() => {}} />}
+          </ExampleLock>
+        ) : status === "acompte_paye" ? (
           <StartDateForm
             chantierId={id}
             quoteStart={f.quote?.startDate ?? null}
@@ -168,7 +176,7 @@ export function FollowUpView({
           {t.liftSignaled(client, formatDateNumeric(f.reception.liftSignaledAt))}
         </Notice>
       ) : null}
-      {status === "reserves_a_lever" ? (
+      {status === "reserves_a_lever" && !example ? (
         <LiftPanel chantierId={id} client={client} onDone={onChanged} />
       ) : null}
       {status === "receptionne" && f.receivedAt ? (
@@ -221,21 +229,31 @@ export function FollowUpView({
       />
       {tab === "suivi" ? (
         <>
-          <ConversationCard chantierId={id} name={clientName} />
+          <ConversationCard chantierId={id} name={clientName} example={example} />
           <JournalCard
             journal={f.journal}
             photoUrls={f.photoUrls}
             emptyText={
               open ? fr.chantier.journal.artisanIntro(client) : fr.chantier.journal.artisanLocked
             }
-            photoAction={open ? <PhotoUpload chantierId={id} onAdded={onChanged} /> : undefined}
+            photoAction={
+              open ? (
+                <ExampleLock locked={example}>
+                  <PhotoUpload chantierId={id} onAdded={onChanged} />
+                </ExampleLock>
+              ) : undefined
+            }
           >
-            {open ? <MessageComposer chantierId={id} onDone={onChanged} /> : null}
+            {open ? (
+              <ExampleLock locked={example}>
+                <MessageComposer chantierId={id} onDone={onChanged} />
+              </ExampleLock>
+            ) : null}
           </JournalCard>
           {next ? (
             <View style={styles.group}>
               <NextInterventionCard next={next} />
-              {status === "planifie" && startAt ? (
+              {status === "planifie" && startAt && !example ? (
                 <LinkText
                   label={t.edit}
                   onPress={() =>
@@ -251,7 +269,9 @@ export function FollowUpView({
         </>
       ) : (
         <>
-          <DocumentsCard documents={f.documents} />
+          <ExampleLock locked={example}>
+            <DocumentsCard documents={f.documents} />
+          </ExampleLock>
           <ScheduleCard progress={f.progress} totalTtcCents={f.quote?.totalTtcCents ?? null} />
           <RequestBlocks detail={c} photoUrls={data.photoUrls} variant="rendez-vous" />
           {c.appointment ? (
@@ -260,29 +280,33 @@ export function FollowUpView({
               title={fr.proAppointment.notes}
             >
               {c.appointment.notes ? <Text style={styles.text}>{c.appointment.notes}</Text> : null}
-              <LinkText
-                label={
-                  c.appointment.notes ? fr.proAppointment.editNotes : fr.proAppointment.addNotes
-                }
-                onPress={() =>
-                  router.push({
-                    pathname: "/pro-chantier/[id]/notes",
-                    params: { id, notes: c.appointment?.notes ?? "" },
-                  })
-                }
-              />
+              {example ? null : (
+                <LinkText
+                  label={
+                    c.appointment.notes ? fr.proAppointment.editNotes : fr.proAppointment.addNotes
+                  }
+                  onPress={() =>
+                    router.push({
+                      pathname: "/pro-chantier/[id]/notes",
+                      params: { id, notes: c.appointment?.notes ?? "" },
+                    })
+                  }
+                />
+              )}
             </DetailBlock>
           ) : null}
         </>
       )}
-      <Pressable
-        role="link"
-        hitSlop={8}
-        onPress={() => router.push(`/chantier/${id}/signaler`)}
-        style={styles.report}
-      >
-        <Text style={styles.danger}>{fr.chantier.report}</Text>
-      </Pressable>
+      {example ? null : (
+        <Pressable
+          role="link"
+          hitSlop={8}
+          onPress={() => router.push(`/chantier/${id}/signaler`)}
+          style={styles.report}
+        >
+          <Text style={styles.danger}>{fr.chantier.report}</Text>
+        </Pressable>
+      )}
       <BottomSheet
         visible={finishOpen}
         onClose={() => setFinishOpen(false)}

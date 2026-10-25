@@ -21,7 +21,16 @@ const { colors, font, radius, spacing } = theme;
  * rapide d'un message (F-40, mêmes règles que la conversation). Masquée si la conversation est
  * fermée.
  */
-export function ConversationCard({ chantierId, name }: { chantierId: string; name: string }) {
+export function ConversationCard({
+  chantierId,
+  name,
+  example = false,
+}: {
+  chantierId: string;
+  name: string;
+  /** Exemple (ADR 0184) : envoi rapide visible mais inactif. */
+  example?: boolean;
+}) {
   const [preview, reload] = useFocusData(
     useCallback(() => loadConversationPreview(chantierId), [chantierId]),
   );
@@ -74,7 +83,10 @@ export function ConversationCard({ chantierId, name }: { chantierId: string; nam
         ) : null}
         <ChevronRight size={18} color={colors["muted-foreground"]} />
       </Pressable>
-      <View style={styles.composer}>
+      <View
+        style={[styles.composer, example && { opacity: 0.55 }]}
+        pointerEvents={example ? "none" : "auto"}
+      >
         <TextInput
           aria-label={fr.messages.composerLabel}
           value={body}

@@ -18,6 +18,8 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
+import { ExampleLock } from "@/components/examples";
+import { useExamplesActive } from "@/lib/examples";
 
 const t = fr.proInvoices;
 const { colors, font, radius, spacing } = theme;
@@ -28,6 +30,8 @@ const { colors, font, radius, spacing } = theme;
  */
 export default function ArtisanInvoicesScreen() {
   const [invoices, reload] = useFocusData(loadArtisanInvoices);
+  // Exemples (ADR 0184) : la facture d'exemple n'a pas de PDF, rien ne s'exporte.
+  const examples = useExamplesActive();
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -76,12 +80,14 @@ export default function ArtisanInvoicesScreen() {
         {invoices === null ? <Notice tone="error">{t.error}</Notice> : null}
         {failure ? <Notice tone="error">{failure}</Notice> : null}
         {invoices && invoices.length > 0 ? (
-          <Button
-            label={t.export}
-            variant="secondary"
-            onPress={exportCsv}
-            loading={busy === "csv"}
-          />
+          <ExampleLock locked={examples} note>
+            <Button
+              label={t.export}
+              variant="secondary"
+              onPress={exportCsv}
+              loading={busy === "csv"}
+            />
+          </ExampleLock>
         ) : null}
         {invoices && invoices.length === 0 ? (
           <EmptyState illustration="documents">{t.empty}</EmptyState>
@@ -92,7 +98,7 @@ export default function ArtisanInvoicesScreen() {
             role="button"
             aria-label={t.view(invoice.numero)}
             aria-busy={busy === invoice.id}
-            disabled={busy !== null}
+            disabled={busy !== null || examples}
             onPress={() => share(invoice.id, invoice.numero)}
             style={styles.card}
           >

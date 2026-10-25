@@ -1,4 +1,4 @@
-import { allowedVatRates, quoteTotals, type VoiceLine } from "@menao/core";
+import { allowedVatRates, quoteTotals, type VoiceLine, isExampleId } from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { Mic, Plus, Save } from "lucide-react-native";
@@ -17,6 +17,7 @@ import { loadQuoteDraft, saveQuoteDraft, type QuoteDraft } from "@/lib/pro-quote
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
 
 const t = fr.proQuote;
 const { colors, font, radius, spacing } = theme;
@@ -69,6 +70,8 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   // Taux proposé : celui de la dernière ligne, sinon le taux normal (ou 0 % en franchise).
   const defaultVat = plain.at(-1)?.vatRateBp ?? rates.at(-1) ?? 0;
   const status = dirty ? "dirty" : hasSaved ? "saved" : "draft";
+  // Exemple (ADR 0184) : le devis se lit, rien ne se modifie ni ne s'envoie.
+  const example = isExampleId(chantierId);
 
   // Modifications non enregistrées : confirmation avant de quitter l'éditeur.
   useEffect(() => {
@@ -150,8 +153,8 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
             />
             <Pressable
               role="button"
-              aria-disabled={!dirty || saving}
-              disabled={!dirty || saving}
+              aria-disabled={!dirty || saving || example}
+              disabled={!dirty || saving || example}
               onPress={save}
               style={styles.save}
               hitSlop={8}
@@ -180,18 +183,22 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
             </Text>
           </View>
           {!draft.assujettiTva ? <Text style={styles.small}>{t.vatExempt}</Text> : null}
-          <Button
-            label={t.dictation.open}
-            variant="secondary"
-            icon={Mic}
-            onPress={() => setDictating(true)}
-          />
-          <Button
-            label={t.generate}
-            onPress={generate}
-            loading={generating}
-            disabled={lines.length === 0 || saving}
-          />
+          <ExampleLock locked={example} note>
+            <View style={styles.footer}>
+              <Button
+                label={t.dictation.open}
+                variant="secondary"
+                icon={Mic}
+                onPress={() => setDictating(true)}
+              />
+              <Button
+                label={t.generate}
+                onPress={generate}
+                loading={generating}
+                disabled={lines.length === 0 || saving}
+              />
+            </View>
+          </ExampleLock>
         </View>
       }
     >
@@ -203,43 +210,47 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
       </View>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {notice ? <Notice tone="success">{notice}</Notice> : null}
-      {lines.map((line) =>
-        editing === line.key ? (
-          <LineForm
-            key={line.key}
-            title={t.editLine}
-            initial={line}
-            rates={rates}
-            defaultVat={defaultVat}
-            onSubmit={(next) => upsert(line.key, next)}
-            onCancel={() => setEditing(null)}
-          />
-        ) : (
-          <LineCard
-            key={line.key}
-            line={line}
-            generated={line.generated}
-            assujettiTva={draft.assujettiTva}
-            onEdit={() => setEditing(line.key)}
-            onDelete={() => setLines((current) => current.filter((l) => l.key !== line.key))}
-          />
-        ),
-      )}
-      {editing === "new" ? (
-        <LineForm
-          title={t.addLine}
-          initial={null}
-          rates={rates}
-          defaultVat={defaultVat}
-          onSubmit={(next) => upsert(null, next)}
-          onCancel={() => setEditing(null)}
-        />
-      ) : (
-        <Pressable role="button" onPress={() => setEditing("new")} style={styles.add}>
-          <Plus size={16} color={colors["primary-strong"]} />
-          <Text style={styles.addText}>{t.addManual}</Text>
-        </Pressable>
-      )}
+      <ExampleLock locked={example}>
+        <View style={styles.lines}>
+          {lines.map((line) =>
+            editing === line.key ? (
+              <LineForm
+                key={line.key}
+                title={t.editLine}
+                initial={line}
+                rates={rates}
+                defaultVat={defaultVat}
+                onSubmit={(next) => upsert(line.key, next)}
+                onCancel={() => setEditing(null)}
+              />
+            ) : (
+              <LineCard
+                key={line.key}
+                line={line}
+                generated={line.generated}
+                assujettiTva={draft.assujettiTva}
+                onEdit={() => setEditing(line.key)}
+                onDelete={() => setLines((current) => current.filter((l) => l.key !== line.key))}
+              />
+            ),
+          )}
+          {editing === "new" ? (
+            <LineForm
+              title={t.addLine}
+              initial={null}
+              rates={rates}
+              defaultVat={defaultVat}
+              onSubmit={(next) => upsert(null, next)}
+              onCancel={() => setEditing(null)}
+            />
+          ) : (
+            <Pressable role="button" onPress={() => setEditing("new")} style={styles.add}>
+              <Plus size={16} color={colors["primary-strong"]} />
+              <Text style={styles.addText}>{t.addManual}</Text>
+            </Pressable>
+          )}
+        </View>
+      </ExampleLock>
       {/* Maquette « Dictez votre devis » : feuille au-dessus de l'éditeur. */}
       <BottomSheet
         visible={dictating}
@@ -254,6 +265,7 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
 }
 
 const styles = StyleSheet.create({
+  lines: { gap: spacing(3) },
   statusRow: {
     flexDirection: "row",
     alignItems: "center",

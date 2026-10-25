@@ -2,6 +2,8 @@ import type { GradeLevel } from "@menao/core";
 import { parseGrade, type Grade, type RewardClaim } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { exampleGradeView } from "./example-data";
+import { examplesActive } from "./examples";
 
 export type GradeView = {
   xp: number;
@@ -18,6 +20,8 @@ export async function loadGrade(): Promise<GradeView | null> {
   if (error) return null;
   const grade = parseGrade(data);
   if (!grade) return null;
+  // Exemples (ADR 0184) : le vrai barème, avec une progression fictive.
+  if (examplesActive()) return exampleGradeView(grade);
   return {
     xp: grade.xp,
     level: grade.level,

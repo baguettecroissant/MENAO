@@ -1,4 +1,4 @@
-import { inboxGroups, timeLeft } from "@menao/core";
+import { inboxGroups, isExampleId, timeLeft } from "@menao/core";
 import { router } from "expo-router";
 import { Clock, MapPin } from "lucide-react-native";
 import { useState } from "react";
@@ -16,6 +16,9 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
+import { ExampleBadge, SpaceExamplesNotice } from "@/components/examples";
+import { exampleInboxItems } from "@/lib/example-data";
+import { loadSpaceExamplesShown } from "@/lib/examples";
 
 const t = fr.proRequests;
 const { colors, font, radius, spacing } = theme;
@@ -35,6 +38,8 @@ const TONE: Record<InboxItem["status"], Tone> = {
  */
 export function RequestsScreen({ tab = false }: { tab?: boolean }) {
   const [rows, reload] = useFocusData(loadInbox);
+  // Rien reçu : demandes d'exemple (ADR 0184), comme sur le site.
+  const [examples, reloadExamples] = useFocusData(loadSpaceExamplesShown);
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -83,7 +88,14 @@ export function RequestsScreen({ tab = false }: { tab?: boolean }) {
           </View>
         )}
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
-        {rows?.length === 0 ? <EmptyState illustration="demandes">{t.empty}</EmptyState> : null}
+        {rows?.length === 0 && examples ? (
+          <>
+            <SpaceExamplesNotice onHidden={() => void reloadExamples()} />
+            {exampleInboxItems(now).map(card)}
+          </>
+        ) : rows?.length === 0 ? (
+          <EmptyState illustration="demandes">{t.empty}</EmptyState>
+        ) : null}
         {open.length > 0 && done.length > 0 ? (
           <Text role="heading" style={styles.group}>
             {t.openTitle(open.length)}
@@ -114,6 +126,7 @@ function RequestCard({ request: r, now }: { request: InboxItem; now: Date }) {
     >
       <View style={styles.cardText}>
         <View style={styles.tags}>
+          {isExampleId(r.request_id) ? <ExampleBadge /> : null}
           <StatusPill text={t.status[r.status]} tone={TONE[r.status]} />
           {r.urgence ? <StatusPill text={t.urgent} tone="danger" /> : null}
         </View>

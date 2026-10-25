@@ -1,3 +1,4 @@
+import { isExampleId } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Fragment, useCallback, useEffect, useRef } from "react";
 import {
@@ -21,6 +22,7 @@ import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
 
 const t = fr.messages;
 const { colors, font, radius, spacing } = theme;
@@ -115,7 +117,10 @@ export default function ConversationScreen() {
         {conversation.closed ? (
           <Text style={styles.closed}>{t.closed}</Text>
         ) : (
-          <Composer chantierId={id} onSent={() => void reload()} />
+          // Exemple (ADR 0184) : la conversation se lit, rien ne s'envoie.
+          <ExampleLock locked={isExampleId(id)} note>
+            <Composer chantierId={id} onSent={() => void reload()} />
+          </ExampleLock>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>

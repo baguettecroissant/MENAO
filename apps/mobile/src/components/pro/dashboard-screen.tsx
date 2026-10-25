@@ -32,11 +32,13 @@ import {
 import { NewBadgeModal } from "@/components/grade/new-badge-modal";
 import { PhotoNudge } from "@/components/pro/photo-nudge";
 import { TodoList } from "@/components/pro/todo-list";
+import { ExamplesCard } from "@/components/examples";
 import { PushPrompt } from "@/components/push-prompt";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
 import { loadGrade, markBadgesSeen } from "@/lib/grade";
+import { useExamplesActive } from "@/lib/examples";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -202,6 +204,7 @@ export function DashboardScreen() {
   const profile = useProfileSummary();
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
+  const examples = useExamplesActive();
   // Année du chiffre d'affaires (ADR 0185) : l'année en cours, puis celle choisie.
   const [year, setYear] = useState<number | null>(null);
   const newBadge = celebrated
@@ -270,7 +273,16 @@ export function DashboardScreen() {
             {data.visibility && data.visibility.missing.includes("abonnement") ? (
               <Notice tone="info">{t.hiddenSignup}</Notice>
             ) : null}
-            <PushPrompt />
+            {/* Rien reçu pour l'instant : l'espace rempli d'exemples (ADR 0184). */}
+            {data.examplesShown && !examples ? (
+              <ExamplesCard
+                title={fr.proExamples.dashboardCard.title}
+                text={fr.proExamples.dashboardCard.text}
+                action={fr.proExamples.dashboardCard.open}
+                onHide={() => void reload()}
+              />
+            ) : null}
+            {examples ? null : <PushPrompt />}
             <View style={styles.kpis}>
               <Kpi
                 label={t.awaitingQuote}
@@ -302,6 +314,7 @@ export function DashboardScreen() {
               />
             </View>
             <ActivityShortcuts
+              example={examples}
               quoteHref={
                 data.quoteChantierId
                   ? `/pro-chantier/${data.quoteChantierId}/devis`

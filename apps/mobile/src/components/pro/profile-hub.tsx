@@ -42,6 +42,8 @@ import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, ScreenSkeleton, Tappable, toast } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
+import { useExamplesActive } from "@/lib/examples";
 
 const t = fr.proHub;
 const { colors, font, radius, spacing } = theme;
@@ -96,6 +98,9 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
   },
 ];
 
+/** Rubriques qui ont leurs exemples (ADR 0184). */
+const EXAMPLE_ROWS: readonly Row["key"][] = ["reviews", "grade", "invoices"];
+
 /** Où mène le conseil de la jauge. */
 const TIP_HREF: Record<ProfileTip, Href> = {
   assure_verifie: "/pro-documents",
@@ -140,10 +145,13 @@ export function ProfileHubContent({
   onChange: () => Promise<void>;
 }) {
   const [leaving, setLeaving] = useState(false);
+  // Exemples (ADR 0184) : « Mon profil » d'exemple ; seules les rubriques qui ont leurs exemples
+  // (avis, grade, factures, fiche) s'ouvrent, les vrais réglages restent fermés.
+  const example = useExamplesActive();
   return (
     <>
       <Animated.View entering={enter(0)}>
-        <Header hub={hub} onChange={onChange} />
+        <Header hub={hub} onChange={onChange} example={example} />
       </Animated.View>
       {hub.status === "brouillon" || hub.status === "refuse" ? (
         <Animated.View entering={enter(1)}>
@@ -164,7 +172,7 @@ export function ProfileHubContent({
         <Notice tone="info">{t.dossierSent}</Notice>
       ) : null}
       <Animated.View entering={enter(2)}>
-        <Strength hub={hub} />
+        <Strength hub={hub} example={example} />
       </Animated.View>
       <Animated.View entering={enter(3)}>
         <Button
@@ -194,7 +202,7 @@ export function ProfileHubContent({
           <SettingsSection title={t.sections[section.key]}>
             {section.rows.map((row) => {
               const status = statusOf(row.key, hub);
-              return (
+              const line = (
                 <SettingsRow
                   key={row.key}
                   icon={row.icon}
@@ -204,20 +212,29 @@ export function ProfileHubContent({
                   href={row.href}
                 />
               );
+              return example && !EXAMPLE_ROWS.includes(row.key) ? (
+                <ExampleLock key={row.key} locked>
+                  {line}
+                </ExampleLock>
+              ) : (
+                line
+              );
             })}
           </SettingsSection>
         </Animated.View>
       ))}
-      <Button
-        label={t.signOut}
-        variant="danger"
-        loading={leaving}
-        onPress={async () => {
-          setLeaving(true);
-          await signOut();
-          setLeaving(false);
-        }}
-      />
+      {example ? null : (
+        <Button
+          label={t.signOut}
+          variant="danger"
+          loading={leaving}
+          onPress={async () => {
+            setLeaving(true);
+            await signOut();
+            setLeaving(false);
+          }}
+        />
+      )}
       <Body muted>{fr.account.version(Constants.expoConfig?.version ?? "")}</Body>
     </>
   );
@@ -229,7 +246,15 @@ function statusOf(key: Row["key"], hub: ProfileHub): HubStatus {
   return hub.statuses[key];
 }
 
-function Header({ hub, onChange }: { hub: ProfileHub; onChange: () => Promise<void> }) {
+function Header({
+  hub,
+  onChange,
+  example,
+}: {
+  hub: ProfileHub;
+  onChange: () => Promise<void>;
+  example: boolean;
+}) {
   const [sending, setSending] = useState(false);
 
   // Photo changée d'un toucher, comme dans « Photo et présentation ».
@@ -257,7 +282,7 @@ function Header({ hub, onChange }: { hub: ProfileHub; onChange: () => Promise<vo
         role="button"
         aria-label={t.changePhoto}
         onPress={changePhoto}
-        disabled={sending}
+        disabled={sending || example}
         scaleTo={0.94}
         style={styles.avatarWrap}
       >
@@ -320,7 +345,7 @@ function Pill({
   );
 }
 
-function Strength({ hub }: { hub: ProfileHub }) {
+function Strength({ hub, example }: { hub: ProfileHub; example: boolean }) {
   const { percent, next } = hub.strength;
   const title = next ? t.strength(percent) : t.complete;
   const hint = next ? t.tips[next] : t.completeHint;
@@ -328,8 +353,8 @@ function Strength({ hub }: { hub: ProfileHub }) {
     <Tappable
       role={next ? "link" : undefined}
       aria-label={`${title}. ${hint}`}
-      onPress={next ? () => router.push(TIP_HREF[next]) : undefined}
-      disabled={!next}
+      onPress={next && !example ? () => router.push(TIP_HREF[next]) : undefined}
+      disabled={!next || example}
       style={styles.strength}
     >
       <ProgressRing percent={percent} />

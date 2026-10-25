@@ -1,10 +1,12 @@
-import { conversationClosed } from "@menao/core";
+import { conversationClosed, isExampleId } from "@menao/core";
 import type { Database } from "@menao/db";
 import { parseArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar } from "./chantiers";
 import { formatDayLabel, formatTime } from "./format";
 import { supabase } from "./supabase";
+import { exampleConversation, exampleConversationList } from "./example-data";
+import { examplesActive } from "./examples";
 
 type Functions = Database["public"]["Functions"];
 type ConversationRow = Functions["my_conversations"]["Returns"][number];
@@ -13,6 +15,7 @@ export type ConversationItem = ConversationRow & { avatarUrl: string | null };
 
 /** Liste « Messages » (F-40) : une conversation par chantier, la plus récente en premier. */
 export async function loadConversations(): Promise<ConversationItem[] | null> {
+  if (examplesActive()) return exampleConversationList();
   const { data, error } = await supabase.rpc("my_conversations");
   if (error) return null;
   return (data ?? []).map((row) => ({ ...row, avatarUrl: artisanAvatar(row.other_avatar_path) }));
@@ -22,6 +25,10 @@ export async function loadConversations(): Promise<ConversationItem[] | null> {
 export async function loadConversationPreview(
   chantierId: string,
 ): Promise<{ lastAt: string | null; unread: number; closed: boolean } | null> {
+  if (isExampleId(chantierId)) {
+    const row = exampleConversationList().find((c) => c.chantier_id === chantierId);
+    return { lastAt: row?.last_at ?? null, unread: row?.unread ?? 0, closed: false };
+  }
   const { data, error } = await supabase.rpc("my_conversations");
   if (error) return null;
   const row = (data ?? []).find((item) => item.chantier_id === chantierId);
@@ -89,6 +96,7 @@ export async function loadConversation(
   chantierId: string,
   artisan: boolean,
 ): Promise<Conversation | null> {
+  if (isExampleId(chantierId)) return exampleConversation(chantierId);
   const [party, { data: messages }] = await Promise.all([
     conversationParty(chantierId, artisan),
     supabase.rpc("chantier_messages", { p_chantier_id: chantierId }),
@@ -134,6 +142,7 @@ export async function sendMessage(chantierId: string, body: string): Promise<str
 
 /** Conversation affichée : messages de l'artisan lus, e-mail groupé en attente annulé. */
 export async function markConversationRead(chantierId: string): Promise<void> {
+  if (isExampleId(chantierId)) return;
   await supabase.rpc("mark_conversation_read", { p_chantier_id: chantierId });
 }
 
@@ -151,6 +160,7 @@ export async function reportMessage(messageId: string, reason: string): Promise<
  * affichée. Renvoie la fonction de désabonnement.
  */
 export function subscribeToConversation(chantierId: string, onMessage: () => void): () => void {
+  if (isExampleId(chantierId)) return () => {};
   const channel = supabase
     .channel(`messages:${chantierId}`)
     .on(

@@ -1,4 +1,4 @@
-import type { ChantierStatus } from "@menao/core";
+import { isExampleId, type ChantierStatus } from "@menao/core";
 import { CalendarDays, MapPin } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
@@ -7,6 +7,7 @@ import { formatDayAndTime } from "@/lib/format";
 import type { ArtisanChantierRow } from "@/lib/pro-chantiers";
 import { theme } from "@/ui/theme";
 import { Tappable } from "@/ui";
+import { ExampleBadge } from "@/components/examples";
 
 const t = fr.proChantiers;
 const { colors, font, radius, spacing } = theme;
@@ -50,7 +51,10 @@ export function ArtisanChantierCard({
       onPress={onPress}
       style={styles.card}
     >
-      <StatusPill text={t.status[status]} tone={tone(status)} />
+      <View style={styles.tags}>
+        {isExampleId(r.chantier_id) ? <ExampleBadge /> : null}
+        <StatusPill text={t.status[status]} tone={tone(status)} />
+      </View>
       <Text style={styles.title}>{r.title}</Text>
       {place ? (
         <View style={styles.row}>
@@ -73,6 +77,7 @@ export function ArtisanChantierCard({
 }
 
 const styles = StyleSheet.create({
+  tags: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
   card: {
     gap: spacing(2),
     borderRadius: radius.card,

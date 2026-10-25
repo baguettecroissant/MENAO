@@ -1,9 +1,10 @@
-import { timeLeft } from "@menao/core";
+import { isExampleId, timeLeft } from "@menao/core";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Clock } from "lucide-react-native";
 import { useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
+import { ExampleLock } from "@/components/examples";
 import { HeaderBand } from "@/components/header-band";
 import { ClientReputationCard } from "@/components/pro/client-reputation-card";
 import { PartnerRecommendations } from "@/components/pro/partner-recommendations";
@@ -44,6 +45,8 @@ export default function OpportunityScreen() {
   const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
   // En attente de réponse, ou acceptée sans rendez-vous (ADR 0016) : on peut encore agir.
   const open = (r.status === "envoyee" && left !== null) || r.status === "acceptee";
+  // Exemple (ADR 0184) : mêmes blocs, actions inactives.
+  const example = isExampleId(id);
 
   return (
     <Screen
@@ -53,42 +56,46 @@ export default function OpportunityScreen() {
           meta={left ? [{ icon: Clock, text: t.timeLeft(left.hours, left.minutes) }] : []}
         >
           {open ? (
-            <View style={styles.expertise}>
-              <Button
-                label={fr.proExpertise.open}
-                variant="secondary"
-                onPress={() => router.push(`/opportunite/${id}/expertise`)}
-              />
-            </View>
+            <ExampleLock locked={example}>
+              <View style={styles.expertise}>
+                <Button
+                  label={fr.proExpertise.open}
+                  variant="secondary"
+                  onPress={() => router.push(`/opportunite/${id}/expertise`)}
+                />
+              </View>
+            </ExampleLock>
           ) : null}
         </HeaderBand>
       }
       footer={
         open ? (
-          <View style={styles.actions}>
-            <Button
-              label={t.fixAppointment}
-              onPress={() =>
-                router.push({
-                  pathname: "/opportunite/[id]/rendez-vous",
-                  params: { id, client: r.client.first_name ?? "" },
-                })
-              }
-            />
-            {r.status === "envoyee" ? (
+          <ExampleLock locked={example} note>
+            <View style={styles.actions}>
               <Button
-                label={t.refuse}
-                variant="danger"
+                label={t.fixAppointment}
                 onPress={() =>
                   router.push({
-                    pathname: "/opportunite/[id]/refuser",
-                    // Partenaires à recommander à sa place après le refus (ADR 0174).
-                    params: { id, partenaires: partners.some((p) => p.sameProject) ? "1" : "" },
+                    pathname: "/opportunite/[id]/rendez-vous",
+                    params: { id, client: r.client.first_name ?? "" },
                   })
                 }
               />
-            ) : null}
-          </View>
+              {r.status === "envoyee" ? (
+                <Button
+                  label={t.refuse}
+                  variant="danger"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/opportunite/[id]/refuser",
+                      // Partenaires à recommander à sa place après le refus (ADR 0174).
+                      params: { id, partenaires: partners.some((p) => p.sameProject) ? "1" : "" },
+                    })
+                  }
+                />
+              ) : null}
+            </View>
+          </ExampleLock>
         ) : undefined
       }
     >
@@ -108,10 +115,12 @@ export default function OpportunityScreen() {
           options={partners}
         />
       ) : null}
-      <LinkText
-        label={fr.proFakeClient.open}
-        onPress={() => router.push(`/opportunite/${id}/faux-particulier`)}
-      />
+      <ExampleLock locked={example}>
+        <LinkText
+          label={fr.proFakeClient.open}
+          onPress={() => router.push(`/opportunite/${id}/faux-particulier`)}
+        />
+      </ExampleLock>
     </Screen>
   );
 }

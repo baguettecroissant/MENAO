@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fr } from "@/i18n/fr";
 import { Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
+import { useExamplesActive } from "@/lib/examples";
 
 const t = fr.proQuickActions;
 const { colors, font, radius, spacing } = theme;
@@ -45,8 +47,13 @@ const ACTIONS: { icon: LucideIcon; label: string; detail: string; href: Href }[]
  * bloquer un créneau, ajouter une photo au suivi d'un chantier, gérer ses disponibilités, ouvrir
  * l'agenda (ADR 0130). Montée simple de la feuille, sans effet ajouté (choix de l'utilisateur).
  */
+/** Actions qui ont leurs exemples (ADR 0184). */
+const EXAMPLE_ACTIONS: readonly string[] = [t.quote, t.agenda];
+
 export function QuickActions({ open, onClose }: { open: boolean; onClose: () => void }) {
   const insets = useSafeAreaInsets();
+  // Exemples (ADR 0184) : seuls le devis (sur un chantier d'exemple) et l'agenda s'ouvrent.
+  const example = useExamplesActive();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} aria-label={t.close} role="button" onPress={onClose} />
@@ -56,25 +63,27 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
           {t.title}
         </Text>
         {ACTIONS.map(({ icon: Icon, label, detail, href }) => (
-          <Tappable
-            key={label}
-            role="link"
-            aria-label={label}
-            onPress={() => {
-              onClose();
-              router.push(href);
-            }}
-            style={styles.row}
-          >
-            <View style={styles.icon}>
-              <Icon size={20} color={colors.primary} />
-            </View>
-            <View style={styles.texts}>
-              <Text style={styles.label}>{label}</Text>
-              <Text style={styles.detail}>{detail}</Text>
-            </View>
-            <ChevronRight size={18} color={colors["muted-foreground"]} />
-          </Tappable>
+          <ExampleLock key={label} locked={example && !EXAMPLE_ACTIONS.includes(label)}>
+            <Tappable
+              key={label}
+              role="link"
+              aria-label={label}
+              onPress={() => {
+                onClose();
+                router.push(href);
+              }}
+              style={styles.row}
+            >
+              <View style={styles.icon}>
+                <Icon size={20} color={colors.primary} />
+              </View>
+              <View style={styles.texts}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={styles.detail}>{detail}</Text>
+              </View>
+              <ChevronRight size={18} color={colors["muted-foreground"]} />
+            </Tappable>
+          </ExampleLock>
         ))}
         <Tappable role="button" onPress={onClose} style={styles.close}>
           <Text style={styles.closeText}>{t.close}</Text>

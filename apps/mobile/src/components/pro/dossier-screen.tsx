@@ -26,6 +26,7 @@ import { useTrades } from "@/lib/trades";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Notice, Screen, ScreenSkeleton, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExamplesCard } from "@/components/examples";
 
 const t = fr.proDossier;
 const { colors, font, radius, spacing } = theme;
@@ -105,6 +106,14 @@ export function DossierScreen() {
     >
       <TabHeader title={t.title} />
       {dossier.status === "en_verification" ? <Notice tone="success">{t.sent}</Notice> : null}
+      {/* Pendant la vérification : l'espace rempli d'exemples (ADR 0184), comme sur le site. */}
+      {dossier.status === "en_verification" ? (
+        <ExamplesCard
+          title={fr.proExamples.dossierCard.title}
+          text={fr.proExamples.dossierCard.text}
+          action={fr.proExamples.dossierCard.open}
+        />
+      ) : null}
       {dossier.status === "refuse" ? (
         <Notice tone="error">{t.refused(dossier.refusalReason)}</Notice>
       ) : null}

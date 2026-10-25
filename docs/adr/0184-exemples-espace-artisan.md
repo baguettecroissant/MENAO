@@ -37,7 +37,24 @@
   - le bandeau passe par `AppShell` (`topBanner`), au-dessus de la barre du haut.
 - **Test de bout en bout** : après l'envoi du dossier, visite des exemples. On y vérifie le bandeau, les pastilles, le bouton « Fixer un rendez-vous » hors d'atteinte, le journal, la facture d'acompte du dossier, chaque rubrique, l'éditeur de devis et le retour au dossier.
 
+## Application mobile (second lot, 25 octobre 2026)
+- **Même fonctionnement que le site** :
+  - pendant la vérification, « Découvrez votre futur espace » sur l'écran du dossier ;
+  - après la validation, carte du tableau de bord, exemples dans les listes vides des demandes et des chantiers, et « Masquer les exemples » (même choix que sur le site).
+- **Mode exemples** (`src/lib/examples.ts`) : un interrupteur global.
+  - Les chargeurs de données de l'espace pro renvoient alors les exemples (`src/lib/example-data.ts`, mêmes données que `@menao/core`), et un identifiant d'exemple ouvre toujours son exemple, même hors du mode.
+  - Les écrans gardent leur code : ils bloquent les actions qui écriraient quelque chose (`ExampleLock`, pastille « Exemple »).
+  - Les vrais réglages de « Mon profil » restent fermés.
+- **Bandeau fin orange en haut**, au-dessus de toute l'application :
+  - replié sur « Données d'exemple », avec « Quitter » ;
+  - il prend la marge de l'encoche, et les écrans en dessous n'en ajoutent pas ;
+  - la navigation n'est pas recréée à l'entrée ou à la sortie des exemples.
+- Pas de messagerie en temps réel ni de lecture enregistrée pour une conversation d'exemple.
+- On sort des exemples à la déconnexion ou au changement de compte.
+- Photos des exemples : images de métiers du site public.
+- Aucun lien vers l'abonnement (règle 10).
+- Tests : `example-data.test.ts`.
+
 ## Conséquences
 - Migration `exemples_espace`, appliquée sur staging le 25 octobre 2026 pour les essais en local.
-- **Application mobile** : même fonctionnement dans un second lot (données et choix « masquer » déjà partagés).
 - Pas de nouvelle dépendance.

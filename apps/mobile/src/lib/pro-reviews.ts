@@ -1,6 +1,8 @@
 import type { ValueForMoney } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { exampleMyReviews } from "./example-data";
+import { examplesActive } from "./examples";
 
 /** Avis d'un client sur un chantier de l'artisan (F-28), publié ou masqué par l'équipe. */
 export type ArtisanReview = {
@@ -92,6 +94,7 @@ async function myArtisanId(): Promise<string | null> {
  * du plus récent au plus ancien, score MENAO détaillé et titres des chantiers. Null en cas d'erreur.
  */
 export async function loadMyReviews(): Promise<MyReviews | null> {
+  if (examplesActive()) return exampleMyReviews();
   const artisanId = await myArtisanId();
   if (!artisanId) return null;
   const [{ data: rows, error }, { data: score }, { data: chantiers }] = await Promise.all([
@@ -126,6 +129,7 @@ export async function loadMyReviews(): Promise<MyReviews | null> {
 
 /** Nombre d'avis publiés sans réponse de l'artisan (tableau de bord, comme le menu du site). */
 export async function countReviewsToAnswer(): Promise<number> {
+  if (examplesActive()) return 1;
   const artisanId = await myArtisanId();
   if (!artisanId) return 0;
   const { count } = await supabase

@@ -16,6 +16,8 @@ import { blockedSlotSchema } from "@menao/validation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { exampleAgendaWeek } from "./example-data";
+import { examplesActive } from "./examples";
 
 export type AgendaAbsence = Absence & { id: string; label: string | null };
 
@@ -132,6 +134,7 @@ async function fetchItems(
  * compte (RLS), filtrées sur l'artisan. Null en cas d'erreur.
  */
 export async function loadAgendaWeek(monday: string): Promise<AgendaWeek | null> {
+  if (examplesActive()) return exampleAgendaWeek(monday);
   const artisan = await myArtisan();
   if (!artisan) return null;
   const today = parisToday();

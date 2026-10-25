@@ -9,6 +9,8 @@ import {
   type WelcomeGift,
 } from "@menao/validation";
 import { loadDossier, type Dossier } from "./artisan-dossier";
+import { exampleMyPage, exampleProfileHub } from "./example-data";
+import { examplesActive } from "./examples";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { hubStatuses, type HubRow, type HubStatus } from "./profile-hub-status";
 import { publicUrl } from "./project";
@@ -43,7 +45,28 @@ export type ProfileHub = {
   welcomeGift: WelcomeGift | null;
 };
 
+/** Nom, e-mail et photo du compte : seules données réelles des exemples (ADR 0184). */
+async function exampleAccount() {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return null;
+  const { data } = await supabase
+    .from("profiles")
+    .select("first_name, last_name, avatar_path")
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+  return {
+    firstName: data?.first_name?.trim() ?? "",
+    lastName: data?.last_name?.trim() ?? "",
+    email: auth.user.email ?? null,
+    avatarUrl: data?.avatar_path ? publicUrl("avatars", data.avatar_path) : null,
+  };
+}
+
 export async function loadProfileHub(): Promise<ProfileHub | null> {
+  if (examplesActive()) {
+    const account = await exampleAccount();
+    return account ? exampleProfileHub(account) : null;
+  }
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
   const [
@@ -126,6 +149,11 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
  * l'artisan n'est pas visible (`my_public_profile`), avec ses derniers avis publiés.
  */
 export async function loadMyPage(): Promise<ArtisanPage | null> {
+  if (examplesActive()) {
+    const account = await exampleAccount();
+    const name = [account?.firstName, account?.lastName].filter(Boolean).join(" ") || null;
+    return exampleMyPage(name, account?.avatarUrl ?? null);
+  }
   const { data } = await supabase.rpc("my_public_profile");
   const profile = parseArtisanProfile(data);
   if (!profile) return null;

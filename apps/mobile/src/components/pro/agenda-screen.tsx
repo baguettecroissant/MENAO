@@ -42,6 +42,8 @@ import { deleteBlockedSlot, loadAgendaWeek } from "@/lib/pro-agenda";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, LinkText, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { ExampleLock } from "@/components/examples";
+import { useExamplesActive } from "@/lib/examples";
 
 const t = fr.proAgenda;
 const { colors, font, radius, spacing } = theme;
@@ -124,6 +126,8 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
   const load = useCallback(() => loadAgendaWeek(monday), [monday]);
   const [data, reload] = useFocusData(load);
   const [refreshing, setRefreshing] = useState(false);
+  // Exemples (ADR 0184) : l'agenda se lit, rien ne se bloque ni ne se libère.
+  const example = useExamplesActive();
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(
     blocked ? { tone: "success", text: t.block.added } : null,
   );
@@ -208,6 +212,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
           <Pressable
             role="link"
             aria-label={`${availabilityLabel(current.availability)}. ${t.manage}`}
+            disabled={example}
             onPress={() => router.push("/pro-disponibilites")}
             style={({ pressed }) => [
               styles.status,
@@ -228,16 +233,18 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
             </Text>
           </Pressable>
         ) : null}
-        <Button
-          label={t.block.open}
-          variant="secondary"
-          onPress={() =>
-            router.push({
-              pathname: "/pro-agenda/bloquer",
-              params: { date: monday > today ? monday : today, depuis: "agenda" },
-            })
-          }
-        />
+        <ExampleLock locked={example} note>
+          <Button
+            label={t.block.open}
+            variant="secondary"
+            onPress={() =>
+              router.push({
+                pathname: "/pro-agenda/bloquer",
+                params: { date: monday > today ? monday : today, depuis: "agenda" },
+              })
+            }
+          />
+        </ExampleLock>
         {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
 
         {current && current.hours.length === 0 ? (
@@ -283,7 +290,11 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
                   ) : null}
                   {dayItems.length > 0 ? (
                     dayItems.map((item) => (
-                      <AgendaRow key={item.id} item={item} onFree={() => free(item)} />
+                      <AgendaRow
+                        key={item.id}
+                        item={item}
+                        onFree={example ? null : () => free(item)}
+                      />
                     ))
                   ) : !absence ? (
                     <Text style={styles.empty}>{t.emptyDay}</Text>
@@ -319,7 +330,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
 }
 
 /** Visite ou démarrage (vers le chantier), ou créneau bloqué (avec « Libérer »). */
-function AgendaRow({ item, onFree }: { item: Placed; onFree: () => Promise<void> }) {
+function AgendaRow({ item, onFree }: { item: Placed; onFree: (() => Promise<void>) | null }) {
   const [freeing, setFreeing] = useState(false);
   const Icon = KIND_ICONS[item.kind];
   const c = KIND_COLORS[item.kind];
@@ -354,6 +365,7 @@ function AgendaRow({ item, onFree }: { item: Placed; onFree: () => Promise<void>
       </Tappable>
     );
   }
+  if (!onFree) return <View style={rowStyle}>{body}</View>;
   return (
     <View style={rowStyle}>
       {body}

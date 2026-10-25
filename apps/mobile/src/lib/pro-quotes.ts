@@ -15,6 +15,8 @@ import {
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { isExampleId } from "@menao/core";
+import { exampleQuoteDraft } from "./example-data";
 
 /** Erreur SQL : message des règles métier (code 22023), sinon message générique. */
 const sqlError = (error: { code?: string; message: string }) =>
@@ -43,6 +45,7 @@ export type QuoteDraft = {
 
 /** Brouillon du devis du chantier (F-19), comme sur le site : lignes dans l'ordre. */
 export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | null> {
+  if (isExampleId(chantierId)) return exampleQuoteDraft(chantierId);
   const [{ data: draft, error }, artisan, { data: appointment }] = await Promise.all([
     supabase
       .from("quotes")
@@ -109,6 +112,7 @@ export async function searchPreviousLines(query: string): Promise<QuoteLineInput
 
 /** Texte d'une dictée sauvegardée pour ce chantier (F-19), comme sur le site (RLS : l'artisan). */
 export async function loadSavedDictation(chantierId: string): Promise<string | null> {
+  if (isExampleId(chantierId)) return null;
   const { data } = await supabase
     .from("quote_dictations")
     .select("transcript")
@@ -172,6 +176,7 @@ export type QuoteSendContext = {
 
 /** Brouillon à prévisualiser puis envoyer (F-20, F-21) ; null s'il n'y a pas encore de ligne. */
 export async function loadQuoteSendContext(chantierId: string): Promise<QuoteSendContext | null> {
+  if (isExampleId(chantierId)) return null;
   const [{ data: draft }, artisan, { data: detail }] = await Promise.all([
     supabase
       .from("quotes")
