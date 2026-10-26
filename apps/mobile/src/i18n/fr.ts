@@ -2449,6 +2449,8 @@ export const fr = {
   },
   /** Briques des listes de l'espace artisan (ADR 0189), comme sur le site. */
   proLists: {
+    // Glisser une ligne pour agir (ADR 0196).
+    swipe: { paid: "Payée", unpaid: "À payer", delete: "Supprimer", answer: "Répondre" },
     more: "Plus d'actions",
     add: "Ajouter",
     search: "Rechercher",

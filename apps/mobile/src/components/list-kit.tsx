@@ -1,5 +1,5 @@
-import { ChevronRight, Ellipsis, Plus, Search } from "lucide-react-native";
-import { Children, useState, type ReactNode } from "react";
+import { ChevronRight, Ellipsis, Plus, Search, type LucideIcon } from "lucide-react-native";
+import { Children, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +9,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+import ReanimatedSwipeable, {
+  type SwipeableMethods,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { fr } from "@/i18n/fr";
 import { haptic } from "@/lib/haptics";
@@ -280,7 +283,87 @@ export function ListRow({
   );
 }
 
+export type SwipeAction = {
+  label: string;
+  icon: LucideIcon;
+  tone: "success" | "danger" | "primary";
+  onPress: () => void;
+};
+
+const SWIPE_TONES: Record<SwipeAction["tone"], string> = {
+  success: colors.success,
+  danger: colors.danger,
+  primary: colors.primary,
+};
+
+/**
+ * Glisser une ligne vers la gauche pour agir (ADR 0196), comme Mail sur iPhone : les boutons
+ * apparaissent à droite (« Payée », « Supprimer », « Répondre »). Un toucher agit et referme
+ * la ligne. Les mêmes actions restent dans la fiche (lecteurs d'écran, exemples).
+ */
+export function Swipe({
+  actions,
+  enabled = true,
+  rounded = false,
+  children,
+}: {
+  actions: readonly SwipeAction[];
+  enabled?: boolean;
+  /** Carte aux coins arrondis (demandes) : les boutons suivent ses coins. */
+  rounded?: boolean;
+  children: ReactNode;
+}) {
+  const ref = useRef<SwipeableMethods>(null);
+  if (!enabled || actions.length === 0) return children;
+  return (
+    <ReanimatedSwipeable
+      ref={ref}
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}
+      containerStyle={rounded ? styles.swipeRounded : undefined}
+      onSwipeableWillOpen={() => haptic.select()}
+      renderRightActions={() => (
+        <View style={styles.swipeActions}>
+          {actions.map((action) => (
+            <Pressable
+              key={action.label}
+              role="button"
+              aria-label={action.label}
+              onPress={() => {
+                ref.current?.close();
+                haptic.tap();
+                action.onPress();
+              }}
+              style={({ pressed }) => [
+                styles.swipeAction,
+                { backgroundColor: SWIPE_TONES[action.tone] },
+                pressed && styles.swipePressed,
+              ]}
+            >
+              <action.icon size={18} color={colors["primary-foreground"]} />
+              <Text style={styles.swipeText}>{action.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    >
+      {children}
+    </ReanimatedSwipeable>
+  );
+}
+
 const styles = StyleSheet.create({
+  swipeActions: { flexDirection: "row" },
+  swipeRounded: { overflow: "hidden", borderRadius: radius.card },
+  swipeAction: {
+    width: 84,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing(1),
+  },
+  swipePressed: { opacity: 0.85 },
+  swipeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-foreground"] },
   header: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
   title: { flex: 1, fontFamily: font.medium, fontSize: 20, color: colors.foreground },
   actions: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
@@ -377,6 +460,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing(3),
     minHeight: 64,
+    // Fond plein : la ligne glisse par-dessus ses boutons (ADR 0196).
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing(4),
     paddingVertical: spacing(3),
   },

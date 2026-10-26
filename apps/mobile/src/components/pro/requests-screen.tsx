@@ -1,11 +1,12 @@
 import { inboxGroups, isExampleId, timeLeft } from "@menao/core";
 import { router } from "expo-router";
-import { Clock, MapPin } from "lucide-react-native";
+import { CalendarCheck, Clock, MapPin } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
+import { Swipe } from "@/components/list-kit";
 import { RequestCardsSkeleton } from "@/components/skeletons";
 import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
@@ -65,7 +66,25 @@ export function RequestsScreen({ tab = false }: { tab?: boolean }) {
         .duration(260)
         .reduceMotion(ReduceMotion.System)}
     >
-      <RequestCard request={r} now={now} />
+      {/* Glisser pour répondre à une demande en attente (ADR 0196). */}
+      <Swipe
+        rounded
+        enabled={r.status === "envoyee" && !isExampleId(r.request_id)}
+        actions={[
+          {
+            label: fr.proLists.swipe.answer,
+            icon: CalendarCheck,
+            tone: "primary",
+            onPress: () =>
+              router.push({
+                pathname: "/opportunite/[id]/rendez-vous",
+                params: { id: r.request_id, client: r.client_first_name ?? "" },
+              }),
+          },
+        ]}
+      >
+        <RequestCard request={r} now={now} />
+      </Swipe>
     </Animated.View>
   );
   return (
