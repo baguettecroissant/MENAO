@@ -174,3 +174,6 @@ export async function reportFakeClient(requestId: string, detail: string): Promi
   });
   return error ? sqlError(error) : null;
 }
+
+/** Clé de la fiche d'une demande dans la mémoire des écrans. */
+export const opportunityScreenKey = (id: string) => `opportunite:${id}`;

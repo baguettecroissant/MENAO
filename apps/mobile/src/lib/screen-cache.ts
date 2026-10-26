@@ -36,6 +36,14 @@ let store: ScreenCacheStore | null = null;
 let persisting = true;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 const preloadedAt = new Map<string, number>();
+/** Chargements d'avance en cours, par écran : l'écran ouvert entre-temps les attend. */
+const inflight = new Map<string, Promise<unknown>>();
+/** Aperçu d'une fiche (titre, sous-titre), connu de la liste avant son chargement. */
+const previews = new Map<string, ScreenPreview>();
+/** Change à chaque oubli (compte, exemples) : un chargement parti avant n'écrit plus rien. */
+let generation = 0;
+
+export type ScreenPreview = { title: string; subtitle?: string | null };
 
 export function setScreenCacheStore(next: ScreenCacheStore | null): void {
   store = next;
@@ -88,6 +96,41 @@ export async function restoreScreenCache(user: string): Promise<void> {
   }
 }
 
+/**
+ * Charge d'avance l'écran d'une fiche ou d'un onglet (ADR 0192 et 0193) : au toucher d'une ligne,
+ * ou pour les premières lignes d'une liste. Un seul chargement à la fois par écran ; rien n'est
+ * écrit si le compte ou le mode exemples a changé entre-temps, ni en cas d'erreur (null).
+ */
+export function prefetchScreen(key: string, load: () => Promise<unknown>): void {
+  if (inflight.has(key)) return;
+  const at = preloadedAt.get(key);
+  if (at !== undefined && Date.now() - at < FRESH_PRELOAD_MS) return;
+  const started = generation;
+  const promise = load()
+    .then((value) => {
+      if (generation !== started || value === null) return null;
+      writePreloadedScreen(key, value);
+      return value;
+    })
+    .catch(() => null)
+    .finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+}
+
+/** Chargement d'avance en cours pour cet écran (résout ses données, ou null). */
+export function inflightScreen(key: ScreenCacheKey): Promise<unknown> | undefined {
+  return typeof key === "string" ? inflight.get(key) : undefined;
+}
+
+/** Titre d'une fiche connu de la liste, affiché pendant son chargement (ADR 0193). */
+export function setScreenPreview(key: string, preview: ScreenPreview): void {
+  previews.set(key, preview);
+}
+
+export function readScreenPreview(key: string): ScreenPreview | undefined {
+  return previews.get(key);
+}
+
 /** Onglet chargé d'avance (ADR 0192) : affiché tel quel s'il est ouvert dans les 20 secondes. */
 export function writePreloadedScreen(key: string, value: unknown): void {
   writeScreenCache(key, value);
@@ -133,6 +176,9 @@ export function clearScreenCache(): void {
   byFunction = new WeakMap();
   byText.clear();
   preloadedAt.clear();
+  inflight.clear();
+  previews.clear();
+  generation += 1;
 }
 
 /**

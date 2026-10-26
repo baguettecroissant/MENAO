@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearScreenCache,
+  inflightScreen,
   parseScreenCache,
+  prefetchScreen,
+  readScreenPreview,
   readScreenCache,
   restoreScreenCache,
   sameScreenData,
@@ -9,6 +12,7 @@ import {
   setScreenCacheOwner,
   setScreenCachePersistence,
   setScreenCacheStore,
+  setScreenPreview,
   takeFreshPreload,
   writePreloadedScreen,
   writeScreenCache,
@@ -139,5 +143,47 @@ describe("onglets gardés sur le téléphone d'une ouverture à l'autre (ADR 019
     writePreloadedScreen("tab:chantiers", []);
     await vi.advanceTimersByTimeAsync(21_000);
     expect(takeFreshPreload("tab:chantiers")).toBe(false);
+  });
+});
+
+describe("fiches chargées d'avance (ADR 0193)", () => {
+  beforeEach(() => clearScreenCache());
+
+  it("charge une seule fois à la fois, puis garde la fiche comme fraîche", async () => {
+    const load = vi.fn(async () => ({ titre: "Cuisine" }));
+    prefetchScreen("pro-chantier:1", load);
+    prefetchScreen("pro-chantier:1", load);
+    expect(load).toHaveBeenCalledTimes(1);
+    await expect(inflightScreen("pro-chantier:1")).resolves.toEqual({ titre: "Cuisine" });
+    expect(readScreenCache("pro-chantier:1")).toEqual({ titre: "Cuisine" });
+    expect(inflightScreen("pro-chantier:1")).toBeUndefined();
+    // Fraîche : un nouveau toucher ne recharge pas.
+    prefetchScreen("pro-chantier:1", load);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it("n'écrit rien si le compte ou les exemples ont changé entre-temps, ni en cas d'erreur", async () => {
+    let resolve: (value: unknown) => void = () => undefined;
+    prefetchScreen("depense:1", () => new Promise((r) => (resolve = r)));
+    const pending = inflightScreen("depense:1");
+    clearScreenCache();
+    resolve({ titre: "Ancien compte" });
+    await pending;
+    expect(readScreenCache("depense:1")).toBeUndefined();
+
+    prefetchScreen("depense:2", async () => null);
+    await inflightScreen("depense:2");
+    expect(readScreenCache("depense:2")).toBeUndefined();
+    prefetchScreen("depense:3", async () => {
+      throw new Error("réseau");
+    });
+    await expect(inflightScreen("depense:3")).resolves.toBeNull();
+  });
+
+  it("garde le titre connu de la liste jusqu'au prochain oubli", () => {
+    setScreenPreview("opportunite:1", { title: "Fuite cuisine", subtitle: "06600 Antibes" });
+    expect(readScreenPreview("opportunite:1")?.title).toBe("Fuite cuisine");
+    clearScreenCache();
+    expect(readScreenPreview("opportunite:1")).toBeUndefined();
   });
 });

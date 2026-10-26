@@ -246,3 +246,6 @@ export async function shareExpensesCsv(): Promise<boolean> {
     return false;
   }
 }
+
+/** Clé de la fiche d'une dépense dans la mémoire des écrans. */
+export const expenseScreenKey = (id: string) => `depense:${id}`;

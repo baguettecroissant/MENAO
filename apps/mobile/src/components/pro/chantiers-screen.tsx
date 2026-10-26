@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 import { ChantierCardsSkeleton } from "@/components/skeletons";
@@ -8,6 +8,7 @@ import { ArtisanChantierCard } from "@/components/pro/chantier-row";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { loadArtisanChantiers } from "@/lib/pro-chantiers";
+import { PREFETCH_DELAY_MS, PREFETCH_FIRST, prefetchChantier } from "@/lib/prefetch";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -30,6 +31,14 @@ export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
   const [refreshing, setRefreshing] = useState(false);
   // Squelette des cartes pendant le premier chargement, puis fondu (ADR 0192).
   const reveal = useReveal(rows !== undefined);
+  // Premiers chantiers chargés d'avance : les ouvrir est instantané (ADR 0193).
+  useEffect(() => {
+    if (!rows?.length) return;
+    const timer = setTimeout(() => {
+      for (const r of rows.slice(0, PREFETCH_FIRST)) prefetchChantier(r.chantier_id, r.title);
+    }, PREFETCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [rows]);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>

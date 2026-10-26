@@ -1,7 +1,7 @@
 import { inboxGroups, isExampleId, timeLeft } from "@menao/core";
 import { router } from "expo-router";
 import { Clock, MapPin } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +11,7 @@ import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
+import { PREFETCH_DELAY_MS, PREFETCH_FIRST, prefetchOpportunity } from "@/lib/prefetch";
 import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -43,6 +44,16 @@ export function RequestsScreen({ tab = false }: { tab?: boolean }) {
   const [examples, reloadExamples] = useFocusData(loadSpaceExamplesShown);
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
+  // Premières demandes chargées d'avance : les ouvrir est instantané (ADR 0193).
+  useEffect(() => {
+    if (!rows?.length) return;
+    const timer = setTimeout(() => {
+      for (const r of rows.slice(0, PREFETCH_FIRST)) {
+        prefetchOpportunity(r.request_id, r.summary || r.trade_label || "");
+      }
+    }, PREFETCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [rows]);
 
   const now = new Date();
   const { open, done } = inboxGroups(rows ?? [], now);
@@ -116,6 +127,7 @@ function RequestCard({ request: r, now }: { request: InboxItem; now: Date }) {
     <Tappable
       role="link"
       aria-label={[t.status[r.status], title, place].filter(Boolean).join(", ")}
+      onPressIn={() => prefetchOpportunity(r.request_id, r.summary || r.trade_label || "", place)}
       onPress={() => router.push(`/opportunite/${r.request_id}`)}
       style={styles.card}
     >

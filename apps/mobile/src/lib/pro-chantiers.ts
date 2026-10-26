@@ -1,8 +1,10 @@
 import {
   cancelReport,
+  isExampleId,
   journalSummary,
   paymentProgress,
   type ArtisanCancelReason,
+  type ChantierStatus,
   type JournalSummary,
 } from "@menao/core";
 import type { Database } from "@menao/db";
@@ -11,7 +13,6 @@ import { fr } from "@/i18n/fr";
 import type { ChantierDocument } from "./chantiers";
 import { REVIEW_COLUMNS, toArtisanReview, type ArtisanReview } from "./pro-reviews";
 import { supabase } from "./supabase";
-import { isExampleId } from "@menao/core";
 import {
   exampleArtisanChantier,
   exampleArtisanFollowUp,
@@ -397,4 +398,34 @@ export async function signalReservesLifted(
     p_message: message,
   });
   return error ? rpcError(error) : null;
+}
+
+/** Après l'acompte, la fiche devient la vue du chantier (F-22), comme sur le site. */
+const FOLLOW_UP: readonly ChantierStatus[] = [
+  "acompte_paye",
+  "planifie",
+  "en_cours",
+  "travaux_termines",
+  "reserves_a_lever",
+  "receptionne",
+  "cloture",
+  "en_litige",
+];
+
+/** Clé de la fiche d'un chantier dans la mémoire des écrans. */
+export const chantierScreenKey = (id: string) => `pro-chantier:${id}`;
+
+/**
+ * Fiche d'un chantier côté artisan : le chantier, et son suivi après l'acompte. Partagée par
+ * l'écran et le chargement d'avance au toucher de la ligne (ADR 0193).
+ */
+export async function loadArtisanChantierScreen(
+  id: string,
+): Promise<{ chantier: ArtisanChantier; followUp: ArtisanFollowUp | null } | null> {
+  const chantier = await loadArtisanChantier(id);
+  if (!chantier) return null;
+  const followUp = FOLLOW_UP.includes(chantier.detail.chantier.status)
+    ? await loadArtisanFollowUp(id, chantier.detail.photos)
+    : null;
+  return { chantier, followUp };
 }

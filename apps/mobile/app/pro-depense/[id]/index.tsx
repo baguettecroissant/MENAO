@@ -6,12 +6,19 @@ import { useCallback, useState, type ReactNode } from "react";
 import { Alert, Image, StyleSheet, Text, View } from "react-native";
 import { ExampleBadge, ExampleLock } from "@/components/examples";
 import { ExpenseLines, ExpenseStatusPill, ToClassifyPill } from "@/components/pro/expense-parts";
+import { DetailSkeleton } from "@/components/skeletons";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDay } from "@/lib/format";
-import { deleteExpense, loadExpenseView, setExpensePaid } from "@/lib/pro-expenses";
+import {
+  deleteExpense,
+  expenseScreenKey,
+  loadExpenseView,
+  setExpensePaid,
+} from "@/lib/pro-expenses";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { readScreenPreview } from "@/lib/screen-cache";
+import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proExpenses;
@@ -37,12 +44,14 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 export default function ExpenseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadExpenseView(id), [id]);
-  const [expense, reload] = useFocusData(load);
+  const [expense, reload] = useFocusData(load, undefined, expenseScreenKey(id));
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const example = isExampleId(id);
 
-  if (expense === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (expense === undefined) {
+    return <DetailSkeleton preview={readScreenPreview(expenseScreenKey(id))} />;
+  }
   if (expense === null) {
     return (
       <Screen header={<TopBar />}>

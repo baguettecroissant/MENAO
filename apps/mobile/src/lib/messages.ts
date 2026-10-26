@@ -178,3 +178,6 @@ export function subscribeToConversation(chantierId: string, onMessage: () => voi
     void supabase.removeChannel(channel);
   };
 }
+
+/** Clé d'une conversation dans la mémoire des écrans. */
+export const conversationScreenKey = (id: string) => `conversation:${id}`;

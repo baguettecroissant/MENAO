@@ -1,6 +1,7 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
+  inflightScreen,
   readScreenCache,
   sameScreenData,
   takeFreshPreload,
@@ -50,9 +51,19 @@ export function useFocusData<T>(
           }
         });
       };
+      const pending = inflightScreen(key);
       if (takeFreshPreload(key)) {
         const preloaded = readScreenCache<T>(key);
         if (preloaded !== undefined) apply(preloaded);
+      } else if (pending) {
+        // Chargement d'avance déjà parti (toucher de la ligne) : on l'attend plutôt que de
+        // recommencer ; en cas d'échec, l'écran charge lui-même.
+        void pending.then((value) => {
+          if (!active) return;
+          if (value === null || value === undefined) run(0);
+          else apply(value as T);
+          takeFreshPreload(key);
+        });
       } else {
         run(0);
       }
