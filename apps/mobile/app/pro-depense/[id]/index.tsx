@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { ExternalLink, Pencil } from "lucide-react-native";
 import { useCallback, useState, type ReactNode } from "react";
-import { Alert, Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { ExampleBadge, ExampleLock } from "@/components/examples";
 import { ExpenseLines, ExpenseStatusPill, ToClassifyPill } from "@/components/pro/expense-parts";
 import { DetailSkeleton } from "@/components/skeletons";
@@ -13,12 +13,15 @@ import { formatCents, formatDay } from "@/lib/format";
 import {
   deleteExpense,
   expenseScreenKey,
+  hideExpense,
   loadExpenseView,
   setExpensePaid,
+  unhideExpense,
 } from "@/lib/pro-expenses";
+import { invalidateScreen, readScreenPreview } from "@/lib/screen-cache";
+import { runUndoable } from "@/lib/undo";
 import { useFocusData } from "@/lib/use-focus-data";
-import { readScreenPreview } from "@/lib/screen-cache";
-import { Body, Button, Card, LinkText, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Card, LinkText, Notice, Screen, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proExpenses;
@@ -45,7 +48,8 @@ export default function ExpenseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadExpenseView(id), [id]);
   const [expense, reload] = useFocusData(load, undefined, expenseScreenKey(id));
-  const [busy, setBusy] = useState(false);
+  // Payée ou non : affiché tout de suite, avant la réponse du serveur (ADR 0195).
+  const [paidOverride, setPaidOverride] = useState<boolean | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const example = isExampleId(id);
 
@@ -60,34 +64,51 @@ export default function ExpenseScreen() {
     );
   }
 
-  const status = expenseStatus(expense, parisToday());
+  const today = parisToday();
+  const view =
+    paidOverride === null ? expense : { ...expense, paid_on: paidOverride ? today : null };
+  const status = expenseStatus(view, today);
   const { documentUrl, document_path: documentPath } = expense;
   const isImage = expense.document_mime?.startsWith("image/") ?? false;
 
-  async function togglePaid() {
+  // Payée ou non : tout de suite à l'écran, puis enregistré ; « Annuler » revient en arrière.
+  async function setPaid(paid: boolean) {
     setFailure(null);
-    setBusy(true);
-    const ok = await setExpensePaid(id, status !== "paye");
+    setPaidOverride(paid);
+    const ok = await setExpensePaid(id, paid);
+    if (!ok) {
+      setPaidOverride(null);
+      setFailure(d.actionFailed);
+      return;
+    }
     await reload();
-    setBusy(false);
-    if (!ok) setFailure(d.actionFailed);
+    setPaidOverride(null);
+    invalidateScreen("tab:depenses");
+    toast.undo(paid ? d.markedPaid : d.markedUnpaid, fr.toastUndo, () => void setPaid(!paid));
   }
 
-  function confirmDelete() {
-    Alert.alert(d.deleteTitle, d.deleteText, [
-      { text: d.deleteCancel, style: "cancel" },
-      {
-        text: d.deleteConfirm,
-        style: "destructive",
-        onPress: async () => {
-          setBusy(true);
-          const ok = await deleteExpense(id);
-          setBusy(false);
-          if (ok) router.back();
-          else setFailure(d.actionFailed);
-        },
+  // Suppression annulable (ADR 0195) : la dépense disparaît tout de suite, et n'est supprimée
+  // qu'au bout de 5 secondes, sauf « Annuler ».
+  function remove() {
+    runUndoable({
+      message: d.deleted,
+      apply: () => {
+        hideExpense(id);
+        invalidateScreen("tab:depenses");
+        router.back();
       },
-    ]);
+      revert: () => {
+        unhideExpense(id);
+        invalidateScreen("tab:depenses");
+      },
+      commit: async () => {
+        const ok = await deleteExpense(id);
+        unhideExpense(id);
+        invalidateScreen("tab:depenses");
+        return ok;
+      },
+      failed: d.actionFailed,
+    });
   }
 
   return (
@@ -98,8 +119,8 @@ export default function ExpenseScreen() {
           <ExpenseStatusPill status={status} />
           {example ? <ExampleBadge /> : null}
         </View>
-        {status === "paye" && expense.paid_on ? (
-          <Body muted>{d.paidOn(formatDay(expense.paid_on))}</Body>
+        {status === "paye" && view.paid_on ? (
+          <Body muted>{d.paidOn(formatDay(view.paid_on))}</Body>
         ) : status === "en_retard" && expense.due_on ? (
           <Body muted>{d.overdueSince(formatDay(expense.due_on))}</Body>
         ) : expense.due_on ? (
@@ -114,8 +135,7 @@ export default function ExpenseScreen() {
           <Button
             label={status === "paye" ? d.markUnpaid : d.markPaid}
             variant={status === "paye" ? "secondary" : "primary"}
-            loading={busy}
-            onPress={() => void togglePaid()}
+            onPress={() => void setPaid(status !== "paye")}
           />
           <Button
             label={d.edit}
@@ -187,7 +207,7 @@ export default function ExpenseScreen() {
       ) : null}
 
       <ExampleLock locked={example}>
-        <Button label={d.delete} variant="danger" disabled={busy} onPress={confirmDelete} />
+        <Button label={d.delete} variant="danger" onPress={remove} />
       </ExampleLock>
     </Screen>
   );

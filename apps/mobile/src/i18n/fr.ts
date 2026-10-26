@@ -1,6 +1,8 @@
 /** Textes de l'application native, en français et centralisés (comme ceux du site). */
 export const fr = {
   brand: "MENAO",
+  /** Bouton des messages d'action annulable (ADR 0195). */
+  toastUndo: "Annuler",
   nav: {
     back: "Retour",
     currentStep: "étape en cours",
@@ -1738,6 +1740,8 @@ export const fr = {
     reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
     attach: "Joindre une photo",
     uploading: "Envoi de la pièce jointe…",
+    // Message affiché tout de suite, avant la réponse du serveur (ADR 0195).
+    sending: "Envoi…",
     attachErrors: {
       too_large: "Fichier trop lourd : 10 Mo au plus.",
       invalid_type: "Format non pris en charge : photo JPEG ou PNG.",
@@ -2646,10 +2650,9 @@ export const fr = {
       dueOn: (date: string) => `Échéance le ${date}`,
       overdueSince: (date: string) => `En retard depuis le ${date}`,
       delete: "Supprimer la dépense",
-      deleteTitle: "Supprimer cette dépense ?",
-      deleteText: "La dépense et sa pièce seront supprimées. C'est définitif.",
-      deleteConfirm: "Supprimer",
-      deleteCancel: "Annuler",
+      deleted: "Dépense supprimée",
+      markedPaid: "Dépense marquée payée",
+      markedUnpaid: "Dépense marquée à payer",
       document: "Pièce",
       noDocument: "Aucune pièce : ajoutez-la depuis « Modifier ».",
       openDocument: "Ouvrir la pièce",

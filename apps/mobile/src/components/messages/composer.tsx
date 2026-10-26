@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
+import { haptic } from "@/lib/haptics";
 import { sendMessage } from "@/lib/messages";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { theme } from "@/ui/theme";
@@ -16,8 +17,19 @@ const { colors, font, radius, spacing } = theme;
 /**
  * Saisie d'un message (F-40), contrôlé comme sur le site (2 000 caractères au plus), et photo
  * jointe : prise de vue ou photothèque, réduite sur le téléphone puis vérifiée par process-upload.
+ * Envoi instantané (ADR 0195) : le champ se vide et le message s'affiche aussitôt (`onPending`) ;
+ * en cas d'échec, le texte revient dans le champ avec l'erreur.
  */
-export function Composer({ chantierId, onSent }: { chantierId: string; onSent: () => void }) {
+export function Composer({
+  chantierId,
+  onSent,
+  onPending,
+}: {
+  chantierId: string;
+  onSent: () => void | Promise<void>;
+  /** Message affiché avant la réponse du serveur ; renvoie de quoi le retirer. */
+  onPending?: (body: string) => () => void;
+}) {
   const insets = useSafeAreaInsets();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,11 +61,20 @@ export function Composer({ chantierId, onSent }: { chantierId: string; onSent: (
     }
     setError(null);
     setPending(true);
-    const failed = await sendMessage(chantierId, parsed.data.body);
-    setPending(false);
-    if (failed) return setError(failed);
+    const text = parsed.data.body;
     setBody("");
-    onSent();
+    const remove = onPending?.(text);
+    const failed = await sendMessage(chantierId, text);
+    setPending(false);
+    if (failed) {
+      remove?.();
+      setBody(text);
+      haptic.error();
+      return setError(failed);
+    }
+    haptic.tap();
+    await onSent();
+    remove?.();
   }
 
   const empty = !body.trim();
