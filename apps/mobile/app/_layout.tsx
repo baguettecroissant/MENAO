@@ -8,18 +8,21 @@ import { ARTISAN_SIGNUP_DRAFT_KEY, signupPending } from "@menao/core";
 import { router, Stack, usePathname, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AnimatedSplash } from "@/components/animated-splash";
 import { PushNotifications } from "@/components/push-notifications";
 import { kv } from "@/lib/kv";
 import { BelowExamplesBanner, ExamplesBanner } from "@/components/examples";
 import { useExamplesActive } from "@/lib/examples";
+import { useScreenCacheRestored } from "@/lib/screen-store";
 import { SessionProvider, useSession } from "@/lib/session";
 import { UnreadProvider } from "@/lib/unread";
 import { ToastHost } from "@/ui";
 
-// L'écran de démarrage (logo MENAO) reste affiché jusqu'au chargement des polices et de la session.
+// L'écran de démarrage du téléphone reste affiché jusqu'au démarrage animé (ADR 0192), qui prend
+// le relais sans saut le temps de charger les polices, la session et les onglets gardés.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
@@ -40,26 +43,31 @@ export default function RootLayout() {
 }
 
 function Root({ ready }: { ready: boolean }) {
-  const { loading } = useSession();
+  const { loading, session } = useSession();
   const examples = useExamplesActive();
-  const done = ready && !loading;
-  useEffect(() => {
-    if (done) SplashScreen.hideAsync().catch(() => undefined);
-  }, [done]);
-  if (!done) return null;
+  // Onglets de la dernière ouverture relus avant le premier écran (ADR 0192).
+  const restored = useScreenCacheRestored(loading ? undefined : (session?.user.id ?? null));
+  const done = ready && !loading && restored;
+  const [splashGone, setSplashGone] = useState(false);
+  const hideSplash = useCallback(() => setSplashGone(true), []);
   return (
     <>
-      <StatusBar style={examples ? "light" : "dark"} />
-      {/* Mode exemples (ADR 0184) : bandeau orange en haut, au-dessus de tous les écrans. */}
-      <View style={rootStyles.fill}>
-        {examples ? <ExamplesBanner /> : null}
-        <BelowExamplesBanner active={examples}>
-          <Stack screenOptions={{ headerShown: false }} />
-        </BelowExamplesBanner>
-      </View>
-      <PushNotifications />
-      <SignupGate />
-      <ToastHost />
+      <StatusBar style={!splashGone || examples ? "light" : "dark"} />
+      {done ? (
+        <>
+          {/* Mode exemples (ADR 0184) : bandeau orange en haut, au-dessus de tous les écrans. */}
+          <View style={rootStyles.fill}>
+            {examples ? <ExamplesBanner /> : null}
+            <BelowExamplesBanner active={examples}>
+              <Stack screenOptions={{ headerShown: false }} />
+            </BelowExamplesBanner>
+          </View>
+          <PushNotifications />
+          <SignupGate />
+          <ToastHost />
+        </>
+      ) : null}
+      {splashGone ? null : <AnimatedSplash ready={done} onDone={hideSplash} />}
     </>
   );
 }
