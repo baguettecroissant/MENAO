@@ -1,6 +1,6 @@
 import { spaceExamplesShown } from "@menao/core";
 import { useSyncExternalStore } from "react";
-import { clearScreenCache } from "./screen-cache";
+import { clearScreenCache, setScreenCachePersistence } from "./screen-cache";
 import { supabase } from "./supabase";
 
 /**
@@ -20,6 +20,8 @@ export function examplesActive(): boolean {
 export function setExamplesActive(on: boolean): void {
   if (active === on) return;
   active = on;
+  // Les exemples ne sont jamais gardés sur le téléphone à la place des vraies données.
+  setScreenCachePersistence(!on);
   clearScreenCache();
   for (const listener of listeners) listener();
 }

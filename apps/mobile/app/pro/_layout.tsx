@@ -7,6 +7,8 @@ import { useTabBarOptions } from "@/components/tab-bar";
 import { fr } from "@/i18n/fr";
 import { haptic } from "@/lib/haptics";
 import { charterRequired } from "@/lib/charter";
+import { useExamplesActive } from "@/lib/examples";
+import { preloadArtisanTabs } from "@/lib/preload";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { theme } from "@/ui/theme";
@@ -35,6 +37,14 @@ export default function ProLayout() {
       active = false;
     };
   }, [space]);
+  // Onglets chargés d'avance pendant que l'accueil s'affiche (ADR 0192), puis de nouveau à
+  // l'entrée ou à la sortie des exemples, qui vident les écrans gardés.
+  const examples = useExamplesActive();
+  useEffect(() => {
+    if (space !== "artisan" || charter !== "ok") return;
+    const timer = setTimeout(preloadArtisanTabs, 800);
+    return () => clearTimeout(timer);
+  }, [space, charter, examples]);
   if (space !== "artisan") return <Redirect href="/" />;
   if (charter === "a_signer") return <Redirect href="/pro-charte" />;
   return (

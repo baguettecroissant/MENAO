@@ -18,6 +18,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { activityCurrentMonth, activityYears, dashboardActivity } from "@menao/core";
@@ -34,6 +35,7 @@ import { PhotoNudge } from "@/components/pro/photo-nudge";
 import { TodoList } from "@/components/pro/todo-list";
 import { ExamplesCard } from "@/components/examples";
 import { PushPrompt } from "@/components/push-prompt";
+import { DashboardSkeleton } from "@/components/skeletons";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
@@ -43,7 +45,7 @@ import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
-import { Notice, ScreenSkeleton, Tappable } from "@/ui";
+import { Notice, Tappable, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDashboard;
@@ -196,7 +198,7 @@ function AppointmentCard({ appointment: a }: { appointment: Dashboard["appointme
  * vers le site (règle 10).
  */
 export function DashboardScreen() {
-  const [data, reload] = useFocusData(loadDashboard);
+  const [data, reload] = useFocusData(loadDashboard, undefined, "tab:accueil");
   // Gamification (F-24) : carte « Mon grade MENAO » et badge tout juste obtenu à fêter.
   const [grade, reloadGrade] = useFocusData(loadGrade);
   const [celebrated, setCelebrated] = useState(false);
@@ -207,6 +209,8 @@ export function DashboardScreen() {
   const examples = useExamplesActive();
   // Année du chiffre d'affaires (ADR 0185) : l'année en cours, puis celle choisie.
   const [year, setYear] = useState<number | null>(null);
+  // Squelette du tableau de bord pendant le premier chargement, puis fondu (ADR 0192).
+  const reveal = useReveal(data !== undefined);
   const newBadge = celebrated
     ? null
     : (grade?.badges.find((b) => b.unlocked_at && !b.seen) ?? null);
@@ -217,7 +221,6 @@ export function DashboardScreen() {
     reloadGrade();
   }
 
-  if (data === undefined) return <ScreenSkeleton />;
   const now = new Date();
   const years = data ? activityYears(data.activityInput.payments, now) : [];
   const shownYear = year !== null && years.includes(year) ? year : (years[0] ?? now.getFullYear());
@@ -256,10 +259,12 @@ export function DashboardScreen() {
       >
         <TabHeader title={t.greeting(data?.firstName ?? null)} />
 
-        {data === null ? (
+        {data === undefined ? (
+          <DashboardSkeleton />
+        ) : data === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : (
-          <>
+          <Animated.View entering={reveal} style={styles.revealed}>
             {data.suspended ? <Notice tone="error">{t.suspended}</Notice> : null}
             {data.radiated ? (
               <Notice tone="error">{t.radiated(data.radiated.reason)}</Notice>
@@ -333,7 +338,7 @@ export function DashboardScreen() {
             ) : null}
             {appointments}
             {grade ? <GradeCard grade={grade} /> : null}
-          </>
+          </Animated.View>
         )}
       </ScrollView>
       <NewBadgeModal
@@ -350,6 +355,7 @@ const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(5), gap: spacing(7), paddingBottom: spacing(10) },
+  revealed: { gap: spacing(7) },
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
   kpi: {
     flexGrow: 1,

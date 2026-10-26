@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import {
   readScreenCache,
   sameScreenData,
+  takeFreshPreload,
   writeScreenCache,
   type ScreenCacheKey,
 } from "./screen-cache";
@@ -17,7 +18,9 @@ const RETRY_DELAYS_MS = [1500, 3000, 5000, 8000];
  * chargement. L'écran n'est redessiné que si les données ont changé.
  * Tant que `waiting` répond vrai (paiement ou signature en cours d'enregistrement), le chargement
  * est relancé quelques fois. `load` et `waiting` doivent être stables (useCallback) ; un écran à
- * paramètre passe `cacheKey` (« chantier:<id> »), sa fonction changeant à chaque ouverture.
+ * paramètre passe `cacheKey` (« chantier:<id> »), sa fonction changeant à chaque ouverture. Un
+ * onglet (« tab:… ») est gardé sur le téléphone ; chargé d'avance à l'instant (préchargement,
+ * ADR 0192), il s'affiche sans recharger.
  */
 export function useFocusData<T>(
   load: () => Promise<T>,
@@ -47,12 +50,17 @@ export function useFocusData<T>(
           }
         });
       };
-      run(0);
+      if (takeFreshPreload(key)) {
+        const preloaded = readScreenCache<T>(key);
+        if (preloaded !== undefined) apply(preloaded);
+      } else {
+        run(0);
+      }
       return () => {
         active = false;
         clearTimeout(timer);
       };
-    }, [load, waiting, apply]),
+    }, [load, waiting, apply, key]),
   );
   const reload = useCallback(() => load().then(apply), [load, apply]);
   return [data, reload] as const;

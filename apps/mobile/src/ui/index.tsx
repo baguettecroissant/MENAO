@@ -17,7 +17,7 @@ import { haptic } from "@/lib/haptics";
 import { Skeleton, Tappable } from "./motion";
 import { theme } from "./theme";
 
-export { Skeleton, Tappable } from "./motion";
+export { Skeleton, Tappable, useReveal } from "./motion";
 export { toast, ToastHost } from "./toast";
 
 const { colors, radius, font, spacing } = theme;
