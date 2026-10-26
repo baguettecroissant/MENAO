@@ -218,6 +218,7 @@ export function ListGroup({ children }: { children: ReactNode }) {
  */
 export function ListRow({
   onPress,
+  onPressIn,
   label,
   title,
   detail,
@@ -228,6 +229,8 @@ export function ListRow({
   disabled = false,
 }: {
   onPress?: () => void;
+  /** Doigt posé : la fiche commence à se charger (ADR 0193). */
+  onPressIn?: () => void;
   /** Nom accessible (« Ouvrir la dépense … »). */
   label?: string;
   title: string;
@@ -246,6 +249,7 @@ export function ListRow({
       aria-busy={busy}
       disabled={!onPress || disabled}
       onPress={onPress}
+      onPressIn={onPressIn}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <View style={styles.texts}>

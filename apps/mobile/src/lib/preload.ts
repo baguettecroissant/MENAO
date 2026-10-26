@@ -3,7 +3,7 @@ import { loadArtisanChantiers } from "./pro-chantiers";
 import { loadArtisanInvoices, loadArtisanQuotes } from "./pro-documents";
 import { loadExpenses } from "./pro-expenses";
 import { loadInbox } from "./pro-requests";
-import { writePreloadedScreen } from "./screen-cache";
+import { prefetchScreen } from "./screen-cache";
 
 /** Onglets chargés d'avance, avec la clé de leur écran (`useFocusData`). */
 const TABS: [key: string, load: () => Promise<unknown>][] = [
@@ -21,11 +21,5 @@ const TABS: [key: string, load: () => Promise<unknown>][] = [
  * simplement l'onglet charger ses données à l'ouverture.
  */
 export function preloadArtisanTabs(): void {
-  for (const [key, load] of TABS) {
-    load()
-      .then((value) => {
-        if (value !== null) writePreloadedScreen(key, value);
-      })
-      .catch(() => undefined);
-  }
+  for (const [key, load] of TABS) prefetchScreen(key, load);
 }

@@ -11,6 +11,7 @@ import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayMonthNumeric, formatTime } from "@/lib/format";
 import { loadArtisanQuotes, type ArtisanQuote } from "@/lib/pro-documents";
+import { prefetchChantier } from "@/lib/prefetch";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, Screen, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -89,6 +90,11 @@ export function ArtisanQuotesScreen({ switcher }: { switcher?: ReactNode }) {
               <ListRow
                 key={q.quote_id}
                 label={t.openQuote(q.title)}
+                onPressIn={
+                  q.status === "brouillon"
+                    ? undefined
+                    : () => prefetchChantier(q.chantier_id, q.title, q.client_name)
+                }
                 onPress={() =>
                   router.push(
                     q.status === "brouillon"

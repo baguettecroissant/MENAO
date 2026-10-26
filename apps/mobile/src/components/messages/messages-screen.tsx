@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,6 +8,7 @@ import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadConversations, type ConversationItem } from "@/lib/messages";
+import { PREFETCH_DELAY_MS, PREFETCH_FIRST, prefetchConversation } from "@/lib/prefetch";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -35,6 +36,16 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
   const [refreshing, setRefreshing] = useState(false);
   // Squelette des conversations pendant le premier chargement, puis fondu (ADR 0192).
   const reveal = useReveal(rows !== undefined);
+  // Premières conversations chargées d'avance : les ouvrir est instantané (ADR 0193).
+  useEffect(() => {
+    if (!rows?.length) return;
+    const timer = setTimeout(() => {
+      for (const r of rows.slice(0, PREFETCH_FIRST)) {
+        prefetchConversation(r.chantier_id, artisan, r.other_name);
+      }
+    }, PREFETCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [rows, artisan]);
   const now = new Date();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>

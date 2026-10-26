@@ -6,14 +6,16 @@ import { StyleSheet, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { ExampleLock } from "@/components/examples";
 import { HeaderBand } from "@/components/header-band";
+import { DetailSkeleton } from "@/components/skeletons";
 import { ClientReputationCard } from "@/components/pro/client-reputation-card";
 import { PartnerRecommendations } from "@/components/pro/partner-recommendations";
 import { RequestBlocks } from "@/components/pro/request-blocks";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadOpportunity } from "@/lib/pro-requests";
+import { loadOpportunity, opportunityScreenKey } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, LinkText, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { readScreenPreview } from "@/lib/screen-cache";
+import { Button, LinkText, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proRequests;
@@ -29,9 +31,11 @@ const { spacing } = theme;
 export default function OpportunityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadOpportunity(id), [id]);
-  const [opportunity] = useFocusData(load, undefined, `opportunite:${id}`);
+  const [opportunity] = useFocusData(load, undefined, opportunityScreenKey(id));
 
-  if (opportunity === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (opportunity === undefined) {
+    return <DetailSkeleton preview={readScreenPreview(opportunityScreenKey(id))} band />;
+  }
   if (opportunity === null) {
     return (
       <Screen header={<TopBar />}>

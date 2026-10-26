@@ -4,6 +4,8 @@ import { Avatar } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric, formatDayLabel, formatTime } from "@/lib/format";
 import type { ConversationItem } from "@/lib/messages";
+import { prefetchConversation } from "@/lib/prefetch";
+import { useSession } from "@/lib/session";
 import { theme } from "@/ui/theme";
 
 const t = fr.messages;
@@ -21,6 +23,7 @@ export function ConversationRow({ row, now }: { row: ConversationItem; now: Date
   const today = formatDayLabel(row.last_at, now) === fr.ago.today;
   const time = today ? formatTime(row.last_at) : formatDateNumeric(row.last_at);
   const unread = row.unread > 0;
+  const artisan = useSession().space === "artisan";
   return (
     <Pressable
       role="link"
@@ -33,6 +36,7 @@ export function ConversationRow({ row, now }: { row: ConversationItem; now: Date
       ]
         .filter(Boolean)
         .join(", ")}
+      onPressIn={() => prefetchConversation(row.chantier_id, artisan, row.other_name)}
       onPress={() => router.push(`/conversation/${row.chantier_id}`)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >

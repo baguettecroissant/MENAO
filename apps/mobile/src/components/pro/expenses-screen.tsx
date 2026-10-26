@@ -28,6 +28,7 @@ import { fr } from "@/i18n/fr";
 import { useExamplesActive } from "@/lib/examples";
 import { formatCents, formatDayMonthNumeric } from "@/lib/format";
 import { loadExpenses, shareExpensesCsv } from "@/lib/pro-expenses";
+import { prefetchExpense } from "@/lib/prefetch";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, Screen, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -141,6 +142,7 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
                 <ListRow
                   key={expense.id}
                   label={t.open(expense.title)}
+                  onPressIn={() => prefetchExpense(expense.id, expense.title)}
                   onPress={() => router.push(`/pro-depense/${expense.id}`)}
                   title={expense.title}
                   detail={

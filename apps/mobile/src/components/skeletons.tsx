@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
+import { HeaderBand } from "@/components/header-band";
+import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { Skeleton } from "@/ui";
+import type { ScreenPreview } from "@/lib/screen-cache";
+import { Body, Screen, Skeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, radius, spacing } = theme;
@@ -100,6 +103,44 @@ export function ListRowsSkeleton({
         ))}
       </View>
     </Loading>
+  );
+}
+
+/**
+ * Fiche en cours de chargement (ADR 0193) : son titre, connu de la liste, s'affiche aussitôt ;
+ * `band` : dans le bandeau bleu, comme la fiche d'une demande ou d'un chantier.
+ */
+export function DetailSkeleton({
+  preview,
+  band = false,
+}: {
+  preview?: ScreenPreview;
+  band?: boolean;
+}) {
+  const blocks = (
+    <Loading>
+      {Array.from({ length: 3 }, (_, i) => (
+        <View key={i} style={[styles.card, styles.column]}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton height={12} />
+          <Skeleton width="70%" height={12} />
+        </View>
+      ))}
+    </Loading>
+  );
+  if (band && preview) {
+    return <Screen band={<HeaderBand title={preview.title} />}>{blocks}</Screen>;
+  }
+  return (
+    <Screen header={<TopBar />}>
+      {preview ? <Title>{preview.title}</Title> : <Skeleton width="70%" height={28} />}
+      {preview?.subtitle ? (
+        <Body muted>{preview.subtitle}</Body>
+      ) : preview ? null : (
+        <Skeleton width="50%" height={14} />
+      )}
+      {blocks}
+    </Screen>
   );
 }
 

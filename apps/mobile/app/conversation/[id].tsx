@@ -15,13 +15,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { Composer } from "@/components/messages/composer";
 import { MessageBubble } from "@/components/messages/message-bubble";
+import { DetailSkeleton } from "@/components/skeletons";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadConversation, markConversationRead, subscribeToConversation } from "@/lib/messages";
+import {
+  conversationScreenKey,
+  loadConversation,
+  markConversationRead,
+  subscribeToConversation,
+} from "@/lib/messages";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, Screen, ScreenSkeleton } from "@/ui";
+import { readScreenPreview } from "@/lib/screen-cache";
+import { Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
 
@@ -38,7 +45,7 @@ export default function ConversationScreen() {
   const { refresh } = useUnread();
   const artisan = useSession().space === "artisan";
   const load = useCallback(() => loadConversation(id, artisan), [id, artisan]);
-  const [conversation, reload] = useFocusData(load);
+  const [conversation, reload] = useFocusData(load, undefined, conversationScreenKey(id));
   const scrollRef = useRef<ScrollViewInstance>(null);
   const messages = conversation?.messages ?? [];
   const lastId = messages.at(-1)?.id ?? null;
@@ -60,7 +67,9 @@ export default function ConversationScreen() {
     if (lastId) markConversationRead(id).then(refresh);
   }, [id, lastId, refresh]);
 
-  if (conversation === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (conversation === undefined) {
+    return <DetailSkeleton preview={readScreenPreview(conversationScreenKey(id))} />;
+  }
   if (conversation === null) {
     return (
       <Screen onRefresh={reload} header={<TopBar />}>

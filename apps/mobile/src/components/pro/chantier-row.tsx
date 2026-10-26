@@ -3,6 +3,7 @@ import { CalendarDays, MapPin } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
 import { fr } from "@/i18n/fr";
+import { prefetchChantier } from "@/lib/prefetch";
 import { formatDayAndTime } from "@/lib/format";
 import type { ArtisanChantierRow } from "@/lib/pro-chantiers";
 import { theme } from "@/ui/theme";
@@ -48,6 +49,7 @@ export function ArtisanChantierCard({
     <Tappable
       role="link"
       aria-label={[t.status[status], r.title, place].filter(Boolean).join(", ")}
+      onPressIn={() => prefetchChantier(r.chantier_id, r.title, place)}
       onPress={onPress}
       style={styles.card}
     >

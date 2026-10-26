@@ -8,29 +8,20 @@ import { HeaderBand, whenMeta } from "@/components/header-band";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
 import { FollowUpView } from "@/components/pro/follow-up-view";
 import { SentQuoteBlock } from "@/components/pro/sent-quote-block";
+import { DetailSkeleton } from "@/components/skeletons";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
-import { loadArtisanChantier, loadArtisanFollowUp } from "@/lib/pro-chantiers";
+import { chantierScreenKey, loadArtisanChantierScreen } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { readScreenPreview } from "@/lib/screen-cache";
+import { Button, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
 
 const t = fr.proAppointment;
 const { colors, font, spacing } = theme;
 const CANCELLABLE: readonly ChantierStatus[] = ARTISAN_CANCELLABLE_STATUSES;
-/** Après l'acompte, la fiche devient la vue du chantier (F-22), comme sur le site. */
-const FOLLOW_UP: readonly ChantierStatus[] = [
-  "acompte_paye",
-  "planifie",
-  "en_cours",
-  "travaux_termines",
-  "reserves_a_lever",
-  "receptionne",
-  "cloture",
-  "en_litige",
-];
 
 /**
  * Vue d'un rendez-vous côté artisan (F-18), comme sur le site (maquette « Vue d'un rendez-vous ») :
@@ -45,17 +36,12 @@ export default function ArtisanChantierScreen() {
     envoye?: string;
     demarrage?: string;
   }>();
-  const load = useCallback(async () => {
-    const chantier = await loadArtisanChantier(id);
-    if (!chantier) return null;
-    const followUp = FOLLOW_UP.includes(chantier.detail.chantier.status)
-      ? await loadArtisanFollowUp(id, chantier.detail.photos)
-      : null;
-    return { chantier, followUp };
-  }, [id]);
-  const [loaded, reload] = useFocusData(load, undefined, `pro-chantier:${id}`);
+  const load = useCallback(() => loadArtisanChantierScreen(id), [id]);
+  const [loaded, reload] = useFocusData(load, undefined, chantierScreenKey(id));
 
-  if (loaded === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (loaded === undefined) {
+    return <DetailSkeleton preview={readScreenPreview(chantierScreenKey(id))} band />;
+  }
   if (loaded === null) {
     return (
       <Screen onRefresh={reload} header={<TopBar />}>
