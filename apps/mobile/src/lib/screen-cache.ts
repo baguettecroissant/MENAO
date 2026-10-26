@@ -122,6 +122,22 @@ export function inflightScreen(key: ScreenCacheKey): Promise<unknown> | undefine
   return typeof key === "string" ? inflight.get(key) : undefined;
 }
 
+const invalidations = new Map<string, Set<() => void>>();
+
+/** Écran à recharger tout de suite (action annulée, ADR 0195) : prévient l'écran affiché. */
+export function invalidateScreen(key: string): void {
+  for (const listener of invalidations.get(key) ?? []) listener();
+}
+
+export function onScreenInvalidated(key: string, listener: () => void): () => void {
+  const listeners = invalidations.get(key) ?? new Set();
+  listeners.add(listener);
+  invalidations.set(key, listeners);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 /** Titre d'une fiche connu de la liste, affiché pendant son chargement (ADR 0193). */
 export function setScreenPreview(key: string, preview: ScreenPreview): void {
   previews.set(key, preview);

@@ -1,6 +1,6 @@
 import { isExampleId } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { Fragment, useCallback, useEffect, useRef } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -47,6 +47,7 @@ export default function ConversationScreen() {
   const load = useCallback(() => loadConversation(id, artisan), [id, artisan]);
   const [conversation, reload] = useFocusData(load, undefined, conversationScreenKey(id));
   const scrollRef = useRef<ScrollViewInstance>(null);
+  const [sending, setSending] = useState<{ id: string; body: string }[]>([]);
   const messages = conversation?.messages ?? [];
   const lastId = messages.at(-1)?.id ?? null;
   const lastReadMine = [...messages].reverse().find((m) => m.mine && m.read)?.id ?? null;
@@ -123,13 +124,40 @@ export default function ConversationScreen() {
               </Fragment>
             ))
           )}
+          {/* Envoi instantané (ADR 0195) : le message s'affiche avant la réponse du serveur. */}
+          {sending.map((p) => (
+            <View key={p.id} style={styles.sending}>
+              <MessageBubble
+                message={{
+                  id: p.id,
+                  mine: true,
+                  kind: "texte",
+                  body: p.body,
+                  url: null,
+                  hidden: false,
+                  read: false,
+                  day: "",
+                  time: t.sending,
+                }}
+                showRead={false}
+              />
+            </View>
+          ))}
         </ScrollView>
         {conversation.closed ? (
           <Text style={styles.closed}>{t.closed}</Text>
         ) : (
           // Exemple (ADR 0184) : la conversation se lit, rien ne s'envoie.
           <ExampleLock locked={isExampleId(id)} note>
-            <Composer chantierId={id} onSent={() => void reload()} />
+            <Composer
+              chantierId={id}
+              onSent={reload}
+              onPending={(body) => {
+                const key = `envoi-${Date.now()}`;
+                setSending((list) => [...list, { id: key, body }]);
+                return () => setSending((list) => list.filter((p) => p.id !== key));
+              }}
+            />
           </ExampleLock>
         )}
       </KeyboardAvoidingView>
@@ -140,6 +168,7 @@ export default function ConversationScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
+  sending: { opacity: 0.6 },
   header: {
     gap: spacing(2),
     paddingHorizontal: spacing(5),

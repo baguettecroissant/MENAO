@@ -18,7 +18,7 @@ import { Skeleton, Tappable } from "./motion";
 import { theme } from "./theme";
 
 export { Skeleton, Tappable, useReveal } from "./motion";
-export { toast, ToastHost } from "./toast";
+export { toast, ToastHost, UNDO_DELAY_MS } from "./toast";
 
 const { colors, radius, font, spacing } = theme;
 

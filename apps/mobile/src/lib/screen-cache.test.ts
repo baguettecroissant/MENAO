@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearScreenCache,
   inflightScreen,
+  invalidateScreen,
+  onScreenInvalidated,
   parseScreenCache,
   prefetchScreen,
   readScreenPreview,
@@ -185,5 +187,18 @@ describe("fiches chargées d'avance (ADR 0193)", () => {
     expect(readScreenPreview("opportunite:1")?.title).toBe("Fuite cuisine");
     clearScreenCache();
     expect(readScreenPreview("opportunite:1")).toBeUndefined();
+  });
+});
+
+describe("écrans prévenus après une action annulable (ADR 0195)", () => {
+  it("prévient l'écran affiché, puis plus après son départ", () => {
+    const listener = vi.fn();
+    const stop = onScreenInvalidated("tab:depenses", listener);
+    invalidateScreen("tab:depenses");
+    invalidateScreen("tab:factures");
+    expect(listener).toHaveBeenCalledTimes(1);
+    stop();
+    invalidateScreen("tab:depenses");
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

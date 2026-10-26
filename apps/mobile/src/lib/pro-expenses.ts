@@ -42,7 +42,19 @@ export async function loadExpenses(): Promise<ExpenseRow[] | null> {
     .select(COLUMNS)
     .order("issued_on", { ascending: false })
     .order("created_at", { ascending: false });
-  return error ? null : ((data ?? []) as Selected[]).map(toRow);
+  if (error) return null;
+  return ((data ?? []) as Selected[]).map(toRow).filter((row) => !pendingDeletions.has(row.id));
+}
+
+/** Dépenses supprimées à l'instant, encore annulables (ADR 0195) : absentes des listes. */
+const pendingDeletions = new Set<string>();
+
+export function hideExpense(id: string): void {
+  pendingDeletions.add(id);
+}
+
+export function unhideExpense(id: string): void {
+  pendingDeletions.delete(id);
 }
 
 export type ExpenseDetail = ExpenseRow & {

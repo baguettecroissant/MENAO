@@ -1,7 +1,8 @@
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   inflightScreen,
+  onScreenInvalidated,
   readScreenCache,
   sameScreenData,
   takeFreshPreload,
@@ -74,5 +75,10 @@ export function useFocusData<T>(
     }, [load, waiting, apply, key]),
   );
   const reload = useCallback(() => load().then(apply), [load, apply]);
+  // Action faite ou annulée ailleurs (ADR 0195) : l'écran affiché se recharge.
+  useEffect(() => {
+    if (typeof key !== "string") return;
+    return onScreenInvalidated(key, () => void reload());
+  }, [key, reload]);
   return [data, reload] as const;
 }
