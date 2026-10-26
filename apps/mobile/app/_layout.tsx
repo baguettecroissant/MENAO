@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/animated-splash";
 import { PushNotifications } from "@/components/push-notifications";
@@ -32,13 +33,16 @@ export default function RootLayout() {
     GoogleSans_700Bold,
   });
   return (
-    <SafeAreaProvider>
-      <SessionProvider>
-        <UnreadProvider>
-          <Root ready={fontsLoaded} />
-        </UnreadProvider>
-      </SessionProvider>
-    </SafeAreaProvider>
+    // Gestes des listes (glisser pour agir, ADR 0196).
+    <GestureHandlerRootView style={rootStyles.fill}>
+      <SafeAreaProvider>
+        <SessionProvider>
+          <UnreadProvider>
+            <Root ready={fontsLoaded} />
+          </UnreadProvider>
+        </SessionProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

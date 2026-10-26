@@ -8,6 +8,7 @@ import {
   type ExpenseStatus,
 } from "@menao/core";
 import { router } from "expo-router";
+import { Check, RotateCcw, Trash2 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
@@ -21,16 +22,26 @@ import {
   ListRow,
   ListSearch,
   type ListTone,
+  Swipe,
 } from "@/components/list-kit";
 import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { useExamplesActive } from "@/lib/examples";
 import { formatCents, formatDayMonthNumeric } from "@/lib/format";
-import { loadExpenses, shareExpensesCsv } from "@/lib/pro-expenses";
+import {
+  deleteExpense,
+  hideExpense,
+  loadExpenses,
+  setExpensePaid,
+  shareExpensesCsv,
+  unhideExpense,
+} from "@/lib/pro-expenses";
+import { invalidateScreen } from "@/lib/screen-cache";
+import { runUndoable } from "@/lib/undo";
 import { prefetchExpense } from "@/lib/prefetch";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Screen, useReveal } from "@/ui";
+import { Body, Notice, Screen, toast, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proExpenses;
@@ -56,6 +67,8 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
   const [filter, setFilter] = useState<ExpenseFilter>("toutes");
   const [query, setQuery] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
+  // Payée ou non depuis la liste : affiché tout de suite, avant le serveur (ADR 0195, 0196).
+  const [paidOverrides, setPaidOverrides] = useState<Record<string, string | null>>({});
   // Squelette des lignes pendant le premier chargement, puis fondu (ADR 0192).
   const reveal = useReveal(expenses !== undefined);
 
@@ -70,7 +83,51 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
     );
   }
   const today = parisToday();
-  const list = expenses ?? [];
+  const list = (expenses ?? []).map((expense) =>
+    expense.id in paidOverrides
+      ? { ...expense, paid_on: paidOverrides[expense.id] ?? null }
+      : expense,
+  );
+  const dropOverride = (id: string) => setPaidOverrides(({ [id]: _dropped, ...rest }) => rest);
+
+  async function setPaid(id: string, paid: boolean) {
+    setPaidOverrides((current) => ({ ...current, [id]: paid ? today : null }));
+    const ok = await setExpensePaid(id, paid);
+    if (!ok) {
+      dropOverride(id);
+      toast.error(fr.proExpenses.detail.actionFailed);
+      return;
+    }
+    await reload();
+    dropOverride(id);
+    toast.undo(
+      paid ? fr.proExpenses.detail.markedPaid : fr.proExpenses.detail.markedUnpaid,
+      fr.toastUndo,
+      () => void setPaid(id, !paid),
+    );
+  }
+
+  // Suppression annulable, comme dans la fiche (ADR 0195).
+  function remove(id: string) {
+    runUndoable({
+      message: fr.proExpenses.detail.deleted,
+      apply: () => {
+        hideExpense(id);
+        invalidateScreen("tab:depenses");
+      },
+      revert: () => {
+        unhideExpense(id);
+        invalidateScreen("tab:depenses");
+      },
+      commit: async () => {
+        const ok = await deleteExpense(id);
+        unhideExpense(id);
+        invalidateScreen("tab:depenses");
+        return ok;
+      },
+      failed: fr.proExpenses.detail.actionFailed,
+    });
+  }
   const rows = list.filter(
     (expense) =>
       matchesExpenseFilter(expense, filter, today) && matchesExpenseQuery(expense, query),
@@ -139,27 +196,52 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
             {rows.map((expense) => {
               const status = expenseStatus(expense, today);
               return (
-                <ListRow
+                <Swipe
                   key={expense.id}
-                  label={t.open(expense.title)}
-                  onPressIn={() => prefetchExpense(expense.id, expense.title)}
-                  onPress={() => router.push(`/pro-depense/${expense.id}`)}
-                  title={expense.title}
-                  detail={
-                    <>
-                      {[formatDayMonthNumeric(expense.issued_on), expense.supplier_name]
-                        .filter(Boolean)
-                        .join(" · ")}
-                      {" · "}
-                      {expense.chantier_title ?? (
-                        <Text style={{ color: theme.colors.warning }}>{t.toClassify}</Text>
-                      )}
-                    </>
-                  }
-                  badge={examples ? <ExampleBadge /> : undefined}
-                  value={formatCents(expense.total_ttc_cents)}
-                  status={{ text: t.statuses[status], tone: STATUS_TONE[status] }}
-                />
+                  enabled={!examples}
+                  actions={[
+                    status === "paye"
+                      ? {
+                          label: fr.proLists.swipe.unpaid,
+                          icon: RotateCcw,
+                          tone: "primary",
+                          onPress: () => void setPaid(expense.id, false),
+                        }
+                      : {
+                          label: fr.proLists.swipe.paid,
+                          icon: Check,
+                          tone: "success",
+                          onPress: () => void setPaid(expense.id, true),
+                        },
+                    {
+                      label: fr.proLists.swipe.delete,
+                      icon: Trash2,
+                      tone: "danger",
+                      onPress: () => remove(expense.id),
+                    },
+                  ]}
+                >
+                  <ListRow
+                    label={t.open(expense.title)}
+                    onPressIn={() => prefetchExpense(expense.id, expense.title)}
+                    onPress={() => router.push(`/pro-depense/${expense.id}`)}
+                    title={expense.title}
+                    detail={
+                      <>
+                        {[formatDayMonthNumeric(expense.issued_on), expense.supplier_name]
+                          .filter(Boolean)
+                          .join(" · ")}
+                        {" · "}
+                        {expense.chantier_title ?? (
+                          <Text style={{ color: theme.colors.warning }}>{t.toClassify}</Text>
+                        )}
+                      </>
+                    }
+                    badge={examples ? <ExampleBadge /> : undefined}
+                    value={formatCents(expense.total_ttc_cents)}
+                    status={{ text: t.statuses[status], tone: STATUS_TONE[status] }}
+                  />
+                </Swipe>
               );
             })}
           </ListGroup>
