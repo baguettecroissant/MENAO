@@ -1,7 +1,9 @@
 import { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationRow } from "./conversation-row";
+import { ListRowsSkeleton } from "@/components/skeletons";
 import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -9,7 +11,7 @@ import { loadConversations, type ConversationItem } from "@/lib/messages";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, ScreenSkeleton, Title } from "@/ui";
+import { Notice, Title, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -29,10 +31,10 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
     refresh();
     return rows;
   }, [refresh]);
-  const [rows, reload] = useFocusData(load);
+  const [rows, reload] = useFocusData(load, undefined, "tab:messages");
   const [refreshing, setRefreshing] = useState(false);
-
-  if (rows === undefined) return <ScreenSkeleton header={standalone ? <TopBar /> : undefined} />;
+  // Squelette des conversations pendant le premier chargement, puis fondu (ADR 0192).
+  const reveal = useReveal(rows !== undefined);
   const now = new Date();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
@@ -60,18 +62,20 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
         ) : (
           <TabHeader title={t.title} subtitle={artisan ? undefined : t.subtitle} />
         )}
-        {rows === null ? (
+        {rows === undefined ? (
+          <ListRowsSkeleton rows={4} avatar />
+        ) : rows === null ? (
           <Notice tone="error">{t.error}</Notice>
         ) : rows.length === 0 ? (
           <EmptyState illustration="messages">{artisan ? t.emptyPro : t.empty}</EmptyState>
         ) : (
-          <View style={styles.list}>
+          <Animated.View entering={reveal} style={styles.list}>
             {rows.map((row, i) => (
               <View key={row.chantier_id} style={i > 0 ? styles.separator : undefined}>
                 <ConversationRow row={row} now={now} />
               </View>
             ))}
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
     </SafeAreaView>

@@ -6,6 +6,7 @@ import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from "react
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill, type Tone } from "@/components/chantier/parts";
+import { RequestCardsSkeleton } from "@/components/skeletons";
 import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -13,7 +14,7 @@ import { formatDay } from "@/lib/format";
 import { loadInbox, requestStart, type InboxItem } from "@/lib/pro-requests";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
+import { Notice, Tappable, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 import { ExampleBadge, SpaceExamplesNotice } from "@/components/examples";
@@ -37,13 +38,12 @@ const TONE: Record<InboxItem["status"], Tone> = {
  * celles à traiter d'abord, l'échéance la plus proche en tête, puis celles déjà traitées.
  */
 export function RequestsScreen({ tab = false }: { tab?: boolean }) {
-  const [rows, reload] = useFocusData(loadInbox);
+  const [rows, reload] = useFocusData(loadInbox, undefined, "tab:demandes");
   // Rien reçu : demandes d'exemple (ADR 0184), comme sur le site.
   const [examples, reloadExamples] = useFocusData(loadSpaceExamplesShown);
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
 
-  if (rows === undefined) return <ScreenSkeleton />;
   const now = new Date();
   const { open, done } = inboxGroups(rows ?? [], now);
   let index = 0;
@@ -80,6 +80,8 @@ export function RequestsScreen({ tab = false }: { tab?: boolean }) {
         }
       >
         {tab ? <TabHeader title={t.title} /> : <Title>{t.title}</Title>}
+        {/* Premier chargement : la forme des cartes (ADR 0192) ; elles arrivent ensuite en fondu. */}
+        {rows === undefined ? <RequestCardsSkeleton /> : null}
         {rows === null ? <Notice tone="error">{t.error}</Notice> : null}
         {rows?.length === 0 && examples ? (
           <>

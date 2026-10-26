@@ -1,6 +1,9 @@
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
+import { StyleSheet } from "react-native";
+import Animated from "react-native-reanimated";
 import { EmptyState } from "@/components/empty-state";
+import { ListRowsSkeleton } from "@/components/skeletons";
 import { ExampleBadge } from "@/components/examples";
 import { ListGroup, ListHeader, ListRow } from "@/components/list-kit";
 import { TabHeader } from "@/components/tab-header";
@@ -11,7 +14,8 @@ import { formatCents, formatDayMonthNumeric } from "@/lib/format";
 import { sharePdf } from "@/lib/pdf";
 import { loadArtisanInvoices, shareInvoicesCsv } from "@/lib/pro-documents";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice, Screen, useReveal } from "@/ui";
+import { theme } from "@/ui/theme";
 
 const t = fr.proInvoices;
 
@@ -23,12 +27,22 @@ const t = fr.proInvoices;
  * écran ouvert par-dessus les onglets, avec la barre de retour.
  */
 export function ArtisanInvoicesScreen({ switcher }: { switcher?: ReactNode } = {}) {
-  const [invoices, reload] = useFocusData(loadArtisanInvoices);
+  const [invoices, reload] = useFocusData(loadArtisanInvoices, undefined, "tab:factures");
   const examples = useExamplesActive();
   const [busy, setBusy] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  // Squelette des lignes pendant le premier chargement, puis fondu (ADR 0192).
+  const reveal = useReveal(invoices !== undefined);
 
-  if (invoices === undefined) return <ScreenSkeleton header={switcher ? undefined : <TopBar />} />;
+  if (invoices === undefined) {
+    return (
+      <Screen header={switcher ? undefined : <TopBar />}>
+        {switcher ? <TabHeader title={fr.tabs.money}>{switcher}</TabHeader> : null}
+        <ListHeader title={t.title} />
+        <ListRowsSkeleton rows={4} />
+      </Screen>
+    );
+  }
   const list = invoices ?? [];
 
   async function exportCsv() {
@@ -56,30 +70,34 @@ export function ArtisanInvoicesScreen({ switcher }: { switcher?: ReactNode } = {
           { label: fr.proAccountant.title, onPress: () => router.push("/pro-comptable") },
         ]}
       />
-      {invoices === null ? <Notice tone="error">{t.error}</Notice> : null}
-      {failure ? <Notice tone="error">{failure}</Notice> : null}
-      {invoices && invoices.length === 0 ? (
-        <EmptyState illustration="documents">{t.empty}</EmptyState>
-      ) : list.length > 0 ? (
-        <ListGroup>
-          {list.map((invoice) => (
-            <ListRow
-              key={invoice.id}
-              label={t.view(invoice.numero)}
-              onPress={examples ? undefined : () => share(invoice.id, invoice.numero)}
-              disabled={busy !== null}
-              busy={busy === invoice.id}
-              title={invoice.client || invoice.numero}
-              detail={[invoice.numero, formatDayMonthNumeric(invoice.issuedOn), invoice.chantier]
-                .filter(Boolean)
-                .join(" · ")}
-              badge={examples ? <ExampleBadge /> : undefined}
-              value={formatCents(invoice.totalTtcCents)}
-              status={{ text: t.kinds[invoice.kind], tone: "neutral" }}
-            />
-          ))}
-        </ListGroup>
-      ) : null}
+      <Animated.View entering={reveal} style={styles.revealed}>
+        {invoices === null ? <Notice tone="error">{t.error}</Notice> : null}
+        {failure ? <Notice tone="error">{failure}</Notice> : null}
+        {invoices && invoices.length === 0 ? (
+          <EmptyState illustration="documents">{t.empty}</EmptyState>
+        ) : list.length > 0 ? (
+          <ListGroup>
+            {list.map((invoice) => (
+              <ListRow
+                key={invoice.id}
+                label={t.view(invoice.numero)}
+                onPress={examples ? undefined : () => share(invoice.id, invoice.numero)}
+                disabled={busy !== null}
+                busy={busy === invoice.id}
+                title={invoice.client || invoice.numero}
+                detail={[invoice.numero, formatDayMonthNumeric(invoice.issuedOn), invoice.chantier]
+                  .filter(Boolean)
+                  .join(" · ")}
+                badge={examples ? <ExampleBadge /> : undefined}
+                value={formatCents(invoice.totalTtcCents)}
+                status={{ text: t.kinds[invoice.kind], tone: "neutral" }}
+              />
+            ))}
+          </ListGroup>
+        ) : null}
+      </Animated.View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({ revealed: { gap: theme.spacing(4) } });

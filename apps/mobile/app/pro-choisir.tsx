@@ -19,7 +19,7 @@ const { colors, font, radius, spacing } = theme;
 export default function ChooseChantierScreen() {
   const { action } = useLocalSearchParams<{ action?: string }>();
   const photo = action === "photo";
-  const [rows] = useFocusData(loadArtisanChantiers);
+  const [rows] = useFocusData(loadArtisanChantiers, undefined, "tab:chantiers");
 
   if (rows === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const list = (rows ?? []).filter((r) =>

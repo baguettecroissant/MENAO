@@ -9,8 +9,10 @@ import {
 } from "@menao/core";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
+import Animated from "react-native-reanimated";
 import { EmptyState } from "@/components/empty-state";
+import { FiltersSkeleton, ListRowsSkeleton } from "@/components/skeletons";
 import { ExampleBadge } from "@/components/examples";
 import {
   ListFilters,
@@ -27,7 +29,7 @@ import { useExamplesActive } from "@/lib/examples";
 import { formatCents, formatDayMonthNumeric } from "@/lib/format";
 import { loadExpenses, shareExpensesCsv } from "@/lib/pro-expenses";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Body, Notice, Screen, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proExpenses;
@@ -48,13 +50,24 @@ const STATUS_TONE: Record<ExpenseStatus, ListTone> = {
  * (`switcher`) ; sinon écran ouvert par-dessus les onglets, avec la barre de retour.
  */
 export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {}) {
-  const [expenses, reload] = useFocusData(loadExpenses);
+  const [expenses, reload] = useFocusData(loadExpenses, undefined, "tab:depenses");
   const examples = useExamplesActive();
   const [filter, setFilter] = useState<ExpenseFilter>("toutes");
   const [query, setQuery] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
+  // Squelette des lignes pendant le premier chargement, puis fondu (ADR 0192).
+  const reveal = useReveal(expenses !== undefined);
 
-  if (expenses === undefined) return <ScreenSkeleton header={switcher ? undefined : <TopBar />} />;
+  if (expenses === undefined) {
+    return (
+      <Screen header={switcher ? undefined : <TopBar />}>
+        {switcher ? <TabHeader title={fr.tabs.money}>{switcher}</TabHeader> : null}
+        <ListHeader title={t.title} />
+        <FiltersSkeleton />
+        <ListRowsSkeleton />
+      </Screen>
+    );
+  }
   const today = parisToday();
   const list = expenses ?? [];
   const rows = list.filter(
@@ -82,72 +95,76 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
         ]}
         primary={{ label: fr.proLists.add, onPress: () => router.push("/pro-depense/nouvelle") }}
       />
-      {failure ? <Notice tone="error">{failure}</Notice> : null}
-      {expenses === null ? <Notice tone="error">{t.error}</Notice> : null}
+      <Animated.View entering={reveal} style={styles.revealed}>
+        {failure ? <Notice tone="error">{failure}</Notice> : null}
+        {expenses === null ? <Notice tone="error">{t.error}</Notice> : null}
 
-      {list.length > 0 ? (
-        <>
-          <ListFilters
-            label={t.filtersLabel}
-            value={filter}
-            onChange={setFilter}
-            items={[
-              { value: "toutes", label: t.filters.toutes, detail: String(list.length) },
-              {
-                value: "a_payer",
-                label: t.filters.a_payer,
-                detail: formatCents(summary.toPayCents),
-              },
-              {
-                value: "en_retard",
-                label: t.filters.en_retard,
-                detail: formatCents(summary.overdueCents),
-                tone: summary.overdueCount > 0 ? "danger" : undefined,
-              },
-              {
-                value: "paye",
-                label: t.filters.paye,
-                detail: String(list.length - summary.toPayCount),
-              },
-            ]}
-          />
-          <ListSearch value={query} onChangeText={setQuery} placeholder={t.searchPlaceholder} />
-        </>
-      ) : null}
+        {list.length > 0 ? (
+          <>
+            <ListFilters
+              label={t.filtersLabel}
+              value={filter}
+              onChange={setFilter}
+              items={[
+                { value: "toutes", label: t.filters.toutes, detail: String(list.length) },
+                {
+                  value: "a_payer",
+                  label: t.filters.a_payer,
+                  detail: formatCents(summary.toPayCents),
+                },
+                {
+                  value: "en_retard",
+                  label: t.filters.en_retard,
+                  detail: formatCents(summary.overdueCents),
+                  tone: summary.overdueCount > 0 ? "danger" : undefined,
+                },
+                {
+                  value: "paye",
+                  label: t.filters.paye,
+                  detail: String(list.length - summary.toPayCount),
+                },
+              ]}
+            />
+            <ListSearch value={query} onChangeText={setQuery} placeholder={t.searchPlaceholder} />
+          </>
+        ) : null}
 
-      {expenses !== null && list.length === 0 ? (
-        <EmptyState illustration="documents">{t.empty}</EmptyState>
-      ) : list.length > 0 && rows.length === 0 ? (
-        <Body muted>{t.noResults}</Body>
-      ) : rows.length > 0 ? (
-        <ListGroup>
-          {rows.map((expense) => {
-            const status = expenseStatus(expense, today);
-            return (
-              <ListRow
-                key={expense.id}
-                label={t.open(expense.title)}
-                onPress={() => router.push(`/pro-depense/${expense.id}`)}
-                title={expense.title}
-                detail={
-                  <>
-                    {[formatDayMonthNumeric(expense.issued_on), expense.supplier_name]
-                      .filter(Boolean)
-                      .join(" · ")}
-                    {" · "}
-                    {expense.chantier_title ?? (
-                      <Text style={{ color: theme.colors.warning }}>{t.toClassify}</Text>
-                    )}
-                  </>
-                }
-                badge={examples ? <ExampleBadge /> : undefined}
-                value={formatCents(expense.total_ttc_cents)}
-                status={{ text: t.statuses[status], tone: STATUS_TONE[status] }}
-              />
-            );
-          })}
-        </ListGroup>
-      ) : null}
+        {expenses !== null && list.length === 0 ? (
+          <EmptyState illustration="documents">{t.empty}</EmptyState>
+        ) : list.length > 0 && rows.length === 0 ? (
+          <Body muted>{t.noResults}</Body>
+        ) : rows.length > 0 ? (
+          <ListGroup>
+            {rows.map((expense) => {
+              const status = expenseStatus(expense, today);
+              return (
+                <ListRow
+                  key={expense.id}
+                  label={t.open(expense.title)}
+                  onPress={() => router.push(`/pro-depense/${expense.id}`)}
+                  title={expense.title}
+                  detail={
+                    <>
+                      {[formatDayMonthNumeric(expense.issued_on), expense.supplier_name]
+                        .filter(Boolean)
+                        .join(" · ")}
+                      {" · "}
+                      {expense.chantier_title ?? (
+                        <Text style={{ color: theme.colors.warning }}>{t.toClassify}</Text>
+                      )}
+                    </>
+                  }
+                  badge={examples ? <ExampleBadge /> : undefined}
+                  value={formatCents(expense.total_ttc_cents)}
+                  status={{ text: t.statuses[status], tone: STATUS_TONE[status] }}
+                />
+              );
+            })}
+          </ListGroup>
+        ) : null}
+      </Animated.View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({ revealed: { gap: theme.spacing(4) } });

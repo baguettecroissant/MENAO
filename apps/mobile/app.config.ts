@@ -96,8 +96,9 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        image: "./assets/splash-icon.png",
-        imageWidth: 160,
+        // Démarrage animé (ADR 0192) : « menao » seul, le logo se trace au-dessus dans l'app.
+        image: "./assets/splash-logo.png",
+        imageWidth: 220,
         resizeMode: "contain",
         backgroundColor: "#4869f6",
       },
