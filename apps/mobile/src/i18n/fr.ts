@@ -1,6 +1,19 @@
 /** Textes de l'application native, en français et centralisés (comme ceux du site). */
 export const fr = {
   brand: "MENAO",
+  /** Moments de réussite (ADR 0197) : rares, donc marquants. */
+  moments: {
+    quoteSent: { title: "Devis envoyé", text: "Votre client est prévenu." },
+    appointment: { title: "Rendez-vous fixé", text: "Il est dans votre agenda." },
+    quoteSigned: {
+      title: "Devis signé",
+      text: "Merci ! Le devis signé est dans vos documents.",
+    },
+    depositPaid: {
+      title: "Acompte payé",
+      text: "Merci ! La facture d'acompte est dans vos documents.",
+    },
+  },
   /** Bouton des messages d'action annulable (ADR 0195). */
   toastUndo: "Annuler",
   nav: {

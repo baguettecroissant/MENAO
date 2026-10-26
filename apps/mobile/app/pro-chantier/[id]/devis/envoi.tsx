@@ -18,7 +18,7 @@ import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteSendContext, sendQuote } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Checkbox, Notice, Screen, ScreenSkeleton, TextField } from "@/ui";
+import { Body, Button, Checkbox, Notice, Screen, ScreenSkeleton, TextField, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proQuote;
@@ -88,6 +88,8 @@ export default function QuoteSendScreen() {
     setPending(false);
     if (result && "startDate" in result) return setErrors({ startDate: result.startDate });
     if (result) return setFailure(result.error);
+    // Moment de réussite (ADR 0197).
+    celebrate(fr.moments.quoteSent);
     router.dismissTo({ pathname: "/pro-chantier/[id]", params: { id, envoye: "1" } });
   }
 
