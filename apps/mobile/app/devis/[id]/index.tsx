@@ -1,6 +1,6 @@
 import { depositAboveAdvice } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { QuotePaper } from "@/components/documents/quote-paper";
@@ -10,7 +10,17 @@ import { formatCents, formatDay } from "@/lib/format";
 import { sharePdf, type PdfTarget } from "@/lib/pdf";
 import { loadQuote, type ClientQuote } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Section, Title } from "@/ui";
+import {
+  Body,
+  Button,
+  celebrate,
+  LinkText,
+  Notice,
+  Screen,
+  ScreenSkeleton,
+  Section,
+  Title,
+} from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
@@ -44,6 +54,16 @@ export default function QuoteScreen() {
     [retour],
   );
   const [quote] = useFocusData(load, waiting);
+  // Signature ou acompte tout juste enregistrés au retour de la page sécurisée : moment de
+  // réussite, une seule fois (ADR 0197).
+  const celebrated = useRef(false);
+  const signedNow = retour === "signature" && quote?.status === "signe";
+  const paidNow = retour === "paiement" && quote?.deposit?.status === "paye";
+  useEffect(() => {
+    if (celebrated.current || !(signedNow || paidNow)) return;
+    celebrated.current = true;
+    celebrate(paidNow ? fr.moments.depositPaid : fr.moments.quoteSigned);
+  }, [signedNow, paidNow]);
   const [pdfFailed, setPdfFailed] = useState(false);
   const [downloading, setDownloading] = useState<PdfTarget | null>(null);
 

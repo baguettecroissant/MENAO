@@ -20,7 +20,7 @@ import { useExamplesActive } from "@/lib/examples";
 import { useScreenCacheRestored } from "@/lib/screen-store";
 import { SessionProvider, useSession } from "@/lib/session";
 import { UnreadProvider } from "@/lib/unread";
-import { ToastHost } from "@/ui";
+import { SuccessHost, ToastHost } from "@/ui";
 
 // L'écran de démarrage du téléphone reste affiché jusqu'au démarrage animé (ADR 0192), qui prend
 // le relais sans saut le temps de charger les polices, la session et les onglets gardés.
@@ -69,6 +69,7 @@ function Root({ ready }: { ready: boolean }) {
           <PushNotifications />
           <SignupGate />
           <ToastHost />
+          <SuccessHost />
         </>
       ) : null}
       {splashGone ? null : <AnimatedSplash ready={done} onDone={hideSplash} />}

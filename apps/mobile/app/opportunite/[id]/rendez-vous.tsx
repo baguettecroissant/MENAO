@@ -10,7 +10,7 @@ import { fr } from "@/i18n/fr";
 import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { fixAppointment } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, Title } from "@/ui";
+import { Body, Button, Notice, Screen, Title, celebrate } from "@/ui";
 
 const t = fr.proAppointment;
 
@@ -47,7 +47,8 @@ export default function FixAppointmentScreen() {
     const result = await fixAppointment(id, parsed.data.date, parsed.data.time);
     setPending(false);
     if ("error" in result) return setFailure(result.error);
-    // La fiche de la demande, rechargée, indique le rendez-vous fixé.
+    // La fiche de la demande, rechargée, indique le rendez-vous fixé ; moment de réussite (ADR 0197).
+    celebrate(fr.moments.appointment);
     router.back();
   }
 
