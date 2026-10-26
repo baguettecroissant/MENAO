@@ -16,6 +16,7 @@ import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
+import { AiProgress } from "@/components/ai-progress";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
 import { readDocument } from "@/lib/document-reading";
 import {
@@ -286,7 +287,7 @@ function DocumentForm({
         />
       </View>
       {errors.photo ? <Notice tone="error">{errors.photo}</Notice> : null}
-      {reading?.step === "reading" ? <Notice tone="info">{r.reading}</Notice> : null}
+      {reading?.step === "reading" ? <AiProgress steps={fr.aiProgress.document} /> : null}
       {reading?.step === "failed" ? <Notice tone="info">{r.failed}</Notice> : null}
       {reading?.step === "done" ? (
         <>

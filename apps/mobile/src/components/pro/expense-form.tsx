@@ -17,6 +17,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { fr } from "@/i18n/fr";
+import { AiProgress } from "@/components/ai-progress";
 import { formatCents } from "@/lib/format";
 import {
   depositPhoto,
@@ -236,7 +237,7 @@ export function ExpenseFormView({
         ) : hasDocument ? (
           <Body muted>{f.document.current}</Body>
         ) : null}
-        {reading?.step === "reading" ? <Notice tone="info">{f.reading.progress}</Notice> : null}
+        {reading?.step === "reading" ? <AiProgress steps={fr.aiProgress.expense} /> : null}
         {reading?.step === "failed" ? <Notice tone="info">{f.reading.failed}</Notice> : null}
         {reading?.step === "done" && reading.filled ? (
           <Notice tone="success">{f.reading.done}</Notice>

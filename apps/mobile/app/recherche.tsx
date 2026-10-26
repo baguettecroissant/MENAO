@@ -34,6 +34,7 @@ import { PhotoThumbnails } from "@/components/photo-thumbnails";
 import { TopBar } from "@/components/top-bar";
 import { TradeShortcuts } from "@/components/trade-shortcuts";
 import { fr } from "@/i18n/fr";
+import { AiProgress } from "@/components/ai-progress";
 import { choosePhotoSource, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
 import { useNeedSuggestions } from "@/lib/need-suggestions";
 import { describeProjectPhoto } from "@/lib/photo-description";
@@ -343,6 +344,8 @@ export default function Recherche() {
               <Text style={styles.ideaText}>{ph.add}</Text>
             </Pressable>
           </View>
+        ) : photoDraft?.step === "reading" ? (
+          <AiProgress steps={fr.aiProgress.photo} />
         ) : photoDraft ? (
           <View aria-live="polite" style={styles.help}>
             <Sparkles

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { LevelBars } from "@/components/dictation-button";
 import { fr } from "@/i18n/fr";
+import { AiProgress } from "@/components/ai-progress";
 import { linesFromDictation, loadSavedDictation, saveDictation } from "@/lib/pro-quotes";
 import { useDictation } from "@/lib/use-dictation";
 import { Button, Notice } from "@/ui";
@@ -197,6 +198,7 @@ export function QuoteDictation({
         </Pressable>
         <Text style={[styles.small, styles.center]}>{t.saveHint}</Text>
       </View>
+      {generating ? <AiProgress steps={fr.aiProgress.quote} /> : null}
       <Button
         label={generating ? t.generating : t.generate}
         onPress={generate}

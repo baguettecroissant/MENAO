@@ -571,7 +571,6 @@ export const fr = {
     current: (state: string) => `État : ${state}`,
     /** Lecture automatique du document (ADR 0176), comme sur le site. */
     reading: {
-      reading: "Lecture du document…",
       done: "Document lu automatiquement : vérifiez les informations ci-dessous avant de l'envoyer.",
       empty:
         "Nous n'avons pas trouvé ces informations sur le document : complétez les champs ci-dessous.",
@@ -2420,6 +2419,30 @@ export const fr = {
       unavailable: "Aucune récompense à réclamer pour le moment.",
     },
   },
+  /**
+   * Attente racontée pendant que l'IA travaille (ADR 0194) : étapes génériques, qui disent ce
+   * qu'elle fait sans promettre de résultat.
+   */
+  aiProgress: {
+    expense: [
+      "Je lis la pièce…",
+      "Je repère le fournisseur et la date…",
+      "Je relève les montants et la TVA…",
+      "Je prépare les lignes…",
+    ],
+    document: [
+      "Je lis le document…",
+      "Je repère l'entreprise et les numéros…",
+      "Je vérifie les dates de validité…",
+    ],
+    quote: [
+      "Je lis votre description…",
+      "Je découpe le travail en lignes…",
+      "Je repère les quantités et les unités…",
+      "Je mets le devis en forme…",
+    ],
+    photo: ["Je regarde la photo…", "Je repère ce qu'il faut faire…", "J'écris la description…"],
+  },
   /** Briques des listes de l'espace artisan (ADR 0189), comme sur le site. */
   proLists: {
     more: "Plus d'actions",
@@ -2575,7 +2598,6 @@ export const fr = {
         tooLarge: "Fichier trop lourd : 10 Mo au plus.",
       },
       reading: {
-        progress: "Lecture de la pièce…",
         done: "Champs remplis d'après la pièce : vérifiez-les avant d'enregistrer.",
         failed: "La pièce n'a pas pu être lue : remplissez les champs.",
         warnings: {
