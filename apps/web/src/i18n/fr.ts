@@ -4229,20 +4229,57 @@ export const fr = {
       },
       plansEyebrow: "Formules",
       plansTitle: "Un abonnement fixe, aucune commission.",
-      plansSubtitle: "Commencez avec 2 mois offerts. Sans engagement de durée.",
+      plansSubtitle:
+        "Commencez par 2 mois d'essai gratuits. Ensuite, au mois sans engagement, ou à l'année avec 2 mois offerts.",
       perMonth: "HT / mois",
-      trial: "2 mois offerts",
+      perYear: "HT / an",
+      trial: "Essai gratuit de 2 mois",
       open: "Disponible",
       soon: "Bientôt disponible",
-      start: "Commencer avec 2 mois offerts",
+      start: "Commencer l'essai gratuit",
+      // Paiement au mois ou à l'année (ADR 0200).
+      billing: {
+        label: "Mode de paiement",
+        monthly: "Au mois",
+        yearly: "À l'année",
+        yearlyBadge: (free: number) => `${free} mois offerts`,
+        monthlyHint: "Sans engagement",
+        yearlyHint: (monthly: string, free: number) =>
+          `Soit ${monthly} par mois, ${free} mois offerts`,
+        yearlyEngagement: (months: number) => `Engagement ${months} mois, payé d'avance`,
+      },
+      engagement: {
+        title: "Au mois ou à l'année",
+        monthly: {
+          title: "Au mois",
+          text: "Sans engagement : vous arrêtez quand vous voulez, depuis votre espace pro.",
+        },
+        yearly: {
+          title: "À l'année",
+          text: (months: number, free: number) =>
+            `${months} mois payés d'avance, ${free} mois offerts. L'engagement commence au premier paiement, après les 2 mois d'essai, et il est affiché clairement au moment de payer.`,
+        },
+        guarantee: {
+          title: "Garantie de l'engagement",
+          text: (minRequests: number, months: number) =>
+            `Moins de ${minRequests} demandes ${months} mois de suite ? Vous partez sans frais. Même chose si vous cessez votre activité.`,
+        },
+      },
+      compare: {
+        title: "Comparez les fonctionnalités",
+        caption: "Fonctionnalités incluses dans chaque formule",
+        feature: "Fonctionnalité",
+        included: "Inclus",
+        notIncluded: "Non inclus",
+      },
       plansNote:
-        "Prix hors taxes, par mois. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
+        "Prix hors taxes. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
       faqEyebrow: "Questions fréquentes",
       faqTitle: "Tout ce que vous voulez savoir.",
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "La formule Base coûte 150 € HT par mois, avec 2 mois offerts à l'inscription. Les formules Premium et Entreprise arrivent prochainement.",
+          a: "La formule Base coûte 150 € HT par mois sans engagement, ou 1 500 € HT par an payés d'avance (2 mois offerts), après 2 mois d'essai gratuits. Les formules Premium et Entreprise arrivent prochainement.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -4270,7 +4307,7 @@ export const fr = {
         },
         {
           q: "Puis-je arrêter mon abonnement ?",
-          a: "Oui, à tout moment depuis votre espace pro : l'abonnement est sans engagement de durée.",
+          a: "Oui. Au mois, à tout moment depuis votre espace pro. À l'année, l'engagement court 12 mois à partir du premier paiement ; vous partez sans frais si nous vous apportons moins de 4 demandes 2 mois de suite, ou si vous cessez votre activité.",
         },
       ],
       finalTitle: "Votre prochain chantier vous attend.",

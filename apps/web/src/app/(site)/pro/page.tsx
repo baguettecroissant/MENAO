@@ -16,11 +16,14 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { planComparison } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
 import { DemoVideo } from "@/components/pro-landing/demo-video";
+import { PlanComparisonTable } from "@/components/pro-landing/plan-comparison";
+import { PricingPlans } from "@/components/pro-landing/pricing-plans";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
@@ -28,7 +31,7 @@ import { AppNotification, LaptopMockup, PhoneMockup } from "@/components/site/de
 import { StoreBadges } from "@/components/site/store-badges";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
-import { ButtonLink, StatusBadge, Tag, TextLink } from "@/components/ui";
+import { ButtonLink, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { APP_SCREENS, WEB_SCREENS } from "@/lib/site/app-screens";
 import { seoCatalog } from "@/lib/site/catalog";
@@ -46,11 +49,6 @@ export const metadata: Metadata = {
 // Formules lues en base (table plans, F-15), page régénérée toutes les heures (spec §4.4).
 export const revalidate = 3600;
 
-const euros = new Intl.NumberFormat("fr-FR", {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 0,
-});
 const PAIN_ICONS = [PhoneCall, BadgePercent, FileStack];
 const FEATURE_ICONS = [Signature, Wallet, MessagesSquare, ClipboardCheck, ReceiptText, Star];
 const FAIRNESS_ICONS = [Users, Scale, ShieldCheck];
@@ -67,14 +65,28 @@ const avantagesOf = (value: unknown): string[] =>
  * chiffre ni témoignage inventé (F-01) ; les illustrations portent des valeurs d'exemple.
  */
 export default async function ProLandingPage() {
-  const [{ data: plans }, { trades }] = await Promise.all([
+  const [{ data: plans }, { data: features }, { trades }] = await Promise.all([
     createPublicClient()
       .from("plans")
-      .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte")
+      .select("code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte")
       .order("ordre"),
+    // Comparatif détaillé des formules (ADR 0200).
+    createPublicClient().from("plan_features").select("categorie, libelle, detail, valeurs, ordre"),
     seoCatalog(),
   ]);
   const base = plans?.find((p) => p.ouverte) ?? plans?.[0];
+  const pricingPlans = (plans ?? []).map((plan) => ({
+    code: plan.code,
+    nom: plan.nom,
+    accroche: plan.accroche,
+    monthlyCents: plan.prix_mensuel_ht_centimes,
+    avantages: avantagesOf(plan.avantages),
+    ouverte: plan.ouverte,
+  }));
+  const comparison = planComparison(
+    features ?? [],
+    pricingPlans.map((plan) => plan.code),
+  );
 
   return (
     <main className="bg-background">
@@ -409,55 +421,10 @@ export default async function ProLandingPage() {
               title={t.plansTitle}
               subtitle={t.plansSubtitle}
             />
-            <ul className="grid items-start gap-5 lg:grid-cols-3">
-              {plans.map((plan) => (
-                <li
-                  key={plan.code}
-                  className={`flex flex-col gap-5 rounded-hero border p-6 sm:p-7 ${
-                    plan.ouverte
-                      ? "border-primary bg-surface shadow-raised ring-4 ring-primary/10"
-                      : "border-border bg-background"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-xl font-medium">{plan.nom}</h3>
-                    {plan.ouverte ? (
-                      <StatusBadge>{t.open}</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="neutral">{t.soon}</StatusBadge>
-                    )}
-                  </div>
-                  <p>
-                    <span className="text-[2.75rem] leading-none font-medium tracking-tight">
-                      {euros.format(plan.prix_mensuel_ht_centimes / 100)}
-                    </span>{" "}
-                    <span className="text-sm text-muted-foreground">{t.perMonth}</span>
-                  </p>
-                  {plan.ouverte && (
-                    <p className="inline-flex items-center gap-1.5 self-start rounded-pill bg-success-soft px-3 py-1 text-sm font-medium text-success">
-                      <CircleCheck aria-hidden="true" className="size-4" />
-                      {t.trial}
-                    </p>
-                  )}
-                  <ul className="flex flex-col gap-2.5 border-t border-border pt-5">
-                    {avantagesOf(plan.avantages).map((avantage) => (
-                      <li key={avantage} className="flex items-start gap-2.5 text-sm">
-                        <CircleCheck
-                          aria-hidden="true"
-                          className={`mt-0.5 size-4 shrink-0 ${plan.ouverte ? "text-primary" : "text-subtle-foreground"}`}
-                        />
-                        {avantage}
-                      </li>
-                    ))}
-                  </ul>
-                  {plan.ouverte && (
-                    <ButtonLink href="/pro/inscription" size="lg" block>
-                      {t.start}
-                    </ButtonLink>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <PricingPlans plans={pricingPlans} />
+            {comparison.length > 0 && (
+              <PlanComparisonTable plans={pricingPlans} comparison={comparison} />
+            )}
             <p className="mx-auto max-w-3xl text-center text-xs text-muted-foreground">
               {t.plansNote}
             </p>
