@@ -15,7 +15,7 @@
   - bouton « Au mois / À l'année (2 mois offerts) » ;
   - trois cartes : accroche, prix, essai gratuit de 2 mois pour la formule ouverte, points forts ;
   - un encart en trois points : au mois sans engagement, à l'année, garantie de l'engagement ;
-  - le tableau « Comparez les fonctionnalités » par catégorie (demandes, devis et signature, paiements, chantiers et planning, gestion, visibilité, équipe et accompagnement).
+  - le tableau « Comparez les fonctionnalités » par catégorie, replié au départ (le début reste visible, « Voir les … fonctionnalités » déplie le reste, demande de l'utilisateur) (demandes, devis et signature, paiements, chantiers et planning, gestion, visibilité, équipe et accompagnement).
 - **À l'année** : 12 mois payés d'avance au prix de 10, soit 1 500 €, 5 000 € et 15 000 € HT. L'équivalent mensuel est affiché.
 - **Garantie** : moins de 4 demandes 2 mois complets de suite, ou activité cessée, et l'artisan part sans frais. Les demandes qu'il apporte lui-même ne comptent pas (ADR 0198).
 - **Contenu paramétré en base** (spec F-15 : « jamais en dur ») :

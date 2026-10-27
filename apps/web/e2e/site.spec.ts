@@ -90,6 +90,14 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   const comparison = plans.getByRole("table", {
     name: "Fonctionnalités incluses dans chaque formule",
   });
+  // Comparatif replié au départ, déplié d'un appui.
+  const more = plans.getByRole("button", { name: /^Voir les \d+ fonctionnalités$/ });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await more.click();
+  await expect(plans.getByRole("button", { name: "Réduire le comparatif" })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
   await expect(
     comparison.getByRole("rowheader", { name: /^Demandes reçues par mois/ }),
   ).toBeVisible();

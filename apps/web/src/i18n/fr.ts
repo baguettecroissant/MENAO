@@ -4271,6 +4271,8 @@ export const fr = {
         feature: "Fonctionnalité",
         included: "Inclus",
         notIncluded: "Non inclus",
+        more: (n: number) => `Voir les ${n} fonctionnalités`,
+        less: "Réduire le comparatif",
       },
       plansNote:
         "Prix hors taxes. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
