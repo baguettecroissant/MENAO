@@ -35,5 +35,5 @@
 - Contrôle d'interface seulement : la base accepte toujours 3 artisans par projet. Le client garde sa liberté de choix. Il n'y a ni migration ni nouvelle dépendance.
 - `packages/emails` : singulier quand `artisans = 1` dans `demande_sans_reponse`.
 
-## Pour les associés
-- Ces demandes apportées par l'artisan ne coûtent rien en publicité. Faut-il les compter dans la promesse des « 4 demandes par mois » ? Proposition : non, à trancher.
+## Décision complémentaire (27 octobre 2026)
+- Les demandes apportées par l'artisan (sa fiche, sa carte de visite, « Redemander un devis ») ne comptent pas dans la promesse des « 4 demandes par mois », ni dans la garantie de l'engagement (ADR 0200). On les reconnaît sans nouvelle colonne : `projects.preferred_artisan_id = requests.artisan_id`.

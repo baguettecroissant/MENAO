@@ -6,6 +6,7 @@ export * from "./onboarding";
 export * from "./files";
 export * from "./expiry";
 export * from "./billing";
+export * from "./plans";
 export * from "./connect";
 export * from "./connect-overview";
 export * from "./project";

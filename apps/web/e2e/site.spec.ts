@@ -78,8 +78,19 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   const plans = page.getByRole("region", { name: "Un abonnement fixe, aucune commission." });
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(plans.getByText(/^150\s€$/)).toBeVisible();
-  await expect(plans.getByText("2 mois offerts", { exact: true })).toBeVisible();
-  await expect(plans.getByText("Bientôt disponible")).toHaveCount(2);
+  await expect(plans.getByText("Essai gratuit de 2 mois")).toBeVisible();
+  // Premium et Entreprise : sur leur carte et en tête du comparatif (ADR 0200).
+  await expect(plans.getByText("Bientôt disponible")).toHaveCount(4);
+  // À l'année : 10 mois payés d'avance, engagement de 12 mois.
+  await plans.getByRole("button", { name: /^À l'année/ }).click();
+  await expect(plans.getByText(/^1\s500\s€$/)).toBeVisible();
+  await expect(plans.getByText("Engagement 12 mois, payé d'avance").first()).toBeVisible();
+  const comparison = plans.getByRole("table", {
+    name: "Fonctionnalités incluses dans chaque formule",
+  });
+  await expect(
+    comparison.getByRole("rowheader", { name: /^Demandes reçues par mois/ }),
+  ).toBeVisible();
   // Simulation de commission (F-03) : 15 % de 8 000 € comparés à l'abonnement Base.
   await expect(page.getByText(/Vous gardez 1\s050\s€ de plus chaque mois/)).toBeVisible();
 

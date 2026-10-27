@@ -2620,8 +2620,43 @@ export type Database = {
           },
         ];
       };
+      plan_features: {
+        Row: {
+          categorie: string;
+          created_at: string;
+          detail: string | null;
+          id: string;
+          libelle: string;
+          ordre: number;
+          updated_at: string;
+          valeurs: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          categorie: string;
+          created_at?: string;
+          detail?: string | null;
+          id?: string;
+          libelle: string;
+          ordre?: number;
+          updated_at?: string;
+          valeurs?: NonNullable<Json>;
+        };
+        Update: {
+          categorie?: string;
+          created_at?: string;
+          detail?: string | null;
+          id?: string;
+          libelle?: string;
+          ordre?: number;
+          updated_at?: string;
+          valeurs?: NonNullable<Json>;
+        };
+        Relationships: [];
+      };
       plans: {
         Row: {
+          accroche: string | null;
           avantages: NonNullable<Json>;
           code: string;
           created_at: string;
@@ -2636,6 +2671,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          accroche?: string | null;
           avantages?: NonNullable<Json>;
           code: string;
           created_at?: string;
@@ -2649,6 +2685,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          accroche?: string | null;
           avantages?: NonNullable<Json>;
           code?: string;
           created_at?: string;
