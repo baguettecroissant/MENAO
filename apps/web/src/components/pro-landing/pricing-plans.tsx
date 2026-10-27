@@ -27,12 +27,15 @@ export type PricingPlan = {
   monthlyCents: number;
   avantages: string[];
   ouverte: boolean;
+  /** Formule mise en avant (« Recommandé », `plans.recommandee`). */
+  recommandee: boolean;
 };
 
 /**
  * Cartes des formules (F-15, ADR 0200, d'après la page tarifs de TrustUp Pro) : paiement au mois
- * sans engagement, ou à l'année payé d'avance avec 2 mois offerts, puis l'engagement et sa
- * garantie. Seule une formule ouverte propose de commencer l'essai.
+ * sans engagement, ou à l'année payé d'avance avec 2 mois offerts (prix ramené au mois), puis
+ * l'engagement et sa garantie. La formule recommandée est mise en avant ; chaque formule ouverte
+ * propose de commencer l'essai.
  */
 export function PricingPlans({ plans }: { plans: PricingPlan[] }) {
   const [yearly, setYearly] = useState(false);
@@ -78,44 +81,41 @@ export function PricingPlans({ plans }: { plans: PricingPlan[] }) {
         ))}
       </div>
 
-      <ul className="grid items-start gap-5 lg:grid-cols-3">
+      <ul className="grid items-start gap-5 pt-3 lg:grid-cols-3">
         {plans.map((plan) => {
           const annual = annualPriceCents(plan.monthlyCents);
           return (
             <li
               key={plan.code}
-              className={`flex flex-col gap-5 rounded-hero border p-6 sm:p-7 ${
-                plan.ouverte
+              className={`relative flex flex-col gap-5 rounded-hero border p-6 sm:p-7 ${
+                plan.recommandee
                   ? "border-primary bg-surface shadow-raised ring-4 ring-primary/10"
-                  : "border-border bg-background"
+                  : "border-border bg-surface"
               }`}
             >
+              {plan.recommandee && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-pill bg-primary px-3 py-1 text-xs font-medium tracking-wide text-primary-foreground uppercase">
+                  {t.recommended}
+                </span>
+              )}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-xl font-medium">{plan.nom}</h3>
-                  {plan.ouverte ? (
-                    <StatusBadge>{t.open}</StatusBadge>
-                  ) : (
-                    <StatusBadge tone="neutral">{t.soon}</StatusBadge>
-                  )}
+                  {!plan.ouverte && <StatusBadge tone="neutral">{t.soon}</StatusBadge>}
                 </div>
                 {plan.accroche && <p className="text-sm text-muted-foreground">{plan.accroche}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
+                {/* À l'année : le prix ramené au mois, le montant facturé par an en dessous. */}
                 <p>
                   <span className="text-[2.75rem] leading-none font-medium tracking-tight">
-                    {price(yearly ? annual : plan.monthlyCents)}
+                    {price(yearly ? monthlyEquivalentCents(annual) : plan.monthlyCents)}
                   </span>{" "}
-                  <span className="text-sm text-muted-foreground">
-                    {yearly ? t.perYear : t.perMonth}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{t.perMonth}</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {yearly
-                    ? t.billing.yearlyHint(
-                        price(monthlyEquivalentCents(annual)),
-                        ANNUAL_FREE_MONTHS,
-                      )
+                    ? t.billing.yearlyHint(price(annual), ANNUAL_FREE_MONTHS)
                     : t.billing.monthlyHint}
                 </p>
                 {yearly && (
@@ -142,7 +142,12 @@ export function PricingPlans({ plans }: { plans: PricingPlan[] }) {
                 ))}
               </ul>
               {plan.ouverte && (
-                <ButtonLink href="/pro/inscription" size="lg" block>
+                <ButtonLink
+                  href="/pro/inscription"
+                  size="lg"
+                  variant={plan.recommandee ? "primary" : "outline"}
+                  block
+                >
                   {t.start}
                 </ButtonLink>
               )}

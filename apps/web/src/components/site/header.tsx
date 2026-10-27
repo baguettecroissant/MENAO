@@ -22,6 +22,8 @@ const t = fr.nav;
  *   pilule s'arrête à 8 px du bord, 64 px de haut en tout, comme l'ancienne barre (barres
  *   collées en `top-16` des pages).
  * - Seule la pilule capte les clics : les marges transparentes laissent passer vers la page.
+ * - Liens et boutons dans la pilule dès 1 280 px (`xl`) ; en dessous, menu replié (la pilule est
+ *   plus étroite que l'ancienne barre : à 1 024 px, les liens passaient sur deux lignes).
  */
 export function SiteHeader() {
   const pathname = usePathname();
@@ -40,7 +42,7 @@ export function SiteHeader() {
             <Link href="/" aria-label="MENAO, accueil" className="rounded-md">
               <Logo />
             </Link>
-            <ul className="hidden items-center gap-6 text-sm text-foreground/80 lg:flex">
+            <ul className="hidden items-center gap-6 text-sm text-foreground/80 xl:flex">
               {NAV_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link
@@ -54,10 +56,10 @@ export function SiteHeader() {
               ))}
             </ul>
           </div>
-          <div className="ml-auto flex items-center lg:hidden">
+          <div className="ml-auto flex items-center xl:hidden">
             <NotificationBell />
           </div>
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="hidden items-center gap-2 xl:flex">
             <NotificationBell />
             <ButtonLink href="/mon-espace" variant="outline" size="sm">
               {t.myClientSpace}
@@ -73,7 +75,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="menu-mobile"
             aria-label={open ? t.closeMenu : t.menu}
-            className="inline-flex size-10 items-center justify-center rounded-full text-foreground hover:bg-background lg:hidden"
+            className="inline-flex size-10 items-center justify-center rounded-full text-foreground hover:bg-background xl:hidden"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -81,7 +83,7 @@ export function SiteHeader() {
         {open && (
           <div
             id="menu-mobile"
-            className="absolute inset-x-3 top-16 max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-card border border-border bg-surface p-4 shadow-raised sm:inset-x-6 lg:hidden"
+            className="absolute inset-x-3 top-16 max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-card border border-border bg-surface p-4 shadow-raised sm:inset-x-6 xl:hidden"
           >
             <ul className="flex flex-col">
               {NAV_LINKS.map((l) => (

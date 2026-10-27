@@ -68,7 +68,7 @@ export default async function ProLandingPage() {
   const [{ data: plans }, { data: features }, { trades }] = await Promise.all([
     createPublicClient()
       .from("plans")
-      .select("code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte")
+      .select("code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
       .order("ordre"),
     // Comparatif détaillé des formules (ADR 0200).
     createPublicClient().from("plan_features").select("categorie, libelle, detail, valeurs, ordre"),
@@ -82,6 +82,7 @@ export default async function ProLandingPage() {
     monthlyCents: plan.prix_mensuel_ht_centimes,
     avantages: avantagesOf(plan.avantages),
     ouverte: plan.ouverte,
+    recommandee: plan.recommandee,
   }));
   const comparison = planComparison(
     features ?? [],

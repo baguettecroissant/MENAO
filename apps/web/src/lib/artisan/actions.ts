@@ -417,7 +417,9 @@ async function invokeBilling(
 export async function startCheckout(_prev: FormState, formData: FormData): Promise<FormState> {
   const plan = z.enum(["base", "premium", "entreprise"]).safeParse(text(formData, "plan"));
   if (!plan.success) return { error: t.plans.errors.plan_unavailable };
-  const result = await invokeBilling("billing-checkout", { plan: plan.data });
+  // Au mois par défaut ; à l'année si l'artisan l'a choisi (ADR 0200).
+  const periodicite = text(formData, "periodicite") === "annuel" ? "annuel" : "mensuel";
+  const result = await invokeBilling("billing-checkout", { plan: plan.data, periodicite });
   if ("url" in result && result.url) redirect(result.url as Route);
   return { error: result.error };
 }

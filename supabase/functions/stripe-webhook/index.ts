@@ -201,9 +201,19 @@ async function saveSubscription(admin: SupabaseClient, s: SubscriptionSnapshot) 
     return;
   }
 
-  const { data: plan } = s.lookupKey
+  // Prix au mois ou à l'année de la formule (ADR 0200).
+  const { data: monthlyPlan } = s.lookupKey
     ? await admin.from("plans").select("code").eq("stripe_lookup_key", s.lookupKey).maybeSingle()
     : { data: null };
+  const { data: annualPlan } =
+    s.lookupKey && !monthlyPlan
+      ? await admin
+          .from("plans")
+          .select("code")
+          .eq("stripe_lookup_key_annuel", s.lookupKey)
+          .maybeSingle()
+      : { data: null };
+  const plan = monthlyPlan ?? annualPlan;
 
   const { error } = await admin.from("subscriptions").upsert(
     {
@@ -216,6 +226,7 @@ async function saveSubscription(admin: SupabaseClient, s: SubscriptionSnapshot) 
       trial_end: s.trialEnd,
       cancel_at_period_end: s.cancelAtPeriodEnd,
       ended_at: s.endedAt,
+      periodicite: s.period ?? (annualPlan ? "annuel" : "mensuel"),
     },
     { onConflict: "artisan_id" },
   );

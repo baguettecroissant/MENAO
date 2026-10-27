@@ -4232,11 +4232,11 @@ export const fr = {
       plansSubtitle:
         "Commencez par 2 mois d'essai gratuits. Ensuite, au mois sans engagement, ou à l'année avec 2 mois offerts.",
       perMonth: "HT / mois",
-      perYear: "HT / an",
       trial: "Essai gratuit de 2 mois",
-      open: "Disponible",
       soon: "Bientôt disponible",
-      start: "Commencer l'essai gratuit",
+      // Formule mise en avant (ADR 0200), paramètre `plans.recommandee`.
+      recommended: "Recommandé",
+      start: "Essayer gratuitement",
       // Paiement au mois ou à l'année (ADR 0200).
       billing: {
         label: "Mode de paiement",
@@ -4244,8 +4244,8 @@ export const fr = {
         yearly: "À l'année",
         yearlyBadge: (free: number) => `${free} mois offerts`,
         monthlyHint: "Sans engagement",
-        yearlyHint: (monthly: string, free: number) =>
-          `Soit ${monthly} par mois, ${free} mois offerts`,
+        yearlyHint: (annual: string, free: number) =>
+          `Soit ${annual} HT facturés par an, ${free} mois offerts`,
         yearlyEngagement: (months: number) => `Engagement ${months} mois, payé d'avance`,
       },
       engagement: {
@@ -4271,6 +4271,8 @@ export const fr = {
         feature: "Fonctionnalité",
         included: "Inclus",
         notIncluded: "Non inclus",
+        more: (n: number) => `Voir les ${n} fonctionnalités`,
+        less: "Réduire le comparatif",
       },
       plansNote:
         "Prix hors taxes. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
@@ -4279,7 +4281,7 @@ export const fr = {
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "La formule Base coûte 150 € HT par mois sans engagement, ou 1 500 € HT par an payés d'avance (2 mois offerts), après 2 mois d'essai gratuits. Les formules Premium et Entreprise arrivent prochainement.",
+          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Entreprise à 1 500 € HT par mois, sans engagement. À l'année, payée d'avance, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -4877,14 +4879,32 @@ export const fr = {
         },
       },
       plans: {
-        intro:
-          "Choisissez votre formule. Les 2 premiers mois sont offerts : aucun prélèvement avant la fin de la période d'essai, résiliable à tout moment.",
+        intro: (date: string) =>
+          `Choisissez votre formule et votre mode de paiement. Les 2 premiers mois sont offerts : aucun prélèvement avant le ${date}, et vous pouvez arrêter à tout moment pendant l'essai.`,
         notValidated:
           "Le choix de la formule sera disponible dès que l'équipe MENAO aura validé votre dossier.",
         perMonth: "HT / mois",
         priceHt: (euros: string) => `${euros} €`,
         trialBadge: "2 mois offerts",
         choose: (nom: string) => `Choisir la formule ${nom}`,
+        // Au mois ou à l'année (ADR 0200).
+        yearlyAlt: (annual: string, monthly: string) =>
+          `ou ${annual} € HT par an, soit ${monthly} € par mois`,
+        chooseMonthly: (nom: string) => `Choisir ${nom} au mois`,
+        recommended: "Recommandé",
+        chooseYearly: (nom: string, free: number) =>
+          `Choisir ${nom} à l'année, ${free} mois offerts`,
+        monthlyLabel: "Au mois",
+        yearlyLabel: (free: number) => `À l'année, ${free} mois offerts`,
+        monthlyNote: "Au mois : sans engagement, vous arrêtez quand vous voulez.",
+        yearlyNote: (months: number, free: number, date: string) =>
+          `À l'année : ${months} mois payés d'avance, ${free} mois offerts. L'engagement commence au premier paiement, le ${date}.`,
+        guaranteeNote: (minRequests: number, months: number) =>
+          `Garantie de l'engagement : moins de ${minRequests} demandes ${months} mois de suite, ou activité cessée, et vous partez sans frais.`,
+        yearlyTrial: (date: string) =>
+          `Paiement à l'année : engagement de 12 mois à partir du ${date}.`,
+        yearlyActive: (date: string) =>
+          `Paiement à l'année : engagement jusqu'au ${date}, puis renouvellement pour un an, sauf résiliation depuis le portail avant cette date.`,
         soon: "Bientôt disponible",
         current: "Votre abonnement",
         manage: "Gérer mon abonnement",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Mise en place Stripe de MENAO (F-15), idempotente. Aucune dépendance.
 // Lit les formules dans Supabase (table plans), puis crée ou met à jour dans Stripe :
-// produits + prix mensuels HT (lookup_key), taux de TVA 20 %, configuration du portail client,
+// produits + prix HT au mois et à l'année (lookup_key, ADR 0200), taux de TVA 20 %, portail client,
 // webhooks (abonnements et Connect). Écrit les identifiants dans le fichier d'environnement donné, sans
 // jamais afficher le secret du webhook.
 //
@@ -82,7 +82,7 @@ function setEnv(updates) {
 
 // 1. Formules (source : base de données)
 const res = await fetch(
-  `${SUPABASE_URL}/rest/v1/plans?select=code,nom,prix_mensuel_ht_centimes,stripe_lookup_key,ouverte&order=ordre`,
+  `${SUPABASE_URL}/rest/v1/plans?select=code,nom,prix_mensuel_ht_centimes,stripe_lookup_key,stripe_lookup_key_annuel,ouverte&order=ordre`,
   {
     headers: { apikey: SUPABASE_PUBLISHABLE_KEY },
   },
@@ -130,7 +130,36 @@ for (const plan of plans) {
   } else {
     console.log(`Formule déjà en place : ${plan.code}`);
   }
-  prices[plan.code] = { price: price.id, product: price.product, ouverte: plan.ouverte };
+  // À l'année (ADR 0200) : 12 mois payés d'avance au prix de 10 (ANNUAL_FREE_MONTHS de @menao/core).
+  const annualAmount = plan.prix_mensuel_ht_centimes * 10;
+  const annualExisting = await stripe("GET", "prices", {
+    lookup_keys: [plan.stripe_lookup_key_annuel],
+    active: true,
+    limit: 1,
+  });
+  let annual = annualExisting.data[0];
+  if (annual && annual.unit_amount === annualAmount) {
+    console.log(`Prix annuel déjà en place : ${plan.code}`);
+  } else {
+    const replaced = Boolean(annual);
+    annual = await stripe("POST", "prices", {
+      product: price.product,
+      currency: "eur",
+      unit_amount: annualAmount,
+      recurring: { interval: "year" },
+      tax_behavior: "exclusive",
+      lookup_key: plan.stripe_lookup_key_annuel,
+      ...(replaced ? { transfer_lookup_key: true } : {}),
+      nickname: `${plan.nom} annuel HT`,
+    });
+    console.log(`Prix annuel ${replaced ? "mis à jour" : "créé"} : ${plan.code}`);
+  }
+  prices[plan.code] = {
+    price: price.id,
+    annualPrice: annual.id,
+    product: price.product,
+    ouverte: plan.ouverte,
+  };
 }
 
 // 2. TVA 20 % (TODO(legal) : à valider par l'expert-comptable)
@@ -182,7 +211,12 @@ const portalParams = {
             enabled: true,
             default_allowed_updates: ["price"],
             proration_behavior: "create_prorations",
-            products: open.map((p) => ({ product: p.product, prices: [p.price] })),
+            products: open.map((p) => ({ product: p.product, prices: [p.price, p.annualPrice] })),
+            // Baisse de formule ou passage de l'année au mois : en fin de période, pour que
+            // l'engagement à l'année aille à son terme (ADR 0200). Montée en gamme : immédiate.
+            schedule_at_period_end: {
+              conditions: [{ type: "decreasing_item_amount" }, { type: "shortening_interval" }],
+            },
           }
         : { enabled: false },
   },

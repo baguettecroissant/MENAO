@@ -1,6 +1,7 @@
 /**
  * Formules d'abonnement : paiement à l'année, garantie de l'engagement et comparatif détaillé de
  * la page Espace Pro (F-15, ADR 0200). Contenu du comparatif paramétré en base (`plan_features`).
+ * Fichier autonome (aucun import) : il est aussi importé par l'Edge Function billing-checkout.
  */
 
 /** Engagement à l'année : 12 mois, payés d'avance, à partir du premier paiement (après l'essai). */
@@ -14,6 +15,25 @@ export const ANNUAL_FREE_MONTHS = 2;
  * comptent pas (ADR 0198).
  */
 export const ENGAGEMENT_GUARANTEE = { minRequests: 4, consecutiveMonths: 2 } as const;
+
+/** Paiement de l'abonnement : au mois sans engagement, ou à l'année payée d'avance. */
+export const BILLING_PERIODS = ["mensuel", "annuel"] as const;
+export type BillingPeriod = (typeof BILLING_PERIODS)[number];
+
+/**
+ * Texte affiché sur la page de paiement Stripe, près du bouton (ADR 0200) : l'engagement et sa
+ * date de début, ou l'absence d'engagement. Montants et date déjà formatés.
+ */
+export function checkoutNotice(
+  period: BillingPeriod,
+  values: { firstPayment: string; annualPrice: string; monthlyPrice: string },
+): string {
+  if (period === "mensuel") {
+    return `Sans engagement : aucun prélèvement avant le ${values.firstPayment}, puis ${values.monthlyPrice} HT par mois, résiliable à tout moment.`;
+  }
+  const { minRequests, consecutiveMonths } = ENGAGEMENT_GUARANTEE;
+  return `Engagement de ${ENGAGEMENT_MONTHS} mois à partir du premier paiement, le ${values.firstPayment}, après les 2 mois d'essai : ${values.annualPrice} HT payés d'avance pour l'année (${ANNUAL_FREE_MONTHS} mois offerts). Garantie : moins de ${minRequests} demandes ${consecutiveMonths} mois de suite, ou activité cessée, et vous partez sans frais.`;
+}
 
 /** Prix de l'année payée d'avance : 10 mois sur 12. */
 export function annualPriceCents(monthlyCents: number): number {

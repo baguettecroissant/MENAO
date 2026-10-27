@@ -22,16 +22,22 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
 
   const base = page.getByRole("region", { name: "Base" });
   await expect(base.getByText("150 €")).toBeVisible();
-  await expect(base.getByText("2 mois offerts")).toBeVisible();
+  await expect(base.getByText("2 mois offerts", { exact: true })).toBeVisible();
+  // Trois formules ouvertes, Premium recommandée (ADR 0200).
+  await expect(page.getByRole("region", { name: "Premium" }).getByText("Recommandé")).toBeVisible();
   await expect(
-    page.getByRole("region", { name: "Premium" }).getByText("Bientôt disponible"),
+    page.getByRole("region", { name: "Entreprise" }).getByRole("button", {
+      name: "Choisir Entreprise au mois",
+    }),
   ).toBeVisible();
 
   // Choix de la formule → redirection vers Stripe Checkout (page simulée)
   await page.route("https://checkout.stripe.com/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<h1>Stripe Checkout (simulé)</h1>" }),
   );
-  await base.getByRole("button", { name: "Choisir la formule Base" }).click();
+  // Au mois ou à l'année (ADR 0200) : engagement et premier paiement annoncés avant de payer.
+  await expect(page.getByText(/^À l'année : 12 mois payés d'avance, 2 mois offerts/)).toBeVisible();
+  await base.getByRole("button", { name: "Choisir Base au mois" }).click();
   await expect(page).toHaveURL(/^https:\/\/checkout\.stripe\.com\//);
 
   // Stripe confirme l'abonnement en essai : webhook signé
@@ -92,6 +98,42 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   await page.goto("/pro/onboarding/formule");
   await expect(page.getByRole("heading", { name: "Votre abonnement : Base" })).toBeVisible();
   await expect(page.getByRole("status")).toContainText("Période d'essai jusqu'au");
+
+  // Passage au prix annuel (portail ou nouvel abonnement) : périodicité enregistrée par le webhook.
+  const yearly = {
+    ...event,
+    id: `evt_e2e_annuel_${now}`,
+    type: "customer.subscription.updated",
+    data: {
+      object: {
+        ...event.data.object,
+        items: {
+          object: "list",
+          data: [
+            {
+              current_period_end: trialEnd,
+              price: {
+                id: "price_e2e_annuel",
+                lookup_key: "menao_base_annuel",
+                recurring: { interval: "year" },
+              },
+            },
+          ],
+        },
+      },
+    },
+  };
+  const yearlySigned = signedStripeEvent(yearly, WEBHOOK_SECRET);
+  const yearlyResponse = await request.post(url, {
+    data: yearlySigned.payload,
+    headers: { "Stripe-Signature": yearlySigned.header, "Content-Type": "application/json" },
+  });
+  expect(yearlyResponse.status()).toBe(200);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Votre abonnement : Base" })).toBeVisible();
+  await expect(
+    page.getByText(/^Paiement à l'année : engagement de 12 mois à partir du/),
+  ).toBeVisible();
   await page.goto("/pro/onboarding");
   await expect(page.getByRole("link", { name: /Choisir votre formule.*Fait/ })).toBeVisible();
   await page.goto("/pro/onboarding/formule");

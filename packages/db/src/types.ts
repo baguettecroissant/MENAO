@@ -2666,7 +2666,9 @@ export type Database = {
           ordre: number;
           ouverte: boolean;
           prix_mensuel_ht_centimes: number;
+          recommandee: boolean;
           stripe_lookup_key: string;
+          stripe_lookup_key_annuel: string;
           updated_at: string;
         };
         ComputedFields: never;
@@ -2681,7 +2683,9 @@ export type Database = {
           ordre?: number;
           ouverte?: boolean;
           prix_mensuel_ht_centimes: number;
+          recommandee?: boolean;
           stripe_lookup_key: string;
+          stripe_lookup_key_annuel: string;
           updated_at?: string;
         };
         Update: {
@@ -2695,7 +2699,9 @@ export type Database = {
           ordre?: number;
           ouverte?: boolean;
           prix_mensuel_ht_centimes?: number;
+          recommandee?: boolean;
           stripe_lookup_key?: string;
+          stripe_lookup_key_annuel?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -3735,6 +3741,7 @@ export type Database = {
           first_paid_at: string | null;
           id: string;
           past_due_since: string | null;
+          periodicite: string;
           plan_code: string | null;
           status: string;
           stripe_customer_id: string;
@@ -3752,6 +3759,7 @@ export type Database = {
           first_paid_at?: string | null;
           id?: string;
           past_due_since?: string | null;
+          periodicite?: string;
           plan_code?: string | null;
           status: string;
           stripe_customer_id: string;
@@ -3768,6 +3776,7 @@ export type Database = {
           first_paid_at?: string | null;
           id?: string;
           past_due_since?: string | null;
+          periodicite?: string;
           plan_code?: string | null;
           status?: string;
           stripe_customer_id?: string;

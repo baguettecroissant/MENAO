@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TRIAL_DAYS,
+  firstPaymentDate,
   REFERRAL_COUPON_ID,
   commissionComparison,
   freeMonthAction,
@@ -13,6 +14,10 @@ import {
 describe("abonnement (F-15)", () => {
   it("2 mois offerts : essai de 60 jours (décision du 22 octobre 2026)", () => {
     expect(TRIAL_DAYS).toBe(60);
+    // Premier prélèvement, et début de l'engagement à l'année, à la fin de l'essai.
+    expect(firstPaymentDate(new Date("2026-10-27T10:00:00Z")).toISOString()).toBe(
+      "2026-12-26T10:00:00.000Z",
+    );
   });
 
   it.each([
@@ -68,7 +73,25 @@ describe("subscriptionFromStripe", () => {
       trialEnd: "2027-01-15T08:00:00.000Z",
       cancelAtPeriodEnd: false,
       endedAt: null,
+      period: null,
     });
+  });
+
+  it("paiement au mois ou à l'année (ADR 0200) : périodicité du prix Stripe", () => {
+    const withInterval = (interval: string) => ({
+      ...sub,
+      items: {
+        data: [
+          {
+            current_period_end: 1_800_000_000,
+            price: { lookup_key: "menao_base_annuel", recurring: { interval } },
+          },
+        ],
+      },
+    });
+    expect(subscriptionFromStripe(withInterval("year"))).toMatchObject({ period: "annuel" });
+    expect(subscriptionFromStripe(withInterval("month"))).toMatchObject({ period: "mensuel" });
+    expect(subscriptionFromStripe(withInterval("week"))).toMatchObject({ period: null });
   });
 
   it("date de fin d'un abonnement résilié (résiliations du back-office)", () => {
