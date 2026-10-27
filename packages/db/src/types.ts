@@ -2666,6 +2666,7 @@ export type Database = {
           ordre: number;
           ouverte: boolean;
           prix_mensuel_ht_centimes: number;
+          recommandee: boolean;
           stripe_lookup_key: string;
           stripe_lookup_key_annuel: string;
           updated_at: string;
@@ -2682,6 +2683,7 @@ export type Database = {
           ordre?: number;
           ouverte?: boolean;
           prix_mensuel_ht_centimes: number;
+          recommandee?: boolean;
           stripe_lookup_key: string;
           stripe_lookup_key_annuel: string;
           updated_at?: string;
@@ -2697,6 +2699,7 @@ export type Database = {
           ordre?: number;
           ouverte?: boolean;
           prix_mensuel_ht_centimes?: number;
+          recommandee?: boolean;
           stripe_lookup_key?: string;
           stripe_lookup_key_annuel?: string;
           updated_at?: string;

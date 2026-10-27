@@ -55,6 +55,13 @@
   - une fois abonné : « engagement de 12 mois à partir du … » pendant l'essai, puis « engagement jusqu'au … ».
 - **Portail Stripe** : inchangé. La résiliation prend effet en fin de période, c'est-à-dire en fin d'année payée pour un abonnement annuel. Pas de changement de prix depuis le portail.
 
+## Ouverture des trois formules (27 octobre 2026, demande de l'utilisateur)
+- Premium et Entreprise sont ouvertes comme Base (`ouverte` à vrai) : essai de 2 mois, au mois ou à l'année, depuis la page Espace Pro et « Ma formule ».
+- Premium est mise en avant avec un bandeau « Recommandé ». C'est le paramètre `plans.recommandee`, une seule formule à la fois. Le libellé « le plus populaire » est écarté tant qu'aucun chiffre ne l'établit.
+- À l'année, le prix est affiché ramené au mois (125 €, 417 €, 1 250 € HT), et le montant facturé par an en dessous.
+- Portail Stripe : changement de formule ouvert sur les prix mensuels et annuels. Une baisse de formule ou un passage de l'année au mois prend effet en fin de période (`schedule_at_period_end`), pour que l'engagement aille à son terme. Une montée en gamme est immédiate.
+- **Point de vigilance** : les fonctionnalités propres à Premium et Entreprise restent à construire avant les premiers paiements, soit à la fin des essais qui démarrent au 1er avril 2027.
+
 ## Restent à faire
 - **Garantie et cessation d'activité** : traitées par l'équipe (résiliation et remboursement des mois non utilisés dans Stripe). `engagementExitAllowed` servira à l'indiquer dans le back-office.
 - **Renouvellement** : l'année se renouvelle pour un an, comme le fait Stripe par défaut. Un rappel avant l'échéance (avec le choix de passer au mois) est à ajouter. `TODO(legal)` : préavis et information à faire valider.

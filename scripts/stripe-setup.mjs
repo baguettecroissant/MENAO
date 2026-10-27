@@ -137,23 +137,29 @@ for (const plan of plans) {
     active: true,
     limit: 1,
   });
-  const annual = annualExisting.data[0];
+  let annual = annualExisting.data[0];
   if (annual && annual.unit_amount === annualAmount) {
     console.log(`Prix annuel déjà en place : ${plan.code}`);
   } else {
-    await stripe("POST", "prices", {
+    const replaced = Boolean(annual);
+    annual = await stripe("POST", "prices", {
       product: price.product,
       currency: "eur",
       unit_amount: annualAmount,
       recurring: { interval: "year" },
       tax_behavior: "exclusive",
       lookup_key: plan.stripe_lookup_key_annuel,
-      ...(annual ? { transfer_lookup_key: true } : {}),
+      ...(replaced ? { transfer_lookup_key: true } : {}),
       nickname: `${plan.nom} annuel HT`,
     });
-    console.log(`Prix annuel ${annual ? "mis à jour" : "créé"} : ${plan.code}`);
+    console.log(`Prix annuel ${replaced ? "mis à jour" : "créé"} : ${plan.code}`);
   }
-  prices[plan.code] = { price: price.id, product: price.product, ouverte: plan.ouverte };
+  prices[plan.code] = {
+    price: price.id,
+    annualPrice: annual.id,
+    product: price.product,
+    ouverte: plan.ouverte,
+  };
 }
 
 // 2. TVA 20 % (TODO(legal) : à valider par l'expert-comptable)
@@ -205,7 +211,12 @@ const portalParams = {
             enabled: true,
             default_allowed_updates: ["price"],
             proration_behavior: "create_prorations",
-            products: open.map((p) => ({ product: p.product, prices: [p.price] })),
+            products: open.map((p) => ({ product: p.product, prices: [p.price, p.annualPrice] })),
+            // Baisse de formule ou passage de l'année au mois : en fin de période, pour que
+            // l'engagement à l'année aille à son terme (ADR 0200). Montée en gamme : immédiate.
+            schedule_at_period_end: {
+              conditions: [{ type: "decreasing_item_amount" }, { type: "shortening_interval" }],
+            },
           }
         : { enabled: false },
   },

@@ -4232,10 +4232,10 @@ export const fr = {
       plansSubtitle:
         "Commencez par 2 mois d'essai gratuits. Ensuite, au mois sans engagement, ou à l'année avec 2 mois offerts.",
       perMonth: "HT / mois",
-      perYear: "HT / an",
       trial: "Essai gratuit de 2 mois",
-      open: "Disponible",
       soon: "Bientôt disponible",
+      // Formule mise en avant (ADR 0200), paramètre `plans.recommandee`.
+      recommended: "Recommandé",
       start: "Commencer l'essai gratuit",
       // Paiement au mois ou à l'année (ADR 0200).
       billing: {
@@ -4244,8 +4244,8 @@ export const fr = {
         yearly: "À l'année",
         yearlyBadge: (free: number) => `${free} mois offerts`,
         monthlyHint: "Sans engagement",
-        yearlyHint: (monthly: string, free: number) =>
-          `Soit ${monthly} par mois, ${free} mois offerts`,
+        yearlyHint: (annual: string, free: number) =>
+          `Soit ${annual} HT facturés par an, ${free} mois offerts`,
         yearlyEngagement: (months: number) => `Engagement ${months} mois, payé d'avance`,
       },
       engagement: {
@@ -4279,7 +4279,7 @@ export const fr = {
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "La formule Base coûte 150 € HT par mois sans engagement, ou 1 500 € HT par an payés d'avance (2 mois offerts), après 2 mois d'essai gratuits. Les formules Premium et Entreprise arrivent prochainement.",
+          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Entreprise à 1 500 € HT par mois, sans engagement. À l'année, payée d'avance, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -4889,6 +4889,7 @@ export const fr = {
         yearlyAlt: (annual: string, monthly: string) =>
           `ou ${annual} € HT par an, soit ${monthly} € par mois`,
         chooseMonthly: (nom: string) => `Choisir ${nom} au mois`,
+        recommended: "Recommandé",
         chooseYearly: (nom: string, free: number) =>
           `Choisir ${nom} à l'année, ${free} mois offerts`,
         monthlyLabel: "Au mois",

@@ -22,9 +22,13 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
 
   const base = page.getByRole("region", { name: "Base" });
   await expect(base.getByText("150 €")).toBeVisible();
-  await expect(base.getByText("2 mois offerts")).toBeVisible();
+  await expect(base.getByText("2 mois offerts", { exact: true })).toBeVisible();
+  // Trois formules ouvertes, Premium recommandée (ADR 0200).
+  await expect(page.getByRole("region", { name: "Premium" }).getByText("Recommandé")).toBeVisible();
   await expect(
-    page.getByRole("region", { name: "Premium" }).getByText("Bientôt disponible"),
+    page.getByRole("region", { name: "Entreprise" }).getByRole("button", {
+      name: "Choisir Entreprise au mois",
+    }),
   ).toBeVisible();
 
   // Choix de la formule → redirection vers Stripe Checkout (page simulée)

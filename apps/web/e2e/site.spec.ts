@@ -78,12 +78,14 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   const plans = page.getByRole("region", { name: "Un abonnement fixe, aucune commission." });
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(plans.getByText(/^150\s€$/)).toBeVisible();
-  await expect(plans.getByText("Essai gratuit de 2 mois")).toBeVisible();
-  // Premium et Entreprise : sur leur carte et en tête du comparatif (ADR 0200).
-  await expect(plans.getByText("Bientôt disponible")).toHaveCount(4);
-  // À l'année : 10 mois payés d'avance, engagement de 12 mois.
+  // Trois formules ouvertes, Premium mise en avant (ADR 0200).
+  await expect(plans.getByText("Essai gratuit de 2 mois")).toHaveCount(3);
+  await expect(plans.getByText("Bientôt disponible")).toHaveCount(0);
+  await expect(plans.getByText("Recommandé").first()).toBeVisible();
+  // À l'année : prix ramené au mois (10 mois sur 12), montant annuel en dessous.
   await plans.getByRole("button", { name: /^À l'année/ }).click();
-  await expect(plans.getByText(/^1\s500\s€$/)).toBeVisible();
+  await expect(plans.getByText(/^125\s€$/)).toBeVisible();
+  await expect(plans.getByText(/^Soit 1\s500\s€ HT facturés par an/)).toBeVisible();
   await expect(plans.getByText("Engagement 12 mois, payé d'avance").first()).toBeVisible();
   const comparison = plans.getByRole("table", {
     name: "Fonctionnalités incluses dans chaque formule",

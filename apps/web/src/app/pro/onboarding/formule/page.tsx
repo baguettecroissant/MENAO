@@ -24,7 +24,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
   const { supabase, artisan, subscription, snapshot } = await getOnboardingContext();
   const { data: plans } = await supabase
     .from("plans")
-    .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte")
+    .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
     .order("ordre");
 
   if (artisan.status !== "valide") {
@@ -98,9 +98,17 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           <li key={plan.code}>
             <Card>
               <section aria-labelledby={`plan-${plan.code}`} className="flex h-full flex-col gap-3">
-                <h2 id={`plan-${plan.code}`} className="text-lg font-medium">
-                  {plan.nom}
-                </h2>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 id={`plan-${plan.code}`} className="text-lg font-medium">
+                    {plan.nom}
+                  </h2>
+                  {/* Formule mise en avant (ADR 0200). */}
+                  {plan.recommandee && (
+                    <span className="rounded-pill bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
+                      {t.recommended}
+                    </span>
+                  )}
+                </div>
                 <p>
                   <span className="text-3xl font-medium tracking-tight">
                     {t.priceHt(euros.format(plan.prix_mensuel_ht_centimes / 100))}

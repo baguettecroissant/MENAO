@@ -18,7 +18,13 @@ export function PlanComparisonTable({
   plans,
   comparison,
 }: {
-  plans: { code: string; nom: string; monthlyCents: number; ouverte: boolean }[];
+  plans: {
+    code: string;
+    nom: string;
+    monthlyCents: number;
+    ouverte: boolean;
+    recommandee: boolean;
+  }[];
   comparison: PlanComparison;
 }) {
   return (
@@ -51,6 +57,11 @@ export function PlanComparisonTable({
                 scope="col"
                 className="sticky top-16 z-10 border-b border-border bg-surface px-1 py-3 text-center align-top font-normal"
               >
+                {plan.recommandee && (
+                  <span className="mx-auto mb-1 block w-fit rounded-pill bg-primary px-2 py-0.5 text-[0.625rem] font-medium tracking-wide text-primary-foreground uppercase sm:text-[0.6875rem]">
+                    {t.recommended}
+                  </span>
+                )}
                 <span className="block font-medium text-foreground sm:text-base">{plan.nom}</span>
                 <span className="block text-muted-foreground">
                   {euros.format(plan.monthlyCents / 100)}

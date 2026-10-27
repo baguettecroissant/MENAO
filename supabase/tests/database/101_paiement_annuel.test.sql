@@ -23,6 +23,14 @@ select results_eq(
     ('entreprise', 'menao_entreprise_annuel') $$,
   'chaque formule a la clé de son prix annuel');
 
+select results_eq(
+  $$ select code from public.plans where recommandee $$,
+  $$ values ('premium'::text) $$,
+  'Premium est la formule recommandée');
+select throws_ok(
+  $$ update public.plans set recommandee = true where code = 'base' $$,
+  '23505', null, 'une seule formule recommandée à la fois');
+
 -- Revenu mensuel avant les abonnements du test (d'autres peuvent exister dans la base).
 select set_config('test.mrr_avant', (app.subscription_summary() ->> 'mrr_cents'), true);
 
