@@ -26,7 +26,7 @@ test("fiche publique : lien depuis la page ville, données structurées, badge, 
   expect(jsonLd).toContain('"name":"Noé Plomberie"');
   const main = await page.getByRole("main").innerText();
   expect(main).not.toMatch(/@|\+33|Rue de l'Exemple|SIRET/i);
-  // Recherche lancée depuis la fiche (ADR 0173) : Noé y sera proposé en premier.
+  // Recherche lancée depuis la fiche (ADR 0173, 0198) : la demande ne partira qu'à Noé.
   await expect(
     page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }),
   ).toHaveAttribute(
