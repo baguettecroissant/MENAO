@@ -5,7 +5,6 @@ import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import { HERO_IMAGE, HERO_SRCSET } from "@/lib/site/images";
 import { HeroSearchInput } from "./hero-search-input";
-import { HomeNav } from "./home-nav";
 import { StoreBadges } from "./store-badges";
 
 const t = fr.home;
@@ -13,13 +12,14 @@ const SHORTCUTS = ["electricien", "plombier", "macon", "peintre", "terrassier"];
 const TAG_ICONS = [BadgeCheck, ShieldCheck, Clock];
 
 /**
- * Bandeau de l'accueil (maquette « Homepage ») : photo plein cadre arrondie, navigation en
- * verre dépoli, titre, recherche, raccourcis métiers et badges des stores (ADR 0150, à la place du
- * téléphone de l'ADR 0147, jugé trop chargé). Aucun chiffre ni témoignage inventé (spec F-01).
+ * Bandeau de l'accueil (maquette « Homepage ») : photo plein cadre arrondie, titre, recherche,
+ * raccourcis métiers et badges des stores (ADR 0150, à la place du téléphone de l'ADR 0147, jugé
+ * trop chargé). Il passe sous l'en-tête du site, la pilule en verre dépoli (ADR 0199) : marge
+ * négative de la hauteur de l'en-tête. Aucun chiffre ni témoignage inventé (spec F-01).
  */
 export function HomeHero() {
   return (
-    <section className="px-2 pt-2 sm:px-4 sm:pt-4">
+    <section className="-mt-[4.75rem] px-2 pt-2 sm:-mt-24 sm:px-4 sm:pt-4">
       <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[#0f1b4d]">
         {HERO_IMAGE ? (
           <>
@@ -41,7 +41,8 @@ export function HomeHero() {
         )}
 
         <div className="relative flex min-h-[620px] flex-col p-3 sm:p-6 lg:min-h-[680px]">
-          <HomeNav />
+          {/* Place de la pilule de l'en-tête, posée par-dessus (ADR 0199). */}
+          <div aria-hidden="true" className="h-14 shrink-0" />
 
           {/* Pastilles flottantes : engagements réels de MENAO (pas de faux témoignages). Masquées
               sur la photo : posées sur des personnes fictives, elles ressembleraient à des badges. */}

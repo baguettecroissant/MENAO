@@ -309,7 +309,7 @@ export function NeedForm({
               <div
                 ref={mirror}
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 overflow-hidden px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed break-words whitespace-pre-wrap"
+                className="champ-tactile pointer-events-none absolute inset-0 overflow-hidden px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed break-words whitespace-pre-wrap"
               >
                 <span className="text-transparent">{text}</span>
                 {completion && <span className="text-subtle-foreground">{completion}</span>}

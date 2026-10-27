@@ -14,6 +14,18 @@
   ::selection {
     @apply bg-primary-soft text-foreground;
   }
+  /* Sur iPhone, Safari zoome la page dès qu'on touche un champ en dessous de 16 px, et le zoom
+     reste en naviguant (pages sans rechargement) : page décalée, défilement de côté. Champs en
+     16 px sur les écrans tactiles (ADR 0199) ; `champ-tactile` pour un calque qui doit suivre le
+     texte d'un champ (suite grisée de la saisie du besoin). */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+    textarea,
+    select,
+    .champ-tactile {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer utilities {
