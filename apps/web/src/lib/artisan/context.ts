@@ -75,7 +75,7 @@ export const getOnboardingContext = cache(async () => {
     supabase
       .from("subscriptions")
       .select(
-        "plan_code, status, trial_end, current_period_end, cancel_at_period_end, past_due_since",
+        "plan_code, status, periodicite, trial_end, current_period_end, cancel_at_period_end, past_due_since",
       )
       .eq("artisan_id", artisan.id)
       .maybeSingle(),

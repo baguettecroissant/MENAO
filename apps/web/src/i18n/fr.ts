@@ -4877,14 +4877,31 @@ export const fr = {
         },
       },
       plans: {
-        intro:
-          "Choisissez votre formule. Les 2 premiers mois sont offerts : aucun prélèvement avant la fin de la période d'essai, résiliable à tout moment.",
+        intro: (date: string) =>
+          `Choisissez votre formule et votre mode de paiement. Les 2 premiers mois sont offerts : aucun prélèvement avant le ${date}, et vous pouvez arrêter à tout moment pendant l'essai.`,
         notValidated:
           "Le choix de la formule sera disponible dès que l'équipe MENAO aura validé votre dossier.",
         perMonth: "HT / mois",
         priceHt: (euros: string) => `${euros} €`,
         trialBadge: "2 mois offerts",
         choose: (nom: string) => `Choisir la formule ${nom}`,
+        // Au mois ou à l'année (ADR 0200).
+        yearlyAlt: (annual: string, monthly: string) =>
+          `ou ${annual} € HT par an, soit ${monthly} € par mois`,
+        chooseMonthly: (nom: string) => `Choisir ${nom} au mois`,
+        chooseYearly: (nom: string, free: number) =>
+          `Choisir ${nom} à l'année, ${free} mois offerts`,
+        monthlyLabel: "Au mois",
+        yearlyLabel: (free: number) => `À l'année, ${free} mois offerts`,
+        monthlyNote: "Au mois : sans engagement, vous arrêtez quand vous voulez.",
+        yearlyNote: (months: number, free: number, date: string) =>
+          `À l'année : ${months} mois payés d'avance, ${free} mois offerts. L'engagement commence au premier paiement, le ${date}.`,
+        guaranteeNote: (minRequests: number, months: number) =>
+          `Garantie de l'engagement : moins de ${minRequests} demandes ${months} mois de suite, ou activité cessée, et vous partez sans frais.`,
+        yearlyTrial: (date: string) =>
+          `Paiement à l'année : engagement de 12 mois à partir du ${date}.`,
+        yearlyActive: (date: string) =>
+          `Paiement à l'année : engagement jusqu'au ${date}, puis renouvellement pour un an, sauf résiliation depuis le portail avant cette date.`,
         soon: "Bientôt disponible",
         current: "Votre abonnement",
         manage: "Gérer mon abonnement",

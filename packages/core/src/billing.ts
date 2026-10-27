@@ -6,6 +6,11 @@
 /** 2 mois offerts (décision des associés du 22 octobre 2026, ADR 0153) : essai Stripe de 60 jours. */
 export const TRIAL_DAYS = 60;
 
+/** Premier prélèvement : à la fin de l'essai ; l'engagement à l'année commence ce jour-là (ADR 0200). */
+export function firstPaymentDate(now: Date = new Date()): Date {
+  return new Date(now.getTime() + TRIAL_DAYS * 86_400_000);
+}
+
 export const SUBSCRIPTION_STATUSES = [
   "trialing",
   "active",
@@ -49,6 +54,8 @@ export type SubscriptionSnapshot = {
   cancelAtPeriodEnd: boolean;
   /** Fin effective de l'abonnement (résilié), pour dater les résiliations (ADR 0051). */
   endedAt: string | null;
+  /** Paiement au mois ou à l'année (ADR 0200), d'après la périodicité du prix ; null si inconnue. */
+  period: "mensuel" | "annuel" | null;
 };
 
 type Obj = Record<string, unknown>;
@@ -69,6 +76,7 @@ export function subscriptionFromStripe(input: unknown): SubscriptionSnapshot | n
   const item = isObj(items[0]) ? items[0] : {};
   const price = isObj(item.price) ? item.price : {};
   const metadata = isObj(input.metadata) ? input.metadata : {};
+  const interval = isObj(price.recurring) ? price.recurring.interval : null;
 
   return {
     stripeSubscriptionId: input.id,
@@ -81,6 +89,7 @@ export function subscriptionFromStripe(input: unknown): SubscriptionSnapshot | n
     trialEnd: iso(input.trial_end),
     cancelAtPeriodEnd: input.cancel_at_period_end === true,
     endedAt: iso(input.ended_at),
+    period: interval === "year" ? "annuel" : interval === "month" ? "mensuel" : null,
   };
 }
 

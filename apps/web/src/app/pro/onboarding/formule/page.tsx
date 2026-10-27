@@ -1,3 +1,11 @@
+import {
+  ANNUAL_FREE_MONTHS,
+  ENGAGEMENT_GUARANTEE,
+  ENGAGEMENT_MONTHS,
+  annualPriceCents,
+  firstPaymentDate,
+  monthlyEquivalentCents,
+} from "@menao/core";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -7,7 +15,10 @@ const t = fr.pro.onboarding.plans;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
 const euros = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 
-/** Étape 7 — formule et abonnement (Stripe Billing, web uniquement). */
+/**
+ * Étape 7 — formule et abonnement (Stripe Billing, web uniquement) : au mois sans engagement ou à
+ * l'année payée d'avance (ADR 0200), engagement et date du premier paiement affichés avant de payer.
+ */
 export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onboarding/formule">) {
   const params = await searchParams;
   const { supabase, artisan, subscription, snapshot } = await getOnboardingContext();
@@ -53,6 +64,18 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           >
             {label}
           </p>
+          {subscription.periodicite === "annuel" &&
+            (status === "trialing" && subscription.trial_end ? (
+              <p className="text-muted-foreground">
+                {t.yearlyTrial(day.format(new Date(subscription.trial_end)))}
+              </p>
+            ) : status === "active" &&
+              subscription.current_period_end &&
+              !subscription.cancel_at_period_end ? (
+              <p className="text-muted-foreground">
+                {t.yearlyActive(day.format(new Date(subscription.current_period_end)))}
+              </p>
+            ) : null)}
           {subscription.cancel_at_period_end && subscription.current_period_end && (
             <p className="text-muted-foreground">
               {t.cancelAtPeriodEnd(day.format(new Date(subscription.current_period_end)))}
@@ -65,10 +88,11 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
     );
   }
 
+  const firstPayment = day.format(firstPaymentDate());
   return (
     <div className="flex flex-col gap-6">
       {params.paiement === "ok" && <Alert tone="success">{t.processing}</Alert>}
-      <p>{t.intro}</p>
+      <p>{t.intro(firstPayment)}</p>
       <ul className="grid gap-4 md:grid-cols-3">
         {(plans ?? []).map((plan) => (
           <li key={plan.code}>
@@ -82,6 +106,14 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
                     {t.priceHt(euros.format(plan.prix_mensuel_ht_centimes / 100))}
                   </span>{" "}
                   <span className="text-muted-foreground">{t.perMonth}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t.yearlyAlt(
+                    euros.format(annualPriceCents(plan.prix_mensuel_ht_centimes) / 100),
+                    euros.format(
+                      monthlyEquivalentCents(annualPriceCents(plan.prix_mensuel_ht_centimes)) / 100,
+                    ),
+                  )}
                 </p>
                 {plan.ouverte && (
                   <span className="self-start rounded-chip bg-success-soft px-3 py-1 text-sm text-success">
@@ -102,6 +134,16 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
             </Card>
           </li>
         ))}
+      </ul>
+      <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+        <li>{t.monthlyNote}</li>
+        <li>{t.yearlyNote(ENGAGEMENT_MONTHS, ANNUAL_FREE_MONTHS, firstPayment)}</li>
+        <li>
+          {t.guaranteeNote(
+            ENGAGEMENT_GUARANTEE.minRequests,
+            ENGAGEMENT_GUARANTEE.consecutiveMonths,
+          )}
+        </li>
       </ul>
       <p className="text-sm text-muted-foreground">{t.vatNote}</p>
     </div>

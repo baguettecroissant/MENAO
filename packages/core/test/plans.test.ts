@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   ANNUAL_FREE_MONTHS,
+  BILLING_PERIODS,
   ENGAGEMENT_GUARANTEE,
   ENGAGEMENT_MONTHS,
   annualPriceCents,
+  checkoutNotice,
   engagementExitAllowed,
   monthlyEquivalentCents,
   planComparison,
@@ -21,6 +23,28 @@ describe("formules et engagement (F-15, ADR 0200)", () => {
     expect(monthlyEquivalentCents(150000)).toBe(12500);
     expect(monthlyEquivalentCents(500000)).toBe(41667);
     expect(monthlyEquivalentCents(1500000)).toBe(125000);
+  });
+
+  it("paiement : au mois ou à l'année, texte affiché au moment de payer", () => {
+    expect(BILLING_PERIODS).toEqual(["mensuel", "annuel"]);
+    expect(
+      checkoutNotice("annuel", {
+        firstPayment: "26 décembre 2026",
+        annualPrice: "1 500 €",
+        monthlyPrice: "150 €",
+      }),
+    ).toBe(
+      "Engagement de 12 mois à partir du premier paiement, le 26 décembre 2026, après les 2 mois d'essai : 1 500 € HT payés d'avance pour l'année (2 mois offerts). Garantie : moins de 4 demandes 2 mois de suite, ou activité cessée, et vous partez sans frais.",
+    );
+    expect(
+      checkoutNotice("mensuel", {
+        firstPayment: "26 décembre 2026",
+        annualPrice: "1 500 €",
+        monthlyPrice: "150 €",
+      }),
+    ).toBe(
+      "Sans engagement : aucun prélèvement avant le 26 décembre 2026, puis 150 € HT par mois, résiliable à tout moment.",
+    );
   });
 
   it("garantie : moins de 4 demandes 2 mois de suite, ou activité cessée, et l'artisan part sans frais", () => {

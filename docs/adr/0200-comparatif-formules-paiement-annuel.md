@@ -1,6 +1,6 @@
 # ADR 0200 — Comparatif des formules et paiement à l'année
 
-- Statut : accepté (lot 1 : page Espace Pro ; lot 2 : paiement à l'année dans Stripe, à venir)
+- Statut : accepté (lot 1 : page Espace Pro ; lot 2 : paiement à l'année dans Stripe, accord de l'utilisateur le 27 octobre 2026)
 - Date : 27 octobre 2026
 - Demande de l'utilisateur du 27 octobre 2026, sur le modèle de la page tarifs de TrustUp Pro :
   - une comparaison détaillée des fonctionnalités, pour les 3 formules ;
@@ -38,8 +38,25 @@
 - Migration `comparatif_formules` et test pgTAP `100_comparatif_formules` (RLS, lecture publique, aucune écriture depuis un compte).
 - Pas de nouvelle dépendance. Textes dans `fr.ts`. La FAQ de `/pro` est mise à jour (prix, arrêt de l'abonnement).
 
-## Lot 2 (à faire, accord demandé avant de toucher à Stripe)
-- Prix annuels dans Stripe (`pnpm stripe:setup`, clés `menao_*_annuel`).
-- Choix mois ou année dans « Ma formule », engagement et date de fin affichés au moment de payer.
-- Pas de résiliation avant la fin de l'engagement dans le portail, sauf garantie ou cessation, traitées par l'équipe.
-- CGV artisans : engagement, garantie, pas de reconduction automatique pour un an, 14 jours de rétractation pour les inscriptions hors établissement (`TODO(legal)`, article L221-3 du code de la consommation).
+## Lot 2 : paiement à l'année dans Stripe
+- **Base** :
+  - `plans.stripe_lookup_key_annuel` (`menao_<formule>_annuel`) ;
+  - `subscriptions.periodicite` (`mensuel` par défaut, ou `annuel`), écrite par le webhook seulement ;
+  - revenu mensuel du back-office : un abonnement annuel compte pour un douzième de son prix (`app.monthly_revenue_cents`) ;
+  - test pgTAP `101`.
+- **Stripe** : `pnpm stripe:setup` crée, pour chaque formule, un prix annuel sur le même produit (10 fois le prix mensuel, facturé chaque année, HT). L'essai de 2 mois s'applique aussi : la première facture annuelle tombe à la fin de l'essai.
+- **`billing-checkout`** :
+  - reçoit `periodicite` et choisit le prix ;
+  - affiche près du bouton de paiement l'engagement et sa date de début, ou l'absence d'engagement (`custom_text.submit`, texte de `checkoutNotice`, date de `firstPaymentDate`).
+- **`stripe-webhook`** : retrouve la formule par sa clé mensuelle ou annuelle, et enregistre la périodicité d'après le prix Stripe (`recurring.interval`).
+- **« Ma formule »** (`/pro/onboarding/formule`) :
+  - pour chaque formule ouverte, deux boutons « Au mois » et « À l'année, 2 mois offerts » ;
+  - le prix annuel et son équivalent mensuel, l'engagement, la date du premier paiement et la garantie ;
+  - une fois abonné : « engagement de 12 mois à partir du … » pendant l'essai, puis « engagement jusqu'au … ».
+- **Portail Stripe** : inchangé. La résiliation prend effet en fin de période, c'est-à-dire en fin d'année payée pour un abonnement annuel. Pas de changement de prix depuis le portail.
+
+## Restent à faire
+- **Garantie et cessation d'activité** : traitées par l'équipe (résiliation et remboursement des mois non utilisés dans Stripe). `engagementExitAllowed` servira à l'indiquer dans le back-office.
+- **Renouvellement** : l'année se renouvelle pour un an, comme le fait Stripe par défaut. Un rappel avant l'échéance (avec le choix de passer au mois) est à ajouter. `TODO(legal)` : préavis et information à faire valider.
+- **CGV artisans** : liste des clauses à prévoir dans le `TODO(legal)` de la page (rédaction par l'avocat).
+- **Production** : mêmes étapes avec la clé Stripe de production (`--live oui`) au moment du branchement du projet de production.
