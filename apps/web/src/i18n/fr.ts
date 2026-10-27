@@ -4236,7 +4236,7 @@ export const fr = {
       soon: "Bientôt disponible",
       // Formule mise en avant (ADR 0200), paramètre `plans.recommandee`.
       recommended: "Recommandé",
-      start: "Commencer l'essai gratuit",
+      start: "Essayer gratuitement",
       // Paiement au mois ou à l'année (ADR 0200).
       billing: {
         label: "Mode de paiement",
