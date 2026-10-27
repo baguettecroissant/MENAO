@@ -67,9 +67,9 @@ export function NeedForm({
   trades: { code: string; label: string }[];
   initialText?: string;
   initialTrade?: string | null;
-  /** « Redemander un devis » : artisan d'un chantier précédent, proposé en premier. */
+  /** « Redemander un devis » : artisan d'un chantier précédent, seul à recevoir la demande. */
   rehire?: { artisanId: string; chantierId: string; name: string } | null;
-  /** Recherche lancée depuis la fiche publique d'un artisan (ADR 0173) : proposé en premier. */
+  /** Recherche lancée depuis la fiche publique d'un artisan (ADR 0173, 0198) : seul à la recevoir. */
   fromPage?: { artisanId: string; name: string } | null;
   /** Programme Partenaires (F-59) : code lu dans l'adresse (`?p=`), transmis avec la demande. */
   partnerCode?: string | null;

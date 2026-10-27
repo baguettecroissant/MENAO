@@ -1259,17 +1259,20 @@ export function notificationContent(
       const projectId = uuid(data, "project_id");
       const ville = text(data, "ville");
       const allRefused = data.tous_refus === true;
+      // Demande directe (ADR 0198) : un seul artisan contacté.
+      const one = integer(data, "artisans") === 1;
+      const who = one ? "L'artisan contacté" : "Les artisans contactés";
+      const refused = one ? "n'a pas pu donner suite" : "n'ont pas pu donner suite";
+      const late = one ? "n'a pas répondu" : "n'ont pas répondu";
       return {
         subject: "Votre demande : d'autres artisans peuvent vous répondre",
-        preview: allRefused
-          ? "Les artisans contactés n'ont pas pu donner suite."
-          : "Les artisans contactés n'ont pas répondu à temps.",
+        preview: allRefused ? `${who} ${refused}.` : `${who} ${late} à temps.`,
         title: "Trouvons un autre artisan",
         paragraphs: [
           hello(ctx.firstName),
           allRefused
-            ? `Les artisans contactés pour votre projet ${quoted(titre)} n'ont pas pu donner suite.`
-            : `Les artisans contactés pour votre projet ${quoted(titre)} n'ont pas répondu dans les 72 heures.`,
+            ? `${who} pour votre projet ${quoted(titre)} ${refused}.`
+            : `${who} pour votre projet ${quoted(titre)} ${late} dans les 72 heures.`,
           `D'autres artisans vérifiés${ville ? ` du secteur de ${ville}` : ""} peuvent recevoir votre demande : choisissez-les en un clic, sans tout ressaisir.`,
           "L'équipe MENAO est prévenue et peut aussi vous aider à trouver le bon artisan.",
         ],

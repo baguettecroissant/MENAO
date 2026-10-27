@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ARTISAN_CANCEL_REASONS,
   cancelReport,
+  directRequest,
   inboxGroups,
   CLIENT_CANCEL_REASONS,
   joinNames,
@@ -31,6 +32,24 @@ describe("demandes de chantier (F-11, F-17)", () => {
     expect(remainingSlots(["envoyee", "envoyee", "acceptee", "envoyee"])).toBe(0);
     // Demande en vérification (ADR 0157) : elle occupe une place.
     expect(remainingSlots(["a_verifier", "refusee"])).toBe(2);
+  });
+
+  it("demande directe : l'artisan choisi par le client reçoit seul la demande (ADR 0198)", () => {
+    // Aucun artisan choisi : liste habituelle.
+    expect(directRequest(null)).toBeNull();
+    // Artisan de la fiche ou « Redemander un devis » qui convient : à lui seul.
+    expect(directRequest({ matches: true, status: null })).toBe("a_envoyer");
+    // Métier, zone ou disponibilité qui ne conviennent pas : liste habituelle.
+    expect(directRequest({ matches: false, status: null })).toBeNull();
+    // Demande en attente, acceptée ou en vérification (ADR 0157) : toujours à lui seul.
+    for (const status of ["envoyee", "acceptee", "a_verifier"] as const) {
+      expect(directRequest({ matches: true, status })).toBe("envoyee");
+      expect(directRequest({ matches: false, status })).toBe("envoyee");
+    }
+    // Refus, 72 h écoulées ou annulation : les autres artisans sont proposés.
+    for (const status of ["refusee", "expiree", "annulee"] as const) {
+      expect(directRequest({ matches: true, status })).toBeNull();
+    }
   });
 
   it("échéance de réponse et temps restant", () => {

@@ -1,11 +1,12 @@
 import {
   MAX_ARTISANS_PER_REQUEST,
   MAX_SEARCH_RESULTS,
+  directRequest,
   joinNames,
   showWiderZone,
 } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ArtisanTile, HelpTile, TILE_WIDTH, type CardSelection } from "@/components/artisan-card";
 import { LotStart } from "@/components/lot-start";
@@ -36,6 +37,8 @@ export default function ProjetArtisans() {
   const [lotSelected, setLotSelected] = useState<Record<string, string[]>>({});
   // Groupe dont les places sont toutes prises : "" pour le métier principal, sinon le lot.
   const [limitReached, setLimitReached] = useState<string | null>(null);
+  // Demande directe (ADR 0198) : l'artisan choisi est coché d'office, une seule fois.
+  const preselected = useRef(false);
 
   // Rechargé à chaque retour sur l'écran (demande envoyée depuis la fiche d'un artisan) et après
   // la modification de la date d'un lot (ADR 0169).
@@ -44,7 +47,17 @@ export default function ProjetArtisans() {
     Promise.all([loadResults(id), loadProjectRequests(id)]).then(([results, requests]) => {
       if (!active) return;
       setData({ results, requests });
-      setSelected((current) => current.filter((a) => !requests.requested.has(a)));
+      const chosen = results?.preferred?.id ?? null;
+      const preselect =
+        chosen !== null &&
+        !preselected.current &&
+        directRequest({ matches: true, status: requests.sentTo.get(chosen)?.status ?? null }) ===
+          "a_envoyer";
+      if (preselect) preselected.current = true;
+      setSelected((current) => {
+        const kept = current.filter((a) => !requests.requested.has(a));
+        return preselect && !kept.includes(chosen) ? [chosen, ...kept] : kept;
+      });
       setLotSelected((current) =>
         Object.fromEntries(
           (results?.lots ?? []).map((lot) => [
@@ -69,6 +82,18 @@ export default function ProjetArtisans() {
       </Screen>
     );
   }
+
+  // « Redemander un devis » ou fiche publique (ADR 0173, 0198) : la demande ne part qu'à l'artisan
+  // choisi ; la liste revient s'il refuse ou laisse passer les 72 h.
+  const preferredRequest = results.preferredId
+    ? requests.sentTo.get(results.preferredId)
+    : undefined;
+  const direct = directRequest(
+    results.preferredId
+      ? { matches: results.preferred !== null, status: preferredRequest?.status ?? null }
+      : null,
+  );
+  const directName = results.preferredName ?? preferredRequest?.name ?? "";
 
   function toggle(artisanId: string) {
     if (selected.includes(artisanId)) {
@@ -160,14 +185,20 @@ export default function ProjetArtisans() {
   );
 
   // Zone élargie (ADR 0165) : plus aucun artisan de la zone à contacter.
-  const wider = showWiderZone({
-    inZoneToContact: results.artisans.filter((a) => !requests.requested.has(a.id)).length,
-    slots: requests.slots,
-    nearby: results.nearby.length,
-  })
-    ? results.nearby.slice(0, MAX_SEARCH_RESULTS)
-    : [];
-  const shown = [...results.artisans, ...wider];
+  const wider =
+    !direct &&
+    showWiderZone({
+      inZoneToContact: results.artisans.filter((a) => !requests.requested.has(a.id)).length,
+      slots: requests.slots,
+      nearby: results.nearby.length,
+    })
+      ? results.nearby.slice(0, MAX_SEARCH_RESULTS)
+      : [];
+  const shown = direct
+    ? results.preferred
+      ? [results.preferred]
+      : []
+    : [...results.artisans, ...wider];
   const empty = results.artisans.length === 0;
 
   const send = () =>
@@ -184,7 +215,16 @@ export default function ProjetArtisans() {
           onEdit={() => router.dismissTo({ pathname: "/projet/[id]", params: { id } })}
         />
       }
-      footer={total > 0 ? <Button label={s.submit(total)} onPress={send} /> : undefined}
+      footer={
+        total > 0 ? (
+          <Button
+            label={
+              direct && lotChoices.length === 0 ? t.direct.submit(directName) : s.submit(total)
+            }
+            onPress={send}
+          />
+        ) : undefined
+      }
     >
       {results.parentId ? <Notice tone="info">{t.lots.lotOf(results.tradeLabel)}</Notice> : null}
       {results.parentId ? (
@@ -198,20 +238,45 @@ export default function ProjetArtisans() {
           }
         />
       ) : null}
-      <Title>{!empty ? t.title : wider.length ? t.wider.emptyTitle : t.noneTitle}</Title>
+      <Title>
+        {direct
+          ? t.direct.title(directName)
+          : !empty
+            ? t.title
+            : wider.length
+              ? t.wider.emptyTitle
+              : t.noneTitle}
+      </Title>
       <Body muted>
-        {!empty ? t.found(results.artisans.length) : wider.length ? t.wider.emptyLead : t.none}
+        {direct === "a_envoyer"
+          ? t.direct.lead(directName)
+          : direct === "envoyee"
+            ? t.direct.sentLead(directName)
+            : !empty
+              ? t.found(results.artisans.length)
+              : wider.length
+                ? t.wider.emptyLead
+                : t.none}
       </Body>
+      {!direct && results.preferredId && !results.preferred && results.preferredName ? (
+        <Notice tone="info">{t.knownUnavailable(results.preferredName)}</Notice>
+      ) : null}
       {!empty && wider.length > 0 ? <Notice tone="info">{t.wider.lead}</Notice> : null}
       {requests.pendingNames.length > 0 && (
         <Notice tone="success">{s.sentBanner(joinNames(requests.pendingNames))}</Notice>
       )}
-      {shown.length > 0 &&
+      {direct ? (
+        severalTrades ? (
+          <Body muted>{s.hintLots}</Body>
+        ) : null
+      ) : (
+        shown.length > 0 &&
         (requests.slots > 0 ? (
           <Body muted>{severalTrades ? s.hintLots : s.hint}</Body>
         ) : (
           <Notice tone="info">{s.noSlot}</Notice>
-        ))}
+        ))
+      )}
       {limitReached === "" && <Notice tone="info">{s.limit}</Notice>}
       {/* Partenaires recommandés par un artisan du chantier (ADR 0174), hors du classement. */}
       {results.recommended.length > 0 ? (
@@ -242,9 +307,12 @@ export default function ProjetArtisans() {
         contentContainerStyle={styles.carouselContent}
       >
         {shown.map((artisan) => rootTile(artisan))}
-        <HelpTile
-          onPress={() => router.push({ pathname: "/projet/[id]/dossier", params: { id } })}
-        />
+        {/* Demande directe (ADR 0198) : le client a déjà choisi son artisan. */}
+        {direct ? null : (
+          <HelpTile
+            onPress={() => router.push({ pathname: "/projet/[id]/dossier", params: { id } })}
+          />
+        )}
       </ScrollView>
       {results.lots.length > 0 ? (
         <View style={styles.lots}>

@@ -1,4 +1,4 @@
-import { joinNames, remainingSlots, roleFromAppMetadata } from "@menao/core";
+import { joinNames, remainingSlots, roleFromAppMetadata, type RequestStatus } from "@menao/core";
 import {
   encodeLotSelection,
   lotSelectionSchema,
@@ -37,7 +37,13 @@ function sqlError(error: { code?: string; message: string }): string {
   return error.code === "22023" ? error.message : fr.errors.generic;
 }
 
-export type ProjectRequests = { requested: Set<string>; slots: number; pendingNames: string[] };
+export type ProjectRequests = {
+  requested: Set<string>;
+  /** Statut et nom de chaque artisan sollicité (demande directe, ADR 0198). */
+  sentTo: Map<string, { status: RequestStatus; name: string }>;
+  slots: number;
+  pendingNames: string[];
+};
 
 /** Demandes déjà envoyées pour ce projet et places restantes (3 artisans au plus, F-11). */
 export async function loadProjectRequests(projectId: string): Promise<ProjectRequests> {
@@ -45,6 +51,7 @@ export async function loadProjectRequests(projectId: string): Promise<ProjectReq
   const rows = (data ?? []).filter((r) => r.project_id === projectId);
   return {
     requested: new Set(rows.map((r) => r.artisan_id)),
+    sentTo: new Map(rows.map((r) => [r.artisan_id, { status: r.status, name: r.artisan_name }])),
     slots: remainingSlots(rows.map((r) => r.status)),
     pendingNames: rows
       .filter((r) => r.status === "envoyee" || r.status === "acceptee")
