@@ -595,6 +595,17 @@ describe("contenu des notifications (F-41)", () => {
     expect(
       notificationContent("demande_sans_reponse", { ...data, tous_refus: true }, ctx).paragraphs[1],
     ).toContain("n'ont pas pu donner suite");
+    // Demande directe (ADR 0198) : un seul artisan contacté.
+    const one = { ...data, artisans: 1 };
+    expect(notificationContent("demande_sans_reponse", one, ctx).paragraphs[1]).toContain(
+      "L'artisan contacté pour votre projet",
+    );
+    expect(notificationContent("demande_sans_reponse", one, ctx).preview).toBe(
+      "L'artisan contacté n'a pas répondu à temps.",
+    );
+    expect(
+      notificationContent("demande_sans_reponse", { ...one, tous_refus: true }, ctx).paragraphs[1],
+    ).toContain("n'a pas pu donner suite");
   });
 
   it("relance « Paiement en attente » : acompte à régler, lien vers le chantier", () => {

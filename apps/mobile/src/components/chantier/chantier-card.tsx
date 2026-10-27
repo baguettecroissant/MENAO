@@ -51,8 +51,8 @@ const open = (c: ClientChantier) =>
   router.push({ pathname: "/chantier/[id]", params: { id: c.chantier_id } });
 
 /**
- * « Redemander un devis » (F-12, ADR 0040) : nouvelle recherche où l'artisan de ce chantier est
- * proposé en premier ; le serveur vérifie le chantier commun, le nom ne sert qu'au bandeau.
+ * « Redemander un devis » (F-12, ADR 0040, 0198) : nouvelle demande envoyée à l'artisan de ce
+ * chantier seul ; le serveur vérifie le chantier commun, le nom ne sert qu'au bandeau.
  */
 export const rehire = (c: Pick<ClientChantier, "artisan_id" | "chantier_id" | "artisan_name">) =>
   router.push({

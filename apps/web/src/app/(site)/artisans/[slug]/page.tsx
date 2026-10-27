@@ -102,7 +102,7 @@ export default async function ArtisanPublicPage({ params }: PageProps<"/artisans
   const zoneNames = new Set([profile.zone.city, ...profile.zone.communes].filter(Boolean));
   // Maillage : pages métier × commune pilote de sa zone (les autres n'existent pas).
   const nearby = trade ? communes.filter((c) => zoneNames.has(c.nom)).slice(0, 8) : [];
-  // Recherche lancée depuis la fiche (ADR 0173) : l'artisan est proposé en premier, présélectionné.
+  // Recherche lancée depuis la fiche (ADR 0173, 0198) : la demande ne part qu'à cet artisan.
   const searchHref = `/recherche?${new URLSearchParams({
     ...(trade ? { metier: trade.code } : {}),
     fiche: profile.id,

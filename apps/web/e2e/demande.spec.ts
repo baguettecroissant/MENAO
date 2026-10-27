@@ -709,8 +709,8 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await capture(page, "client-nouvelle-demande");
   await page.goto("/mon-espace");
 
-  // « Redemander un devis » (F-12) : nouvelle recherche pour Noé, présenté en premier et
-  // présélectionné ; la recherche non envoyée reste dans l'espace, puis est supprimée.
+  // « Redemander un devis » (F-12, ADR 0198) : demande directe à Noé seul, présélectionné ; la
+  // recherche non envoyée reste dans l'espace, puis est supprimée.
   await page
     .getByRole("region", { name: "Mes chantiers terminés" })
     .getByRole("link", { name: "Redemander un devis à Noé" })
@@ -733,11 +733,12 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
   await expect(clientNav).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Votre demande pour Noé" })).toBeVisible();
   const known = page.getByRole("listitem").filter({ hasText: "Déjà venu chez vous" });
   await expect(known.getByRole("heading", { name: "Noé" })).toBeVisible();
   await expect(known.getByRole("checkbox")).toBeChecked();
   await capture(page, "client-recherche-artisans");
-  await expect(page.getByRole("button", { name: /^Envoyer ma demande/ })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Envoyer ma demande à Noé" })).toBeEnabled();
   await page.goto("/mon-espace");
   const drafts = page.getByRole("region", { name: "Recherches non envoyées" });
   await expect(drafts.getByRole("link", { name: "Reprendre" })).toHaveAttribute(

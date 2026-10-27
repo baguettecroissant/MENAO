@@ -554,7 +554,7 @@ export const fr = {
       descriptionFallback: (name: string) =>
         `Fiche de ${name} sur MENAO : zone d'intervention, expertises, assurances vérifiées et avis de clients. Décrivez votre projet, c'est gratuit.`,
       requestHint: (name: string) =>
-        `Décrivez vos travaux en quelques minutes : ${name} vous sera proposé en premier s'il intervient chez vous, et vous choisirez les artisans à solliciter.`,
+        `Décrivez vos travaux en quelques minutes : votre demande sera envoyée à ${name} uniquement. S'il ne peut pas intervenir, nous vous proposerons d'autres artisans.`,
       nearbyTitle: (trade: string) => `Trouver un ${trade.toLowerCase()} près de chez vous`,
       nearbyCity: (trade: string, city: string) => `${trade} à ${city}`,
       allTrade: (trade: string) => `Tous les artisans ${trade.toLowerCase()}s vérifiés`,
@@ -1069,7 +1069,7 @@ export const fr = {
   },
   search: {
     rehire: (name: string) =>
-      `Nouvelle demande pour ${name} : décrivez vos travaux, ${name} vous sera proposé en premier s'il intervient pour ce besoin.`,
+      `Nouvelle demande pour ${name} : décrivez vos travaux, elle lui sera envoyée directement.`,
     titleStart: "Trouvez l'artisan du BTP dont",
     titleAccent: "vous avez besoin",
     tagline: "Recherche rapide et intelligente",
@@ -1385,6 +1385,16 @@ export const fr = {
         someone: "un de vos artisans",
       },
       score: (n: number) => `Score MENAO ${n}/100`,
+      // Demande directe (ADR 0198) : l'artisan choisi par le client reçoit seul la demande.
+      direct: {
+        title: (name: string) => `Votre demande pour ${name}`,
+        lead: (name: string) =>
+          `Votre demande ne sera envoyée qu'à ${name}. S'il ne peut pas intervenir, nous vous proposerons d'autres artisans vérifiés.`,
+        sentLead: (name: string) =>
+          `Si ${name} ne peut pas intervenir, nous vous proposerons d'autres artisans vérifiés.`,
+        hint: (name: string) => `${name} recevra seul votre demande.`,
+        submit: (name: string) => `Envoyer ma demande à ${name}`,
+      },
       knownUnavailable: (name: string) =>
         `${name} n'est pas disponible pour cette demande (métier, zone d'intervention ou congés) : voici d'autres artisans vérifiés.`,
       viewProfile: (name: string) => `Voir le profil de ${name}`,
@@ -5033,7 +5043,7 @@ export const fr = {
       "Recommandations entre artisans : un artisan contacté par le particulier peut lui recommander un de ses partenaires MENAO (son parrain ou un de ses filleuls), à sa place ou pour un autre métier du chantier. Ces partenaires sont présentés à part, avec le nom de l'artisan qui les recommande, en dehors de ce classement. Une recommandation n'est jamais rémunérée et le particulier reste libre de ne pas les contacter.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
       "Place réservée aux nouveaux artisans : un artisan validé depuis moins de 90 jours, ou qui a mené moins de 3 chantiers à terme, n'a pas encore d'historique. Quand aucun d'eux ne figure parmi les 5 premiers, l'un d'eux est présenté en 3e position, choisi parmi ceux qui remplissent les conditions ci-dessus : d'abord parmi les disponibles immédiatement, puis par un tirage propre à chaque projet. Cette place ne dépend d'aucun paiement.",
-      "Exceptions, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier (mention « Déjà venu chez vous »), ou quand il lance sa recherche depuis la fiche publique d'un artisan, cet artisan est présenté en premier et présélectionné, s'il remplit les conditions ci-dessus. Le particulier reste libre de le retirer de sa sélection, et cette place ne vaut que pour sa demande.",
+      "Exceptions, à la demande du particulier : quand il redemande un devis à un artisan avec qui il a déjà réalisé un chantier (mention « Déjà venu chez vous »), ou quand il lance sa recherche depuis la fiche publique d'un artisan (lien ou carte de visite de l'artisan), sa demande est envoyée à cet artisan seul, s'il remplit les conditions ci-dessus. Aucun autre artisan ne lui est présenté pour ce métier tant que cet artisan n'a pas répondu ; s'il refuse ou ne répond pas dans les 72 h, le particulier peut choisir d'autres artisans selon le classement ci-dessus. Le particulier reste libre de lancer une recherche classique depuis l'accueil. Cette exception ne vaut que pour sa demande et ne dépend d'aucun paiement.",
     ],
     paidTitle: "Mise en avant payante",
     paid: "Aucune. Le classement ne dépend ni de la formule d'abonnement ni d'un paiement de l'artisan. Si cela devait changer, les artisans concernés seraient signalés par la mention « Mis en avant ».",
@@ -5042,7 +5052,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 23 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 27 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",

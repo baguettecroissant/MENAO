@@ -13,13 +13,18 @@ const t = fr.search.selection;
  * cases au-delà des places restantes (3 artisans au plus par projet, vérifié aussi en base). Un
  * chantier à plusieurs métiers (ADR 0170) a un groupe par métier : `key` vide pour le métier
  * principal (cases `artisan`), l'identifiant du lot sinon (cases `lot`, « <lot>.<artisan> »).
+ * Demande directe (ADR 0198) : `hint` et `submitLabel` nomment l'artisan choisi.
  */
 export function SelectionBar({
   formId,
   groups,
+  hint,
+  submitLabel,
 }: {
   formId: string;
   groups: { key: string; slots: number }[];
+  hint?: string;
+  submitLabel?: string;
 }) {
   const [count, setCount] = useState(0);
   const [full, setFull] = useState(false);
@@ -72,7 +77,7 @@ export function SelectionBar({
   return (
     <div className="sticky bottom-4 z-20 flex flex-col items-center justify-between gap-3 rounded-card border border-border bg-surface/95 p-4 shadow-raised backdrop-blur sm:flex-row">
       <p className="text-sm text-muted-foreground" aria-live="polite">
-        {several ? (full ? t.limitLots : t.hintLots) : full ? t.limit : t.hint}
+        {hint ?? (several ? (full ? t.limitLots : t.hintLots) : full ? t.limit : t.hint)}
       </p>
       <Button
         type="submit"
@@ -81,7 +86,7 @@ export function SelectionBar({
         block={false}
         className="w-full shrink-0 whitespace-nowrap sm:w-auto"
       >
-        {t.submit(count)}
+        {submitLabel ?? t.submit(count)}
         <Send aria-hidden="true" className="size-4" />
       </Button>
     </div>

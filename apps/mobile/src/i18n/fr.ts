@@ -764,7 +764,7 @@ export const fr = {
     titleAccent: "vous avez besoin",
     tagline: "Recherche rapide et intelligente",
     rehire: (name: string) =>
-      `Nouvelle demande pour ${name} : décrivez vos travaux, ${name} vous sera proposé en premier s'il intervient pour ce besoin.`,
+      `Nouvelle demande pour ${name} : décrivez vos travaux, elle lui sera envoyée directement.`,
     label: "Décrivez votre projet",
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
@@ -964,6 +964,17 @@ export const fr = {
         : `Nous avons trouvé ${n} artisans vérifiés qui correspondent à votre projet.`,
     noneTitle: "Aucun artisan disponible pour l'instant",
     none: "Aucun artisan vérifié ne couvre encore votre secteur pour ce métier.",
+    // Demande directe (ADR 0198), comme sur le site : l'artisan choisi reçoit seul la demande.
+    direct: {
+      title: (name: string) => `Votre demande pour ${name}`,
+      lead: (name: string) =>
+        `Votre demande ne sera envoyée qu'à ${name}. S'il ne peut pas intervenir, nous vous proposerons d'autres artisans vérifiés.`,
+      sentLead: (name: string) =>
+        `Si ${name} ne peut pas intervenir, nous vous proposerons d'autres artisans vérifiés.`,
+      submit: (name: string) => `Envoyer ma demande à ${name}`,
+    },
+    knownUnavailable: (name: string) =>
+      `${name} n'est pas disponible pour cette demande (métier, zone d'intervention ou congés) : voici d'autres artisans vérifiés.`,
     // Chantier à plusieurs métiers (ADR 0167), comme sur le site.
     lots: {
       title: "Les autres métiers de votre chantier",

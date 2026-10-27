@@ -65,8 +65,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
  * avec trombone (photos, 10 au plus) et micro (dictée), aide progressive, raccourcis métiers et
  * avantages. L'analyse par l'IA crée le projet et pré-remplit ses critères (ADR 0012) ; l'écran
  * animé reste affiché pendant l'analyse puis l'envoi des photos, avant la vérification des critères.
- * « Redemander un devis » (`artisan`, `depuis`, `nom`) : l'artisan d'un chantier précédent est
- * proposé en premier ; le nom ne sert qu'au bandeau, le serveur vérifie le chantier commun.
+ * « Redemander un devis » (`artisan`, `depuis`, `nom`) : la demande ne part qu'à l'artisan d'un
+ * chantier précédent (ADR 0198) ; le nom ne sert qu'au bandeau, le serveur vérifie le chantier commun.
  */
 export default function Recherche() {
   const params = useLocalSearchParams<{

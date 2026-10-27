@@ -60,11 +60,12 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
   await expect(page.getByText(/Aucune\. Le classement ne dépend ni de la formule/)).toBeVisible();
 });
 
-// Recherche lancée depuis la fiche publique d'un artisan (ADR 0173) : il est proposé en premier,
-// présélectionné, sans la mention « Déjà venu chez vous » (aucun chantier commun).
-test("depuis la fiche d'Inès : proposée en premier et présélectionnée", async ({ page }) => {
+// Recherche lancée depuis la fiche publique d'un artisan (ADR 0173, 0198) : demande directe, à
+// elle seule, présélectionnée, sans confrère ni mention « Déjà venu chez vous » (aucun chantier commun).
+test("depuis la fiche d'Inès : demande directe, sans confrère", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/artisans/plomberie-dispo-exemple");
+  await expect(page.getByText(/votre demande sera envoyée à Inès uniquement/)).toBeVisible();
   await page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }).first().click();
   await expect(page).toHaveURL(/\/recherche\?.*fiche=/);
   await expect(page.getByText(/^Nouvelle demande pour Inès/)).toBeVisible();
@@ -76,13 +77,16 @@ test("depuis la fiche d'Inès : proposée en premier et présélectionnée", asy
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
 
   await expect(page).toHaveURL(new RegExp(`/recherche/${UUID}/artisans$`));
+  await expect(page.getByRole("heading", { name: "Votre demande pour Inès" })).toBeVisible();
   const cards = page
     .getByRole("main")
     .getByRole("listitem")
     .filter({ has: page.getByRole("heading") });
+  await expect(cards).toHaveCount(1);
   await expect(cards.nth(0).getByRole("heading")).toHaveText("Inès");
   await expect(page.getByLabel("Sélectionner Inès")).toBeChecked();
-  await expect(page.getByLabel("Sélectionner Noé")).not.toBeChecked();
+  await expect(page.getByLabel("Sélectionner Noé")).toHaveCount(0);
   await expect(page.getByText("Déjà venu chez vous")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Envoyer ma demande" })).toBeEnabled();
+  await expect(page.getByText("Vous ne trouvez pas votre artisan idéal ?")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Envoyer ma demande à Inès" })).toBeEnabled();
 });

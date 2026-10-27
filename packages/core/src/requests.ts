@@ -67,6 +67,23 @@ export function remainingSlots(statuses: readonly RequestStatus[]): number {
   return Math.max(0, MAX_ARTISANS_PER_REQUEST - statuses.filter((s) => ACTIVE.includes(s)).length);
 }
 
+/**
+ * Demande directe (ADR 0198) : le client a choisi un artisan (sa fiche publique, sa carte de
+ * visite ou « Redemander un devis »), sa demande ne part qu'à lui. `a_envoyer` : l'artisan
+ * convient (métier, zone, disponibilité) et n'a pas encore reçu la demande ; `envoyee` : elle
+ * l'attend, est acceptée ou en vérification. Null : liste habituelle (aucun artisan choisi,
+ * artisan qui ne convient pas, demande refusée, expirée après 72 h ou annulée).
+ */
+export type DirectRequest = "a_envoyer" | "envoyee" | null;
+
+export function directRequest(
+  preferred: { matches: boolean; status: RequestStatus | null } | null,
+): DirectRequest {
+  if (!preferred) return null;
+  if (preferred.status !== null) return ACTIVE.includes(preferred.status) ? "envoyee" : null;
+  return preferred.matches ? "a_envoyer" : null;
+}
+
 export function requestDeadline(sentAt: Date): Date {
   return new Date(sentAt.getTime() + REQUEST_RESPONSE_HOURS * 3_600_000);
 }

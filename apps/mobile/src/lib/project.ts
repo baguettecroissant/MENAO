@@ -10,7 +10,11 @@ import {
   type DateSouhaitMode,
 } from "@menao/core";
 import type { Database } from "@menao/db";
-import { projectCriteriaSchema, type ProjectCriteriaInput } from "@menao/validation";
+import {
+  parseArtisanProfile,
+  projectCriteriaSchema,
+  type ProjectCriteriaInput,
+} from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
@@ -336,6 +340,14 @@ export type ProjectResults = {
   recommended: RecommendedArtisan[];
   /** Zone élargie (ADR 0165) : montrés seulement quand plus aucun artisan de la zone n'est à contacter. */
   nearby: MatchedArtisan[];
+  /**
+   * Artisan choisi par le client (« Redemander un devis » ou fiche publique, ADR 0173, 0198) :
+   * `preferredId` enregistré sur le projet, `preferred` s'il convient (métier, zone, disponibilité).
+   */
+  preferredId: string | null;
+  preferred: MatchedArtisan | null;
+  /** Son prénom, même s'il ne convient pas (« … n'est pas disponible pour cette demande »). */
+  preferredName: string | null;
   summary: NeedSummary;
   /** Chantier à plusieurs métiers (ADR 0167) : projet principal d'un lot, sinon null. */
   parentId: string | null;
@@ -462,7 +474,7 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
   const [{ data: project }, summary, artisans, { data: lotRows }] = await Promise.all([
     supabase
       .from("projects")
-      .select("work_type_codes, parent_project_id, trade_code, lot_dates")
+      .select("work_type_codes, parent_project_id, trade_code, lot_dates, preferred_artisan_id")
       .eq("id", projectId)
       .maybeSingle(),
     loadNeedSummary(projectId),
@@ -474,6 +486,22 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
       .order("created_at"),
   ]);
   if (!project || !summary || !artisans) return null;
+  // Artisan choisi par le client, cherché plus loin dans le classement s'il le faut (ADR 0040).
+  const preferredId = project.preferred_artisan_id;
+  const preferred = !preferredId
+    ? null
+    : (artisans.find((a) => a.id === preferredId && !a.outsideZone) ??
+      ((await matchArtisans(projectId, MAX_SEARCH_RESULTS + 20)) ?? []).find(
+        (a) => a.id === preferredId && !a.outsideZone,
+      ) ??
+      null);
+  const preferredName =
+    preferred?.name ??
+    (preferredId
+      ? (parseArtisanProfile(
+          (await supabase.rpc("artisan_public_profile", { p_artisan_id: preferredId })).data,
+        )?.display_name ?? null)
+      : null);
   const orderedLots = inWorkOrder(lotRows ?? [], (lot) => lot.trade_code);
   // Partenaires recommandés par un artisan du chantier (ADR 0174), comme sur le site.
   const [{ data: recRows }, { data: myRequests }] = await Promise.all([
@@ -534,9 +562,18 @@ export async function loadResults(projectId: string): Promise<ProjectResults | n
     tradeLabel: summary.tradeLabel,
     city: summary.city ?? "",
     workTypeCodes: project.work_type_codes,
-    artisans: artisans.filter((a) => !a.outsideZone && !recommendedIds.has(a.id)),
+    // Artisan choisi en tête, comme sur le site (ADR 0173).
+    artisans: [
+      ...(preferred && !recommendedIds.has(preferred.id) ? [preferred] : []),
+      ...artisans.filter(
+        (a) => !a.outsideZone && !recommendedIds.has(a.id) && a.id !== preferredId,
+      ),
+    ].slice(0, MAX_SEARCH_RESULTS),
     recommended,
     nearby: artisans.filter((a) => a.outsideZone),
+    preferredId,
+    preferred,
+    preferredName,
     summary,
     parentId: project.parent_project_id,
     lots,

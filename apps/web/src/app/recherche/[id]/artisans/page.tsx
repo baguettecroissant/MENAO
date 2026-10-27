@@ -1,6 +1,7 @@
 import {
   MAX_SEARCH_RESULTS,
   availability,
+  directRequest,
   parisToday,
   inWorkOrder,
   lotStart,
@@ -111,12 +112,22 @@ export default async function ProjectResultsPage({
   const inZone = (artisans ?? []).filter((a) => !a.hors_zone);
   const nearby = (artisans ?? []).filter((a) => a.hors_zone);
   const preferred = inZone.find((a) => a.artisan_id === preferredId) ?? null;
-  // « Redemander un devis » ou recherche lancée depuis sa fiche publique (ADR 0173) : l'artisan en
-  // tête, présélectionné, à la demande du client.
-  const results = [
-    ...(preferred ? [preferred] : []),
-    ...inZone.filter((a) => a !== preferred),
-  ].slice(0, MAX_SEARCH_RESULTS);
+  const projectRequests = (sent.data ?? []).filter((r) => r.project_id === id);
+  const preferredRequest = projectRequests.find((r) => r.artisan_id === preferredId);
+  // « Redemander un devis » ou recherche lancée depuis sa fiche publique (ADR 0173, 0198) : la
+  // demande ne part qu'à cet artisan ; la liste revient s'il refuse ou laisse passer les 72 h.
+  const direct = directRequest(
+    preferredId ? { matches: preferred !== null, status: preferredRequest?.status ?? null } : null,
+  );
+  const directName = preferred?.display_name ?? preferredRequest?.artisan_name ?? "";
+  const results = direct
+    ? preferred
+      ? [preferred]
+      : []
+    : [...(preferred ? [preferred] : []), ...inZone.filter((a) => a !== preferred)].slice(
+        0,
+        MAX_SEARCH_RESULTS,
+      );
   const today = parisToday();
   const sentName = (sent.data ?? []).find((r) => r.artisan_id === preferredId)?.artisan_name;
   // « Déjà venu chez vous » seulement après un chantier commun (pas pour un artisan de sa fiche).
@@ -132,23 +143,26 @@ export default async function ProjectResultsPage({
       ])
     : [{ data: null }, null];
   const preferredUnavailable =
-    preferredId && !preferred ? (sentName ?? preferredProfile?.display_name ?? null) : null;
+    !direct && preferredId && !preferred
+      ? (sentName ?? preferredProfile?.display_name ?? null)
+      : null;
   const recommended = await recommendedFor(id, artisans);
   const recommendedIds = new Set(recommended.map((r) => r.artisan.artisan_id));
   const ranked = results.filter((a) => !recommendedIds.has(a.artisan_id));
-  const projectRequests = (sent.data ?? []).filter((r) => r.project_id === id);
   const requested = new Set(projectRequests.map((r) => r.artisan_id));
   const slots = remainingSlots(projectRequests.map((r) => r.status));
   const pending = projectRequests.filter((r) => r.status === "envoyee" || r.status === "acceptee");
   const tradeLabel = summary?.trade ?? "";
   // Plus aucun artisan de la zone à contacter : ceux d'un peu plus loin.
-  const wider = showWiderZone({
-    inZoneToContact: inZone.filter((a) => !requested.has(a.artisan_id)).length,
-    slots,
-    nearby: nearby.length,
-  })
-    ? nearby.slice(0, MAX_SEARCH_RESULTS)
-    : [];
+  const wider =
+    !direct &&
+    showWiderZone({
+      inZoneToContact: inZone.filter((a) => !requested.has(a.artisan_id)).length,
+      slots,
+      nearby: nearby.length,
+    })
+      ? nearby.slice(0, MAX_SEARCH_RESULTS)
+      : [];
   const card = (
     a: (typeof inZone)[number],
     outsideZone: boolean,
@@ -191,7 +205,9 @@ export default async function ProjectResultsPage({
     );
   };
   const selectionGroups = [
-    ...((results.length > 0 || wider.length > 0) && slots > 0 ? [{ key: "", slots }] : []),
+    ...((results.length > 0 || wider.length > 0) && slots > 0 && direct !== "envoyee"
+      ? [{ key: "", slots }]
+      : []),
     ...lots
       .filter((lot) => (lot.artisans.length > 0 || lot.recommended.length > 0) && lot.slots > 0)
       .map((lot) => ({ key: lot.id, slots: lot.slots })),
@@ -220,10 +236,24 @@ export default async function ProjectResultsPage({
           )}
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
-              {results.length ? t.title : wider.length ? t.wider.emptyTitle : t.noneTitle}
+              {direct
+                ? t.direct.title(directName)
+                : results.length
+                  ? t.title
+                  : wider.length
+                    ? t.wider.emptyTitle
+                    : t.noneTitle}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {results.length ? t.found(results.length) : wider.length ? t.wider.emptyLead : t.none}
+              {direct === "a_envoyer"
+                ? t.direct.lead(directName)
+                : direct === "envoyee"
+                  ? t.direct.sentLead(directName)
+                  : results.length
+                    ? t.found(results.length)
+                    : wider.length
+                      ? t.wider.emptyLead
+                      : t.none}
             </p>
           </div>
 
@@ -233,7 +263,7 @@ export default async function ProjectResultsPage({
               <TextLink href="/mon-espace">{fr.search.request.follow}</TextLink>
             </Alert>
           )}
-          {results.length > 0 && slots === 0 && (
+          {!direct && results.length > 0 && slots === 0 && (
             <Alert tone="info">{fr.search.selection.noSlot}</Alert>
           )}
           {preferredUnavailable && (
@@ -352,10 +382,19 @@ export default async function ProjectResultsPage({
 
           {/* Une seule barre pour tous les métiers (ADR 0170) : 3 artisans au plus par métier. */}
           {selectionGroups.length > 0 && (
-            <SelectionBar formId="selection" groups={selectionGroups} />
+            <SelectionBar
+              formId="selection"
+              groups={selectionGroups}
+              {...(direct && selectionGroups.length === 1
+                ? { hint: t.direct.hint(directName), submitLabel: t.direct.submit(directName) }
+                : {})}
+            />
           )}
 
-          <TicketBlock projectId={id} askEmail={Boolean(claims?.claims.is_anonymous)} />
+          {/* Demande directe (ADR 0198) : le client a déjà choisi son artisan. */}
+          {!direct && (
+            <TicketBlock projectId={id} askEmail={Boolean(claims?.claims.is_anonymous)} />
+          )}
 
           <p className="text-xs text-muted-foreground">
             <TextLink href="/criteres-de-classement">{t.ranking}</TextLink>
