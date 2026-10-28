@@ -37,7 +37,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth";
 import { formatDay } from "@/lib/format";
-import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
+import { choosePhotoSource, pickAvatar, uploadPhoto } from "@/lib/photos";
 import { loadProfileHub, type ProfileHub } from "@/lib/profile-hub";
 import type { HubRow, HubStatus } from "@/lib/profile-hub-status";
 import { forgetProfileSummary } from "@/lib/profile-summary";
@@ -285,7 +285,7 @@ function Header({
   async function changePhoto() {
     const source = await choosePhotoSource(t.photoTitle);
     if (!source) return;
-    const picked = await pickPhotos(source, 1, true);
+    const picked = await pickAvatar(source);
     if ("error" in picked) return toast.error(picked.error);
     const photo = picked.photos[0];
     if (!photo) return;

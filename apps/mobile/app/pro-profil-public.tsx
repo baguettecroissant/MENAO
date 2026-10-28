@@ -6,7 +6,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadDossier, saveGoogleListing, savePresentation } from "@/lib/artisan-dossier";
 import { haptic } from "@/lib/haptics";
-import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
+import { choosePhotoSource, pickAvatar, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { deletePortfolioPhoto, loadPortfolio, type PortfolioPhoto } from "@/lib/portfolio";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -43,7 +43,7 @@ function PhotoCard({ hasPhoto, onSaved }: { hasPhoto: boolean; onSaved: () => vo
     setMessage(null);
     const source = await choosePhotoSource(t.photoTitle);
     if (!source) return;
-    const picked = await pickPhotos(source, 1, true);
+    const picked = await pickAvatar(source);
     if ("error" in picked) return setMessage({ tone: "error", text: picked.error });
     const photo = picked.photos[0];
     if (!photo) return;

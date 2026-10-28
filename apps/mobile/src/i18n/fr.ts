@@ -3101,6 +3101,20 @@ export const fr = {
     enable: "Activer les notifications",
     later: "Plus tard",
   },
+  /** Cadrage de la photo de profil avant l'envoi (ADR 0202), comme sur le site. */
+  avatarFramer: {
+    title: "Cadrer votre photo",
+    hint: "Faites glisser l'image et pincez pour zoomer : le rond montre ce qui apparaîtra sur votre fiche et dans les messages.",
+    zoomIn: "Zoomer",
+    zoomOut: "Dézoomer",
+    fit: "Image entière",
+    fill: "Remplir le rond",
+    background: "Fond",
+    white: "Fond blanc",
+    black: "Fond noir",
+    confirm: "Valider le cadrage",
+    cancel: "Annuler",
+  },
   /** Photos du téléphone (journal, messagerie, signalement) : appareil photo ou photothèque. */
   photos: {
     camera: "Prendre une photo",
