@@ -4,11 +4,12 @@ import { Menu, MessageCircle, PanelLeftClose, PanelLeftOpen, Search, X } from "l
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Logo, LogoMark } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { fr } from "@/i18n/fr";
 import type { ShellAccount } from "@/lib/client/shell";
+import { useLiveUnreadMessages } from "@/lib/messages/use-live-unread";
 import { AccountMenu } from "./account-menu";
 import {
   ACCOUNT_LINKS,
@@ -57,6 +58,12 @@ export function AppFrame({
   const current = activeItem(space, pathname);
   const CurrentIcon = current?.icon;
   const messagesHref = SPACE_MESSAGES[space];
+  // Pastille des messages à jour sans recharger la page (F-40).
+  const unreadMessages = useLiveUnreadMessages(badges.messages, Boolean(messagesHref && account));
+  const liveBadges = useMemo(
+    () => ({ ...badges, messages: unreadMessages }),
+    [badges, unreadMessages],
+  );
 
   useEffect(() => {
     const dialog = drawer.current;
@@ -87,7 +94,7 @@ export function AppFrame({
       >
         <SidebarContent
           space={space}
-          badges={badges}
+          badges={liveBadges}
           account={account}
           visibility={visibility}
           collapsed={collapsed}
@@ -197,16 +204,16 @@ export function AppFrame({
             {messagesHref && (
               <Link
                 href={messagesHref as Route}
-                aria-label={t.messages(badges.messages ?? 0)}
+                aria-label={t.messages(unreadMessages)}
                 className="relative inline-flex size-11 items-center justify-center rounded-full text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
               >
                 <MessageCircle aria-hidden="true" className="size-5" />
-                {(badges.messages ?? 0) > 0 && (
+                {unreadMessages > 0 && (
                   <span
                     aria-hidden="true"
                     className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.625rem] font-medium text-primary-foreground"
                   >
-                    {(badges.messages ?? 0) > 9 ? "9+" : badges.messages}
+                    {unreadMessages > 9 ? "9+" : unreadMessages}
                   </span>
                 )}
               </Link>
@@ -248,7 +255,7 @@ export function AppFrame({
           {drawerOpen && (
             <SidebarContent
               space={space}
-              badges={badges}
+              badges={liveBadges}
               account={null}
               role={account?.role}
               visibility={visibility}

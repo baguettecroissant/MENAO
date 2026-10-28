@@ -1,8 +1,6 @@
 import { ARTISAN_BADGE_SIZE, artisanBadge, artisanBadgeSvg } from "@menao/core";
 import { Globe } from "lucide-react";
-import type { Route } from "next";
 import { CopySnippet } from "@/components/copy-snippet";
-import { TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { GoogleListingForm } from "./google-listing-form";
 
@@ -51,9 +49,6 @@ export function WebPresence({
             copyLabel={t.copy}
             copiedLabel={t.copied}
           />
-          <TextLink href={`/artisans/${slug}` as Route} className="self-start text-sm">
-            {t.open}
-          </TextLink>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">{t.hidden}</p>
