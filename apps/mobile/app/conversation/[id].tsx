@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { Composer } from "@/components/messages/composer";
 import { MessageBubble } from "@/components/messages/message-bubble";
+import { PushDeniedNotice } from "@/components/push-prompt";
 import { DetailSkeleton } from "@/components/skeletons";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -24,6 +25,7 @@ import {
   markConversationRead,
   subscribeToConversation,
 } from "@/lib/messages";
+import { setVisibleConversation } from "@/lib/push";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -63,6 +65,14 @@ export default function ConversationScreen() {
     ),
   );
 
+  // Conversation à l'écran : ses nouveaux messages n'y sonnent pas (ADR 0201).
+  useFocusEffect(
+    useCallback(() => {
+      setVisibleConversation(id);
+      return () => setVisibleConversation(null);
+    }, [id]),
+  );
+
   // Messages affichés : ceux de l'artisan sont lus, les pastilles sont relues.
   useEffect(() => {
     if (lastId) markConversationRead(id).then(refresh);
@@ -100,6 +110,7 @@ export default function ConversationScreen() {
             </Pressable>
           </View>
         </View>
+        <PushDeniedNotice />
       </View>
       <KeyboardAvoidingView
         style={styles.flex}

@@ -2144,6 +2144,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      message_pushes: {
+        Row: {
+          attempts: number;
+          created_at: string;
+          id: string;
+          locked_at: string | null;
+          message_id: string;
+          pushed_at: string | null;
+          status: Database["public"]["Enums"]["message_push_status"];
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attempts?: number;
+          created_at?: string;
+          id?: string;
+          locked_at?: string | null;
+          message_id: string;
+          pushed_at?: string | null;
+          status?: Database["public"]["Enums"]["message_push_status"];
+          user_id: string;
+        };
+        Update: {
+          attempts?: number;
+          created_at?: string;
+          id?: string;
+          locked_at?: string | null;
+          message_id?: string;
+          pushed_at?: string | null;
+          status?: Database["public"]["Enums"]["message_push_status"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_pushes_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: true;
+            referencedRelation: "messages";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       messages: {
         Row: {
           author_id: string | null;
@@ -4727,6 +4769,19 @@ export type Database = {
         };
         Returns: undefined;
       };
+      claim_message_pushes: {
+        Args: { p_limit?: number };
+        Returns: {
+          apercu: string;
+          auteur: string;
+          chantier_id: string;
+          destinataire: string;
+          id: string;
+          kind: Database["public"]["Enums"]["message_kind"];
+          titre: string;
+          tokens: string[];
+        }[];
+      };
       claim_notifications: {
         Args: { p_limit?: number };
         Returns: {
@@ -4768,6 +4823,10 @@ export type Database = {
           p_signup: Json;
           p_siret: string;
         };
+        Returns: undefined;
+      };
+      complete_message_push: {
+        Args: { p_id: string; p_retry: boolean; p_sent: boolean };
         Returns: undefined;
       };
       complete_notification: {
@@ -5353,6 +5412,7 @@ export type Database = {
       free_month_status: "a_appliquer" | "applique";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       message_kind: "texte" | "photo" | "fichier";
+      message_push_status: "a_envoyer" | "en_cours" | "envoyee" | "echec" | "ignoree";
       notification_channel: "email" | "sms" | "push";
       notification_status: "a_envoyer" | "en_cours" | "envoyee" | "echec" | "ignoree";
       notification_type:
@@ -5655,6 +5715,7 @@ export const Constants = {
       free_month_status: ["a_appliquer", "applique"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       message_kind: ["texte", "photo", "fichier"],
+      message_push_status: ["a_envoyer", "en_cours", "envoyee", "echec", "ignoree"],
       notification_channel: ["email", "sms", "push"],
       notification_status: ["a_envoyer", "en_cours", "envoyee", "echec", "ignoree"],
       notification_type: [

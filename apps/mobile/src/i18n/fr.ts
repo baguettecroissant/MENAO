@@ -3100,6 +3100,8 @@ export const fr = {
     text: "Recevez une notification pour vos rendez-vous, devis, paiements et messages, même application fermée.",
     enable: "Activer les notifications",
     later: "Plus tard",
+    deniedMessages: "Notifications désactivées : vous ne serez pas prévenu des nouveaux messages.",
+    openSettings: "Les activer dans les réglages",
   },
   /** Photos du téléphone (journal, messagerie, signalement) : appareil photo ou photothèque. */
   photos: {

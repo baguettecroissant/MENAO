@@ -11,6 +11,22 @@ export type PushPermission = "granted" | "denied" | "undetermined" | "unsupporte
 /** Jeton de l'appareil enregistré pour le compte connecté, désinscrit à la déconnexion. */
 let registeredToken: string | null = null;
 
+/** Conversation affichée à l'écran : ses nouveaux messages n'y sonnent pas (ADR 0201). */
+let visibleConversation: string | null = null;
+
+export function setVisibleConversation(id: string | null): void {
+  visibleConversation = id;
+}
+
+/** Push d'un message de la conversation affichée (lien « …/messages/<chantier> »). */
+export function isVisibleConversationLink(link: unknown): boolean {
+  return (
+    typeof link === "string" &&
+    visibleConversation !== null &&
+    link.endsWith(`/messages/${visibleConversation}`)
+  );
+}
+
 /** Autorisation du téléphone pour les notifications. */
 export async function pushPermission(): Promise<PushPermission> {
   if (!pushSupported) return "unsupported";
