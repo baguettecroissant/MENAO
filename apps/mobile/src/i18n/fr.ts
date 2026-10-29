@@ -2794,6 +2794,7 @@ export const fr = {
       visite: "Visite",
       demarrage: "Démarrage",
       creneau: "Occupé",
+      occupe: "Pris ailleurs",
       absence: "Absent",
     },
     legendLabel: "Légende",
@@ -2801,6 +2802,7 @@ export const fr = {
       visite: "Visite chez le client",
       demarrage: "Démarrage de chantier",
       creneau: "Créneau bloqué",
+      occupe: "Rendez-vous de votre téléphone",
       absence: "Absence",
     },
     emptyDay: "Rien de prévu",
@@ -3102,6 +3104,30 @@ export const fr = {
     later: "Plus tard",
     deniedMessages: "Notifications désactivées : vous ne serez pas prévenu des nouveaux messages.",
     openSettings: "Les activer dans les réglages",
+  },
+  /** Synchronisation avec le calendrier du téléphone (ADR 0203). */
+  phoneCalendar: {
+    title: "Calendrier de votre téléphone",
+    text: "Vos rendez-vous MENAO apparaissent tout de suite dans votre calendrier (iCloud, Google, Outlook…), et MENAO tient compte de vos autres rendez-vous.",
+    privacy:
+      "MENAO ne lit que les heures de début et de fin de vos autres rendez-vous, jamais leur titre ni leur détail.",
+    allow: "Autoriser l'accès au calendrier",
+    denied: "MENAO n'a pas accès à votre calendrier. Autorisez-le dans les réglages du téléphone.",
+    openSettings: "Ouvrir les réglages",
+    write: "Ajouter mes rendez-vous MENAO à mon calendrier",
+    writeTo: "Dans le calendrier",
+    read: "Tenir compte de mes autres rendez-vous",
+    readFrom: "Calendriers pris en compte",
+    readOnly: "lecture seule",
+    syncNow: "Synchroniser maintenant",
+    lastSync: (when: string) => `Dernière synchronisation : ${when}`,
+    neverSynced: "Pas encore synchronisé.",
+    done: "Calendrier synchronisé.",
+    failed: "La synchronisation n'a pas abouti. Réessayez.",
+    noCalendar: "Aucun calendrier modifiable sur ce téléphone.",
+    eventTitle: (kind: string, title: string | null) =>
+      title ? `${kind} MENAO · ${title}` : `${kind} MENAO`,
+    eventNotes: "Rendez-vous MENAO. Le détail est dans l'application MENAO.",
   },
   /** Photos du téléphone (journal, messagerie, signalement) : appareil photo ou photothèque. */
   photos: {

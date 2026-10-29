@@ -68,6 +68,16 @@ const config: ExpoConfig = {
       },
     ],
     [
+      // Calendrier du téléphone (ADR 0203) : rendez-vous MENAO écrits, plages occupées lues
+      // (début et fin seulement). Ni rappels ni contacts.
+      "expo-calendar",
+      {
+        calendarPermission:
+          "MENAO ajoute vos rendez-vous MENAO à votre calendrier et repère les moments où vous êtes déjà pris (heures seulement, jamais le détail).",
+        remindersPermission: false,
+      },
+    ],
+    [
       // Dictée du projet (F-05, ADR 0081) : capture du micro en PCM, iPhone et Android.
       "expo-audio",
       // Ni lecture ni enregistrement en arrière-plan : pas de mode audio permanent sur iPhone ni de

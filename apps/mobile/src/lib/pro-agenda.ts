@@ -86,7 +86,8 @@ async function fetchAbsences(artisanId: string, from: string, to?: string) {
 }
 
 /**
- * Visites, démarrages et créneaux bloqués qui commencent entre deux instants (`agendaItemsFrom`,
+ * Visites, démarrages, créneaux bloqués et plages occupées du téléphone qui commencent entre deux
+ * instants (`agendaItemsFrom`,
  * comme sur le site). Null en cas d'erreur.
  */
 async function fetchItems(
@@ -95,11 +96,19 @@ async function fetchItems(
   to: Date,
   excludeChantierId?: string,
 ): Promise<AgendaItem[] | null> {
-  const [chantiers, blocked] = await Promise.all([
+  const [chantiers, blocked, external] = await Promise.all([
     supabase.rpc("artisan_chantiers"),
     supabase
       .from("artisan_blocked_slots")
       .select("id, starts_at, ends_at, label")
+      .eq("artisan_id", artisanId)
+      .lt("starts_at", to.toISOString())
+      .gt("ends_at", from.toISOString())
+      .order("starts_at"),
+    // Plages occupées du calendrier du téléphone (ADR 0203).
+    supabase
+      .from("artisan_external_busy")
+      .select("id, starts_at, ends_at")
       .eq("artisan_id", artisanId)
       .lt("starts_at", to.toISOString())
       .gt("ends_at", from.toISOString())
@@ -121,6 +130,11 @@ async function fetchItems(
       startsAt: b.starts_at,
       endsAt: b.ends_at,
       label: b.label,
+    })),
+    external: (external.data ?? []).map((e) => ({
+      id: e.id,
+      startsAt: e.starts_at,
+      endsAt: e.ends_at,
     })),
     from,
     to,
@@ -161,6 +175,17 @@ export async function loadAgendaWeek(monday: string): Promise<AgendaWeek | null>
     items,
     absences,
   };
+}
+
+/**
+ * Rendez-vous des prochains jours (synchronisation avec le calendrier du téléphone, ADR 0203) :
+ * visites, démarrages, créneaux bloqués et plages déjà lues. Null sans artisan ou en cas d'erreur.
+ */
+export async function loadUpcomingAgendaItems(from: Date, to: Date): Promise<AgendaItem[] | null> {
+  if (examplesActive()) return null;
+  const artisan = await myArtisan();
+  if (!artisan) return null;
+  return fetchItems(artisan.id, from, to);
 }
 
 /** Contexte des formulaires de rendez-vous (F-18, F-44) : créneaux libres et avertissements. */

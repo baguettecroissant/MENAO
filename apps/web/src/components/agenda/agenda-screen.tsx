@@ -169,6 +169,15 @@ export function AgendaScreen({
             />
             {t.legend.creneau}
           </li>
+          {items.some((item) => item.kind === "occupe") && (
+            <li className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="size-3 rounded-sm border-l-[3px] border-subtle-foreground bg-surface"
+              />
+              {t.legend.occupe}
+            </li>
+          )}
           <li className="flex items-center gap-2">
             <span aria-hidden="true" className="size-3 rounded-sm bg-warning-soft" />
             {t.legend.absence}
