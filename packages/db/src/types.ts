@@ -1800,6 +1800,74 @@ export type Database = {
           },
         ];
       };
+      commercial_attributions: {
+        Row: {
+          artisan_id: string;
+          commercial_id: string;
+          created_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          commercial_id: string;
+          created_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          commercial_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_attributions_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commercial_attributions_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commercials: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          nom: string;
+          status: Database["public"]["Enums"]["commercial_status"];
+          updated_at: string;
+          user_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          nom: string;
+          status?: Database["public"]["Enums"]["commercial_status"];
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          nom?: string;
+          status?: Database["public"]["Enums"]["commercial_status"];
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       communes: {
         Row: {
           code_insee: string;
@@ -4303,6 +4371,20 @@ export type Database = {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
         Returns: undefined;
       };
+      admin_commercial_code_available: { Args: { p_code: string }; Returns: boolean };
+      admin_commercials: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          code: string;
+          created_at: string;
+          email: string;
+          id: string;
+          nom: string;
+          signups: number;
+          status: Database["public"]["Enums"]["commercial_status"];
+          validated: number;
+        }[];
+      };
       admin_complete_spot_check: {
         Args: { p_id: string; p_insurer_called?: boolean; p_note?: string; p_result: string };
         Returns: undefined;
@@ -4439,6 +4521,10 @@ export type Database = {
           status: Database["public"]["Enums"]["referral_status"];
         }[];
       };
+      admin_register_commercial: {
+        Args: { p_code: string; p_nom: string; p_user_id: string };
+        Returns: string;
+      };
       admin_rename_reference: {
         Args: { p_code: string; p_kind: string; p_label: string };
         Returns: undefined;
@@ -4491,6 +4577,10 @@ export type Database = {
           label: string;
           tag: string;
         }[];
+      };
+      admin_set_commercial_status: {
+        Args: { p_id: string; p_status: Database["public"]["Enums"]["commercial_status"] };
+        Returns: undefined;
       };
       admin_set_google_reviews: {
         Args: { p_artisan_id: string; p_count: number; p_rating: number; p_url: string };
@@ -4765,6 +4855,7 @@ export type Database = {
         Args: { p_code: string; p_project_id: string };
         Returns: boolean;
       };
+      auth_email_exists: { Args: { p_email: string }; Returns: boolean };
       chantier_appointment: {
         Args: { p_chantier_id: string };
         Returns: {
@@ -4897,6 +4988,7 @@ export type Database = {
           stripe_subscription_id: string;
         }[];
       };
+      grade_scale: { Args: Record<PropertyKey, never>; Returns: Json };
       grant_starter_month: {
         Args: { p_now?: string; p_stripe_subscription_id: string };
         Returns: boolean;
@@ -4959,6 +5051,14 @@ export type Database = {
           planning_updated_at: string;
           reactivite: number;
           score: number;
+        }[];
+      };
+      my_commercial_signups: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          raison_sociale: string;
+          signed_up_at: string;
+          status: Database["public"]["Enums"]["artisan_status"];
         }[];
       };
       my_conversations: {
@@ -5386,7 +5486,8 @@ export type Database = {
       accountant_export_kind: "automatique" | "manuel";
       accountant_export_status: "envoye" | "echec";
       accountant_period: "mensuel" | "trimestriel";
-      app_role: "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support";
+      app_role:
+        "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support" | "commercial";
       appointment_status: "planifie" | "annule";
       artisan_invitation_status: "envoyee" | "inscrit";
       artisan_report_kind: "client_injoignable" | "client_absent" | "fausse_demande";
@@ -5437,6 +5538,7 @@ export type Database = {
         | "annule";
       chantier_update_kind: "message" | "photo";
       client_cancel_reason: "plus_besoin" | "autre_artisan" | "delai" | "budget" | "autre";
+      commercial_status: "actif" | "suspendu";
       diplome_metier:
         "cap" | "bep" | "bac_pro" | "bp" | "bts" | "brevet_maitrise" | "titre_pro" | "autre";
       dispute_category: "retard" | "malfacon" | "comportement" | "paiement" | "autre";
@@ -5672,7 +5774,7 @@ export const Constants = {
       accountant_export_kind: ["automatique", "manuel"],
       accountant_export_status: ["envoye", "echec"],
       accountant_period: ["mensuel", "trimestriel"],
-      app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support"],
+      app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support", "commercial"],
       appointment_status: ["planifie", "annule"],
       artisan_invitation_status: ["envoyee", "inscrit"],
       artisan_report_kind: ["client_injoignable", "client_absent", "fausse_demande"],
@@ -5726,6 +5828,7 @@ export const Constants = {
       ],
       chantier_update_kind: ["message", "photo"],
       client_cancel_reason: ["plus_besoin", "autre_artisan", "delai", "budget", "autre"],
+      commercial_status: ["actif", "suspendu"],
       diplome_metier: [
         "cap",
         "bep",

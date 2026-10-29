@@ -31,6 +31,13 @@ export default async function AccountLayout({ children }: { children: ReactNode 
       </AppShell>
     );
   }
+  if (role === "commercial") {
+    return (
+      <AppShell space="commercial" account={shell?.account ?? null}>
+        {children}
+      </AppShell>
+    );
+  }
   if (role === "artisan_en_attente") {
     return (
       <AppShell space="pro" account={shell?.account ?? null}>

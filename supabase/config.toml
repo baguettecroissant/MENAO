@@ -259,6 +259,11 @@ content_path = "./supabase/templates/magic_link.html"
 subject = "Réinitialisation de votre mot de passe MENAO"
 content_path = "./supabase/templates/recovery.html"
 
+# Invitation d'un commercial par un admin (F-65, ADR 0205).
+[auth.email.template.invite]
+subject = "Votre accès à l'espace commercial MENAO"
+content_path = "./supabase/templates/invite.html"
+
 [auth.email.template.email_change]
 subject = "Confirmez votre nouvelle adresse e-mail MENAO"
 content_path = "./supabase/templates/email_change.html"
@@ -520,6 +525,9 @@ verify_jwt = true
 verify_jwt = false
 
 # Envoi des notifications (F-41) : appelée par la base avec un secret partagé, sans jeton.
+[functions.commercial-invite]
+verify_jwt = true
+
 [functions.notify]
 verify_jwt = false
 

@@ -14,9 +14,10 @@ export const metadata: Metadata = { title: `${fr.pro.grade.title} — MENAO` };
  * progression fictive de niveau 2.
  */
 export default async function ExampleGradePage() {
-  const { firstName } = await requireExampleViewer();
+  const { firstName, commercial } = await requireExampleViewer();
   const supabase = await createClient();
-  const { data } = await supabase.rpc("artisan_grade");
+  // Démo d'un commercial (ADR 0205) : le barème seul, sans fiche artisan.
+  const { data } = await supabase.rpc(commercial ? "grade_scale" : "artisan_grade");
   const grade = parseGrade(data);
   if (!grade) {
     return (

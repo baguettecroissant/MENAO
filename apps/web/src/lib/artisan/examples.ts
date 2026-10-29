@@ -34,7 +34,8 @@ export const requireExampleViewer = cache(async () => {
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth || auth.claims.is_anonymous) redirect("/connexion?next=/pro/decouvrir");
   const role = roleFromAppMetadata(auth.claims.app_metadata);
-  if (role !== "artisan" && role !== "artisan_en_attente") {
+  // Commerciaux de terrain (ADR 0205) : l'espace d'exemples sert à la démo chez l'artisan.
+  if (role !== "artisan" && role !== "artisan_en_attente" && role !== "commercial") {
     redirect(homePathForRole(role) as Route);
   }
   const [{ data: profile }, { data: artisan }] = await Promise.all([
@@ -55,6 +56,7 @@ export const requireExampleViewer = cache(async () => {
         : null,
       role,
     },
+    commercial: role === "commercial",
     // Validé (ou suspendu, radié) : l'espace pro est ouvert, le bandeau y ramène.
     validated:
       role === "artisan" &&

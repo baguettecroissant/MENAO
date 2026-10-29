@@ -49,7 +49,7 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 - [ ] **Ne pas** appliquer `supabase/seed.sql` (données fictives) ni `supabase/scripts/demo-artisans-06.sql`.
 
 ### Fonctions (Claude avec ton accord ; secrets : Toi)
-- [ ] Déployer les 15 fonctions : `analyze-need`, `billing-checkout`, `billing-portal`, `connect-onboarding`, `deposit-checkout`, `generate-pdf`, `notify`, `process-upload`, `quote-from-voice`, `rge-check`, `signature-create`, `signature-webhook`, `sirene-check`, `stripe-webhook`, `transcribe` (`supabase functions deploy … --use-api`). `rge-check` lit l'annuaire RGE public de l'ADEME : aucune clé à fournir.
+- [ ] Déployer les 15 fonctions : `analyze-need`, `billing-checkout`, `billing-portal`, `connect-onboarding`, `deposit-checkout`, `generate-pdf`, `notify`, `process-upload`, `quote-from-voice`, `rge-check`, `signature-create`, `signature-webhook`, `sirene-check`, `stripe-webhook`, `transcribe`, ainsi que `commercial-invite` (invitation des commerciaux, ADR 0205) (`supabase functions deploy … --use-api`). `rge-check` lit l'annuaire RGE public de l'ADEME : aucune clé à fournir.
 - [ ] Secrets des fonctions (tableau de bord, Edge Functions puis Secrets) :
   - `SITE_URLS` : `https://menao.fr,https://www.menao.fr` (sans localhost ni Vercel) ;
   - Stripe : `STRIPE_SECRET_KEY` (clé réelle `sk_live_…`), plus les quatre valeurs écrites par `scripts/stripe-setup.mjs` (phase C) : `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION_ID`, et la clé publique réelle `STRIPE_PUBLISHABLE_KEY` (`pk_live_…`, pré-remplissage du compte de paiement des artisans, ADR 0204) ;

@@ -17,6 +17,8 @@ const ALLOWED_TYPES: readonly EmailOtpType[] = [
   "magiclink",
   "recovery",
   "email_change",
+  // Invitation d'un commercial par un admin (ADR 0205) : il choisit ensuite son mot de passe.
+  "invite",
 ];
 
 /**
@@ -33,7 +35,10 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const nextParam = searchParams.get("next");
-  const next = type === "recovery" ? "/nouveau-mot-de-passe" : safeRedirectPath(nextParam);
+  const next =
+    type === "recovery" || type === "invite"
+      ? "/nouveau-mot-de-passe"
+      : safeRedirectPath(nextParam);
 
   const code = searchParams.get("code");
 

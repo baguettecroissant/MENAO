@@ -10,13 +10,14 @@ import {
 } from "../src/roles";
 
 describe("rôles", () => {
-  it("liste les six rôles de la spécification (§3)", () => {
+  it("liste les six rôles de la spécification (§3), plus les commerciaux (ADR 0205)", () => {
     expect(ROLES).toEqual([
       "particulier",
       "artisan",
       "artisan_en_attente",
       "admin",
       "support",
+      "commercial",
       "visiteur",
     ]);
   });
@@ -60,6 +61,7 @@ describe("homePathForRole", () => {
     expect(homePathForRole("particulier")).toBe("/mon-espace");
     expect(homePathForRole("admin")).toBe("/admin");
     expect(homePathForRole("support")).toBe("/admin/tickets");
+    expect(homePathForRole("commercial")).toBe("/commercial");
     expect(homePathForRole("visiteur")).toBe("/connexion");
   });
 });
@@ -72,5 +74,7 @@ describe("appSpaceForRole (application native)", () => {
     expect(appSpaceForRole("artisan_en_attente")).toBe("artisan");
     expect(appSpaceForRole("admin")).toBe("equipe");
     expect(appSpaceForRole("support")).toBe("equipe");
+    // Commercial (ADR 0205) : son espace est sur le site.
+    expect(appSpaceForRole("commercial")).toBe("equipe");
   });
 });
