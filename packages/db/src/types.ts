@@ -1834,6 +1834,101 @@ export type Database = {
           },
         ];
       };
+      commercial_bonus_settings: {
+        Row: {
+          delai_validation_jours: number;
+          id: boolean;
+          objectif_valides_mois: number | null;
+          prime_abonnement_centimes: number | null;
+          prime_validation_centimes: number | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          delai_validation_jours?: number;
+          id?: boolean;
+          objectif_valides_mois?: number | null;
+          prime_abonnement_centimes?: number | null;
+          prime_validation_centimes?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          delai_validation_jours?: number;
+          id?: boolean;
+          objectif_valides_mois?: number | null;
+          prime_abonnement_centimes?: number | null;
+          prime_validation_centimes?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      commercial_bonuses: {
+        Row: {
+          amount_cents: number | null;
+          artisan_id: string | null;
+          cancel_reason: string | null;
+          commercial_id: string;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["commercial_bonus_kind"];
+          paid_at: string | null;
+          payout_reference: string | null;
+          status: Database["public"]["Enums"]["commercial_bonus_status"];
+          updated_at: string;
+          validate_after: string;
+          validated_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents?: number | null;
+          artisan_id?: string | null;
+          cancel_reason?: string | null;
+          commercial_id: string;
+          created_at?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["commercial_bonus_kind"];
+          paid_at?: string | null;
+          payout_reference?: string | null;
+          status?: Database["public"]["Enums"]["commercial_bonus_status"];
+          updated_at?: string;
+          validate_after: string;
+          validated_at?: string | null;
+        };
+        Update: {
+          amount_cents?: number | null;
+          artisan_id?: string | null;
+          cancel_reason?: string | null;
+          commercial_id?: string;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["commercial_bonus_kind"];
+          paid_at?: string | null;
+          payout_reference?: string | null;
+          status?: Database["public"]["Enums"]["commercial_bonus_status"];
+          updated_at?: string;
+          validate_after?: string;
+          validated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_bonuses_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commercial_bonuses_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercials: {
         Row: {
           code: string;
@@ -1844,6 +1939,7 @@ export type Database = {
           status: Database["public"]["Enums"]["commercial_status"];
           updated_at: string;
           user_id: string | null;
+          zone_codes_postaux: string[];
         };
         ComputedFields: never;
         Insert: {
@@ -1855,6 +1951,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["commercial_status"];
           updated_at?: string;
           user_id?: string | null;
+          zone_codes_postaux?: string[];
         };
         Update: {
           code?: string;
@@ -1865,6 +1962,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["commercial_status"];
           updated_at?: string;
           user_id?: string | null;
+          zone_codes_postaux?: string[];
         };
         Relationships: [];
       };
@@ -4473,6 +4571,10 @@ export type Database = {
           total: number;
         }[];
       };
+      admin_cancel_commercial_bonus: {
+        Args: { p_id: string; p_reason: string };
+        Returns: undefined;
+      };
       admin_cancel_partner_commission: {
         Args: { p_id: string; p_reason: string };
         Returns: undefined;
@@ -4506,7 +4608,20 @@ export type Database = {
         Args: { p_message: string; p_outcome: string; p_ticket_id: string };
         Returns: undefined;
       };
+      admin_commercial_bonuses_to_pay: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          amount_cents: number;
+          artisan: string;
+          code: string;
+          commercial: string;
+          id: string;
+          kind: Database["public"]["Enums"]["commercial_bonus_kind"];
+          validated_at: string;
+        }[];
+      };
       admin_commercial_code_available: { Args: { p_code: string }; Returns: boolean };
+      admin_commercial_detail: { Args: { p_id: string }; Returns: Json };
       admin_commercials: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4518,6 +4633,24 @@ export type Database = {
           signups: number;
           status: Database["public"]["Enums"]["commercial_status"];
           validated: number;
+        }[];
+      };
+      admin_commercials_dashboard: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          code: string;
+          email: string;
+          followed: number;
+          id: string;
+          nom: string;
+          paid_cents: number;
+          pending_bonuses: number;
+          signups: number;
+          status: Database["public"]["Enums"]["commercial_status"];
+          subscribed: number;
+          to_pay_cents: number;
+          validated: number;
+          zone_codes_postaux: string[];
         }[];
       };
       admin_complete_spot_check: {
@@ -4537,6 +4670,10 @@ export type Database = {
       admin_log_account_action: {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;
+      };
+      admin_mark_commercial_bonuses_paid: {
+        Args: { p_ids: string[]; p_reference: string };
+        Returns: number;
       };
       admin_mark_commissions_paid: {
         Args: { p_ids: string[]; p_reference: string };
@@ -4676,6 +4813,15 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_save_commercial_bonus_settings: {
+        Args: {
+          p_delai_validation_jours?: number;
+          p_objectif_valides_mois?: number;
+          p_prime_abonnement_centimes?: number;
+          p_prime_validation_centimes?: number;
+        };
+        Returns: undefined;
+      };
       admin_save_partner: {
         Args: {
           p_code: string;
@@ -4719,6 +4865,7 @@ export type Database = {
         Args: { p_id: string; p_status: Database["public"]["Enums"]["commercial_status"] };
         Returns: undefined;
       };
+      admin_set_commercial_zone: { Args: { p_codes: string[]; p_id: string }; Returns: undefined };
       admin_set_google_reviews: {
         Args: { p_artisan_id: string; p_count: number; p_rating: number; p_url: string };
         Returns: undefined;
@@ -4753,6 +4900,7 @@ export type Database = {
         Args: { p_artisan_id: string; p_reason: string };
         Returns: undefined;
       };
+      admin_transfer_prospects: { Args: { p_from: string; p_to?: string }; Returns: number };
       admin_user_account: { Args: { p_user_id: string }; Returns: Json };
       admin_user_emails: {
         Args: { p_user_ids: string[] };
@@ -5075,6 +5223,20 @@ export type Database = {
           welcome: number;
         }[];
       };
+      commercial_bonuses_list: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          amount_cents: number;
+          artisan: string;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["commercial_bonus_kind"];
+          paid_at: string;
+          status: Database["public"]["Enums"]["commercial_bonus_status"];
+          validate_after: string;
+          validated_at: string;
+        }[];
+      };
       commercial_day: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -5137,6 +5299,7 @@ export type Database = {
         }[];
       };
       commercial_release_prospect: { Args: { p_id: string }; Returns: undefined };
+      commercial_results: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_update_prospect: {
         Args: {
           p_id: string;
@@ -5747,6 +5910,8 @@ export type Database = {
         | "annule";
       chantier_update_kind: "message" | "photo";
       client_cancel_reason: "plus_besoin" | "autre_artisan" | "delai" | "budget" | "autre";
+      commercial_bonus_kind: "validation" | "abonnement";
+      commercial_bonus_status: "en_attente" | "validee" | "annulee" | "payee";
       commercial_status: "actif" | "suspendu";
       diplome_metier:
         "cap" | "bep" | "bac_pro" | "bp" | "bts" | "brevet_maitrise" | "titre_pro" | "autre";
@@ -6038,6 +6203,8 @@ export const Constants = {
       ],
       chantier_update_kind: ["message", "photo"],
       client_cancel_reason: ["plus_besoin", "autre_artisan", "delai", "budget", "autre"],
+      commercial_bonus_kind: ["validation", "abonnement"],
+      commercial_bonus_status: ["en_attente", "validee", "annulee", "payee"],
       commercial_status: ["actif", "suspendu"],
       diplome_metier: [
         "cap",

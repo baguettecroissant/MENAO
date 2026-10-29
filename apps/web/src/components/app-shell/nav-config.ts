@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   Sparkles,
   Store,
+  TrendingUp,
   UserRound,
   Users,
   Wallet,
@@ -241,7 +242,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
     },
   ],
   // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, leur journée et leurs
-  // prospects (ADR 0206), puis le guide terrain.
+  // prospects (ADR 0206), leurs résultats et leurs primes (ADR 0207), puis le guide terrain.
   commercial: [
     {
       items: [
@@ -252,6 +253,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           label: fr.commercialProspects.nav.prospects,
           icon: Building2,
         },
+        { href: "/commercial/resultats", label: fr.commercialResults.nav, icon: TrendingUp },
         { href: "/commercial/guide", label: fr.commercialSpace.nav.guide, icon: BookOpen },
         // Démo chez l'artisan : l'espace pro rempli d'exemples (ADR 0184).
         { href: "/pro/decouvrir/tableau-de-bord", label: fr.commercialSpace.nav.demo, icon: Eye },
