@@ -9,7 +9,7 @@ import {
   weekdayOf,
   type HoursRange,
 } from "@menao/core";
-import { CalendarOff, HardHat, MapPin, Palmtree, UserRound } from "lucide-react";
+import { CalendarOff, HardHat, MapPin, Palmtree, Smartphone, UserRound } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -27,8 +27,14 @@ const KIND_STYLES: Record<AgendaKind, string> = {
   visite: "border-primary bg-primary-soft text-primary-strong",
   demarrage: "border-success bg-success-soft text-success",
   creneau: "border-border-strong bg-background text-muted-foreground",
+  occupe: "border-subtle-foreground bg-surface text-muted-foreground",
 };
-const KIND_ICONS = { visite: UserRound, demarrage: HardHat, creneau: CalendarOff } as const;
+const KIND_ICONS = {
+  visite: UserRound,
+  demarrage: HardHat,
+  creneau: CalendarOff,
+  occupe: Smartphone,
+} as const;
 
 /** Rayures des journées d'absence. */
 const ABSENCE_STRIPES: CSSProperties = {

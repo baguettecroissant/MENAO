@@ -13,7 +13,7 @@ import {
   type AgendaItemKind,
   type AvailabilityStatus,
 } from "@menao/core";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   CalendarOff,
   ChevronLeft,
@@ -21,6 +21,7 @@ import {
   HardHat,
   MapPin,
   Palmtree,
+  Smartphone,
   UserRound,
   X,
 } from "lucide-react-native";
@@ -38,6 +39,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatClock, formatDay, formatDayMonth } from "@/lib/format";
+import { syncPhoneCalendar } from "@/lib/phone-calendar";
 import { deleteBlockedSlot, loadAgendaWeek } from "@/lib/pro-agenda";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, LinkText, Notice, ScreenSkeleton, Tappable, Title } from "@/ui";
@@ -56,8 +58,18 @@ const KIND_COLORS: Record<AgendaItemKind, { border: string; bg: string; fg: stri
     bg: colors.background,
     fg: colors["muted-foreground"],
   },
+  occupe: {
+    border: colors["subtle-foreground"],
+    bg: colors.surface,
+    fg: colors["muted-foreground"],
+  },
 };
-const KIND_ICONS = { visite: UserRound, demarrage: HardHat, creneau: CalendarOff } as const;
+const KIND_ICONS = {
+  visite: UserRound,
+  demarrage: HardHat,
+  creneau: CalendarOff,
+  occupe: Smartphone,
+} as const;
 
 const STATUS_COLORS: Record<AvailabilityStatus["kind"], { bg: string; fg: string }> = {
   disponible: { bg: colors["success-soft"], fg: colors.success },
@@ -131,6 +143,18 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(
     blocked ? { tone: "success", text: t.block.added } : null,
   );
+  // Calendrier du téléphone (ADR 0203) : synchronisé à l'affichage, l'agenda relu ensuite.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      void syncPhoneCalendar().then((result) => {
+        if (active && result === "ok") void reload();
+      });
+      return () => {
+        active = false;
+      };
+    }, [reload]),
+  );
 
   if (data === undefined) return <ScreenSkeleton />;
 
@@ -148,7 +172,10 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
     setNotice(
       failed ? { tone: "error", text: failed } : { tone: "success", text: t.block.removed },
     );
-    if (!failed) await reload();
+    if (!failed) {
+      void syncPhoneCalendar({ force: true });
+      await reload();
+    }
   }
 
   return (
@@ -293,7 +320,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
                       <AgendaRow
                         key={item.id}
                         item={item}
-                        onFree={example ? null : () => free(item)}
+                        onFree={example || item.kind !== "creneau" ? null : () => free(item)}
                       />
                     ))
                   ) : !absence ? (
@@ -305,7 +332,14 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
           : null}
 
         <View aria-label={t.legendLabel} style={styles.legend}>
-          {(["visite", "demarrage", "creneau"] as const).map((kind) => (
+          {(
+            [
+              "visite",
+              "demarrage",
+              "creneau",
+              ...(current?.items.some((i) => i.kind === "occupe") ? (["occupe"] as const) : []),
+            ] as const
+          ).map((kind) => (
             <View key={kind} style={styles.legendItem}>
               <View
                 style={[

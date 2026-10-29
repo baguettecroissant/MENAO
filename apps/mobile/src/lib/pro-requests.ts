@@ -4,6 +4,7 @@ import { parseRequestDetail, type RequestDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { loadClientReputation, type ClientReputation } from "./client-ratings";
 import { formatLongDate } from "./dates";
+import { syncPhoneCalendar } from "./phone-calendar";
 import { supabase } from "./supabase";
 import { isExampleId } from "@menao/core";
 import { exampleInboxItems, exampleOpportunity } from "./example-data";
@@ -146,6 +147,8 @@ export async function fixAppointment(
     p_time: time,
   });
   if (error || !data) return { error: error ? sqlError(error) : fr.errors.generic };
+  // Rendez-vous écrit tout de suite dans le calendrier du téléphone (ADR 0203).
+  void syncPhoneCalendar({ force: true });
   return { chantierId: data };
 }
 

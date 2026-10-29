@@ -6,6 +6,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { addBlockedSlot, type BlockedSlotErrors } from "@/lib/pro-agenda";
 import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { syncPhoneCalendar } from "@/lib/phone-calendar";
 
 const t = fr.proAgenda.block;
 
@@ -30,6 +31,7 @@ export default function BlockSlotScreen() {
     const result = await addBlockedSlot({ date, start, end, label });
     setPending(false);
     if (result === null) {
+      void syncPhoneCalendar({ force: true });
       // Retour à l'agenda d'où l'on vient, sinon l'agenda remplace cet écran (bouton (+)).
       const agenda = {
         pathname: "/pro-agenda",

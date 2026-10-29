@@ -50,8 +50,8 @@ export async function absencesBetween(from: string, to: string): Promise<AgendaA
 }
 
 /**
- * Visites planifiées, démarrages de chantier et créneaux bloqués qui commencent entre deux instants
- * (chantiers annulés exclus), assemblés par `agendaItemsFrom` (`@menao/core`).
+ * Visites planifiées, démarrages de chantier, créneaux bloqués et plages occupées du téléphone qui
+ * commencent entre deux instants (chantiers annulés exclus), assemblés par `agendaItemsFrom` (`@menao/core`).
  * `excludeChantierId` : le rendez-vous en cours de modification.
  */
 export async function agendaItems(
@@ -60,11 +60,19 @@ export async function agendaItems(
   excludeChantierId?: string,
 ): Promise<AgendaItem[]> {
   const { supabase, artisanId } = await requireProSpace();
-  const [{ chantiers }, { data: blocked }] = await Promise.all([
+  const [{ chantiers }, { data: blocked }, { data: external }] = await Promise.all([
     artisanActivity(),
     supabase
       .from("artisan_blocked_slots")
       .select("id, starts_at, ends_at, label")
+      .eq("artisan_id", artisanId)
+      .lt("starts_at", to.toISOString())
+      .gt("ends_at", from.toISOString())
+      .order("starts_at"),
+    // Plages occupées du calendrier du téléphone (ADR 0203).
+    supabase
+      .from("artisan_external_busy")
+      .select("id, starts_at, ends_at")
       .eq("artisan_id", artisanId)
       .lt("starts_at", to.toISOString())
       .gt("ends_at", from.toISOString())
@@ -85,6 +93,11 @@ export async function agendaItems(
       startsAt: b.starts_at,
       endsAt: b.ends_at,
       label: b.label,
+    })),
+    external: (external ?? []).map((e) => ({
+      id: e.id,
+      startsAt: e.starts_at,
+      endsAt: e.ends_at,
     })),
     from,
     to,

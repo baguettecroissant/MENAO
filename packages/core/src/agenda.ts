@@ -395,7 +395,8 @@ export function layoutDay<T extends Timed>(
   return out;
 }
 
-export type AgendaItemKind = "visite" | "demarrage" | "creneau";
+/** « occupe » : plage occupée lue dans le calendrier du téléphone (ADR 0203), sans détail. */
+export type AgendaItemKind = "visite" | "demarrage" | "creneau" | "occupe";
 
 /** Élément horaire de l'agenda (F-44) : visite, démarrage de chantier ou créneau bloqué. */
 export type AgendaItem = {
@@ -419,6 +420,7 @@ export type AgendaItem = {
 export function agendaItemsFrom({
   chantiers,
   blocked,
+  external = [],
   from,
   to,
   excludeChantierId,
@@ -433,6 +435,8 @@ export function agendaItemsFrom({
     startAt: string | null;
   }[];
   blocked: readonly { id: string; startsAt: string; endsAt: string; label: string | null }[];
+  /** Plages occupées du calendrier du téléphone (ADR 0203). */
+  external?: readonly { id: string; startsAt: string; endsAt: string }[];
   from: Date;
   to: Date;
   excludeChantierId?: string;
@@ -476,6 +480,19 @@ export function agendaItemsFrom({
         (new Date(b.endsAt).getTime() - new Date(b.startsAt).getTime()) / 60_000,
       ),
       title: b.label,
+      place: null,
+      chantierId: null,
+    });
+  }
+  for (const e of external) {
+    items.push({
+      id: `occupe-${e.id}`,
+      kind: "occupe",
+      start: e.startsAt,
+      durationMinutes: Math.round(
+        (new Date(e.endsAt).getTime() - new Date(e.startsAt).getTime()) / 60_000,
+      ),
+      title: null,
       place: null,
       chantierId: null,
     });
