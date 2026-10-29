@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/animated-splash";
 import { AvatarFramerHost } from "@/components/avatar-framer";
+import { PhoneCalendarSync } from "@/components/phone-calendar-sync";
 import { PushNotifications } from "@/components/push-notifications";
 import { kv } from "@/lib/kv";
 import { BelowExamplesBanner, ExamplesBanner } from "@/components/examples";
@@ -68,6 +69,7 @@ function Root({ ready }: { ready: boolean }) {
             </BelowExamplesBanner>
           </View>
           <PushNotifications />
+          <PhoneCalendarSync />
           <SignupGate />
           <ToastHost />
           <AvatarFramerHost />

@@ -1,7 +1,8 @@
 // Edge Function notify (F-41) : envoie les notifications en attente, par e-mail (Resend) et en
-// push vers l'application (Expo). Appelée chaque minute par la base (pg_cron + pg_net) avec un
-// secret partagé ; aucune donnée personnelle journalisée (CLAUDE.md règle 11). ADR 0017, 0078.
-import { notificationContent } from "../../../packages/emails/src/content.ts";
+// push vers l'application (Expo). Appelée chaque minute par la base (pg_cron + pg_net), et dès
+// l'envoi d'un message de la messagerie, avec un secret partagé ; aucune donnée personnelle
+// journalisée (CLAUDE.md règle 11). ADR 0017, 0078, 0201.
+import { messagePushContent, notificationContent } from "../../../packages/emails/src/content.ts";
 import {
   isDeliverableAddress,
   renderNotification,
@@ -22,6 +23,17 @@ type Claimed = {
   first_name: string | null;
 };
 
+type ClaimedMessagePush = {
+  id: string;
+  chantier_id: string;
+  titre: string | null;
+  auteur: string | null;
+  destinataire: string;
+  kind: string;
+  apercu: string | null;
+  tokens: string[] | null;
+};
+
 type ClaimedPush = {
   id: string;
   type: NotificationType;
@@ -29,22 +41,20 @@ type ClaimedPush = {
   tokens: string[] | null;
 };
 
+type PushTarget = { id: string; tokens: string[] | null; message: Omit<PushMessage, "to"> };
+
 /**
- * Pushes en attente : mêmes textes que le centre de notifications (objet, aperçu et page de
- * l'e-mail), vers chaque appareil du destinataire. Une notification est envoyée dès qu'un appareil
- * l'a reçue ; les jetons refusés par le service sont oubliés.
+ * Envoi d'un lot vers chaque appareil du destinataire : réussi dès qu'un appareil l'a reçu ; les
+ * jetons refusés par le service sont oubliés. Le résultat est enregistré par `complete`.
  */
-async function sendPushes(admin: ReturnType<typeof adminClient>) {
-  const { data, error } = await admin.rpc("claim_push_notifications", { p_limit: PUSH_BATCH_SIZE });
-  if (error) return { pushed: 0, pushFailed: 0 };
-  const claimed = (data ?? []) as ClaimedPush[];
-  const messages: { id: string; message: PushMessage }[] = claimed.flatMap((n) => {
-    const content = notificationContent(n.type, n.data ?? {}, { siteUrl: "", firstName: null });
-    return (n.tokens ?? []).map((to) => ({
-      id: n.id,
-      message: { to, title: content.subject, body: content.preview, link: content.cta.url || "/" },
-    }));
-  });
+async function pushBatch(
+  admin: ReturnType<typeof adminClient>,
+  targets: PushTarget[],
+  complete: string,
+) {
+  const messages = targets.flatMap((n) =>
+    (n.tokens ?? []).map((to) => ({ id: n.id, message: { to, ...n.message } })),
+  );
   const results = messages.length ? await pushProvider().send(messages.map((m) => m.message)) : [];
   const outcome = new Map<string, { sent: boolean; retry: boolean }>();
   const forgotten: string[] = [];
@@ -61,9 +71,9 @@ async function sendPushes(admin: ReturnType<typeof adminClient>) {
   if (forgotten.length) await admin.rpc("forget_push_tokens", { p_tokens: forgotten });
   let pushed = 0;
   let pushFailed = 0;
-  for (const n of claimed) {
+  for (const n of targets) {
     const result = outcome.get(n.id) ?? { sent: false, retry: false };
-    await admin.rpc("complete_push_notification", {
+    await admin.rpc(complete, {
       p_id: n.id,
       p_sent: result.sent,
       p_retry: !result.sent && result.retry,
@@ -72,6 +82,39 @@ async function sendPushes(admin: ReturnType<typeof adminClient>) {
     else pushFailed++;
   }
   return { pushed, pushFailed };
+}
+
+/** Pushes en attente : mêmes textes que le centre de notifications (objet, aperçu et page de l'e-mail). */
+async function sendPushes(admin: ReturnType<typeof adminClient>) {
+  const { data, error } = await admin.rpc("claim_push_notifications", { p_limit: PUSH_BATCH_SIZE });
+  if (error) return { pushed: 0, pushFailed: 0 };
+  const targets = ((data ?? []) as ClaimedPush[]).map((n) => {
+    const content = notificationContent(n.type, n.data ?? {}, { siteUrl: "", firstName: null });
+    return {
+      id: n.id,
+      tokens: n.tokens,
+      message: { title: content.subject, body: content.preview, link: content.cta.url || "/" },
+    };
+  });
+  return pushBatch(admin, targets, "complete_push_notification");
+}
+
+/** Pushes des messages (ADR 0201) : un par message, l'auteur en titre et le début du texte. */
+async function sendMessagePushes(admin: ReturnType<typeof adminClient>) {
+  const { data, error } = await admin.rpc("claim_message_pushes", { p_limit: PUSH_BATCH_SIZE });
+  if (error) return { pushed: 0, pushFailed: 0 };
+  const targets = ((data ?? []) as ClaimedMessagePush[]).map((n) => ({
+    id: n.id,
+    tokens: n.tokens,
+    message: messagePushContent({
+      chantierId: n.chantier_id,
+      auteur: n.auteur,
+      destinataire: n.destinataire,
+      kind: n.kind,
+      apercu: n.apercu,
+    }),
+  }));
+  return pushBatch(admin, targets, "complete_message_push");
 }
 
 /** Comparaison à temps constant du secret partagé. */
@@ -91,6 +134,8 @@ Deno.serve(async (req) => {
     return json({ error: "non autorisé" }, 401);
   }
   const admin = adminClient();
+  // Messages d'abord : la fonction est appelée dès l'envoi d'un message (ADR 0201).
+  const messagePushes = await sendMessagePushes(admin);
   // E-mails : seulement si l'envoi est configuré (Resend) ; le push n'en dépend pas.
   const provider = notificationProvider();
   const { data, error } = provider
@@ -120,7 +165,9 @@ Deno.serve(async (req) => {
     if (result.ok) sent++;
     else failed++;
   }
-  const { pushed, pushFailed } = await sendPushes(admin);
+  const notificationPushes = await sendPushes(admin);
+  const pushed = notificationPushes.pushed + messagePushes.pushed;
+  const pushFailed = notificationPushes.pushFailed + messagePushes.pushFailed;
   // Comptes seulement : ni adresse, ni contenu, ni jeton.
   console.log(JSON.stringify({ sent, failed, pushed, pushFailed }));
   return json({ sent, failed, pushed, pushFailed });
