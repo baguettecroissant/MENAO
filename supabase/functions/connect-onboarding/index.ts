@@ -2,14 +2,58 @@
 // Paiements directs sur le compte de l'artisan, qui est le marchand et paie les frais Stripe ;
 // Stripe porte le risque de pertes ; MENAO ne détient aucun fonds (ADR 0011).
 // action « link » : crée le compte si besoin et renvoie le lien d'inscription Stripe ;
-// action « refresh » : relit l'état du compte (au retour de Stripe, sans attendre le webhook).
+// action « refresh » : relit l'état du compte (au retour de Stripe, sans attendre le webhook) ;
+// action « prefill » : avant la création du compte, données d'identité à transformer en jetons
+// Stripe par le navigateur ou l'application, avec la clé publique (ADR 0204).
+// À la création, le compte est pré-rempli avant le premier lien : profil public par le serveur,
+// identité par les jetons reçus. Un pré-remplissage refusé par Stripe ne bloque jamais l'inscription.
 // Depuis l'application (`app: true`), la fin de l'inscription Stripe passe par la page de retour du
 // site, qui rouvre l'application sur l'écran des paiements (ADR 0060, 0124).
+import type Stripe from "stripe";
 import { appReturnUrl } from "../../../packages/core/src/app-return.ts";
 import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
+import {
+  type ConnectProfileParams,
+  connectPrefill,
+  isConnectToken,
+  isStripePublishableKey,
+} from "../../../packages/core/src/connect-prefill.ts";
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
-import { saveConnectAccount } from "../_shared/connect.ts";
+import { prefillSource, saveConnectAccount } from "../_shared/connect.ts";
+import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
+
+/**
+ * Pré-remplit un compte qui vient d'être créé, avant le premier lien d'inscription. Chaque étape
+ * est indépendante : une donnée refusée par Stripe sera simplement demandée à l'artisan.
+ */
+async function prefillAccount(
+  stripe: Stripe,
+  accountId: string,
+  profile: ConnectProfileParams,
+  tokens: { account?: string; person?: string },
+) {
+  const steps: [string, () => Promise<unknown>][] = [
+    ["profil", () => stripe.accounts.update(accountId, profile)],
+  ];
+  if (tokens.account)
+    steps.push([
+      "entreprise",
+      () => stripe.accounts.update(accountId, { account_token: tokens.account }),
+    ]);
+  if (tokens.person)
+    steps.push([
+      "dirigeant",
+      () => stripe.accounts.createPerson(accountId, { person_token: tokens.person }),
+    ]);
+  for (const [label, step] of steps) {
+    try {
+      await step();
+    } catch (error) {
+      logStripeError(`connect-onboarding pré-remplissage ${label}`, error);
+    }
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
@@ -24,6 +68,8 @@ Deno.serve(async (req) => {
     action?: string;
     origin?: string;
     app?: unknown;
+    accountToken?: unknown;
+    personToken?: unknown;
   };
   const { data: allowed } = await admin.rpc("consume_rate_limit", {
     p_key: `connect-onboarding:${user.id}`,
@@ -48,7 +94,18 @@ Deno.serve(async (req) => {
       return json({ status: "ok", chargesEnabled: snapshot?.chargesEnabled ?? false });
     }
 
+    if (body.action === "prefill") {
+      // Compte déjà créé : Stripe n'accepte plus de modification de l'identité.
+      const publishableKey = env("STRIPE_PUBLISHABLE_KEY");
+      if (accountId || !isStripePublishableKey(publishableKey))
+        return json({ status: "ok", prefill: null });
+      const { account, person } = connectPrefill(await prefillSource(admin, artisan.id, user));
+      if (!account && !person) return json({ status: "ok", prefill: null });
+      return json({ status: "ok", prefill: { publishableKey, account, person } });
+    }
+
     if (!accountId) {
+      const prefill = connectPrefill(await prefillSource(admin, artisan.id, user));
       const account = await stripe.accounts.create({
         country: "FR",
         email: user.email,
@@ -59,7 +116,7 @@ Deno.serve(async (req) => {
           requirement_collection: "stripe",
         },
         business_profile: {
-          name: artisan.raison_sociale ?? undefined,
+          name: prefill.name ?? undefined,
           mcc: "1520", // Entrepreneurs généraux du bâtiment
         },
         metadata: { artisan_id: artisan.id },
@@ -70,6 +127,10 @@ Deno.serve(async (req) => {
         .update({ stripe_account_id: accountId })
         .eq("id", artisan.id);
       if (error) throw error;
+      await prefillAccount(stripe, accountId, prefill.profile, {
+        account: isConnectToken("account", body.accountToken) ? body.accountToken : undefined,
+        person: isConnectToken("person", body.personToken) ? body.personToken : undefined,
+      });
     }
 
     const origin = returnOrigin(body.origin);

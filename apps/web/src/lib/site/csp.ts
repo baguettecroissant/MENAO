@@ -85,6 +85,8 @@ export function contentSecurityPolicy({
       "https://data.geopf.fr",
       // Recherche de l'entreprise à l'inscription artisan (ADR 0110).
       "https://recherche-entreprises.api.gouv.fr",
+      // Jetons Stripe du pré-remplissage du compte de paiement, créés par le navigateur (ADR 0204).
+      "https://api.stripe.com",
       "https://*.ingest.de.sentry.io",
       "https://*.ingest.sentry.io",
       ...(preview ? [...live, "wss://ws-us3.pusher.com"] : []),

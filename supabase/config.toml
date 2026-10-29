@@ -409,6 +409,9 @@ STRIPE_WEBHOOK_SECRET = "env(STRIPE_WEBHOOK_SECRET)"
 STRIPE_CONNECT_WEBHOOK_SECRET = "env(STRIPE_CONNECT_WEBHOOK_SECRET)"
 STRIPE_TAX_RATE_ID = "env(STRIPE_TAX_RATE_ID)"
 STRIPE_PORTAL_CONFIGURATION_ID = "env(STRIPE_PORTAL_CONFIGURATION_ID)"
+# Clé publique (pk_…) : jetons du pré-remplissage du compte de paiement (ADR 0204). Vide : le
+# compte n'est pré-rempli que de son profil public.
+STRIPE_PUBLISHABLE_KEY = "env(STRIPE_PUBLISHABLE_KEY)"
 # Origines autorisées pour le retour depuis Stripe (séparées par des virgules).
 SITE_URLS = "env(SITE_URLS)"
 # CI uniquement : stripe-mock.
