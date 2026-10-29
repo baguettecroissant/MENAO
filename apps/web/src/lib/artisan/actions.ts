@@ -3,6 +3,8 @@
 import {
   REQUIRED_DOCUMENT_TYPES,
   onboardingProgress,
+  type ConnectTokenPrefill,
+  type ConnectTokens,
   type DocumentPrefill,
   type DocumentReadingWarning,
 } from "@menao/core";
@@ -432,12 +434,33 @@ export async function openBillingPortal(): Promise<FormState> {
 
 type ConnectStatus = keyof typeof t.connect.errors | "ok";
 
-/** Ouvre l'inscription Stripe Connect (création du compte si besoin). */
-export async function startConnectOnboarding(): Promise<FormState> {
+/**
+ * Avant la création du compte Stripe : données d'identité que le navigateur transforme en jetons
+ * avec la clé publique (ADR 0204). Null si le compte existe déjà ou si rien n'est à pré-remplir.
+ */
+export async function loadConnectPrefill(): Promise<ConnectTokenPrefill | null> {
+  const { supabase } = await getOnboardingContext();
+  const { data } = await supabase.functions.invoke<{
+    status: string;
+    prefill?: ConnectTokenPrefill | null;
+  }>("connect-onboarding", { method: "POST", body: { action: "prefill" } });
+  return data?.status === "ok" ? (data.prefill ?? null) : null;
+}
+
+/** Ouvre l'inscription Stripe Connect (création du compte si besoin, pré-remplie par les jetons). */
+export async function startConnectOnboarding(tokens: ConnectTokens = {}): Promise<FormState> {
   const { supabase } = await getOnboardingContext();
   const { data, error } = await supabase.functions.invoke<{ status: ConnectStatus; url?: string }>(
     "connect-onboarding",
-    { method: "POST", body: { action: "link", origin: env.NEXT_PUBLIC_SITE_URL } },
+    {
+      method: "POST",
+      body: {
+        action: "link",
+        origin: env.NEXT_PUBLIC_SITE_URL,
+        accountToken: tokens.accountToken,
+        personToken: tokens.personToken,
+      },
+    },
   );
   if (data?.status === "ok" && data.url) redirect(data.url as Route);
   let status: ConnectStatus = data?.status ?? "unavailable";

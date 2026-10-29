@@ -2,8 +2,14 @@ import {
   collectedTotals,
   connectAccountStatus,
   connectRequirementGroups,
+  connectTokenId,
+  connectTokenRequest,
   parisToday,
   type ConnectAccountStatus,
+  type ConnectAccountTokenData,
+  type ConnectPersonTokenData,
+  type ConnectTokenPrefill,
+  type ConnectTokens,
   type ConnectOverview,
   type ConnectRequirementGroup,
 } from "@menao/core";
@@ -92,11 +98,48 @@ async function failure(error: unknown): Promise<string> {
   return t.unavailable ?? fr.errors.generic;
 }
 
-/** Lien d'inscription Stripe, avec retour dans l'application (page de retour du site). */
-export async function startConnect(): Promise<{ url: string } | { error: string }> {
+async function createToken(
+  publishableKey: string,
+  kind: "account" | "person",
+  data: ConnectAccountTokenData | ConnectPersonTokenData | null,
+): Promise<string | undefined> {
+  if (!data) return undefined;
+  try {
+    const { url, init } = connectTokenRequest(publishableKey, kind, data);
+    const response = await fetch(url, init);
+    return connectTokenId(kind, await response.json()) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Avant la création du compte : jetons Stripe du pré-remplissage, créés par l'application avec la
+ * clé publique (ADR 0204). Un échec laisse l'artisan saisir ces informations chez Stripe.
+ */
+async function connectTokens(): Promise<ConnectTokens> {
+  const { data } = await supabase.functions.invoke<{
+    status: string;
+    prefill?: ConnectTokenPrefill | null;
+  }>("connect-onboarding", { body: { action: "prefill" } });
+  const prefill = data?.status === "ok" ? data.prefill : null;
+  if (!prefill) return {};
+  const [accountToken, personToken] = await Promise.all([
+    createToken(prefill.publishableKey, "account", prefill.account),
+    createToken(prefill.publishableKey, "person", prefill.person),
+  ]);
+  return { accountToken, personToken };
+}
+
+/**
+ * Lien d'inscription Stripe, avec retour dans l'application (page de retour du site).
+ * `prefill` : premier passage, le compte va être créé et pré-rempli.
+ */
+export async function startConnect(prefill = false): Promise<{ url: string } | { error: string }> {
+  const tokens = prefill ? await connectTokens().catch(() => ({})) : {};
   const { data, error } = await supabase.functions.invoke<{ status: string; url?: string }>(
     "connect-onboarding",
-    { body: { action: "link", origin: env.siteUrl, app: true } },
+    { body: { action: "link", origin: env.siteUrl, app: true, ...tokens } },
   );
   if (error || !data?.url) return { error: await failure(error) };
   return { url: data.url };

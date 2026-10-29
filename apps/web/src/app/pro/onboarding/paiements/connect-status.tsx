@@ -58,7 +58,7 @@ export function ConnectStatusPanel({
         <>
           <p>{t.intro}</p>
           <p className="text-sm text-muted-foreground">{t.fees}</p>
-          <ConnectButton label={t.start} />
+          <ConnectButton label={t.start} prefill />
         </>
       );
     case "a_completer":

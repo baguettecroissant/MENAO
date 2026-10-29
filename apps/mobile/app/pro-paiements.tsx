@@ -25,7 +25,7 @@ export default function PaymentsScreen() {
   async function openStripe() {
     setMessage(null);
     setBusy(true);
-    const opened = await startConnect();
+    const opened = await startConnect(data?.status === "a_demarrer");
     if ("error" in opened) {
       setBusy(false);
       setMessage(opened.error);
