@@ -3120,6 +3120,141 @@ export type Database = {
           },
         ];
       };
+      prospect_follows: {
+        Row: {
+          commercial_id: string;
+          created_at: string;
+          next_action_at: string | null;
+          notes: string | null;
+          phone: string | null;
+          prospect_id: string;
+          status: Database["public"]["Enums"]["prospect_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          created_at?: string;
+          next_action_at?: string | null;
+          notes?: string | null;
+          phone?: string | null;
+          prospect_id: string;
+          status?: Database["public"]["Enums"]["prospect_status"];
+          updated_at?: string;
+        };
+        Update: {
+          commercial_id?: string;
+          created_at?: string;
+          next_action_at?: string | null;
+          notes?: string | null;
+          phone?: string | null;
+          prospect_id?: string;
+          status?: Database["public"]["Enums"]["prospect_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prospect_follows_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prospect_follows_prospect_id_fkey";
+            columns: ["prospect_id"];
+            isOneToOne: true;
+            referencedRelation: "prospects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      prospect_opt_outs: {
+        Row: {
+          created_at: string;
+          siren: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          siren: string;
+        };
+        Update: {
+          created_at?: string;
+          siren?: string;
+        };
+        Relationships: [];
+      };
+      prospects: {
+        Row: {
+          adresse: string | null;
+          ape_code: string | null;
+          code_insee: string | null;
+          code_postal: string | null;
+          commune: string | null;
+          created_at: string;
+          date_creation: string | null;
+          denomination: string;
+          departement: string;
+          enseigne: string | null;
+          est_siege: boolean;
+          id: string;
+          location: unknown;
+          nature_juridique: string | null;
+          rge: boolean;
+          seen_at: string;
+          siren: string | null;
+          siret: string;
+          tranche_effectif: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          adresse?: string | null;
+          ape_code?: string | null;
+          code_insee?: string | null;
+          code_postal?: string | null;
+          commune?: string | null;
+          created_at?: string;
+          date_creation?: string | null;
+          denomination: string;
+          departement: string;
+          enseigne?: string | null;
+          est_siege?: boolean;
+          id?: string;
+          location?: unknown;
+          nature_juridique?: string | null;
+          rge?: boolean;
+          seen_at?: string;
+          siren?: never;
+          siret: string;
+          tranche_effectif?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          adresse?: string | null;
+          ape_code?: string | null;
+          code_insee?: string | null;
+          code_postal?: string | null;
+          commune?: string | null;
+          created_at?: string;
+          date_creation?: string | null;
+          denomination?: string;
+          departement?: string;
+          enseigne?: string | null;
+          est_siege?: boolean;
+          id?: string;
+          location?: unknown;
+          nature_juridique?: string | null;
+          rge?: boolean;
+          seen_at?: string;
+          siren?: never;
+          siret?: string;
+          tranche_effectif?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       push_tokens: {
         Row: {
           created_at: string;
@@ -4398,6 +4533,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_draw_spot_checks: { Args: Record<PropertyKey, never>; Returns: number };
+      admin_import_prospects: { Args: { p_rows: Json }; Returns: number };
       admin_log_account_action: {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;
@@ -4496,6 +4632,7 @@ export type Database = {
           ville: string;
         }[];
       };
+      admin_prospects_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_radiate_artisan: {
         Args: { p_artisan_id: string; p_reason: string };
         Returns: undefined;
@@ -4937,6 +5074,78 @@ export type Database = {
           ratings: number;
           welcome: number;
         }[];
+      };
+      commercial_day: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          commune: string;
+          id: string;
+          kind: string;
+          next_action_at: string;
+          nom: string;
+          phone: string;
+          status: Database["public"]["Enums"]["prospect_status"];
+        }[];
+      };
+      commercial_do_not_contact: { Args: { p_id: string }; Returns: undefined };
+      commercial_follow_prospect: { Args: { p_id: string }; Returns: undefined };
+      commercial_prospect: {
+        Args: { p_id: string };
+        Returns: {
+          adresse: string;
+          ape_code: string;
+          code_postal: string;
+          commune: string;
+          date_creation: string;
+          denomination: string;
+          enseigne: string;
+          est_siege: boolean;
+          followed_by_other: boolean;
+          id: string;
+          lat: number;
+          lon: number;
+          mine: boolean;
+          nature_juridique: string;
+          next_action_at: string;
+          nom: string;
+          notes: string;
+          phone: string;
+          rge: boolean;
+          siret: string;
+          stage: string;
+          status: Database["public"]["Enums"]["prospect_status"];
+          tranche_effectif: string;
+        }[];
+      };
+      commercial_prospects: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_search?: string };
+        Returns: {
+          ape_code: string;
+          code_postal: string;
+          commune: string;
+          followed_by_other: boolean;
+          id: string;
+          lat: number;
+          lon: number;
+          mine: boolean;
+          next_action_at: string;
+          nom: string;
+          rge: boolean;
+          stage: string;
+          status: Database["public"]["Enums"]["prospect_status"];
+          total: number;
+        }[];
+      };
+      commercial_release_prospect: { Args: { p_id: string }; Returns: undefined };
+      commercial_update_prospect: {
+        Args: {
+          p_id: string;
+          p_next_action_at?: string;
+          p_notes?: string;
+          p_phone?: string;
+          p_status: Database["public"]["Enums"]["prospect_status"];
+        };
+        Returns: undefined;
       };
       complete_artisan_oauth_signup: {
         Args: {
@@ -5626,6 +5835,7 @@ export type Database = {
       project_lieu_type: "appartement" | "maison" | "jardin" | "entreprise";
       project_status: "brouillon" | "criteres_valides" | "demande_envoyee";
       project_surface: "moins_10" | "10_20" | "20_50" | "plus_50";
+      prospect_status: "a_contacter" | "rdv_pris" | "demo_faite" | "pas_interesse";
       push_platform: "ios" | "android";
       quote_line_type: "materiel" | "main_oeuvre" | "autre";
       quote_refusal_reason: "trop_cher" | "autre_artisan" | "projet_reporte" | "autre";
@@ -5931,6 +6141,7 @@ export const Constants = {
       project_lieu_type: ["appartement", "maison", "jardin", "entreprise"],
       project_status: ["brouillon", "criteres_valides", "demande_envoyee"],
       project_surface: ["moins_10", "10_20", "20_50", "plus_50"],
+      prospect_status: ["a_contacter", "rdv_pris", "demo_faite", "pas_interesse"],
       push_platform: ["ios", "android"],
       quote_line_type: ["materiel", "main_oeuvre", "autre"],
       quote_refusal_reason: ["trop_cher", "autre_artisan", "projet_reporte", "autre"],

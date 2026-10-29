@@ -144,6 +144,141 @@ export const fr = {
       unavailable: "Vos cartes seront disponibles quand votre accès sera actif.",
     },
   },
+  /** Suivi des prospects des commerciaux (F-65, lot 2, ADR 0206). */
+  commercialProspects: {
+    nav: { day: "Ma journée", prospects: "Prospects" },
+    list: {
+      title: "Prospects",
+      intro:
+        "Les entreprises du bâtiment de la zone, issues du registre public des entreprises. Suivez celles que vous démarchez : un prospect suivi par un collègue est signalé, sans plus de détails.",
+      searchLabel: "Rechercher une entreprise, une commune ou un code postal",
+      searchPlaceholder: "Nom, commune ou code postal",
+      search: "Rechercher",
+      filtersLabel: "Filtrer les prospects",
+      filters: {
+        tous: "Tous",
+        miens: "Mes prospects",
+        relances: "À relancer",
+        libres: "Libres",
+      } as Record<string, string>,
+      views: { liste: "Liste", carte: "Carte" },
+      viewsLabel: "Affichage",
+      listLabel: "Prospects",
+      count: (n: number) =>
+        n === 0
+          ? "Aucun prospect"
+          : n === 1
+            ? "1 prospect"
+            : `${n.toLocaleString("fr-FR")} prospects`,
+      empty: "Aucun prospect ne correspond à votre recherche.",
+      emptyBase:
+        "La base des entreprises n'est pas encore importée. L'équipe MENAO s'en occupe depuis le back-office.",
+      previous: "Page précédente",
+      next: "Page suivante",
+      pageOf: (page: number, pages: number) => `Page ${page} sur ${pages}`,
+      followedByOther: "Suivi par un collègue",
+      free: "Libre",
+      rge: "RGE",
+      nextAction: (date: string) => `Relance : ${date}`,
+      mapLabel: "Carte des prospects",
+      mapLimit: (shown: number) =>
+        `Les ${shown.toLocaleString("fr-FR")} premiers résultats sont sur la carte : affinez la recherche pour voir les autres.`,
+      mapEmpty: "Aucun prospect localisé pour cette recherche.",
+      mapLegend: { mine: "Mes prospects", free: "Libres", other: "Suivis par un collègue" },
+      mapZoomIn: "Zoomer",
+      mapZoomOut: "Dézoomer",
+      mapRecenter: "Recentrer sur les prospects",
+    },
+    status: {
+      a_contacter: "À contacter",
+      rdv_pris: "Rendez-vous pris",
+      demo_faite: "Démo faite",
+      pas_interesse: "Pas intéressé",
+    } as Record<string, string>,
+    stage: {
+      inscrit: "Inscrit sur MENAO",
+      valide: "Validé sur MENAO",
+      abonne: "Abonné MENAO",
+    } as Record<string, string>,
+    detail: {
+      back: "Prospects",
+      company: "L'entreprise",
+      activity: "Activité",
+      legalForm: "Forme juridique",
+      created: "Création",
+      staff: "Effectif",
+      address: "Adresse",
+      siret: "SIRET",
+      directions: "Itinéraire",
+      headOffice: "Siège",
+      rge: "Qualifié RGE",
+      followedByOther:
+        "Ce prospect est suivi par un collègue. Pour éviter deux visites, voyez avec l'équipe avant de le démarcher.",
+      follow: "Suivre ce prospect",
+      followHint: "Il apparaîtra dans « Mes prospects », avec vos relances.",
+      followTitle: "Mon suivi",
+      statusLabel: "Étape",
+      nextActionLabel: "Prochaine action (rendez-vous ou relance)",
+      phoneLabel: "Téléphone",
+      phoneHint: "Format international, par exemple +33612345678.",
+      notesLabel: "Notes",
+      notesHint: "Utiles au suivi seulement : jamais d'avis personnel. 2 000 caractères au plus.",
+      save: "Enregistrer",
+      saved: "Suivi enregistré.",
+      release: "Ne plus suivre",
+      releaseHint: "Le prospect redevient libre ; vos notes sont effacées.",
+      // TODO(legal): information au premier contact et droit d'opposition (question n°2 pour l'avocat).
+      firstContact:
+        "Au premier contact : présentez-vous, dites que ses coordonnées viennent du registre public des entreprises, et proposez-lui de ne plus être contacté.",
+      doNotContact: "Ne plus contacter",
+      doNotContactHint:
+        "Dès que l'artisan le demande. L'entreprise disparaît de la base pour tous les commerciaux et ne sera plus jamais importée.",
+      doNotContactConfirm: "Confirmer : ne plus jamais contacter cette entreprise",
+      doNotContactCancel: "Annuler",
+      doNotContactDone: "C'est noté : l'entreprise ne sera plus contactée.",
+      notFound: "Ce prospect n'existe plus dans la base.",
+      // Tranches d'effectif salarié du registre Sirene (INSEE).
+      staffBands: {
+        NN: "Sans salarié",
+        "00": "0 salarié",
+        "01": "1 ou 2 salariés",
+        "02": "3 à 5 salariés",
+        "03": "6 à 9 salariés",
+        "11": "10 à 19 salariés",
+        "12": "20 à 49 salariés",
+        "21": "50 à 99 salariés",
+        "22": "100 à 199 salariés",
+        "31": "200 à 249 salariés",
+        "32": "250 à 499 salariés",
+        "41": "500 à 999 salariés",
+        "42": "1 000 à 1 999 salariés",
+        "51": "2 000 à 4 999 salariés",
+        "52": "5 000 à 9 999 salariés",
+        "53": "10 000 salariés et plus",
+      } as Record<string, string>,
+    },
+    day: {
+      title: "Ma journée",
+      intro: (date: string) => `Vos rendez-vous et vos relances du ${date}.`,
+      appointments: "Rendez-vous aujourd'hui",
+      appointmentsEmpty: "Aucun rendez-vous prévu aujourd'hui.",
+      followUps: "Relances à faire",
+      followUpsEmpty: "Aucune relance en retard. Bravo.",
+      late: (date: string) => `Prévue le ${date}`,
+      at: (time: string) => `À ${time}`,
+      phoneTitle: "Créneaux téléphone",
+      phoneText:
+        "12 h à 13 h : prise de rendez-vous. 17 h à 18 h : relances et suivi. Les appels restent en semaine, de 10 h à 13 h et de 14 h à 20 h.",
+      call: "Appeler",
+      allProspects: "Voir tous mes prospects",
+    },
+    errors: {
+      suspended: "Votre accès est suspendu.",
+      unavailable: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+      date: "Date ou heure invalide.",
+      phone: "Téléphone invalide : format international, par exemple +33612345678.",
+    },
+  },
   /** Espace partenaire par lien privé (ADR 0139). */
   partnerSpace: {
     metaTitle: "Espace partenaire — MENAO",
@@ -5930,6 +6065,34 @@ export const fr = {
       webhooksLink: "Notifications Stripe et DocuSeal",
     },
     /** Programme Partenaires (F-59, ADR 0136). */
+    // Base des prospects des commerciaux (F-65, lot 2, ADR 0206).
+    prospects: {
+      title: "Base de prospects",
+      lead: "Les entreprises du bâtiment actives d'un département, depuis l'API publique « Recherche d'entreprises » (registre Sirene), sans celles qui refusent la diffusion de leurs données ni celles qui ont demandé à ne plus être contactées.",
+      total: (n: number) => `${n.toLocaleString("fr-FR")} entreprises dans la base`,
+      followed: (n: number) => `${n.toLocaleString("fr-FR")} suivies par un commercial`,
+      optOuts: (n: number) => `${n.toLocaleString("fr-FR")} à ne plus contacter`,
+      lastImport: (date: string) => `Dernière mise à jour : ${date}`,
+      never: "Aucun import pour l'instant.",
+      byDepartement: "Par département",
+      departementLabel: "Département",
+      departementHint: "Code du département, par exemple 06.",
+      start: "Importer ou mettre à jour",
+      stop: "Arrêter",
+      running: (code: string, page: number, pages: number) =>
+        `Activité ${code} : page ${page} sur ${pages}`,
+      progress: (n: number) => `${n.toLocaleString("fr-FR")} établissements enregistrés`,
+      done: (n: number) =>
+        `Import terminé : ${n.toLocaleString("fr-FR")} établissements enregistrés.`,
+      stopped: (n: number) =>
+        `Import arrêté : ${n.toLocaleString("fr-FR")} établissements enregistrés.`,
+      keepOpen: "Gardez cette page ouverte pendant l'import (quelques minutes).",
+      errors: {
+        departement: "Code de département invalide.",
+        api: "L'API « Recherche d'entreprises » ne répond pas. Réessayez plus tard.",
+        save: "L'enregistrement a échoué. Réessayez.",
+      },
+    },
     // Commerciaux de terrain (F-65, ADR 0205).
     commercials: {
       title: "Commerciaux",

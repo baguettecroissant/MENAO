@@ -215,3 +215,20 @@ select 'b6500000-0000-4000-8000-000000000001', a.id
 from public.artisans a
 join auth.users u on u.id = a.user_id
 where u.email = 'artisan@example.test';
+
+-- Prospects du commercial (F-65, ADR 0206) : trois entreprises fictives du 06 ; Rémi suit la première,
+-- avec une relance en retard (« Ma journée »).
+insert into public.prospects (id, siret, denomination, ape_code, nature_juridique, date_creation, tranche_effectif,
+  adresse, code_postal, commune, code_insee, departement, location, rge, est_siege)
+values
+  ('b6510000-0000-4000-8000-000000000001', '00000650100019', 'PLOMBERIE PROSPECT EXEMPLE', '43.22A', '5499',
+   '2015-04-01', '01', '1 RUE DE L''EXEMPLE', '06000', 'NICE', '06088', '06',
+   extensions.st_setsrid(extensions.st_makepoint(7.2683, 43.7009), 4326)::extensions.geography, false, true),
+  ('b6510000-0000-4000-8000-000000000002', '00000650200017', 'ELEC PROSPECT EXEMPLE', '43.21A', '1000',
+   '2019-09-16', 'NN', '2 AVENUE DE L''EXEMPLE', '06300', 'NICE', '06088', '06',
+   extensions.st_setsrid(extensions.st_makepoint(7.2856, 43.6990), 4326)::extensions.geography, true, true),
+  ('b6510000-0000-4000-8000-000000000003', '00000650300015', 'MACONNERIE PROSPECT EXEMPLE', '43.99C', '5710',
+   '2008-02-11', '03', '3 CHEMIN DE L''EXEMPLE', '06600', 'ANTIBES', '06004', '06',
+   extensions.st_setsrid(extensions.st_makepoint(7.1251, 43.5808), 4326)::extensions.geography, false, true);
+insert into public.prospect_follows (prospect_id, commercial_id, status, next_action_at) values
+  ('b6510000-0000-4000-8000-000000000001', 'b6500000-0000-4000-8000-000000000001', 'a_contacter', now() - interval '1 day');
