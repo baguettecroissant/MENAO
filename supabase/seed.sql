@@ -49,6 +49,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000017'::uuid, 'carreleur-nice@example.test', 'artisan', 'Lina', 'Exemple', null),
   -- Artisan validé inscrit avant la charte qualité, réservé au test e2e de sa signature (ADR 0109).
   ('a0000000-0000-4000-8000-000000000014'::uuid, 'charte@example.test', 'artisan', 'Maxime', 'Exemple', null),
+  -- Commercial de terrain (F-65, ADR 0205), réservé au test e2e de l'espace commercial.
+  ('a0000000-0000-4000-8000-000000000018'::uuid, 'commercial@example.test', 'commercial', 'Rémi', 'Commercial', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -204,3 +206,12 @@ select a.id, 'V5', 25, 'Signataire Exemple', coalesce(a.raison_sociale, 'ENTREPR
   coalesce(a.siret, '00000001800010'), 'M 10 10 L 200 80 L 400 40', 'B1'
 from public.artisans a
 where a.id <> 'b0000000-0000-4000-8000-000000000014';
+
+-- Espace commercial (F-65, ADR 0205) : fiche du commercial fictif et un artisan inscrit avec son code.
+insert into public.commercials (id, user_id, code, nom) values
+  ('b6500000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000018', 'remi-06', 'Rémi Commercial');
+insert into public.commercial_attributions (commercial_id, artisan_id)
+select 'b6500000-0000-4000-8000-000000000001', a.id
+from public.artisans a
+join auth.users u on u.id = a.user_id
+where u.email = 'artisan@example.test';

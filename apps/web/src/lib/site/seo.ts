@@ -54,6 +54,8 @@ export const PRIVATE_PATHS = [
   "/p/",
   // Espace partenaire par lien privé (ADR 0139) : jamais exploré, en plus du noindex de la page.
   "/espace-partenaire/",
+  // Espace commercial (ADR 0205) : réservé aux comptes commerciaux.
+  "/commercial",
 ] as const;
 
 export const absoluteUrl = (path: string) =>

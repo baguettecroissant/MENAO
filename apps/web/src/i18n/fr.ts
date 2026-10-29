@@ -76,6 +76,74 @@ export const fr = {
       action: "Créer mon compte pro",
     },
   },
+  /** Espace des commerciaux de terrain (F-65, ADR 0205) : code, QR code, inscrits et guide. */
+  commercialSpace: {
+    metaTitle: "Espace commercial — MENAO",
+    nav: { home: "Mon code", guide: "Guide terrain", demo: "Démo (exemples)" },
+    greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName}` : "Bonjour"),
+    intro: "Chaque artisan inscrit avec votre code est rattaché à votre nom.",
+    suspended:
+      "Votre accès est suspendu : votre code n'est plus rattaché aux inscriptions. Contactez l'équipe MENAO.",
+    missing: "Votre accès n'est pas encore prêt. Contactez l'équipe MENAO.",
+    code: {
+      title: "Votre code",
+      howTo: [
+        "Dans l'application MENAO, sur le téléphone de l'artisan : il saisit ce code à l'étape « Compte » de l'inscription.",
+        "Avec votre QR code ou votre lien : l'inscription sur le site reprend votre code toute seule.",
+      ],
+      link: "Votre lien d'inscription",
+      copy: "Copier le lien",
+      copied: "Lien copié",
+      qrAlt: "QR code de votre lien d'inscription MENAO",
+      expand: "afficher en grand",
+      close: "Fermer",
+      fullscreenTitle: "Inscription avec votre code",
+      fullscreenHint: "L'artisan scanne ce QR code avec l'appareil photo de son téléphone.",
+      whatsapp: "Envoyer par WhatsApp",
+      whatsappMessage: (link: string) =>
+        `Bonjour, voici le lien pour vous inscrire sur MENAO avec votre conseiller : ${link}`,
+      cards: "Cartes à imprimer",
+    },
+    signups: {
+      title: "Vos inscriptions",
+      empty:
+        "Aucun artisan inscrit avec votre code pour l'instant. Ils apparaîtront ici dès leur inscription.",
+      listLabel: "Artisans inscrits avec votre code",
+      since: (date: string) => `Inscrit le ${date}`,
+      unnamed: "Entreprise à compléter",
+      status: {
+        brouillon: "En cours",
+        en_verification: "Dossier envoyé",
+        valide: "Validé",
+        refuse: "Refusé",
+        suspendu: "Suspendu",
+        radie: "Radié",
+      } as Record<string, string>,
+    },
+    guide: {
+      title: "Guide terrain",
+      intro:
+        "Le parcours de l'artisan, la journée type, la démo, les appels types, les objections et les règles à respecter.",
+      listLabel: "Rubriques du guide",
+      back: "Guide terrain",
+      previous: "Rubrique précédente",
+      next: "Rubrique suivante",
+      open: "Ouvrir le guide terrain",
+    },
+    cards: {
+      title: "Cartes à imprimer",
+      intro:
+        "Votre carte, avec votre code et le QR code d'inscription : pour l'artisan qui préfère s'inscrire plus tard.",
+      printHint:
+        "10 cartes de 85 × 55 mm par feuille A4 : imprimez à 100 %, sans mise à l'échelle.",
+      print: "Imprimer la planche",
+      back: "Mon code",
+      role: "Conseiller MENAO",
+      codeLine: (code: string) => `Code : ${code}`,
+      scan: "Inscription des artisans",
+      unavailable: "Vos cartes seront disponibles quand votre accès sera actif.",
+    },
+  },
   /** Espace partenaire par lien privé (ADR 0139). */
   partnerSpace: {
     metaTitle: "Espace partenaire — MENAO",
@@ -2163,12 +2231,14 @@ export const fr = {
       pro: "Espace pro",
       admin: "Back-office",
       exemples: "Exemples",
+      commercial: "Espace commercial",
     },
     nav: {
       client: "Navigation de mon espace",
       pro: "Navigation de l'espace pro",
       admin: "Navigation du back-office",
       exemples: "Navigation des exemples",
+      commercial: "Navigation de l'espace commercial",
     },
     sections: {
       activity: "Activité",
@@ -2593,6 +2663,7 @@ export const fr = {
     artisan_en_attente: "Artisan (vérification en cours)",
     admin: "Administrateur MENAO",
     support: "Support MENAO",
+    commercial: "Commercial MENAO",
     visiteur: "Visiteur",
   },
   legal: {
@@ -2762,6 +2833,7 @@ export const fr = {
         more: "En savoir plus",
         backToFile: "Revenir à mon dossier",
         backToSpace: "Revenir à mon espace",
+        backToCommercial: "Revenir à mon espace commercial",
       },
       inSpace: {
         text: "Voici des exemples pour découvrir votre espace. Ils disparaissent dès votre première demande.",
@@ -4448,11 +4520,12 @@ export const fr = {
         oauthTitle: "Finalisez votre compte",
         oauthLead: (provider: string, email: string | null) =>
           `Vous êtes connecté avec ${provider}${email ? ` (${email})` : ""}. Complétez vos informations pour créer votre profil.`,
-        referralToggle: "J'ai un code de parrainage",
-        referralLabel: "Code de parrainage (facultatif)",
+        // Code d'un parrain, d'un partenaire ou d'un conseiller MENAO (commercial, ADR 0205).
+        referralToggle: "J'ai un code (parrain ou conseiller MENAO)",
+        referralLabel: "Code de parrainage ou de votre conseiller (facultatif)",
         referralHint:
-          "Le code d'un artisan MENAO qui vous a recommandé : un cadeau de bienvenue vous attend à la validation de votre dossier.",
-        referralApplied: (code: string) => `Code de parrainage ou partenaire appliqué : ${code}`,
+          "Le code de votre conseiller MENAO, ou celui d'un artisan MENAO qui vous a recommandé : avec ce dernier, un cadeau de bienvenue vous attend à la validation de votre dossier.",
+        referralApplied: (code: string) => `Code appliqué : ${code}`,
         oauthSubmit: "Créer mon profil",
         notYou: "Ce n'est pas vous ? Se déconnecter",
       },
@@ -5144,6 +5217,7 @@ export const fr = {
       subscriptions: "Abonnements",
       partners: "Partenaires",
       referrals: "Parrainages",
+      commercials: "Commerciaux",
       references: "Métiers et travaux",
       journal: "Journal d'audit",
       ai: "Suivi de l'IA",
@@ -5856,6 +5930,49 @@ export const fr = {
       webhooksLink: "Notifications Stripe et DocuSeal",
     },
     /** Programme Partenaires (F-59, ADR 0136). */
+    // Commerciaux de terrain (F-65, ADR 0205).
+    commercials: {
+      title: "Commerciaux",
+      intro:
+        "Les commerciaux de terrain : leur code d'inscription rattache à leur nom les artisans qu'ils inscrivent. Ils ne voient que leurs inscrits, jamais le back-office.",
+      empty: "Aucun commercial pour l'instant.",
+      listLabel: "Commerciaux",
+      columns: {
+        name: "Commercial",
+        code: "Code",
+        status: "Statut",
+        signups: "Inscrits",
+        validated: "Validés",
+      },
+      signups: (signups: number, validated: number) =>
+        `${signups} inscrit${signups > 1 ? "s" : ""}, ${validated} validé${validated > 1 ? "s" : ""}`,
+      status: { actif: "Actif", suspendu: "Suspendu" } as Record<string, string>,
+      suspend: "Suspendre",
+      reactivate: "Réactiver",
+      statusError: "Le statut n'a pas pu être modifié. Réessayez.",
+      newTitle: "Inviter un commercial",
+      newLead:
+        "Il reçoit un e-mail pour choisir son mot de passe. Le lien est valable une heure ; ensuite, « Mot de passe oublié » sur la page de connexion.",
+      fields: {
+        firstName: "Prénom",
+        lastName: "Nom",
+        email: "Adresse e-mail",
+        code: "Code",
+        codeHint:
+          "3 à 32 caractères : minuscules, chiffres et tirets, par exemple julien-06. Il ne pourra plus changer : il est imprimé sur ses cartes.",
+      },
+      submit: "Envoyer l'invitation",
+      invited: (email: string) => `Invitation envoyée à ${email}.`,
+      errors: {
+        invalid: "Vérifiez le prénom, le nom, l'adresse e-mail et le code.",
+        code_taken: "Ce code est déjà utilisé : choisissez-en un autre.",
+        email_taken:
+          "Un compte existe déjà avec cette adresse. Commercial déjà invité : il choisit son mot de passe avec « Mot de passe oublié » sur la page de connexion. Sinon, utilisez une autre adresse.",
+        forbidden: "Réservé aux administrateurs, avec la double authentification.",
+        rate_limited: "Trop d'invitations en peu de temps. Réessayez dans une heure.",
+        unavailable: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+      } as Record<string, string>,
+    },
     partners: {
       title: "Partenaires",
       intro:

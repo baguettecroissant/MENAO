@@ -9,6 +9,8 @@ export const ROLES = [
   "artisan_en_attente",
   "admin",
   "support",
+  // Commercial de terrain (F-65, ADR 0205) : compte créé par un admin, jamais à l'inscription.
+  "commercial",
   "visiteur",
 ] as const;
 
@@ -46,6 +48,8 @@ export function homePathForRole(role: Role): string {
     case "support":
       // Équipe restreinte (spec §4) : tickets, modération et litiges (ADR 0049).
       return "/admin/tickets";
+    case "commercial":
+      return "/commercial";
     case "visiteur":
       return "/connexion";
     default:
@@ -56,12 +60,12 @@ export function homePathForRole(role: Role): string {
 /**
  * Espace de l'application native selon le rôle (phase 6). Les visiteurs et les particuliers
  * partagent l'espace client : on visite et on cherche sans compte (ADR 0055). L'équipe MENAO
- * utilise le back-office web.
+ * utilise le back-office web, les commerciaux leur espace sur le site (ADR 0205).
  */
 export type AppSpace = "client" | "artisan" | "equipe";
 
 export function appSpaceForRole(role: Role): AppSpace {
-  if (isStaff(role)) return "equipe";
+  if (isStaff(role) || role === "commercial") return "equipe";
   if (role === "artisan" || role === "artisan_en_attente") return "artisan";
   return "client";
 }

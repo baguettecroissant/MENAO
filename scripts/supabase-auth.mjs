@@ -19,7 +19,7 @@
 import { readFileSync } from "node:fs";
 
 const PRODUCTION_REF = "ffidtbwxiyqybyfdqmkj";
-const TEMPLATES = ["confirmation", "magic_link", "recovery", "email_change"];
+const TEMPLATES = ["confirmation", "magic_link", "recovery", "email_change", "invite"];
 
 const args = Object.fromEntries(
   process.argv

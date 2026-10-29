@@ -358,7 +358,7 @@ function QrTile({ qr, label, onExpand }: { qr: Qr; label: string; onExpand: () =
   );
 }
 
-function QrSvg({ qr, label, className }: { qr: Qr; label: string; className: string }) {
+export function QrSvg({ qr, label, className }: { qr: Qr; label: string; className: string }) {
   return (
     <svg
       viewBox={`0 0 ${qr.size} ${qr.size}`}

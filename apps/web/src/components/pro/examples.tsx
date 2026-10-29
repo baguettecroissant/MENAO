@@ -67,13 +67,30 @@ export function ExampleLock({
  * Bandeau fin en haut des pages d'exemples, couleur des exemples : rien n'est réel, retour au
  * dossier ou à l'espace. Sur téléphone, replié sur son titre.
  */
-export function ExamplesBanner({ validated }: { validated: boolean }) {
+export function ExamplesBanner({
+  validated,
+  commercial = false,
+}: {
+  validated: boolean;
+  /** Démo d'un commercial (ADR 0205) : retour à son espace. */
+  commercial?: boolean;
+}) {
   const back = (
     <Link
-      href={(validated ? "/pro/tableau-de-bord" : "/pro/onboarding") as Route}
+      href={
+        (commercial
+          ? "/commercial"
+          : validated
+            ? "/pro/tableau-de-bord"
+            : "/pro/onboarding") as Route
+      }
       className={backLink}
     >
-      {validated ? t.banner.backToSpace : t.banner.backToFile}
+      {commercial
+        ? t.banner.backToCommercial
+        : validated
+          ? t.banner.backToSpace
+          : t.banner.backToFile}
     </Link>
   );
   return (

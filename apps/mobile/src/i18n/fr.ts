@@ -182,10 +182,11 @@ export const fr = {
       oauthTitle: "Finalisez votre compte",
       oauthLead: "Vous êtes connecté. Complétez vos informations pour créer votre profil.",
       oauthSubmit: "Créer mon profil",
-      referralToggle: "J'ai un code de parrainage",
-      referralLabel: "Code de parrainage (facultatif)",
+      // Code d'un parrain, d'un partenaire ou d'un conseiller MENAO (commercial, ADR 0205).
+      referralToggle: "J'ai un code (parrain ou conseiller MENAO)",
+      referralLabel: "Code de parrainage ou de votre conseiller (facultatif)",
       referralHint:
-        "Le code d'un artisan MENAO qui vous a recommandé. Un cadeau de bienvenue vous attend à la validation de votre dossier.",
+        "Le code de votre conseiller MENAO, ou celui d'un artisan MENAO qui vous a recommandé : avec ce dernier, un cadeau de bienvenue vous attend à la validation de votre dossier.",
       notYou: "Ce n'est pas vous ? Se déconnecter",
       clientAccount:
         "Ce compte est déjà un compte client MENAO. Pour votre activité, créez un compte pro avec une autre adresse e-mail.",
@@ -3574,6 +3575,11 @@ export const fr = {
   staff: {
     title: "Back-office MENAO",
     text: "Le back-office de l'équipe MENAO est disponible sur le site, depuis un ordinateur.",
+    // Commerciaux de terrain (ADR 0205) : leur espace est sur le site, depuis le téléphone.
+    commercialTitle: "Espace commercial",
+    commercialText:
+      "Votre code, votre QR code et le guide terrain sont sur le site MENAO, à ouvrir dans le navigateur de votre téléphone.",
+    commercialOpen: "Ouvrir mon espace commercial",
   },
   /** Diplômes du métier (ADR 0155), comme sur le site. */
   diplomesMetier: {

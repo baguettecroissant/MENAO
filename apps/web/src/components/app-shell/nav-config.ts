@@ -1,9 +1,12 @@
 import {
   Activity,
+  BookOpen,
+  BriefcaseBusiness,
   CalendarClock,
   ClipboardCheck,
   CalendarDays,
   ClipboardList,
+  Eye,
   FileText,
   Gift,
   Handshake,
@@ -15,6 +18,7 @@ import {
   Map as MapIcon,
   MessageCircle,
   MessagesSquare,
+  QrCode,
   Repeat,
   ScrollText,
   Send,
@@ -28,8 +32,9 @@ import {
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
 
-// « exemples » : aperçu de l'espace pro rempli d'exemples (ADR 0184).
-export type Space = "client" | "pro" | "admin" | "exemples";
+// « exemples » : aperçu de l'espace pro rempli d'exemples (ADR 0184). « commercial » : commerciaux
+// de terrain (ADR 0205).
+export type Space = "client" | "pro" | "admin" | "exemples" | "commercial";
 export type BadgeKey =
   "actions" | "messages" | "requests" | "quotes" | "reviews" | "dossiers" | "controles" | "tickets";
 export type Badges = Partial<Record<BadgeKey, number>>;
@@ -57,6 +62,7 @@ export const SPACE_HOME: Record<Space, string> = {
   pro: "/pro/tableau-de-bord",
   admin: "/admin",
   exemples: "/pro/decouvrir/tableau-de-bord",
+  commercial: "/commercial",
 };
 
 /** Messages, accessibles depuis la barre du haut sur mobile (ADR 0043). */
@@ -214,6 +220,12 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/admin/partenaires", label: fr.admin.nav.partners, icon: Handshake },
         // Parrainages entre artisans (F-60, ADR 0143).
         { href: "/admin/parrainages", label: fr.admin.nav.referrals, icon: Gift },
+        // Commerciaux de terrain (F-65, ADR 0205).
+        {
+          href: "/admin/commerciaux",
+          label: fr.admin.nav.commercials,
+          icon: BriefcaseBusiness,
+        },
       ],
     },
     {
@@ -223,6 +235,17 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/admin/referentiels", label: fr.admin.nav.references, icon: ListTree },
         { href: "/admin/journal", label: fr.admin.nav.journal, icon: ScrollText },
         { href: "/admin/ia", label: fr.admin.nav.ai, icon: Sparkles },
+      ],
+    },
+  ],
+  // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, puis le guide terrain.
+  commercial: [
+    {
+      items: [
+        { href: "/commercial", label: fr.commercialSpace.nav.home, icon: QrCode, exact: true },
+        { href: "/commercial/guide", label: fr.commercialSpace.nav.guide, icon: BookOpen },
+        // Démo chez l'artisan : l'espace pro rempli d'exemples (ADR 0184).
+        { href: "/pro/decouvrir/tableau-de-bord", label: fr.commercialSpace.nav.demo, icon: Eye },
       ],
     },
   ],
@@ -245,6 +268,10 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
     { href: "/contact", label: fr.appShell.help },
   ],
   admin: [],
+  commercial: [
+    { href: "/compte", label: fr.account.title },
+    { href: "/contact", label: fr.appShell.help },
+  ],
   exemples: [
     { href: "/compte", label: fr.pro.hub.rows.identity },
     { href: "/contact", label: fr.appShell.help },

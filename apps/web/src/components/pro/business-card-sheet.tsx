@@ -14,6 +14,8 @@ const CARDS = Array.from({ length: 10 }, (_, i) => i);
 export function BusinessCardSheet({
   card,
   qr,
+  qrAlt = t.qrAlt,
+  scan = t.scan,
 }: {
   card: {
     name: string;
@@ -24,6 +26,9 @@ export function BusinessCardSheet({
     host: string;
   };
   qr: { size: number; path: string };
+  /** Texte du QR code et légende dessous (cartes des commerciaux, ADR 0205). */
+  qrAlt?: string;
+  scan?: string;
 }) {
   return (
     <div className="overflow-x-auto print:overflow-visible">
@@ -54,14 +59,14 @@ export function BusinessCardSheet({
               <svg
                 viewBox={`0 0 ${qr.size} ${qr.size}`}
                 role="img"
-                aria-label={t.qrAlt}
+                aria-label={qrAlt}
                 className="size-[27mm]"
                 shapeRendering="crispEdges"
               >
                 <path d={qr.path} fill="#111728" />
               </svg>
               <figcaption className="text-center text-[6.5pt] leading-tight text-[#4a5468]">
-                {t.scan}
+                {scan}
                 <span className="block font-medium text-[#111728]">{card.host}</span>
               </figcaption>
             </figure>
