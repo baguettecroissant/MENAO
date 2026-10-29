@@ -44,6 +44,17 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   expect(first.length).toBeGreaterThan(0);
   await capture(page, "commercial-guide");
 
+  // Mes résultats (lot 3) : l'inscrit du seed, primes non réglées (règle 15).
+  await page
+    .getByRole("navigation", { name: "Navigation de l'espace commercial" })
+    .getByRole("link", { name: "Mes résultats" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Mes résultats", level: 1 })).toBeVisible();
+  await expect(page.getByText("1 au total").first()).toBeVisible();
+  await expect(
+    page.getByText("Les montants des primes ne sont pas encore fixés par l'équipe MENAO."),
+  ).toBeVisible();
+
   // Cartes à imprimer, hors de la coque.
   await page.goto("/commercial/cartes");
   await expect(page.getByRole("heading", { name: "Cartes à imprimer", level: 1 })).toBeVisible();

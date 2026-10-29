@@ -156,6 +156,7 @@ export const fr = {
       search: "Rechercher",
       filtersLabel: "Filtrer les prospects",
       filters: {
+        zone: "Ma zone",
         tous: "Tous",
         miens: "Mes prospects",
         relances: "À relancer",
@@ -171,6 +172,7 @@ export const fr = {
             ? "1 prospect"
             : `${n.toLocaleString("fr-FR")} prospects`,
       empty: "Aucun prospect ne correspond à votre recherche.",
+      emptyZone: "Aucun prospect dans votre zone pour l'instant.",
       emptyBase:
         "La base des entreprises n'est pas encore importée. L'équipe MENAO s'en occupe depuis le back-office.",
       previous: "Page précédente",
@@ -277,6 +279,63 @@ export const fr = {
       unavailable: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
       date: "Date ou heure invalide.",
       phone: "Téléphone invalide : format international, par exemple +33612345678.",
+    },
+  },
+  /** Résultats et primes des commerciaux (F-65, lot 3, ADR 0207). */
+  commercialResults: {
+    nav: "Mes résultats",
+    title: "Mes résultats",
+    intro:
+      "Les artisans inscrits avec votre code, leur validation et leur abonnement, puis vos primes.",
+    figures: {
+      signups: "Inscrits",
+      validated: "Validés",
+      subscribed: "Abonnés",
+      thisMonth: (n: number) => `${n.toLocaleString("fr-FR")} ce mois-ci`,
+      total: (n: number) => `${n.toLocaleString("fr-FR")} au total`,
+    },
+    objective: (done: number, target: number) =>
+      `Objectif du mois : ${done.toLocaleString("fr-FR")} validé${done > 1 ? "s" : ""} sur ${target.toLocaleString("fr-FR")}`,
+    pipeline: {
+      title: "Mes prospects en cours",
+      followed: (n: number) => `${n.toLocaleString("fr-FR")} suivi${n > 1 ? "s" : ""}`,
+    },
+    months: {
+      title: "Mois par mois",
+      caption: "Inscrits, validés et abonnés des six derniers mois",
+      month: "Mois",
+    },
+    bonuses: {
+      title: "Mes primes",
+      notSet: "Les montants des primes ne sont pas encore fixés par l'équipe MENAO.",
+      amounts: (validation: string | null, subscription: string | null) =>
+        [
+          validation ? `${validation} par artisan validé` : null,
+          subscription ? `${subscription} par artisan abonné` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      pending: (n: number) =>
+        n === 0
+          ? "Aucune prime en attente"
+          : `${n.toLocaleString("fr-FR")} en attente du délai de vérification`,
+      validated: "À payer",
+      paid: "Déjà payées",
+      empty:
+        "Aucune prime pour l'instant : elles apparaissent quand un de vos artisans est validé ou s'abonne.",
+      listLabel: "Mes primes",
+      kind: { validation: "Dossier validé", abonnement: "Abonnement" } as Record<string, string>,
+      status: {
+        en_attente: "En attente",
+        validee: "À payer",
+        annulee: "Annulée",
+        payee: "Payée",
+      } as Record<string, string>,
+      delay: (date: string) => `Vérifiée le ${date}`,
+      checkOn: (date: string) => `Vérification à partir du ${date}`,
+      // TODO(legal): primes et contrat des commerciaux (question n°3 pour l'avocat).
+      rules:
+        "Une prime est créée quand un artisan inscrit avec votre code est validé, puis quand il paie son premier mois d'abonnement. Elle est vérifiée après un délai : dossier toujours validé, abonnement toujours actif.",
     },
   },
   /** Espace partenaire par lien privé (ADR 0139). */
@@ -6091,6 +6150,73 @@ export const fr = {
         departement: "Code de département invalide.",
         api: "L'API « Recherche d'entreprises » ne répond pas. Réessayez plus tard.",
         save: "L'enregistrement a échoué. Réessayez.",
+      },
+    },
+    // Résultats et primes des commerciaux (F-65, lot 3, ADR 0207).
+    commercialResults: {
+      columns: {
+        signups: "Inscrits",
+        validated: "Validés",
+        subscribed: "Abonnés",
+        followed: "Prospects suivis",
+        toPay: "Primes à payer",
+      },
+      open: (name: string) => `Ouvrir la fiche de ${name}`,
+      export: "Exporter les primes à payer (CSV)",
+      settings: {
+        title: "Primes des commerciaux",
+        lead: "Montants décidés par les associés. Vides : aucune prime n'est calculée. Une prime est vérifiée après le délai (dossier toujours validé, abonnement toujours actif) avant d'être à payer.",
+        validation: "Prime par artisan validé (€)",
+        subscription: "Prime par artisan abonné (€)",
+        delay: "Délai de vérification (jours)",
+        objective: "Objectif mensuel d'artisans validés par commercial",
+        objectiveHint: "Facultatif : affiché au commercial dans « Mes résultats ».",
+        save: "Enregistrer les réglages",
+        saved: "Réglages enregistrés.",
+        notSet: "Montants des primes non fixés : aucune prime n'est calculée.",
+      },
+      detail: {
+        back: "Commerciaux",
+        zone: "Zone",
+        zoneLabel: "Codes postaux de la zone",
+        zoneHint:
+          "Séparés par des virgules ; un début de code vaut pour tous ceux qui commencent ainsi (par exemple 061 pour 06100 à 06199). Vide : aucune zone, le commercial voit tout le département.",
+        zoneSave: "Enregistrer la zone",
+        zoneSaved: "Zone enregistrée.",
+        zoneInvalid: (codes: string) => `Codes invalides : ${codes}`,
+        transfer: "Ses prospects",
+        transferLead: (n: number) =>
+          `${n.toLocaleString("fr-FR")} prospect${n > 1 ? "s" : ""} suivi${n > 1 ? "s" : ""}. À transférer à un autre commercial, ou à libérer, s'il quitte MENAO.`,
+        transferTo: "Transférer à",
+        choose: "Choisir un commercial",
+        releaseButton: "Libérer ses prospects",
+        releaseHint: "Ils redeviennent libres : leurs suivis et leurs notes sont effacés.",
+        releaseConfirm: "Confirmer : libérer tous ses prospects",
+        releaseCancel: "Annuler",
+        released: (n: number) =>
+          `${n.toLocaleString("fr-FR")} prospect${n > 1 ? "s" : ""} libéré${n > 1 ? "s" : ""}.`,
+        release: "Les libérer (plus suivis par personne)",
+        transferSubmit: "Transférer",
+        transferred: (n: number) =>
+          `${n.toLocaleString("fr-FR")} prospect${n > 1 ? "s" : ""} transféré${n > 1 ? "s" : ""}.`,
+        artisans: "Artisans inscrits avec son code",
+        artisansEmpty: "Aucun artisan inscrit avec son code.",
+        bonuses: "Primes",
+        bonusesEmpty: "Aucune prime.",
+        markPaid: "Marquer comme payées",
+        reference: "Référence du virement",
+        paid: (n: number) =>
+          `${n.toLocaleString("fr-FR")} prime${n > 1 ? "s" : ""} marquée${n > 1 ? "s" : ""} payée${n > 1 ? "s" : ""}.`,
+        cancel: "Annuler",
+        cancelReason: "Motif de l'annulation",
+        cancelled: "Prime annulée.",
+        select: (label: string) => `Sélectionner : ${label}`,
+      },
+      errors: {
+        amount: "Montant invalide.",
+        delay: "Délai : entre 0 et 180 jours.",
+        objective: "Objectif : entre 1 et 1 000.",
+        generic: "L'opération a échoué. Réessayez.",
       },
     },
     // Commerciaux de terrain (F-65, ADR 0205).

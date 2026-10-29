@@ -17,7 +17,9 @@ const PAGE_SIZE = 50;
 /** La carte montre au plus 500 résultats du filtre en cours (limite de la base). */
 const MAP_LIMIT = 500;
 const FILTERS = ["tous", "miens", "relances", "libres"] as const;
-type Filter = (typeof FILTERS)[number];
+/** Avec une zone (ADR 0207), « Ma zone » en premier et par défaut. */
+const ZONE_FILTERS = ["zone", ...FILTERS] as const;
+type Filter = (typeof ZONE_FILTERS)[number];
 
 export const metadata: Metadata = { title: `${t.list.title} — MENAO`, robots: { index: false } };
 
@@ -32,10 +34,16 @@ const one = (value: string | string[] | undefined) =>
   typeof value === "string" ? value : undefined;
 
 /** Adresse de la liste avec ses paramètres utiles (valeurs par défaut omises). */
-function listHref(params: { q: string | null; filtre: Filter; vue: string; page?: number }) {
+function listHref(params: {
+  q: string | null;
+  filtre: Filter;
+  defaut: Filter;
+  vue: string;
+  page?: number;
+}) {
   const search = new URLSearchParams();
   if (params.q) search.set("q", params.q);
-  if (params.filtre !== "tous") search.set("filtre", params.filtre);
+  if (params.filtre !== params.defaut) search.set("filtre", params.filtre);
   if (params.vue === "carte") search.set("vue", "carte");
   if (params.page && params.page > 1) search.set("page", String(params.page));
   const qs = search.toString();
@@ -45,14 +53,18 @@ function listHref(params: { q: string | null; filtre: Filter; vue: string; page?
 /**
  * Prospects des commerciaux (F-65, lot 2, ADR 0206) : recherche, filtres (tous, les miens, à
  * relancer, libres), liste paginée ou carte des 500 premiers résultats. Un prospect suivi par un
- * collègue est signalé sans plus de détails.
+ * collègue est signalé sans plus de détails. Commercial avec une zone (lot 3, ADR 0207) : filtre
+ * « Ma zone » en premier, et par défaut.
  */
 export default async function CommercialProspectsPage({
   searchParams,
 }: PageProps<"/commercial/prospects">) {
   const params = await searchParams;
+  const space = await getCommercialSpace();
+  const filters: readonly Filter[] = space.zone.length > 0 ? ZONE_FILTERS : FILTERS;
+  const defaultFilter = filters[0] ?? "tous";
   const query = one(params.q)?.trim().slice(0, 100) || null;
-  const filter: Filter = FILTERS.find((f) => f === one(params.filtre)) ?? "tous";
+  const filter: Filter = filters.find((f) => f === one(params.filtre)) ?? defaultFilter;
   const view = one(params.vue) === "carte" ? "carte" : "liste";
   const page = Math.max(1, Math.min(10_000, Number.parseInt(one(params.page) ?? "", 10) || 1));
   const done = one(params.retire) === "1";
@@ -60,11 +72,11 @@ export default async function CommercialProspectsPage({
     listHref({
       q: query,
       filtre: next.filtre ?? filter,
+      defaut: defaultFilter,
       vue: next.vue ?? view,
       page: next.page,
     });
 
-  const space = await getCommercialSpace();
   const { data, error } = space.active
     ? await space.supabase.rpc("commercial_prospects", {
         p_search: query ?? undefined,
@@ -112,7 +124,7 @@ export default async function CommercialProspectsPage({
             {done && <Alert tone="success">{t.detail.doNotContactDone}</Alert>}
 
             <form role="search" action={PATH} className="flex gap-2">
-              {filter !== "tous" && <input type="hidden" name="filtre" value={filter} />}
+              {filter !== defaultFilter && <input type="hidden" name="filtre" value={filter} />}
               {view === "carte" && <input type="hidden" name="vue" value="carte" />}
               <div className="relative flex-1">
                 <label htmlFor="prospect-search" className="sr-only">
@@ -142,7 +154,7 @@ export default async function CommercialProspectsPage({
 
             <ListFilters
               label={t.list.filtersLabel}
-              items={FILTERS.map((key) => ({
+              items={filters.map((key) => ({
                 href: href({ filtre: key, page: 1 }),
                 label: t.list.filters[key] ?? key,
                 active: key === filter,
@@ -176,7 +188,13 @@ export default async function CommercialProspectsPage({
 
             {error ? null : rows.length === 0 ? (
               <EmptyState illustration="documents">
-                {!query && filter === "tous" ? t.list.emptyBase : t.list.empty}
+                {query
+                  ? t.list.empty
+                  : filter === "zone"
+                    ? t.list.emptyZone
+                    : filter === "tous"
+                      ? t.list.emptyBase
+                      : t.list.empty}
               </EmptyState>
             ) : view === "carte" ? (
               <div className="flex flex-col gap-2">

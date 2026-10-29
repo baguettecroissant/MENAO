@@ -9,8 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Espace commercial (F-65, ADR 0205) : réservé au rôle « commercial » (les autres rôles retournent
- * à leur accueil). Fiche du commercial (code, statut) et compte affiché dans la coque. Mis en cache
- * pour la durée de la requête.
+ * à leur accueil). Fiche du commercial (code, statut, zone : ADR 0207) et compte affiché dans la
+ * coque. Mis en cache pour la durée de la requête.
  */
 export const getCommercialSpace = cache(async (next = "/commercial") => {
   const supabase = await createClient();
@@ -22,7 +22,11 @@ export const getCommercialSpace = cache(async (next = "/commercial") => {
   if (role !== "commercial") redirect(homePathForRole(role) as Route);
   const userId = auth.claims.sub;
   const [{ data: commercial }, { data: profile }] = await Promise.all([
-    supabase.from("commercials").select("code, nom, status").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("commercials")
+      .select("code, nom, status, zone_codes_postaux")
+      .eq("user_id", userId)
+      .maybeSingle(),
     supabase
       .from("profiles")
       .select("first_name, last_name, phone, avatar_path")
@@ -43,5 +47,7 @@ export const getCommercialSpace = cache(async (next = "/commercial") => {
     /** Code utilisable seulement si le commercial est actif. */
     commercial: commercial ?? null,
     active: commercial?.status === "actif",
+    /** Débuts de code postal de sa zone (ADR 0207) ; vide : pas de zone. */
+    zone: commercial?.zone_codes_postaux ?? [],
   };
 });
