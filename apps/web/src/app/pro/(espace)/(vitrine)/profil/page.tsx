@@ -86,6 +86,7 @@ export default async function MyPublicProfilePage() {
       tips={tips}
       structurallyVisible={space.visibility.visible}
       availability={space.availability}
+      publicHref={page?.slug ? `/artisans/${page.slug}` : null}
       webPresence={
         page && (
           <WebPresence

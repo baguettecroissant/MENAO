@@ -1,11 +1,11 @@
 import type { AvailabilityStatus, ProfileTip } from "@menao/core";
-import { ArrowRight, Eye, EyeOff, Lightbulb, PartyPopper } from "lucide-react";
+import { ArrowRight, ExternalLink, Eye, EyeOff, Lightbulb, PartyPopper } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PublicReview } from "@/components/review/review-list";
 import { ExampleLock } from "@/components/pro/examples";
-import { TextLink, buttonClasses } from "@/components/ui";
+import { ButtonLink, TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { ArtisanProfile } from "@/lib/project/artisans";
 import { ProfileBody, ProfileHeader, profileTrade } from "./profile-view";
@@ -40,6 +40,7 @@ export function PublicProfileScreen({
   structurallyVisible,
   availability,
   webPresence,
+  publicHref = null,
   example = false,
 }: {
   profile: ArtisanProfile;
@@ -52,6 +53,8 @@ export function PublicProfileScreen({
   availability: AvailabilityStatus;
   /** « Votre fiche sur internet » (ADR 0144), sous les conseils. */
   webPresence?: ReactNode;
+  /** Adresse de la fiche publique, quand elle est en ligne : bouton « Ouvrir ma fiche » en haut. */
+  publicHref?: string | null;
   /** Exemple (ADR 0184) : liens « Modifier » inactifs. */
   example?: boolean;
 }) {
@@ -86,6 +89,18 @@ export function PublicProfileScreen({
               <div className="flex flex-col gap-1">
                 <h1 className="text-lg font-medium">{t.title}</h1>
                 <p className="text-sm text-foreground/80">{intro}</p>
+                {visible && publicHref && (
+                  <ButtonLink
+                    href={publicHref as Route}
+                    target="_blank"
+                    variant="outline"
+                    size="sm"
+                    className="mt-1 self-start"
+                  >
+                    {t.web.open}
+                    <ExternalLink aria-hidden="true" className="size-4" />
+                  </ButtonLink>
+                )}
                 {!structurallyVisible ? (
                   <TextLink href="/pro/onboarding" className="self-start text-sm">
                     {t.completeFile}
