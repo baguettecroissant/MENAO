@@ -210,6 +210,11 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.goto("/pro/onboarding/profil");
   const avatar = page.getByRole("region", { name: "Photo de profil" });
   await avatar.getByLabel("Fichier").setInputFiles(files.png);
+  // Cadrage avant l'envoi (ADR 0202) : la fenêtre s'ouvre, le cadrage proposé est validé.
+  const framer = page.getByRole("dialog", { name: "Cadrer votre photo" });
+  await framer.getByRole("button", { name: "Valider le cadrage" }).click();
+  await expect(framer).toBeHidden();
+  await expect(avatar.getByText("Photo cadrée, prête à être envoyée.")).toBeVisible();
   await avatar.getByRole("button", { name: "Envoyer la photo" }).click();
   await expect(page.getByRole("img", { name: "Photo de profil" })).toBeVisible();
 

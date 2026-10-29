@@ -2,6 +2,19 @@ import { FORMES_JURIDIQUES, type DiplomeMetier } from "@menao/core";
 
 /** Textes de l'interface, centralisés (CLAUDE.md : pas de chaînes en dur dispersées). */
 export const fr = {
+  /** Cadrage de la photo de profil avant l'envoi (ADR 0202). */
+  avatarFramer: {
+    title: "Cadrer votre photo",
+    hint: "Faites glisser l'image et zoomez : le rond montre ce qui apparaîtra sur votre fiche et dans les messages.",
+    zoom: "Zoom",
+    fit: "Image entière",
+    fill: "Remplir le rond",
+    confirm: "Valider le cadrage",
+    cancel: "Annuler",
+    reframe: "Recadrer",
+    ready: "Photo cadrée, prête à être envoyée.",
+    preview: "Aperçu de la photo cadrée",
+  },
   meta: {
     name: "MENAO",
     title: "MENAO — Artisans du bâtiment vérifiés",

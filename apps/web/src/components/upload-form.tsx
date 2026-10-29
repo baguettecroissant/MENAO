@@ -13,6 +13,7 @@ import { documentMetadataSchema, type UploadPurpose } from "@menao/validation";
 import { Camera, FileUp } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
+import { AvatarFramer } from "@/components/avatar-framer";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { processUpload, readDocument } from "@/lib/artisan/actions";
@@ -89,6 +90,10 @@ export function UploadForm({
   const lastRead = useRef<DocumentPrefill>({});
   const [reading, setReading] = useState<Reading | null>(null);
   const [readErrors, setReadErrors] = useState<Record<string, string[] | undefined>>({});
+  // Photo de profil (ADR 0202) : cadrée avant l'envoi ; l'image cadrée remplace le fichier choisi.
+  const [framing, setFraming] = useState<File | null>(null);
+  const framed = useRef<{ key: string; blob: Blob; url: string } | null>(null);
+  const [framedUrl, setFramedUrl] = useState<string | null>(null);
 
   // Page quittée sans envoyer le document lu : son fichier brut est retiré.
   useEffect(
@@ -100,7 +105,9 @@ export function UploadForm({
 
   async function prepare(file: File): Promise<string | null | "invalid_type"> {
     let blob: Blob = file;
-    if (resizeTo) {
+    if (square && framed.current?.key === fileKey(file)) {
+      blob = framed.current.blob;
+    } else if (resizeTo) {
       try {
         blob = await resizeImage(file, resizeTo, {
           type: keepTransparency && file.type !== "image/jpeg" ? "image/png" : "image/jpeg",
@@ -192,6 +199,10 @@ export function UploadForm({
     if (result.fieldErrors) void discardRaw(path);
     upload.current = null;
     lastRead.current = {};
+    if (!result.fieldErrors && !result.error) {
+      framed.current = null;
+      setFramedUrl(null);
+    }
     setReading(null);
     return result;
   }, {});
@@ -250,6 +261,7 @@ export function UploadForm({
             {fileLabel}
           </label>
           <input
+            ref={fileInput}
             id={`${formId}-file`}
             name="file"
             type="file"
@@ -259,10 +271,49 @@ export function UploadForm({
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file && readAs) void read(file);
+              if (file && square) setFraming(file);
             }}
             className="rounded-button border border-border bg-surface p-2 file:mr-3 file:rounded-button file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:font-medium file:text-primary"
           />
         </div>
+      )}
+      {square && framedUrl && (
+        <div className="flex items-center gap-3" aria-live="polite">
+          {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local de l'image cadrée */}
+          <img
+            src={framedUrl}
+            alt={fr.avatarFramer.preview}
+            className="size-16 rounded-full border border-border"
+          />
+          <div className="flex flex-col gap-1 text-sm">
+            <p className="text-success">{fr.avatarFramer.ready}</p>
+            <button
+              type="button"
+              className="self-start font-medium text-primary-strong underline-offset-2 hover:underline"
+              onClick={() => {
+                const file = fileInput.current?.files?.[0];
+                if (file) setFraming(file);
+              }}
+            >
+              {fr.avatarFramer.reframe}
+            </button>
+          </div>
+        </div>
+      )}
+      {framing && (
+        <AvatarFramer
+          file={framing}
+          onCancel={() => {
+            setFraming(null);
+            if (!framed.current && fileInput.current) fileInput.current.value = "";
+          }}
+          onConfirm={(blob, url) => {
+            if (framed.current) URL.revokeObjectURL(framed.current.url);
+            framed.current = { key: fileKey(framing), blob, url };
+            setFramedUrl(url);
+            setFraming(null);
+          }}
+        />
       )}
       <div className="flex flex-col gap-1">
         <p id={`${formId}-file-hint`} className="text-sm text-muted-foreground">

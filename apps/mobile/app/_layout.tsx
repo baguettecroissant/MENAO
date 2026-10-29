@@ -13,6 +13,7 @@ import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/animated-splash";
+import { AvatarFramerHost } from "@/components/avatar-framer";
 import { PhoneCalendarSync } from "@/components/phone-calendar-sync";
 import { PushNotifications } from "@/components/push-notifications";
 import { kv } from "@/lib/kv";
@@ -71,6 +72,7 @@ function Root({ ready }: { ready: boolean }) {
           <PhoneCalendarSync />
           <SignupGate />
           <ToastHost />
+          <AvatarFramerHost />
           <SuccessHost />
         </>
       ) : null}

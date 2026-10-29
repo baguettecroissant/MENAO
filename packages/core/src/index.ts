@@ -1,4 +1,5 @@
 export * from "./roles";
+export * from "./avatar-framing";
 export * from "./legal";
 export * from "./siret";
 export * from "./sirene";

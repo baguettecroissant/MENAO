@@ -2,7 +2,7 @@ import { Camera } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
-import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
+import { choosePhotoSource, pickAvatar, uploadPhoto } from "@/lib/photos";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { theme } from "@/ui/theme";
 import { Tappable } from "@/ui";
@@ -12,7 +12,7 @@ const { colors, font, radius, spacing } = theme;
 
 /**
  * Artisan sans photo de profil : carte du tableau de bord qui invite à en ajouter une, puis
- * l'envoie (recadrée au carré, réduite à 512 px, comme sur le site). La carte disparaît dès que
+ * l'envoie (cadrée dans l'écran de cadrage, 512 px, comme sur le site, ADR 0202). La carte disparaît dès que
  * l'en-tête relit la photo.
  */
 export function PhotoNudge() {
@@ -23,7 +23,7 @@ export function PhotoNudge() {
     setError(null);
     const source = await choosePhotoSource(t.choose);
     if (!source) return;
-    const picked = await pickPhotos(source, 1, true);
+    const picked = await pickAvatar(source);
     if ("error" in picked) {
       setError(picked.error);
       return;

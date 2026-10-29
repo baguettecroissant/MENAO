@@ -6,6 +6,7 @@ import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { Alert, Platform } from "react-native";
+import { frameAvatar } from "@/components/avatar-framer";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
 import {
@@ -95,6 +96,21 @@ export async function pickPhotos(
   } catch {
     return { error: fr.photos.failed };
   }
+}
+
+/**
+ * Photo de profil (ADR 0202) : choisie sans le recadrage carré du système (qui coupe un logo
+ * allongé), puis cadrée dans l'écran de cadrage MENAO. Liste vide si l'utilisateur annule.
+ */
+export async function pickAvatar(
+  source: "camera" | "library",
+): Promise<{ photos: PickedPhoto[] } | { error: string }> {
+  const picked = await pickPhotos(source, 1);
+  if ("error" in picked) return picked;
+  const photo = picked.photos[0];
+  if (!photo) return picked;
+  const framed = await frameAvatar(photo.uri);
+  return { photos: framed ? [{ uri: framed }] : [] };
 }
 
 /**
