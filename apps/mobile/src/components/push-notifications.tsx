@@ -2,19 +2,23 @@ import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { useEffect } from "react";
 import { appRouteForSitePath } from "@/lib/links";
-import { pushSupported, registerDevice } from "@/lib/push";
+import { isVisibleConversationLink, pushSupported, registerDevice } from "@/lib/push";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 
-// Au premier plan, la notification s'affiche aussi (bannière et son).
+// Au premier plan, la notification s'affiche aussi (bannière et son), sauf le message d'une
+// conversation déjà à l'écran (ADR 0201).
 if (pushSupported) {
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
+    handleNotification: async (notification) => {
+      const shown = !isVisibleConversationLink(notification.request.content.data?.link);
+      return {
+        shouldShowBanner: shown,
+        shouldShowList: shown,
+        shouldPlaySound: shown,
+        shouldSetBadge: false,
+      };
+    },
   });
 }
 

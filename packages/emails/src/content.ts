@@ -1589,6 +1589,39 @@ export function notificationContent(
   }
 }
 
+export type MessagePushInput = {
+  chantierId: string;
+  auteur: string | null;
+  /** Côté du destinataire : « artisan » ouvre l'espace pro, sinon l'espace du client. */
+  destinataire: string;
+  kind: string;
+  apercu: string | null;
+};
+
+/**
+ * Push d'un message de la messagerie (F-41, ADR 0201) : l'auteur en titre, le début du texte (ou
+ * « Photo », « Fichier ») en corps, la conversation au toucher.
+ */
+export function messagePushContent(input: MessagePushInput): {
+  title: string;
+  body: string;
+  link: string;
+} {
+  const forArtisan = input.destinataire === "artisan";
+  const title = input.auteur || (forArtisan ? "Votre client" : "Votre artisan");
+  const text = input.apercu?.replace(/\s+/g, " ").trim() ?? "";
+  const body =
+    input.kind === "photo"
+      ? "Photo"
+      : input.kind === "fichier"
+        ? "Fichier joint"
+        : text.length > 140
+          ? `${text.slice(0, 139).trimEnd()}…`
+          : text || "Nouveau message";
+  const base = forArtisan ? "/pro/messages" : "/mon-espace/messages";
+  return { title, body, link: `${base}/${input.chantierId}` };
+}
+
 /** Version texte de l'e-mail (messageries sans HTML). */
 export function plainText(content: EmailContent, footer: string = EMAIL_FOOTER): string {
   return [

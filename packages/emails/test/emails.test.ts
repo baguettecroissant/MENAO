@@ -1,6 +1,12 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
-import { NOTIFICATION_TYPES, notificationContent, plainText, quoted } from "../src/content.ts";
+import {
+  NOTIFICATION_TYPES,
+  messagePushContent,
+  notificationContent,
+  plainText,
+  quoted,
+} from "../src/content.ts";
 import { renderNotification } from "../src/render.tsx";
 
 const ctx = { siteUrl: "https://menao.example/", firstName: "Camille" };
@@ -967,5 +973,49 @@ describe("cohérence avec la base", () => {
     expect([...Constants.public.Enums.notification_type].sort()).toEqual(
       [...NOTIFICATION_TYPES].sort(),
     );
+  });
+});
+
+describe("push d'un message (F-41, ADR 0201)", () => {
+  const chantierId = "22222222-2222-4222-8222-222222222222";
+
+  it("auteur en titre, texte en corps, conversation de l'espace du destinataire", () => {
+    expect(
+      messagePushContent({
+        chantierId,
+        auteur: "Camille",
+        destinataire: "artisan",
+        kind: "texte",
+        apercu: "Bonjour,\n le portail sera ouvert dès 8 h.",
+      }),
+    ).toEqual({
+      title: "Camille",
+      body: "Bonjour, le portail sera ouvert dès 8 h.",
+      link: `/pro/messages/${chantierId}`,
+    });
+    expect(
+      messagePushContent({
+        chantierId,
+        auteur: null,
+        destinataire: "client",
+        kind: "texte",
+        apercu: "Ok",
+      }),
+    ).toEqual({ title: "Votre artisan", body: "Ok", link: `/mon-espace/messages/${chantierId}` });
+  });
+
+  it("texte long coupé, pièces jointes nommées", () => {
+    const long = messagePushContent({
+      chantierId,
+      auteur: "Camille",
+      destinataire: "artisan",
+      kind: "texte",
+      apercu: "a".repeat(180),
+    });
+    expect(long.body).toHaveLength(140);
+    expect(long.body.endsWith("…")).toBe(true);
+    const photo = { chantierId, auteur: "X", destinataire: "client", apercu: null };
+    expect(messagePushContent({ ...photo, kind: "photo" }).body).toBe("Photo");
+    expect(messagePushContent({ ...photo, kind: "fichier" }).body).toBe("Fichier joint");
   });
 });
