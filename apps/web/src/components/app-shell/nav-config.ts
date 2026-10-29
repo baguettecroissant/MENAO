@@ -2,6 +2,8 @@ import {
   Activity,
   BookOpen,
   BriefcaseBusiness,
+  Building2,
+  CalendarCheck,
   CalendarClock,
   ClipboardCheck,
   CalendarDays,
@@ -238,11 +240,18 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       ],
     },
   ],
-  // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, puis le guide terrain.
+  // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, leur journée et leurs
+  // prospects (ADR 0206), puis le guide terrain.
   commercial: [
     {
       items: [
         { href: "/commercial", label: fr.commercialSpace.nav.home, icon: QrCode, exact: true },
+        { href: "/commercial/journee", label: fr.commercialProspects.nav.day, icon: CalendarCheck },
+        {
+          href: "/commercial/prospects",
+          label: fr.commercialProspects.nav.prospects,
+          icon: Building2,
+        },
         { href: "/commercial/guide", label: fr.commercialSpace.nav.guide, icon: BookOpen },
         // Démo chez l'artisan : l'espace pro rempli d'exemples (ADR 0184).
         { href: "/pro/decouvrir/tableau-de-bord", label: fr.commercialSpace.nav.demo, icon: Eye },

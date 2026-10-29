@@ -69,3 +69,4 @@ export * from "./expense-reading";
 export * from "./expenses";
 export * from "./accountant";
 export * from "./phone-calendar";
+export * from "./prospects";
