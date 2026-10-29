@@ -2309,6 +2309,124 @@ export type Database = {
           },
         ];
       };
+      launch_members: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["launch_member_kind"];
+          mission: string | null;
+          nom: string;
+          objectif_valides: number | null;
+          ordre: number;
+          ref: string | null;
+          updated_at: string;
+          user_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["launch_member_kind"];
+          mission?: string | null;
+          nom: string;
+          objectif_valides?: number | null;
+          ordre?: number;
+          ref?: string | null;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["launch_member_kind"];
+          mission?: string | null;
+          nom?: string;
+          objectif_valides?: number | null;
+          ordre?: number;
+          ref?: string | null;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      launch_tasks: {
+        Row: {
+          categorie: string;
+          created_at: string;
+          created_by: string | null;
+          debut: string | null;
+          detail: string | null;
+          echeance: string | null;
+          fait_le: string | null;
+          fait_par: string | null;
+          id: string;
+          jalon: boolean;
+          member_id: string | null;
+          ordre: number;
+          partage: boolean;
+          phase: Database["public"]["Enums"]["launch_phase"];
+          recurrence: string | null;
+          ref: string | null;
+          statut: Database["public"]["Enums"]["launch_task_status"];
+          titre: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          categorie?: string;
+          created_at?: string;
+          created_by?: string | null;
+          debut?: string | null;
+          detail?: string | null;
+          echeance?: string | null;
+          fait_le?: string | null;
+          fait_par?: string | null;
+          id?: string;
+          jalon?: boolean;
+          member_id?: string | null;
+          ordre?: number;
+          partage?: boolean;
+          phase?: Database["public"]["Enums"]["launch_phase"];
+          recurrence?: string | null;
+          ref?: string | null;
+          statut?: Database["public"]["Enums"]["launch_task_status"];
+          titre: string;
+          updated_at?: string;
+        };
+        Update: {
+          categorie?: string;
+          created_at?: string;
+          created_by?: string | null;
+          debut?: string | null;
+          detail?: string | null;
+          echeance?: string | null;
+          fait_le?: string | null;
+          fait_par?: string | null;
+          id?: string;
+          jalon?: boolean;
+          member_id?: string | null;
+          ordre?: number;
+          partage?: boolean;
+          phase?: Database["public"]["Enums"]["launch_phase"];
+          recurrence?: string | null;
+          ref?: string | null;
+          statut?: Database["public"]["Enums"]["launch_task_status"];
+          titre?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "launch_tasks_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "launch_members";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       legal_acceptances: {
         Row: {
           accepted_at: string;
@@ -4657,6 +4775,7 @@ export type Database = {
         Args: { p_id: string; p_insurer_called?: boolean; p_note?: string; p_result: string };
         Returns: undefined;
       };
+      admin_copy_launch_tasks: { Args: { p_from: string; p_to: string }; Returns: number };
       admin_decide_artisan: {
         Args: {
           p_artisan_id: string;
@@ -4665,8 +4784,21 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_delete_launch_member: { Args: { p_id: string }; Returns: undefined };
+      admin_delete_launch_task: { Args: { p_id: string }; Returns: undefined };
       admin_draw_spot_checks: { Args: Record<PropertyKey, never>; Returns: number };
+      admin_import_launch_plan: { Args: { p_plan: Json }; Returns: Json };
       admin_import_prospects: { Args: { p_rows: Json }; Returns: number };
+      admin_launch_accounts: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          email: string;
+          member_id: string;
+          nom: string;
+          role: string;
+          user_id: string;
+        }[];
+      };
       admin_log_account_action: {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;
@@ -4821,6 +4953,35 @@ export type Database = {
           p_prime_validation_centimes?: number;
         };
         Returns: undefined;
+      };
+      admin_save_launch_member: {
+        Args: {
+          p_id?: string;
+          p_kind: Database["public"]["Enums"]["launch_member_kind"];
+          p_mission?: string;
+          p_nom: string;
+          p_objectif_valides?: number;
+          p_ordre?: number;
+          p_user_id?: string;
+        };
+        Returns: string;
+      };
+      admin_save_launch_task: {
+        Args: {
+          p_categorie?: string;
+          p_debut?: string;
+          p_detail?: string;
+          p_echeance?: string;
+          p_id?: string;
+          p_jalon?: boolean;
+          p_member_id?: string;
+          p_partage?: boolean;
+          p_phase?: Database["public"]["Enums"]["launch_phase"];
+          p_recurrence?: string;
+          p_statut?: Database["public"]["Enums"]["launch_task_status"];
+          p_titre: string;
+        };
+        Returns: string;
       };
       admin_save_partner: {
         Args: {
@@ -5379,6 +5540,10 @@ export type Database = {
         Returns: string;
       };
       invoice_document: { Args: { p_invoice_id: string }; Returns: Json };
+      launch_set_task_status: {
+        Args: { p_statut: Database["public"]["Enums"]["launch_task_status"]; p_task: string };
+        Returns: undefined;
+      };
       mark_conversation_read: { Args: { p_chantier_id: string }; Returns: number };
       mark_free_month_applied: {
         Args: { p_grant_id: string; p_stripe_subscription_id: string };
@@ -5449,6 +5614,7 @@ export type Database = {
           unread: number;
         }[];
       };
+      my_launch_plan: { Args: Record<PropertyKey, never>; Returns: Json };
       my_menao_score: { Args: Record<PropertyKey, never>; Returns: Json };
       my_notifications: {
         Args: { p_limit?: number };
@@ -5924,6 +6090,9 @@ export type Database = {
       expense_origin: "manuelle" | "facture_electronique";
       free_month_reason: "parrainage" | "demarrage";
       free_month_status: "a_appliquer" | "applique";
+      launch_member_kind: "associe" | "commercial" | "validation" | "autre";
+      launch_phase: "preparation" | "pre_ouverture" | "lancement" | "essais" | "apres";
+      launch_task_status: "a_faire" | "en_cours" | "fait";
       legal_document: "cgu" | "confidentialite" | "cgv_artisan";
       message_kind: "texte" | "photo" | "fichier";
       message_push_status: "a_envoyer" | "en_cours" | "envoyee" | "echec" | "ignoree";
@@ -6231,6 +6400,9 @@ export const Constants = {
       expense_origin: ["manuelle", "facture_electronique"],
       free_month_reason: ["parrainage", "demarrage"],
       free_month_status: ["a_appliquer", "applique"],
+      launch_member_kind: ["associe", "commercial", "validation", "autre"],
+      launch_phase: ["preparation", "pre_ouverture", "lancement", "essais", "apres"],
+      launch_task_status: ["a_faire", "en_cours", "fait"],
       legal_document: ["cgu", "confidentialite", "cgv_artisan"],
       message_kind: ["texte", "photo", "fichier"],
       message_push_status: ["a_envoyer", "en_cours", "envoyee", "echec", "ignoree"],

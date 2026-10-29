@@ -51,6 +51,10 @@ from (values
   ('a0000000-0000-4000-8000-000000000014'::uuid, 'charte@example.test', 'artisan', 'Maxime', 'Exemple', null),
   -- Commercial de terrain (F-65, ADR 0205), réservé au test e2e de l'espace commercial.
   ('a0000000-0000-4000-8000-000000000018'::uuid, 'commercial@example.test', 'commercial', 'Rémi', 'Commercial', null),
+  -- Sixième admin, réservé au test e2e des tableaux de lancement (F-66, ADR 0208).
+  ('a0000000-0000-4000-8000-000000000019'::uuid, 'admin6@example.test', 'admin', 'Gaby', 'Admin', null),
+  -- Seconde commerciale (F-66, ADR 0208) : son planning n'apparaît jamais dans celui de Rémi.
+  ('a0000000-0000-4000-8000-000000000020'::uuid, 'commercial2@example.test', 'commercial', 'Léa', 'Commerciale', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);
@@ -209,7 +213,8 @@ where a.id <> 'b0000000-0000-4000-8000-000000000014';
 
 -- Espace commercial (F-65, ADR 0205) : fiche du commercial fictif et un artisan inscrit avec son code.
 insert into public.commercials (id, user_id, code, nom) values
-  ('b6500000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000018', 'remi-06', 'Rémi Commercial');
+  ('b6500000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000018', 'remi-06', 'Rémi Commercial'),
+  ('b6500000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000020', 'lea-06', 'Léa Commerciale');
 insert into public.commercial_attributions (commercial_id, artisan_id)
 select 'b6500000-0000-4000-8000-000000000001', a.id
 from public.artisans a
@@ -232,3 +237,30 @@ values
    extensions.st_setsrid(extensions.st_makepoint(7.1251, 43.5808), 4326)::extensions.geography, false, true);
 insert into public.prospect_follows (prospect_id, commercial_id, status, next_action_at) values
   ('b6510000-0000-4000-8000-000000000001', 'b6500000-0000-4000-8000-000000000001', 'a_contacter', now() - interval '1 day');
+
+-- Tableaux de lancement (F-66, ADR 0208) : équipe et tâches FICTIVES et neutres (le vrai planning est
+-- importé en base depuis un fichier gardé hors du dépôt), dates relatives au jour du chargement.
+-- Rémi : une tâche à venir, une en retard, une faite ; Léa : une tâche que Rémi ne voit jamais ;
+-- jalons de toute l'équipe, l'un partagé, l'autre interne (invisible des commerciaux) ; les associés,
+-- sans compte relié.
+insert into public.launch_members (id, user_id, nom, mission, kind, ordre) values
+  ('b6520000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000018', 'Rémi Commercial',
+   'Tournées et appels autour de Nice', 'commercial', 1),
+  ('b6520000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000020', 'Léa Commerciale', null, 'commercial', 2),
+  ('b6520000-0000-4000-8000-000000000003', null, 'Les associés', null, 'associe', 3);
+insert into public.launch_tasks (id, member_id, titre, phase, categorie, echeance, jalon, partage, statut, fait_le, fait_par)
+values
+  ('b6530000-0000-4000-8000-000000000001', 'b6520000-0000-4000-8000-000000000001', 'Préparer la tournée de Nice Nord',
+   'pre_ouverture', 'terrain', current_date + 3, false, false, 'a_faire', null, null),
+  ('b6530000-0000-4000-8000-000000000002', 'b6520000-0000-4000-8000-000000000001', 'Relire le guide terrain',
+   'preparation', 'terrain', current_date - 2, false, false, 'a_faire', null, null),
+  ('b6530000-0000-4000-8000-000000000003', 'b6520000-0000-4000-8000-000000000001', 'Imprimer les cartes de visite',
+   'preparation', 'terrain', current_date - 5, false, false, 'fait', now(), 'a0000000-0000-4000-8000-000000000018'),
+  ('b6530000-0000-4000-8000-000000000004', 'b6520000-0000-4000-8000-000000000002', 'Appeler les plombiers d''Antibes',
+   'pre_ouverture', 'terrain', current_date + 1, false, false, 'a_faire', null, null),
+  ('b6530000-0000-4000-8000-000000000005', null, 'Ouverture aux artisans',
+   'lancement', 'evenement', current_date + 30, true, true, 'a_faire', null, null),
+  ('b6530000-0000-4000-8000-000000000006', null, 'Feu vert interne',
+   'pre_ouverture', 'pilotage', current_date + 20, true, false, 'a_faire', null, null),
+  ('b6530000-0000-4000-8000-000000000007', 'b6520000-0000-4000-8000-000000000003', 'Choisir le cabinet d''avocats',
+   'preparation', 'juridique', current_date + 10, false, false, 'a_faire', null, null);
