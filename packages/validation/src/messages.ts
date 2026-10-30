@@ -4,7 +4,7 @@ export const messages = {
   tooLong: "Ce champ est trop long.",
   emailInvalid: "Adresse e-mail invalide.",
   phoneInvalid: "Numéro de téléphone invalide.",
-  passwordTooShort: "Le mot de passe doit contenir au moins 12 caractères.",
+  passwordTooShort: "Le mot de passe doit contenir au moins 8 caractères.",
   passwordTooLong: "Le mot de passe doit contenir au plus 72 caractères.",
   siretInvalid: "Numéro SIRET invalide (14 chiffres).",
   // Charte qualité de l'artisan (tutoiement, comme la charte).

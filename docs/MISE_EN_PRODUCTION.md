@@ -65,7 +65,7 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
   - adresse du site, adresses de retour autorisées (jamais `exp://**` en production), modèles d'e-mails français, envoi par Resend.
 - [ ] Réglages à vérifier dans le tableau de bord :
   - confirmation de l'e-mail obligatoire ;
-  - mot de passe d'au moins 12 caractères ;
+  - mot de passe d'au moins 8 caractères ;
   - nouvelle authentification pour changer de mot de passe ;
   - **sessions anonymes activées** (recherche sans compte, ADR 0012) ;
   - double authentification TOTP activée (back-office, ADR 0008).

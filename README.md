@@ -119,7 +119,7 @@ Mise en production (passage de staging à la production, ouverture du site) : [d
 1. Secrets GitHub (environnement `staging`) : `SUPABASE_ACCESS_TOKEN`, `SUPABASE_STAGING_PROJECT_REF`, `SUPABASE_STAGING_DB_PASSWORD`, puis lancer le workflow **Migrations → staging** (migrations + Edge Functions).
    Secrets des Edge Functions (tableau de bord → Edge Functions → Secrets) : `INSEE_API_KEY` (et `INSEE_API_BASE_URL` si différente de la valeur par défaut).
 2. Auth → URL Configuration : Site URL = URL Vercel de staging ; Redirect URLs = `https://<domaine>/**` et `https://*-<équipe>.vercel.app/**` (previews).
-3. Auth → Providers → Email : confirmation obligatoire, mot de passe ≥ 12 caractères.
+3. Auth → Providers → Email : confirmation obligatoire, mot de passe ≥ 8 caractères.
 4. Auth → Email Templates : reprendre `supabase/templates/*.html` (liens `/auth/confirm?token_hash=…`).
 5. Auth → SMTP : Resend (ADR 0002).
 

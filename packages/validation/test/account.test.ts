@@ -44,7 +44,7 @@ describe("Mon compte (F-08)", () => {
     });
   });
 
-  it("mot de passe : l'actuel est requis, le nouveau fait 12 caractères et diffère", () => {
+  it("mot de passe : l'actuel est requis, le nouveau fait 8 caractères et diffère", () => {
     expect(
       passwordChangeSchema.parse({
         currentPassword: "ancien-mot-de-passe",
