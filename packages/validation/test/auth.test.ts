@@ -59,8 +59,8 @@ describe("signUpSchema", () => {
     expect(signUpSchema.parse({ ...valid, phone: undefined }).phone).toBeUndefined();
   });
 
-  it("exige un mot de passe d'au moins 12 caractères (F-08)", () => {
-    const r = signUpSchema.safeParse({ ...valid, password: "court-11car" });
+  it("exige un mot de passe d'au moins 8 caractères (F-08)", () => {
+    const r = signUpSchema.safeParse({ ...valid, password: "court-7" });
     expect(r.success).toBe(false);
     expect(r.error?.issues[0]?.message).toBe(messages.passwordTooShort);
   });

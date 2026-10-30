@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { messages } from "./messages";
 
-export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_MIN_LENGTH = 8;
 /** Limite de bcrypt utilisée par Supabase Auth. */
 export const PASSWORD_MAX_LENGTH = 72;
 

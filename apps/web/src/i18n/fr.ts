@@ -1844,7 +1844,7 @@ export const fr = {
       spaceTitle: "Créer mon espace client MENAO",
       spaceIntro:
         "Votre espace client MENAO vous permettra de rechercher des artisans, d'échanger avec eux, de suivre vos chantiers et de recevoir vos devis.",
-      passwordHint: "Doit contenir au moins 12 caractères.",
+      passwordHint: "Doit contenir au moins 8 caractères.",
       free: "La création d'espace client MENAO et la mise en relation avec un artisan sont 100 % gratuites.",
       signUpSubmit: "Créer mon espace et continuer",
       haveAccountTitle: "Vous avez déjà un espace MENAO ?",
@@ -2023,7 +2023,7 @@ export const fr = {
     phoneHint: "Indicatif +33 par défaut.",
     email: "Adresse e-mail",
     password: "Mot de passe",
-    passwordHint: "12 caractères minimum.",
+    passwordHint: "8 caractères minimum.",
     acceptTermsBefore: "J'accepte les ",
     terms: "conditions générales d'utilisation",
     acceptTermsMiddle: " et la ",
@@ -2077,7 +2077,7 @@ export const fr = {
   resetPassword: {
     title: "Nouveau mot de passe",
     password: "Nouveau mot de passe",
-    passwordHint: "12 caractères minimum.",
+    passwordHint: "8 caractères minimum.",
     submit: "Enregistrer mon mot de passe",
   },
   magicLink: {
@@ -2907,7 +2907,7 @@ export const fr = {
       title: "Mot de passe",
       current: "Mot de passe actuel",
       new: "Nouveau mot de passe",
-      hint: "12 caractères minimum.",
+      hint: "8 caractères minimum.",
       submit: "Changer mon mot de passe",
       wrong: "Mot de passe actuel incorrect.",
       changed: "Mot de passe modifié. Vos autres appareils devront se reconnecter.",

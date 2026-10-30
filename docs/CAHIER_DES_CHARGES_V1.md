@@ -231,7 +231,7 @@ Extraire les valeurs exactes depuis Figma (connecteur Figma de Claude Code) dans
 - Bouton « Trouver l'artisan idéal » actif quand métier + ville sont renseignés.
 
 ### F-08 Compte particulier
-- Écran « Dernière étape avant de découvrir vos artisans » : prénom, nom, téléphone (optionnel, indicatif +33 par défaut), e-mail, mot de passe (12 caractères minimum), résumé du besoin à gauche.
+- Écran « Dernière étape avant de découvrir vos artisans » : prénom, nom, téléphone (optionnel, indicatif +33 par défaut), e-mail, mot de passe (8 caractères minimum), résumé du besoin à gauche.
 - Cases obligatoires : acceptation des CGU et de la politique de confidentialité (non visibles sur les maquettes, **à ajouter**). Case optionnelle : communications marketing.
 - Lien « Me connecter à mon espace ».
 - Connexion aussi par lien magique e-mail ; Apple/Google en V1.1.
