@@ -561,7 +561,7 @@ select lives_ok(
        p_user_id => 'c1090000-0000-4000-8000-000000000005', p_objectif_valides => 40) $$,
   'membre importé relié au compte d''une commerciale');
 select lives_ok(
-  $$ select public.launch_set_task_status((select id from public.launch_tasks where ref = 'LAN109.t1'), 'fait') $$,
+  $$ select public.launch_set_task_status((select id from public.launch_tasks where titre = 'Import un 109'), 'fait') $$,
   'tâche importée faite');
 select is(
   public.admin_import_launch_plan($plan$ {
