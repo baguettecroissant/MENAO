@@ -29,6 +29,18 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   await expect(signups.getByText("En cours")).toBeVisible();
   await capture(page, "commercial-accueil");
 
+  // Écran d'accueil du téléphone (ADR 0211) : manifeste propre à l'espace, ouvert en plein écran.
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    "/commercial.webmanifest",
+  );
+  await expect(page.locator('meta[name="mobile-web-app-capable"]')).toHaveAttribute(
+    "content",
+    "yes",
+  );
+  const manifest = await (await page.request.get("/commercial.webmanifest")).json();
+  expect(manifest).toMatchObject({ start_url: "/commercial", display: "standalone", scope: "/" });
+
   // Guide terrain : liste des rubriques, puis une rubrique.
   await page
     .getByRole("navigation", { name: "Navigation de l'espace commercial" })

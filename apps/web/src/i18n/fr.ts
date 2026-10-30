@@ -89,6 +89,8 @@ export const fr = {
   commercialSpace: {
     metaTitle: "Espace commercial — MENAO",
     nav: { home: "Mon code", guide: "Guide terrain", demo: "Démo (exemples)" },
+    // Icône de l'écran d'accueil (ADR 0211).
+    homeScreen: { name: "MENAO, espace commercial" },
     greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName}` : "Bonjour"),
     intro: "Chaque artisan inscrit avec votre code est rattaché à votre nom.",
     suspended:
