@@ -2,6 +2,8 @@ import {
   FORMES_JURIDIQUES,
   type DiplomeMetier,
   type LaunchCategory,
+  type LaunchChannel,
+  type LaunchIndicator,
   type LaunchMemberKind,
   type LaunchPhase,
   type LaunchTaskStatus,
@@ -6360,21 +6362,40 @@ export const fr = {
       },
       import: {
         title: "Importer le plan",
-        lead: "Fichier .json préparé à part, hors du site (membres et tâches). Une tâche déjà importée est mise à jour sans perdre ce qui a été coché.",
+        lead: "Fichier .json préparé à part, hors du site (membres, tâches, et s'il y en a, cibles et réglages des chiffres). Une tâche déjà importée est mise à jour sans perdre ce qui a été coché. Les cibles du fichier remplacent toutes les cibles en place.",
         file: "Fichier du plan (.json)",
-        preview: (members: number, tasks: number) =>
-          `Fichier prêt : ${members} membre${members > 1 ? "s" : ""}, ${tasks} tâche${tasks > 1 ? "s" : ""}.`,
+        // Cibles et réglages des chiffres (lot 2, ADR 0209) : mentionnés seulement s'il y en a.
+        preview: (members: number, tasks: number, targets: number, settings: boolean) =>
+          `Fichier prêt : ${[
+            `${members} membre${members > 1 ? "s" : ""}`,
+            `${tasks} tâche${tasks > 1 ? "s" : ""}`,
+            targets > 0 ? `${targets} cible${targets > 1 ? "s" : ""}` : null,
+            settings ? "réglages des chiffres" : null,
+          ]
+            .filter(Boolean)
+            .join(", ")}.`,
         submit: "Importer",
         done: (r: {
           members_created: number;
           members_updated: number;
           tasks_created: number;
           tasks_updated: number;
+          targets_created: number;
+          targets_updated: number;
+          targets_deleted: number;
+          settings_updated: boolean;
           skipped: number;
         }) =>
           [
             `Import terminé : ${r.members_created} membre${r.members_created > 1 ? "s" : ""} ajouté${r.members_created > 1 ? "s" : ""}, ${r.members_updated} mis à jour`,
             `${r.tasks_created} tâche${r.tasks_created > 1 ? "s" : ""} ajoutée${r.tasks_created > 1 ? "s" : ""}, ${r.tasks_updated} mise${r.tasks_updated > 1 ? "s" : ""} à jour`,
+            r.targets_created + r.targets_updated > 0
+              ? `${r.targets_created} cible${r.targets_created > 1 ? "s" : ""} ajoutée${r.targets_created > 1 ? "s" : ""}, ${r.targets_updated} mise${r.targets_updated > 1 ? "s" : ""} à jour`
+              : null,
+            r.targets_deleted > 0
+              ? `${r.targets_deleted} ancienne${r.targets_deleted > 1 ? "s" : ""} cible${r.targets_deleted > 1 ? "s" : ""} retirée${r.targets_deleted > 1 ? "s" : ""}`
+              : null,
+            r.settings_updated ? "réglages mis à jour" : null,
             r.skipped > 0
               ? `${r.skipped} ligne${r.skipped > 1 ? "s" : ""} ignorée${r.skipped > 1 ? "s" : ""} (invalide${r.skipped > 1 ? "s" : ""})`
               : null,
@@ -6387,6 +6408,8 @@ export const fr = {
           invalid: (detail: string) => `Fichier refusé. ${detail}`,
           task: (n: number) => `Tâche n° ${n}`,
           member: (n: number) => `Membre n° ${n}`,
+          target: (n: number) => `Cible n° ${n}`,
+          settings: "Réglages",
           field: (row: string, key: string) => `${row}, champ « ${key} »`,
           tooBig:
             "Fichier trop lourd pour un seul import (900 Ko au plus). Séparez les tâches en deux fichiers, chacun avec la liste des membres, et importez-les l'un après l'autre.",
@@ -6469,6 +6492,245 @@ export const fr = {
         deleteHint: "Elle disparaît du planning, définitivement.",
         deleteConfirm: "Confirmer : supprimer la tâche",
         cancel: "Annuler",
+      },
+      // Onglets des pages Lancement (F-66, lot 2, ADR 0209) : une seule entrée dans le menu.
+      tabs: {
+        label: "Pages du lancement",
+        planning: "Planning",
+        figures: "Chiffres",
+        codes: "Codes de suivi",
+      },
+      /** Canal d'arrivée d'une inscription d'artisan (LAUNCH_CHANNELS). */
+      channels: {
+        commercial: "Commerciaux",
+        partenaire: "Partenaires",
+        terrain: "Terrain",
+        meta: "Publicité Facebook et Instagram",
+        google: "Publicité Google",
+        flyer: "Flyers",
+        salon: "Salons",
+        presse: "Presse",
+        radio: "Radio",
+        autre: "Autre",
+        parrainage: "Parrainage",
+        invitation: "Invitations",
+        direct: "Sans code",
+      } satisfies Record<LaunchChannel, string>,
+      /** Indicateurs des cibles importées avec le plan (LAUNCH_INDICATORS). */
+      indicators: {
+        valides_cumul: "Artisans validés",
+        inscrits_cumul: "Artisans inscrits",
+        valides_semaine: "Validés dans la semaine",
+        cases_sous_seuil: "Cases sous le seuil",
+        dossiers_48h_pct: "Dossiers traités sous 48 h",
+        fiches_completes_pct: "Fiches complètes",
+        app_installee_pct: "Application installée",
+        premier_devis_perso_pct: "Premier devis à ses propres clients",
+        demandes_semaine: "Demandes cette semaine",
+        demandes_par_artisan: "Demandes par artisan (médiane)",
+        reponse_72h_pct: "Réponse sous 72 h",
+        devis_envoye_pct: "Artisans avec un devis envoyé",
+        abonnes_pct: "Abonnés après l'essai",
+      } satisfies Record<LaunchIndicator, string>,
+      // Chiffres du lancement en direct (F-66, lot 2, ADR 0209).
+      figures: {
+        title: "Chiffres",
+        intro:
+          "Les chiffres du lancement en direct, calculés sur les vraies données de MENAO, face aux cibles importées avec le plan.",
+        error: "Les chiffres n'ont pas pu être chargés. Réessayez dans un instant.",
+        none: "—",
+        target: (value: string) => `Cible : ${value}`,
+        status: { atteint: "Atteint", proche: "Proche", loin: "Loin" },
+        hero: {
+          title: "Artisans validés",
+          count: (n: number) => `artisan${n > 1 ? "s" : ""} validé${n > 1 ? "s" : ""}`,
+          objective: (n: number) => `Objectif d'équipe : ${n.toLocaleString("fr-FR")}`,
+          noObjective: "Pas encore d'objectif d'équipe : il arrive avec les cibles du plan.",
+          ring: "Part de l'objectif d'équipe atteinte",
+          ringValue: (n: number, target: number) =>
+            `${n.toLocaleString("fr-FR")} sur ${target.toLocaleString("fr-FR")}`,
+          ahead: (n: number) => `${n.toLocaleString("fr-FR")} d'avance`,
+          behind: (n: number) => `${n.toLocaleString("fr-FR")} de retard`,
+          onTarget: "Pile sur la cible",
+          gap: (done: number, target: number) =>
+            `${done.toLocaleString("fr-FR")} validé${done > 1 ? "s" : ""} à ce jour pour une cible de ${target.toLocaleString("fr-FR")} cette semaine`,
+          thisWeek: (n: number) => `${n.toLocaleString("fr-FR")} cette semaine`,
+          daysLeft: (n: number) =>
+            n === 0
+              ? "Dernier jour du recrutement"
+              : `${n.toLocaleString("fr-FR")} jour${n > 1 ? "s" : ""} avant la fin du recrutement`,
+          ended: "Recrutement terminé",
+        },
+        curve: {
+          title: "Validations semaine par semaine",
+          lead: "Artisans validés en cumul, à la date de leur première validation (suspendus ou radiés depuis compris), face à la cible.",
+          actual: "Validés en cumul",
+          target: "Cible",
+          empty: "Pas encore de semaine à montrer.",
+          caption: "Artisans validés par semaine, en cumul, face à la cible",
+          week: "Semaine du",
+          validated: "Validés dans la semaine",
+          cumul: "Validés en cumul",
+          targetCumul: "Cible en cumul",
+          signups: "Inscrits en cumul",
+        },
+        funnel: {
+          title: "Entonnoir",
+          lead: "De l'inscription à l'abonnement, avec la part qui passe d'une étape à la suivante.",
+          steps: {
+            inscrits: "Inscrits",
+            dossiers_envoyes: "Dossiers envoyés",
+            valides: "Validés",
+            fiches_completes: "Fiches complètes",
+            en_essai: "Essais commencés",
+            abonnes: "Abonnés",
+          },
+          rate: (percent: string) => `${percent} de l'étape précédente`,
+          caption: "Entonnoir, de l'inscription à l'abonnement",
+          step: "Étape",
+          count: "Artisans",
+          rateColumn: "Part de l'étape précédente",
+        },
+        members: {
+          title: "Par membre de l'équipe",
+          lead: "Artisans validés grâce aux codes de chacun (code commercial et codes de suivi), face à son objectif.",
+          empty: "Personne d'actif dans l'équipe pour l'instant.",
+          objective: (n: number) => `Objectif : ${n.toLocaleString("fr-FR")}`,
+          noObjective: "Sans objectif",
+          validated: (n: number) => `${n.toLocaleString("fr-FR")} validé${n > 1 ? "s" : ""}`,
+          signups: (n: number) => `${n.toLocaleString("fr-FR")} inscrit${n > 1 ? "s" : ""}`,
+          thisWeek: (n: number) => `${n.toLocaleString("fr-FR")} cette semaine`,
+          progress: (name: string, n: number, target: number) =>
+            `${name} : ${n.toLocaleString("fr-FR")} validé${n > 1 ? "s" : ""} sur un objectif de ${target.toLocaleString("fr-FR")}`,
+          weeks: "Validés par semaine, sur les 8 dernières semaines",
+          week: (week: string, n: number) =>
+            `Semaine du ${week} : ${n.toLocaleString("fr-FR")} validé${n > 1 ? "s" : ""}`,
+          reviews: (n: number) =>
+            `${n.toLocaleString("fr-FR")} dossier${n > 1 ? "s" : ""} traité${n > 1 ? "s" : ""}`,
+          reviews48: (percent: string) => `${percent} sous 48 h (dossiers non renvoyés depuis)`,
+          open: (name: string) => `Ouvrir le tableau de ${name}`,
+        },
+        channels: {
+          title: "Canaux d'arrivée",
+          lead: "D'où viennent les inscriptions : codes des commerciaux et des partenaires, codes de suivi, parrainage, invitations, ou sans code.",
+          empty: "Aucune inscription pour l'instant.",
+          share: (percent: string) => `${percent} des inscrits`,
+          detail: (signups: number, validated: number) =>
+            `${signups.toLocaleString("fr-FR")} inscrit${signups > 1 ? "s" : ""} · ${validated.toLocaleString("fr-FR")} validé${validated > 1 ? "s" : ""}`,
+          thisWeek: (n: number) =>
+            `+${n.toLocaleString("fr-FR")} validé${n > 1 ? "s" : ""} cette semaine`,
+          caption: "Inscriptions par canal d'arrivée",
+          channel: "Canal",
+          signups: "Inscrits",
+          shareColumn: "Part des inscrits",
+          validated: "Validés",
+          thisWeekColumn: "Validés cette semaine",
+        },
+        coverage: {
+          title: "Couverture métier × zone",
+          lead: (seuil: number) =>
+            `Artisans validés qui interviennent dans chaque commune pilote, par métier. Seuil : ${seuil} par case.`,
+          under: (n: number, total: number) =>
+            `${n.toLocaleString("fr-FR")} case${n > 1 ? "s" : ""} sous le seuil, sur ${total.toLocaleString("fr-FR")}`,
+          caption: "Artisans validés par métier et par commune pilote",
+          trade: "Métier",
+          legend: { vide: "Aucun artisan", faible: "Sous le seuil", ok: "Seuil atteint" },
+          level: { vide: "aucun artisan", faible: "sous le seuil", ok: "seuil atteint" },
+          cell: (trade: string, commune: string, n: number) =>
+            `${trade} à ${commune} : ${n.toLocaleString("fr-FR")} artisan${n > 1 ? "s" : ""}`,
+          empty: "Pas de commune pilote ou de métier actif pour l'instant.",
+        },
+        quality: {
+          title: "Qualité",
+          reviews48: (n: number, total: number) =>
+            `${n.toLocaleString("fr-FR")} sur ${total.toLocaleString("fr-FR")} décision${total > 1 ? "s" : ""}`,
+          waiting: "En attente depuis plus de 48 h",
+          waitingHint: (n: number) =>
+            `${n.toLocaleString("fr-FR")} dossier${n > 1 ? "s" : ""} en attente en tout`,
+          ofValidated: (n: number, total: number) =>
+            `${n.toLocaleString("fr-FR")} sur ${total.toLocaleString("fr-FR")} validé${total > 1 ? "s" : ""}`,
+          complete: (n: number, total: number, seuil: number) =>
+            `${n.toLocaleString("fr-FR")} sur ${total.toLocaleString("fr-FR")} validé${total > 1 ? "s" : ""}, jauge à ${seuil} %${seuil < 100 ? " ou plus" : ""}`,
+        },
+        activity: {
+          title: "Activité",
+          lead: "Demandes des particuliers, réponses et devis, sur les 30 derniers jours sauf mention contraire. Les demandes directes à un artisan sont à part.",
+          lastWeek: (n: number) => `${n.toLocaleString("fr-FR")} la semaine dernière`,
+          fourPlus: "Artisans à 4 demandes ou plus",
+          ofActive: (n: number) =>
+            `sur ${n.toLocaleString("fr-FR")} artisan${n > 1 ? "s" : ""} validé${n > 1 ? "s" : ""}`,
+          median: (n: number) => `${n.toLocaleString("fr-FR", { maximumFractionDigits: 1 })}`,
+          medianHint: "Sur les artisans validés : un artisan sans demande compte pour 0",
+          replies: (n: number, total: number) =>
+            `${n.toLocaleString("fr-FR")} sur ${total.toLocaleString("fr-FR")} demande${total > 1 ? "s" : ""}`,
+          quotes: (n: number, total: number) =>
+            `${n.toLocaleString("fr-FR")} sur ${total.toLocaleString("fr-FR")} validé${total > 1 ? "s" : ""}`,
+          subscribers: (n: number, ended: number, trials: number) =>
+            `${n.toLocaleString("fr-FR")} abonné${n > 1 ? "s" : ""} sur ${ended.toLocaleString("fr-FR")} essai${ended > 1 ? "s" : ""} terminé${ended > 1 ? "s" : ""} · ${trials.toLocaleString("fr-FR")} en essai en ce moment`,
+        },
+        settings: {
+          title: "Réglages des chiffres",
+          lead: "Période du recrutement (semaines de la courbe, jours restants) et seuils. Le fichier du plan peut aussi les apporter.",
+          debut: "Début du recrutement",
+          fin: "Fin du recrutement",
+          datesHint: "Vides : les 12 dernières semaines, jusqu'à la semaine en cours.",
+          seuilCouverture: "Seuil de couverture (artisans par case)",
+          seuilCouvertureHint: "De 1 à 20. Vide : 3.",
+          seuilFiche: "Seuil d'une fiche complète (%)",
+          seuilFicheHint: "Jauge de « Mon profil », de 50 à 100. Vide : 100.",
+          save: "Enregistrer les réglages",
+          saved: "Réglages enregistrés.",
+        },
+        // Carte « Résultats » du tableau d'un membre.
+        results: {
+          title: "Résultats",
+          inactive: "Membre inactif : ses résultats ne sont plus suivis.",
+          codes: "Ses codes de suivi",
+          noCodes: "Aucun code de suivi à son nom.",
+        },
+      },
+      // Codes de suivi /p/<code> (F-66, lot 2, ADR 0209).
+      codes: {
+        title: "Codes de suivi",
+        intro:
+          "Un code par support (publicité, flyers, salon, code personnel d'un associé) pour savoir d'où viennent les inscriptions d'artisans.",
+        help: "Les liens /p/<code>/pro mènent à l'inscription artisan : l'artisan inscrit par ce lien, ou en saisissant le code, est compté pour ce code.",
+        listLabel: "Codes de suivi",
+        empty: "Aucun code de suivi pour l'instant.",
+        noMember: "Sans responsable",
+        active: "Actif",
+        inactive: "Inactif",
+        counts: (signups: number, validated: number) =>
+          `${signups.toLocaleString("fr-FR")} inscrit${signups > 1 ? "s" : ""} · ${validated.toLocaleString("fr-FR")} validé${validated > 1 ? "s" : ""}`,
+        link: (code: string) => `Lien d'inscription du code ${code}`,
+        copy: "Copier le lien",
+        copied: "Lien copié",
+        qr: (code: string) => `QR code du code ${code}`,
+        qrButton: "QR code",
+        qrOpen: (code: string) => `Agrandir le QR code du code ${code}`,
+        close: "Fermer",
+        edit: (code: string) => `Modifier le code ${code}`,
+        editShort: "Modifier",
+        newTitle: "Nouveau code de suivi",
+        newLead: "Le code ne pourra plus changer : il est imprimé sur les supports.",
+        editTitle: (code: string) => `Code ${code}`,
+        editLead: "Le code lui-même ne change plus ; le reste se modifie.",
+        back: "Codes de suivi",
+        fields: {
+          code: "Code",
+          codeHint:
+            "3 à 32 caractères : minuscules, chiffres et tirets, par exemple salon-nice. Il ne pourra plus changer.",
+          libelle: "Libellé",
+          libelleHint:
+            "Pour s'y retrouver : « Flyers boulangeries de Nice », « Salon de l'habitat ».",
+          canal: "Canal",
+          member: "Responsable",
+          memberNone: "Aucun",
+          active: "Actif : les nouvelles inscriptions avec ce code lui sont comptées",
+        },
+        create: "Créer le code",
+        save: "Enregistrer",
+        done: { cree: "Code de suivi créé.", modifie: "Code de suivi enregistré." },
       },
       errors: {
         generic: "L'opération a échoué. Réessayez.",

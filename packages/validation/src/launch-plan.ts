@@ -1,11 +1,15 @@
 import {
+  ACQUISITION_CHANNELS,
   LAUNCH_CATEGORIES,
+  LAUNCH_FIGURES_LIMITS,
+  LAUNCH_INDICATORS,
   LAUNCH_LIMITS,
   LAUNCH_MEMBER_KINDS,
   LAUNCH_MEMBER_REF_PATTERN,
   LAUNCH_PHASES,
   LAUNCH_TASK_REF_PATTERN,
   LAUNCH_TASK_STATUSES,
+  normalizePartnerCode,
 } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
@@ -61,6 +65,21 @@ function checkDates(
   }
   if (task.debut && task.echeance && task.debut > task.echeance) {
     ctx.addIssue({ code: "custom", path: ["debut"], message: messages.launchDateOrder });
+  }
+}
+
+/** Période de recrutement : début au plus tard à la fin (comme `admin_save_launch_settings`). */
+function checkRecruitment(
+  settings: { debut_recrutement: string | null; fin_recrutement: string | null },
+  ctx: z.RefinementCtx,
+) {
+  const { debut_recrutement: debut, fin_recrutement: fin } = settings;
+  if (debut && fin && debut > fin) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["debut_recrutement"],
+      message: messages.launchRecruitmentOrder,
+    });
   }
 }
 
@@ -123,12 +142,68 @@ const planTaskSchema = z
   )
   .superRefine(checkDates);
 
+/** Seuil entier du fichier, entre deux bornes ; absent ou null → null (valeur par défaut en base). */
+const planThreshold = (min: number, max: number, error: string) =>
+  z
+    .number({ error })
+    .int({ error })
+    .min(min, { error })
+    .max(max, { error })
+    .nullish()
+    .transform((value) => value ?? null);
+
+/**
+ * Réglages des chiffres (lot 2, ADR 0209) : période de recrutement (bornes de la courbe) et seuils.
+ * Présents, ils remplacent les réglages en place (champ absent : null, seuils par défaut en base).
+ */
+const planSettingsSchema = z
+  .object(
+    {
+      debut_recrutement: optionalDate,
+      fin_recrutement: optionalDate,
+      seuil_couverture: planThreshold(
+        LAUNCH_FIGURES_LIMITS.coverageThresholdMin,
+        LAUNCH_FIGURES_LIMITS.coverageThresholdMax,
+        messages.launchCoverageThresholdInvalid,
+      ),
+      seuil_fiche_complete: planThreshold(
+        LAUNCH_FIGURES_LIMITS.profileThresholdMin,
+        LAUNCH_FIGURES_LIMITS.profileThresholdMax,
+        messages.launchProfileThresholdInvalid,
+      ),
+    },
+    { error: messages.launchSettingsItem },
+  )
+  .superRefine(checkRecruitment);
+
+const targetValueError = { error: messages.launchTargetValueInvalid };
+
+/**
+ * Cible d'un indicateur (lot 2, ADR 0209) : pour toute l'équipe (sans membre) ou un membre du
+ * fichier ; datée (lundi de la semaine pour une série hebdomadaire, échéance sinon) ou permanente
+ * (sans date) ; valeur de 0 à 1 000 000, décimales permises (demandes par artisan).
+ */
+const planTargetSchema = z.object(
+  {
+    indicateur: oneOf(LAUNCH_INDICATORS),
+    member: memberRef.nullish().transform((value) => value ?? null),
+    jour: optionalDate,
+    valeur: z
+      .number(targetValueError)
+      .min(0, targetValueError)
+      .max(LAUNCH_FIGURES_LIMITS.targetValueMax, targetValueError),
+  },
+  { error: messages.launchPlanItem },
+);
+
 /**
  * Plan de lancement importé par un admin (F-66, ADR 0208), depuis un fichier gardé hors du dépôt
  * public : version 1, 50 membres et 2 000 tâches au plus, références uniques, dates réelles entre
  * 2020 et 2040, échéance ou rendez-vous régulier, début au plus tard à l'échéance, membre présent
- * dans le fichier (ou aucun : tâche de toute l'équipe). Champs inconnus retirés ; la base refait
- * les contrôles ligne par ligne.
+ * dans le fichier (ou aucun : tâche de toute l'équipe). Lot 2 (ADR 0209), facultatifs : réglages
+ * des chiffres et cibles (2 000 au plus, une seule par indicateur, membre et date, membre présent
+ * dans le fichier). Clé absente : rien n'est changé en base. Champs inconnus retirés ; la base
+ * refait les contrôles ligne par ligne.
  */
 export const launchPlanFileSchema = z
   .object(
@@ -140,6 +215,11 @@ export const launchPlanFileSchema = z
       tasks: z
         .array(planTaskSchema, { error: messages.launchPlanLists })
         .max(LAUNCH_LIMITS.maxTasks, { error: messages.launchPlanTooManyTasks }),
+      reglages: planSettingsSchema.optional(),
+      cibles: z
+        .array(planTargetSchema, { error: messages.launchTargetsList })
+        .max(LAUNCH_FIGURES_LIMITS.maxTargets, { error: messages.launchPlanTooManyTargets })
+        .optional(),
     },
     { error: messages.launchPlanVersion },
   )
@@ -173,11 +253,33 @@ export const launchPlanFileSchema = z
         });
       }
     });
+    // Une cible par indicateur, membre et date (contrainte unique de `launch_targets`).
+    const targetKeys = new Set<string>();
+    (plan.cibles ?? []).forEach((target, i) => {
+      const key = [target.indicateur, target.member ?? "", target.jour ?? ""].join("|");
+      if (targetKeys.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["cibles", i],
+          message: messages.launchTargetDuplicate,
+        });
+      }
+      targetKeys.add(key);
+      if (target.member && !memberRefs.has(target.member)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["cibles", i, "member"],
+          message: messages.launchMemberUnknown,
+        });
+      }
+    });
   });
 export type LaunchPlanFileInput = z.input<typeof launchPlanFileSchema>;
 export type LaunchPlanFile = z.output<typeof launchPlanFileSchema>;
 export type LaunchPlanMember = LaunchPlanFile["members"][number];
 export type LaunchPlanTask = LaunchPlanFile["tasks"][number];
+export type LaunchPlanSettings = NonNullable<LaunchPlanFile["reglages"]>;
+export type LaunchPlanTarget = NonNullable<LaunchPlanFile["cibles"]>[number];
 
 // ---------------------------------------------------------------------------
 // Formulaires du back-office (valeurs lues dans le FormData)
@@ -256,6 +358,75 @@ export const launchTaskFormSchema = z
   .superRefine(checkDates);
 export type LaunchTaskFormInput = z.input<typeof launchTaskFormSchema>;
 export type LaunchTaskForm = z.output<typeof launchTaskFormSchema>;
+
+/** Valeur d'une case à cocher, ou null quand le formulaire ne l'envoie pas (case décochée). */
+const isChecked = (value: boolean | string | null | undefined): boolean | null =>
+  value === null || value === undefined || value === ""
+    ? null
+    : value === true || value === "on" || value === "true";
+
+/**
+ * Code de suivi /p/<code> (`admin_save_acquisition_code`, lot 2, ADR 0209). Création (sans `id`) :
+ * code obligatoire, en minuscules et sans espaces autour, même format que les codes partenaires et
+ * commerciaux (la base vérifie qu'il n'est pas déjà pris). Modification (`id`) : le code est
+ * définitif, renvoyé normalisé s'il est lisible (sinon null) sans être contrôlé. Libellé, canal et
+ * membre responsable (facultatif) comme en base. Actif : case cochée ; sans case, un code se crée
+ * actif, et une case décochée le désactive en modification.
+ */
+export const acquisitionCodeFormSchema = z
+  .object({
+    id: optionalId(messages.acquisitionCodeUnknown),
+    code: z.string({ error: messages.acquisitionCodeInvalid }).nullish(),
+    libelle: filled(messages.acquisitionLabelRequired, LAUNCH_FIGURES_LIMITS.codeLabelMaxLength),
+    canal: z.enum(ACQUISITION_CHANNELS, { error: messages.required }),
+    member_id: optionalId(messages.launchMemberInvalid),
+    active: z.union([z.boolean(), z.string()]).nullish(),
+  })
+  .superRefine((form, ctx) => {
+    if (form.id !== null || normalizePartnerCode(form.code) !== null) return;
+    ctx.addIssue({
+      code: "custom",
+      path: ["code"],
+      message: form.code?.trim()
+        ? messages.acquisitionCodeInvalid
+        : messages.acquisitionCodeRequired,
+    });
+  })
+  .transform((form) => ({
+    id: form.id,
+    code: normalizePartnerCode(form.code),
+    libelle: form.libelle,
+    canal: form.canal,
+    member_id: form.member_id,
+    active: isChecked(form.active) ?? form.id === null,
+  }));
+export type AcquisitionCodeFormInput = z.input<typeof acquisitionCodeFormSchema>;
+export type AcquisitionCodeForm = z.output<typeof acquisitionCodeFormSchema>;
+
+/**
+ * Réglages des chiffres (`admin_save_launch_settings`, lot 2, ADR 0209), remplacés en entier :
+ * début et fin du recrutement (bornes de la courbe ; vides : les 12 dernières semaines), seuil de
+ * couverture (1 à 20 artisans par case) et seuil d'une fiche complète (50 à 100 % de la jauge de
+ * « Mon profil ») ; seuil vide → null, la base remet la valeur par défaut (3 et 100).
+ */
+export const launchSettingsFormSchema = z
+  .object({
+    debut_recrutement: optionalDate,
+    fin_recrutement: optionalDate,
+    seuil_couverture: optionalInt(
+      LAUNCH_FIGURES_LIMITS.coverageThresholdMin,
+      LAUNCH_FIGURES_LIMITS.coverageThresholdMax,
+      messages.launchCoverageThresholdInvalid,
+    ),
+    seuil_fiche_complete: optionalInt(
+      LAUNCH_FIGURES_LIMITS.profileThresholdMin,
+      LAUNCH_FIGURES_LIMITS.profileThresholdMax,
+      messages.launchProfileThresholdInvalid,
+    ),
+  })
+  .superRefine(checkRecruitment);
+export type LaunchSettingsFormInput = z.input<typeof launchSettingsFormSchema>;
+export type LaunchSettingsForm = z.output<typeof launchSettingsFormSchema>;
 
 // ---------------------------------------------------------------------------
 // Planning d'un membre (`my_launch_plan`)

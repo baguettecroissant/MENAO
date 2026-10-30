@@ -17,6 +17,7 @@ import {
   LaunchPlanImport,
 } from "@/components/launch/admin-forms";
 import { LaunchTaskRow } from "@/components/launch/launch-board";
+import { LaunchHeader } from "@/components/launch/launch-tabs";
 import { PhaseFrieze } from "@/components/launch/phase-frieze";
 import { MemberAvatar, MilestoneCountdowns, ProgressBar } from "@/components/launch/visuals";
 import { Alert, ButtonLink, Card, CardTitle, StatusBadge, Tag, TextLink } from "@/components/ui";
@@ -32,8 +33,9 @@ const LATE_PREVIEW = 10;
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
 
 /**
- * Lancement (F-66, ADR 0208) : prochaines dates clés de l'équipe (jalons de toute l'équipe et de
- * chaque membre), frise des 5 étapes, cartes des
+ * Lancement (F-66, ADR 0208), onglet « Planning » (les chiffres et les codes de suivi sont dans
+ * les onglets voisins, lot 2, ADR 0209) : prochaines dates clés de l'équipe (jalons de toute
+ * l'équipe et de chaque membre), frise des 5 étapes, cartes des
  * membres (avancement, retards, objectif interne), jalons et tâches de toute l'équipe, retards de
  * l'équipe, puis les outils (import du plan, ajout d'un membre, copie d'un planning). Réservé aux
  * admins ; les chiffres viennent de @menao/core.
@@ -75,23 +77,23 @@ export default async function AdminLaunchPage({ searchParams }: PageProps<"/admi
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
-          <p className="max-w-3xl text-sm text-muted-foreground">{t.intro}</p>
-        </div>
-        {me && (
-          <ButtonLink
-            href={`/admin/lancement/${me.id}` as Route}
-            variant="outline"
-            size="sm"
-            className="shrink-0 self-start"
-          >
-            <CalendarCheck aria-hidden="true" className="size-4" />
-            {t.myPlanning}
-          </ButtonLink>
-        )}
-      </div>
+      <LaunchHeader
+        current="planning"
+        intro={t.intro}
+        aside={
+          me && (
+            <ButtonLink
+              href={`/admin/lancement/${me.id}` as Route}
+              variant="outline"
+              size="sm"
+              className="shrink-0 self-start"
+            >
+              <CalendarCheck aria-hidden="true" className="size-4" />
+              {t.myPlanning}
+            </ButtonLink>
+          )
+        }
+      />
 
       {doneMessage && <Alert tone="success">{doneMessage}</Alert>}
 

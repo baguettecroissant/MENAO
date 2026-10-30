@@ -72,3 +72,4 @@ export * from "./phone-calendar";
 export * from "./prospects";
 export * from "./commercial-results";
 export * from "./launch-plan";
+export * from "./launch-figures";

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
+  acquisitionCodeFormSchema,
   launchMemberFormSchema,
   launchPlanFileSchema,
+  launchSettingsFormSchema,
   launchTaskFormSchema,
   parseMyLaunchPlan,
 } from "../src/launch-plan";
@@ -226,6 +228,145 @@ describe("fichier d'import du plan de lancement (F-66)", () => {
   });
 });
 
+// Réglages et cibles FICTIFS et neutres : les vraies cibles sont importées depuis le fichier gardé
+// hors du dépôt public (ADR 0209).
+describe("fichier d'import : réglages et cibles des chiffres (F-66, lot 2)", () => {
+  const cibles = [
+    { indicateur: "valides_cumul", jour: "2026-11-02", valeur: 4 },
+    { indicateur: "valides_cumul", member: "membre-a", jour: "2026-11-02", valeur: 1 },
+    { indicateur: "dossiers_48h_pct", member: null, jour: null, valeur: 50 },
+    { indicateur: "demandes_par_artisan", jour: "2026-12-31", valeur: 1.5 },
+  ];
+
+  it("facultatifs : sans « reglages » ni « cibles », rien n'est ajouté", () => {
+    const parsed = launchPlanFileSchema.parse(plan);
+    expect(parsed).not.toHaveProperty("reglages");
+    expect(parsed).not.toHaveProperty("cibles");
+  });
+
+  it("réglages lus, champs absents à null ; cibles lues, membre absent à null", () => {
+    const parsed = launchPlanFileSchema.parse({
+      ...plan,
+      reglages: { debut_recrutement: "2026-11-02", seuil_couverture: 2 },
+      cibles,
+    });
+    expect(parsed.reglages).toEqual({
+      debut_recrutement: "2026-11-02",
+      fin_recrutement: null,
+      seuil_couverture: 2,
+      seuil_fiche_complete: null,
+    });
+    expect(parsed.cibles).toEqual([
+      { indicateur: "valides_cumul", member: null, jour: "2026-11-02", valeur: 4 },
+      { indicateur: "valides_cumul", member: "membre-a", jour: "2026-11-02", valeur: 1 },
+      { indicateur: "dossiers_48h_pct", member: null, jour: null, valeur: 50 },
+      { indicateur: "demandes_par_artisan", member: null, jour: "2026-12-31", valeur: 1.5 },
+    ]);
+    expect(launchPlanFileSchema.parse({ ...plan, reglages: {}, cibles: [] })).toMatchObject({
+      reglages: {
+        debut_recrutement: null,
+        fin_recrutement: null,
+        seuil_couverture: null,
+        seuil_fiche_complete: null,
+      },
+      cibles: [],
+    });
+  });
+
+  it("réglages : objet, dates réelles dans l'ordre, seuils entiers dans leurs bornes", () => {
+    const settings = (reglages: unknown) => issues({ ...plan, reglages });
+    expect(settings([])).toEqual([["reglages", messages.launchSettingsItem]]);
+    expect(settings("2026-11-02")).toEqual([["reglages", messages.launchSettingsItem]]);
+    expect(settings({ debut_recrutement: "2026-02-30" })).toEqual([
+      ["reglages.debut_recrutement", messages.dateInvalid],
+    ]);
+    expect(settings({ fin_recrutement: "2207-03-31" })).toEqual([
+      ["reglages.fin_recrutement", messages.launchDateRange],
+    ]);
+    expect(settings({ debut_recrutement: "2027-04-01", fin_recrutement: "2027-03-31" })).toEqual([
+      ["reglages.debut_recrutement", messages.launchRecruitmentOrder],
+    ]);
+    expect(settings({ debut_recrutement: "2027-03-31", fin_recrutement: "2027-03-31" })).toEqual(
+      [],
+    );
+    for (const seuil of [0, 21, 2.5, "3"]) {
+      expect(settings({ seuil_couverture: seuil })).toEqual([
+        ["reglages.seuil_couverture", messages.launchCoverageThresholdInvalid],
+      ]);
+    }
+    for (const seuil of [49, 101, 75.5, "80"]) {
+      expect(settings({ seuil_fiche_complete: seuil })).toEqual([
+        ["reglages.seuil_fiche_complete", messages.launchProfileThresholdInvalid],
+      ]);
+    }
+    expect(settings({ seuil_couverture: 1, seuil_fiche_complete: 50 })).toEqual([]);
+    expect(settings({ seuil_couverture: 20, seuil_fiche_complete: 100 })).toEqual([]);
+  });
+
+  it("cibles : liste, indicateur connu, date réelle ou aucune, valeur de 0 à 1 000 000", () => {
+    const one = (cible: Record<string, unknown>) =>
+      issues({ ...plan, cibles: [{ indicateur: "valides_cumul", valeur: 1, ...cible }] });
+    expect(issues({ ...plan, cibles: {} })).toEqual([["cibles", messages.launchTargetsList]]);
+    expect(issues({ ...plan, cibles: [3] })).toEqual([["cibles.0", messages.launchPlanItem]]);
+    expect(one({ indicateur: "budget" })).toEqual([
+      [
+        "cibles.0.indicateur",
+        `${messages.launchValueUnknown} valides_cumul, inscrits_cumul, valides_semaine, cases_sous_seuil, dossiers_48h_pct, fiches_completes_pct, app_installee_pct, premier_devis_perso_pct, demandes_semaine, demandes_par_artisan, reponse_72h_pct, devis_envoye_pct, abonnes_pct.`,
+      ],
+    ]);
+    expect(one({ jour: "2026-11-31" })).toEqual([["cibles.0.jour", messages.dateInvalid]]);
+    expect(one({ jour: "2019-12-28" })).toEqual([["cibles.0.jour", messages.launchDateRange]]);
+    for (const valeur of [-1, 1_000_001, "4", null, Number.POSITIVE_INFINITY]) {
+      expect(one({ valeur })).toEqual([["cibles.0.valeur", messages.launchTargetValueInvalid]]);
+    }
+    expect(one({})).toEqual([]);
+    expect(one({ valeur: 0 })).toEqual([]);
+    expect(one({ valeur: 1_000_000, jour: "2040-12-31" })).toEqual([]);
+    // Référence mal formée : signalée en premier (c'est le message affiché).
+    expect(one({ member: "Membre A" })[0]).toEqual(["cibles.0.member", messages.launchRefInvalid]);
+  });
+
+  it("cibles : membre du fichier ou aucun ; une seule par indicateur, membre et date", () => {
+    expect(
+      issues({ ...plan, cibles: [{ indicateur: "valides_cumul", member: "membre-z", valeur: 1 }] }),
+    ).toEqual([["cibles.0.member", messages.launchMemberUnknown]]);
+    expect(
+      issues({
+        ...plan,
+        cibles: [
+          ...cibles,
+          { indicateur: "valides_cumul", member: null, jour: "2026-11-02", valeur: 9 },
+        ],
+      }),
+    ).toEqual([["cibles.4", messages.launchTargetDuplicate]]);
+    expect(
+      issues({
+        ...plan,
+        cibles: [
+          { indicateur: "abonnes_pct", valeur: 10 },
+          { indicateur: "abonnes_pct", jour: null, member: null, valeur: 20 },
+        ],
+      }),
+    ).toEqual([["cibles.1", messages.launchTargetDuplicate]]);
+    // Même indicateur et même date pour l'équipe et pour un membre : deux cibles distinctes.
+    expect(issues({ ...plan, cibles: cibles.slice(0, 2) })).toEqual([]);
+  });
+
+  it("2 000 cibles au plus", () => {
+    const many = Array.from({ length: 2001 }, (_, i) => ({
+      indicateur: "valides_cumul",
+      jour: new Date(Date.UTC(2027, 0, 1 + i)).toISOString().slice(0, 10),
+      valeur: i,
+    }));
+    expect(issues({ ...plan, cibles: many })).toEqual([
+      ["cibles", messages.launchPlanTooManyTargets],
+    ]);
+    expect(launchPlanFileSchema.safeParse({ ...plan, cibles: many.slice(0, 2000) }).success).toBe(
+      true,
+    );
+  });
+});
+
 const memberForm = {
   nom: " Membre Exemple ",
   mission: "",
@@ -398,5 +539,166 @@ describe("planning d'un membre (my_launch_plan)", () => {
     expect(
       parseMyLaunchPlan({ member: null, tasks: [row, { ...row, statut: "inconnu" }, 3] }).tasks,
     ).toEqual([row]);
+  });
+});
+
+describe("formulaire d'un code de suivi (F-66, lot 2)", () => {
+  const codeForm = {
+    code: "  Essai-Flyer ",
+    libelle: " Flyer d'essai ",
+    canal: "flyer",
+    member_id: "",
+  };
+  const errors = (form: Record<string, unknown>) => {
+    const result = acquisitionCodeFormSchema.safeParse(form);
+    return result.success ? {} : z.flattenError(result.error).fieldErrors;
+  };
+
+  it("création : code en minuscules sans espaces autour, actif sans case à cocher", () => {
+    expect(acquisitionCodeFormSchema.parse(codeForm)).toEqual({
+      id: null,
+      code: "essai-flyer",
+      libelle: "Flyer d'essai",
+      canal: "flyer",
+      member_id: null,
+      active: true,
+    });
+    expect(
+      acquisitionCodeFormSchema.parse({
+        ...codeForm,
+        member_id: "b6520000-0000-4000-8000-000000000003",
+        active: "on",
+      }),
+    ).toMatchObject({ member_id: "b6520000-0000-4000-8000-000000000003", active: true });
+    expect(acquisitionCodeFormSchema.parse({ ...codeForm, active: "" }).active).toBe(true);
+    expect(acquisitionCodeFormSchema.parse({ ...codeForm, active: "false" }).active).toBe(false);
+  });
+
+  it("création : code obligatoire, au format des liens /p/<code>", () => {
+    expect(errors({ ...codeForm, code: "" })).toEqual({ code: [messages.acquisitionCodeRequired] });
+    expect(errors({ ...codeForm, code: null })).toEqual({
+      code: [messages.acquisitionCodeRequired],
+    });
+    for (const code of ["ab", "-flyer", "flyer-", "flyer salon", "flyér", "x".repeat(33)]) {
+      expect(errors({ ...codeForm, code })).toEqual({ code: [messages.acquisitionCodeInvalid] });
+    }
+    expect(acquisitionCodeFormSchema.parse({ ...codeForm, code: "abc" }).code).toBe("abc");
+    expect(
+      acquisitionCodeFormSchema.parse({ ...codeForm, code: "x".repeat(32) }).code,
+    ).toHaveLength(32);
+  });
+
+  it("modification : code définitif, non contrôlé ; case décochée → désactivé", () => {
+    const id = "b6540000-0000-4000-8000-000000000001";
+    expect(acquisitionCodeFormSchema.parse({ ...codeForm, id, code: undefined })).toEqual({
+      id,
+      code: null,
+      libelle: "Flyer d'essai",
+      canal: "flyer",
+      member_id: null,
+      active: false,
+    });
+    expect(acquisitionCodeFormSchema.parse({ ...codeForm, id, active: "on" })).toMatchObject({
+      code: "essai-flyer",
+      active: true,
+    });
+    expect(acquisitionCodeFormSchema.parse({ ...codeForm, id, code: "mal formé" }).code).toBeNull();
+  });
+
+  it("erreurs par champ", () => {
+    expect(
+      errors({ id: "x", code: "", libelle: " ", canal: "affiche", member_id: "personne" }),
+    ).toEqual({
+      id: [messages.acquisitionCodeUnknown],
+      libelle: [messages.acquisitionLabelRequired],
+      canal: [messages.required],
+      member_id: [messages.launchMemberInvalid],
+    });
+    expect(errors({ ...codeForm, libelle: "x".repeat(81) })).toEqual({
+      libelle: [messages.tooLong],
+    });
+    expect(errors({ ...codeForm, code: "", libelle: "" })).toEqual({
+      code: [messages.acquisitionCodeRequired],
+      libelle: [messages.acquisitionLabelRequired],
+    });
+    // Canal ou identifiant illisibles : le code est vérifié une fois ces champs corrigés.
+    expect(errors({ ...codeForm, code: "", canal: "" })).toEqual({ canal: [messages.required] });
+  });
+});
+
+describe("formulaire des réglages des chiffres (F-66, lot 2)", () => {
+  const settingsForm = {
+    debut_recrutement: "",
+    fin_recrutement: "",
+    seuil_couverture: "",
+    seuil_fiche_complete: "",
+  };
+  const errors = (form: Record<string, unknown>) => {
+    const result = launchSettingsFormSchema.safeParse(form);
+    return result.success ? {} : z.flattenError(result.error).fieldErrors;
+  };
+
+  it("champs vides à null (seuils par défaut en base)", () => {
+    expect(launchSettingsFormSchema.parse(settingsForm)).toEqual({
+      debut_recrutement: null,
+      fin_recrutement: null,
+      seuil_couverture: null,
+      seuil_fiche_complete: null,
+    });
+    expect(launchSettingsFormSchema.parse({})).toEqual({
+      debut_recrutement: null,
+      fin_recrutement: null,
+      seuil_couverture: null,
+      seuil_fiche_complete: null,
+    });
+  });
+
+  it("dates et seuils saisis", () => {
+    expect(
+      launchSettingsFormSchema.parse({
+        debut_recrutement: "2026-11-02",
+        fin_recrutement: "2027-03-29",
+        seuil_couverture: " 2 ",
+        seuil_fiche_complete: "80",
+      }),
+    ).toEqual({
+      debut_recrutement: "2026-11-02",
+      fin_recrutement: "2027-03-29",
+      seuil_couverture: 2,
+      seuil_fiche_complete: 80,
+    });
+  });
+
+  it("erreurs par champ", () => {
+    expect(
+      errors({ ...settingsForm, debut_recrutement: "2027-04-01", fin_recrutement: "2027-03-29" }),
+    ).toEqual({ debut_recrutement: [messages.launchRecruitmentOrder] });
+    // Seuils illisibles : l'ordre des dates est vérifié une fois ces champs corrigés.
+    expect(
+      errors({
+        debut_recrutement: "2027-04-01",
+        fin_recrutement: "2027-03-29",
+        seuil_couverture: "0",
+        seuil_fiche_complete: "101",
+      }),
+    ).toEqual({
+      seuil_couverture: [messages.launchCoverageThresholdInvalid],
+      seuil_fiche_complete: [messages.launchProfileThresholdInvalid],
+    });
+    expect(
+      errors({ ...settingsForm, debut_recrutement: "2026-02-30", seuil_couverture: "2,5" }),
+    ).toEqual({
+      debut_recrutement: [messages.dateInvalid],
+      seuil_couverture: [messages.launchCoverageThresholdInvalid],
+    });
+    expect(
+      errors({ ...settingsForm, fin_recrutement: "0027-03-29", seuil_fiche_complete: "49" }),
+    ).toEqual({
+      fin_recrutement: [messages.launchDateRange],
+      seuil_fiche_complete: [messages.launchProfileThresholdInvalid],
+    });
+    expect(errors({ ...settingsForm, seuil_couverture: "21" })).toEqual({
+      seuil_couverture: [messages.launchCoverageThresholdInvalid],
+    });
   });
 });

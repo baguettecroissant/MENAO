@@ -11,12 +11,19 @@ const t = fr.admin.launch.import;
  */
 export const LAUNCH_IMPORT_MAX_BYTES = 900 * 1024;
 
-/** Compteurs renvoyés par admin_import_launch_plan (F-66, ADR 0208). */
+/**
+ * Compteurs renvoyés par admin_import_launch_plan (F-66, ADR 0208), avec les cibles et les réglages
+ * des chiffres (lot 2, ADR 0209).
+ */
 export const launchImportResultSchema = z.object({
   members_created: z.number().int().nonnegative(),
   members_updated: z.number().int().nonnegative(),
   tasks_created: z.number().int().nonnegative(),
   tasks_updated: z.number().int().nonnegative(),
+  targets_created: z.number().int().nonnegative(),
+  targets_updated: z.number().int().nonnegative(),
+  targets_deleted: z.number().int().nonnegative(),
+  settings_updated: z.boolean(),
   skipped: z.number().int().nonnegative(),
 });
 export type LaunchImportResult = z.infer<typeof launchImportResultSchema>;
@@ -24,7 +31,7 @@ export type LaunchImportResult = z.infer<typeof launchImportResultSchema>;
 /**
  * Fichier du plan de lancement (gardé hors du dépôt) lu puis vérifié : le plan, ou le premier
  * problème en clair, avec la ligne et le champ du fichier (« Tâche n° 4, champ « echeance » :
- * Indiquez une échéance… »).
+ * Indiquez une échéance… », « Cible n° 2, champ « valeur » : … », « Réglages, champ … »).
  */
 export function checkLaunchPlanFile(data: unknown): { plan: LaunchPlanFile } | { error: string } {
   const parsed = launchPlanFileSchema.safeParse(data);
@@ -35,12 +42,19 @@ export function checkLaunchPlanFile(data: unknown): { plan: LaunchPlanFile } | {
   const issue = parsed.error.issues[0];
   if (!issue) return { error: t.errors.read };
   const [list, index, field] = issue.path;
+  // Réglages : un objet (« reglages.seuil_couverture ») ; sinon une ligne d'une liste.
+  if (list === "reglages") {
+    const where = typeof index === "string" ? t.errors.field(t.errors.settings, index) : null;
+    return { error: t.errors.invalid(where ? `${where} : ${issue.message}` : issue.message) };
+  }
   const row =
     typeof index === "number" && list === "tasks"
       ? t.errors.task(index + 1)
       : typeof index === "number" && list === "members"
         ? t.errors.member(index + 1)
-        : null;
+        : typeof index === "number" && list === "cibles"
+          ? t.errors.target(index + 1)
+          : null;
   const where = row && typeof field === "string" ? t.errors.field(row, field) : row;
   return { error: t.errors.invalid(where ? `${where} : ${issue.message}` : issue.message) };
 }

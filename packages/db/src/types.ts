@@ -119,6 +119,82 @@ export type Database = {
           },
         ];
       };
+      acquisition_code_attributions: {
+        Row: {
+          artisan_id: string;
+          code_id: string;
+          created_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          code_id: string;
+          created_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          code_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "acquisition_code_attributions_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "acquisition_code_attributions_code_id_fkey";
+            columns: ["code_id"];
+            isOneToOne: false;
+            referencedRelation: "acquisition_codes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      acquisition_codes: {
+        Row: {
+          active: boolean;
+          canal: Database["public"]["Enums"]["acquisition_channel"];
+          code: string;
+          created_at: string;
+          id: string;
+          libelle: string;
+          member_id: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          canal: Database["public"]["Enums"]["acquisition_channel"];
+          code: string;
+          created_at?: string;
+          id?: string;
+          libelle: string;
+          member_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          canal?: Database["public"]["Enums"]["acquisition_channel"];
+          code?: string;
+          created_at?: string;
+          id?: string;
+          libelle?: string;
+          member_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "acquisition_codes_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "launch_members";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ai_runs: {
         Row: {
           audio_seconds: number | null;
@@ -2351,6 +2427,76 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [];
+      };
+      launch_settings: {
+        Row: {
+          debut_recrutement: string | null;
+          fin_recrutement: string | null;
+          id: boolean;
+          seuil_couverture: number;
+          seuil_fiche_complete: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          debut_recrutement?: string | null;
+          fin_recrutement?: string | null;
+          id?: boolean;
+          seuil_couverture?: number;
+          seuil_fiche_complete?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          debut_recrutement?: string | null;
+          fin_recrutement?: string | null;
+          id?: boolean;
+          seuil_couverture?: number;
+          seuil_fiche_complete?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      launch_targets: {
+        Row: {
+          created_at: string;
+          id: string;
+          indicateur: string;
+          jour: string | null;
+          member_id: string | null;
+          updated_at: string;
+          valeur: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          indicateur: string;
+          jour?: string | null;
+          member_id?: string | null;
+          updated_at?: string;
+          valeur: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          indicateur?: string;
+          jour?: string | null;
+          member_id?: string | null;
+          updated_at?: string;
+          valeur?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "launch_targets_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "launch_members";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       launch_tasks: {
         Row: {
@@ -4655,6 +4801,21 @@ export type Database = {
         Returns: string;
       };
       add_ticket_message: { Args: { p_body: string; p_ticket_id: string }; Returns: string };
+      admin_acquisition_codes: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          active: boolean;
+          canal: Database["public"]["Enums"]["acquisition_channel"];
+          code: string;
+          created_at: string;
+          id: string;
+          inscrits: number;
+          libelle: string;
+          member_id: string;
+          member_nom: string;
+          valides: number;
+        }[];
+      };
       admin_activity: {
         Args: { p_kinds?: string[]; p_limit?: number; p_offset?: number };
         Returns: {
@@ -4799,6 +4960,8 @@ export type Database = {
           user_id: string;
         }[];
       };
+      admin_launch_coverage: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_launch_figures: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_log_account_action: {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;
@@ -4945,6 +5108,17 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_save_acquisition_code: {
+        Args: {
+          p_active?: boolean;
+          p_canal: Database["public"]["Enums"]["acquisition_channel"];
+          p_code: string;
+          p_id?: string;
+          p_libelle: string;
+          p_member_id?: string;
+        };
+        Returns: string;
+      };
       admin_save_commercial_bonus_settings: {
         Args: {
           p_delai_validation_jours?: number;
@@ -4965,6 +5139,15 @@ export type Database = {
           p_user_id?: string;
         };
         Returns: string;
+      };
+      admin_save_launch_settings: {
+        Args: {
+          p_debut_recrutement?: string;
+          p_fin_recrutement?: string;
+          p_seuil_couverture?: number;
+          p_seuil_fiche_complete?: number;
+        };
+        Returns: undefined;
       };
       admin_save_launch_task: {
         Args: {
@@ -6024,6 +6207,8 @@ export type Database = {
       accountant_export_kind: "automatique" | "manuel";
       accountant_export_status: "envoye" | "echec";
       accountant_period: "mensuel" | "trimestriel";
+      acquisition_channel:
+        "terrain" | "meta" | "google" | "flyer" | "salon" | "presse" | "radio" | "autre";
       app_role:
         "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support" | "commercial";
       appointment_status: "planifie" | "annule";
@@ -6318,6 +6503,16 @@ export const Constants = {
       accountant_export_kind: ["automatique", "manuel"],
       accountant_export_status: ["envoye", "echec"],
       accountant_period: ["mensuel", "trimestriel"],
+      acquisition_channel: [
+        "terrain",
+        "meta",
+        "google",
+        "flyer",
+        "salon",
+        "presse",
+        "radio",
+        "autre",
+      ],
       app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support", "commercial"],
       appointment_status: ["planifie", "annule"],
       artisan_invitation_status: ["envoyee", "inscrit"],
