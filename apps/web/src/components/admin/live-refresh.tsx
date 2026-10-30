@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 const t = fr.admin.overview;
 /** Tables suivies en direct (publication supabase_realtime, ADR 0045). */
 const TABLES = ["projects", "requests", "chantier_events", "tickets", "artisans"] as const;
+export type LiveTable = (typeof TABLES)[number];
 /** Plusieurs changements rapprochés ne déclenchent qu'une actualisation. */
 const DEBOUNCE_MS = 2_000;
 /** Actualisation de secours, si le temps réel est indisponible ou coupé. */
@@ -22,10 +23,25 @@ const clock = new Intl.DateTimeFormat("fr-FR", {
 /**
  * Vue d'ensemble en direct (F-58, ADR 0045) : chaque changement sur les tables suivies relance le
  * rendu de la page ; sans temps réel, la page s'actualise chaque minute tant qu'elle est visible.
+ * Aussi pour les chiffres du lancement (F-66, lot 2, ADR 0209), sur leur propre canal, une
+ * partie des tables seulement et un regroupement plus long, leur calcul étant lourd (`channel`,
+ * `tables`, `debounceMs`).
  */
-export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
+export function LiveRefresh({
+  renderedAt,
+  channel: channelName = "admin:vue-ensemble",
+  tables = TABLES,
+  debounceMs = DEBOUNCE_MS,
+}: {
+  renderedAt: string;
+  channel?: string;
+  tables?: readonly LiveTable[];
+  debounceMs?: number;
+}) {
   const router = useRouter();
   const [live, setLive] = useState(false);
+  // Tables comparées par leur liste : un nouveau tableau à chaque actualisation ne réabonne pas.
+  const tableKey = tables.join(",");
 
   useEffect(() => {
     const supabase = createClient();
@@ -35,10 +51,10 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
       pending = setTimeout(() => {
         pending = null;
         router.refresh();
-      }, DEBOUNCE_MS);
+      }, debounceMs);
     };
-    const channel = supabase.channel("admin:vue-ensemble");
-    for (const table of TABLES) {
+    const channel = supabase.channel(channelName);
+    for (const table of tableKey.split(",")) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, refresh);
     }
     channel.subscribe((status) => setLive(status === "SUBSCRIBED"));
@@ -50,7 +66,7 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
       if (pending) clearTimeout(pending);
       void supabase.removeChannel(channel);
     };
-  }, [router]);
+  }, [router, channelName, tableKey, debounceMs]);
 
   return (
     <p

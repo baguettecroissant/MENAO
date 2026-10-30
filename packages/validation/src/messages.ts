@@ -142,4 +142,18 @@ export const messages = {
   launchValueUnknown: "Valeur inconnue. Valeurs possibles :",
   launchTextInvalid: "Texte attendu, entre guillemets.",
   launchBooleanInvalid: "Indiquez true ou false, sans guillemets.",
+  // Chiffres du lancement (F-66, lot 2).
+  launchSettingsItem: "« reglages » doit être un objet entre accolades { }.",
+  launchTargetsList: "« cibles » doit être une liste entre crochets [ ].",
+  launchPlanTooManyTargets: "2 000 cibles au plus par fichier.",
+  launchTargetValueInvalid: "Indiquez un nombre entre 0 et 1 000 000, sans guillemets.",
+  launchTargetDuplicate:
+    "Cette cible apparaît deux fois dans le fichier (même indicateur, même membre, même date).",
+  launchCoverageThresholdInvalid: "Indiquez un nombre entier entre 1 et 20.",
+  launchProfileThresholdInvalid: "Indiquez un nombre entier entre 50 et 100.",
+  launchRecruitmentOrder: "La date de début du recrutement doit être avant la date de fin.",
+  acquisitionCodeRequired: "Indiquez le code.",
+  acquisitionCodeInvalid: "Code invalide : 3 à 32 caractères, minuscules, chiffres et tirets.",
+  acquisitionCodeUnknown: "Code de suivi introuvable.",
+  acquisitionLabelRequired: "Indiquez le libellé du code.",
 } as const;

@@ -1,6 +1,11 @@
 "use server";
 
-import { launchMemberFormSchema, launchTaskFormSchema } from "@menao/validation";
+import {
+  acquisitionCodeFormSchema,
+  launchMemberFormSchema,
+  launchSettingsFormSchema,
+  launchTaskFormSchema,
+} from "@menao/validation";
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -30,6 +35,13 @@ const TASK_FIELDS = [
   "jalon",
   "partage",
   "statut",
+] as const;
+const CODE_FIELDS = ["code", "libelle", "canal", "member_id", "active"] as const;
+const SETTINGS_FIELDS = [
+  "debut_recrutement",
+  "fin_recrutement",
+  "seuil_couverture",
+  "seuil_fiche_complete",
 ] as const;
 
 /** Message d'erreur de la base : 22023 = règle métier, montré tel quel ; sinon message générique. */
@@ -198,4 +210,74 @@ export async function importLaunchPlan(data: unknown): Promise<LaunchImportRespo
   if (!result.success) return { error: t.import.errors.save };
   revalidateLaunch();
   return { result: result.data };
+}
+
+/**
+ * Code de suivi /p/<code> (F-66, lot 2, ADR 0209) : création, ou modification du libellé, du canal,
+ * du responsable et de l'état (le code lui-même est définitif : renvoyé par un champ caché). La
+ * base vérifie l'admin (aal2), le format et que le code n'est pas déjà pris dans l'espace des liens
+ * /p/<code> (partenaires, commerciaux, parrainage), puis journalise. Retour sur la liste des codes.
+ */
+export async function saveAcquisitionCode(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = formValues(formData, CODE_FIELDS);
+  const id = optionalUuid(formData, "id");
+  if (id === null) return { error: t.errors.generic, values };
+  // Case « Actif » : seulement en modification (absente car décochée : code désactivé) ; à la
+  // création, pas de case et le code naît actif.
+  const parsed = acquisitionCodeFormSchema.safeParse({
+    ...values,
+    id,
+    active: text(formData, "active"),
+  });
+  if (!parsed.success) {
+    return {
+      error: t.errors.invalid,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      values,
+    };
+  }
+  const c = parsed.data;
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase.rpc("admin_save_acquisition_code", {
+    p_code: c.code ?? "",
+    p_libelle: c.libelle,
+    p_canal: c.canal,
+    p_id: c.id ?? undefined,
+    p_member_id: c.member_id ?? undefined,
+    p_active: c.active,
+  });
+  if (error || !data) return { error: error ? dbError(error) : t.errors.generic, values };
+  revalidateLaunch();
+  redirect(`${PATH}/codes?fait=${c.id ? "code-modifie" : "code-cree"}` as Route);
+}
+
+/**
+ * Réglages des chiffres (lot 2, ADR 0209), remplacés en entier : période du recrutement et seuils
+ * (vides : valeurs par défaut en base). Retour sur les chiffres, section des réglages ouverte.
+ */
+export async function saveLaunchSettings(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = formValues(formData, SETTINGS_FIELDS);
+  const parsed = launchSettingsFormSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      error: t.errors.invalid,
+      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      values,
+    };
+  }
+  const r = parsed.data;
+  const { supabase } = await requireAdmin();
+  // Champ vide : paramètre absent, donc nul en base (seuils : valeur par défaut).
+  const { error } = await supabase.rpc("admin_save_launch_settings", {
+    p_debut_recrutement: r.debut_recrutement ?? undefined,
+    p_fin_recrutement: r.fin_recrutement ?? undefined,
+    p_seuil_couverture: r.seuil_couverture ?? undefined,
+    p_seuil_fiche_complete: r.seuil_fiche_complete ?? undefined,
+  });
+  if (error) return { error: dbError(error), values };
+  revalidateLaunch();
+  redirect(`${PATH}/chiffres?fait=reglages#reglages` as Route);
 }

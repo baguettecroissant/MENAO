@@ -575,8 +575,9 @@ export function LaunchCopyForm({ members }: { members: readonly { id: string; no
 
 /**
  * Import du plan de lancement : fichier .json choisi sur l'ordinateur de l'admin (gardé hors du
- * dépôt public), lu et vérifié dans le navigateur (aperçu « n membres, n tâches »), puis envoyé à
- * l'action serveur ; message avec les compteurs de la base.
+ * dépôt public), lu et vérifié dans le navigateur (aperçu « n membres, n tâches », et les cibles
+ * et réglages des chiffres s'il y en a, lot 2), puis envoyé à l'action serveur ; message avec les
+ * compteurs de la base.
  */
 export function LaunchPlanImport() {
   const router = useRouter();
@@ -628,7 +629,16 @@ export function LaunchPlanImport() {
   if (error) message = <Alert tone="error">{error}</Alert>;
   else if (done) message = <Alert tone="success">{done}</Alert>;
   else if (plan) {
-    message = <Alert tone="info">{i.preview(plan.members.length, plan.tasks.length)}</Alert>;
+    message = (
+      <Alert tone="info">
+        {i.preview(
+          plan.members.length,
+          plan.tasks.length,
+          plan.cibles?.length ?? 0,
+          plan.reglages !== undefined,
+        )}
+      </Alert>
+    );
   }
 
   return (

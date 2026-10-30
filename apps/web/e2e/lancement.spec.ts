@@ -4,8 +4,9 @@ import { capture, dates } from "./fixtures";
 import { expect, test } from "./test";
 import { totp } from "./totp";
 
-// Tableaux de lancement (F-66, ADR 0208). Comptes et tâches FICTIFS du seed : admin6@example.test,
-// commercial@example.test (Rémi) et commercial2@example.test (Léa) ; fichier d'import fictif.
+// Tableaux de lancement (F-66, ADR 0208) et chiffres du lancement (lot 2, ADR 0209). Comptes et
+// tâches FICTIFS du seed : admin6@example.test, commercial@example.test (Rémi) et
+// commercial2@example.test (Léa) ; fichier d'import fictif (cible et réglages neutres compris).
 const UUID = "[0-9a-f-]{36}";
 const PLAN = fileURLToPath(new URL("./fixtures/plan-lancement-exemple.json", import.meta.url));
 
@@ -16,10 +17,10 @@ async function signIn(page: Page, email: string) {
   await page.getByRole("button", { name: "Me connecter" }).click();
 }
 
-test("lancement : vue d'équipe, import du plan, tableau d'un membre et ajout d'une tâche", async ({
+test("lancement : vue d'équipe, import du plan, tableau d'un membre, chiffres et codes de suivi", async ({
   page,
 }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(120_000);
   // Comme partenaires.spec.ts : la double authentification d'admin6 est activée au premier passage.
   // Une relance automatique (CI) ne peut pas la rejouer (secret inconnu) : l'échec d'origine est
   // celui à lire dans le rapport.
@@ -47,10 +48,12 @@ test("lancement : vue d'équipe, import du plan, tableau d'un membre et ajout d'
 
   // Import du fichier fictif : aperçu, puis compteurs de la base (premier import ou mise à jour).
   await page.getByLabel("Fichier du plan (.json)").setInputFiles(PLAN);
-  await expect(page.getByText("Fichier prêt : 2 membres, 4 tâches.")).toBeVisible();
+  await expect(
+    page.getByText("Fichier prêt : 2 membres, 4 tâches, 1 cible, réglages des chiffres."),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Importer", exact: true }).click();
   await expect(page.getByText(/^Import terminé : /)).toHaveText(
-    /^Import terminé : (2 membres ajoutés, 0 mis à jour|0 membre ajouté, 2 mis à jour) · (4 tâches ajoutées, 0 mise à jour|0 tâche ajoutée, 4 mises à jour)\.$/,
+    /^Import terminé : (2 membres ajoutés, 0 mis à jour|0 membre ajouté, 2 mis à jour) · (4 tâches ajoutées, 0 mise à jour|0 tâche ajoutée, 4 mises à jour) · (1 cible ajoutée, 0 mise à jour|0 cible ajoutée, 1 mise à jour) · réglages mis à jour\.$/,
   );
 
   // Tableau d'un membre importé, puis ajout d'une tâche depuis son tableau.
@@ -72,7 +75,43 @@ test("lancement : vue d'équipe, import du plan, tableau d'un membre et ajout d'
   await expect(
     page.getByRole("link", { name: "Modifier : Tâche ajoutée par le test" }).first(),
   ).toBeVisible();
+  // Carte « Résultats » du membre (lot 2).
+  await expect(page.getByRole("heading", { name: "Résultats", exact: true })).toBeVisible();
   await capture(page, "lancement-membre");
+
+  // Onglet « Chiffres » : chiffres en direct, objectif d'équipe de la cible fictive importée.
+  await page.goto("/admin/lancement");
+  const tabs = page.getByRole("navigation", { name: "Pages du lancement" });
+  await tabs.getByRole("link", { name: "Chiffres" }).click();
+  await expect(page).toHaveURL(/\/admin\/lancement\/chiffres$/);
+  await expect(tabs.getByRole("link", { name: "Chiffres" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.getByRole("heading", { name: "Artisans validés", exact: true })).toBeVisible();
+  await expect(page.getByText("Objectif d'équipe : 50")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Couverture métier × zone" })).toBeVisible();
+  await capture(page, "lancement-chiffres");
+
+  // Onglet « Codes de suivi » : création d'un code fictif (déjà là après une relance locale).
+  await tabs.getByRole("link", { name: "Codes de suivi" }).click();
+  await expect(page).toHaveURL(/\/admin\/lancement\/codes$/);
+  const flyer = page
+    .getByRole("list", { name: "Codes de suivi" })
+    .getByRole("listitem")
+    .filter({ hasText: "e2e-flyer" });
+  if ((await flyer.count()) === 0) {
+    await page.getByLabel("Code", { exact: true }).fill("e2e-flyer");
+    await page.getByLabel("Libellé").fill("Flyer de test");
+    await page.getByLabel("Canal").selectOption("flyer");
+    await page.getByRole("button", { name: "Créer le code" }).click();
+    await expect(page).toHaveURL(/\/admin\/lancement\/codes\?fait=code-cree$/);
+    await expect(page.getByText("Code de suivi créé.")).toBeVisible();
+  }
+  // Lien d'inscription affiché (le même est repris, caché, dans la fenêtre du QR code).
+  await expect(flyer.getByText(/\/p\/e2e-flyer\/pro$/).first()).toBeVisible();
+  await expect(flyer.getByRole("button", { name: "Copier le lien" })).toBeVisible();
+  await capture(page, "lancement-codes");
 });
 
 test("mon planning : le commercial voit ses tâches et celles de l'équipe, et coche les siennes", async ({

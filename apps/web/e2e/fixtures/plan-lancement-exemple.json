@@ -52,5 +52,17 @@
       "echeance": "2027-02-01",
       "jalon": true
     }
+  ],
+  "reglages": {
+    "seuil_couverture": 2,
+    "seuil_fiche_complete": 80
+  },
+  "cibles": [
+    {
+      "indicateur": "valides_cumul",
+      "member": null,
+      "jour": "2027-03-29",
+      "valeur": 50
+    }
   ]
 }

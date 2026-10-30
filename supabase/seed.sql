@@ -264,3 +264,8 @@ values
    'pre_ouverture', 'pilotage', current_date + 20, true, false, 'a_faire', null, null),
   ('b6530000-0000-4000-8000-000000000007', 'b6520000-0000-4000-8000-000000000003', 'Choisir le cabinet d''avocats',
    'preparation', 'juridique', current_date + 10, false, false, 'a_faire', null, null);
+
+-- Codes de suivi (F-66, lot 2, ADR 0209) : un code FICTIF de flyers, sous la responsabilité des
+-- associés (les réglages des chiffres sont créés par la migration ; aucune cible dans le seed).
+insert into public.acquisition_codes (id, code, libelle, canal, member_id) values
+  ('b6540000-0000-4000-8000-000000000001', 'essai-flyer', 'Flyer d''essai', 'flyer', 'b6520000-0000-4000-8000-000000000003');

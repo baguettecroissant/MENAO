@@ -522,7 +522,8 @@ select is(
       {"ref": "LAN109.x8", "titre": "Année mal tapée 109", "echeance": "2207-01-15"}
     ]
   } $plan$::jsonb),
-  '{"members_created": 2, "members_updated": 0, "tasks_created": 4, "tasks_updated": 0, "skipped": 10}'::jsonb,
+  '{"members_created": 2, "members_updated": 0, "tasks_created": 4, "tasks_updated": 0, "skipped": 10,
+    "targets_created": 0, "targets_deleted": 0, "targets_updated": 0, "settings_updated": false}'::jsonb,
   'import : membres et tâches créés, lignes invalides ignorées et comptées');
 reset role;
 select results_eq(
@@ -578,7 +579,8 @@ select is(
       {"ref": "LAN109.t5", "member": "lan109-beta", "titre": "Import cinq 109", "echeance": "2027-01-20"}
     ]
   } $plan$::jsonb),
-  '{"members_created": 0, "members_updated": 2, "tasks_created": 1, "tasks_updated": 2, "skipped": 0}'::jsonb,
+  '{"members_created": 0, "members_updated": 2, "tasks_created": 1, "tasks_updated": 2, "skipped": 0,
+    "targets_created": 0, "targets_deleted": 0, "targets_updated": 0, "settings_updated": false}'::jsonb,
   'réimport : mises à jour par repère');
 reset role;
 select results_eq(
@@ -620,7 +622,8 @@ select throws_ok($$ select public.admin_import_launch_plan('[]') $$,
 select throws_ok($$ select public.admin_import_launch_plan('{"version": 1, "tasks": {}}') $$,
   '22023', 'Fichier non reconnu : listes des membres et des tâches attendues.', 'import : liste des tâches attendue');
 select is(public.admin_import_launch_plan('{"version": 1}'),
-  '{"members_created": 0, "members_updated": 0, "tasks_created": 0, "tasks_updated": 0, "skipped": 0}'::jsonb,
+  '{"members_created": 0, "members_updated": 0, "tasks_created": 0, "tasks_updated": 0, "skipped": 0,
+    "targets_created": 0, "targets_deleted": 0, "targets_updated": 0, "settings_updated": false}'::jsonb,
   'import sans membre ni tâche : rien à faire');
 reset role;
 select is_empty($$ select 1 from public.launch_members where ref like 'lan109-m%' $$,
