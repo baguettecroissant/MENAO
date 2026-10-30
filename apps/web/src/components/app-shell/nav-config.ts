@@ -22,6 +22,7 @@ import {
   MessagesSquare,
   QrCode,
   Repeat,
+  Rocket,
   ScrollText,
   Send,
   ShieldCheck,
@@ -168,6 +169,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       label: fr.appShell.sections.tools,
       items: [
         { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
+        // Équipe de lancement et planning de chacun (F-66, ADR 0208).
+        { href: "/admin/lancement", label: fr.admin.nav.launch, icon: Rocket },
         // Toute l'activité, page par page (ADR 0146).
         { href: "/admin/activite", label: fr.admin.nav.activity, icon: Activity },
         // Carte des artisans et de la demande, entonnoir des recherches (ADR 0181).
@@ -241,13 +244,16 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       ],
     },
   ],
-  // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, leur journée et leurs
-  // prospects (ADR 0206), leurs résultats et leurs primes (ADR 0207), puis le guide terrain.
+  // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, leur journée, leur planning
+  // de lancement (ADR 0208) et leurs prospects (ADR 0206), leurs résultats et leurs primes
+  // (ADR 0207), puis le guide terrain.
   commercial: [
     {
       items: [
         { href: "/commercial", label: fr.commercialSpace.nav.home, icon: QrCode, exact: true },
         { href: "/commercial/journee", label: fr.commercialProspects.nav.day, icon: CalendarCheck },
+        // Planning de lancement (F-66, ADR 0208).
+        { href: "/commercial/planning", label: fr.commercialLaunch.nav, icon: CalendarCheck },
         {
           href: "/commercial/prospects",
           label: fr.commercialProspects.nav.prospects,

@@ -1,4 +1,11 @@
-import { FORMES_JURIDIQUES, type DiplomeMetier } from "@menao/core";
+import {
+  FORMES_JURIDIQUES,
+  type DiplomeMetier,
+  type LaunchCategory,
+  type LaunchMemberKind,
+  type LaunchPhase,
+  type LaunchTaskStatus,
+} from "@menao/core";
 
 /** Textes de l'interface, centralisés (CLAUDE.md : pas de chaînes en dur dispersées). */
 export const fr = {
@@ -336,6 +343,98 @@ export const fr = {
       // TODO(legal): primes et contrat des commerciaux (question n°3 pour l'avocat).
       rules:
         "Une prime est créée quand un artisan inscrit avec votre code est validé, puis quand il paie son premier mois d'abonnement. Elle est vérifiée après un délai : dossier toujours validé, abonnement toujours actif.",
+    },
+  },
+  /**
+   * Tableaux de lancement (F-66, ADR 0208) : « Mon planning » des commerciaux, et libellés du
+   * tableau partagés avec le back-office (étapes, catégories, états, filtres).
+   */
+  commercialLaunch: {
+    nav: "Mon planning",
+    title: "Mon planning",
+    intro:
+      "Vos tâches semaine par semaine, les dates clés de l'équipe et les rendez-vous réguliers. Cochez une tâche dès qu'elle est faite.",
+    notReady: "Votre planning n'est pas encore prêt.",
+    notReadyText: "L'équipe MENAO le prépare : il apparaîtra ici.",
+    phases: {
+      preparation: "Préparation",
+      pre_ouverture: "Pré-ouverture",
+      lancement: "Lancement",
+      essais: "Essais",
+      apres: "Après le lancement",
+    } satisfies Record<LaunchPhase, string>,
+    categories: {
+      digital: "Internet",
+      terrain: "Terrain",
+      reseaux: "Réseaux sociaux",
+      contenus: "Contenus",
+      presse: "Presse",
+      ambassadeurs: "Ambassadeurs",
+      produit: "Produit",
+      juridique: "Juridique",
+      pilotage: "Pilotage",
+      equipe: "Équipe",
+      validation: "Validation des dossiers",
+      evenement: "Événement",
+    } satisfies Record<LaunchCategory, string>,
+    kinds: {
+      associe: "Associé",
+      commercial: "Commercial",
+      validation: "Validation des dossiers",
+      autre: "Autre",
+    } satisfies Record<LaunchMemberKind, string>,
+    statuses: {
+      a_faire: "À faire",
+      en_cours: "En cours",
+      fait: "Faite",
+    } satisfies Record<LaunchTaskStatus, string>,
+    board: {
+      progressLabel: "Avancement des tâches",
+      progress: (done: number, total: number) =>
+        `${done.toLocaleString("fr-FR")} tâche${done > 1 ? "s" : ""} faite${done > 1 ? "s" : ""} sur ${total.toLocaleString("fr-FR")}`,
+      milestones: "Prochaines dates clés",
+      countdown: (days: number) => (days === 0 ? "Aujourd'hui" : `J-${days}`),
+      weeks: "Semaines du planning",
+      weekCase: (range: string, total: number, done: number, late: number) =>
+        `Semaine ${range} : ${
+          total === 0
+            ? "aucune tâche"
+            : [
+                `${total} tâche${total > 1 ? "s" : ""}`,
+                `${done} faite${done > 1 ? "s" : ""}`,
+                late > 0 ? `${late} en retard` : null,
+              ]
+                .filter(Boolean)
+                .join(", ")
+        }`,
+      thisWeekCase: "cette semaine",
+      filters: "Filtrer les tâches",
+      filter: {
+        a_faire: "À faire",
+        retard: "En retard",
+        semaine: "Cette semaine",
+        faites: "Faites",
+        tout: "Tout",
+      },
+      late: "En retard",
+      thisWeek: (range: string) => `Cette semaine · ${range}`,
+      week: (range: string) => `Semaine ${range}`,
+      range: (from: string, to: string) => `du ${from} au ${to}`,
+      regular: "Rendez-vous réguliers",
+      regularHint: "Ils reviennent régulièrement et ne comptent pas dans l'avancement.",
+      empty: {
+        a_faire: "Rien à faire pour l'instant.",
+        retard: "Rien en retard.",
+        semaine: "Rien de prévu cette semaine.",
+        faites: "Aucune tâche faite pour l'instant.",
+        tout: "Aucune tâche dans ce planning.",
+      },
+      markDone: (title: string) => `Marquer comme faite : ${title}`,
+      reopen: (title: string) => `Rouvrir : ${title}`,
+      edit: (title: string) => `Modifier : ${title}`,
+      state: { late: "En retard", inProgress: "En cours", done: "Faite", milestone: "Jalon" },
+      team: "Toute l'équipe",
+      toggleError: "Pas enregistré. Réessayez.",
     },
   },
   /** Espace partenaire par lien privé (ADR 0139). */
@@ -5398,6 +5497,7 @@ export const fr = {
     badge: "Back-office",
     nav: {
       overview: "Vue d'ensemble",
+      launch: "Lancement",
       activity: "Activité",
       market: "Marché",
       requests: "Demandes",
@@ -6217,6 +6317,162 @@ export const fr = {
         delay: "Délai : entre 0 et 180 jours.",
         objective: "Objectif : entre 1 et 1 000.",
         generic: "L'opération a échoué. Réessayez.",
+      },
+    },
+    // Tableaux de lancement (F-66, ADR 0208) : l'équipe et le planning de chacun.
+    launch: {
+      title: "Lancement",
+      intro:
+        "L'équipe de lancement et le planning de chacun : tâches datées, dates clés et rendez-vous réguliers. Chaque commercial voit ses tâches dans son espace, avec celles partagées avec toute l'équipe.",
+      myPlanning: "Mon planning",
+      milestones: "Prochaines dates clés de l'équipe",
+      milestonesEmpty: "Aucune date clé à venir.",
+      phases: "Les étapes du lancement",
+      today: "Aujourd'hui",
+      phaseDates: (from: string, to: string) => `${from} → ${to}`,
+      phaseNoDates: "Pas encore de date",
+      phasePercent: (percent: number) => `${percent} % fait`,
+      phaseProgress: (phase: string, done: number, total: number) =>
+        `${phase} : ${done} tâche${done > 1 ? "s" : ""} faite${done > 1 ? "s" : ""} sur ${total}`,
+      team: "L'équipe",
+      teamEmpty:
+        "Personne dans l'équipe pour l'instant : ajoutez un membre ou importez le plan ci-dessous.",
+      linked: "Compte relié",
+      notLinked: "Sans compte",
+      inactive: "Inactif",
+      objective: (n: number) =>
+        `Objectif : ${n.toLocaleString("fr-FR")} artisan${n > 1 ? "s" : ""} validé${n > 1 ? "s" : ""}`,
+      late: (n: number) => `${n} en retard`,
+      thisWeek: (n: number) => `${n} cette semaine`,
+      openBoard: (name: string) => `Ouvrir le tableau de ${name}`,
+      teamTasks: "Jalons et tâches de toute l'équipe",
+      teamTasksEmpty: "Aucune tâche commune pour l'instant.",
+      teamLate: "En retard dans l'équipe",
+      teamLateEmpty: "Rien en retard dans l'équipe.",
+      teamLateAll: (n: number) => `Voir les ${n} tâches en retard`,
+      teamLateLess: "Voir seulement les 10 premières",
+      owner: (name: string | null) => name ?? "Toute l'équipe",
+      tools: "Outils",
+      done: {
+        membreSupprime: "Membre retiré de l'équipe. Ses tâches restent, pour toute l'équipe.",
+        tache: "Tâche enregistrée.",
+        tacheSupprimee: "Tâche supprimée.",
+      },
+      import: {
+        title: "Importer le plan",
+        lead: "Fichier .json préparé à part, hors du site (membres et tâches). Une tâche déjà importée est mise à jour sans perdre ce qui a été coché.",
+        file: "Fichier du plan (.json)",
+        preview: (members: number, tasks: number) =>
+          `Fichier prêt : ${members} membre${members > 1 ? "s" : ""}, ${tasks} tâche${tasks > 1 ? "s" : ""}.`,
+        submit: "Importer",
+        done: (r: {
+          members_created: number;
+          members_updated: number;
+          tasks_created: number;
+          tasks_updated: number;
+          skipped: number;
+        }) =>
+          [
+            `Import terminé : ${r.members_created} membre${r.members_created > 1 ? "s" : ""} ajouté${r.members_created > 1 ? "s" : ""}, ${r.members_updated} mis à jour`,
+            `${r.tasks_created} tâche${r.tasks_created > 1 ? "s" : ""} ajoutée${r.tasks_created > 1 ? "s" : ""}, ${r.tasks_updated} mise${r.tasks_updated > 1 ? "s" : ""} à jour`,
+            r.skipped > 0
+              ? `${r.skipped} ligne${r.skipped > 1 ? "s" : ""} ignorée${r.skipped > 1 ? "s" : ""} (invalide${r.skipped > 1 ? "s" : ""})`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") + ".",
+        errors: {
+          choose: "Choisissez d'abord le fichier du plan.",
+          read: "Fichier illisible : choisissez un fichier .json.",
+          invalid: (detail: string) => `Fichier refusé. ${detail}`,
+          task: (n: number) => `Tâche n° ${n}`,
+          member: (n: number) => `Membre n° ${n}`,
+          field: (row: string, key: string) => `${row}, champ « ${key} »`,
+          tooBig:
+            "Fichier trop lourd pour un seul import (900 Ko au plus). Séparez les tâches en deux fichiers, chacun avec la liste des membres, et importez-les l'un après l'autre.",
+          save: "L'import a échoué. Réessayez.",
+        },
+      },
+      newMember: {
+        title: "Ajouter un membre",
+        lead: "Un associé, un commercial ou la personne qui valide les dossiers. Relié à un compte, il voit son planning dans son espace.",
+      },
+      copy: {
+        title: "Copier un planning",
+        lead: "Les tâches d'un membre, remises à faire, ajoutées au planning d'un autre : pratique pour un nouveau commercial. Les tâches partagées ne sont pas copiées : toute l'équipe les voit déjà.",
+        from: "Copier le planning de",
+        to: "Vers le planning de",
+        choose: "Choisir un membre",
+        submit: "Copier",
+        confirm: (from: string, to: string) =>
+          `Les tâches de ${from} (hors tâches partagées) seront ajoutées au planning de ${to}, à faire. Ses tâches actuelles restent.`,
+        confirmButton: "Confirmer la copie",
+        cancel: "Annuler",
+        same: "Choisissez deux membres différents.",
+        copied: (n: number) =>
+          `${n} tâche${n > 1 ? "s" : ""} copiée${n > 1 ? "s" : ""} dans ce planning.`,
+      },
+      member: {
+        back: "Lancement",
+        addTask: "Ajouter une tâche",
+        edit: "Le membre",
+        saved: "Membre enregistré.",
+        fields: {
+          nom: "Nom",
+          mission: "Mission",
+          missionHint: "Une phrase, affichée en haut de son planning.",
+          kind: "Rôle dans l'équipe",
+          account: "Compte relié",
+          accountNone: "Aucun compte",
+          accountHint:
+            "Le membre voit son planning dans son espace. Un commercial se relie à un compte commercial ; les autres, à un compte administrateur.",
+          accountTaken: (name: string) => `${name} (déjà dans l'équipe)`,
+          objective: "Objectif d'artisans validés",
+          objectiveHint: "Facultatif. Interne : visible seulement dans le back-office.",
+          ordre: "Ordre d'affichage",
+          ordreHint: "Les plus petits d'abord.",
+        },
+        roles: { admin: "admin", commercial: "commercial" } as Record<string, string>,
+        save: "Enregistrer",
+        create: "Ajouter le membre",
+        delete: "Retirer de l'équipe",
+        deleteHint: "Ses tâches restent, pour toute l'équipe.",
+        deleteConfirm: "Confirmer : retirer de l'équipe",
+        cancel: "Annuler",
+      },
+      task: {
+        newTitle: "Nouvelle tâche",
+        editTitle: "Modifier la tâche",
+        backTo: (name: string) => `Tableau de ${name}`,
+        backTeam: "Lancement",
+        fields: {
+          titre: "Titre",
+          detail: "Détail",
+          member: "Responsable",
+          team: "Toute l'équipe",
+          phase: "Étape",
+          categorie: "Catégorie",
+          debut: "Début",
+          echeance: "Échéance",
+          echeanceHint: "Obligatoire, sauf pour un rendez-vous régulier.",
+          recurrence: "Rendez-vous régulier",
+          recurrenceHint:
+            "Par exemple « Chaque lundi à 9 h ». Vide pour une tâche ponctuelle. Il ne compte pas dans l'avancement.",
+          jalon: "Jalon : date clé, affichée en compte à rebours",
+          partage: "Partagée avec toute l'équipe",
+          partageHint:
+            "Tous les membres la verront dans leur planning, y compris les commerciaux. Sinon : seulement le responsable et les administrateurs.",
+          statut: "Où en est-elle ?",
+        },
+        save: "Enregistrer la tâche",
+        delete: "Supprimer la tâche",
+        deleteHint: "Elle disparaît du planning, définitivement.",
+        deleteConfirm: "Confirmer : supprimer la tâche",
+        cancel: "Annuler",
+      },
+      errors: {
+        generic: "L'opération a échoué. Réessayez.",
+        invalid: "Vérifiez les champs signalés.",
       },
     },
     // Commerciaux de terrain (F-65, ADR 0205).

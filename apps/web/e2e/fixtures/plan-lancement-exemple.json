@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "members": [
+    {
+      "ref": "e2e-membre-un",
+      "nom": "Membre Exemple Un",
+      "mission": "Membre fictif des tests de bout en bout.",
+      "kind": "autre",
+      "ordre": 10
+    },
+    {
+      "ref": "e2e-membre-deux",
+      "nom": "Membre Exemple Deux",
+      "mission": "Second membre fictif des tests.",
+      "kind": "validation",
+      "ordre": 11
+    }
+  ],
+  "tasks": [
+    {
+      "ref": "e2e-tache-1",
+      "member": "e2e-membre-un",
+      "titre": "Tâche d'exemple numéro 1",
+      "detail": "Tâche fictive pour vérifier l'import.",
+      "phase": "preparation",
+      "categorie": "terrain",
+      "debut": "2027-01-04",
+      "echeance": "2027-01-08"
+    },
+    {
+      "ref": "e2e-tache-2",
+      "member": "e2e-membre-un",
+      "titre": "Tâche d'exemple numéro 2",
+      "phase": "pre_ouverture",
+      "categorie": "contenus",
+      "echeance": "2027-01-15"
+    },
+    {
+      "ref": "e2e-tache-3",
+      "member": null,
+      "titre": "Point d'équipe d'exemple",
+      "phase": "preparation",
+      "categorie": "pilotage",
+      "recurrence": "Chaque lundi à 9 h"
+    },
+    {
+      "ref": "e2e-tache-4",
+      "member": "e2e-membre-deux",
+      "titre": "Date clé d'exemple",
+      "phase": "lancement",
+      "categorie": "evenement",
+      "echeance": "2027-02-01",
+      "jalon": true
+    }
+  ]
+}

@@ -29,6 +29,12 @@ describe("suivi des échéances (F-51)", () => {
     expect(daysUntil("2026-10-08", today)).toBe(-1);
   });
 
+  it("jours restants depuis un jour AAAA-MM-JJ (jalons du lancement, F-66)", () => {
+    expect(daysUntil("2026-10-09", "2026-10-09")).toBe(0);
+    expect(daysUntil("2026-11-01", "2026-10-29")).toBe(3);
+    expect(daysUntil("2026-10-08", "2026-10-09")).toBe(-1);
+  });
+
   it.each([
     [null, "ok"],
     ["2026-12-31", "ok"],

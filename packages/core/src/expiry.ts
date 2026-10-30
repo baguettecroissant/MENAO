@@ -1,4 +1,5 @@
 /** Suivi des échéances des documents et certifications d'un artisan validé (F-51). */
+import { daysBetween } from "./agenda";
 
 /**
  * Documents dont l'expiration est surveillée après validation (le Kbis ne l'est pas).
@@ -27,8 +28,12 @@ export type ExpiryStatus = "ok" | "bientot" | "urgent" | "expire";
 
 const DAY_MS = 86_400_000;
 
-/** Jours restants jusqu'à la date de fin (AAAA-MM-JJ, incluse) ; négatif si dépassée. */
-export function daysUntil(dateFin: string, today: Date = new Date()): number {
+/**
+ * Jours restants jusqu'à la date de fin (AAAA-MM-JJ, incluse) ; négatif si dépassée. `today` :
+ * un instant (jour UTC) ou directement un jour AAAA-MM-JJ (jalons du lancement, F-66).
+ */
+export function daysUntil(dateFin: string, today: Date | string = new Date()): number {
+  if (typeof today === "string") return daysBetween(today, dateFin);
   const start = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
   return Math.round((Date.parse(`${dateFin}T00:00:00Z`) - start) / DAY_MS);
 }
