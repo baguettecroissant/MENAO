@@ -1,7 +1,8 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
-import { Card } from "@/components/ui";
+import { StaffInviteForm } from "@/components/admin/staff-invite-form";
+import { ButtonLink, Card, CardTitle } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -14,7 +15,10 @@ const PATH = "/admin/personnes";
 
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
 
-/** Personnes (F-52, ADR 0047) : tous les comptes, filtrés par rôle, avec recherche. */
+/**
+ * Personnes (F-52, ADR 0047) : tous les comptes, filtrés par rôle, avec recherche. Sous « Équipe
+ * MENAO », invitation d'un admin ou d'un membre du support (F-67, ADR 0210).
+ */
 export default async function AdminPeoplePage({ searchParams }: PageProps<"/admin/personnes">) {
   const params = await searchParams;
   const filter = parsePeopleFilter(params.role);
@@ -35,10 +39,28 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
-        <p className="text-sm text-muted-foreground">{t.intro}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+          <p className="text-sm text-muted-foreground">{t.intro}</p>
+        </div>
+        {filter !== "equipe" && (
+          <ButtonLink
+            href={`${PATH}?role=equipe#inviter` as Route}
+            variant="outline"
+            size="sm"
+            className="shrink-0 self-start"
+          >
+            {t.invite.link}
+          </ButtonLink>
+        )}
       </div>
+      {filter === "equipe" && (
+        <Card id="inviter" className="flex scroll-mt-24 flex-col gap-4">
+          <CardTitle title={t.invite.title} description={t.invite.lead} />
+          <StaffInviteForm />
+        </Card>
+      )}
       <SearchForm
         action={PATH}
         label={t.searchLabel}

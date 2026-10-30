@@ -5858,6 +5858,32 @@ export const fr = {
         artisans: "Artisans",
         equipe: "Équipe MENAO",
       },
+      // Invitation d'un admin ou d'un membre du support (F-67, ADR 0210).
+      invite: {
+        link: "Inviter un membre de l'équipe",
+        title: "Inviter un membre de l'équipe",
+        lead: "Il reçoit un e-mail pour choisir son mot de passe (lien valable une heure ; ensuite, « Mot de passe oublié » sur la page de connexion). À sa première visite du back-office, il active la double authentification.",
+        fields: {
+          firstName: "Prénom",
+          lastName: "Nom",
+          email: "Adresse e-mail",
+          role: "Accès",
+          roleHint:
+            "Admin : tout le back-office, dont la validation des dossiers et le lancement. Support : tickets, modération et litiges seulement.",
+        },
+        roles: { admin: "Admin", support: "Support" } as Record<string, string>,
+        submit: "Envoyer l'invitation",
+        invited: (email: string) => `Invitation envoyée à ${email}.`,
+        errors: {
+          invalid: "Vérifiez le prénom, le nom, l'adresse e-mail et l'accès.",
+          email_taken:
+            "Un compte existe déjà avec cette adresse. Pour la sécurité, une invitation ne donne jamais l'accès admin à un compte existant : utilisez une autre adresse (par exemple son adresse @menao.fr).",
+          forbidden: "Réservé aux administrateurs, avec la double authentification.",
+          rate_limited: "Trop d'invitations en peu de temps. Réessayez dans une heure.",
+          unavailable:
+            "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+        } as Record<string, string>,
+      },
       columns: {
         name: "Nom",
         email: "E-mail",

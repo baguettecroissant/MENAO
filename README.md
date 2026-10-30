@@ -69,7 +69,9 @@ Analyse du besoin (`analyze-need`, Claude Haiku 5.5, repli Sonnet 5.5) et dicté
 
 ## Créer un administrateur
 
-Le rôle se trouve dans `app_metadata`, jamais modifiable depuis l'application. Dans l'éditeur SQL du projet Supabase (après inscription normale de la personne) :
+Depuis le back-office : « Personnes », filtre « Équipe MENAO », formulaire « Inviter un membre de l'équipe » (admin ou support, ADR 0210). La personne reçoit un e-mail pour choisir son mot de passe.
+
+Premier admin d'un nouveau projet, ou recours : le rôle se trouve dans `app_metadata`, jamais modifiable depuis l'application. Dans l'éditeur SQL du projet Supabase (après inscription normale de la personne) :
 
 ```sql
 update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}'

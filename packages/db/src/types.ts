@@ -5071,6 +5071,10 @@ export type Database = {
       };
       admin_reactivate_account: { Args: { p_user_id: string }; Returns: undefined };
       admin_reactivate_artisan: { Args: { p_artisan_id: string }; Returns: undefined };
+      admin_record_staff_invite: {
+        Args: { p_role: Database["public"]["Enums"]["app_role"]; p_user_id: string };
+        Returns: undefined;
+      };
       admin_references: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_referral_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_referrals: {
