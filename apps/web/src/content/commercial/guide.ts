@@ -15,6 +15,50 @@ export type CommercialGuideSection = {
 
 export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
   {
+    // Ajout à l'écran d'accueil (ADR 0211).
+    slug: "telephone",
+    title: "Mettre MENAO sur mon téléphone",
+    summary:
+      "Une icône MENAO sur l'écran d'accueil, qui ouvre directement votre espace, en plein écran.",
+    body: [
+      {
+        type: "p",
+        text: "Votre espace est sur le site MENAO. Ajoutez-le à l'écran d'accueil : il s'ouvre d'un geste, comme une application, et vous n'avez à vous connecter qu'une fois.",
+      },
+      { type: "h2", id: "iphone", text: "Sur iPhone" },
+      {
+        type: "list",
+        ordered: true,
+        items: [
+          "Ouvrez **menao.fr/commercial** dans Safari et connectez-vous.",
+          "Touchez le bouton **Partager** (le carré avec une flèche vers le haut).",
+          "Choisissez **Sur l'écran d'accueil**, puis **Ajouter**.",
+          "Ouvrez MENAO depuis la nouvelle icône et connectez-vous une dernière fois : l'icône garde sa propre connexion.",
+        ],
+      },
+      { type: "h2", id: "android", text: "Sur Android" },
+      {
+        type: "list",
+        ordered: true,
+        items: [
+          "Ouvrez **menao.fr/commercial** dans Chrome et connectez-vous.",
+          "Touchez le menu **⋮** en haut à droite.",
+          "Choisissez **Ajouter à l'écran d'accueil** (ou **Installer l'application**), puis confirmez.",
+        ],
+      },
+      {
+        type: "callout",
+        tone: "menao",
+        title: "Et l'application MENAO ?",
+        text: "L'application de l'App Store et de Google Play est faite pour les artisans et les clients. Pour vous, elle ouvre votre espace sur le site : l'icône de l'écran d'accueil y mène plus vite.",
+      },
+      {
+        type: "p",
+        text: "Avant l'ouverture, le site demande le code d'accès que l'équipe MENAO vous a donné : saisissez-le dans l'icône, puis de nouveau au bout de 30 jours.",
+      },
+    ],
+  },
+  {
     slug: "parcours",
     title: "Du premier contact à l'abonnement",
     summary:

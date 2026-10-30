@@ -37,6 +37,8 @@ const OPEN = [
   "icon\\.svg",
   "apple-icon\\.png",
   "manifest\\.webmanifest",
+  // Manifeste de l'espace commercial (ADR 0211) : lu par le téléphone sans cookie.
+  "commercial\\.webmanifest",
   "robots\\.txt",
 ];
 
