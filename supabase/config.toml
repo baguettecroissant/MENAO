@@ -261,7 +261,7 @@ content_path = "./supabase/templates/recovery.html"
 
 # Invitation d'un commercial par un admin (F-65, ADR 0205).
 [auth.email.template.invite]
-subject = "Votre accès à l'espace commercial MENAO"
+subject = "Votre accès à MENAO"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.email_change]
@@ -526,6 +526,10 @@ verify_jwt = false
 
 # Envoi des notifications (F-41) : appelée par la base avec un secret partagé, sans jeton.
 [functions.commercial-invite]
+verify_jwt = true
+
+# Invitation d'un admin ou d'un membre du support (F-67, ADR 0210) : admin en session aal2.
+[functions.staff-invite]
 verify_jwt = true
 
 [functions.notify]

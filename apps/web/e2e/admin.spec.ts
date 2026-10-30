@@ -160,6 +160,14 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await drawn.getByRole("button", { name: "Conforme", exact: true }).click();
   await expect(page.getByRole("listitem", { name: drawnName ?? "" })).toContainText("Contrôlé le");
 
+  // Inviter un membre de l'équipe (F-67, ADR 0210) : le lien de « Personnes » ouvre le formulaire
+  // sous « Équipe MENAO ». L'envoi passe par l'Edge Function staff-invite, non servie ici.
+  await page.goto("/admin/personnes");
+  await page.getByRole("link", { name: "Inviter un membre de l'équipe" }).click();
+  await expect(page).toHaveURL(/\/admin\/personnes\?role=equipe#inviter$/);
+  await expect(page.getByLabel("Accès")).toHaveValue("admin");
+  await expect(page.getByRole("button", { name: "Envoyer l'invitation" })).toBeVisible();
+
   // Côté artisan : dossier validé. Déconnexion depuis le menu du compte (ADR 0035).
   await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("button", { name: "Me déconnecter" }).click();
