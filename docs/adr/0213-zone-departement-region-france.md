@@ -24,5 +24,5 @@ L'artisan choisissait un rayon autour de son adresse (100 km au plus à l'écran
 - **Nouvelle table** `artisan_territories`, avec RLS et tests pgTAP (`112_zone_territoires`). Elle est incluse dans les exports RGPD.
 - **Après la fusion** : `db push` sur staging. Aucune Edge Function à déployer.
 - **Application native** : il faut un nouveau build. Un ancien build ne sait pas lire un artisan en zone territoire (fiche publique, écran « Zone »).
-- **Carte du marché du back-office** : elle ne compte encore que les rayons pour estimer la couverture d'une commune. Les tableaux de lancement, eux, comptent les territoires.
+- **Carte du marché du back-office** : adaptée par l'ADR 0214.
 - **Pas de nouvelle dépendance.**
