@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ZoneForm } from "./zone-form";
 
 export default async function ZoneStepPage() {
-  const { artisan, zones } = await getOnboardingContext();
+  const { artisan, zones, territoryCodes } = await getOnboardingContext();
   // Coordonnées de l'adresse de départ enregistrée, pour l'aperçu de la carte (ADR 0127).
   const supabase = await createClient();
   const { data: points } = await supabase.rpc("my_artisan_base_point");
@@ -21,6 +21,7 @@ export default async function ZoneStepPage() {
           basePoint: points?.[0] ?? null,
           radiusKm: artisan.radius_km,
           communes: zones.map((z) => ({ code: z.code_insee, nom: z.nom })),
+          territories: territoryCodes,
         }}
       />
     </Card>

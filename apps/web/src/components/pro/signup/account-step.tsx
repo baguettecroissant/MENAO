@@ -1,6 +1,6 @@
 "use client";
 
-import type { ArtisanSignupDraft, OAuthProvider } from "@menao/core";
+import { signupZoneInput, type ArtisanSignupDraft, type OAuthProvider } from "@menao/core";
 import { PASSWORD_MIN_LENGTH } from "@menao/validation";
 import { ArrowRight } from "lucide-react";
 import { useState, useTransition, type FormEvent } from "react";
@@ -35,14 +35,7 @@ function profilePayload(draft: ArtisanSignupDraft) {
     siret: draft.company?.siret,
     isDirigeant: draft.isDirigeant,
     assujettiTva: draft.assujettiTva,
-    zone: draft.base && {
-      mode: "rayon",
-      baseLabel: draft.base.label,
-      baseCitycode: draft.base.citycode,
-      lon: draft.base.lon,
-      lat: draft.base.lat,
-      radiusKm: draft.radiusKm,
-    },
+    zone: signupZoneInput(draft),
   };
 }
 

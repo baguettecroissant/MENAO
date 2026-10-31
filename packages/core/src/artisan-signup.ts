@@ -4,6 +4,8 @@
  * à la création du compte.
  */
 
+import { isTerritoryCode } from "./zone-territories";
+
 export const ARTISAN_SIGNUP_PATH = "/pro/inscription";
 /** Retour de Google ou Apple pour un artisan : finalisation du compte (ADR 0110). */
 export const ARTISAN_SIGNUP_FINALIZE_PATH = "/pro/finaliser";
@@ -14,6 +16,10 @@ export const ARTISAN_SIGNUP_DRAFT_KEY = "menao.inscription-pro.v1";
 
 export const ARTISAN_SIGNUP_STEPS = ["metiers", "entreprise", "zone", "compte"] as const;
 export type ArtisanSignupStep = (typeof ARTISAN_SIGNUP_STEPS)[number];
+
+/** Zone choisie à l'inscription : les listes de communes se règlent ensuite (ADR 0213). */
+export const SIGNUP_ZONE_MODES = ["rayon", "departements", "regions", "france"] as const;
+export type SignupZoneMode = (typeof SIGNUP_ZONE_MODES)[number];
 
 /** Rayons d'intervention proposés (zone en rayon, F-14). */
 export const ZONE_RADIUS_OPTIONS_KM = [10, 20, 30, 50, 75, 100] as const;
@@ -45,7 +51,10 @@ export type ArtisanSignupDraft = {
   isDirigeant: boolean | null;
   assujettiTva: boolean | null;
   base: ArtisanSignupBase | null;
+  zoneMode: SignupZoneMode;
   radiusKm: number;
+  /** Départements ou régions choisis (ADR 0213), selon `zoneMode`. */
+  territories: string[];
 };
 
 export function emptySignupDraft(): ArtisanSignupDraft {
@@ -55,7 +64,9 @@ export function emptySignupDraft(): ArtisanSignupDraft {
     isDirigeant: null,
     assujettiTva: null,
     base: null,
+    zoneMode: "rayon",
     radiusKm: SIGNUP_DEFAULT_RADIUS_KM,
+    territories: [],
   };
 }
 
@@ -66,13 +77,28 @@ export function signupStepDone(step: ArtisanSignupStep, draft: ArtisanSignupDraf
     case "entreprise":
       return draft.company !== null && draft.isDirigeant !== null && draft.assujettiTva !== null;
     case "zone":
-      return (
-        draft.base !== null &&
-        (ZONE_RADIUS_OPTIONS_KM as readonly number[]).includes(draft.radiusKm)
-      );
+      if (draft.base === null) return false;
+      if (draft.zoneMode === "rayon") {
+        return (ZONE_RADIUS_OPTIONS_KM as readonly number[]).includes(draft.radiusKm);
+      }
+      return draft.zoneMode === "france" || draft.territories.length > 0;
     case "compte":
       return false;
   }
+}
+
+/** Zone du brouillon, sous la forme lue par `signupZoneSchema` (@menao/validation). */
+export function signupZoneInput(draft: ArtisanSignupDraft) {
+  if (draft.base === null) return null;
+  const base = {
+    mode: draft.zoneMode,
+    baseLabel: draft.base.label,
+    baseCitycode: draft.base.citycode,
+    lon: draft.base.lon,
+    lat: draft.base.lat,
+  };
+  if (draft.zoneMode === "rayon") return { ...base, radiusKm: draft.radiusKm };
+  return draft.zoneMode === "france" ? base : { ...base, territories: draft.territories };
 }
 
 export function firstOpenSignupStep(draft: ArtisanSignupDraft): ArtisanSignupStep {
@@ -144,6 +170,7 @@ export function parseSignupDraft(value: unknown): ArtisanSignupDraft {
   const draft = emptySignupDraft();
   if (!isObj(value)) return draft;
   const radius = num(value.radiusKm);
+  const zoneMode = SIGNUP_ZONE_MODES.find((mode) => mode === value.zoneMode) ?? draft.zoneMode;
   return {
     tradeCodes: Array.isArray(value.tradeCodes)
       ? [
@@ -162,5 +189,16 @@ export function parseSignupDraft(value: unknown): ArtisanSignupDraft {
       radius !== null && (ZONE_RADIUS_OPTIONS_KM as readonly number[]).includes(radius)
         ? radius
         : draft.radiusKm,
+    zoneMode,
+    territories:
+      (zoneMode === "departements" || zoneMode === "regions") && Array.isArray(value.territories)
+        ? [
+            ...new Set(
+              value.territories.filter(
+                (c): c is string => typeof c === "string" && isTerritoryCode(zoneMode, c),
+              ),
+            ),
+          ]
+        : [],
   };
 }

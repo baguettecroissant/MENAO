@@ -31,6 +31,7 @@ export type ProfileHubStatus = { tone: ProfileHubTone } & (
         | "verifiedCompany"
         | "toVerify"
         | "toDefine"
+        | "france"
         | "paused"
         | "available"
         | "inReview"
@@ -40,7 +41,16 @@ export type ProfileHubStatus = { tone: ProfileHubTone } & (
         | "toActivate";
     }
   | {
-      code: "photos" | "toAnswer" | "reviews" | "level" | "communes" | "toRenew" | "refused";
+      code:
+        | "photos"
+        | "toAnswer"
+        | "reviews"
+        | "level"
+        | "communes"
+        | "departements"
+        | "regions"
+        | "toRenew"
+        | "refused";
       n: number;
     }
   | { code: "radius"; km: number }
@@ -111,6 +121,10 @@ function zoneStatus(s: ArtisanOnboardingSnapshot): ProfileHubStatus {
   }
   if (s.zoneMode === "communes" && s.communeCount > 0) {
     return { code: "communes", n: s.communeCount, tone: "neutral" };
+  }
+  if (s.zoneMode === "france" && s.hasBaseLocation) return { code: "france", tone: "neutral" };
+  if ((s.zoneMode === "departements" || s.zoneMode === "regions") && s.hasBaseLocation) {
+    if (s.territoryCount > 0) return { code: s.zoneMode, n: s.territoryCount, tone: "neutral" };
   }
   return { code: "toDefine", tone: "warning" };
 }

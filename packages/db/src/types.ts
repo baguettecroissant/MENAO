@@ -1086,6 +1086,56 @@ export type Database = {
           },
         ];
       };
+      artisan_territories: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          departement_code: string | null;
+          id: string;
+          region_code: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          departement_code?: string | null;
+          id?: string;
+          region_code?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          departement_code?: string | null;
+          id?: string;
+          region_code?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_territories_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_territories_departement_code_fkey";
+            columns: ["departement_code"];
+            isOneToOne: false;
+            referencedRelation: "departements";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "artisan_territories_region_code_fkey";
+            columns: ["region_code"];
+            isOneToOne: false;
+            referencedRelation: "regions";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       artisan_trades: {
         Row: {
           artisan_id: string;
@@ -2078,6 +2128,39 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      departements: {
+        Row: {
+          code: string;
+          created_at: string;
+          nom: string;
+          region_code: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          created_at?: string;
+          nom: string;
+          region_code: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          nom?: string;
+          region_code?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "departements_region_code_fkey";
+            columns: ["region_code"];
+            isOneToOne: false;
+            referencedRelation: "regions";
+            referencedColumns: ["code"];
+          },
+        ];
       };
       expense_lines: {
         Row: {
@@ -4040,6 +4123,28 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      regions: {
+        Row: {
+          code: string;
+          created_at: string;
+          nom: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          created_at?: string;
+          nom: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          nom?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       requests: {
         Row: {
@@ -6145,6 +6250,7 @@ export type Database = {
           p_lon?: number;
           p_mode: Database["public"]["Enums"]["zone_mode"];
           p_radius_km?: number;
+          p_territoires?: string[];
         };
         Returns: undefined;
       };
@@ -6389,7 +6495,7 @@ export type Database = {
         | "invitation_artisan";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
-      zone_mode: "rayon" | "communes";
+      zone_mode: "rayon" | "communes" | "departements" | "regions" | "france";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -6711,7 +6817,7 @@ export const Constants = {
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],
-      zone_mode: ["rayon", "communes"],
+      zone_mode: ["rayon", "communes", "departements", "regions", "france"],
     },
   },
 } as const;

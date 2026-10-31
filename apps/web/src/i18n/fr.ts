@@ -1277,7 +1277,7 @@ export const fr = {
       rankingEyebrow: "Classement",
       rankingTitle: "Aucune place ne s'achète.",
       rankingText:
-        "Les artisans disponibles tout de suite passent en premier, puis viennent leur Score MENAO sur 100 (vérifications, expérience, diplômes, profil, réactivité et avis des clients) et leur distance. Une place est réservée à un nouvel artisan, le temps qu'il se fasse connaître. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
+        "Les artisans de proximité passent avant ceux qui couvrent une région ou toute la France. Parmi eux, les disponibles tout de suite passent en premier, puis viennent leur Score MENAO sur 100 (vérifications, expérience, diplômes, profil, réactivité et avis des clients) et leur distance. Une place est réservée à un nouvel artisan, le temps qu'il se fasse connaître. Le classement ne dépend ni de leur formule d'abonnement ni d'un paiement.",
       rankingLink: "Lire les critères de classement",
     },
     faq: {
@@ -3296,6 +3296,9 @@ export const fr = {
           `${n === 1 ? "1 métier" : `${n} métiers`}${rge ? " · RGE" : ""}`,
         radius: (km: number) => `${km} km`,
         communes: (n: number) => (n === 1 ? "1 commune" : `${n} communes`),
+        departements: (n: number) => (n === 1 ? "1 département" : `${n} départements`),
+        regions: (n: number) => (n === 1 ? "1 région" : `${n} régions`),
+        france: "Toute la France",
         toDefine: "À définir",
         paused: "En pause",
         from: (date: string) => `Dès le ${date}`,
@@ -4388,7 +4391,7 @@ export const fr = {
       citiesEyebrow: "Votre zone",
       citiesTitle: "Les communes où MENAO démarre",
       citiesSubtitle:
-        "Vous choisissez votre zone d'intervention : un rayon autour de votre adresse, ou une liste de communes.",
+        "Vous choisissez votre zone d'intervention : un rayon autour de votre adresse, une liste de communes, des départements, des régions ou toute la France.",
       clientPage: (trade: string) => `Voir la page ${trade.toLowerCase()} côté particuliers`,
       faqTitle: (trade: string) => `Questions fréquentes des artisans ${trade.toLowerCase()}s`,
       faq: (trade: string) => [
@@ -4689,7 +4692,7 @@ export const fr = {
         },
         {
           q: "Dans quelle zone suis-je visible ?",
-          a: "MENAO ouvre d'abord dans les Alpes-Maritimes. Vous choisissez votre zone : un rayon autour de votre adresse ou une liste de communes.",
+          a: "MENAO ouvre d'abord dans les Alpes-Maritimes. Vous choisissez votre zone : un rayon autour de votre adresse, une liste de communes, des départements, des régions ou toute la France.",
         },
         {
           q: "Puis-je arrêter mon abonnement ?",
@@ -4804,6 +4807,21 @@ export const fr = {
         summary: (km: number, place: string) => `Jusqu'à ${km} km autour de ${place}.`,
         communesLater:
           "Vous préférez une liste de communes ? Vous pourrez la choisir depuis votre espace.",
+        mode: "Comment définir votre zone ?",
+        modeRayon: "Un rayon",
+        modeDepartements: "Des départements",
+        modeRegions: "Des régions",
+        modeFrance: "Toute la France",
+        departementSearch: "Ajouter un département",
+        departementSearchHint: "Tapez un nom ou un numéro, par exemple 06.",
+        regionSearch: "Ajouter une région",
+        regionSearchHint: "Tapez le nom d'une région puis choisissez-la dans la liste.",
+        territories: "Territoires choisis",
+        remove: (nom: string) => `Retirer ${nom}`,
+        noTerritory: "Choisissez au moins un territoire.",
+        franceNote: "Vous recevrez les demandes de toute la France.",
+        wideNote:
+          "Sur une région ou toute la France, vous passez après les artisans proches du chantier.",
       },
       account: {
         title: "Créez votre compte",
@@ -5453,6 +5471,18 @@ export const fr = {
         legend: "Comment définir votre zone ?",
         modeRayon: "Autour de mon adresse",
         modeCommunes: "Une liste de communes",
+        modeDepartements: "Un ou plusieurs départements",
+        modeRegions: "Une ou plusieurs régions",
+        modeFrance: "Toute la France",
+        addressTerritoryHint: "Elle sert à indiquer votre distance aux clients.",
+        departementSearch: "Ajouter un département",
+        departementSearchHint: "Tapez un nom ou un numéro, par exemple 06.",
+        regionSearch: "Ajouter une région",
+        regionSearchHint: "Tapez le nom d'une région puis choisissez-la dans la liste.",
+        territories: "Territoires choisis",
+        franceNote: "Vous recevrez les demandes de toute la France.",
+        wideNote:
+          "Sur une région ou toute la France, vous passez après les artisans proches du chantier.",
         address: "Adresse de départ",
         addressHint: "Commencez à taper puis choisissez une adresse dans la liste.",
         radius: "Rayon d'intervention",
@@ -5479,8 +5509,9 @@ export const fr = {
     ],
     orderTitle: "Dans quel ordre ?",
     order: [
-      "D'abord les artisans disponibles immédiatement, puis les autres.",
-      "Dans chacun de ces deux groupes, le Score MENAO, sur 100, affiché sur la fiche de chaque artisan : badge « Assuré et vérifié » (20 points) ; expérience dans le métier, déclarée ou selon l'âge de l'entreprise (10) ; diplôme du métier déclaré et qualification vérifiée, comme RGE ou Qualibat (10) ; fiche complète, avec photo, réalisations, présentation et spécialités (10) ; réactivité, c'est-à-dire temps de réponse moyen aux demandes et devis envoyés dans les 72 h (10) ; avis des clients (40). Pour les avis, la note Google vérifiée par l'équipe MENAO sert de base, ou 3 sur 5 sans fiche Google ; les avis MENAO comptent de plus en plus avec leur nombre (la moitié du poids à 5 avis, 80 % à 20 avis). Un artisan sans demande part d'une réactivité neutre, remplacée par ses résultats réels.",
+      "D'abord les artisans de proximité : ceux dont la zone est un rayon, une liste de communes ou des départements passent avant ceux qui couvrent une région entière ou toute la France.",
+      "Dans chacun de ces groupes, les artisans disponibles immédiatement, puis les autres.",
+      "Ensuite, le Score MENAO, sur 100, affiché sur la fiche de chaque artisan : badge « Assuré et vérifié » (20 points) ; expérience dans le métier, déclarée ou selon l'âge de l'entreprise (10) ; diplôme du métier déclaré et qualification vérifiée, comme RGE ou Qualibat (10) ; fiche complète, avec photo, réalisations, présentation et spécialités (10) ; réactivité, c'est-à-dire temps de réponse moyen aux demandes et devis envoyés dans les 72 h (10) ; avis des clients (40). Pour les avis, la note Google vérifiée par l'équipe MENAO sert de base, ou 3 sur 5 sans fiche Google ; les avis MENAO comptent de plus en plus avec leur nombre (la moitié du poids à 5 avis, 80 % à 20 avis). Un artisan sans demande part d'une réactivité neutre, remplacée par ses résultats réels.",
       "Ensuite, la date de disponibilité, puis les artisans les plus proches du chantier.",
       "Recommandations entre artisans : un artisan contacté par le particulier peut lui recommander un de ses partenaires MENAO (son parrain ou un de ses filleuls), à sa place ou pour un autre métier du chantier. Ces partenaires sont présentés à part, avec le nom de l'artisan qui les recommande, en dehors de ce classement. Une recommandation n'est jamais rémunérée et le particulier reste libre de ne pas les contacter.",
       "À égalité, un ordre aléatoire propre à chaque projet, pour ne favoriser aucun artisan.",
@@ -5494,7 +5525,7 @@ export const fr = {
     reviews:
       "Seuls les clients ayant réalisé un chantier avec l'artisan via MENAO peuvent laisser un avis (« Avis vérifié »), une fois le procès-verbal de réception signé, et un seul par chantier. Chaque avis indique sa date de publication et la date de réception du chantier ; ils sont affichés du plus récent au plus ancien. L'artisan peut répondre publiquement une fois. Tout compte peut signaler un avis : l'équipe MENAO peut alors le masquer s'il enfreint la loi ou nos conditions d'utilisation, jamais pour la seule raison qu'il est négatif.",
     updated:
-      "Dernière mise à jour : 27 octobre 2026 (version provisoire, en cours de validation juridique).",
+      "Dernière mise à jour : 31 octobre 2026 (version provisoire, en cours de validation juridique).",
   },
   admin: {
     title: "Back-office MENAO",
@@ -7673,6 +7704,7 @@ export const fr = {
         none: "Aucun avis Google saisi.",
       },
       zone: "Zone d'intervention",
+      zoneFrance: "Toute la France",
       zoneRayon: (label: string | null, km: number | null) =>
         `${km ?? "?"} km autour de ${label ?? "?"}`,
       certifications: "Certifications",

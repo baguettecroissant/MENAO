@@ -1132,6 +1132,7 @@ export function exampleHubFacts(now: Date = new Date()): ProfileHubFacts {
     radiusKm: 20,
     hasBaseLocation: true,
     communeCount: 0,
+    territoryCount: 0,
     documents,
     presentationLength: exampleProfile(null, now).presentation.length,
     hasAvatar: true,

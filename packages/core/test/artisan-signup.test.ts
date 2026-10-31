@@ -34,7 +34,9 @@ const complete: ArtisanSignupDraft = {
   isDirigeant: true,
   assujettiTva: true,
   base: { label: "12 Avenue des Oliviers 06100 Nice", citycode: "06088", lon: 7.26, lat: 43.72 },
+  zoneMode: "rayon",
   radiusKm: 20,
+  territories: [],
 };
 
 describe("étapes de l'inscription artisan", () => {
@@ -62,6 +64,24 @@ describe("étapes de l'inscription artisan", () => {
     expect(firstOpenSignupStep({ ...complete, company: null })).toBe("entreprise");
     expect(firstOpenSignupStep({ ...complete, base: null })).toBe("zone");
     expect(firstOpenSignupStep(complete)).toBe("compte");
+  });
+
+  it("zone par territoire : au moins un département ou une région (ADR 0213)", () => {
+    const zone = { ...complete, zoneMode: "departements" as const, territories: [] };
+    expect(signupStepDone("zone", zone)).toBe(false);
+    expect(signupStepDone("zone", { ...zone, territories: ["06"] })).toBe(true);
+    expect(signupStepDone("zone", { ...zone, zoneMode: "france" })).toBe(true);
+    expect(signupStepDone("zone", { ...zone, zoneMode: "france", base: null })).toBe(false);
+  });
+
+  it("relit la zone du brouillon et écarte les codes inconnus", () => {
+    expect(
+      parseSignupDraft({ zoneMode: "regions", territories: ["93", "93", "99", 4] }),
+    ).toMatchObject({ zoneMode: "regions", territories: ["93"] });
+    expect(parseSignupDraft({ zoneMode: "communes", territories: ["06"] })).toMatchObject({
+      zoneMode: "rayon",
+      territories: [],
+    });
   });
 
   it("part de l'adresse du siège pour la zone", () => {

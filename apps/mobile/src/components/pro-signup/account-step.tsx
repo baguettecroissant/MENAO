@@ -1,4 +1,4 @@
-import type { ArtisanSignupDraft } from "@menao/core";
+import { signupZoneInput, type ArtisanSignupDraft } from "@menao/core";
 import {
   PASSWORD_MIN_LENGTH,
   artisanAccountSchema,
@@ -30,14 +30,7 @@ export function signupProfile(draft: ArtisanSignupDraft) {
     siret: draft.company?.siret,
     isDirigeant: draft.isDirigeant,
     assujettiTva: draft.assujettiTva,
-    zone: draft.base && {
-      mode: "rayon",
-      baseLabel: draft.base.label,
-      baseCitycode: draft.base.citycode,
-      lon: draft.base.lon,
-      lat: draft.base.lat,
-      radiusKm: draft.radiusKm,
-    },
+    zone: signupZoneInput(draft),
   });
 }
 

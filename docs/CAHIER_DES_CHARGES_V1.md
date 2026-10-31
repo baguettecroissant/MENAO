@@ -284,7 +284,7 @@ Extraire les valeurs exactes depuis Figma (connecteur Figma de Claude Code) dans
 - Onboarding en étapes (sauvegarde à chaque étape) :
   1. Entreprise : raison sociale, nom commercial, forme juridique, TVA intracommunautaire, assujetti TVA oui/non, adresse.
   2. Métiers et spécialités (référentiel), années d'expérience, certifications (RGE, Qualifelec, Qualibat… avec numéro et date de fin).
-  3. Zone d'intervention : adresse de base + rayon (km) **ou** liste de communes.
+  3. Zone d'intervention : adresse de base + rayon (km), **ou** liste de communes, **ou** adresse de base + départements, régions ou France entière (ADR 0213).
   4. Documents : **Kbis ou extrait INSEE/RNE de moins de 3 mois**, **attestation d'assurance décennale** (assureur, numéro, date de fin, couverture géographique), **RC Pro**, pièce d'identité du dirigeant. Formats PDF/JPEG/PNG, 10 Mo max.
   5. Profil public : photo, présentation, photos de réalisations.
   6. Coordonnées bancaires et identité pour les paiements : **onboarding Stripe Connect** (type de compte selon D5), KYC géré par Stripe. C'est sur ce compte que l'artisan sera payé directement par ses clients.

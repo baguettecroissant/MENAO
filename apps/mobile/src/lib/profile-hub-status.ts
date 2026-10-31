@@ -31,6 +31,10 @@ function text(s: ProfileHubStatus): string {
       return v.level(s.n);
     case "communes":
       return v.communes(s.n);
+    case "departements":
+      return v.departements(s.n);
+    case "regions":
+      return v.regions(s.n);
     case "toRenew":
       return v.toRenew(s.n);
     case "refused":

@@ -11,6 +11,7 @@ import {
   rgeConfirmation,
   subscriptionGrantsAccess,
   type SubscriptionStatus,
+  territoryLabel,
 } from "@menao/core";
 import { menaoScorePartsSchema } from "@menao/validation";
 import type { Route } from "next";
@@ -65,6 +66,7 @@ export default async function AdminArtisanPage({
     trades,
     workTypes,
     zones,
+    territories,
     certifications,
     documents,
     photos,
@@ -84,6 +86,10 @@ export default async function AdminArtisanPage({
     supabase.from("artisan_trades").select("trade_code").eq("artisan_id", id),
     supabase.from("artisan_work_types").select("work_type_code").eq("artisan_id", id),
     supabase.from("artisan_zones").select("code_insee, nom").eq("artisan_id", id).order("nom"),
+    supabase
+      .from("artisan_territories")
+      .select("departement_code, region_code")
+      .eq("artisan_id", id),
     supabase
       .from("certifications")
       .select("id, type, numero, date_fin, verified_at")
@@ -404,7 +410,14 @@ export default async function AdminArtisanPage({
           <p>
             {artisan.zone_mode === "rayon"
               ? t.zoneRayon(artisan.base_label, artisan.radius_km)
-              : (zones.data ?? []).map((z) => z.nom).join(", ") || "—"}
+              : artisan.zone_mode === "france"
+                ? t.zoneFrance
+                : artisan.zone_mode === "departements" || artisan.zone_mode === "regions"
+                  ? (territories.data ?? [])
+                      .flatMap((z) => z.departement_code ?? z.region_code ?? [])
+                      .map((code) => territoryLabel(artisan.zone_mode as "regions", code))
+                      .join(", ") || "—"
+                  : (zones.data ?? []).map((z) => z.nom).join(", ") || "—"}
           </p>
         </Section>
       </div>

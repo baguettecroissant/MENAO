@@ -30,6 +30,7 @@ export const messages = {
   zoneAddressRequired: "Choisissez une adresse dans la liste proposée.",
   radiusInvalid: "Choisissez un rayon dans la liste.",
   communesRequired: "Ajoutez au moins une commune.",
+  territoriesRequired: "Choisissez au moins un département ou une région.",
   tooMany: "Trop d'éléments sélectionnés.",
   kbisTooOld: "Le Kbis (ou l'extrait INSEE/RNE) doit dater de moins de 3 mois.",
   urssafTooOld: "L'attestation URSSAF doit dater de moins de 6 mois.",

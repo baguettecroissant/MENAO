@@ -8,6 +8,7 @@ import {
   remainingSlots,
   storedLotTrades,
   type DateSouhaitMode,
+  type ZoneMode,
 } from "@menao/core";
 import type { Database } from "@menao/db";
 import {
@@ -314,7 +315,7 @@ export type MatchedArtisan = {
   availableFrom: string | null;
   distanceKm: number | null;
   zone: {
-    mode: "rayon" | "communes" | null;
+    mode: ZoneMode | null;
     radiusKm: number | null;
     city: string | null;
     communes: string[];

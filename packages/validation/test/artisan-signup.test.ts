@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { signupZoneSchema, territoryChoiceSchema } from "../src/artisan";
 import {
   artisanAccountSchema,
   artisanOAuthAccountSchema,
@@ -123,5 +124,41 @@ describe("emailCodeSchema", () => {
       emailCodeSchema.safeParse({ email: "pro@example.test", code: "12345" }).error?.issues[0]
         ?.message,
     ).toBe(messages.emailCodeInvalid);
+  });
+});
+
+describe("zone par territoire à l'inscription (ADR 0213)", () => {
+  const base = {
+    baseLabel: "12 Avenue des Oliviers 06100 Nice",
+    baseCitycode: "06088",
+    lon: 7.26,
+    lat: 43.72,
+  };
+
+  it("accepte des départements, des régions ou la France, avec l'adresse de départ", () => {
+    expect(
+      signupZoneSchema.parse({ ...base, mode: "departements", territories: ["06", "83", "06"] }),
+    ).toMatchObject({ territories: ["06", "83"] });
+    expect(
+      signupZoneSchema.safeParse({ ...base, mode: "regions", territories: ["93"] }).success,
+    ).toBe(true);
+    expect(signupZoneSchema.safeParse({ ...base, mode: "france" }).success).toBe(true);
+  });
+
+  it("refuse une liste vide, un code inconnu ou une adresse manquante", () => {
+    expect(
+      signupZoneSchema.safeParse({ ...base, mode: "departements", territories: [] }).success,
+    ).toBe(false);
+    expect(
+      signupZoneSchema.safeParse({ ...base, mode: "regions", territories: ["2A"] }).success,
+    ).toBe(false);
+    expect(signupZoneSchema.safeParse({ mode: "france" }).success).toBe(false);
+  });
+
+  it("garde l'adresse enregistrée : seuls les territoires sont contrôlés", () => {
+    expect(territoryChoiceSchema.safeParse({ mode: "france" }).success).toBe(true);
+    expect(
+      territoryChoiceSchema.safeParse({ mode: "departements", territories: ["06"] }).success,
+    ).toBe(true);
   });
 });
