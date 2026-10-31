@@ -1,8 +1,9 @@
 /**
  * Carte du marché du back-office (F-50, ADR 0181) : calculs de la carte (Plan IGN, projection
  * Web Mercator, déplacement et zoom), état des artisans à une date (« Voir grandir ») et entonnoir
- * recherches → résultats → demandes par métier et par commune, avec la couverture par les
- * artisans validés. Sans dépendance, comme l'aperçu de zone (zone-map.ts).
+ * recherches → résultats → demandes par métier et par commune. La couverture par les artisans
+ * validés vient de la base (admin_market, ADR 0214). Sans dépendance, comme l'aperçu de zone
+ * (zone-map.ts).
  */
 
 const TILE_PX = 256;
@@ -132,20 +133,6 @@ export function kmToPixels(km: number, lat: number, zoom: number): number {
   return (km * 1000) / metersPerPixel;
 }
 
-/** Distance à vol d'oiseau en kilomètres. */
-export function distanceKm(
-  a: { lon: number; lat: number },
-  b: { lon: number; lat: number },
-): number {
-  const rad = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * rad;
-  const dLon = (b.lon - a.lon) * rad;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
-}
-
 // ---------------------------------------------------------------------------------------------
 // Données du marché (admin_market)
 // ---------------------------------------------------------------------------------------------
@@ -158,6 +145,8 @@ export type MarketArtisan = {
   lon: number | null;
   lat: number | null;
   rayon_km: number | null;
+  /** Communes ou territoires de la zone, vide pour un rayon. */
+  zone_labels: string[];
   commune: string | null;
   inscrit_le: string;
   valide_le: string | null;
@@ -172,6 +161,15 @@ export type MarketDemand = {
   recherches: number;
   resultats: number;
   demandes: number;
+  /** Artisans validés du métier qui couvrent la commune, quel que soit leur mode de zone. */
+  couverture: number;
+  /** Parmi eux, ceux qui couvrent une région ou la France (après les locaux au classement). */
+  couverture_large: number;
+};
+
+/** Demande d'une commune, sans la couverture : elle dépend du métier et ne s'additionne pas. */
+export type MarketCommune = Omit<MarketDemand, "couverture" | "couverture_large"> & {
+  metiers: string[];
 };
 
 /** Étape d'un artisan sur la carte : validé, suspendu, en cours d'inscription, refusé. */
@@ -205,8 +203,8 @@ export function marketStart(artisans: readonly MarketArtisan[], today: Date): Da
 export function demandByCommune(
   demand: readonly MarketDemand[],
   trade: string | null = null,
-): (MarketDemand & { metiers: string[] })[] {
-  const byCode = new Map<string, MarketDemand & { metiers: string[] }>();
+): MarketCommune[] {
+  const byCode = new Map<string, MarketCommune>();
   for (const row of demand) {
     if (trade && row.metier !== trade) continue;
     const current = byCode.get(row.code_insee);
@@ -217,8 +215,14 @@ export function demandByCommune(
       if (row.metier && !current.metiers.includes(row.metier)) current.metiers.push(row.metier);
     } else {
       byCode.set(row.code_insee, {
-        ...row,
+        code_insee: row.code_insee,
+        ville: row.ville,
         metier: trade,
+        lon: row.lon,
+        lat: row.lat,
+        recherches: row.recherches,
+        resultats: row.resultats,
+        demandes: row.demandes,
         metiers: row.metier ? [row.metier] : [],
       });
     }
@@ -232,40 +236,16 @@ export function demandRadius(recherches: number, max: number): number {
   return Math.round(8 + 28 * Math.sqrt(recherches / max));
 }
 
-/** Artisans validés du métier dont la zone (rayon) couvre la commune. */
-export function coveringArtisans(
-  row: Pick<MarketDemand, "metier" | "lon" | "lat">,
-  artisans: readonly MarketArtisan[],
-): number {
-  if (row.lon === null || row.lat === null) return 0;
-  const place = { lon: row.lon, lat: row.lat };
-  return artisans.filter(
-    (a) =>
-      a.statut === "valide" &&
-      (!row.metier || a.metiers.includes(row.metier)) &&
-      a.lon !== null &&
-      a.lat !== null &&
-      a.rayon_km !== null &&
-      distanceKm(place, { lon: a.lon, lat: a.lat }) <= a.rayon_km,
-  ).length;
-}
-
-export type MarketFunnelRow = MarketDemand & { couverture: number; aRecruter: boolean };
+export type MarketFunnelRow = MarketDemand & { aRecruter: boolean };
 
 /**
  * Entonnoir par métier et par commune, du plus recherché au moins recherché : une ligne est « à
  * recruter » quand des particuliers cherchent et qu'aucun artisan validé du métier ne la couvre.
  */
-export function marketFunnel(
-  demand: readonly MarketDemand[],
-  artisans: readonly MarketArtisan[],
-): MarketFunnelRow[] {
+export function marketFunnel(demand: readonly MarketDemand[]): MarketFunnelRow[] {
   return [...demand]
     .sort((a, b) => b.recherches - a.recherches || a.code_insee.localeCompare(b.code_insee))
-    .map((row) => {
-      const couverture = coveringArtisans(row, artisans);
-      return { ...row, couverture, aRecruter: row.recherches > 0 && couverture === 0 };
-    });
+    .map((row) => ({ ...row, aRecruter: row.recherches > 0 && row.couverture === 0 }));
 }
 
 export type MarketTotals = {

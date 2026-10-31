@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  coveringArtisans,
   demandByCommune,
   demandRadius,
-  distanceKm,
   fitView,
   kmToPixels,
   marketFunnel,
@@ -29,6 +27,7 @@ const artisan = (overrides: Partial<MarketArtisan> = {}): MarketArtisan => ({
   lon: nice.lon,
   lat: nice.lat,
   rayon_km: 20,
+  zone_labels: [],
   commune: "Nice",
   inscrit_le: "2026-10-01T10:00:00Z",
   valide_le: "2026-10-05T10:00:00Z",
@@ -44,6 +43,8 @@ const demand = (overrides: Partial<MarketDemand> = {}): MarketDemand => ({
   recherches: 4,
   resultats: 3,
   demandes: 1,
+  couverture: 0,
+  couverture_large: 0,
   ...overrides,
 });
 
@@ -97,8 +98,7 @@ describe("carte du marché : calculs de la carte (ADR 0181)", () => {
     expect(fitView([], 800, 500)).toEqual({ lon: 7.15, lat: 43.75, zoom: 9 });
   });
 
-  it("distances et rayons à l'échelle", () => {
-    expect(Math.round(distanceKm(nice, antibes))).toBe(18);
+  it("rayons à l'échelle", () => {
     expect(kmToPixels(10, 43.7, 10)).toBeGreaterThan(kmToPixels(10, 43.7, 9));
   });
 });
@@ -135,27 +135,23 @@ describe("carte du marché : artisans et demande (ADR 0181)", () => {
       }),
     ]);
     expect(demandByCommune(rows, "peintre")[0]?.recherches).toBe(2);
+    // La couverture dépend du métier : elle ne s'additionne pas d'un métier à l'autre.
+    expect(demandByCommune(rows)[0]).not.toHaveProperty("couverture");
     expect(demandRadius(10, 10)).toBe(36);
     expect(demandRadius(0, 10)).toBe(0);
     expect(demandRadius(1, 10)).toBeLessThan(demandRadius(4, 10));
   });
 
-  it("couverture : artisan validé du métier dont le rayon atteint la commune", () => {
-    expect(coveringArtisans(demand(), [artisan()])).toBe(1);
-    expect(coveringArtisans(demand(), [artisan({ rayon_km: 10 })])).toBe(0);
-    expect(coveringArtisans(demand(), [artisan({ metiers: ["peintre"] })])).toBe(0);
-    expect(coveringArtisans(demand(), [artisan({ statut: "brouillon" })])).toBe(0);
-    expect(coveringArtisans(demand({ lon: null, lat: null }), [artisan()])).toBe(0);
+  it("une commune couverte seulement par une région ou la France n'est pas à recruter", () => {
+    const [row] = marketFunnel([demand({ couverture: 1, couverture_large: 1 })]);
+    expect(row?.aRecruter).toBe(false);
   });
 
   it("entonnoir trié et communes à recruter ; totaux", () => {
-    const funnel = marketFunnel(
-      [
-        demand({ code_insee: "06088", ville: "Nice", lon: nice.lon, lat: nice.lat, recherches: 2 }),
-        demand(),
-      ],
-      [artisan({ rayon_km: 5 })],
-    );
+    const funnel = marketFunnel([
+      demand({ code_insee: "06088", ville: "Nice", recherches: 2, couverture: 1 }),
+      demand(),
+    ]);
     expect(funnel.map((row) => [row.ville, row.couverture, row.aRecruter])).toEqual([
       ["Antibes", 0, true],
       ["Nice", 1, false],

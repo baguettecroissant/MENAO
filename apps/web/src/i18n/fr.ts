@@ -5591,6 +5591,15 @@ export const fr = {
           refuse: "Refusé",
         },
         joined: (date: string) => `Inscrit le ${date}`,
+        zoneRadius: (km: number) => `Rayon de ${km} km`,
+        zoneList: (labels: string[]) =>
+          labels.length > 3
+            ? `${labels.slice(0, 3).join(", ")} +${labels.length - 3}`
+            : labels.join(", "),
+        zonesNotDrawn: (n: number) =>
+          n > 1
+            ? `${n} artisans validés ont une zone sans cercle (communes, départements, régions ou France) : survolez leur point pour la lire.`
+            : "1 artisan validé a une zone sans cercle (communes, départements, régions ou France) : survolez son point pour la lire.",
         searches: (n: number) => `${n} recherche${n > 1 ? "s" : ""}`,
         results: (n: number) => `${n} jusqu'aux résultats`,
         requests: (n: number) => `${n} demande${n > 1 ? "s" : ""} envoyée${n > 1 ? "s" : ""}`,
@@ -5611,7 +5620,12 @@ export const fr = {
         requests: "Demandes",
         coverage: "Artisans qui couvrent",
         toRecruit: "À recruter",
-        covered: (n: number) => `${n}`,
+        covered: (n: number, large: number) =>
+          large === 0
+            ? `${n}`
+            : large === n
+              ? `${n} (région ou France)`
+              : `${n} (dont ${large} région ou France)`,
         unknownTrade: "Métier non déterminé",
         empty: "Aucune recherche sur la période.",
         unplaced: (n: number) => `${n} recherche${n > 1 ? "s" : ""} sans commune.`,

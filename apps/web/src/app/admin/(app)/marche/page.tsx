@@ -24,7 +24,7 @@ export default async function AdminMarketPage({ searchParams }: PageProps<"/admi
   const days = parseMarketPeriod(params.periode);
   const { supabase } = await requireAdmin();
   const market = await getMarket(supabase, days);
-  const funnel = marketFunnel(market.demand, market.artisans);
+  const funnel = marketFunnel(market.demand);
   const totals = marketTotals(market.artisans, funnel);
   const tradeLabel = (code: string | null) =>
     code ? (market.trades.find((tr) => tr.code === code)?.label ?? code) : t.funnel.unknownTrade;
@@ -128,7 +128,9 @@ export default async function AdminMarketPage({ searchParams }: PageProps<"/admi
                           {t.funnel.toRecruit}
                         </span>
                       ) : (
-                        <span className="tabular-nums">{t.funnel.covered(row.couverture)}</span>
+                        <span className="tabular-nums">
+                          {t.funnel.covered(row.couverture, row.couverture_large)}
+                        </span>
                       )}
                     </td>
                   </tr>

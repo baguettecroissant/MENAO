@@ -13,6 +13,7 @@ import {
   zoomView,
   type MapView,
   type MarketArtisan,
+  type MarketCommune,
   type MarketDemand,
   type MarketStage,
 } from "@menao/core";
@@ -39,16 +40,12 @@ const formatDate = (at: Date) =>
 
 type Hovered =
   | { kind: "artisan"; artisan: MarketArtisan; stage: MarketStage; x: number; y: number }
-  | {
-      kind: "demand";
-      row: ReturnType<typeof demandByCommune>[number];
-      x: number;
-      y: number;
-    };
+  | { kind: "demand"; row: MarketCommune; x: number; y: number };
 
 /**
  * Carte du marché (ADR 0181) sur le Plan IGN : un point par artisan (couleur selon son étape),
- * zones d'intervention, cercles de demande par commune, filtre par métier et curseur « Voir
+ * zones d'intervention (les rayons, seuls dessinés ; les autres zones se lisent au survol),
+ * cercles de demande par commune, filtre par métier et curseur « Voir
  * grandir » qui rejoue l'arrivée des artisans. Glisser pour déplacer, molette ou boutons pour
  * zoomer. Sans bibliothèque de cartes, comme l'aperçu de zone.
  */
@@ -179,6 +176,10 @@ export function MarketMap({
     (total, { stage }) => ({ ...total, [stage]: total[stage] + 1 }),
     { valide: 0, en_cours: 0, suspendu: 0, refuse: 0 },
   );
+
+  const zonesNotDrawn = visible.filter(
+    ({ artisan, stage }) => stage === "valide" && !artisan.rayon_km,
+  ).length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -354,6 +355,11 @@ export function MarketMap({
                 {hovered.artisan.metiers.length > 0 && (
                   <p>{hovered.artisan.metiers.map(tradeLabel).join(", ")}</p>
                 )}
+                {hovered.artisan.rayon_km ? (
+                  <p>{t.zoneRadius(hovered.artisan.rayon_km)}</p>
+                ) : hovered.artisan.zone_labels.length > 0 ? (
+                  <p>{t.zoneList(hovered.artisan.zone_labels)}</p>
+                ) : null}
                 <p className="text-muted-foreground">
                   {t.joined(formatDate(new Date(hovered.artisan.inscrit_le)))}
                 </p>
@@ -424,6 +430,10 @@ export function MarketMap({
           {t.credit}
         </span>
       </div>
+
+      {layers.zones && zonesNotDrawn > 0 && (
+        <p className="text-xs text-muted-foreground">{t.zonesNotDrawn(zonesNotDrawn)}</p>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <button
