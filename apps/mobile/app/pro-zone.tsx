@@ -1,10 +1,10 @@
-import { ZONE_RADIUS_OPTIONS_KM } from "@menao/core";
+import { ZONE_RADIUS_OPTIONS_KM, territoryOfInsee, type ZoneMode } from "@menao/core";
 import { MapPin, X } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
-import { Segmented } from "@/components/segmented";
+import { TerritoryField } from "@/components/territory-field";
 import { TopBar } from "@/components/top-bar";
 import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
@@ -22,11 +22,20 @@ import { theme } from "@/ui/theme";
 const t = fr.proZone;
 const { colors, font, radius, spacing } = theme;
 
+const MODES: { value: ZoneMode; label: string }[] = [
+  { value: "rayon", label: t.modeRadius },
+  { value: "communes", label: t.modeCommunes },
+  { value: "departements", label: t.modeDepartements },
+  { value: "regions", label: t.modeRegions },
+  { value: "france", label: t.modeFrance },
+];
+
 type Message = { tone: "error" | "success"; text: string } | null;
 
 /**
  * Zone d'intervention (ADR 0125), comme l'étape « Zone » du site : un rayon autour d'une adresse
- * de départ (gardée si seul le rayon change), ou une liste de communes (set_artisan_zone).
+ * de départ (gardée si seul le rayon change), une liste de communes, ou des départements, des
+ * régions ou toute la France avec l'adresse de départ (ADR 0213, set_artisan_zone).
  */
 export default function ZoneScreen() {
   const [zone, reload] = useFocusData(loadZone);
@@ -45,7 +54,7 @@ export default function ZoneScreen() {
 }
 
 function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> }) {
-  const [mode, setMode] = useState<"rayon" | "communes">(zone.mode ?? "rayon");
+  const [mode, setMode] = useState<ZoneMode>(zone.mode ?? "rayon");
   const [radiusKm, setRadiusKm] = useState<number | null>(
     zone.radiusKm !== null && (ZONE_RADIUS_OPTIONS_KM as readonly number[]).includes(zone.radiusKm)
       ? zone.radiusKm
@@ -54,19 +63,42 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
   const [base, setBase] = useState<AddressSuggestion | null>(null);
   const [editingBase, setEditingBase] = useState(!zone.hasBase);
   const [communes, setCommunes] = useState(zone.communes);
+  const [territories, setTerritories] = useState(zone.territories);
   const [message, setMessage] = useState<Message>(null);
   const [busy, setBusy] = useState(false);
   const point = base ?? zone.basePoint;
+  const withBase = mode !== "communes";
+
+  function chooseMode(next: ZoneMode) {
+    setMode(next);
+    if (next === zone.mode) return setTerritories(zone.territories);
+    // Le territoire de l'adresse de départ est proposé d'emblée.
+    const citycode = base?.citycode ?? zone.baseCitycode;
+    const own =
+      citycode && (next === "departements" || next === "regions")
+        ? territoryOfInsee(next, citycode)
+        : null;
+    setTerritories(own ? [own] : []);
+  }
 
   async function save() {
     setMessage(null);
-    if (mode === "rayon") {
-      if (!base && !zone.hasBase) return setMessage({ tone: "error", text: t.addressRequired });
-      if (radiusKm === null) return setMessage({ tone: "error", text: t.radius });
+    if (withBase && !base && !zone.hasBase) {
+      return setMessage({ tone: "error", text: t.addressRequired });
+    }
+    if (mode === "rayon" && radiusKm === null) return setMessage({ tone: "error", text: t.radius });
+    if ((mode === "departements" || mode === "regions") && territories.length === 0) {
+      return setMessage({ tone: "error", text: t.territoryRequired });
     }
     setBusy(true);
     const result = await saveZone(
-      mode === "rayon" ? { mode, radiusKm: radiusKm ?? 0, base } : { mode, communes },
+      mode === "rayon"
+        ? { mode, radiusKm: radiusKm ?? 0, base }
+        : mode === "communes"
+          ? { mode, communes }
+          : mode === "france"
+            ? { mode, base }
+            : { mode, territories, base },
     );
     setBusy(false);
     if (!result.ok) {
@@ -74,7 +106,11 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
       const text =
         fields.baseLabel || fields.lon || fields.lat || fields.baseCitycode
           ? t.addressRequired
-          : (fields.communes ?? fields.radiusKm ?? result.error ?? fr.errors.generic);
+          : (fields.communes ??
+            fields.territories ??
+            fields.radiusKm ??
+            result.error ??
+            fr.errors.generic);
       return setMessage({ tone: "error", text });
     }
     toast.success(t.saved);
@@ -92,16 +128,8 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
 
   return (
     <Card>
-      <Segmented
-        label={t.mode}
-        value={mode}
-        options={[
-          { value: "rayon", label: t.modeRadius },
-          { value: "communes", label: t.modeCommunes },
-        ]}
-        onChange={setMode}
-      />
-      {mode === "rayon" ? (
+      <ChoiceGroup<ZoneMode> legend={t.mode} value={mode} options={MODES} onChange={chooseMode} />
+      {withBase ? (
         <>
           {!editingBase && (base || zone.baseLabel) ? (
             <View style={styles.base}>
@@ -121,16 +149,34 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
               }}
             />
           )}
-          <ChoiceGroup<number>
-            legend={t.radius}
-            value={radiusKm}
-            options={ZONE_RADIUS_OPTIONS_KM.map((km) => ({ value: km, label: t.km(km) }))}
-            onChange={setRadiusKm}
-            columns={3}
-          />
-          {point && radiusKm !== null ? (
-            <ZoneMap lon={point.lon} lat={point.lat} radiusKm={radiusKm} />
+          {mode === "rayon" ? (
+            <>
+              <ChoiceGroup<number>
+                legend={t.radius}
+                value={radiusKm}
+                options={ZONE_RADIUS_OPTIONS_KM.map((km) => ({ value: km, label: t.km(km) }))}
+                onChange={setRadiusKm}
+                columns={3}
+              />
+              {point && radiusKm !== null ? (
+                <ZoneMap lon={point.lon} lat={point.lat} radiusKm={radiusKm} />
+              ) : null}
+            </>
           ) : null}
+          {mode === "departements" || mode === "regions" ? (
+            <TerritoryField
+              mode={mode}
+              codes={territories}
+              onChange={setTerritories}
+              labels={{
+                search: mode === "regions" ? t.regionSearch : t.departementSearch,
+                hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
+                remove: t.territoryRemove,
+              }}
+            />
+          ) : null}
+          {mode === "france" ? <Body muted>{t.franceNote}</Body> : null}
+          {mode === "regions" || mode === "france" ? <Body muted>{t.wideNote}</Body> : null}
         </>
       ) : (
         <>

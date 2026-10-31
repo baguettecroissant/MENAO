@@ -25,6 +25,7 @@ const vide: ArtisanOnboardingSnapshot = {
   radiusKm: null,
   hasBaseLocation: false,
   communeCount: 0,
+  territoryCount: 0,
   documents: {},
   presentationLength: 0,
   hasAvatar: false,
@@ -84,6 +85,21 @@ describe("étapes d'onboarding (F-14)", () => {
     expect(onboardingProgress({ ...base, radiusKm: 30, hasBaseLocation: true }).zone).toBe(true);
   });
 
+  it("zone par territoire : adresse de départ et au moins un territoire (ADR 0213)", () => {
+    const base = {
+      ...entrepriseOk,
+      tradeCount: 1,
+      zoneMode: "departements" as const,
+      hasBaseLocation: true,
+    };
+    expect(onboardingProgress(base).zone).toBe(false);
+    expect(onboardingProgress({ ...base, territoryCount: 2 }).zone).toBe(true);
+    expect(onboardingProgress({ ...base, hasBaseLocation: false, territoryCount: 2 }).zone).toBe(
+      false,
+    );
+    expect(onboardingProgress({ ...base, zoneMode: "france" }).zone).toBe(true);
+  });
+
   it("zone en communes : au moins une commune", () => {
     const base = { ...entrepriseOk, tradeCount: 1, zoneMode: "communes" as const };
     expect(onboardingProgress(base).zone).toBe(false);
@@ -107,6 +123,7 @@ describe("étapes d'onboarding (F-14)", () => {
           tradeCount: 1,
           zoneMode: "communes",
           communeCount: 1,
+          territoryCount: 0,
           charterAccepted: true,
         },
         today,
@@ -120,6 +137,7 @@ const etapes123 = {
   tradeCount: 1,
   zoneMode: "communes" as const,
   communeCount: 1,
+  territoryCount: 0,
   charterAccepted: true,
 };
 const documentsOk = {

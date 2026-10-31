@@ -1,7 +1,9 @@
 "use client";
 
+import { territoryOfInsee, type ZoneMode } from "@menao/core";
 import { useActionState, useState } from "react";
 import { Autocomplete } from "@/components/autocomplete";
+import { TerritoryField } from "@/components/territory-field";
 import { Alert, Button, RadioGroup, SelectField } from "@/components/ui";
 import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
@@ -24,7 +26,7 @@ export function ZoneForm({
 }: {
   radiusOptions: readonly number[];
   initial: {
-    mode: "rayon" | "communes";
+    mode: ZoneMode;
     baseLabel: string | null;
     baseCitycode: string | null;
     hasBaseLocation: boolean;
@@ -32,6 +34,8 @@ export function ZoneForm({
     basePoint: { lon: number; lat: number } | null;
     radiusKm: number | null;
     communes: Commune[];
+    /** Départements ou régions enregistrés, selon `mode` (ADR 0213). */
+    territories: string[];
   };
 }) {
   const [state, action, pending] = useActionState(saveZone, initialFormState);
@@ -40,8 +44,22 @@ export function ZoneForm({
   const [address, setAddress] = useState<AddressSuggestion | null>(null);
   const [communes, setCommunes] = useState<Commune[]>(initial.communes);
   const [radiusKm, setRadiusKm] = useState(String(initial.radiusKm ?? 30));
+  const [territories, setTerritories] = useState(initial.territories);
   const point = address ?? initial.basePoint;
+  const citycode = address?.citycode ?? initial.baseCitycode;
+  const withBase = mode !== "communes";
   const errors = state.fieldErrors ?? {};
+
+  function chooseMode(next: ZoneMode) {
+    setMode(next);
+    if (next === initial.mode) return setTerritories(initial.territories);
+    // Le territoire de l'adresse de départ est proposé d'emblée.
+    const own =
+      citycode && (next === "departements" || next === "regions")
+        ? territoryOfInsee(next, citycode)
+        : null;
+    setTerritories(own ? [own] : []);
+  }
 
   return (
     <form action={action} className="flex flex-col gap-6" noValidate>
@@ -50,18 +68,21 @@ export function ZoneForm({
         legend={t.legend}
         name="mode"
         value={mode}
-        onChange={(v) => setMode(v as typeof mode)}
+        onChange={(v) => chooseMode(v as ZoneMode)}
         options={[
           { value: "rayon", label: t.modeRayon },
           { value: "communes", label: t.modeCommunes },
+          { value: "departements", label: t.modeDepartements },
+          { value: "regions", label: t.modeRegions },
+          { value: "france", label: t.modeFrance },
         ]}
       />
 
-      {mode === "rayon" ? (
+      {withBase ? (
         <div className="flex flex-col gap-4">
           <Autocomplete<AddressSuggestion>
             label={t.address}
-            hint={t.addressHint}
+            hint={mode === "rayon" ? t.addressHint : t.addressTerritoryHint}
             defaultQuery={initial.baseLabel ?? ""}
             errors={errors.baseLabel}
             search={searchAddresses}
@@ -78,20 +99,45 @@ export function ZoneForm({
             </>
           )}
           {!address && initial.hasBaseLocation && <input type="hidden" name="keepBase" value="1" />}
-          <SelectField
-            label={t.radius}
-            name="radiusKm"
-            value={radiusKm}
-            onChange={(event) => setRadiusKm(event.target.value)}
-            errors={errors.radiusKm}
-          >
-            {radiusOptions.map((km) => (
-              <option key={km} value={km}>
-                {t.radiusOption(km)}
-              </option>
-            ))}
-          </SelectField>
-          {point && <ZoneMap lon={point.lon} lat={point.lat} radiusKm={Number(radiusKm)} />}
+          {mode === "rayon" && (
+            <>
+              <SelectField
+                label={t.radius}
+                name="radiusKm"
+                value={radiusKm}
+                onChange={(event) => setRadiusKm(event.target.value)}
+                errors={errors.radiusKm}
+              >
+                {radiusOptions.map((km) => (
+                  <option key={km} value={km}>
+                    {t.radiusOption(km)}
+                  </option>
+                ))}
+              </SelectField>
+              {point && <ZoneMap lon={point.lon} lat={point.lat} radiusKm={Number(radiusKm)} />}
+            </>
+          )}
+          {(mode === "departements" || mode === "regions") && (
+            <>
+              <TerritoryField
+                mode={mode}
+                codes={territories}
+                onChange={setTerritories}
+                errors={errors.territories}
+                labels={{
+                  search: mode === "regions" ? t.regionSearch : t.departementSearch,
+                  hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
+                  list: t.territories,
+                  remove: t.remove,
+                }}
+              />
+              <input type="hidden" name="territories" value={JSON.stringify(territories)} />
+            </>
+          )}
+          {mode === "france" && <p className="text-sm text-muted-foreground">{t.franceNote}</p>}
+          {(mode === "regions" || mode === "france") && (
+            <p className="text-sm text-muted-foreground">{t.wideNote}</p>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-4">

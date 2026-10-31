@@ -102,6 +102,15 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.goto("/pro/onboarding/zone");
   // Rayon choisi à l'inscription : carte de l'adresse enregistrée (ADR 0127).
   await expect(page.locator('img[src^="https://data.geopf.fr/wmts"]').first()).toBeAttached();
+  // Départements (ADR 0213) : l'adresse enregistrée est gardée, les choix sont relus.
+  await page.getByLabel("Un ou plusieurs départements").check();
+  await page.getByRole("combobox", { name: "Ajouter un département" }).fill("var");
+  await page.getByRole("option", { name: "Var (83)" }).click();
+  await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await page.goto("/pro/onboarding/zone");
+  await expect(page.getByLabel("Un ou plusieurs départements")).toBeChecked();
+  await expect(page.getByRole("button", { name: "Retirer Var (83)" })).toBeVisible();
   await page.getByLabel("Une liste de communes").check();
   await page.getByRole("combobox", { name: "Ajouter une commune" }).fill("nic");
   await page.getByRole("option", { name: "Nice (06000)" }).click();

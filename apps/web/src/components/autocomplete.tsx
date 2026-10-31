@@ -11,11 +11,13 @@ type AutocompleteProps<T> = {
   name?: string;
   defaultQuery?: string;
   errors?: readonly string[] | undefined;
-  /** Recherche (annulable) : appelée après une courte pause de frappe, à partir de 3 caractères. */
+  /** Recherche (annulable) : appelée après une courte pause de frappe, à partir de `minChars`. */
   search: (query: string, signal: AbortSignal) => Promise<T[]>;
   getKey: (item: T) => string;
   getLabel: (item: T) => string;
   onSelect: (item: T) => void;
+  /** Longueur de saisie qui déclenche la recherche (3 par défaut). */
+  minChars?: number;
   /** Vider le champ après une sélection (ajout à une liste). */
   clearOnSelect?: boolean;
   placeholder?: string;
@@ -34,6 +36,7 @@ export function Autocomplete<T>({
   getKey,
   getLabel,
   onSelect,
+  minChars = 3,
   clearOnSelect = false,
   placeholder,
   searchIcon = false,
@@ -48,7 +51,7 @@ export function Autocomplete<T>({
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 3 || q === selectedLabel.current) return;
+    if (q.length < minChars || q === selectedLabel.current) return;
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -67,7 +70,7 @@ export function Autocomplete<T>({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, search]);
+  }, [query, search, minChars]);
 
   function choose(item: T) {
     onSelect(item);

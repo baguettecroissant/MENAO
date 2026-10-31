@@ -15,6 +15,7 @@ const snapshot: ArtisanOnboardingSnapshot = {
   radiusKm: 30,
   hasBaseLocation: true,
   communeCount: 0,
+  territoryCount: 0,
   documents: {
     kbis: { status: "valide", dateEmission: "2025-01-10", dateFin: null },
     decennale: { status: "valide", dateEmission: "2026-01-01", dateFin: "2027-06-30" },

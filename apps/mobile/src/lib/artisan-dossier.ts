@@ -55,27 +55,30 @@ export async function loadDossier(): Promise<Dossier | null> {
     .maybeSingle();
   if (!artisan) return null;
 
-  const [trades, zones, documents, profile, charter, subscription] = await Promise.all([
-    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
-    supabase.from("artisan_zones").select("code_insee").eq("artisan_id", artisan.id),
-    supabase
-      .from("artisan_documents")
-      .select("type, status, date_emission, date_fin, refusal_reason")
-      .eq("artisan_id", artisan.id),
-    supabase.from("profiles").select("avatar_path").eq("user_id", auth.user.id).maybeSingle(),
-    supabase
-      .from("artisan_charter_acceptances")
-      .select("id")
-      .eq("artisan_id", artisan.id)
-      .eq("version", CHARTER_VERSION)
-      .eq("engagement_version", ENGAGEMENT_VERSION)
-      .maybeSingle(),
-    supabase
-      .from("subscriptions")
-      .select("status, past_due_since")
-      .eq("artisan_id", artisan.id)
-      .maybeSingle(),
-  ]);
+  const [trades, zones, territories, documents, profile, charter, subscription] = await Promise.all(
+    [
+      supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
+      supabase.from("artisan_zones").select("code_insee").eq("artisan_id", artisan.id),
+      supabase.from("artisan_territories").select("id").eq("artisan_id", artisan.id),
+      supabase
+        .from("artisan_documents")
+        .select("type, status, date_emission, date_fin, refusal_reason")
+        .eq("artisan_id", artisan.id),
+      supabase.from("profiles").select("avatar_path").eq("user_id", auth.user.id).maybeSingle(),
+      supabase
+        .from("artisan_charter_acceptances")
+        .select("id")
+        .eq("artisan_id", artisan.id)
+        .eq("version", CHARTER_VERSION)
+        .eq("engagement_version", ENGAGEMENT_VERSION)
+        .maybeSingle(),
+      supabase
+        .from("subscriptions")
+        .select("status, past_due_since")
+        .eq("artisan_id", artisan.id)
+        .maybeSingle(),
+    ],
+  );
 
   // Par type : le document validé s'il existe, sinon celui en cours d'examen (« remplace » ignoré).
   const rows = (documents.data ?? []).filter(
@@ -104,6 +107,7 @@ export async function loadDossier(): Promise<Dossier | null> {
     radiusKm: artisan.radius_km,
     hasBaseLocation: artisan.base_location !== null,
     communeCount: zones.data?.length ?? 0,
+    territoryCount: territories.data?.length ?? 0,
     documents: snapshots,
     presentationLength: presentation.trim().length,
     hasAvatar: avatarPath !== null,

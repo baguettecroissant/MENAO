@@ -1,4 +1,4 @@
-import { DIPLOMES_METIER } from "@menao/core";
+import { DIPLOMES_METIER, ZONE_MODES } from "@menao/core";
 import { z } from "zod";
 import { menaoScorePartsSchema } from "./menao-score";
 
@@ -20,7 +20,7 @@ const profileSchema = z.object({
   // Temps de réponse moyen en minutes (F-10), publié à partir de 3 réponses.
   response_minutes: z.number().nullable().catch(null),
   zone: z.object({
-    mode: z.enum(["rayon", "communes"]).nullable(),
+    mode: z.enum(ZONE_MODES).nullable(),
     radius_km: z.number().nullable(),
     city: z.string().nullable(),
     communes: z.array(z.string()),

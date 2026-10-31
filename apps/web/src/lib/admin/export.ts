@@ -94,6 +94,7 @@ export async function adminUserExport(supabase: Client, userId: string) {
   const [
     trades,
     zones,
+    territories,
     documents,
     certifications,
     photos,
@@ -108,6 +109,7 @@ export async function adminUserExport(supabase: Client, userId: string) {
   ] = await Promise.all([
     supabase.from("artisan_trades").select("*").eq("artisan_id", aid).limit(LIMIT),
     supabase.from("artisan_zones").select("*").eq("artisan_id", aid).limit(LIMIT),
+    supabase.from("artisan_territories").select("*").eq("artisan_id", aid).limit(LIMIT),
     supabase.from("artisan_documents").select("*").eq("artisan_id", aid).limit(LIMIT),
     supabase.from("certifications").select("*").eq("artisan_id", aid).limit(LIMIT),
     supabase.from("artisan_photos").select("*").eq("artisan_id", aid).limit(LIMIT),
@@ -126,6 +128,7 @@ export async function adminUserExport(supabase: Client, userId: string) {
       fiche: artisan,
       metiers: trades.data ?? [],
       zones: zones.data ?? [],
+      territoires: territories.data ?? [],
       documents: documents.data ?? [],
       certifications: certifications.data ?? [],
       photos: photos.data ?? [],

@@ -1,3 +1,5 @@
+import { isTerritoryZoneMode, type ZoneMode } from "./zone-territories";
+
 /** Onboarding artisan en étapes (F-14). */
 
 export const ONBOARDING_STEPS = [
@@ -53,10 +55,12 @@ export type ArtisanOnboardingSnapshot = {
   raisonSociale: string | null;
   assujettiTva: boolean | null;
   tradeCount: number;
-  zoneMode: "rayon" | "communes" | null;
+  zoneMode: ZoneMode | null;
   radiusKm: number | null;
   hasBaseLocation: boolean;
   communeCount: number;
+  /** Départements ou régions choisis (ADR 0213). */
+  territoryCount: number;
   documents: Partial<Record<RequiredDocumentType, DocumentSnapshot>>;
   presentationLength: number;
   hasAvatar: boolean;
@@ -117,7 +121,11 @@ export function onboardingProgress(
   const zone =
     a.zoneMode === "rayon"
       ? a.hasBaseLocation && a.radiusKm !== null && a.radiusKm > 0
-      : a.zoneMode === "communes" && a.communeCount > 0;
+      : a.zoneMode === "communes"
+        ? a.communeCount > 0
+        : isTerritoryZoneMode(a.zoneMode) &&
+          a.hasBaseLocation &&
+          (a.zoneMode === "france" || a.territoryCount > 0);
   return {
     entreprise: a.siretVerified && a.sireneActive && !!a.raisonSociale && a.assujettiTva !== null,
     metiers: a.tradeCount > 0,

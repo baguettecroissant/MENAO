@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { radiusZoneSchema, siretSchema, tradeCodesSchema } from "./artisan";
+import { signupZoneSchema, siretSchema, tradeCodesSchema } from "./artisan";
 import { completeSignupSchema, signUpSchema } from "./auth";
 import { messages } from "./messages";
 
 /**
  * Inscription artisan en un seul parcours (ADR 0110) : ce que l'artisan choisit avant de créer
- * son compte (métiers, entreprise, zone en rayon autour du siège), envoyé en une fois avec le
+ * son compte (métiers, entreprise, zone autour du siège ou par territoire), envoyé en une fois avec le
  * compte. Le SIRET est revérifié auprès de l'INSEE après la création du compte.
  */
 export const artisanSignupProfileSchema = z.object({
@@ -13,7 +13,7 @@ export const artisanSignupProfileSchema = z.object({
   siret: siretSchema,
   isDirigeant: z.boolean({ error: messages.required }),
   assujettiTva: z.boolean({ error: messages.required }),
-  zone: radiusZoneSchema,
+  zone: signupZoneSchema,
 });
 export type ArtisanSignupProfile = z.output<typeof artisanSignupProfileSchema>;
 
@@ -34,7 +34,8 @@ export function artisanSignupMetadata(profile: ArtisanSignupProfile, partnerCode
       base_citycode: profile.zone.baseCitycode,
       lon: profile.zone.lon,
       lat: profile.zone.lat,
-      radius_km: profile.zone.radiusKm,
+      ...("radiusKm" in profile.zone ? { radius_km: profile.zone.radiusKm } : {}),
+      ...("territories" in profile.zone ? { territoires: profile.zone.territories } : {}),
     },
   };
 }

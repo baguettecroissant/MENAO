@@ -41,6 +41,7 @@ export const getOnboardingContext = cache(async () => {
     trades,
     workTypes,
     zones,
+    territories,
     certifications,
     documents,
     photos,
@@ -55,6 +56,10 @@ export const getOnboardingContext = cache(async () => {
       .select("code_insee, nom")
       .eq("artisan_id", artisan.id)
       .order("nom"),
+    supabase
+      .from("artisan_territories")
+      .select("departement_code, region_code")
+      .eq("artisan_id", artisan.id),
     supabase
       .from("certifications")
       .select("id, type, numero, date_fin, verified_at")
@@ -109,6 +114,9 @@ export const getOnboardingContext = cache(async () => {
 
   const tradeCodes = (trades.data ?? []).map((t) => t.trade_code);
   const zoneList = zones.data ?? [];
+  const territoryCodes = (territories.data ?? []).flatMap(
+    (t) => t.departement_code ?? t.region_code ?? [],
+  );
   const snapshot: ArtisanOnboardingSnapshot = {
     siretVerified: artisan.sirene_checked_at !== null,
     sireneActive: artisan.sirene_active === true,
@@ -119,6 +127,7 @@ export const getOnboardingContext = cache(async () => {
     radiusKm: artisan.radius_km,
     hasBaseLocation: artisan.base_location !== null,
     communeCount: zoneList.length,
+    territoryCount: territoryCodes.length,
     documents: documentSnapshots,
     presentationLength: artisan.presentation?.trim().length ?? 0,
     hasAvatar: avatarPath !== null,
@@ -149,6 +158,7 @@ export const getOnboardingContext = cache(async () => {
     tradeCodes,
     workTypeCodes: (workTypes.data ?? []).map((w) => w.work_type_code),
     zones: zoneList,
+    territoryCodes,
     certifications: certifications.data ?? [],
     snapshot,
     progress: onboardingProgress(snapshot),

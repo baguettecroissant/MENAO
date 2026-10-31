@@ -1,8 +1,9 @@
-import type { BudgetMinimum, DiplomeMetier } from "@menao/core";
+import type { BudgetMinimum, DiplomeMetier, ZoneMode } from "@menao/core";
 import {
   certificationSchema,
   companyStepSchema,
   siretSchema,
+  territoryChoiceSchema,
   tradesStepSchema,
   zoneStepSchema,
   type CertificationType,
@@ -319,14 +320,20 @@ export async function refreshRge(): Promise<RgeStatus> {
 // Zone d'intervention
 // ---------------------------------------------------------------------------------------------
 
+type ZoneBase = { label: string; citycode: string; lon: number; lat: number };
+
 export type Zone = {
-  mode: "rayon" | "communes" | null;
+  mode: ZoneMode | null;
   radiusKm: number | null;
   baseLabel: string | null;
+  /** Adresse enregistrée : code commune, pour proposer son territoire (ADR 0213). */
+  baseCitycode: string | null;
   hasBase: boolean;
   /** Coordonnées de l'adresse enregistrée (my_artisan_base_point), pour la carte (ADR 0127). */
   basePoint: { lon: number; lat: number } | null;
   communes: { code: string; nom: string }[];
+  /** Départements ou régions enregistrés, selon `mode` (ADR 0213). */
+  territories: string[];
 };
 
 export async function loadZone(): Promise<Zone | null> {
@@ -334,35 +341,39 @@ export async function loadZone(): Promise<Zone | null> {
   if (!auth.user) return null;
   const { data: a } = await supabase
     .from("artisans")
-    .select("id, zone_mode, radius_km, base_label, base_location")
+    .select("id, zone_mode, radius_km, base_label, base_code_insee, base_location")
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (!a) return null;
-  const [{ data: communes }, { data: points }] = await Promise.all([
+  const [{ data: communes }, { data: territories }, { data: points }] = await Promise.all([
     supabase.from("artisan_zones").select("code_insee, nom").eq("artisan_id", a.id).order("nom"),
+    supabase
+      .from("artisan_territories")
+      .select("departement_code, region_code")
+      .eq("artisan_id", a.id),
     supabase.rpc("my_artisan_base_point"),
   ]);
   return {
     mode: a.zone_mode,
     radiusKm: a.radius_km,
     baseLabel: a.base_label,
+    baseCitycode: a.base_code_insee,
     hasBase: a.base_location !== null,
     basePoint: points?.[0] ?? null,
     communes: (communes ?? []).map((c) => ({ code: c.code_insee, nom: c.nom })),
+    territories: (territories ?? []).flatMap((t) => t.departement_code ?? t.region_code ?? []),
   };
 }
 
 /**
- * Zone en rayon (nouvelle adresse de départ, ou rayon seul en gardant l'adresse enregistrée) ou
+ * Zone en rayon ou par territoire (nouvelle adresse de départ, ou adresse enregistrée gardée) ou
  * liste de communes, comme sur le site (set_artisan_zone).
  */
 export async function saveZone(
   input:
-    | {
-        mode: "rayon";
-        radiusKm: number;
-        base: { label: string; citycode: string; lon: number; lat: number } | null;
-      }
+    | { mode: "rayon"; radiusKm: number; base: ZoneBase | null }
+    | { mode: "departements" | "regions"; territories: string[]; base: ZoneBase | null }
+    | { mode: "france"; base: ZoneBase | null }
     | { mode: "communes"; communes: { code: string; nom: string }[] },
 ): Promise<SaveResult> {
   if (input.mode === "rayon" && input.base === null) {
@@ -372,30 +383,38 @@ export async function saveZone(
     });
     return error ? { ok: false, error: fr.errors.generic } : { ok: true };
   }
-  const parsed = zoneStepSchema.safeParse(
-    input.mode === "rayon"
-      ? {
-          mode: "rayon",
+  if (input.mode !== "rayon" && input.mode !== "communes" && input.base === null) {
+    const choice = territoryChoiceSchema.safeParse(input);
+    if (!choice.success) return { ok: false, fields: flatten(choice.error) };
+    const { error } = await supabase.rpc("set_artisan_zone", {
+      p_mode: choice.data.mode,
+      ...("territories" in choice.data ? { p_territoires: choice.data.territories } : {}),
+    });
+    return error ? { ok: false, error: fr.errors.generic } : { ok: true };
+  }
+  const base =
+    input.mode === "communes"
+      ? {}
+      : {
           baseLabel: input.base?.label ?? "",
           baseCitycode: input.base?.citycode ?? "",
           lon: input.base?.lon,
           lat: input.base?.lat,
-          radiusKm: input.radiusKm,
-        }
-      : { mode: "communes", communes: input.communes },
-  );
+        };
+  const parsed = zoneStepSchema.safeParse({ ...input, ...base });
   if (!parsed.success) return { ok: false, fields: flatten(parsed.error) };
   const z0 = parsed.data;
   const { error } =
-    z0.mode === "rayon"
-      ? await supabase.rpc("set_artisan_zone", {
-          p_mode: "rayon",
+    z0.mode === "communes"
+      ? await supabase.rpc("set_artisan_zone", { p_mode: "communes", p_communes: z0.communes })
+      : await supabase.rpc("set_artisan_zone", {
+          p_mode: z0.mode,
           p_base_label: z0.baseLabel,
           p_base_code_insee: z0.baseCitycode,
           p_lon: z0.lon,
           p_lat: z0.lat,
-          p_radius_km: z0.radiusKm,
-        })
-      : await supabase.rpc("set_artisan_zone", { p_mode: "communes", p_communes: z0.communes });
+          ...("radiusKm" in z0 ? { p_radius_km: z0.radiusKm } : {}),
+          ...("territories" in z0 ? { p_territoires: z0.territories } : {}),
+        });
   return error ? { ok: false, error: fr.errors.generic } : { ok: true };
 }

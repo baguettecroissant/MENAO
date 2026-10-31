@@ -1,4 +1,4 @@
-import { ZONE_RADIUS_OPTIONS_KM, isValidSiret, normalizeSiret } from "@menao/core";
+import { ZONE_RADIUS_OPTIONS_KM, isTerritoryCode, isValidSiret, normalizeSiret } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -77,23 +77,64 @@ export const RADIUS_OPTIONS_KM = ZONE_RADIUS_OPTIONS_KM;
 const MAX_COMMUNES = 200;
 const inseeCode = z.string().regex(/^(\d{5}|2[AB]\d{3})$/);
 
-/** Zone en rayon : adresse de base (Géoplateforme ou siège de l'entreprise) et rayon. */
-export const radiusZoneSchema = z.object({
-  mode: z.literal("rayon"),
+/** Adresse de départ (Géoplateforme ou siège de l'entreprise). */
+const baseFields = {
   baseLabel: z.string().trim().min(1, { error: messages.zoneAddressRequired }).max(300),
   baseCitycode: inseeCode,
   // France métropolitaine, Corse et DROM (boîte englobante large).
   lon: z.coerce.number().min(-63).max(56),
   lat: z.coerce.number().min(-22).max(52),
+};
+
+/** Zone en rayon : adresse de base et rayon. */
+export const radiusZoneSchema = z.object({
+  mode: z.literal("rayon"),
+  ...baseFields,
   radiusKm: z.coerce.number().refine((v) => (RADIUS_OPTIONS_KM as readonly number[]).includes(v), {
     error: messages.radiusInvalid,
   }),
 });
 export type RadiusZone = z.output<typeof radiusZoneSchema>;
 
-/** Étape 3 — zone d'intervention : adresse de base + rayon, ou liste de communes. */
-export const zoneStepSchema = z.discriminatedUnion("mode", [
+const territoryCodes = (mode: "departements" | "regions") =>
+  z
+    .array(z.string())
+    .transform((list) => [...new Set(list)])
+    .refine((list) => list.length > 0, { error: messages.territoriesRequired })
+    .refine((list) => list.every((code) => isTerritoryCode(mode, code)), {
+      error: messages.territoriesRequired,
+    });
+
+const departementsZone = z.object({
+  mode: z.literal("departements"),
+  territories: territoryCodes("departements"),
+});
+const regionsZone = z.object({
+  mode: z.literal("regions"),
+  territories: territoryCodes("regions"),
+});
+const franceZone = z.object({ mode: z.literal("france") });
+
+/** Territoires seuls (ADR 0213), quand l'adresse de départ enregistrée est gardée. */
+export const territoryChoiceSchema = z.discriminatedUnion("mode", [
+  departementsZone,
+  regionsZone,
+  franceZone,
+]);
+export type TerritoryChoice = z.output<typeof territoryChoiceSchema>;
+
+/** Zone à l'inscription : rayon, ou territoires avec l'adresse de départ (ADR 0213). */
+export const signupZoneSchema = z.discriminatedUnion("mode", [
   radiusZoneSchema,
+  departementsZone.extend(baseFields),
+  regionsZone.extend(baseFields),
+  franceZone.extend(baseFields),
+]);
+export type SignupZone = z.output<typeof signupZoneSchema>;
+
+/** Étape 3 — zone d'intervention : adresse de base + rayon ou territoires, ou liste de communes. */
+export const zoneStepSchema = z.discriminatedUnion("mode", [
+  ...signupZoneSchema.options,
   z.object({
     mode: z.literal("communes"),
     communes: z
