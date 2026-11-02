@@ -287,7 +287,7 @@ Extraire les valeurs exactes depuis Figma (connecteur Figma de Claude Code) dans
   3. Zone d'intervention : adresse de base + rayon (km), **ou** liste de communes, **ou** adresse de base + départements, régions ou France entière (ADR 0213).
   4. Documents : **Kbis ou extrait INSEE/RNE de moins de 3 mois**, **attestation d'assurance décennale** (assureur, numéro, date de fin, couverture géographique), **RC Pro**, pièce d'identité du dirigeant. Formats PDF/JPEG/PNG, 10 Mo max.
   5. Profil public : photo, présentation, photos de réalisations.
-  6. Coordonnées bancaires et identité pour les paiements : **onboarding Stripe Connect** (type de compte selon D5), KYC géré par Stripe. C'est sur ce compte que l'artisan sera payé directement par ses clients.
+  6. Coordonnées bancaires et identité pour les paiements : **onboarding Stripe Connect** (type de compte selon D5), KYC géré par Stripe. C'est sur ce compte que l'artisan sera payé directement par ses clients. Ouvert dès l'envoi du dossier, pendant la vérification par l'équipe ; date de naissance, adresse personnelle et IBAN saisis dans MENAO et transmis directement à Stripe, puis formulaire Stripe affiché dans MENAO ([ADR 0215](adr/0215-stripe-integre.md)).
   7. Choix de la formule et paiement **sur le web uniquement** via Stripe Checkout / Billing. Prélèvement SEPA et carte.
 - Statuts : `brouillon` → `en_verification` → `valide` | `refuse` (motif) | `suspendu`.
 - L'artisan n'est visible et ne reçoit de demandes que si **validé + abonnement actif + compte Stripe Connect activé**.

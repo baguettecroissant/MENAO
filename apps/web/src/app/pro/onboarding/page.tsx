@@ -278,7 +278,12 @@ export default async function OnboardingIndexPage() {
             href="/pro/onboarding/paiements"
             icon={<CreditCard aria-hidden="true" className="size-5" />}
             title={d.paiementsTitle}
-            hint={d.paiementsHint}
+            hint={
+              // Ouvert dès l'envoi du dossier (ADR 0215).
+              artisan.status === "en_verification" && !progress.paiements
+                ? d.paiementsHintNow
+                : d.paiementsHint
+            }
             tone={progress.paiements ? "done" : "todo"}
             status={progress.paiements ? d.states.done : d.states.todo}
           />

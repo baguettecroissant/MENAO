@@ -1,17 +1,25 @@
-// Edge Function connect-onboarding (F-14 étape 6) : compte Stripe Connect de l'artisan validé.
+// Edge Function connect-onboarding (F-14 étape 6) : compte Stripe Connect de l'artisan, ouvert dès
+// l'envoi du dossier (ADR 0215), pendant que l'équipe le vérifie.
 // Paiements directs sur le compte de l'artisan, qui est le marchand et paie les frais Stripe ;
 // Stripe porte le risque de pertes ; MENAO ne détient aucun fonds (ADR 0011).
-// action « link » : crée le compte si besoin et renvoie le lien d'inscription Stripe ;
-// action « refresh » : relit l'état du compte (au retour de Stripe, sans attendre le webhook) ;
 // action « prefill » : avant la création du compte, données d'identité à transformer en jetons
-// Stripe par le navigateur ou l'application, avec la clé publique (ADR 0204).
+// Stripe par le navigateur ou l'application, avec la clé publique (ADR 0204), et de quoi présenter
+// le formulaire des compléments (ADR 0215) ;
+// action « create » : crée le compte, pré-rempli par les jetons reçus ;
+// action « session » : session du formulaire Stripe intégré à MENAO (crée le compte si besoin) ;
+// action « link » : crée le compte si besoin et renvoie le lien d'inscription Stripe (secours) ;
+// action « refresh » : relit l'état du compte (au retour de Stripe, sans attendre le webhook).
 // À la création, le compte est pré-rempli avant le premier lien : profil public par le serveur,
-// identité par les jetons reçus. Un pré-remplissage refusé par Stripe ne bloque jamais l'inscription.
+// identité et IBAN par les jetons reçus. Un pré-remplissage refusé par Stripe ne bloque jamais
+// l'inscription.
 // Depuis l'application (`app: true`), la fin de l'inscription Stripe passe par la page de retour du
 // site, qui rouvre l'application sur l'écran des paiements (ADR 0060, 0124).
 import type Stripe from "stripe";
 import { appReturnUrl } from "../../../packages/core/src/app-return.ts";
-import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
+import {
+  connectAccountFromStripe,
+  connectOnboardingOpen,
+} from "../../../packages/core/src/connect.ts";
 import {
   type ConnectProfileParams,
   connectPrefill,
@@ -31,7 +39,7 @@ async function prefillAccount(
   stripe: Stripe,
   accountId: string,
   profile: ConnectProfileParams,
-  tokens: { account?: string; person?: string },
+  tokens: { account?: string; person?: string; bank?: string },
 ) {
   const steps: [string, () => Promise<unknown>][] = [
     ["profil", () => stripe.accounts.update(accountId, profile)],
@@ -45,6 +53,13 @@ async function prefillAccount(
     steps.push([
       "dirigeant",
       () => stripe.accounts.createPerson(accountId, { person_token: tokens.person }),
+    ]);
+  // IBAN par la mise à jour du compte : l'ajout direct d'un compte bancaire (createExternalAccount)
+  // est refusé par Stripe pour un compte doté de son propre tableau de bord (essai du 02/11/2026).
+  if (tokens.bank)
+    steps.push([
+      "iban",
+      () => stripe.accounts.update(accountId, { external_account: tokens.bank }),
     ]);
   for (const [label, step] of steps) {
     try {
@@ -61,8 +76,7 @@ Deno.serve(async (req) => {
   const ctx = await currentArtisan(req, admin);
   if (!ctx) return json({ status: "forbidden" }, 403);
   const { user, artisan } = ctx;
-  if (artisan.status !== "valide" && artisan.status !== "suspendu")
-    return json({ status: "not_validated" }, 403);
+  if (!connectOnboardingOpen(artisan.status)) return json({ status: "not_validated" }, 403);
 
   const body = (await req.json().catch(() => ({}))) as {
     action?: string;
@@ -70,6 +84,7 @@ Deno.serve(async (req) => {
     app?: unknown;
     accountToken?: unknown;
     personToken?: unknown;
+    bankToken?: unknown;
   };
   const { data: allowed } = await admin.rpc("consume_rate_limit", {
     p_key: `connect-onboarding:${user.id}`,
@@ -99,9 +114,14 @@ Deno.serve(async (req) => {
       const publishableKey = env("STRIPE_PUBLISHABLE_KEY");
       if (accountId || !isStripePublishableKey(publishableKey))
         return json({ status: "ok", prefill: null });
-      const { account, person } = connectPrefill(await prefillSource(admin, artisan.id, user));
-      if (!account && !person) return json({ status: "ok", prefill: null });
-      return json({ status: "ok", prefill: { publishableKey, account, person } });
+      const { account, person, businessAddress, holderName, soleOwnerDefault } = connectPrefill(
+        await prefillSource(admin, artisan.id, user),
+      );
+      // Même sans identité à transmettre, l'IBAN peut l'être (ADR 0215).
+      return json({
+        status: "ok",
+        prefill: { publishableKey, account, person, businessAddress, holderName, soleOwnerDefault },
+      });
     }
 
     if (!accountId) {
@@ -130,7 +150,22 @@ Deno.serve(async (req) => {
       await prefillAccount(stripe, accountId, prefill.profile, {
         account: isConnectToken("account", body.accountToken) ? body.accountToken : undefined,
         person: isConnectToken("person", body.personToken) ? body.personToken : undefined,
+        bank: isConnectToken("bank_account", body.bankToken) ? body.bankToken : undefined,
       });
+    }
+
+    if (body.action === "create") return json({ status: "ok" });
+
+    if (body.action === "session") {
+      // Formulaire Stripe affiché dans MENAO (composant intégré, ADR 0215) ; la connexion à Stripe
+      // reste demandée : elle est imposée tant que Stripe porte les pertes (ADR 0011).
+      const publishableKey = env("STRIPE_PUBLISHABLE_KEY");
+      if (!isStripePublishableKey(publishableKey)) return json({ status: "unavailable" }, 503);
+      const session = await stripe.accountSessions.create({
+        account: accountId,
+        components: { account_onboarding: { enabled: true } },
+      });
+      return json({ status: "ok", clientSecret: session.client_secret, publishableKey });
     }
 
     const origin = returnOrigin(body.origin);

@@ -19,6 +19,8 @@
     "@menao/ui-tokens": "workspace:^",
     "@menao/validation": "workspace:^",
     "@sentry/nextjs": "11.6.0",
+    "@stripe/connect-js": "3.4.6",
+    "@stripe/react-connect-js": "3.4.4",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.3",
     "lucide-react": "1.48.0",

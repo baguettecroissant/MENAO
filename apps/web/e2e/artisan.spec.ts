@@ -250,6 +250,17 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.goto("/pro/onboarding/documents");
   await expect(page.getByRole("button", { name: /Déposer|Remplacer/ })).toHaveCount(0);
 
+  // Paiements ouverts dès l'envoi du dossier, pendant la vérification (ADR 0215).
+  await page.goto("/pro/onboarding");
+  await expect(
+    page.getByText("Vous pouvez le faire dès maintenant, pendant la vérification"),
+  ).toBeVisible();
+  await page.goto("/pro/onboarding/paiements");
+  await expect(page.getByText("ne touche jamais l'argent de vos chantiers")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Configurer mes paiements avec Stripe" }),
+  ).toBeVisible();
+
   // Pendant la vérification : l'espace rempli d'exemples (ADR 0184), en lecture seule.
   await page.goto("/pro/onboarding");
   await page.getByRole("link", { name: "Découvrir mon espace" }).click();

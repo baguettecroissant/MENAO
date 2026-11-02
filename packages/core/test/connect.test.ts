@@ -3,8 +3,20 @@ import {
   artisanVisibility,
   connectAccountFromStripe,
   connectAccountStatus,
+  connectOnboardingOpen,
   connectRequirementGroups,
 } from "../src/connect";
+
+describe("ouverture du compte de paiement (ADR 0215)", () => {
+  it("dès l'envoi du dossier, pas avant ; jamais pour un dossier refusé ou radié", () => {
+    expect(connectOnboardingOpen("en_verification")).toBe(true);
+    expect(connectOnboardingOpen("valide")).toBe(true);
+    expect(connectOnboardingOpen("suspendu")).toBe(true);
+    expect(connectOnboardingOpen("brouillon")).toBe(false);
+    expect(connectOnboardingOpen("refuse")).toBe(false);
+    expect(connectOnboardingOpen("radie")).toBe(false);
+  });
+});
 
 describe("visibilité de l'artisan (F-14)", () => {
   const ok = { status: "valide" as const, subscriptionActive: true, connectChargesEnabled: true };

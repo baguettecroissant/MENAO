@@ -110,6 +110,8 @@ export const messages = {
   welcomeGiftRecipientRequired: "Indiquez le nom du destinataire.",
   welcomeGiftAddressRequired: "Indiquez l'adresse de livraison.",
   postalCodeInvalid: "Indiquez un code postal à 5 chiffres.",
+  birthDateInvalid: "Date de naissance invalide (16 ans au moins).",
+  ibanInvalid: "IBAN invalide : vérifiez chaque caractère (27 pour un compte français).",
   welcomeGiftCityRequired: "Indiquez la commune.",
   googleUrlInvalid: "Indiquez le lien de la fiche Google de l'entreprise.",
   googleRatingInvalid: "Note Google entre 1 et 5.",

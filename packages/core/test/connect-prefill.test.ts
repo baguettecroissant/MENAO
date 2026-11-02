@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   type ConnectPrefillSource,
+  birthDateOf,
+  completeConnectPrefill,
   connectBusinessType,
   connectPrefill,
   connectTokenId,
   connectTokenRequest,
+  homeAddressOf,
   isConnectToken,
   isStripePublishableKey,
+  normalizeIban,
   productDescription,
+  representativeTitle,
   statementDescriptor,
 } from "../src/connect-prefill";
 
@@ -85,8 +90,17 @@ describe("pré-remplissage du compte Stripe", () => {
       last_name: "Exemple",
       email: "jean@example.test",
       phone: "+33600000000",
-      relationship: { representative: true },
+      relationship: { representative: true, title: "Gérant" },
     });
+    expect(prefill.businessAddress).toEqual({
+      line1: "1 RUE DE L'EXEMPLE",
+      postal_code: "06000",
+      city: "NICE",
+      country: "FR",
+    });
+    expect(prefill.holderName).toBe("EXEMPLE TERRASSEMENT");
+    // SARL : plusieurs associés possibles, la case n'est pas cochée d'office.
+    expect(prefill.soleOwnerDefault).toBe(false);
     expect(prefill.profile).toEqual({
       business_profile: {
         product_description:
@@ -110,6 +124,16 @@ describe("pré-remplissage du compte Stripe", () => {
     const prefill = connectPrefill({ ...sarl, isDirigeant: false });
     expect(prefill.person).toBeNull();
     expect(prefill.account?.business_type).toBe("company");
+    expect(prefill.soleOwnerDefault).toBeNull();
+    expect(prefill.holderName).toBe("EXEMPLE TERRASSEMENT");
+  });
+
+  it("SASU et EURL : président ou gérant, associé unique coché d'office", () => {
+    const sasu = connectPrefill({ ...sarl, formeJuridiqueCode: "5720" });
+    expect(sasu.person?.relationship).toEqual({ representative: true, title: "Président" });
+    expect(sasu.soleOwnerDefault).toBe(true);
+    expect(connectPrefill({ ...sarl, formeJuridiqueCode: "5498" }).soleOwnerDefault).toBe(true);
+    expect(connectPrefill({ ...sarl, formeJuridiqueCode: "5710" }).soleOwnerDefault).toBe(false);
   });
 
   it("entrepreneur individuel : nom et contact de l'entrepreneur, sans adresse ni SIREN", () => {
@@ -128,6 +152,8 @@ describe("pré-remplissage du compte Stripe", () => {
       },
     });
     expect(prefill.person).toBeNull();
+    expect(prefill.holderName).toBe("Jean Exemple");
+    expect(prefill.soleOwnerDefault).toBeNull();
   });
 
   it("entrepreneur individuel qui n'est pas le dirigeant : pas de jeton d'identité", () => {
@@ -152,8 +178,9 @@ describe("pré-remplissage du compte Stripe", () => {
     expect(prefill.person).toEqual({
       first_name: "Jean",
       last_name: "Exemple",
-      relationship: { representative: true },
+      relationship: { representative: true, title: "Gérant" },
     });
+    expect(prefill.businessAddress).toBeNull();
     expect(prefill.profile.business_profile).not.toHaveProperty("support_phone");
     expect(prefill.profile.business_profile).not.toHaveProperty("support_email");
   });
@@ -200,6 +227,122 @@ describe("pré-remplissage du compte Stripe", () => {
   });
 });
 
+describe("fonction du dirigeant", () => {
+  it("président de SAS, gérant de SARL, rien sinon", () => {
+    expect(representativeTitle("5710")).toBe("Président");
+    expect(representativeTitle("5720")).toBe("Président");
+    expect(representativeTitle("5499")).toBe("Gérant");
+    expect(representativeTitle("5498")).toBe("Gérant");
+    expect(representativeTitle("5202")).toBeNull();
+    expect(representativeTitle(null)).toBeNull();
+  });
+});
+
+describe("compléments saisis dans MENAO (ADR 0215)", () => {
+  it("IBAN : espaces retirés, clé de contrôle vérifiée", () => {
+    // IBAN d'exemple publié (fictif).
+    expect(normalizeIban("fr76 3000 6000 0112 3456 7890 189")).toBe("FR7630006000011234567890189");
+    expect(normalizeIban("FR7630006000011234567890188")).toBeNull();
+    expect(normalizeIban("FR76")).toBeNull();
+    expect(normalizeIban("")).toBeNull();
+    expect(normalizeIban(null)).toBeNull();
+  });
+
+  it("date de naissance : de 16 à 100 ans, date réelle", () => {
+    expect(birthDateOf("1985-04-23", "2026-11-02")).toEqual({ day: 23, month: 4, year: 1985 });
+    expect(birthDateOf("2010-11-02", "2026-11-02")).toEqual({ day: 2, month: 11, year: 2010 });
+    expect(birthDateOf("2010-11-03", "2026-11-02")).toBeNull();
+    expect(birthDateOf("1926-11-02", "2026-11-02")).toEqual({ day: 2, month: 11, year: 1926 });
+    expect(birthDateOf("1925-11-01", "2026-11-02")).toBeNull();
+    expect(birthDateOf("1990-02-30", "2026-11-02")).toBeNull();
+    expect(birthDateOf("23/04/1985", "2026-11-02")).toBeNull();
+  });
+
+  it("adresse personnelle complète et en métropole seulement", () => {
+    expect(
+      homeAddressOf({ line1: " 2  rue des Essais ", postalCode: "06100", city: "Nice" }),
+    ).toEqual({ line1: "2 rue des Essais", postal_code: "06100", city: "Nice", country: "FR" });
+    expect(homeAddressOf({ line1: "2 rue", postalCode: "97400", city: "Saint-Denis" })).toBeNull();
+    expect(homeAddressOf({ line1: "", postalCode: "06100", city: "Nice" })).toBeNull();
+  });
+
+  const home = {
+    line1: "2 rue des Essais",
+    postal_code: "06100",
+    city: "Nice",
+    country: "FR" as const,
+  };
+  const dob = { day: 23, month: 4, year: 1985 };
+
+  it("SASU : date de naissance, adresse, associé unique et IBAN au nom de la société", () => {
+    const tokens = completeConnectPrefill(connectPrefill({ ...sarl, formeJuridiqueCode: "5720" }), {
+      birthDate: dob,
+      homeAddress: home,
+      iban: "FR7630006000011234567890189",
+      soleOwner: true,
+    });
+    expect(tokens.account).toMatchObject({ company: { owners_provided: true } });
+    expect(tokens.person).toMatchObject({
+      dob,
+      address: home,
+      relationship: {
+        representative: true,
+        title: "Président",
+        owner: true,
+        percent_ownership: 100,
+      },
+    });
+    expect(tokens.bankAccount).toEqual({
+      country: "FR",
+      currency: "eur",
+      account_number: "FR7630006000011234567890189",
+      account_holder_name: "EXEMPLE TERRASSEMENT",
+      account_holder_type: "company",
+    });
+  });
+
+  it("plusieurs associés : rien n'est déclaré à leur place", () => {
+    const tokens = completeConnectPrefill(connectPrefill(sarl), {
+      birthDate: dob,
+      soleOwner: false,
+    });
+    expect(tokens.account).not.toHaveProperty("company.owners_provided");
+    expect(tokens.person?.relationship).toEqual({ representative: true, title: "Gérant" });
+    expect(tokens.person).not.toHaveProperty("address");
+    expect(tokens.bankAccount).toBeNull();
+  });
+
+  it("entrepreneur individuel : date et adresse dans son identité, compte à son nom", () => {
+    const prefill = connectPrefill({ ...sarl, formeJuridiqueCode: "1000", raisonSociale: "X" });
+    const tokens = completeConnectPrefill(prefill, {
+      birthDate: dob,
+      homeAddress: home,
+      iban: "FR76 3000 6000 0112 3456 7890 189",
+    });
+    expect(tokens.account).toMatchObject({
+      individual: { first_name: "Jean", dob, address: home },
+    });
+    expect(tokens.person).toBeNull();
+    expect(tokens.bankAccount).toMatchObject({
+      account_holder_name: "Jean Exemple",
+      account_holder_type: "individual",
+    });
+  });
+
+  it("sans être le dirigeant : seulement l'IBAN, aucune donnée de personne", () => {
+    const prefill = connectPrefill({ ...sarl, isDirigeant: false });
+    const tokens = completeConnectPrefill(prefill, {
+      birthDate: dob,
+      homeAddress: home,
+      iban: "FR7630006000011234567890189",
+      soleOwner: true,
+    });
+    expect(tokens.person).toBeNull();
+    expect(tokens.account).not.toHaveProperty("company.owners_provided");
+    expect(tokens.bankAccount?.account_number).toBe("FR7630006000011234567890189");
+  });
+});
+
 describe("jetons Stripe", () => {
   it("encode la requête comme l'API Stripe", () => {
     const request = connectTokenRequest("pk_test_exemple0000", "account", {
@@ -233,7 +376,21 @@ describe("jetons Stripe", () => {
     );
   });
 
+  it("encode l'IBAN du jeton de compte bancaire", () => {
+    const request = connectTokenRequest("pk_test_exemple0000", "bank_account", {
+      country: "FR",
+      currency: "eur",
+      account_number: "FR7630006000011234567890189",
+      account_holder_type: "company",
+    });
+    expect(decodeURIComponent(request.init.body)).toBe(
+      "bank_account[country]=FR&bank_account[currency]=eur&bank_account[account_number]=FR7630006000011234567890189&bank_account[account_holder_type]=company",
+    );
+  });
+
   it("reconnaît les identifiants de jeton et les clés publiques", () => {
+    expect(isConnectToken("bank_account", "btok_1AbCdEfGhIjKl")).toBe(true);
+    expect(isConnectToken("bank_account", "ct_1AbCdEfGhIjKl")).toBe(false);
     expect(isConnectToken("account", "ct_1AbCdEfGhIjKl")).toBe(true);
     expect(isConnectToken("account", "cpt_1AbCdEfGhIjKl")).toBe(false);
     expect(isConnectToken("person", "cpt_1AbCdEfGhIjKl")).toBe(true);

@@ -1,7 +1,9 @@
 import {
   type ConnectAccountTokenData,
+  type ConnectBankAccountTokenData,
   type ConnectPersonTokenData,
-  type ConnectTokenPrefill,
+  type ConnectTokenData,
+  type ConnectTokenKind,
   type ConnectTokens,
   connectTokenId,
   connectTokenRequest,
@@ -9,8 +11,8 @@ import {
 
 async function createToken(
   publishableKey: string,
-  kind: "account" | "person",
-  data: ConnectAccountTokenData | ConnectPersonTokenData | null,
+  kind: ConnectTokenKind,
+  data: ConnectAccountTokenData | ConnectPersonTokenData | ConnectBankAccountTokenData | null,
 ): Promise<string | undefined> {
   if (!data) return undefined;
   try {
@@ -23,16 +25,18 @@ async function createToken(
 }
 
 /**
- * Jetons Stripe du pré-remplissage, créés par le navigateur avec la clé publique (ADR 0204) : les
- * données d'identité vont directement à Stripe. Un échec laisse l'artisan les saisir chez Stripe.
+ * Jetons Stripe du pré-remplissage, créés par le navigateur avec la clé publique (ADR 0204,
+ * ADR 0215) : identité et IBAN vont directement à Stripe, sans passer par MENAO. Un échec laisse
+ * l'artisan les saisir chez Stripe.
  */
 export async function createConnectTokens(
-  prefill: ConnectTokenPrefill | null,
+  publishableKey: string,
+  data: ConnectTokenData,
 ): Promise<ConnectTokens> {
-  if (!prefill) return {};
-  const [accountToken, personToken] = await Promise.all([
-    createToken(prefill.publishableKey, "account", prefill.account),
-    createToken(prefill.publishableKey, "person", prefill.person),
+  const [accountToken, personToken, bankToken] = await Promise.all([
+    createToken(publishableKey, "account", data.account),
+    createToken(publishableKey, "person", data.person),
+    createToken(publishableKey, "bank_account", data.bankAccount),
   ]);
-  return { accountToken, personToken };
+  return { accountToken, personToken, bankToken };
 }
