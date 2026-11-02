@@ -97,7 +97,7 @@ export default async function AdminArtisanPage({
     supabase
       .from("artisan_documents")
       .select(
-        "id, type, storage_path, mime_type, status, created_at, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason, verified_at, verified_by",
+        "id, type, source, storage_path, mime_type, status, created_at, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason, verified_at, verified_by",
       )
       .eq("artisan_id", id),
     supabase

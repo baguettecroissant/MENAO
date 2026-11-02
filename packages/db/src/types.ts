@@ -534,6 +534,7 @@ export type Database = {
           refusal_reason: string | null;
           renewal_reminder_days: number | null;
           size_bytes: number;
+          source: string;
           status: Database["public"]["Enums"]["document_status"];
           storage_path: string;
           type: Database["public"]["Enums"]["document_type"];
@@ -557,6 +558,7 @@ export type Database = {
           refusal_reason?: string | null;
           renewal_reminder_days?: number | null;
           size_bytes: number;
+          source?: string;
           status?: Database["public"]["Enums"]["document_status"];
           storage_path: string;
           type: Database["public"]["Enums"]["document_type"];
@@ -579,6 +581,7 @@ export type Database = {
           refusal_reason?: string | null;
           renewal_reminder_days?: number | null;
           size_bytes?: number;
+          source?: string;
           status?: Database["public"]["Enums"]["document_status"];
           storage_path?: string;
           type?: Database["public"]["Enums"]["document_type"];
@@ -1364,6 +1367,8 @@ export type Database = {
           radius_km: number | null;
           raison_sociale: string | null;
           refusal_reason: string | null;
+          registre_statut: string | null;
+          registre_verifie_le: string | null;
           rge_checked_at: string | null;
           siren: string | null;
           sirene_active: boolean | null;
@@ -1428,6 +1433,8 @@ export type Database = {
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
+          registre_statut?: string | null;
+          registre_verifie_le?: string | null;
           rge_checked_at?: string | null;
           siren?: never;
           sirene_active?: boolean | null;
@@ -1491,6 +1498,8 @@ export type Database = {
           radius_km?: number | null;
           raison_sociale?: string | null;
           refusal_reason?: string | null;
+          registre_statut?: string | null;
+          registre_verifie_le?: string | null;
           rge_checked_at?: string | null;
           siren?: never;
           sirene_active?: boolean | null;
@@ -6134,6 +6143,10 @@ export type Database = {
           p_signed_pdf_path: string;
         };
         Returns: string;
+      };
+      record_registry_check: {
+        Args: { p_artisan_id: string; p_document?: Json; p_outcome: string };
+        Returns: Json;
       };
       record_rge_qualifications: { Args: { p_artisan_id: string; p_rows: Json }; Returns: number };
       record_sirene_result: {

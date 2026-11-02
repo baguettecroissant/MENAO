@@ -292,6 +292,9 @@ export const fr = {
       identite: "Carte d'identité ou passeport",
       urssaf: "De moins de 6 mois",
     },
+    // Kbis remplacé par la vérification au registre (ADR 0217), comme sur le site.
+    registryHint: "Vérifié automatiquement au registre des entreprises",
+    registryFailedHint: "Vérification automatique impossible : déposez-le",
     states: {
       missing: "À ajouter",
       en_attente: "Déposé",
@@ -585,6 +588,7 @@ export const fr = {
     pending: "Nouveau document envoyé, en cours de vérification",
     refused: (motif: string | null) => (motif ? `Refusé : ${motif}` : "Refusé"),
     kbisDone: "Le Kbis n'est plus demandé une fois le dossier validé.",
+    registryVerified: "Vérifié automatiquement au registre des entreprises : rien à déposer",
     states: {
       valide: "Vérifié",
       bientot: "À renouveler",
@@ -606,6 +610,20 @@ export const fr = {
     chooseFile: "Choisir un fichier (PDF)",
     fileReady: (name: string) => `Fichier prêt à envoyer : ${name}`,
     kbisDone: "Le Kbis n'est plus demandé une fois le dossier validé : rien à envoyer.",
+    // Entreprise vérifiée au registre, à la place du Kbis déposé (ADR 0217), comme sur le site.
+    registryVerified: (date: string) =>
+      `Entreprise vérifiée automatiquement au registre des entreprises le ${date} : rien à envoyer.`,
+    registryReasons: {
+      introuvable:
+        "Votre entreprise n'a pas été trouvée dans l'annuaire public des entreprises : envoyez votre Kbis ou un extrait RNE.",
+      inactive:
+        "L'annuaire public des entreprises indique une entreprise fermée : envoyez un Kbis ou un extrait RNE récent.",
+      masque:
+        "Les dirigeants de votre entreprise ne sont pas publiés dans l'annuaire public : envoyez votre Kbis ou un extrait RNE.",
+      dirigeant_absent:
+        "Votre nom n'apparaît pas parmi les dirigeants publiés de l'entreprise : envoyez votre Kbis ou un extrait RNE.",
+    } as Record<string, string>,
+    registryRecheck: "Revérifier au registre",
     radiated: "Votre compte est radié : les documents ne peuvent plus être changés.",
     replace: "Reprendre la photo",
     added: "Photo prête à envoyer",

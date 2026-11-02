@@ -4918,6 +4918,9 @@ export const fr = {
           identite: "Carte d'identité ou passeport",
           urssaf: "De moins de 6 mois",
         },
+        // Kbis remplacé par la vérification au registre (ADR 0217).
+        registryHint: "Vérifié automatiquement au registre des entreprises",
+        registryFailedHint: "Vérification automatique impossible : déposez-le",
         states: {
           missing: "À ajouter",
           en_attente: "Déposé",
@@ -5394,7 +5397,7 @@ export const fr = {
       },
       documents: {
         intro:
-          "Déposez les 5 justificatifs ci-dessous. Ils restent privés : seule l'équipe MENAO peut les consulter pour vérifier votre entreprise.",
+          "Déposez les justificatifs ci-dessous. Ils restent privés : seule l'équipe MENAO peut les consulter pour vérifier votre entreprise.",
         types: {
           kbis: "Kbis ou extrait INSEE/RNE de moins de 3 mois",
           decennale: "Attestation d'assurance décennale",
@@ -5410,6 +5413,23 @@ export const fr = {
         },
         invalidNow: "Ce document n'est plus valable (date dépassée) : déposez-en un nouveau.",
         view: "Voir le document",
+        // Entreprise vérifiée au registre, à la place du Kbis déposé (ADR 0217).
+        registry: {
+          verified: (date: string) =>
+            `Entreprise vérifiée automatiquement au registre des entreprises le ${date} : rien à déposer.`,
+          view: "Voir la fiche de vérification",
+          reasons: {
+            introuvable:
+              "Votre entreprise n'a pas été trouvée dans l'annuaire public des entreprises : déposez votre Kbis ou un extrait RNE.",
+            inactive:
+              "L'annuaire public des entreprises indique une entreprise fermée : déposez un Kbis ou un extrait RNE récent.",
+            masque:
+              "Les dirigeants de votre entreprise ne sont pas publiés dans l'annuaire public : déposez votre Kbis ou un extrait RNE.",
+            dirigeant_absent:
+              "Votre nom n'apparaît pas parmi les dirigeants publiés de l'entreprise : déposez votre Kbis ou un extrait RNE.",
+          } as Record<string, string>,
+          recheck: "Revérifier au registre",
+        },
         replace: "Remplacer le document",
         send: "Déposer le document",
         dateEmission: "Date d'émission",
@@ -7809,6 +7829,9 @@ export const fr = {
       docReplaced: "Remplacé",
       docEntered: "Saisi par l'artisan",
       docDeposited: (date: string) => `Déposé le ${date}`,
+      // Kbis remplacé par la vérification au registre (ADR 0217).
+      docRegistry: (date: string) =>
+        `Entreprise vérifiée automatiquement au registre le ${date}, inscrit trouvé parmi les dirigeants`,
       docChecks: "À contrôler",
       docCompany: "Fiche de l'entreprise",
       docCompanyName: "Raison sociale",

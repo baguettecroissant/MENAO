@@ -10,7 +10,7 @@ export async function loadMyDocuments(): Promise<MyDocuments | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "status, decennale_non_soumis, artisan_documents(type, status, date_fin, refusal_reason, created_at)",
+      "status, decennale_non_soumis, registre_statut, artisan_documents(type, source, status, date_fin, refusal_reason, created_at)",
     )
     .eq("user_id", auth.user.id)
     .maybeSingle();
@@ -18,7 +18,11 @@ export async function loadMyDocuments(): Promise<MyDocuments | null> {
   return {
     status: artisan.status,
     rows: documentRows(
-      { status: artisan.status, decennaleExempt: artisan.decennale_non_soumis },
+      {
+        status: artisan.status,
+        decennaleExempt: artisan.decennale_non_soumis,
+        registryStatus: artisan.registre_statut,
+      },
       artisan.artisan_documents,
     ),
   };

@@ -25,6 +25,10 @@ export type DocumentRow = {
   exempt: boolean;
   /** Dépôt possible : pendant l'inscription, ou renouvellement d'un document surveillé (F-51). */
   canUpload: boolean;
+  /** Kbis remplacé par la fiche de vérification au registre (ADR 0217) : rien à déposer. */
+  registry: boolean;
+  /** Kbis à déposer après un contrôle au registre sans succès : sa raison (ADR 0217). */
+  registryFailed: string | null;
 };
 
 export type DocumentInput = {
@@ -33,10 +37,11 @@ export type DocumentInput = {
   date_fin: string | null;
   refusal_reason: string | null;
   created_at: string;
+  source?: string;
 };
 
 export function documentRows(
-  artisan: { status: string; decennaleExempt: boolean },
+  artisan: { status: string; decennaleExempt: boolean; registryStatus?: string | null },
   documents: readonly DocumentInput[],
   today: Date = new Date(),
 ): DocumentRow[] {
@@ -48,6 +53,8 @@ export function documentRows(
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
     const valid = rows.find((d) => d.status === "valide");
     const newest = rows[0];
+    const registry = valid?.source === "registre";
+    const registryStatus = artisan.registryStatus ?? null;
     return {
       type,
       current: valid
@@ -62,7 +69,13 @@ export function documentRows(
       refusedReason: newest?.status === "refuse" ? newest.refusal_reason : null,
       exempt: type === "decennale" && artisan.decennaleExempt,
       canUpload:
-        onboarding || (renewal && (MONITORED_DOCUMENT_TYPES as readonly string[]).includes(type)),
+        !registry &&
+        (onboarding || (renewal && (MONITORED_DOCUMENT_TYPES as readonly string[]).includes(type))),
+      registry,
+      registryFailed:
+        type === "kbis" && onboarding && !newest && registryStatus && registryStatus !== "verifie"
+          ? registryStatus
+          : null,
     };
   });
 }

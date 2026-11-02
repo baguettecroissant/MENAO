@@ -234,6 +234,15 @@ export default async function OnboardingIndexPage() {
           }
           const state = documentState(type, snapshot.documents[type]);
           const refused = documents.find((doc) => doc.type === type && doc.status === "refuse");
+          // Kbis vérifié au registre, ou vérification impossible (ADR 0217).
+          const registry =
+            type === "kbis" &&
+            documents.some((doc) => doc.type === "kbis" && doc.source === "registre");
+          const registryFailed =
+            type === "kbis" &&
+            state === "missing" &&
+            artisan.registre_statut !== null &&
+            artisan.registre_statut !== "verifie";
           return (
             <Row
               key={type}
@@ -243,7 +252,11 @@ export default async function OnboardingIndexPage() {
               hint={
                 state === "refuse" && refused?.refusal_reason
                   ? t.documents.refusedBecause(refused.refusal_reason)
-                  : d.documentHints[type]
+                  : registry && state === "valide"
+                    ? d.registryHint
+                    : registryFailed
+                      ? d.registryFailedHint
+                      : d.documentHints[type]
               }
               tone={documentTone[state]}
               status={d.states[state]}

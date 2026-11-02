@@ -197,6 +197,15 @@ export function DossierScreen() {
           }
           const state = documentState(type, snapshot.documents[type]);
           const refused = dossier.documents.find((d) => d.type === type && d.status === "refuse");
+          // Kbis vérifié au registre, ou vérification impossible (ADR 0217), comme sur le site.
+          const registry =
+            type === "kbis" &&
+            dossier.documents.some((d) => d.type === "kbis" && d.source === "registre");
+          const registryFailed =
+            type === "kbis" &&
+            state === "missing" &&
+            dossier.registryStatus !== null &&
+            dossier.registryStatus !== "verifie";
           return (
             <Row
               key={type}
@@ -205,7 +214,11 @@ export function DossierScreen() {
               hint={
                 state === "refuse" && refused?.refusal_reason
                   ? t.refusedBecause(refused.refusal_reason)
-                  : t.documentHints[type]
+                  : registry && state === "valide"
+                    ? t.registryHint
+                    : registryFailed
+                      ? t.registryFailedHint
+                      : t.documentHints[type]
               }
               tone={documentTone[state]}
               status={t.states[state]}

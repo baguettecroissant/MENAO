@@ -18,6 +18,8 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
+import { formatLongDate } from "@/lib/dates";
+import { verifySiret } from "@/lib/my-company";
 import { readDocument } from "@/lib/document-reading";
 import {
   depositPhoto,
@@ -74,18 +76,32 @@ export default function DocumentScreen() {
   const exempt = type === "decennale" && dossier?.snapshot.decennaleExempt === true;
   // Kbis : demandé à l'inscription seulement (pas de renouvellement, F-51).
   const kbisDone = type === "kbis" && validated;
+  // Kbis remplacé par la fiche de vérification au registre, ou vérification impossible (ADR 0217).
+  const kbis = dossier?.documents.filter((doc) => doc.type === "kbis") ?? [];
+  const registry = kbis.find((doc) => doc.source === "registre" && doc.status === "valide");
+  const registryFailed =
+    type === "kbis" && draft && kbis.length === 0 && dossier?.registryStatus
+      ? (t.registryReasons[dossier.registryStatus] ?? null)
+      : null;
   return (
     <Screen header={<TopBar />}>
       <Title>{d.documents[type]}</Title>
-      {exempt || kbisDone || locked ? null : <Body muted>{t.photoHint}</Body>}
+      {exempt || kbisDone || locked || (type === "kbis" && registry) ? null : (
+        <Body muted>{t.photoHint}</Body>
+      )}
       {locked ? (
         <Notice tone="info">{t.locked}</Notice>
       ) : dossier?.status === "radie" ? (
         <Notice tone="info">{t.radiated}</Notice>
       ) : kbisDone ? (
         <Notice tone="info">{t.kbisDone}</Notice>
+      ) : type === "kbis" && registry ? (
+        <Notice tone="success">
+          {t.registryVerified(formatLongDate(registry.date_emission ?? ""))}
+        </Notice>
       ) : (
         <>
+          {registryFailed ? <RegistryRecheck reason={registryFailed} onDone={reload} /> : null}
           {type === "decennale" && draft ? (
             <ExemptChoice exempt={exempt} onChange={reload} />
           ) : null}
@@ -95,6 +111,23 @@ export default function DocumentScreen() {
         </>
       )}
     </Screen>
+  );
+}
+
+/** Kbis à envoyer après un contrôle au registre sans succès, avec sa raison (ADR 0217). */
+function RegistryRecheck({ reason, onDone }: { reason: string; onDone: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  async function recheck() {
+    setBusy(true);
+    await verifySiret();
+    await onDone();
+    setBusy(false);
+  }
+  return (
+    <Card tone="soft">
+      <Notice tone="info">{reason}</Notice>
+      <Button label={t.registryRecheck} variant="secondary" onPress={recheck} loading={busy} />
+    </Card>
   );
 }
 
