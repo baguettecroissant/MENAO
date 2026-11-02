@@ -50,9 +50,13 @@ test("paiements Stripe Connect : configuration, compte actif, artisan visible", 
   await expect(main.getByText("un compte de paiement actif")).toBeVisible();
   await expect(main.getByText("un abonnement actif")).toHaveCount(0);
 
-  // Reprise de la configuration : redirection vers Stripe (simulée)
+  // Reprise de la configuration : formulaire Stripe intégré (ADR 0215), page ouverte par un lien
+  // simple, avec ses propres en-têtes (Stripe dans la CSP, fenêtre de connexion Stripe possible).
   await page.goto("/pro/onboarding/paiements");
   await expect(page.getByText("ne touche jamais l'argent de vos chantiers")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Reprendre la configuration Stripe" }),
+  ).toHaveAttribute("href", "/pro/onboarding/paiements/stripe");
   const external: string[] = [];
   await page.route(
     (url) => url.hostname !== "localhost",
@@ -61,7 +65,12 @@ test("paiements Stripe Connect : configuration, compte actif, artisan visible", 
       return route.fulfill({ contentType: "text/html", body: "<h1>Stripe (simulé)</h1>" });
     },
   );
-  await page.getByRole("button", { name: "Reprendre la configuration Stripe" }).click();
+  const embedded = await page.goto("/pro/onboarding/paiements/stripe");
+  expect(embedded?.headers()["cross-origin-opener-policy"]).toBe("unsafe-none");
+  expect(embedded?.headers()["content-security-policy"]).toContain("https://connect-js.stripe.com");
+  // Secours : le site de Stripe (simulé). Sans clé publique en CI, le formulaire intégré ne se
+  // charge pas et le bouton de secours devient le bouton principal.
+  await page.getByRole("button", { name: "Continuer sur le site de Stripe" }).click();
   await expect
     .poll(() => external.some((u) => /(^|\.)stripe\.(com|me)$/.test(new URL(u).hostname)))
     .toBe(true);
@@ -93,8 +102,8 @@ test("paiements Stripe Connect : configuration, compte actif, artisan visible", 
     main.getByText(`À fournir avant le ${longDay.format(new Date(deadline * 1000))}.`),
   ).toBeVisible();
   await expect(
-    main.getByRole("button", { name: "Compléter mes informations sur Stripe" }),
-  ).toBeVisible();
+    main.getByRole("link", { name: "Compléter mes informations sur Stripe" }),
+  ).toHaveAttribute("href", "/pro/onboarding/paiements/stripe");
 
   // Informations transmises : Stripe les vérifie, rien à faire en attendant.
   await accountUpdated(request, "verification", {
