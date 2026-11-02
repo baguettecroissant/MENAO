@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type ConnectPrefillSource,
   birthDateOf,
+  businessUrlOf,
   completeConnectPrefill,
   connectBusinessType,
   connectPrefill,
@@ -14,6 +15,7 @@ import {
   productDescription,
   representativeTitle,
   statementDescriptor,
+  withBusinessUrl,
 } from "../src/connect-prefill";
 
 // Données fictives.
@@ -343,6 +345,35 @@ describe("compléments saisis dans MENAO (ADR 0215)", () => {
     expect(tokens.person).toBeNull();
     expect(tokens.account).not.toHaveProperty("company.owners_provided");
     expect(tokens.bankAccount?.account_number).toBe("FR7630006000011234567890189");
+  });
+});
+
+describe("site web ou page de réseau social demandé par Stripe", () => {
+  it("adresse complétée par https://, page de l'entreprise exigée sur un réseau", () => {
+    expect(businessUrlOf("facebook.com/menuiserie-exemple")).toEqual({
+      url: "https://facebook.com/menuiserie-exemple",
+    });
+    expect(businessUrlOf(" https://www.instagram.com/menuiserie.exemple/ ")).toEqual({
+      url: "https://www.instagram.com/menuiserie.exemple/",
+    });
+    expect(businessUrlOf("www.menuiserie-exemple.fr")).toEqual({
+      url: "https://www.menuiserie-exemple.fr/",
+    });
+    expect(businessUrlOf("facebook.com")).toEqual({ error: "generic" });
+    expect(businessUrlOf("https://www.instagram.com/")).toEqual({ error: "generic" });
+    expect(businessUrlOf("ma page facebook")).toEqual({ error: "invalid" });
+    expect(businessUrlOf("menuiserie")).toEqual({ error: "invalid" });
+    expect(businessUrlOf("ftp://exemple.fr")).toEqual({ error: "invalid" });
+    expect(businessUrlOf("  ")).toBeNull();
+    expect(businessUrlOf(null)).toBeNull();
+  });
+
+  it("ajoutée au profil public envoyé par le serveur", () => {
+    const profile = connectPrefill(sarl).profile;
+    expect(withBusinessUrl(profile, "https://facebook.com/x").business_profile.url).toBe(
+      "https://facebook.com/x",
+    );
+    expect(withBusinessUrl(profile, null)).toBe(profile);
   });
 });
 

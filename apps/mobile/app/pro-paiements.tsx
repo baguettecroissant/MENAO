@@ -44,7 +44,7 @@ export default function PaymentsScreen() {
           completeConnectPrefill(prefill, details ?? {}),
         )
       : {};
-    const failed = await createConnect(tokens);
+    const failed = await createConnect(tokens, details?.website ?? null);
     if (failed) {
       setBusy(false);
       setMessage(failed.error);

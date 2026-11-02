@@ -35,6 +35,7 @@ export default async function ConnectStripePage() {
           {fr.pro.onboarding.steps.paiements}
         </h2>
         <p className="text-sm text-muted-foreground">{t.embedded.lead}</p>
+        <p className="text-sm text-muted-foreground">{t.embedded.website}</p>
         <ConnectEmbedded />
       </section>
     </Card>

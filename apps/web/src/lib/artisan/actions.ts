@@ -533,8 +533,11 @@ export async function startConnectOnboarding(tokens: ConnectTokens = {}): Promis
  * Crée le compte Stripe de l'artisan, pré-rempli par les jetons créés dans le navigateur (identité,
  * IBAN), avant le formulaire Stripe intégré (ADR 0215).
  */
-export async function createConnectAccount(tokens: ConnectTokens = {}): Promise<FormState> {
-  const result = await invokeConnect({ action: "create", ...tokenBody(tokens) });
+export async function createConnectAccount(
+  tokens: ConnectTokens = {},
+  website: string | null = null,
+): Promise<FormState> {
+  const result = await invokeConnect({ action: "create", ...tokenBody(tokens), website });
   return "error" in result ? { error: result.error } : { success: "ok" };
 }
 

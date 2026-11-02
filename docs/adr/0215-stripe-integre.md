@@ -29,6 +29,7 @@
   - fonction du dirigeant déduite de la forme juridique : « Président » (57xx), « Gérant » (54xx) ;
   - associé unique déclaré seulement si la case est cochée : 100 % du capital, associés déclarés (`owners_provided`) ;
   - « Tout remplir chez Stripe » : ouvre Stripe avec le seul pré-remplissage de l'ADR 0204.
+  - **Complément du 2 novembre 2026** : champ facultatif « Site web, page Facebook ou Instagram », demandé par Stripe (`business_profile.url`, toujours dû pour ce type de compte malgré la description de l'activité). Il est contrôlé par `businessUrlOf` (adresse complète exigée sur un réseau : « facebook.com » seul est refusé par Stripe) et envoyé par le serveur dans le profil public, sans jeton. Essai en mode test : avec une page Facebook, le site n'est plus demandé. Au-dessus du formulaire Stripe : « Pas de site web ? Stripe accepte l'adresse complète de votre page Facebook ou Instagram. »
 - **Formulaire Stripe intégré au site** :
   - page `/pro/onboarding/paiements/stripe`, toujours ouverte par un lien simple (chargement complet) : seule page dont la CSP autorise les scripts, cadres et images de Stripe, et dont la `Cross-Origin-Opener-Policy` vaut `unsafe-none`. Le reste du site garde la politique stricte (une politique ne vaut que pour le document chargé) ;
   - action `session` de `connect-onboarding` : crée le compte si besoin, puis une session limitée au formulaire d'inscription ; action `create` : crée le compte avec les jetons ;

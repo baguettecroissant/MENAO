@@ -5134,6 +5134,10 @@ export const fr = {
           soleOwner: "Je suis le seul associé de l'entreprise",
           soleOwnerHint:
             "Sinon, Stripe vous demandera les associés qui détiennent plus de 25 % du capital.",
+          website: "Site web, page Facebook ou Instagram",
+          optional: "(facultatif)",
+          websiteHint:
+            "Stripe la demande pour vérifier votre activité. Indiquez l'adresse complète de votre page, par exemple facebook.com/votre-entreprise.",
           submit: "Continuer",
           sending: "Envoi à Stripe…",
           skip: "Tout remplir chez Stripe",
@@ -5141,6 +5145,8 @@ export const fr = {
         // Formulaire Stripe affiché dans MENAO (ADR 0215).
         embedded: {
           lead: "Stripe vous demande d'abord de vous connecter ou de créer votre accès Stripe (code reçu par SMS), puis de vérifier vos informations.",
+          website:
+            "Pas de site web ? Stripe accepte l'adresse complète de votre page Facebook ou Instagram.",
           loading: "Chargement du formulaire Stripe…",
           fallback: "Le formulaire ne s'affiche pas ?",
           openStripe: "Continuer sur le site de Stripe",

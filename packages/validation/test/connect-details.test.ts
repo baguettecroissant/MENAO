@@ -38,6 +38,20 @@ describe("compléments avant Stripe (ADR 0215)", () => {
       homeAddress: { line1: "2 rue des Essais", postal_code: "06100", city: "Nice", country: "FR" },
       iban: "FR7630006000011234567890189",
       soleOwner: true,
+      website: null,
+    });
+  });
+
+  it("site web ou page de réseau social, facultatif", () => {
+    const base = { birthDate: "1985-04-23", sameAddress: true, iban: IBAN };
+    expect(schema.parse({ ...base, website: "facebook.com/menuiserie-exemple" }).website).toBe(
+      "https://facebook.com/menuiserie-exemple",
+    );
+    expect(errors(schema.safeParse({ ...base, website: "facebook.com" }))).toEqual({
+      website: messages.websiteGeneric,
+    });
+    expect(errors(schema.safeParse({ ...base, website: "ma page" }))).toEqual({
+      website: messages.websiteInvalid,
     });
   });
 
@@ -74,7 +88,7 @@ describe("compléments avant Stripe (ADR 0215)", () => {
     expect(parsed.homeAddress).toBeNull();
   });
 
-  it("sans être le dirigeant : seulement l'IBAN", () => {
+  it("sans être le dirigeant : seulement l'IBAN (et le site web)", () => {
     const other = connectDetailsSchema({
       personal: false,
       today: "2026-11-02",
@@ -82,6 +96,7 @@ describe("compléments avant Stripe (ADR 0215)", () => {
     });
     expect(other.parse({ iban: IBAN, birthDate: "x" })).toEqual({
       iban: "FR7630006000011234567890189",
+      website: null,
     });
   });
 });
