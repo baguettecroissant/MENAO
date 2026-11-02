@@ -2,11 +2,13 @@ import {
   type ConnectOverview,
   collectedTotals,
   connectAccountStatus,
+  connectOnboardingOpen,
   connectRequirementGroups,
   parisToday,
 } from "@menao/core";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { loadConnectPrefill } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { formatDay } from "@/lib/format";
 import { ConnectOverviewPanel } from "./connect-overview";
@@ -15,8 +17,9 @@ import { ConnectStatusPanel } from "./connect-status";
 const t = fr.pro.onboarding.connect;
 
 /**
- * Étape 6 — compte de paiement Stripe Connect (paiements directs, ADR 0011). Dit en clair ce que
- * Stripe attend encore (rubriques lisibles, date limite) ou qu'il vérifie les informations.
+ * Étape 6 — compte de paiement Stripe Connect (paiements directs, ADR 0011), ouverte dès l'envoi du
+ * dossier (ADR 0215). Dit en clair ce que Stripe attend encore (rubriques lisibles, date limite)
+ * ou qu'il vérifie les informations.
  */
 export default async function PaymentsStepPage({
   searchParams,
@@ -26,7 +29,7 @@ export default async function PaymentsStepPage({
   const { supabase } = context;
   let { artisan } = context;
 
-  if (artisan.status !== "valide" && artisan.status !== "suspendu") {
+  if (!connectOnboardingOpen(artisan.status)) {
     return (
       <Card>
         <p>{t.notValidated}</p>
@@ -52,6 +55,8 @@ export default async function PaymentsStepPage({
     requirementsPending: artisan.connect_requirements_pending,
     disabledReason: artisan.connect_disabled_reason,
   });
+  // Premier passage : de quoi pré-remplir le compte Stripe avant sa création (ADR 0204, 0215).
+  const prefill = status === "a_demarrer" ? await loadConnectPrefill().catch(() => null) : null;
   // Compte actif : solde, virements et encaissé via MENAO (ADR 0152), lus en parallèle.
   const money =
     status === "actif"
@@ -87,6 +92,8 @@ export default async function PaymentsStepPage({
                 ? formatDay(artisan.connect_requirements_deadline)
                 : null
             }
+            prefill={prefill}
+            today={parisToday()}
           />
         </section>
       </Card>

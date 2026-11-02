@@ -4935,6 +4935,7 @@ export const fr = {
         afterLead: "Pour recevoir des demandes, il faudra aussi :",
         paiementsTitle: "Recevoir les paiements de vos clients",
         paiementsHint: "Compte Stripe à votre nom : MENAO ne prend aucune commission",
+        paiementsHintNow: "Vous pouvez le faire dès maintenant, pendant la vérification",
         formuleTitle: "Choisir votre formule",
         formuleHint: "Vous pouvez le faire dès maintenant",
       },
@@ -5112,8 +5113,35 @@ export const fr = {
           "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
         fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
         notValidated:
-          "La configuration des paiements sera disponible dès que l'équipe MENAO aura validé votre dossier.",
+          "La configuration des paiements sera disponible dès l'envoi de votre dossier à l'équipe MENAO.",
         start: "Configurer mes paiements avec Stripe",
+        // Compléments saisis dans MENAO, transmis directement à Stripe (ADR 0215).
+        prepare: {
+          title: "Préparez votre compte de paiement",
+          intro:
+            "Ces informations partent directement chez Stripe, sans être enregistrées par MENAO : vous n'aurez plus à les saisir.",
+          birthDate: "Votre date de naissance",
+          homeAddress: "Votre adresse personnelle",
+          sameAddress: "Même adresse que l'entreprise",
+          line1: "Adresse",
+          postalCode: "Code postal",
+          city: "Ville",
+          iban: "IBAN du compte qui recevra vos paiements",
+          ibanHint: "Le compte bancaire professionnel, au nom de l'entreprise.",
+          soleOwner: "Je suis le seul associé de l'entreprise",
+          soleOwnerHint:
+            "Sinon, Stripe vous demandera les associés qui détiennent plus de 25 % du capital.",
+          submit: "Continuer",
+          sending: "Envoi à Stripe…",
+          skip: "Tout remplir chez Stripe",
+        },
+        // Formulaire Stripe affiché dans MENAO (ADR 0215).
+        embedded: {
+          lead: "Stripe vous demande d'abord de vous connecter ou de créer votre accès Stripe (code reçu par SMS), puis de vérifier vos informations.",
+          loading: "Chargement du formulaire Stripe…",
+          fallback: "Le formulaire ne s'affiche pas ?",
+          openStripe: "Continuer sur le site de Stripe",
+        },
         resume: "Reprendre la configuration Stripe",
         active:
           "Votre compte de paiement est actif : vous pouvez recevoir les paiements de vos clients.",
@@ -5193,7 +5221,7 @@ export const fr = {
           autre: "Autres informations demandées par Stripe",
         },
         errors: {
-          not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
+          not_validated: "Envoyez d'abord votre dossier à l'équipe MENAO.",
           no_account: "Aucun compte de paiement pour le moment.",
           rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
           unavailable: "Stripe est momentanément indisponible. Réessayez dans quelques minutes.",

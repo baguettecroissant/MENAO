@@ -42,6 +42,20 @@ const widgetHeaders = [
   },
 ];
 
+// Formulaire Stripe intégré (ADR 0215) : Stripe autorisé dans la CSP, et fenêtre de connexion à
+// Stripe possible (Stripe exige « unsafe-none », valeur par défaut des navigateurs). Ces en-têtes
+// ne valent que pour un document chargé en entier : la page n'est ouverte que par un lien simple.
+const stripeConnectHeaders = [
+  ...securityHeaders.filter(
+    (h) => h.key !== "Cross-Origin-Opener-Policy" && h.key !== "Content-Security-Policy",
+  ),
+  { key: "Cross-Origin-Opener-Policy", value: "unsafe-none" },
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy({ ...cspOptions, stripeConnect: true }),
+  },
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -60,6 +74,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path((?!widget(?:/|$)).*)", headers: securityHeaders },
       { source: "/widget/:path*", headers: widgetHeaders },
+      // Règle placée après la règle générale : ses en-têtes remplacent ceux du même nom.
+      { source: "/pro/onboarding/paiements/stripe", headers: stripeConnectHeaders },
     ];
   },
   // Mode pré-lancement (ADR 0101) : page d'attente sans le cookie des testeurs.

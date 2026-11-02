@@ -22,7 +22,15 @@ export type CspOptions = {
    * site en HTTPS. Partout ailleurs, le site ne s'affiche jamais dans un cadre.
    */
   embeddable?: boolean;
+  /**
+   * Page du formulaire Stripe intégré (ADR 0215) : scripts, cadres et images de Stripe autorisés.
+   * Page toujours chargée en entier ; le reste du site garde la politique stricte.
+   */
+  stripeConnect?: boolean;
 };
+
+// Composants Connect de Stripe (formulaire d'inscription intégré, ADR 0215).
+const STRIPE_CONNECT_ORIGINS = ["https://connect-js.stripe.com", "https://js.stripe.com"];
 
 // Pages externes atteintes après l'envoi d'un formulaire (redirection d'une Server Action sans
 // JavaScript) : paiement Stripe (Checkout, portail, Connect) et signature DocuSeal (UE).
@@ -56,14 +64,23 @@ export function contentSecurityPolicy({
   preview,
   sentryDsn,
   embeddable = false,
+  stripeConnect = false,
 }: CspOptions) {
   const supabase = supabaseUrl.replace(/\/+$/, "");
   const realtime = supabase.replace(/^http/, "ws");
   const live = preview ? ["https://vercel.live"] : [];
   const report = sentryReportUri(sentryDsn);
+  const stripe = stripeConnect ? STRIPE_CONNECT_ORIGINS : [];
   const directives: [string, ...string[]][] = [
     ["default-src", "'self'"],
-    ["script-src", "'self'", "'unsafe-inline'", ...(dev ? ["'unsafe-eval'"] : []), ...live],
+    [
+      "script-src",
+      "'self'",
+      "'unsafe-inline'",
+      ...(dev ? ["'unsafe-eval'"] : []),
+      ...stripe,
+      ...live,
+    ],
     ["style-src", "'self'", "'unsafe-inline'", ...live],
     [
       "img-src",
@@ -73,6 +90,7 @@ export function contentSecurityPolicy({
       supabase,
       // Tuiles du Plan IGN, aperçu de la zone d'intervention (ADR 0126).
       "https://data.geopf.fr",
+      ...(stripeConnect ? ["https://*.stripe.com"] : []),
       ...(preview ? [...live, "https://vercel.com"] : []),
     ],
     ["font-src", "'self'", ...live],
@@ -95,7 +113,7 @@ export function contentSecurityPolicy({
     // Cadres : le stockage Supabase seulement (ADR 0120), pour les PDF des artisans vérifiés côte à
     // côte dans le back-office. Sur tout le site : lors d'une navigation interne, la page garde la
     // politique du premier document chargé (une règle propre à /admin ne s'appliquerait pas).
-    ["frame-src", supabase, ...live],
+    ["frame-src", supabase, ...stripe, ...live],
     ["frame-ancestors", ...(embeddable ? ["https:"] : ["'none'"])],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],

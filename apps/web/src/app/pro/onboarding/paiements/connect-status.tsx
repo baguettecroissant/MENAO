@@ -1,15 +1,21 @@
-import type { ConnectAccountStatus, ConnectRequirementGroup } from "@menao/core";
+import type {
+  ConnectAccountStatus,
+  ConnectRequirementGroup,
+  ConnectTokenPrefill,
+} from "@menao/core";
 import { CircleCheck, Clock, ExternalLink, ListChecks, ShieldAlert } from "lucide-react";
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { ConnectButton } from "./connect-button";
+import { ConnectPrepareForm } from "./connect-prepare-form";
+import { ConnectStripeLink } from "./stripe-link";
 
 const t = fr.pro.onboarding.connect;
 
 /**
- * État du compte de paiement et prochaine action (F-14) : démarrer, compléter les rubriques que
- * Stripe attend encore (avec la date limite), patienter pendant sa vérification, ou contacter
- * l'équipe si le compte est refusé.
+ * État du compte de paiement et prochaine action (F-14) : démarrer (compléments saisis dans MENAO,
+ * ADR 0215), compléter les rubriques que Stripe attend encore (avec la date limite) dans le
+ * formulaire Stripe intégré, patienter pendant sa vérification, ou contacter l'équipe si le compte
+ * est refusé.
  */
 export function ConnectStatusPanel({
   status,
@@ -17,6 +23,8 @@ export function ConnectStatusPanel({
   due,
   pending,
   deadline,
+  prefill,
+  today,
 }: {
   status: ConnectAccountStatus;
   payoutsEnabled: boolean;
@@ -26,6 +34,10 @@ export function ConnectStatusPanel({
   pending: readonly ConnectRequirementGroup[];
   /** Date limite déjà mise en forme (« 18 octobre 2026 »), si Stripe en fixe une. */
   deadline: string | null;
+  /** Avant la création du compte : de quoi pré-remplir Stripe (ADR 0204, ADR 0215). */
+  prefill: ConnectTokenPrefill | null;
+  /** Date du jour (AAAA-MM-JJ, heure de Paris). */
+  today: string;
 }) {
   const note = deadline ? t.deadline(deadline) : null;
   switch (status) {
@@ -37,7 +49,7 @@ export function ConnectStatusPanel({
             (due.length > 0 ? (
               <>
                 <RequirementList title={t.duePayoutsTitle} groups={due} note={note} />
-                <ConnectButton label={t.complete} />
+                <ConnectStripeLink label={t.complete} />
               </>
             ) : (
               <p className="text-muted-foreground">{t.payoutsPending}</p>
@@ -58,7 +70,7 @@ export function ConnectStatusPanel({
         <>
           <p>{t.intro}</p>
           <p className="text-sm text-muted-foreground">{t.fees}</p>
-          <ConnectButton label={t.start} prefill />
+          <ConnectPrepareForm prefill={prefill} today={today} />
         </>
       );
     case "a_completer":
@@ -69,7 +81,7 @@ export function ConnectStatusPanel({
           ) : (
             <p>{t.intro}</p>
           )}
-          <ConnectButton label={due.length > 0 ? t.complete : t.resume} />
+          <ConnectStripeLink label={due.length > 0 ? t.complete : t.resume} />
           <p className="text-sm text-muted-foreground">{t.fees}</p>
         </>
       );

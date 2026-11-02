@@ -9,6 +9,7 @@ export * from "./auth";
 export * from "./charter";
 export * from "./client-rating";
 export * from "./company-search";
+export * from "./connect-details";
 export * from "./chantier";
 export * from "./conversation";
 export * from "./dispute";

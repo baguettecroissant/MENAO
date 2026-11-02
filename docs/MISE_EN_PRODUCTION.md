@@ -16,7 +16,7 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 ### Comptes et abonnements (Toi)
 - [ ] **Supabase** : offre payante pour le projet de production (sauvegardes quotidiennes, pas de mise en pause, limites plus hautes). Vérifier la **région** : la spec demande `eu-west-1` ; staging est à Londres (`eu-west-2`), un écart déjà signalé.
 - [ ] **Vercel** : passage en **Pro**. L'offre gratuite (Hobby) interdit l'usage commercial. Garder le plafond de dépenses (spec §4.4).
-- [ ] **Stripe** : activer le compte en mode réel (identité de l'entreprise, compte bancaire). Pour **Connect** : profil de plateforme, image de marque des pages d'inscription des artisans, et décision sur la migration vers Accounts v2, laissée en suspens (ADR 0011).
+- [ ] **Stripe** : activer le compte en mode réel (identité de l'entreprise, compte bancaire). Pour **Connect** : profil de plateforme, image de marque des pages d'inscription des artisans (nom, icône et couleur de MENAO : ce sont aussi ceux de la fenêtre de connexion Stripe du formulaire intégré, ADR 0215), et décision sur la migration vers Accounts v2, laissée en suspens (ADR 0011).
 - [ ] **DocuSeal** : compte de production (UE), offre adaptée au volume de signatures.
 - [ ] **Resend** : offre adaptée au volume. L'offre gratuite est limitée à 100 e-mails par jour, en tout.
 - [ ] **Apple Developer** (compte particulier choisi) et **Google Play Console** : nécessaires pour l'app (phase E) et pour « Se connecter avec Apple ».
@@ -52,7 +52,7 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 - [ ] Déployer les 15 fonctions : `analyze-need`, `billing-checkout`, `billing-portal`, `connect-onboarding`, `deposit-checkout`, `generate-pdf`, `notify`, `process-upload`, `quote-from-voice`, `rge-check`, `signature-create`, `signature-webhook`, `sirene-check`, `stripe-webhook`, `transcribe`, ainsi que `commercial-invite` (invitation des commerciaux, ADR 0205) et `staff-invite` (invitation de l'équipe, ADR 0210) (`supabase functions deploy … --use-api`). `rge-check` lit l'annuaire RGE public de l'ADEME : aucune clé à fournir.
 - [ ] Secrets des fonctions (tableau de bord, Edge Functions puis Secrets) :
   - `SITE_URLS` : `https://menao.fr,https://www.menao.fr` (sans localhost ni Vercel) ;
-  - Stripe : `STRIPE_SECRET_KEY` (clé réelle `sk_live_…`), plus les quatre valeurs écrites par `scripts/stripe-setup.mjs` (phase C) : `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION_ID`, et la clé publique réelle `STRIPE_PUBLISHABLE_KEY` (`pk_live_…`, pré-remplissage du compte de paiement des artisans, ADR 0204) ;
+  - Stripe : `STRIPE_SECRET_KEY` (clé réelle `sk_live_…`), plus les quatre valeurs écrites par `scripts/stripe-setup.mjs` (phase C) : `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`, `STRIPE_TAX_RATE_ID`, `STRIPE_PORTAL_CONFIGURATION_ID`, et la clé publique réelle `STRIPE_PUBLISHABLE_KEY` (`pk_live_…`, pré-remplissage du compte de paiement des artisans et formulaire Stripe intégré, ADR 0204 et 0215) ;
   - DocuSeal : `DOCUSEAL_API_KEY`, `DOCUSEAL_WEBHOOK_SECRET` (et `DOCUSEAL_API_URL` pour l'UE, `DOCUSEAL_OTP`) ;
   - e-mails : `RESEND_API_KEY` (clé propre à la production), `EMAIL_FROM` ;
   - notifications : `NOTIFY_SECRET` (nouvelle valeur aléatoire) et `EXPO_ACCESS_TOKEN` (push) ;

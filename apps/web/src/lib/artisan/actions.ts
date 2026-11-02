@@ -463,7 +463,8 @@ type ConnectStatus = keyof typeof t.connect.errors | "ok";
 
 /**
  * Avant la création du compte Stripe : données d'identité que le navigateur transforme en jetons
- * avec la clé publique (ADR 0204). Null si le compte existe déjà ou si rien n'est à pré-remplir.
+ * avec la clé publique (ADR 0204), et de quoi présenter le formulaire des compléments (ADR 0215).
+ * Null si le compte existe déjà ou si la clé publique n'est pas configurée.
  */
 export async function loadConnectPrefill(): Promise<ConnectTokenPrefill | null> {
   const { supabase } = await getOnboardingContext();
@@ -474,22 +475,23 @@ export async function loadConnectPrefill(): Promise<ConnectTokenPrefill | null> 
   return data?.status === "ok" ? (data.prefill ?? null) : null;
 }
 
-/** Ouvre l'inscription Stripe Connect (création du compte si besoin, pré-remplie par les jetons). */
-export async function startConnectOnboarding(tokens: ConnectTokens = {}): Promise<FormState> {
+type ConnectReply = {
+  status: ConnectStatus;
+  url?: string;
+  clientSecret?: string;
+  publishableKey?: string;
+};
+
+/** Appelle `connect-onboarding` ; en cas d'échec, le message d'erreur à afficher. */
+async function invokeConnect(
+  body: Record<string, unknown>,
+): Promise<{ data: ConnectReply } | { error: string }> {
   const { supabase } = await getOnboardingContext();
-  const { data, error } = await supabase.functions.invoke<{ status: ConnectStatus; url?: string }>(
-    "connect-onboarding",
-    {
-      method: "POST",
-      body: {
-        action: "link",
-        origin: env.NEXT_PUBLIC_SITE_URL,
-        accountToken: tokens.accountToken,
-        personToken: tokens.personToken,
-      },
-    },
-  );
-  if (data?.status === "ok" && data.url) redirect(data.url as Route);
+  const { data, error } = await supabase.functions.invoke<ConnectReply>("connect-onboarding", {
+    method: "POST",
+    body,
+  });
+  if (data?.status === "ok") return { data };
   let status: ConnectStatus = data?.status ?? "unavailable";
   if (error instanceof FunctionsHttpError) {
     const parsed = (await error.context.json().catch(() => null)) as { status?: string } | null;
@@ -499,4 +501,46 @@ export async function startConnectOnboarding(tokens: ConnectTokens = {}): Promis
         : "unavailable";
   }
   return { error: t.connect.errors[status === "ok" ? "unavailable" : status] };
+}
+
+/** Jetons du pré-remplissage, tels que la fonction les attend. */
+const tokenBody = (tokens: ConnectTokens) => ({
+  accountToken: tokens.accountToken,
+  personToken: tokens.personToken,
+  bankToken: tokens.bankToken,
+});
+
+/** Ouvre l'inscription Stripe Connect sur le site de Stripe (secours du formulaire intégré). */
+export async function startConnectOnboarding(tokens: ConnectTokens = {}): Promise<FormState> {
+  const result = await invokeConnect({
+    action: "link",
+    origin: env.NEXT_PUBLIC_SITE_URL,
+    ...tokenBody(tokens),
+  });
+  if ("data" in result && result.data.url) redirect(result.data.url as Route);
+  return { error: "error" in result ? result.error : t.connect.errors.unavailable };
+}
+
+/**
+ * Crée le compte Stripe de l'artisan, pré-rempli par les jetons créés dans le navigateur (identité,
+ * IBAN), avant le formulaire Stripe intégré (ADR 0215).
+ */
+export async function createConnectAccount(tokens: ConnectTokens = {}): Promise<FormState> {
+  const result = await invokeConnect({ action: "create", ...tokenBody(tokens) });
+  return "error" in result ? { error: result.error } : { success: "ok" };
+}
+
+/**
+ * Session du formulaire Stripe intégré à MENAO (ADR 0215) : secret à durée courte, propre au
+ * compte de l'artisan connecté, et clé publique. Appelée à l'ouverture puis à chaque expiration.
+ */
+export async function openConnectSession(): Promise<
+  { clientSecret: string; publishableKey: string } | { error: string }
+> {
+  const result = await invokeConnect({ action: "session" });
+  if ("error" in result) return result;
+  const { clientSecret, publishableKey } = result.data;
+  return clientSecret && publishableKey
+    ? { clientSecret, publishableKey }
+    : { error: t.connect.errors.unavailable };
 }
