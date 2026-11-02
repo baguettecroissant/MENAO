@@ -4,6 +4,8 @@ import {
   canSubmitOnboarding,
   dossierItemsLeft,
   onboardingProgress,
+  parisToday,
+  presentationDraft,
   subscriptionGrantsAccess,
   type ArtisanOnboardingSnapshot,
   type DocumentSnapshot,
@@ -38,6 +40,8 @@ export type Dossier = {
   /** Métiers déclarés, avec leur libellé (couverture de la décennale, ADR 0116). */
   trades: { code: string; label: string }[];
   documents: DossierDocument[];
+  /** « Proposer un texte » : présentation construite avec ce que MENAO sait déjà. */
+  presentationDraft: string;
   /** Dernier contrôle au registre (ADR 0217) : raison si le Kbis reste demandé. */
   registryStatus: string | null;
   presentation: string;
@@ -55,17 +59,20 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut",
     )
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (!artisan) return null;
 
-  const [trades, zones, territories, documents, profile, charter, subscription] = await Promise.all(
-    [
+  const [trades, zones, territories, documents, profile, charter, subscription, rge] =
+    await Promise.all([
       supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
       supabase.from("artisan_zones").select("code_insee").eq("artisan_id", artisan.id),
-      supabase.from("artisan_territories").select("id").eq("artisan_id", artisan.id),
+      supabase
+        .from("artisan_territories")
+        .select("departement_code, region_code")
+        .eq("artisan_id", artisan.id),
       supabase
         .from("artisan_documents")
         .select("type, source, status, date_emission, date_fin, refusal_reason")
@@ -83,8 +90,13 @@ export async function loadDossier(): Promise<Dossier | null> {
         .select("status, past_due_since")
         .eq("artisan_id", artisan.id)
         .maybeSingle(),
-    ],
-  );
+      // Qualification RGE en cours, pour la présentation proposée.
+      supabase
+        .from("artisan_rge_qualifications")
+        .select("id", { count: "exact", head: true })
+        .eq("artisan_id", artisan.id)
+        .gte("date_fin", parisToday()),
+    ]);
 
   // Par type : le document validé s'il existe, sinon celui en cours d'examen (« remplace » ignoré).
   const rows = (documents.data ?? []).filter(
@@ -140,6 +152,25 @@ export async function loadDossier(): Promise<Dossier | null> {
     })),
     registryStatus: artisan.registre_statut,
     presentation,
+    presentationDraft: presentationDraft(
+      {
+        companyName: artisan.nom_commercial ?? artisan.raison_sociale,
+        legalFormCode: artisan.forme_juridique_code,
+        trades: (tradeLabels ?? []).map((trade) => trade.label),
+        city: artisan.adresse_commune,
+        zoneMode: artisan.zone_mode,
+        radiusKm: artisan.radius_km,
+        territories: (territories.data ?? []).flatMap(
+          (row) => row.departement_code ?? row.region_code ?? [],
+        ),
+        sinceYear: artisan.date_creation_entreprise
+          ? Number(artisan.date_creation_entreprise.slice(0, 4))
+          : null,
+        experienceYears: artisan.experience_years,
+        rge: (rge.count ?? 0) > 0,
+      },
+      Number(parisToday().slice(0, 4)),
+    ),
     avatarPath,
     indexable: artisan.indexable,
     itemsLeft: dossierItemsLeft(snapshot),

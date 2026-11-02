@@ -5500,7 +5500,9 @@ export const fr = {
         presentation: "Présentation",
         presentationHint:
           "Votre parcours, votre savoir-faire, ce qui vous distingue (100 caractères minimum).",
-        presentationCount: (n: number) => `${n} caractère${n > 1 ? "s" : ""}`,
+        presentationCount: (n: number, min: number) =>
+          n < min ? `${n} / ${min} caractères` : `${n} caractère${n > 1 ? "s" : ""}`,
+        presentationDraft: "Proposer un texte",
         presentationSave: "Enregistrer la présentation",
         portfolio: "Photos de réalisations",
         portfolioHint:

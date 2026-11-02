@@ -1,4 +1,4 @@
-import { PORTFOLIO_MAX_PHOTOS } from "@menao/core";
+import { PORTFOLIO_MAX_PHOTOS, parisToday, presentationDraft } from "@menao/core";
 import Image from "next/image";
 import { ButtonLink, Card } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
@@ -12,9 +12,41 @@ const t = fr.pro.onboarding.profile;
 const MAX_PHOTOS = PORTFOLIO_MAX_PHOTOS;
 
 export default async function ProfileStepPage() {
-  const { supabase, userId, artisan, avatarPath, photos } = await getOnboardingContext();
+  const { supabase, userId, artisan, avatarPath, photos, tradeCodes, territoryCodes } =
+    await getOnboardingContext();
   const publicUrl = (bucket: string, path: string) =>
     supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  // « Proposer un texte » : métiers et qualification RGE en cours, pour la présentation proposée.
+  const today = parisToday();
+  const [trades, rge] = await Promise.all([
+    supabase
+      .from("trades")
+      .select("label")
+      .in("code", tradeCodes.length ? tradeCodes : ["-"])
+      .order("sort_order"),
+    supabase
+      .from("artisan_rge_qualifications")
+      .select("id", { count: "exact", head: true })
+      .eq("artisan_id", artisan.id)
+      .gte("date_fin", today),
+  ]);
+  const draft = presentationDraft(
+    {
+      companyName: artisan.nom_commercial ?? artisan.raison_sociale,
+      legalFormCode: artisan.forme_juridique_code,
+      trades: (trades.data ?? []).map((trade) => trade.label),
+      city: artisan.adresse_commune,
+      zoneMode: artisan.zone_mode,
+      radiusKm: artisan.radius_km,
+      territories: territoryCodes,
+      sinceYear: artisan.date_creation_entreprise
+        ? Number(artisan.date_creation_entreprise.slice(0, 4))
+        : null,
+      experienceYears: artisan.experience_years,
+      rge: (rge.count ?? 0) > 0,
+    },
+    Number(today.slice(0, 4)),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -52,7 +84,7 @@ export default async function ProfileStepPage() {
       </Card>
 
       <Card>
-        <PresentationForm presentation={artisan.presentation} />
+        <PresentationForm presentation={artisan.presentation} draft={draft} />
       </Card>
 
       <Card>
