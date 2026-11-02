@@ -15,6 +15,7 @@ import {
   PenLine,
   UserRound,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
@@ -220,6 +221,17 @@ export function DossierScreen() {
           status={progress.profil ? t.states.done : t.states.todo}
           href="/pro-profil-public"
         />
+        {/* Paiements ouverts dès l'envoi du dossier, comme sur le site (ADR 0215). */}
+        {dossier.status === "en_verification" ? (
+          <Row
+            icon={Wallet}
+            title={t.paiementsTitle}
+            hint={t.paiementsHintNow}
+            tone={progress.paiements ? "done" : "todo"}
+            status={progress.paiements ? t.states.done : t.states.todo}
+            href="/pro-paiements"
+          />
+        ) : null}
       </View>
 
       <View style={styles.privacy}>

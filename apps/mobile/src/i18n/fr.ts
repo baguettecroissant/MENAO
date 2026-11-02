@@ -275,6 +275,9 @@ export const fr = {
       `${rules} règles à cocher et votre engagement à certifier, puis une signature`,
     profilTitle: "Votre photo et votre présentation",
     profilHint: "Ce que les clients verront sur votre fiche",
+    // Paiements ouverts dès l'envoi du dossier (ADR 0215).
+    paiementsTitle: "Recevoir les paiements de vos clients",
+    paiementsHintNow: "Vous pouvez le faire dès maintenant, pendant la vérification",
     documents: {
       kbis: "Kbis ou extrait INSEE/RNE de moins de 3 mois",
       decennale: "Attestation d'assurance décennale",
@@ -461,10 +464,34 @@ export const fr = {
       "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
     fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
     notValidated:
-      "La configuration des paiements sera disponible dès que l'équipe MENAO aura validé votre dossier.",
+      "La configuration des paiements sera disponible dès l'envoi de votre dossier à l'équipe MENAO.",
     start: "Configurer mes paiements avec Stripe",
     resume: "Reprendre la configuration Stripe",
     complete: "Compléter mes informations sur Stripe",
+    // Compléments saisis dans MENAO, transmis directement à Stripe (ADR 0215), comme sur le site.
+    prepare: {
+      title: "Préparez votre compte de paiement",
+      intro:
+        "Ces informations partent directement chez Stripe, sans être enregistrées par MENAO : vous n'aurez plus à les saisir.",
+      birthDate: "Votre date de naissance",
+      birthDatePlaceholder: "JJ/MM/AAAA",
+      homeAddress: "Votre adresse personnelle",
+      sameAddress: "Même adresse que l'entreprise",
+      line1: "Adresse",
+      postalCode: "Code postal",
+      city: "Ville",
+      iban: "IBAN du compte qui recevra vos paiements",
+      ibanHint: "Le compte bancaire professionnel, au nom de l'entreprise.",
+      soleOwner: "Je suis le seul associé de l'entreprise",
+      soleOwnerHint:
+        "Sinon, Stripe vous demandera les associés qui détiennent plus de 25 % du capital.",
+      submit: "Continuer",
+      skip: "Tout remplir chez Stripe",
+    },
+    // Formulaire Stripe affiché dans l'application (ADR 0215).
+    embedded: {
+      title: "Compte de paiement",
+    },
     active:
       "Votre compte de paiement est actif : vous pouvez recevoir les paiements de vos clients.",
     payoutsPending:
@@ -539,7 +566,7 @@ export const fr = {
       autre: "Autres informations demandées par Stripe",
     },
     errors: {
-      not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
+      not_validated: "Envoyez d'abord votre dossier à l'équipe MENAO.",
       no_account: "Aucun compte de paiement pour le moment.",
       rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
       unavailable: "Stripe est momentanément indisponible. Réessayez dans quelques minutes.",

@@ -1,13 +1,17 @@
 import {
   collectedTotals,
   connectAccountStatus,
+  connectOnboardingOpen,
   connectRequirementGroups,
   connectTokenId,
   connectTokenRequest,
   parisToday,
   type ConnectAccountStatus,
   type ConnectAccountTokenData,
+  type ConnectBankAccountTokenData,
   type ConnectPersonTokenData,
+  type ConnectTokenData,
+  type ConnectTokenKind,
   type ConnectTokenPrefill,
   type ConnectTokens,
   type ConnectOverview,
@@ -20,11 +24,13 @@ import { supabase } from "./supabase";
 
 /**
  * Compte de paiement Stripe de l'artisan (ADR 0124), comme l'étape « Paiements » du site : état du
- * compte (connectAccountStatus) et rubriques que Stripe attend encore. Paiements directs sur le
- * compte de l'artisan, sans commission MENAO (CLAUDE.md règle 12).
+ * compte (connectAccountStatus) et rubriques que Stripe attend encore. Ouvert dès l'envoi du
+ * dossier (ADR 0215). Paiements directs sur le compte de l'artisan, sans commission MENAO
+ * (CLAUDE.md règle 12).
  */
 export type Payments = {
-  validated: boolean;
+  /** Dossier envoyé ou validé : le compte de paiement peut être configuré (ADR 0215). */
+  open: boolean;
   status: ConnectAccountStatus;
   payoutsEnabled: boolean;
   due: ConnectRequirementGroup[];
@@ -32,6 +38,8 @@ export type Payments = {
   deadline: string | null;
   /** Compte actif : solde et virements lus chez Stripe, encaissé via MENAO (ADR 0152). */
   money: Money | null;
+  /** Avant la création du compte : de quoi pré-remplir Stripe (ADR 0204, ADR 0215). */
+  prefill: ConnectTokenPrefill | null;
 };
 
 export type Money = {
@@ -76,16 +84,33 @@ export async function loadPayments(): Promise<Payments | null> {
     requirementsPending: a.connect_requirements_pending,
     disabledReason: a.connect_disabled_reason,
   });
-  const validated = a.status === "valide" || a.status === "suspendu";
+  const open = connectOnboardingOpen(a.status);
+  const [money, prefill] = await Promise.all([
+    open && status === "actif" ? loadMoney() : null,
+    open && status === "a_demarrer" ? loadPrefill().catch(() => null) : null,
+  ]);
   return {
-    validated,
+    open,
     status,
     payoutsEnabled: a.connect_payouts_enabled,
     due: connectRequirementGroups(a.connect_requirements_due),
     pending: connectRequirementGroups(a.connect_requirements_pending),
     deadline: a.connect_requirements_deadline,
-    money: validated && status === "actif" ? await loadMoney() : null,
+    money,
+    prefill,
   };
+}
+
+/**
+ * Avant la création du compte : données d'identité à transformer en jetons avec la clé publique
+ * (ADR 0204), et de quoi présenter le formulaire des compléments (ADR 0215).
+ */
+async function loadPrefill(): Promise<ConnectTokenPrefill | null> {
+  const { data } = await supabase.functions.invoke<{
+    status: string;
+    prefill?: ConnectTokenPrefill | null;
+  }>("connect-onboarding", { body: { action: "prefill" } });
+  return data?.status === "ok" ? (data.prefill ?? null) : null;
 }
 
 async function failure(error: unknown): Promise<string> {
@@ -100,8 +125,8 @@ async function failure(error: unknown): Promise<string> {
 
 async function createToken(
   publishableKey: string,
-  kind: "account" | "person",
-  data: ConnectAccountTokenData | ConnectPersonTokenData | null,
+  kind: ConnectTokenKind,
+  data: ConnectAccountTokenData | ConnectPersonTokenData | ConnectBankAccountTokenData | null,
 ): Promise<string | undefined> {
   if (!data) return undefined;
   try {
@@ -114,32 +139,54 @@ async function createToken(
 }
 
 /**
- * Avant la création du compte : jetons Stripe du pré-remplissage, créés par l'application avec la
- * clé publique (ADR 0204). Un échec laisse l'artisan saisir ces informations chez Stripe.
+ * Jetons Stripe du pré-remplissage, créés par l'application avec la clé publique (ADR 0204,
+ * ADR 0215) : identité et IBAN vont directement à Stripe, sans passer par MENAO. Un échec laisse
+ * l'artisan les saisir chez Stripe.
  */
-async function connectTokens(): Promise<ConnectTokens> {
-  const { data } = await supabase.functions.invoke<{
-    status: string;
-    prefill?: ConnectTokenPrefill | null;
-  }>("connect-onboarding", { body: { action: "prefill" } });
-  const prefill = data?.status === "ok" ? data.prefill : null;
-  if (!prefill) return {};
-  const [accountToken, personToken] = await Promise.all([
-    createToken(prefill.publishableKey, "account", prefill.account),
-    createToken(prefill.publishableKey, "person", prefill.person),
+export async function createConnectTokens(
+  publishableKey: string,
+  data: ConnectTokenData,
+): Promise<ConnectTokens> {
+  const [accountToken, personToken, bankToken] = await Promise.all([
+    createToken(publishableKey, "account", data.account),
+    createToken(publishableKey, "person", data.person),
+    createToken(publishableKey, "bank_account", data.bankAccount),
   ]);
-  return { accountToken, personToken };
+  return { accountToken, personToken, bankToken };
+}
+
+/** Crée le compte Stripe, pré-rempli par les jetons, avant le formulaire Stripe intégré. */
+export async function createConnect(tokens: ConnectTokens): Promise<{ error: string } | null> {
+  const { error } = await supabase.functions.invoke("connect-onboarding", {
+    body: { action: "create", ...tokens },
+  });
+  return error ? { error: await failure(error) } : null;
 }
 
 /**
- * Lien d'inscription Stripe, avec retour dans l'application (page de retour du site).
- * `prefill` : premier passage, le compte va être créé et pré-rempli.
+ * Session du formulaire Stripe intégré à l'application (ADR 0215) : secret à durée courte, propre
+ * au compte de l'artisan connecté, et clé publique. Une nouvelle à chaque ouverture et expiration.
  */
-export async function startConnect(prefill = false): Promise<{ url: string } | { error: string }> {
-  const tokens = prefill ? await connectTokens().catch(() => ({})) : {};
+export async function openConnectSession(): Promise<
+  { clientSecret: string; publishableKey: string } | { error: string }
+> {
+  const { data, error } = await supabase.functions.invoke<{
+    status: string;
+    clientSecret?: string;
+    publishableKey?: string;
+  }>("connect-onboarding", { body: { action: "session" } });
+  if (error || !data?.clientSecret || !data.publishableKey) return { error: await failure(error) };
+  return { clientSecret: data.clientSecret, publishableKey: data.publishableKey };
+}
+
+/**
+ * Lien d'inscription sur le site de Stripe, avec retour dans l'application (page de retour du
+ * site) : secours du formulaire intégré, quand il ne se charge pas.
+ */
+export async function startConnect(): Promise<{ url: string } | { error: string }> {
   const { data, error } = await supabase.functions.invoke<{ status: string; url?: string }>(
     "connect-onboarding",
-    { body: { action: "link", origin: env.siteUrl, app: true, ...tokens } },
+    { body: { action: "link", origin: env.siteUrl, app: true } },
   );
   if (error || !data?.url) return { error: await failure(error) };
   return { url: data.url };

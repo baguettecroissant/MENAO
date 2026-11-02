@@ -42,7 +42,7 @@
 - Pour l'artisan : un seul passage. Après l'envoi du dossier, quatre champs dans MENAO, la connexion à Stripe (code par SMS), puis le site web et l'acceptation des conditions. Durée à mesurer avec les artisans pilotes.
 - Un artisan refusé après coup peut garder un compte Stripe vide, sans argent : il n'est pas visible et ne reçoit aucun paiement.
 - Les comptes déjà créés ne sont pas concernés par le lot 1 (identité verrouillée par Stripe) ; ils profitent du formulaire intégré.
-- L'application garde l'ancien parcours (lien Stripe, après validation) jusqu'à la PR 2, qui utilisera le composant natif de `@stripe/stripe-react-native`. La fonction reste compatible : réponse de `prefill` enrichie de champs facultatifs.
+- L'application garde l'ancien parcours (lien Stripe, après validation) jusqu'à la PR 2, qui utilisera le composant natif de `@stripe/stripe-react-native` (ADR 0216). La fonction reste compatible : réponse de `prefill` enrichie de champs facultatifs.
 - Avant la mise en ligne réelle : nom, icône et couleur de MENAO dans les paramètres Connect de Stripe (MISE_EN_PRODUCTION.md).
 - Pistes non retenues ici : adresse du site web pré-remplie (la fiche MENAO n'est publique qu'une fois l'artisan capable d'encaisser) ; caméra autorisée dans la page pour une vérification d'identité par photo (l'envoi d'un fichier reste possible).
 - TODO(legal) : les conditions des artisans doivent mentionner que la date de naissance, l'adresse personnelle et l'IBAN saisis dans MENAO sont transmis directement à Stripe, sans être conservés par MENAO (complète la clause de l'ADR 0204).
