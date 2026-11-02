@@ -112,6 +112,10 @@ export const messages = {
   postalCodeInvalid: "Indiquez un code postal à 5 chiffres.",
   birthDateInvalid: "Date de naissance invalide (16 ans au moins).",
   ibanInvalid: "IBAN invalide : vérifiez chaque caractère (27 pour un compte français).",
+  websiteInvalid:
+    "Adresse invalide : indiquez par exemple facebook.com/votre-entreprise ou www.votre-site.fr.",
+  websiteGeneric:
+    "Indiquez l'adresse complète de votre page, par exemple facebook.com/votre-entreprise.",
   welcomeGiftCityRequired: "Indiquez la commune.",
   googleUrlInvalid: "Indiquez le lien de la fiche Google de l'entreprise.",
   googleRatingInvalid: "Note Google entre 1 et 5.",

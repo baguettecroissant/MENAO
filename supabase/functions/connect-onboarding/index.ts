@@ -22,9 +22,11 @@ import {
 } from "../../../packages/core/src/connect.ts";
 import {
   type ConnectProfileParams,
+  businessUrlOf,
   connectPrefill,
   isConnectToken,
   isStripePublishableKey,
+  withBusinessUrl,
 } from "../../../packages/core/src/connect-prefill.ts";
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
 import { prefillSource, saveConnectAccount } from "../_shared/connect.ts";
@@ -85,6 +87,8 @@ Deno.serve(async (req) => {
     accountToken?: unknown;
     personToken?: unknown;
     bankToken?: unknown;
+    /** Site web ou page Facebook ou Instagram saisi dans MENAO (ADR 0215). */
+    website?: unknown;
   };
   const { data: allowed } = await admin.rpc("consume_rate_limit", {
     p_key: `connect-onboarding:${user.id}`,
@@ -147,7 +151,10 @@ Deno.serve(async (req) => {
         .update({ stripe_account_id: accountId })
         .eq("id", artisan.id);
       if (error) throw error;
-      await prefillAccount(stripe, accountId, prefill.profile, {
+      // Site web saisi dans MENAO : revérifié ici, ignoré s'il n'est pas valable.
+      const site = typeof body.website === "string" ? businessUrlOf(body.website) : null;
+      const profile = withBusinessUrl(prefill.profile, site && "url" in site ? site.url : null);
+      await prefillAccount(stripe, accountId, profile, {
         account: isConnectToken("account", body.accountToken) ? body.accountToken : undefined,
         person: isConnectToken("person", body.personToken) ? body.personToken : undefined,
         bank: isConnectToken("bank_account", body.bankToken) ? body.bankToken : undefined,

@@ -35,6 +35,7 @@ export function ConnectPrepare({
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
   const [iban, setIban] = useState("");
+  const [website, setWebsite] = useState("");
   const [soleOwner, setSoleOwner] = useState(prefill?.soleOwnerDefault === true);
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
 
@@ -56,6 +57,7 @@ export function ConnectPrepare({
       city,
       iban,
       soleOwner,
+      website,
     });
     if (!parsed.success) {
       setErrors(z.flattenError(parsed.error).fieldErrors);
@@ -137,6 +139,18 @@ export function ConnectPrepare({
         autoCorrect={false}
         autoComplete="off"
         error={error("iban")}
+      />
+      <TextField
+        label={t.website}
+        hint={t.websiteHint}
+        value={website}
+        onChangeText={setWebsite}
+        keyboardType="url"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="url"
+        textContentType="URL"
+        error={error("website")}
       />
       <Button label={t.submit} onPress={submit} loading={busy} />
       <Button label={t.skip} variant="ghost" onPress={() => onContinue(null)} disabled={busy} />

@@ -488,12 +488,17 @@ export const fr = {
       soleOwner: "Je suis le seul associé de l'entreprise",
       soleOwnerHint:
         "Sinon, Stripe vous demandera les associés qui détiennent plus de 25 % du capital.",
+      website: "Site web, page Facebook ou Instagram (facultatif)",
+      websiteHint:
+        "Stripe la demande pour vérifier votre activité. Indiquez l'adresse complète de votre page, par exemple facebook.com/votre-entreprise.",
       submit: "Continuer",
       skip: "Tout remplir chez Stripe",
     },
     // Formulaire Stripe affiché dans l'application (ADR 0215).
     embedded: {
       title: "Compte de paiement",
+      website:
+        "Pas de site web ? Stripe accepte l'adresse complète de votre page Facebook ou Instagram.",
     },
     active:
       "Votre compte de paiement est actif : vous pouvez recevoir les paiements de vos clients.",

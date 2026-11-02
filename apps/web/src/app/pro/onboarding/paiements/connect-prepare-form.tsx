@@ -45,7 +45,7 @@ export function ConnectPrepareForm({
             completeConnectPrefill(prefill, details ?? {}),
           )
         : {};
-      const result = await createConnectAccount(tokens);
+      const result = await createConnectAccount(tokens, details?.website ?? null);
       if (result.error) setError(result.error);
       else window.location.assign(CONNECT_STRIPE_PATH);
     });
@@ -79,6 +79,7 @@ export function ConnectPrepareForm({
       city: value("city"),
       iban: value("iban"),
       soleOwner: form.get("soleOwner") === "on",
+      website: value("website"),
     });
     if (!parsed.success) {
       setErrors(z.flattenError(parsed.error).fieldErrors);
@@ -166,6 +167,17 @@ export function ConnectPrepareForm({
         spellCheck={false}
         required
         errors={errors.iban}
+      />
+      <Field
+        label={t.prepare.website}
+        labelNote={t.prepare.optional}
+        name="website"
+        hint={t.prepare.websiteHint}
+        inputMode="url"
+        autoComplete="url"
+        autoCapitalize="none"
+        spellCheck={false}
+        errors={errors.website}
       />
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
         <Button type="submit" disabled={pending} className="sm:w-auto sm:px-6">

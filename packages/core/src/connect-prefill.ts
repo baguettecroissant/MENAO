@@ -100,6 +100,8 @@ export type ConnectProfileParams = {
     product_description: string;
     support_phone?: string;
     support_email?: string;
+    /** Site web, page Facebook ou Instagram de l'entreprise, saisi dans MENAO. */
+    url?: string;
   };
   settings?: { payments: { statement_descriptor: string } };
 };
@@ -343,7 +345,56 @@ export type ConnectDetails = {
   iban?: string | null;
   /** Société : l'inscrit dirigeant est le seul associé. */
   soleOwner?: boolean;
+  /** Site web ou page de réseau social, déjà vérifié par `businessUrlOf`. */
+  website?: string | null;
 };
+
+/** Réseaux et annuaires dont l'adresse seule (sans page) ne décrit pas l'entreprise. */
+const GENERIC_HOSTS = new Set([
+  "facebook.com",
+  "fb.com",
+  "instagram.com",
+  "tiktok.com",
+  "linkedin.com",
+  "youtube.com",
+  "x.com",
+  "twitter.com",
+  "google.com",
+  "pagesjaunes.fr",
+]);
+
+/**
+ * Site web, page Facebook ou Instagram de l'entreprise, demandé par Stripe : « https:// » ajouté
+ * s'il manque. Erreur si l'adresse est invalide, ou si c'est un réseau sans la page de l'entreprise
+ * (« facebook.com » seul, refusé par Stripe). Null si rien n'est saisi.
+ */
+export function businessUrlOf(
+  value: string | null | undefined,
+): { url: string } | { error: "invalid" | "generic" } | null {
+  const text = (value ?? "").trim();
+  if (!text) return null;
+  if (/\s/.test(text) || text.length > 300) return { error: "invalid" };
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(text) ? text : `https://${text}`);
+  } catch {
+    return { error: "invalid" };
+  }
+  const host = url.hostname.toLowerCase().replace(/^(www|m|fr-fr|fr)\./, "");
+  if (!/^https?:$/.test(url.protocol) || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host))
+    return { error: "invalid" };
+  if (GENERIC_HOSTS.has(host) && url.pathname.replace(/\/+$/, "") === "")
+    return { error: "generic" };
+  return { url: url.href };
+}
+
+/** Profil public complété par le site web saisi (null : profil inchangé). */
+export function withBusinessUrl(
+  profile: ConnectProfileParams,
+  url: string | null | undefined,
+): ConnectProfileParams {
+  return url ? { ...profile, business_profile: { ...profile.business_profile, url } } : profile;
+}
 
 /** Contenu des jetons à créer : identité de l'entreprise, dirigeant, compte bancaire. */
 export type ConnectTokenData = {

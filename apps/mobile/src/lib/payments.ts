@@ -155,10 +155,16 @@ export async function createConnectTokens(
   return { accountToken, personToken, bankToken };
 }
 
-/** Crée le compte Stripe, pré-rempli par les jetons, avant le formulaire Stripe intégré. */
-export async function createConnect(tokens: ConnectTokens): Promise<{ error: string } | null> {
+/**
+ * Crée le compte Stripe, pré-rempli par les jetons et le site web (ou la page Facebook ou
+ * Instagram) saisi, avant le formulaire Stripe intégré.
+ */
+export async function createConnect(
+  tokens: ConnectTokens,
+  website: string | null = null,
+): Promise<{ error: string } | null> {
   const { error } = await supabase.functions.invoke("connect-onboarding", {
-    body: { action: "create", ...tokens },
+    body: { action: "create", ...tokens, website },
   });
   return error ? { error: await failure(error) } : null;
 }

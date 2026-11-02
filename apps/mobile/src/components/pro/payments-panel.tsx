@@ -71,6 +71,7 @@ export function PaymentsPanel({
               onPress={onStripe}
               loading={busy}
             />
+            <Body muted>{t.embedded.website}</Body>
             <Body muted>{t.fees}</Body>
           </>
         ) : data.status === "verification" ? (
