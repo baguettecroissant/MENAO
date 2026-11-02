@@ -1,5 +1,5 @@
 import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH } from "@menao/core";
-import { Camera, ImagePlus, X } from "lucide-react-native";
+import { Camera, ImagePlus, Sparkles, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { TopBar } from "@/components/top-bar";
@@ -28,7 +28,11 @@ export default function PublicProfileScreen() {
     <Screen onRefresh={reload} header={<TopBar />}>
       <Title>{t.title}</Title>
       <PhotoCard hasPhoto={Boolean(dossier?.avatarPath)} onSaved={reload} />
-      <PresentationCard initial={dossier?.presentation ?? ""} onSaved={reload} />
+      <PresentationCard
+        initial={dossier?.presentation ?? ""}
+        draft={dossier?.presentationDraft ?? null}
+        onSaved={reload}
+      />
       <PortfolioCard />
       {dossier ? <GoogleCard initial={dossier.indexable} /> : null}
     </Screen>
@@ -77,7 +81,20 @@ function PhotoCard({ hasPhoto, onSaved }: { hasPhoto: boolean; onSaved: () => vo
   );
 }
 
-function PresentationCard({ initial, onSaved }: { initial: string; onSaved: () => void }) {
+/**
+ * Présentation (100 caractères au moins), avec le compteur « 12 / 100 » et, tant que le minimum
+ * n'est pas atteint, « Proposer un texte » : un brouillon que l'artisan relit et modifie.
+ */
+function PresentationCard({
+  initial,
+  draft,
+  onSaved,
+}: {
+  initial: string;
+  /** Présentation proposée (presentationDraft). */
+  draft: string | null;
+  onSaved: () => void;
+}) {
   const [value, setValue] = useState(initial);
   const [error, setError] = useState<string | undefined>();
   const [sending, setSending] = useState(false);
@@ -105,6 +122,14 @@ function PresentationCard({ initial, onSaved }: { initial: string; onSaved: () =
         hint={t.presentationHint(PRESENTATION_MIN_LENGTH, value.trim().length)}
         error={error}
       />
+      {draft && value.trim().length < PRESENTATION_MIN_LENGTH ? (
+        <Button
+          label={t.presentationDraft}
+          variant="ghost"
+          icon={Sparkles}
+          onPress={() => setValue(draft)}
+        />
+      ) : null}
       <Button label={t.save} onPress={save} loading={sending} />
     </Card>
   );

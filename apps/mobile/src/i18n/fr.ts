@@ -681,7 +681,10 @@ export const fr = {
     photoDone: "Photo enregistrée.",
     presentation: "Présentation",
     presentationHint: (min: number, length: number) =>
-      `${min} caractères au moins (${length} pour l'instant) : votre expérience, vos spécialités, votre façon de travailler.`,
+      length < min
+        ? `${length} / ${min} caractères : votre expérience, vos spécialités, votre façon de travailler.`
+        : `${length} caractères : votre expérience, vos spécialités, votre façon de travailler.`,
+    presentationDraft: "Proposer un texte",
     save: "Enregistrer la présentation",
     saved: "Présentation enregistrée.",
     // Photos de réalisations (ADR 0124), comme sur le site.
