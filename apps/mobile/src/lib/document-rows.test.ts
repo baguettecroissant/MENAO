@@ -54,6 +54,39 @@ describe("« Mes documents » dans l'application (ADR 0123)", () => {
     expect(rows.find((r) => r.type === "decennale")?.exempt).toBe(true);
   });
 
+  it("Kbis vérifié au registre (ADR 0217) : rien à déposer", () => {
+    const rows = documentRows(
+      { status: "brouillon", decennaleExempt: false, registryStatus: "verifie" },
+      [{ ...doc("kbis", "valide", null, "2026-10-18"), source: "registre" }],
+      today,
+    );
+    expect(rows.find((r) => r.type === "kbis")).toMatchObject({
+      registry: true,
+      canUpload: false,
+      registryFailed: null,
+    });
+    expect(rows.find((r) => r.type === "rc_pro")?.canUpload).toBe(true);
+  });
+
+  it("contrôle au registre sans succès : Kbis à déposer, avec la raison", () => {
+    const kbis = (registryStatus: string | null, docs = [] as ReturnType<typeof doc>[]) =>
+      documentRows(
+        { status: "brouillon", decennaleExempt: false, registryStatus },
+        docs,
+        today,
+      ).find((r) => r.type === "kbis");
+    expect(kbis("dirigeant_absent")).toMatchObject({
+      registry: false,
+      canUpload: true,
+      registryFailed: "dirigeant_absent",
+    });
+    expect(kbis(null)?.registryFailed).toBeNull();
+    // Kbis déjà déposé : plus de raison affichée.
+    expect(
+      kbis("masque", [doc("kbis", "en_attente", null, "2026-10-18")])?.registryFailed,
+    ).toBeNull();
+  });
+
   it("dossier en vérification ou compte radié : aucun dépôt", () => {
     for (const status of ["en_verification", "radie"]) {
       expect(

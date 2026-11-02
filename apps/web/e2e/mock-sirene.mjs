@@ -2,7 +2,8 @@
 // SIRET commençant par 00008 → entreprise active du bâtiment ; 00009 → entreprise fermée ;
 // autre → 404. Données entièrement fictives.
 // Aussi l'annuaire RGE de l'ADEME (/rge/lines, ADR 0118) : qualifications fictives pour les SIRET
-// commençant par 00008, aucune pour les autres.
+// commençant par 00008, aucune pour les autres. Et l'annuaire des entreprises de l'État (/search,
+// ADR 0217) : SIREN commençant par 00008 → entreprise active dirigée par « Dominique Exemple ».
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.MOCK_SIRENE_PORT ?? 18399);
@@ -68,6 +69,30 @@ function rgeLines(siret) {
   ];
 }
 
+function registry(siren) {
+  if (!/^00008\d{4}$/.test(siren)) return [];
+  return [
+    {
+      siren,
+      nom_complet: "MENUISERIE EXEMPLE",
+      nom_raison_sociale: "MENUISERIE EXEMPLE",
+      nature_juridique: "5499",
+      etat_administratif: "A",
+      statut_diffusion: "O",
+      date_creation: "2019-03-01",
+      siege: { siret: `${siren}00011`, etat_administratif: "A" },
+      dirigeants: [
+        {
+          type_dirigeant: "personne physique",
+          nom: "EXEMPLE",
+          prenoms: "DOMINIQUE",
+          qualite: "Gérant",
+        },
+      ],
+    },
+  ];
+}
+
 createServer((req, res) => {
   const match = /^\/siret\/(\d{14})$/.exec(req.url ?? "");
   const send = (status, body) => {
@@ -75,6 +100,10 @@ createServer((req, res) => {
     res.end(JSON.stringify(body));
   };
   if (req.url === "/") return send(200, { ok: true });
+  if (req.url?.startsWith("/search")) {
+    const results = registry(new URL(req.url, "http://localhost").searchParams.get("q") ?? "");
+    return send(200, { results, total_results: results.length, page: 1, per_page: 5 });
+  }
   if (req.url?.startsWith("/rge/lines")) {
     const siret = new URL(req.url, "http://localhost").searchParams.get("siret_eq") ?? "";
     const results = rgeLines(siret);

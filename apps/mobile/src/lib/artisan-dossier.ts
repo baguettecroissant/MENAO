@@ -25,6 +25,10 @@ export type DossierDocument = {
   status: DocumentSnapshot["status"];
   refusal_reason: string | null;
   date_fin: string | null;
+  /** « registre » : fiche de vérification générée par MENAO à la place du Kbis (ADR 0217). */
+  source: string;
+  /** AAAA-MM-JJ : date de la vérification pour une fiche du registre. */
+  date_emission: string | null;
 };
 
 export type Dossier = {
@@ -34,6 +38,8 @@ export type Dossier = {
   /** Métiers déclarés, avec leur libellé (couverture de la décennale, ADR 0116). */
   trades: { code: string; label: string }[];
   documents: DossierDocument[];
+  /** Dernier contrôle au registre (ADR 0217) : raison si le Kbis reste demandé. */
+  registryStatus: string | null;
   presentation: string;
   avatarPath: string | null;
   /** Fiche proposée par Google (ADR 0144), cochée par défaut. */
@@ -49,7 +55,7 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut",
     )
     .eq("user_id", auth.user.id)
     .maybeSingle();
@@ -62,7 +68,7 @@ export async function loadDossier(): Promise<Dossier | null> {
       supabase.from("artisan_territories").select("id").eq("artisan_id", artisan.id),
       supabase
         .from("artisan_documents")
-        .select("type, status, date_emission, date_fin, refusal_reason")
+        .select("type, source, status, date_emission, date_fin, refusal_reason")
         .eq("artisan_id", artisan.id),
       supabase.from("profiles").select("avatar_path").eq("user_id", auth.user.id).maybeSingle(),
       supabase
@@ -129,7 +135,10 @@ export async function loadDossier(): Promise<Dossier | null> {
       status: d.status,
       refusal_reason: d.refusal_reason,
       date_fin: d.date_fin,
+      source: d.source,
+      date_emission: d.date_emission,
     })),
+    registryStatus: artisan.registre_statut,
     presentation,
     avatarPath,
     indexable: artisan.indexable,

@@ -9,6 +9,7 @@
     "./pdf": "./src/quote-pdf.ts",
     "./invoice-pdf": "./src/invoice-pdf.ts",
     "./reception-pdf": "./src/reception-pdf.ts",
+    "./registry-pdf": "./src/registry-pdf.ts",
     "./accountant-export": "./src/accountant-export.ts"
   },
   "scripts": {

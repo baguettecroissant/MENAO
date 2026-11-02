@@ -68,8 +68,9 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(
     page.getByRole("heading", { level: 1, name: "Faire vérifier mon entreprise" }),
   ).toBeVisible();
-  await expect(page.getByText("1 sur 8")).toBeVisible();
-  await expect(page.getByText("Encore 7 éléments avant l'envoi.")).toBeVisible();
+  // Kbis : entreprise vérifiée au registre dès l'inscription (ADR 0217, faux annuaire).
+  await expect(page.getByText("2 sur 8")).toBeVisible();
+  await expect(page.getByText("Encore 6 éléments avant l'envoi.")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Envoyer mon dossier en vérification" }),
   ).toBeDisabled();
@@ -153,28 +154,41 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(page.getByRole("link", { name: /Charte qualité MENAO.*Signée/ })).toBeVisible();
 
+  // Kbis : la fiche de vérification au registre en tient lieu, rien à déposer (ADR 0217).
+  await expect(
+    page.getByRole("link", {
+      name: /Kbis ou extrait INSEE\/RNE de moins de 3 mois.*Vérifié automatiquement au registre.*Vérifié/,
+    }),
+  ).toBeVisible();
+
   // Documents : une pièce à la fois depuis le dossier (un faux PDF est refusé d'après son contenu
   // réel), puis les autres sur la page de tous les documents.
-  await page
-    .getByRole("link", { name: /Kbis ou extrait INSEE\/RNE de moins de 3 mois.*À ajouter/ })
-    .click();
-  await expect(page).toHaveURL(/\/pro\/onboarding\/documents\?type=kbis$/);
+  // Attestation de vigilance URSSAF (ADR 0115) : date d'émission et code de sécurité.
+  await page.getByRole("link", { name: /Attestation de vigilance URSSAF.*À ajouter/ }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/documents\?type=urssaf$/);
   await expect(page.getByRole("region")).toHaveCount(1);
   await expect(page.getByLabel("Prendre en photo")).toHaveAttribute("capture", "environment");
-  const kbis = page.getByRole("region", { name: "Kbis ou extrait INSEE/RNE de moins de 3 mois" });
-  await kbis.getByLabel("Date d'émission").fill(dates.recent);
-  await kbis.getByLabel("Fichier").setInputFiles(files.fakePdf);
-  await kbis.getByRole("button", { name: "Déposer le document" }).click();
-  await expect(kbis.getByRole("alert")).toContainText("n'est pas accepté");
-  await kbis.getByLabel("Date d'émission").fill(dates.recent);
-  await kbis.getByLabel("Fichier").setInputFiles(files.pdf);
-  await kbis.getByRole("button", { name: "Déposer le document" }).click();
-  await expect(kbis.getByText("Déposé, en attente de vérification")).toBeVisible();
+  const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF" });
+  await urssaf.getByLabel("Date d'émission").fill(dates.recent);
+  await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
+  await urssaf.getByLabel("Fichier").setInputFiles(files.fakePdf);
+  await urssaf.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(urssaf.getByRole("alert")).toContainText("n'est pas accepté");
+  await urssaf.getByLabel("Date d'émission").fill(dates.recent);
+  await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
+  await urssaf.getByLabel("Fichier").setInputFiles(files.pdf);
+  await urssaf.getByRole("button", { name: "Déposer le document" }).click();
+  await expect(urssaf.getByText("Déposé, en attente de vérification")).toBeVisible();
   await page.getByRole("link", { name: "Retour à mon dossier" }).click();
   await expect(
-    page.getByRole("link", { name: /Kbis ou extrait INSEE\/RNE de moins de 3 mois.*Déposé/ }),
+    page.getByRole("link", { name: /Attestation de vigilance URSSAF.*Déposé/ }),
   ).toBeVisible();
   await page.goto("/pro/onboarding/documents");
+  const kbis = page.getByRole("region", { name: "Kbis ou extrait INSEE/RNE de moins de 3 mois" });
+  await expect(
+    kbis.getByText(/Entreprise vérifiée automatiquement au registre des entreprises le/),
+  ).toBeVisible();
+  await expect(kbis.getByRole("button", { name: "Déposer le document" })).toHaveCount(0);
 
   const decennale = page.getByRole("region", { name: "Attestation d'assurance décennale" });
   await decennale.getByLabel("Assureur").fill("Assurances Exemple");
@@ -203,14 +217,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await identite.getByRole("button", { name: "Déposer le document" }).click();
   await expect(identite.getByText("Déposé, en attente de vérification")).toBeVisible();
 
-  // Attestation de vigilance URSSAF (ADR 0115) : date d'émission et code de sécurité.
-  const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF" });
-  await urssaf.getByLabel("Date d'émission").fill(dates.recent);
-  await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
-  await urssaf.getByLabel("Fichier").setInputFiles(files.pdf);
-  await urssaf.getByRole("button", { name: "Déposer le document" }).click();
-  await expect(urssaf.getByText("Déposé, en attente de vérification")).toBeVisible();
-  await expect(kbis.getByRole("link", { name: "Voir le document" })).toHaveAttribute(
+  await expect(kbis.getByRole("link", { name: "Voir la fiche de vérification" })).toHaveAttribute(
     "href",
     /token=/,
   );

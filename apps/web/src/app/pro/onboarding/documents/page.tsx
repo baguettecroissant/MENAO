@@ -8,7 +8,7 @@ import {
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { setDecennaleExempt } from "@/lib/artisan/actions";
+import { recheckRegistry, setDecennaleExempt } from "@/lib/artisan/actions";
 import { DocumentUpload } from "./document-upload";
 
 const t = fr.pro.onboarding.documents;
@@ -68,7 +68,13 @@ export default async function DocumentsStepPage({
         const current = rows.find((d) => d.status === "valide") ?? rows[0];
         const pending = rows.find((d) => d !== current);
         const monitored = (MONITORED_DOCUMENT_TYPES as readonly string[]).includes(type);
-        const canUpload = onboarding || (renewal && monitored);
+        // Kbis remplacé par la fiche de vérification au registre (ADR 0217) : rien à déposer.
+        const registry = current?.source === "registre" && current.status === "valide";
+        const registryFailed =
+          type === "kbis" && onboarding && !current && artisan.registre_statut !== null
+            ? (t.registry.reasons[artisan.registre_statut] ?? null)
+            : null;
+        const canUpload = (onboarding || (renewal && monitored)) && !registry;
         return (
           <Card key={type}>
             <section aria-labelledby={`doc-${type}`} className="flex flex-col gap-4">
@@ -109,11 +115,18 @@ export default async function DocumentsStepPage({
                           {doc === current ? t.current : t.renewal} · {t.statuses[doc.status]}
                         </p>
                       )}
+                      {doc.source === "registre" && doc.date_emission && (
+                        <p className="text-sm">
+                          {t.registry.verified(formatDate(doc.date_emission))}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">
                         {[
                           doc.assureur,
                           doc.numero,
-                          doc.date_emission && t.issuedOn(formatDate(doc.date_emission)),
+                          doc.source !== "registre" &&
+                            doc.date_emission &&
+                            t.issuedOn(formatDate(doc.date_emission)),
                           doc.date_fin && t.validUntil(formatDate(doc.date_fin)),
                         ]
                           .filter(Boolean)
@@ -128,7 +141,7 @@ export default async function DocumentsStepPage({
                               rel="noreferrer"
                               className="font-medium text-primary underline"
                             >
-                              {t.view}
+                              {doc.source === "registre" ? t.registry.view : t.view}
                             </a>
                           </>
                         )}
@@ -149,6 +162,19 @@ export default async function DocumentsStepPage({
                     </div>
                   );
                 })}
+              {registryFailed && (
+                <div className="flex flex-col gap-2">
+                  <Alert tone="info">{registryFailed}</Alert>
+                  <form action={recheckRegistry}>
+                    <button
+                      type="submit"
+                      className="min-h-touch text-sm font-semibold text-primary-strong underline underline-offset-4"
+                    >
+                      {t.registry.recheck}
+                    </button>
+                  </form>
+                </div>
+              )}
               {type === "decennale" && onboarding && (
                 <div className="flex flex-col gap-2 rounded-card bg-primary-softer p-4 text-sm">
                   {exempt ? (

@@ -87,6 +87,14 @@ export async function verifySiret(): Promise<SireneCheckState> {
   return { status: status ?? "unavailable" };
 }
 
+/**
+ * « Revérifier au registre » (ADR 0217) : nouvelle vérification du SIRET, puis de l'entreprise
+ * dans l'annuaire public ; la fiche de vérification remplace le Kbis à déposer si elle aboutit.
+ */
+export async function recheckRegistry(): Promise<void> {
+  await verifySiret();
+}
+
 /** Nouvelle lecture de l'annuaire RGE pour le SIRET de l'artisan (ADR 0118), « Actualiser ». */
 export async function refreshRge(): Promise<void> {
   const { supabase } = await getOnboardingContext();

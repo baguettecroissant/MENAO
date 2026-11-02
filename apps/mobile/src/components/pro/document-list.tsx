@@ -30,9 +30,14 @@ function describe(
   if (row.refused)
     return { tone: "danger", status: t.states.refuse, hint: t.refused(row.refusedReason) };
   if (!row.current)
-    return { tone: "todo", status: t.states.missing, hint: d.documentHints[row.type] };
+    return {
+      tone: "todo",
+      status: t.states.missing,
+      hint: row.registryFailed ? d.registryFailedHint : d.documentHints[row.type],
+    };
   if (row.type === "kbis" && validated)
     return { tone: "done", status: t.states.valide, hint: t.kbisDone };
+  if (row.registry) return { tone: "done", status: t.states.valide, hint: t.registryVerified };
   const { expiry, days, dateFin } = row.current;
   if (expiry === "expire") return { tone: "danger", status: t.states.expire, hint: t.expired };
   if (expiry === "urgent" || expiry === "bientot") {

@@ -30,6 +30,8 @@ export type AdminDocument = {
   refusal_reason: string | null;
   verified_at: string | null;
   verified_by: string | null;
+  /** « registre » : fiche de vérification générée par MENAO à la place du Kbis (ADR 0217). */
+  source: string;
 };
 
 export type CompanyReference = {
@@ -311,6 +313,7 @@ function CompactRow({
   reviewer: string | null;
   coverage: ReactNode;
 }) {
+  const registry = doc.source === "registre";
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm">
@@ -318,11 +321,15 @@ function CompactRow({
         {" · "}
         <span className="text-muted-foreground">
           {[
-            t.docDeposited(dateTime.format(new Date(doc.created_at))),
+            registry
+              ? t.docRegistry(dateTime.format(new Date(doc.created_at)))
+              : t.docDeposited(dateTime.format(new Date(doc.created_at))),
             doc.assureur,
             doc.numero,
             doc.couverture,
-            doc.date_emission && docT.issuedOn(day.format(new Date(doc.date_emission))),
+            !registry &&
+              doc.date_emission &&
+              docT.issuedOn(day.format(new Date(doc.date_emission))),
             doc.date_fin && docT.validUntil(day.format(new Date(doc.date_fin))),
           ]
             .filter(Boolean)
@@ -338,12 +345,12 @@ function CompactRow({
               rel="noreferrer"
               className="font-medium text-primary underline"
             >
-              {docT.view}
+              {registry ? docT.registry.view : docT.view}
             </a>
           </>
         )}
       </p>
-      {doc.verified_at && (
+      {doc.verified_at && !registry && (
         <p className="text-xs text-muted-foreground">
           {t.docDecidedBy(dateTime.format(new Date(doc.verified_at)), reviewer)}
         </p>
