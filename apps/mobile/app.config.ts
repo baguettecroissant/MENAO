@@ -104,6 +104,13 @@ const config: ExpoConfig = {
       },
     ],
     [
+      // Formulaire Stripe Connect dans l'application (ADR 0215) : SDK iOS par CocoaPods. Le passage
+      // par Swift Package Manager (défaut du SDK depuis 0.78) imposerait de compiler toute l'app en
+      // frameworks dynamiques. Option retirée en 0.84 : à revoir à la prochaine montée de version.
+      "@stripe/stripe-react-native",
+      { disableSPM: true },
+    ],
+    [
       "expo-splash-screen",
       {
         // Démarrage animé (ADR 0192) : « menao » seul, le logo se trace au-dessus dans l'app.

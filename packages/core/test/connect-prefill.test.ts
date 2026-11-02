@@ -248,14 +248,17 @@ describe("compléments saisis dans MENAO (ADR 0215)", () => {
     expect(normalizeIban(null)).toBeNull();
   });
 
-  it("date de naissance : de 16 à 100 ans, date réelle", () => {
+  it("date de naissance : de 16 à 100 ans, date réelle, AAAA-MM-JJ ou JJ/MM/AAAA", () => {
     expect(birthDateOf("1985-04-23", "2026-11-02")).toEqual({ day: 23, month: 4, year: 1985 });
     expect(birthDateOf("2010-11-02", "2026-11-02")).toEqual({ day: 2, month: 11, year: 2010 });
     expect(birthDateOf("2010-11-03", "2026-11-02")).toBeNull();
     expect(birthDateOf("1926-11-02", "2026-11-02")).toEqual({ day: 2, month: 11, year: 1926 });
     expect(birthDateOf("1925-11-01", "2026-11-02")).toBeNull();
     expect(birthDateOf("1990-02-30", "2026-11-02")).toBeNull();
-    expect(birthDateOf("23/04/1985", "2026-11-02")).toBeNull();
+    // Saisie au clavier dans l'application.
+    expect(birthDateOf("23/04/1985", "2026-11-02")).toEqual({ day: 23, month: 4, year: 1985 });
+    expect(birthDateOf("31/02/1985", "2026-11-02")).toBeNull();
+    expect(birthDateOf("23-04-1985", "2026-11-02")).toBeNull();
   });
 
   it("adresse personnelle complète et en métropole seulement", () => {

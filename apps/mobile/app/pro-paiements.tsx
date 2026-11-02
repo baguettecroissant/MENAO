@@ -1,42 +1,89 @@
-import { useState } from "react";
+import { completeConnectPrefill, parisToday, type ConnectDetails } from "@menao/core";
+import { useCallback, useState } from "react";
+import { ConnectPrepare } from "@/components/pro/connect-prepare";
 import { MoneyPanel } from "@/components/pro/money-panel";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
+import { StripeOnboarding } from "@/components/pro/stripe-onboarding";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { openHostedPage } from "@/lib/hosted";
-import { loadPayments, refreshConnect, startConnect } from "@/lib/payments";
+import {
+  createConnect,
+  createConnectTokens,
+  loadPayments,
+  refreshConnect,
+  startConnect,
+} from "@/lib/payments";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Card, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 
 const t = fr.proPayments;
 
 /**
- * Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site : démarrer, compléter
- * ce que Stripe attend encore (avec la date limite), patienter pendant sa vérification, ou compte
- * actif, avec « Votre argent » (solde et virements, ADR 0152). Stripe s'ouvre dans la fenêtre
- * sécurisée du téléphone, puis l'état est relu au retour.
+ * Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site, ouvert dès l'envoi du
+ * dossier (ADR 0215) : compléments saisis dans MENAO puis formulaire Stripe dans l'application
+ * (premier passage), compléter ce que Stripe attend encore (avec la date limite), patienter pendant
+ * sa vérification, ou compte actif, avec « Votre argent » (solde et virements, ADR 0152). L'état est
+ * relu à la sortie du formulaire. En secours, le site de Stripe dans la fenêtre sécurisée.
  * Paiements directs sur le compte de l'artisan, sans commission MENAO (CLAUDE.md règle 12).
  */
 export default function PaymentsScreen() {
   const [data, reload] = useFocusData(loadPayments);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [embedded, setEmbedded] = useState(false);
 
-  async function openStripe() {
+  /** Premier passage : jetons des compléments, création du compte, puis formulaire Stripe. */
+  async function start(details: ConnectDetails | null) {
     setMessage(null);
     setBusy(true);
-    const opened = await startConnect(data?.status === "a_demarrer");
-    if ("error" in opened) {
+    const prefill = data?.prefill ?? null;
+    const tokens = prefill
+      ? await createConnectTokens(
+          prefill.publishableKey,
+          completeConnectPrefill(prefill, details ?? {}),
+        )
+      : {};
+    const failed = await createConnect(tokens);
+    if (failed) {
       setBusy(false);
-      setMessage(opened.error);
+      setMessage(failed.error);
       return;
     }
-    const result = await openHostedPage(opened.url);
-    if (result === "connect_expire") setMessage(t.linkExpired);
+    setEmbedded(true);
+  }
+
+  function openStripe() {
+    setMessage(null);
+    setBusy(true);
+    setEmbedded(true);
+  }
+
+  const closeStripe = useCallback(async () => {
+    setEmbedded(false);
     await refreshConnect();
     await reload();
     setBusy(false);
-  }
+  }, [reload]);
+
+  /** Formulaire intégré impossible : le site de Stripe, avec retour dans l'application. */
+  const fallback = useCallback(
+    async (error: string | null) => {
+      setEmbedded(false);
+      const opened = await startConnect();
+      if ("error" in opened) {
+        setBusy(false);
+        setMessage(error ?? opened.error);
+        return;
+      }
+      const result = await openHostedPage(opened.url);
+      if (result === "connect_expire") setMessage(t.linkExpired);
+      await refreshConnect();
+      await reload();
+      setBusy(false);
+    },
+    [reload],
+  );
 
   async function check() {
     setBusy(true);
@@ -47,21 +94,40 @@ export default function PaymentsScreen() {
 
   if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
-    <Screen onRefresh={reload} header={<TopBar />}>
-      <Title>{t.title}</Title>
-      {message ? <Notice tone="error">{message}</Notice> : null}
-      {data === null ? (
-        <Notice tone="error">{t.loadError}</Notice>
-      ) : !data.validated ? (
-        <Card>
-          <Body>{t.notValidated}</Body>
-        </Card>
-      ) : (
-        <>
-          <PaymentsPanel data={data} busy={busy} onStripe={openStripe} onCheck={check} />
-          {data.money ? <MoneyPanel data={data.money} /> : null}
-        </>
-      )}
-    </Screen>
+    <>
+      <Screen onRefresh={reload} header={<TopBar />}>
+        <Title>{t.title}</Title>
+        {message ? <Notice tone="error">{message}</Notice> : null}
+        {data === null ? (
+          <Notice tone="error">{t.loadError}</Notice>
+        ) : !data.open ? (
+          <Card>
+            <Body>{t.notValidated}</Body>
+          </Card>
+        ) : (
+          <>
+            <PaymentsPanel
+              data={data}
+              busy={busy}
+              onStripe={openStripe}
+              onCheck={check}
+              prepare={
+                <ConnectPrepare
+                  prefill={data.prefill}
+                  today={parisToday()}
+                  busy={busy}
+                  onContinue={(details) => void start(details)}
+                />
+              }
+            />
+            {data.money ? <MoneyPanel data={data.money} /> : null}
+          </>
+        )}
+      </Screen>
+      {/* Plein écran, au-dessus de l'écran Paiements. */}
+      {embedded ? (
+        <StripeOnboarding onExit={() => void closeStripe()} onUnavailable={fallback} />
+      ) : null}
+    </>
   );
 }

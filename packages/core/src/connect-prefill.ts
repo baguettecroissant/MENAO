@@ -287,14 +287,18 @@ const MIN_AGE = 16;
 const MAX_AGE = 100;
 
 /**
- * Date de naissance (AAAA-MM-JJ) d'une personne de 16 à 100 ans au jour donné (AAAA-MM-JJ, heure
- * de Paris) ; sinon null.
+ * Date de naissance (AAAA-MM-JJ, ou JJ/MM/AAAA saisi au clavier dans l'application) d'une personne
+ * de 16 à 100 ans au jour donné (AAAA-MM-JJ, heure de Paris) ; sinon null.
  */
 export function birthDateOf(
   value: string | null | undefined,
   today: string,
 ): ConnectBirthDate | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec((value ?? "").trim());
+  const text = (value ?? "").trim();
+  const french = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+    french ? `${french[3]}-${french[2]}-${french[1]}` : text,
+  );
   const now = /^(\d{4})-(\d{2})-(\d{2})$/.exec(today);
   if (!match || !now) return null;
   const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];

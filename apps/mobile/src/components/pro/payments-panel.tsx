@@ -1,5 +1,6 @@
 import type { ConnectRequirementGroup } from "@menao/core";
 import * as WebBrowser from "expo-web-browser";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
@@ -10,19 +11,25 @@ import { theme } from "@/ui/theme";
 const t = fr.proPayments;
 const { colors, font, spacing } = theme;
 
-/** État du compte de paiement Stripe et prochaine action (ADR 0124), comme sur le site. */
+/**
+ * État du compte de paiement Stripe et prochaine action (ADR 0124), comme sur le site : démarrer
+ * (compléments saisis dans MENAO, ADR 0215), reprendre ou compléter dans le formulaire Stripe.
+ */
 export function PaymentsPanel({
   data,
   busy,
   onStripe,
   onCheck,
+  prepare,
 }: {
   data: Payments;
   busy: boolean;
-  /** Ouvre Stripe (démarrer, reprendre, compléter). */
+  /** Ouvre le formulaire Stripe (reprendre, compléter). */
   onStripe: () => void;
   /** Relit l'état du compte. */
   onCheck: () => void;
+  /** Premier passage : formulaire des compléments, avant Stripe. */
+  prepare: ReactNode;
 }) {
   const note = data.deadline ? t.deadline(formatLongDate(data.deadline)) : null;
   return (
@@ -50,7 +57,7 @@ export function PaymentsPanel({
           <>
             <Body>{t.intro}</Body>
             <Body muted>{t.fees}</Body>
-            <Button label={t.start} onPress={onStripe} loading={busy} />
+            {prepare}
           </>
         ) : data.status === "a_completer" ? (
           <>
