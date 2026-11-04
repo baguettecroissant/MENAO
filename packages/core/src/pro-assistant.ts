@@ -12,6 +12,9 @@ export const PRO_ASSISTANT_QUESTION_MIN_LENGTH = 2;
 export const PRO_ASSISTANT_QUESTION_MAX_LENGTH = 500;
 /** Une réponse se lit dans une petite fenêtre : quelques phrases. */
 export const PRO_ASSISTANT_ANSWER_MAX_LENGTH = 900;
+/** Questions de relance proposées sous une réponse, en un toucher. */
+export const PRO_ASSISTANT_MAX_SUGGESTIONS = 3;
+const SUGGESTION_MAX_LENGTH = 70;
 /** Échanges précédents renvoyés au modèle (questions et réponses), les plus récents. */
 const HISTORY_MAX_MESSAGES = 10;
 
@@ -57,12 +60,16 @@ export type RawProAssistantAnswer = {
   sans_reponse: boolean;
   /** Question sans rapport avec MENAO pour un artisan. */
   hors_sujet: boolean;
+  /** Questions de relance que l'artisan pourrait poser ensuite. */
+  suggestions: string[];
 };
 
 export type ProAssistantAnswer = {
   answer: string;
   /** Proposer le rappel ou l'écriture à l'équipe en évidence sous la réponse. */
   suggestHuman: boolean;
+  /** Questions de relance (au plus 3), à poser d'un toucher. */
+  suggestions: string[];
 };
 
 export function proAssistantJsonSchema() {
@@ -72,8 +79,9 @@ export function proAssistantJsonSchema() {
       reponse: { type: "string" },
       sans_reponse: { type: "boolean" },
       hors_sujet: { type: "boolean" },
+      suggestions: { type: "array", items: { type: "string" } },
     },
-    required: ["reponse", "sans_reponse", "hors_sujet"],
+    required: ["reponse", "sans_reponse", "hors_sujet", "suggestions"],
     additionalProperties: false,
   } as const;
 }
@@ -95,5 +103,29 @@ export function normalizeProAssistantAnswer(raw: RawProAssistantAnswer): ProAssi
     const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf(".\n"), cut.lastIndexOf(" ?"));
     text = end > PRO_ASSISTANT_ANSWER_MAX_LENGTH / 2 ? cut.slice(0, end + 1) : `${cut.trimEnd()}…`;
   }
-  return { answer: text, suggestHuman: raw.sans_reponse || raw.hors_sujet };
+  return {
+    answer: text,
+    suggestHuman: raw.sans_reponse || raw.hors_sujet,
+    suggestions: normalizeSuggestions(raw.suggestions),
+  };
+}
+
+/**
+ * Questions de relance : courtes, terminées par « ? », sans doublon (casse ignorée), au plus 3.
+ * Les questions trop longues ou vides sont écartées plutôt que coupées.
+ */
+export function normalizeSuggestions(values: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    let text = value.replace(/\s+/g, " ").trim();
+    if (!text || text.length > SUGGESTION_MAX_LENGTH) continue;
+    if (!text.endsWith("?")) text = `${text.replace(/[.!…]+$/, "")} ?`;
+    const key = text.toLocaleLowerCase("fr");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(text);
+    if (result.length === PRO_ASSISTANT_MAX_SUGGESTIONS) break;
+  }
+  return result;
 }

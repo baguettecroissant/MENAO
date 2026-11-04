@@ -40,7 +40,9 @@ async function siteKnowledge(): Promise<string | null> {
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
     const text = response.ok ? (await response.text()).trim() : "";
-    if (text) knowledgeCache = { at: Date.now(), text };
+    // Une page HTML (page d'attente du pré-lancement, erreur) n'est jamais prise pour le texte.
+    if (text && !text.startsWith("<")) knowledgeCache = { at: Date.now(), text };
+    else console.error("pro-assistant : contenus du site invalides");
   } catch {
     console.error("pro-assistant : contenus du site illisibles");
   }

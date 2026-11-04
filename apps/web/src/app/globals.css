@@ -146,6 +146,50 @@
   .animate-menao-fade-up {
     animation: menao-fade-up 0.45s ease-out both;
   }
+  /* Assistant des pages Pro (ADR 0218) : feuille qui monte sur mobile, fenêtre qui apparaît sur
+     grand écran, points « en train d'écrire ». Animations discrètes, sans rebond. */
+  @keyframes menao-sheet {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes menao-panel {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-menao-assistant {
+    animation: menao-sheet 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @media (min-width: 40rem) {
+    .animate-menao-assistant {
+      animation: menao-panel 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+      transform-origin: bottom right;
+    }
+  }
+  @keyframes menao-typing {
+    0%,
+    60%,
+    100% {
+      opacity: 0.3;
+      transform: none;
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+  }
+  .animate-menao-typing {
+    animation: menao-typing 1.1s ease-in-out infinite;
+  }
   /* Site vitrine (F-01) : apparition au chargement, zoom lent des photos, reflet d'un bouton. */
   @keyframes menao-rise {
     from {
@@ -262,6 +306,8 @@
     .animate-menao-orbit-reverse,
     .animate-menao-pop,
     .animate-menao-fade-up,
+    .animate-menao-assistant,
+    .animate-menao-typing,
     .animate-spin,
     .animate-pulse {
       animation: none;
