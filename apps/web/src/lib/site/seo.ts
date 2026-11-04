@@ -69,6 +69,7 @@ export const STATIC_PAGES = [
   "/a-propos",
   "/partenaires",
   "/pro",
+  "/pro/faq",
   "/faq",
   "/contact",
   "/criteres-de-classement",

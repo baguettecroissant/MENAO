@@ -554,6 +554,8 @@ export const fr = {
       ranking: "comment les artisans sont présentés et classés",
       pro: "demandes près de chez soi, devis, signature, paiements et factures, sans commission",
       proSignUp: "inscription et vérification de l'entreprise",
+      proFaq:
+        "toutes les réponses pour les artisans : inscription, abonnement, demandes, devis, paiements",
       partners: "programme partenaires : recommander MENAO contre une prime fixe",
       about: "mission et engagements de MENAO",
       contact: "écrire à l'équipe MENAO",
@@ -789,7 +791,7 @@ export const fr = {
       items: [
         {
           title: "Artisans vérifiés",
-          text: "Entreprise active, Kbis récent, assurance décennale, RC Pro et identité du dirigeant contrôlés par l'équipe MENAO.",
+          text: "Entreprise active et vérifiée au registre, assurance décennale, RC Pro et identité du dirigeant contrôlés par l'équipe MENAO.",
         },
         {
           title: "Paiement direct à l'artisan",
@@ -1038,7 +1040,7 @@ export const fr = {
       commitments: [
         {
           title: "Des artisans vérifiés",
-          text: "Entreprise active, Kbis récent, assurance décennale, RC Pro et identité du dirigeant contrôlés par l'équipe MENAO, puis surveillés jusqu'à leur échéance.",
+          text: "Entreprise active et vérifiée au registre, assurance décennale, RC Pro et identité du dirigeant contrôlés par l'équipe MENAO, puis surveillés jusqu'à leur échéance.",
         },
         {
           title: "Aucune commission sur les chantiers",
@@ -1141,7 +1143,7 @@ export const fr = {
       pro: [
         {
           title: "Créez votre profil pro",
-          text: "SIRET, métiers, zone d'intervention et documents : Kbis, décennale, RC Pro, pièce d'identité.",
+          text: "SIRET, métiers, zone d'intervention et documents : décennale, RC Pro, pièce d'identité. Le Kbis n'est demandé que si l'entreprise n'a pas pu être vérifiée au registre.",
         },
         {
           title: "Faites vérifier votre dossier",
@@ -1163,7 +1165,7 @@ export const fr = {
     guarantees: {
       title: "Garanties & Confiance",
       metaDescription:
-        "Artisans vérifiés (entreprise, Kbis, décennale, RC Pro, identité), paiement direct à l'artisan via Stripe, avis vérifiés, données protégées et recours en cas de problème : les garanties MENAO.",
+        "Artisans vérifiés (entreprise vérifiée au registre, décennale, RC Pro, identité), paiement direct à l'artisan via Stripe, avis vérifiés, données protégées et recours en cas de problème : les garanties MENAO.",
       eyebrow: "Garanties & Confiance",
       heroTitle: "La confiance,",
       heroAccent: "ça se vérifie.",
@@ -1177,7 +1179,7 @@ export const fr = {
         status: "Vérifié",
         checks: [
           "Entreprise active (INSEE)",
-          "Kbis de moins de 3 mois",
+          "Entreprise vérifiée au registre (ou Kbis récent)",
           "Assurance décennale",
           "Responsabilité civile professionnelle",
           "Pièce d'identité du dirigeant",
@@ -1193,7 +1195,10 @@ export const fr = {
           title: "Entreprise en activité",
           text: "SIRET contrôlé dans le répertoire Sirene de l'INSEE, avec une activité du bâtiment.",
         },
-        { title: "Kbis récent", text: "Extrait Kbis ou avis de situation de moins de 3 mois." },
+        {
+          title: "Entreprise vérifiée au registre",
+          text: "Entreprise active et dirigeant reconnu dans l'annuaire public des entreprises (registre national) ; à défaut, Kbis ou extrait de moins de 3 mois.",
+        },
         {
           title: "Assurance décennale",
           text: "Attestation en cours de validité, vérifiée par l'équipe MENAO.",
@@ -4609,7 +4614,7 @@ export const fr = {
           },
           {
             title: "Des pros vérifiés",
-            text: "Entreprise active, Kbis récent, décennale, RC Pro et identité contrôlés par l'équipe MENAO avant toute mise en ligne.",
+            text: "Entreprise active et vérifiée au registre, décennale, RC Pro et identité contrôlés par l'équipe MENAO avant toute mise en ligne.",
           },
         ],
         criteria: "Lire nos critères de classement",
@@ -4769,6 +4774,321 @@ export const fr = {
         notIncluded: "non inclus",
         faq: "Questions fréquentes",
       },
+    },
+    /** FAQ des artisans (/pro/faq, F-69, ADR 0218) : aussi lue par l'assistant des pages Pro. */
+    faqPage: {
+      title: "Questions fréquentes des artisans",
+      metaDescription:
+        "Toutes les réponses pour les artisans du bâtiment : inscription et vérification, abonnement sans commission, demandes de chantier, devis dictés, paiements directs, avis et classement.",
+      eyebrow: "Espace Pro · Aide",
+      heroTitle: "Vos questions,",
+      heroAccent: "nos réponses.",
+      intro:
+        "Tout ce qu'il faut savoir pour travailler avec MENAO : de l'inscription au paiement du solde, sans commission sur vos chantiers.",
+      categoriesLabel: "Thèmes",
+      essentials: "L'essentiel",
+      seeAll: "Voir toutes les questions des artisans",
+      contactTitle: "Vous ne trouvez pas votre réponse ?",
+      contactText:
+        "Posez votre question à l'assistant MENAO en bas de la page, ou demandez à être rappelé par l'équipe.",
+      groups: [
+        {
+          id: "inscription-et-verification",
+          title: "Inscription et vérification",
+          items: [
+            {
+              q: "Combien de temps faut-il pour s'inscrire ?",
+              a: "Créer votre profil prend environ 2 minutes : vos métiers, votre entreprise et votre zone. Le dossier de vérification demande ensuite environ 5 minutes, documents pris en photo depuis votre téléphone. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",
+            },
+            {
+              q: "Quels métiers peuvent s'inscrire sur MENAO ?",
+              a: "Aujourd'hui, quinze métiers du bâtiment : électricien, plombier, chauffagiste, climaticien, maçon, peintre, plaquiste, carreleur, menuisier, charpentier, couvreur, façadier, serrurier, terrassier et paysagiste. Vous en choisissez un ou plusieurs à l'inscription, puis vous précisez vos spécialités.",
+            },
+            {
+              q: "Comment fonctionne la vérification au registre qui remplace le Kbis ?",
+              a: "MENAO vérifie automatiquement dans l'annuaire public des entreprises que votre entreprise est active et que vous figurez parmi ses dirigeants : vous n'avez alors rien à déposer. Si l'entreprise est introuvable ou fermée, si ses dirigeants ne sont pas publiés ou si votre nom n'y figure pas, déposez un Kbis ou un extrait RNE de moins de 3 mois.",
+            },
+            {
+              q: "Ma décennale ne couvre pas tous mes métiers, ou mon activité n'y est pas soumise : que faire ?",
+              a: "En déposant votre attestation, décochez les métiers qu'elle ne couvre pas : ils passent en vérification manuelle par l'équipe MENAO. Pour les rares métiers sans travaux sur le bâti, vous pouvez déclarer vos métiers non soumis à la décennale avant l'envoi du dossier ; l'équipe MENAO vérifie cette déclaration, et la RC Pro reste demandée.",
+            },
+            {
+              q: "Qui a accès à mes documents ?",
+              a: "Vos documents restent privés : seule l'équipe MENAO les consulte pour vérifier votre entreprise. À l'envoi, ils sont lus automatiquement pour pré-remplir les informations utiles (dates, assureur, numéro de contrat), que vous vérifiez avant de valider.",
+            },
+            {
+              q: "Que se passe-t-il si l'équipe demande un complément ou refuse mon dossier ?",
+              a: "Le message de l'équipe MENAO, ou le motif du refus, s'affiche dans votre espace pro. Vous corrigez les éléments concernés, puis vous renvoyez votre dossier. Pendant la vérification, vos documents ne peuvent pas être modifiés.",
+            },
+            {
+              q: "Qu'est-ce que la charte qualité MENAO ?",
+              a: "C'est l'engagement que vous lisez et signez en ligne pendant votre inscription : réactivité (devis dans les 72 h, planning à jour chaque semaine), relation client, qualité du travail, transparence et avis. Elle prévoit notamment de toujours passer par MENAO avec un client trouvé sur MENAO, pendant comme après le chantier. En cas de manquement, la procédure est progressive (rappel, avertissement, suspension des demandes, puis radiation), et une faute grave, comme le contournement de la plateforme, entraîne une radiation immédiate.",
+            },
+          ],
+        },
+        {
+          id: "abonnement-essai-et",
+          title: "Abonnement, essai et formules",
+          items: [
+            {
+              q: "Dois-je payer avant d'être vérifié, et quand commence l'essai de 2 mois ?",
+              a: "Rien n'est à payer avant la vérification : le choix de la formule s'ouvre une fois votre dossier validé par l'équipe MENAO. L'essai de 2 mois commence le jour où vous choisissez votre formule ; aucun prélèvement n'a lieu avant la date indiquée à ce moment-là, et vous pouvez arrêter à tout moment pendant l'essai.",
+            },
+            {
+              q: "Quelle différence entre les formules Base, Premium et Entreprise ?",
+              a: "Toutes donnent accès aux demandes de votre zone, sans commission, et aux outils de devis, de signature, de paiement, de suivi de chantier et de factures. Le détail de ce que chaque formule inclut figure dans le comparatif des formules de la page Espace Pro.",
+            },
+            {
+              q: "Comment fonctionne le paiement à l'année ?",
+              a: "Vous payez 12 mois d'avance et 2 mois vous sont offerts. L'engagement commence au premier paiement, à la fin des 2 mois d'essai, puis l'année se renouvelle pour un an, sauf résiliation depuis le portail d'abonnement avant l'échéance.",
+            },
+            {
+              q: "Puis-je changer de formule en cours de route ?",
+              a: "Oui, depuis « Gérer mon abonnement ». Passer à une formule supérieure prend effet tout de suite ; passer à une formule inférieure, ou de l'année au mois, prend effet à la fin de la période en cours.",
+            },
+            {
+              q: "Que se passe-t-il si un prélèvement de l'abonnement échoue ?",
+              a: "Stripe réessaie le paiement et MENAO vous prévient par e-mail : mettez à jour votre moyen de paiement depuis « Gérer mon abonnement ». Si l'impayé dure plus de 15 jours, votre profil n'apparaît plus dans les recherches, jusqu'à ce que l'abonnement soit régularisé.",
+            },
+            {
+              q: "Comment fonctionne le parrainage d'un confrère ?",
+              a: "Partagez votre lien, votre QR code ou votre code de parrainage depuis « Mon profil ». Vous gagnez un mois offert dès le premier paiement de votre confrère, jusqu'à 12 mois par an, et il reçoit un cadeau de bienvenue (t-shirt ou casquette MENAO) à la validation de son dossier.",
+            },
+          ],
+        },
+        {
+          id: "recevoir-des-demandes",
+          title: "Recevoir des demandes",
+          items: [
+            {
+              q: "Que contient une demande de chantier ?",
+              a: "Le besoin résumé par l'IA de MENAO, la description et les photos du client, les travaux, la commune, la date de début souhaitée et, s'il l'a indiqué, son budget approximatif. Si le chantier prévoit d'autres métiers, la demande les cite : chaque artisan établit son propre devis. Avant d'accepter, vous voyez le prénom et la ville du client, pas ses coordonnées.",
+            },
+            {
+              q: "Comment accepter une demande ?",
+              a: "En fixant un rendez-vous depuis la demande : MENAO vous propose des créneaux libres d'après vos horaires et votre agenda. Le client voit alors la date dans son espace, et ses coordonnées ainsi que l'adresse exacte du chantier s'affichent pour vous.",
+            },
+            {
+              q: "Comment refuser une demande ?",
+              a: "Avec le bouton « Refuser le chantier » et un motif : planning complet, hors de votre domaine d'expertise, hors de votre zone ou autre. La charte qualité vous demande de répondre à chaque demande sous 24 h et de refuser vite celles que vous ne pouvez pas prendre, pour que le client puisse choisir un autre artisan.",
+            },
+            {
+              q: "Comment suis-je prévenu d'une nouvelle demande ?",
+              a: "Par e-mail, par notification et dans votre espace, rubrique « À faire maintenant », avec le temps qu'il vous reste pour répondre. Sans réponse de votre part, MENAO vous relance au bout de 24 h puis de 48 h ; passé 72 h, la demande expire.",
+            },
+            {
+              q: "Puis-je ne recevoir que les chantiers au-dessus d'un certain budget ?",
+              a: "Oui : dans « Métiers et certifications », réglez un budget minimum, à partir de 1 000, 5 000, 15 000 ou 50 000 €. Vous ne recevez plus les demandes dont le budget annoncé est inférieur ; celles sans budget vous restent proposées.",
+            },
+            {
+              q: "Pourquoi ai-je reçu une demande un peu hors de ma zone ?",
+              a: "Quand un client n'a plus d'artisan disponible plus près, MENAO peut lui proposer des artisans dont la zone s'arrête à 20 km au plus de son chantier. La demande l'indique, et vous pouvez la décliner sans pénalité avec le motif « Hors zone » ; votre zone, elle, ne change pas.",
+            },
+            {
+              q: "Qu'est-ce qu'une demande directe ?",
+              a: "Quand un client passe par votre fiche publique (lien ou QR code de votre carte de visite) ou vous redemande un devis, sa demande vous est envoyée à vous seul, si vous remplissez les conditions habituelles. Aucun autre artisan ne lui est présenté pour ce métier tant que vous n'avez pas répondu ; si vous refusez ou ne répondez pas sous 72 h, il peut en choisir d'autres.",
+            },
+          ],
+        },
+        {
+          id: "devis-et-signature",
+          title: "Devis et signature",
+          items: [
+            {
+              q: "Comment préparer mon devis ?",
+              a: "Ajoutez vos lignes (matériel, main-d'œuvre ou autre) avec quantité, unité et prix HT, à la main ou par la dictée intelligente ; la recherche retrouve aussi les articles déjà utilisés dans vos devis. MENAO calcule la TVA et les totaux, puis vous montre l'aperçu PDF avant l'envoi.",
+            },
+            {
+              q: "Comment fonctionne la dictée du devis ?",
+              a: "Vous citez à voix haute les fournitures, les quantités et les prix, jusqu'à 2 minutes par dictée. MENAO transforme chaque prestation en ligne chiffrée, que vous vérifiez avant d'envoyer. MENAO n'invente aucun prix : seuls ceux que vous dictez sont repris.",
+            },
+            {
+              q: "Quelles informations figurent sur le devis ?",
+              a: "MENAO met en forme le devis avec les mentions obligatoires, votre logo si vous en avez ajouté un, et votre assurance décennale, qui doit être complète et à jour pour y figurer. Chaque devis envoyé porte aussi la mention « Confidentiel », établi pour votre client et à son usage personnel.",
+            },
+            {
+              q: "Quel taux de TVA appliquer, et si je suis en franchise ?",
+              a: "Vous choisissez le taux de chaque ligne ; les taux réduits de 5,5 % et 10 % concernent les travaux dans un logement achevé depuis plus de 2 ans, sous conditions. Si votre entreprise ne facture pas la TVA, indiquez-le dans vos informations d'entreprise : vos devis portent alors la mention « TVA non applicable, art. 293 B du CGI ».",
+            },
+            {
+              q: "Comment fixer l'acompte demandé au client ?",
+              a: "À l'envoi du devis, vous choisissez le pourcentage payé à la signature ; le reste est demandé à la réception du chantier. MENAO propose 30 % par défaut, et vous pouvez enregistrer votre propre échéancier par défaut. Au-delà de 30 %, MENAO conseille au client de ne pas verser plus de 30 % avant le début des travaux, sans rien bloquer.",
+            },
+            {
+              q: "Comment mon client signe-t-il le devis, et combien de temps est-il valable ?",
+              a: "Votre client reçoit le devis dans son espace et le signe en ligne chez DocuSeal, notre prestataire de signature électronique, avec un code à usage unique. Il peut aussi demander une modification, et vous envoyez alors une nouvelle version, ou refuser le devis en indiquant pourquoi. Le devis est valable 30 jours à compter de son envoi.",
+            },
+            {
+              q: "Puis-je annuler un chantier ?",
+              a: "Oui, depuis la page du rendez-vous, en indiquant pourquoi : client injoignable, absent au rendez-vous, demande pas sérieuse ou autre raison. Ce motif reste entre vous et l'équipe MENAO ; le client est informé de l'annulation, avec votre message si vous en laissez un, et peut contacter un autre artisan. L'annulation est définitive.",
+            },
+          ],
+        },
+        {
+          id: "paiements-et-factures",
+          title: "Paiements et factures",
+          items: [
+            {
+              q: "Quand et comment ouvrir mon compte de paiement Stripe ?",
+              a: "Dès l'envoi de votre dossier à l'équipe MENAO, sans attendre sa validation. Il faut votre date de naissance, votre adresse personnelle, l'IBAN du compte professionnel qui recevra vos paiements et, si vous le souhaitez, votre site web ou votre page Facebook ou Instagram. Ces informations partent directement chez Stripe sans être enregistrées par MENAO, puis Stripe vous demande de créer votre accès et de vérifier vos informations.",
+            },
+            {
+              q: "Stripe me demande des informations ou refuse mon compte : que faire ?",
+              a: "Votre espace pro liste ce que Stripe attend encore, avec la date limite éventuelle : complétez-le avec « Compléter mes informations sur Stripe ». Si Stripe refuse l'ouverture du compte, contactez l'équipe MENAO pour trouver une solution.",
+            },
+            {
+              q: "Quand l'acompte et le solde sont-ils payés ?",
+              a: "Votre client règle l'acompte en ligne après avoir signé le devis, puis le solde après la réception des travaux, une fois les éventuelles réserves levées. Chaque paiement arrive sur votre compte Stripe, puis il est viré sur votre compte bancaire selon le calendrier de vos virements Stripe.",
+            },
+            {
+              q: "Où suivre mon argent, les frais Stripe et les remboursements ?",
+              a: "La rubrique « Votre argent » affiche le disponible, les paiements en cours, le prochain virement, les frais Stripe du mois et ce que vous avez encaissé via MENAO. Ces chiffres sont lus chez Stripe : virements, remboursements et coordonnées bancaires se gèrent dans votre propre tableau de bord Stripe.",
+            },
+            {
+              q: "Les factures sont-elles faites automatiquement ?",
+              a: "Oui. Une facture d'acompte puis une facture de solde sont émises en votre nom à chaque paiement reçu, numérotées sans interruption. Vous les retrouvez dans « Argent », onglet « Factures », avec un export CSV pour votre comptable.",
+            },
+            {
+              q: "MENAO relance-t-il mes clients ?",
+              a: "Oui : MENAO relance automatiquement votre client quand un devis attend sa signature, quand l'acompte n'est pas réglé, et pour l'inviter à donner son avis après le chantier.",
+            },
+          ],
+        },
+        {
+          id: "suivi-de-chantier",
+          title: "Suivi de chantier et réception",
+          items: [
+            {
+              q: "Que faire une fois l'acompte payé ?",
+              a: "Confirmez la date de démarrage des travaux : votre client en est informé et la date apparaît dans votre agenda. Vous pouvez la modifier ensuite si besoin.",
+            },
+            {
+              q: "Comment tenir mon client informé pendant les travaux ?",
+              a: "Une fois le chantier en cours, ajoutez des photos (10 à la fois, 10 Mo au plus chacune) et des messages dans le suivi du chantier : votre client les voit dans son espace. Vous échangez aussi avec lui par la messagerie du chantier.",
+            },
+            {
+              q: "Comment se passe la fin des travaux ?",
+              a: "Ajoutez des photos du chantier terminé, puis déclarez-le terminé : votre client est invité à réceptionner les travaux en signant le procès-verbal en ligne, avec ou sans réserves. Sans réserves, le solde lui est demandé juste après.",
+            },
+            {
+              q: "Mon client a émis des réserves : que faire ?",
+              a: "Intervenez pour les lever, ajoutez des photos des reprises dans le suivi, puis signalez la levée des réserves. Votre client vérifie, confirme la levée, et le solde lui est alors demandé.",
+            },
+            {
+              q: "Que se passe-t-il en cas de problème sur un chantier ?",
+              a: "Vous comme votre client pouvez signaler un problème depuis la page du chantier (retard, malfaçon, comportement, paiement…), photos à l'appui. Pendant un chantier en cours, ses étapes (paiements, démarrage, réception) sont suspendues jusqu'à la décision de l'équipe MENAO, qui fait reprendre le chantier ou l'annule.",
+            },
+          ],
+        },
+        {
+          id: "avis-score-menao",
+          title: "Avis, Score MENAO et classement",
+          items: [
+            {
+              q: "Qui peut me laisser un avis ?",
+              a: "Seuls vos clients ayant réalisé un chantier avec vous via MENAO, une fois les travaux réceptionnés, à raison d'un avis par chantier, marqué « Avis vérifié ». Votre client y note la qualité, le respect des délais, la communication, la propreté et le rapport qualité-prix.",
+            },
+            {
+              q: "Puis-je répondre à un avis, ou faire retirer un avis négatif ?",
+              a: "Vous pouvez répondre publiquement à chaque avis, une seule fois : votre réponse s'affiche sous l'avis, sur votre fiche. Un avis contraire aux règles peut être signalé à l'équipe MENAO ; il n'est masqué que s'il enfreint la loi ou les conditions d'utilisation, jamais au seul motif qu'il est négatif.",
+            },
+            {
+              q: "Comment est calculé mon Score MENAO ?",
+              a: "Sur 100 points : badge « Assuré et vérifié » (20), expérience (10), diplôme et qualification (10), fiche complète (10), réactivité (10) et avis des clients (40). Il s'affiche sur votre fiche et compte dans votre place quand un client cherche un artisan ; votre espace pro le détaille critère par critère.",
+            },
+            {
+              q: "Je débute sans avis : comment suis-je classé ?",
+              a: "Sans avis MENAO, le critère des avis part de la note de votre fiche Google vérifiée par l'équipe MENAO, ou de 3 sur 5, et la réactivité part d'une valeur neutre, remplacée ensuite par vos résultats réels. Une place est aussi réservée aux nouveaux artisans (validés depuis moins de 90 jours ou avec moins de 3 chantiers menés à terme) : quand aucun ne figure parmi les 5 premiers, l'un d'eux est présenté en 3e position.",
+            },
+            {
+              q: "Comment gagner des points rapidement ?",
+              a: "Faites valider votre décennale, votre RC Pro et votre attestation URSSAF pour obtenir le badge « Assuré et vérifié », indiquez votre diplôme du métier et ajoutez vos qualifications : le RGE est vérifié automatiquement avec votre SIRET, les autres (Qualibat, Qualifelec…) par l'équipe MENAO. Complétez aussi votre fiche : photo, au moins 3 photos de réalisations, une présentation de 300 caractères ou plus et vos spécialités.",
+            },
+            {
+              q: "Une formule plus chère améliore-t-elle mon classement ?",
+              a: "Non. Le classement ne dépend ni de votre formule d'abonnement ni d'un paiement. Si une mise en avant payante existait un jour, elle serait signalée par la mention « Mis en avant ».",
+            },
+            {
+              q: "Puis-je noter mes clients ?",
+              a: "Oui, après la clôture du chantier : accueil et accès au chantier, clarté du besoin et délai des paiements, avec un commentaire. Votre note n'est jamais montrée au client ni publiée ; selon le réglage en vigueur, seule l'équipe MENAO la consulte, ou les artisans qui reçoivent une demande de ce client voient la moyenne des notes, jamais votre commentaire.",
+            },
+          ],
+        },
+        {
+          id: "zone-d-intervention",
+          title: "Zone d'intervention et disponibilités",
+          items: [
+            {
+              q: "Puis-je modifier ma zone d'intervention après l'inscription ?",
+              a: "Oui, depuis « Ma fiche », rubrique « Zone d'intervention ». Vous pouvez choisir un rayon de 10 à 100 km autour de votre adresse, une liste de communes, des départements, des régions ou toute la France.",
+            },
+            {
+              q: "Choisir une région ou toute la France me pénalise-t-il ?",
+              a: "Sur une région ou toute la France, vous passez après les artisans de proximité, c'est-à-dire ceux dont la zone est un rayon, une liste de communes ou des départements. Dans chaque groupe, l'ordre suit ensuite les mêmes critères de classement.",
+            },
+            {
+              q: "Comment arrêter de recevoir des demandes pendant un moment ?",
+              a: "Dans « Mes disponibilités », mettez-vous en pause, ou déclarez vos congés et absences : vous n'apparaissez plus dans les recherches, et vos chantiers en cours comme vos rendez-vous ne changent pas. Après des congés, vous réapparaissez de vous-même le lendemain.",
+            },
+            {
+              q: "Mon carnet est plein : puis-je rester visible ?",
+              a: "Oui : indiquez à partir de quelle date vous pouvez commencer un nouveau chantier. Vous restez dans les recherches avec la mention « Disponible à partir du » et cette date ; les artisans disponibles tout de suite passent avant vous dans le classement.",
+            },
+            {
+              q: "Puis-je retrouver mon agenda MENAO dans mon agenda habituel ?",
+              a: "Oui : créez votre lien d'abonnement dans « Mes disponibilités » et ajoutez-le à Google Agenda, Apple Calendrier ou Outlook. Visites, démarrages, créneaux bloqués et absences s'y mettent à jour automatiquement, en général toutes les quelques heures. Le lien est personnel et ne contient ni adresse ni nom de client.",
+            },
+          ],
+        },
+        {
+          id: "outils-de-gestion",
+          title: "Outils de gestion et visibilité",
+          items: [
+            {
+              q: "Comment suivre mes dépenses de chantier ?",
+              a: "Dans « Argent », onglet « Dépenses », photographiez une facture ou un ticket : MENAO lit les montants pour vous, et vous les vérifiez avant d'enregistrer. Chaque dépense peut être rattachée à un chantier, et vous suivez ce qu'il reste à payer ; MENAO ne paie rien à votre place.",
+            },
+            {
+              q: "Puis-je envoyer mes factures et mes dépenses à mon comptable ?",
+              a: "Oui : enregistrez l'e-mail de votre comptable et choisissez un envoi automatique chaque mois ou chaque trimestre, ou envoyez à la main. Il reçoit vos factures et vos dépenses de la période, tableaux et pièces, par un lien de téléchargement valable 30 jours.",
+            },
+            {
+              q: "Ma fiche MENAO est-elle visible sur internet ?",
+              a: "Oui : dès que vous êtes visible des particuliers, votre fiche a sa propre adresse, à mettre sur vos devis, vos réseaux ou votre site, avec un badge à coller sur votre site. Vous choisissez si Google peut la proposer, et elle ne montre jamais votre téléphone, votre e-mail ni votre adresse.",
+            },
+            {
+              q: "À quoi servent les cartes de visite MENAO ?",
+              a: "Vous imprimez une planche de 10 cartes depuis « Mon profil » ; leur QR code mène à votre fiche, avec vos réalisations et vos avis vérifiés. Un client, même rencontré hors de MENAO, qui lance sa demande depuis votre fiche vous l'envoie à vous seul.",
+            },
+            {
+              q: "Puis-je découvrir mon espace avant de recevoir des demandes ?",
+              a: "Oui : des données d'exemple fictives (demandes, rendez-vous, devis, chantier en cours) vous montrent comment tout fonctionne, sans rien envoyer. Elles disparaissent dès votre première demande, et vous pouvez les masquer avant.",
+            },
+          ],
+        },
+        {
+          id: "compte-documents-et",
+          title: "Compte, documents et données",
+          items: [
+            {
+              q: "Pourquoi mon profil n'est-il pas visible des particuliers ?",
+              a: "Trois conditions sont nécessaires : votre dossier validé par l'équipe MENAO, un abonnement actif et un compte de paiement actif. Votre espace pro vous indique ce qui manque ; vous n'apparaissez pas non plus quand vous êtes en pause ou en congés.",
+            },
+            {
+              q: "Que se passe-t-il quand une assurance ou mon attestation URSSAF arrive à échéance ?",
+              a: "MENAO vous prévient 30, 15 puis 7 jours avant l'expiration : déposez le document à jour dans « Documents ». Si un document obligatoire expire sans renouvellement validé, votre compte est suspendu, puis réactivé dès la validation du nouveau document.",
+            },
+            {
+              q: "Comment récupérer mes données ou supprimer mon compte ?",
+              a: "Dans « Mon compte », vous téléchargez une copie de vos données (compte, demandes, chantiers, devis, paiements, messages, avis) dans un fichier JSON. Vous pouvez aussi demander la suppression de votre compte : l'équipe MENAO traite la demande sous un mois, et certains documents, comme les factures, doivent être conservés pendant une durée fixée par la loi.",
+            },
+            {
+              q: "Comment joindre l'équipe MENAO ?",
+              a: "Depuis « Aide et contact » dans « Mon profil », ou par le formulaire de contact du site : l'équipe MENAO répond sous 7 jours. Sur les pages Pro, vous pouvez aussi demander à être rappelé.",
+            },
+          ],
+        },
+      ],
     },
     /** Inscription artisan en un seul parcours (ADR 0110). */
     signUp: {

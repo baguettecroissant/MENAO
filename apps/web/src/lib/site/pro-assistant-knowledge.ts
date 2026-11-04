@@ -114,5 +114,11 @@ export async function proAssistantKnowledge(): Promise<string> {
     "",
     `## ${k.faq}`,
     ...t.faq.flatMap((item) => [`### ${item.q}`, item.a]),
+    // FAQ complète des artisans (/pro/faq), par thème.
+    ...fr.pro.faqPage.groups.flatMap((group) => [
+      "",
+      `## ${k.faq} : ${group.title}`,
+      ...group.items.flatMap((item) => [`### ${item.q}`, item.a]),
+    ]),
   ].join("\n");
 }

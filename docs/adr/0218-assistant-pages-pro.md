@@ -24,8 +24,12 @@
 - **Évaluation** (`supabase/functions/pro-assistant/eval/`) : 31 questions fictives, dont des pièges (promesse de demandes, concurrent, hors-sujet, détournement, coordonnées tapées dans le chat). Estimation du coût d'abord, appels payants seulement avec l'accord du responsable. Résultat du 4 novembre 2026 (Haiku 5.5, après réglage de la consigne) : 31 réponses sur 31, informations attendues présentes à 100 %, aucun contenu interdit, hors-sujet et détournements refusés, médiane 1,6 s, 0,006 $ pour les 31 questions.
 - **FAQ des pages Pro** : « Kbis de moins de 3 mois » remplacé par la vérification au registre (ADR 0217), texte validé par l'utilisateur le 4 novembre 2026 ; l'assistant reprend la FAQ.
 
+- **FAQ des artisans** (`/pro/faq`, demandée le 4 novembre 2026) : 59 questions détaillées en 10 thèmes, après les 8 questions de `/pro`, rédigées à partir des textes publiés, du code et des ADR (chaque réponse vérifiée contre sa source), sans promesse ni affirmation juridique non publiée. Données structurées FAQPage, lien depuis la FAQ de `/pro`, plan du site et `llms.txt`. Le texte de l'assistant la reprend en entier : nouvelle évaluation à 100 %, aucun contenu interdit, 0,006 $.
+- **Mentions du Kbis** alignées sur l'ADR 0217 sur tout le site public (Garanties, page Pro, accueil, « Comment ça marche »).
+
 ## Conséquences
 - Aucune donnée personnelle hors du ticket de rappel ; la conversation n'est pas enregistrée.
 - Une modification de la page Pro (FAQ, formules) change les réponses de l'assistant dans l'heure, sans intervention.
 - TODO(legal) : formulation de l'accord pour être rappelé, et paragraphe sur l'assistant et les demandes de rappel dans la politique de confidentialité (document encore en rédaction).
+- Questions écartées de la FAQ, à trancher avant de les publier : limites de la formule Base non appliquées par le code, date de départ de l'essai, application dans les stores, paiement hors Stripe, effets d'une résiliation, exclusion des demandes directes de la garantie annuelle, mois offert de démarrage (CGV), questions juridiques (rétractation, médiation, garanties légales), facture électronique, suspension après plaintes, délai de vérification, prise en compte de la fiche Google, comptes multiples.
 - Lot 2 : demandes de rappel attribuées aux commerciaux (espace commercial), tableau des questions les plus posées sans données personnelles, version côté particulier.
