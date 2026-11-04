@@ -258,6 +258,22 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
                     </a>
                   ),
                 },
+                // Demande de rappel (assistant des pages Pro, ADR 0218).
+                ...(ticket.contact_phone
+                  ? [
+                      {
+                        label: f.phone,
+                        value: (
+                          <a
+                            href={`tel:${ticket.contact_phone}`}
+                            className="text-primary underline-offset-2 hover:underline"
+                          >
+                            {ticket.contact_phone}
+                          </a>
+                        ),
+                      },
+                    ]
+                  : []),
               ]}
             />
             {admin && ticket.user_id && (

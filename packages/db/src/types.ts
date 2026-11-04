@@ -4635,6 +4635,7 @@ export type Database = {
           category: Database["public"]["Enums"]["dispute_category"] | null;
           chantier_id: string | null;
           contact_email: string;
+          contact_phone: string | null;
           created_at: string;
           due_at: string;
           handled_by: string | null;
@@ -4656,6 +4657,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["dispute_category"] | null;
           chantier_id?: string | null;
           contact_email: string;
+          contact_phone?: string | null;
           created_at?: string;
           due_at?: string;
           handled_by?: string | null;
@@ -4676,6 +4678,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["dispute_category"] | null;
           chantier_id?: string | null;
           contact_email?: string;
+          contact_phone?: string | null;
           created_at?: string;
           due_at?: string;
           handled_by?: string | null;
@@ -6179,6 +6182,16 @@ export type Database = {
       report_message: { Args: { p_message_id: string; p_reason: string }; Returns: string };
       report_review: { Args: { p_reason: string; p_review_id: string }; Returns: string };
       request_account_deletion: { Args: { p_message?: string }; Returns: string };
+      request_pro_callback: {
+        Args: {
+          p_city?: string;
+          p_email: string;
+          p_first_name: string;
+          p_phone: string;
+          p_trade?: string;
+        };
+        Returns: undefined;
+      };
       rge_refresh_candidates: {
         Args: { p_limit?: number };
         Returns: {
@@ -6505,7 +6518,8 @@ export type Database = {
         | "particulier_a_verifier"
         | "faux_particulier"
         | "accompagnement"
-        | "invitation_artisan";
+        | "invitation_artisan"
+        | "rappel_pro";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes" | "departements" | "regions" | "france";
@@ -6827,6 +6841,7 @@ export const Constants = {
         "faux_particulier",
         "accompagnement",
         "invitation_artisan",
+        "rappel_pro",
       ],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],

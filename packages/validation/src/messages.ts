@@ -4,6 +4,10 @@ export const messages = {
   tooLong: "Ce champ est trop long.",
   emailInvalid: "Adresse e-mail invalide.",
   phoneInvalid: "Numéro de téléphone invalide.",
+  // Demande de rappel depuis l'assistant des pages Pro (ADR 0218).
+  callbackFirstName: "Indiquez votre prénom.",
+  callbackPhone: "Indiquez un numéro de téléphone valide.",
+  callbackConsent: "Cochez la case pour que nous puissions vous rappeler.",
   passwordTooShort: "Le mot de passe doit contenir au moins 8 caractères.",
   passwordTooLong: "Le mot de passe doit contenir au plus 72 caractères.",
   siretInvalid: "Numéro SIRET invalide (14 chiffres).",

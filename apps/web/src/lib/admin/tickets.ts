@@ -56,7 +56,7 @@ export async function getTicketDetail(supabase: Client, id: string) {
   const { data: ticket } = await supabase
     .from("tickets")
     .select(
-      "id, type, status, subject, message, contact_email, user_id, project_id, chantier_id, category, due_at, resolved_at, handled_by, created_at, projects(description, ville_nom, trades(label)), reviews(id, artisan_id, author_name, score, comment, status, moderation_reason), messages(id, kind, body, hidden_at, moderation_reason), chantiers(id, title, status), ticket_messages(id, from_staff, body, storage_path, created_at)",
+      "id, type, status, subject, message, contact_email, contact_phone, user_id, project_id, chantier_id, category, due_at, resolved_at, handled_by, created_at, projects(description, ville_nom, trades(label)), reviews(id, artisan_id, author_name, score, comment, status, moderation_reason), messages(id, kind, body, hidden_at, moderation_reason), chantiers(id, title, status), ticket_messages(id, from_staff, body, storage_path, created_at)",
     )
     .eq("id", id)
     .maybeSingle();

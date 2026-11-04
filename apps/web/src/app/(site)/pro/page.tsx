@@ -24,6 +24,7 @@ import { CommissionCalculator } from "@/components/pro-landing/commission-calcul
 import { DemoVideo } from "@/components/pro-landing/demo-video";
 import { PlanComparisonTable } from "@/components/pro-landing/plan-comparison";
 import { PricingPlans } from "@/components/pro-landing/pricing-plans";
+import { ProAssistant } from "@/components/pro-landing/pro-assistant";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
@@ -464,6 +465,9 @@ export default async function ProLandingPage() {
         <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 sm:px-6">
           <SectionHeading id="pro-faq" eyebrow={t.faqEyebrow} title={t.faqTitle} />
           <FaqList items={t.faq} />
+          <TextLink href="/pro/faq" className="self-center">
+            {fr.pro.faqPage.seeAll}
+          </TextLink>
         </div>
         <FaqJsonLd items={t.faq} />
       </section>
@@ -475,6 +479,7 @@ export default async function ProLandingPage() {
         action={{ href: "/pro/inscription", label: t.hero.signUp }}
         reassurance={t.finalReassurance}
       />
+      <ProAssistant />
     </main>
   );
 }
