@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   normalizeProAssistantAnswer,
   normalizeProAssistantHistory,
+  normalizeSuggestions,
   proAssistantJsonSchema,
   proAssistantQuestionCount,
   PRO_ASSISTANT_ANSWER_MAX_LENGTH,
@@ -56,7 +57,7 @@ describe("assistant des pages Pro (ADR 0218)", () => {
 
   it("schéma : réponse et deux indicateurs obligatoires, rien d'autre", () => {
     const schema = proAssistantJsonSchema();
-    expect(schema.required).toEqual(["reponse", "sans_reponse", "hors_sujet"]);
+    expect(schema.required).toEqual(["reponse", "sans_reponse", "hors_sujet", "suggestions"]);
     expect(schema.additionalProperties).toBe(false);
   });
 
@@ -66,17 +67,24 @@ describe("assistant des pages Pro (ADR 0218)", () => {
         reponse: "## Prix\n**Base** : 150 € HT par mois.",
         sans_reponse: false,
         hors_sujet: false,
+        suggestions: [],
       }),
-    ).toEqual({ answer: "Prix\nBase : 150 € HT par mois.", suggestHuman: false });
+    ).toEqual({ answer: "Prix\nBase : 150 € HT par mois.", suggestHuman: false, suggestions: [] });
     expect(
       normalizeProAssistantAnswer({
         reponse: "Je ne sais pas.",
         sans_reponse: true,
         hors_sujet: false,
+        suggestions: [],
       })?.suggestHuman,
     ).toBe(true);
     expect(
-      normalizeProAssistantAnswer({ reponse: "  ", sans_reponse: false, hors_sujet: true }),
+      normalizeProAssistantAnswer({
+        reponse: "  ",
+        sans_reponse: false,
+        hors_sujet: true,
+        suggestions: [],
+      }),
     ).toBeNull();
   });
 
@@ -86,8 +94,27 @@ describe("assistant des pages Pro (ADR 0218)", () => {
       reponse: sentence.repeat(40),
       sans_reponse: false,
       hors_sujet: false,
+      suggestions: [],
     })?.answer;
     expect(answer?.length).toBeLessThanOrEqual(PRO_ASSISTANT_ANSWER_MAX_LENGTH);
     expect(answer?.endsWith(".")).toBe(true);
+  });
+
+  it("suggestions : courtes, terminées par « ? », sans doublon, au plus 3", () => {
+    expect(
+      normalizeSuggestions([
+        "  Et la formule   Premium ",
+        "Et la formule premium ?",
+        "",
+        "x".repeat(80),
+        "Comment je suis payé ?",
+        "Puis-je arrêter quand je veux.",
+        "Une quatrième ?",
+      ]),
+    ).toEqual([
+      "Et la formule Premium ?",
+      "Comment je suis payé ?",
+      "Puis-je arrêter quand je veux ?",
+    ]);
   });
 });

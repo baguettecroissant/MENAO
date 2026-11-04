@@ -31,7 +31,7 @@ export function ProAssistant() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label={t.openLabel}
-          className={`fixed right-4 bottom-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-pill bg-primary px-5 text-[0.9375rem] font-medium text-white shadow-raised transition hover:bg-primary-strong sm:right-6 sm:bottom-6 ${focusRing}`}
+          className={`animate-menao-fade-up fixed right-4 bottom-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-pill bg-primary px-5 text-[0.9375rem] font-medium text-white shadow-raised transition hover:bg-primary-strong sm:right-6 sm:bottom-6 ${focusRing}`}
         >
           <MessageCircle aria-hidden="true" className="size-5" />
           {t.open}

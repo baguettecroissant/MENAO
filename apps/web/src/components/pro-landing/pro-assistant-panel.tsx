@@ -29,9 +29,15 @@ const f = t.callbackForm;
 // Réponses immédiates : celles de la FAQ de la page Pro.
 const faq = fr.pro.landing.faq;
 
-type Message = ProAssistantMessage & { suggestHuman?: boolean };
+type Message = ProAssistantMessage & { suggestHuman?: boolean; suggestions?: readonly string[] };
 
-/** Conversation et demande de rappel (ADR 0218). L'historique reste dans la page. */
+const quickLabels: readonly string[] = t.quick.map((item) => item.label);
+
+/**
+ * Conversation et demande de rappel (ADR 0218). L'historique reste dans la page. Plein écran sur
+ * téléphone, fenêtre en bas à droite sur grand écran ; questions de relance sous la dernière
+ * réponse.
+ */
 export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
   const [view, setView] = useState<"chat" | "callback">("chat");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,12 +53,23 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+  // Plein écran sur téléphone : la page derrière ne défile plus.
+  useEffect(() => {
+    if (!window.matchMedia("(max-width: 39.99rem)").matches) return;
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = previous;
+    };
+  }, []);
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, pending]);
 
   const asked = messages.filter((m) => m.role === "user").length;
   const limitReached = stopped || asked >= PRO_ASSISTANT_MAX_QUESTIONS;
+  const askedLabels = new Set(messages.filter((m) => m.role === "user").map((m) => m.text));
 
   async function ask(text: string) {
     const clean = text.trim();
@@ -65,12 +82,18 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
       status: string;
       answer?: string;
       suggestHuman?: boolean;
+      suggestions?: string[];
     }>("pro-assistant", { method: "POST", body: { question: clean, history } });
     setPending(false);
     if (!error && data?.status === "ok" && data.answer) {
       setMessages((current) => [
         ...current,
-        { role: "assistant", text: data.answer ?? "", suggestHuman: data.suggestHuman ?? false },
+        {
+          role: "assistant",
+          text: data.answer ?? "",
+          suggestHuman: data.suggestHuman ?? false,
+          suggestions: data.suggestions ?? [],
+        },
       ]);
       return;
     }
@@ -82,15 +105,22 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
     ]);
   }
 
-  function quick(index: number) {
-    const item = t.quick[index];
+  function quick(label: string) {
+    const item = t.quick.find((q) => q.label === label);
     const answer = item ? faq[item.faq]?.a : undefined;
-    if (!item || !answer || pending) return;
+    if (!item || !answer || pending || limitReached) return;
+    // Après une réponse immédiate : les autres questions fréquentes pas encore posées.
+    const remaining = quickLabels.filter((l) => l !== label && !askedLabels.has(l));
     setMessages((current) => [
       ...current,
-      { role: "user", text: item.label },
-      { role: "assistant", text: answer },
+      { role: "user", text: label },
+      { role: "assistant", text: answer, suggestions: remaining.slice(0, 3) },
     ]);
+  }
+
+  function pick(text: string) {
+    if (quickLabels.includes(text)) quick(text);
+    else void ask(text);
   }
 
   function submit(event: FormEvent) {
@@ -98,23 +128,31 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
     void ask(question);
   }
 
+  const last = messages[messages.length - 1];
+
   return (
     <section
       role="dialog"
+      aria-modal="true"
       aria-labelledby="pro-assistant-title"
-      className="fixed inset-x-2 bottom-2 z-50 flex max-h-[85dvh] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-raised sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[24rem] sm:max-h-[min(40rem,85dvh)]"
+      className="animate-menao-assistant fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-surface sm:inset-auto sm:right-6 sm:bottom-6 sm:h-auto sm:max-h-[min(42rem,85dvh)] sm:w-[25rem] sm:rounded-card sm:border sm:border-border sm:shadow-raised"
     >
-      <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-        <LogoMark className="size-7" />
-        <h2 id="pro-assistant-title" className="flex-1 font-medium">
-          {t.title}
-        </h2>
+      <header className="flex items-center gap-3 bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_50%,#4869f6_100%)] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-white/15">
+          <LogoMark tone="white" className="size-6" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <h2 id="pro-assistant-title" className="font-medium">
+            {t.title}
+          </h2>
+          <p className="text-xs text-white/75">{t.subtitle}</p>
+        </div>
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label={t.close}
-          className={`inline-flex size-10 items-center justify-center rounded-pill text-muted-foreground hover:bg-background ${focusRing}`}
+          className={`inline-flex size-10 items-center justify-center rounded-pill text-white/90 hover:bg-white/15 ${focusRing}`}
         >
           <X aria-hidden="true" className="size-5" />
         </button>
@@ -124,25 +162,15 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
         <CallbackForm onBack={() => setView("chat")} />
       ) : (
         <>
-          <div ref={listRef} className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+          <div
+            ref={listRef}
+            className="flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4"
+          >
             <p className="text-xs text-subtle-foreground">{t.aiNotice}</p>
             <Bubble role="assistant">{t.greeting}</Bubble>
-            {messages.length === 0 && (
-              <div className="flex flex-wrap gap-2">
-                {t.quick.map((item, index) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => quick(index)}
-                    className={`min-h-10 rounded-pill border border-border bg-surface px-3.5 text-sm transition hover:border-primary/40 hover:text-primary-strong ${focusRing}`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            {messages.length === 0 && <Chips items={quickLabels} onPick={pick} />}
             {messages.map((message, index) => (
-              <div key={index} className="flex flex-col gap-2">
+              <div key={index} className="animate-menao-fade-up flex flex-col gap-2">
                 <Bubble role={message.role}>{message.text}</Bubble>
                 {message.suggestHuman && (
                   <div className="flex flex-wrap gap-2">
@@ -154,16 +182,23 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
                     </ButtonLink>
                   </div>
                 )}
+                {message === last &&
+                  !pending &&
+                  !limitReached &&
+                  message.suggestions &&
+                  message.suggestions.length > 0 && (
+                    <Chips
+                      label={t.suggestionsLabel}
+                      items={message.suggestions.filter((s) => !askedLabels.has(s))}
+                      onPick={pick}
+                    />
+                  )}
               </div>
             ))}
-            {pending && (
-              <p role="status" className="text-sm text-muted-foreground">
-                {t.thinking}
-              </p>
-            )}
+            {pending && <Typing />}
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-border px-4 py-3">
+          <div className="flex flex-col gap-3 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {!limitReached && (
               <form onSubmit={submit} className="flex items-end gap-2">
                 <label htmlFor="pro-assistant-question" className="sr-only">
@@ -176,13 +211,14 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
                   maxLength={PRO_ASSISTANT_QUESTION_MAX_LENGTH}
                   placeholder={t.placeholder}
                   autoComplete="off"
+                  enterKeyHint="send"
                   className={inputClasses}
                 />
                 <button
                   type="submit"
                   disabled={pending || !question.trim()}
                   aria-label={t.send}
-                  className={`inline-flex size-12 shrink-0 items-center justify-center rounded-pill bg-primary text-white transition hover:bg-primary-strong disabled:opacity-50 ${focusRing}`}
+                  className={`inline-flex size-12 shrink-0 items-center justify-center rounded-pill bg-primary text-white transition hover:bg-primary-strong active:scale-95 disabled:opacity-50 ${focusRing}`}
                 >
                   <ArrowUp aria-hidden="true" className="size-5" />
                 </button>
@@ -205,6 +241,56 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
         </>
       )}
     </section>
+  );
+}
+
+/** Questions à poser d'un toucher (questions fréquentes, puis relances proposées). */
+function Chips({
+  items,
+  onPick,
+  label,
+}: {
+  items: readonly string[];
+  onPick: (text: string) => void;
+  label?: string;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      {label && <p className="text-xs text-subtle-foreground">{label}</p>}
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => onPick(item)}
+            className={`min-h-10 rounded-pill border border-primary/25 bg-primary-soft px-3.5 text-left text-sm text-primary-strong transition hover:border-primary/50 active:scale-[0.98] ${focusRing}`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** « L'assistant écrit… » : trois points qui s'animent (fixes si les animations sont réduites). */
+function Typing() {
+  return (
+    <p
+      role="status"
+      className="animate-menao-fade-up flex items-center gap-1 self-start rounded-card rounded-bl-md bg-background px-4 py-3.5"
+    >
+      <span className="sr-only">{t.thinking}</span>
+      {[0, 150, 300].map((delay) => (
+        <span
+          key={delay}
+          aria-hidden="true"
+          className="animate-menao-typing size-2 rounded-pill bg-muted-foreground"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+      ))}
+    </p>
   );
 }
 

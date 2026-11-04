@@ -27,6 +27,10 @@
 - **FAQ des artisans** (`/pro/faq`, demandée le 4 novembre 2026) : 59 questions détaillées en 10 thèmes, après les 8 questions de `/pro`, rédigées à partir des textes publiés, du code et des ADR (chaque réponse vérifiée contre sa source), sans promesse ni affirmation juridique non publiée. Données structurées FAQPage, lien depuis la FAQ de `/pro`, plan du site et `llms.txt`. Le texte de l'assistant la reprend en entier : nouvelle évaluation à 100 %, aucun contenu interdit, 0,006 $.
 - **Mentions du Kbis** alignées sur l'ADR 0217 sur tout le site public (Garanties, page Pro, accueil, « Comment ça marche »).
 
+- **Fenêtre** (demande du 4 novembre 2026) : plein écran sur téléphone (moins de 640 px de large, page derrière figée), fenêtre en bas à droite sur grand écran ; en-tête aux couleurs de la marque ; animations discrètes sans rebond (feuille qui monte, apparition des messages, trois points pendant la réponse), coupées si « Réduire les animations » est activé.
+- **Questions de relance** : l'IA propose 2 ou 3 questions courtes sous sa réponse (`suggestions`, nettoyées dans `normalizeSuggestions`) ; après une réponse immédiate, les autres questions fréquentes. Évaluation : relances dans 31 réponses sur 31, toujours 100 % et aucun contenu interdit, 0,01 $.
+- **Pré-lancement** : `/assistant-pro.txt` fait partie des adresses ouvertes (`lib/site/prelaunch.ts`) ; la fonction refuse une page HTML comme texte de référence.
+
 ## Conséquences
 - Aucune donnée personnelle hors du ticket de rappel ; la conversation n'est pas enregistrée.
 - Une modification de la page Pro (FAQ, formules) change les réponses de l'assistant dans l'heure, sans intervention.

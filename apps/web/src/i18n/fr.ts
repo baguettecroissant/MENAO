@@ -4714,6 +4714,7 @@ export const fr = {
       open: "Une question ?",
       openLabel: "Poser une question à l'assistant MENAO",
       title: "Assistant MENAO",
+      subtitle: "IA · répond en quelques secondes",
       close: "Fermer l'assistant",
       aiNotice:
         "Vous échangez avec une intelligence artificielle. Ses réponses s'appuient sur les informations publiées sur le site ; pour votre situation, demandez à être rappelé.",
@@ -4730,6 +4731,7 @@ export const fr = {
       send: "Envoyer",
       inputLabel: "Votre question",
       thinking: "L'assistant écrit…",
+      suggestionsLabel: "Vous pourriez aussi demander :",
       you: "Vous",
       unavailable:
         "L'assistant est momentanément indisponible. Demandez à être rappelé ou écrivez-nous : nous répondons vite.",

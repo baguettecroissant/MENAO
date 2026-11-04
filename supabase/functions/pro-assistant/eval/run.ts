@@ -123,6 +123,7 @@ let noAnswerTotal = 0;
 let offTopicOk = 0;
 let offTopicTotal = 0;
 let formIssues = 0;
+let withSuggestions = 0;
 run: for (let pass = 1; pass <= passes; pass++) {
   for (const c of list) {
     const run: AiRun = { function_name: "pro-assistant", model, outcome: "erreur", latency_ms: 0 };
@@ -164,6 +165,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
       /\bMenao\b/.test(text) ? "Menao en minuscules" : null,
     ].filter(Boolean);
     formIssues += form.length;
+    if (result.suggestions.length) withSuggestions += 1;
     rows.push({
       id: c.id,
       pass,
@@ -171,6 +173,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
       question: c.question,
       reponse: text,
       humain: result.suggestHuman,
+      suggestions: result.suggestions,
       manquants: missing,
       interdits: found,
       forme: form,
@@ -181,7 +184,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
       form.length ? `⚠ ${form.join(", ")}` : "",
     ].filter(Boolean);
     console.log(
-      `${c.id} (${run.latency_ms} ms)${result.suggestHuman ? " [humain]" : ""} : ${text.replace(/\n/g, " ")}${flags.length ? `  ${flags.join("  ")}` : ""}`,
+      `${c.id} (${run.latency_ms} ms)${result.suggestHuman ? " [humain]" : ""} : ${text.replace(/\n/g, " ")}${result.suggestions.length ? `  → ${result.suggestions.join(" | ")}` : ""}${flags.length ? `  ${flags.join("  ")}` : ""}`,
     );
     if ((await spentUsd()) - before > ceilingUsd) {
       console.log(`Plafond de ${ceilingUsd} $ atteint : arrêt.`);
@@ -204,6 +207,9 @@ console.log(`Contenus interdits trouvés : ${forbidden}.`);
 console.log(`Sans réponse, échange humain proposé : ${noAnswerOk}/${noAnswerTotal}.`);
 console.log(`Hors sujet repéré : ${offTopicOk}/${offTopicTotal}.`);
 console.log(`Problèmes de forme : ${formIssues}.`);
+console.log(
+  `Réponses avec questions de relance : ${withSuggestions}/${latencies.length - failures}.`,
+);
 console.log(`Temps de réponse : médiane ${quantile(0.5)} ms, 95 % sous ${quantile(0.95)} ms.`);
 console.log(`Coût réel : ${cost.toFixed(4)} $.`);
 if (outputPath) {
