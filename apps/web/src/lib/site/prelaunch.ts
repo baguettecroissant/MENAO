@@ -40,6 +40,8 @@ const OPEN = [
   // Manifeste de l'espace commercial (ADR 0211) : lu par le téléphone sans cookie.
   "commercial\\.webmanifest",
   "robots\\.txt",
+  // Texte de référence de l'assistant des pages Pro (ADR 0218) : lu par l'Edge Function, sans cookie.
+  "assistant-pro\\.txt",
 ];
 
 /** Réécritures « beforeFiles » de next.config : aucune si le mode est désactivé. */
