@@ -66,6 +66,9 @@ export const NOTIFICATION_TYPES = [
   "avis_reponse",
   "demarrage_rappel",
   "filleul_valide",
+  // Relances de l'inscription : validé pas encore visible, compte Google ou Apple (ADR 0219).
+  "activation_relance",
+  "finalisation_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -91,6 +94,8 @@ export type EmailContext = {
 
 export const EMAIL_FOOTER =
   "Vous recevez cet e-mail car vous avez un compte MENAO. Message envoyé automatiquement : merci de ne pas y répondre.";
+/** Lien du pied de page vers les préférences d'e-mail (page /notifications, ADR 0219). */
+export const EMAIL_PREFERENCES_LABEL = "Gérer mes e-mails";
 
 const PARIS = "Europe/Paris";
 const dayFormat = new Intl.DateTimeFormat("fr-FR", {
@@ -213,6 +218,29 @@ function moment(iso: string | null): { day: string; time: string } | null {
 }
 
 const hello = (firstName: string | null) => (firstName ? `Bonjour ${firstName},` : "Bonjour,");
+
+/** Étapes de l'inscription encore à faire (relances, ADR 0219), dans l'ordre du parcours. */
+const SIGNUP_STEP_LABELS: Record<string, string> = {
+  entreprise: "les informations de votre entreprise",
+  metiers: "vos métiers",
+  zone: "votre zone d'intervention",
+  charte: "la charte qualité",
+  documents: "vos documents",
+  profil: "votre présentation",
+  paiements: "l'activation de vos paiements",
+  formule: "le choix de votre formule",
+};
+function missingSteps(data: Record<string, unknown>): string[] {
+  const value = data.manque;
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((step) => (typeof step === "string" ? SIGNUP_STEP_LABELS[step] : undefined))
+    .filter((label): label is string => typeof label === "string");
+}
+const listing = (items: readonly string[]) =>
+  items.length <= 1
+    ? (items[0] ?? "")
+    : `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}`;
 
 /** Guillemets français avec espaces insécables (jamais de « » » seul en début de ligne). */
 export const quoted = (value: string) => `«\u00a0${value}\u00a0»`;
@@ -657,6 +685,9 @@ export function notificationContent(
       // « Faire vérifier mon entreprise ». Le texte suit l'état du dossier.
       const etape = integer(data, "etape") ?? 1;
       const cta = { label: "Reprendre mon inscription", url: link("/pro/onboarding") };
+      // Étapes manquantes jointes depuis l'ADR 0219.
+      const remaining = missingSteps(data);
+      const remainingLine = remaining.length > 0 ? `Il vous reste : ${listing(remaining)}.` : null;
       if (data.complement === true) {
         return {
           subject: "Votre dossier MENAO attend vos compléments",
@@ -693,7 +724,8 @@ export function notificationContent(
           paragraphs: [
             hello(ctx.firstName),
             "Votre profil MENAO est créé, mais votre entreprise n'est pas encore vérifiée : les clients de votre secteur ne le voient pas.",
-            "Ajoutez vos documents et signez la charte qualité : tout est enregistré au fur et à mesure, vous reprenez là où vous en étiez.",
+            remainingLine ??
+              "Ajoutez vos documents et signez la charte qualité : tout est enregistré au fur et à mesure, vous reprenez là où vous en étiez.",
             "C'est notre dernier rappel. Votre inscription reste accessible depuis votre espace pro.",
           ],
           quote: null,
@@ -707,8 +739,9 @@ export function notificationContent(
           title: "Vos documents en photo",
           paragraphs: [
             hello(ctx.firstName),
-            "Pour faire vérifier votre entreprise, une photo de chaque document suffit : Kbis, attestations d'assurance décennale et de responsabilité civile, pièce d'identité.",
+            "Pour faire vérifier votre entreprise, une photo de chaque document suffit : attestations d'assurance décennale et de responsabilité civile, attestation URSSAF, pièce d'identité. Votre entreprise est vérifiée au registre : le Kbis n'est demandé que si cette vérification échoue.",
             "Prenez-les depuis votre téléphone, un document à la fois. Vous pouvez vous arrêter et reprendre plus tard.",
+            ...(remainingLine ? [remainingLine] : []),
           ],
           quote: null,
           cta,
@@ -721,10 +754,79 @@ export function notificationContent(
         paragraphs: [
           hello(ctx.firstName),
           "Votre profil MENAO est créé. Il reste à faire vérifier votre entreprise : vos documents en photo et la charte qualité, en quelques minutes.",
+          ...(remainingLine ? [remainingLine] : []),
           "Tout est enregistré au fur et à mesure : vous reprenez là où vous en étiez.",
         ],
         quote: null,
         cta,
+      };
+    }
+    case "activation_relance": {
+      // Dossier validé, profil pas encore visible (ADR 0219) : paiements et/ou formule, trois
+      // relances au plus. E-mail seulement : la formule se choisit sur le web (règle 10).
+      const etape = integer(data, "etape") ?? 1;
+      const steps = Array.isArray(data.manque) ? data.manque : [];
+      const needsPayments = steps.includes("paiements");
+      const needsPlan = steps.includes("formule");
+      const todo = [
+        needsPayments && "activer vos paiements (votre compte Stripe, à votre nom)",
+        needsPlan && "choisir votre formule, avec 2 mois d'essai gratuits",
+      ].filter((step): step is string => typeof step === "string");
+      const cta = {
+        label: needsPayments ? "Activer mes paiements" : "Choisir ma formule",
+        url: link(needsPayments ? "/pro/onboarding/paiements" : "/pro/onboarding/formule"),
+      };
+      const what =
+        todo.length > 0 ? `il vous reste à ${todo.join(" et à ")}` : "il vous reste une étape";
+      if (etape >= 3) {
+        return {
+          subject: "Dernier rappel : votre profil MENAO n'est pas encore visible",
+          preview:
+            "Votre entreprise est vérifiée : terminez votre inscription pour recevoir des demandes.",
+          title: "Votre profil n'est pas encore visible",
+          paragraphs: [
+            hello(ctx.firstName),
+            `Votre entreprise est vérifiée, mais les particuliers de votre zone ne voient pas encore votre profil : ${what}.`,
+            "C'est notre dernier rappel. Votre inscription reste accessible depuis votre espace pro.",
+          ],
+          quote: null,
+          cta,
+        };
+      }
+      return {
+        subject:
+          etape === 2
+            ? "Plus qu'une étape pour recevoir vos premières demandes"
+            : "Votre entreprise est vérifiée : terminez votre inscription",
+        preview: "Votre profil apparaîtra auprès des particuliers de votre zone.",
+        title: etape === 2 ? "Plus qu'une étape" : "Votre entreprise est vérifiée",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre dossier est validé. Pour apparaître dans les recherches des particuliers de votre zone, ${what}.`,
+          "Vos clients vous paient directement sur votre compte : MENAO ne prend aucune commission sur vos chantiers.",
+        ],
+        quote: null,
+        cta,
+      };
+    }
+    case "finalisation_relance": {
+      // Compte créé avec Google ou Apple, jamais finalisé (ADR 0219) : deux relances au plus.
+      const etape = integer(data, "etape") ?? 1;
+      return {
+        subject:
+          etape >= 2
+            ? "Dernier rappel : votre compte MENAO n'est pas terminé"
+            : "Votre compte MENAO n'est pas terminé",
+        preview: "Quelques informations suffisent pour terminer la création de votre compte.",
+        title: "Terminez la création de votre compte",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Vous avez commencé à créer votre compte MENAO, mais il n'est pas encore terminé.",
+          "Quelques informations suffisent : vous reprenez en un instant, avec le même compte Google ou Apple.",
+          ...(etape >= 2 ? ["C'est notre dernier rappel."] : []),
+        ],
+        quote: null,
+        cta: { label: "Terminer mon compte", url: link("/finaliser-compte") },
       };
     }
     case "niveau_atteint": {

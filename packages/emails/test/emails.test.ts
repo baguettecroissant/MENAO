@@ -1,6 +1,7 @@
 import { Constants } from "@menao/db";
 import { describe, expect, it } from "vitest";
 import {
+  EMAIL_FOOTER,
   NOTIFICATION_TYPES,
   messagePushContent,
   notificationContent,
@@ -539,6 +540,51 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("relances de l'inscription : étapes manquantes listées, sans Kbis exigé (ADR 0219)", () => {
+    const withSteps = notificationContent(
+      "inscription_relance",
+      { etape: 1, manque: ["charte", "documents", "inconnue"] },
+      ctx,
+    );
+    expect(withSteps.paragraphs).toContain("Il vous reste : la charte qualité et vos documents.");
+    const photos = notificationContent("inscription_relance", { etape: 2 }, ctx);
+    expect(photos.paragraphs.join(" ")).toContain("le Kbis n'est demandé que si");
+  });
+
+  it("relance d'activation (ADR 0219) : paiements puis formule, dernier rappel à la troisième", () => {
+    const both = notificationContent(
+      "activation_relance",
+      { etape: 1, manque: ["paiements", "formule"] },
+      ctx,
+    );
+    expect(both.subject).toBe("Votre entreprise est vérifiée : terminez votre inscription");
+    expect(both.paragraphs[1]).toContain("activer vos paiements");
+    expect(both.paragraphs[1]).toContain("choisir votre formule");
+    expect(both.cta).toEqual({
+      label: "Activer mes paiements",
+      url: "https://menao.example/pro/onboarding/paiements",
+    });
+    const plan = notificationContent("activation_relance", { etape: 2, manque: ["formule"] }, ctx);
+    expect(plan.cta).toEqual({
+      label: "Choisir ma formule",
+      url: "https://menao.example/pro/onboarding/formule",
+    });
+    const last = notificationContent("activation_relance", { etape: 3, manque: ["formule"] }, ctx);
+    expect(last.subject).toBe("Dernier rappel : votre profil MENAO n'est pas encore visible");
+  });
+
+  it("relance de finalisation (ADR 0219) : compte Google ou Apple, deux relances", () => {
+    const first = notificationContent("finalisation_relance", { etape: 1 }, ctx);
+    expect(first.subject).toBe("Votre compte MENAO n'est pas terminé");
+    expect(first.cta).toEqual({
+      label: "Terminer mon compte",
+      url: "https://menao.example/finaliser-compte",
+    });
+    expect(notificationContent("finalisation_relance", { etape: 2 }, ctx).subject).toBe(
+      "Dernier rappel : votre compte MENAO n'est pas terminé",
+    );
+  });
+
   it("relances d'une demande sans réponse (ADR 0156) : à 24 h, puis dernier rappel à 48 h", () => {
     const requestId = "11111111-1111-4111-8111-111111111111";
     const data = {
@@ -951,8 +997,11 @@ describe("rendu HTML et texte", () => {
           { ...ids, titre: "Prises", artisan: "Xavier", rendez_vous: "2026-02-20T15:30:00Z" },
           ctx,
         ),
+        `${EMAIL_FOOTER}\nGérer mes e-mails : https://menao.example/notifications`,
       ),
     );
+    // Lien vers les préférences d'e-mail en pied de page (ADR 0219).
+    expect(email.html).toContain('href="https://menao.example/notifications"');
   });
 
   it("échappe les données saisies par les utilisateurs", () => {

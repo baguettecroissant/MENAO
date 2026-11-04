@@ -5,11 +5,12 @@ import { Head } from "@react-email/head";
 import { Heading } from "@react-email/heading";
 import { Hr } from "@react-email/hr";
 import { Html } from "@react-email/html";
+import { Link } from "@react-email/link";
 import { Preview } from "@react-email/preview";
 import { Section } from "@react-email/section";
 import { Text } from "@react-email/text";
 import { colors } from "@menao/ui-tokens";
-import { EMAIL_FOOTER, quoted, type EmailContent } from "./content.ts";
+import { EMAIL_FOOTER, EMAIL_PREFERENCES_LABEL, quoted, type EmailContent } from "./content.ts";
 
 // Polices système : les messageries ignorent le plus souvent les polices web.
 const font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -29,11 +30,14 @@ export function NotificationEmail({
   content,
   siteUrl = "",
   footer = EMAIL_FOOTER,
+  preferencesUrl,
 }: {
   content: EmailContent;
   siteUrl?: string;
   /** Pied de page : par défaut celui des titulaires d'un compte MENAO. */
   footer?: string;
+  /** Lien vers les préférences d'e-mail (notifications des titulaires d'un compte, ADR 0219). */
+  preferencesUrl?: string;
 }) {
   const base = siteUrl.replace(/\/+$/, "");
   return (
@@ -179,6 +183,14 @@ export function NotificationEmail({
             }}
           >
             {footer}
+            {preferencesUrl && (
+              <>
+                {" "}
+                <Link href={preferencesUrl} style={{ color: colors["muted-foreground"] }}>
+                  {EMAIL_PREFERENCES_LABEL}
+                </Link>
+              </>
+            )}
           </Text>
         </Container>
       </Body>

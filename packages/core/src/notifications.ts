@@ -27,16 +27,24 @@ export const OPTIONAL_NOTIFICATIONS = {
     // Devis sans réponse, démarrage des travaux demain (ADR 0183).
     "devis_relance",
     "demarrage_rappel",
+    // Relances de l'inscription : validé pas encore visible, compte non finalisé (ADR 0219).
+    "activation_relance",
+    "finalisation_relance",
   ],
 } as const;
 export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;
 
 /**
  * Notifications envoyées par e-mail seulement, jamais affichées dans l'application ni en push :
- * le paiement de l'abonnement artisan (CLAUDE.md règle 10, ADR 0158) et le mois offert de
- * démarrage (ADR 0166).
+ * le paiement de l'abonnement artisan (CLAUDE.md règle 10, ADR 0158), le mois offert de
+ * démarrage (ADR 0166) et la relance d'activation, qui renvoie vers le choix de la formule
+ * (ADR 0219).
  */
-export const WEB_ONLY_NOTIFICATIONS: readonly string[] = ["abonnement_impaye", "mois_offert"];
+export const WEB_ONLY_NOTIFICATIONS: readonly string[] = [
+  "abonnement_impaye",
+  "mois_offert",
+  "activation_relance",
+];
 export type EmailPreferences = Record<EmailPreferenceKey, boolean>;
 
 /** Catégorie d'une notification : facultative (activité, rappels) ou transactionnelle. */

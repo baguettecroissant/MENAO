@@ -5340,6 +5340,18 @@ export type Database = {
         Args: { p_active: boolean; p_code: string; p_kind: string };
         Returns: undefined;
       };
+      admin_stalled_signups: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_id: string;
+          depuis: string;
+          derniere_relance: string;
+          entreprise: string;
+          etat: string;
+          manque: string[];
+          relances: number;
+        }[];
+      };
       admin_subscription_counts: { Args: { p_query?: string }; Returns: Json };
       admin_subscription_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_subscriptions: {
@@ -5897,6 +5909,7 @@ export type Database = {
       my_commercial_signups: {
         Args: Record<PropertyKey, never>;
         Returns: {
+          manque: string[];
           raison_sociale: string;
           signed_up_at: string;
           status: Database["public"]["Enums"]["artisan_status"];
@@ -6479,7 +6492,9 @@ export type Database = {
         | "devis_expire"
         | "avis_reponse"
         | "demarrage_rappel"
-        | "filleul_valide";
+        | "filleul_valide"
+        | "activation_relance"
+        | "finalisation_relance";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -6801,6 +6816,8 @@ export const Constants = {
         "avis_reponse",
         "demarrage_rappel",
         "filleul_valide",
+        "activation_relance",
+        "finalisation_relance",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
