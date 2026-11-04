@@ -4704,6 +4704,76 @@ export const fr = {
         "Créez votre profil en quelques minutes : l'équipe MENAO s'occupe de la vérification.",
       finalReassurance: ["2 mois offerts", "Sans engagement", "Sans commission"],
     },
+    /** Assistant des pages Pro (F-69, ADR 0218). */
+    assistant: {
+      open: "Une question ?",
+      openLabel: "Poser une question à l'assistant MENAO",
+      title: "Assistant MENAO",
+      close: "Fermer l'assistant",
+      aiNotice:
+        "Vous échangez avec une intelligence artificielle. Ses réponses s'appuient sur les informations publiées sur le site ; pour votre situation, demandez à être rappelé.",
+      greeting:
+        "Bonjour ! Je réponds à vos questions sur MENAO : prix, inscription, demandes de chantier, paiements. Que voulez-vous savoir ?",
+      // Questions à réponse immédiate : la réponse est celle de la FAQ de la page (index).
+      quick: [
+        { label: "Combien ça coûte ?", faq: 0 },
+        { label: "Quels documents pour m'inscrire ?", faq: 4 },
+        { label: "Comment je reçois des demandes ?", faq: 3 },
+        { label: "Vous prenez une commission ?", faq: 1 },
+      ],
+      placeholder: "Posez votre question…",
+      send: "Envoyer",
+      inputLabel: "Votre question",
+      thinking: "L'assistant écrit…",
+      you: "Vous",
+      unavailable:
+        "L'assistant est momentanément indisponible. Demandez à être rappelé ou écrivez-nous : nous répondons vite.",
+      limit:
+        "Pour aller plus loin, le plus simple est d'en parler avec l'équipe : demandez à être rappelé.",
+      signUp: "Créer mon compte pro",
+      callback: "Être rappelé",
+      write: "Écrire à l'équipe",
+      callbackForm: {
+        title: "Être rappelé par l'équipe MENAO",
+        intro: "Laissez vos coordonnées : un membre de l'équipe vous rappelle dès que possible.",
+        firstName: "Prénom",
+        phone: "Téléphone",
+        email: "E-mail",
+        trade: "Métier",
+        city: "Commune",
+        optional: "(facultatif)",
+        // TODO(legal) : formulation du consentement et information RGPD à faire valider.
+        consent:
+          "J'accepte d'être rappelé par l'équipe MENAO au sujet de mon inscription. Mes coordonnées servent uniquement à ce rappel.",
+        privacy: "Vos données",
+        submit: "Demander à être rappelé",
+        sent: "C'est noté ! L'équipe MENAO vous rappelle dès que possible.",
+        back: "Revenir à la conversation",
+      },
+      // Texte de référence de l'assistant (/assistant-pro.txt) : titres des parties.
+      knowledge: {
+        title: "MENAO : informations publiées pour les artisans",
+        intro:
+          "Textes publiés sur les pages Pro de menao.fr, seule source des réponses de l'assistant.",
+        presentation: "Présentation",
+        steps: "Comment ça marche",
+        features: "Outils inclus",
+        commission: "Zéro commission",
+        fairness: "Un réseau juste",
+        plans: "Formules et prix",
+        planPrice: (name: string, monthly: string, yearly: string) =>
+          `${name} : ${monthly} HT par mois au mois, sans engagement ; ${yearly} HT par mois à l'année.`,
+        planSoon: "Formule bientôt disponible.",
+        compare: "Comparatif des fonctionnalités par formule",
+        included: "inclus",
+        notIncluded: "non inclus",
+        faq: "Questions fréquentes",
+        links: "Liens utiles",
+        signUpLink: "Créer son compte pro",
+        rankingLink: "Critères de classement",
+        contactLink: "Contacter l'équipe",
+      },
+    },
     /** Inscription artisan en un seul parcours (ADR 0110). */
     signUp: {
       title: "Créer mon profil professionnel",
@@ -7422,6 +7492,7 @@ export const fr = {
         "suggest-need": "Suggestions de saisie",
         "describe-photo": "Description des photos",
         "read-expense": "Lecture des factures fournisseurs",
+        "pro-assistant": "Assistant des pages Pro",
       } as Record<string, string>,
       models: { title: "Par modèle", model: "Modèle", calls: "Appels", failures: "Échecs" },
       daily: {
@@ -7469,6 +7540,7 @@ export const fr = {
           "Nouvel artisan à accompagner : demandes reçues sans être choisi (alerte automatique)",
         invitation_artisan:
           "Invitation d'un artisan par un client : le rappeler (« Un de vos clients vous recommande »)",
+        rappel_pro: "Artisan à rappeler (demande faite depuis l'assistant des pages Pro)",
       },
       dispute: {
         chantier: (title: string, status: string) => `Chantier : ${title} (${status})`,

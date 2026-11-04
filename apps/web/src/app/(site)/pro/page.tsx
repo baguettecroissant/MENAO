@@ -24,6 +24,7 @@ import { CommissionCalculator } from "@/components/pro-landing/commission-calcul
 import { DemoVideo } from "@/components/pro-landing/demo-video";
 import { PlanComparisonTable } from "@/components/pro-landing/plan-comparison";
 import { PricingPlans } from "@/components/pro-landing/pricing-plans";
+import { ProAssistant } from "@/components/pro-landing/pro-assistant";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
@@ -475,6 +476,7 @@ export default async function ProLandingPage() {
         action={{ href: "/pro/inscription", label: t.hero.signUp }}
         reassurance={t.finalReassurance}
       />
+      <ProAssistant />
     </main>
   );
 }

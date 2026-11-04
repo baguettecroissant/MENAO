@@ -1,9 +1,9 @@
 "use server";
 
-import { messages, siretSchema } from "@menao/validation";
+import { messages, proCallbackSchema, siretSchema } from "@menao/validation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
-import { text, type FormState } from "@/lib/auth/form";
+import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/server";
 
 const contactSchema = z.object({
@@ -40,6 +40,32 @@ export async function sendContactMessage(_prev: FormState, formData: FormData): 
   const { data: auth } = await supabase.auth.getClaims();
   const follow = Boolean(auth && !auth.claims.is_anonymous);
   return { success: fr.pages.contact.sent, ...(follow ? { values: { suivi: "1" } } : {}) };
+}
+
+/**
+ * « Être rappelé » depuis l'assistant des pages Pro (ADR 0218) : ticket rappel_pro pour l'équipe
+ * (2 demandes par téléphone ou par e-mail et par 24 h).
+ */
+export async function requestProCallback(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = {
+    first_name: text(formData, "first_name") ?? "",
+    phone: text(formData, "phone") ?? "",
+    email: text(formData, "email") ?? "",
+    trade: text(formData, "trade") ?? "",
+    city: text(formData, "city") ?? "",
+  };
+  const parsed = proCallbackSchema.safeParse({ ...values, consent: checkbox(formData, "consent") });
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("request_pro_callback", {
+    p_first_name: parsed.data.first_name,
+    p_phone: parsed.data.phone,
+    p_email: parsed.data.email,
+    ...(parsed.data.trade ? { p_trade: parsed.data.trade } : {}),
+    ...(parsed.data.city ? { p_city: parsed.data.city } : {}),
+  });
+  if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
+  return { success: fr.pro.assistant.callbackForm.sent };
 }
 
 const partnerApplicationSchema = z.object({

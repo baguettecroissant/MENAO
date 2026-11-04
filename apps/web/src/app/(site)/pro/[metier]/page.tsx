@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CircleCheck, MapPin } from "lucide-react";
 import { CtaBand } from "@/components/site/cta-band";
+import { ProAssistant } from "@/components/pro-landing/pro-assistant";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { JsonLd } from "@/components/site/json-ld";
 import { SectionHeading } from "@/components/site/section-heading";
@@ -206,6 +207,7 @@ export default async function ProTradePage({ params }: PageProps<"/pro/[metier]"
         secondary={{ href: "/pro", label: t.more }}
         reassurance={landing.finalReassurance}
       />
+      <ProAssistant />
     </main>
   );
 }
