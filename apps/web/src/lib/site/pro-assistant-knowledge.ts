@@ -9,7 +9,6 @@ import {
 } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { createPublicClient } from "@/lib/supabase/public";
-import { absoluteUrl } from "./seo";
 
 const t = fr.pro.landing;
 const k = fr.pro.assistant.knowledge;
@@ -115,10 +114,5 @@ export async function proAssistantKnowledge(): Promise<string> {
     "",
     `## ${k.faq}`,
     ...t.faq.flatMap((item) => [`### ${item.q}`, item.a]),
-    "",
-    `## ${k.links}`,
-    `- ${k.signUpLink} : ${absoluteUrl("/pro/inscription")}`,
-    `- ${k.rankingLink} : ${absoluteUrl("/criteres-de-classement")}`,
-    `- ${k.contactLink} : ${absoluteUrl("/contact")}`,
   ].join("\n");
 }

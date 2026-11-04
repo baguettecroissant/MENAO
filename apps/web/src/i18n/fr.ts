@@ -4401,7 +4401,7 @@ export const fr = {
         },
         {
           q: "Que faut-il pour m'inscrire ?",
-          a: "Votre numéro SIRET, un Kbis de moins de 3 mois, vos attestations d'assurance décennale (si votre activité y est soumise) et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF et une pièce d'identité. L'équipe MENAO vérifie votre entreprise et vos documents avant de vous rendre visible.",
+          a: "Votre numéro SIRET (MENAO vérifie votre entreprise au registre ; un Kbis n'est demandé que si cette vérification échoue), vos attestations d'assurance décennale (si votre activité y est soumise) et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF et une pièce d'identité. L'équipe MENAO vérifie votre entreprise et vos documents avant de vous rendre visible.",
         },
         {
           q: "Combien d'artisans reçoivent la même demande ?",
@@ -4684,7 +4684,7 @@ export const fr = {
         },
         {
           q: "Que faut-il pour m'inscrire ?",
-          a: "Votre numéro SIRET, un Kbis de moins de 3 mois, vos attestations d'assurance décennale et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF, une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
+          a: "Votre numéro SIRET (MENAO vérifie votre entreprise au registre ; un Kbis n'est demandé que si cette vérification échoue), vos attestations d'assurance décennale et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF, une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
         },
         {
           q: "Qui vérifie mon dossier ?",
@@ -4768,10 +4768,6 @@ export const fr = {
         included: "inclus",
         notIncluded: "non inclus",
         faq: "Questions fréquentes",
-        links: "Liens utiles",
-        signUpLink: "Créer son compte pro",
-        rankingLink: "Critères de classement",
-        contactLink: "Contacter l'équipe",
       },
     },
     /** Inscription artisan en un seul parcours (ADR 0110). */

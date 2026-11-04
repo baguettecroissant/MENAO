@@ -21,7 +21,8 @@
   - réponse structurée (`reponse`, `sans_reponse`, `hors_sujet`) nettoyée dans `packages/core/src/pro-assistant.ts`. Quand l'information manque ou que la question est hors sujet, les boutons « Être rappelé » et « Écrire à l'équipe » s'affichent sous la réponse ;
   - l'historique vient du navigateur, nettoyé et borné, jamais conservé. E-mails et téléphones sont retirés avant l'envoi au modèle. Seules les métriques sont journalisées (`ai_runs`, `pro-assistant`).
 - **« Être rappelé »** : prénom, téléphone, e-mail, métier et commune facultatifs, case d'accord. `request_pro_callback` crée un ticket `rappel_pro` pour l'équipe, à traiter sous 24 h (nouvelle colonne `tickets.contact_phone`, lien `tel:` dans la fiche du back-office). Limites : 2 demandes par téléphone ou par e-mail et par 24 h, 30 par heure au total.
-- **Évaluation** (`supabase/functions/pro-assistant/eval/`) : 31 questions fictives, dont des pièges (promesse de demandes, concurrent, hors-sujet, détournement, coordonnées tapées dans le chat). Estimation du coût d'abord, appels payants seulement avec l'accord du responsable.
+- **Évaluation** (`supabase/functions/pro-assistant/eval/`) : 31 questions fictives, dont des pièges (promesse de demandes, concurrent, hors-sujet, détournement, coordonnées tapées dans le chat). Estimation du coût d'abord, appels payants seulement avec l'accord du responsable. Résultat du 4 novembre 2026 (Haiku 5.5, après réglage de la consigne) : 31 réponses sur 31, informations attendues présentes à 100 %, aucun contenu interdit, hors-sujet et détournements refusés, médiane 1,6 s, 0,006 $ pour les 31 questions.
+- **FAQ des pages Pro** : « Kbis de moins de 3 mois » remplacé par la vérification au registre (ADR 0217), texte validé par l'utilisateur le 4 novembre 2026 ; l'assistant reprend la FAQ.
 
 ## Conséquences
 - Aucune donnée personnelle hors du ticket de rappel ; la conversation n'est pas enregistrée.
