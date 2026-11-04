@@ -36,7 +36,7 @@ select lives_ok(
   $$ select public.request_pro_callback('Camille', '+33612345678', 'autre@example.test') $$,
   'deuxième demande');
 select throws_ok(
-  $$ select public.request_pro_callback('Camille', '+33699999999', 'camille@example.test') $$,
+  $$ select public.request_pro_callback('Camille', '+33612345678', 'troisieme@example.test') $$,
   '22023', 'Votre demande est déjà enregistrée : nous vous rappelons très vite.',
   '2 demandes par téléphone ou par e-mail et par 24 h');
 select is((select count(*)::int from public.tickets), 0, 'tickets invisibles sans session');
@@ -54,7 +54,7 @@ select pg_temp.connecter('e1010000-0000-4000-8000-000000000002', 'support');
 set local role authenticated;
 select results_eq(
   $$ select contact_email, contact_phone, message, due_at <= now() + interval '1 day', user_id is null
-     from public.tickets where type = 'rappel_pro' order by created_at, contact_email limit 1 $$,
+     from public.tickets where type = 'rappel_pro' and contact_email = 'camille@example.test' $$,
   $$ values ('camille@example.test'::text, '+33612345678'::text,
              E'Prénom : Camille\nMétier : Menuisier\nCommune : Nice'::text, true, true) $$,
   'demande reçue par l''équipe, à traiter sous 24 h');
