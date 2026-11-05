@@ -16,6 +16,7 @@ import {
   Composer,
   Typing,
 } from "@/components/assistant/assistant-ui";
+import { VoiceCall } from "@/components/assistant/voice-call";
 import { Button, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createClient } from "@/lib/supabase/client";
@@ -161,6 +162,7 @@ export function ClientAssistantPanel({
       </div>
 
       <div className="flex flex-col gap-3 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <VoiceCall assistant="client" />
         {!limitReached && (
           <Composer
             id="client-assistant-message"

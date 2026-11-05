@@ -1,7 +1,8 @@
 /**
  * E-mails de la secrétaire vocale « Camille » (F-75, ADR 0225), envoyés pendant un appel à la
  * demande de l'appelant : le lien d'inscription d'un artisan, l'état du dossier d'un artisan
- * inscrit (envoyé à l'adresse de son compte : rien n'est dit au téléphone).
+ * inscrit (envoyé à l'adresse de son compte : rien n'est dit au téléphone), et la demande de
+ * travaux préparée pour un particulier (F-77, ADR 0227).
  */
 import { SIGNUP_STEP_LABELS, type EmailContent } from "./content.ts";
 
@@ -142,5 +143,39 @@ export function voiceAppointmentContent(rdv: VoiceAppointment, siteUrl: string):
     ],
     quote: null,
     cta: { label: "Découvrir l'espace pro", url: `${site}/pro` },
+  };
+}
+
+export type VoiceWorkRequest = {
+  firstName: string;
+  /** Résumé du besoin par l'analyse (projects.summary), s'il existe. */
+  summary: string | null;
+  city: string | null;
+  /** Artisans disponibles proposés (au plus 3). */
+  available: number;
+  /** Lien à usage unique vers la demande préparée (jeton de transfert). */
+  url: string;
+};
+
+/**
+ * Demande de travaux préparée au téléphone (ADR 0227) : rien n'est parti chez les artisans ; le
+ * particulier vérifie et envoie lui-même depuis le lien.
+ */
+export function voiceWorkRequestContent(request: VoiceWorkRequest): EmailContent {
+  const near = request.city ? ` près de ${request.city}` : "";
+  return {
+    subject: "Votre demande de travaux est prête",
+    preview: "Vérifiez-la, puis envoyez-la vous-même aux artisans.",
+    title: "Votre demande est prête",
+    paragraphs: [
+      hello(request.firstName),
+      "Comme convenu au téléphone avec Camille, voici votre demande de travaux. Elle n'est pas encore partie : rien n'est envoyé aux artisans tant que vous ne l'avez pas vérifiée.",
+      request.available > 0
+        ? `${request.available === 1 ? "Un artisan vérifié disponible" : `${request.available} artisans vérifiés disponibles`}${near} ${request.available === 1 ? "vous est proposé" : "vous sont proposés"} ; vous pourrez changer ce choix.`
+        : `Aucun artisan n'est encore disponible pour ces travaux${near} : depuis le lien, vous pourrez demander à l'équipe MENAO de chercher pour vous.`,
+      "Ouvrez le lien, créez votre espace MENAO gratuit ou connectez-vous, vérifiez les informations, puis envoyez votre demande. Le lien est valable 7 jours.",
+    ],
+    quote: request.summary,
+    cta: { label: "Vérifier et envoyer ma demande", url: request.url },
   };
 }

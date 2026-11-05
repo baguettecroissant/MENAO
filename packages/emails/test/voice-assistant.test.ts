@@ -4,9 +4,11 @@ import {
   renderVoiceAppointment,
   renderVoiceDossier,
   renderVoiceSignupLink,
+  renderVoiceWorkRequest,
   voiceAppointmentContent,
   voiceDossierContent,
   voiceSignupLinkContent,
+  voiceWorkRequestContent,
 } from "../src/index";
 
 const SITE = "https://menao.example/";
@@ -147,5 +149,40 @@ describe("rendez-vous avec le conseiller (ADR 0226)", () => {
     expect(JSON.stringify(content)).not.toContain("+33612345678");
     expect(content.quote).toBe("Inscription accompagnée");
     expect(content.cta.url).toBe("https://menao.example/commercial/journee");
+  });
+});
+
+describe("demande de travaux préparée au téléphone (ADR 0227)", () => {
+  const base = {
+    firstName: "Léa",
+    summary: "Réparer une fuite sous l'évier",
+    city: "Antibes",
+    available: 3,
+    url: "https://menao.example/recherche/telephone/abc",
+  };
+
+  it("lien de vérification, résumé en citation, artisans proposés", () => {
+    const content = voiceWorkRequestContent(base);
+    expect(content.cta.url).toBe(base.url);
+    expect(content.quote).toBe(base.summary);
+    expect(content.paragraphs[0]).toBe("Bonjour Léa,");
+    expect(content.paragraphs[2]).toContain("3 artisans vérifiés disponibles près de Antibes");
+    expect(content.paragraphs.join(" ")).toContain("rien n'est envoyé aux artisans");
+  });
+
+  it("un seul artisan, ou aucun : l'équipe peut chercher", () => {
+    expect(voiceWorkRequestContent({ ...base, available: 1 }).paragraphs[2]).toContain(
+      "Un artisan vérifié disponible près de Antibes vous est proposé",
+    );
+    expect(voiceWorkRequestContent({ ...base, available: 0, city: null }).paragraphs[2]).toBe(
+      "Aucun artisan n'est encore disponible pour ces travaux : depuis le lien, vous pourrez demander à l'équipe MENAO de chercher pour vous.",
+    );
+  });
+
+  it("rendu HTML et texte", () => {
+    const email = renderVoiceWorkRequest(base, SITE);
+    expect(email.subject).toBe("Votre demande de travaux est prête");
+    expect(email.html).toContain(base.url);
+    expect(email.text).toContain(base.url);
   });
 });

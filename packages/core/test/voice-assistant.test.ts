@@ -16,6 +16,7 @@ import {
   voiceCallSeconds,
   voiceText,
   voiceToolDefinitions,
+  voiceWorkDescription,
 } from "../src/voice-assistant";
 
 describe("secrétaire vocale (ADR 0225)", () => {
@@ -177,5 +178,41 @@ describe("créneaux lus au téléphone (ADR 0226)", () => {
     expect(parisSlotSpoken(parisInstant("2026-12-01", "12:30"))).toBe(
       "mardi premier décembre à midi trente",
     );
+  });
+});
+
+describe("demande de travaux par téléphone (ADR 0227)", () => {
+  it("description pour l'analyse : besoin, commune et délai dictés", () => {
+    expect(
+      voiceWorkDescription({
+        besoin: "  Fuite  sous l'évier de la cuisine, ça goutte depuis hier. ",
+        commune: "Antibes",
+        delai: "cette semaine",
+      }),
+    ).toBe(
+      "Fuite sous l'évier de la cuisine, ça goutte depuis hier.\nCommune des travaux : Antibes.\nDélai souhaité : cette semaine.",
+    );
+  });
+
+  it("délai facultatif", () => {
+    expect(
+      voiceWorkDescription({
+        besoin: "Repeindre un salon de vingt mètres carrés",
+        commune: "Nice",
+      }),
+    ).toBe("Repeindre un salon de vingt mètres carrés\nCommune des travaux : Nice.");
+  });
+
+  it("besoin trop court ou commune absente : rien", () => {
+    expect(voiceWorkDescription({ besoin: "fuite", commune: "Nice" })).toBeNull();
+    expect(
+      voiceWorkDescription({ besoin: "Repeindre un salon de vingt mètres carrés" }),
+    ).toBeNull();
+    expect(voiceWorkDescription({ besoin: 42, commune: "Nice" })).toBeNull();
+  });
+
+  it("besoin borné à 1 500 caractères", () => {
+    const text = voiceWorkDescription({ besoin: "a".repeat(3000), commune: "Nice" });
+    expect(text?.startsWith("a".repeat(1500) + "\n")).toBe(true);
   });
 });

@@ -1656,6 +1656,19 @@ export const fr = {
     },
   },
   search: {
+    // Demande préparée au téléphone par Camille (F-77, ADR 0227) : page du lien de l'e-mail.
+    prepared: {
+      metaTitle: "Votre demande de travaux",
+      title: (firstName: string) => `${firstName}, votre demande est prête`,
+      intro:
+        "Camille a préparé votre demande au téléphone. Rien n'est encore envoyé aux artisans : créez votre espace MENAO gratuit ou connectez-vous, puis vérifiez votre demande et envoyez-la.",
+      project: "Votre demande",
+      expiredTitle: "Ce lien n'est plus valable",
+      expired:
+        "Il a peut-être déjà servi, ou il date de plus de 7 jours. Si vous avez déjà envoyé votre demande, retrouvez-la dans votre espace MENAO ; sinon, faites une nouvelle demande en quelques minutes.",
+      newRequest: "Faire une demande",
+      signIn: "Me connecter",
+    },
     rehire: (name: string) =>
       `Nouvelle demande pour ${name} : décrivez vos travaux, elle lui sera envoyée directement.`,
     titleStart: "Trouvez l'artisan du BTP dont",

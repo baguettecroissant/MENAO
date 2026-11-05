@@ -3,7 +3,8 @@
  * voix (appel web depuis le site pendant les essais, numéro de téléphone ensuite), sur la
  * plateforme Vapi. Pendant la conversation, Vapi appelle nos outils (Edge Function
  * voice-assistant) : envoyer le lien d'inscription par e-mail, envoyer l'état du dossier à
- * l'adresse du compte, enregistrer une demande de rappel.
+ * l'adresse du compte, enregistrer une demande de rappel. Côté particuliers (F-77, ADR 0227) :
+ * préparer une demande de travaux, envoyée ensuite par le particulier lui-même.
  *
  * Ici : noms des outils et leur définition pour Vapi, lecture défensive des messages de Vapi,
  * numéros et adresses dictés à l'oral, durée d'un appel terminé.
@@ -16,6 +17,7 @@ export const VOICE_TOOLS = [
   "demander_rappel",
   "proposer_creneaux",
   "reserver_creneau",
+  "preparer_demande_travaux",
 ] as const;
 export type VoiceTool = (typeof VOICE_TOOLS)[number];
 
@@ -112,7 +114,45 @@ export function voiceToolDefinitions() {
         required: ["creneau", "type", "commune", "prenom", "telephone", "email", "motif"],
       },
     },
+    {
+      name: "preparer_demande_travaux",
+      description:
+        "Pour un particulier qui a des travaux : prépare sa demande sur MENAO et lui envoie un e-mail pour la vérifier et l'envoyer lui-même aux artisans. Rien n'est envoyé aux artisans pendant l'appel. N'appelle cet outil qu'après le récapitulatif, quand le particulier a dit oui, avec son prénom, son numéro et son adresse e-mail relus.",
+      parameters: {
+        type: "object",
+        properties: {
+          besoin: text(
+            "Description des travaux en quelques phrases, avec les mots du particulier : quoi, où dans le logement, depuis quand, ce qu'il a déjà constaté. Sans nom, sans numéro, sans adresse e-mail.",
+          ),
+          commune: text("Commune des travaux."),
+          delai: text("Délai souhaité, tel que dit (« au plus vite », « avant l'été »)."),
+          prenom: text("Prénom du particulier."),
+          telephone: text("Numéro du particulier, en chiffres, par exemple 0612345678."),
+          email: text("Adresse e-mail du particulier, en minuscules, sans espace."),
+        },
+        required: ["besoin", "commune", "prenom", "telephone", "email"],
+      },
+    },
   ];
+}
+
+/** Besoin dicté : au moins quelques mots, borné avant l'analyse. */
+const WORK_NEED_MIN = 10;
+const WORK_NEED_MAX = 1500;
+
+/**
+ * Demande de travaux par téléphone (F-77, ADR 0227) : texte remis à l'analyse du besoin
+ * (analyze-need), comme si le particulier l'avait écrit sur le site. Null si le besoin est trop
+ * court ou la commune absente.
+ */
+export function voiceWorkDescription(args: Record<string, unknown>): string | null {
+  const need = voiceText(args.besoin, WORK_NEED_MAX);
+  const city = voiceText(args.commune, 100);
+  if (!need || need.length < WORK_NEED_MIN || !city) return null;
+  const delay = voiceText(args.delai, 100);
+  return [need, `Commune des travaux : ${city}.`, delay ? `Délai souhaité : ${delay}.` : null]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export type VoiceToolCall = { id: string; name: string; args: Record<string, unknown> };

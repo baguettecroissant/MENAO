@@ -5,7 +5,9 @@
 // - « tool-calls » : envoyer le lien d'inscription par e-mail, envoyer l'état du dossier à
 //   l'adresse du compte (rien n'est dit au téléphone : l'appelant n'est pas identifié), enregistrer
 //   une demande de rappel (ticket rappel_pro), proposer puis réserver un créneau avec le conseiller
-//   du secteur (ADR 0226). Réponse toujours en HTTP 200, une entrée par appel.
+//   du secteur (ADR 0226), préparer la demande de travaux d'un particulier (ADR 0227 : session
+//   anonyme, analyse par analyze-need, lien à usage unique envoyé par e-mail ; rien ne part chez
+//   les artisans avant que le particulier envoie lui-même). Réponse toujours en HTTP 200.
 // - « end-of-call-report » : durée de l'appel dans ai_runs (jamais la transcription).
 // Aucune donnée personnelle dans les journaux.
 import {
@@ -22,6 +24,7 @@ import {
   spokenPhoneToE164,
   voiceCallSeconds,
   voiceText,
+  voiceWorkDescription,
   type VoiceToolCall,
 } from "../../../packages/core/src/voice-assistant.ts";
 import { isDeliverableAddress } from "../../../packages/emails/src/address.ts";
@@ -29,7 +32,9 @@ import {
   renderVoiceAppointment,
   renderVoiceDossier,
   renderVoiceSignupLink,
+  renderVoiceWorkRequest,
 } from "../../../packages/emails/src/render.tsx";
+import { createClient } from "@supabase/supabase-js";
 import { geocodeCommune } from "../_shared/geocoding.ts";
 import { logAiRuns, sha256 } from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
@@ -351,6 +356,162 @@ async function bookSlot(admin: Admin, call: VoiceToolCall): Promise<ToolResult> 
   };
 }
 
+const WORK_REQUEST_FAILED =
+  "La demande n'a pas pu être préparée. Propose au particulier de la faire sur le site menao.fr, en quelques minutes.";
+
+/**
+ * Demande de travaux par téléphone (ADR 0227) : même chemin que le site. Une session anonyme
+ * fait analyser le besoin (analyze-need crée le projet), valide les critères et compte les
+ * artisans disponibles ; un jeton de transfert de 7 jours part par e-mail. Le particulier crée son
+ * espace ou se connecte, vérifie et envoie lui-même.
+ */
+async function prepareWorkRequest(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
+  const description = voiceWorkDescription(call.args);
+  const phone = spokenPhoneToE164(call.args.telephone);
+  const email = spokenEmail(call.args.email);
+  const firstName = voiceText(call.args.prenom, 60);
+  if (!description) {
+    return {
+      toolCallId: call.id,
+      error: "Il manque la description des travaux ou la commune : redemande-les.",
+    };
+  }
+  if (!phone)
+    return { toolCallId: call.id, error: "Numéro invalide : redemande les dix chiffres." };
+  if (!email || !isDeliverableAddress(email)) {
+    return {
+      toolCallId: call.id,
+      error: "Adresse e-mail invalide : redemande-la lettre par lettre, puis relis-la.",
+    };
+  }
+  if (!firstName) return { toolCallId: call.id, error: "Il manque le prénom." };
+  const provider = notificationProvider();
+  if (!provider) return { toolCallId: call.id, error: WORK_REQUEST_FAILED };
+  // Vapi peut rejouer une requête : une seule demande par appel d'outil.
+  if (!(await allowed(admin, `voice-assistant:travaux:${call.id}`, 1, 86_400))) {
+    return {
+      toolCallId: call.id,
+      result: "Cette demande est déjà préparée et envoyée par e-mail.",
+    };
+  }
+  if (!(await canEmail(admin, email))) {
+    return {
+      toolCallId: call.id,
+      result:
+        "Plusieurs e-mails sont déjà partis vers cette adresse aujourd'hui : propose au particulier d'ouvrir le dernier reçu, ou de faire sa demande sur menao.fr.",
+    };
+  }
+
+  const url = env("SUPABASE_URL");
+  const anonKey = env("SUPABASE_ANON_KEY");
+  const visitor = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: signIn, error: signInError } = await visitor.auth.signInAnonymously();
+  const accessToken = signIn.session?.access_token;
+  if (signInError || !accessToken) {
+    console.error("voice-assistant : session anonyme impossible", signInError?.status ?? "");
+    return { toolCallId: call.id, error: WORK_REQUEST_FAILED };
+  }
+  const analysis = await fetch(`${url}/functions/v1/analyze-need`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      apikey: anonKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ description }),
+  });
+  const analysed = (await analysis.json().catch(() => null)) as {
+    status?: string;
+    projectId?: string;
+  } | null;
+  const projectId = analysed?.status === "ok" ? analysed.projectId : undefined;
+  if (!projectId) {
+    console.error("voice-assistant : analyse du besoin en échec", analysis.status);
+    return { toolCallId: call.id, error: WORK_REQUEST_FAILED };
+  }
+
+  // Critères validés (métier et commune reconnus) : artisans disponibles, comme sur le site.
+  const owner = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+  const { error: criteriaError } = await owner.rpc("validate_project_criteria", {
+    p_project_id: projectId,
+  });
+  let available = 0;
+  if (!criteriaError) {
+    const { data: matches } = await owner.rpc("match_artisans", {
+      p_project_id: projectId,
+      p_limit: 3,
+    });
+    available = Array.isArray(matches) ? matches.length : 0;
+  }
+
+  const { data: token, error } = await admin.rpc("voice_prepare_work_request", {
+    p_project_id: projectId,
+    p_first_name: firstName,
+    p_email: email,
+    p_phone: phone,
+  });
+  if (error || typeof token !== "string") {
+    if (error?.code === "22023") {
+      return {
+        toolCallId: call.id,
+        result:
+          "Trois demandes ont déjà été préparées pour ce numéro aujourd'hui : propose au particulier d'utiliser les e-mails déjà reçus.",
+      };
+    }
+    console.error("voice-assistant : demande non préparée", error?.code ?? "");
+    return { toolCallId: call.id, error: WORK_REQUEST_FAILED };
+  }
+
+  const { data: project } = await admin
+    .from("projects")
+    .select("summary, ville_nom")
+    .eq("id", projectId)
+    .maybeSingle();
+  const message = renderVoiceWorkRequest(
+    {
+      firstName,
+      summary: (project?.summary as string | null | undefined) ?? null,
+      city: (project?.ville_nom as string | null | undefined) ?? null,
+      available,
+      url: `${siteUrl()}/recherche/telephone/${token}`,
+    },
+    siteUrl(),
+  );
+  const sent = await provider.sendEmail({
+    to: email,
+    ...message,
+    idempotencyKey: `voice-travaux-${call.id}`,
+  });
+  if (!sent.ok) {
+    console.error("voice-assistant : demande préparée non envoyée", sent.error);
+    return { toolCallId: call.id, error: WORK_REQUEST_FAILED };
+  }
+
+  const next =
+    "Dis-lui qu'il vient de recevoir un e-mail : il ouvre le lien, crée son espace gratuit ou se connecte, vérifie sa demande et l'envoie lui-même. Rien ne part chez les artisans avant. Le lien est valable sept jours.";
+  if (criteriaError) {
+    return {
+      toolCallId: call.id,
+      result: `Demande préparée et e-mail envoyé, mais la commune ou le type de travaux n'a pas été reconnu : il pourra le préciser en ouvrant le lien. ${next}`,
+    };
+  }
+  if (available === 0) {
+    return {
+      toolCallId: call.id,
+      result: `Demande préparée et e-mail envoyé. Aucun artisan n'est encore disponible pour ces travaux dans son secteur : depuis le lien, il pourra demander à l'équipe MENAO de chercher pour lui. Ne promets rien. ${next}`,
+    };
+  }
+  return {
+    toolCallId: call.id,
+    result: `Demande préparée et e-mail envoyé. ${available === 1 ? "Un artisan disponible lui est proposé" : `${available} artisans disponibles lui sont proposés`} ; il pourra changer ce choix. ${next}`,
+  };
+}
+
 async function runTool(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
   try {
     if (call.name === "envoyer_lien_inscription") return await sendSignupLink(admin, call);
@@ -358,6 +519,7 @@ async function runTool(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
     if (call.name === "demander_rappel") return await requestCallback(admin, call);
     if (call.name === "proposer_creneaux") return await proposeSlots(admin, call);
     if (call.name === "reserver_creneau") return await bookSlot(admin, call);
+    if (call.name === "preparer_demande_travaux") return await prepareWorkRequest(admin, call);
     return { toolCallId: call.id, error: "Outil inconnu." };
   } catch (error) {
     console.error(

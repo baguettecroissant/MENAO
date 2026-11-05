@@ -9,19 +9,22 @@ import { fr } from "@/i18n/fr";
 
 const t = fr.pro.assistant.voice;
 const PUBLIC_KEY = env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
-const ASSISTANT_ID = env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+/** Camille côté artisans (pages Pro, ADR 0225) ou côté particuliers (demande de travaux, ADR 0227). */
+const ASSISTANTS = {
+  pro: env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
+  client: env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID,
+} as const;
+export type VoiceAssistant = keyof typeof ASSISTANTS;
 
 type CallState = "idle" | "connecting" | "live" | "ended" | "failed";
-
-/** La secrétaire vocale est-elle configurée (clé publique et assistant Vapi) ? */
-export const voiceCallsEnabled = Boolean(PUBLIC_KEY && ASSISTANT_ID);
 
 /**
  * Appel web avec la secrétaire vocale « Camille » (F-75, ADR 0225) : la bibliothèque de Vapi
  * (et son transport audio) n'est téléchargée qu'au premier appel. Le micro est demandé par le
  * navigateur au démarrage ; Camille annonce qu'elle est une IA dans sa première phrase.
  */
-export function VoiceCall() {
+export function VoiceCall({ assistant = "pro" }: { assistant?: VoiceAssistant }) {
+  const ASSISTANT_ID = ASSISTANTS[assistant];
   const [state, setState] = useState<CallState>("idle");
   const [speaking, setSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -30,7 +33,7 @@ export function VoiceCall() {
   // Appel raccroché si la fenêtre se ferme ou si l'on quitte la page.
   useEffect(() => () => void vapi.current?.stop(), []);
 
-  if (!voiceCallsEnabled || !PUBLIC_KEY || !ASSISTANT_ID) return null;
+  if (!PUBLIC_KEY || !ASSISTANT_ID) return null;
 
   async function start() {
     if (!PUBLIC_KEY || !ASSISTANT_ID) return;

@@ -25,7 +25,7 @@ import { authErrorMessage } from "@/lib/auth/errors";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { redirectToProvider } from "@/lib/auth/oauth";
 import { createClient } from "@/lib/supabase/server";
-import { sendPagePath } from "./paths";
+import { preparedRequestPath, sendPagePath } from "./paths";
 
 const t = fr.search.request;
 
@@ -47,17 +47,8 @@ function parseContext(ctx: RequestContext) {
     : null;
 }
 
-/**
- * F-08 : création du compte au moment de la demande. Le projet appartient à la session anonyme :
- * un jeton de transfert, joint au lien de confirmation, le rattachera au nouveau compte.
- */
-export async function signUpForRequest(
-  ctx: RequestContext,
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const context = parseContext(ctx);
-  if (!context) return { error: fr.errors.generic };
+/** Création du compte particulier ; le lien de confirmation ramène à `next`. */
+async function createParticulierAccount(formData: FormData, next: () => Promise<string | null>) {
   const values = {
     firstName: text(formData, "firstName") ?? "",
     lastName: text(formData, "lastName") ?? "",
@@ -72,20 +63,16 @@ export async function signUpForRequest(
   });
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
 
-  const supabase = await createClient();
-  const { data: token, error: transferError } = await supabase.rpc("create_project_transfer", {
-    p_project_id: context.projectId,
-  });
-  if (transferError || !token) return { error: t.transferError, values };
+  const target = await next();
+  if (!target) return { error: t.transferError, values };
 
   const input = parsed.data;
+  const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email: input.email,
     password: input.password,
     options: {
-      emailRedirectTo: confirmUrlFor(
-        sendPagePath(context.projectId, context.artisanIds, token, context.lots),
-      ),
+      emailRedirectTo: confirmUrlFor(target),
       data: {
         first_name: input.firstName,
         last_name: input.lastName,
@@ -99,6 +86,43 @@ export async function signUpForRequest(
   });
   if (error) return { error: authErrorMessage(error), values };
   return { success: t.checkEmail };
+}
+
+/** Connexion d'un compte particulier existant ; null si refusée (erreur dans `state`). */
+async function signInParticulier(formData: FormData) {
+  const values = { email: text(formData, "email") ?? "" };
+  const parsed = signInSchema.safeParse({ ...values, password: text(formData, "password") ?? "" });
+  if (!parsed.success) {
+    return { state: { fieldErrors: z.flattenError(parsed.error).fieldErrors, values } };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error) return { state: { error: authErrorMessage(error), values } };
+  if (roleFromAppMetadata(data.user.app_metadata) !== "particulier") {
+    return { state: { error: t.notParticulier, values } };
+  }
+  return { supabase, user: data.user, values };
+}
+
+/**
+ * F-08 : création du compte au moment de la demande. Le projet appartient à la session anonyme :
+ * un jeton de transfert, joint au lien de confirmation, le rattachera au nouveau compte.
+ */
+export async function signUpForRequest(
+  ctx: RequestContext,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const context = parseContext(ctx);
+  if (!context) return { error: fr.errors.generic };
+  return createParticulierAccount(formData, async () => {
+    const supabase = await createClient();
+    const { data: token, error } = await supabase.rpc("create_project_transfer", {
+      p_project_id: context.projectId,
+    });
+    if (error || !token) return null;
+    return sendPagePath(context.projectId, context.artisanIds, token, context.lots);
+  });
 }
 
 /**
@@ -134,28 +158,60 @@ export async function signInForRequest(
   const context = parseContext(ctx);
   if (!context) return { error: fr.errors.generic };
   const values = { email: text(formData, "email") ?? "" };
-  const parsed = signInSchema.safeParse({ ...values, password: text(formData, "password") ?? "" });
-  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
-
-  const supabase = await createClient();
-  const { data: token } = await supabase.rpc("create_project_transfer", {
+  const anonymous = await createClient();
+  const { data: token } = await anonymous.rpc("create_project_transfer", {
     p_project_id: context.projectId,
   });
   if (!token) return { error: t.transferError, values };
 
-  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: authErrorMessage(error), values };
-  if (roleFromAppMetadata(data.user.app_metadata) !== "particulier") {
-    return { error: t.notParticulier, values };
-  }
+  const signedIn = await signInParticulier(formData);
+  if (!signedIn.supabase) return signedIn.state;
+  const { supabase, user } = signedIn;
   const { error: claimError } = await supabase.rpc("claim_project", { p_token: token });
   if (claimError) return { error: t.transferError, values };
   const target = sendPagePath(context.projectId, context.artisanIds, undefined, context.lots);
   // Compte Google ou Apple à finaliser (ADR 0108) : CGU d'abord, puis la page d'envoi.
-  if (signupPending(data.user.app_metadata)) {
+  if (signupPending(user.app_metadata)) {
     redirect(`/finaliser-compte?next=${encodeURIComponent(target)}` as Route);
   }
   redirect(target as Route);
+}
+
+/**
+ * Demande préparée au téléphone par Camille (F-77, ADR 0227) : le jeton de transfert vient de
+ * l'e-mail. Après inscription ou connexion, la page du lien rattache le projet au compte.
+ */
+const PREPARED_TOKEN = /^[0-9a-f]{64}$/;
+
+export async function signUpForPreparedRequest(
+  token: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!PREPARED_TOKEN.test(token)) return { error: fr.errors.generic };
+  return createParticulierAccount(formData, async () => preparedRequestPath(token));
+}
+
+export async function signInForPreparedRequest(
+  token: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!PREPARED_TOKEN.test(token)) return { error: fr.errors.generic };
+  const signedIn = await signInParticulier(formData);
+  if (!signedIn.supabase) return signedIn.state;
+  redirect(preparedRequestPath(token) as Route);
+}
+
+export async function continueWithProviderForPreparedRequest(
+  token: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const provider = text(formData, "provider");
+  if (!PREPARED_TOKEN.test(token) || !isOAuthProvider(provider))
+    return { error: fr.errors.generic };
+  return redirectToProvider(provider, preparedRequestPath(token));
 }
 
 /** F-11 : envoi aux artisans choisis (règles et éligibilité vérifiées en base). */
