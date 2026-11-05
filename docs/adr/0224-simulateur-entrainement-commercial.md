@@ -31,6 +31,7 @@
   - lisibles par le commercial (ses 5 dernières séances) et par un admin (progression) ;
   - aucune écriture directe ;
   - supprimés avec la fiche du commercial.
+- **Modèles** : les artisans sur Haiku (rapide, quelques dixièmes de centime la réplique) ; le coach sur Sonnet (`AI_COMMERCIAL_COACH_MODEL`, sinon le modèle des devis), environ 1 centime par note : sur Haiku, il retirait des points de « règles » pour des fautes inexistantes, et sa note d'un bon échange variait de 9 à 16 sur 20 d'une passe à l'autre. Le coach reçoit le prénom du commercial pour ses phrases d'exemple.
 - **Edge Function `commercial-copilot`**, actions `train` et `coach`, sans prospect :
   - réservées au commercial actif ;
   - 150 appels par commercial et par jour, plafond horaire commun avec le copilote ;
@@ -38,7 +39,8 @@
 - **Évaluation** (`eval/entrainement.ts`) :
   - une réplique par artisan et deux pièges (promesse interdite, « oublie ton rôle ») ;
   - quatre échanges écrits à l'avance pour le coach, avec la note attendue : bon commercial (14 à 20), promesses interdites (9 au plus, règles à 0), monologue sans écoute, refus non respecté ;
-  - estimation de 0,006 $ ; appels payants avec l'accord du responsable.
+  - appels payants avec l'accord du responsable ;
+  - résultat du 5 novembre 2026 : les 7 répliques restent courtes et dans le rôle ; le méfiant refuse net la promesse de « dix chantiers par mois » ; le pressé ne sort pas de son rôle face à « oublie ton rôle ». Coach sur Sonnet : 17 sur 20 pour le bon échange (règles 4 sur 4), 0 pour les promesses, 5 pour le monologue, 1 pour le refus non respecté ; 0,04 $ la passe.
 
 ## Conséquences
 - Après la fusion : `db push` sur staging (migration `entrainement_commercial`), puis `functions deploy commercial-copilot`.

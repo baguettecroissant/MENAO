@@ -16,7 +16,7 @@ import type {
   TrainingMessage,
   TrainingPersona,
 } from "../../../../packages/core/src/commercial-copilot.ts";
-import { llmConfig, openRouterBaseUrl, type AiRun } from "../../_shared/ai.ts";
+import { llmConfig, openRouterBaseUrl, quoteModel, type AiRun } from "../../_shared/ai.ts";
 import { VIOLATION_LABELS } from "../copilot.ts";
 import { commercialGuideText } from "../knowledge.ts";
 import { detectedBreaches, PERSONAS, personaReply, reviewTraining } from "../training.ts";
@@ -225,6 +225,8 @@ if (!llm || Deno.env.get("ANTHROPIC_API_KEY")) {
   throw new Error("OPENROUTER_API_KEY seule attendue (passerelle des tests et du staging).");
 }
 const model = args.get("modele") ?? llm.primary;
+/** Le coach a son propre modèle : Sonnet par défaut, comme dans l'Edge Function. */
+const coachModel = args.get("coach") ?? quoteModel();
 const price = await loadPrice(model);
 
 if (args.has("estimation")) {
@@ -283,12 +285,12 @@ console.log("");
 for (const c of REVIEWS) {
   const run: AiRun = {
     function_name: "commercial-copilot",
-    model,
+    model: coachModel,
     outcome: "erreur",
     latency_ms: 0,
   };
   const detected = detectedBreaches(c.history, VIOLATION_LABELS);
-  const review = await reviewTraining(llm, guide, c.persona, c.history, detected, run);
+  const review = await reviewTraining(llm, guide, c.persona, c.history, detected, run, "Julien");
   if (!review) {
     failures += 1;
     console.log(`${c.id} : échec (${run.outcome})`);
@@ -320,5 +322,7 @@ for (const c of REVIEWS) {
 
 await new Promise((resolve) => setTimeout(resolve, 3000));
 console.log("");
-console.log(`Modèle : ${model}. Échecs : ${failures} ; écarts : ${issues}.`);
+console.log(
+  `Modèles : ${model} (artisans), ${coachModel} (coach). Échecs : ${failures} ; écarts : ${issues}.`,
+);
 console.log(`Coût réel : ${((await spentUsd()) - before).toFixed(4)} $.`);

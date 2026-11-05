@@ -30,7 +30,7 @@ import {
   type StoredCopilotBrief,
 } from "../../../packages/core/src/commercial-copilot.ts";
 import { scrubPersonalData } from "../../../packages/core/src/project.ts";
-import { llmConfig, logAiRuns, type AiRun } from "../_shared/ai.ts";
+import { llmConfig, logAiRuns, quoteModel, type AiRun } from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 import { env } from "../_shared/env.ts";
@@ -145,8 +145,23 @@ async function training(
     const reply = await personaReply(llm, persona, history, scrubPersonalData(message), run);
     response = reply ? json({ status: "ok", ...reply }) : json({ status: "unavailable" }, 503);
   } else {
+    // Le coach juge finement (refus, promesses) : Sonnet par défaut, une note par séance.
+    run.model = env("AI_COMMERCIAL_COACH_MODEL") || quoteModel();
     const detected = detectedBreaches(history, VIOLATION_LABELS);
-    const review = await reviewTraining(llm, GUIDE, persona, history, detected, run);
+    const { data: profile } = await asUser
+      .from("profiles")
+      .select("first_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const review = await reviewTraining(
+      llm,
+      GUIDE,
+      persona,
+      history,
+      detected,
+      run,
+      profile?.first_name?.trim() || null,
+    );
     if (review) {
       const { error } = await asUser.rpc("commercial_save_training", {
         p_persona: persona,
