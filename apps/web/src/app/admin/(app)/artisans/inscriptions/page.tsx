@@ -80,7 +80,9 @@ export default async function AdminStalledSignupsPage() {
                         : row.manque.map((step) => t.steps[step] ?? step).join(", ")}
                     </td>
                     <td className="py-3 pr-4 whitespace-nowrap">
-                      {t.days(Math.floor((now.getTime() - new Date(row.depuis).getTime()) / DAY_MS))}
+                      {t.days(
+                        Math.floor((now.getTime() - new Date(row.depuis).getTime()) / DAY_MS),
+                      )}
                     </td>
                     <td className="py-3 whitespace-nowrap">
                       {t.reminders(
