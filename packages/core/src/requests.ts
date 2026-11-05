@@ -139,3 +139,19 @@ export function joinNames(names: readonly string[]): string {
   if (names.length <= 1) return names[0] ?? "";
   return `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}`;
 }
+
+/**
+ * Délai de réponse habituel communiqué au particulier à l'envoi de sa demande (ADR 0221) : une
+ * tranche, jamais un chiffre exact, et seulement pour un artisan qui répond vite et a assez
+ * d'historique. Une information, pas une garantie (comme le badge de l'ADR 0160).
+ */
+export const RESPONSE_BANDS = ["deux_heures", "six_heures", "journee"] as const;
+export type ResponseBand = (typeof RESPONSE_BANDS)[number];
+
+export function responseBand(minutes: number | null, responses: number): ResponseBand | null {
+  if (minutes === null || responses < RESPONSE_TIME_MIN_RESPONSES) return null;
+  if (minutes < FAST_RESPONSE_MINUTES) return "deux_heures";
+  if (minutes < 6 * 60) return "six_heures";
+  if (minutes < 24 * 60) return "journee";
+  return null;
+}

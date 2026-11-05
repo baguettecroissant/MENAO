@@ -222,6 +222,31 @@ function moment(iso: string | null): { day: string; time: string } | null {
 
 const hello = (firstName: string | null) => (firstName ? `Bonjour ${firstName},` : "Bonjour,");
 
+/** Délai de réponse habituel (ADR 0221) : tranche communiquée au particulier, jamais un chiffre. */
+const RESPONSE_BAND_LABELS: Record<string, string> = {
+  deux_heures: "en moins de 2 h",
+  six_heures: "en moins de 6 h",
+  journee: "dans la journée",
+};
+function responseDelays(data: Record<string, unknown>): string[] {
+  const value = data.delais;
+  if (!Array.isArray(value)) return [];
+  const lines = value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const { nom, tranche } = item as { nom?: unknown; tranche?: unknown };
+      const band = typeof tranche === "string" ? RESPONSE_BAND_LABELS[tranche] : undefined;
+      return typeof nom === "string" && nom.trim() && band
+        ? `${nom.trim()} répond en général ${band}.`
+        : null;
+    })
+    .filter((line): line is string => line !== null)
+    .slice(0, 3);
+  return lines.length > 0
+    ? [...lines, "C'est une indication tirée de ses réponses passées, pas un engagement."]
+    : [];
+}
+
 /** Étapes de l'inscription encore à faire (relances, ADR 0219), dans l'ordre du parcours. */
 const SIGNUP_STEP_LABELS: Record<string, string> = {
   entreprise: "les informations de votre entreprise",
@@ -286,6 +311,8 @@ export function notificationContent(
             ? `Votre demande pour ${quoted(titre)} a bien été envoyée à ${to} vérifié${nb > 1 ? "s" : ""}.`
             : `Votre demande pour ${quoted(titre)} a bien été envoyée.`,
           "Chaque artisan a 72 heures pour vous répondre. Vous serez prévenu dès qu'un artisan fixe un rendez-vous ; sans réponse, nous vous proposerons d'autres artisans.",
+          // Délai de réponse habituel de chaque artisan (ADR 0221).
+          ...responseDelays(data),
         ],
         quote: null,
         cta: { label: "Suivre ma demande", url: link("/mon-espace") },

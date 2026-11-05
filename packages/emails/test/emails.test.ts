@@ -566,6 +566,28 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("demande envoyée : délai de réponse habituel de chaque artisan (ADR 0221)", () => {
+    const content = notificationContent(
+      "demande_envoyee",
+      {
+        titre: "Fuite",
+        nb: 2,
+        delais: [
+          { nom: "Rapide Plomberie", tranche: "deux_heures" },
+          { nom: "Autre", tranche: "inconnue" },
+          { nom: "  ", tranche: "journee" },
+        ],
+      },
+      ctx,
+    );
+    expect(content.paragraphs).toContain("Rapide Plomberie répond en général en moins de 2 h.");
+    expect(content.paragraphs.at(-1)).toBe(
+      "C'est une indication tirée de ses réponses passées, pas un engagement.",
+    );
+    const none = notificationContent("demande_envoyee", { titre: "Fuite", nb: 1 }, ctx);
+    expect(none.paragraphs.join(" ")).not.toContain("répond en général");
+  });
+
   it("relances de l'inscription : étapes manquantes listées, sans Kbis exigé (ADR 0219)", () => {
     const withSteps = notificationContent(
       "inscription_relance",

@@ -6106,6 +6106,13 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_response_bands: {
+        Args: { p_request_ids: string[] };
+        Returns: {
+          request_id: string;
+          tranche: string;
+        }[];
+      };
       particulier_slot_proposals: {
         Args: Record<PropertyKey, never>;
         Returns: {
