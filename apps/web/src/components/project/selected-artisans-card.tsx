@@ -1,4 +1,4 @@
-import { Briefcase, MapPin } from "lucide-react";
+import { Briefcase, Clock, MapPin } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
@@ -14,6 +14,8 @@ export type SelectedArtisan = {
   trade?: string | null;
   zone?: string | null;
   availableNow?: boolean;
+  /** Délai de réponse habituel, en tranche (ADR 0221) : page de confirmation de l'envoi. */
+  responseBand?: string | null;
 };
 
 /** « Artisan sélectionné » (maquettes) : colonne de gauche de la demande et de sa confirmation. */
@@ -62,6 +64,12 @@ export function SelectedArtisansCard({
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <MapPin aria-hidden="true" className="size-3.5 shrink-0" />
                   {a.zone}
+                </p>
+              )}
+              {a.responseBand && t.responseBands[a.responseBand] && (
+                <p className="flex items-center gap-1.5 text-xs text-primary-strong">
+                  <Clock aria-hidden="true" className="size-3.5 shrink-0" />
+                  {t.responseBands[a.responseBand]}
                 </p>
               )}
               {a.availableNow && (

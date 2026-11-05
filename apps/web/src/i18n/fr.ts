@@ -1905,6 +1905,11 @@ export const fr = {
         "Nous venons de vous envoyer un e-mail de confirmation. Cliquez sur le lien qu'il contient : vous reviendrez ici pour envoyer votre demande.",
       selected: "Artisan sélectionné",
       selectedMany: "Artisans sélectionnés",
+      responseBands: {
+        deux_heures: "Répond en général en moins de 2 h",
+        six_heures: "Répond en général en moins de 6 h",
+        journee: "Répond en général dans la journée",
+      } as Record<string, string>,
       changeSelection: "Modifier",
       project: "Votre projet",
       messageTitle: "Ajouter un message personnalisé",
@@ -1943,6 +1948,8 @@ export const fr = {
       sentCallbackRange: (from: string, to: string) =>
         `Vous avez indiqué être joignable par téléphone entre ${from} et ${to}.`,
       sentNext: "Vous recevrez les coordonnées de chaque artisan dès qu'il accepte votre demande.",
+      // Délai de réponse habituel (ADR 0221) : une information, pas une garantie.
+      responseNote: "Délais indicatifs, tirés des réponses passées de chaque artisan.",
       follow: "Suivre ma demande depuis mon espace",
       // Chantier à plusieurs métiers (ADR 0168) : les métiers qui restent à contacter.
       otherLots: {

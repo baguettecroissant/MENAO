@@ -17,6 +17,7 @@ import {
   requestDeadline,
   respondsFast,
   timeLeft,
+  responseBand,
 } from "../src/requests";
 
 describe("demandes de chantier (F-11, F-17)", () => {
@@ -150,5 +151,19 @@ describe("annulation par l'artisan : signalement (ADR 0145)", () => {
     expect(ARTISAN_CANCEL_REASONS.filter((r) => cancelReport(r) !== null)).toEqual(
       Constants.public.Enums.artisan_report_kind,
     );
+  });
+});
+
+describe("délai de réponse habituel communiqué au particulier (ADR 0221)", () => {
+  it("tranche seulement avec assez d'historique et une réponse en moins d'une journée", () => {
+    expect(responseBand(null, 10)).toBeNull();
+    expect(responseBand(30, 2)).toBeNull();
+    expect(responseBand(30, 3)).toBe("deux_heures");
+    expect(responseBand(119, 5)).toBe("deux_heures");
+    expect(responseBand(120, 5)).toBe("six_heures");
+    expect(responseBand(359, 5)).toBe("six_heures");
+    expect(responseBand(360, 5)).toBe("journee");
+    expect(responseBand(1439, 5)).toBe("journee");
+    expect(responseBand(1440, 5)).toBeNull();
   });
 });
