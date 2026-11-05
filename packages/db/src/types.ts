@@ -5776,6 +5776,18 @@ export type Database = {
           welcome: number;
         }[];
       };
+      commercial_add_report: {
+        Args: {
+          p_id: string;
+          p_interest: string;
+          p_next_action_at?: string;
+          p_next_action_label?: string;
+          p_objections: string[];
+          p_status: Database["public"]["Enums"]["prospect_status"];
+          p_summary: string;
+        };
+        Returns: string;
+      };
       commercial_bonuses_list: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -5789,18 +5801,6 @@ export type Database = {
           validate_after: string;
           validated_at: string;
         }[];
-      };
-      commercial_add_report: {
-        Args: {
-          p_id: string;
-          p_interest: string;
-          p_next_action_at?: string;
-          p_next_action_label?: string;
-          p_objections: string[];
-          p_status: Database["public"]["Enums"]["prospect_status"];
-          p_summary: string;
-        };
-        Returns: string;
       };
       commercial_copilot_context: { Args: { p_id: string }; Returns: Json };
       commercial_day: {
