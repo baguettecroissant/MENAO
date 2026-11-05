@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, X } from "lucide-react";
+import { ArrowUp, MessageCircle, X } from "lucide-react";
 import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 import { LogoMark } from "@/components/brand/logo";
 import { focusRing, inputClasses } from "@/components/ui";
@@ -8,8 +8,39 @@ import { focusRing, inputClasses } from "@/components/ui";
 /**
  * Éléments communs des assistants MENAO (pages Pro, ADR 0218 ; particuliers, ADR 0220) : fenêtre
  * plein écran sur téléphone (page derrière figée) et en bas à droite sur grand écran, bulles,
- * questions à poser d'un toucher, points « en train d'écrire », champ de saisie.
+ * questions à poser d'un toucher, points « en train d'écrire », champ de saisie, bulle d'ouverture.
  */
+
+/** Bulle ronde en bas à droite : apparition douce, halo discret (trois pulsations). */
+export function AssistantBubble({
+  label,
+  title,
+  onOpen,
+}: {
+  label: string;
+  title: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={label}
+      title={title}
+      className={`animate-menao-bubble-in group fixed right-4 bottom-4 z-40 inline-flex size-14 items-center justify-center rounded-pill bg-[linear-gradient(135deg,#1a2b85_0%,#4869f6_100%)] text-white shadow-raised ring-2 ring-white transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:bottom-6 ${focusRing}`}
+    >
+      {/* Halo discret : trois pulsations après l'arrivée, puis plus rien. */}
+      <span
+        aria-hidden="true"
+        className="animate-menao-halo pointer-events-none absolute inset-0 rounded-pill bg-primary"
+      />
+      <MessageCircle
+        aria-hidden="true"
+        className="relative size-6 fill-white transition-transform duration-200 group-hover:-rotate-6"
+      />
+    </button>
+  );
+}
 export function AssistantDialog({
   id,
   title,

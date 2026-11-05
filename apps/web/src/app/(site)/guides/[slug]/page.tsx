@@ -16,6 +16,7 @@ import { guideCover, guideShareImage, shareImage } from "@/lib/site/images";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
 import { frenchSpacing } from "@/lib/site/typography";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.guides;
 
@@ -323,6 +324,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
           reassurance={fr.site.cta.reassurance}
         />
       )}
+      <SiteAssistantBubble />
     </main>
   );
 }

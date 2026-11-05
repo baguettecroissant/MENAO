@@ -17,6 +17,7 @@ import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID } from "@/lib/site/structured-data";
 import { createPublicClient } from "@/lib/supabase/public";
 import { shareImage } from "@/lib/site/images";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.seo;
 
@@ -317,6 +318,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         action={{ href: searchHref, label: fr.site.cta.action }}
         reassurance={fr.site.cta.reassurance}
       />
+      <SiteAssistantBubble />
     </main>
   );
 }

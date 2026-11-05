@@ -12,6 +12,7 @@ import { FaqJsonLd, FaqList, type FaqItem } from "@/components/site/faq-list";
 import { PageHero } from "@/components/site/page-hero";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.pages.faq;
 const CATEGORIES: {
@@ -110,6 +111,7 @@ export default function FaqPage() {
         </div>
       </div>
       <FaqJsonLd items={CATEGORIES.flatMap((category) => category.items)} />
+      <SiteAssistantBubble />
     </main>
   );
 }
