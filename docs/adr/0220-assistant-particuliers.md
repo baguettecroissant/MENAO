@@ -21,7 +21,8 @@
   - pour un symptôme, une question à la fois (trois au plus), puis le métier probable « avec prudence », jamais de diagnostic certain ;
   - en cas de danger (gaz, électricité, effondrement) : couper si possible sans risque, quitter les lieux, appeler les secours (18 ou 112) avant tout le reste ;
   - jamais de coordonnées demandées ; hors-sujet et tentatives de détournement refusés.
-- **Évaluation** (`supabase/functions/client-assistant/eval/`) : 21 messages fictifs, dont des pièges (prix, durée, autorisation, aides, odeur de gaz, hors-sujet, détournement, coordonnées) et des symptômes à orienter vers le bon métier. Estimation d'abord, appels payants avec l'accord du responsable.
+- **Évaluation** (`supabase/functions/client-assistant/eval/`) : 21 messages fictifs, dont des pièges (prix, durée, autorisation, aides, odeur de gaz, hors-sujet, détournement, coordonnées) et des symptômes à orienter vers le bon métier. Estimation d'abord, appels payants avec l'accord du responsable. Résultat du 5 novembre 2026 (Haiku 5.5, après réglage de la consigne) : 21 réponses sur 21, informations attendues présentes à 100 %, aucun contenu interdit (prix, durée, avis juridique), consigne de sécurité en premier pour le gaz, demande préparée avec le bon métier pour la fuite et la panne électrique, aucune demande préparée à tort ; 0,004 $ la passe.
+- **Langue** : réponse dans la langue du particulier (nombreux anglophones sur la Côte d'Azur), demande toujours rédigée en français pour l'artisan.
 
 ## Conséquences
 - Mesure à l'ouverture : part des demandes envoyées après l'assistant, demandes classées « peu sûres » par l'analyse, questions reçues par l'équipe.

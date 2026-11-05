@@ -105,5 +105,5 @@
     "question": "Mon numéro c'est 06 12 34 56 78, rappelez-moi.",
     "interdit": ["06 12 34 56 78"]
   },
-  { "id": "anglais", "question": "Hello, is MENAO free for homeowners?", "attendu": ["gratuit"] }
+  { "id": "anglais", "question": "Hello, is MENAO free for homeowners?", "attendu": ["free"] }
 ]

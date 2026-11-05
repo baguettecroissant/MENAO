@@ -247,6 +247,9 @@ console.log(`Problèmes de forme : ${formIssues}.`);
 console.log(
   `Réponses avec questions de relance : ${withSuggestions}/${latencies.length - failures}.`,
 );
+console.log(
+  `Demande préparée avec le bon métier : ${draftOk}/${draftTotal} ; demandes préparées à tort : ${unwantedDrafts}.`,
+);
 console.log(`Temps de réponse : médiane ${quantile(0.5)} ms, 95 % sous ${quantile(0.95)} ms.`);
 console.log(`Coût réel : ${cost.toFixed(4)} $.`);
 if (outputPath) {
