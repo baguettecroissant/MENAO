@@ -129,7 +129,6 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
             ref={listRef}
             className="flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4"
           >
-            <p className="text-xs text-subtle-foreground">{t.aiNotice}</p>
             <Bubble role="assistant" speaker={t.title}>
               {t.greeting}
             </Bubble>

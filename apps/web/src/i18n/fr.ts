@@ -1469,8 +1469,6 @@ export const fr = {
       title: "Assistant MENAO",
       subtitle: "IA · répond en quelques secondes",
       close: "Fermer l'assistant",
-      aiNotice:
-        "Vous échangez avec une intelligence artificielle. Elle vous aide à décrire votre besoin et répond à vos questions sur MENAO ; l'artisan confirmera tout sur place.",
       greeting:
         "Bonjour ! Décrivez votre problème avec vos mots, ou posez votre question : je vous aide à trouver le bon artisan et à préparer votre demande.",
       quick: [
@@ -4761,8 +4759,6 @@ export const fr = {
       title: "Assistant MENAO",
       subtitle: "IA · répond en quelques secondes",
       close: "Fermer l'assistant",
-      aiNotice:
-        "Vous échangez avec une intelligence artificielle. Ses réponses s'appuient sur les informations publiées sur le site ; pour votre situation, demandez à être rappelé.",
       greeting:
         "Bonjour ! Je réponds à vos questions sur MENAO : prix, inscription, demandes de chantier, paiements. Que voulez-vous savoir ?",
       // Questions à réponse immédiate : la réponse est celle de la FAQ de la page (index).

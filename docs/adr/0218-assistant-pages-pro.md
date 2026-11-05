@@ -11,7 +11,7 @@
 
 ## Décision
 - **Bouton « Une question ? »** en bas à droite de `/pro` et `/pro/[metier]` (`components/pro-landing/pro-assistant.tsx`). La fenêtre (`pro-assistant-panel.tsx`) n'est téléchargée qu'au premier clic.
-- **Mention IA** permanente en tête de conversation (transparence, règlement européen sur l'IA, article 50).
+- **Mention IA** permanente dans l'en-tête de la fenêtre (« IA · répond en quelques secondes » : transparence, règlement européen sur l'IA, article 50). Le paragraphe d'avertissement en tête de conversation a été retiré le 5 novembre 2026 à la demande de l'utilisateur (trop long, comme chez Checkatrade).
 - **4 questions à réponse immédiate** (prix, documents, demandes, commission) : la réponse est celle de la FAQ de la page Pro, sans appel au modèle.
 - **Questions libres** : Edge Function `pro-assistant`, sans compte, sur le modèle de `suggest-need` :
   - limites par adresse IP (40 par heure) et globale (1 500 par heure), 6 questions par conversation (`PRO_ASSISTANT_MAX_QUESTIONS`) ;
