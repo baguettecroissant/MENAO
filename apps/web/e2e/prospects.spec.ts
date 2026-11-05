@@ -33,6 +33,8 @@ test("prospects : journée, recherche, suivi, rendez-vous et ne plus contacter",
     page.getByRole("heading", { name: "ELEC PROSPECT EXEMPLE", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Suivre ce prospect" }).click();
+  // Copilote (ADR 0223) : visible dès que le prospect est suivi, sans appel à l'IA ici.
+  await expect(page.getByRole("tab", { name: "Préparer ma visite" })).toBeVisible();
   await page.getByLabel("Étape").selectOption({ label: "Rendez-vous pris" });
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris" }).format(new Date());
   await page.getByLabel("Prochaine action (rendez-vous ou relance)").fill(`${today}T23:30`);

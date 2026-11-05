@@ -3629,6 +3629,33 @@ export type Database = {
           },
         ];
       };
+      prospect_briefs: {
+        Row: {
+          content: NonNullable<Json>;
+          created_at: string;
+          prospect_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          content: NonNullable<Json>;
+          created_at?: string;
+          prospect_id: string;
+        };
+        Update: {
+          content?: NonNullable<Json>;
+          created_at?: string;
+          prospect_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prospect_briefs_prospect_id_fkey";
+            columns: ["prospect_id"];
+            isOneToOne: true;
+            referencedRelation: "prospect_follows";
+            referencedColumns: ["prospect_id"];
+          },
+        ];
+      };
       prospect_follows: {
         Row: {
           commercial_id: string;
@@ -3693,6 +3720,55 @@ export type Database = {
           siren?: string;
         };
         Relationships: [];
+      };
+      prospect_reports: {
+        Row: {
+          commercial_id: string;
+          created_at: string;
+          id: string;
+          interest: string;
+          next_action_label: string | null;
+          objections: string[];
+          prospect_id: string;
+          summary: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          created_at?: string;
+          id?: string;
+          interest: string;
+          next_action_label?: string | null;
+          objections?: string[];
+          prospect_id: string;
+          summary: string;
+        };
+        Update: {
+          commercial_id?: string;
+          created_at?: string;
+          id?: string;
+          interest?: string;
+          next_action_label?: string | null;
+          objections?: string[];
+          prospect_id?: string;
+          summary?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prospect_reports_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prospect_reports_prospect_id_fkey";
+            columns: ["prospect_id"];
+            isOneToOne: false;
+            referencedRelation: "prospect_follows";
+            referencedColumns: ["prospect_id"];
+          },
+        ];
       };
       prospects: {
         Row: {
@@ -5756,6 +5832,18 @@ export type Database = {
           welcome: number;
         }[];
       };
+      commercial_add_report: {
+        Args: {
+          p_id: string;
+          p_interest: string;
+          p_next_action_at?: string;
+          p_next_action_label?: string;
+          p_objections: string[];
+          p_status: Database["public"]["Enums"]["prospect_status"];
+          p_summary: string;
+        };
+        Returns: string;
+      };
       commercial_bonuses_list: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -5770,6 +5858,7 @@ export type Database = {
           validated_at: string;
         }[];
       };
+      commercial_copilot_context: { Args: { p_id: string }; Returns: Json };
       commercial_day: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -5812,6 +5901,10 @@ export type Database = {
           tranche_effectif: string;
         }[];
       };
+      commercial_prospect_demand: {
+        Args: { p_days?: number; p_id: string; p_radius_km?: number; p_trade_codes: string[] };
+        Returns: number;
+      };
       commercial_prospects: {
         Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_search?: string };
         Returns: {
@@ -5833,6 +5926,7 @@ export type Database = {
       };
       commercial_release_prospect: { Args: { p_id: string }; Returns: undefined };
       commercial_results: { Args: Record<PropertyKey, never>; Returns: Json };
+      commercial_save_brief: { Args: { p_content: Json; p_id: string }; Returns: string };
       commercial_update_prospect: {
         Args: {
           p_id: string;

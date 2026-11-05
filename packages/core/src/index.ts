@@ -63,6 +63,7 @@ export * from "./document-reading";
 export * from "./need-suggestion";
 export * from "./pro-assistant";
 export * from "./client-assistant";
+export * from "./commercial-copilot";
 export * from "./need-phrases";
 export * from "./need-photo";
 export * from "./market-map";

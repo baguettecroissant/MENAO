@@ -117,7 +117,8 @@ export type AiRun = {
     | "describe-photo"
     | "read-expense"
     | "pro-assistant"
-    | "client-assistant";
+    | "client-assistant"
+    | "commercial-copilot";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;
