@@ -6049,6 +6049,13 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_response_bands: {
+        Args: { p_request_ids: string[] };
+        Returns: {
+          request_id: string;
+          tranche: string;
+        }[];
+      };
       particulier_start_balance: { Args: { p_chantier_id: string }; Returns: Json };
       particulier_start_deposit: { Args: { p_quote_id: string }; Returns: Json };
       particulier_start_reception: {
