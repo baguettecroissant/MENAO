@@ -14,6 +14,11 @@ import { joinNames } from "@/lib/project/names";
 import { getProjectSummary } from "@/lib/project/summary";
 import { createClient } from "@/lib/supabase/server";
 import { oauthProviders } from "@/lib/auth/oauth";
+import {
+  continueWithProviderForRequest,
+  signInForRequest,
+  signUpForRequest,
+} from "@/lib/project/request-actions";
 import { AccountStep } from "./account-step";
 import { RequestForm } from "./request-form";
 
@@ -121,7 +126,16 @@ export default async function SendRequestPage({
 
   let form;
   if (anonymous) {
-    form = <AccountStep context={context} providers={oauthProviders} />;
+    form = (
+      <AccountStep
+        actions={{
+          signUp: signUpForRequest.bind(null, context),
+          signIn: signInForRequest.bind(null, context),
+          provider: continueWithProviderForRequest.bind(null, context),
+        }}
+        providers={oauthProviders}
+      />
+    );
   } else if (roleFromAppMetadata(auth.claims.app_metadata) !== "particulier") {
     form = <Alert tone="error">{t.notParticulier}</Alert>;
   } else {

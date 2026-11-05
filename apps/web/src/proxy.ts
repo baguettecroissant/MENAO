@@ -137,6 +137,7 @@ export const config = {
     "/admin/:path*",
     "/commercial/:path*",
     "/recherche/:path*",
+    "/demande-preparee/:path*",
     "/finaliser-compte",
   ],
 };

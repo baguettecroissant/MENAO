@@ -4987,6 +4987,52 @@ export type Database = {
         };
         Relationships: [];
       };
+      voice_work_requests: {
+        Row: {
+          created_at: string;
+          email: string;
+          first_name: string;
+          id: string;
+          phone: string;
+          project_id: string;
+          transfer_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          email: string;
+          first_name: string;
+          id?: string;
+          phone: string;
+          project_id: string;
+          transfer_id: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          first_name?: string;
+          id?: string;
+          phone?: string;
+          project_id?: string;
+          transfer_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "voice_work_requests_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "voice_work_requests_transfer_id_fkey";
+            columns: ["transfer_id"];
+            isOneToOne: true;
+            referencedRelation: "project_transfers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       webhook_events: {
         Row: {
           created_at: string;
@@ -6651,6 +6697,10 @@ export type Database = {
         }[];
       };
       voice_dossier_for_email: { Args: { p_email: string }; Returns: Json };
+      voice_prepare_work_request: {
+        Args: { p_email: string; p_first_name: string; p_phone: string; p_project_id: string };
+        Returns: string;
+      };
       voice_request_callback: {
         Args: {
           p_city?: string;
@@ -6662,6 +6712,18 @@ export type Database = {
           p_trade?: string;
         };
         Returns: string;
+      };
+      voice_work_request_preview: {
+        Args: { p_token: string };
+        Returns: {
+          email: string;
+          first_name: string;
+          phone: string;
+          project_id: string;
+          summary: string;
+          trade_label: string;
+          ville_nom: string;
+        }[];
       };
     };
     Enums: {

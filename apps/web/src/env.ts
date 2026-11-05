@@ -30,6 +30,8 @@ const schema = z.object({
   // aux origines du site dans Vapi) et identifiant de l'assistant. Vides : aucun bouton d'appel.
   NEXT_PUBLIC_VAPI_PUBLIC_KEY: z.string().optional(),
   NEXT_PUBLIC_VAPI_ASSISTANT_ID: z.string().optional(),
+  // Camille côté particuliers (ADR 0227) : demande de travaux par téléphone. Vide : aucun bouton.
+  NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID: z.string().optional(),
 });
 
 export const env = schema.parse({
@@ -42,4 +44,5 @@ export const env = schema.parse({
   NEXT_PUBLIC_OAUTH_PROVIDERS: process.env.NEXT_PUBLIC_OAUTH_PROVIDERS,
   NEXT_PUBLIC_VAPI_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY,
   NEXT_PUBLIC_VAPI_ASSISTANT_ID: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
+  NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID: process.env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID,
 });
