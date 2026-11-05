@@ -116,7 +116,8 @@ export type AiRun = {
     | "suggest-need"
     | "describe-photo"
     | "read-expense"
-    | "pro-assistant";
+    | "pro-assistant"
+    | "client-assistant";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;
