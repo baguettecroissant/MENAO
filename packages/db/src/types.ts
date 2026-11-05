@@ -6559,6 +6559,19 @@ export type Database = {
       };
       unregister_push_token: { Args: { p_token: string }; Returns: undefined };
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
+      voice_dossier_for_email: { Args: { p_email: string }; Returns: Json };
+      voice_request_callback: {
+        Args: {
+          p_city?: string;
+          p_email: string;
+          p_first_name: string;
+          p_moment?: string;
+          p_phone: string;
+          p_reason: string;
+          p_trade?: string;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       accountant_export_kind: "automatique" | "manuel";

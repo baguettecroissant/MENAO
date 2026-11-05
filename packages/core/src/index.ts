@@ -79,3 +79,4 @@ export * from "./launch-plan";
 export * from "./launch-figures";
 export * from "./registry";
 export * from "./presentation-draft";
+export * from "./voice-assistant";
