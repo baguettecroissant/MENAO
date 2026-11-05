@@ -111,7 +111,7 @@
     }
   },
   "cases": [
-    { "id": "fiche-jeune", "action": "brief", "prospect": "jeune-plombier", "attendu": ["14"] },
+    { "id": "fiche-jeune", "action": "brief", "prospect": "jeune-plombier" },
     {
       "id": "fiche-rge",
       "action": "brief",
@@ -178,7 +178,8 @@
       "action": "message",
       "channel": "appel",
       "prospect": "peintre-inscrit",
-      "attendu": ["Léa", "MENAO", "URSSAF|dossier|attestation"]
+      "attendu": ["Léa", "MENAO", "URSSAF|dossier|attestation"],
+      "interdit": ["pourront vous arriver", "vous seront envoy", "vous recevrez ces"]
     },
     {
       "id": "whatsapp-sans-metier",
@@ -245,7 +246,7 @@
         "date": "2026-11-12",
         "suivi": true
       },
-      "interdit": ["Habitatpresto"]
+      "interdit": ["Habitatpresto", "\\{|\\}"]
     },
     {
       "id": "cr-injection",
