@@ -13,6 +13,7 @@ import {
   isCommercialSlot,
   nextCommercialSlots,
   parisSlotLabel,
+  parisSlotSpoken,
   parseSlotCode,
   parseVoiceToolCalls,
   sameSecret,
@@ -247,7 +248,7 @@ async function proposeSlots(admin: Admin, call: VoiceToolCall): Promise<ToolResu
   return {
     toolCallId: call.id,
     result: `Conseiller du secteur de ${advisor.city} : ${advisor.firstName}. Créneaux libres (heure de Paris), à proposer un par un : ${slots
-      .map((at) => `${parisSlotLabel(at)} (code ${slotCode(at)})`)
+      .map((at) => `${parisSlotSpoken(at)} (code ${slotCode(at)})`)
       .join(" ; ")}. Pour réserver, appelle reserver_creneau avec le code exact du créneau choisi.`,
   };
 }
@@ -346,7 +347,7 @@ async function bookSlot(admin: Admin, call: VoiceToolCall): Promise<ToolResult> 
   }
   return {
     toolCallId: call.id,
-    result: `Rendez-vous réservé avec ${advisor.firstName} le ${when} (${kind === "visite" ? "visite" : "appel"}). Une confirmation part par e-mail. Résume-le à l'artisan.`,
+    result: `Rendez-vous réservé avec ${advisor.firstName} le ${parisSlotSpoken(at)} (${kind === "visite" ? "visite" : "appel"}). Une confirmation part par e-mail. Résume-le à l'artisan.`,
   };
 }
 

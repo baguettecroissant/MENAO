@@ -388,3 +388,52 @@ export function slotCode(at: Date): string {
   }).format(at);
   return `${parisDate(at)}T${time}`;
 }
+
+const UNITS = [
+  "zéro",
+  "un",
+  "deux",
+  "trois",
+  "quatre",
+  "cinq",
+  "six",
+  "sept",
+  "huit",
+  "neuf",
+  "dix",
+  "onze",
+  "douze",
+  "treize",
+  "quatorze",
+  "quinze",
+  "seize",
+];
+const TENS: Record<number, string> = { 20: "vingt", 30: "trente", 40: "quarante", 50: "cinquante" };
+
+/** Nombre de 0 à 59 en toutes lettres (« vingt et un », « dix-sept »). */
+export function frenchNumberWords(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 59) return String(n);
+  if (n <= 16) return UNITS[n] as string;
+  if (n < 20) return `dix-${UNITS[n - 10]}`;
+  const tens = Math.floor(n / 10) * 10;
+  const unit = n % 10;
+  if (unit === 0) return TENS[tens] as string;
+  return unit === 1 ? `${TENS[tens]} et un` : `${TENS[tens]}-${UNITS[unit]}`;
+}
+
+/**
+ * « vendredi six novembre à quatorze heures trente » : créneau à lire au téléphone (ADR 0226), tout
+ * en lettres, pour que la voix ne lise jamais un chiffre à l'anglaise.
+ */
+export function parisSlotSpoken(at: Date): string {
+  const label = parisSlotLabel(at); // « vendredi 6 novembre à 14 h 30 »
+  const match = /^(\S+) (\d+) (\S+) à (\d+) h(?: (\d+))?$/.exec(label);
+  if (!match) return label;
+  const [, weekday, day, month, hour, minute] = match;
+  const d = Number(day);
+  const h = Number(hour);
+  const hours =
+    h === 0 ? "minuit" : h === 12 ? "midi" : `${frenchNumberWords(h)} heure${h > 1 ? "s" : ""}`;
+  const minutes = minute ? ` ${frenchNumberWords(Number(minute))}` : "";
+  return `${weekday} ${d === 1 ? "premier" : frenchNumberWords(d)} ${month} à ${hours}${minutes}`;
+}
