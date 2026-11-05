@@ -56,6 +56,14 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   expect(first.length).toBeGreaterThan(0);
   await capture(page, "commercial-guide");
 
+  // Simulateur d'entraînement (ADR 0224), rangé dans le guide : choix de l'artisan, sans appel à
+  // l'IA ici.
+  await page.goto("/commercial/guide");
+  await page.getByRole("list", { name: "Entraînement" }).getByRole("link").click();
+  await expect(page.getByRole("heading", { name: "S'entraîner", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: /Le méfiant/ }).click();
+  await expect(page.getByText("Oui ? C'est pour quoi ?")).toBeVisible();
+
   // Mes résultats (lot 3) : l'inscrit du seed, primes non réglées (règle 15).
   await page
     .getByRole("navigation", { name: "Navigation de l'espace commercial" })

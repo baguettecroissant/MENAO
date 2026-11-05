@@ -401,6 +401,90 @@ export const fr = {
       label: "120 caractères au plus.",
     },
   },
+  /**
+   * Simulateur d'entraînement des commerciaux (F-74, ADR 0224) : un artisan joué par l'IA, puis
+   * la note d'un coach. Personnages fictifs.
+   */
+  commercialTraining: {
+    // Rangé dans le guide terrain : aucune nouvelle entrée de menu.
+    guideRow: {
+      label: "Entraînement",
+      title: "S'entraîner face à un artisan",
+      detail: "Un artisan joué par l'IA, puis la note d'un coach sur 20 avec 3 conseils.",
+    },
+    back: "Guide terrain",
+    metaTitle: "S'entraîner — MENAO",
+    title: "S'entraîner",
+    intro:
+      "Face à un artisan joué par l'IA, entraînez-vous à l'accroche, aux objections et à la conclusion. Un coach note ensuite l'échange sur 20, avec 3 conseils.",
+    choose: "Choisissez votre artisan",
+    personas: {
+      mefiant: {
+        label: "Le méfiant",
+        description: "Plombier installé depuis 25 ans, déjà déçu par une plateforme.",
+        opener: "Oui ? C'est pour quoi ?",
+      },
+      presse: {
+        label: "Le pressé",
+        description: "Électricien sur un chantier, deux minutes devant lui.",
+        opener: "Allô ? Oui, je suis sur un chantier, faites vite.",
+      },
+      autre_plateforme: {
+        label: "Déjà sur une plateforme",
+        description: "Peintre qui achète déjà des contacts à l'unité.",
+        opener: "Bonjour. Vous vendez quoi ?",
+      },
+      debutant: {
+        label: "Le débutant",
+        description: "Menuisier micro-entrepreneur installé depuis 4 mois, budget serré.",
+        opener: "Bonjour ! Oui, c'est moi le menuisier. Je vous écoute.",
+      },
+      patron: {
+        label: "Le patron",
+        description: "Gérant d'une maçonnerie de 10 salariés, carnet plein.",
+        opener: "Bonjour. J'ai cinq minutes entre deux rendez-vous, je vous écoute.",
+      },
+    } as Record<string, { label: string; description: string; opener: string }>,
+    artisan: "Artisan",
+    you: "Vous",
+    turns: (count: number, max: number) => `${count} sur ${max} messages`,
+    placeholder: "Votre réponse…",
+    inputLabel: "Votre message à l'artisan",
+    send: "Envoyer",
+    thinking: "L'artisan répond…",
+    finish: "Terminer et voir ma note",
+    finishHint: (min: number) => `La note est possible après ${min} messages.`,
+    ended: {
+      accord: "L'artisan est d'accord pour la suite.",
+      refus: "L'artisan a mis fin à l'échange.",
+    } as Record<string, string>,
+    limit: "Dernier message de la séance : place à la note.",
+    coachPending: "Le coach relit l'échange…",
+    scoreLabel: "Votre note",
+    score: (total: number) => `${total}/20`,
+    criteria: {
+      accroche: "Accroche",
+      ecoute: "Écoute",
+      objections: "Objections",
+      regles: "Règles",
+      conclusion: "Conclusion",
+    } as Record<string, string>,
+    criterionScore: (score: number) => `${score} sur 4`,
+    strengths: "Vos points forts",
+    tips: "3 conseils pour la prochaine fois",
+    breaches: "Règles enfreintes",
+    again: "Recommencer avec cet artisan",
+    change: "Changer d'artisan",
+    history: {
+      title: "Mes dernières séances",
+      row: (persona: string, total: number) => `${persona} · ${total}/20`,
+    },
+    errors: {
+      rate_limited: "Limite du jour atteinte pour l'entraînement. Réessayez demain.",
+      forbidden: "L'entraînement est réservé aux commerciaux actifs.",
+      unavailable: "Le simulateur est momentanément indisponible. Réessayez dans quelques minutes.",
+    },
+  },
   /** Résultats et primes des commerciaux (F-65, lot 3, ADR 0207). */
   commercialResults: {
     nav: "Mes résultats",

@@ -2119,6 +2119,42 @@ export type Database = {
           },
         ];
       };
+      commercial_trainings: {
+        Row: {
+          commercial_id: string;
+          created_at: string;
+          id: string;
+          persona: string;
+          score: number;
+          turns: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          created_at?: string;
+          id?: string;
+          persona: string;
+          score: number;
+          turns: number;
+        };
+        Update: {
+          commercial_id?: string;
+          created_at?: string;
+          id?: string;
+          persona?: string;
+          score?: number;
+          turns?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_trainings_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercials: {
         Row: {
           code: string;
@@ -5927,6 +5963,10 @@ export type Database = {
       commercial_release_prospect: { Args: { p_id: string }; Returns: undefined };
       commercial_results: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_save_brief: { Args: { p_content: Json; p_id: string }; Returns: string };
+      commercial_save_training: {
+        Args: { p_persona: string; p_score: number; p_turns: number };
+        Returns: string;
+      };
       commercial_update_prospect: {
         Args: {
           p_id: string;
