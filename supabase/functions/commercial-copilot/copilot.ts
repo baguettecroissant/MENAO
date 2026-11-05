@@ -81,7 +81,7 @@ const CHANNEL_RULES: Record<CopilotChannel, string> = {
   appel: `Script d'appel : 30 secondes à l'oral (${COPILOT_MESSAGE_MAX_LENGTH.appel} caractères au plus), objet vide, phrases à dire telles quelles, une par ligne, qui finissent par une question pour proposer un rendez-vous de 15 minutes ; aucun lien.`,
 };
 
-const VIOLATION_LABELS: Record<CopilotViolation, string> = {
+export const VIOLATION_LABELS: Record<CopilotViolation, string> = {
   garantie: "une garantie de clients, de chantiers ou de demandes",
   nombre_promis: "un nombre de demandes, de chantiers ou de clients",
   revenu: "un revenu ou un chiffre d'affaires",

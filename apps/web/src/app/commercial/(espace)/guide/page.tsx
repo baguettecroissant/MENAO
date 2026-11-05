@@ -4,10 +4,14 @@ import { COMMERCIAL_GUIDE } from "@/content/commercial/guide";
 import { fr } from "@/i18n/fr";
 
 const t = fr.commercialSpace.guide;
+const training = fr.commercialTraining.guideRow;
 
 export const metadata: Metadata = { title: `${t.title} — MENAO`, robots: { index: false } };
 
-/** Guide terrain des commerciaux (F-65, ADR 0205) : une rubrique par page, lisible au téléphone. */
+/**
+ * Guide terrain des commerciaux (F-65, ADR 0205) : une rubrique par page, lisible au téléphone ;
+ * en tête, le simulateur d'entraînement (ADR 0224).
+ */
 export default function CommercialGuidePage() {
   return (
     <main className="bg-background">
@@ -16,6 +20,13 @@ export default function CommercialGuidePage() {
           <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
           <p className="text-sm text-muted-foreground">{t.intro}</p>
         </div>
+        <ListPanel label={training.label}>
+          <ListRow
+            href="/commercial/guide/entrainement"
+            title={training.title}
+            detail={training.detail}
+          />
+        </ListPanel>
         <ListPanel label={t.listLabel}>
           {COMMERCIAL_GUIDE.map((section) => (
             <ListRow

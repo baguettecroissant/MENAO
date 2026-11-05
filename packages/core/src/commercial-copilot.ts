@@ -600,3 +600,185 @@ export function normalizeCopilotReport(
 export function reportTexts(report: CopilotReport): string[] {
   return report.followUp ? [report.followUp] : [];
 }
+
+// ---------------------------------------------------------------------------------------------
+// Simulateur d'entraînement (ADR 0224)
+// ---------------------------------------------------------------------------------------------
+
+/** Artisans joués par l'IA : les profils et les objections les plus courants du guide terrain. */
+export const TRAINING_PERSONAS = [
+  "mefiant",
+  "presse",
+  "autre_plateforme",
+  "debutant",
+  "patron",
+] as const;
+export type TrainingPersona = (typeof TRAINING_PERSONAS)[number];
+
+/** Messages du commercial par séance ; le coach note à partir de 3. */
+export const TRAINING_MAX_TURNS = 12;
+export const TRAINING_MIN_TURNS_FOR_REVIEW = 3;
+export const TRAINING_MESSAGE_MAX_LENGTH = 600;
+/** Une réplique de l'artisan se dit en quelques secondes. */
+const TRAINING_REPLY_MAX_LENGTH = 400;
+
+export type TrainingMessage = { role: "commercial" | "artisan"; text: string };
+
+/**
+ * Échange reçu du navigateur, rendu sûr : messages valides seulement, longueurs bornées, deux
+ * messages du même côté à la suite réduits au dernier, au plus la séance entière. Il n'est jamais
+ * conservé.
+ */
+export function normalizeTrainingHistory(value: unknown): TrainingMessage[] {
+  if (!Array.isArray(value)) return [];
+  const messages: TrainingMessage[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const { role, text } = item as { role?: unknown; text?: unknown };
+    if ((role !== "commercial" && role !== "artisan") || typeof text !== "string") continue;
+    const clean = text.trim();
+    if (!clean) continue;
+    const max = role === "commercial" ? TRAINING_MESSAGE_MAX_LENGTH : TRAINING_REPLY_MAX_LENGTH;
+    if (messages[messages.length - 1]?.role === role) messages.pop();
+    messages.push({ role, text: clean.slice(0, max) });
+  }
+  return messages.slice(-(TRAINING_MAX_TURNS * 2 + 1));
+}
+
+/** Messages du commercial dans l'échange. */
+export function trainingTurnCount(history: readonly TrainingMessage[]): number {
+  return history.filter((m) => m.role === "commercial").length;
+}
+
+export const TRAINING_OUTCOMES = ["en_cours", "accord", "refus"] as const;
+export type TrainingOutcome = (typeof TRAINING_OUTCOMES)[number];
+
+export type RawTrainingReply = { reponse: string; fin: boolean; issue: string };
+export type TrainingReply = { reply: string; ended: boolean; outcome: TrainingOutcome };
+
+export function trainingReplyJsonSchema() {
+  return {
+    type: "object",
+    properties: {
+      reponse: { type: "string" },
+      fin: { type: "boolean" },
+      issue: { type: "string", enum: [...TRAINING_OUTCOMES] },
+    },
+    required: ["reponse", "fin", "issue"],
+    additionalProperties: false,
+  } as const;
+}
+
+/** Réplique nettoyée ; un échange terminé a toujours une issue (accord ou refus). */
+export function normalizeTrainingReply(raw: RawTrainingReply): TrainingReply | null {
+  const reply = upperMenao(raw.reponse.replace(/\s+/g, " ").trim()).slice(
+    0,
+    TRAINING_REPLY_MAX_LENGTH,
+  );
+  if (!reply) return null;
+  const outcome = TRAINING_OUTCOMES.find((o) => o === raw.issue) ?? "en_cours";
+  const ended = raw.fin === true || outcome !== "en_cours";
+  return { reply, ended, outcome: ended && outcome === "en_cours" ? "refus" : outcome };
+}
+
+/** Critères du coach, notés de 0 à 4 : 20 points en tout. */
+export const TRAINING_CRITERIA = [
+  "accroche",
+  "ecoute",
+  "objections",
+  "regles",
+  "conclusion",
+] as const;
+export type TrainingCriterion = (typeof TRAINING_CRITERIA)[number];
+export const TRAINING_CRITERION_MAX = 4;
+
+export type RawTrainingReview = {
+  notes: Record<TrainingCriterion, number>;
+  points_forts: string[];
+  conseils: string[];
+  regles_enfreintes: string[];
+};
+
+export type TrainingReview = {
+  scores: Record<TrainingCriterion, number>;
+  /** Sur 20. */
+  total: number;
+  strengths: string[];
+  tips: string[];
+  breaches: string[];
+};
+
+export function trainingReviewJsonSchema() {
+  return {
+    type: "object",
+    properties: {
+      notes: {
+        type: "object",
+        properties: Object.fromEntries(TRAINING_CRITERIA.map((c) => [c, { type: "integer" }])),
+        required: [...TRAINING_CRITERIA],
+        additionalProperties: false,
+      },
+      points_forts: { type: "array", items: { type: "string" } },
+      conseils: { type: "array", items: { type: "string" } },
+      regles_enfreintes: { type: "array", items: { type: "string" } },
+    },
+    required: ["notes", "points_forts", "conseils", "regles_enfreintes"],
+    additionalProperties: false,
+  } as const;
+}
+
+/**
+ * Règles vérifiées dans les propos du commercial pendant l'entraînement : les mêmes que pour les
+ * textes du copilote, sauf l'offre à l'année (il y répond si l'artisan la demande), les adresses
+ * web, et les nombres de demandes cités sans promesse (les limites des formules, si on les lui
+ * demande). Une promesse explicite (« vous recevrez 10 demandes ») reste interdite.
+ */
+const SPEECH_RULES = RULES.filter(
+  (r) => !["engagement_annuel", "adresse_web", "nombre_promis"].includes(r.code),
+);
+const SPEECH_PROMISE = new RegExp(
+  String.raw`\b(recevr\w*|aur\w*|obtiendr\w*|décrocher\w*|ferez|ferait)\s+(au moins\s+|plus de\s+|facilement\s+)?${NUMBER}\s+${LEADS}`,
+  "iu",
+);
+
+export function speechViolations(text: string): CopilotViolation[] {
+  const found = new Set<CopilotViolation>();
+  for (const rule of SPEECH_RULES) if (rule.pattern.test(text)) found.add(rule.code);
+  if (SPEECH_PROMISE.test(text)) found.add("nombre_promis");
+  return [...found];
+}
+
+const clampScore = (value: unknown) =>
+  typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, Math.min(TRAINING_CRITERION_MAX, Math.round(value)))
+    : 0;
+
+/**
+ * Note du coach, nettoyée. Une règle enfreinte repérée dans les propos du commercial (détecteur)
+ * met « règles » à 0 et s'ajoute aux règles enfreintes, quoi qu'en dise le modèle. Null sans
+ * conseil.
+ */
+export function normalizeTrainingReview(
+  raw: RawTrainingReview,
+  detected: readonly string[],
+): TrainingReview | null {
+  const scores = Object.fromEntries(
+    TRAINING_CRITERIA.map((c) => [c, clampScore(raw.notes?.[c])]),
+  ) as Record<TrainingCriterion, number>;
+  if (detected.length) scores.regles = 0;
+  const list = (items: string[], max: number, length: number) =>
+    items
+      .map((i) => upperMenao(i.replace(/\s+/g, " ").trim()).slice(0, length))
+      .filter(Boolean)
+      .slice(0, max);
+  const tips = list(raw.conseils, 3, 300);
+  if (tips.length === 0) return null;
+  const breaches = [...new Set([...detected, ...list(raw.regles_enfreintes, 4, 200)])];
+  return {
+    scores,
+    total: TRAINING_CRITERIA.reduce((sum, c) => sum + scores[c], 0),
+    strengths: list(raw.points_forts, 2, 240),
+    tips,
+    breaches,
+  };
+}

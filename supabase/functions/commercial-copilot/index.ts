@@ -5,11 +5,13 @@
 //   envoyé par MENAO : le commercial le relit et l'envoie depuis son téléphone ;
 // - « report » : compte rendu d'une dictée (déjà transcrite par la fonction transcribe), à valider
 //   par le commercial avant d'entrer dans son suivi.
+// Et le simulateur d'entraînement (ADR 0224), sans prospect : « train » (réplique de l'artisan joué
+// par l'IA) et « coach » (note sur 20 et conseils ; seule la note est gardée).
 // Le suivi est vérifié par la base (fonctions appelées avec le jeton du commercial). Envoyés au
 // modèle : données publiques de l'entreprise, notes et comptes rendus du commercial (e-mails et
 // téléphones retirés) ; jamais le téléphone, l'adresse ni le SIRET du prospect. Journal : métriques
 // seules (ai_runs).
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   COPILOT_ACTIONS,
   COPILOT_CHANNELS,
@@ -18,6 +20,12 @@ import {
   PROSPECT_DEMAND_DAYS,
   PROSPECT_DEMAND_RADIUS_KM,
   prospectTradeCodes,
+  normalizeTrainingHistory,
+  trainingTurnCount,
+  TRAINING_MAX_TURNS,
+  TRAINING_MESSAGE_MAX_LENGTH,
+  TRAINING_MIN_TURNS_FOR_REVIEW,
+  TRAINING_PERSONAS,
   type ProspectDemand,
   type StoredCopilotBrief,
 } from "../../../packages/core/src/commercial-copilot.ts";
@@ -26,13 +34,22 @@ import { llmConfig, logAiRuns, type AiRun } from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 import { env } from "../_shared/env.ts";
-import { generateBrief, generateMessage, generateReport, type CopilotContext } from "./copilot.ts";
+import {
+  generateBrief,
+  generateMessage,
+  generateReport,
+  VIOLATION_LABELS,
+  type CopilotContext,
+} from "./copilot.ts";
 import { commercialGuideText } from "./knowledge.ts";
+import { detectedBreaches, personaReply, reviewTraining } from "./training.ts";
 
 /** Une journée chargée : une quinzaine de prospects, chacun avec fiche, message et compte rendu. */
 const MAX_PER_DAY_USER = 80;
 /** Plafond de dépense, tous commerciaux confondus. */
 const MAX_PER_HOUR = 600;
+/** Entraînement : une dizaine de séances par jour (12 répliques et une note chacune). */
+const MAX_TRAINING_PER_DAY_USER = 150;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const WEEKDAYS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
@@ -66,18 +83,83 @@ function afterResponse(task: Promise<unknown>): Promise<unknown> | undefined {
   EdgeRuntime.waitUntil(task);
 }
 
-async function withinLimits(admin: ReturnType<typeof adminClient>, userId: string) {
+async function withinLimits(
+  admin: SupabaseClient,
+  userId: string,
+  scope: "copilote" | "entrainement" = "copilote",
+) {
+  const perUser =
+    scope === "copilote"
+      ? ([`commercial-copilot:user:${userId}`, MAX_PER_DAY_USER, 86_400] as const)
+      : ([`commercial-training:user:${userId}`, MAX_TRAINING_PER_DAY_USER, 86_400] as const);
   const results = await Promise.all(
-    (
-      [
-        [`commercial-copilot:user:${userId}`, MAX_PER_DAY_USER, 86_400],
-        ["commercial-copilot:all", MAX_PER_HOUR, 3600],
-      ] as const
-    ).map(([key, max, seconds]) =>
+    [perUser, ["commercial-copilot:all", MAX_PER_HOUR, 3600] as const].map(([key, max, seconds]) =>
       admin.rpc("consume_rate_limit", { p_key: key, p_max: max, p_window_seconds: seconds }),
     ),
   );
   return results.every(({ data }) => data === true);
+}
+
+/**
+ * Simulateur d'entraînement : commercial actif seulement (sa fiche est lisible avec son jeton).
+ * L'échange vient du navigateur et n'est jamais conservé ; seule la note d'une séance l'est.
+ */
+async function training(
+  admin: SupabaseClient,
+  asUser: SupabaseClient,
+  userId: string,
+  body: { action?: unknown; persona?: unknown; history?: unknown; message?: unknown },
+): Promise<Response> {
+  const persona = TRAINING_PERSONAS.find((p) => p === body.persona);
+  const history = normalizeTrainingHistory(body.history);
+  const message = typeof body.message === "string" ? body.message.trim() : "";
+  const turns = trainingTurnCount(history);
+  if (
+    !persona ||
+    (body.action === "train" &&
+      (!message || message.length > TRAINING_MESSAGE_MAX_LENGTH || turns >= TRAINING_MAX_TURNS)) ||
+    (body.action === "coach" && turns < TRAINING_MIN_TURNS_FOR_REVIEW)
+  ) {
+    return json({ status: "invalid" }, 400);
+  }
+  const { data: me } = await asUser
+    .from("commercials")
+    .select("status")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (me?.status !== "actif") return json({ status: "forbidden" }, 403);
+  if (!(await withinLimits(admin, userId, "entrainement"))) {
+    return json({ status: "rate_limited" }, 429);
+  }
+  const llm = llmConfig();
+  if (!llm) return json({ status: "unavailable" }, 503);
+
+  const run: AiRun = {
+    function_name: "commercial-copilot",
+    model: env("AI_COMMERCIAL_COPILOT_MODEL") || llm.primary,
+    outcome: "erreur",
+    latency_ms: 0,
+  };
+  let response: Response;
+  if (body.action === "train") {
+    const reply = await personaReply(llm, persona, history, scrubPersonalData(message), run);
+    response = reply ? json({ status: "ok", ...reply }) : json({ status: "unavailable" }, 503);
+  } else {
+    const detected = detectedBreaches(history, VIOLATION_LABELS);
+    const review = await reviewTraining(llm, GUIDE, persona, history, detected, run);
+    if (review) {
+      const { error } = await asUser.rpc("commercial_save_training", {
+        p_persona: persona,
+        p_score: review.total,
+        p_turns: Math.min(turns, TRAINING_MAX_TURNS),
+      });
+      if (error) console.error("commercial-copilot : séance non enregistrée", error.code);
+    }
+    response = review ? json({ status: "ok", review }) : json({ status: "unavailable" }, 503);
+  }
+  await afterResponse(logAiRuns(admin, [run]));
+  response.headers.set("Server-Timing", `ia;dur=${run.latency_ms}`);
+  return response;
 }
 
 Deno.serve(
@@ -95,7 +177,20 @@ Deno.serve(
       prospectId?: unknown;
       channel?: unknown;
       transcript?: unknown;
+      persona?: unknown;
+      history?: unknown;
+      message?: unknown;
     } | null;
+
+    // Appels à la base avec le jeton du commercial : ses droits sont vérifiés par la base.
+    const asUser = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false },
+    });
+    if (body && (body.action === "train" || body.action === "coach")) {
+      return await training(admin, asUser, user.id, body);
+    }
+
     const action = COPILOT_ACTIONS.find((a) => a === body?.action);
     const prospectId = typeof body?.prospectId === "string" ? body.prospectId : "";
     const channel = COPILOT_CHANNELS.find((c) => c === body?.channel);
@@ -111,11 +206,7 @@ Deno.serve(
       return json({ status: "invalid" }, 400);
     }
 
-    // Appels à la base avec le jeton du commercial : le suivi est vérifié par les fonctions.
-    const asUser = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { persistSession: false },
-    });
+    // Le suivi du prospect est vérifié par les fonctions de la base.
     const { data: context, error: contextError } = await asUser.rpc("commercial_copilot_context", {
       p_id: prospectId,
     });
