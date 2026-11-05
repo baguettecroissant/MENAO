@@ -21,7 +21,8 @@ as $$
 $$;
 revoke execute on function app.response_band(uuid) from public, anon, authenticated;
 
--- Notification « demande envoyée » (ADR 0183) : délais habituels des artisans de cet envoi.
+-- Notification « demande envoyée » (ADR 0183) : délais habituels des artisans de cet envoi
+-- (champ absent quand aucun artisan n'a de délai à communiquer).
 create or replace function app.requests_notify_sent()
 returns trigger
 language plpgsql
@@ -63,9 +64,9 @@ begin
   perform app.notify(new.particulier_id, 'demande_envoyee', jsonb_build_object(
     'project_id', v_root,
     'titre', v_title,
-    'nb', v_count,
-    'delais', v_delays
-  ));
+    'nb', v_count
+  ) || case when jsonb_array_length(v_delays) > 0
+         then jsonb_build_object('delais', v_delays) else '{}'::jsonb end);
   return null;
 end;
 $$;
