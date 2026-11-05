@@ -1463,6 +1463,9 @@ export const fr = {
     assistant: {
       open: "Vous ne savez pas comment décrire votre problème, ou vous avez une question ?",
       openAction: "Demandez à l'assistant",
+      // Bulle sur les pages d'information du site.
+      bubbleLabel: "Poser une question à l'assistant MENAO",
+      bubbleTitle: "Une question ?",
       title: "Assistant MENAO",
       subtitle: "IA · répond en quelques secondes",
       close: "Fermer l'assistant",

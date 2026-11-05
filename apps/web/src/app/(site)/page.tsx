@@ -21,6 +21,7 @@ import { ButtonLink, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { organizationJsonLd } from "@/lib/site/structured-data";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.home;
 const steps = fr.site.clientSteps;
@@ -187,6 +188,7 @@ export default async function HomePage() {
         action={{ href: "/recherche", label: fr.site.cta.action }}
         reassurance={fr.site.cta.reassurance}
       />
+      <SiteAssistantBubble />
     </main>
   );
 }

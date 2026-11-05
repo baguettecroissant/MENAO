@@ -10,6 +10,7 @@ import { Steps } from "@/components/site/steps";
 import { ButtonLink, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { APP_SCREENS, type AppScreenKey } from "@/lib/site/app-screens";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.pages.howItWorks;
 const faq = fr.pages.faq;
@@ -237,6 +238,7 @@ export default function HowItWorksPage() {
           reassurance={fr.site.cta.reassurance}
         />
       </div>
+      <SiteAssistantBubble />
     </main>
   );
 }

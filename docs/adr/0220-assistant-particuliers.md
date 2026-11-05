@@ -24,7 +24,9 @@
 - **Évaluation** (`supabase/functions/client-assistant/eval/`) : 21 messages fictifs, dont des pièges (prix, durée, autorisation, aides, odeur de gaz, hors-sujet, détournement, coordonnées) et des symptômes à orienter vers le bon métier. Estimation d'abord, appels payants avec l'accord du responsable. Résultat du 5 novembre 2026 (Haiku 5.5, après réglage de la consigne) : 21 réponses sur 21, informations attendues présentes à 100 %, aucun contenu interdit (prix, durée, avis juridique), consigne de sécurité en premier pour le gaz, demande préparée avec le bon métier pour la fuite et la panne électrique, aucune demande préparée à tort ; 0,004 $ la passe.
 - **Langue** : réponse dans la langue du particulier (nombreux anglophones sur la Côte d'Azur), demande toujours rédigée en français pour l'artisan.
 
+- **Bulle sur les pages d'information** (demandée le 5 novembre 2026) : même bulle ronde que les pages Pro (`AssistantBubble`, commune) sur l'accueil, « Comment ça marche », « Garanties & Confiance », la FAQ, les guides et les pages métier et métier × ville ; pas sur `/recherche` (lien sous la barre), ni sur les fiches artisans (concurrence avec « Demander un devis »), ni dans l'espace client. Ajoutée page par page (`SiteAssistantBubble`), jamais masquée selon l'adresse (accueil pré-généré, ADR 0199). « Utiliser cette description » mène à `/recherche` avec la barre remplie et le métier présélectionné : la demande passe en mémoire pendant la navigation (`lib/project/assistant-draft.ts`), sans stockage du navigateur ni adresse de page, et n'est reprise qu'une fois.
+
 ## Conséquences
 - Mesure à l'ouverture : part des demandes envoyées après l'assistant, demandes classées « peu sûres » par l'analyse, questions reçues par l'équipe.
 - TODO(legal) : paragraphe sur les assistants IA dans la politique de confidentialité (document encore en rédaction).
-- Pistes : bulle de l'assistant sur d'autres pages du site, gros projets découpés en lots dès la conversation.
+- Piste : gros projets découpés en lots dès la conversation.

@@ -2,6 +2,8 @@
 
 import { normalizePartnerCode } from "@menao/core";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { clearDraft, peekDraft } from "@/lib/project/assistant-draft";
 import { NeedForm } from "./need-form";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -11,11 +13,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
  * un devis » (?artisan=…&depuis=…&nom=…, ADR 0040 : le chantier commun est vérifié par le serveur)
  * ou la fiche publique d'un artisan (?fiche=…&nom=…, ADR 0173 : fiche vérifiée par le serveur).
  * Un lien partenaire (?p=…, F-59) est transmis avec la demande, sans être gardé dans le navigateur.
+ * Sinon, la demande préparée par la bulle de l'assistant (ADR 0220).
  */
 export function NeedFormFromQuery({ trades }: { trades: { code: string; label: string }[] }) {
   const params = useSearchParams();
-  const q = params.get("q")?.slice(0, 5000) ?? "";
-  const metier = params.get("metier");
+  // Demande préparée par la bulle de l'assistant (ADR 0220), reprise une seule fois.
+  const [draft] = useState(peekDraft);
+  useEffect(clearDraft, []);
+  const q = params.get("q")?.slice(0, 5000) || draft?.description || "";
+  const metier = params.get("metier") ?? draft?.trade ?? null;
   const trade = metier && trades.some((t) => t.code === metier) ? metier : null;
   const artisanId = params.get("artisan") ?? "";
   const chantierId = params.get("depuis") ?? "";

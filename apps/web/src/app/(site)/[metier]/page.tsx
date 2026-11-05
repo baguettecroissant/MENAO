@@ -14,6 +14,7 @@ import { seoCatalog } from "@/lib/site/catalog";
 import { shareImage } from "@/lib/site/images";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.seo;
 const steps = fr.site.clientSteps;
@@ -203,6 +204,7 @@ export default async function TradePage({ params }: PageProps<"/[metier]">) {
         action={{ href: searchHref, label: fr.site.cta.action }}
         reassurance={fr.site.cta.reassurance}
       />
+      <SiteAssistantBubble />
     </main>
   );
 }

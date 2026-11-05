@@ -14,6 +14,7 @@ import { guideCover } from "@/lib/site/images";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
 import { frenchSpacing } from "@/lib/site/typography";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.guides;
 const AUDIENCES = ["particuliers", "artisans"] as const;
@@ -166,6 +167,7 @@ export default function GuidesPage() {
         secondary={{ href: "/pro", label: fr.nav.pro }}
         reassurance={fr.site.cta.reassurance}
       />
+      <SiteAssistantBubble />
     </main>
   );
 }

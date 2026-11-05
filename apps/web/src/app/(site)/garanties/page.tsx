@@ -21,6 +21,7 @@ import { Steps } from "@/components/site/steps";
 import { PaymentFlow, VerificationCard } from "@/components/site/trust-visuals";
 import { ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.pages.guarantees;
 const CHECK_ICONS = [Building2, FileText, ShieldCheck, Umbrella, UserCheck];
@@ -219,6 +220,7 @@ export default function GuaranteesPage() {
           reassurance={fr.site.cta.reassurance}
         />
       </div>
+      <SiteAssistantBubble />
     </main>
   );
 }
