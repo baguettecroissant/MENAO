@@ -4,7 +4,9 @@ import {
   isCommercialSlot,
   nextCommercialSlots,
   parisInstant,
+  frenchNumberWords,
   parisSlotLabel,
+  parisSlotSpoken,
   parseSlotCode,
   parseVoiceToolCalls,
   slotCode,
@@ -146,5 +148,34 @@ describe("rendez-vous avec le commercial du secteur (ADR 0226)", () => {
       "2026-11-10T09:00:00.000Z",
     );
     expect(parseSlotCode("mardi")).toBeNull();
+  });
+});
+
+describe("créneaux lus au téléphone (ADR 0226)", () => {
+  it("nombres en toutes lettres", () => {
+    expect([0, 1, 16, 17, 20, 21, 22, 30, 31, 45, 59].map(frenchNumberWords)).toEqual([
+      "zéro",
+      "un",
+      "seize",
+      "dix-sept",
+      "vingt",
+      "vingt et un",
+      "vingt-deux",
+      "trente",
+      "trente et un",
+      "quarante-cinq",
+      "cinquante-neuf",
+    ]);
+  });
+  it("créneau entier en lettres", () => {
+    expect(parisSlotSpoken(parisInstant("2026-11-06", "14:00"))).toBe(
+      "vendredi six novembre à quatorze heures",
+    );
+    expect(parisSlotSpoken(parisInstant("2026-11-05", "17:30"))).toBe(
+      "jeudi cinq novembre à dix-sept heures trente",
+    );
+    expect(parisSlotSpoken(parisInstant("2026-12-01", "12:30"))).toBe(
+      "mardi premier décembre à midi trente",
+    );
   });
 });
