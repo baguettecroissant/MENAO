@@ -248,7 +248,7 @@ function responseDelays(data: Record<string, unknown>): string[] {
 }
 
 /** Étapes de l'inscription encore à faire (relances, ADR 0219), dans l'ordre du parcours. */
-const SIGNUP_STEP_LABELS: Record<string, string> = {
+export const SIGNUP_STEP_LABELS: Record<string, string> = {
   entreprise: "les informations de votre entreprise",
   metiers: "vos métiers",
   zone: "votre zone d'intervention",

@@ -26,6 +26,10 @@ const schema = z.object({
   // Connexion avec Google ou Apple (« google,apple ») : vide tant que les fournisseurs ne sont pas
   // configurés dans Supabase, aucun bouton (ADR 0108).
   NEXT_PUBLIC_OAUTH_PROVIDERS: z.string().optional(),
+  // Secrétaire vocale « Camille » (ADR 0225) : clé publique Vapi (faite pour le navigateur, limitée
+  // aux origines du site dans Vapi) et identifiant de l'assistant. Vides : aucun bouton d'appel.
+  NEXT_PUBLIC_VAPI_PUBLIC_KEY: z.string().optional(),
+  NEXT_PUBLIC_VAPI_ASSISTANT_ID: z.string().optional(),
 });
 
 export const env = schema.parse({
@@ -36,4 +40,6 @@ export const env = schema.parse({
   NEXT_PUBLIC_APP_STORE_URL: process.env.NEXT_PUBLIC_APP_STORE_URL,
   NEXT_PUBLIC_PLAY_STORE_URL: process.env.NEXT_PUBLIC_PLAY_STORE_URL,
   NEXT_PUBLIC_OAUTH_PROVIDERS: process.env.NEXT_PUBLIC_OAUTH_PROVIDERS,
+  NEXT_PUBLIC_VAPI_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY,
+  NEXT_PUBLIC_VAPI_ASSISTANT_ID: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
 });

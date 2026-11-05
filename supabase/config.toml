@@ -513,6 +513,11 @@ verify_jwt = false
 [functions.commercial-copilot]
 verify_jwt = true
 
+# Secrétaire vocale (ADR 0225) : appelée par Vapi, sans jeton Supabase ; secret partagé
+# (en-tête X-Vapi-Secret) vérifié dans la fonction.
+[functions.voice-assistant]
+verify_jwt = false
+
 # Lecture automatique des documents du dossier (ADR 0176) : artisan connecté.
 [functions.read-document]
 verify_jwt = true

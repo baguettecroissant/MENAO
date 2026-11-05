@@ -4,6 +4,7 @@ import {
   EMAIL_PREFERENCES_LABEL,
   notificationContent,
   plainText,
+  type EmailContent,
   type EmailContext,
   type NotificationType,
 } from "./content.ts";
@@ -13,6 +14,12 @@ import {
   accountantFooter,
   type AccountantExportEmail,
 } from "./accountant.ts";
+import {
+  VOICE_EMAIL_FOOTER,
+  voiceDossierContent,
+  voiceSignupLinkContent,
+  type VoiceDossier,
+} from "./voice-assistant.ts";
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
@@ -58,4 +65,26 @@ export function renderAccountantExport(
       ),
     text: plainText(content, footer),
   };
+}
+
+function renderContent(content: EmailContent, siteUrl: string, footer: string): RenderedEmail {
+  return {
+    subject: content.subject,
+    html:
+      DOCTYPE +
+      renderToStaticMarkup(
+        <NotificationEmail content={content} siteUrl={siteUrl} footer={footer} />,
+      ),
+    text: plainText(content, footer),
+  };
+}
+
+/** Secrétaire vocale (ADR 0225) : lien d'inscription demandé au téléphone. */
+export function renderVoiceSignupLink(firstName: string | null, siteUrl: string): RenderedEmail {
+  return renderContent(voiceSignupLinkContent({ firstName, siteUrl }), siteUrl, VOICE_EMAIL_FOOTER);
+}
+
+/** Secrétaire vocale (ADR 0225) : état du dossier, envoyé à l'adresse du compte. */
+export function renderVoiceDossier(dossier: VoiceDossier, siteUrl: string): RenderedEmail {
+  return renderContent(voiceDossierContent(dossier, siteUrl), siteUrl, VOICE_EMAIL_FOOTER);
 }

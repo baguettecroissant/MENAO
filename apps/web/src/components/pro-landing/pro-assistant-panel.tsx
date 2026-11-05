@@ -15,6 +15,7 @@ import {
   Composer,
   Typing,
 } from "@/components/assistant/assistant-ui";
+import { VoiceCall } from "@/components/assistant/voice-call";
 import {
   Alert,
   Button,
@@ -165,6 +166,7 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="flex flex-col gap-3 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <VoiceCall />
             {!limitReached && (
               <Composer
                 id="pro-assistant-question"

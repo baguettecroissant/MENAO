@@ -27,7 +27,23 @@ export type CspOptions = {
    * Page toujours chargée en entier ; le reste du site garde la politique stricte.
    */
   stripeConnect?: boolean;
+  /**
+   * Appels web de la secrétaire vocale (ADR 0225), quand elle est configurée : API Vapi et
+   * transport audio Daily (scripts et connexions). Sur tout le site, pour la même raison que les
+   * cadres : la page garde la politique du premier document chargé.
+   */
+  voiceCalls?: boolean;
 };
+
+// Appels web de la secrétaire vocale : API Vapi, transport audio Daily (WebRTC).
+const VOICE_SCRIPT_ORIGINS = ["https://*.daily.co"];
+const VOICE_CONNECT_ORIGINS = [
+  "https://api.vapi.ai",
+  "https://*.daily.co",
+  "wss://*.daily.co",
+  "https://*.pluot.blue",
+  "wss://*.pluot.blue",
+];
 
 // Composants Connect de Stripe (formulaire d'inscription intégré, ADR 0215).
 const STRIPE_CONNECT_ORIGINS = ["https://connect-js.stripe.com", "https://js.stripe.com"];
@@ -65,6 +81,7 @@ export function contentSecurityPolicy({
   sentryDsn,
   embeddable = false,
   stripeConnect = false,
+  voiceCalls = false,
 }: CspOptions) {
   const supabase = supabaseUrl.replace(/\/+$/, "");
   const realtime = supabase.replace(/^http/, "ws");
@@ -79,6 +96,7 @@ export function contentSecurityPolicy({
       "'unsafe-inline'",
       ...(dev ? ["'unsafe-eval'"] : []),
       ...stripe,
+      ...(voiceCalls ? VOICE_SCRIPT_ORIGINS : []),
       ...live,
     ],
     ["style-src", "'self'", "'unsafe-inline'", ...live],
@@ -107,6 +125,7 @@ export function contentSecurityPolicy({
       "https://api.stripe.com",
       "https://*.ingest.de.sentry.io",
       "https://*.ingest.sentry.io",
+      ...(voiceCalls ? VOICE_CONNECT_ORIGINS : []),
       ...(preview ? [...live, "wss://ws-us3.pusher.com"] : []),
     ],
     ["worker-src", "'self'", "blob:"],

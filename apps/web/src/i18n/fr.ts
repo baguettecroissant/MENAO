@@ -4978,6 +4978,20 @@ export const fr = {
     },
     /** Assistant des pages Pro (F-69, ADR 0218). */
     assistant: {
+      // Secrétaire vocale « Camille » (ADR 0225) : appel web, visible quand elle est configurée.
+      voice: {
+        start: "Parler à Camille",
+        hint: "Assistante vocale · IA",
+        connecting: "Connexion…",
+        live: "En ligne avec Camille",
+        speaking: "Camille parle…",
+        mute: "Couper mon micro",
+        unmute: "Rétablir mon micro",
+        hangUp: "Raccrocher",
+        ended: "Appel terminé.",
+        failed:
+          "L'appel n'a pas pu démarrer. Vérifiez que le micro est autorisé pour ce site, puis réessayez.",
+      },
       open: "Une question ?",
       openLabel: "Poser une question à l'assistant MENAO",
       title: "Assistant MENAO",

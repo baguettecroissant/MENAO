@@ -17,6 +17,10 @@ const cspOptions = {
   dev: process.env.NODE_ENV !== "production",
   preview: (process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV) === "preview",
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  // Secrétaire vocale (ADR 0225) : origines de Vapi et Daily seulement si elle est configurée.
+  voiceCalls: Boolean(
+    process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY && process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
+  ),
 };
 const csp = contentSecurityPolicy(cspOptions);
 
