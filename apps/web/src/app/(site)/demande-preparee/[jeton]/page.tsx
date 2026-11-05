@@ -32,6 +32,15 @@ type Client = Awaited<ReturnType<typeof createClient>>;
  * artisans (et la demande à l'équipe) s'il n'y en a aucun.
  */
 async function nextStep(supabase: Client, projectId: string): Promise<string> {
+  // Lien rouvert après l'envoi : la demande se suit dans l'espace client.
+  const { data: project } = await supabase
+    .from("projects")
+    .select("status")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (project && project.status !== "brouillon" && project.status !== "criteres_valides") {
+    return "/mon-espace";
+  }
   const { error } = await supabase.rpc("validate_project_criteria", { p_project_id: projectId });
   if (error) return `/recherche/${projectId}`;
   const matches = await matchArtisans(supabase, projectId, 3);
