@@ -4,18 +4,23 @@ import { REFUSAL_REASONS } from "@menao/core";
 import { useActionState, useCallback, useState } from "react";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
+import { ProposeSlotsForm } from "@/components/pro/propose-slots-form";
 import { Alert, Button, FieldError, RadioGroup, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { AppointmentAgenda } from "@/lib/artisan/agenda";
-import { fixAppointment } from "@/lib/artisan/chantier-actions";
+import { fixAppointment, proposeSlots } from "@/lib/artisan/chantier-actions";
 import { refuseRequest } from "@/lib/artisan/request-actions";
 import { initialFormState } from "@/lib/auth/form";
+import { formatDayMonthShort, formatTime } from "@/lib/format";
 import { useActionSuccess } from "@/lib/use-action-success";
 
 const t = fr.pro.onboarding.requests;
 const a = fr.pro.appointment;
 
-/** Barre d'actions de l'opportunité (F-17) : « Fixer un rendez-vous » ou « Refuser le chantier ». */
+/**
+ * Barre d'actions de l'opportunité (F-17) : « Proposer 3 créneaux » (accepter en un toucher,
+ * ADR 0222), « Fixer un rendez-vous » ou « Refuser le chantier ».
+ */
 export function OpportunityActions({
   requestId,
   clientFirstName,
@@ -23,6 +28,7 @@ export function OpportunityActions({
   canRefuse,
   partnersAfterRefusal = false,
   agenda,
+  proposedSlots = null,
 }: {
   requestId: string;
   clientFirstName: string | null;
@@ -32,8 +38,12 @@ export function OpportunityActions({
   partnersAfterRefusal?: boolean;
   /** F-44 : créneaux libres proposés et avertissements. */
   agenda?: AppointmentAgenda;
+  /** Créneaux déjà proposés, en attente du choix du client (ADR 0222). */
+  proposedSlots?: readonly string[] | null;
 }) {
-  const [panel, setPanel] = useState<"rendez-vous" | "refus" | null>(null);
+  const [panel, setPanel] = useState<"creneaux" | "rendez-vous" | "refus" | null>(null);
+  const suggestions = agenda?.suggestions ?? [];
+  const canPropose = suggestions.length >= 2;
   const close = useCallback(() => setPanel(null), []);
   const [refused, refuse, refusing] = useActionState(
     refuseRequest.bind(null, requestId),
@@ -44,13 +54,54 @@ export function OpportunityActions({
 
   return (
     <>
-      <Button type="button" size="lg" onClick={() => setPanel("rendez-vous")}>
+      {proposedSlots && proposedSlots.length > 0 && (
+        <div className="rounded-input bg-primary-soft px-4 py-3 text-sm">
+          <p className="font-medium text-primary-strong">{a.proposedTitle}</p>
+          <p>
+            {proposedSlots
+              .map((iso) => a.suggestion(formatDayMonthShort(iso), formatTime(iso)))
+              .join(" · ")}
+          </p>
+          <p className="text-xs text-muted-foreground">{a.proposedWaiting(clientFirstName)}</p>
+        </div>
+      )}
+      {canPropose && (
+        <Button
+          type="button"
+          size="lg"
+          variant={proposedSlots ? "secondary" : "primary"}
+          onClick={() => setPanel("creneaux")}
+        >
+          {proposedSlots ? a.proposeOther : a.propose(Math.min(3, suggestions.length))}
+        </Button>
+      )}
+      <Button
+        type="button"
+        size={canPropose ? "md" : "lg"}
+        variant={canPropose ? "secondary" : "primary"}
+        onClick={() => setPanel("rendez-vous")}
+      >
         {t.fixAppointment}
       </Button>
       {canRefuse && (
         <Button type="button" variant="danger-text" size="sm" onClick={() => setPanel("refus")}>
           {t.refuse}
         </Button>
+      )}
+
+      {canPropose && (
+        <Drawer
+          open={panel === "creneaux"}
+          onClose={close}
+          title={a.proposeTitle(clientFirstName)}
+          backLabel={a.backToForm}
+        >
+          <ProposeSlotsForm
+            suggestions={suggestions}
+            action={proposeSlots.bind(null, requestId)}
+            onDone={close}
+          />
+        </Drawer>
       )}
 
       <Drawer

@@ -271,6 +271,61 @@ export type Database = {
         };
         Relationships: [];
       };
+      appointment_proposals: {
+        Row: {
+          artisan_id: string;
+          chosen_at: string | null;
+          chosen_slot: string | null;
+          created_at: string;
+          id: string;
+          particulier_id: string;
+          request_id: string;
+          slots: string[];
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chosen_at?: string | null;
+          chosen_slot?: string | null;
+          created_at?: string;
+          id?: string;
+          particulier_id: string;
+          request_id: string;
+          slots: string[];
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          chosen_at?: string | null;
+          chosen_slot?: string | null;
+          created_at?: string;
+          id?: string;
+          particulier_id?: string;
+          request_id?: string;
+          slots?: string[];
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_proposals_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointment_proposals_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "requests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       appointments: {
         Row: {
           artisan_notes: string | null;
@@ -5506,6 +5561,7 @@ export type Database = {
           vat_rate_bp: number;
         }[];
       };
+      artisan_propose_slots: { Args: { p_request_id: string; p_slots: string[] }; Returns: string };
       artisan_public_page: { Args: { p_slug: string }; Returns: Json };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
       artisan_public_reviews: {
@@ -6013,6 +6069,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      particulier_choose_slot: { Args: { p_proposal_id: string; p_slot: string }; Returns: string };
       particulier_confirm_reserves_lifted: { Args: { p_chantier_id: string }; Returns: undefined };
       particulier_refuse_quote: {
         Args: {
@@ -6054,6 +6111,16 @@ export type Database = {
         Returns: {
           request_id: string;
           tranche: string;
+        }[];
+      };
+      particulier_slot_proposals: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_name: string;
+          project_id: string;
+          proposal_id: string;
+          request_id: string;
+          slots: string[];
         }[];
       };
       particulier_start_balance: { Args: { p_chantier_id: string }; Returns: Json };
@@ -6501,7 +6568,9 @@ export type Database = {
         | "demarrage_rappel"
         | "filleul_valide"
         | "activation_relance"
-        | "finalisation_relance";
+        | "finalisation_relance"
+        | "creneaux_proposes"
+        | "creneau_choisi";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -6825,6 +6894,8 @@ export const Constants = {
         "filleul_valide",
         "activation_relance",
         "finalisation_relance",
+        "creneaux_proposes",
+        "creneau_choisi",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

@@ -21,6 +21,7 @@ import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
 import { qrSvg } from "@/lib/qr";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/empty-state";
+import { SlotProposals } from "@/components/project/slot-proposals";
 
 const t = fr.myChantiers;
 
@@ -47,6 +48,7 @@ export default async function MySpacePage() {
     { data: cancelled },
     { data: reviews },
     { data: lifts },
+    { data: proposalRows },
   ] = await Promise.all([
     supabase.rpc("particulier_chantiers"),
     supabase.rpc("particulier_requests"),
@@ -68,6 +70,8 @@ export default async function MySpacePage() {
       .select("chantier_id")
       .not("lift_signaled_at", "is", null)
       .is("lifted_at", null),
+    // Accepter en un toucher (ADR 0222) : créneaux proposés, en attente du choix du client.
+    supabase.rpc("particulier_slot_proposals"),
   ]);
   const drafts = draftRows ?? [];
   const cancelledByClient = new Set((cancelled ?? []).map((r) => r.id));
@@ -242,6 +246,11 @@ export default async function MySpacePage() {
             <Search aria-hidden="true" className="size-4" />
           </ButtonLink>
         </div>
+        <SlotProposals
+          proposals={(proposalRows ?? [])
+            .filter((p) => p.slots.length > 0)
+            .map((p) => ({ id: p.proposal_id, artisan: p.artisan_name, slots: p.slots }))}
+        />
         {chantiers.length === 0 && requests.length === 0 ? (
           <>
             <EmptyState illustration="demandes" title={fr.myRequests.empty} className="py-14">

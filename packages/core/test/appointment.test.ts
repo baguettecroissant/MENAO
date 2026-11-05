@@ -3,6 +3,7 @@ import {
   APPOINTMENT_MAX_DAYS_AHEAD,
   appointmentInputError,
   parisLocalToDate,
+  proposedSlotsError,
 } from "../src/appointment";
 import { buildIcs } from "../src/ics";
 
@@ -93,5 +94,19 @@ describe("agenda à venir du tableau de bord (F-16)", () => {
       "demarrage:a",
     ]);
     expect(upcomingAgenda(rows, now, 2)).toHaveLength(2);
+  });
+});
+
+describe("créneaux proposés au client (ADR 0222)", () => {
+  const now = new Date("2026-11-05T10:00:00Z");
+  const at = (hours: number) => new Date(now.getTime() + hours * 3_600_000);
+  it("2 ou 3 créneaux différents, à venir, dans les 6 mois", () => {
+    expect(proposedSlotsError([at(24), at(48), at(72)], now)).toBeNull();
+    expect(proposedSlotsError([at(24), at(48)], now)).toBeNull();
+    expect(proposedSlotsError([at(24)], now)).toBe("nombre");
+    expect(proposedSlotsError([at(24), at(24)], now)).toBe("nombre");
+    expect(proposedSlotsError([at(24), at(48), at(72), at(96)], now)).toBe("nombre");
+    expect(proposedSlotsError([at(0.5), at(48)], now)).toBe("passe");
+    expect(proposedSlotsError([at(24), at(181 * 24)], now)).toBe("trop_loin");
   });
 });

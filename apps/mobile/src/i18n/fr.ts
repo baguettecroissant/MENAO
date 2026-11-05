@@ -5,6 +5,8 @@ export const fr = {
   moments: {
     quoteSent: { title: "Devis envoyé", text: "Votre client est prévenu." },
     appointment: { title: "Rendez-vous fixé", text: "Il est dans votre agenda." },
+    // Accepter en un toucher (ADR 0222).
+    slotsProposed: { title: "Créneaux envoyés", text: "Votre client va choisir son rendez-vous." },
     quoteSigned: {
       title: "Devis signé",
       text: "Merci ! Le devis signé est dans vos documents.",
@@ -1315,6 +1317,12 @@ export const fr = {
   },
   // Suivi des demandes et des chantiers (F-11, F-12) : textes repris de l'espace client du site.
   myChantiers: {
+    // Accepter en un toucher (ADR 0222) : créneaux proposés par les artisans.
+    slots: {
+      title: "Rendez-vous à choisir",
+      from: (artisan: string) => `${artisan} vous propose de venir voir votre projet :`,
+      hint: "Touchez le créneau qui vous convient : le rendez-vous est fixé aussitôt.",
+    },
     // Chantier à plusieurs métiers (ADR 0168).
     lotOf: (chantier: string) => `Un des métiers de votre chantier : ${chantier}`,
     title: "Mes chantiers",
@@ -2099,6 +2107,24 @@ export const fr = {
   },
   /** Rendez-vous fixé par l'artisan (F-17) : mêmes textes et mêmes contrôles que le site. */
   proAppointment: {
+    // Accepter en un toucher (ADR 0222) : créneaux proposés au client, qui en choisit un.
+    propose: "Proposer des créneaux",
+    proposeTitle: (name: string | null) =>
+      name ? `Proposer des créneaux à ${name}` : "Proposer des créneaux",
+    proposeHint:
+      "Votre client choisit l'un de ces créneaux : le rendez-vous est fixé aussitôt, et vos coordonnées sont échangées.",
+    proposeLegend: "Vos créneaux libres",
+    proposeCount: (n: number) =>
+      n < 2 ? "Choisissez 2 ou 3 créneaux." : `${n} créneaux seront proposés.`,
+    proposeSubmit: "Proposer ces créneaux",
+    proposeNone: "Aucun créneau libre trouvé dans votre agenda : fixez directement un rendez-vous.",
+    proposeErrors: {
+      nombre: "Choisissez 2 ou 3 créneaux différents.",
+      passe: "Proposez des créneaux à venir, au moins une heure plus tard.",
+      trop_loin: "Les créneaux doivent être dans les 6 prochains mois.",
+    },
+    proposedTitle: "Créneaux déjà proposés",
+    proposedWaiting: "En attente du choix de votre client. Vous pouvez en proposer d'autres.",
     title: (name: string | null) =>
       name ? `Fixer un rendez-vous avec ${name}` : "Fixer un rendez-vous",
     date: "Date du rendez-vous",
