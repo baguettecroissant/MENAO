@@ -14,6 +14,8 @@ export const VOICE_TOOLS = [
   "envoyer_lien_inscription",
   "envoyer_etat_dossier",
   "demander_rappel",
+  "proposer_creneaux",
+  "reserver_creneau",
 ] as const;
 export type VoiceTool = (typeof VOICE_TOOLS)[number];
 
@@ -65,6 +67,49 @@ export function voiceToolDefinitions() {
           email: text("Adresse e-mail de la personne, en minuscules, sans espace."),
         },
         required: ["prenom", "telephone", "email", "motif"],
+      },
+    },
+    {
+      name: "proposer_creneaux",
+      description:
+        "Trouve les prochains créneaux libres du conseiller MENAO qui couvre la commune de l'artisan, pour un rendez-vous par téléphone (appel) ou sur place (visite). À utiliser quand l'artisan veut être accompagné par un conseiller. Propose ensuite ces créneaux un par un, sans en inventer d'autres.",
+      parameters: {
+        type: "object",
+        properties: {
+          commune: text("Commune où travaille l'artisan."),
+          type: {
+            type: "string",
+            enum: ["appel", "visite"],
+            description: "Rendez-vous par téléphone (appel) ou sur place (visite).",
+          },
+        },
+        required: ["commune", "type"],
+      },
+    },
+    {
+      name: "reserver_creneau",
+      description:
+        "Réserve le créneau choisi par l'artisan avec le conseiller du secteur, après proposer_creneaux. Demande d'abord son prénom, son numéro, son adresse e-mail et, pour une visite, l'adresse de son entreprise, et relis-les.",
+      parameters: {
+        type: "object",
+        properties: {
+          creneau: text(
+            "Code exact du créneau choisi, tel que donné par proposer_creneaux (par exemple 2026-11-10T10:00).",
+          ),
+          type: {
+            type: "string",
+            enum: ["appel", "visite"],
+            description: "Le même type que pour proposer_creneaux.",
+          },
+          commune: text("La même commune que pour proposer_creneaux."),
+          prenom: text("Prénom de l'artisan."),
+          telephone: text("Numéro de l'artisan, en chiffres, par exemple 0612345678."),
+          email: text("Adresse e-mail de l'artisan, en minuscules, sans espace."),
+          adresse: text("Pour une visite : adresse de l'entreprise (numéro et rue)."),
+          metier: text("Métier de l'artisan, s'il l'a donné."),
+          motif: text("Objet du rendez-vous, en une phrase (« inscription accompagnée »)."),
+        },
+        required: ["creneau", "type", "commune", "prenom", "telephone", "email", "motif"],
       },
     },
   ];
@@ -169,4 +214,177 @@ export function sameSecret(a: string, b: string): boolean {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Rendez-vous avec le commercial du secteur (ADR 0226)
+// ---------------------------------------------------------------------------------------------
+
+export const VOICE_APPOINTMENT_KINDS = ["appel", "visite"] as const;
+export type VoiceAppointmentKind = (typeof VOICE_APPOINTMENT_KINDS)[number];
+
+/** Durée d'un rendez-vous et écart minimal avec un autre (trajet compris). */
+export const COMMERCIAL_APPOINTMENT_MINUTES = 30;
+export const COMMERCIAL_APPOINTMENT_GAP_MINUTES = 60;
+/** Débuts possibles, heure de Paris, en semaine : le matin et l'après-midi (plage d'appel du guide). */
+export const COMMERCIAL_SLOT_STARTS = [
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "12:00",
+  "12:30",
+  "14:00",
+  "14:30",
+  "15:00",
+  "15:30",
+  "16:00",
+  "16:30",
+  "17:00",
+  "17:30",
+  "18:00",
+  "18:30",
+  "19:00",
+  "19:30",
+] as const;
+/** Délai minimal avant un rendez-vous, et horizon des créneaux proposés. */
+export const COMMERCIAL_SLOT_MIN_DELAY_MINUTES = 120;
+export const COMMERCIAL_SLOT_HORIZON_DAYS = 14;
+
+const PARIS = "Europe/Paris";
+
+/** Décalage de Paris par rapport à UTC (minutes) à un instant donné. */
+function parisOffsetMinutes(at: Date): number {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: PARIS,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+      .formatToParts(at)
+      .map((p) => [p.type, p.value]),
+  );
+  const asUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+  );
+  return Math.round((asUtc - at.getTime()) / 60_000);
+}
+
+/** Instant correspondant à une date et une heure de Paris (« 2026-11-10 », « 10:00 »). */
+export function parisInstant(date: string, time: string): Date {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  const [h, min] = time.split(":").map(Number) as [number, number];
+  const guess = new Date(Date.UTC(y, m - 1, d, h, min));
+  // Deux passes : le décalage peut changer à l'heure du changement d'heure.
+  const first = new Date(guess.getTime() - parisOffsetMinutes(guess) * 60_000);
+  return new Date(guess.getTime() - parisOffsetMinutes(first) * 60_000);
+}
+
+/** Date de Paris (AAAA-MM-JJ) d'un instant. */
+function parisDate(at: Date): string {
+  return new Intl.DateTimeFormat("fr-CA", { timeZone: PARIS }).format(at);
+}
+
+function addDays(date: string, days: number): string {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/**
+ * Prochains créneaux libres du commercial : en semaine, aux débuts prévus, au moins deux heures
+ * après maintenant, à plus d'une heure de tout rendez-vous déjà pris, sur deux semaines. Au plus
+ * un créneau par demi-journée, pour offrir du choix.
+ */
+export function nextCommercialSlots(now: Date, busy: readonly Date[], count = 3): Date[] {
+  const earliest = now.getTime() + COMMERCIAL_SLOT_MIN_DELAY_MINUTES * 60_000;
+  const gap = COMMERCIAL_APPOINTMENT_GAP_MINUTES * 60_000;
+  const slots: Date[] = [];
+  const today = parisDate(now);
+  for (let i = 0; i <= COMMERCIAL_SLOT_HORIZON_DAYS && slots.length < count; i++) {
+    const day = addDays(today, i);
+    const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+    if (weekday === 0 || weekday === 6) continue;
+    for (const half of ["matin", "apres-midi"] as const) {
+      const starts = COMMERCIAL_SLOT_STARTS.filter((s) =>
+        half === "matin" ? s < "13:00" : s >= "13:00",
+      );
+      for (const start of starts) {
+        const at = parisInstant(day, start);
+        if (at.getTime() < earliest) continue;
+        if (busy.some((b) => Math.abs(b.getTime() - at.getTime()) < gap)) continue;
+        slots.push(at);
+        break;
+      }
+      if (slots.length >= count) break;
+    }
+  }
+  return slots;
+}
+
+/** Le créneau demandé est-il un début prévu, en semaine, à l'heure de Paris ? */
+export function isCommercialSlot(at: Date): boolean {
+  const day = parisDate(at);
+  const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+  if (weekday === 0 || weekday === 6) return false;
+  return COMMERCIAL_SLOT_STARTS.some((s) => parisInstant(day, s).getTime() === at.getTime());
+}
+
+const WEEKDAYS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+const MONTHS = [
+  "janvier",
+  "février",
+  "mars",
+  "avril",
+  "mai",
+  "juin",
+  "juillet",
+  "août",
+  "septembre",
+  "octobre",
+  "novembre",
+  "décembre",
+];
+
+/** « mardi 10 novembre à 10 h 30 » (heure de Paris), pour les e-mails et la consigne. */
+export function parisSlotLabel(at: Date): string {
+  const day = parisDate(at);
+  const [, m, d] = day.split("-").map(Number) as [number, number, number];
+  const weekday = WEEKDAYS[new Date(`${day}T12:00:00Z`).getUTCDay()] ?? "";
+  const time = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: PARIS,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(at);
+  const [h, min] = time.split(":");
+  return `${weekday} ${d} ${MONTHS[m - 1]} à ${Number(h)} h${min === "00" ? "" : ` ${min}`}`;
+}
+
+/** Créneau renvoyé par le modèle (« 2026-11-10T10:00 », heure de Paris, ou ISO avec fuseau). */
+export function parseSlotCode(value: unknown): Date | null {
+  if (typeof value !== "string") return null;
+  const v = value.trim();
+  const local = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/.exec(v);
+  if (local) return parisInstant(local[1] as string, local[2] as string);
+  const at = new Date(v);
+  return /T\d{2}:\d{2}/.test(v) && !Number.isNaN(at.getTime()) ? at : null;
+}
+
+/** Code d'un créneau à rendre au modèle (« 2026-11-10T10:00 », heure de Paris). */
+export function slotCode(at: Date): string {
+  const time = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: PARIS,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(at);
+  return `${parisDate(at)}T${time}`;
 }

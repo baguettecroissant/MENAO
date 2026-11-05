@@ -72,6 +72,8 @@ export const NOTIFICATION_TYPES = [
   // Accepter en un toucher : créneaux proposés au client, créneau choisi (ADR 0222).
   "creneaux_proposes",
   "creneau_choisi",
+  // Rendez-vous avec le commercial du secteur pris par la secrétaire vocale (ADR 0226).
+  "rdv_commercial",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -899,6 +901,33 @@ export function notificationContent(
           label: "Voir le chantier",
           url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
         },
+      };
+    }
+    case "rdv_commercial": {
+      // Rendez-vous pris par Camille, la secrétaire vocale (ADR 0226), pour le commercial du secteur.
+      // Les coordonnées de l'artisan sont dans « Ma journée », jamais dans l'e-mail.
+      const rdv = moment(text(data, "rendez_vous"));
+      const visit = text(data, "type") === "visite";
+      const who = [text(data, "prenom"), text(data, "metier"), text(data, "commune")]
+        .filter(Boolean)
+        .join(", ");
+      const reason = text(data, "motif");
+      return {
+        subject: rdv
+          ? `Nouveau rendez-vous le ${rdv.day} à ${rdv.time}`
+          : "Nouveau rendez-vous pris par Camille",
+        preview:
+          "Camille, la secrétaire vocale de MENAO, vous a réservé un rendez-vous avec un artisan.",
+        title: visit ? "Une visite à faire" : "Un appel à passer",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Camille vous a réservé ${visit ? "une visite" : "un rendez-vous téléphonique"}${rdv ? ` le ${rdv.day} à ${rdv.time}` : ""}${who ? ` avec ${who}` : ""}.`,
+          visit
+            ? "L'adresse et le numéro de l'artisan sont dans « Ma journée »."
+            : "Appelez l'artisan à l'heure prévue : son numéro est dans « Ma journée ».",
+        ],
+        quote: reason,
+        cta: { label: "Ouvrir Ma journée", url: link("/commercial/journee") },
       };
     }
     case "niveau_atteint": {

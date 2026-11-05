@@ -1,13 +1,21 @@
-import { ChevronRight, Clock } from "lucide-react";
+import { parisLocalToDate } from "@menao/core";
+import { ChevronRight, Clock, Mail, MapPin } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { CancelAppointmentForm } from "@/components/commercial/cancel-appointment-form";
 import { CallLink } from "@/components/commercial/prospect-forms";
 import { EmptyState } from "@/components/empty-state";
 import { ListPanel } from "@/components/list-kit";
 import { Alert, ButtonLink, Card, CardTitle } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getCommercialSpace } from "@/lib/commercial/space";
-import { formatDayFull, formatDayShort, formatTime, parisInputValues } from "@/lib/format";
+import {
+  formatDayFull,
+  formatDayShort,
+  formatDayTime,
+  formatTime,
+  parisInputValues,
+} from "@/lib/format";
 
 const t = fr.commercialProspects;
 
@@ -44,8 +52,9 @@ function DayRow({ item, when }: { item: DayItem; when: string }) {
 }
 
 /**
- * « Ma journée » des commerciaux (F-65, lot 2, ADR 0206) : les rendez-vous du jour, puis les
- * relances du jour et celles en retard, avec le bouton Appeler ; rappel des créneaux téléphone.
+ * « Ma journée » des commerciaux (F-65, lot 2, ADR 0206) : les rendez-vous pris par Camille
+ * (ADR 0226), les rendez-vous du jour, puis les relances du jour et celles en retard, avec le
+ * bouton Appeler ; rappel des créneaux téléphone.
  */
 export default async function CommercialDayPage() {
   const space = await getCommercialSpace();
@@ -55,6 +64,16 @@ export default async function CommercialDayPage() {
   const items = data ?? [];
   const now = new Date().toISOString();
   const today = parisInputValues(now).date;
+  // Rendez-vous de Camille, à partir d'aujourd'hui (heure de Paris).
+  const { data: camille } = space.active
+    ? await space.supabase
+        .from("commercial_appointments")
+        .select("id, starts_at, kind, first_name, phone, email, address, city, trade, reason")
+        .eq("status", "prevu")
+        .gte("starts_at", parisLocalToDate(today, "00:00").toISOString())
+        .order("starts_at")
+        .limit(30)
+    : { data: null };
   const appointments = items.filter((i) => i.kind === "rdv");
   const followUps = items.filter((i) => i.kind !== "rdv");
   // Relance d'un jour passé : sa date ; relance du jour : son heure.
@@ -79,6 +98,52 @@ export default async function CommercialDayPage() {
           <Alert tone="error">{t.errors.unavailable}</Alert>
         ) : (
           <>
+            {camille && camille.length > 0 && (
+              <section aria-labelledby="camille" className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <h2 id="camille" className="text-lg font-medium">
+                    {t.day.camille.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">{t.day.camille.intro}</p>
+                </div>
+                <ListPanel label={t.day.camille.title}>
+                  {camille.map((rdv) => (
+                    <li key={rdv.id} className="flex flex-col gap-2 px-4 py-3 sm:px-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <span className="flex min-w-0 flex-col gap-0.5">
+                          <span className="text-[0.9375rem] font-medium">
+                            {[rdv.first_name, rdv.trade, rdv.city].filter(Boolean).join(" · ")}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDayTime(rdv.starts_at)} ·{" "}
+                            {t.day.camille.kinds[rdv.kind] ?? rdv.kind}
+                          </span>
+                        </span>
+                        <CallLink phone={rdv.phone} label={t.day.call} />
+                      </div>
+                      <p className="text-sm break-words">{rdv.reason}</p>
+                      {rdv.address && (
+                        <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                          <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                          {rdv.address}, {rdv.city}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-4">
+                        <a
+                          href={`mailto:${rdv.email}`}
+                          className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
+                        >
+                          <Mail aria-hidden="true" className="size-4" />
+                          {t.day.camille.email}
+                        </a>
+                        <CancelAppointmentForm id={rdv.id} />
+                      </div>
+                    </li>
+                  ))}
+                </ListPanel>
+              </section>
+            )}
+
             <section aria-labelledby="rendez-vous" className="flex flex-col gap-3">
               <h2 id="rendez-vous" className="text-lg font-medium">
                 {t.day.appointments}

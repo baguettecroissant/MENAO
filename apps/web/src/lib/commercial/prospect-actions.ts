@@ -185,3 +185,13 @@ export async function doNotContact(_prev: FormState, formData: FormData): Promis
   refresh(id);
   redirect(`${LIST}?retire=1` as Route);
 }
+
+/** Annuler un rendez-vous pris par Camille (ADR 0226) : le créneau redevient libre. */
+export async function cancelAppointment(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { id, space, refused } = await context(formData);
+  if (refused) return { error: refused };
+  const { error } = await space.supabase.rpc("commercial_cancel_appointment", { p_id: id });
+  if (error) return rpcError(error);
+  revalidatePath(DAY);
+  return { success: fr.commercialProspects.day.camille.cancelled };
+}

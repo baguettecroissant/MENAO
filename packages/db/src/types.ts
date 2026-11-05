@@ -1990,6 +1990,69 @@ export type Database = {
           },
         ];
       };
+      commercial_appointments: {
+        Row: {
+          address: string | null;
+          city: string;
+          commercial_id: string;
+          created_at: string;
+          email: string;
+          first_name: string;
+          id: string;
+          kind: string;
+          phone: string;
+          postcode: string | null;
+          reason: string;
+          starts_at: string;
+          status: string;
+          trade: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          address?: string | null;
+          city: string;
+          commercial_id: string;
+          created_at?: string;
+          email: string;
+          first_name: string;
+          id?: string;
+          kind: string;
+          phone: string;
+          postcode?: string | null;
+          reason: string;
+          starts_at: string;
+          status?: string;
+          trade?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          address?: string | null;
+          city?: string;
+          commercial_id?: string;
+          created_at?: string;
+          email?: string;
+          first_name?: string;
+          id?: string;
+          kind?: string;
+          phone?: string;
+          postcode?: string | null;
+          reason?: string;
+          starts_at?: string;
+          status?: string;
+          trade?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_appointments_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_attributions: {
         Row: {
           artisan_id: string;
@@ -5894,6 +5957,7 @@ export type Database = {
           validated_at: string;
         }[];
       };
+      commercial_cancel_appointment: { Args: { p_id: string }; Returns: undefined };
       commercial_copilot_context: { Args: { p_id: string }; Returns: Json };
       commercial_day: {
         Args: Record<PropertyKey, never>;
@@ -6559,6 +6623,33 @@ export type Database = {
       };
       unregister_push_token: { Args: { p_token: string }; Returns: undefined };
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
+      voice_book_commercial_appointment: {
+        Args: {
+          p_address?: string;
+          p_city: string;
+          p_commercial_id: string;
+          p_email: string;
+          p_first_name: string;
+          p_kind: string;
+          p_phone: string;
+          p_postcode?: string;
+          p_reason: string;
+          p_starts_at: string;
+          p_trade?: string;
+        };
+        Returns: string;
+      };
+      voice_commercial_busy: {
+        Args: { p_commercial_id: string; p_from: string; p_to: string };
+        Returns: string[];
+      };
+      voice_commercial_for_postcode: {
+        Args: { p_postcode: string };
+        Returns: {
+          commercial_id: string;
+          prenom: string;
+        }[];
+      };
       voice_dossier_for_email: { Args: { p_email: string }; Returns: Json };
       voice_request_callback: {
         Args: {
@@ -6717,7 +6808,8 @@ export type Database = {
         | "activation_relance"
         | "finalisation_relance"
         | "creneaux_proposes"
-        | "creneau_choisi";
+        | "creneau_choisi"
+        | "rdv_commercial";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7043,6 +7135,7 @@ export const Constants = {
         "finalisation_relance",
         "creneaux_proposes",
         "creneau_choisi",
+        "rdv_commercial",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
