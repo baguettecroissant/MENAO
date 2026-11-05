@@ -42,6 +42,8 @@ const OPEN = [
   "robots\\.txt",
   // Texte de référence de l'assistant des pages Pro (ADR 0218) : lu par l'Edge Function, sans cookie.
   "assistant-pro\\.txt",
+  // Texte de référence de l'assistant des particuliers (ADR 0220), lu de la même façon.
+  "assistant-particulier\\.txt",
 ];
 
 /** Réécritures « beforeFiles » de next.config : aucune si le mode est désactivé. */

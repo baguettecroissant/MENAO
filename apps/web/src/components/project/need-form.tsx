@@ -35,6 +35,7 @@ import { describeProjectPhoto } from "@/lib/project/photo-description";
 import { PHOTO_ACCEPT, selectPhotos, uploadProjectPhoto } from "@/lib/project/photos";
 import { useNeedSuggestions } from "@/lib/project/suggestions";
 import { AnalysisScreen } from "./analysis-screen";
+import { ClientAssistant } from "./client-assistant";
 import { DictationButton, type DictationState } from "./dictation-button";
 import { TradeChips } from "./trade-chips";
 
@@ -595,6 +596,18 @@ export function NeedForm({
         </Button>
         <p className="max-w-xl text-center text-xs text-muted-foreground">{t.privacy}</p>
       </form>
+
+      {/* Assistant des particuliers (ADR 0220) : sa demande préparée remplit le champ. */}
+      {phase === "idle" && (
+        <ClientAssistant
+          trades={trades}
+          onUseDraft={(draft) => {
+            setText(draft.description);
+            if (draft.trade) setTradeHint(draft.trade);
+            pendingSelection.current = [draft.description.length, draft.description.length];
+          }}
+        />
+      )}
 
       {phase !== "idle" && <AnalysisScreen photos={phase === "photos"} />}
     </>

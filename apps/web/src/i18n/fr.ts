@@ -1459,6 +1459,46 @@ export const fr = {
     titleAccent: "vous avez besoin",
     tagline: "Recherche rapide et intelligente",
     label: "Décrivez votre projet",
+    /** Assistant des particuliers (F-71, ADR 0220), ouvert depuis la saisie du besoin. */
+    assistant: {
+      open: "Vous ne savez pas comment décrire votre problème, ou vous avez une question ?",
+      openAction: "Demandez à l'assistant",
+      title: "Assistant MENAO",
+      subtitle: "IA · répond en quelques secondes",
+      close: "Fermer l'assistant",
+      aiNotice:
+        "Vous échangez avec une intelligence artificielle. Elle vous aide à décrire votre besoin et répond à vos questions sur MENAO ; l'artisan confirmera tout sur place.",
+      greeting:
+        "Bonjour ! Décrivez votre problème avec vos mots, ou posez votre question : je vous aide à trouver le bon artisan et à préparer votre demande.",
+      quick: [
+        "J'ai une fuite ou de l'humidité",
+        "Je ne sais pas quel artisan contacter",
+        "C'est gratuit pour moi ?",
+        "Comment les artisans sont vérifiés ?",
+      ],
+      placeholder: "Écrivez votre message…",
+      inputLabel: "Votre message",
+      send: "Envoyer",
+      thinking: "L'assistant écrit…",
+      you: "Vous",
+      suggestionsLabel: "Vous pouvez répondre :",
+      unavailable:
+        "L'assistant est momentanément indisponible. Décrivez votre besoin directement dans le champ, ou écrivez à l'équipe MENAO.",
+      limit:
+        "Vous pouvez maintenant décrire votre besoin dans le champ de recherche ; pour une autre question, écrivez à l'équipe MENAO.",
+      write: "Écrire à l'équipe",
+      draft: {
+        title: "Votre demande est prête",
+        trade: (label: string) => `Artisan proposé : ${label}`,
+        use: "Utiliser cette description",
+        hint: "Vous pourrez la relire et la compléter avant de l'envoyer.",
+      },
+      // Texte de référence de l'assistant (/assistant-particulier.txt) : titres des parties.
+      knowledge: {
+        trades: "Métiers des artisans sur MENAO",
+        guides: "Guides MENAO (à conseiller selon la question)",
+      },
+    },
     placeholder:
       "Décrivez en détail votre besoin (ex : « Je cherche un plombier pour la rénovation complète de ma salle de bain de 8 m² à Nice »)",
     listening: "Écoute …",

@@ -6,9 +6,15 @@ import {
   type ProAssistantMessage,
 } from "@menao/core";
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { ArrowLeft, ArrowUp, X } from "lucide-react";
-import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
-import { LogoMark } from "@/components/brand/logo";
+import { ArrowLeft } from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  AssistantDialog,
+  Bubble,
+  Chips,
+  Composer,
+  Typing,
+} from "@/components/assistant/assistant-ui";
 import {
   Alert,
   Button,
@@ -17,7 +23,6 @@ import {
   Field,
   TextLink,
   focusRing,
-  inputClasses,
 } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
@@ -45,24 +50,7 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
   const [pending, setPending] = useState(false);
   const [stopped, setStopped] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => closeRef.current?.focus(), []);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-  // Plein écran sur téléphone : la page derrière ne défile plus.
-  useEffect(() => {
-    if (!window.matchMedia("(max-width: 39.99rem)").matches) return;
-    const root = document.documentElement;
-    const previous = root.style.overflow;
-    root.style.overflow = "hidden";
-    return () => {
-      root.style.overflow = previous;
-    };
-  }, []);
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, pending]);
@@ -123,41 +111,16 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
     else void ask(text);
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    void ask(question);
-  }
-
   const last = messages[messages.length - 1];
 
   return (
-    <section
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="pro-assistant-title"
-      className="animate-menao-assistant fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-surface sm:inset-auto sm:right-6 sm:bottom-6 sm:h-auto sm:max-h-[min(42rem,85dvh)] sm:w-[25rem] sm:rounded-card sm:border sm:border-border sm:shadow-raised"
+    <AssistantDialog
+      id="pro-assistant"
+      title={t.title}
+      subtitle={t.subtitle}
+      closeLabel={t.close}
+      onClose={onClose}
     >
-      <header className="flex items-center gap-3 bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_50%,#4869f6_100%)] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-white/15">
-          <LogoMark tone="white" className="size-6" />
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <h2 id="pro-assistant-title" className="font-medium">
-            {t.title}
-          </h2>
-          <p className="text-xs text-white/75">{t.subtitle}</p>
-        </div>
-        <button
-          ref={closeRef}
-          type="button"
-          onClick={onClose}
-          aria-label={t.close}
-          className={`inline-flex size-10 items-center justify-center rounded-pill text-white/90 hover:bg-white/15 ${focusRing}`}
-        >
-          <X aria-hidden="true" className="size-5" />
-        </button>
-      </header>
-
       {view === "callback" ? (
         <CallbackForm onBack={() => setView("chat")} />
       ) : (
@@ -167,11 +130,15 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
             className="flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4"
           >
             <p className="text-xs text-subtle-foreground">{t.aiNotice}</p>
-            <Bubble role="assistant">{t.greeting}</Bubble>
+            <Bubble role="assistant" speaker={t.title}>
+              {t.greeting}
+            </Bubble>
             {messages.length === 0 && <Chips items={quickLabels} onPick={pick} />}
             {messages.map((message, index) => (
               <div key={index} className="animate-menao-fade-up flex flex-col gap-2">
-                <Bubble role={message.role}>{message.text}</Bubble>
+                <Bubble role={message.role} speaker={message.role === "user" ? t.you : t.title}>
+                  {message.text}
+                </Bubble>
                 {message.suggestHuman && (
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" block={false} onClick={() => setView("callback")}>
@@ -195,34 +162,22 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
                   )}
               </div>
             ))}
-            {pending && <Typing />}
+            {pending && <Typing label={t.thinking} />}
           </div>
 
           <div className="flex flex-col gap-3 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {!limitReached && (
-              <form onSubmit={submit} className="flex items-end gap-2">
-                <label htmlFor="pro-assistant-question" className="sr-only">
-                  {t.inputLabel}
-                </label>
-                <input
-                  id="pro-assistant-question"
-                  value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
-                  maxLength={PRO_ASSISTANT_QUESTION_MAX_LENGTH}
-                  placeholder={t.placeholder}
-                  autoComplete="off"
-                  enterKeyHint="send"
-                  className={inputClasses}
-                />
-                <button
-                  type="submit"
-                  disabled={pending || !question.trim()}
-                  aria-label={t.send}
-                  className={`inline-flex size-12 shrink-0 items-center justify-center rounded-pill bg-primary text-white transition hover:bg-primary-strong active:scale-95 disabled:opacity-50 ${focusRing}`}
-                >
-                  <ArrowUp aria-hidden="true" className="size-5" />
-                </button>
-              </form>
+              <Composer
+                id="pro-assistant-question"
+                value={question}
+                onChange={setQuestion}
+                onSubmit={() => void ask(question)}
+                pending={pending}
+                maxLength={PRO_ASSISTANT_QUESTION_MAX_LENGTH}
+                placeholder={t.placeholder}
+                label={t.inputLabel}
+                sendLabel={t.send}
+              />
             )}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
               <ButtonLink href="/pro/inscription" size="sm">
@@ -240,71 +195,7 @@ export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
           </div>
         </>
       )}
-    </section>
-  );
-}
-
-/** Questions à poser d'un toucher (questions fréquentes, puis relances proposées). */
-function Chips({
-  items,
-  onPick,
-  label,
-}: {
-  items: readonly string[];
-  onPick: (text: string) => void;
-  label?: string;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div className="flex flex-col gap-2">
-      {label && <p className="text-xs text-subtle-foreground">{label}</p>}
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => onPick(item)}
-            className={`min-h-10 rounded-pill border border-primary/25 bg-primary-soft px-3.5 text-left text-sm text-primary-strong transition hover:border-primary/50 active:scale-[0.98] ${focusRing}`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** « L'assistant écrit… » : trois points qui s'animent (fixes si les animations sont réduites). */
-function Typing() {
-  return (
-    <p
-      role="status"
-      className="animate-menao-fade-up flex items-center gap-1 self-start rounded-card rounded-bl-md bg-background px-4 py-3.5"
-    >
-      <span className="sr-only">{t.thinking}</span>
-      {[0, 150, 300].map((delay) => (
-        <span
-          key={delay}
-          aria-hidden="true"
-          className="animate-menao-typing size-2 rounded-pill bg-muted-foreground"
-          style={{ animationDelay: `${delay}ms` }}
-        />
-      ))}
-    </p>
-  );
-}
-
-function Bubble({ role, children }: { role: Message["role"]; children: string }) {
-  return role === "user" ? (
-    <p className="max-w-[85%] self-end rounded-card rounded-br-md bg-primary px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line text-white">
-      <span className="sr-only">{t.you} : </span>
-      {children}
-    </p>
-  ) : (
-    <p className="max-w-[90%] self-start rounded-card rounded-bl-md bg-background px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line">
-      <span className="sr-only">{t.title} : </span>
-      {children}
-    </p>
+    </AssistantDialog>
   );
 }
 
