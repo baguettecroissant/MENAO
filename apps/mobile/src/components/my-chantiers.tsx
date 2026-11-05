@@ -10,8 +10,9 @@ import { RequestGroup } from "@/components/chantier/request-group";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar, loadMyChantiers, type MyChantiers } from "@/lib/chantiers";
-import { formatDateNumeric } from "@/lib/format";
-import { Body, Card, LinkText, Notice, ScreenSkeleton } from "@/ui";
+import { chooseSlot, loadSlotProposals, type SlotProposal } from "@/lib/requests";
+import { formatDateNumeric, formatDayMonthShort, formatTime } from "@/lib/format";
+import { Body, Card, Chip, LinkText, Notice, ScreenSkeleton, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -27,9 +28,22 @@ export function MyChantiersScreen() {
   const [data, setData] = useState<MyChantiers | null | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [proposals, setProposals] = useState<SlotProposal[]>([]);
+  const [slotError, setSlotError] = useState<string | null>(null);
   const load = useCallback(async () => {
-    setData(await loadMyChantiers());
+    const [chantiers, slots] = await Promise.all([loadMyChantiers(), loadSlotProposals()]);
+    setData(chantiers);
+    setProposals(slots);
   }, []);
+
+  /** Accepter en un toucher (ADR 0222) : un toucher fixe le rendez-vous. */
+  async function choose(proposalId: string, slot: string) {
+    setSlotError(null);
+    const result = await chooseSlot(proposalId, slot);
+    if ("error" in result) return setSlotError(result.error);
+    celebrate(fr.moments.appointment);
+    router.push(`/chantier/${result.chantierId}`);
+  }
   // Rechargé à chaque retour sur l'onglet (demande annulée, devis signé sur le site…).
   useFocusEffect(
     useCallback(() => {
@@ -98,6 +112,31 @@ export function MyChantiersScreen() {
         </TabHeader>
 
         {data === null && <Notice tone="error">{t.error}</Notice>}
+
+        {proposals.length > 0 && (
+          <View style={styles.slots}>
+            <Text style={styles.section}>{t.slots.title}</Text>
+            {slotError ? <Notice tone="error">{slotError}</Notice> : null}
+            {proposals.map((p) => (
+              <Card key={p.id}>
+                <Text style={styles.slotsFrom}>{t.slots.from(p.artisan)}</Text>
+                <View style={styles.slotsChips}>
+                  {p.slots.map((iso) => (
+                    <Chip
+                      key={iso}
+                      label={fr.proAppointment.suggestion(
+                        formatDayMonthShort(iso),
+                        formatTime(iso),
+                      )}
+                      onPress={() => choose(p.id, iso)}
+                    />
+                  ))}
+                </View>
+                <Body muted>{t.slots.hint}</Body>
+              </Card>
+            ))}
+          </View>
+        )}
 
         {empty && data !== null ? (
           <EmptyState illustration="demandes" title={t.empty}>
@@ -172,6 +211,14 @@ export function MyChantiersScreen() {
 }
 
 const styles = StyleSheet.create({
+  slots: { gap: spacing(3) },
+  slotsFrom: {
+    fontFamily: font.medium,
+    fontSize: 15,
+    color: colors["primary-strong"],
+    marginBottom: spacing(2),
+  },
+  slotsChips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2), marginBottom: spacing(2) },
   safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
   counts: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },

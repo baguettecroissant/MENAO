@@ -6,6 +6,11 @@ export const APPOINTMENT_MAX_DAYS_AHEAD = 180;
 export const APPOINTMENT_DURATION_MINUTES = 60;
 export const APPOINTMENT_NOTES_MAX_LENGTH = 5000;
 export const CANCEL_REASON_MAX_LENGTH = 500;
+/** Accepter en un toucher (ADR 0222) : créneaux proposés au client, qui en choisit un. */
+export const PROPOSED_SLOTS_MIN = 2;
+export const PROPOSED_SLOTS_MAX = 3;
+/** Délai minimal avant le premier créneau proposé (même règle en base). */
+const PROPOSED_SLOT_MIN_DELAY_MS = 60 * 60_000;
 
 const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -93,4 +98,20 @@ export function upcomingAgenda<
     }
   }
   return entries.sort((a, b) => Date.parse(a.at) - Date.parse(b.at)).slice(0, limit);
+}
+
+export type ProposedSlotsError = "nombre" | "passe" | "trop_loin";
+
+/**
+ * Créneaux proposés au client (ADR 0222), mêmes règles que `artisan_propose_slots` : 2 ou 3
+ * créneaux différents, le premier au moins une heure plus tard, le dernier dans les 6 mois.
+ */
+export function proposedSlotsError(slots: readonly Date[], now: Date): ProposedSlotsError | null {
+  const times = [...new Set(slots.map((slot) => slot.getTime()))].sort((a, b) => a - b);
+  if (times.length < PROPOSED_SLOTS_MIN || times.length > PROPOSED_SLOTS_MAX) return "nombre";
+  if ((times[0] ?? 0) <= now.getTime() + PROPOSED_SLOT_MIN_DELAY_MS) return "passe";
+  if ((times[times.length - 1] ?? 0) > now.getTime() + APPOINTMENT_MAX_DAYS_AHEAD * 86_400_000) {
+    return "trop_loin";
+  }
+  return null;
 }

@@ -32,6 +32,7 @@ export function RequestOpportunityView({
   minDate,
   trades,
   agenda,
+  proposedSlots = null,
   clientReputation,
   partners,
   base = "/pro",
@@ -44,6 +45,8 @@ export function RequestOpportunityView({
   minDate: string;
   trades: readonly { code: string; label: string }[];
   agenda?: AppointmentAgenda;
+  /** Créneaux proposés en attente du choix du client (ADR 0222). */
+  proposedSlots?: readonly string[] | null;
   clientReputation: ClientReputation | null;
   partners: readonly PartnerOption[];
   base?: string;
@@ -129,6 +132,7 @@ export function RequestOpportunityView({
               canRefuse={r.status === "envoyee"}
               partnersAfterRefusal={partners.some((p) => p.sameProject)}
               agenda={agenda}
+              proposedSlots={proposedSlots}
             />
           </ExampleLock>
         </StickyActions>

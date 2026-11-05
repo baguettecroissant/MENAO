@@ -2096,6 +2096,11 @@ export const fr = {
         "Nous venons de vous envoyer un e-mail de confirmation. Cliquez sur le lien qu'il contient : vous reviendrez ici pour envoyer votre demande.",
       selected: "Artisan sélectionné",
       selectedMany: "Artisans sélectionnés",
+      responseBands: {
+        deux_heures: "Répond en général en moins de 2 h",
+        six_heures: "Répond en général en moins de 6 h",
+        journee: "Répond en général dans la journée",
+      } as Record<string, string>,
       changeSelection: "Modifier",
       project: "Votre projet",
       messageTitle: "Ajouter un message personnalisé",
@@ -2134,6 +2139,8 @@ export const fr = {
       sentCallbackRange: (from: string, to: string) =>
         `Vous avez indiqué être joignable par téléphone entre ${from} et ${to}.`,
       sentNext: "Vous recevrez les coordonnées de chaque artisan dès qu'il accepte votre demande.",
+      // Délai de réponse habituel (ADR 0221) : une information, pas une garantie.
+      responseNote: "Délais indicatifs, tirés des réponses passées de chaque artisan.",
       follow: "Suivre ma demande depuis mon espace",
       // Chantier à plusieurs métiers (ADR 0168) : les métiers qui restent à contacter.
       otherLots: {
@@ -2359,6 +2366,12 @@ export const fr = {
     subtitle: "Suivez vos chantiers MENAO, en toute simplicité",
     start: "Démarrer un chantier",
     countActive: (n: number) => (n <= 1 ? `${n} chantier en cours` : `${n} chantiers en cours`),
+    // Accepter en un toucher (ADR 0222) : créneaux proposés par les artisans.
+    slots: {
+      title: "Rendez-vous à choisir",
+      from: (artisan: string) => `${artisan} vous propose de venir voir votre projet :`,
+      hint: "Touchez le créneau qui vous convient : le rendez-vous est fixé aussitôt, et ses coordonnées vous sont communiquées.",
+    },
     countToSign: (n: number) => `${n} devis à signer`,
     // « À faire maintenant » (ADR 0132), comme l'accueil de l'application (ADR 0082).
     todoTitle: "À faire maintenant",
@@ -4008,6 +4021,26 @@ export const fr = {
       seePublic: "Voir ma fiche publique",
     },
     appointment: {
+      // Accepter en un toucher (ADR 0222) : créneaux proposés au client, qui en choisit un.
+      propose: (n: number) => `Proposer ${n} créneaux`,
+      proposeTitle: (name: string | null) =>
+        name ? `Proposer des créneaux à ${name}` : "Proposer des créneaux à votre client",
+      proposeHint:
+        "Votre client choisit l'un de ces créneaux : le rendez-vous est fixé aussitôt, et vos coordonnées sont échangées.",
+      proposeLegend: "Vos créneaux libres",
+      proposeCount: (n: number) =>
+        n < 2 ? "Choisissez 2 ou 3 créneaux." : `${n} créneaux seront proposés.`,
+      proposeSubmit: "Proposer ces créneaux",
+      proposeSent: "Créneaux envoyés : votre client va choisir.",
+      proposeErrors: {
+        nombre: "Choisissez 2 ou 3 créneaux différents.",
+        passe: "Proposez des créneaux à venir, au moins une heure plus tard.",
+        trop_loin: "Les créneaux doivent être dans les 6 prochains mois.",
+      },
+      proposedTitle: "Créneaux proposés",
+      proposedWaiting: (name: string | null) =>
+        name ? `En attente du choix de ${name}.` : "En attente du choix de votre client.",
+      proposeOther: "Proposer d'autres créneaux",
       title: "Informations du rendez-vous",
       back: "Mes chantiers",
       client: "Client",

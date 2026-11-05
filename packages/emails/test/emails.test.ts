@@ -540,6 +540,54 @@ describe("contenu des notifications (F-41)", () => {
     );
   });
 
+  it("créneaux proposés puis créneau choisi (ADR 0222)", () => {
+    const proposed = notificationContent(
+      "creneaux_proposes",
+      {
+        artisan: "Dupont Plomberie",
+        creneaux: ["2026-11-10T08:00:00Z", "2026-11-10T13:00:00Z", "pas une date"],
+      },
+      ctx,
+    );
+    expect(proposed.subject).toBe("Dupont Plomberie vous propose 2 créneaux");
+    expect(proposed.paragraphs[1]).toContain("le mardi 10 novembre à 09h00");
+    expect(proposed.cta).toEqual({
+      label: "Choisir mon créneau",
+      url: "https://menao.example/mon-espace",
+    });
+    const chosen = notificationContent(
+      "creneau_choisi",
+      { chantier_id: "22222222-2222-4222-8222-222222222222", rendez_vous: "2026-11-10T08:00:00Z" },
+      ctx,
+    );
+    expect(chosen.subject).toBe("Rendez-vous fixé le mardi 10 novembre à 09h00");
+    expect(chosen.cta?.url).toBe(
+      "https://menao.example/pro/chantiers/22222222-2222-4222-8222-222222222222",
+    );
+  });
+
+  it("demande envoyée : délai de réponse habituel de chaque artisan (ADR 0221)", () => {
+    const content = notificationContent(
+      "demande_envoyee",
+      {
+        titre: "Fuite",
+        nb: 2,
+        delais: [
+          { nom: "Rapide Plomberie", tranche: "deux_heures" },
+          { nom: "Autre", tranche: "inconnue" },
+          { nom: "  ", tranche: "journee" },
+        ],
+      },
+      ctx,
+    );
+    expect(content.paragraphs).toContain("Rapide Plomberie répond en général en moins de 2 h.");
+    expect(content.paragraphs.at(-1)).toBe(
+      "C'est une indication tirée de ses réponses passées, pas un engagement.",
+    );
+    const none = notificationContent("demande_envoyee", { titre: "Fuite", nb: 1 }, ctx);
+    expect(none.paragraphs.join(" ")).not.toContain("répond en général");
+  });
+
   it("relances de l'inscription : étapes manquantes listées, sans Kbis exigé (ADR 0219)", () => {
     const withSteps = notificationContent(
       "inscription_relance",
