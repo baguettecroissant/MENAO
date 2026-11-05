@@ -9,19 +9,31 @@ import { dictationSupported, recordingToWav } from "@/lib/project/dictation";
 import { useMicLevel } from "@/lib/project/use-mic-level";
 import { MicLevel } from "./mic-level";
 
-const t = fr.search.dictation;
-
 export type DictationState = "idle" | "listening" | "transcribing";
 
-/** Dictée (F-05) : bouton micro rond des maquettes ; « Écoute… » puis texte inséré. */
+type DefaultLabels = typeof fr.search.dictation;
+
+/** Libellés et messages de la dictée (par défaut, ceux de la saisie du besoin). */
+export type DictationLabels = {
+  [K in keyof DefaultLabels]: DefaultLabels[K] extends (...args: infer A) => string
+    ? (...args: A) => string
+    : string;
+};
+
+/**
+ * Dictée (F-05) : bouton micro rond des maquettes ; « Écoute… » puis texte inséré. Réutilisée par
+ * le compte rendu du commercial (ADR 0223), avec ses propres libellés.
+ */
 export function DictationButton({
   onText,
   onError,
   onStateChange,
+  labels: t = fr.search.dictation,
 }: {
   onText: (text: string) => void;
   onError: (message: string | null) => void;
   onStateChange?: (state: DictationState) => void;
+  labels?: DictationLabels;
 }) {
   const [state, setStateRaw] = useState<DictationState>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -82,7 +94,7 @@ export function DictationButton({
       onError(t.limit);
       stop();
     }
-  }, [state, seconds, onError]);
+  }, [state, seconds, onError, t.limit]);
 
   async function transcribe(recording: Blob) {
     setState("transcribing");

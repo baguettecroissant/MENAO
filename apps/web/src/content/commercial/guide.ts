@@ -1,4 +1,4 @@
-import type { GuideBlock } from "@/content/guides/types";
+import type { GuideBlock } from "../guides/types.ts";
 
 /**
  * Guide terrain des commerciaux (F-65, ADR 0205) : rubriques à lire sur téléphone, tirées du plan

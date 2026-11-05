@@ -294,6 +294,113 @@ export const fr = {
       phone: "Téléphone invalide : format international, par exemple +33612345678.",
     },
   },
+  /**
+   * Copilote du commercial (F-74, ADR 0223) : fiche de préparation, message (envoyé par le
+   * commercial lui-même) et compte rendu dicté, sur la fiche d'un prospect suivi.
+   */
+  commercialCopilot: {
+    title: "Copilote",
+    subtitle: "IA · à relire avant usage",
+    tabsLabel: "Outils du copilote",
+    tabs: { brief: "Préparer ma visite", message: "Préparer un message", report: "Compte rendu" },
+    brief: {
+      empty:
+        "En quelques secondes : qui il est, la demande dans sa zone, les arguments et les objections probables pour ce profil.",
+      generate: "Préparer la fiche",
+      regenerate: "Régénérer",
+      pending: "Préparation de la fiche…",
+      preparedOn: (date: string) => `Préparée le ${date}`,
+      portrait: "Qui c'est",
+      demandTitle: "La demande dans sa zone",
+      demand: (count: number, trades: string, km: number, days: number) =>
+        `${count} recherches de ${trades} à moins de ${km} km ces ${days} derniers jours.`,
+      arguments: "Les arguments pour ce profil",
+      objections: "Les objections probables",
+      opening: "Pour lancer la conversation",
+    },
+    message: {
+      channelLabel: "Canal",
+      channels: {
+        sms: "SMS",
+        whatsapp: "WhatsApp",
+        email: "E-mail",
+        appel: "Script d'appel",
+      } as Record<string, string>,
+      generate: "Rédiger",
+      regenerate: "Une autre version",
+      pending: "Rédaction…",
+      subjectLabel: "Objet",
+      bodyLabel: "Message, modifiable",
+      scriptLabel: "Script de 30 secondes, modifiable",
+      hint: "Le message s'ouvre sur votre téléphone : relisez-le, puis envoyez-le vous-même.",
+      openWhatsApp: "Ouvrir WhatsApp",
+      openSms: "Ouvrir SMS",
+      openEmail: "Ouvrir l'e-mail",
+      call: "Appeler",
+      copy: "Copier",
+      copied: "Copié",
+      // TODO(legal): information au premier contact et droit d'opposition (question n°2 pour
+      // l'avocat), comme le rappel « firstContact » de la fiche.
+      optOut:
+        "Vos coordonnées professionnelles viennent du registre public des entreprises. Si vous ne souhaitez plus être contacté, répondez simplement STOP.",
+    },
+    report: {
+      intro:
+        "Dictez en sortant : ce qui s'est dit, son intérêt, ses objections et la suite. L'audio n'est jamais gardé.",
+      transcriptLabel: "Ce qui s'est dit",
+      transcriptPlaceholder:
+        "Par exemple : démo faite, il aime le devis à la voix, trouve le prix élevé, rappeler jeudi après 17 h.",
+      generate: "Rédiger le compte rendu",
+      pending: "Rédaction du compte rendu…",
+      tooShort: "Dites-en un peu plus : quelques mots au moins.",
+      summaryLabel: "Compte rendu",
+      interestLabel: "Intérêt",
+      interests: { chaud: "Chaud", tiede: "Tiède", froid: "Froid" } as Record<string, string>,
+      objectionsLabel: "Objections entendues",
+      objectionsHint: "Une par ligne, 3 au plus.",
+      statusLabel: "Étape",
+      nextKindLabel: "Prochaine action",
+      nextKinds: { appel: "Appel", visite: "Visite", message: "Message" } as Record<string, string>,
+      noNext: "Aucune",
+      nextAtLabel: "Quand",
+      nextLabelLabel: "Quoi",
+      followUpLabel: "Message de suivi, modifiable",
+      doNotContact:
+        "Il a demandé à ne plus être contacté : enregistrez, puis touchez « Ne plus contacter » en bas de la fiche.",
+      save: "Enregistrer dans le suivi",
+      saved: "Compte rendu enregistré : l'étape et la prochaine action du suivi sont à jour.",
+      restart: "Recommencer",
+      dictation: {
+        start: "Dicter le compte rendu",
+        stop: "Arrêter la dictée",
+        listening: (seconds: number) => `Écoute… ${seconds} s`,
+        transcribing: "Transcription en cours…",
+        denied:
+          "Le micro n'est pas autorisé. Autorisez-le dans les réglages de votre navigateur pour dicter.",
+        unsupported: "La dictée n'est pas disponible sur ce navigateur : écrivez le compte rendu.",
+        failed: "La transcription a échoué. Réessayez ou écrivez le compte rendu.",
+        rate_limited: "Trop de dictées en peu de temps. Réessayez dans une heure.",
+        limit: "Dictée limitée à 2 minutes.",
+        quiet: "On ne vous entend pas…",
+        silent:
+          "Aucun son capté : vérifiez que votre micro n'est pas coupé et qu'il est bien choisi dans votre navigateur, puis réessayez.",
+      },
+    },
+    history: {
+      title: "Comptes rendus",
+      next: (label: string) => `Suite prévue : ${label}`,
+    },
+    errors: {
+      rejected:
+        "Le texte proposé ne respectait pas les règles du guide terrain. Réessayez, ou rédigez-le vous-même.",
+      rate_limited: "Limite du jour atteinte pour le copilote. Réessayez demain.",
+      not_followed: "Suivez d'abord ce prospect pour utiliser le copilote.",
+      unavailable: "Le copilote est momentanément indisponible. Réessayez dans quelques minutes.",
+      summary: "Le compte rendu est vide.",
+      objections: "3 objections au plus, de 120 caractères chacune.",
+      label: "120 caractères au plus.",
+    },
+  },
   /** Résultats et primes des commerciaux (F-65, lot 3, ADR 0207). */
   commercialResults: {
     nav: "Mes résultats",

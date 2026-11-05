@@ -1,4 +1,10 @@
-import { FORMES_JURIDIQUES, apeLabel, directionsUrl } from "@menao/core";
+import {
+  FORMES_JURIDIQUES,
+  apeLabel,
+  directionsUrl,
+  parseStoredBrief,
+  partnerLinks,
+} from "@menao/core";
 import { ArrowLeft, Navigation } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,13 +16,16 @@ import {
   ProspectFollowForm,
   ReleaseProspectForm,
 } from "@/components/commercial/prospect-forms";
+import { ProspectCopilot } from "@/components/commercial/prospect-copilot";
 import { Alert, Card, CardTitle, StatusBadge } from "@/components/ui";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { getCommercialSpace } from "@/lib/commercial/space";
-import { formatDay, parisInputValues } from "@/lib/format";
+import { formatDay, formatDayTime, parisInputValues } from "@/lib/format";
 
 const t = fr.commercialProspects;
 const d = t.detail;
+const c = fr.commercialCopilot;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export const metadata: Metadata = { title: `${t.list.title} — MENAO`, robots: { index: false } };
@@ -31,7 +40,8 @@ function localInput(iso: string | null): string {
 /**
  * Fiche d'un prospect (F-65, lot 2, ADR 0206) : l'entreprise (registre public), le rappel du
  * premier contact, puis selon le cas « Suivre », mon suivi, ou « suivi par un collègue » ; toujours
- * « Ne plus contacter », définitif.
+ * « Ne plus contacter », définitif. Pour un prospect que je suis : le copilote (ADR 0223) et
+ * l'historique de mes comptes rendus.
  */
 export default async function CommercialProspectPage({
   params,
@@ -72,6 +82,31 @@ export default async function CommercialProspectPage({
       </main>
     );
   }
+
+  // Copilote : fiche gardée, comptes rendus, lien d'inscription du commercial, noms des métiers.
+  const [{ data: briefRow }, { data: reports }] = p.mine
+    ? await Promise.all([
+        space.supabase
+          .from("prospect_briefs")
+          .select("content, created_at")
+          .eq("prospect_id", p.id)
+          .maybeSingle(),
+        space.supabase
+          .from("prospect_reports")
+          .select("id, summary, interest, objections, next_action_label, created_at")
+          .eq("prospect_id", p.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ])
+    : [{ data: null }, { data: null }];
+  const brief = parseStoredBrief(briefRow?.content);
+  const { data: trades } = brief?.demand?.metiers.length
+    ? await space.supabase.from("trades").select("code, label").in("code", brief.demand.metiers)
+    : { data: [] };
+  const tradeLabels = Object.fromEntries((trades ?? []).map((tr) => [tr.code, tr.label]));
+  const link = space.commercial
+    ? partnerLinks(env.NEXT_PUBLIC_SITE_URL, space.commercial.code).pros
+    : env.NEXT_PUBLIC_SITE_URL;
 
   const place = [p.code_postal, p.commune].filter(Boolean).join(" ");
   const located = p.lat !== null && p.lon !== null;
@@ -152,6 +187,17 @@ export default async function CommercialProspectPage({
 
         <Alert tone="info">{d.firstContact}</Alert>
 
+        {p.mine && (
+          <ProspectCopilot
+            prospectId={p.id}
+            phone={p.phone}
+            link={link}
+            brief={brief}
+            briefAt={brief ? (briefRow?.created_at ?? null) : null}
+            tradeLabels={tradeLabels}
+          />
+        )}
+
         {p.mine ? (
           <Card className="flex flex-col gap-5">
             <CardTitle
@@ -173,6 +219,44 @@ export default async function CommercialProspectPage({
           <Alert tone="info">{d.followedByOther}</Alert>
         ) : (
           <FollowProspectForm id={p.id} />
+        )}
+
+        {reports && reports.length > 0 && (
+          <Card className="flex flex-col gap-3">
+            <CardTitle title={c.history.title} />
+            <ol className="flex flex-col">
+              {reports.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex flex-col gap-1.5 border-t border-border py-3 text-sm first:border-t-0 first:pt-0"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDayTime(r.created_at)}
+                    </span>
+                    <StatusBadge
+                      tone={
+                        r.interest === "chaud"
+                          ? "success"
+                          : r.interest === "tiede"
+                            ? "warning"
+                            : "neutral"
+                      }
+                    >
+                      {c.report.interests[r.interest] ?? r.interest}
+                    </StatusBadge>
+                  </div>
+                  <p className="leading-relaxed break-words">{r.summary}</p>
+                  {r.objections.length > 0 && (
+                    <p className="text-muted-foreground">{r.objections.join(" · ")}</p>
+                  )}
+                  {r.next_action_label && (
+                    <p className="text-muted-foreground">{c.history.next(r.next_action_label)}</p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </Card>
         )}
 
         <div className="border-t border-border pt-5">
