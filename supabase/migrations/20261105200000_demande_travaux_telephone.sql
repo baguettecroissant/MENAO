@@ -20,6 +20,7 @@ create table public.voice_work_requests (
 create index voice_work_requests_phone_idx on public.voice_work_requests (phone, created_at);
 -- Aucune politique : accès par les fonctions ci-dessous et le rôle service uniquement.
 alter table public.voice_work_requests enable row level security;
+revoke all on public.voice_work_requests from anon, authenticated;
 
 -- Lien utilisé (projet rattaché au compte) : les coordonnées dictées ne servent plus.
 create function app.forget_voice_work_request()
