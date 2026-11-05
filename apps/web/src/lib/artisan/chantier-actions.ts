@@ -1,6 +1,11 @@
 "use server";
 
-import { appointmentInputError, cancelReport, chantierStartInputError } from "@menao/core";
+import {
+  appointmentInputError,
+  cancelReport,
+  chantierStartInputError,
+  proposedSlotsError,
+} from "@menao/core";
 import {
   appointmentNotesSchema,
   appointmentSchema,
@@ -69,6 +74,33 @@ export async function fixAppointment(
   }
   revalidatePath("/pro", "layout");
   redirect(`/pro/chantiers/${chantierId}` as Route);
+}
+
+/**
+ * Accepter en un toucher (ADR 0222) : 2 ou 3 créneaux proposés au client, qui en choisit un.
+ * La demande reste ouverte jusqu'au dernier créneau ; plus de relance à l'artisan.
+ */
+export async function proposeSlots(
+  requestId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  if (!z.uuid().safeParse(requestId).success) return { error: fr.errors.generic };
+  const slots = formData
+    .getAll("slot")
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => new Date(v))
+    .filter((d) => !Number.isNaN(d.getTime()));
+  const invalid = proposedSlotsError(slots, new Date());
+  if (invalid) return { error: t.proposeErrors[invalid] };
+  const { supabase } = await requireArtisan();
+  const { error } = await supabase.rpc("artisan_propose_slots", {
+    p_request_id: requestId,
+    p_slots: slots.map((d) => d.toISOString()),
+  });
+  if (error) return rpcError(error);
+  revalidatePath("/pro", "layout");
+  return { success: t.proposeSent };
 }
 
 export async function rescheduleAppointment(

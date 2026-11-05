@@ -2168,6 +2168,12 @@ export const fr = {
     subtitle: "Suivez vos chantiers MENAO, en toute simplicité",
     start: "Démarrer un chantier",
     countActive: (n: number) => (n <= 1 ? `${n} chantier en cours` : `${n} chantiers en cours`),
+    // Accepter en un toucher (ADR 0222) : créneaux proposés par les artisans.
+    slots: {
+      title: "Rendez-vous à choisir",
+      from: (artisan: string) => `${artisan} vous propose de venir voir votre projet :`,
+      hint: "Touchez le créneau qui vous convient : le rendez-vous est fixé aussitôt, et ses coordonnées vous sont communiquées.",
+    },
     countToSign: (n: number) => `${n} devis à signer`,
     // « À faire maintenant » (ADR 0132), comme l'accueil de l'application (ADR 0082).
     todoTitle: "À faire maintenant",
@@ -3817,6 +3823,26 @@ export const fr = {
       seePublic: "Voir ma fiche publique",
     },
     appointment: {
+      // Accepter en un toucher (ADR 0222) : créneaux proposés au client, qui en choisit un.
+      propose: (n: number) => `Proposer ${n} créneaux`,
+      proposeTitle: (name: string | null) =>
+        name ? `Proposer des créneaux à ${name}` : "Proposer des créneaux à votre client",
+      proposeHint:
+        "Votre client choisit l'un de ces créneaux : le rendez-vous est fixé aussitôt, et vos coordonnées sont échangées.",
+      proposeLegend: "Vos créneaux libres",
+      proposeCount: (n: number) =>
+        n < 2 ? "Choisissez 2 ou 3 créneaux." : `${n} créneaux seront proposés.`,
+      proposeSubmit: "Proposer ces créneaux",
+      proposeSent: "Créneaux envoyés : votre client va choisir.",
+      proposeErrors: {
+        nombre: "Choisissez 2 ou 3 créneaux différents.",
+        passe: "Proposez des créneaux à venir, au moins une heure plus tard.",
+        trop_loin: "Les créneaux doivent être dans les 6 prochains mois.",
+      },
+      proposedTitle: "Créneaux proposés",
+      proposedWaiting: (name: string | null) =>
+        name ? `En attente du choix de ${name}.` : "En attente du choix de votre client.",
+      proposeOther: "Proposer d'autres créneaux",
       title: "Informations du rendez-vous",
       back: "Mes chantiers",
       client: "Client",
