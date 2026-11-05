@@ -13,8 +13,8 @@ const ProAssistantPanel = lazy(() =>
 );
 
 /**
- * Assistant des pages Pro (F-69, ADR 0218) : bouton « Une question ? » en bas à droite, qui ouvre
- * la conversation. Les questions fréquentes de la page y ont une réponse immédiate ; les autres
+ * Assistant des pages Pro (F-69, ADR 0218) : bulle ronde en bas à droite, qui ouvre la
+ * conversation. Les questions fréquentes de la page y ont une réponse immédiate ; les autres
  * passent par l'IA (Edge Function pro-assistant).
  */
 export function ProAssistant() {
@@ -31,10 +31,18 @@ export function ProAssistant() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label={t.openLabel}
-          className={`animate-menao-fade-up fixed right-4 bottom-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-pill bg-primary px-5 text-[0.9375rem] font-medium text-white shadow-raised transition hover:bg-primary-strong sm:right-6 sm:bottom-6 ${focusRing}`}
+          title={t.open}
+          className={`animate-menao-bubble-in group fixed right-4 bottom-4 z-40 inline-flex size-14 items-center justify-center rounded-pill bg-[linear-gradient(135deg,#1a2b85_0%,#4869f6_100%)] text-white shadow-raised ring-2 ring-white transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:bottom-6 ${focusRing}`}
         >
-          <MessageCircle aria-hidden="true" className="size-5" />
-          {t.open}
+          {/* Halo discret : trois pulsations après l'arrivée, puis plus rien. */}
+          <span
+            aria-hidden="true"
+            className="animate-menao-halo pointer-events-none absolute inset-0 rounded-pill bg-primary"
+          />
+          <MessageCircle
+            aria-hidden="true"
+            className="relative size-6 fill-white transition-transform duration-200 group-hover:-rotate-6"
+          />
         </button>
       )}
     </>
