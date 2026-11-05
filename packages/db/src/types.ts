@@ -5846,12 +5846,7 @@ export type Database = {
         }[];
       };
       commercial_prospect_demand: {
-        Args: {
-          p_days?: number;
-          p_id: string;
-          p_radius_km?: number;
-          p_trade_codes: string[];
-        };
+        Args: { p_days?: number; p_id: string; p_radius_km?: number; p_trade_codes: string[] };
         Returns: number;
       };
       commercial_prospects: {
