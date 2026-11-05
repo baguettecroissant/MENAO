@@ -108,7 +108,7 @@ Règles absolues, tirées du guide terrain :
 4. Aucun nom de concurrent, même si les notes en citent un : on compare un abonnement fixe à une commission, sans nommer personne.
 5. Ni « les meilleurs artisans », ni vocabulaire d'urgence ou de pression (dernière chance, places limitées…), ni remise.
 6. Aucune adresse web : MENAO ajoute le lien d'inscription du commercial à l'emplacement [lien].
-7. La demande de la zone n'est citée que si elle est fournie, avec son nombre exact, comme des recherches de particuliers et jamais comme des demandes qu'il recevra : on parle des prochaines demandes, pas des recherches passées.
+7. La demande de la zone n'est citée que si elle est fournie, avec son nombre exact, comme des recherches passées de particuliers. Ne dis jamais que ces recherches lui seront envoyées ou « pourront lui arriver » : elles sont passées ; seules les prochaines demandes pourront lui être proposées.
 8. Ne devine jamais le genre ni le prénom de l'artisan : « Bonjour » seul, ou le nom de l'entreprise. Vouvoiement toujours.
 9. Style du guide : direct et chiffré (« 150 € HT par mois, aucune commission »), les mots du métier (chantier, devis, acompte, réception, décennale), phrases courtes, français correct, sans titre, sans gras ni Markdown. MENAO toujours en majuscules.
 
@@ -202,18 +202,19 @@ objet : seulement pour un e-mail, sinon une chaîne vide.`;
 function reportTask(
   transcript: string,
   now: { date: string; time: string; weekday: string },
+  firstName: string,
 ): string {
   return `<maintenant>${now.weekday} ${now.date}, ${now.time} (heure de Paris)</maintenant>
 <dictee>${transcript}</dictee>
 
 Tâche : mets en forme le compte rendu que le commercial vient de dicter après une visite ou un appel (la dictée peut contenir des erreurs de transcription).
-- resume : 1 à 3 phrases factuelles, à la troisième personne, seulement ce qui a été dit (600 caractères au plus).
+- resume : 1 à 3 phrases factuelles, à la troisième personne, seulement ce que dit la dictée de cet échange (600 caractères au plus) ; les notes et les comptes rendus précédents servent de contexte, ne les recopie pas.
 - interet : chaud (veut s'inscrire, ou a pris rendez-vous avec envie), tiede (intéressé mais hésite), froid (pas intéressé pour le moment).
 - objections : les objections exprimées par l'artisan, 3 au plus, en quelques mots chacune ; liste vide s'il n'y en a pas.
 - statut : a_contacter (rien de fixé), rdv_pris (un rendez-vous est fixé), demo_faite (la démo a eu lieu), pas_interesse.
 - ne_plus_contacter : true seulement si l'artisan a demandé à ne plus être contacté (« ne me rappelez plus », « retirez mon numéro »…), sinon false.
 - prochaine_action : type (appel, visite, message ou aucune) ; date (AAAA-MM-JJ) et heure (HH:MM) dites dans la dictée, ou à défaut une relance raisonnable sous 2 à 7 jours (heure null si aucune n'est dite) ; libelle court (« Rappeler pour finir l'inscription »). Type aucune si ne_plus_contacter ou s'il n'y a plus rien à faire.
-- message_suivi : un court message WhatsApp ou SMS (400 caractères au plus) que le commercial peut envoyer à l'artisan après l'échange : remerciement, ce qui a été convenu, [lien] si c'est utile. null si ne_plus_contacter ou si aucun message n'a de sens.`;
+- message_suivi : un court message WhatsApp ou SMS (400 caractères au plus) que le commercial ${firstName} peut envoyer à l'artisan après l'échange : remerciement, ce qui a été convenu, [lien] si c'est utile, signé « ${firstName}, MENAO ». null si ne_plus_contacter ou si aucun message n'a de sens.`;
 }
 
 type Attempt<T> = { value: T | null; violations: CopilotViolation[] };
@@ -387,7 +388,8 @@ export async function generateReport(
   now: { date: string; time: string; weekday: string },
   run: AiRun,
 ) {
-  const task = `${prospectBlock(ctx, null, now.date)}\n\n${reportTask(transcript, now)}`;
+  const firstName = ctx.prenom?.trim() || "votre conseiller";
+  const task = `${prospectBlock(ctx, null, now.date)}\n\n${reportTask(transcript, now, firstName)}`;
   return await generate<CopilotReport>(
     llm,
     guide,

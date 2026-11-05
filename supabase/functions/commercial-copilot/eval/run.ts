@@ -1,6 +1,6 @@
 // Évaluation du copilote du commercial (F-74, ADR 0223) sur des prospects et des dictées fictifs
-// (cases.json) : informations attendues, contenus interdits (concurrents, garanties, remises,
-// demande de la zone citée sous le seuil), promesses détectées après le second essai, champs du
+// (cases.json) : informations attendues, contenus interdits dans les textes destinés à l'artisan
+// (concurrents, garanties, remises, demande de la zone citée sous le seuil), promesses détectées après le second essai, champs du
 // compte rendu (intérêt, étape, « ne plus contacter », prochaine action et sa date), forme du
 // message (prénom du commercial, MENAO, emplacement du lien, longueur), temps de réponse et coût
 // réel. Même chemin que l'Edge Function (copilot.ts), avec le guide terrain du dépôt. Rien n'est
@@ -155,6 +155,8 @@ run: for (let pass = 1; pass <= passes; pass++) {
       latency_ms: 0,
     };
     let texts: string[] = [];
+    // Textes dits ou envoyés à l'artisan : les seuls où un contenu interdit compte.
+    let facing: string[] = [];
     let shown = "";
     let attempts = 0;
     const issues: string[] = [];
@@ -170,6 +172,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
           ...briefTexts(r.value),
           ...r.value.objections.map((o) => o.objection),
         ];
+        facing = briefTexts(r.value);
         shown = [
           r.value.portrait,
           ...r.value.arguments.map((a) => `• ${a.title} — ${a.detail}`),
@@ -184,6 +187,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
       if (r.value) {
         output = r.value;
         texts = [r.value.subject ?? "", r.value.body];
+        facing = texts;
         shown = `${r.value.subject ? `[${r.value.subject}] ` : ""}${r.value.body}`;
         violationsLeft += texts.flatMap(copilotViolations).length;
         const written = c.channel !== "appel";
@@ -205,6 +209,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
       if (r.value) {
         output = r.value;
         texts = [r.value.summary, ...r.value.objections, r.value.followUp ?? ""];
+        facing = reportTexts(r.value);
         shown = `${r.value.summary} [${r.value.interest}, ${r.value.status}${r.value.doNotContact ? ", NE PLUS CONTACTER" : ""}] → ${
           r.value.nextAction
             ? `${r.value.nextAction.kind} ${r.value.nextAction.date} ${r.value.nextAction.time} « ${r.value.nextAction.label} »`
@@ -247,7 +252,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
     }
     const all = texts.join("\n");
     const missing = (c.attendu ?? []).filter((re) => !new RegExp(re, "i").test(all));
-    const found = (c.interdit ?? []).filter((re) => new RegExp(re, "i").test(all));
+    const found = (c.interdit ?? []).filter((re) => new RegExp(re, "i").test(facing.join("\n")));
     expectedTotal += (c.attendu ?? []).length;
     expectedOk += (c.attendu ?? []).length - missing.length;
     forbidden += found.length;
