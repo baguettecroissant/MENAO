@@ -5561,10 +5561,7 @@ export type Database = {
           vat_rate_bp: number;
         }[];
       };
-      artisan_propose_slots: {
-        Args: { p_request_id: string; p_slots: string[] };
-        Returns: string;
-      };
+      artisan_propose_slots: { Args: { p_request_id: string; p_slots: string[] }; Returns: string };
       artisan_public_page: { Args: { p_slug: string }; Returns: Json };
       artisan_public_profile: { Args: { p_artisan_id: string }; Returns: Json };
       artisan_public_reviews: {
@@ -6072,10 +6069,7 @@ export type Database = {
           ville_nom: string;
         }[];
       };
-      particulier_choose_slot: {
-        Args: { p_proposal_id: string; p_slot: string };
-        Returns: string;
-      };
+      particulier_choose_slot: { Args: { p_proposal_id: string; p_slot: string }; Returns: string };
       particulier_confirm_reserves_lifted: { Args: { p_chantier_id: string }; Returns: undefined };
       particulier_refuse_quote: {
         Args: {
