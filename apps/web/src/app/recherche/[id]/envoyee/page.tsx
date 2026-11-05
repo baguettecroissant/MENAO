@@ -46,6 +46,11 @@ export default async function RequestSentPage({
   ]);
   const requests = (data ?? []).filter((r) => sentNow.has(r.project_id) && r.status === "envoyee");
   if (requests.length === 0) notFound();
+  // Délai de réponse habituel de chaque artisan contacté (ADR 0221).
+  const { data: bands } = await supabase.rpc("particulier_response_bands", {
+    p_request_ids: requests.map((r) => r.request_id),
+  });
+  const bandOf = new Map((bands ?? []).map((b) => [b.request_id, b.tranche]));
   const hhmm = (v: string | null) => (v ?? "").slice(0, 5).replace(":", " h ");
   const names = joinNames([...new Set(requests.map((r) => r.artisan_name))]);
   // Chantier à plusieurs métiers (ADR 0168) : les métiers pas encore contactés.
@@ -67,8 +72,12 @@ export default async function RequestSentPage({
                 ? publicUrl(supabase, "avatars", r.artisan_avatar_path)
                 : null,
               trade: r.trade_label,
+              responseBand: bandOf.get(r.request_id) ?? null,
             }))}
           />
+          {bandOf.size > 0 && (
+            <p className="px-1 text-xs text-muted-foreground">{t.responseNote}</p>
+          )}
           {summary && <ProjectSummaryCard summary={summary} editable={false} />}
         </aside>
         <div className="flex flex-col items-center gap-6">

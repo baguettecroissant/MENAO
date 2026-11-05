@@ -346,3 +346,26 @@ export async function sendRequests(
   if (error) return { ok: false, error: sqlError(error) };
   return { ok: true, callbackFrom: r.callbackFrom, callbackTo: r.callbackTo };
 }
+
+/** Accepter en un toucher (ADR 0222) : créneaux proposés par les artisans, à choisir. */
+export type SlotProposal = { id: string; artisan: string; slots: string[] };
+
+export async function loadSlotProposals(): Promise<SlotProposal[]> {
+  const { data } = await supabase.rpc("particulier_slot_proposals");
+  return (data ?? [])
+    .filter((p) => p.slots.length > 0)
+    .map((p) => ({ id: p.proposal_id, artisan: p.artisan_name, slots: p.slots }));
+}
+
+/** Le client choisit l'un des créneaux : le rendez-vous est fixé, le chantier s'ouvre. */
+export async function chooseSlot(
+  proposalId: string,
+  slot: string,
+): Promise<{ chantierId: string } | { error: string }> {
+  const { data, error } = await supabase.rpc("particulier_choose_slot", {
+    p_proposal_id: proposalId,
+    p_slot: slot,
+  });
+  if (error || !data) return { error: error ? sqlError(error) : fr.errors.generic };
+  return { chantierId: data };
+}

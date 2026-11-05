@@ -77,7 +77,17 @@ export default function OpportunityScreen() {
           <ExampleLock locked={example} note>
             <View style={styles.actions}>
               <Button
+                label={fr.proAppointment.propose}
+                onPress={() =>
+                  router.push({
+                    pathname: "/opportunite/[id]/creneaux",
+                    params: { id, client: r.client.first_name ?? "" },
+                  })
+                }
+              />
+              <Button
                 label={t.fixAppointment}
+                variant="secondary"
                 onPress={() =>
                   router.push({
                     pathname: "/opportunite/[id]/rendez-vous",

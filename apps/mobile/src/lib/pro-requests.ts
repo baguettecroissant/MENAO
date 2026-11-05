@@ -153,6 +153,32 @@ export async function fixAppointment(
 }
 
 /**
+ * Accepter en un toucher (ADR 0222), comme sur le site : 2 ou 3 créneaux proposés au client, qui
+ * en choisit un ; la demande reste ouverte jusqu'au dernier créneau.
+ */
+export async function proposeSlots(
+  requestId: string,
+  slots: readonly string[],
+): Promise<{ error: string } | null> {
+  const { error } = await supabase.rpc("artisan_propose_slots", {
+    p_request_id: requestId,
+    p_slots: [...slots],
+  });
+  return error ? { error: sqlError(error) } : null;
+}
+
+/** Créneaux déjà proposés pour cette demande, en attente du choix du client. */
+export async function loadProposedSlots(requestId: string): Promise<string[] | null> {
+  const { data } = await supabase
+    .from("appointment_proposals")
+    .select("slots")
+    .eq("request_id", requestId)
+    .eq("status", "proposee")
+    .maybeSingle();
+  return data?.slots ?? null;
+}
+
+/**
  * « Ce chantier a besoin d'une expertise » (F-17, F-18), comme sur le site : signalement à l'équipe
  * MENAO, avec le corps de métier nécessaire (artisan_report_expertise).
  */

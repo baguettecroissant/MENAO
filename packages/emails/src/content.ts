@@ -69,6 +69,9 @@ export const NOTIFICATION_TYPES = [
   // Relances de l'inscription : validé pas encore visible, compte Google ou Apple (ADR 0219).
   "activation_relance",
   "finalisation_relance",
+  // Accepter en un toucher : créneaux proposés au client, créneau choisi (ADR 0222).
+  "creneaux_proposes",
+  "creneau_choisi",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -219,6 +222,31 @@ function moment(iso: string | null): { day: string; time: string } | null {
 
 const hello = (firstName: string | null) => (firstName ? `Bonjour ${firstName},` : "Bonjour,");
 
+/** Délai de réponse habituel (ADR 0221) : tranche communiquée au particulier, jamais un chiffre. */
+const RESPONSE_BAND_LABELS: Record<string, string> = {
+  deux_heures: "en moins de 2 h",
+  six_heures: "en moins de 6 h",
+  journee: "dans la journée",
+};
+function responseDelays(data: Record<string, unknown>): string[] {
+  const value = data.delais;
+  if (!Array.isArray(value)) return [];
+  const lines = value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const { nom, tranche } = item as { nom?: unknown; tranche?: unknown };
+      const band = typeof tranche === "string" ? RESPONSE_BAND_LABELS[tranche] : undefined;
+      return typeof nom === "string" && nom.trim() && band
+        ? `${nom.trim()} répond en général ${band}.`
+        : null;
+    })
+    .filter((line): line is string => line !== null)
+    .slice(0, 3);
+  return lines.length > 0
+    ? [...lines, "C'est une indication tirée de ses réponses passées, pas un engagement."]
+    : [];
+}
+
 /** Étapes de l'inscription encore à faire (relances, ADR 0219), dans l'ordre du parcours. */
 const SIGNUP_STEP_LABELS: Record<string, string> = {
   entreprise: "les informations de votre entreprise",
@@ -283,6 +311,8 @@ export function notificationContent(
             ? `Votre demande pour ${quoted(titre)} a bien été envoyée à ${to} vérifié${nb > 1 ? "s" : ""}.`
             : `Votre demande pour ${quoted(titre)} a bien été envoyée.`,
           "Chaque artisan a 72 heures pour vous répondre. Vous serez prévenu dès qu'un artisan fixe un rendez-vous ; sans réponse, nous vous proposerons d'autres artisans.",
+          // Délai de réponse habituel de chaque artisan (ADR 0221).
+          ...responseDelays(data),
         ],
         quote: null,
         cta: { label: "Suivre ma demande", url: link("/mon-espace") },
@@ -827,6 +857,48 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Terminer mon compte", url: link("/finaliser-compte") },
+      };
+    }
+    case "creneaux_proposes": {
+      // L'artisan accepte la demande et propose 2 ou 3 créneaux (ADR 0222) : le client choisit.
+      const who = text(data, "artisan") ?? "L'artisan";
+      const slots = (Array.isArray(data.creneaux) ? data.creneaux : [])
+        .map((value) => moment(typeof value === "string" ? value : null))
+        .filter((slot): slot is { day: string; time: string } => slot !== null)
+        .map((slot) => `le ${slot.day} à ${slot.time}`);
+      return {
+        subject: `${who} vous propose ${slots.length > 1 ? `${slots.length} créneaux` : "un rendez-vous"}`,
+        preview: "Choisissez le créneau qui vous convient : le rendez-vous est fixé aussitôt.",
+        title: "Choisissez votre rendez-vous",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${who} accepte votre demande et vous propose de venir voir votre projet${slots.length ? ` : ${slots.join(", ")}` : ""}.`,
+          "Choisissez le créneau qui vous convient dans votre espace : le rendez-vous est fixé aussitôt, et ses coordonnées vous sont communiquées.",
+        ],
+        quote: null,
+        cta: { label: "Choisir mon créneau", url: link("/mon-espace") },
+      };
+    }
+    case "creneau_choisi": {
+      // Le client a choisi l'un des créneaux proposés (ADR 0222) : rendez-vous fixé.
+      const rdv = moment(text(data, "rendez_vous"));
+      const chantierId = uuid(data, "chantier_id");
+      return {
+        subject: rdv ? `Rendez-vous fixé le ${rdv.day} à ${rdv.time}` : "Rendez-vous fixé",
+        preview: "Votre client a choisi l'un des créneaux que vous lui avez proposés.",
+        title: "Votre client a choisi son créneau",
+        paragraphs: [
+          hello(ctx.firstName),
+          rdv
+            ? `Votre client a choisi le ${rdv.day} à ${rdv.time} parmi les créneaux que vous lui avez proposés : le rendez-vous est inscrit dans votre agenda.`
+            : "Votre client a choisi l'un des créneaux que vous lui avez proposés : le rendez-vous est inscrit dans votre agenda.",
+          "Ses coordonnées et l'adresse du chantier sont maintenant disponibles.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
       };
     }
     case "niveau_atteint": {

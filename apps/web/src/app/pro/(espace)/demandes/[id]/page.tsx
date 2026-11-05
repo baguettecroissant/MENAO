@@ -27,19 +27,32 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
   const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), new Date()) : null;
   // En attente de réponse, ou acceptée avant la phase 3 sans rendez-vous (ADR 0016).
   const open = (r.status === "envoyee" && left !== null) || r.status === "acceptee";
-  const [{ data: signed }, { data: trades }, agenda, { data: reputation }, { data: partnerRows }] =
-    await Promise.all([
-      r.photos.length
-        ? supabase.storage.from("project-photos").createSignedUrls(r.photos, 3600)
-        : Promise.resolve({ data: [] }),
-      supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
-      // F-44 : créneaux libres et avertissements du tiroir « Fixer un rendez-vous ».
-      open ? appointmentAgenda() : undefined,
-      // F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible.
-      supabase.rpc("client_reputation", { p_request_id: r.id }),
-      // « Recommander un partenaire » (ADR 0174) : partenaires du réseau de parrainage.
-      supabase.rpc("partner_recommendation_options", { p_request_id: r.id }),
-    ]);
+  const [
+    { data: signed },
+    { data: trades },
+    agenda,
+    { data: reputation },
+    { data: partnerRows },
+    { data: proposal },
+  ] = await Promise.all([
+    r.photos.length
+      ? supabase.storage.from("project-photos").createSignedUrls(r.photos, 3600)
+      : Promise.resolve({ data: [] }),
+    supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+    // F-44 : créneaux libres et avertissements du tiroir « Fixer un rendez-vous ».
+    open ? appointmentAgenda() : undefined,
+    // F-23 : moyenne des notes du client par les artisans, si l'équipe l'a rendue visible.
+    supabase.rpc("client_reputation", { p_request_id: r.id }),
+    // « Recommander un partenaire » (ADR 0174) : partenaires du réseau de parrainage.
+    supabase.rpc("partner_recommendation_options", { p_request_id: r.id }),
+    // Accepter en un toucher (ADR 0222) : créneaux proposés, en attente du choix du client.
+    supabase
+      .from("appointment_proposals")
+      .select("slots")
+      .eq("request_id", r.id)
+      .eq("status", "proposee")
+      .maybeSingle(),
+  ]);
 
   return (
     <RequestOpportunityView
@@ -50,6 +63,7 @@ export default async function ArtisanRequestPage({ params }: PageProps<"/pro/dem
       minDate={parisToday()}
       trades={trades ?? []}
       agenda={agenda}
+      proposedSlots={proposal?.slots ?? null}
       clientReputation={reputation?.[0] ?? null}
       partners={(partnerRows ?? []).map((o) => ({
         projectId: o.project_id,
