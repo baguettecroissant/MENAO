@@ -16,8 +16,10 @@ import {
 } from "./accountant.ts";
 import {
   VOICE_EMAIL_FOOTER,
+  voiceAppointmentContent,
   voiceDossierContent,
   voiceSignupLinkContent,
+  type VoiceAppointment,
   type VoiceDossier,
 } from "./voice-assistant.ts";
 
@@ -87,4 +89,9 @@ export function renderVoiceSignupLink(firstName: string | null, siteUrl: string)
 /** Secrétaire vocale (ADR 0225) : état du dossier, envoyé à l'adresse du compte. */
 export function renderVoiceDossier(dossier: VoiceDossier, siteUrl: string): RenderedEmail {
   return renderContent(voiceDossierContent(dossier, siteUrl), siteUrl, VOICE_EMAIL_FOOTER);
+}
+
+/** Secrétaire vocale (ADR 0226) : confirmation du rendez-vous avec le conseiller du secteur. */
+export function renderVoiceAppointment(rdv: VoiceAppointment, siteUrl: string): RenderedEmail {
+  return renderContent(voiceAppointmentContent(rdv, siteUrl), siteUrl, VOICE_EMAIL_FOOTER);
 }

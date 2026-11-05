@@ -111,3 +111,36 @@ export function voiceDossierContent(dossier: VoiceDossier, siteUrl: string): Ema
     cta: { label: "Contacter l'équipe", url: `${site}/contact` },
   };
 }
+
+export type VoiceAppointment = {
+  firstName: string;
+  /** Prénom du conseiller MENAO du secteur. */
+  advisor: string;
+  /** « mardi 10 novembre à 10 h » (heure de Paris). */
+  when: string;
+  kind: "appel" | "visite";
+  /** Numéro au format affiché, pour un appel. */
+  phone: string | null;
+  address: string | null;
+};
+
+/** Confirmation du rendez-vous avec le conseiller, envoyée à l'artisan (ADR 0226). */
+export function voiceAppointmentContent(rdv: VoiceAppointment, siteUrl: string): EmailContent {
+  const site = siteUrl.replace(/\/+$/, "");
+  const visit = rdv.kind === "visite";
+  return {
+    subject: `Votre rendez-vous MENAO le ${rdv.when}`,
+    preview: `${rdv.advisor}, conseiller MENAO, ${visit ? "passe vous voir" : "vous appelle"} le ${rdv.when}.`,
+    title: "Votre rendez-vous est confirmé",
+    paragraphs: [
+      hello(rdv.firstName),
+      visit
+        ? `${rdv.advisor}, conseiller MENAO de votre secteur, passe vous voir le ${rdv.when}${rdv.address ? `, ${rdv.address}` : ""}.`
+        : `${rdv.advisor}, conseiller MENAO de votre secteur, vous appelle le ${rdv.when}${rdv.phone ? ` au ${rdv.phone}` : ""}.`,
+      "Pour l'inscription, préparez une photo de votre Kbis ou extrait INSEE de moins de 3 mois, de vos attestations décennale et RC Pro, de votre attestation URSSAF de moins de 6 mois et de votre pièce d'identité.",
+      "Un empêchement ? Rappelez Camille, l'assistante de MENAO, pour prévenir votre conseiller.",
+    ],
+    quote: null,
+    cta: { label: "Découvrir l'espace pro", url: `${site}/pro` },
+  };
+}

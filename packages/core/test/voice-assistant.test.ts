@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   VOICE_TOOLS,
+  isCommercialSlot,
+  nextCommercialSlots,
+  parisInstant,
+  parisSlotLabel,
+  parseSlotCode,
   parseVoiceToolCalls,
+  slotCode,
   sameSecret,
   spokenEmail,
   spokenPhoneToE164,
@@ -90,5 +96,55 @@ describe("secrétaire vocale (ADR 0225)", () => {
     expect(sameSecret("abc", "abd")).toBe(false);
     expect(sameSecret("abc", "abcd")).toBe(false);
     expect(sameSecret("", "")).toBe(false);
+  });
+});
+
+describe("rendez-vous avec le commercial du secteur (ADR 0226)", () => {
+  // Jeudi 5 novembre 2026, 15 h 10 à Paris (UTC+1).
+  const now = new Date("2026-11-05T14:10:00Z");
+
+  it("heure de Paris, y compris en été", () => {
+    expect(parisInstant("2026-11-10", "10:00").toISOString()).toBe("2026-11-10T09:00:00.000Z");
+    expect(parisInstant("2026-07-10", "10:00").toISOString()).toBe("2026-07-10T08:00:00.000Z");
+  });
+
+  it("créneaux : deux heures d'avance, un par demi-journée, jamais le week-end", () => {
+    const slots = nextCommercialSlots(now, []);
+    expect(slots.map(slotCode)).toEqual([
+      "2026-11-05T17:30",
+      "2026-11-06T10:00",
+      "2026-11-06T14:00",
+    ]);
+  });
+
+  it("créneaux : une heure d'écart avec les rendez-vous déjà pris", () => {
+    const busy = [parisInstant("2026-11-06", "10:30"), parisInstant("2026-11-05", "18:00")];
+    expect(nextCommercialSlots(now, busy).map(slotCode)).toEqual([
+      "2026-11-05T19:00",
+      "2026-11-06T11:30",
+      "2026-11-06T14:00",
+    ]);
+  });
+
+  it("vendredi soir → lundi", () => {
+    const friday = new Date("2026-11-06T18:00:00Z");
+    expect(slotCode(nextCommercialSlots(friday, [], 1)[0] as Date)).toBe("2026-11-09T10:00");
+  });
+
+  it("créneau valide : début prévu, en semaine", () => {
+    expect(isCommercialSlot(parisInstant("2026-11-10", "14:30"))).toBe(true);
+    expect(isCommercialSlot(parisInstant("2026-11-10", "13:00"))).toBe(false);
+    expect(isCommercialSlot(parisInstant("2026-11-10", "10:15"))).toBe(false);
+    expect(isCommercialSlot(parisInstant("2026-11-08", "10:00"))).toBe(false);
+  });
+
+  it("libellé et code des créneaux", () => {
+    expect(parisSlotLabel(parisInstant("2026-11-10", "10:00"))).toBe("mardi 10 novembre à 10 h");
+    expect(parisSlotLabel(parisInstant("2026-11-10", "14:30"))).toBe("mardi 10 novembre à 14 h 30");
+    expect(parseSlotCode("2026-11-10T10:00")?.toISOString()).toBe("2026-11-10T09:00:00.000Z");
+    expect(parseSlotCode("2026-11-10T09:00:00.000Z")?.toISOString()).toBe(
+      "2026-11-10T09:00:00.000Z",
+    );
+    expect(parseSlotCode("mardi")).toBeNull();
   });
 });

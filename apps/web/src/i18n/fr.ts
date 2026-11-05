@@ -286,6 +286,18 @@ export const fr = {
         "12 h à 13 h : prise de rendez-vous. 17 h à 18 h : relances et suivi. Les appels restent en semaine, de 10 h à 13 h et de 14 h à 20 h.",
       call: "Appeler",
       allProspects: "Voir tous mes prospects",
+      // Rendez-vous pris par la secrétaire vocale Camille (ADR 0226).
+      camille: {
+        title: "Rendez-vous pris par Camille",
+        intro:
+          "Camille, la secrétaire vocale de MENAO, réserve ces rendez-vous dans vos créneaux libres pour les artisans de votre zone qui veulent être accompagnés.",
+        kinds: { appel: "Appel", visite: "Visite" } as Record<string, string>,
+        email: "Écrire",
+        cancel: "Annuler",
+        cancelConfirm: "Confirmer l'annulation",
+        cancelled: "Rendez-vous annulé : le créneau est de nouveau libre.",
+        cancelHint: "Prévenez l'artisan : Camille ne le fait pas.",
+      },
     },
     errors: {
       suspended: "Votre accès est suspendu.",
