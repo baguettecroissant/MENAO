@@ -121,6 +121,8 @@ export const fr = {
         "Aucun artisan inscrit avec votre code pour l'instant. Ils apparaîtront ici dès leur inscription.",
       listLabel: "Artisans inscrits avec votre code",
       since: (date: string) => `Inscrit le ${date}`,
+      // Étapes manquantes de l'inscrit, pour l'appeler au bon moment (ADR 0219).
+      missing: (steps: string) => `Il manque : ${steps}`,
       unnamed: "Entreprise à compléter",
       status: {
         brouillon: "En cours",
@@ -8080,6 +8082,42 @@ export const fr = {
       },
       apeWarning: "APE hors bâtiment",
       open: (name: string) => `Ouvrir le dossier de ${name}`,
+      stalledLink: "Inscriptions bloquées",
+    },
+    /** Inscriptions bloquées et relances automatiques (ADR 0219). */
+    stalled: {
+      title: "Inscriptions bloquées",
+      intro:
+        "Artisans qui n'ont pas terminé : dossier pas encore envoyé, compléments attendus, ou dossier validé mais profil pas encore visible. MENAO les relance automatiquement trois fois ; au-delà, un appel aide souvent.",
+      back: "Dossiers artisans",
+      empty: "Aucune inscription bloquée.",
+      count: (n: number) => (n === 1 ? "1 inscription bloquée" : `${n} inscriptions bloquées`),
+      columns: {
+        company: "Entreprise",
+        state: "Où il en est",
+        missing: "Il manque",
+        since: "Depuis",
+        reminders: "Relances",
+      },
+      states: {
+        dossier: "Dossier en cours",
+        complement: "Compléments demandés",
+        activation: "Validé, pas encore visible",
+      } as Record<string, string>,
+      steps: {
+        entreprise: "entreprise",
+        metiers: "métiers",
+        zone: "zone",
+        charte: "charte",
+        documents: "documents",
+        profil: "présentation",
+        paiements: "paiements",
+        formule: "formule",
+      } as Record<string, string>,
+      readyToSend: "prêt à envoyer",
+      days: (n: number) => (n <= 0 ? "aujourd'hui" : n === 1 ? "1 jour" : `${n} jours`),
+      reminders: (n: number, last: string | null) =>
+        n === 0 ? "aucune" : last ? `${n} sur 3 (dernière le ${last})` : `${n} sur 3`,
     },
     statuses: {
       brouillon: "Brouillon",

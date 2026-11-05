@@ -57,7 +57,16 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+        {/* Inscriptions bloquées et relances automatiques (ADR 0219). */}
+        <Link
+          href={"/admin/artisans/inscriptions" as Route}
+          className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+        >
+          {t.stalledLink}
+        </Link>
+      </div>
       <nav aria-label={t.filters}>
         <ul className="flex flex-wrap gap-2">
           {STATUSES.map((s) => (

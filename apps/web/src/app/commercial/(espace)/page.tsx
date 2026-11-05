@@ -65,7 +65,16 @@ export default async function CommercialHomePage() {
                   <ListRow
                     key={`${s.signed_up_at}-${i}`}
                     title={s.raison_sociale || t.signups.unnamed}
-                    detail={t.signups.since(formatDay(s.signed_up_at))}
+                    detail={[
+                      t.signups.since(formatDay(s.signed_up_at)),
+                      s.manque.length > 0
+                        ? t.signups.missing(
+                            s.manque.map((step) => fr.admin.stalled.steps[step] ?? step).join(", "),
+                          )
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                     status={{
                       text: t.signups.status[s.status] ?? s.status,
                       tone: TONES[s.status] ?? "neutral",

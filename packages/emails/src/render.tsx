@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  EMAIL_FOOTER,
+  EMAIL_PREFERENCES_LABEL,
   notificationContent,
   plainText,
   type EmailContext,
@@ -24,11 +26,19 @@ export function renderNotification(
   ctx: EmailContext,
 ): RenderedEmail {
   const content = notificationContent(type, data, ctx);
+  const preferencesUrl = `${ctx.siteUrl.replace(/\/+$/, "")}/notifications`;
   return {
     subject: content.subject,
     html:
-      DOCTYPE + renderToStaticMarkup(<NotificationEmail content={content} siteUrl={ctx.siteUrl} />),
-    text: plainText(content),
+      DOCTYPE +
+      renderToStaticMarkup(
+        <NotificationEmail
+          content={content}
+          siteUrl={ctx.siteUrl}
+          preferencesUrl={preferencesUrl}
+        />,
+      ),
+    text: plainText(content, `${EMAIL_FOOTER}\n${EMAIL_PREFERENCES_LABEL} : ${preferencesUrl}`),
   };
 }
 
