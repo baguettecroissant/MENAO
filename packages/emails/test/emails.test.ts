@@ -1248,3 +1248,45 @@ describe("synthèse du mois de l'agent comptable (ADR 0237)", () => {
     expect(c.paragraphs).toContain("Factures émises : aucune.");
   });
 });
+
+describe("relance d'un paiement dû (ADR 0238)", () => {
+  const ctx = { siteUrl: "https://menao.example", firstName: "Claire" };
+  const eur = (cents: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
+  const chantierId = "33333333-3333-4333-8333-333333333333";
+
+  it("acompte : au nom de l'artisan, montant, lien vers le chantier du client", () => {
+    const c = notificationContent(
+      "paiement_relance",
+      {
+        chantier_id: chantierId,
+        titre: "Doublage du salon",
+        artisan: "Plâtrerie Paul",
+        tranche: "acompte",
+        montant: 21000,
+      },
+      ctx,
+    );
+    expect(c.subject).toBe("Rappel : l'acompte de votre chantier «\u00a0Doublage du salon\u00a0»");
+    expect(c.paragraphs[1]).toBe(
+      `Plâtrerie Paul vous rappelle que l'acompte de ${eur(21000)} pour «\u00a0Doublage du salon\u00a0» reste à régler.`,
+    );
+    expect(c.paragraphs).toContain(
+      "Si vous avez déjà réglé, merci de ne pas tenir compte de ce message.",
+    );
+    expect(c.cta).toEqual({
+      label: "Régler l'acompte",
+      url: `https://menao.example/mon-espace/chantiers/${chantierId}`,
+    });
+  });
+
+  it("solde : libellés du solde", () => {
+    const c = notificationContent(
+      "paiement_relance",
+      { chantier_id: chantierId, titre: "Cuisine", artisan: "Plâtrerie Paul", tranche: "solde" },
+      ctx,
+    );
+    expect(c.title).toBe("Solde à régler");
+    expect(c.cta.label).toBe("Régler le solde");
+  });
+});

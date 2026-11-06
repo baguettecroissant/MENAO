@@ -1,4 +1,5 @@
 import {
+  canRemindNow,
   daysSince,
   moneyMonthLabel,
   openItemLevel,
@@ -6,13 +7,14 @@ import {
   type MoneyOverview,
 } from "@menao/core";
 import { router, type Href } from "expo-router";
-import type { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useState, type ReactNode } from "react";
+import { Alert, StyleSheet, Switch, Text, View } from "react-native";
 import { ListGroup, ListHeader, ListRow } from "@/components/list-kit";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
-import { formatCents, formatDayMonthNumeric } from "@/lib/format";
-import { Card, Notice, Screen } from "@/ui";
+import { formatCents, formatDay, formatDayMonthNumeric } from "@/lib/format";
+import { sendPaymentReminder, setAutoReminders } from "@/lib/pro-quotes";
+import { Card, Notice, Screen, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.moneyOverview;
@@ -32,6 +34,44 @@ export function MoneyOverviewScreen({
   onRefresh: () => Promise<unknown>;
 }) {
   const header = <TabHeader title={fr.tabs.money}>{switcher}</TabHeader>;
+  const [auto, setAuto] = useState(overview?.autoReminders ?? false);
+  const [savingAuto, setSavingAuto] = useState(false);
+
+  /** Toucher d'une ligne « À encaisser » : relancer le client ou ouvrir le chantier (ADR 0238). */
+  function actions(item: MoneyOverview["open"][number]) {
+    const open = () => router.push(`/pro-chantier/${item.chantierId}` as Href);
+    const allowed = canRemindNow(item.lastReminder, new Date());
+    Alert.alert(item.chantier, allowed ? t.remindHint : t.remindTooSoon, [
+      ...(allowed
+        ? [
+            {
+              text: t.remind,
+              onPress: async () => {
+                const failed = await sendPaymentReminder(item.chantierId, item.kind);
+                if (failed) toast.error(failed);
+                else {
+                  toast.success(t.reminded);
+                  void onRefresh();
+                }
+              },
+            },
+          ]
+        : []),
+      { text: t.openChantier, onPress: open },
+      { text: t.cancel, style: "cancel" as const },
+    ]);
+  }
+
+  async function toggleAuto(next: boolean) {
+    setAuto(next);
+    setSavingAuto(true);
+    const failed = await setAutoReminders(next);
+    setSavingAuto(false);
+    if (failed) {
+      setAuto(!next);
+      toast.error(failed);
+    } else toast.success(next ? t.autoOn : t.autoOff);
+  }
   if (!overview) {
     return (
       <Screen onRefresh={onRefresh}>
@@ -96,9 +136,15 @@ export function MoneyOverviewScreen({
             return (
               <ListRow
                 key={`${item.chantierId}-${item.kind}`}
-                onPress={() => router.push(`/pro-chantier/${item.chantierId}` as Href)}
+                onPress={() => actions(item)}
                 title={item.chantier}
-                detail={[t.kinds[item.kind], item.failed ? t.failed : null]
+                detail={[
+                  t.kinds[item.kind],
+                  item.failed ? t.failed : null,
+                  item.lastReminder
+                    ? t.lastReminder(formatDay(item.lastReminder), item.reminders)
+                    : null,
+                ]
                   .filter(Boolean)
                   .join(" · ")}
                 value={formatCents(item.amountCents)}
@@ -120,6 +166,23 @@ export function MoneyOverviewScreen({
           })}
         </ListGroup>
       )}
+
+      <Card>
+        <Text role="heading" style={styles.heading}>
+          {t.autoTitle}
+        </Text>
+        <Text style={styles.detail}>{t.autoText}</Text>
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>{t.autoLabel}</Text>
+          <Switch
+            value={auto}
+            onValueChange={(next) => void toggleAuto(next)}
+            disabled={savingAuto}
+            accessibilityLabel={t.autoLabel}
+            trackColor={{ true: colors.primary, false: colors["border-strong"] }}
+          />
+        </View>
+      </Card>
 
       {overview.withoutInvoice.length > 0 ? (
         <>
@@ -160,4 +223,13 @@ const styles = StyleSheet.create({
   },
   detail: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   empty: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  heading: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing(3),
+    minHeight: theme.touchTarget,
+  },
+  switchLabel: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.foreground },
 });

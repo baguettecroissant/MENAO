@@ -1,4 +1,5 @@
 import {
+  canRemindNow,
   daysSince,
   moneyMonthLabel,
   openItemLevel,
@@ -8,6 +9,7 @@ import {
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AutoRemindersForm, RemindButton } from "@/components/pro/money-reminders";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireProSpace } from "@/lib/artisan/space";
@@ -116,15 +118,31 @@ export default async function MoneyOverviewPage() {
                         )}
                         {item.failed && <StatusBadge tone="danger">{t.failed}</StatusBadge>}
                       </span>
+                      {item.lastReminder && (
+                        <span className="text-xs text-muted-foreground">
+                          {t.lastReminder(formatDay(item.lastReminder), item.reminders)}
+                        </span>
+                      )}
                     </span>
-                    <span className="shrink-0 font-medium tabular-nums">
-                      {money(item.amountCents)}
+                    <span className="flex shrink-0 flex-col items-end gap-2">
+                      <span className="font-medium tabular-nums">{money(item.amountCents)}</span>
+                      <RemindButton
+                        chantierId={item.chantierId}
+                        kind={item.kind}
+                        allowed={canRemindNow(item.lastReminder, now)}
+                      />
                     </span>
                   </li>
                 );
               })}
             </ul>
           )}
+        </Card>
+
+        <Card className="flex flex-col gap-2">
+          <h2 className="text-lg font-medium">{t.autoTitle}</h2>
+          <p className="text-sm text-muted-foreground">{t.autoText}</p>
+          <AutoRemindersForm enabled={overview.autoReminders} />
         </Card>
 
         {overview.withoutInvoice.length > 0 && (

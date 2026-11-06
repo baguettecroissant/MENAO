@@ -756,6 +756,21 @@ export const fr = {
     withoutInvoiceHint:
       "La facture n'a pas pu être émise : écrivez à l'équipe MENAO depuis « Aide et contact ».",
     error: "Le suivi n'a pas pu être chargé. Tirez pour réessayer.",
+    // Relance des impayés (ADR 0238).
+    remind: "Relancer le client",
+    openChantier: "Ouvrir le chantier",
+    cancel: "Annuler",
+    reminded: "Relance envoyée au client.",
+    remindTooSoon: "Ce client a déjà été relancé il y a moins de 3 jours.",
+    remindHint: "Le client reçoit un e-mail courtois, en votre nom, avec le lien pour payer.",
+    lastReminder: (date: string, n: number) =>
+      `Relancé le ${date}${n > 1 ? ` · ${n} relances` : ""}`,
+    autoTitle: "Relances automatiques",
+    autoText:
+      "À J+7, J+15 et J+30 après l'échéance, MENAO envoie un rappel courtois à votre client, en votre nom, avec le lien pour payer.",
+    autoLabel: "Activer les relances automatiques",
+    autoOn: "Relances automatiques activées.",
+    autoOff: "Relances automatiques désactivées.",
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
   home: {
