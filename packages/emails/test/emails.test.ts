@@ -1212,3 +1212,39 @@ describe("messages de la secrétaire dédiée (ADR 0232)", () => {
     expect(c.title).toBe("Message urgent");
   });
 });
+
+describe("synthèse du mois de l'agent comptable (ADR 0237)", () => {
+  const ctx = { siteUrl: "https://menao.example", firstName: "Paul" };
+  const eur = (cents: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
+
+  it("chiffres du mois, à encaisser, lien vers le suivi", () => {
+    const c = notificationContent(
+      "synthese_mois",
+      {
+        mois: "2026-10",
+        devis_signes: 2,
+        devis_signes_cents: 450000,
+        encaisse_cents: 123400,
+        depenses_cents: 32000,
+        factures: 3,
+        a_encaisser: 1,
+        a_encaisser_cents: 70000,
+      },
+      ctx,
+    );
+    expect(c.subject).toBe("Votre mois de octobre 2026 en bref");
+    expect(c.title).toBe("Octobre 2026 en bref");
+    expect(c.paragraphs).toContain(`Encaissé : ${eur(123400)}.`);
+    expect(c.paragraphs).toContain(`Devis signés : 2, pour ${eur(450000)}.`);
+    expect(c.paragraphs).toContain(`À encaisser aujourd'hui : 1 paiement, pour ${eur(70000)}.`);
+    expect(c.cta.url).toBe("https://menao.example/pro/suivi");
+  });
+
+  it("mois sans activité : formulations neutres", () => {
+    const c = notificationContent("synthese_mois", { mois: "2026-10" }, ctx);
+    expect(c.paragraphs).toContain("Devis signés : aucun.");
+    expect(c.paragraphs).toContain("À encaisser aujourd'hui : rien.");
+    expect(c.paragraphs).toContain("Factures émises : aucune.");
+  });
+});

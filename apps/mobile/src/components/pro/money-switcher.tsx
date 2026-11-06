@@ -6,7 +6,7 @@ import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
 
-export const MONEY_VIEWS = ["devis", "factures", "depenses"] as const;
+export const MONEY_VIEWS = ["devis", "factures", "depenses", "suivi"] as const;
 export type MoneyView = (typeof MONEY_VIEWS)[number];
 
 /**
@@ -16,14 +16,18 @@ export type MoneyView = (typeof MONEY_VIEWS)[number];
 export function MoneySwitcher({
   value,
   onChange,
+  overview = false,
 }: {
   value: MoneyView;
   onChange: (value: MoneyView) => void;
+  /** Puce « Suivi » : agent comptable avancé (Premium et Entreprise, ADR 0237). */
+  overview?: boolean;
 }) {
   const options: { value: MoneyView; label: string }[] = [
     { value: "devis", label: fr.tabs.quotes },
     { value: "factures", label: fr.tabs.invoices },
     { value: "depenses", label: fr.tabs.expenses },
+    ...(overview ? [{ value: "suivi" as const, label: fr.tabs.overview }] : []),
   ];
   return (
     <View role="tablist" style={styles.row}>

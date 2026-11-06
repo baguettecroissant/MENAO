@@ -81,6 +81,8 @@ export const NOTIFICATION_TYPES = [
   "agents_minutes_epuisees",
   // Message ou rendez-vous pris par la secrétaire dédiée de l'artisan (ADR 0232).
   "secretaire_message",
+  // Synthèse du mois de l'agent comptable avancé (ADR 0237).
+  "synthese_mois",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -191,6 +193,16 @@ function amount(data: Record<string, unknown>, key: string): string | null {
 function count(data: Record<string, unknown>, key: string): number {
   const value = data[key];
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
+/** « 2026-10 » → « octobre 2026 ». */
+function monthLabel(code: string): string {
+  const [year, month] = code.split("-").map(Number) as [number, number];
+  return new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, 15)));
 }
 
 /** Entier positif ou nul (jours restants), sinon null. */
@@ -961,6 +973,40 @@ export function notificationContent(
         ],
         quote: text(data, "motif"),
         cta: { label: "Voir le message", url: link("/pro/onboarding/formule#secretaire") },
+      };
+    }
+    case "synthese_mois": {
+      // Agent comptable avancé (ADR 0237) : chiffres du mois écoulé, sans conseil.
+      // TODO(legal) : présentation des montants à faire relire par l'expert-comptable.
+      const code = text(data, "mois");
+      const month = code && /^\d{4}-\d{2}$/.test(code) ? monthLabel(code) : null;
+      const signed = count(data, "devis_signes");
+      const open = count(data, "a_encaisser");
+      const invoices = count(data, "factures");
+      const lines = [
+        `Encaissé : ${amount(data, "encaisse_cents") ?? euros.format(0)}.`,
+        signed
+          ? `Devis signés : ${signed}, pour ${amount(data, "devis_signes_cents") ?? euros.format(0)}.`
+          : "Devis signés : aucun.",
+        open
+          ? `À encaisser aujourd'hui : ${open} paiement${open > 1 ? "s" : ""}, pour ${amount(data, "a_encaisser_cents") ?? euros.format(0)}.`
+          : "À encaisser aujourd'hui : rien.",
+        `Dépenses enregistrées : ${amount(data, "depenses_cents") ?? euros.format(0)}.`,
+        `Factures émises : ${invoices || "aucune"}.`,
+      ];
+      return {
+        subject: month ? `Votre mois de ${month} en bref` : "Votre mois en bref",
+        preview: "Encaissé, à encaisser, devis signés et dépenses du mois.",
+        title: month
+          ? `${month.charAt(0).toUpperCase()}${month.slice(1)} en bref`
+          : "Votre mois en bref",
+        paragraphs: [
+          hello(ctx.firstName),
+          ...lines,
+          "Montants TTC, tirés de votre espace MENAO : ils ne remplacent pas votre comptabilité.",
+        ],
+        quote: null,
+        cta: { label: "Voir mon suivi", url: link("/pro/suivi") },
       };
     }
     case "agents_minutes_80":

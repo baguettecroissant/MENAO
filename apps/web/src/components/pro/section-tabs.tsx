@@ -21,13 +21,18 @@ const SECTIONS = {
 export function SectionTabs({
   section,
   base = "/pro",
+  hidden = [],
 }: {
   section: keyof typeof SECTIONS;
   base?: string;
+  /** Onglets absents de la formule (« Suivi » hors Premium et Entreprise, ADR 0237). */
+  hidden?: readonly string[];
 }) {
   const pathname = usePathname();
   const { label, tabs } = SECTIONS[section];
-  const entries = Object.entries(tabs) as [string, string][];
+  const entries = (Object.entries(tabs) as [string, string][]).filter(
+    ([slug]) => !hidden.includes(slug),
+  );
   if (!entries.some(([slug]) => pathname === `${base}/${slug}`)) return null;
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6 sm:pt-8">

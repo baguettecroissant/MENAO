@@ -6609,6 +6609,7 @@ export type Database = {
       };
       my_launch_plan: { Args: Record<PropertyKey, never>; Returns: Json };
       my_menao_score: { Args: Record<PropertyKey, never>; Returns: Json };
+      my_money_overview: { Args: { p_now?: string }; Returns: Json };
       my_notifications: {
         Args: { p_limit?: number };
         Returns: {
@@ -7312,7 +7313,8 @@ export type Database = {
         | "equipe_recap_camille"
         | "agents_minutes_80"
         | "agents_minutes_epuisees"
-        | "secretaire_message";
+        | "secretaire_message"
+        | "synthese_mois";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7643,6 +7645,7 @@ export const Constants = {
         "agents_minutes_80",
         "agents_minutes_epuisees",
         "secretaire_message",
+        "synthese_mois",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

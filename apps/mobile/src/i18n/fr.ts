@@ -730,6 +730,32 @@ export const fr = {
     money: "Argent",
     invoices: "Factures",
     expenses: "Dépenses",
+    // Suivi de l'argent, agent comptable avancé (ADR 0237).
+    overview: "Suivi",
+  },
+  // Suivi de l'argent (F-87, ADR 0237), comme sur le site.
+  moneyOverview: {
+    title: "Suivi",
+    monthTitle: (month: string) => `${month.charAt(0).toUpperCase()}${month.slice(1)} en bref`,
+    ttc: "Montants TTC, tirés de votre espace : ils ne remplacent pas votre comptabilité.",
+    collected: "Encaissé",
+    signed: "Devis signés",
+    signedCount: (n: number) => `${n} devis`,
+    open: "À encaisser",
+    openCount: (n: number) => (n <= 1 ? `${n} paiement` : `${n} paiements`),
+    expenses: "Dépenses",
+    previous: (month: string, value: string) => `${month} : ${value}`,
+    openTitle: "À encaisser",
+    openEmpty: "Rien à encaisser : tous vos paiements sont à jour.",
+    kinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+    dueSince: (days: number) =>
+      days === 0 ? "Dû aujourd'hui" : days === 1 ? "Dû depuis 1 jour" : `Dû depuis ${days} jours`,
+    failed: "Dernier paiement échoué",
+    checkTitle: "À vérifier",
+    withoutInvoice: (kind: string) => `${kind} reçu sans facture`,
+    withoutInvoiceHint:
+      "La facture n'a pas pu être émise : écrivez à l'équipe MENAO depuis « Aide et contact ».",
+    error: "Le suivi n'a pas pu être chargé. Tirez pour réessayer.",
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
   home: {
