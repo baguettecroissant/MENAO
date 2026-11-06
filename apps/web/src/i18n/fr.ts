@@ -3750,6 +3750,32 @@ export const fr = {
         occupe: "Pris ailleurs",
         absence: "Absent",
       },
+      // Détail d'un créneau (ADR 0232) : fenêtre ouverte au clic.
+      details: {
+        secretaryKind: "RDV client",
+        open: (what: string) => `Voir le détail : ${what}`,
+        close: "Fermer",
+        titles: {
+          secretaire: "Rendez-vous pris par votre secrétaire",
+          creneau: "Créneau bloqué",
+          occupe: "Rendez-vous de votre téléphone",
+        } as Record<string, string>,
+        when: (day: string, range: string) => `${day} · ${range}`,
+        client: "Client",
+        phone: "Téléphone",
+        city: "Commune",
+        reason: "Motif",
+        urgent: "Urgent",
+        takenAt: (date: string) => `Pris par votre secrétaire ${date}.`,
+        label: "Motif",
+        noLabel: "Sans motif.",
+        phoneBusy:
+          "Plage occupée de l'agenda de votre téléphone : elle n'est plus proposée pour vos rendez-vous.",
+        call: (phone: string) => `Appeler le ${phone}`,
+        messages: "Voir les messages de votre secrétaire",
+        release: "Libérer le créneau",
+        released: "Créneau libéré.",
+      },
       legendLabel: "Légende",
       legend: {
         visite: "Visite chez le client",
