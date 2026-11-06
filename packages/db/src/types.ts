@@ -4294,7 +4294,7 @@ export type Database = {
         Row: {
           closed_dates: string[];
           holidays_closed: boolean;
-          hours: Json;
+          hours: NonNullable<Json>;
           id: boolean;
           updated_at: string;
           updated_by: string | null;
@@ -4303,7 +4303,7 @@ export type Database = {
         Insert: {
           closed_dates?: string[];
           holidays_closed?: boolean;
-          hours?: Json;
+          hours?: NonNullable<Json>;
           id?: boolean;
           updated_at?: string;
           updated_by?: string | null;
@@ -4311,7 +4311,7 @@ export type Database = {
         Update: {
           closed_dates?: string[];
           holidays_closed?: boolean;
-          hours?: Json;
+          hours?: NonNullable<Json>;
           id?: boolean;
           updated_at?: string;
           updated_by?: string | null;
