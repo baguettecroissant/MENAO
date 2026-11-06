@@ -6713,6 +6713,7 @@ export type Database = {
         };
         Returns: string;
       };
+      voice_requests_for_email: { Args: { p_email: string }; Returns: Json };
       voice_work_request_preview: {
         Args: { p_token: string };
         Returns: {

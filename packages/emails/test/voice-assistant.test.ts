@@ -4,10 +4,12 @@ import {
   renderVoiceAppointment,
   renderVoiceDossier,
   renderVoiceSignupLink,
+  renderVoiceRequestsStatus,
   renderVoiceWorkRequest,
   voiceAppointmentContent,
   voiceDossierContent,
   voiceSignupLinkContent,
+  voiceRequestsStatusContent,
   voiceWorkRequestContent,
 } from "../src/index";
 
@@ -184,5 +186,75 @@ describe("demande de travaux préparée au téléphone (ADR 0227)", () => {
     expect(email.subject).toBe("Votre demande de travaux est prête");
     expect(email.html).toContain(base.url);
     expect(email.text).toContain(base.url);
+  });
+});
+
+describe("« Où en est ma demande ? » (ADR 0229)", () => {
+  const project = {
+    summary: "Réparer une fuite sous l'évier",
+    trade: "Plombier",
+    city: "Antibes",
+    sentAt: "2026-11-03T09:00:00Z",
+    artisans: [
+      { name: "Bruno", status: "acceptee" },
+      { name: "Marc Plomberie", status: "envoyee" },
+      { name: null, status: "refusee" },
+    ],
+  };
+
+  it("chaque projet avec la réponse de chaque artisan, bouton vers l'espace client", () => {
+    const content = voiceRequestsStatusContent(
+      { firstName: "Léa", account: true, pendingPrepared: 0, projects: [project] },
+      SITE,
+    );
+    expect(content.paragraphs[0]).toBe("Bonjour Léa,");
+    expect(content.paragraphs[1]).toBe(
+      "« Réparer une fuite sous l'évier » (Plombier, Antibes), envoyée le 3 novembre : Bruno a accepté, ses coordonnées sont dans votre espace ; Marc Plomberie n'a pas encore répondu ; un artisan n'est pas disponible.",
+    );
+    expect(content.cta).toEqual({
+      label: "Ouvrir mon espace",
+      url: "https://menao.example/mon-espace",
+    });
+  });
+
+  it("aucun artisan n'a donné suite : proposer d'en choisir un autre", () => {
+    const content = voiceRequestsStatusContent(
+      {
+        firstName: null,
+        account: true,
+        pendingPrepared: 0,
+        projects: [{ ...project, artisans: [{ name: "Bruno", status: "expiree" }] }],
+      },
+      SITE,
+    );
+    expect(content.paragraphs.join(" ")).toContain("vous pouvez choisir un autre artisan");
+  });
+
+  it("demande préparée au téléphone en attente, sans compte", () => {
+    const content = voiceRequestsStatusContent(
+      { firstName: "Nina", account: false, pendingPrepared: 1, projects: [] },
+      SITE,
+    );
+    expect(content.paragraphs.join(" ")).toContain("« Votre demande de travaux est prête »");
+    expect(content.cta.url).toBe("https://menao.example");
+  });
+
+  it("compte sans demande récente", () => {
+    const content = voiceRequestsStatusContent(
+      { firstName: null, account: true, pendingPrepared: 0, projects: [] },
+      SITE,
+    );
+    expect(content.paragraphs[1]).toBe(
+      "Vous n'avez envoyé aucune demande de travaux ces quatre derniers mois.",
+    );
+  });
+
+  it("rendu", () => {
+    const email = renderVoiceRequestsStatus(
+      { firstName: "Léa", account: true, pendingPrepared: 0, projects: [project] },
+      SITE,
+    );
+    expect(email.subject).toBe("Où en est votre demande de travaux");
+    expect(email.text).toContain("Marc Plomberie n'a pas encore répondu");
   });
 });
