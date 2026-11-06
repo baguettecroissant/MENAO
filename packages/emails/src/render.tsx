@@ -18,10 +18,12 @@ import {
   VOICE_EMAIL_FOOTER,
   voiceAppointmentContent,
   voiceDossierContent,
+  voiceRequestsStatusContent,
   voiceSignupLinkContent,
   voiceWorkRequestContent,
   type VoiceAppointment,
   type VoiceDossier,
+  type VoiceRequestsStatus,
   type VoiceWorkRequest,
 } from "./voice-assistant.ts";
 
@@ -91,6 +93,14 @@ export function renderVoiceSignupLink(firstName: string | null, siteUrl: string)
 /** Secrétaire vocale (ADR 0225) : état du dossier, envoyé à l'adresse du compte. */
 export function renderVoiceDossier(dossier: VoiceDossier, siteUrl: string): RenderedEmail {
   return renderContent(voiceDossierContent(dossier, siteUrl), siteUrl, VOICE_EMAIL_FOOTER);
+}
+
+/** Secrétaire vocale (ADR 0229) : état des demandes d'un particulier, à l'adresse du compte. */
+export function renderVoiceRequestsStatus(
+  state: VoiceRequestsStatus,
+  siteUrl: string,
+): RenderedEmail {
+  return renderContent(voiceRequestsStatusContent(state, siteUrl), siteUrl, VOICE_EMAIL_FOOTER);
 }
 
 /** Secrétaire vocale (ADR 0227) : demande de travaux préparée, à vérifier et envoyer. */

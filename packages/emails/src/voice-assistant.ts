@@ -2,7 +2,8 @@
  * E-mails de la secrétaire vocale « Camille » (F-75, ADR 0225), envoyés pendant un appel à la
  * demande de l'appelant : le lien d'inscription d'un artisan, l'état du dossier d'un artisan
  * inscrit (envoyé à l'adresse de son compte : rien n'est dit au téléphone), et la demande de
- * travaux préparée pour un particulier (F-77, ADR 0227).
+ * travaux préparée pour un particulier (F-77, ADR 0227), l'état des demandes d'un particulier
+ * (F-79, ADR 0229), envoyé à l'adresse de son compte.
  */
 import { SIGNUP_STEP_LABELS, type EmailContent } from "./content.ts";
 
@@ -177,5 +178,80 @@ export function voiceWorkRequestContent(request: VoiceWorkRequest): EmailContent
     ],
     quote: request.summary,
     cta: { label: "Vérifier et envoyer ma demande", url: request.url },
+  };
+}
+
+export type VoiceRequestsStatus = {
+  firstName: string | null;
+  /** L'adresse correspond à un compte particulier. */
+  account: boolean;
+  /** Demandes préparées au téléphone qui attendent encore la vérification (ADR 0227). */
+  pendingPrepared: number;
+  projects: {
+    summary: string | null;
+    trade: string | null;
+    city: string | null;
+    /** Date d'envoi (ISO). */
+    sentAt: string;
+    /** Statut de chaque demande (public.request_status). */
+    artisans: { name: string | null; status: string }[];
+  }[];
+};
+
+const REQUEST_STATUS_PHRASES: Record<string, string> = {
+  envoyee: "n'a pas encore répondu",
+  acceptee: "a accepté, ses coordonnées sont dans votre espace",
+  refusee: "n'est pas disponible",
+  expiree: "n'a pas répondu à temps",
+  annulee: "demande annulée",
+  a_verifier: "demande en cours de vérification par l'équipe MENAO",
+};
+const STILL_OPEN = ["envoyee", "acceptee", "a_verifier"];
+
+const sentDay = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/Paris",
+  });
+
+/** « Où en est ma demande ? » (ADR 0229) : l'état des demandes, rien n'a été dit au téléphone. */
+export function voiceRequestsStatusContent(
+  state: VoiceRequestsStatus,
+  siteUrl: string,
+): EmailContent {
+  const site = siteUrl.replace(/\/+$/, "");
+  const paragraphs = [hello(state.firstName)];
+  for (const project of state.projects) {
+    const place = [project.trade, project.city].filter(Boolean).join(", ");
+    const answers = project.artisans
+      .map((a) => `${a.name ?? "un artisan"} ${REQUEST_STATUS_PHRASES[a.status] ?? "sans réponse"}`)
+      .join(" ; ");
+    paragraphs.push(
+      `« ${project.summary ?? "Votre demande"} »${place ? ` (${place})` : ""}, envoyée le ${sentDay(project.sentAt)} : ${answers}.`,
+    );
+  }
+  if (state.projects.some((p) => !p.artisans.some((a) => STILL_OPEN.includes(a.status)))) {
+    paragraphs.push(
+      "Quand aucun artisan n'a donné suite, vous pouvez choisir un autre artisan depuis votre espace, en quelques secondes.",
+    );
+  }
+  if (state.account && state.projects.length === 0) {
+    paragraphs.push("Vous n'avez envoyé aucune demande de travaux ces quatre derniers mois.");
+  }
+  if (state.pendingPrepared > 0) {
+    paragraphs.push(
+      `${state.pendingPrepared > 1 ? "Des demandes préparées" : "Une demande préparée"} au téléphone ${state.pendingPrepared > 1 ? "attendent" : "attend"} encore votre vérification : ouvrez l'e-mail « Votre demande de travaux est prête » et suivez son lien, valable 7 jours. Rien ne part chez les artisans avant.`,
+    );
+  }
+  return {
+    subject: "Où en est votre demande de travaux",
+    preview: "L'état de vos demandes, comme demandé au téléphone.",
+    title: "L'état de vos demandes",
+    paragraphs,
+    quote: null,
+    cta: state.account
+      ? { label: "Ouvrir mon espace", url: `${site}/mon-espace` }
+      : { label: "Aller sur MENAO", url: site },
   };
 }

@@ -7,7 +7,8 @@
 //   une demande de rappel (ticket rappel_pro), proposer puis réserver un créneau avec le conseiller
 //   du secteur (ADR 0226), préparer la demande de travaux d'un particulier (ADR 0227 : session
 //   anonyme, analyse par analyze-need, lien à usage unique envoyé par e-mail ; rien ne part chez
-//   les artisans avant que le particulier envoie lui-même). Réponse toujours en HTTP 200.
+//   les artisans avant que le particulier envoie lui-même), envoyer l'état des demandes d'un
+//   particulier à l'adresse de son compte (ADR 0229). Réponse toujours en HTTP 200.
 // - « end-of-call-report » : durée de l'appel dans ai_runs (jamais la transcription).
 // Aucune donnée personnelle dans les journaux.
 import {
@@ -31,6 +32,7 @@ import { isDeliverableAddress } from "../../../packages/emails/src/address.ts";
 import {
   renderVoiceAppointment,
   renderVoiceDossier,
+  renderVoiceRequestsStatus,
   renderVoiceSignupLink,
   renderVoiceWorkRequest,
 } from "../../../packages/emails/src/render.tsx";
@@ -155,6 +157,75 @@ async function sendDossier(admin: Admin, call: VoiceToolCall): Promise<ToolResul
     idempotencyKey: `voice-dossier-${call.id}`,
   });
   if (!sent.ok) console.error("voice-assistant : état du dossier non envoyé", sent.error);
+  return neutral;
+}
+
+/**
+ * « Où en est ma demande ? » (ADR 0229) : même réponse que l'adresse ait un compte ou non ; l'état
+ * part seulement vers l'adresse du compte (ou vers celle d'une demande préparée au téléphone).
+ */
+async function sendRequestsStatus(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
+  const neutral = {
+    toolCallId: call.id,
+    result:
+      "Si cette adresse correspond à un compte MENAO, l'état de ses demandes vient d'y être envoyé par e-mail. Ne dis rien d'autre sur ses demandes.",
+  };
+  const email = spokenEmail(call.args.email);
+  if (!email) {
+    return {
+      toolCallId: call.id,
+      error: "Adresse e-mail invalide : redemande-la lettre par lettre.",
+    };
+  }
+  const provider = notificationProvider();
+  if (!provider)
+    return { toolCallId: call.id, error: "Envoi d'e-mail indisponible pour le moment." };
+  if (!(await canEmail(admin, email))) return neutral;
+  const { data, error } = await admin.rpc("voice_requests_for_email", { p_email: email });
+  if (error) {
+    console.error("voice-assistant : demandes illisibles", error.code);
+    return {
+      toolCallId: call.id,
+      error: "Les demandes sont momentanément inaccessibles. Propose de réessayer plus tard.",
+    };
+  }
+  if (!data || typeof data !== "object") return neutral;
+  const d = data as {
+    prenom?: string | null;
+    compte?: boolean;
+    demandes_a_verifier?: number;
+    projets?: {
+      resume?: string | null;
+      metier?: string | null;
+      commune?: string | null;
+      envoye_le?: string;
+      artisans?: { nom?: string | null; statut?: string }[];
+    }[];
+  };
+  const message = renderVoiceRequestsStatus(
+    {
+      firstName: d.prenom ?? null,
+      account: d.compte === true,
+      pendingPrepared: typeof d.demandes_a_verifier === "number" ? d.demandes_a_verifier : 0,
+      projects: (Array.isArray(d.projets) ? d.projets : []).map((p) => ({
+        summary: p.resume ?? null,
+        trade: p.metier ?? null,
+        city: p.commune ?? null,
+        sentAt: p.envoye_le ?? new Date().toISOString(),
+        artisans: (Array.isArray(p.artisans) ? p.artisans : []).map((a) => ({
+          name: a.nom ?? null,
+          status: a.statut ?? "",
+        })),
+      })),
+    },
+    siteUrl(),
+  );
+  const sent = await provider.sendEmail({
+    to: email,
+    ...message,
+    idempotencyKey: `voice-demandes-${call.id}`,
+  });
+  if (!sent.ok) console.error("voice-assistant : état des demandes non envoyé", sent.error);
   return neutral;
 }
 
@@ -520,6 +591,7 @@ async function runTool(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
     if (call.name === "proposer_creneaux") return await proposeSlots(admin, call);
     if (call.name === "reserver_creneau") return await bookSlot(admin, call);
     if (call.name === "preparer_demande_travaux") return await prepareWorkRequest(admin, call);
+    if (call.name === "envoyer_etat_demandes") return await sendRequestsStatus(admin, call);
     return { toolCallId: call.id, error: "Outil inconnu." };
   } catch (error) {
     console.error(

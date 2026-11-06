@@ -18,6 +18,7 @@ export const VOICE_TOOLS = [
   "proposer_creneaux",
   "reserver_creneau",
   "preparer_demande_travaux",
+  "envoyer_etat_demandes",
 ] as const;
 export type VoiceTool = (typeof VOICE_TOOLS)[number];
 
@@ -131,6 +132,18 @@ export function voiceToolDefinitions() {
           email: text("Adresse e-mail du particulier, en minuscules, sans espace."),
         },
         required: ["besoin", "commune", "prenom", "telephone", "email"],
+      },
+    },
+    {
+      name: "envoyer_etat_demandes",
+      description:
+        "Pour un particulier qui demande où en est sa demande de travaux : envoie l'état de ses demandes (réponse de chaque artisan) à l'adresse e-mail de son compte MENAO. Rien n'est dit au téléphone : l'information part seulement vers cette adresse. Demande l'adresse et relis-la lettre par lettre avant d'appeler cet outil.",
+      parameters: {
+        type: "object",
+        properties: {
+          email: text("Adresse e-mail du compte MENAO, en minuscules, sans espace."),
+        },
+        required: ["email"],
       },
     },
   ];
