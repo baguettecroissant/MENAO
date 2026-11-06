@@ -427,7 +427,7 @@ export async function submitOnboarding(): Promise<FormState> {
 type BillingStatus = keyof typeof t.plans.errors | "ok";
 
 async function invokeBilling(
-  fn: "billing-checkout" | "billing-portal",
+  fn: "billing-checkout" | "billing-portal" | "billing-topup",
   body: Record<string, unknown>,
 ) {
   const { supabase } = await getOnboardingContext();
@@ -457,6 +457,18 @@ export async function startCheckout(_prev: FormState, formData: FormData): Promi
   // Au mois par défaut ; à l'année si l'artisan l'a choisi (ADR 0200).
   const periodicite = text(formData, "periodicite") === "annuel" ? "annuel" : "mensuel";
   const result = await invokeBilling("billing-checkout", { plan: plan.data, periodicite });
+  if ("url" in result && result.url) redirect(result.url as Route);
+  return { error: result.error };
+}
+
+/** Recharge de minutes de voix (ADR 0233) : paiement unique sur le site, jamais dans l'application. */
+export async function startTopUp(_prev: FormState, formData: FormData): Promise<FormState> {
+  const offer = z
+    .string()
+    .regex(/^[a-z0-9_]{1,40}$/)
+    .catch("recharge_100")
+    .parse(text(formData, "offer") ?? "recharge_100");
+  const result = await invokeBilling("billing-topup", { offer });
   if ("url" in result && result.url) redirect(result.url as Route);
   return { error: result.error };
 }

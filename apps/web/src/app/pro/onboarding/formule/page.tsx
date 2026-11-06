@@ -42,6 +42,20 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
     const plan = plans?.find((p) => p.code === subscription.plan_code);
     const { data: agents } = await supabase.rpc("my_ai_agents");
     const agentsState = parseAiAgents(agents);
+    // Recharges de minutes (ADR 0233) : offre et prochaine échéance.
+    const { data: topUps } = agentsState.agents.topUps
+      ? await supabase.rpc("my_voice_topups")
+      : { data: null };
+    const topUpData = (topUps ?? null) as {
+      prochaine_echeance?: string | null;
+      offres?: {
+        code: string;
+        minutes: number;
+        prix_ht_centimes: number;
+        validite_mois: number;
+      }[];
+    } | null;
+    const firstOffer = topUpData?.offres?.[0];
     // Secrétaire dédiée (ADR 0232) : réglages, horaires et derniers messages, si incluse.
     const [secretarySettings, secretaryMessages, hoursCount] = agentsState.agents.secretary
       ? await Promise.all([
@@ -118,6 +132,22 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
         <AiAgentsCard
           state={agentsState}
           planName={snapshot.subscriptionActive ? (plan?.nom ?? null) : null}
+          topUp={
+            topUpData
+              ? {
+                  offer: firstOffer
+                    ? {
+                        code: firstOffer.code,
+                        minutes: firstOffer.minutes,
+                        priceCents: firstOffer.prix_ht_centimes,
+                        months: firstOffer.validite_mois,
+                      }
+                    : null,
+                  nextExpiry: topUpData.prochaine_echeance ?? null,
+                }
+              : null
+          }
+          topUpDone={params.recharge === "ok"}
         />
         {agentsState.agents.secretary && (
           <SecretaryCard

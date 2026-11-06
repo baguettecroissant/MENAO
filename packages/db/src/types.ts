@@ -5166,32 +5166,44 @@ export type Database = {
       };
       voice_credits: {
         Row: {
+          amount_ht_cents: number | null;
           artisan_id: string;
           created_at: string;
           created_by: string | null;
+          expired_processed_at: string | null;
+          expires_at: string | null;
           id: string;
           reason: string;
           reference: string | null;
           seconds: number;
+          stripe_session_id: string | null;
         };
         ComputedFields: never;
         Insert: {
+          amount_ht_cents?: number | null;
           artisan_id: string;
           created_at?: string;
           created_by?: string | null;
+          expired_processed_at?: string | null;
+          expires_at?: string | null;
           id?: string;
           reason: string;
           reference?: string | null;
           seconds: number;
+          stripe_session_id?: string | null;
         };
         Update: {
+          amount_ht_cents?: number | null;
           artisan_id?: string;
           created_at?: string;
           created_by?: string | null;
+          expired_processed_at?: string | null;
+          expires_at?: string | null;
           id?: string;
           reason?: string;
           reference?: string | null;
           seconds?: number;
+          stripe_session_id?: string | null;
         };
         Relationships: [
           {
@@ -5202,6 +5214,46 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      voice_topup_offers: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          minutes: number;
+          nom: string;
+          ordre: number;
+          prix_ht_centimes: number;
+          stripe_lookup_key: string;
+          updated_at: string;
+          validite_mois: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          minutes: number;
+          nom: string;
+          ordre?: number;
+          prix_ht_centimes: number;
+          stripe_lookup_key: string;
+          updated_at?: string;
+          validite_mois?: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          minutes?: number;
+          nom?: string;
+          ordre?: number;
+          prix_ht_centimes?: number;
+          stripe_lookup_key?: string;
+          updated_at?: string;
+          validite_mois?: number;
+        };
+        Relationships: [];
       };
       voice_usage: {
         Row: {
@@ -6537,6 +6589,7 @@ export type Database = {
       };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
+      my_voice_topups: { Args: Record<PropertyKey, never>; Returns: Json };
       my_welcome_gift: { Args: Record<PropertyKey, never>; Returns: Json };
       my_zone_demand: { Args: Record<PropertyKey, never>; Returns: Json };
       particulier_cancel_chantier: {
@@ -6981,6 +7034,15 @@ export type Database = {
           commercial_id: string;
           prenom: string;
         }[];
+      };
+      voice_credit_topup: {
+        Args: {
+          p_amount_ht_cents: number;
+          p_artisan_id: string;
+          p_offer_code: string;
+          p_stripe_session_id: string;
+        };
+        Returns: string;
       };
       voice_dossier_for_email: { Args: { p_email: string }; Returns: Json };
       voice_prepare_work_request: {

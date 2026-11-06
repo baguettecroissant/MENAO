@@ -1,8 +1,9 @@
 import { voiceGauge, type AiAgentsState } from "@menao/core";
 import { Check, Lock } from "lucide-react";
-import { Card } from "@/components/ui";
+import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { formatDayMonth, formatDayTimeInline } from "@/lib/format";
+import { formatDay, formatDayMonth, formatDayTimeInline } from "@/lib/format";
+import { TopUpForm } from "./top-up-form";
 
 const t = fr.pro.onboarding.plans.agents;
 
@@ -20,9 +21,17 @@ function nextMonthLabel(month: string | null): string {
 export function AiAgentsCard({
   state,
   planName,
+  topUp = null,
+  topUpDone = false,
 }: {
   state: AiAgentsState;
   planName: string | null;
+  /** Recharge proposée (Premium et Entreprise) et prochaine échéance des minutes rechargées. */
+  topUp?: {
+    offer: { code: string; minutes: number; priceCents: number; months: number } | null;
+    nextExpiry: string | null;
+  } | null;
+  topUpDone?: boolean;
 }) {
   const gauge = voiceGauge(state);
   const a = state.agents;
@@ -102,6 +111,15 @@ export function AiAgentsCard({
               : `${t.minutesLeft(gauge.remainingMinutes, gauge.topUpMinutes)} ${t.minutesReset(nextMonthLabel(state.month))}`}
           </p>
           {gauge.level === "alerte" && <p className="text-sm text-warning">{t.minutesAlert}</p>}
+          {topUp?.nextExpiry && gauge.topUpMinutes > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {t.topUpExpiry(formatDay(topUp.nextExpiry))}
+            </p>
+          )}
+          {topUpDone && <Alert tone="success">{t.topUpDone}</Alert>}
+          {state.agents.topUps && topUp?.offer && (
+            <TopUpForm offer={topUp.offer} primary={gauge.level !== "ok"} />
+          )}
         </section>
       )}
       {state.calls.length > 0 && (

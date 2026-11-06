@@ -6084,6 +6084,11 @@ export const fr = {
           minutesAlert: "Plus de 80 % des minutes incluses sont utilisées.",
           minutesEmpty:
             "Minutes épuisées : votre assistante se contente de noter le nom et le numéro de vos clients jusqu'au 1er du mois.",
+          topUp: (minutes: number, euros: string) => `Recharger ${minutes} minutes · ${euros} HT`,
+          topUpHint: (months: number) =>
+            `Paiement unique sur le site, sans abonnement. Minutes valables ${months} mois.`,
+          topUpDone: "Paiement reçu : vos minutes seront ajoutées dans quelques secondes.",
+          topUpExpiry: (date: string) => `Prochaine échéance de minutes rechargées : ${date}.`,
           callsTitle: "Derniers appels",
           agentNames: {
             secretaire: "Secrétaire",
@@ -6149,6 +6154,8 @@ export const fr = {
           unavailable:
             "Le service de paiement est momentanément indisponible. Réessayez dans quelques minutes.",
           forbidden: "Cette action est réservée aux comptes professionnels.",
+          non_inclus:
+            "Les recharges de minutes sont incluses dans les formules Premium et Entreprise.",
         },
       },
       upload: {
@@ -8153,6 +8160,16 @@ export const fr = {
     },
     ai: {
       // Minutes de voix des agents IA des artisans (F-82, ADR 0231).
+      // Recharges de minutes vendues (ADR 0233).
+      topUps: {
+        title: "Recharges de minutes, ce mois-ci",
+        empty: "Aucune recharge vendue ce mois-ci.",
+        sold: "Recharges vendues",
+        revenue: "Encaissé HT",
+        minutes: "Minutes vendues",
+        margin: "Marge estimée",
+        marginHint: "Si toutes les minutes sont utilisées, à 0,09 € la minute.",
+      },
       voice: {
         title: "Minutes de voix des artisans, ce mois-ci",
         intro:
