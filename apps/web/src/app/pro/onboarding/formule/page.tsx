@@ -5,7 +5,9 @@ import {
   annualPriceCents,
   firstPaymentDate,
   monthlyEquivalentCents,
+  parseAiAgents,
 } from "@menao/core";
+import { AiAgentsCard } from "@/components/pro/ai-agents-card";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -37,6 +39,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
 
   if (subscription) {
     const plan = plans?.find((p) => p.code === subscription.plan_code);
+    const { data: agents } = await supabase.rpc("my_ai_agents");
     const status = subscription.status as keyof typeof t.status;
     const label =
       status === "trialing"
@@ -51,40 +54,48 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
             )
           : t.status[status];
     return (
-      <Card>
-        <section aria-labelledby="abonnement" className="flex flex-col gap-3">
-          <h2 id="abonnement" className="text-lg font-medium">
-            {t.current} : {plan?.nom ?? "—"}
-          </h2>
-          <p
-            role="status"
-            className={
-              snapshot.subscriptionActive && status !== "past_due" ? "text-success" : "text-danger"
-            }
-          >
-            {label}
-          </p>
-          {subscription.periodicite === "annuel" &&
-            (status === "trialing" && subscription.trial_end ? (
-              <p className="text-muted-foreground">
-                {t.yearlyTrial(day.format(new Date(subscription.trial_end)))}
-              </p>
-            ) : status === "active" &&
-              subscription.current_period_end &&
-              !subscription.cancel_at_period_end ? (
-              <p className="text-muted-foreground">
-                {t.yearlyActive(day.format(new Date(subscription.current_period_end)))}
-              </p>
-            ) : null)}
-          {subscription.cancel_at_period_end && subscription.current_period_end && (
-            <p className="text-muted-foreground">
-              {t.cancelAtPeriodEnd(day.format(new Date(subscription.current_period_end)))}
+      <div className="flex flex-col gap-6">
+        <Card>
+          <section aria-labelledby="abonnement" className="flex flex-col gap-3">
+            <h2 id="abonnement" className="text-lg font-medium">
+              {t.current} : {plan?.nom ?? "—"}
+            </h2>
+            <p
+              role="status"
+              className={
+                snapshot.subscriptionActive && status !== "past_due"
+                  ? "text-success"
+                  : "text-danger"
+              }
+            >
+              {label}
             </p>
-          )}
-          <p className="text-sm text-muted-foreground">{t.manageHint}</p>
-          <ManageSubscription />
-        </section>
-      </Card>
+            {subscription.periodicite === "annuel" &&
+              (status === "trialing" && subscription.trial_end ? (
+                <p className="text-muted-foreground">
+                  {t.yearlyTrial(day.format(new Date(subscription.trial_end)))}
+                </p>
+              ) : status === "active" &&
+                subscription.current_period_end &&
+                !subscription.cancel_at_period_end ? (
+                <p className="text-muted-foreground">
+                  {t.yearlyActive(day.format(new Date(subscription.current_period_end)))}
+                </p>
+              ) : null)}
+            {subscription.cancel_at_period_end && subscription.current_period_end && (
+              <p className="text-muted-foreground">
+                {t.cancelAtPeriodEnd(day.format(new Date(subscription.current_period_end)))}
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground">{t.manageHint}</p>
+            <ManageSubscription />
+          </section>
+        </Card>
+        <AiAgentsCard
+          state={parseAiAgents(agents)}
+          planName={snapshot.subscriptionActive ? (plan?.nom ?? null) : null}
+        />
+      </div>
     );
   }
 

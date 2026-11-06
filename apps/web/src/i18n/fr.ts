@@ -6011,6 +6011,45 @@ export const fr = {
         },
       },
       plans: {
+        // Agents IA de la formule (F-82, ADR 0231).
+        agents: {
+          title: "Vos agents IA",
+          intro: (plan: string) => `Ce que votre formule ${plan} comprend.`,
+          noPlan: "Choisissez une formule pour voir les agents IA qu'elle comprend.",
+          items: {
+            dictation: "Devis dicté dans l'application",
+            expenses: "Lecture des tickets de dépenses",
+            secretary: "Secrétaire dédiée, avec votre nom, vos horaires et votre agenda",
+            conversationalQuote: "Devis dicté en conversation avec Camille",
+            accounting: "Agent comptable : rapprochement, relance des impayés, synthèse du mois",
+            reminders: "Rappels automatiques de vos clients",
+          },
+          included: "Inclus",
+          soon: "Inclus, bientôt disponible",
+          upgrade: "Avec Premium et Entreprise",
+          reminderModes: {
+            sms: "Inclus par SMS et e-mail, bientôt disponible",
+            appel: "Inclus par SMS, e-mail et appel, bientôt disponible",
+          } as Record<string, string>,
+          minutesTitle: "Minutes de voix ce mois-ci",
+          minutesUsed: (used: number, included: number) => `${used} / ${included} minutes`,
+          minutesLeft: (left: number, topUp: number) =>
+            topUp > 0
+              ? `Il vous reste ${left} minute${left > 1 ? "s" : ""}, dont ${topUp} rechargée${topUp > 1 ? "s" : ""}.`
+              : `Il vous reste ${left} minute${left > 1 ? "s" : ""}.`,
+          minutesReset: (date: string) => `Les minutes incluses repartent à zéro le ${date}.`,
+          minutesAlert: "Plus de 80 % des minutes incluses sont utilisées.",
+          minutesEmpty:
+            "Minutes épuisées : votre assistante se contente de noter le nom et le numéro de vos clients jusqu'au 1er du mois.",
+          callsTitle: "Derniers appels",
+          agentNames: {
+            secretaire: "Secrétaire",
+            devis: "Devis dicté",
+            rappel: "Rappel",
+          } as Record<string, string>,
+          duration: (minutes: number, seconds: number) =>
+            minutes ? `${minutes} min ${String(seconds).padStart(2, "0")}` : `${seconds} s`,
+        },
         intro: (date: string) =>
           `Choisissez votre formule et votre mode de paiement. Les 2 premiers mois sont offerts : aucun prélèvement avant le ${date}, et vous pouvez arrêter à tout moment pendant l'essai.`,
         notValidated:
@@ -8070,6 +8109,19 @@ export const fr = {
       },
     },
     ai: {
+      // Minutes de voix des agents IA des artisans (F-82, ADR 0231).
+      voice: {
+        title: "Minutes de voix des artisans, ce mois-ci",
+        intro:
+          "Secrétaires dédiées, devis dictés en conversation et rappels : minutes comptées pour chaque artisan. Coût estimé à 0,09 € la minute.",
+        empty: "Aucune minute utilisée ce mois-ci.",
+        company: "Entreprise",
+        plan: "Formule",
+        calls: "Appels",
+        minutes: "Minutes",
+        cost: "Coût estimé",
+        error: "Le suivi des minutes est momentanément indisponible.",
+      },
       title: "Suivi de l'IA",
       intro:
         "Appels aux modèles d'IA : analyse des demandes, transcription de la voix et dictée des devis. Ce suivi ne garde aucune donnée personnelle. Le coût exact se lit dans les consoles des fournisseurs.",

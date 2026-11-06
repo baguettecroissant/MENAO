@@ -76,6 +76,9 @@ export const NOTIFICATION_TYPES = [
   "rdv_commercial",
   // Récapitulatif du matin de Camille, pour l'équipe (ADR 0230).
   "equipe_recap_camille",
+  // Minutes de voix des agents IA de l'artisan (ADR 0231).
+  "agents_minutes_80",
+  "agents_minutes_epuisees",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -930,6 +933,33 @@ export function notificationContent(
         ],
         quote: reason,
         cta: { label: "Ouvrir Ma journée", url: link("/commercial/journee") },
+      };
+    }
+    case "agents_minutes_80":
+    case "agents_minutes_epuisees": {
+      // Minutes de voix incluses dans la formule (ADR 0231) : alerte à 80 %, puis épuisement.
+      const included = count(data, "minutes_incluses");
+      const left = count(data, "minutes_restantes");
+      const empty = type === "agents_minutes_epuisees";
+      return {
+        subject: empty
+          ? "Vos minutes d'assistante sont épuisées"
+          : left
+            ? `Il vous reste ${left} minute${left > 1 ? "s" : ""} d'assistante ce mois-ci`
+            : "Vos minutes d'assistante arrivent à leur fin",
+        preview: "Les minutes de voix incluses dans votre formule MENAO.",
+        title: empty ? "Minutes épuisées" : "Minutes bientôt épuisées",
+        paragraphs: [
+          hello(ctx.firstName),
+          empty
+            ? "Les minutes de voix incluses dans votre formule sont toutes utilisées pour ce mois-ci."
+            : `Vous avez utilisé 80 % des minutes de voix${included ? ` (${included} minutes)` : ""} incluses dans votre formule ce mois-ci.`,
+          empty
+            ? "Jusqu'au 1er du mois prochain, votre assistante se contente de noter le nom et le numéro de vos clients."
+            : "Les minutes repartent à zéro le 1er du mois prochain.",
+        ],
+        quote: null,
+        cta: { label: "Voir mes agents IA", url: link("/pro/onboarding/formule#agents") },
       };
     }
     case "equipe_recap_camille": {

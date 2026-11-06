@@ -5034,6 +5034,114 @@ export type Database = {
         };
         Relationships: [];
       };
+      voice_alerts: {
+        Row: {
+          artisan_id: string;
+          level: string;
+          month: string;
+          sent_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          level: string;
+          month: string;
+          sent_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          level?: string;
+          month?: string;
+          sent_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "voice_alerts_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      voice_credits: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          reason: string;
+          reference: string | null;
+          seconds: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          reason: string;
+          reference?: string | null;
+          seconds: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          reason?: string;
+          reference?: string | null;
+          seconds?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "voice_credits_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      voice_usage: {
+        Row: {
+          agent: string;
+          artisan_id: string;
+          call_id: string;
+          created_at: string;
+          id: string;
+          month: string;
+          seconds: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          agent: string;
+          artisan_id: string;
+          call_id: string;
+          created_at?: string;
+          id?: string;
+          month: string;
+          seconds: number;
+        };
+        Update: {
+          agent?: string;
+          artisan_id?: string;
+          call_id?: string;
+          created_at?: string;
+          id?: string;
+          month?: string;
+          seconds?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "voice_usage_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       voice_work_requests: {
         Row: {
           created_at: string;
@@ -5388,6 +5496,10 @@ export type Database = {
       admin_delete_launch_member: { Args: { p_id: string }; Returns: undefined };
       admin_delete_launch_task: { Args: { p_id: string }; Returns: undefined };
       admin_draw_spot_checks: { Args: Record<PropertyKey, never>; Returns: number };
+      admin_grant_voice_minutes: {
+        Args: { p_artisan_id: string; p_minutes: number; p_note: string };
+        Returns: undefined;
+      };
       admin_import_launch_plan: { Args: { p_plan: Json }; Returns: Json };
       admin_import_prospects: { Args: { p_rows: Json }; Returns: number };
       admin_launch_accounts: {
@@ -5716,6 +5828,16 @@ export type Database = {
       admin_verify_certification: {
         Args: { p_certification_id: string; p_verified: boolean };
         Returns: undefined;
+      };
+      admin_voice_usage: {
+        Args: { p_month?: string };
+        Returns: {
+          appels: number;
+          artisan_id: string;
+          entreprise: string;
+          formule: string;
+          secondes: number;
+        }[];
       };
       admin_webhook_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_webhook_events: {
@@ -6237,6 +6359,7 @@ export type Database = {
           zone_radius_km: number;
         }[];
       };
+      my_ai_agents: { Args: Record<PropertyKey, never>; Returns: Json };
       my_artisan_base_point: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -6721,6 +6844,7 @@ export type Database = {
       };
       unregister_push_token: { Args: { p_token: string }; Returns: undefined };
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
+      voice_artisan_agents: { Args: { p_artisan_id: string }; Returns: Json };
       voice_book_commercial_appointment: {
         Args: {
           p_address?: string;
@@ -6752,6 +6876,10 @@ export type Database = {
       voice_prepare_work_request: {
         Args: { p_email: string; p_first_name: string; p_phone: string; p_project_id: string };
         Returns: string;
+      };
+      voice_record_usage: {
+        Args: { p_agent: string; p_artisan_id: string; p_call_id: string; p_seconds: number };
+        Returns: Json;
       };
       voice_request_callback: {
         Args: {
@@ -6925,7 +7053,9 @@ export type Database = {
         | "creneaux_proposes"
         | "creneau_choisi"
         | "rdv_commercial"
-        | "equipe_recap_camille";
+        | "equipe_recap_camille"
+        | "agents_minutes_80"
+        | "agents_minutes_epuisees";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7253,6 +7383,8 @@ export const Constants = {
         "creneau_choisi",
         "rdv_commercial",
         "equipe_recap_camille",
+        "agents_minutes_80",
+        "agents_minutes_epuisees",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
