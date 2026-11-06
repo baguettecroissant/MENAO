@@ -1,4 +1,4 @@
-import { aiRates } from "@menao/core";
+import { VOICE_COST_CENTS_PER_MINUTE, aiRates } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { FilterChips, listHref } from "@/components/admin/list-controls";
@@ -38,7 +38,13 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
   const params = await searchParams;
   const period = parseAiPeriod(params.periode);
   const { supabase } = await requireAdmin();
-  const summary = await getAiSummary(supabase, period);
+  const [summary, { data: voiceUsage, error: voiceError }] = await Promise.all([
+    getAiSummary(supabase, period),
+    supabase.rpc("admin_voice_usage"),
+  ]);
+  const v = t.voice;
+  const euros = (cents: number) =>
+    (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 
   const totals = (summary?.fonctions ?? []).reduce(
     (acc, fn) => ({
@@ -313,6 +319,61 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
           </Card>
         </>
       )}
+      {/* Minutes de voix des agents IA des artisans (ADR 0231), toujours sur le mois en cours. */}
+      <Card className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-medium">{v.title}</h2>
+          <p className="text-sm text-muted-foreground">{v.intro}</p>
+        </div>
+        {voiceError ? (
+          <Alert tone="error">{v.error}</Alert>
+        ) : !voiceUsage?.length ? (
+          <p className="text-sm text-muted-foreground">{v.empty}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[36rem] text-left text-sm">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th scope="col" className="py-2 pr-4 font-normal">
+                    {v.company}
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-normal">
+                    {v.plan}
+                  </th>
+                  {[v.calls, v.minutes, v.cost].map((label) => (
+                    <th key={label} scope="col" className="py-2 pr-4 text-right font-normal">
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="tabular-nums">
+                {voiceUsage.map((row) => {
+                  const minutes = Math.ceil(row.secondes / 60);
+                  return (
+                    <tr key={row.artisan_id} className="border-t border-border">
+                      <td className="py-3 pr-4">
+                        <Link
+                          href={`/admin/artisans/${row.artisan_id}` as Route}
+                          className="font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          {row.entreprise}
+                        </Link>
+                      </td>
+                      <td className="py-3 pr-4">{row.formule ?? f.none}</td>
+                      <td className="py-3 pr-4 text-right">{count(row.appels)}</td>
+                      <td className="py-3 pr-4 text-right">{count(minutes)}</td>
+                      <td className="py-3 pr-4 text-right">
+                        {euros(minutes * VOICE_COST_CENTS_PER_MINUTE)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

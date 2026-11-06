@@ -1157,3 +1157,26 @@ describe("récapitulatif du matin de Camille (ADR 0230)", () => {
     expect(c.quote).toBeNull();
   });
 });
+
+describe("minutes de voix des agents IA (ADR 0231)", () => {
+  const ctx = { siteUrl: "https://menao.example", firstName: "Jean" };
+
+  it("alerte à 80 % : minutes restantes et incluses, lien vers les agents", () => {
+    const c = notificationContent(
+      "agents_minutes_80",
+      { minutes_restantes: 60, minutes_incluses: 300 },
+      ctx,
+    );
+    expect(c.subject).toBe("Il vous reste 60 minutes d'assistante ce mois-ci");
+    expect(c.paragraphs[1]).toBe(
+      "Vous avez utilisé 80 % des minutes de voix (300 minutes) incluses dans votre formule ce mois-ci.",
+    );
+    expect(c.cta.url).toBe("https://menao.example/pro/onboarding/formule#agents");
+  });
+
+  it("minutes épuisées : l'assistante note seulement les messages", () => {
+    const c = notificationContent("agents_minutes_epuisees", { minutes_incluses: 300 }, ctx);
+    expect(c.subject).toBe("Vos minutes d'assistante sont épuisées");
+    expect(c.paragraphs[2]).toContain("noter le nom et le numéro");
+  });
+});
