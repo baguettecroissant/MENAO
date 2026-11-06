@@ -1,5 +1,5 @@
 import { parseAiAgents } from "@menao/core";
-import type { QuoteLineInput } from "@menao/validation";
+import { voiceDraftLines, type QuoteLineInput } from "@menao/validation";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { QuoteEditor } from "@/components/pro/quote-editor";
@@ -7,7 +7,6 @@ import { QuoteHeader } from "@/components/pro/quote-header";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
-import { voiceDraftLines } from "@/lib/artisan/voice-quote";
 
 const t = fr.pro.quote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

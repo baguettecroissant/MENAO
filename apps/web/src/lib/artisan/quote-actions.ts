@@ -5,6 +5,7 @@ import {
   messages,
   quoteLinesSchema,
   sendQuoteSchema,
+  voiceDraftLines,
   type QuoteLineInput,
 } from "@menao/validation";
 import type { Route } from "next";
@@ -15,7 +16,6 @@ import type { VoiceSession } from "@/components/assistant/voice-call";
 import { fr } from "@/i18n/fr";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { requireArtisan } from "./requests";
-import { voiceDraftLines } from "./voice-quote";
 
 export type SaveQuoteResult = { ok: true } | { ok: false; error: string };
 

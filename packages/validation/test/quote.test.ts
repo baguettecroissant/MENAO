@@ -9,6 +9,7 @@ import {
   refuseQuoteSchema,
   sendQuoteSchema,
   signatureConsentsSchema,
+  voiceDraftLines,
 } from "../src/quote";
 
 const base = {
@@ -122,5 +123,19 @@ describe("signature du devis (F-13)", () => {
         "Cochez cette case pour signer le devis.",
       ]);
     }
+  });
+
+  it("brouillon de Camille : lignes valides gardées, les autres écartées", () => {
+    const ok = {
+      type: "main_oeuvre",
+      designation: "Pose de cloison",
+      description: "",
+      quantityMilli: 12000,
+      unit: "m2",
+      unitPriceHtCents: 3800,
+      vatRateBp: 0,
+    };
+    expect(voiceDraftLines([ok, { ...ok, quantityMilli: 0 }, "texte"])).toEqual([ok]);
+    expect(voiceDraftLines(null)).toEqual([]);
   });
 });

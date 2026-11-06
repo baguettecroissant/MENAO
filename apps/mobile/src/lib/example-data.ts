@@ -163,6 +163,8 @@ export function exampleQuoteDraft(id: string, now = new Date()): QuoteDraft | nu
     appointmentAt: exampleChantier(id, now)?.appointment?.starts_at ?? null,
     saved: true,
     assujettiTva: true,
+    conversation: false,
+    voiceDraft: null,
   };
 }
 

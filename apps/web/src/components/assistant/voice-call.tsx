@@ -42,6 +42,7 @@ export function VoiceCall({
   onCallStarted,
   onCallEnded,
   hintOnMobile = true,
+  autoStart = false,
 }: {
   /** « quote » : devis en conversation, l'assistante est donnée par le serveur (session). */
   assistant?: VoiceAssistant | "secretary" | "quote";
@@ -54,6 +55,8 @@ export function VoiceCall({
   onCallEnded?: () => void;
   /** Précision du bouton (« · elle vous pose les questions ») masquée sur petit écran. */
   hintOnMobile?: boolean;
+  /** Appel lancé dès l'affichage (page intégrée à l'application, ADR 0235). */
+  autoStart?: boolean;
 }) {
   const ASSISTANT_ID =
     assistant === "secretary"
@@ -75,6 +78,15 @@ export function VoiceCall({
 
   // Appel raccroché si la fenêtre se ferme ou si l'on quitte la page.
   useEffect(() => () => void vapi.current?.stop(), []);
+
+  // Lancement automatique, une seule fois ; en cas d'échec, le bouton reste là.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoStart || autoStarted.current) return;
+    autoStarted.current = true;
+    void start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- un seul lancement, à l'affichage
+  }, [autoStart]);
 
   if (!PUBLIC_KEY || (!ASSISTANT_ID && assistant !== "quote")) return null;
 
