@@ -59,8 +59,10 @@ select is(public.voice_quote_context('c1241000-0000-4000-8000-000000000002', 'c1
 select is(public.voice_quote_context('c1241000-0000-4000-8000-000000000001', 'c1244000-0000-4000-8000-000000000002'),
   null, 'devis déjà signé : rien');
 
-select is((select unit_price_ht_cents from public.voice_quote_usual_prices('c1241000-0000-4000-8000-000000000001', 'pose du carrelage')),
-  4500, 'prix habituel retrouvé par ses mots');
+select is((select count(*)::int from public.voice_quote_usual_prices('c1241000-0000-4000-8000-000000000001', 'pose du carrelage')),
+  2, 'prix habituels : toutes les lignes qui contiennent un des mots');
+select is((select unit_price_ht_cents from public.voice_quote_usual_prices('c1241000-0000-4000-8000-000000000001', 'pose du carrelage') limit 1),
+  4500, 'prix habituel : la ligne qui contient le plus de mots d''abord');
 select is((select count(*)::int from public.voice_quote_usual_prices('c1241000-0000-4000-8000-000000000002', 'carrelage')),
   0, 'prix d''un autre artisan : rien');
 
