@@ -105,6 +105,13 @@ const nextConfig: NextConfig = {
         destination: "/pro/inscription?p=:code",
         permanent: false,
       },
+      // Premiers e-mails de demande préparée au téléphone (ADR 0227), envoyés avec un mauvais
+      // chemin : vers la vraie page (jeton de 64 caractères hexadécimaux).
+      {
+        source: "/recherche/telephone/:jeton([0-9a-f]{64})",
+        destination: "/demande-preparee/:jeton",
+        permanent: false,
+      },
     ];
     if (!siteUrl || new URL(siteUrl).host === VERCEL_HOST) return partnerLinks;
     return [

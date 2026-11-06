@@ -1,3 +1,4 @@
+import { voicePreparedRequestPath } from "@menao/core";
 import { encodeLotSelection, type LotSelection } from "@menao/validation";
 
 /**
@@ -29,5 +30,5 @@ export function rehirePath(artisanId: string, chantierId: string, artisanName: s
 
 /** Demande préparée au téléphone par Camille (F-77, ADR 0227) : lien de l'e-mail. */
 export function preparedRequestPath(token: string): string {
-  return `/demande-preparee/${token}`;
+  return voicePreparedRequestPath(token);
 }

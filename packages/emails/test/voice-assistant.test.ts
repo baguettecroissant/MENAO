@@ -160,7 +160,7 @@ describe("demande de travaux préparée au téléphone (ADR 0227)", () => {
     summary: "Réparer une fuite sous l'évier",
     city: "Antibes",
     available: 3,
-    url: "https://menao.example/recherche/telephone/abc",
+    url: "https://menao.example/demande-preparee/abc",
   };
 
   it("lien de vérification, résumé en citation, artisans proposés", () => {

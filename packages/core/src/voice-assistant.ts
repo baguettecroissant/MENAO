@@ -149,6 +149,15 @@ export function voiceToolDefinitions() {
   ];
 }
 
+/**
+ * Page du lien envoyé par e-mail pour une demande préparée au téléphone (ADR 0227), en dehors de
+ * /recherche : sans session, le proxy y renvoie vers l'accueil. Seule source de ce chemin, pour
+ * l'Edge Function comme pour le site.
+ */
+export function voicePreparedRequestPath(token: string): string {
+  return `/demande-preparee/${token}`;
+}
+
 /** Besoin dicté : au moins quelques mots, borné avant l'analyse. */
 const WORK_NEED_MIN = 10;
 const WORK_NEED_MAX = 1500;
