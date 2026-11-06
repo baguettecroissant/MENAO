@@ -99,13 +99,23 @@ test("agenda : horaires, absence, pause, abonnement .ics et créneau bloqué", a
   await expect(sync.getByText("Nouveau lien créé")).toBeVisible();
   expect((await page.request.get(feedUrl)).status()).toBe(404);
 
-  // Créneau bloqué : ajouté depuis l'agenda, visible dans sa semaine, puis libéré.
+  // Créneau bloqué : ajouté depuis l'agenda, visible dans sa semaine, puis libéré depuis sa
+  // fenêtre de détail (ADR 0232).
   const date = day(2);
   await page.goto(`/pro/agenda?semaine=${date}`);
-  const release = page.getByRole("button", {
-    name: "Libérer le créneau Occupé · 14h00 – 16h00 · Chantier hors MENAO",
+  const slot = page.getByRole("button", {
+    name: "Voir le détail : Occupé · 14h00 – 16h00 · Chantier hors MENAO",
   });
-  await clickAll(release);
+  const details = page.getByRole("dialog", { name: "Créneau bloqué" });
+  const releaseSlot = async () => {
+    const before = await slot.count();
+    await slot.first().click();
+    await expect(details.getByText("Chantier hors MENAO")).toBeVisible();
+    await details.getByRole("button", { name: "Libérer le créneau" }).click();
+    await expect(details).toBeHidden();
+    await expect(slot).toHaveCount(before - 1);
+  };
+  while ((await slot.count()) > 0) await releaseSlot();
   await page.getByRole("button", { name: "Bloquer un créneau" }).click();
   const dialog = page.getByRole("dialog", { name: "Bloquer un créneau" });
   await dialog.getByLabel("Date", { exact: true }).fill(date);
@@ -114,7 +124,7 @@ test("agenda : horaires, absence, pause, abonnement .ics et créneau bloqué", a
   await dialog.getByLabel("Motif").fill("Chantier hors MENAO");
   await dialog.getByRole("button", { name: "Bloquer ce créneau" }).click();
   await expect(dialog).toBeHidden();
-  await expect(release).toHaveCount(1);
-  await release.click();
-  await expect(release).toHaveCount(0);
+  await expect(slot).toHaveCount(1);
+  await releaseSlot();
+  await expect(slot).toHaveCount(0);
 });
