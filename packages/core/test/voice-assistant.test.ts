@@ -17,6 +17,7 @@ import {
   voiceText,
   voiceToolDefinitions,
   voiceSquad,
+  voicePreparedRequestPath,
   voiceWorkDescription,
 } from "../src/voice-assistant";
 
@@ -193,6 +194,10 @@ describe("demande de travaux par téléphone (ADR 0227)", () => {
     ).toBe(
       "Fuite sous l'évier de la cuisine, ça goutte depuis hier.\nCommune des travaux : Antibes.\nDélai souhaité : cette semaine.",
     );
+  });
+
+  it("lien de l'e-mail : la page de la demande préparée, hors de /recherche", () => {
+    expect(voicePreparedRequestPath("abc")).toBe("/demande-preparee/abc");
   });
 
   it("délai facultatif", () => {

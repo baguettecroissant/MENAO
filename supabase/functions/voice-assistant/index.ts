@@ -24,6 +24,7 @@ import {
   spokenEmail,
   spokenPhoneToE164,
   voiceCallSeconds,
+  voicePreparedRequestPath,
   voiceText,
   voiceWorkDescription,
   type VoiceToolCall,
@@ -549,7 +550,7 @@ async function prepareWorkRequest(admin: Admin, call: VoiceToolCall): Promise<To
       summary: (project?.summary as string | null | undefined) ?? null,
       city: (project?.ville_nom as string | null | undefined) ?? null,
       available,
-      url: `${siteUrl()}/recherche/telephone/${token}`,
+      url: `${siteUrl()}${voicePreparedRequestPath(token)}`,
     },
     siteUrl(),
   );
