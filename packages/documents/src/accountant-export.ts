@@ -45,6 +45,10 @@ export const ACCOUNTANT_EXPORT_TEXTS = {
     carburant: "Carburant et déplacements",
     autre: "Autre",
   } as Record<string, string>,
+  // Synthèse de la période (agent comptable avancé, ADR 0237) : totaux, sans commentaire.
+  summaryHeaders: ["Pièces", "Nombre", "Total HT", "TVA", "Total TTC"],
+  summaryRows: { invoices: "Factures émises", expenses: "Dépenses" },
+  summaryReadme: "Synthèse de la période : synthese.csv (totaux des factures et des dépenses).",
   readme: (company: string, period: string, invoices: number | null, expenses: number | null) =>
     [
       `${company} — ${period}`,
@@ -136,11 +140,14 @@ export function accountantArchive({
   period,
   invoices,
   expenses,
+  summary = false,
 }: {
   company: string;
   period: string;
   invoices: AccountantInvoice[] | null;
   expenses: AccountantExpense[] | null;
+  /** Ajoute `synthese.csv` (Premium et Entreprise, ADR 0237). */
+  summary?: boolean;
 }): Uint8Array {
   const t = ACCOUNTANT_EXPORT_TEXTS;
   const text = (value: string) => new TextEncoder().encode(value);
@@ -196,8 +203,41 @@ export function accountantArchive({
     }
   }
 
+  if (summary && (invoices || expenses)) {
+    files["synthese.csv"] = text(accountantSummaryCsv(invoices, expenses));
+  }
   files["LISEZ-MOI.txt"] = text(
-    t.readme(company, period, invoices?.length ?? null, expenses?.length ?? null),
+    t.readme(company, period, invoices?.length ?? null, expenses?.length ?? null) +
+      (summary && (invoices || expenses) ? `${t.summaryReadme}\r\n` : ""),
   );
   return zipSync(files, { level: 6 });
+}
+
+/**
+ * `synthese.csv` : nombre et totaux HT, TVA et TTC des factures et des dépenses de la période
+ * (parties demandées seulement). Mêmes conventions que les autres tableaux.
+ */
+export function accountantSummaryCsv(
+  invoices: readonly AccountantInvoice[] | null,
+  expenses: readonly AccountantExpense[] | null,
+): string {
+  const t = ACCOUNTANT_EXPORT_TEXTS;
+  const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const amount = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
+  const row = (
+    label: string,
+    items: readonly { totalHtCents: number; totalTvaCents: number; totalTtcCents: number }[],
+  ) => [
+    label,
+    String(items.length),
+    amount(items.reduce((sum, i) => sum + i.totalHtCents, 0)),
+    amount(items.reduce((sum, i) => sum + i.totalTvaCents, 0)),
+    amount(items.reduce((sum, i) => sum + i.totalTtcCents, 0)),
+  ];
+  const lines = [
+    [...t.summaryHeaders],
+    ...(invoices ? [row(t.summaryRows.invoices, invoices)] : []),
+    ...(expenses ? [row(t.summaryRows.expenses, expenses)] : []),
+  ];
+  return `${String.fromCharCode(0xfeff)}${lines.map((r) => r.map(cell).join(";")).join("\r\n")}\r\n`;
 }

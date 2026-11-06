@@ -2,6 +2,7 @@ import { unzipSync, strFromU8 } from "fflate";
 import { describe, expect, it } from "vitest";
 import {
   accountantArchive,
+  accountantSummaryCsv,
   expensePieceName,
   fileSlug,
   type AccountantExpense,
@@ -96,5 +97,23 @@ describe("archive envoyée au comptable (F-63)", () => {
     );
     expect(Object.keys(files).sort()).toEqual(["LISEZ-MOI.txt", "depenses.csv"]);
     expect(strFromU8(files["LISEZ-MOI.txt"] as Uint8Array)).not.toContain("Factures");
+  });
+
+  it("synthèse de la période (agent comptable avancé, ADR 0237)", () => {
+    const csv = accountantSummaryCsv(null, [expense(), expense()]);
+    expect(csv).toContain('"Pièces";"Nombre";"Total HT";"TVA";"Total TTC"');
+    expect(csv).toContain('"Dépenses";"2";"870,00";"182,70";"1052,70"');
+    expect(csv).not.toContain("Factures émises");
+    const files = unzipSync(
+      accountantArchive({
+        company: "Entreprise Exemple",
+        period: "septembre 2026",
+        invoices: null,
+        expenses: [expense({ piece: null })],
+        summary: true,
+      }),
+    );
+    expect(Object.keys(files).sort()).toEqual(["LISEZ-MOI.txt", "depenses.csv", "synthese.csv"]);
+    expect(strFromU8(files["LISEZ-MOI.txt"] as Uint8Array)).toContain("synthese.csv");
   });
 });

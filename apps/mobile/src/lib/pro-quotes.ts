@@ -1,4 +1,11 @@
-import { parseAiAgents, parisToday, quoteStartDateError, type VoiceLine } from "@menao/core";
+import {
+  parseAiAgents,
+  parseMoneyOverview,
+  parisToday,
+  quoteStartDateError,
+  type MoneyOverview,
+  type VoiceLine,
+} from "@menao/core";
 import {
   quoteDocumentModel,
   quotePdfData,
@@ -302,4 +309,14 @@ export async function sendQuote(
   if (error) return { error: sqlError(error) };
   await supabase.functions.invoke("generate-pdf", { body: { quoteId } });
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Suivi de l'argent (ADR 0237)
+// ---------------------------------------------------------------------------
+
+/** Suivi de l'artisan connecté ; null si illisible. */
+export async function loadMoneyOverview(): Promise<MoneyOverview | null> {
+  const { data, error } = await supabase.rpc("my_money_overview");
+  return error ? null : parseMoneyOverview(data);
 }

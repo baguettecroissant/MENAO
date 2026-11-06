@@ -3395,7 +3395,7 @@ export const fr = {
       home: "Accueil",
       money: "Argent",
       storefront: "Ma vitrine",
-      moneyTabs: { devis: "Devis", factures: "Factures", depenses: "Dépenses" },
+      moneyTabs: { devis: "Devis", factures: "Factures", depenses: "Dépenses", suivi: "Suivi" },
       storefrontTabs: { profil: "Ma fiche", avis: "Avis", grade: "Mon grade" },
     },
     /** Exemples de l'espace (ADR 0184) : données fictives, en lecture seule. */
@@ -4482,6 +4482,34 @@ export const fr = {
       search: "Rechercher",
     },
     // Envoi au comptable (F-63, ADR 0187) : factures et dépenses de la période, par un lien sécurisé.
+    // Suivi de l'argent, agent comptable avancé (F-87, ADR 0237).
+    moneyOverview: {
+      title: "Suivi",
+      monthTitle: (month: string) => `${month.charAt(0).toUpperCase()}${month.slice(1)} en bref`,
+      ttc: "Montants TTC, tirés de votre espace : ils ne remplacent pas votre comptabilité.",
+      collected: "Encaissé",
+      signed: "Devis signés",
+      signedCount: (n: number) => `${n} devis`,
+      open: "À encaisser",
+      openCount: (n: number) => (n <= 1 ? `${n} paiement` : `${n} paiements`),
+      expenses: "Dépenses",
+      previous: (month: string, value: string) => `${month} : ${value}`,
+      openTitle: "À encaisser",
+      openEmpty: "Rien à encaisser : tous vos paiements sont à jour.",
+      kinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+      dueSince: (days: number) =>
+        days === 0
+          ? "Dû depuis aujourd'hui"
+          : days === 1
+            ? "Dû depuis 1 jour"
+            : `Dû depuis ${days} jours`,
+      failed: "Dernier paiement échoué",
+      checkTitle: "À vérifier",
+      withoutInvoice: (kind: string) => `${kind} reçu sans facture`,
+      withoutInvoiceHint:
+        "La facture n'a pas pu être émise : écrivez à l'équipe MENAO pour la régénérer.",
+      help: "Aide et support",
+    },
     // Aide et support de l'espace artisan, avec l'assistant (F-86, ADR 0236).
     helpCenter: {
       title: "Aide et support",
