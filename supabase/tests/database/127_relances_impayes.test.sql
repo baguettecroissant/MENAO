@@ -13,6 +13,8 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_met
 insert into public.artisans (id, user_id, status, raison_sociale, nom_commercial, zone_mode) values
   ('c1271000-0000-4000-8000-000000000001', 'c1270000-0000-4000-8000-000000000001', 'valide', 'PAUL 127', 'Plâtrerie Paul', 'communes'),
   ('c1271000-0000-4000-8000-000000000003', 'c1270000-0000-4000-8000-000000000003', 'valide', 'BASE 127', null, 'communes');
+-- Prénom de l'artisan connu : le rappel part quand même au nom de l'entreprise.
+update public.profiles set first_name = 'Paul' where user_id = 'c1270000-0000-4000-8000-000000000001';
 insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status) values
   ('c1271000-0000-4000-8000-000000000001', 'premium', 'cus_c127', 'sub_c127', 'active'),
   ('c1271000-0000-4000-8000-000000000003', 'base', 'cus_c127b', 'sub_c127b', 'active');
