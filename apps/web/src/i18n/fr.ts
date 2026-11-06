@@ -4416,6 +4416,9 @@ export const fr = {
           unavailable: "Camille n'est pas disponible pour le moment. Réessayez dans un instant.",
           generic: "L'appel n'a pas pu démarrer. Réessayez dans un instant.",
         } as Record<string, string>,
+        // Page intégrée à l'application (ADR 0235) : aucun achat évoqué (CLAUDE.md règle 10).
+        outsideApp: "Ouvrez cette page depuis l'application MENAO.",
+        appMinutes: "Vos minutes de voix du mois sont épuisées.",
       },
       list: {
         title: "Devis",

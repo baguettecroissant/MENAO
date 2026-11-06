@@ -1,19 +1,25 @@
 import { allowedVatRates, quoteTotals, type VoiceLine, isExampleId } from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
 import { router, useLocalSearchParams, usePreventRemove } from "expo-router";
-import { Mic, Plus, Save } from "lucide-react-native";
-import { useCallback, useState } from "react";
+import { Mic, Phone, Plus, Save } from "lucide-react-native";
+import { useCallback, useRef, useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand, whenMeta } from "@/components/header-band";
 import { BottomSheet } from "@/components/bottom-sheet";
+import { QuoteConversation } from "@/components/pro/quote-conversation";
 import { QuoteDictation } from "@/components/pro/quote-dictation";
 import { LineCard } from "@/components/pro/quote-line-card";
 import { LineForm } from "@/components/pro/quote-line-form";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
-import { loadQuoteDraft, saveQuoteDraft, type QuoteDraft } from "@/lib/pro-quotes";
+import {
+  loadQuoteDraft,
+  saveQuoteDraft,
+  settleVoiceQuoteDrafts,
+  type QuoteDraft,
+} from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -61,6 +67,12 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  // Devis avec Camille (ADR 0235) : lignes de l'appel en cours, remplacées à chaque proposition ;
+  // brouillon à clore dès que le devis est enregistré. Pas sur la version web de l'application.
+  const [calling, setCalling] = useState(false);
+  const camille = useRef<Set<string>>(new Set());
+  const voiceUsed = useRef(false);
+  const [pendingDraft, setPendingDraft] = useState(draft.voiceDraft);
 
   const plain = lines.map(withoutKey);
   const dirty = JSON.stringify(plain) !== snapshot;
@@ -97,6 +109,10 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
     }
     setSnapshot(JSON.stringify(toSave));
     setHasSaved(true);
+    if (voiceUsed.current) {
+      voiceUsed.current = false;
+      void settleVoiceQuoteDrafts(chantierId);
+    }
     return true;
   }
 
@@ -125,7 +141,28 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
     setEditing(null);
   }
 
-  function addGenerated(generated: VoiceLine[]) {
+  /** Lignes proposées par Camille : la liste de l'appel en cours remplace la précédente. */
+  function setCamilleLines(next: (VoiceLine | QuoteLineInput)[]) {
+    const previous = camille.current;
+    const added = next.map((line) => ({ ...line, key: newKey(), generated: true }));
+    camille.current = new Set(added.map((line) => line.key));
+    voiceUsed.current = true;
+    setLines((current) => [...current.filter((l) => !previous.has(l.key)), ...added]);
+    setNotice(t.conversation.updated(added.length));
+  }
+
+  /** Brouillon d'un appel précédent : ajouté au devis, ou écarté. */
+  function resumeDraft(add: boolean) {
+    if (add && pendingDraft) {
+      addGenerated(pendingDraft);
+      voiceUsed.current = true;
+    } else {
+      void settleVoiceQuoteDrafts(chantierId);
+    }
+    setPendingDraft(null);
+  }
+
+  function addGenerated(generated: (VoiceLine | QuoteLineInput)[]) {
     setLines((current) => [
       ...current,
       ...generated.map((line) => ({ ...line, key: newKey(), generated: true })),
@@ -183,6 +220,26 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
           {!draft.assujettiTva ? <Text style={styles.small}>{t.vatExempt}</Text> : null}
           <ExampleLock locked={example} note>
             <View style={styles.footer}>
+              {draft.conversation && Platform.OS !== "web" ? (
+                calling ? (
+                  <QuoteConversation
+                    chantierId={chantierId}
+                    assujettiTva={draft.assujettiTva}
+                    onStart={() => {
+                      camille.current = new Set();
+                    }}
+                    onLines={setCamilleLines}
+                    onClose={() => setCalling(false)}
+                  />
+                ) : (
+                  <Button
+                    label={t.conversation.open}
+                    variant="secondary"
+                    icon={Phone}
+                    onPress={() => setCalling(true)}
+                  />
+                )
+              ) : null}
               <Button
                 label={t.dictation.open}
                 variant="secondary"
@@ -208,6 +265,19 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
       </View>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {notice ? <Notice tone="success">{notice}</Notice> : null}
+      {pendingDraft && !example ? (
+        <View style={styles.draft}>
+          <Text style={styles.draftText}>{t.conversation.draft(pendingDraft.length)}</Text>
+          <View style={styles.draftActions}>
+            <Button label={t.conversation.draftAdd} onPress={() => resumeDraft(true)} />
+            <Button
+              label={t.conversation.draftDiscard}
+              variant="secondary"
+              onPress={() => resumeDraft(false)}
+            />
+          </View>
+        </View>
+      ) : null}
       <ExampleLock locked={example}>
         <View style={styles.lines}>
           {lines.map((line) =>
@@ -288,6 +358,16 @@ const styles = StyleSheet.create({
   },
   addText: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
   footer: { gap: spacing(1.5) },
+  draft: {
+    gap: spacing(3),
+    padding: spacing(4),
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors["primary-softer"],
+  },
+  draftText: { fontFamily: font.regular, fontSize: 14, color: colors["primary-strong"] },
+  draftActions: { gap: spacing(2) },
   totalLine: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   text: { fontFamily: font.regular, fontSize: 15, color: colors.foreground },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },

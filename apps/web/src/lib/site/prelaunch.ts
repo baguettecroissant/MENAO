@@ -32,6 +32,8 @@ const OPEN = [
   "bannieres",
   // Badge des artisans (ADR 0144) : image déjà collée sur leur site.
   "badge",
+  // Pages intégrées à l'application (ADR 0235) : ouvertes sans cookie, la session vient de l'appli.
+  "appli",
   "\\.well-known",
   "favicon\\.ico",
   "icon\\.svg",

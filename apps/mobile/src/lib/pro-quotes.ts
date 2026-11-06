@@ -1,4 +1,4 @@
-import { parisToday, quoteStartDateError, type VoiceLine } from "@menao/core";
+import { parseAiAgents, parisToday, quoteStartDateError, type VoiceLine } from "@menao/core";
 import {
   quoteDocumentModel,
   quotePdfData,
@@ -10,6 +10,7 @@ import {
   messages,
   parseArtisanChantierDetail,
   quoteLinesSchema,
+  voiceDraftLines,
   type QuoteLineInput,
 } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
@@ -41,12 +42,22 @@ export type QuoteDraft = {
   /** Un brouillon existe déjà en base. */
   saved: boolean;
   assujettiTva: boolean;
+  /** « Dicter avec Camille » inclus dans la formule (ADR 0234, 0235). */
+  conversation: boolean;
+  /** Lignes d'un appel précédent avec Camille, pas encore reprises ni écartées. */
+  voiceDraft: QuoteLineInput[] | null;
 };
 
 /** Brouillon du devis du chantier (F-19), comme sur le site : lignes dans l'ordre. */
 export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | null> {
   if (isExampleId(chantierId)) return exampleQuoteDraft(chantierId);
-  const [{ data: draft, error }, artisan, { data: appointment }] = await Promise.all([
+  const [
+    { data: draft, error },
+    artisan,
+    { data: appointment },
+    { data: agents },
+    { data: voiceDraft },
+  ] = await Promise.all([
     supabase
       .from("quotes")
       .select(
@@ -62,8 +73,18 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
       .eq("chantier_id", chantierId)
       .eq("status", "planifie")
       .maybeSingle(),
+    supabase.rpc("my_ai_agents"),
+    supabase
+      .from("voice_quote_drafts")
+      .select("lines")
+      .eq("chantier_id", chantierId)
+      .is("settled_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   if (error || !artisan) return null;
+  const pending = voiceDraftLines(voiceDraft?.lines);
   return {
     appointmentAt: appointment?.starts_at ?? null,
     lines: [...(draft?.quote_lines ?? [])]
@@ -79,7 +100,39 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
       })),
     saved: Boolean(draft),
     assujettiTva: artisan.assujetti_tva ?? true,
+    conversation: parseAiAgents(agents).agents.conversationalQuote,
+    voiceDraft: pending.length ? pending : null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Devis avec Camille (ADR 0235)
+// ---------------------------------------------------------------------------
+
+/** Session de l'artisan, passée à la page intégrée de l'appel (jamais dans l'adresse). */
+export async function voiceSessionToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
+/** Lignes enregistrées par Camille pendant cet appel : elles font foi à la fin de l'appel. */
+export async function voiceQuoteDraftForCall(
+  chantierId: string,
+  callId: string,
+): Promise<QuoteLineInput[]> {
+  if (!callId || callId.length > 100) return [];
+  const { data } = await supabase
+    .from("voice_quote_drafts")
+    .select("lines")
+    .eq("chantier_id", chantierId)
+    .eq("call_id", callId)
+    .maybeSingle();
+  return voiceDraftLines(data?.lines);
+}
+
+/** Brouillons de Camille repris dans le devis enregistré, ou écartés par l'artisan. */
+export async function settleVoiceQuoteDrafts(chantierId: string): Promise<void> {
+  await supabase.rpc("settle_voice_quote_drafts", { p_chantier_id: chantierId });
 }
 
 /** F-19 « Enregistrer » : remplace les lignes du brouillon ; les totaux sont calculés en base. */
