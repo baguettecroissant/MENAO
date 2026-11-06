@@ -8,7 +8,7 @@
 - **Elle répond au nom de l'entreprise** de l'artisan :
   - nom annoncé réglable, sinon le nom commercial ;
   - elle connaît ses métiers, sa zone et ses horaires (agenda F-44) et transmet ses consignes (« pas de dépannage le dimanche ») ;
-  - elle dit qu'elle est une intelligence artificielle ;
+  - elle ne l'annonce pas dans son premier message (décision du 6 novembre 2026 : le mot inquiète les clients), mais dit franchement qu'elle est une intelligence artificielle si on le lui demande. `TODO(legal)` : faire confirmer par l'avocat l'obligation d'informer qu'on parle à une IA (règlement européen sur l'IA, article 50) ;
   - aucun prix, aucun diagnostic.
 - **Ses trois outils** (Edge Function `voice-assistant`) :
   - `secretaire_creneaux` propose les prochains créneaux libres de l'agenda (`nextArtisanSlots`) : horaires de l'artisan, hors absences, créneaux bloqués et rendez-vous de chantier, deux heures d'avance au moins, un le matin et un l'après-midi au plus ;
