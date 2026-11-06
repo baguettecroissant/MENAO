@@ -29,7 +29,8 @@ export function AiAgentsCard({
   const rows: { label: string; value: string; on: boolean }[] = [
     { label: t.items.dictation, value: t.included, on: true },
     { label: t.items.expenses, value: t.included, on: true },
-    { label: t.items.secretary, value: a.secretary ? t.soon : t.upgrade, on: a.secretary },
+    // Secrétaire dédiée disponible (ADR 0232) : les autres agents vocaux et avancés arrivent.
+    { label: t.items.secretary, value: a.secretary ? t.included : t.upgrade, on: a.secretary },
     {
       label: t.items.conversationalQuote,
       value: a.conversationalQuote ? t.soon : t.upgrade,
