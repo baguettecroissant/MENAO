@@ -16,6 +16,7 @@ import {
   voiceCallSeconds,
   voiceText,
   voiceToolDefinitions,
+  voiceSquad,
   voiceWorkDescription,
 } from "../src/voice-assistant";
 
@@ -214,5 +215,36 @@ describe("demande de travaux par téléphone (ADR 0227)", () => {
   it("besoin borné à 1 500 caractères", () => {
     const text = voiceWorkDescription({ besoin: "a".repeat(3000), commune: "Nice" });
     expect(text?.startsWith("a".repeat(1500) + "\n")).toBe(true);
+  });
+});
+
+describe("une seule Camille : passage de relais (ADR 0228)", () => {
+  const ids = { pro: "assistant-pro", client: "assistant-client" };
+
+  it("le groupe commence par la Camille de la page, l'autre en relais", () => {
+    const squad = voiceSquad("client", ids);
+    expect(squad.members.map((m) => m.assistantId)).toEqual(["assistant-client", "assistant-pro"]);
+    expect(voiceSquad("pro", ids).members[0]?.assistantId).toBe("assistant-pro");
+  });
+
+  it("chaque Camille peut passer la main à l'autre, sans rien dire, en gardant la conversation", () => {
+    const [first, second] = voiceSquad("pro", ids).members;
+    expect(first?.assistantDestinations).toEqual([
+      expect.objectContaining({
+        type: "assistant",
+        assistantName: "Camille particuliers",
+        message: "",
+        transferMode: "swap-system-message-in-history",
+      }),
+    ]);
+    expect(second?.assistantDestinations[0]?.assistantName).toBe("Camille MENAO");
+  });
+
+  it("la Camille qui reprend la main enchaîne au lieu de se présenter à nouveau", () => {
+    const [first, second] = voiceSquad("client", ids).members;
+    expect(first?.assistantOverrides).toBeUndefined();
+    expect(second?.assistantOverrides).toEqual({
+      firstMessageMode: "assistant-speaks-first-with-model-generated-message",
+    });
   });
 });

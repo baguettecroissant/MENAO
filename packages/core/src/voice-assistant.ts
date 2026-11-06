@@ -477,3 +477,48 @@ export function parisSlotSpoken(at: Date): string {
   const minutes = minute ? ` ${frenchNumberWords(Number(minute))}` : "";
   return `${weekday} ${d === 1 ? "premier" : frenchNumberWords(d)} ${month} à ${hours}${minutes}`;
 }
+
+/**
+ * Une seule Camille (F-78, ADR 0228) : les deux assistantes Vapi (artisans et particuliers) forment
+ * un groupe dans chaque appel. Celle de la page répond ; si l'appelant est de l'autre côté, elle
+ * passe la main sans rien dire (même voix, même prénom) et la conversation continue : la consigne
+ * est remplacée, l'historique est gardé.
+ * Les noms sont ceux des assistantes dans Vapi (le passage de relais les désigne par leur nom).
+ */
+export type VoiceSide = "pro" | "client";
+
+export const VOICE_ASSISTANT_NAMES: Record<VoiceSide, string> = {
+  pro: "Camille MENAO",
+  client: "Camille particuliers",
+};
+
+const VOICE_HANDOFF_DESCRIPTIONS: Record<VoiceSide, string> = {
+  pro: "Camille côté artisans : pour un artisan ou une entreprise du bâtiment (inscription, dossier, formules, rendez-vous avec un conseiller).",
+  client:
+    "Camille côté particuliers : pour un particulier qui a des travaux chez lui (préparer une demande de travaux).",
+};
+
+const otherSide = (side: VoiceSide): VoiceSide => (side === "pro" ? "client" : "pro");
+
+export function voiceSquad(start: VoiceSide, ids: Record<VoiceSide, string>) {
+  const member = (side: VoiceSide, starts: boolean) => ({
+    assistantId: ids[side],
+    assistantDestinations: [
+      {
+        type: "assistant" as const,
+        assistantName: VOICE_ASSISTANT_NAMES[otherSide(side)],
+        message: "",
+        transferMode: "swap-system-message-in-history" as const,
+        description: VOICE_HANDOFF_DESCRIPTIONS[otherSide(side)],
+      },
+    ],
+    ...(starts
+      ? {}
+      : {
+          assistantOverrides: {
+            firstMessageMode: "assistant-speaks-first-with-model-generated-message" as const,
+          },
+        }),
+  });
+  return { members: [member(start, true), member(otherSide(start), false)] };
+}

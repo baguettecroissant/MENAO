@@ -1,6 +1,7 @@
 "use client";
 
 import type Vapi from "@vapi-ai/web";
+import { voiceSquad, type VoiceSide } from "@menao/core";
 import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, focusRing } from "@/components/ui";
@@ -10,11 +11,11 @@ import { fr } from "@/i18n/fr";
 const t = fr.pro.assistant.voice;
 const PUBLIC_KEY = env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
 /** Camille côté artisans (pages Pro, ADR 0225) ou côté particuliers (demande de travaux, ADR 0227). */
-const ASSISTANTS = {
+const ASSISTANTS: Record<VoiceSide, string | undefined> = {
   pro: env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
   client: env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID,
-} as const;
-export type VoiceAssistant = keyof typeof ASSISTANTS;
+};
+export type VoiceAssistant = VoiceSide;
 
 type CallState = "idle" | "connecting" | "live" | "ended" | "failed";
 
@@ -57,7 +58,17 @@ export function VoiceCall({ assistant = "pro" }: { assistant?: VoiceAssistant })
         });
         vapi.current = client;
       }
-      const call = await client.start(ASSISTANT_ID);
+      // Une seule Camille (ADR 0228) : les deux assistantes en groupe, celle de la page d'abord,
+      // pour passer la main si l'appelant est de l'autre côté. Une seule configurée : elle seule.
+      const { pro, client: particuliers } = ASSISTANTS;
+      const call =
+        pro && particuliers
+          ? await client.start(
+              undefined,
+              undefined,
+              voiceSquad(assistant, { pro, client: particuliers }),
+            )
+          : await client.start(ASSISTANT_ID);
       if (!call) setState("failed");
     } catch {
       setState("failed");
