@@ -3543,6 +3543,45 @@ export const fr = {
   help: {
     title: "Aide et contact",
     lead: "Les réponses aux questions les plus courantes. Une autre question ? Écrivez-nous.",
+    // Assistant de l'espace artisan (F-86, ADR 0236), comme sur le site.
+    assistant: {
+      title: "Posez votre question",
+      quick: [
+        "Qu'est-ce que je dois faire maintenant ?",
+        "Comment envoyer un devis ?",
+        "Comment être payé en ligne ?",
+        "Comment synchroniser mon agenda ?",
+      ],
+      placeholder: "Votre question…",
+      label: "Votre question à l'assistant",
+      send: "Envoyer",
+      typing: "L'assistant écrit…",
+      unavailable:
+        "L'assistant n'est pas disponible pour le moment. Réessayez dans un instant ou écrivez à l'équipe.",
+      limit: "Pour aller plus loin, écrivez à l'équipe MENAO : elle vous répond par e-mail.",
+      writeTeam: "Écrire à l'équipe",
+      restart: "Nouvelle conversation",
+      screens: {
+        accueil: "Ouvrir l'accueil",
+        demandes: "Ouvrir mes demandes",
+        chantiers: "Ouvrir mes chantiers",
+        agenda: "Ouvrir l'agenda",
+        disponibilites: "Ouvrir mes disponibilités",
+        messages: "Ouvrir mes messages",
+        devis: "Ouvrir mes devis",
+        factures: "Ouvrir mes factures",
+        depenses: "Ouvrir mes dépenses",
+        comptable: "Ouvrir « Mon comptable »",
+        paiements: "Ouvrir les paiements",
+        fiche: "Ouvrir ma fiche",
+        documents: "Ouvrir mes documents",
+        zone: "Ouvrir ma zone",
+        metiers: "Ouvrir mes métiers",
+        avis: "Ouvrir mes avis",
+        grade: "Ouvrir mon grade",
+        profil: "Ouvrir mon profil",
+      } as Record<string, string>,
+    },
     faq: [
       {
         q: "Comment recevoir plus de demandes ?",
