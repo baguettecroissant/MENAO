@@ -8,6 +8,7 @@ import {
   parseAiAgents,
 } from "@menao/core";
 import { AiAgentsCard } from "@/components/pro/ai-agents-card";
+import { SecretaryCard } from "@/components/pro/secretary-card";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -40,6 +41,29 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
   if (subscription) {
     const plan = plans?.find((p) => p.code === subscription.plan_code);
     const { data: agents } = await supabase.rpc("my_ai_agents");
+    const agentsState = parseAiAgents(agents);
+    // Secrétaire dédiée (ADR 0232) : réglages, horaires et derniers messages, si incluse.
+    const [secretarySettings, secretaryMessages, hoursCount] = agentsState.agents.secretary
+      ? await Promise.all([
+          supabase
+            .from("secretary_settings")
+            .select("display_name, can_book, visit_minutes, instructions")
+            .eq("artisan_id", artisan.id)
+            .maybeSingle(),
+          supabase
+            .from("secretary_messages")
+            .select(
+              "id, kind, caller_name, caller_phone, city, reason, urgent, appointment_at, done_at, created_at",
+            )
+            .eq("artisan_id", artisan.id)
+            .order("created_at", { ascending: false })
+            .limit(20),
+          supabase
+            .from("artisan_hours")
+            .select("id", { count: "exact", head: true })
+            .eq("artisan_id", artisan.id),
+        ])
+      : [null, null, null];
     const status = subscription.status as keyof typeof t.status;
     const label =
       status === "trialing"
@@ -92,9 +116,17 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           </section>
         </Card>
         <AiAgentsCard
-          state={parseAiAgents(agents)}
+          state={agentsState}
           planName={snapshot.subscriptionActive ? (plan?.nom ?? null) : null}
         />
+        {agentsState.agents.secretary && (
+          <SecretaryCard
+            settings={secretarySettings?.data ?? null}
+            fallbackName={artisan.nom_commercial ?? artisan.raison_sociale ?? ""}
+            hasHours={(hoursCount?.count ?? 0) > 0}
+            messages={secretaryMessages?.data ?? []}
+          />
+        )}
       </div>
     );
   }

@@ -79,6 +79,8 @@ export const NOTIFICATION_TYPES = [
   // Minutes de voix des agents IA de l'artisan (ADR 0231).
   "agents_minutes_80",
   "agents_minutes_epuisees",
+  // Message ou rendez-vous pris par la secrétaire dédiée de l'artisan (ADR 0232).
+  "secretaire_message",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -933,6 +935,32 @@ export function notificationContent(
         ],
         quote: reason,
         cta: { label: "Ouvrir Ma journée", url: link("/commercial/journee") },
+      };
+    }
+    case "secretaire_message": {
+      // Secrétaire dédiée (ADR 0232) : le numéro du client est dans l'espace de l'artisan, jamais
+      // dans l'e-mail.
+      const rdv = moment(text(data, "rendez_vous"));
+      const isRdv = text(data, "type") === "rendez_vous";
+      const who = [text(data, "prenom"), text(data, "commune")].filter(Boolean).join(", ");
+      const urgent = data.urgent === true;
+      return {
+        subject: isRdv
+          ? rdv
+            ? `Rendez-vous pris le ${rdv.day} à ${rdv.time}${who ? ` avec ${who}` : ""}`
+            : "Rendez-vous pris par votre secrétaire"
+          : `${urgent ? "Urgent : " : ""}nouveau message${who ? ` de ${who}` : ""}`,
+        preview: "Votre secrétaire MENAO a répondu à un client pour vous.",
+        title: isRdv ? "Nouveau rendez-vous" : urgent ? "Message urgent" : "Nouveau message",
+        paragraphs: [
+          hello(ctx.firstName),
+          isRdv
+            ? `Votre secrétaire a pris un rendez-vous${rdv ? ` le ${rdv.day} à ${rdv.time}` : ""}${who ? ` avec ${who}` : ""}. Il est déjà dans votre agenda.`
+            : `Votre secrétaire a pris un message${who ? ` de ${who}` : ""}${urgent ? ", signalé comme urgent" : ""}.`,
+          "Le numéro du client est dans votre espace, avec le détail de sa demande.",
+        ],
+        quote: text(data, "motif"),
+        cta: { label: "Voir le message", url: link("/pro/onboarding/formule#secretaire") },
       };
     }
     case "agents_minutes_80":

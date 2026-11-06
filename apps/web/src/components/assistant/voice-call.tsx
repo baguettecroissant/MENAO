@@ -16,6 +16,11 @@ const ASSISTANTS: Record<VoiceSide, string | undefined> = {
   client: env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID,
 };
 export type VoiceAssistant = VoiceSide;
+/** Secrétaire dédiée de l'artisan (ADR 0232), essayée depuis son espace. */
+const SECRETARY_ID = env.NEXT_PUBLIC_VAPI_SECRETARY_ASSISTANT_ID;
+
+/** Appel préparé par le serveur : variables de l'appel (dont le jeton signé), ou raison du refus. */
+export type VoiceSession = { variables: Record<string, string> } | { error: string };
 
 type CallState = "idle" | "connecting" | "live" | "ended" | "failed";
 
@@ -24,8 +29,19 @@ type CallState = "idle" | "connecting" | "live" | "ended" | "failed";
  * (et son transport audio) n'est téléchargée qu'au premier appel. Le micro est demandé par le
  * navigateur au démarrage ; Camille annonce qu'elle est une IA dans sa première phrase.
  */
-export function VoiceCall({ assistant = "pro" }: { assistant?: VoiceAssistant }) {
-  const ASSISTANT_ID = ASSISTANTS[assistant];
+export function VoiceCall({
+  assistant = "pro",
+  session,
+  labels,
+}: {
+  assistant?: VoiceAssistant | "secretary";
+  /** Secrétaire : prépare l'appel (jeton et contexte de l'artisan) juste avant de le lancer. */
+  session?: () => Promise<VoiceSession>;
+  labels?: Partial<Record<"start" | "hint" | "live" | "speaking", string>>;
+}) {
+  const ASSISTANT_ID = assistant === "secretary" ? SECRETARY_ID : ASSISTANTS[assistant];
+  const text = { ...t, ...labels };
+  const [refusal, setRefusal] = useState<string | null>(null);
   const [state, setState] = useState<CallState>("idle");
   const [speaking, setSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -60,13 +76,25 @@ export function VoiceCall({ assistant = "pro" }: { assistant?: VoiceAssistant })
       }
       // Une seule Camille (ADR 0228) : les deux assistantes en groupe, celle de la page d'abord,
       // pour passer la main si l'appelant est de l'autre côté. Une seule configurée : elle seule.
+      if (session) {
+        setRefusal(null);
+        const prepared = await session();
+        if ("error" in prepared) {
+          setRefusal(prepared.error);
+          setState("idle");
+          return;
+        }
+        const call = await client.start(ASSISTANT_ID, { variableValues: prepared.variables });
+        if (!call) setState("failed");
+        return;
+      }
       const { pro, client: particuliers } = ASSISTANTS;
       const call =
-        pro && particuliers
+        assistant !== "secretary" && pro && particuliers
           ? await client.start(
               undefined,
               undefined,
-              voiceSquad(assistant, { pro, client: particuliers }),
+              voiceSquad(assistant as VoiceSide, { pro, client: particuliers }),
             )
           : await client.start(ASSISTANT_ID);
       if (!call) setState("failed");
@@ -94,7 +122,7 @@ export function VoiceCall({ assistant = "pro" }: { assistant?: VoiceAssistant })
           <span className="relative size-3 rounded-full bg-primary" />
         </span>
         <span className="min-w-0 flex-1 text-sm font-medium text-primary-strong">
-          {state === "connecting" ? t.connecting : speaking ? t.speaking : t.live}
+          {state === "connecting" ? t.connecting : speaking ? text.speaking : text.live}
         </span>
         <button
           type="button"
@@ -128,10 +156,15 @@ export function VoiceCall({ assistant = "pro" }: { assistant?: VoiceAssistant })
     <div className="flex flex-col gap-1.5">
       <Button type="button" variant="outline" size="sm" onClick={start}>
         <Phone aria-hidden="true" className="size-4" />
-        {t.start}
-        <span className="font-normal text-muted-foreground">· {t.hint}</span>
+        {text.start}
+        <span className="font-normal text-muted-foreground">· {text.hint}</span>
       </Button>
       {state === "ended" && <p className="text-xs text-muted-foreground">{t.ended}</p>}
+      {refusal && (
+        <p role="alert" className="text-xs text-danger">
+          {refusal}
+        </p>
+      )}
       {state === "failed" && (
         <p role="alert" className="text-xs text-danger">
           {t.failed}

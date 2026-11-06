@@ -4701,6 +4701,106 @@ export type Database = {
         };
         Relationships: [];
       };
+      secretary_messages: {
+        Row: {
+          appointment_at: string | null;
+          artisan_id: string;
+          blocked_slot_id: string | null;
+          call_id: string;
+          caller_name: string;
+          caller_phone: string;
+          city: string | null;
+          created_at: string;
+          done_at: string | null;
+          id: string;
+          kind: string;
+          reason: string;
+          urgent: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          appointment_at?: string | null;
+          artisan_id: string;
+          blocked_slot_id?: string | null;
+          call_id: string;
+          caller_name: string;
+          caller_phone: string;
+          city?: string | null;
+          created_at?: string;
+          done_at?: string | null;
+          id?: string;
+          kind: string;
+          reason: string;
+          urgent?: boolean;
+        };
+        Update: {
+          appointment_at?: string | null;
+          artisan_id?: string;
+          blocked_slot_id?: string | null;
+          call_id?: string;
+          caller_name?: string;
+          caller_phone?: string;
+          city?: string | null;
+          created_at?: string;
+          done_at?: string | null;
+          id?: string;
+          kind?: string;
+          reason?: string;
+          urgent?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "secretary_messages_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "secretary_messages_blocked_slot_id_fkey";
+            columns: ["blocked_slot_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_blocked_slots";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      secretary_settings: {
+        Row: {
+          artisan_id: string;
+          can_book: boolean;
+          display_name: string | null;
+          instructions: string | null;
+          updated_at: string;
+          visit_minutes: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          can_book?: boolean;
+          display_name?: string | null;
+          instructions?: string | null;
+          updated_at?: string;
+          visit_minutes?: number;
+        };
+        Update: {
+          artisan_id?: string;
+          can_book?: boolean;
+          display_name?: string | null;
+          instructions?: string | null;
+          updated_at?: string;
+          visit_minutes?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "secretary_settings_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       signature_requests: {
         Row: {
           completed_at: string | null;
@@ -6727,6 +6827,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      save_secretary_settings: {
+        Args: {
+          p_can_book: boolean;
+          p_display_name: string;
+          p_instructions: string;
+          p_visit_minutes: number;
+        };
+        Returns: undefined;
+      };
+      secretary_message_done: { Args: { p_done: boolean; p_id: string }; Returns: undefined };
       send_chantier_requests: {
         Args: {
           p_callback_from: string;
@@ -6894,6 +7004,25 @@ export type Database = {
         Returns: string;
       };
       voice_requests_for_email: { Args: { p_email: string }; Returns: Json };
+      voice_secretary_agenda: {
+        Args: { p_artisan_id: string; p_from: string; p_to: string };
+        Returns: Json;
+      };
+      voice_secretary_context: { Args: { p_artisan_id: string }; Returns: Json };
+      voice_secretary_record: {
+        Args: {
+          p_artisan_id: string;
+          p_call_id: string;
+          p_caller_name: string;
+          p_caller_phone: string;
+          p_city?: string;
+          p_kind: string;
+          p_reason: string;
+          p_starts_at?: string;
+          p_urgent?: boolean;
+        };
+        Returns: string;
+      };
       voice_work_request_preview: {
         Args: { p_token: string };
         Returns: {
@@ -7055,7 +7184,8 @@ export type Database = {
         | "rdv_commercial"
         | "equipe_recap_camille"
         | "agents_minutes_80"
-        | "agents_minutes_epuisees";
+        | "agents_minutes_epuisees"
+        | "secretaire_message";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7385,6 +7515,7 @@ export const Constants = {
         "equipe_recap_camille",
         "agents_minutes_80",
         "agents_minutes_epuisees",
+        "secretaire_message",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

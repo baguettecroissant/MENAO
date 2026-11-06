@@ -19,6 +19,9 @@ export const VOICE_TOOLS = [
   "reserver_creneau",
   "preparer_demande_travaux",
   "envoyer_etat_demandes",
+  "secretaire_creneaux",
+  "secretaire_reserver",
+  "secretaire_message",
 ] as const;
 export type VoiceTool = (typeof VOICE_TOOLS)[number];
 
@@ -144,6 +147,48 @@ export function voiceToolDefinitions() {
           email: text("Adresse e-mail du compte MENAO, en minuscules, sans espace."),
         },
         required: ["email"],
+      },
+    },
+    {
+      name: "secretaire_creneaux",
+      description:
+        "Secrétaire d'un artisan : trouve les prochains créneaux libres dans son agenda pour un rendez-vous (visite ou devis sur place). Propose-les un par un, sans en inventer d'autres.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+    {
+      name: "secretaire_reserver",
+      description:
+        "Secrétaire d'un artisan : réserve le créneau choisi par le client dans l'agenda de l'artisan, après secretaire_creneaux. Demande d'abord son nom, son numéro et le motif, et relis-les.",
+      parameters: {
+        type: "object",
+        properties: {
+          creneau: text("Code exact du créneau choisi, tel que donné par secretaire_creneaux."),
+          nom: text("Nom du client (prénom et nom)."),
+          telephone: text("Numéro du client, en chiffres, par exemple 0612345678."),
+          motif: text("Objet du rendez-vous, en une phrase, avec les mots du client."),
+          commune: text("Commune des travaux, si elle a été donnée."),
+        },
+        required: ["creneau", "nom", "telephone", "motif"],
+      },
+    },
+    {
+      name: "secretaire_message",
+      description:
+        "Secrétaire d'un artisan : transmet un message à l'artisan (demande de devis, question, rappel souhaité, urgence). Demande le nom, le numéro et le motif, et relis-les avant d'appeler cet outil.",
+      parameters: {
+        type: "object",
+        properties: {
+          nom: text("Nom du client (prénom et nom)."),
+          telephone: text("Numéro du client, en chiffres, par exemple 0612345678."),
+          motif: text("Le message, en une ou deux phrases, avec les mots du client."),
+          commune: text("Commune, si elle a été donnée."),
+          moment: text("Meilleur moment pour rappeler, tel que dit."),
+          urgent: {
+            type: "boolean",
+            description: "Vrai seulement pour une urgence (fuite, panne, danger).",
+          },
+        },
+        required: ["nom", "telephone", "motif"],
       },
     },
   ];
@@ -576,4 +621,140 @@ export function receptionCallbackSpoken(status: ReceptionStatus, now: Date): str
         ? `demain à partir de ${spokenHour(next)}`
         : parisSlotSpoken(next).replace(" à ", " à partir de ");
   return `L'équipe est fermée pour le moment : elle rappelle ${when}.`;
+}
+
+// ---------------------------------------------------------------------------
+// Secrétaire dédiée de l'artisan (F-83, ADR 0232)
+// ---------------------------------------------------------------------------
+
+const SESSION_PATTERN =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.(\d{10,16})\.([A-Za-z0-9_-]{20,100})$/;
+
+async function hmacBase64Url(secret: string, data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(data)));
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
+ * Jeton d'un appel de la secrétaire : identifiant de l'artisan et échéance, signés avec le secret
+ * du serveur des outils. Il passe par les variables de l'appel Vapi ; les outils ne font
+ * confiance qu'à lui pour savoir pour quel artisan agir.
+ */
+export async function signVoiceSession(
+  secret: string,
+  artisanId: string,
+  expiresAt: number,
+): Promise<string> {
+  const payload = `${artisanId}.${Math.floor(expiresAt)}`;
+  return `${payload}.${await hmacBase64Url(secret, payload)}`;
+}
+
+/** Artisan d'un jeton valide et non expiré ; null sinon. */
+export async function verifyVoiceSession(
+  secret: string,
+  token: unknown,
+  now: Date,
+): Promise<string | null> {
+  if (!secret || typeof token !== "string") return null;
+  const match = SESSION_PATTERN.exec(token);
+  if (!match) return null;
+  const [, artisanId, expiresAt, signature] = match as unknown as [string, string, string, string];
+  if (Number(expiresAt) < now.getTime()) return null;
+  const expected = await hmacBase64Url(secret, `${artisanId}.${expiresAt}`);
+  return sameSecret(signature, expected) ? artisanId : null;
+}
+
+const SECRETARY_DAYS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+
+/** « lundi de 08:00 à 12:00 et de 13:30 à 17:30 ; mardi … », d'après les horaires de l'artisan. */
+export function secretaryHoursText(raw: unknown): string {
+  if (!Array.isArray(raw)) return "";
+  const ranges = raw.flatMap((item) => {
+    const r = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+    return typeof r.jour === "number" && typeof r.debut === "string" && typeof r.fin === "string"
+      ? [{ day: r.jour, start: r.debut, end: r.fin }]
+      : [];
+  });
+  return SECRETARY_DAYS.flatMap((name, index) => {
+    const day = ranges
+      .filter((r) => r.day === index + 1)
+      .sort((a, b) => a.start.localeCompare(b.start));
+    return day.length ? [`${name} ${day.map((r) => `de ${r.start} à ${r.end}`).join(" et ")}`] : [];
+  }).join(" ; ");
+}
+
+export type ArtisanHours = { weekday: number; start: string; end: string };
+
+/**
+ * Prochains créneaux libres de l'artisan pour sa secrétaire : ses horaires, hors absences et
+ * moments occupés, au moins deux heures plus tard, par pas de 30 minutes ; au plus un le matin et
+ * un l'après-midi. Sans horaires : aucun créneau (la secrétaire prend alors un message).
+ */
+export function nextArtisanSlots({
+  hours,
+  absences,
+  busy,
+  now,
+  durationMinutes,
+  count = 3,
+  horizonDays = 21,
+}: {
+  hours: readonly ArtisanHours[];
+  absences: readonly { startsOn: string; endsOn: string }[];
+  busy: readonly { start: Date; end: Date }[];
+  now: Date;
+  durationMinutes: number;
+  count?: number;
+  horizonDays?: number;
+}): Date[] {
+  const earliest = now.getTime() + 2 * 60 * 60_000;
+  const duration = durationMinutes * 60_000;
+  const today = parisDate(now);
+  const minutes = (time: string) => {
+    const [h, m] = time.split(":").map(Number) as [number, number];
+    return h * 60 + m;
+  };
+  const clock = (total: number) =>
+    `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  const slots: Date[] = [];
+  for (let i = 0; i <= horizonDays && slots.length < count; i++) {
+    const day = addDays(today, i);
+    if (absences.some((a) => day >= a.startsOn && day <= a.endsOn)) continue;
+    const jsDay = new Date(`${day}T12:00:00Z`).getUTCDay();
+    const weekday = jsDay === 0 ? 7 : jsDay;
+    const starts = hours
+      .filter((h) => h.weekday === weekday)
+      .flatMap((h) => {
+        const list: number[] = [];
+        for (let m = minutes(h.start); m + durationMinutes <= minutes(h.end); m += 30) list.push(m);
+        return list;
+      })
+      .sort((a, b) => a - b);
+    for (const [from, to] of [
+      [0, 12 * 60],
+      [12 * 60, 24 * 60],
+    ] as const) {
+      if (slots.length >= count) break;
+      for (const m of starts) {
+        if (m < from || m >= to) continue;
+        const at = parisInstant(day, clock(m));
+        const end = at.getTime() + duration;
+        if (at.getTime() < earliest) continue;
+        if (busy.some((b) => b.start.getTime() < end && b.end.getTime() > at.getTime())) continue;
+        slots.push(at);
+        break;
+      }
+    }
+  }
+  return slots;
 }

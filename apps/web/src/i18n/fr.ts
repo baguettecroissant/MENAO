@@ -6011,6 +6011,49 @@ export const fr = {
         },
       },
       plans: {
+        // Secrétaire dédiée (F-83, ADR 0232).
+        secretary: {
+          title: "Votre secrétaire",
+          intro:
+            "Elle répond à vos clients au nom de votre entreprise quand vous êtes sur un chantier : rendez-vous dans votre agenda sur vos créneaux libres, ou message transmis tout de suite. Elle dit qu'elle est une intelligence artificielle.",
+          testTitle: "L'essayer",
+          testText:
+            "Appelez-la depuis cette page, comme le ferait un client. Les minutes de l'essai comptent dans votre formule.",
+          testStart: "Appeler ma secrétaire",
+          testHint: "Appel d'essai",
+          live: "En ligne avec votre secrétaire",
+          speaking: "Votre secrétaire parle…",
+          errors: {
+            non_inclus: "La secrétaire est incluse dans les formules Premium et Entreprise.",
+            generic: "L'appel n'a pas pu être préparé. Réessayez dans un instant.",
+          } as Record<string, string>,
+          settingsTitle: "Ses réglages",
+          displayName: "Nom annoncé au téléphone",
+          displayNameHint: (fallback: string) => `Laissé vide : « ${fallback} ».`,
+          canBook: "Elle peut prendre des rendez-vous dans mon agenda",
+          visitMinutes: "Durée d'un rendez-vous",
+          visitChoices: {
+            30: "30 minutes",
+            60: "1 heure",
+            90: "1 h 30",
+            120: "2 heures",
+          } as Record<number, string>,
+          instructions: "Consignes à donner aux clients",
+          instructionsHint: "Par exemple : pas de dépannage le week-end, devis gratuit.",
+          save: "Enregistrer",
+          saved: "Réglages enregistrés.",
+          noHours:
+            "Renseignez vos horaires dans l'agenda : sans eux, elle prend des messages mais pas de rendez-vous.",
+          messagesTitle: "Messages et rendez-vous",
+          messagesEmpty: "Aucun message pour l'instant.",
+          rdv: (when: string) => `Rendez-vous le ${when}`,
+          message: "Message",
+          urgent: "Urgent",
+          call: "Appeler",
+          markDone: "Marquer comme traité",
+          markTodo: "Remettre à traiter",
+          done: "Traité",
+        },
         // Agents IA de la formule (F-82, ADR 0231).
         agents: {
           title: "Vos agents IA",
