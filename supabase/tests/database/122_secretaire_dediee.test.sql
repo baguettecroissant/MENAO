@@ -32,6 +32,20 @@ select is((public.voice_secretary_context('c1221000-0000-4000-8000-000000000001'
   true, 'droits de sa formule');
 reset role;
 
+-- Zone par départements (ADR 0213), puis toute la France.
+update public.artisans set zone_mode = 'departements' where id = 'c1221000-0000-4000-8000-000000000002';
+insert into public.artisan_territories (artisan_id, departement_code) values
+  ('c1221000-0000-4000-8000-000000000002', '06'), ('c1221000-0000-4000-8000-000000000002', '83');
+set local role service_role;
+select is(public.voice_secretary_context('c1221000-0000-4000-8000-000000000002') ->> 'zone',
+  'dans les départements suivants : Alpes-Maritimes, Var', 'zone : ses départements');
+reset role;
+update public.artisans set zone_mode = 'france' where id = 'c1221000-0000-4000-8000-000000000002';
+set local role service_role;
+select is(public.voice_secretary_context('c1221000-0000-4000-8000-000000000002') ->> 'zone',
+  'dans toute la France', 'zone : toute la France');
+reset role;
+
 -- ---------- Réglages par l'artisan ----------
 set local role authenticated;
 select set_config('request.jwt.claims', jsonb_build_object('sub', 'c1220000-0000-4000-8000-000000000001',
