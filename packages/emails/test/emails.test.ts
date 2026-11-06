@@ -1180,3 +1180,35 @@ describe("minutes de voix des agents IA (ADR 0231)", () => {
     expect(c.paragraphs[2]).toContain("noter le nom et le numéro");
   });
 });
+
+describe("messages de la secrétaire dédiée (ADR 0232)", () => {
+  const ctx = { siteUrl: "https://menao.example", firstName: "Paul" };
+
+  it("rendez-vous : date, prénom et commune, jamais le numéro", () => {
+    const c = notificationContent(
+      "secretaire_message",
+      {
+        type: "rendez_vous",
+        prenom: "Léa",
+        commune: "Antibes",
+        motif: "Fuite sous l'évier",
+        rendez_vous: "2026-11-10T09:00:00Z",
+      },
+      ctx,
+    );
+    expect(c.title).toBe("Nouveau rendez-vous");
+    expect(c.paragraphs[1]).toContain("avec Léa, Antibes");
+    expect(c.quote).toBe("Fuite sous l'évier");
+    expect(c.cta.url).toBe("https://menao.example/pro/onboarding/formule#secretaire");
+  });
+
+  it("message urgent", () => {
+    const c = notificationContent(
+      "secretaire_message",
+      { type: "message", prenom: "Marc", motif: "Plus d'eau chaude", urgent: true },
+      ctx,
+    );
+    expect(c.subject).toBe("Urgent : nouveau message de Marc");
+    expect(c.title).toBe("Message urgent");
+  });
+});

@@ -9,12 +9,16 @@
 //   anonyme, analyse par analyze-need, lien à usage unique envoyé par e-mail ; rien ne part chez
 //   les artisans avant que le particulier envoie lui-même), envoyer l'état des demandes d'un
 //   particulier à l'adresse de son compte (ADR 0229). Après une demande de rappel, Camille dit
-//   quand l'équipe rappelle, d'après ses horaires d'accueil (ADR 0230). Réponse toujours en HTTP 200.
+//   quand l'équipe rappelle, d'après ses horaires d'accueil (ADR 0230). Secrétaire dédiée d'un
+//   artisan (ADR 0232) : créneaux libres de son agenda, rendez-vous, message ; l'artisan vient du
+//   jeton signé passé dans les variables de l'appel, jamais des arguments. Minutes comptées à la
+//   fin de l'appel. Réponse toujours en HTTP 200.
 // - « end-of-call-report » : durée de l'appel dans ai_runs (jamais la transcription).
 // Aucune donnée personnelle dans les journaux.
 import {
   COMMERCIAL_SLOT_HORIZON_DAYS,
   isCommercialSlot,
+  nextArtisanSlots,
   nextCommercialSlots,
   parisSlotLabel,
   parisSlotSpoken,
@@ -25,6 +29,7 @@ import {
   slotCode,
   spokenEmail,
   spokenPhoneToE164,
+  verifyVoiceSession,
   voiceCallSeconds,
   voicePreparedRequestPath,
   voiceText,
@@ -601,8 +606,180 @@ async function prepareWorkRequest(admin: Admin, call: VoiceToolCall): Promise<To
   };
 }
 
-async function runTool(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
+// ---------------------------------------------------------------------------
+// Secrétaire dédiée de l'artisan (ADR 0232)
+// ---------------------------------------------------------------------------
+
+type VapiMessage = {
+  call?: {
+    id?: unknown;
+    assistantOverrides?: { variableValues?: Record<string, unknown> };
+  };
+  assistant?: { variableValues?: Record<string, unknown> };
+};
+
+/** Artisan de l'appel, d'après le jeton signé des variables de l'appel (voice-session). */
+async function secretaryArtisan(message: unknown): Promise<string | null> {
+  const m = (message ?? {}) as VapiMessage;
+  const token =
+    m.call?.assistantOverrides?.variableValues?.jeton ?? m.assistant?.variableValues?.jeton;
+  return await verifyVoiceSession(env("VAPI_SERVER_SECRET"), token, new Date());
+}
+
+const callId = (message: unknown) => {
+  const id = (message as VapiMessage | null)?.call?.id;
+  return typeof id === "string" && id ? id.slice(0, 100) : null;
+};
+
+const NO_SESSION =
+  "Session expirée : prends seulement un message en notant le nom, le numéro et le motif, puis dis qu'il sera transmis.";
+
+type SecretaryContext = {
+  rendez_vous?: boolean;
+  duree_visite?: number;
+  droits?: { secondes_restantes?: number };
+};
+
+async function secretaryContext(admin: Admin, artisanId: string): Promise<SecretaryContext | null> {
+  const { data, error } = await admin.rpc("voice_secretary_context", { p_artisan_id: artisanId });
+  if (error || !data || typeof data !== "object") return null;
+  return data as SecretaryContext;
+}
+
+async function secretarySlots(
+  admin: Admin,
+  call: VoiceToolCall,
+  artisanId: string | null,
+): Promise<ToolResult> {
+  if (!artisanId) return { toolCallId: call.id, error: NO_SESSION };
+  const context = await secretaryContext(admin, artisanId);
+  if (!context) return { toolCallId: call.id, error: "Agenda indisponible : prends un message." };
+  if (context.rendez_vous === false) {
+    return {
+      toolCallId: call.id,
+      result: "L'artisan ne prend pas de rendez-vous par sa secrétaire : prends un message.",
+    };
+  }
+  if ((context.droits?.secondes_restantes ?? 0) <= 0) {
+    return { toolCallId: call.id, result: "Prends seulement un message, sans rendez-vous." };
+  }
+  const now = new Date();
+  const { data, error } = await admin.rpc("voice_secretary_agenda", {
+    p_artisan_id: artisanId,
+    p_from: now.toISOString(),
+    p_to: new Date(now.getTime() + 22 * 86_400_000).toISOString(),
+  });
+  if (error || !data || typeof data !== "object") {
+    console.error("voice-assistant : agenda de l'artisan illisible", error?.code ?? "");
+    return { toolCallId: call.id, error: "Agenda indisponible : prends un message." };
+  }
+  const agenda = data as {
+    horaires?: { weekday: number; start: string; end: string }[];
+    absences?: { startsOn: string; endsOn: string }[];
+    occupe?: { debut: string; fin: string }[];
+  };
+  const slots = nextArtisanSlots({
+    hours: agenda.horaires ?? [],
+    absences: agenda.absences ?? [],
+    busy: (agenda.occupe ?? []).map((b) => ({ start: new Date(b.debut), end: new Date(b.fin) })),
+    now,
+    durationMinutes: context.duree_visite ?? 60,
+  });
+  if (slots.length === 0) {
+    return {
+      toolCallId: call.id,
+      result: "Aucun créneau libre dans les trois prochaines semaines : prends un message.",
+    };
+  }
+  return {
+    toolCallId: call.id,
+    result: `Créneaux libres (heure de Paris), à proposer un par un : ${slots
+      .map((at) => `${parisSlotSpoken(at)} (code ${slotCode(at)})`)
+      .join(
+        " ; ",
+      )}. Pour réserver, appelle secretaire_reserver avec le code exact du créneau choisi.`,
+  };
+}
+
+async function secretaryRecord(
+  admin: Admin,
+  call: VoiceToolCall,
+  artisanId: string | null,
+  id: string | null,
+  kind: "message" | "rendez_vous",
+): Promise<ToolResult> {
+  if (!artisanId || !id) return { toolCallId: call.id, error: NO_SESSION };
+  const phone = spokenPhoneToE164(call.args.telephone);
+  const name = voiceText(call.args.nom, 80);
+  const reason = voiceText(call.args.motif, 400);
+  if (!phone)
+    return { toolCallId: call.id, error: "Numéro invalide : redemande les dix chiffres." };
+  if (!name || !reason) return { toolCallId: call.id, error: "Il manque le nom ou le motif." };
+  const at = kind === "rendez_vous" ? parseSlotCode(call.args.creneau) : null;
+  if (kind === "rendez_vous" && !at) {
+    return {
+      toolCallId: call.id,
+      error: "Créneau inconnu : rappelle secretaire_creneaux et utilise un code donné.",
+    };
+  }
+  if (kind === "rendez_vous") {
+    const context = await secretaryContext(admin, artisanId);
+    if ((context?.droits?.secondes_restantes ?? 0) <= 0) {
+      return { toolCallId: call.id, error: "Prends seulement un message, sans rendez-vous." };
+    }
+  }
+  const moment = voiceText(call.args.moment, 100);
+  const { error } = await admin.rpc("voice_secretary_record", {
+    p_artisan_id: artisanId,
+    p_call_id: id,
+    p_kind: kind,
+    p_caller_name: name,
+    p_caller_phone: phone,
+    p_reason: moment ? `${reason} (rappel souhaité : ${moment})` : reason,
+    p_city: voiceText(call.args.commune, 100) ?? undefined,
+    p_urgent: call.args.urgent === true,
+    p_starts_at: at ? at.toISOString() : undefined,
+  });
+  if (error) {
+    if (error.code === "22023") {
+      return {
+        toolCallId: call.id,
+        error: /Créneau déjà pris/.test(error.message)
+          ? "Ce créneau vient d'être pris : rappelle secretaire_creneaux pour en proposer d'autres."
+          : `${error.message} Prends un message à la place.`,
+      };
+    }
+    console.error("voice-assistant : message de la secrétaire non enregistré", error.code);
+    return {
+      toolCallId: call.id,
+      error: "L'enregistrement a échoué. Excuse-toi et propose de rappeler.",
+    };
+  }
+  return {
+    toolCallId: call.id,
+    result:
+      kind === "rendez_vous"
+        ? `Rendez-vous réservé le ${at ? parisSlotSpoken(at) : ""}. L'artisan est prévenu. Résume-le au client.`
+        : "Message transmis : l'artisan le reçoit tout de suite sur son téléphone. Dis au client qu'il sera rappelé, sans promettre d'heure.",
+  };
+}
+
+async function runTool(
+  admin: Admin,
+  call: VoiceToolCall,
+  message: unknown = null,
+): Promise<ToolResult> {
   try {
+    if (call.name.startsWith("secretaire_")) {
+      const artisanId = await secretaryArtisan(message);
+      if (call.name === "secretaire_creneaux") return await secretarySlots(admin, call, artisanId);
+      if (call.name === "secretaire_reserver") {
+        return await secretaryRecord(admin, call, artisanId, callId(message), "rendez_vous");
+      }
+      if (call.name === "secretaire_message") {
+        return await secretaryRecord(admin, call, artisanId, callId(message), "message");
+      }
+    }
     if (call.name === "envoyer_lien_inscription") return await sendSignupLink(admin, call);
     if (call.name === "envoyer_etat_dossier") return await sendDossier(admin, call);
     if (call.name === "demander_rappel") return await requestCallback(admin, call);
@@ -633,11 +810,23 @@ Deno.serve(async (req) => {
 
   if (message?.type === "tool-calls") {
     const calls = parseVoiceToolCalls(message);
-    const results = await Promise.all(calls.map((call) => runTool(admin, call)));
+    const results = await Promise.all(calls.map((call) => runTool(admin, call, message)));
     return json({ results });
   }
 
   if (message?.type === "end-of-call-report") {
+    // Secrétaire dédiée (ADR 0232) : minutes de l'artisan, une seule fois par appel.
+    const artisanId = await secretaryArtisan(message);
+    const id = callId(message);
+    if (artisanId && id) {
+      const { error } = await admin.rpc("voice_record_usage", {
+        p_artisan_id: artisanId,
+        p_call_id: id,
+        p_seconds: Math.round(voiceCallSeconds(message) ?? 0),
+        p_agent: "secretaire",
+      });
+      if (error) console.error("voice-assistant : minutes non comptées", error.code);
+    }
     const m = message as { call?: { assistant?: { model?: { model?: unknown } } } };
     const model = m.call?.assistant?.model?.model;
     await logAiRuns(admin, [

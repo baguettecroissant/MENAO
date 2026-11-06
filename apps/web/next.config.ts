@@ -20,7 +20,9 @@ const cspOptions = {
   // Secrétaire vocale (ADR 0225) : origines de Vapi et Daily seulement si elle est configurée.
   voiceCalls: Boolean(
     process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY &&
-    (process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || process.env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID),
+    (process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID ||
+      process.env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID ||
+      process.env.NEXT_PUBLIC_VAPI_SECRETARY_ASSISTANT_ID),
   ),
 };
 const csp = contentSecurityPolicy(cspOptions);
