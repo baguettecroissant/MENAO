@@ -39,12 +39,13 @@ insert into public.chantier_events (chantier_id, event, from_status, to_status, 
 select set_config('menao.transition_chantier', '', true);
 
 insert into public.quotes (id, chantier_id, artisan_id, version, status, numero, total_ht_cents, total_tva_cents,
-  total_ttc_cents, sent_at, valid_until, start_date, duration_days, payment_schedule, document, signed_at)
+  total_ttc_cents, sent_at, valid_until, start_date, duration_days, payment_schedule, document, signed_at,
+  signed_pdf_path)
 select ('c1265000-0000-4000-8000-00000000000' || n)::uuid, ('c1264000-0000-4000-8000-00000000000' || n)::uuid,
   'c1261000-0000-4000-8000-000000000001', 1, 'signe', 'DEVIS-2026-012' || n, 100000, 0, 100000,
   now() - interval '12 days', current_date + 20, current_date + 30, 5,
   '[{"percent":30,"trigger":"signature","amount_cents":30000},{"percent":70,"trigger":"reception","amount_cents":70000}]',
-  '{}', now() - interval '10 days'
+  '{}', now() - interval '10 days', 'devis-signes/c126/devis-' || n || '.pdf'
 from generate_series(1, 3) n;
 
 insert into public.payments (quote_id, chantier_id, artisan_id, kind, amount_cents, status, stripe_account_id, paid_at, created_at) values
