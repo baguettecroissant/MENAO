@@ -83,6 +83,8 @@ export const NOTIFICATION_TYPES = [
   "secretaire_message",
   // Synthèse du mois de l'agent comptable avancé (ADR 0237).
   "synthese_mois",
+  // Relance d'un paiement dû, au nom de l'artisan (ADR 0238).
+  "paiement_relance",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -1106,6 +1108,28 @@ export function notificationContent(
           label: recompense ? "Réclamer ma récompense" : "Voir mon grade",
           url: link("/pro/grade"),
         },
+      };
+    }
+    case "paiement_relance": {
+      // Agent comptable avancé (ADR 0238) : rappel d'un acompte ou d'un solde dû, envoyé au nom de
+      // l'artisan (d'un toucher ou à J+7, J+15, J+30). Ton neutre, sans pénalité ; le paiement
+      // va directement à l'artisan (règle 12).
+      // TODO(legal) : contenu et fréquence des relances à un particulier, à faire valider.
+      const solde = text(data, "tranche") === "solde";
+      const what = solde ? "le solde" : "l'acompte";
+      const montant = amount(data, "montant");
+      return {
+        subject: `Rappel : ${what} de votre chantier ${quoted(titre)}`,
+        preview: `${artisan} vous rappelle ${what}${montant ? ` de ${montant}` : ""} à régler.`,
+        title: solde ? "Solde à régler" : "Acompte à régler",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} vous rappelle que ${what}${montant ? ` de ${montant}` : ""} pour ${quoted(titre)} reste à régler.`,
+          `Le paiement se fait en ligne, de façon sécurisée, directement sur le compte de ${artisan}.`,
+          "Si vous avez déjà réglé, merci de ne pas tenir compte de ce message.",
+        ],
+        quote: null,
+        cta: myChantier(solde ? "Régler le solde" : "Régler l'acompte"),
       };
     }
     case "acompte_relance":

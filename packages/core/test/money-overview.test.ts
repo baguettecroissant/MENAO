@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canRemindNow,
   daysSince,
   moneyMonthLabel,
   openItemLevel,
@@ -28,6 +29,8 @@ describe("suivi de l'argent (ADR 0237)", () => {
           montant_cents: 30000,
           depuis: "2026-10-27T10:00:00Z",
           echec: true,
+          derniere_relance: "2026-11-04T09:00:00Z",
+          relances: 2,
         },
         {
           chantier_id: "c2",
@@ -49,6 +52,9 @@ describe("suivi de l'argent (ADR 0237)", () => {
       ],
     });
     expect(overview?.included).toBe(true);
+    expect(overview?.autoReminders).toBe(false);
+    expect(overview?.open[0]).toMatchObject({ lastReminder: "2026-11-04T09:00:00Z", reminders: 2 });
+    expect(overview?.open[1]).toMatchObject({ lastReminder: null, reminders: 0 });
     expect(overview?.current.collectedCents).toBe(30000);
     expect(overview?.previous).toEqual({
       month: "2026-10",
@@ -82,5 +88,12 @@ describe("suivi de l'argent (ADR 0237)", () => {
     expect(moneyMonthLabel("2026-11")).toBe("novembre");
     expect(moneyMonthLabel("2026-01", true)).toBe("janvier 2026");
     expect(moneyMonthLabel("x")).toBe("");
+  });
+
+  it("relance possible tous les 3 jours", () => {
+    const now = new Date("2026-11-06T12:00:00Z");
+    expect(canRemindNow(null, now)).toBe(true);
+    expect(canRemindNow("2026-11-04T12:00:00Z", now)).toBe(false);
+    expect(canRemindNow("2026-11-03T12:00:00Z", now)).toBe(true);
   });
 });

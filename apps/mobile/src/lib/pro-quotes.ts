@@ -320,3 +320,23 @@ export async function loadMoneyOverview(): Promise<MoneyOverview | null> {
   const { data, error } = await supabase.rpc("my_money_overview");
   return error ? null : parseMoneyOverview(data);
 }
+
+/** « Relancer le client » (ADR 0238) : message d'erreur, ou null si la relance est partie. */
+export async function sendPaymentReminder(
+  chantierId: string,
+  kind: "acompte" | "solde",
+): Promise<string | null> {
+  const { error } = await supabase.rpc("artisan_send_payment_reminder", {
+    p_chantier_id: chantierId,
+    p_kind: kind,
+  });
+  if (!error) return null;
+  return error.code === "22023" || error.code === "42501" ? error.message : fr.errors.generic;
+}
+
+/** « Relances automatiques » (ADR 0238) : message d'erreur, ou null. */
+export async function setAutoReminders(enabled: boolean): Promise<string | null> {
+  const { error } = await supabase.rpc("set_payment_reminders_auto", { p_enabled: enabled });
+  if (!error) return null;
+  return error.code === "42501" ? error.message : fr.errors.generic;
+}

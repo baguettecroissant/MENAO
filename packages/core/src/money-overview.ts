@@ -24,6 +24,9 @@ export type MoneyOpenItem = {
   since: string | null;
   /** Le dernier paiement de cette tranche a échoué. */
   failed: boolean;
+  /** Dernière relance envoyée au client (ADR 0238), et leur nombre. */
+  lastReminder: string | null;
+  reminders: number;
 };
 
 export type MoneyPaidItem = {
@@ -37,6 +40,8 @@ export type MoneyPaidItem = {
 export type MoneyOverview = {
   /** La formule comprend l'agent comptable avancé (Premium et Entreprise). */
   included: boolean;
+  /** Relances automatiques à J+7, J+15 et J+30 (désactivées par défaut, ADR 0238). */
+  autoReminders: boolean;
   current: MoneyMonth;
   previous: MoneyMonth;
   open: MoneyOpenItem[];
@@ -70,6 +75,7 @@ export function parseMoneyOverview(raw: unknown): MoneyOverview | null {
   const list = (value: unknown) => (Array.isArray(value) ? value.map(record) : []);
   return {
     included: r.inclus === true,
+    autoReminders: r.relances_auto === true,
     current: month(r.mois),
     previous: month(r.mois_precedent),
     open: list(r.a_encaisser)
@@ -81,6 +87,8 @@ export function parseMoneyOverview(raw: unknown): MoneyOverview | null {
         amountCents: cents(item.montant_cents),
         since: str(item.depuis) || null,
         failed: item.echec === true,
+        lastReminder: str(item.derniere_relance) || null,
+        reminders: cents(item.relances),
       })),
     withoutInvoice: list(r.sans_facture)
       .filter((item) => str(item.chantier_id))
@@ -126,4 +134,14 @@ export function moneyMonthLabel(code: string, withYear = false): string {
     ...(withYear ? { year: "numeric" } : {}),
     timeZone: "UTC",
   }).format(date);
+}
+
+/** Délai minimal entre deux relances d'un même paiement (mêmes règles en base). */
+export const MONEY_REMINDER_GAP_DAYS = 3;
+
+/** Le client peut être relancé maintenant : aucune relance de ce paiement depuis 3 jours. */
+export function canRemindNow(lastReminder: string | null, now: Date): boolean {
+  if (!lastReminder) return true;
+  const at = Date.parse(lastReminder);
+  return Number.isNaN(at) || now.getTime() - at >= MONEY_REMINDER_GAP_DAYS * 86_400_000;
 }

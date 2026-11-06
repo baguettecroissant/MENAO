@@ -38,8 +38,8 @@ export function AiAgentsCard({
   const rows: { label: string; value: string; on: boolean }[] = [
     { label: t.items.dictation, value: t.included, on: true },
     { label: t.items.expenses, value: t.included, on: true },
-    // Secrétaire dédiée (ADR 0232) et devis avec Camille (ADR 0234) disponibles : les agents
-    // avancés arrivent.
+    // Secrétaire dédiée (ADR 0232), devis avec Camille (ADR 0234) et agent comptable avancé
+    // (ADR 0237, 0238) disponibles.
     { label: t.items.secretary, value: a.secretary ? t.included : t.upgrade, on: a.secretary },
     {
       label: t.items.conversationalQuote,
@@ -48,7 +48,7 @@ export function AiAgentsCard({
     },
     {
       label: t.items.accounting,
-      value: a.advancedAccounting ? t.soon : t.upgrade,
+      value: a.advancedAccounting ? t.included : t.upgrade,
       on: a.advancedAccounting,
     },
     {

@@ -4509,6 +4509,20 @@ export const fr = {
       withoutInvoiceHint:
         "La facture n'a pas pu être émise : écrivez à l'équipe MENAO pour la régénérer.",
       help: "Aide et support",
+      // Relance des impayés (ADR 0238).
+      remind: "Relancer",
+      reminding: "Envoi…",
+      reminded: "Relance envoyée au client.",
+      lastReminder: (date: string, n: number) =>
+        `Relancé le ${date}${n > 1 ? ` · ${n} relances` : ""}`,
+      remindTooSoon: "Relancé il y a moins de 3 jours",
+      remindHint: "Le client reçoit un e-mail courtois, en votre nom, avec le lien pour payer.",
+      autoTitle: "Relances automatiques",
+      autoText:
+        "À J+7, J+15 et J+30 après l'échéance, MENAO envoie un rappel courtois à votre client, en votre nom, avec le lien pour payer.",
+      autoLabel: "Activer les relances automatiques",
+      autoOn: "Relances automatiques activées.",
+      autoOff: "Relances automatiques désactivées.",
     },
     // Aide et support de l'espace artisan, avec l'assistant (F-86, ADR 0236).
     helpCenter: {

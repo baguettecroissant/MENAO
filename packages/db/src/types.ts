@@ -3313,6 +3313,79 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_reminder_settings: {
+        Row: {
+          artisan_id: string;
+          auto: boolean;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          auto?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          auto?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_reminder_settings_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_reminders: {
+        Row: {
+          artisan_id: string;
+          chantier_id: string;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          mode: string;
+          sent_at: string;
+          step: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          chantier_id: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          mode: string;
+          sent_at?: string;
+          step?: number | null;
+        };
+        Update: {
+          artisan_id?: string;
+          chantier_id?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          mode?: string;
+          sent_at?: string;
+          step?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_reminders_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_reminders_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount_cents: number;
@@ -6246,6 +6319,10 @@ export type Database = {
         Returns: string;
       };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
+      artisan_send_payment_reminder: {
+        Args: { p_chantier_id: string; p_kind: Database["public"]["Enums"]["payment_kind"] };
+        Returns: string;
+      };
       artisan_send_quote: {
         Args: {
           p_deposit_percent: number;
@@ -7014,6 +7091,7 @@ export type Database = {
         Args: { p_activite: boolean; p_rappels: boolean };
         Returns: undefined;
       };
+      set_payment_reminders_auto: { Args: { p_enabled: boolean }; Returns: undefined };
       set_project_lot_trades: {
         Args: { p_project_id: string; p_trade_codes: string[] };
         Returns: undefined;
@@ -7314,7 +7392,8 @@ export type Database = {
         | "agents_minutes_80"
         | "agents_minutes_epuisees"
         | "secretaire_message"
-        | "synthese_mois";
+        | "synthese_mois"
+        | "paiement_relance";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7646,6 +7725,7 @@ export const Constants = {
         "agents_minutes_epuisees",
         "secretaire_message",
         "synthese_mois",
+        "paiement_relance",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
