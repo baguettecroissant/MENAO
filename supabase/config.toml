@@ -508,6 +508,10 @@ verify_jwt = false
 [functions.pro-assistant]
 verify_jwt = false
 
+# Assistant de l'espace artisan (ADR 0236) : artisan connecté seulement.
+[functions.artisan-assistant]
+verify_jwt = true
+
 # Assistant des particuliers (ADR 0220) : visiteur sans compte ; limites par adresse IP et
 # globale dans la fonction.
 [functions.client-assistant]

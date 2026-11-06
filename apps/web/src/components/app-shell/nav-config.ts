@@ -282,7 +282,7 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
     { href: "/compte", label: fr.pro.hub.rows.identity },
     { href: "/notifications", label: fr.clientApp.notifications },
     { href: "/echanges", label: fr.exchanges.title },
-    { href: "/contact", label: fr.appShell.help },
+    { href: "/pro/aide", label: fr.appShell.help },
   ],
   admin: [],
   commercial: [

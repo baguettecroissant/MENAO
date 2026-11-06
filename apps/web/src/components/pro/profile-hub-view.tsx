@@ -89,7 +89,7 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
     rows: [
       { key: "identity", icon: IdCard, href: "/compte" },
       { key: "notifications", icon: Bell, href: "/notifications" },
-      { key: "help", icon: LifeBuoy, href: "/contact" },
+      { key: "help", icon: LifeBuoy, href: "/pro/aide" },
       // Données d'exemple à tout moment (ADR 0190), aussi après la validation ou le masquage.
       { key: "examples", icon: Eye, href: "/pro/decouvrir" },
     ],

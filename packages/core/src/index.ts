@@ -81,3 +81,4 @@ export * from "./registry";
 export * from "./presentation-draft";
 export * from "./voice-assistant";
 export * from "./ai-agents";
+export * from "./artisan-assistant";

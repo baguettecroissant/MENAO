@@ -116,7 +116,7 @@ export function SidebarContent({
       <div className="flex shrink-0 flex-col gap-0.5 border-t border-border p-2.5">
         {space !== "admin" && (
           <Link
-            href="/contact"
+            href={(space === "pro" ? "/pro/aide" : "/contact") as Route}
             title={collapsed ? t.help : undefined}
             className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${collapsed ? "justify-center px-0" : ""}`}
           >

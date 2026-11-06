@@ -8,9 +8,11 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+import { ArtisanAssistant } from "@/components/pro/artisan-assistant";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { haptic } from "@/lib/haptics";
+import { useSession } from "@/lib/session";
 import { Body, Button, Card, Screen, Tappable, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
@@ -18,10 +20,12 @@ const t = fr.help;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * « Aide et contact » de l'artisan (ADR 0129) : questions fréquentes dépliables et contact par
- * e-mail, sans lien vers le site (CLAUDE.md règle 10).
+ * « Aide et contact » de l'artisan (ADR 0129) : l'assistant de l'espace artisan (ADR 0236), les
+ * questions fréquentes dépliables et le contact par e-mail, sans lien vers le site (CLAUDE.md
+ * règle 10).
  */
 export default function Aide() {
+  const { role } = useSession();
   async function write() {
     const url = `mailto:${t.email}?subject=${encodeURIComponent(t.subject)}`;
     const ok = await Linking.canOpenURL(url).catch(() => false);
@@ -32,6 +36,7 @@ export default function Aide() {
   return (
     <Screen header={<TopBar />}>
       <Title>{t.title}</Title>
+      {role === "artisan" ? <ArtisanAssistant onWrite={() => void write()} /> : null}
       <Body muted>{t.lead}</Body>
       <View style={styles.list}>
         {t.faq.map((item) => (

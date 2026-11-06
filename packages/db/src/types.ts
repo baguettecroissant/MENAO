@@ -6568,6 +6568,7 @@ export type Database = {
           lon: number;
         }[];
       };
+      my_assistant_context: { Args: Record<PropertyKey, never>; Returns: Json };
       my_charter_score: {
         Args: Record<PropertyKey, never>;
         Returns: {

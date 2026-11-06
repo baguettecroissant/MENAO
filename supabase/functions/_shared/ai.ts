@@ -119,7 +119,8 @@ export type AiRun = {
     | "pro-assistant"
     | "client-assistant"
     | "commercial-copilot"
-    | "voice-assistant";
+    | "voice-assistant"
+    | "artisan-assistant";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;
