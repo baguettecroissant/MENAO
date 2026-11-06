@@ -38,10 +38,30 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
   const params = await searchParams;
   const period = parseAiPeriod(params.periode);
   const { supabase } = await requireAdmin();
-  const [summary, { data: voiceUsage, error: voiceError }] = await Promise.all([
-    getAiSummary(supabase, period),
-    supabase.rpc("admin_voice_usage"),
-  ]);
+  // Recharges du mois en cours, heure de Paris (ADR 0233).
+  const monthStart = new Date(
+    `${new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date()).slice(0, 7)}-01T00:00:00+01:00`,
+  ).toISOString();
+  const [summary, { data: voiceUsage, error: voiceError }, { data: topUpRows }] = await Promise.all(
+    [
+      getAiSummary(supabase, period),
+      supabase.rpc("admin_voice_usage"),
+      supabase
+        .from("voice_credits")
+        .select("seconds, amount_ht_cents")
+        .eq("reason", "recharge")
+        .gte("created_at", monthStart),
+    ],
+  );
+  const topUps = (topUpRows ?? []).reduce(
+    (acc, row) => ({
+      count: acc.count + 1,
+      cents: acc.cents + (row.amount_ht_cents ?? 0),
+      minutes: acc.minutes + Math.floor(row.seconds / 60),
+    }),
+    { count: 0, cents: 0, minutes: 0 },
+  );
+  const tu = t.topUps;
   const v = t.voice;
   const euros = (cents: number) =>
     (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
@@ -319,6 +339,24 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
           </Card>
         </>
       )}
+      {/* Recharges de minutes vendues ce mois-ci (ADR 0233). */}
+      <Card className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">{tu.title}</h2>
+        {topUps.count === 0 ? (
+          <p className="text-sm text-muted-foreground">{tu.empty}</p>
+        ) : (
+          <SummaryTiles label={tu.title}>
+            <SummaryTile label={tu.sold} value={count(topUps.count)} />
+            <SummaryTile label={tu.revenue} value={euros(topUps.cents)} />
+            <SummaryTile label={tu.minutes} value={count(topUps.minutes)} />
+            <SummaryTile
+              label={tu.margin}
+              value={euros(topUps.cents - topUps.minutes * VOICE_COST_CENTS_PER_MINUTE)}
+              hint={tu.marginHint}
+            />
+          </SummaryTiles>
+        )}
+      </Card>
       {/* Minutes de voix des agents IA des artisans (ADR 0231), toujours sur le mois en cours. */}
       <Card className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">

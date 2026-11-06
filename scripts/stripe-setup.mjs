@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Mise en place Stripe de MENAO (F-15), idempotente. Aucune dépendance.
 // Lit les formules dans Supabase (table plans), puis crée ou met à jour dans Stripe :
-// produits + prix HT au mois et à l'année (lookup_key, ADR 0200), taux de TVA 20 %, portail client,
+// produits + prix HT au mois et à l'année (lookup_key, ADR 0200), recharges de minutes (paiement
+// unique, ADR 0233), taux de TVA 20 %, portail client,
 // webhooks (abonnements et Connect). Écrit les identifiants dans le fichier d'environnement donné, sans
 // jamais afficher le secret du webhook.
 //
@@ -160,6 +161,42 @@ for (const plan of plans) {
     product: price.product,
     ouverte: plan.ouverte,
   };
+}
+
+// 1 bis. Recharges de minutes de voix (ADR 0233) : paiement unique, HT, lu dans voice_topup_offers.
+const offersRes = await fetch(
+  `${SUPABASE_URL}/rest/v1/voice_topup_offers?select=code,nom,prix_ht_centimes,stripe_lookup_key&active=eq.true&order=ordre`,
+  { headers: { apikey: SUPABASE_PUBLISHABLE_KEY } },
+);
+const offers = await offersRes.json();
+if (!Array.isArray(offers)) throw new Error("Recharges illisibles dans Supabase");
+for (const offer of offers) {
+  const existing = await stripe("GET", "prices", {
+    lookup_keys: [offer.stripe_lookup_key],
+    active: true,
+    limit: 1,
+  });
+  const current = existing.data[0];
+  if (current && current.unit_amount === offer.prix_ht_centimes) {
+    console.log(`Recharge déjà en place : ${offer.code}`);
+    continue;
+  }
+  const product = current
+    ? { id: current.product }
+    : await stripe("POST", "products", {
+        name: `MENAO ${offer.nom}`,
+        metadata: { menao_topup: offer.code },
+      });
+  await stripe("POST", "prices", {
+    product: product.id,
+    currency: "eur",
+    unit_amount: offer.prix_ht_centimes,
+    tax_behavior: "exclusive",
+    lookup_key: offer.stripe_lookup_key,
+    ...(current ? { transfer_lookup_key: true } : {}),
+    nickname: `${offer.nom} HT`,
+  });
+  console.log(`Recharge ${current ? "mise à jour" : "créée"} : ${offer.code}`);
 }
 
 // 2. TVA 20 % (TODO(legal) : à valider par l'expert-comptable)

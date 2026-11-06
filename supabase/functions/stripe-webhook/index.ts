@@ -1,5 +1,5 @@
-// Edge Function stripe-webhook (F-15, F-31) : seule écriture des abonnements et des paiements des
-// chantiers (comptes connectés des artisans). Signature vérifiée, traitement idempotent (table
+// Edge Function stripe-webhook (F-15, F-31) : seule écriture des abonnements, des paiements des
+// chantiers (comptes connectés des artisans) et des recharges de minutes (ADR 0233). Signature vérifiée, traitement idempotent (table
 // webhook_events), CLAUDE.md règle 9. Aucune donnée personnelle journalisée.
 import Stripe from "stripe";
 import { connectAccountFromStripe } from "../../../packages/core/src/connect.ts";
@@ -103,6 +103,11 @@ Deno.serve(async (req) => {
       if (starterError) throw starterError;
       await applyFreeMonths(admin, stripe, paidSubscription);
     }
+    // Recharge de minutes de voix payée sur le compte de la plateforme (ADR 0233) : créditée une
+    // seule fois par session.
+    if (!event.account && event.type === "checkout.session.completed") {
+      await saveVoiceTopUp(admin, event.data.object as Stripe.Checkout.Session);
+    }
     // Paiement d'un chantier, sur le compte connecté de l'artisan (ADR 0011, ADR 0023).
     if (event.account && event.type.startsWith("checkout.session.")) {
       await savePayment(
@@ -132,6 +137,20 @@ Deno.serve(async (req) => {
     return json({ error: "traitement impossible" }, 500);
   }
 });
+
+/** Recharge de minutes (billing-topup) : métadonnées posées à la création, paiement reçu. */
+async function saveVoiceTopUp(admin: SupabaseClient, session: Stripe.Checkout.Session) {
+  const meta = session.metadata ?? {};
+  if (session.mode !== "payment" || meta.menao_kind !== "recharge_minutes") return;
+  if (session.payment_status !== "paid" || !meta.artisan_id || !meta.offer) return;
+  const { error } = await admin.rpc("voice_credit_topup", {
+    p_artisan_id: meta.artisan_id,
+    p_stripe_session_id: session.id,
+    p_offer_code: meta.offer,
+    p_amount_ht_cents: session.amount_subtotal ?? 0,
+  });
+  if (error) throw error;
+}
 
 /** Paiement retrouvé par les métadonnées posées à la création (devis, tranche) ; compte et montant vérifiés en base. */
 async function savePayment(

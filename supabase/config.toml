@@ -465,6 +465,10 @@ verify_jwt = false
 [functions.billing-checkout]
 verify_jwt = true
 
+# Recharge de minutes de voix (ADR 0233) : artisan connecté ; formule vérifiée par la base.
+[functions.billing-topup]
+verify_jwt = true
+
 [functions.billing-portal]
 verify_jwt = true
 

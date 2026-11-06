@@ -985,6 +985,7 @@ export function notificationContent(
           empty
             ? "Jusqu'au 1er du mois prochain, votre assistante se contente de noter le nom et le numéro de vos clients."
             : "Les minutes repartent à zéro le 1er du mois prochain.",
+          "Besoin de plus ? Vous pouvez recharger des minutes depuis votre espace, sur le site : elles restent valables 12 mois.",
         ],
         quote: null,
         cta: { label: "Voir mes agents IA", url: link("/pro/onboarding/formule#agents") },
