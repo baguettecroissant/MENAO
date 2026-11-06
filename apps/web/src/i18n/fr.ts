@@ -4392,6 +4392,31 @@ export const fr = {
           "Aucune ligne n'a pu être tirée de la dictée. Citez les fournitures, les quantités et les prix.",
         unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
       },
+      // Devis en conversation avec Camille (F-85, ADR 0234).
+      conversation: {
+        start: "Dicter avec Camille",
+        hint: "elle vous pose les questions",
+        live: "Camille vous écoute : les lignes s'ajoutent pendant l'appel",
+        speaking: "Camille parle…",
+        updated: (n: number) =>
+          n <= 1
+            ? "Camille a proposé 1 ligne : vérifiez-la."
+            : `Camille a proposé ${n} lignes : vérifiez-les.`,
+        draft: (n: number) =>
+          n <= 1
+            ? "Lors de votre dernier appel, Camille a préparé 1 ligne."
+            : `Lors de votre dernier appel, Camille a préparé ${n} lignes.`,
+        draftAdd: "Ajouter au devis",
+        draftDiscard: "Écarter",
+        errors: {
+          non_inclus: "Le devis avec Camille est inclus dans les formules Premium et Entreprise.",
+          minutes_epuisees:
+            "Vos minutes de voix du mois sont épuisées : vous pouvez en recharger dans « Ma formule ».",
+          invalid: "Ce chantier n'attend plus de devis.",
+          unavailable: "Camille n'est pas disponible pour le moment. Réessayez dans un instant.",
+          generic: "L'appel n'a pas pu démarrer. Réessayez dans un instant.",
+        } as Record<string, string>,
+      },
       list: {
         title: "Devis",
         subtitle: "Suivez vos devis MENAO.",

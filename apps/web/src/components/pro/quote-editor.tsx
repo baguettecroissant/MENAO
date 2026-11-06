@@ -25,8 +25,10 @@ import { fr } from "@/i18n/fr";
 import {
   saveQuoteDraft,
   searchPreviousLines,
+  settleVoiceQuoteDrafts,
   type PreviousLine,
 } from "@/lib/artisan/quote-actions";
+import { QuoteConversation } from "./quote-conversation";
 import { QuoteDictation } from "./quote-dictation";
 
 const t = fr.pro.quote;
@@ -60,6 +62,8 @@ export function QuoteEditor({
   saved,
   assujettiTva,
   savedDictation,
+  conversation = false,
+  voiceDraft = null,
 }: {
   chantierId: string;
   initialLines: QuoteLineInput[];
@@ -68,6 +72,10 @@ export function QuoteEditor({
   /** Dictée sauvegardée pour ce chantier (F-19). */
   savedDictation: string | null;
   assujettiTva: boolean;
+  /** « Dicter avec Camille » inclus dans la formule (ADR 0234). */
+  conversation?: boolean;
+  /** Lignes d'un appel précédent avec Camille, pas encore reprises ni écartées. */
+  voiceDraft?: QuoteLineInput[] | null;
 }) {
   const counter = useRef(initialLines.length);
   const [lines, setLines] = useState<Line[]>(() =>
@@ -84,6 +92,11 @@ export function QuoteEditor({
   const router = useRouter();
   // Ligne à remettre sous les yeux après validation (le formulaire se referme).
   const [reveal, setReveal] = useState<{ key: string } | null>(null);
+  // Devis avec Camille (ADR 0234) : lignes de l'appel en cours, remplacées à chaque proposition ;
+  // brouillon à clore dès que le devis est enregistré.
+  const camille = useRef<Set<string>>(new Set());
+  const voiceUsed = useRef(false);
+  const [pendingDraft, setPendingDraft] = useState(voiceDraft?.length ? voiceDraft : null);
 
   const plain: QuoteLineInput[] = lines.map(withoutKey);
   const dirty = JSON.stringify(plain) !== snapshot;
@@ -112,6 +125,7 @@ export function QuoteEditor({
       if (result.ok) {
         setSnapshot(JSON.stringify(toSave));
         setHasSaved(true);
+        settleVoiceDraft();
       } else {
         setError(result.error);
       }
@@ -131,6 +145,7 @@ export function QuoteEditor({
         }
         setSnapshot(JSON.stringify(toSave));
         setHasSaved(true);
+        settleVoiceDraft();
       }
       router.push(`/pro/chantiers/${chantierId}/devis/apercu` as Route);
     });
@@ -146,6 +161,39 @@ export function QuoteEditor({
     setDictating(false);
     setNotice(t.dictation.generated(added.length));
     if (added[0]) setReveal({ key: added[0].key });
+  }
+
+  /** Lignes proposées par Camille : la liste de l'appel en cours remplace la précédente. */
+  function setCamilleLines(next: QuoteLineInput[]) {
+    const previous = camille.current;
+    const added = next.map((line) => ({
+      ...line,
+      key: `l${counter.current++}`,
+      generated: true,
+    }));
+    camille.current = new Set(added.map((line) => line.key));
+    voiceUsed.current = true;
+    setLines((current) => [...current.filter((l) => !previous.has(l.key)), ...added]);
+    setNotice(t.conversation.updated(added.length));
+    const last = added.at(-1);
+    if (last) setReveal({ key: last.key });
+  }
+
+  /** Brouillon d'un appel précédent : ajouté au devis, ou écarté. */
+  function resumeDraft(add: boolean) {
+    if (add && pendingDraft) {
+      addGenerated(pendingDraft);
+      voiceUsed.current = true;
+    } else {
+      void settleVoiceQuoteDrafts(chantierId);
+    }
+    setPendingDraft(null);
+  }
+
+  function settleVoiceDraft() {
+    if (!voiceUsed.current) return;
+    voiceUsed.current = false;
+    void settleVoiceQuoteDrafts(chantierId);
   }
 
   function upsert(key: string | null, line: QuoteLineInput) {
@@ -198,6 +246,27 @@ export function QuoteEditor({
         </div>
         {error && <Alert tone="error">{error}</Alert>}
         {notice && <Alert tone="success">{notice}</Alert>}
+        {pendingDraft && (
+          <div className="flex flex-col gap-3 rounded-card border border-primary/30 bg-primary-softer px-4 py-3">
+            <p className="text-sm text-primary-strong">
+              {t.conversation.draft(pendingDraft.length)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" block={false} onClick={() => resumeDraft(true)}>
+                {t.conversation.draftAdd}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                block={false}
+                onClick={() => resumeDraft(false)}
+              >
+                {t.conversation.draftDiscard}
+              </Button>
+            </div>
+          </div>
+        )}
         {lines.length > 0 && (
           <ul className="flex flex-col gap-3">
             {lines.map((line) => (
@@ -262,6 +331,16 @@ export function QuoteEditor({
             </div>
           </dl>
           {!assujettiTva && <p className="text-xs text-muted-foreground">{t.vatExempt}</p>}
+          {conversation && (
+            <QuoteConversation
+              chantierId={chantierId}
+              assujettiTva={assujettiTva}
+              onStart={() => {
+                camille.current = new Set();
+              }}
+              onLines={setCamilleLines}
+            />
+          )}
           <Button type="button" variant="outline" size="lg" onClick={() => setDictating(true)}>
             {t.dictation.open}
             <Mic aria-hidden="true" className="size-4" />

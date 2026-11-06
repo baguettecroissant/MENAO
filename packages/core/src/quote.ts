@@ -301,3 +301,71 @@ export function normalizeVoiceLines(
   }
   return lines;
 }
+
+// ---------------------------------------------------------------------------
+// Devis en conversation avec Camille (F-85, ADR 0234) : lignes envoyées par l'outil
+// devis_proposer, lues avec indulgence (nombres en texte, unités en toutes lettres) puis
+// contrôlées par normalizeVoiceLines comme celles de la dictée.
+// ---------------------------------------------------------------------------
+
+const UNIT_ALIASES: Record<string, QuoteUnit> = {
+  "m²": "m2",
+  "m³": "m3",
+  metre: "m",
+  mètre: "m",
+  "metre lineaire": "ml",
+  "mètre linéaire": "ml",
+  "metre carre": "m2",
+  "mètre carré": "m2",
+  "metre cube": "m3",
+  "mètre cube": "m3",
+  heure: "h",
+  heures: "h",
+  jours: "jour",
+  piece: "u",
+  pièce: "u",
+  unite: "u",
+  unité: "u",
+  litre: "l",
+  kilo: "kg",
+};
+
+const voiceNumber = (value: unknown): number | null => {
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.replace(/\s/g, "").replace(",", "."))
+        : Number.NaN;
+  return Number.isFinite(n) ? n : null;
+};
+
+function voiceLineType(value: unknown): string {
+  const type = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if ((QUOTE_LINE_TYPES as readonly string[]).includes(type)) return type;
+  if (/main|pose|travail/.test(type)) return "main_oeuvre";
+  if (/mat|fourn/.test(type)) return "materiel";
+  return "autre";
+}
+
+/** Lignes de l'outil devis_proposer : forme attendue par normalizeVoiceLines, sans rien inventer. */
+export function rawVoiceLinesFrom(value: unknown): RawVoiceLine[] {
+  if (!Array.isArray(value)) return [];
+  const lines: RawVoiceLine[] = [];
+  for (const item of value.slice(0, VOICE_MAX_LINES)) {
+    if (!item || typeof item !== "object") continue;
+    const r = item as Record<string, unknown>;
+    if (typeof r.designation !== "string") continue;
+    const unit = typeof r.unite === "string" ? r.unite.trim().toLowerCase() : "";
+    lines.push({
+      type: voiceLineType(r.type),
+      designation: r.designation,
+      description: typeof r.description === "string" && r.description.trim() ? r.description : null,
+      quantite: voiceNumber(r.quantite) ?? 1,
+      unite: UNIT_ALIASES[unit] ?? unit,
+      prix_unitaire_ht: voiceNumber(r.prix_unitaire_ht),
+      tva: voiceNumber(r.tva),
+    });
+  }
+  return lines;
+}

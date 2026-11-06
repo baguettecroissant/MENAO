@@ -11,10 +11,18 @@
 //   particulier à l'adresse de son compte (ADR 0229). Après une demande de rappel, Camille dit
 //   quand l'équipe rappelle, d'après ses horaires d'accueil (ADR 0230). Secrétaire dédiée d'un
 //   artisan (ADR 0232) : créneaux libres de son agenda, rendez-vous, message ; l'artisan vient du
-//   jeton signé passé dans les variables de l'appel, jamais des arguments. Minutes comptées à la
-//   fin de l'appel. Réponse toujours en HTTP 200.
+//   jeton signé passé dans les variables de l'appel, jamais des arguments. Devis en conversation
+//   (ADR 0234) : prix habituels de l'artisan, lignes proposées gardées en brouillon pour le
+//   chantier du jeton. Minutes comptées à la fin de l'appel. Réponse toujours en HTTP 200.
 // - « end-of-call-report » : durée de l'appel dans ai_runs (jamais la transcription).
 // Aucune donnée personnelle dans les journaux.
+import {
+  VAT_EXEMPT_BP,
+  VAT_RATES_BP,
+  normalizeVoiceLines,
+  quoteTotals,
+  rawVoiceLinesFrom,
+} from "../../../packages/core/src/quote.ts";
 import {
   COMMERCIAL_SLOT_HORIZON_DAYS,
   isCommercialSlot,
@@ -24,11 +32,14 @@ import {
   parisSlotSpoken,
   parseSlotCode,
   parseVoiceToolCalls,
+  quoteTotalsSpoken,
   receptionCallbackSpoken,
   sameSecret,
   slotCode,
   spokenEmail,
   spokenPhoneToE164,
+  usualPriceSpoken,
+  verifyVoiceQuoteSession,
   verifyVoiceSession,
   voiceCallSeconds,
   voicePreparedRequestPath,
@@ -764,12 +775,125 @@ async function secretaryRecord(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Devis dicté en conversation (ADR 0234)
+// ---------------------------------------------------------------------------
+
+/** Artisan et chantier de l'appel « devis », d'après le jeton signé (voice-session). */
+async function quoteSession(message: unknown) {
+  const m = (message ?? {}) as VapiMessage;
+  const token =
+    m.call?.assistantOverrides?.variableValues?.jeton ?? m.assistant?.variableValues?.jeton;
+  return await verifyVoiceQuoteSession(env("VAPI_SERVER_SECRET"), token, new Date());
+}
+
+const NO_QUOTE_SESSION =
+  "Session expirée : dis à l'artisan que les lignes déjà proposées sont dans son éditeur et qu'il peut relancer l'appel.";
+
+async function quoteUsualPrices(
+  admin: Admin,
+  call: VoiceToolCall,
+  session: { artisanId: string } | null,
+): Promise<ToolResult> {
+  if (!session) return { toolCallId: call.id, error: NO_QUOTE_SESSION };
+  const query = voiceText(call.args.recherche, 100);
+  if (!query) return { toolCallId: call.id, error: "Dis ce que tu cherches en quelques mots." };
+  const { data, error } = await admin.rpc("voice_quote_usual_prices", {
+    p_artisan_id: session.artisanId,
+    p_query: query,
+  });
+  if (error) {
+    console.error("voice-assistant : prix habituels illisibles", error.code);
+    return { toolCallId: call.id, error: "Prix indisponibles : demande le prix à l'artisan." };
+  }
+  const prices = (data ?? []) as {
+    designation: string;
+    unit: string;
+    unit_price_ht_cents: number;
+  }[];
+  if (prices.length === 0) {
+    return {
+      toolCallId: call.id,
+      result: "Aucun prix habituel pour cela dans ses devis : demande-lui son prix.",
+    };
+  }
+  return {
+    toolCallId: call.id,
+    result: `Prix de ses derniers devis, à lui proposer sans les imposer : ${prices
+      .map((p) => usualPriceSpoken(p.designation, p.unit, p.unit_price_ht_cents))
+      .join(" ; ")}.`,
+  };
+}
+
+async function quotePropose(
+  admin: Admin,
+  call: VoiceToolCall,
+  session: { artisanId: string; chantierId: string } | null,
+  id: string | null,
+): Promise<ToolResult> {
+  if (!session || !id) return { toolCallId: call.id, error: NO_QUOTE_SESSION };
+  const { data: artisan } = await admin
+    .from("artisans")
+    .select("assujetti_tva")
+    .eq("id", session.artisanId)
+    .maybeSingle();
+  const assujettiTva = artisan?.assujetti_tva !== false;
+  const lines = normalizeVoiceLines(rawVoiceLinesFrom(call.args.lignes), {
+    assujettiTva,
+    defaultVatBp: assujettiTva ? (VAT_RATES_BP.at(-1) ?? 2000) : VAT_EXEMPT_BP,
+  });
+  if (lines.length === 0) {
+    return {
+      toolCallId: call.id,
+      error:
+        "Aucune ligne utilisable : chaque ligne a besoin d'une désignation et d'une quantité positive. Renvoie toute la liste.",
+    };
+  }
+  const { error } = await admin.rpc("voice_quote_save_draft", {
+    p_artisan_id: session.artisanId,
+    p_chantier_id: session.chantierId,
+    p_call_id: id,
+    p_lines: lines,
+  });
+  if (error) {
+    if (error.code === "22023") {
+      return { toolCallId: call.id, error: `${error.message} Dis-le à l'artisan.` };
+    }
+    console.error("voice-assistant : brouillon du devis non enregistré", error.code);
+    return { toolCallId: call.id, error: "Enregistrement impossible : réessaie une fois." };
+  }
+  const missing = lines.filter((line) => line.unitPriceHtCents === 0).length;
+  const skipped = rawVoiceLinesFrom(call.args.lignes).length - lines.length;
+  return {
+    toolCallId: call.id,
+    result: [
+      `${lines.length === 1 ? "Une ligne est" : `${lines.length} lignes sont`} dans l'éditeur.`,
+      quoteTotalsSpoken(quoteTotals(lines)),
+      missing
+        ? `${missing === 1 ? "Une ligne n'a" : `${missing} lignes n'ont`} pas encore de prix : demande-les ou dis qu'elles seront à compléter.`
+        : "",
+      skipped > 0
+        ? `${skipped} ligne(s) écartée(s) car incomplète(s) : vérifie avec l'artisan.`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
 async function runTool(
   admin: Admin,
   call: VoiceToolCall,
   message: unknown = null,
 ): Promise<ToolResult> {
   try {
+    if (call.name.startsWith("devis_")) {
+      const session = await quoteSession(message);
+      if (call.name === "devis_prix_habituels") return await quoteUsualPrices(admin, call, session);
+      if (call.name === "devis_proposer") {
+        return await quotePropose(admin, call, session, callId(message));
+      }
+    }
     if (call.name.startsWith("secretaire_")) {
       const artisanId = await secretaryArtisan(message);
       if (call.name === "secretaire_creneaux") return await secretarySlots(admin, call, artisanId);
@@ -815,15 +939,17 @@ Deno.serve(async (req) => {
   }
 
   if (message?.type === "end-of-call-report") {
-    // Secrétaire dédiée (ADR 0232) : minutes de l'artisan, une seule fois par appel.
-    const artisanId = await secretaryArtisan(message);
+    // Secrétaire dédiée (ADR 0232) ou devis en conversation (ADR 0234) : minutes de l'artisan,
+    // une seule fois par appel.
+    const quote = await quoteSession(message);
+    const artisanId = quote?.artisanId ?? (await secretaryArtisan(message));
     const id = callId(message);
     if (artisanId && id) {
       const { error } = await admin.rpc("voice_record_usage", {
         p_artisan_id: artisanId,
         p_call_id: id,
         p_seconds: Math.round(voiceCallSeconds(message) ?? 0),
-        p_agent: "secretaire",
+        p_agent: quote ? "devis" : "secretaire",
       });
       if (error) console.error("voice-assistant : minutes non comptées", error.code);
     }

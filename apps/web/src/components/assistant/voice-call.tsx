@@ -19,8 +19,13 @@ export type VoiceAssistant = VoiceSide;
 /** Secrétaire dédiée de l'artisan (ADR 0232), essayée depuis son espace. */
 const SECRETARY_ID = env.NEXT_PUBLIC_VAPI_SECRETARY_ASSISTANT_ID;
 
-/** Appel préparé par le serveur : variables de l'appel (dont le jeton signé), ou raison du refus. */
-export type VoiceSession = { variables: Record<string, string> } | { error: string };
+/**
+ * Appel préparé par le serveur : variables de l'appel (dont le jeton signé), et assistante à
+ * appeler quand c'est le serveur qui la choisit (devis en conversation, ADR 0234) ; ou raison du
+ * refus.
+ */
+export type VoiceSession =
+  { variables: Record<string, string>; assistantId?: string } | { error: string };
 
 type CallState = "idle" | "connecting" | "live" | "ended" | "failed";
 
@@ -33,27 +38,48 @@ export function VoiceCall({
   assistant = "pro",
   session,
   labels,
+  onMessage,
+  onCallStarted,
+  onCallEnded,
+  hintOnMobile = true,
 }: {
-  assistant?: VoiceAssistant | "secretary";
-  /** Secrétaire : prépare l'appel (jeton et contexte de l'artisan) juste avant de le lancer. */
+  /** « quote » : devis en conversation, l'assistante est donnée par le serveur (session). */
+  assistant?: VoiceAssistant | "secretary" | "quote";
+  /** Secrétaire, devis : prépare l'appel (jeton et contexte) juste avant de le lancer. */
   session?: () => Promise<VoiceSession>;
   labels?: Partial<Record<"start" | "hint" | "live" | "speaking", string>>;
+  /** Messages de l'appel envoyés par Vapi au navigateur (appels d'outils compris). */
+  onMessage?: (message: unknown) => void;
+  onCallStarted?: (callId: string) => void;
+  onCallEnded?: () => void;
+  /** Précision du bouton (« · elle vous pose les questions ») masquée sur petit écran. */
+  hintOnMobile?: boolean;
 }) {
-  const ASSISTANT_ID = assistant === "secretary" ? SECRETARY_ID : ASSISTANTS[assistant];
+  const ASSISTANT_ID =
+    assistant === "secretary"
+      ? SECRETARY_ID
+      : assistant === "quote"
+        ? undefined
+        : ASSISTANTS[assistant];
   const text = { ...t, ...labels };
   const [refusal, setRefusal] = useState<string | null>(null);
   const [state, setState] = useState<CallState>("idle");
   const [speaking, setSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
   const vapi = useRef<Vapi | null>(null);
+  // Écouteurs posés une seule fois : ils lisent toujours les derniers rappels reçus.
+  const handlers = useRef({ onMessage, onCallEnded });
+  useEffect(() => {
+    handlers.current = { onMessage, onCallEnded };
+  });
 
   // Appel raccroché si la fenêtre se ferme ou si l'on quitte la page.
   useEffect(() => () => void vapi.current?.stop(), []);
 
-  if (!PUBLIC_KEY || !ASSISTANT_ID) return null;
+  if (!PUBLIC_KEY || (!ASSISTANT_ID && assistant !== "quote")) return null;
 
   async function start() {
-    if (!PUBLIC_KEY || !ASSISTANT_ID) return;
+    if (!PUBLIC_KEY || (!ASSISTANT_ID && !session)) return;
     setState("connecting");
     setMuted(false);
     try {
@@ -65,7 +91,9 @@ export function VoiceCall({
         client.on("call-end", () => {
           setState((current) => (current === "failed" ? current : "ended"));
           setSpeaking(false);
+          handlers.current.onCallEnded?.();
         });
+        client.on("message", (message: unknown) => handlers.current.onMessage?.(message));
         client.on("speech-start", () => setSpeaking(true));
         client.on("speech-end", () => setSpeaking(false));
         client.on("error", () => {
@@ -84,8 +112,14 @@ export function VoiceCall({
           setState("idle");
           return;
         }
-        const call = await client.start(ASSISTANT_ID, { variableValues: prepared.variables });
+        const assistantId = prepared.assistantId ?? ASSISTANT_ID;
+        if (!assistantId) {
+          setState("failed");
+          return;
+        }
+        const call = await client.start(assistantId, { variableValues: prepared.variables });
         if (!call) setState("failed");
+        else onCallStarted?.(call.id);
         return;
       }
       const { pro, client: particuliers } = ASSISTANTS;
@@ -157,7 +191,11 @@ export function VoiceCall({
       <Button type="button" variant="outline" size="sm" onClick={start}>
         <Phone aria-hidden="true" className="size-4" />
         {text.start}
-        <span className="font-normal text-muted-foreground">· {text.hint}</span>
+        <span
+          className={`font-normal text-muted-foreground ${hintOnMobile ? "" : "max-sm:hidden"}`}
+        >
+          · {text.hint}
+        </span>
       </Button>
       {state === "ended" && <p className="text-xs text-muted-foreground">{t.ended}</p>}
       {refusal && (
