@@ -22,6 +22,8 @@ export const VOICE_TOOLS = [
   "secretaire_creneaux",
   "secretaire_reserver",
   "secretaire_message",
+  "devis_prix_habituels",
+  "devis_proposer",
 ] as const;
 export type VoiceTool = (typeof VOICE_TOOLS)[number];
 
@@ -189,6 +191,66 @@ export function voiceToolDefinitions() {
           },
         },
         required: ["nom", "telephone", "motif"],
+      },
+    },
+    {
+      name: "devis_prix_habituels",
+      description:
+        "Devis de l'artisan : cherche le prix qu'il met d'habitude pour une prestation ou une fourniture, dans ses anciens devis. À appeler quand il ne donne pas de prix et que la liste de ses prix habituels n'en contient pas.",
+      parameters: {
+        type: "object",
+        properties: {
+          recherche: text(
+            "Prestation ou fourniture, en quelques mots (par exemple « pose carrelage »).",
+          ),
+        },
+        required: ["recherche"],
+      },
+    },
+    {
+      name: "devis_proposer",
+      description:
+        "Devis de l'artisan : enregistre la liste COMPLÈTE des lignes convenues jusqu'ici. Elle remplace la précédente : renvoie toutes les lignes à chaque fois, corrections comprises. Les lignes apparaissent tout de suite dans l'éditeur de l'artisan ; l'outil renvoie le total à lui relire.",
+      parameters: {
+        type: "object",
+        properties: {
+          lignes: {
+            type: "array",
+            description: "Toutes les lignes du devis, dans l'ordre.",
+            items: {
+              type: "object",
+              properties: {
+                type: {
+                  type: "string",
+                  enum: ["materiel", "main_oeuvre", "autre"],
+                  description:
+                    "materiel (fournitures), main_oeuvre (temps de travail : pose, dépose, installation), autre (déplacement, évacuation, forfait divers).",
+                },
+                designation: text("Libellé court et professionnel, 80 caractères au plus."),
+                description: text(
+                  "Précisions données par l'artisan (finition, dimensions), sinon vide.",
+                ),
+                quantite: { type: "number", description: "Quantité ; 1 si aucune n'est donnée." },
+                unite: {
+                  type: "string",
+                  enum: ["u", "h", "jour", "m", "ml", "m2", "m3", "kg", "l", "forfait"],
+                  description: "Unité de la quantité.",
+                },
+                prix_unitaire_ht: {
+                  type: "number",
+                  description:
+                    "Prix unitaire hors taxes en euros, donné ou confirmé par l'artisan. 0 s'il n'en a pas donné : n'invente jamais de prix.",
+                },
+                tva: {
+                  type: "number",
+                  description: "5.5, 10 ou 20 seulement si l'artisan le précise, sinon 0.",
+                },
+              },
+              required: ["type", "designation", "quantite", "unite", "prix_unitaire_ht"],
+            },
+          },
+        },
+        required: ["lignes"],
       },
     },
   ];
@@ -757,4 +819,151 @@ export function nextArtisanSlots({
     }
   }
   return slots;
+}
+
+// ---------------------------------------------------------------------------
+// Devis dicté en conversation avec Camille (F-85, ADR 0234)
+// ---------------------------------------------------------------------------
+
+const TENS_TO_60: Record<number, string> = { ...TENS, 60: "soixante" };
+
+function wordsBelow100(n: number): string {
+  if (n <= 16) return UNITS[n] as string;
+  if (n < 20) return `dix-${UNITS[n - 10]}`;
+  if (n < 70) {
+    const tens = Math.floor(n / 10) * 10;
+    const unit = n % 10;
+    if (unit === 0) return TENS_TO_60[tens] as string;
+    return unit === 1 ? `${TENS_TO_60[tens]} et un` : `${TENS_TO_60[tens]}-${UNITS[unit]}`;
+  }
+  if (n < 80) return n === 71 ? "soixante et onze" : `soixante-${wordsBelow100(n - 60)}`;
+  return n === 80 ? "quatre-vingts" : `quatre-vingt-${wordsBelow100(n - 80)}`;
+}
+
+/** 0 à 999 ; « cents » et « quatre-vingts » perdent leur s devant « mille » (`final` faux). */
+function wordsBelow1000(n: number, final = true): string {
+  const hundreds = Math.floor(n / 100);
+  const rest = n % 100;
+  let below = rest ? wordsBelow100(rest) : "";
+  if (!final && below === "quatre-vingts") below = "quatre-vingt";
+  if (hundreds === 0) return below;
+  const head = hundreds === 1 ? "cent" : `${UNITS[hundreds]} cent${rest || !final ? "" : "s"}`;
+  return below ? `${head} ${below}` : head;
+}
+
+/** Entier de 0 à 999 999 999 en toutes lettres (« mille deux cent cinquante »). */
+export function frenchIntegerWords(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 999_999_999) return String(n);
+  if (n === 0) return "zéro";
+  const millions = Math.floor(n / 1_000_000);
+  const thousands = Math.floor(n / 1000) % 1000;
+  const rest = n % 1000;
+  const parts: string[] = [];
+  if (millions) parts.push(millions === 1 ? "un million" : `${wordsBelow1000(millions)} millions`);
+  if (thousands)
+    parts.push(thousands === 1 ? "mille" : `${wordsBelow1000(thousands, false)} mille`);
+  if (rest) parts.push(wordsBelow1000(rest));
+  return parts.join(" ");
+}
+
+/** 125050 centimes → « mille deux cent cinquante euros cinquante » : montant à lire au téléphone. */
+export function eurosSpoken(cents: number): string {
+  if (!Number.isInteger(cents) || cents < 0) return String(cents);
+  const euros = Math.floor(cents / 100);
+  const rest = cents % 100;
+  if (euros === 0 && rest > 0) return `${wordsBelow100(rest)} centime${rest > 1 ? "s" : ""}`;
+  const words = frenchIntegerWords(euros);
+  const unit = /millions?$/.test(words) ? "d'euros" : euros > 1 ? "euros" : "euro";
+  return `${words} ${unit}${rest ? ` ${wordsBelow100(rest)}` : ""}`;
+}
+
+const UNIT_SPOKEN: Record<string, string> = {
+  u: "l'unité",
+  h: "l'heure",
+  jour: "le jour",
+  m: "le mètre",
+  ml: "le mètre linéaire",
+  m2: "le mètre carré",
+  m3: "le mètre cube",
+  kg: "le kilo",
+  l: "le litre",
+  forfait: "le forfait",
+};
+
+/** « Pose de carrelage : quarante-cinq euros hors taxes le mètre carré », un prix par ligne. */
+export function usualPriceSpoken(designation: string, unit: string, priceHtCents: number): string {
+  return `${designation} : ${eurosSpoken(priceHtCents)} hors taxes ${UNIT_SPOKEN[unit] ?? "l'unité"}`;
+}
+
+/** Prix habituels du contexte du devis (voice_quote_context), en une liste lisible par Camille. */
+export function usualPricesText(raw: unknown): string {
+  if (!Array.isArray(raw)) return "";
+  return raw
+    .flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const { designation, unite, prix_ht_centimes } = item as Record<string, unknown>;
+      if (typeof designation !== "string" || typeof prix_ht_centimes !== "number") return [];
+      return [usualPriceSpoken(designation, String(unite), prix_ht_centimes)];
+    })
+    .join(" ; ");
+}
+
+/** Régime de TVA dit à Camille (franchise en base : aucune TVA sur le devis). */
+export function quoteVatText(assujettiTva: boolean): string {
+  return assujettiTva
+    ? "taux de TVA possibles : cinq virgule cinq, dix ou vingt pour cent. Ne demande le taux que si l'artisan veut en changer."
+    : "franchise en base de TVA : aucune TVA sur ce devis, n'en parle pas.";
+}
+
+/** Totaux à relire : « Total hors taxes … ; TVA … ; total toutes taxes comprises … ». */
+export function quoteTotalsSpoken(totals: {
+  totalHtCents: number;
+  totalTvaCents: number;
+  totalTtcCents: number;
+}): string {
+  if (totals.totalTvaCents === 0) return `Total : ${eurosSpoken(totals.totalHtCents)}, sans TVA.`;
+  return `Total hors taxes : ${eurosSpoken(totals.totalHtCents)} ; TVA : ${eurosSpoken(
+    totals.totalTvaCents,
+  )} ; total toutes taxes comprises : ${eurosSpoken(totals.totalTtcCents)}.`;
+}
+
+const UUID_PART = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const QUOTE_SESSION_PATTERN = new RegExp(
+  `^(${UUID_PART})\\.(${UUID_PART})\\.(\\d{10,16})\\.([A-Za-z0-9_-]{20,100})$`,
+);
+
+/**
+ * Jeton d'un appel « devis » : artisan, chantier et échéance, signés avec le secret du serveur des
+ * outils. Signature séparée de celle de la secrétaire (préfixe « devis: ») : aucun jeton ne sert
+ * à l'autre usage.
+ */
+export async function signVoiceQuoteSession(
+  secret: string,
+  artisanId: string,
+  chantierId: string,
+  expiresAt: number,
+): Promise<string> {
+  const payload = `${artisanId}.${chantierId}.${Math.floor(expiresAt)}`;
+  return `${payload}.${await hmacBase64Url(secret, `devis:${payload}`)}`;
+}
+
+/** Artisan et chantier d'un jeton « devis » valide et non expiré ; null sinon. */
+export async function verifyVoiceQuoteSession(
+  secret: string,
+  token: unknown,
+  now: Date,
+): Promise<{ artisanId: string; chantierId: string } | null> {
+  if (!secret || typeof token !== "string") return null;
+  const match = QUOTE_SESSION_PATTERN.exec(token);
+  if (!match) return null;
+  const [, artisanId, chantierId, expiresAt, signature] = match as unknown as [
+    string,
+    string,
+    string,
+    string,
+    string,
+  ];
+  if (Number(expiresAt) < now.getTime()) return null;
+  const expected = await hmacBase64Url(secret, `devis:${artisanId}.${chantierId}.${expiresAt}`);
+  return sameSecret(signature, expected) ? { artisanId, chantierId } : null;
 }

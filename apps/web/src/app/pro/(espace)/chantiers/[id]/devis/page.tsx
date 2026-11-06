@@ -1,3 +1,4 @@
+import { parseAiAgents } from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -6,6 +7,7 @@ import { QuoteHeader } from "@/components/pro/quote-header";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
+import { voiceDraftLines } from "@/lib/artisan/voice-quote";
 
 const t = fr.pro.quote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -23,7 +25,13 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
     redirect(`/pro/chantiers/${id}` as Route);
   }
 
-  const [{ data: draft }, { data: artisan }, { data: dictation }] = await Promise.all([
+  const [
+    { data: draft },
+    { data: artisan },
+    { data: dictation },
+    { data: agents },
+    { data: voiceDraft },
+  ] = await Promise.all([
     supabase
       .from("quotes")
       .select(
@@ -34,6 +42,16 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
       .maybeSingle(),
     supabase.from("artisans").select("assujetti_tva").eq("id", artisanId).single(),
     supabase.from("quote_dictations").select("transcript").eq("chantier_id", id).maybeSingle(),
+    // Devis avec Camille (ADR 0234) : inclus dans la formule ? Lignes d'un appel non reprises ?
+    supabase.rpc("my_ai_agents"),
+    supabase
+      .from("voice_quote_drafts")
+      .select("lines")
+      .eq("chantier_id", id)
+      .is("settled_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   const lines: QuoteLineInput[] = [...(draft?.quote_lines ?? [])]
     .sort((a, b) => a.position - b.position)
@@ -63,6 +81,8 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
         saved={Boolean(draft)}
         assujettiTva={artisan?.assujetti_tva ?? true}
         savedDictation={dictation?.transcript ?? null}
+        conversation={parseAiAgents(agents).agents.conversationalQuote}
+        voiceDraft={voiceDraftLines(voiceDraft?.lines)}
       />
     </main>
   );

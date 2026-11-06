@@ -1,14 +1,21 @@
 "use server";
 
 import { parisToday, quoteStartDateError } from "@menao/core";
-import { messages, quoteLinesSchema, sendQuoteSchema } from "@menao/validation";
+import {
+  messages,
+  quoteLinesSchema,
+  sendQuoteSchema,
+  type QuoteLineInput,
+} from "@menao/validation";
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { VoiceSession } from "@/components/assistant/voice-call";
 import { fr } from "@/i18n/fr";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { requireArtisan } from "./requests";
+import { voiceDraftLines } from "./voice-quote";
 
 export type SaveQuoteResult = { ok: true } | { ok: false; error: string };
 
@@ -27,6 +34,65 @@ export async function saveQuoteDraft(chantierId: string, lines: unknown): Promis
     return { ok: false, error: error.code === "22023" ? error.message : fr.errors.generic };
   revalidatePath("/pro", "layout");
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Devis en conversation avec Camille (F-85, ADR 0234)
+// ---------------------------------------------------------------------------
+
+/** Appel avec Camille pour ce devis : jeton, contexte du chantier et assistante (voice-session). */
+export async function prepareQuoteCall(chantierId: string): Promise<VoiceSession> {
+  const t = fr.pro.quote.conversation;
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const { supabase } = await requireArtisan();
+  const { data, error } = await supabase.functions.invoke("voice-session", {
+    method: "POST",
+    body: { usage: "devis", chantierId },
+  });
+  if (
+    !error &&
+    data?.status === "ok" &&
+    typeof data.assistantId === "string" &&
+    data.variables &&
+    typeof data.variables === "object"
+  ) {
+    return {
+      variables: data.variables as Record<string, string>,
+      assistantId: data.assistantId,
+    };
+  }
+  let status: string | undefined;
+  try {
+    const body = (await (error as { context?: Response } | null)?.context?.json?.()) as
+      { status?: string } | undefined;
+    status = body?.status;
+  } catch {
+    status = undefined;
+  }
+  return { error: t.errors[status ?? ""] ?? t.errors.generic ?? fr.errors.generic };
+}
+
+/** Lignes enregistrées par Camille pendant cet appel : elles font foi à la fin de l'appel. */
+export async function voiceQuoteDraftForCall(
+  chantierId: string,
+  callId: string,
+): Promise<QuoteLineInput[]> {
+  if (!z.uuid().safeParse(chantierId).success || !callId || callId.length > 100) return [];
+  const { supabase } = await requireArtisan();
+  const { data } = await supabase
+    .from("voice_quote_drafts")
+    .select("lines")
+    .eq("chantier_id", chantierId)
+    .eq("call_id", callId)
+    .maybeSingle();
+  return voiceDraftLines(data?.lines);
+}
+
+/** Brouillons de Camille repris dans le devis enregistré, ou écartés par l'artisan. */
+export async function settleVoiceQuoteDrafts(chantierId: string): Promise<void> {
+  if (!z.uuid().safeParse(chantierId).success) return;
+  const { supabase } = await requireArtisan();
+  await supabase.rpc("settle_voice_quote_drafts", { p_chantier_id: chantierId });
 }
 
 export type PreviousLine = {

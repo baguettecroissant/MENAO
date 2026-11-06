@@ -5215,6 +5215,55 @@ export type Database = {
           },
         ];
       };
+      voice_quote_drafts: {
+        Row: {
+          artisan_id: string;
+          call_id: string;
+          chantier_id: string;
+          created_at: string;
+          id: string;
+          lines: NonNullable<Json>;
+          settled_at: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          call_id: string;
+          chantier_id: string;
+          created_at?: string;
+          id?: string;
+          lines: NonNullable<Json>;
+          settled_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          call_id?: string;
+          chantier_id?: string;
+          created_at?: string;
+          id?: string;
+          lines?: NonNullable<Json>;
+          settled_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "voice_quote_drafts_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "voice_quote_drafts_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       voice_topup_offers: {
         Row: {
           active: boolean;
@@ -6967,6 +7016,7 @@ export type Database = {
         Args: { p_project_id: string; p_trade_codes: string[] };
         Returns: undefined;
       };
+      settle_voice_quote_drafts: { Args: { p_chantier_id: string }; Returns: undefined };
       siret_registered: { Args: { p_siret: string }; Returns: boolean };
       staff_review_held_requests: {
         Args: { p_project_id: string; p_reason?: string; p_release: boolean };
@@ -7048,6 +7098,20 @@ export type Database = {
       voice_prepare_work_request: {
         Args: { p_email: string; p_first_name: string; p_phone: string; p_project_id: string };
         Returns: string;
+      };
+      voice_quote_context: { Args: { p_artisan_id: string; p_chantier_id: string }; Returns: Json };
+      voice_quote_save_draft: {
+        Args: { p_artisan_id: string; p_call_id: string; p_chantier_id: string; p_lines: Json };
+        Returns: string;
+      };
+      voice_quote_usual_prices: {
+        Args: { p_artisan_id: string; p_query: string };
+        Returns: {
+          designation: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          unit_price_ht_cents: number;
+          vat_rate_bp: number;
+        }[];
       };
       voice_record_usage: {
         Args: { p_agent: string; p_artisan_id: string; p_call_id: string; p_seconds: number };
