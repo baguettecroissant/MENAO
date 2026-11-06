@@ -3,15 +3,31 @@ import {
   agendaItemsFrom,
   suggestSlots,
   type Absence,
-  type AgendaItem,
+  type AgendaItem as CoreAgendaItem,
   type HoursRange,
   type Weekday,
 } from "@menao/core";
 import { cache } from "react";
 import { artisanActivity, requireProSpace } from "./space";
 
-/** Élément horaire de l'agenda (F-44), commun avec l'application (`@menao/core`). */
-export type { AgendaItem, AgendaItemKind as AgendaKind } from "@menao/core";
+export type { AgendaItemKind as AgendaKind } from "@menao/core";
+
+/** Rendez-vous pris par la secrétaire dédiée (ADR 0232), affiché dans le détail du créneau. */
+export type SecretaryAppointment = {
+  messageId: string;
+  callerName: string;
+  callerPhone: string;
+  city: string | null;
+  reason: string;
+  urgent: boolean;
+  takenAt: string;
+};
+
+/**
+ * Élément horaire de l'agenda (F-44), commun avec l'application (`@menao/core`) ; sur le site, un
+ * créneau bloqué par la secrétaire porte aussi le détail du rendez-vous.
+ */
+export type AgendaItem = CoreAgendaItem & { secretary?: SecretaryAppointment };
 
 export type AgendaAbsence = Absence & { id: string; label: string | null };
 
@@ -78,7 +94,7 @@ export async function agendaItems(
       .gt("ends_at", from.toISOString())
       .order("starts_at"),
   ]);
-  return agendaItemsFrom({
+  const items: AgendaItem[] = agendaItemsFrom({
     chantiers: chantiers.map((c) => ({
       chantierId: c.chantier_id,
       status: c.status,
@@ -103,13 +119,38 @@ export async function agendaItems(
     to,
     excludeChantierId,
   });
+  // Rendez-vous de la secrétaire dédiée (ADR 0232) : client, téléphone et motif du créneau.
+  const slotIds = (blocked ?? []).map((b) => b.id);
+  if (slotIds.length === 0) return items;
+  const { data: messages } = await supabase
+    .from("secretary_messages")
+    .select("id, blocked_slot_id, caller_name, caller_phone, city, reason, urgent, created_at")
+    .in("blocked_slot_id", slotIds);
+  const bySlot = new Map((messages ?? []).map((m) => [m.blocked_slot_id, m]));
+  return items.map((item) => {
+    const m = item.kind === "creneau" ? bySlot.get(item.id) : undefined;
+    return m
+      ? {
+          ...item,
+          secretary: {
+            messageId: m.id,
+            callerName: m.caller_name,
+            callerPhone: m.caller_phone,
+            city: m.city,
+            reason: m.reason,
+            urgent: m.urgent,
+            takenAt: m.created_at,
+          },
+        }
+      : item;
+  });
 }
 
 /** Contexte des formulaires de rendez-vous (F-18) : créneaux libres et avertissements. */
 export type AppointmentAgenda = {
   hours: HoursRange[];
   absences: AgendaAbsence[];
-  busy: Pick<AgendaItem, "kind" | "start" | "durationMinutes" | "title">[];
+  busy: Pick<CoreAgendaItem, "kind" | "start" | "durationMinutes" | "title">[];
   /** Instants ISO proposés (vide pour la date de démarrage). */
   suggestions: string[];
 };

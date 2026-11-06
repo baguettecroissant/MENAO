@@ -9,15 +9,23 @@ import {
   weekdayOf,
   type HoursRange,
 } from "@menao/core";
-import { CalendarOff, HardHat, MapPin, Palmtree, Smartphone, UserRound } from "lucide-react";
+import {
+  CalendarOff,
+  HardHat,
+  Headset,
+  MapPin,
+  Palmtree,
+  Smartphone,
+  UserRound,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { fr } from "@/i18n/fr";
 import { deleteBlockedSlot } from "@/lib/artisan/agenda-actions";
 import type { AgendaAbsence, AgendaItem, AgendaKind } from "@/lib/artisan/agenda";
-import { formatClock, formatDayMonth, formatTime } from "@/lib/format";
-import { RemoveButton } from "./remove-button";
+import { formatClock, formatDayInline, formatDayMonth, formatTime } from "@/lib/format";
+import { AgendaItemDetails } from "./agenda-item-details";
 
 const t = fr.pro.agenda;
 /** Hauteur d'une heure dans la grille, en pixels. */
@@ -29,6 +37,9 @@ const KIND_STYLES: Record<AgendaKind, string> = {
   creneau: "border-border-strong bg-background text-muted-foreground",
   occupe: "border-subtle-foreground bg-surface text-muted-foreground",
 };
+/** Rendez-vous pris par la secrétaire dédiée (ADR 0232) : comme une visite chez le client. */
+const SECRETARY_STYLE = "border-primary bg-primary-soft text-primary-strong";
+
 const KIND_ICONS = {
   visite: UserRound,
   demarrage: HardHat,
@@ -53,6 +64,11 @@ const clockOf = (minutes: number) => formatClock(minutesToTime(minutes));
 
 function describe(item: Placed): string {
   const time = t.range(clockOf(item.startMinutes), clockOf(item.endMinutes));
+  if (item.secretary) {
+    return [t.details.secretaryKind, time, item.secretary.callerName, item.secretary.city]
+      .filter(Boolean)
+      .join(" · ");
+  }
   return [t.kinds[item.kind], time, item.title, item.place].filter(Boolean).join(" · ");
 }
 
@@ -276,7 +292,10 @@ export function WeekView({
   );
 }
 
-/** Visite ou démarrage (lien vers le chantier), ou créneau bloqué (avec « Libérer »). */
+/**
+ * Visite ou démarrage (lien vers le chantier), ou créneau sans chantier : rendez-vous de la
+ * secrétaire, créneau bloqué ou plage du téléphone, avec sa fenêtre de détail.
+ */
 function AgendaBlock({
   item,
   style,
@@ -293,25 +312,29 @@ function AgendaBlock({
   base: string;
   example: boolean;
 }) {
-  const Icon = KIND_ICONS[item.kind];
+  const s = item.secretary;
+  const Icon = s ? Headset : KIND_ICONS[item.kind];
   const grid = variant === "grid";
   const time = formatTime(item.start);
+  const kindLabel = s ? t.details.secretaryKind : t.kinds[item.kind];
+  const title = s ? s.callerName : item.title;
+  const place = s ? s.city : item.place;
   const body = (
     <>
       <span className="flex min-w-0 items-center gap-1 font-medium">
         <Icon aria-hidden="true" className="size-3.5 shrink-0" />
-        <span className="truncate">{compact ? time : `${time} · ${t.kinds[item.kind]}`}</span>
+        <span className="truncate">{compact ? time : `${time} · ${kindLabel}`}</span>
       </span>
-      {item.title && <span className="block truncate text-foreground/85">{item.title}</span>}
-      {item.place && !compact && (grid ? item.durationMinutes >= 60 : true) && (
+      {title && <span className="block truncate text-foreground/85">{title}</span>}
+      {place && !compact && (grid ? item.durationMinutes >= 60 : true) && (
         <span className="flex min-w-0 items-center gap-1 text-[0.6875rem] opacity-80">
           <MapPin aria-hidden="true" className="size-3 shrink-0" />
-          <span className="truncate">{item.place}</span>
+          <span className="truncate">{place}</span>
         </span>
       )}
     </>
   );
-  const classes = `${KIND_STYLES[item.kind]} border-l-[3px] text-xs leading-4 ${
+  const classes = `${s ? SECRETARY_STYLE : KIND_STYLES[item.kind]} border-l-[3px] text-xs leading-4 ${
     grid ? "absolute z-[1] overflow-hidden rounded-md px-1.5 py-1" : "flex rounded-lg px-3 py-2"
   }`;
 
@@ -328,25 +351,23 @@ function AgendaBlock({
       </Link>
     );
   }
+  // Créneau sans chantier : cliquable, détail et « Libérer » dans une fenêtre (ADR 0232).
+  const when = t.details.when(
+    formatDayInline(item.start).replace(/ \d{4}$/, ""),
+    t.range(clockOf(item.startMinutes), clockOf(item.endMinutes)),
+  );
   return (
-    <div
+    <AgendaItemDetails
+      item={item}
+      when={when}
+      describe={describe(item)}
       style={style}
-      title={describe(item)}
-      className={`${classes} ${grid ? "group" : "items-start justify-between gap-2"}`}
+      className={`${classes} ${grid ? "block" : "w-full flex-col items-start"}`}
+      removeAction={
+        !example && item.kind === "creneau" ? deleteBlockedSlot.bind(null, item.id) : undefined
+      }
     >
-      <span className="block min-w-0">{body}</span>
-      {/* Grille : « Libérer » apparaît au survol ou au clavier ; liste mobile : toujours visible. */}
-      {!example && (
-        <RemoveButton
-          action={deleteBlockedSlot.bind(null, item.id)}
-          label={t.block.remove(describe(item))}
-          className={
-            grid
-              ? "absolute top-0.5 right-0.5 size-6 bg-surface opacity-0 shadow-card group-hover:opacity-100"
-              : "-mr-1 size-8 opacity-70 hover:opacity-100"
-          }
-        />
-      )}
-    </div>
+      {grid ? body : <span className="block min-w-0">{body}</span>}
+    </AgendaItemDetails>
   );
 }
