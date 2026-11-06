@@ -544,3 +544,36 @@ export function voiceSquad(start: VoiceSide, ids: Record<VoiceSide, string>) {
   });
   return { members: [member(start, true), member(otherSide(start), false)] };
 }
+
+/**
+ * Horaires d'accueil de l'équipe (F-81, ADR 0230), calculés en base (`reception_status`) : accueil
+ * ouvert maintenant, heure de fermeture du jour, prochaine ouverture (jours fériés et fermetures
+ * comprises). Dates ISO.
+ */
+export type ReceptionStatus = {
+  ouvert: boolean;
+  ferme_a: string | null;
+  prochaine_ouverture: string | null;
+};
+
+const parisDay = (at: Date) => at.toLocaleDateString("en-CA", { timeZone: PARIS });
+/** « dix-sept heures », « neuf heures trente ». */
+const spokenHour = (at: Date) => parisSlotSpoken(at).split(" à ")[1] ?? "";
+
+/** Phrase lue par Camille après une demande de rappel : quand l'équipe pourra rappeler. */
+export function receptionCallbackSpoken(status: ReceptionStatus, now: Date): string {
+  const close = status.ferme_a ? new Date(status.ferme_a) : null;
+  if (status.ouvert && close && !Number.isNaN(close.getTime())) {
+    return `L'équipe est joignable aujourd'hui jusqu'à ${spokenHour(close)} : elle rappelle dès que possible.`;
+  }
+  const next = status.prochaine_ouverture ? new Date(status.prochaine_ouverture) : null;
+  if (!next || Number.isNaN(next.getTime())) return "L'équipe rappelle dès que possible.";
+  const day = parisDay(next);
+  const when =
+    day === parisDay(now)
+      ? `aujourd'hui à partir de ${spokenHour(next)}`
+      : day === parisDay(new Date(now.getTime() + 86_400_000))
+        ? `demain à partir de ${spokenHour(next)}`
+        : parisSlotSpoken(next).replace(" à ", " à partir de ");
+  return `L'équipe est fermée pour le moment : elle rappelle ${when}.`;
+}

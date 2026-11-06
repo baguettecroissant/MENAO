@@ -23,9 +23,10 @@ import { useActionState, useMemo, useState } from "react";
 import { Alert, Button, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { saveHours } from "@/lib/artisan/agenda-actions";
-import { initialFormState } from "@/lib/auth/form";
+import { initialFormState, type FormState } from "@/lib/auth/form";
 
-const t = fr.pro.agenda.availability.hours;
+const agendaTexts = fr.pro.agenda.availability.hours;
+type HoursAction = (prev: FormState, formData: FormData) => Promise<FormState>;
 // Heures au quart d'heure, toujours au format 24 h (un champ « time » natif suit la langue du
 // système et peut afficher AM/PM).
 const QUARTERS = Array.from({ length: 96 }, (_, i) => minutesToTime(i * 15));
@@ -69,12 +70,25 @@ const PRESET_KEYS = Object.keys(HOURS_PRESETS) as HoursPreset[];
  * Horaires de travail de la semaine (F-44) : jusqu'à trois plages par jour, modèles courants,
  * recopie du lundi. Enregistrés en une fois ; contrôles de @menao/core avant l'envoi.
  */
-export function HoursEditor({ initial }: { initial: HoursRange[] }) {
+/**
+ * Horaires de la semaine. Par défaut ceux de l'agenda de l'artisan (F-44) ; les horaires d'accueil
+ * de l'équipe (ADR 0230) passent leur propre action et leurs textes.
+ */
+export function HoursEditor({
+  initial,
+  action: saveAction = saveHours,
+  texts,
+}: {
+  initial: HoursRange[];
+  action?: HoursAction;
+  texts?: Partial<Record<"title" | "text" | "save" | "none", string>>;
+}) {
+  const t = { ...agendaTexts, ...texts };
   const [week, setWeek] = useState<WeekHours>(() => weekHours(initial));
   const [saved, setSaved] = useState(() => JSON.stringify(hoursOfWeek(weekHours(initial))));
   const [state, action, pending] = useActionState(
     async (prev: typeof initialFormState, formData: FormData) => {
-      const result = await saveHours(prev, formData);
+      const result = await saveAction(prev, formData);
       if (result.success) setSaved(String(formData.get("hours")));
       return result;
     },

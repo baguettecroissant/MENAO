@@ -1672,6 +1672,22 @@ export type Database = {
           },
         ];
       };
+      camille_recaps: {
+        Row: {
+          day: string;
+          sent_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          day: string;
+          sent_at?: string;
+        };
+        Update: {
+          day?: string;
+          sent_at?: string;
+        };
+        Relationships: [];
+      };
       certifications: {
         Row: {
           artisan_id: string;
@@ -3567,6 +3583,7 @@ export type Database = {
           project_id: string;
           token_hash: string;
           used_at: string | null;
+          via_telephone: boolean;
         };
         ComputedFields: never;
         Insert: {
@@ -3577,6 +3594,7 @@ export type Database = {
           project_id: string;
           token_hash: string;
           used_at?: string | null;
+          via_telephone?: boolean;
         };
         Update: {
           created_at?: string;
@@ -3586,6 +3604,7 @@ export type Database = {
           project_id?: string;
           token_hash?: string;
           used_at?: string | null;
+          via_telephone?: boolean;
         };
         Relationships: [
           {
@@ -4270,6 +4289,34 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      reception_settings: {
+        Row: {
+          closed_dates: string[];
+          holidays_closed: boolean;
+          hours: Json;
+          id: boolean;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          closed_dates?: string[];
+          holidays_closed?: boolean;
+          hours?: Json;
+          id?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          closed_dates?: string[];
+          holidays_closed?: boolean;
+          hours?: Json;
+          id?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
       };
       receptions: {
         Row: {
@@ -5592,6 +5639,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_save_reception_settings: {
+        Args: { p_closed_dates: string[]; p_holidays_closed: boolean; p_hours: Json };
+        Returns: undefined;
+      };
       admin_search: {
         Args: { p_limit?: number; p_query: string };
         Returns: {
@@ -6431,6 +6482,7 @@ export type Database = {
       public_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       quote_document: { Args: { p_quote_id: string }; Returns: Json };
       reception_document: { Args: { p_reception_id: string }; Returns: Json };
+      reception_status: { Args: Record<PropertyKey, never>; Returns: Json };
       recommend_partner: {
         Args: { p_partner_id: string; p_project_id: string; p_request_id: string };
         Returns: string;
@@ -6872,7 +6924,8 @@ export type Database = {
         | "finalisation_relance"
         | "creneaux_proposes"
         | "creneau_choisi"
-        | "rdv_commercial";
+        | "rdv_commercial"
+        | "equipe_recap_camille";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7199,6 +7252,7 @@ export const Constants = {
         "creneaux_proposes",
         "creneau_choisi",
         "rdv_commercial",
+        "equipe_recap_camille",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

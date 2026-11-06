@@ -16,6 +16,7 @@ import {
   voiceCallSeconds,
   voiceText,
   voiceToolDefinitions,
+  receptionCallbackSpoken,
   voiceSquad,
   voicePreparedRequestPath,
   voiceWorkDescription,
@@ -251,5 +252,48 @@ describe("une seule Camille : passage de relais (ADR 0228)", () => {
     expect(second?.assistantOverrides).toEqual({
       firstMessageMode: "assistant-speaks-first-with-model-generated-message",
     });
+  });
+});
+
+describe("horaires d'accueil : quand l'équipe rappelle (ADR 0230)", () => {
+  const at = (iso: string) => new Date(iso);
+
+  it("accueil ouvert : joignable jusqu'à la fermeture du jour", () => {
+    expect(
+      receptionCallbackSpoken(
+        { ouvert: true, ferme_a: "2026-11-06T16:00:00Z", prochaine_ouverture: null },
+        at("2026-11-06T10:00:00Z"),
+      ),
+    ).toBe(
+      "L'équipe est joignable aujourd'hui jusqu'à dix-sept heures : elle rappelle dès que possible.",
+    );
+  });
+
+  it("accueil fermé : plus tard dans la journée, demain ou un autre jour", () => {
+    const closed = (next: string) => ({ ouvert: false, ferme_a: null, prochaine_ouverture: next });
+    expect(
+      receptionCallbackSpoken(closed("2026-11-06T08:00:00Z"), at("2026-11-06T07:00:00Z")),
+    ).toBe(
+      "L'équipe est fermée pour le moment : elle rappelle aujourd'hui à partir de neuf heures.",
+    );
+    expect(
+      receptionCallbackSpoken(closed("2026-11-06T08:30:00Z"), at("2026-11-05T18:00:00Z")),
+    ).toBe(
+      "L'équipe est fermée pour le moment : elle rappelle demain à partir de neuf heures trente.",
+    );
+    expect(
+      receptionCallbackSpoken(closed("2026-11-09T08:00:00Z"), at("2026-11-06T18:00:00Z")),
+    ).toBe(
+      "L'équipe est fermée pour le moment : elle rappelle lundi neuf novembre à partir de neuf heures.",
+    );
+  });
+
+  it("aucun horaire connu : dès que possible", () => {
+    expect(
+      receptionCallbackSpoken(
+        { ouvert: false, ferme_a: null, prochaine_ouverture: null },
+        at("2026-11-06T10:00:00Z"),
+      ),
+    ).toBe("L'équipe rappelle dès que possible.");
   });
 });
