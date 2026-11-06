@@ -167,4 +167,8 @@ export const messages = {
   acquisitionCodeInvalid: "Code invalide : 3 à 32 caractères, minuscules, chiffres et tirets.",
   acquisitionCodeUnknown: "Code de suivi introuvable.",
   acquisitionLabelRequired: "Indiquez le libellé du code.",
+  // Horaires d'accueil de l'équipe (ADR 0230).
+  receptionDateInvalid: (value: string) =>
+    `Date de fermeture invalide : « ${value} ». Écrivez-la comme 24/12/2026, entre 2020 et 2040.`,
+  receptionTooManyDates: "Cent dates de fermeture au plus.",
 } as const;

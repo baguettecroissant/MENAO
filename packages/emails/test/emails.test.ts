@@ -1116,3 +1116,44 @@ describe("push d'un message (F-41, ADR 0201)", () => {
     expect(messagePushContent({ ...photo, kind: "fichier" }).body).toBe("Fichier joint");
   });
 });
+
+describe("récapitulatif du matin de Camille (ADR 0230)", () => {
+  const ctx = { siteUrl: "https://menao.example", firstName: "Tim" };
+
+  it("chiffres de la veille, motifs des rappels, lien vers les tickets", () => {
+    const c = notificationContent(
+      "equipe_recap_camille",
+      {
+        appels: 5,
+        minutes: 18,
+        hors_horaires: 3,
+        rappels: 2,
+        motifs: ["question sur les formules", "litige avec un client"],
+        rendez_vous: 1,
+        demandes_preparees: 2,
+        demandes_validees: 1,
+      },
+      ctx,
+    );
+    expect(c.subject).toBe("Camille : 5 appels depuis hier");
+    expect(c.paragraphs).toEqual([
+      "Bonjour Tim,",
+      "5 appels (18 minutes), dont 3 hors des horaires d'accueil.",
+      "2 demandes de rappel à traiter dans les tickets.",
+      "1 rendez-vous pris avec un commercial.",
+      "2 demandes de travaux préparées, dont 1 déjà envoyée par le particulier.",
+    ]);
+    expect(c.quote).toBe("Motifs des rappels : question sur les formules ; litige avec un client");
+    expect(c.cta.url).toBe("https://menao.example/admin/tickets");
+  });
+
+  it("seulement ce qui s'est passé", () => {
+    const c = notificationContent("equipe_recap_camille", { rappels: 1 }, ctx);
+    expect(c.paragraphs).toEqual([
+      "Bonjour Tim,",
+      "1 demande de rappel à traiter dans les tickets.",
+    ]);
+    expect(c.subject).toBe("Le récapitulatif de Camille");
+    expect(c.quote).toBeNull();
+  });
+});

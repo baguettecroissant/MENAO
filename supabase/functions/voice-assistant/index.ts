@@ -8,7 +8,8 @@
 //   du secteur (ADR 0226), préparer la demande de travaux d'un particulier (ADR 0227 : session
 //   anonyme, analyse par analyze-need, lien à usage unique envoyé par e-mail ; rien ne part chez
 //   les artisans avant que le particulier envoie lui-même), envoyer l'état des demandes d'un
-//   particulier à l'adresse de son compte (ADR 0229). Réponse toujours en HTTP 200.
+//   particulier à l'adresse de son compte (ADR 0229). Après une demande de rappel, Camille dit
+//   quand l'équipe rappelle, d'après ses horaires d'accueil (ADR 0230). Réponse toujours en HTTP 200.
 // - « end-of-call-report » : durée de l'appel dans ai_runs (jamais la transcription).
 // Aucune donnée personnelle dans les journaux.
 import {
@@ -19,6 +20,7 @@ import {
   parisSlotSpoken,
   parseSlotCode,
   parseVoiceToolCalls,
+  receptionCallbackSpoken,
   sameSecret,
   slotCode,
   spokenEmail,
@@ -27,6 +29,7 @@ import {
   voicePreparedRequestPath,
   voiceText,
   voiceWorkDescription,
+  type ReceptionStatus,
   type VoiceToolCall,
 } from "../../../packages/core/src/voice-assistant.ts";
 import { isDeliverableAddress } from "../../../packages/emails/src/address.ts";
@@ -230,6 +233,21 @@ async function sendRequestsStatus(admin: Admin, call: VoiceToolCall): Promise<To
   return neutral;
 }
 
+/** Quand l'équipe rappelle, d'après ses horaires d'accueil (ADR 0230). */
+async function callbackWhen(admin: Admin): Promise<string> {
+  const { data, error } = await admin.rpc("reception_status");
+  if (error || !data || typeof data !== "object") return "L'équipe rappelle dès que possible.";
+  const d = data as Partial<ReceptionStatus>;
+  return receptionCallbackSpoken(
+    {
+      ouvert: d.ouvert === true,
+      ferme_a: typeof d.ferme_a === "string" ? d.ferme_a : null,
+      prochaine_ouverture: typeof d.prochaine_ouverture === "string" ? d.prochaine_ouverture : null,
+    },
+    new Date(),
+  );
+}
+
 async function requestCallback(admin: Admin, call: VoiceToolCall): Promise<ToolResult> {
   const phone = spokenPhoneToE164(call.args.telephone);
   const email = spokenEmail(call.args.email);
@@ -270,8 +288,7 @@ async function requestCallback(admin: Admin, call: VoiceToolCall): Promise<ToolR
   }
   return {
     toolCallId: call.id,
-    result:
-      "Demande de rappel enregistrée : l'équipe rappelle sous un jour ouvré, au moment indiqué si possible.",
+    result: `Demande de rappel enregistrée. ${await callbackWhen(admin)} Au moment indiqué si possible. Dis-le simplement, sans promettre d'heure précise.`,
   };
 }
 

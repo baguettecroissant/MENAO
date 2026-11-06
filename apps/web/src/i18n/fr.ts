@@ -8142,6 +8142,27 @@ export const fr = {
       empty: "Aucun appel sur cette période.",
     },
     tickets: {
+      // Horaires d'accueil de l'équipe (F-81, ADR 0230).
+      reception: {
+        title: "Horaires d'accueil",
+        intro:
+          "Camille s'en sert pour dire quand l'équipe rappelle. Plus tard, ils aiguilleront la ligne téléphonique : l'équipe aux heures d'accueil, Camille le reste du temps.",
+        openNow: (time: string) => `Ouvert maintenant, jusqu'à ${time}`,
+        closedNow: (when: string) => `Fermé, réouverture ${when}`,
+        closedUnknown: "Fermé, aucune plage d'ouverture dans les deux semaines",
+        hoursTitle: "Plages de la semaine",
+        hoursText: "Heure de Paris. Plusieurs plages par jour pour une pause.",
+        hoursSave: "Enregistrer les horaires",
+        hoursNone: "Aucune plage : l'accueil est toujours fermé.",
+        closuresTitle: "Fermetures",
+        closures: "Fermetures exceptionnelles",
+        closuresHint: "Une date par ligne, par exemple 24/12/2026.",
+        holidays: "Fermé les jours fériés (France métropolitaine)",
+        closuresSave: "Enregistrer les fermetures",
+        saved: "Enregistré.",
+        readOnly: "Seuls les administrateurs modifient les horaires.",
+        summaryDays: ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"],
+      },
       title: "Dossiers et messages",
       types: {
         dossier_recherche: "Dossier de recherche",

@@ -74,6 +74,8 @@ export const NOTIFICATION_TYPES = [
   "creneau_choisi",
   // Rendez-vous avec le commercial du secteur pris par la secrétaire vocale (ADR 0226).
   "rdv_commercial",
+  // Récapitulatif du matin de Camille, pour l'équipe (ADR 0230).
+  "equipe_recap_camille",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -928,6 +930,49 @@ export function notificationContent(
         ],
         quote: reason,
         cta: { label: "Ouvrir Ma journée", url: link("/commercial/journee") },
+      };
+    }
+    case "equipe_recap_camille": {
+      // Récapitulatif du matin (ADR 0230) : ce que Camille a fait depuis le précédent, sans
+      // coordonnées (elles sont dans chaque ticket ou rendez-vous).
+      const n = (key: string) => count(data, key);
+      const many = (value: number, one: string, several: string) =>
+        `${value} ${value > 1 ? several : one}`;
+      const motifs = Array.isArray(data.motifs)
+        ? data.motifs
+            .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+            .slice(0, 5)
+        : [];
+      const afterHours = n("hors_horaires");
+      const validated = n("demandes_validees");
+      const lines = [
+        n("appels") > 0
+          ? `${many(n("appels"), "appel", "appels")} (${many(n("minutes"), "minute", "minutes")})${afterHours ? `, dont ${afterHours} hors des horaires d'accueil` : ""}.`
+          : null,
+        n("rappels") > 0
+          ? `${many(n("rappels"), "demande de rappel à traiter", "demandes de rappel à traiter")} dans les tickets.`
+          : null,
+        n("rendez_vous") > 0
+          ? `${many(n("rendez_vous"), "rendez-vous pris", "rendez-vous pris")} avec un commercial.`
+          : null,
+        n("demandes_preparees") > 0
+          ? `${many(n("demandes_preparees"), "demande de travaux préparée", "demandes de travaux préparées")}${validated ? `, dont ${validated} déjà ${validated > 1 ? "envoyées" : "envoyée"} par le particulier` : ""}.`
+          : null,
+      ].filter((line): line is string => line !== null);
+      return {
+        subject: n("appels")
+          ? `Camille : ${many(n("appels"), "appel", "appels")} depuis hier`
+          : "Le récapitulatif de Camille",
+        preview: "Ce que Camille, l'assistante vocale de MENAO, a fait depuis hier matin.",
+        title: "Ce que Camille a fait",
+        paragraphs: [
+          hello(ctx.firstName),
+          ...(lines.length ? lines : ["Aucune activité depuis le dernier récapitulatif."]),
+        ],
+        quote: motifs.length ? `Motifs des rappels : ${motifs.join(" ; ")}` : null,
+        postscript:
+          "Les coordonnées sont dans chaque ticket et dans « Ma journée » des commerciaux.",
+        cta: { label: "Voir les tickets", url: link("/admin/tickets") },
       };
     }
     case "niveau_atteint": {

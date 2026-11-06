@@ -1,10 +1,12 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
+import { ReceptionCard } from "@/components/admin/reception-card";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { parsePage } from "@/lib/admin/follow-up";
 import { requireStaff } from "@/lib/admin/guard";
+import { getReception } from "@/lib/admin/reception";
 import { TICKET_FILTERS, listTickets, parseTicketFilter, ticketCounts } from "@/lib/admin/tickets";
 import { formatDay } from "@/lib/format";
 
@@ -25,10 +27,11 @@ export default async function TicketsPage({ searchParams }: PageProps<"/admin/ti
   const filter = parseTicketFilter(params.file);
   const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
   const page = parsePage(params.page);
-  const { supabase } = await requireStaff();
-  const [{ rows, total }, counts] = await Promise.all([
+  const { supabase, role } = await requireStaff();
+  const [{ rows, total }, counts, reception] = await Promise.all([
     listTickets(supabase, { filter, query, page }),
     ticketCounts(supabase, query),
+    getReception(supabase),
   ]);
   const now = new Date();
   const href = (next: { file?: string; page?: number }) =>
@@ -140,6 +143,13 @@ export default async function TicketsPage({ searchParams }: PageProps<"/admin/ti
         )}
         <Pagination page={page} total={total} hrefFor={(p) => href({ page: p })} />
       </Card>
+      {reception && (
+        <ReceptionCard
+          settings={reception.settings}
+          state={reception.state}
+          canEdit={role === "admin"}
+        />
+      )}
     </div>
   );
 }
