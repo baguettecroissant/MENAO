@@ -15,6 +15,7 @@ export function JournalCard({
   summary,
   photoUrls,
   author,
+  authors,
   intro,
   emptyText,
   photoAction,
@@ -26,6 +27,8 @@ export function JournalCard({
   photoUrls: ReadonlyMap<string, string>;
   /** Auteur affiché des messages : « Vous » pour l'artisan, son prénom pour le client. */
   author: string;
+  /** Auteur de certaines entrées (ADR 0243) : collègue, ou membre de l'équipe vu par le client. */
+  authors?: Readonly<Record<string, string>>;
   intro?: string;
   /** Texte de l'encadré vide (côté client) ; aucun encadré s'il est absent. */
   emptyText?: string;
@@ -41,6 +44,7 @@ export function JournalCard({
     id: m.id,
     message: m.message,
     ago: formatTimeAgo(m.createdAt, now),
+    author: authors?.[m.id] ?? author,
   }));
   return (
     <section
@@ -61,7 +65,7 @@ export function JournalCard({
       {intro && <p className="text-sm text-muted-foreground">{intro}</p>}
       {photos.length > 0 && <PhotoMosaic urls={photos} />}
       {photoAction}
-      {messages.length > 0 && <JournalMessages author={author} messages={messages} />}
+      {messages.length > 0 && <JournalMessages messages={messages} />}
       {emptyText && photos.length === 0 && messages.length === 0 && (
         <div className="flex flex-col items-center gap-3 rounded-card bg-background px-6 py-10 text-center">
           <ImageIcon

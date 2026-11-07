@@ -25,10 +25,13 @@ export function JournalCard({
   emptyText,
   photoAction,
   children,
+  authors,
 }: {
   journal: JournalSummary;
   photoUrls: string[];
   emptyText: string | null;
+  /** Auteur de certaines entrées (ADR 0243) : collègue, ou membre de l'équipe vu par le client. */
+  authors?: Readonly<Record<string, string>>;
   /** « Ajouter une photo » (artisan, pendant les travaux), sous les photos comme sur le site. */
   photoAction?: ReactNode;
   children?: ReactNode;
@@ -72,6 +75,7 @@ export function JournalCard({
         {photoAction}
         {journal.messages.map((m) => (
           <View key={m.id} style={styles.message}>
+            {authors?.[m.id] ? <Text style={styles.small}>{authors[m.id]}</Text> : null}
             <Text style={styles.messageText}>{m.message}</Text>
             <Text style={styles.small}>{t.journal.messageLeft(formatAgo(m.createdAt))}</Text>
           </View>

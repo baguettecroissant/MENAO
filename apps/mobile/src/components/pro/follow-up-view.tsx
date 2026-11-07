@@ -251,6 +251,7 @@ export function FollowUpView({
           <JournalCard
             journal={f.journal}
             photoUrls={f.photoUrls}
+            authors={f.journalAuthors}
             emptyText={
               open ? fr.chantier.journal.artisanIntro(client) : fr.chantier.journal.artisanLocked
             }

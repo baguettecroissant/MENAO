@@ -1290,3 +1290,20 @@ describe("relance d'un paiement dû (ADR 0238)", () => {
     expect(c.cta.label).toBe("Régler le solde");
   });
 });
+
+describe("chantier attribué à un membre de l'équipe (ADR 0243)", () => {
+  it("nom de l'entreprise, titre du chantier, lien vers le chantier", () => {
+    const chantierId = "44444444-4444-4444-8444-444444444444";
+    const c = notificationContent(
+      "chantier_attribue",
+      { chantier_id: chantierId, titre: "Salle de bain", entreprise: "Plomberie Paul" },
+      { siteUrl: "https://menao.example", firstName: "Oscar" },
+    );
+    expect(c.subject).toBe("Chantier attribué : Salle de bain");
+    expect(c.paragraphs[1]).toContain("Plomberie Paul vous a attribué le chantier");
+    expect(c.cta).toEqual({
+      label: "Voir le chantier",
+      url: `https://menao.example/pro/chantiers/${chantierId}`,
+    });
+  });
+});

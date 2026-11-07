@@ -85,6 +85,8 @@ export const NOTIFICATION_TYPES = [
   "synthese_mois",
   // Relance d'un paiement dû, au nom de l'artisan (ADR 0238).
   "paiement_relance",
+  // Chantier attribué à un membre de l'équipe de l'artisan (ADR 0243).
+  "chantier_attribue",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -1130,6 +1132,25 @@ export function notificationContent(
         ],
         quote: null,
         cta: myChantier(solde ? "Régler le solde" : "Régler l'acompte"),
+      };
+    }
+    case "chantier_attribue": {
+      // Comptes d'équipe (ADR 0243) : le patron ou le chef d'équipe attribue un chantier à un membre.
+      const entreprise = text(data, "entreprise");
+      const chantierId = uuid(data, "chantier_id");
+      return {
+        subject: titre ? `Chantier attribué : ${titre}` : "Un chantier vous est attribué",
+        preview: `${entreprise ?? "Votre entreprise"} vous a attribué un chantier sur MENAO.`,
+        title: "Un chantier vous est attribué",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${entreprise ?? "Votre entreprise"} vous a attribué ${titre ? `le chantier ${quoted(titre)}` : "un chantier"} : vous y retrouvez le journal, les photos, les messages avec le client et les rendez-vous.`,
+        ],
+        quote: null,
+        cta: {
+          label: "Voir le chantier",
+          url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+        },
       };
     }
     case "acompte_relance":

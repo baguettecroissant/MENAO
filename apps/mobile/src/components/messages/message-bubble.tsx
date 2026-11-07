@@ -29,6 +29,7 @@ export function MessageBubble({
 }) {
   return (
     <View style={[styles.item, m.mine ? styles.mine : styles.theirs]}>
+      {m.author ? <Text style={styles.author}>{m.author}</Text> : null}
       <Content message={m} />
       <Text style={styles.time}>
         {m.time}
@@ -146,6 +147,7 @@ function ReportMessage({ messageId }: { messageId: string }) {
 }
 
 const styles = StyleSheet.create({
+  author: { fontFamily: font.medium, fontSize: 12, color: colors["muted-foreground"] },
   item: { maxWidth: "85%", gap: spacing(1) },
   mine: { alignSelf: "flex-end", alignItems: "flex-end" },
   theirs: { alignSelf: "flex-start", alignItems: "flex-start" },

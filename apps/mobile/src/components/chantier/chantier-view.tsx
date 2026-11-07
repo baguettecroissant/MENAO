@@ -70,6 +70,7 @@ export function ChantierView({
   const journal = (
     <JournalCard
       journal={detail.journal}
+      authors={detail.journalAuthors}
       photoUrls={detail.photoUrls}
       emptyText={
         STARTED.includes(status)

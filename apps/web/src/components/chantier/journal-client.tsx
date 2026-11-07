@@ -76,11 +76,9 @@ export function PhotoMosaic({ urls }: { urls: string[] }) {
 
 /** Messages du journal : les deux plus récents, puis « Afficher tous les messages ». */
 export function JournalMessages({
-  author,
   messages,
 }: {
-  author: string;
-  messages: { id: string; message: string; ago: string }[];
+  messages: { id: string; message: string; ago: string; author: string }[];
 }) {
   const [all, setAll] = useState(false);
   const shown = all ? messages : messages.slice(0, 2);
@@ -89,7 +87,7 @@ export function JournalMessages({
       <ul className="flex flex-col gap-4">
         {shown.map((m) => (
           <li key={m.id} className="flex flex-col gap-0.5">
-            <p className="text-sm font-medium">{author}</p>
+            <p className="text-sm font-medium">{m.author}</p>
             <p className="text-xs text-muted-foreground">{t.messageLeft(m.ago)}</p>
             <p className="mt-1 text-sm leading-relaxed whitespace-pre-line">{m.message}</p>
           </li>

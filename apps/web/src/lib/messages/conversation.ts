@@ -42,5 +42,6 @@ export async function loadConversation(
     read: r.read_at !== null,
     day: dayLabel(r.created_at, now),
     time: formatTime(r.created_at),
+    author: r.author_name,
   }));
 }

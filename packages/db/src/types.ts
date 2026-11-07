@@ -6484,6 +6484,7 @@ export type Database = {
       chantier_messages: {
         Args: { p_chantier_id: string };
         Returns: {
+          author_name: string;
           body: string;
           created_at: string;
           hidden: boolean;
@@ -6495,6 +6496,7 @@ export type Database = {
         }[];
       };
       chantier_team: { Args: { p_chantier_id: string }; Returns: Json };
+      chantier_update_authors: { Args: { p_chantier_id: string }; Returns: Json };
       choose_welcome_gift: {
         Args: {
           p_adresse_code_postal: string;
@@ -7545,7 +7547,8 @@ export type Database = {
         | "agents_minutes_epuisees"
         | "secretaire_message"
         | "synthese_mois"
-        | "paiement_relance";
+        | "paiement_relance"
+        | "chantier_attribue";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -7879,6 +7882,7 @@ export const Constants = {
         "secretaire_message",
         "synthese_mois",
         "paiement_relance",
+        "chantier_attribue",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

@@ -118,6 +118,7 @@ export function exampleArtisanFollowUp(now = new Date()): ArtisanFollowUp {
     coverUrl: null,
     depositPaid: true,
     journal,
+    journalAuthors: {},
     photoUrls: photoUrls(journal.photos),
     documents: [
       {
