@@ -6,8 +6,10 @@ import {
   firstPaymentDate,
   monthlyEquivalentCents,
   parseAiAgents,
+  parseClientReminders,
 } from "@menao/core";
 import { AiAgentsCard } from "@/components/pro/ai-agents-card";
+import { ClientRemindersCard } from "@/components/pro/client-reminders-card";
 import { SecretaryCard } from "@/components/pro/secretary-card";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -56,6 +58,12 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
       }[];
     } | null;
     const firstOffer = topUpData?.offres?.[0];
+    // Rappels aux clients par SMS (ADR 0239), si inclus.
+    const { data: reminders } =
+      agentsState.agents.reminders !== "non"
+        ? await supabase.rpc("my_client_reminders")
+        : { data: null };
+    const remindersState = reminders ? parseClientReminders(reminders) : null;
     // Secrétaire dédiée (ADR 0232) : réglages, horaires et derniers messages, si incluse.
     const [secretarySettings, secretaryMessages, hoursCount] = agentsState.agents.secretary
       ? await Promise.all([
@@ -157,6 +165,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
             messages={secretaryMessages?.data ?? []}
           />
         )}
+        {remindersState?.included && <ClientRemindersCard state={remindersState} />}
       </div>
     );
   }

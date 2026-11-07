@@ -2006,6 +2006,42 @@ export type Database = {
           },
         ];
       };
+      client_reminder_settings: {
+        Row: {
+          acompte: boolean;
+          artisan_id: string;
+          avis: boolean;
+          demarrage: boolean;
+          rdv: boolean;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acompte?: boolean;
+          artisan_id: string;
+          avis?: boolean;
+          demarrage?: boolean;
+          rdv?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          acompte?: boolean;
+          artisan_id?: string;
+          avis?: boolean;
+          demarrage?: boolean;
+          rdv?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_reminder_settings_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_appointments: {
         Row: {
           address: string | null;
@@ -6417,6 +6453,15 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"];
         }[];
       };
+      claim_sms_notifications: {
+        Args: { p_limit?: number };
+        Returns: {
+          data: Json;
+          id: string;
+          phone: string;
+          type: Database["public"]["Enums"]["notification_type"];
+        }[];
+      };
       clear_external_busy: { Args: Record<PropertyKey, never>; Returns: undefined };
       client_ratings_visible: { Args: Record<PropertyKey, never>; Returns: boolean };
       client_reputation: {
@@ -6659,6 +6704,7 @@ export type Database = {
           score: number;
         }[];
       };
+      my_client_reminders: { Args: Record<PropertyKey, never>; Returns: Json };
       my_commercial_signups: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -6985,6 +7031,10 @@ export type Database = {
           artisan_id: string;
           siret: string;
         }[];
+      };
+      save_client_reminder_settings: {
+        Args: { p_acompte: boolean; p_avis: boolean; p_demarrage: boolean; p_rdv: boolean };
+        Returns: undefined;
       };
       save_project_criteria: {
         Args: {
