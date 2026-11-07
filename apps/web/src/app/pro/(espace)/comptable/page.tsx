@@ -11,7 +11,7 @@ import Link from "next/link";
 import { AccountantSettingsForm } from "@/components/pro/accountant-settings";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { formatDay } from "@/lib/format";
 
 const t = fr.pro.accountant;
@@ -23,7 +23,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  * envois. L'adresse du comptable n'est lue que par l'artisan.
  */
 export default async function AccountantPage() {
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("accounting");
   const [{ data: settings }, { data: exports }] = await Promise.all([
     supabase
       .from("accountant_settings")

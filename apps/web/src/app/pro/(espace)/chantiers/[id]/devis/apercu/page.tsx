@@ -9,7 +9,7 @@ import { QuoteTabs } from "@/components/pro/quote-tabs";
 import { ButtonLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { documentLogoUrl } from "@/lib/documents/logo";
 
 const t = fr.pro.quote;
@@ -26,7 +26,7 @@ export default async function QuotePreviewPage({
 }: PageProps<"/pro/chantiers/[id]/devis/apercu">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("money");
   const c = await getChantierDetail(supabase, id);
   if (!c) notFound();
   if (c.chantier.status !== "rdv_planifie" && c.chantier.status !== "devis_en_revision") {

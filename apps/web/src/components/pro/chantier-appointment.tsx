@@ -1,7 +1,12 @@
-import { ARTISAN_CANCELLABLE_STATUSES, type ChantierStatus } from "@menao/core";
+import {
+  ARTISAN_CANCELLABLE_STATUSES,
+  type ChantierRights,
+  type ChantierStatus,
+} from "@menao/core";
 import { CalendarDays, CalendarPlus, Clock, MessageCircle } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   CancelChantierButton,
   NotesBlock,
@@ -21,6 +26,12 @@ import { SentQuoteBlock, type DepositPayment, type SentQuote } from "./sent-quot
 
 const t = fr.pro.appointment;
 const cancellable: readonly ChantierStatus[] = ARTISAN_CANCELLABLE_STATUSES;
+const FULL_RIGHTS: ChantierRights = {
+  money: true,
+  decisions: true,
+  replyReviews: true,
+  assign: true,
+};
 const pill =
   "inline-flex min-h-9 items-center gap-1.5 self-start rounded-pill border border-white/60 px-3.5 text-sm font-medium text-white hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none";
 
@@ -40,6 +51,8 @@ export function ChantierAppointmentView({
   agenda,
   base = "/pro",
   example = false,
+  rights = FULL_RIGHTS,
+  teamCard = null,
 }: {
   c: ChantierDetail;
   photoUrls: string[];
@@ -52,10 +65,16 @@ export function ChantierAppointmentView({
   agenda?: AppointmentAgenda;
   base?: string;
   example?: boolean;
+  /** Ce que la place dans l'équipe permet (ADR 0241) ; tout par défaut (patron, exemples). */
+  rights?: ChantierRights;
+  /** « Équipe sur ce chantier » pour le patron ou le chef. */
+  teamCard?: ReactNode;
 }) {
   const status = c.chantier.status;
   // F-19 : devis à créer après le rendez-vous, ou à modifier si le client l'a demandé.
-  const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
+  const awaitingQuote =
+    rights.money && (status === "rdv_planifie" || status === "devis_en_revision");
+  const canCancel = rights.decisions && cancellable.includes(status);
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const planned = status === "rdv_planifie" && appointment !== null;
   const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
@@ -73,7 +92,7 @@ export function ChantierAppointmentView({
               <Clock aria-hidden="true" className="size-4" />
               {formatTime(appointment.starts_at)}
             </span>
-            {planned && (
+            {rights.decisions && planned && (
               <ExampleLock locked={example}>
                 <RescheduleButton
                   chantierId={c.chantier.id}
@@ -101,7 +120,7 @@ export function ChantierAppointmentView({
           {fr.messages.writeClient}
         </Link>
       </DetailHeader>
-      {active && (
+      {rights.decisions && active && (
         <ExampleLock locked={example}>
           <ExpertiseButton requestId={c.id} trades={trades} />
         </ExampleLock>
@@ -118,7 +137,8 @@ export function ChantierAppointmentView({
             <StatusBadge tone="primary">{fr.pro.chantiers.status[status]}</StatusBadge>
           </div>
         )}
-        {sentQuote && (
+        {teamCard}
+        {rights.money && sentQuote && (
           <ExampleLock locked={example}>
             <SentQuoteBlock quote={sentQuote} deposit={deposit} invoice={invoice} />
           </ExampleLock>
@@ -136,7 +156,7 @@ export function ChantierAppointmentView({
         )}
       </div>
 
-      {(awaitingQuote || cancellable.includes(status)) && (
+      {(awaitingQuote || canCancel) && (
         <StickyActions>
           {awaitingQuote && (
             <ButtonLink href={`${base}/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
@@ -147,7 +167,7 @@ export function ChantierAppointmentView({
                   : fr.pro.quote.create}
             </ButtonLink>
           )}
-          {cancellable.includes(status) && (
+          {canCancel && (
             <ExampleLock locked={example} note>
               <CancelChantierButton chantierId={c.chantier.id} />
             </ExampleLock>

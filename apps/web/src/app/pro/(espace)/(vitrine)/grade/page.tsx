@@ -5,7 +5,7 @@ import { MenaoScoreCard } from "@/components/pro/score/menao-score-card";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { myMenaoScore } from "@/lib/artisan/score";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 export const metadata: Metadata = { title: `${fr.pro.grade.title} — MENAO` };
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: `${fr.pro.grade.title} — MENAO` };
  * récompense du niveau 5, livraison pré-remplie avec l'adresse de l'entreprise.
  */
 export default async function GradePage() {
-  const { supabase, artisanId, firstName } = await requireProSpace();
+  const { supabase, artisanId, firstName } = await requireTeamPermission("storefront");
   const { data: claims } = await supabase.auth.getClaims();
   const [{ data }, { data: artisan }, { data: profile }, score] = await Promise.all([
     supabase.rpc("artisan_grade"),

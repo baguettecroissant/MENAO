@@ -1,4 +1,4 @@
-import { addDays, parisLocalToDate, weekStartFrom } from "@menao/core";
+import { addDays, parisLocalToDate, teamCan, weekStartFrom } from "@menao/core";
 import type { Metadata } from "next";
 import { AgendaScreen } from "@/components/agenda/agenda-screen";
 import { fr } from "@/i18n/fr";
@@ -29,6 +29,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/pro/agend
       hours={hours}
       items={items}
       absences={absences}
+      canEdit={teamCan(space.teamPosition, "agenda")}
     />
   );
 }

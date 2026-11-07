@@ -142,6 +142,7 @@ export default async function MyProfilePage({
             : null,
         welcomeGift: parseWelcomeGift(giftData),
         team: team ? { used: team.used, seats: team.seats } : null,
+        teamPosition: space.teamPosition,
       }}
     />
   );

@@ -36,6 +36,7 @@ export function ReviewSection({
   heading,
   meta,
   example = false,
+  canReply = true,
 }: {
   review: ChantierReview;
   chantierId: string;
@@ -44,6 +45,8 @@ export function ReviewSection({
   meta?: ReactNode;
   /** Exemple (ADR 0184) : réponse et signalement inactifs. */
   example?: boolean;
+  /** Réponse et signalement : le patron seulement (vitrine, ADR 0241). */
+  canReply?: boolean;
 }) {
   const headingId = `avis-${review.id}`;
   return (
@@ -90,13 +93,14 @@ export function ReviewSection({
           <p className="text-sm whitespace-pre-line">{review.reply}</p>
         </div>
       ) : (
+        canReply &&
         review.status === "publie" && (
           <ExampleLock locked={example} note>
             <ReviewReplyForm reviewId={review.id} chantierId={chantierId} />
           </ExampleLock>
         )
       )}
-      {review.status === "publie" && (
+      {canReply && review.status === "publie" && (
         <ExampleLock locked={example}>
           <ReportReview reviewId={review.id} />
         </ExampleLock>

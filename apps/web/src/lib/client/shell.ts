@@ -5,6 +5,7 @@ import {
   type ChantierStatus,
   type PaymentStatus,
   type Role,
+  type TeamPosition,
 } from "@menao/core";
 import { cache } from "react";
 import { avatarUrl } from "@/lib/chantier/storage";
@@ -15,6 +16,8 @@ export type ShellAccount = {
   lastName: string | null;
   avatarUrl: string | null;
   role: Role;
+  /** Espace pro : patron, chef d'équipe ou ouvrier (ADR 0241). */
+  teamPosition?: TeamPosition;
 };
 
 /**

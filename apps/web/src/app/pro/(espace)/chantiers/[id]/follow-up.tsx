@@ -1,4 +1,5 @@
-import { journalSummary, parisToday } from "@menao/core";
+import { journalSummary, parisToday, type ChantierRights } from "@menao/core";
+import type { ReactNode } from "react";
 import { ArtisanFollowUpView, type FollowUpData } from "@/components/pro/chantier-follow-up";
 import { appointmentAgenda } from "@/lib/artisan/agenda";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
@@ -139,11 +140,15 @@ export async function ArtisanFollowUp({
   c,
   tab,
   startConfirmed,
+  rights,
+  teamCard,
 }: {
   supabase: Client;
   c: ChantierDetail;
   tab: "suivi" | "dossier";
   startConfirmed: boolean;
+  rights: ChantierRights;
+  teamCard: ReactNode;
 }) {
   const data = await loadFollowUp(supabase, c);
   return (
@@ -154,6 +159,8 @@ export async function ArtisanFollowUp({
       startConfirmed={startConfirmed}
       today={parisToday()}
       now={new Date()}
+      rights={rights}
+      teamCard={teamCard}
     />
   );
 }

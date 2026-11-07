@@ -6,7 +6,7 @@ import { WebPresence } from "@/components/pro/web-presence";
 import type { PublicReview } from "@/components/review/review-list";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { parseArtisanProfile, publicUrl } from "@/lib/project/artisans";
 
 const t = fr.pro.publicProfile;
@@ -22,7 +22,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  * l'artisan n'est pas visible, avec les conseils pour la rendre plus convaincante.
  */
 export default async function MyPublicProfilePage() {
-  const space = await requireProSpace();
+  const space = await requireTeamPermission("storefront");
   const { supabase } = space;
   const [{ data }, { data: reviewRows }, { count: certifications }, { data: page }] =
     await Promise.all([

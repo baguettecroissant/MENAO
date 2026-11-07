@@ -13,9 +13,11 @@ import {
   roleFromAppMetadata,
   spaceExamplesShown,
   subscriptionGrantsAccess,
+  teamCan,
   type ChantierStatus,
   type SubscriptionStatus,
   type TeamContext,
+  type TeamPermission,
 } from "@menao/core";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
@@ -158,6 +160,16 @@ export const requireProSpace = cache(async () => {
   };
 });
 
+/**
+ * Page réservée à certaines places de l'équipe (ADR 0241) : demandes, argent, vitrine, export
+ * comptable… Les autres reviennent à l'accueil (la base refuse de toute façon leurs données).
+ */
+export async function requireTeamPermission(permission: TeamPermission) {
+  const space = await requireProSpace();
+  if (!teamCan(space.teamPosition, permission)) redirect("/pro/tableau-de-bord");
+  return space;
+}
+
 /** Demandes reçues et chantiers de l'artisan, partagés entre la coque et le tableau de bord. */
 export const artisanActivity = cache(async () => {
   const { supabase } = await requireProSpace();
@@ -174,6 +186,8 @@ export const artisanActivity = cache(async () => {
  */
 export const spaceExamples = cache(async () => {
   const [space, { inbox, chantiers }] = await Promise.all([requireProSpace(), artisanActivity()]);
+  // Exemples pour le patron seulement : un ouvrier sans chantier attribué n'est pas un nouvel inscrit.
+  if (space.teamPosition !== "patron") return false;
   return spaceExamplesShown({
     requests: inbox.length,
     chantiers: chantiers.length,
@@ -205,6 +219,8 @@ export const getProShell = cache(async () => {
       lastName: space.lastName,
       avatarUrl: space.avatarUrl,
       role: "artisan" as const,
+      // Rubriques du menu selon la place dans l'entreprise (ADR 0241).
+      teamPosition: space.teamPosition,
     },
     badges: {
       requests: requestsAwaitingAnswer(inbox, new Date()).length,
@@ -217,6 +233,10 @@ export const getProShell = cache(async () => {
       messages: unread ?? 0,
       reviews: reviewsToAnswer ?? 0,
     },
-    visibility: { ...space.visibility, availability: space.availability },
+    // Visibilité de la fiche (abonnement, paiements en ligne) : l'affaire du patron (ADR 0241).
+    visibility:
+      space.teamPosition === "patron"
+        ? { ...space.visibility, availability: space.availability }
+        : null,
   };
 });

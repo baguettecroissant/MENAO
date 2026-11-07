@@ -1,7 +1,8 @@
-import { roleFromAppMetadata } from "@menao/core";
+import { roleFromAppMetadata, teamCan } from "@menao/core";
 import { expensesCsv } from "@menao/documents";
 import { fr } from "@/i18n/fr";
 import { loadExpenses } from "@/lib/artisan/expenses";
+import { teamContext } from "@/lib/artisan/space";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.pro.expenses;
@@ -14,6 +15,10 @@ export async function GET() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth || roleFromAppMetadata(auth.claims.app_metadata) !== "artisan") {
+    return new Response(null, { status: 403 });
+  }
+  // Export pour le comptable : le patron seulement (ADR 0241).
+  if (!teamCan((await teamContext())?.position, "accounting")) {
     return new Response(null, { status: 403 });
   }
   const expenses = await loadExpenses(supabase);

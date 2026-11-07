@@ -175,3 +175,50 @@ export function teamCan(
   if (position === "chef") return CHEF_PERMISSIONS.has(permission);
   return false;
 }
+
+/** Membre de l'équipe pour un chantier (`chantier_team`, ADR 0241) : attribué ou non. */
+export type ChantierTeamMember = {
+  userId: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: TeamRole;
+  assigned: boolean;
+};
+
+export function parseChantierTeam(raw: unknown): ChantierTeamMember[] {
+  return (Array.isArray(raw) ? raw : []).flatMap((row): ChantierTeamMember[] => {
+    const m = obj(row);
+    const userId = str(m.user_id);
+    if (!userId || !isTeamRole(m.role)) return [];
+    return [
+      {
+        userId,
+        firstName: str(m.prenom),
+        lastName: str(m.nom),
+        role: m.role,
+        assigned: m.affecte === true,
+      },
+    ];
+  });
+}
+
+/** Ce que la place permet sur la fiche d'un chantier (ADR 0241), pour le site et l'application. */
+export type ChantierRights = {
+  /** Devis, acompte, échéancier, factures, solde. */
+  money: boolean;
+  /** Rendez-vous, démarrage, fin, réception, annulation, expertise, note du client. */
+  decisions: boolean;
+  /** Réponse aux avis et signalement d'un avis (vitrine). */
+  replyReviews: boolean;
+  /** Choisir qui travaille sur le chantier. */
+  assign: boolean;
+};
+
+export function chantierRights(position: TeamPosition | null | undefined): ChantierRights {
+  return {
+    money: teamCan(position, "money"),
+    decisions: teamCan(position, "chantierDecisions"),
+    replyReviews: teamCan(position, "storefront"),
+    assign: teamCan(position, "assignChantiers"),
+  };
+}

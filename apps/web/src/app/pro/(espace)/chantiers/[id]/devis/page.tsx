@@ -6,7 +6,7 @@ import { QuoteEditor } from "@/components/pro/quote-editor";
 import { QuoteHeader } from "@/components/pro/quote-header";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.quote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[id]/devis">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase, artisanId } = await requireProSpace();
+  const { supabase, artisanId } = await requireTeamPermission("money");
   const c = await getChantierDetail(supabase, id);
   if (!c) notFound();
   if (c.chantier.status !== "rdv_planifie" && c.chantier.status !== "devis_en_revision") {

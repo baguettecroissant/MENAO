@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ExpenseDetailView } from "@/components/pro/expense-detail";
 import { fr } from "@/i18n/fr";
 import { expenseDocumentUrl, loadExpense } from "@/lib/artisan/expenses";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -18,7 +18,7 @@ export default async function ExpensePage({
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const { piece } = await searchParams;
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("money");
   const expense = await loadExpense(supabase, id);
   if (!expense) notFound();
   const documentUrl = expense.document_path

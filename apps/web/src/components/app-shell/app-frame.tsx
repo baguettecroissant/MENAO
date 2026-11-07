@@ -12,7 +12,7 @@ import type { ShellAccount } from "@/lib/client/shell";
 import { useLiveUnreadMessages } from "@/lib/messages/use-live-unread";
 import { AccountMenu } from "./account-menu";
 import {
-  ACCOUNT_LINKS,
+  accountLinksFor,
   MENU_COOKIE,
   SPACE_HOME,
   SPACE_MESSAGES,
@@ -222,7 +222,10 @@ export function AppFrame({
             <NotificationBell />
             {account && (
               <div className="lg:hidden">
-                <AccountMenu account={account} links={ACCOUNT_LINKS[space]} />
+                <AccountMenu
+                  account={account}
+                  links={accountLinksFor(space, account.teamPosition)}
+                />
               </div>
             )}
           </div>
@@ -258,6 +261,7 @@ export function AppFrame({
               badges={liveBadges}
               account={null}
               role={account?.role}
+              teamPosition={account?.teamPosition}
               visibility={visibility}
             />
           )}

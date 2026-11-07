@@ -85,6 +85,7 @@ export function WeekView({
   items,
   base = "/pro",
   example = false,
+  readOnly = false,
 }: {
   days: string[];
   today: string;
@@ -96,6 +97,8 @@ export function WeekView({
   base?: string;
   /** Exemple : pas de « Libérer » sur les créneaux bloqués. */
   example?: boolean;
+  /** Ouvrier (ADR 0241) : agenda en lecture, pas de « Libérer » non plus. */
+  readOnly?: boolean;
 }) {
   const placed: Placed[] = items
     .map((item) => {
@@ -214,7 +217,7 @@ export function WeekView({
                     key={item.id}
                     item={item}
                     base={base}
-                    example={example}
+                    example={example || readOnly}
                     compact={columns > 1}
                     style={{
                       top: top(item.startMinutes) + 1,
@@ -277,7 +280,12 @@ export function WeekView({
                 <ul className="mt-3 flex flex-col gap-2">
                   {dayItems.map((item) => (
                     <li key={item.id}>
-                      <AgendaBlock item={item} variant="row" base={base} example={example} />
+                      <AgendaBlock
+                        item={item}
+                        variant="row"
+                        base={base}
+                        example={example || readOnly}
+                      />
                     </li>
                   ))}
                 </ul>

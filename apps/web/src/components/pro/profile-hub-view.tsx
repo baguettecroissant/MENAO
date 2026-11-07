@@ -1,4 +1,11 @@
-import type { ProfileHubRow, ProfileHubTone, ProfileTip } from "@menao/core";
+import {
+  teamCan,
+  type ProfileHubRow,
+  type ProfileHubTone,
+  type ProfileTip,
+  type TeamPermission,
+  type TeamPosition,
+} from "@menao/core";
 import type { ReferralRow, WelcomeGift } from "@menao/validation";
 import {
   Award,
@@ -47,6 +54,29 @@ type RowKey =
   | "examples"
   | "team";
 type Row = { key: RowKey; icon: LucideIcon; href: string };
+
+/**
+ * Droit nécessaire pour chaque rubrique (ADR 0241) : un membre de l'équipe ne voit que les siennes
+ * (compte, notifications, aide ; disponibilités et factures pour le chef d'équipe).
+ */
+const ROW_PERMISSION: Partial<Record<RowKey, TeamPermission>> = {
+  photo: "storefront",
+  portfolio: "storefront",
+  reviews: "storefront",
+  grade: "storefront",
+  businessCards: "storefront",
+  company: "storefront",
+  trades: "storefront",
+  zone: "storefront",
+  availability: "agenda",
+  team: "team",
+  documents: "dossier",
+  charter: "dossier",
+  payments: "subscription",
+  subscription: "subscription",
+  invoices: "money",
+  examples: "storefront",
+};
 
 /** Rubriques de « Mon profil », dans l'ordre de l'application (ADR 0129, 0131). */
 const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
@@ -143,6 +173,8 @@ export type ProfileHubData = {
   welcomeGift: WelcomeGift | null;
   /** « Mon équipe » (ADR 0240) : comptes utilisés et places ; absent pour un membre. */
   team?: { used: number; seats: number } | null;
+  /** Place dans l'entreprise (ADR 0241) ; patron par défaut (exemples). */
+  teamPosition?: TeamPosition;
 };
 
 /**
@@ -160,6 +192,15 @@ export function ProfileHubView({
   /** Onglet de la carte de visite et du parrainage ouvert à l'arrivée. */
   shareTab?: "card" | "referral";
 }) {
+  const position = hub.teamPosition ?? "patron";
+  const patron = position === "patron";
+  const sections = SECTIONS.map((section) => ({
+    ...section,
+    rows: section.rows.filter((row) => {
+      const permission = ROW_PERMISSION[row.key];
+      return !permission || teamCan(position, permission);
+    }),
+  })).filter((section) => section.rows.length > 0);
   const statusLabel = hub.status === "valide" ? null : t.status[hub.status];
   const { percent, next } = hub.strength;
   const link = (href: string) => (example ? exampleHref(href) : href);
@@ -175,7 +216,7 @@ export function ProfileHubView({
     <main className="flex-1">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex items-center gap-5">
-          {example ? (
+          {example || !patron ? (
             <span className="shrink-0">{photo}</span>
           ) : (
             <Link
@@ -209,17 +250,19 @@ export function ProfileHubView({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
-          <Strength percent={percent} next={next} href={next ? link(TIP_HREF[next]) : null} />
-          <ButtonLink
-            href={(link("/pro/profil") ?? "/pro/profil") as Route}
-            variant="secondary"
-            className="self-center"
-          >
-            <Eye aria-hidden="true" className="size-4" />
-            {t.seeProfile}
-          </ButtonLink>
-        </div>
+        {patron && (
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
+            <Strength percent={percent} next={next} href={next ? link(TIP_HREF[next]) : null} />
+            <ButtonLink
+              href={(link("/pro/profil") ?? "/pro/profil") as Route}
+              variant="secondary"
+              className="self-center"
+            >
+              <Eye aria-hidden="true" className="size-4" />
+              {t.seeProfile}
+            </ButtonLink>
+          </div>
+        )}
 
         {hub.welcomeGift && <WelcomeGiftCard gift={hub.welcomeGift} />}
         {(hub.card || hub.referral) && (
@@ -243,7 +286,7 @@ export function ProfileHubView({
         )}
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {SECTIONS.map((section) => (
+          {sections.map((section) => (
             <section
               key={section.key}
               aria-labelledby={`hub-${section.key}`}

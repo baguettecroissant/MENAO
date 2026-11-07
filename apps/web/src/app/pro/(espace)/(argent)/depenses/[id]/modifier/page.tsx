@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { ExpenseForm } from "@/components/pro/expense-form";
 import { fr } from "@/i18n/fr";
 import { expenseChantierOptions, loadExpense } from "@/lib/artisan/expenses";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 const f = fr.pro.expenses.form;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -19,7 +19,7 @@ export default async function EditExpensePage({
 }: PageProps<"/pro/depenses/[id]/modifier">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("money");
   const [expense, chantiers] = await Promise.all([
     loadExpense(supabase, id),
     expenseChantierOptions(supabase),
