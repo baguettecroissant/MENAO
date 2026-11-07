@@ -17,7 +17,7 @@ import {
 } from "@menao/core";
 import { parseGrade, parseWelcomeGift } from "@menao/validation";
 import type { Metadata } from "next";
-import { DashboardView } from "@/components/pro/dashboard-view";
+import { DashboardView, WorkerDashboardView } from "@/components/pro/dashboard-view";
 import { ExamplesCard } from "@/components/pro/examples";
 import { fr } from "@/i18n/fr";
 import { artisanActivity, getProShell, requireProSpace, spaceExamples } from "@/lib/artisan/space";
@@ -41,7 +41,38 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
     radiationReason,
     documentsToRenew,
     urssafMissing,
+    teamPosition,
+    company,
   } = await requireProSpace();
+  // Ouvrier (ADR 0241) : ses rendez-vous et ses chantiers, sans montants ni demandes.
+  if (teamPosition === "ouvrier") {
+    const { chantiers } = await artisanActivity();
+    const now = new Date();
+    return (
+      <WorkerDashboardView
+        firstName={firstName}
+        company={company}
+        appointments={upcomingAgenda(
+          chantiers.map((c) => ({
+            ...c,
+            appointmentAt: c.appointment_at as string | null,
+            startAt: c.start_at as string | null,
+          })),
+          now,
+          8,
+        ).map(({ kind, at, row }) => ({
+          kind,
+          chantierId: row.chantier_id,
+          startsAt: at,
+          title: row.title,
+          place: row.adresse || [row.code_postal, row.ville_nom].filter(Boolean).join(" "),
+        }))}
+        chantiers={chantiers}
+      />
+    );
+  }
+  // Chef d'équipe : sans ce qui revient au patron (dossier, paiements en ligne, vitrine, parrainage).
+  const patron = teamPosition === "patron";
   const onboarding = fr.pro.onboarding;
   const notices = [
     ...(status === "radie" ? [onboarding.status.radie(radiationReason)] : []),
@@ -137,11 +168,11 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
           title: c.title,
           place: [c.code_postal, c.ville_nom].filter(Boolean).join(" "),
         })),
-      documentsToRenew,
-      urssafMissing: urssafMissing && status !== "radie",
-      paymentsMissing: visibility.missing.includes("paiements"),
-      reviewsToAnswer: badges.reviews,
-      welcomeGiftToChoose: parseWelcomeGift(giftData)?.status === "a_choisir",
+      documentsToRenew: patron ? documentsToRenew : [],
+      urssafMissing: patron && urssafMissing && status !== "radie",
+      paymentsMissing: patron && visibility.missing.includes("paiements"),
+      reviewsToAnswer: patron ? badges.reviews : 0,
+      welcomeGiftToChoose: patron && parseWelcomeGift(giftData)?.status === "a_choisir",
     },
     now,
   );
@@ -149,7 +180,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
   return (
     <DashboardView
       grade={
-        grade && gradeProgress
+        patron && grade && gradeProgress
           ? {
               level: grade.level,
               xp: grade.xp,
@@ -162,8 +193,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
       }
       firstName={firstName}
       missingPhoto={!avatarUrl}
-      notices={notices}
-      visible={visibility.visible}
+      notices={patron ? notices : []}
+      visible={!patron || visibility.visible}
       awaitingClients={clientsAwaitingQuote(rows)}
       revenue={{
         cents: revenue.currentCents,
@@ -189,8 +220,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
         shortcuts: {
           quote: awaitingQuote ? `/pro/chantiers/${awaitingQuote.chantier_id}/devis` : "/pro/devis",
           block: "/pro/agenda",
-          share: "/pro/profil",
-          invite: "/pro/mon-profil?onglet=parrainage#parrainage",
+          share: patron ? "/pro/profil" : undefined,
+          invite: patron ? "/pro/mon-profil?onglet=parrainage#parrainage" : undefined,
         },
       }}
     />

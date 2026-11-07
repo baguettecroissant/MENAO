@@ -1,4 +1,4 @@
-import type { ProfileTip } from "@menao/core";
+import { teamCan, type ProfileTip, type TeamPermission } from "@menao/core";
 import type { WelcomeGift } from "@menao/validation";
 import Constants from "expo-constants";
 import { router, type Href } from "expo-router";
@@ -63,6 +63,29 @@ type Row = {
     | "help";
   icon: LucideIcon;
   href: Href;
+};
+
+/**
+ * Droit nécessaire pour chaque rubrique (ADR 0241), comme sur le site : un membre de l'équipe ne
+ * voit que les siennes (compte, notifications, aide ; disponibilités, factures et dépenses pour le
+ * chef d'équipe).
+ */
+const ROW_PERMISSION: Partial<Record<Row["key"], TeamPermission>> = {
+  photo: "storefront",
+  portfolio: "storefront",
+  reviews: "storefront",
+  grade: "storefront",
+  company: "storefront",
+  trades: "storefront",
+  zone: "storefront",
+  availability: "agenda",
+  team: "team",
+  documents: "dossier",
+  charter: "dossier",
+  payments: "subscription",
+  invoices: "money",
+  expenses: "money",
+  accountant: "accounting",
 };
 
 /** Rubriques de « Mon profil », dans l'ordre des maquettes de la refonte (ADR 0129). */
@@ -163,6 +186,16 @@ export function ProfileHubContent({
   // Exemples (ADR 0184) : « Mon profil » d'exemple ; seules les rubriques qui ont leurs exemples
   // (avis, grade, factures, fiche) s'ouvrent, les vrais réglages restent fermés.
   const example = useExamplesActive();
+  // Place dans l'entreprise (ADR 0241) : un membre ne voit que ses rubriques.
+  const position = hub.teamPosition ?? "patron";
+  const patron = position === "patron";
+  const sections = SECTIONS.map((section) => ({
+    ...section,
+    rows: section.rows.filter((row) => {
+      const permission = ROW_PERMISSION[row.key];
+      return !permission || teamCan(position, permission);
+    }),
+  })).filter((section) => section.rows.length > 0);
 
   // Interrupteur « Afficher des données d'exemple » (ADR 0190), à tout moment : l'espace
   // s'ouvre rempli d'exemples ; à l'arrêt, « Mon profil » relit les vraies données.
@@ -176,7 +209,7 @@ export function ProfileHubContent({
       <Animated.View entering={enter(0)}>
         <Header hub={hub} onChange={onChange} example={example} />
       </Animated.View>
-      {hub.status === "brouillon" || hub.status === "refuse" ? (
+      {!patron ? null : hub.status === "brouillon" || hub.status === "refuse" ? (
         <Animated.View entering={enter(1)}>
           <Tappable
             role="link"
@@ -194,18 +227,22 @@ export function ProfileHubContent({
       ) : hub.status === "en_verification" ? (
         <Notice tone="info">{t.dossierSent}</Notice>
       ) : null}
-      <Animated.View entering={enter(2)}>
-        <Strength hub={hub} example={example} />
-      </Animated.View>
-      <Animated.View entering={enter(3)}>
-        <Button
-          label={t.seeProfile}
-          icon={Eye}
-          variant="secondary"
-          onPress={() => router.push("/pro-ma-fiche")}
-        />
-      </Animated.View>
-      {hub.welcomeGift ? (
+      {patron ? (
+        <>
+          <Animated.View entering={enter(2)}>
+            <Strength hub={hub} example={example} />
+          </Animated.View>
+          <Animated.View entering={enter(3)}>
+            <Button
+              label={t.seeProfile}
+              icon={Eye}
+              variant="secondary"
+              onPress={() => router.push("/pro-ma-fiche")}
+            />
+          </Animated.View>
+        </>
+      ) : null}
+      {patron && hub.welcomeGift ? (
         <Animated.View entering={enter(4)}>
           <WelcomeGiftCard gift={hub.welcomeGift} />
         </Animated.View>
@@ -215,7 +252,7 @@ export function ProfileHubContent({
           <ShareCard hub={hub} />
         </Animated.View>
       ) : null}
-      {SECTIONS.map((section, index) => (
+      {sections.map((section, index) => (
         <Animated.View key={section.key} entering={enter(5 + index)}>
           <SettingsSection title={t.sections[section.key]}>
             {section.rows
@@ -240,7 +277,7 @@ export function ProfileHubContent({
                   line
                 );
               })}
-            {section.key === "account" ? (
+            {patron && section.key === "account" ? (
               <SettingsSwitch
                 key="examples"
                 icon={Eye}

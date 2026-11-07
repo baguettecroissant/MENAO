@@ -12,6 +12,7 @@ import {
 } from "@/lib/invitations";
 import { Body, Button, Card, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.inviteArtisan;
 const { colors, font, spacing } = theme;
@@ -28,7 +29,7 @@ const EMPTY: InvitationForm = {
  * « Invitez votre artisan de confiance » (ADR 0162), comme sur le site : l'équipe MENAO contacte
  * de la part du client un artisan qui n'est pas encore sur MENAO. Suivi de ses invitations.
  */
-export default function InviteArtisanScreen() {
+function InviteArtisanScreen() {
   const [values, setValues] = useState<InvitationForm>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
   const [failure, setFailure] = useState<string | null>(null);
@@ -145,3 +146,6 @@ const styles = StyleSheet.create({
   meta: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   done: { color: colors.success },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("referral", InviteArtisanScreen);

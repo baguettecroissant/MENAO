@@ -10,7 +10,7 @@ import { QuoteTabs } from "@/components/pro/quote-tabs";
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.quote;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -30,7 +30,7 @@ export default async function QuoteSendPage({
 }: PageProps<"/pro/chantiers/[id]/devis/envoi">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase, artisanId } = await requireProSpace();
+  const { supabase, artisanId } = await requireTeamPermission("money");
   const c = await getChantierDetail(supabase, id);
   if (!c) notFound();
   if (c.chantier.status !== "rdv_planifie" && c.chantier.status !== "devis_en_revision") {

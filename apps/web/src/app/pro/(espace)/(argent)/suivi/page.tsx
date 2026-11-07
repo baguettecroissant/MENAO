@@ -12,7 +12,7 @@ import { redirect } from "next/navigation";
 import { AutoRemindersForm, RemindButton } from "@/components/pro/money-reminders";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { formatDay } from "@/lib/format";
 
 const t = fr.pro.moneyOverview;
@@ -27,7 +27,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  * Des chiffres seulement, aucun conseil.
  */
 export default async function MoneyOverviewPage() {
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("money");
   const { data } = await supabase.rpc("my_money_overview");
   const overview = parseMoneyOverview(data);
   if (!overview?.included) redirect("/pro/devis" as Route);

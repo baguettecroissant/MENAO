@@ -32,6 +32,7 @@ import {
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proDocument;
 const r = fr.proDocument.reading;
@@ -59,7 +60,7 @@ function monthsAgo(months: number): string {
  * envoi par process-upload. Pendant l'inscription, ou pour renouveler un document surveillé d'un
  * artisan validé (F-51).
  */
-export default function DocumentScreen() {
+function DocumentScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
   const type = REQUIRED_DOCUMENT_TYPES.find((value) => value === params.type);
   const [dossier, reload] = useFocusData(loadDossier);
@@ -458,3 +459,6 @@ const styles = StyleSheet.create({
   coverage: { gap: spacing(2) },
   exemptTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("dossier", DocumentScreen);

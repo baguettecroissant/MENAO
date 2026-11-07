@@ -17,6 +17,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { chooseWelcomeGift, loadWelcomeGift } from "@/lib/welcome-gift";
 import { Body, Button, LinkText, Notice, Screen, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proHub.welcomeGift;
 const { colors, font, radius, spacing } = theme;
@@ -27,7 +28,7 @@ type Field = "item" | "size" | "recipient" | "ligne" | "code_postal" | "commune"
  * de livraison pré-remplie avec celle de l'entreprise. La demande part à l'équipe MENAO (ticket
  * « recompense »), qui organise l'envoi. Ni abonnement ni achat : rien à voir avec la règle 10.
  */
-export default function WelcomeGiftScreen() {
+function WelcomeGiftScreen() {
   const [gift] = useFocusData(loadWelcomeGift);
   if (gift === undefined) return <Screen header={<TopBar />}>{null}</Screen>;
   if (!gift) {
@@ -282,3 +283,6 @@ const styles = StyleSheet.create({
   addressText: { flex: 1, gap: spacing(1) },
   footer: { gap: spacing(2) },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("referral", WelcomeGiftScreen);

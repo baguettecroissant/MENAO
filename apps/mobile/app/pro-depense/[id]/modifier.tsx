@@ -7,11 +7,12 @@ import { fr } from "@/i18n/fr";
 import { loadExpense, loadExpenseChantiers } from "@/lib/pro-expenses";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proExpenses;
 
 /** Modification d'une dépense (F-62) : mêmes champs, pièce remplaçable. */
-export default function EditExpenseScreen() {
+function EditExpenseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(
     async () => Promise.all([loadExpense(id), loadExpenseChantiers()]),
@@ -54,3 +55,6 @@ export default function EditExpenseScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", EditExpenseScreen);

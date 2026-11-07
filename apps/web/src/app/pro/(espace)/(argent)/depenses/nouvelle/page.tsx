@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ExpenseForm } from "@/components/pro/expense-form";
 import { fr } from "@/i18n/fr";
 import { expenseChantierOptions } from "@/lib/artisan/expenses";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 const f = fr.pro.expenses.form;
 
@@ -16,7 +16,7 @@ export default async function NewExpensePage({
   searchParams,
 }: PageProps<"/pro/depenses/nouvelle">) {
   const { chantier } = await searchParams;
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("money");
   const chantiers = await expenseChantierOptions(supabase);
   const chantierId =
     typeof chantier === "string" && chantiers.some((c) => c.id === chantier) ? chantier : "";

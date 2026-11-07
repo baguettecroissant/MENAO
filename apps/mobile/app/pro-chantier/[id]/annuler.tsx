@@ -8,6 +8,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { cancelArtisanChantier } from "@/lib/pro-chantiers";
 import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAppointment;
 const CAUSES = ARTISAN_CANCEL_REASONS.map((value) => ({ value, label: t.cancelCauses[value] }));
@@ -16,7 +17,7 @@ const CAUSES = ARTISAN_CANCEL_REASONS.map((value) => ({ value, label: t.cancelCa
  * F-18 « Annuler le chantier », comme sur le site : motif pour l'équipe (signalement, ADR 0145),
  * message facultatif pour le client. Définitif.
  */
-export default function CancelArtisanChantierScreen() {
+function CancelArtisanChantierScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [cause, setCause] = useState<ArtisanCancelReason | null>(null);
   const [reason, setReason] = useState("");
@@ -74,3 +75,6 @@ export default function CancelArtisanChantierScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("chantierDecisions", CancelArtisanChantierScreen);

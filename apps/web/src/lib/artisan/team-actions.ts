@@ -87,3 +87,27 @@ export async function updateTeamMember(_prev: FormState, formData: FormData): Pr
   revalidatePath(PATH);
   return {};
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * Équipe d'un chantier choisie par le patron ou le chef d'équipe (ADR 0241) : les membres cochés
+ * y travaillent ; la base vérifie la place et l'appartenance à l'entreprise.
+ */
+export async function saveChantierTeam(_prev: FormState, formData: FormData): Promise<FormState> {
+  const tc = fr.pro.chantierTeam;
+  const chantierId = text(formData, "chantierId") ?? "";
+  const userIds = formData
+    .getAll("userIds")
+    .map(String)
+    .filter((id) => UUID.test(id));
+  if (!UUID.test(chantierId)) return { error: tc.errors.generic };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_chantier_team", {
+    p_chantier_id: chantierId,
+    p_user_ids: userIds,
+  });
+  if (error) return { error: error.code === "22023" ? tc.errors.member : tc.errors.generic };
+  revalidatePath(`/pro/chantiers/${chantierId}`);
+  return { success: tc.saved };
+}

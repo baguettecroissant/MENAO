@@ -34,6 +34,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { teamCan, type TeamPermission, type TeamPosition } from "@menao/core";
 import { fr } from "@/i18n/fr";
 
 // « exemples » : aperçu de l'espace pro rempli d'exemples (ADR 0184). « commercial » : commerciaux
@@ -55,6 +56,8 @@ export type NavItem = {
   also?: readonly string[];
   /** Back-office : rubrique ouverte au rôle support (ADR 0049) ; les autres sont réservées aux admins. */
   support?: boolean;
+  /** Espace pro : rubrique réservée aux places qui ont ce droit (ADR 0241). */
+  team?: TeamPermission;
 };
 export type NavSection = { label?: string; items: readonly NavItem[] };
 
@@ -82,7 +85,13 @@ const PRO_NAV: readonly NavSection[] = [
   {
     items: [
       { href: "/pro/tableau-de-bord", label: fr.pro.space.home, icon: LayoutGrid },
-      { href: "/pro/demandes", label: fr.pro.space.requests, icon: Inbox, badge: "requests" },
+      {
+        href: "/pro/demandes",
+        label: fr.pro.space.requests,
+        icon: Inbox,
+        badge: "requests",
+        team: "requests",
+      },
       { href: "/pro/chantiers", label: fr.pro.space.chantiers, icon: HardHat },
       { href: "/pro/agenda", label: fr.pro.space.agenda, icon: CalendarDays },
       {
@@ -97,6 +106,7 @@ const PRO_NAV: readonly NavSection[] = [
         icon: Wallet,
         badge: "quotes",
         also: ["/pro/factures", "/pro/depenses", "/pro/comptable"],
+        team: "money",
       },
       {
         href: "/pro/profil",
@@ -104,6 +114,7 @@ const PRO_NAV: readonly NavSection[] = [
         icon: Store,
         badge: "reviews",
         also: ["/pro/avis", "/pro/grade"],
+        team: "storefront",
       },
     ],
   },
@@ -269,7 +280,10 @@ export const NAV: Record<Space, readonly NavSection[]> = {
 };
 
 /** Liens du menu du compte (en plus de la déconnexion). */
-export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string }[]> = {
+export const ACCOUNT_LINKS: Record<
+  Space,
+  readonly { href: string; label: string; team?: TeamPermission }[]
+> = {
   client: [
     { href: "/compte", label: fr.account.title },
     { href: "/notifications", label: fr.clientApp.notifications },
@@ -278,7 +292,7 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
   ],
   pro: [
     { href: "/pro/mon-profil", label: fr.pro.space.myProfile },
-    { href: "/pro/profil", label: fr.pro.space.publicProfile },
+    { href: "/pro/profil", label: fr.pro.space.publicProfile, team: "storefront" },
     { href: "/compte", label: fr.pro.hub.rows.identity },
     { href: "/notifications", label: fr.clientApp.notifications },
     { href: "/echanges", label: fr.exchanges.title },
@@ -295,6 +309,13 @@ export const ACCOUNT_LINKS: Record<Space, readonly { href: string; label: string
   ],
 };
 
+/** Liens du menu du compte ; dans l'espace pro, selon la place dans l'entreprise (ADR 0241). */
+export function accountLinksFor(space: Space, teamPosition?: TeamPosition | null) {
+  return ACCOUNT_LINKS[space].filter(
+    (link) => !link.team || !teamPosition || teamCan(teamPosition, link.team),
+  );
+}
+
 const startsWith = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
@@ -303,11 +324,24 @@ export function isActive(item: NavItem, pathname: string): boolean {
   return item.also?.some((href) => startsWith(pathname, href)) ?? false;
 }
 
-/** Rubriques d'un espace pour un rôle : le support ne voit que les siennes (ADR 0049). */
-export function navFor(space: Space, role?: string | null): readonly NavSection[] {
-  if (space !== "admin" || role !== "support") return NAV[space];
+/**
+ * Rubriques d'un espace pour un rôle : le support ne voit que les siennes (ADR 0049) ; dans
+ * l'espace pro, chaque place de l'équipe voit celles de ses droits (ADR 0241).
+ */
+export function navFor(
+  space: Space,
+  role?: string | null,
+  teamPosition?: TeamPosition | null,
+): readonly NavSection[] {
+  const keep =
+    space === "admin" && role === "support"
+      ? (item: NavItem) => item.support === true
+      : space === "pro" && teamPosition
+        ? (item: NavItem) => !item.team || teamCan(teamPosition, item.team)
+        : null;
+  if (!keep) return NAV[space];
   return NAV[space]
-    .map((section) => ({ ...section, items: section.items.filter((item) => item.support) }))
+    .map((section) => ({ ...section, items: section.items.filter(keep) }))
     .filter((section) => section.items.length > 0);
 }
 

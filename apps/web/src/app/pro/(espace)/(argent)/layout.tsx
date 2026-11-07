@@ -1,6 +1,7 @@
 import { parseAiAgents } from "@menao/core";
 import type { ReactNode } from "react";
 import { SectionTabs } from "@/components/pro/section-tabs";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -8,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
  * comptable avancé, ADR 0237) seulement si la formule le comprend.
  */
 export default async function MoneyLayout({ children }: { children: ReactNode }) {
+  // Patron et chef d'équipe seulement (ADR 0241) : aucun montant pour un ouvrier.
+  await requireTeamPermission("money");
   const supabase = await createClient();
   const { data } = await supabase.rpc("my_ai_agents");
   const advanced = parseAiAgents(data).agents.advancedAccounting;

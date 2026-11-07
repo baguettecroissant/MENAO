@@ -5,10 +5,12 @@ import {
   isJournalOpen,
   journalSummary,
   paymentProgress,
+  type ChantierRights,
 } from "@menao/core";
 import type { Database } from "@menao/db";
 import { CircleCheck, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
+import type { ReactNode } from "react";
 import {
   ChantierStartPanel,
   DeclareFinishedButton,
@@ -54,6 +56,12 @@ import { ReviewSection, type ChantierReview } from "./review-section";
 const t = fr.chantier;
 const tf = fr.pro.followUp;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const FULL_RIGHTS: ChantierRights = {
+  money: true,
+  decisions: true,
+  replyReviews: true,
+  assign: true,
+};
 
 type Tables = Database["public"]["Tables"];
 
@@ -108,6 +116,8 @@ export function ArtisanFollowUpView({
   now,
   base = "/pro",
   example = false,
+  rights = FULL_RIGHTS,
+  teamCard = null,
 }: {
   c: ChantierDetail;
   data: FollowUpData;
@@ -117,6 +127,10 @@ export function ArtisanFollowUpView({
   now: Date;
   base?: string;
   example?: boolean;
+  /** Ce que la place dans l'équipe permet (ADR 0241) ; tout par défaut (patron, exemples). */
+  rights?: ChantierRights;
+  /** « Équipe sur ce chantier » pour le patron ou le chef. */
+  teamCard?: ReactNode;
 }) {
   const id = c.chantier.id;
   const status = c.chantier.status;
@@ -201,7 +215,7 @@ export function ArtisanFollowUpView({
                   receivedAt: data.receivedAt,
                 })}
               />
-              {depositPaid && (
+              {rights.money && depositPaid && (
                 <span className="inline-flex items-center gap-1 rounded-chip bg-success-soft px-2.5 py-1 text-xs font-medium text-success">
                   <ShieldCheck aria-hidden="true" className="size-3.5" />
                   {t.depositReceived}
@@ -253,7 +267,7 @@ export function ArtisanFollowUpView({
               {tf.liftSignaled(clientFirstName, formatDateNumeric(reception.lift_signaled_at))}
             </Alert>
           )}
-          {status === "receptionne" && data.receivedAt && (
+          {rights.money && status === "receptionne" && data.receivedAt && (
             <Alert tone="success">
               {tf.received(
                 clientFirstName,
@@ -262,7 +276,7 @@ export function ArtisanFollowUpView({
               )}
             </Alert>
           )}
-          {status === "cloture" && balancePayment?.paid_at && (
+          {rights.money && status === "cloture" && balancePayment?.paid_at && (
             <Alert tone="success">
               {tf.closed(
                 formatDateNumeric(balancePayment.paid_at),
@@ -275,11 +289,13 @@ export function ArtisanFollowUpView({
               review={review}
               chantierId={id}
               heading={tf.reviewTitle(clientFirstName)}
+              canReply={rights.replyReviews}
             />
           ) : (
             status === "cloture" && <Alert tone="info">{tf.reviewPending(clientFirstName)}</Alert>
           )}
-          {status === "cloture" &&
+          {rights.decisions &&
+            status === "cloture" &&
             (clientRating ? (
               <Alert tone="info">
                 {fr.pro.clientRating.done(
@@ -299,6 +315,7 @@ export function ArtisanFollowUpView({
           <ChantierTabs base={`${base}/chantiers/${id}`} active={tab} />
           {tab === "suivi" ? (
             <>
+              {teamCard}
               {!conversation?.closed && (
                 <ConversationCard
                   chantierId={id}
@@ -337,7 +354,7 @@ export function ArtisanFollowUpView({
                   artisanName={null}
                   clientName={clientName}
                 >
-                  {status === "planifie" && startAt && (
+                  {rights.decisions && status === "planifie" && startAt && (
                     <ExampleLock locked={example}>
                       <EditChantierStartButton
                         chantierId={id}
@@ -352,10 +369,14 @@ export function ArtisanFollowUpView({
             </>
           ) : (
             <>
-              <ExampleLock locked={example}>
-                <ChantierDocuments documents={documents} />
-              </ExampleLock>
-              <PaymentSchedule progress={progress} />
+              {rights.money && (
+                <>
+                  <ExampleLock locked={example}>
+                    <ChantierDocuments documents={documents} />
+                  </ExampleLock>
+                  <PaymentSchedule progress={progress} />
+                </>
+              )}
               <RequestBlocks
                 detail={c}
                 photoUrls={c.photos.flatMap((path) => {
@@ -377,7 +398,7 @@ export function ArtisanFollowUpView({
         </div>
       </div>
 
-      {status === "acompte_paye" && (
+      {rights.decisions && status === "acompte_paye" && (
         <ExampleLock locked={example} note>
           <ChantierStartPanel
             chantierId={id}
@@ -405,14 +426,14 @@ export function ArtisanFollowUpView({
           </div>
         </div>
       )}
-      {canDeclareFinished(status) && (
+      {rights.decisions && canDeclareFinished(status) && (
         <StickyActions>
           <ExampleLock locked={example} note>
             <DeclareFinishedButton chantierId={id} clientName={clientFirstName} />
           </ExampleLock>
         </StickyActions>
       )}
-      {status === "reserves_a_lever" && (
+      {rights.decisions && status === "reserves_a_lever" && (
         <StickyActions>
           <ExampleLock locked={example} note>
             <SignalLiftButton chantierId={id} clientName={clientFirstName} />

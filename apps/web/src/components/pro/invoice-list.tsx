@@ -36,9 +36,12 @@ export type InvoiceListItem = {
 export function InvoiceList({
   invoices,
   example = false,
+  accounting = true,
 }: {
   invoices: readonly InvoiceListItem[];
   example?: boolean;
+  /** Export et envoi au comptable : le patron seulement (ADR 0241). */
+  accounting?: boolean;
 }) {
   return (
     <main className="flex-1">
@@ -46,17 +49,29 @@ export function InvoiceList({
         <ListHeader
           title={t.title}
           actions={
-            <ExampleLock locked={example}>
-              <MoreMenu
-                label={fr.pro.lists.more}
-                items={[
-                  ...(invoices.length > 0
-                    ? [{ kind: "download" as const, href: "/pro/factures/export", label: t.export }]
-                    : []),
-                  { kind: "link" as const, href: "/pro/comptable", label: fr.pro.accountant.link },
-                ]}
-              />
-            </ExampleLock>
+            accounting && (
+              <ExampleLock locked={example}>
+                <MoreMenu
+                  label={fr.pro.lists.more}
+                  items={[
+                    ...(invoices.length > 0
+                      ? [
+                          {
+                            kind: "download" as const,
+                            href: "/pro/factures/export",
+                            label: t.export,
+                          },
+                        ]
+                      : []),
+                    {
+                      kind: "link" as const,
+                      href: "/pro/comptable",
+                      label: fr.pro.accountant.link,
+                    },
+                  ]}
+                />
+              </ExampleLock>
+            )
           }
         />
         {invoices.length === 0 ? (

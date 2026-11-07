@@ -1,10 +1,11 @@
-import { parisToday, type ChantierStatus } from "@menao/core";
+import { chantierRights, parisToday, type ChantierStatus } from "@menao/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ChantierAppointmentView } from "@/components/pro/chantier-appointment";
+import { ChantierTeamCard } from "@/components/pro/chantier-team";
 import { fr } from "@/i18n/fr";
 import { appointmentAgenda } from "@/lib/artisan/agenda";
-import { getChantierDetail } from "@/lib/artisan/chantiers";
+import { getChantierDetail, getChantierTeam } from "@/lib/artisan/chantiers";
 import { requireProSpace } from "@/lib/artisan/space";
 import { ArtisanFollowUp } from "./follow-up";
 
@@ -34,9 +35,15 @@ export default async function ChantierPage({
 }: PageProps<"/pro/chantiers/[id]">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireProSpace();
-  const c = await getChantierDetail(supabase, id);
+  const { supabase, teamPosition } = await requireProSpace();
+  // Place dans l'équipe (ADR 0241) : argent, décisions et attribution selon les droits.
+  const rights = chantierRights(teamPosition);
+  const [c, team] = await Promise.all([
+    getChantierDetail(supabase, id),
+    rights.assign ? getChantierTeam(supabase, id) : Promise.resolve(null),
+  ]);
   if (!c) notFound();
+  const teamCard = team ? <ChantierTeamCard chantierId={id} members={team} /> : null;
   if (FOLLOW_UP.includes(c.chantier.status)) {
     const { onglet, demarrage } = await searchParams;
     return (
@@ -45,6 +52,8 @@ export default async function ChantierPage({
         c={c}
         tab={onglet === "dossier" ? "dossier" : "suivi"}
         startConfirmed={demarrage === "confirme"}
+        rights={rights}
+        teamCard={teamCard}
       />
     );
   }
@@ -109,6 +118,8 @@ export default async function ChantierPage({
       invoice={invoice}
       minDate={parisToday()}
       agenda={agenda}
+      rights={rights}
+      teamCard={teamCard}
     />
   );
 }

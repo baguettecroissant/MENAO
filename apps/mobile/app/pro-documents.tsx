@@ -4,6 +4,7 @@ import { fr } from "@/i18n/fr";
 import { loadMyDocuments } from "@/lib/artisan-documents";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proDocuments;
 const d = fr.proDossier;
@@ -12,7 +13,7 @@ const d = fr.proDossier;
  * « Mes documents » (ADR 0123), comme la page des documents du site : état de chaque document
  * obligatoire, échéances, renouvellement d'un document surveillé en photo ou en PDF.
  */
-export default function MyDocumentsScreen() {
+function MyDocumentsScreen() {
   const [data] = useFocusData(loadMyDocuments);
   if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const validated = data?.status === "valide" || data?.status === "suspendu";
@@ -29,3 +30,6 @@ export default function MyDocumentsScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("dossier", MyDocumentsScreen);

@@ -4,7 +4,7 @@ import { PlanningCard } from "@/components/pro/score/menao-score-card";
 import { fr } from "@/i18n/fr";
 import { artisanHours, calendarFeed } from "@/lib/artisan/agenda";
 import { myMenaoScore } from "@/lib/artisan/score";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { SITE_URL } from "@/lib/site/seo";
 
 export const metadata: Metadata = { title: `${fr.pro.agenda.availability.title} — MENAO` };
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: `${fr.pro.agenda.availability.title} 
  * et absences, abonnement .ics pour Google Agenda, Apple Calendrier ou Outlook.
  */
 export default async function AvailabilityPage() {
-  const space = await requireProSpace();
+  const space = await requireTeamPermission("agenda");
   const [hours, feed, score] = await Promise.all([
     artisanHours(),
     calendarFeed(),

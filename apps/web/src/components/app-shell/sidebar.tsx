@@ -1,6 +1,6 @@
 "use client";
 
-import type { AvailabilityStatus, VisibilityCondition } from "@menao/core";
+import type { AvailabilityStatus, TeamPosition, VisibilityCondition } from "@menao/core";
 import { CalendarClock, Eye, EyeOff, LifeBuoy, Palmtree, CirclePause } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -49,6 +49,7 @@ export function SidebarContent({
   visibility,
   collapsed = false,
   role = account?.role,
+  teamPosition = account?.teamPosition,
 }: {
   space: Space;
   badges: Badges;
@@ -57,6 +58,8 @@ export function SidebarContent({
   collapsed?: boolean;
   /** Rôle du compte, pour les rubriques du back-office (le tiroir n'affiche pas le compte). */
   role?: string | null;
+  /** Place dans l'entreprise, pour les rubriques de l'espace pro (ADR 0241). */
+  teamPosition?: TeamPosition;
 }) {
   const pathname = usePathname();
   return (
@@ -85,7 +88,7 @@ export function SidebarContent({
       </div>
 
       <nav aria-label={t.nav[space]} className="flex-1 overflow-y-auto px-3 py-4">
-        {navFor(space, role).map((section, index) => (
+        {navFor(space, role, teamPosition).map((section, index) => (
           <div key={section.label ?? index} className="mb-4 last:mb-0">
             {section.label &&
               (collapsed ? (

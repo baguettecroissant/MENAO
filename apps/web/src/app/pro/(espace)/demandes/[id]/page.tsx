@@ -5,7 +5,7 @@ import { RequestOpportunityView } from "@/components/pro/request-opportunity";
 import { fr } from "@/i18n/fr";
 import { appointmentAgenda } from "@/lib/artisan/agenda";
 import { getRequestDetail } from "@/lib/artisan/requests";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.onboarding.requests;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 export default async function ArtisanRequestPage({ params }: PageProps<"/pro/demandes/[id]">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("requests");
   const r = await getRequestDetail(supabase, id);
   if (!r) notFound();
   if (r.chantier_id) redirect(`/pro/chantiers/${r.chantier_id}` as Route);

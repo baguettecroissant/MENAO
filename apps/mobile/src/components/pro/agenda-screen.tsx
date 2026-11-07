@@ -6,6 +6,7 @@ import {
   parisDateTime,
   parisToday,
   rangesOn,
+  teamCan,
   weekDates,
   weekStartFrom,
   weekdayOf,
@@ -46,6 +47,7 @@ import { Body, Button, LinkText, Notice, ScreenSkeleton, Tappable, Title } from 
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
 import { useExamplesActive } from "@/lib/examples";
+import { useTeamPosition } from "@/lib/team";
 
 const t = fr.proAgenda;
 const { colors, font, radius, spacing } = theme;
@@ -140,12 +142,17 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
   const [refreshing, setRefreshing] = useState(false);
   // Exemples (ADR 0184) : l'agenda se lit, rien ne se bloque ni ne se libère.
   const example = useExamplesActive();
+  // Ouvrier (ADR 0241) : les rendez-vous de ses chantiers, en lecture ; créneaux, disponibilités et
+  // calendrier du téléphone restent au patron et au chef d'équipe.
+  const position = useTeamPosition();
+  const canEdit = !position || teamCan(position, "agenda");
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(
     blocked ? { tone: "success", text: t.block.added } : null,
   );
   // Calendrier du téléphone (ADR 0203) : synchronisé à l'affichage, l'agenda relu ensuite.
   useFocusEffect(
     useCallback(() => {
+      if (!canEdit) return;
       let active = true;
       void syncPhoneCalendar().then((result) => {
         if (active && result === "ok") void reload();
@@ -153,7 +160,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
       return () => {
         active = false;
       };
-    }, [reload]),
+    }, [reload, canEdit]),
   );
 
   if (data === undefined) return <ScreenSkeleton />;
@@ -235,7 +242,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
           {weekTitle(monday, sunday)}
         </Text>
 
-        {current ? (
+        {current && canEdit ? (
           <Pressable
             role="link"
             aria-label={`${availabilityLabel(current.availability)}. ${t.manage}`}
@@ -260,21 +267,23 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
             </Text>
           </Pressable>
         ) : null}
-        <ExampleLock locked={example} note>
-          <Button
-            label={t.block.open}
-            variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: "/pro-agenda/bloquer",
-                params: { date: monday > today ? monday : today, depuis: "agenda" },
-              })
-            }
-          />
-        </ExampleLock>
+        {canEdit ? (
+          <ExampleLock locked={example} note>
+            <Button
+              label={t.block.open}
+              variant="secondary"
+              onPress={() =>
+                router.push({
+                  pathname: "/pro-agenda/bloquer",
+                  params: { date: monday > today ? monday : today, depuis: "agenda" },
+                })
+              }
+            />
+          </ExampleLock>
+        ) : null}
         {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
 
-        {current && current.hours.length === 0 ? (
+        {canEdit && current && current.hours.length === 0 ? (
           <View style={styles.hoursMissing}>
             <Notice tone="info">{t.hoursMissing}</Notice>
             <LinkText label={t.setHours} onPress={() => router.push("/pro-disponibilites")} />
@@ -320,7 +329,9 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
                       <AgendaRow
                         key={item.id}
                         item={item}
-                        onFree={example || item.kind !== "creneau" ? null : () => free(item)}
+                        onFree={
+                          example || !canEdit || item.kind !== "creneau" ? null : () => free(item)
+                        }
                       />
                     ))
                   ) : !absence ? (

@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/empty-state";
 import { SpaceExamplesNotice } from "@/components/examples";
 import { exampleChantierList } from "@/lib/example-data";
 import { loadSpaceExamplesShown } from "@/lib/examples";
+import { useTeamPosition } from "@/lib/team";
 
 const t = fr.proChantiers;
 const { colors, spacing } = theme;
@@ -28,6 +29,7 @@ export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
   const [rows, reload] = useFocusData(loadArtisanChantiers, undefined, "tab:chantiers");
   // Rien reçu : chantiers d'exemple (ADR 0184), comme sur le site.
   const [examples, reloadExamples] = useFocusData(loadSpaceExamplesShown);
+  const position = useTeamPosition();
   const [refreshing, setRefreshing] = useState(false);
   // Squelette des cartes pendant le premier chargement, puis fondu (ADR 0192).
   const reveal = useReveal(rows !== undefined);
@@ -74,7 +76,10 @@ export function ArtisanChantiersScreen({ switcher }: { switcher?: ReactNode }) {
                 ))}
               </>
             ) : rows?.length === 0 ? (
-              <EmptyState illustration="chantiers">{t.empty}</EmptyState>
+              <EmptyState illustration="chantiers">
+                {/* Ouvrier (ADR 0241) : seulement les chantiers qui lui sont attribués. */}
+                {position === "ouvrier" ? fr.proDashboard.worker.empty : t.empty}
+              </EmptyState>
             ) : null}
             {(rows ?? []).map((r) => (
               <ArtisanChantierCard

@@ -12,6 +12,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, LinkText, Notice, Screen, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
 import { OutfitIllustration } from "@/components/grade/outfit-illustration";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.grade.reward;
 const { colors, font, radius, spacing } = theme;
@@ -22,7 +23,7 @@ type Field = "jacket_size" | "pants_size" | "address" | "city" | "country" | "ph
  * veste et du pantalon, adresse de livraison (pré-remplie avec celle de l'entreprise) et téléphone.
  * La demande part à l'équipe MENAO (ticket « recompense »), qui organise l'envoi.
  */
-export default function RewardScreen() {
+function RewardScreen() {
   const { niveau } = useLocalSearchParams<{ niveau?: string }>();
   const load = useCallback(async () => {
     const [grade, defaults] = await Promise.all([loadGrade(), loadDeliveryDefaults()]);
@@ -286,3 +287,6 @@ const styles = StyleSheet.create({
   addressText: { flex: 1, gap: spacing(1) },
   footer: { gap: spacing(2) },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", RewardScreen);

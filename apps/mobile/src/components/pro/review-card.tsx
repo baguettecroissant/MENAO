@@ -31,6 +31,7 @@ export function ReviewCard({
   meta,
   onReplied,
   example = false,
+  canReply = true,
 }: {
   review: ArtisanReview;
   heading: string;
@@ -39,6 +40,8 @@ export function ReviewCard({
   onReplied: () => void;
   /** Exemple (ADR 0184) : réponse et signalement inactifs. */
   example?: boolean;
+  /** Réponse et signalement : le patron seulement (vitrine, ADR 0241). */
+  canReply?: boolean;
 }) {
   const stars = reviewStars(review.score);
   return (
@@ -93,12 +96,14 @@ export function ReviewCard({
           <Text style={styles.replyTitle}>{t.yourReply}</Text>
           <Text style={styles.text}>{review.reply}</Text>
         </View>
-      ) : review.status === "publie" ? (
+      ) : canReply && review.status === "publie" ? (
         <ExampleLock locked={example} note>
           <ReplyForm reviewId={review.id} onReplied={onReplied} />
         </ExampleLock>
       ) : null}
-      {review.status === "publie" && !example ? <ReportForm reviewId={review.id} /> : null}
+      {canReply && review.status === "publie" && !example ? (
+        <ReportForm reviewId={review.id} />
+      ) : null}
     </Card>
   );
 }

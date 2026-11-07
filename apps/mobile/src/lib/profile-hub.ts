@@ -4,6 +4,7 @@ import {
   profileStrength,
   teamIncluded,
   type ProfileTip,
+  type TeamPosition,
 } from "@menao/core";
 import {
   parseArtisanProfile,
@@ -55,6 +56,8 @@ export type ProfileHub = {
   welcomeGift: WelcomeGift | null;
   /** « Mon équipe » (ADR 0240) : patron d'une formule qui l'inclut, sinon rien. */
   team?: { used: number; seats: number } | null;
+  /** Place dans l'entreprise (ADR 0241) ; patron par défaut (exemples). */
+  teamPosition?: TeamPosition;
 };
 
 /** Comptes de l'équipe pour « Mon profil » : patron seulement, formule qui les inclut. */
@@ -100,6 +103,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     { data: referralRows },
     { data: artisan },
     team,
+    context,
   ] = await Promise.all([
     loadDossier(),
     supabase.rpc("my_public_profile"),
@@ -121,6 +125,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       .eq("id", await myArtisanKey())
       .maybeSingle(),
     teamSummary(),
+    myTeamContext(),
   ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
@@ -174,6 +179,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     referrals: parseReferralRows(referralRows),
     welcomeGift,
     team,
+    teamPosition: context?.position ?? "patron",
   };
 }
 

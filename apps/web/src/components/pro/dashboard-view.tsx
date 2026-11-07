@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { ChantierList } from "@/components/pro/chantier-list";
 import { BadgeIcon } from "@/components/pro/grade/badge-icon";
 import {
   DashboardShortcuts,
@@ -114,60 +115,7 @@ export function DashboardView({
   } | null;
 }) {
   const appointmentSection = (
-    <Section
-      title={t.upcoming}
-      action={
-        agendaHref && (
-          <TextLink href={agendaHref as Route} className="inline-flex items-center gap-1 text-sm">
-            {t.openAgenda}
-            <ArrowRight aria-hidden="true" className="size-3.5" />
-          </TextLink>
-        )
-      }
-    >
-      {appointments.length === 0 ? (
-        <p className="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-12 text-center text-sm text-muted-foreground shadow-card">
-          {t.noUpcoming}
-          <Arc className="absolute -right-2 bottom-2 h-12 w-20" />
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {appointments.map((a) => (
-            <li key={`${a.kind}-${a.chantierId}`}>
-              <Link
-                href={`${base}/chantiers/${a.chantierId}` as Route}
-                className={`block overflow-hidden ${cardLink}`}
-              >
-                <div
-                  className={`flex flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2.5 text-sm text-primary-foreground ${
-                    a.kind === "demarrage" ? "bg-success" : "bg-primary"
-                  }`}
-                >
-                  <span className="rounded-chip bg-white/20 px-2 py-0.5 text-xs font-medium">
-                    {t.kinds[a.kind]}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays aria-hidden="true" className="size-4" />
-                    {formatDayLong(a.startsAt)}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock aria-hidden="true" className="size-4" />
-                    {formatTime(a.startsAt)}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 p-4">
-                  <p className="font-medium">{a.title}</p>
-                  <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <MapPin aria-hidden="true" className="mt-px size-3.5 shrink-0 text-primary" />
-                    {a.place}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Section>
+    <UpcomingSection appointments={appointments} base={base} agendaHref={agendaHref} />
   );
 
   const requestSection = (
@@ -373,6 +321,113 @@ export function DashboardView({
             )}
           </>
         )}
+      </div>
+    </main>
+  );
+}
+
+/** Rendez-vous et démarrages des jours suivants (F-16), avec le lien vers l'agenda. */
+function UpcomingSection({
+  appointments,
+  base,
+  agendaHref,
+}: {
+  appointments: DashboardAppointment[];
+  base: string;
+  agendaHref: string | null;
+}) {
+  return (
+    <Section
+      title={t.upcoming}
+      action={
+        agendaHref && (
+          <TextLink href={agendaHref as Route} className="inline-flex items-center gap-1 text-sm">
+            {t.openAgenda}
+            <ArrowRight aria-hidden="true" className="size-3.5" />
+          </TextLink>
+        )
+      }
+    >
+      {appointments.length === 0 ? (
+        <p className="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-12 text-center text-sm text-muted-foreground shadow-card">
+          {t.noUpcoming}
+          <Arc className="absolute -right-2 bottom-2 h-12 w-20" />
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {appointments.map((a) => (
+            <li key={`${a.kind}-${a.chantierId}`}>
+              <Link
+                href={`${base}/chantiers/${a.chantierId}` as Route}
+                className={`block overflow-hidden ${cardLink}`}
+              >
+                <div
+                  className={`flex flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2.5 text-sm text-primary-foreground ${
+                    a.kind === "demarrage" ? "bg-success" : "bg-primary"
+                  }`}
+                >
+                  <span className="rounded-chip bg-white/20 px-2 py-0.5 text-xs font-medium">
+                    {t.kinds[a.kind]}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays aria-hidden="true" className="size-4" />
+                    {formatDayLong(a.startsAt)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock aria-hidden="true" className="size-4" />
+                    {formatTime(a.startsAt)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2 p-4">
+                  <p className="font-medium">{a.title}</p>
+                  <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                    <MapPin aria-hidden="true" className="mt-px size-3.5 shrink-0 text-primary" />
+                    {a.place}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * Accueil d'un ouvrier (ADR 0241) : ses prochains rendez-vous et les chantiers qui lui sont
+ * attribués, sans aucun montant ni demande.
+ */
+export function WorkerDashboardView({
+  firstName,
+  company,
+  appointments,
+  chantiers,
+}: {
+  firstName: string | null;
+  company: string | null;
+  appointments: DashboardAppointment[];
+  chantiers: ComponentProps<typeof ChantierList>["rows"];
+}) {
+  return (
+    <main className="flex-1">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {t.greeting(firstName)}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t.worker.subtitle(company)}</p>
+        </div>
+        <UpcomingSection appointments={appointments} base="/pro" agendaHref="/pro/agenda" />
+        <Section title={t.worker.chantiers}>
+          {chantiers.length === 0 ? (
+            <p className="rounded-card border border-border bg-surface px-6 py-10 text-center text-sm text-muted-foreground shadow-card">
+              {t.worker.empty}
+            </p>
+          ) : (
+            <ChantierList rows={chantiers} />
+          )}
+        </Section>
       </div>
     </main>
   );

@@ -1,7 +1,7 @@
 import { exampleInbox } from "@menao/core";
 import type { Metadata } from "next";
 import { fr } from "@/i18n/fr";
-import { artisanActivity, requireProSpace, spaceExamples } from "@/lib/artisan/space";
+import { artisanActivity, requireTeamPermission, spaceExamples } from "@/lib/artisan/space";
 import { EXAMPLES_BASE } from "@/lib/artisan/examples";
 import { EmptyState } from "@/components/empty-state";
 import { SpaceExamplesNotice } from "@/components/pro/examples";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  * l'artisan n'a rien reçu : demandes d'exemple (ADR 0184).
  */
 export default async function ArtisanRequestsPage() {
-  const { supabase } = await requireProSpace();
+  const { supabase } = await requireTeamPermission("requests");
   const [{ inbox: rows }, examples] = await Promise.all([artisanActivity(), spaceExamples()]);
   const now = new Date();
   const paths = rows.map((r) => r.photo_path).filter((p): p is string => Boolean(p));

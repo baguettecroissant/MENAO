@@ -13,6 +13,7 @@ import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
 import { useExamplesActive } from "@/lib/examples";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proMyPage;
 const { colors, font, spacing } = theme;
@@ -21,7 +22,7 @@ const { colors, font, spacing } = theme;
  * « Voir ma fiche » (ADR 0129) : exactement la fiche que voient les particuliers (même vue que
  * dans leur recherche), avec un accès direct à sa modification.
  */
-export default function MaFiche() {
+function MaFiche() {
   const insets = useSafeAreaInsets();
   const [page] = useFocusData(loadMyPage);
   // Exemples (ADR 0184) : la fiche d'exemple se lit, elle ne se modifie pas.
@@ -74,3 +75,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", MaFiche);

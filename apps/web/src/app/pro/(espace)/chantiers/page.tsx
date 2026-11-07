@@ -2,7 +2,7 @@ import { exampleChantierRows } from "@menao/core";
 import type { Metadata } from "next";
 import { fr } from "@/i18n/fr";
 import { EXAMPLES_BASE } from "@/lib/artisan/examples";
-import { artisanActivity, spaceExamples } from "@/lib/artisan/space";
+import { artisanActivity, requireProSpace, spaceExamples } from "@/lib/artisan/space";
 import { EmptyState } from "@/components/empty-state";
 import { ChantierList } from "@/components/pro/chantier-list";
 import { SpaceExamplesNotice } from "@/components/pro/examples";
@@ -16,7 +16,11 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  * n'a rien reçu : chantiers d'exemple (ADR 0184).
  */
 export default async function ChantiersPage() {
-  const [{ chantiers: rows }, examples] = await Promise.all([artisanActivity(), spaceExamples()]);
+  const [{ chantiers: rows }, examples, { teamPosition }] = await Promise.all([
+    artisanActivity(),
+    spaceExamples(),
+    requireProSpace(),
+  ]);
 
   return (
     <main className="flex-1">
@@ -31,7 +35,10 @@ export default async function ChantiersPage() {
             <ChantierList rows={exampleChantierRows()} base={EXAMPLES_BASE} example />
           </>
         ) : rows.length === 0 ? (
-          <EmptyState illustration="chantiers">{t.empty}</EmptyState>
+          <EmptyState illustration="chantiers">
+            {/* Ouvrier (ADR 0241) : seulement les chantiers qui lui sont attribués. */}
+            {teamPosition === "ouvrier" ? fr.pro.dashboard.worker.empty : t.empty}
+          </EmptyState>
         ) : (
           <ChantierList rows={rows} />
         )}

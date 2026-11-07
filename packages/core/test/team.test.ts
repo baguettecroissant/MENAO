@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   TEAM_PERMISSIONS,
+  chantierRights,
+  parseChantierTeam,
   parseTeam,
   parseTeamContext,
   teamCan,
@@ -104,5 +106,41 @@ describe("comptes d'équipe (ADR 0240)", () => {
     expect(TEAM_PERMISSIONS.some((p) => teamCan("ouvrier", p))).toBe(false);
     expect(teamCan(null, "money")).toBe(false);
     expect(teamCan(undefined, "allChantiers")).toBe(false);
+  });
+
+  it("équipe d'un chantier (ADR 0241)", () => {
+    expect(
+      parseChantierTeam([
+        { user_id: "u1", prenom: "Léa", nom: "Martin", role: "chef", affecte: false },
+        { user_id: "u2", prenom: " ", role: "ouvrier", affecte: true },
+        { user_id: "u3", role: "stagiaire", affecte: true },
+        null,
+      ]),
+    ).toEqual([
+      { userId: "u1", firstName: "Léa", lastName: "Martin", role: "chef", assigned: false },
+      { userId: "u2", firstName: null, lastName: null, role: "ouvrier", assigned: true },
+    ]);
+    expect(parseChantierTeam(null)).toEqual([]);
+  });
+
+  it("droits sur la fiche d'un chantier (ADR 0241)", () => {
+    expect(chantierRights("patron")).toEqual({
+      money: true,
+      decisions: true,
+      replyReviews: true,
+      assign: true,
+    });
+    expect(chantierRights("chef")).toEqual({
+      money: true,
+      decisions: true,
+      replyReviews: false,
+      assign: true,
+    });
+    expect(chantierRights("ouvrier")).toEqual({
+      money: false,
+      decisions: false,
+      replyReviews: false,
+      assign: false,
+    });
   });
 });

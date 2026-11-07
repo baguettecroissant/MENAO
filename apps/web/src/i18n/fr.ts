@@ -3596,6 +3596,14 @@ export const fr = {
     },
     dashboard: {
       title: "Tableau de bord",
+      /** Accueil d'un ouvrier (ADR 0241) : ses rendez-vous et ses chantiers, sans montants. */
+      worker: {
+        subtitle: (company: string | null) =>
+          company ? `Vos chantiers chez ${company}.` : "Vos chantiers.",
+        chantiers: "Mes chantiers",
+        empty:
+          "Aucun chantier ne vous est attribué pour l'instant. Votre patron ou votre chef d'équipe vous l'attribue depuis la fiche du chantier.",
+      },
       /** Activité de l'artisan (ADR 0185) : raccourcis, chiffre d'affaires, devis, chantiers. */
       activity: {
         shortcuts: {
@@ -4531,6 +4539,18 @@ export const fr = {
      * Comptes d'équipe (F-89, ADR 0240) : « Mon équipe » du patron (places de la formule, membres,
      * invitation), et page d'un membre dont l'accès est suspendu.
      */
+    /** Équipe d'un chantier (ADR 0241) : le patron ou le chef choisit qui y travaille. */
+    chantierTeam: {
+      title: "Équipe sur ce chantier",
+      intro:
+        "Les ouvriers ne voient que les chantiers qui leur sont attribués : journal, photos, messages et rendez-vous, sans aucun montant.",
+      save: "Enregistrer",
+      saved: "Équipe du chantier enregistrée.",
+      errors: {
+        member: "Ce membre ne fait plus partie de votre équipe : rechargez la page.",
+        generic: "L'équipe du chantier n'a pas pu être enregistrée. Réessayez.",
+      },
+    },
     team: {
       title: "Mon équipe",
       lead: "Invitez vos salariés : chacun a son propre accès à MENAO, sur le site et dans l'application.",

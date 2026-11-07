@@ -49,8 +49,9 @@ export type ChantierHref = (chantierId: string) => string | null;
 export type DashboardShortcutLinks = {
   quote: string;
   block: string;
-  share: string;
-  invite: string;
+  /** Partager la fiche, inviter un artisan : le patron seulement (ADR 0241). */
+  share?: string;
+  invite?: string;
 };
 
 /** Raccourcis du tableau de bord (ADR 0185) : les gestes les plus courants, en un geste. */
@@ -63,18 +64,23 @@ export function DashboardShortcuts({ links }: { links: DashboardShortcutLinks })
   ];
   return (
     <nav aria-label={t.shortcuts.title} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {items.map(({ key, icon: Icon }) => (
-        <Link
-          key={key}
-          href={links[key] as Route}
-          className="flex min-h-touch items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm font-medium shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
-            <Icon aria-hidden="true" className="size-[18px]" />
-          </span>
-          {t.shortcuts[key]}
-        </Link>
-      ))}
+      {items
+        .flatMap(({ key, icon: Icon }) => {
+          const href = links[key];
+          return href ? [{ key, icon: Icon, href }] : [];
+        })
+        .map(({ key, icon: Icon, href }) => (
+          <Link
+            key={key}
+            href={href as Route}
+            className="flex min-h-touch items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm font-medium shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
+              <Icon aria-hidden="true" className="size-[18px]" />
+            </span>
+            {t.shortcuts[key]}
+          </Link>
+        ))}
     </nav>
   );
 }

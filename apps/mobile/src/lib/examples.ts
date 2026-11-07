@@ -2,7 +2,7 @@ import { spaceExamplesShown } from "@menao/core";
 import { useSyncExternalStore } from "react";
 import { clearScreenCache, setScreenCachePersistence } from "./screen-cache";
 import { supabase } from "./supabase";
-import { myArtisanKey } from "./team";
+import { myArtisanKey, myTeamContext } from "./team";
 
 /**
  * Mode exemples de l'application (ADR 0184) : l'espace pro rempli de demandes et de chantiers
@@ -49,6 +49,8 @@ export async function loadSpaceExamplesShown(): Promise<boolean> {
   const { data: session } = await supabase.auth.getSession();
   const userId = session.session?.user.id;
   if (!userId) return false;
+  // Exemples pour le patron seulement (ADR 0241) : un ouvrier sans chantier n'est pas un nouvel inscrit.
+  if ((await myTeamContext())?.position !== "patron") return false;
   const [{ data: artisan }, { data: inbox }, { data: chantiers }] = await Promise.all([
     supabase
       .from("artisans")

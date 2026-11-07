@@ -16,6 +16,7 @@ import { Body, Card, Notice, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 import { useExamplesActive } from "@/lib/examples";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proReviews;
 const { colors, font, radius, spacing } = theme;
@@ -25,7 +26,7 @@ const { colors, font, radius, spacing } = theme;
  * l'équipe) avec réponse publique et signalement, nombre d'avis sans réponse, score MENAO détaillé
  * et fonctionnement des avis. Aucun lien vers le site (règle 10).
  */
-export default function MyReviews() {
+function MyReviews() {
   const [data, reload] = useFocusData(loadMyReviews);
   const examples = useExamplesActive();
   const [refreshing, setRefreshing] = useState(false);
@@ -158,3 +159,6 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", MyReviews);

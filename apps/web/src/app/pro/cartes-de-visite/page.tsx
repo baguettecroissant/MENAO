@@ -6,7 +6,7 @@ import { BusinessCardSheet } from "@/components/pro/business-card-sheet";
 import { Alert } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
-import { requireProSpace } from "@/lib/artisan/space";
+import { requireTeamPermission } from "@/lib/artisan/space";
 import { formatPhone } from "@/lib/format";
 import { qrSvg } from "@/lib/qr";
 import { PrintButton } from "./print-button";
@@ -22,7 +22,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO`, robots: { ind
  * pro.
  */
 export default async function BusinessCardsPage() {
-  const space = await requireProSpace();
+  const space = await requireTeamPermission("storefront");
   const { data: auth } = await space.supabase.auth.getClaims();
   const [{ data: artisan }, { data: profile }, { data: trades }] = await Promise.all([
     space.supabase

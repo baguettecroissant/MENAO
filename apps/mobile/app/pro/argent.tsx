@@ -7,6 +7,7 @@ import { MoneyOverviewScreen } from "@/components/pro/money-overview-screen";
 import { ArtisanQuotesScreen } from "@/components/pro/quotes-screen";
 import { loadMoneyOverview } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
+import { withTeamPermission } from "@/components/team-gate";
 
 const asView = (value: string | undefined): MoneyView =>
   MONEY_VIEWS.find((view) => view === value) ?? "devis";
@@ -16,7 +17,7 @@ const asView = (value: string | undefined): MoneyView =>
  * dépenses, d'une puce, et « Suivi » si la formule comprend l'agent comptable avancé (ADR 0237).
  * `?vue=factures`, `?vue=depenses` ou `?vue=suivi` ouvre directement la liste voulue.
  */
-export default function MoneyTab() {
+function MoneyTab() {
   const { vue } = useLocalSearchParams<{ vue?: string }>();
   const [view, setView] = useState<MoneyView>(asView(vue));
   const [overview, reloadOverview] = useFocusData(loadMoneyOverview, undefined, "tab:suivi");
@@ -38,3 +39,6 @@ export default function MoneyTab() {
   if (shown === "depenses") return <ArtisanExpensesScreen switcher={switcher} />;
   return <ArtisanQuotesScreen switcher={switcher} />;
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", MoneyTab);

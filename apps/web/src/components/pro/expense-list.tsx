@@ -44,6 +44,7 @@ export function ExpenseList({
   today,
   base = "/pro",
   example = false,
+  accounting = true,
 }: {
   expenses: readonly ExpenseRow[];
   filter: ExpenseFilter;
@@ -51,6 +52,8 @@ export function ExpenseList({
   today: string;
   base?: string;
   example?: boolean;
+  /** Export et envoi au comptable : le patron seulement (ADR 0241). */
+  accounting?: boolean;
 }) {
   const rows = expenses.filter(
     (e) => matchesExpenseFilter(e, filter, today) && matchesExpenseQuery(e, query),
@@ -71,7 +74,8 @@ export function ExpenseList({
                 <MoreMenu
                   label={fr.pro.lists.more}
                   items={[
-                    ...(expenses.length > 0
+                    // Export et envoi au comptable : le patron seulement (ADR 0241).
+                    ...(accounting && expenses.length > 0
                       ? [
                           {
                             kind: "download" as const,
@@ -80,11 +84,15 @@ export function ExpenseList({
                           },
                         ]
                       : []),
-                    {
-                      kind: "link" as const,
-                      href: "/pro/comptable",
-                      label: fr.pro.accountant.link,
-                    },
+                    ...(accounting
+                      ? [
+                          {
+                            kind: "link" as const,
+                            href: "/pro/comptable",
+                            label: fr.pro.accountant.link,
+                          },
+                        ]
+                      : []),
                     {
                       kind: "soon" as const,
                       label: t.einvoice.button,

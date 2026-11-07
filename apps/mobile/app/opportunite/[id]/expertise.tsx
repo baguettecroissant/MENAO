@@ -9,6 +9,7 @@ import { reportExpertise } from "@/lib/pro-requests";
 import { useTrades } from "@/lib/trades";
 import { Body, Button, Chip, Notice, Screen, TextField, Title } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proExpertise;
 
@@ -17,7 +18,7 @@ const t = fr.proExpertise;
  * corps de métier nécessaire ; l'équipe MENAO proposera un artisan adapté au client. `id` : la
  * demande (depuis l'opportunité ou la vue du rendez-vous).
  */
-export default function ExpertiseScreen() {
+function ExpertiseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const trades = useTrades();
   const [trade, setTrade] = useState("");
@@ -97,3 +98,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
   error: { fontFamily: theme.font.regular, fontSize: 13, color: theme.colors.danger },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("requests", ExpertiseScreen);

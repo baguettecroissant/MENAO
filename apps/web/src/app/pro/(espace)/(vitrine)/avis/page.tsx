@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ReviewsScreen } from "@/components/pro/reviews-screen";
 import { fr } from "@/i18n/fr";
-import { artisanActivity, requireProSpace } from "@/lib/artisan/space";
+import { artisanActivity, requireTeamPermission } from "@/lib/artisan/space";
 
 export const metadata: Metadata = { title: `${fr.pro.reviews.title} — MENAO` };
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: `${fr.pro.reviews.title} — MENAO` }
  * l'équipe), réponse publique et signalement, du plus récent au plus ancien.
  */
 export default async function MyReviewsPage() {
-  const space = await requireProSpace();
+  const space = await requireTeamPermission("storefront");
   const { supabase } = space;
   const [{ data: rows }, { data: score }, { chantiers }] = await Promise.all([
     supabase

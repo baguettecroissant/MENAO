@@ -55,6 +55,7 @@ export function AgendaScreen({
   absences,
   base = "/pro",
   example = false,
+  canEdit = true,
 }: {
   monday: string;
   today: string;
@@ -67,6 +68,11 @@ export function AgendaScreen({
   base?: string;
   /** Exemple : disponibilités, créneau à bloquer et onglets inactifs. */
   example?: boolean;
+  /**
+   * Créneaux, absences, horaires et disponibilité (ADR 0241) : patron et chef d'équipe ; un
+   * ouvrier voit les rendez-vous de ses chantiers, en lecture.
+   */
+  canEdit?: boolean;
 }) {
   const days = weekDates(monday);
   const sunday = days[6] ?? monday;
@@ -81,9 +87,11 @@ export function AgendaScreen({
             <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </div>
-          <ExampleLock locked={example}>
-            <AgendaTabs current="agenda" />
-          </ExampleLock>
+          {canEdit && (
+            <ExampleLock locked={example}>
+              <AgendaTabs current="agenda" />
+            </ExampleLock>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -108,21 +116,23 @@ export function AgendaScreen({
             )}
             <h2 className="ml-1 text-lg font-medium">{weekTitle(monday, sunday)}</h2>
           </div>
-          <ExampleLock locked={example}>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href="/pro/agenda/disponibilites"
-                className={`inline-flex min-h-10 items-center gap-2 rounded-pill px-4 text-sm font-medium focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${STATUS_STYLES[availability.kind]}`}
-              >
-                <span aria-hidden="true" className="size-2 rounded-full bg-current" />
-                {availabilityLabel(availability)}
-              </Link>
-              <BlockSlotButton minDate={today} defaultDate={monday > today ? monday : today} />
-            </div>
-          </ExampleLock>
+          {canEdit && (
+            <ExampleLock locked={example}>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href="/pro/agenda/disponibilites"
+                  className={`inline-flex min-h-10 items-center gap-2 rounded-pill px-4 text-sm font-medium focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${STATUS_STYLES[availability.kind]}`}
+                >
+                  <span aria-hidden="true" className="size-2 rounded-full bg-current" />
+                  {availabilityLabel(availability)}
+                </Link>
+                <BlockSlotButton minDate={today} defaultDate={monday > today ? monday : today} />
+              </div>
+            </ExampleLock>
+          )}
         </div>
 
-        {hours.length === 0 && (
+        {canEdit && hours.length === 0 && (
           <Alert tone="info">
             {t.hoursMissing}{" "}
             <TextLink href="/pro/agenda/disponibilites#horaires">{t.setHours}</TextLink>
@@ -142,6 +152,7 @@ export function AgendaScreen({
           items={items}
           base={base}
           example={example}
+          readOnly={!canEdit}
         />
 
         <ul

@@ -12,6 +12,7 @@ import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proPublicProfile;
 const { colors, font, radius, spacing } = theme;
@@ -21,7 +22,7 @@ const { colors, font, radius, spacing } = theme;
  * le site : photo recadrée au carré et réduite à 512 px, présentation de 100 caractères au moins,
  * 12 photos de réalisations au plus. Puis le choix d'afficher la fiche dans Google (ADR 0171).
  */
-export default function PublicProfileScreen() {
+function PublicProfileScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
   if (dossier === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
@@ -291,3 +292,6 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.8 },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", PublicProfileScreen);

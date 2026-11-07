@@ -7,6 +7,7 @@ import { fr } from "@/i18n/fr";
 import { addBlockedSlot, type BlockedSlotErrors } from "@/lib/pro-agenda";
 import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
 import { syncPhoneCalendar } from "@/lib/phone-calendar";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAgenda.block;
 
@@ -14,7 +15,7 @@ const t = fr.proAgenda.block;
  * « Bloquer un créneau » (F-44), comme sur le site : rendez-vous personnel, chantier hors MENAO…
  * Date, heures de début et de fin, motif facultatif ; l'agenda s'ouvre ensuite sur cette semaine.
  */
-export default function BlockSlotScreen() {
+function BlockSlotScreen() {
   const params = useLocalSearchParams<{ date?: string; depuis?: string }>();
   const today = parisToday();
   const [date, setDate] = useState(params.date && params.date >= today ? params.date : today);
@@ -93,3 +94,6 @@ export default function BlockSlotScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("agenda", BlockSlotScreen);

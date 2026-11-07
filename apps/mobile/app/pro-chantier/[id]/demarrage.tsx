@@ -13,6 +13,7 @@ import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { confirmChantierStart } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proFollowUp;
 
@@ -21,7 +22,7 @@ const t = fr.proFollowUp;
  * modifier tant que les travaux n'ont pas commencé (`debut` : démarrage actuel), comme sur le
  * site, avec les avertissements de l'agenda (F-44). Le client est prévenu par la base.
  */
-export default function ChantierStartScreen() {
+function ChantierStartScreen() {
   const { id, devis, debut } = useLocalSearchParams<{
     id: string;
     devis?: string;
@@ -96,3 +97,6 @@ export default function ChantierStartScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("chantierDecisions", ChantierStartScreen);

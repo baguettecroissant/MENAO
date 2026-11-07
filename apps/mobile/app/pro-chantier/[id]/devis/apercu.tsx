@@ -8,6 +8,7 @@ import { sharePdf } from "@/lib/pdf";
 import { loadQuoteSendContext } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proQuote;
 const STEPS = [
@@ -16,7 +17,7 @@ const STEPS = [
 ] as const;
 
 /** Aperçu du devis (F-20), comme sur le site : le devis tel qu'il sera envoyé, puis l'envoi. */
-export default function QuotePreviewScreen() {
+function QuotePreviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuoteSendContext(id), [id]);
   const [context] = useFocusData(load);
@@ -51,3 +52,6 @@ export default function QuotePreviewScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", QuotePreviewScreen);

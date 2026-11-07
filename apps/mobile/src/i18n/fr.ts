@@ -1951,6 +1951,13 @@ export const fr = {
     },
   },
   proDashboard: {
+    /** Accueil d'un ouvrier (ADR 0241) : ses rendez-vous et ses chantiers, sans montants. */
+    worker: {
+      chantiers: "Mes chantiers",
+      open: "Voir mes chantiers",
+      empty:
+        "Aucun chantier ne vous est attribué pour l'instant. Votre patron ou votre chef d'équipe vous l'attribue depuis la fiche du chantier.",
+    },
     title: "Tableau de bord",
     /** Activité de l'artisan (ADR 0185), comme sur le site. */
     activity: {
@@ -3407,6 +3414,14 @@ export const fr = {
    * Comptes d'équipe (F-89, ADR 0240), comme sur le site : « Mon équipe » du patron. Ni formule ni
    * lien vers le site (CLAUDE.md règle 10).
    */
+  // Équipe d'un chantier (ADR 0241) : le patron ou le chef choisit qui y travaille.
+  proChantierTeam: {
+    title: "Équipe sur ce chantier",
+    intro:
+      "Les ouvriers ne voient que les chantiers qui leur sont attribués : journal, photos, messages et rendez-vous, sans aucun montant.",
+    assigned: "Attribué",
+    error: "L'équipe du chantier n'a pas pu être enregistrée. Réessayez.",
+  },
   proTeam: {
     title: "Mon équipe",
     lead: "Invitez vos salariés : chacun a son propre accès à MENAO, dans l'application et sur le site.",
