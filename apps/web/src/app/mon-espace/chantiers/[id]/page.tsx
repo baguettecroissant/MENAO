@@ -40,6 +40,7 @@ import { chantierTag, nextIntervention } from "@/lib/chantier/view";
 import { formatDateNumeric } from "@/lib/format";
 import { rehirePath } from "@/lib/project/paths";
 import { createClient } from "@/lib/supabase/server";
+import { updateAuthorMap } from "@/lib/chantier/authors";
 
 const t = fr.chantier;
 const cancellable: readonly ChantierStatus[] = CLIENT_CANCELLABLE_STATUSES;
@@ -87,6 +88,7 @@ export default async function ClientChantierPage({
     { data: reception },
     { data: review },
     { data: openTicket },
+    { data: updateAuthors },
   ] = await Promise.all([
     supabase
       .from("chantier_updates")
@@ -123,6 +125,8 @@ export default async function ClientChantierPage({
       .eq("type", "litige")
       .neq("status", "resolu")
       .maybeSingle(),
+    // Entrées d'un membre de l'équipe de l'artisan : « Prénom (Entreprise) » (ADR 0243).
+    supabase.rpc("chantier_update_authors", { p_chantier_id: id }),
   ]);
   const journal = journalSummary(
     (updates ?? []).map((u) => ({
@@ -298,6 +302,7 @@ export default async function ClientChantierPage({
                 summary={journal}
                 photoUrls={photos}
                 author={c.artisan_name}
+                authors={updateAuthorMap(updateAuthors)}
                 intro={empty && !started ? t.journal.clientIntro(c.artisan_name) : undefined}
                 emptyText={
                   started

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ArtisanFollowUpView, type FollowUpData } from "@/components/pro/chantier-follow-up";
 import { appointmentAgenda } from "@/lib/artisan/agenda";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
+import { updateAuthorMap } from "@/lib/chantier/authors";
 import { signedUrlMap } from "@/lib/chantier/storage";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +26,7 @@ async function loadFollowUp(supabase: Client, c: ChantierDetail): Promise<Follow
     { data: conversations },
     { data: clientRating },
     { data: ratingsVisible },
+    { data: updateAuthors },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -94,6 +96,8 @@ async function loadFollowUp(supabase: Client, c: ChantierDetail): Promise<Follow
       .eq("chantier_id", id)
       .maybeSingle(),
     supabase.rpc("client_ratings_visible"),
+    // Auteur des entrées des collègues (ADR 0243).
+    supabase.rpc("chantier_update_authors", { p_chantier_id: id }),
   ]);
   const journalPaths = journalSummary(
     (updates ?? []).map((u) => ({
@@ -125,6 +129,7 @@ async function loadFollowUp(supabase: Client, c: ChantierDetail): Promise<Follow
     conversation: (conversations ?? []).find((row) => row.chantier_id === id) ?? null,
     clientRating,
     ratingsVisible: ratingsVisible === true,
+    updateAuthors: updateAuthorMap(updateAuthors),
     journalPhotoUrls,
     projectPhotoUrls,
     agenda,

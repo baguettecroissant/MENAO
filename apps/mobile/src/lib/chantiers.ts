@@ -3,6 +3,7 @@ import type { Database } from "@menao/db";
 import { fr } from "@/i18n/fr";
 import { publicUrl } from "./project";
 import { supabase } from "./supabase";
+import { updateAuthorMap } from "./journal-authors";
 
 type Fn = Database["public"]["Functions"];
 export type ClientChantier = Fn["particulier_chantiers"]["Returns"][number];
@@ -239,6 +240,8 @@ export type ChantierDetail = {
   coverUrl: string | null;
   avatarUrl: string | null;
   journal: JournalSummary;
+  /** Auteur des entrées d'un collègue ou d'un membre de l'équipe (ADR 0243). */
+  journalAuthors: Record<string, string>;
   photoUrls: string[];
   payments: { status: Database["public"]["Enums"]["payment_status"]; amountCents: number }[];
   documents: ChantierDocument[];
@@ -256,6 +259,8 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
   const { data: rows } = await supabase.rpc("particulier_chantiers", { p_chantier_id: id });
   const c = rows?.[0];
   if (!c) return null;
+  // Auteur des entrées d'un membre de l'équipe (ADR 0243), lu en parallèle.
+  const authorsRead = supabase.rpc("chantier_update_authors", { p_chantier_id: id });
   const [
     { data: updates },
     { data: quotes },
@@ -321,6 +326,7 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
     coverUrl: c.photo_path ? (cover.get(c.photo_path) ?? null) : null,
     avatarUrl: avatarOf(c.artisan_avatar_path),
     journal,
+    journalAuthors: updateAuthorMap((await authorsRead).data),
     photoUrls: journal.photos.flatMap((p) => {
       const url = journalPhotos.get(p);
       return url ? [url] : [];

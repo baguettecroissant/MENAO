@@ -99,6 +99,8 @@ export type FollowUpData = {
   projectPhotoUrls: Map<string, string>;
   /** F-44 : avertissements de la date de démarrage (absence, hors horaires, conflit). */
   agenda?: AppointmentAgenda;
+  /** Auteur des entrées des collègues (ADR 0243). */
+  updateAuthors?: Record<string, string>;
 };
 
 /**
@@ -330,6 +332,7 @@ export function ArtisanFollowUpView({
                 summary={journal}
                 photoUrls={data.journalPhotoUrls}
                 author={t.journal.you}
+                authors={data.updateAuthors}
                 intro={open ? t.journal.artisanIntro(clientFirstName) : t.journal.artisanLocked}
                 photoAction={
                   open ? (

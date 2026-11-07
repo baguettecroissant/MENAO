@@ -19,6 +19,7 @@ import {
   exampleChantierList,
 } from "./example-data";
 import { examplesActive } from "./examples";
+import { updateAuthorMap } from "./journal-authors";
 
 /** Liens signés (1 h) des fichiers d'un espace privé, par chemin ; les droits RLS s'appliquent. */
 async function signedUrls(bucket: string, paths: readonly string[]) {
@@ -176,6 +177,8 @@ export type ArtisanFollowUp = {
   coverUrl: string | null;
   depositPaid: boolean;
   journal: JournalSummary;
+  /** Auteur des entrées d'un collègue ou d'un membre de l'équipe (ADR 0243). */
+  journalAuthors: Record<string, string>;
   photoUrls: string[];
   documents: ChantierDocument[];
   /** Devis signé : total TTC et échéancier recalculé (règle 5), date de début prévue au devis. */
@@ -208,6 +211,8 @@ export async function loadArtisanFollowUp(
   projectPhotos: readonly string[],
 ): Promise<ArtisanFollowUp> {
   if (isExampleId(chantierId)) return exampleArtisanFollowUp();
+  // Auteur des entrées d'un membre de l'équipe (ADR 0243), lu en parallèle.
+  const authorsRead = supabase.rpc("chantier_update_authors", { p_chantier_id: chantierId });
   const [
     { data: quote },
     { data: payments },
@@ -305,6 +310,7 @@ export async function loadArtisanFollowUp(
     coverUrl: projectPhotos[0] ? (cover.get(projectPhotos[0]) ?? null) : null,
     depositPaid: (payments ?? []).some((p) => p.kind === "acompte" && p.status === "paye"),
     journal,
+    journalAuthors: updateAuthorMap((await authorsRead).data),
     photoUrls: journal.photos.flatMap((p) => {
       const url = journalPhotos.get(p);
       return url ? [url] : [];

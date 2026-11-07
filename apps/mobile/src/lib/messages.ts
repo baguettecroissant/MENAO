@@ -47,6 +47,11 @@ export type ConversationMessage = {
   /** « Aujourd'hui », « Hier » ou la date, à l'heure de Paris. */
   day: string;
   time: string;
+  /**
+   * Auteur quand ce n'est pas soi (ADR 0243) : prénom d'un collègue de l'entreprise, ou
+   * « Prénom (Entreprise) » d'un membre de l'équipe vu par le client.
+   */
+  author?: string | null;
 };
 
 export type Conversation = {
@@ -123,6 +128,7 @@ export async function loadConversation(
       read: m.read_at !== null,
       day: formatDayLabel(m.created_at, now),
       time: formatTime(m.created_at),
+      author: m.author_name,
     })),
   };
 }

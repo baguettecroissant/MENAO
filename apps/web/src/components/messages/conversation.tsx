@@ -36,6 +36,11 @@ export type ConversationMessage = {
   /** « Aujourd'hui », « Hier » ou la date, à l'heure de Paris. */
   day: string;
   time: string;
+  /**
+   * Auteur quand ce n'est pas soi (ADR 0243) : prénom d'un collègue de l'entreprise, ou
+   * « Prénom (Entreprise) » d'un membre de l'équipe vu par le client.
+   */
+  author?: string | null;
 };
 
 /**
@@ -112,6 +117,9 @@ export function Conversation({
                   m.mine ? "items-end self-end" : "items-start self-start"
                 }`}
               >
+                {m.author && (
+                  <span className="text-xs font-medium text-muted-foreground">{m.author}</span>
+                )}
                 <Bubble message={m} />
                 <span className="text-[0.6875rem] text-muted-foreground">
                   {m.time}
