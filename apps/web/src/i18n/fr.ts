@@ -3549,6 +3549,7 @@ export const fr = {
         trades: "Métiers et certifications",
         zone: "Zone d'intervention",
         availability: "Disponibilités",
+        team: "Mon équipe",
         documents: "Documents",
         charter: "Charte qualité",
         payments: "Paiements",
@@ -3589,6 +3590,8 @@ export const fr = {
         toActivate: "À activer",
         subscriptionActive: "Active",
         subscriptionToChoose: "À choisir",
+        team: (used: number, seats: number) => `${used} sur ${seats}`,
+        teamNotIncluded: "Premium et Entreprise",
       },
     },
     dashboard: {
@@ -4523,6 +4526,68 @@ export const fr = {
       autoLabel: "Activer les relances automatiques",
       autoOn: "Relances automatiques activées.",
       autoOff: "Relances automatiques désactivées.",
+    },
+    /**
+     * Comptes d'équipe (F-89, ADR 0240) : « Mon équipe » du patron (places de la formule, membres,
+     * invitation), et page d'un membre dont l'accès est suspendu.
+     */
+    team: {
+      title: "Mon équipe",
+      lead: "Invitez vos salariés : chacun a son propre accès à MENAO, sur le site et dans l'application.",
+      seats: (used: number, seats: number) =>
+        `${used} compte${used > 1 ? "s" : ""} sur ${seats}, vous compris`,
+      notIncluded: {
+        title: "Avec Premium et Entreprise",
+        text: "Donnez un accès à vos chefs d'équipe et à vos ouvriers : 3 comptes en Premium, 10 en Entreprise, vous compris.",
+        cta: "Voir les formules",
+      },
+      full: "Toutes les places de votre formule sont prises : retirez ou suspendez un membre pour en inviter un autre.",
+      you: "Vous",
+      patron: "Patron",
+      roles: { chef: "Chef d'équipe", ouvrier: "Ouvrier" } as Record<"chef" | "ouvrier", string>,
+      states: {
+        actif: "Actif",
+        en_attente: "Invitation envoyée",
+        suspendu_places: "Suspendu : plus de place dans votre formule",
+        suspendu_patron: "Suspendu",
+      } as Record<"actif" | "en_attente" | "suspendu_places" | "suspendu_patron", string>,
+      since: (date: string) => `Depuis le ${date}`,
+      invite: {
+        title: "Inviter un membre",
+        hint: "Il reçoit un e-mail pour choisir son mot de passe, puis se connecte sur le site ou dans l'application.",
+        firstName: "Prénom",
+        lastName: "Nom",
+        email: "Adresse e-mail",
+        role: "Rôle",
+        submit: "Envoyer l'invitation",
+        sent: (email: string) => `Invitation envoyée à ${email}.`,
+      },
+      actions: {
+        role: (name: string) => `Rôle de ${name}`,
+        suspend: "Suspendre",
+        reactivate: "Réactiver",
+        remove: "Retirer",
+        confirmRemove: (name: string) =>
+          `Retirer ${name} de votre équipe ? Son accès est fermé tout de suite.`,
+        removed: (name: string) => `${name} ne fait plus partie de votre équipe.`,
+        cancel: "Annuler",
+      },
+      errors: {
+        no_seat:
+          "Toutes les places de votre formule sont prises : retirez ou suspendez un membre d'abord.",
+        email_taken:
+          "Cette adresse a déjà un compte MENAO : invitez votre salarié avec une autre adresse.",
+        rate_limited: "Trop d'invitations envoyées : réessayez dans une heure.",
+        forbidden: "Seul le patron de l'entreprise gère son équipe.",
+        not_found: "Ce membre ne fait plus partie de votre équipe.",
+        invalid: "Vérifiez les informations saisies.",
+        unavailable: "L'invitation n'a pas pu être envoyée. Réessayez dans quelques minutes.",
+      } as Record<string, string>,
+      suspended: {
+        title: "Accès suspendu",
+        text: (company: string | null) =>
+          `Votre accès à l'espace${company ? ` de ${company}` : " de votre entreprise"} est suspendu. Votre patron peut le réactiver depuis « Mon équipe ».`,
+      },
     },
     // Aide et support de l'espace artisan, avec l'assistant (F-86, ADR 0236).
     helpCenter: {

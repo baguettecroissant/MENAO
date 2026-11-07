@@ -1,6 +1,7 @@
 import type { ValueForMoney } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { exampleMyReviews } from "./example-data";
 import { examplesActive } from "./examples";
 
@@ -85,7 +86,11 @@ async function myArtisanId(): Promise<string | null> {
   const { data: session } = await supabase.auth.getSession();
   const userId = session.session?.user.id;
   if (!userId) return null;
-  const { data } = await supabase.from("artisans").select("id").eq("user_id", userId).maybeSingle();
+  const { data } = await supabase
+    .from("artisans")
+    .select("id")
+    .eq("id", await myArtisanKey())
+    .maybeSingle();
   return data?.id ?? null;
 }
 

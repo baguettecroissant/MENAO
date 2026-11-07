@@ -12,6 +12,7 @@ import {
   stripImageMetadata,
   type DetectedFileType,
 } from "../../../packages/core/src/files.ts";
+import { teamArtisanId } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -148,6 +149,14 @@ Deno.serve(
         return await saveTicketPhoto(admin, user.id, body?.ticketId, file);
       }
 
+      // Justificatif d'une dépense : patron ou membre actif de son équipe (ADR 0240).
+      if (purpose === "expense_document") {
+        const artisanId = await teamArtisanId(admin, user.id);
+        if (!artisanId) return respond("forbidden", 403);
+        return await saveExpenseDocument(admin, artisanId, body?.expenseId, file);
+      }
+
+      // Logo, réalisations et documents du dossier : le patron seulement.
       const { data: artisan } = await admin
         .from("artisans")
         .select("id, status")
@@ -156,9 +165,6 @@ Deno.serve(
       if (!artisan) return respond("forbidden", 403);
 
       if (purpose === "logo") return await saveLogo(admin, artisan.id, file);
-      if (purpose === "expense_document") {
-        return await saveExpenseDocument(admin, artisan.id, body?.expenseId, file);
-      }
       return purpose === "portfolio"
         ? await savePortfolioPhoto(admin, artisan.id, file)
         : await saveDocument(admin, artisan, file, body?.document);

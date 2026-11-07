@@ -3,6 +3,8 @@ export const messages = {
   required: "Ce champ est obligatoire.",
   tooLong: "Ce champ est trop long.",
   emailInvalid: "Adresse e-mail invalide.",
+  // Comptes d'équipe (ADR 0240).
+  teamRole: "Choisissez un rôle : chef d'équipe ou ouvrier.",
   phoneInvalid: "Numéro de téléphone invalide.",
   // Demande de rappel depuis l'assistant des pages Pro (ADR 0218).
   callbackFirstName: "Indiquez votre prénom.",

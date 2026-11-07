@@ -7,8 +7,9 @@
   </head>
   <!-- Même mise en page que les e-mails de notification (packages/emails) : bandeau bleu clair avec
        le logo servi par le site, carte blanche, bouton en pilule centré, pied de page.
-       Deux versions : commercial (commercial-invite, ADR 0205) ou équipe MENAO, admin et support
-       (staff-invite, ADR 0210), choisie par .Data.equipe, posé à l'invitation. -->
+       Trois versions : commercial (commercial-invite, ADR 0205), équipe MENAO, admin et support
+       (staff-invite, ADR 0210, .Data.equipe), ou membre de l'équipe d'un artisan (team-members,
+       ADR 0240, .Data.equipe_artisan : nom de l'entreprise), posés à l'invitation. -->
   <body
     style="
       margin: 0;
@@ -17,10 +18,13 @@
       font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
     "
   >
+    <!-- prettier-ignore -->
     <div style="display: none; max-height: 0; overflow: hidden">
-      {{ if .Data.equipe }}Choisissez votre mot de passe pour ouvrir le back-office MENAO, lien
-      valable une heure.{{ else }}Choisissez votre mot de passe pour ouvrir votre espace commercial,
-      lien valable une heure.{{ end }}
+      {{ if .Data.equipe_artisan }}Choisissez votre mot de passe pour rejoindre l'équipe
+      {{ .Data.equipe_artisan }} sur MENAO, lien valable une heure.{{ else if .Data.equipe }}
+      Choisissez votre mot de passe pour ouvrir le back-office MENAO, lien valable une heure.
+      {{ else }}Choisissez votre mot de passe pour ouvrir votre espace commercial, lien valable une
+      heure.{{ end }}
     </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
@@ -62,22 +66,29 @@
                   padding: 28px 24px;
                 "
               >
+                <!-- prettier-ignore -->
                 <h1 style="margin: 0 0 16px; font-size: 22px; line-height: 28px; color: #111728">
-                  {{ if .Data.equipe }}Votre accès au back-office MENAO{{ else }}Votre accès à
-                  l'espace commercial MENAO{{ end }}
+                  {{ if .Data.equipe_artisan }}Rejoignez l'équipe {{ .Data.equipe_artisan }} sur
+                  MENAO{{ else if .Data.equipe }}Votre accès au back-office MENAO{{ else }}Votre
+                  accès à l'espace commercial MENAO{{ end }}
                 </h1>
                 <p style="margin: 0 0 12px; font-size: 15px; line-height: 22px; color: #111728">
                   Bonjour,
                 </p>
+                <!-- prettier-ignore -->
                 <p style="margin: 0 0 12px; font-size: 15px; line-height: 22px; color: #111728">
-                  {{ if .Data.equipe }}L'équipe MENAO vous a ouvert un accès au back-office. Cliquez
-                  sur le bouton ci-dessous pour choisir votre mot de passe. À votre première
-                  connexion, vous activerez la double authentification avec une application comme
-                  Google Authenticator ou 1Password. Le lien est valable une heure et ne peut servir
-                  qu'une fois.{{ else }}L'équipe MENAO vous a créé un compte commercial : votre code
-                  d'inscription, votre QR code et le guide terrain vous y attendent. Cliquez sur le
-                  bouton ci-dessous pour choisir votre mot de passe. Le lien est valable une heure
-                  et ne peut servir qu'une fois.{{ end }}
+                  {{ if .Data.equipe_artisan }}{{ .Data.equipe_artisan }} vous a ouvert un compte
+                  MENAO pour travailler avec son équipe sur ses chantiers. Cliquez sur le bouton
+                  ci-dessous pour choisir votre mot de passe, puis connectez-vous sur menao.fr ou
+                  dans l'application MENAO. Le lien est valable une heure et ne peut servir qu'une
+                  fois.{{ else if .Data.equipe }}L'équipe MENAO vous a ouvert un accès au
+                  back-office. Cliquez sur le bouton ci-dessous pour choisir votre mot de passe. À
+                  votre première connexion, vous activerez la double authentification avec une
+                  application comme Google Authenticator ou 1Password. Le lien est valable une heure
+                  et ne peut servir qu'une fois.{{ else }}L'équipe MENAO vous a créé un compte
+                  commercial : votre code d'inscription, votre QR code et le guide terrain vous y
+                  attendent. Cliquez sur le bouton ci-dessous pour choisir votre mot de passe. Le
+                  lien est valable une heure et ne peut servir qu'une fois.{{ end }}
                 </p>
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>

@@ -24,6 +24,7 @@ import { examplesActive } from "./examples";
 import { loadInbox, type InboxItem } from "./pro-requests";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { loadWelcomeGift } from "./welcome-gift";
 
 export type Dashboard = {
@@ -106,7 +107,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       .select(
         "status, radiation_reason, connect_charges_enabled, examples_hidden_at, artisan_documents(type, status, date_fin)",
       )
-      .eq("user_id", userId)
+      .eq("id", await myArtisanKey())
       .maybeSingle(),
     countReviewsToAnswer(),
     // Abonnement de l'artisan (lecture limitée à son compte, RLS).

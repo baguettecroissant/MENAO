@@ -19,6 +19,7 @@ import {
   ReceiptText,
   Star,
   UserRound,
+  Users,
   Wallet,
   Wrench,
   type LucideIcon,
@@ -43,7 +44,8 @@ type RowKey =
   | "identity"
   | "notifications"
   | "help"
-  | "examples";
+  | "examples"
+  | "team";
 type Row = { key: RowKey; icon: LucideIcon; href: string };
 
 /** Rubriques de « Mon profil », dans l'ordre de l'application (ADR 0129, 0131). */
@@ -66,6 +68,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
       { key: "trades", icon: Wrench, href: "/pro/onboarding/metiers" },
       { key: "zone", icon: MapPin, href: "/pro/onboarding/zone" },
       { key: "availability", icon: CalendarClock, href: "/pro/agenda/disponibilites" },
+      // Comptes d'équipe (ADR 0240) : patron seulement.
+      { key: "team", icon: Users, href: "/pro/equipe" },
     ],
   },
   {
@@ -137,6 +141,8 @@ export type ProfileHubData = {
   } | null;
   /** Cadeau de bienvenue du filleul (ADR 0154). */
   welcomeGift: WelcomeGift | null;
+  /** « Mon équipe » (ADR 0240) : comptes utilisés et places ; absent pour un membre. */
+  team?: { used: number; seats: number } | null;
 };
 
 /**
@@ -249,6 +255,7 @@ export function ProfileHubView({
               <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
                 {section.rows
                   .filter((row) => !(example && row.key === "examples"))
+                  .filter((row) => row.key !== "team" || Boolean(hub.team))
                   .map((row) => (
                     <HubLine
                       key={row.key}
@@ -267,6 +274,12 @@ export function ProfileHubView({
 }
 
 function statusOf(key: RowKey, hub: ProfileHubData): HubLineStatus {
+  if (key === "team") {
+    if (!hub.team) return null;
+    return hub.team.seats > 1
+      ? { text: t.values.team(hub.team.used, hub.team.seats), tone: "neutral" }
+      : { text: t.values.teamNotIncluded, tone: "neutral" };
+  }
   if (key === "subscription") {
     return hub.subscriptionActive
       ? { text: t.values.subscriptionActive, tone: "success" }

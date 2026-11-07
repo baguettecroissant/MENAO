@@ -17,12 +17,15 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { teamContext } from "./space";
 
 /**
  * Données de l'onboarding de l'artisan connecté (mises en cache pour la durée de la requête,
- * partagées entre le layout et la page). Redirige si l'utilisateur n'est pas artisan.
+ * partagées entre le layout et la page). Redirige si l'utilisateur n'est pas artisan. Dossier de
+ * l'entreprise, réservé au patron : un membre de son équipe (ADR 0240) n'y accède qu'en lecture,
+ * depuis « Mon profil » (`allowMembers`).
  */
-export const getOnboardingContext = cache(async () => {
+export const getOnboardingContext = cache(async (allowMembers: boolean = false) => {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth) redirect("/connexion?next=/pro/onboarding");
@@ -30,12 +33,14 @@ export const getOnboardingContext = cache(async () => {
   const role = roleFromAppMetadata(auth.claims.app_metadata);
   if (role !== "artisan" && role !== "artisan_en_attente") redirect(homePathForRole(role) as Route);
 
-  const { data: artisan, error } = await supabase
-    .from("artisans")
-    .select("*")
-    .eq("user_id", auth.claims.sub)
-    .single();
-  if (error) throw new Error("Fiche artisan introuvable");
+  const team = await teamContext();
+  if (team && team.position !== "patron" && (!allowMembers || !team.artisanId)) {
+    redirect(team.artisanId ? "/pro/tableau-de-bord" : "/pro/acces-suspendu");
+  }
+  const { data: artisan, error } = team?.artisanId
+    ? await supabase.from("artisans").select("*").eq("id", team.artisanId).single()
+    : { data: null, error: true };
+  if (error || !artisan) throw new Error("Fiche artisan introuvable");
 
   const [
     trades,

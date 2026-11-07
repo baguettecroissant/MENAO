@@ -2,6 +2,7 @@ import { CHARTER_RULE_COUNT, CHARTER_VERSION, ENGAGEMENT_VERSION } from "@menao/
 import type { CharterAcceptance } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey, myTeamContext } from "./team";
 
 export type CharterAcceptanceRow = {
   signer_name: string;
@@ -20,7 +21,7 @@ async function myArtisan() {
   const { data: artisan } = await supabase
     .from("artisans")
     .select("id, status, raison_sociale, nom_commercial, siret")
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   return artisan ? { ...artisan, userId: auth.user.id } : null;
 }
@@ -42,6 +43,9 @@ async function currentAcceptance(artisanId: string) {
  * (ADR 0117). En cas d'erreur de lecture, on ne bloque pas l'espace.
  */
 export async function charterRequired(): Promise<boolean> {
+  // Engagement de l'entreprise, signé par le patron : ses membres n'ont rien à signer (ADR 0240).
+  const team = await myTeamContext();
+  if (team && team.position !== "patron") return false;
   const artisan = await myArtisan();
   if (!artisan || (artisan.status !== "valide" && artisan.status !== "suspendu")) return false;
   return (await currentAcceptance(artisan.id)) === null;

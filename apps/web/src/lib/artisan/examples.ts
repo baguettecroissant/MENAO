@@ -9,6 +9,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { teamContext } from "./space";
 
 /** Pages d'exemples de l'espace pro (ADR 0184). */
 export const EXAMPLES_BASE = "/pro/decouvrir";
@@ -44,7 +45,12 @@ export const requireExampleViewer = cache(async () => {
       .select("first_name, last_name, avatar_path")
       .eq("user_id", auth.claims.sub)
       .maybeSingle(),
-    supabase.from("artisans").select("status").eq("user_id", auth.claims.sub).maybeSingle(),
+    // Fiche du patron ou de l'entreprise d'un membre (ADR 0240).
+    teamContext().then(async (team) =>
+      team?.artisanId
+        ? await supabase.from("artisans").select("status").eq("id", team.artisanId).maybeSingle()
+        : { data: null },
+    ),
   ]);
   return {
     firstName: profile?.first_name ?? null,

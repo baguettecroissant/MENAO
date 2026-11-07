@@ -34,3 +34,24 @@ export async function currentArtisan(req: Request, admin: SupabaseClient) {
     .maybeSingle();
   return artisan ? { user: data.user, artisan: artisan as ArtisanRow } : null;
 }
+
+/**
+ * Fiche de l'entreprise d'un compte (F-89, ADR 0240) : la sienne (patron) ou celle dont il est
+ * membre actif. Pour les fonctions ouvertes à l'équipe ; celles du patron (abonnement, Stripe,
+ * dossier) gardent la recherche par titulaire.
+ */
+export async function teamArtisanId(admin: SupabaseClient, userId: string): Promise<string | null> {
+  const { data: own } = await admin
+    .from("artisans")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (own) return own.id as string;
+  const { data: member } = await admin
+    .from("artisan_members")
+    .select("artisan_id")
+    .eq("user_id", userId)
+    .is("suspended_at", null)
+    .maybeSingle();
+  return (member?.artisan_id as string | undefined) ?? null;
+}

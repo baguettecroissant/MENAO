@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { documentRows, type DocumentRow } from "./document-rows";
 
 export type MyDocuments = { status: string; rows: DocumentRow[] };
@@ -12,7 +13,7 @@ export async function loadMyDocuments(): Promise<MyDocuments | null> {
     .select(
       "status, decennale_non_soumis, registre_statut, artisan_documents(type, source, status, date_fin, refusal_reason, created_at)",
     )
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
   return {

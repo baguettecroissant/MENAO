@@ -16,6 +16,7 @@ import { fr } from "@/i18n/fr";
 import { env } from "./env";
 import type { AgendaAbsence } from "./pro-agenda";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 const t = fr.proAvailability;
 
@@ -43,7 +44,7 @@ export async function loadAvailability(): Promise<Availability | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select("id, paused, available_from")
-    .eq("user_id", userId)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
   const today = parisToday();

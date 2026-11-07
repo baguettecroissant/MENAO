@@ -567,6 +567,10 @@ verify_jwt = true
 [functions.staff-invite]
 verify_jwt = true
 
+# Équipe d'un artisan (F-89, ADR 0240) : le patron invite ou retire un membre.
+[functions.team-members]
+verify_jwt = true
+
 [functions.notify]
 verify_jwt = false
 

@@ -21,6 +21,7 @@ import { FunctionsHttpError } from "@supabase/supabase-js";
 import { fr } from "@/i18n/fr";
 import { env } from "./env";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 /**
  * Compte de paiement Stripe de l'artisan (ADR 0124), comme l'étape « Paiements » du site : état du
@@ -73,7 +74,7 @@ export async function loadPayments(): Promise<Payments | null> {
     .select(
       "status, stripe_account_id, connect_charges_enabled, connect_payouts_enabled, connect_details_submitted, connect_requirements_due, connect_requirements_pending, connect_requirements_deadline, connect_disabled_reason",
     )
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!a) return null;
   const status = connectAccountStatus({

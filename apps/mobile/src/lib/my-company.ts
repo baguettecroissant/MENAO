@@ -12,6 +12,7 @@ import { FunctionsHttpError } from "@supabase/supabase-js";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 /**
  * Entreprise, métiers, certifications et zone de l'artisan dans l'application (ADR 0125), comme
@@ -37,7 +38,7 @@ async function myArtisanId(): Promise<string | null> {
   const { data } = await supabase
     .from("artisans")
     .select("id")
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   return data?.id ?? null;
 }
@@ -71,7 +72,7 @@ export async function loadCompany(): Promise<Company | null> {
     .select(
       "status, siret, siren, sirene_checked_at, sirene_active, sirene_partial, raison_sociale, nom_commercial, assujetti_tva, forme_juridique_code, ape_code, ape_eligible, adresse_ligne, adresse_code_postal, adresse_commune, logo_path",
     )
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!a) return null;
   const { data: logo } = a.logo_path
@@ -196,7 +197,7 @@ export async function loadTrades(): Promise<TradesData | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select("id, experience_years, diplome_metier, budget_minimum, rge_checked_at")
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
   const [trades, workTypes, mine, myWorkTypes, certifications, rge] = await Promise.all([
@@ -342,7 +343,7 @@ export async function loadZone(): Promise<Zone | null> {
   const { data: a } = await supabase
     .from("artisans")
     .select("id, zone_mode, radius_km, base_label, base_code_insee, base_location")
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!a) return null;
   const [{ data: communes }, { data: territories }, { data: points }] = await Promise.all([

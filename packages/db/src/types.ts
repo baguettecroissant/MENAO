@@ -849,6 +849,51 @@ export type Database = {
           },
         ];
       };
+      artisan_members: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          id: string;
+          invited_by: string | null;
+          role: Database["public"]["Enums"]["team_role"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role: Database["public"]["Enums"]["team_role"];
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          role?: Database["public"]["Enums"]["team_role"];
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_members_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_photos: {
         Row: {
           artisan_id: string;
@@ -6308,6 +6353,10 @@ export type Database = {
         };
         Returns: string;
       };
+      artisan_record_team_invite: {
+        Args: { p_role: Database["public"]["Enums"]["team_role"]; p_user_id: string };
+        Returns: undefined;
+      };
       artisan_remove_logo: { Args: Record<PropertyKey, never>; Returns: string };
       artisan_reply_review: { Args: { p_reply: string; p_review_id: string }; Returns: undefined };
       artisan_report_expertise: {
@@ -6761,6 +6810,8 @@ export type Database = {
           responses: number;
         }[];
       };
+      my_team: { Args: Record<PropertyKey, never>; Returns: Json };
+      my_team_context: { Args: Record<PropertyKey, never>; Returns: Json };
       my_unread_messages: { Args: Record<PropertyKey, never>; Returns: number };
       my_unread_notifications: { Args: Record<PropertyKey, never>; Returns: number };
       my_voice_topups: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -6999,6 +7050,7 @@ export type Database = {
         Args: { p_platform: Database["public"]["Enums"]["push_platform"]; p_token: string };
         Returns: undefined;
       };
+      remove_team_member: { Args: { p_user_id: string }; Returns: Json };
       renew_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: string };
       replace_external_busy: {
         Args: { p_from: string; p_slots: Json; p_to: string };
@@ -7151,6 +7203,14 @@ export type Database = {
       staff_review_held_requests: {
         Args: { p_project_id: string; p_reason?: string; p_release: boolean };
         Returns: number;
+      };
+      set_team_member_active: {
+        Args: { p_active: boolean; p_user_id: string };
+        Returns: undefined;
+      };
+      set_team_member_role: {
+        Args: { p_role: Database["public"]["Enums"]["team_role"]; p_user_id: string };
+        Returns: undefined;
       };
       staff_set_ticket_status: {
         Args: { p_status: Database["public"]["Enums"]["ticket_status"]; p_ticket_id: string };
@@ -7467,6 +7527,7 @@ export type Database = {
       review_decision: "valide" | "refuse" | "complement";
       review_status: "publie" | "masque";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
+      team_role: "chef" | "ouvrier";
       ticket_status: "ouvert" | "en_cours" | "resolu";
       ticket_type:
         | "dossier_recherche"
@@ -7800,6 +7861,7 @@ export const Constants = {
       review_decision: ["valide", "refuse", "complement"],
       review_status: ["publie", "masque"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
+      team_role: ["chef", "ouvrier"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
       ticket_type: [
         "dossier_recherche",

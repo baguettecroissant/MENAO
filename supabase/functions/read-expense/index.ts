@@ -18,7 +18,7 @@ import {
   withinHourlyLimits,
   type AiRun,
 } from "../_shared/ai.ts";
-import { adminClient, json } from "../_shared/artisan.ts";
+import { adminClient, json, teamArtisanId } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 import { env } from "../_shared/env.ts";
 
@@ -89,11 +89,11 @@ Deno.serve(
     const path = typeof body?.path === "string" ? body.path : "";
     if (!new RegExp(`^${user.id}/${UUID}$`).test(path)) return json({ status: "invalid" }, 400);
 
-    const { data: artisan } = await admin
-      .from("artisans")
-      .select("status")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // Patron ou membre actif de son équipe (ADR 0240).
+    const artisanId = await teamArtisanId(admin, user.id);
+    const { data: artisan } = artisanId
+      ? await admin.from("artisans").select("status").eq("id", artisanId).maybeSingle()
+      : { data: null };
     if (!artisan || !PRO_STATUSES.has(artisan.status as string)) {
       return json({ status: "forbidden" }, 403);
     }

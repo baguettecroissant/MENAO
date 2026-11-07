@@ -3403,6 +3403,60 @@ export const fr = {
    * l'entreprise, la conformité, l'argent et le compte, avec l'état de chaque rubrique. Jamais
    * d'abonnement ni de lien vers le site (règle 10).
    */
+  /**
+   * Comptes d'équipe (F-89, ADR 0240), comme sur le site : « Mon équipe » du patron. Ni formule ni
+   * lien vers le site (CLAUDE.md règle 10).
+   */
+  proTeam: {
+    title: "Mon équipe",
+    lead: "Invitez vos salariés : chacun a son propre accès à MENAO, dans l'application et sur le site.",
+    seats: (used: number, seats: number) =>
+      `${used} compte${used > 1 ? "s" : ""} sur ${seats}, vous compris`,
+    notIncluded: "Les comptes d'équipe ne sont pas inclus dans votre formule actuelle.",
+    full: "Toutes les places sont prises : retirez ou suspendez un membre pour en inviter un autre.",
+    you: "Vous",
+    patron: "Patron",
+    roles: { chef: "Chef d'équipe", ouvrier: "Ouvrier" } as Record<"chef" | "ouvrier", string>,
+    states: {
+      actif: "Actif",
+      en_attente: "Invitation envoyée",
+      suspendu_places: "Suspendu : plus de place",
+      suspendu_patron: "Suspendu",
+    } as Record<"actif" | "en_attente" | "suspendu_places" | "suspendu_patron", string>,
+    since: (date: string) => `Depuis le ${date}`,
+    invite: {
+      title: "Inviter un membre",
+      hint: "Il reçoit un e-mail pour choisir son mot de passe, puis se connecte dans l'application ou sur le site.",
+      firstName: "Prénom",
+      lastName: "Nom",
+      email: "Adresse e-mail",
+      role: "Rôle",
+      submit: "Envoyer l'invitation",
+      sent: (email: string) => `Invitation envoyée à ${email}.`,
+    },
+    actions: {
+      suspend: "Suspendre",
+      reactivate: "Réactiver",
+      remove: "Retirer",
+      confirmTitle: "Retirer ce membre ?",
+      confirmRemove: (name: string) =>
+        `${name} ne fera plus partie de votre équipe : son accès est fermé tout de suite.`,
+      cancel: "Annuler",
+      removed: (name: string) => `${name} ne fait plus partie de votre équipe.`,
+      saved: "C'est enregistré.",
+    },
+    errors: {
+      no_seat: "Toutes les places sont prises : retirez ou suspendez un membre d'abord.",
+      email_taken:
+        "Cette adresse a déjà un compte MENAO : invitez votre salarié avec une autre adresse.",
+      rate_limited: "Trop d'invitations envoyées : réessayez dans une heure.",
+      forbidden: "Seul le patron de l'entreprise gère son équipe.",
+      not_found: "Ce membre ne fait plus partie de votre équipe.",
+      invalid: "Vérifiez les informations saisies.",
+      unavailable: "L'action n'a pas pu aboutir. Réessayez dans quelques minutes.",
+    } as Record<string, string>,
+    loadError: "Impossible de charger votre équipe.",
+  },
   proHub: {
     /**
      * Parrainage (F-60, ADR 0137) : le code seulement. Ni lien vers le site ni mention de
@@ -3528,6 +3582,7 @@ export const fr = {
       trades: "Métiers et certifications",
       zone: "Zone d'intervention",
       availability: "Disponibilités",
+      team: "Mon équipe",
       documents: "Documents",
       charter: "Charte qualité",
       payments: "Paiements",
@@ -3541,6 +3596,7 @@ export const fr = {
     },
     values: {
       upToDate: "À jour",
+      team: (used: number, seats: number) => `${used} sur ${seats}`,
       toComplete: "À compléter",
       photos: (n: number) => (n === 0 ? "Aucune photo" : n === 1 ? "1 photo" : `${n} photos`),
       toAnswer: (n: number) => `${n} à répondre`,
