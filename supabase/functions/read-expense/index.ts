@@ -89,8 +89,8 @@ Deno.serve(
     const path = typeof body?.path === "string" ? body.path : "";
     if (!new RegExp(`^${user.id}/${UUID}$`).test(path)) return json({ status: "invalid" }, 400);
 
-    // Patron ou membre actif de son équipe (ADR 0240).
-    const artisanId = await teamArtisanId(admin, user.id);
+    // Patron ou chef d'équipe (ADR 0241) : les dépenses sont de l'argent, jamais pour un ouvrier.
+    const artisanId = await teamArtisanId(admin, user.id, { managers: true });
     const { data: artisan } = artisanId
       ? await admin.from("artisans").select("status").eq("id", artisanId).maybeSingle()
       : { data: null };

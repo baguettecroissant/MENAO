@@ -1775,6 +1775,43 @@ export type Database = {
           },
         ];
       };
+      chantier_assignments: {
+        Row: {
+          assigned_by: string | null;
+          chantier_id: string;
+          created_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assigned_by?: string | null;
+          chantier_id: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          assigned_by?: string | null;
+          chantier_id?: string;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chantier_assignments_chantier_id_fkey";
+            columns: ["chantier_id"];
+            isOneToOne: false;
+            referencedRelation: "chantiers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chantier_assignments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_members";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       chantier_events: {
         Row: {
           actor_id: string | null;
@@ -6457,6 +6494,7 @@ export type Database = {
           storage_path: string;
         }[];
       };
+      chantier_team: { Args: { p_chantier_id: string }; Returns: Json };
       choose_welcome_gift: {
         Args: {
           p_adresse_code_postal: string;
@@ -7177,6 +7215,10 @@ export type Database = {
           p_radius_km?: number;
           p_territoires?: string[];
         };
+        Returns: undefined;
+      };
+      set_chantier_team: {
+        Args: { p_chantier_id: string; p_user_ids: string[] };
         Returns: undefined;
       };
       set_decennale_non_soumis: { Args: { p_value: boolean }; Returns: undefined };

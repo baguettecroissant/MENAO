@@ -111,7 +111,8 @@ select is(public.record_chantier_photo('c1294000-0000-4000-8000-000000000001', '
   'c1294000-0000-4000-8000-000000000001/photo.jpg'), 'ok', 'membre : photo du journal');
 select is(public.record_chantier_photo('c1294000-0000-4000-8000-000000000001', 'c1290000-0000-4000-8000-000000000005',
   'c1294000-0000-4000-8000-000000000001/photo2.jpg'), 'forbidden', 'autre artisan : photo refusée');
-select is(public.record_message_attachment('c1294000-0000-4000-8000-000000000001', 'c1290000-0000-4000-8000-000000000003',
+-- Chef d'équipe : tous les chantiers ; un ouvrier, seulement les siens (test 130).
+select is(public.record_message_attachment('c1294000-0000-4000-8000-000000000001', 'c1290000-0000-4000-8000-000000000002',
   'photo', 'c1294000-0000-4000-8000-000000000001/piece.jpg'), 'ok', 'membre : pièce jointe');
 reset role;
 

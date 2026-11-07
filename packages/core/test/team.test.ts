@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  TEAM_PERMISSIONS,
   parseTeam,
   parseTeamContext,
+  teamCan,
   teamIncluded,
   teamMemberName,
   teamMemberState,
@@ -83,5 +85,24 @@ describe("comptes d'équipe (ADR 0240)", () => {
     expect(teamMemberState({ pending: true, suspension: "patron" })).toBe("suspendu_patron");
     expect(teamMemberState({ pending: false, suspension: null })).toBe("actif");
     expect(teamSeatsLeft({ seats: 1, used: 3 })).toBe(0);
+  });
+
+  it("droits de chaque place (ADR 0241)", () => {
+    // Le patron peut tout.
+    expect(TEAM_PERMISSIONS.every((p) => teamCan("patron", p))).toBe(true);
+    // Le chef encadre, sans les réglages du patron.
+    expect(TEAM_PERMISSIONS.filter((p) => teamCan("chef", p))).toEqual([
+      "allChantiers",
+      "money",
+      "requests",
+      "chantierDecisions",
+      "assignChantiers",
+      "agenda",
+      "secretary",
+    ]);
+    // L'ouvrier : ses chantiers seulement, aucun montant ; rien sans place.
+    expect(TEAM_PERMISSIONS.some((p) => teamCan("ouvrier", p))).toBe(false);
+    expect(teamCan(null, "money")).toBe(false);
+    expect(teamCan(undefined, "allChantiers")).toBe(false);
   });
 });

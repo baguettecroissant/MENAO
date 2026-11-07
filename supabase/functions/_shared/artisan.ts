@@ -38,9 +38,14 @@ export async function currentArtisan(req: Request, admin: SupabaseClient) {
 /**
  * Fiche de l'entreprise d'un compte (F-89, ADR 0240) : la sienne (patron) ou celle dont il est
  * membre actif. Pour les fonctions ouvertes à l'équipe ; celles du patron (abonnement, Stripe,
- * dossier) gardent la recherche par titulaire.
+ * dossier) gardent la recherche par titulaire. `managers` (ADR 0241) : patron et chef d'équipe
+ * seulement (argent, devis, secrétaire), jamais un ouvrier.
  */
-export async function teamArtisanId(admin: SupabaseClient, userId: string): Promise<string | null> {
+export async function teamArtisanId(
+  admin: SupabaseClient,
+  userId: string,
+  options: { managers?: boolean } = {},
+): Promise<string | null> {
   const { data: own } = await admin
     .from("artisans")
     .select("id")
@@ -49,9 +54,10 @@ export async function teamArtisanId(admin: SupabaseClient, userId: string): Prom
   if (own) return own.id as string;
   const { data: member } = await admin
     .from("artisan_members")
-    .select("artisan_id")
+    .select("artisan_id, role")
     .eq("user_id", userId)
     .is("suspended_at", null)
     .maybeSingle();
-  return (member?.artisan_id as string | undefined) ?? null;
+  if (!member || (options.managers && member.role !== "chef")) return null;
+  return member.artisan_id as string;
 }
