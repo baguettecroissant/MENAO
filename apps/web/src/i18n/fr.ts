@@ -6157,6 +6157,23 @@ export const fr = {
         },
       },
       plans: {
+        // Rappels aux clients par SMS (F-88, ADR 0239).
+        clientReminders: {
+          title: "Rappels à vos clients",
+          intro:
+            "En plus de l'e-mail, vos clients reçoivent un SMS à votre nom, sur le portable qu'ils ont donné dans leur demande.",
+          items: {
+            rdv: "La veille d'un rendez-vous",
+            demarrage: "La veille du démarrage du chantier",
+            acompte: "Acompte ou solde à régler",
+            avis: "Demande d'avis à la fin du chantier",
+          } as Record<string, string>,
+          smsCount: (used: number, included: number) => `${used} / ${included} SMS ce mois-ci`,
+          smsHint: "Au-delà, l'e-mail part toujours, mais plus aucun SMS jusqu'au 1er du mois.",
+          save: "Enregistrer",
+          saving: "Enregistrement…",
+          saved: "Réglages enregistrés.",
+        },
         // Secrétaire dédiée (F-83, ADR 0232).
         secretary: {
           title: "Votre secrétaire",
@@ -6217,8 +6234,8 @@ export const fr = {
           soon: "Inclus, bientôt disponible",
           upgrade: "Avec Premium et Entreprise",
           reminderModes: {
-            sms: "Inclus par SMS et e-mail, bientôt disponible",
-            appel: "Inclus par SMS, e-mail et appel, bientôt disponible",
+            sms: "Inclus par SMS et e-mail",
+            appel: "Inclus par SMS et e-mail, appel bientôt disponible",
           } as Record<string, string>,
           minutesTitle: "Minutes de voix ce mois-ci",
           minutesUsed: (used: number, included: number) => `${used} / ${included} minutes`,

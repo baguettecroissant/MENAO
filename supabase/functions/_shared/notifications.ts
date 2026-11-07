@@ -1,6 +1,5 @@
 // NotificationProvider (ADR 0002, 0017, 0078) : l'envoi passe par une interface, pour changer de
-// fournisseur sans toucher au code métier. E-mails (Resend) et push (Expo) ; les SMS (Brevo)
-// s'ajouteront ici.
+// fournisseur sans toucher au code métier. E-mails (Resend), SMS (Brevo, ADR 0239) et push (Expo).
 import { env } from "./env.ts";
 
 export type EmailMessage = {
@@ -72,6 +71,75 @@ export class ResendProvider implements NotificationProvider {
 export function notificationProvider(): NotificationProvider | null {
   const key = env("RESEND_API_KEY");
   return key ? new ResendProvider(key, env("EMAIL_FROM") || DEFAULT_FROM) : null;
+}
+
+// ---------------------------------------------------------------------------
+// SMS (Brevo, ADR 0239) : rappels au client au nom de l'artisan, SMS de service.
+// ---------------------------------------------------------------------------
+
+export type SmsMessage = {
+  /** Numéro au format international (+33…). */
+  to: string;
+  text: string;
+  /** Identifiant de la notification (étiquette chez Brevo, jamais le numéro). */
+  tag: string;
+};
+
+export interface SmsProvider {
+  sendSms(message: SmsMessage): Promise<SendResult>;
+}
+
+/** Expéditeur alphanumérique (11 caractères au plus). */
+const DEFAULT_SMS_SENDER = "MENAO";
+
+/**
+ * Brevo, SMS transactionnels : https://developers.brevo.com/docs/transactional-sms-endpoints.
+ * TODO(legal) : accord de traitement (DPA) avec Brevo pour les numéros des clients des artisans.
+ */
+export class BrevoSmsProvider implements SmsProvider {
+  readonly #apiKey: string;
+  readonly #sender: string;
+
+  constructor(apiKey: string, sender: string) {
+    this.#apiKey = apiKey;
+    this.#sender = sender;
+  }
+
+  async sendSms(message: SmsMessage): Promise<SendResult> {
+    try {
+      const res = await fetch("https://api.brevo.com/v3/transactionalSMS/send", {
+        method: "POST",
+        headers: {
+          "api-key": this.#apiKey,
+          accept: "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: this.#sender,
+          recipient: message.to.replace(/^\+/, ""),
+          content: message.text,
+          type: "transactional",
+          tag: message.tag,
+        }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (res.ok) return { ok: true };
+      // Code seulement : la réponse de Brevo peut citer le numéro.
+      return {
+        ok: false,
+        error: `brevo ${res.status}`,
+        retry: res.status === 429 || res.status >= 500,
+      };
+    } catch {
+      return { ok: false, error: "brevo injoignable", retry: true };
+    }
+  }
+}
+
+/** Fournisseur de SMS configuré, ou null (pas de compte Brevo branché : aucun SMS ne part). */
+export function smsProvider(): SmsProvider | null {
+  const key = env("BREVO_API_KEY");
+  return key ? new BrevoSmsProvider(key, env("SMS_SENDER") || DEFAULT_SMS_SENDER) : null;
 }
 
 /** Notification push vers un appareil (jeton Expo) : titre, texte et page concernée. */

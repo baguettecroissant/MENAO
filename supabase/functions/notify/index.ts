@@ -3,6 +3,7 @@
 // l'envoi d'un message de la messagerie, avec un secret partagé ; aucune donnée personnelle
 // journalisée (CLAUDE.md règle 11). ADR 0017, 0078, 0201.
 import { messagePushContent, notificationContent } from "../../../packages/emails/src/content.ts";
+import { smsContent } from "../../../packages/emails/src/sms.ts";
 import {
   isDeliverableAddress,
   renderNotification,
@@ -10,7 +11,12 @@ import {
 } from "../../../packages/emails/src/index.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
-import { notificationProvider, pushProvider, type PushMessage } from "../_shared/notifications.ts";
+import {
+  notificationProvider,
+  pushProvider,
+  smsProvider,
+  type PushMessage,
+} from "../_shared/notifications.ts";
 
 const BATCH_SIZE = 20;
 const PUSH_BATCH_SIZE = 50;
@@ -127,6 +133,43 @@ function sameSecret(received: string, expected: string): boolean {
   return diff === 0;
 }
 
+/**
+ * Rappels au client par SMS (ADR 0239) : numéro lu au moment de l'envoi dans la demande du
+ * chantier. Sans compte Brevo branché, les SMS sont classés en échec (« sms non configuré »),
+ * sans nouvel essai : rien ne part plus tard avec du retard.
+ */
+async function sendSmsBatch(admin: ReturnType<typeof adminClient>, siteUrl: string) {
+  const { data, error } = await admin.rpc("claim_sms_notifications", { p_limit: BATCH_SIZE });
+  if (error) return { sent: 0, failed: 0 };
+  const provider = smsProvider();
+  const site = siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "") || "menao.fr";
+  let sent = 0;
+  let failed = 0;
+  for (const n of (data ?? []) as {
+    id: string;
+    type: string;
+    data: Record<string, unknown> | null;
+    phone: string | null;
+  }[]) {
+    const text = smsContent(n.type, n.data ?? {}, site);
+    const result =
+      !text || !n.phone
+        ? { ok: false as const, error: "sms impossible", retry: false }
+        : !provider
+          ? { ok: false as const, error: "sms non configuré", retry: false }
+          : await provider.sendSms({ to: n.phone, text, tag: n.id });
+    await admin.rpc("complete_notification", {
+      p_id: n.id,
+      p_sent: result.ok,
+      p_error: result.ok ? null : result.error,
+      p_retry: !result.ok && result.retry,
+    });
+    if (result.ok) sent++;
+    else failed++;
+  }
+  return { sent, failed };
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
   const secret = env("NOTIFY_SECRET");
@@ -165,10 +208,13 @@ Deno.serve(async (req) => {
     if (result.ok) sent++;
     else failed++;
   }
+  const sms = await sendSmsBatch(admin, siteUrl);
   const notificationPushes = await sendPushes(admin);
   const pushed = notificationPushes.pushed + messagePushes.pushed;
   const pushFailed = notificationPushes.pushFailed + messagePushes.pushFailed;
-  // Comptes seulement : ni adresse, ni contenu, ni jeton.
-  console.log(JSON.stringify({ sent, failed, pushed, pushFailed }));
-  return json({ sent, failed, pushed, pushFailed });
+  // Comptes seulement : ni adresse, ni numéro, ni contenu, ni jeton.
+  console.log(
+    JSON.stringify({ sent, failed, sms: sms.sent, smsFailed: sms.failed, pushed, pushFailed }),
+  );
+  return json({ sent, failed, sms: sms.sent, smsFailed: sms.failed, pushed, pushFailed });
 });
