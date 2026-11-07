@@ -73,6 +73,43 @@ export type JournalSummary = {
  * Journal présenté comme sur les maquettes (F-22, F-12) : mosaïque des photos et messages, du plus
  * récent au plus ancien, avec la date de la dernière mise à jour.
  */
+/** Une journée du fil de suivi : ses messages et ses photos, du plus récent au plus ancien. */
+export type JournalDay = {
+  /** Jour à l'heure de Paris (AAAA-MM-JJ). */
+  day: string;
+  /** Moment de l'entrée la plus récente du jour. */
+  lastAt: string;
+  messages: { id: string; message: string; createdAt: string }[];
+  photos: string[];
+};
+
+const parisDay = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" });
+
+/**
+ * Fil chronologique du suivi (refonte « Nette », ADR 0246) : les entrées regroupées par jour, à
+ * l'heure de Paris, les jours les plus récents d'abord. Les photos sans fichier et les messages
+ * vides sont ignorés, comme dans `journalSummary`.
+ */
+export function journalTimeline(updates: readonly ChantierUpdate[]): JournalDay[] {
+  const at = (iso: string) => new Date(iso).getTime();
+  const sorted = [...updates].sort((a, b) => at(b.createdAt) - at(a.createdAt));
+  const days: JournalDay[] = [];
+  for (const u of sorted) {
+    const isPhoto = u.kind === "photo" && u.storagePath;
+    const isMessage = u.kind === "message" && u.message;
+    if (!isPhoto && !isMessage) continue;
+    const day = parisDay.format(new Date(u.createdAt));
+    let entry = days.at(-1);
+    if (!entry || entry.day !== day) {
+      entry = { day, lastAt: u.createdAt, messages: [], photos: [] };
+      days.push(entry);
+    }
+    if (isPhoto) entry.photos.push(u.storagePath as string);
+    else entry.messages.push({ id: u.id, message: u.message as string, createdAt: u.createdAt });
+  }
+  return days;
+}
+
 export function journalSummary(updates: readonly ChantierUpdate[]): JournalSummary {
   const at = (iso: string) => new Date(iso).getTime();
   const sorted = [...updates].sort((a, b) => at(b.createdAt) - at(a.createdAt));

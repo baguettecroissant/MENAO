@@ -42,12 +42,15 @@ export function RescheduleButton({
   date,
   time,
   agenda,
+  tone = "light",
 }: {
   chantierId: string;
   minDate: string;
   date: string;
   time: string;
   agenda?: AppointmentAgenda;
+  /** `dark` : lien bleu sur une carte blanche (fiche « Nette », ADR 0246). */
+  tone?: "light" | "dark";
 }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -56,7 +59,11 @@ export function RescheduleButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md text-sm font-medium text-white underline underline-offset-2 hover:text-white/85 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none"
+        className={
+          tone === "dark"
+            ? "rounded-md text-sm font-semibold text-primary-strong hover:underline focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+            : "rounded-md text-sm font-medium text-white underline underline-offset-2 hover:text-white/85 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none"
+        }
       >
         {t.reschedule}
       </button>

@@ -4,34 +4,58 @@ import {
   canDeclareFinished,
   chantierStepIndex,
   isJournalOpen,
-  nextIntervention,
   type ChantierRights,
+  type JournalDay,
 } from "@menao/core";
 import { chantierMessageSchema, liftMessageSchema } from "@menao/validation";
 import { router } from "expo-router";
-import { NotebookPen, ShieldCheck } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  CalendarCheck,
+  CalendarDays,
+  Camera,
+  Check,
+  CircleCheck,
+  Flag,
+  Hourglass,
+  PenLine,
+  ShieldAlert,
+  Wrench,
+} from "lucide-react-native";
+import { useCallback, useState } from "react";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { BottomSheet } from "@/components/bottom-sheet";
-import { ChantierLayout } from "@/components/chantier/chantier-layout";
-import { DocumentsCard, JournalCard, ScheduleCard } from "@/components/chantier/dossier";
-import {
-  NextInterventionCard,
-  PersonRow,
-  StatusPill,
-  chantierTag,
-} from "@/components/chantier/parts";
+import { DocumentsCard } from "@/components/chantier/dossier";
+import { chantierTag } from "@/components/chantier/parts";
+import { ExampleLock } from "@/components/examples";
 import { ConversationCard } from "@/components/messages/conversation-card";
+import { PhotoViewer } from "@/components/photo-viewer";
 import { ChantierTeamCard } from "@/components/pro/chantier-team-card";
+import { ChantierFrame, MoneyCard, NotesCard, PlanningCard } from "@/components/pro/chantier-fiche";
 import { ClientRatingForm } from "@/components/pro/client-rating-form";
-import { PhotoUpload } from "@/components/pro/photo-upload";
-import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheLink,
+  FicheTag,
+  NextStepCard,
+  PillTabs,
+  capitalize,
+} from "@/components/pro/fiche-kit";
+import { PhotoUpload, PhotoUploadStatus, usePhotoUpload } from "@/components/pro/photo-upload";
+import { RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewCard } from "@/components/pro/review-card";
 import { StartDateForm } from "@/components/pro/start-date-form";
-import { Segmented } from "@/components/segmented";
 import { fr } from "@/i18n/fr";
-import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
+import {
+  formatAgo,
+  formatCents,
+  formatDateNumeric,
+  formatDayAndTime,
+  formatDayLabel,
+} from "@/lib/format";
+import { loadConversationPreview } from "@/lib/messages";
 import {
   addChantierMessage,
   declareChantierFinished,
@@ -39,11 +63,12 @@ import {
   type ArtisanChantier,
   type ArtisanFollowUp,
 } from "@/lib/pro-chantiers";
+import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, LinkText, Notice, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
-import { ExampleLock } from "@/components/examples";
 
 const t = fr.proFollowUp;
+const tf = fr.proChantierFiche;
 const { colors, font, radius, spacing } = theme;
 const FULL_RIGHTS: ChantierRights = {
   money: true,
@@ -52,13 +77,15 @@ const FULL_RIGHTS: ChantierRights = {
   assign: true,
 };
 
+type Tab = "suivi" | "dossier" | "messages";
+
 /**
- * Vue d'un chantier côté artisan après l'acompte (F-22), comme sur le site et avec la mise en page
- * de la vue du client (maquettes « Vue d'un chantier ») : confirmation de la date de démarrage et
- * « Déclarer le chantier terminé » en pied d'écran, « Messagerie avec … » et journal pendant les
- * travaux, réserves et leur levée, avis du client et réponse publique (F-28), note de l'artisan
- * sur son client après la clôture (F-23), dossier (documents, échéancier, client). Aucun lien vers
- * le site (règle 10).
+ * Fiche d'un chantier côté artisan après l'acompte (F-22), refonte « Nette » (F-92) : frise des
+ * étapes et « Prochaine étape » avec l'action du moment (confirmer la date de démarrage, déclarer
+ * le chantier terminé, signaler la levée des réserves…), avis du client et réponse publique
+ * (F-28), note de l'artisan sur son client (F-23), puis les onglets Suivi (fil chronologique,
+ * photos et messages, argent, planning, équipe, notes privées), Dossier (documents, demande
+ * d'origine, client) et Messages (conversation, F-40). Aucun lien vers le site (règle 10).
  */
 export function FollowUpView({
   data,
@@ -78,7 +105,7 @@ export function FollowUpView({
   /** Ce que la place dans l'équipe permet (ADR 0241) ; tout par défaut (patron, exemples). */
   rights?: ChantierRights;
 }) {
-  const [tab, setTab] = useState<"suivi" | "dossier">("suivi");
+  const [tab, setTab] = useState<Tab>("suivi");
   const [justConfirmed, setJustConfirmed] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const c = data.detail;
@@ -88,23 +115,142 @@ export function FollowUpView({
   const clientName =
     [c.client.first_name, c.client.last_name].filter(Boolean).join(" ") || t.yourClientFallback;
   const client = c.client.first_name ?? t.yourClientFallback;
-  const step = chantierStepIndex(status);
   const open = isJournalOpen(status);
-  const next = nextIntervention({ status, appointmentAt: null, startAt });
-  const address = c.adresse ?? ([c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null);
   const start = startAt ? formatDayAndTime(startAt) : null;
   const showConfirmed = (confirmed || justConfirmed) && status === "planifie" && start;
+  const [conversation] = useFocusData(useCallback(() => loadConversationPreview(id), [id]));
+  const quoteId = f.documents.find((d) => d.kind === "devis")?.id ?? null;
+
+  const nextStep = (() => {
+    switch (status) {
+      case "acompte_paye":
+        return rights.decisions ? (
+          <NextStepCard
+            icon={CalendarCheck}
+            title={tf.next.startTitle}
+            text={tf.next.startText(capitalize(client))}
+          >
+            {example ? (
+              <ExampleLock locked note>
+                {null}
+              </ExampleLock>
+            ) : (
+              <StartDateForm
+                chantierId={id}
+                quoteStart={f.quote?.startDate ?? null}
+                onConfirmed={() => {
+                  setJustConfirmed(true);
+                  onChanged();
+                }}
+              />
+            )}
+          </NextStepCard>
+        ) : null;
+      case "planifie":
+        return start ? (
+          <NextStepCard
+            icon={CalendarDays}
+            title={fr.chantier.next.startOn(start.day, start.time)}
+            text={fr.chantier.journal.artisanLocked}
+          />
+        ) : null;
+      case "en_cours":
+        return canDeclareFinished(status) ? (
+          <NextStepCard
+            icon={Flag}
+            title={tf.next.finishTitle}
+            text={tf.next.finishText(
+              capitalize(client),
+              rights.money && f.progress ? formatCents(f.progress.remainingCents) : null,
+            )}
+          >
+            {rights.decisions ? (
+              <ExampleLock locked={example} note>
+                <FicheButton
+                  label={t.finish}
+                  icon={Check}
+                  tall
+                  onPress={() => setFinishOpen(true)}
+                />
+              </ExampleLock>
+            ) : null}
+          </NextStepCard>
+        ) : null;
+      case "travaux_termines":
+        return (
+          <NextStepCard
+            icon={Hourglass}
+            title={tf.next.receptionTitle}
+            text={t.awaitingReception(client)}
+          />
+        );
+      case "reserves_a_lever":
+        return (
+          <NextStepCard icon={Wrench} title={t.reservesTitle(client)} text={t.reservesNext}>
+            {f.reception?.reserves ? (
+              <Text style={styles.reserves}>{f.reception.reserves}</Text>
+            ) : null}
+            {f.reception?.liftSignaledAt ? (
+              <Notice tone="info">
+                {t.liftSignaled(client, formatDateNumeric(f.reception.liftSignaledAt))}
+              </Notice>
+            ) : null}
+            {rights.decisions && !example ? (
+              <LiftPanel chantierId={id} client={client} onDone={onChanged} />
+            ) : null}
+          </NextStepCard>
+        );
+      case "receptionne":
+        return (
+          <NextStepCard
+            icon={CircleCheck}
+            title={tf.next.receivedTitle}
+            text={
+              rights.money && f.receivedAt
+                ? t.received(
+                    client,
+                    formatDateNumeric(f.receivedAt),
+                    formatCents(f.progress?.remainingCents ?? 0),
+                  )
+                : null
+            }
+          />
+        );
+      case "cloture":
+        return (
+          <NextStepCard
+            icon={CircleCheck}
+            title={tf.next.closedTitle}
+            text={
+              rights.money && f.balancePaidAt && f.balanceCents !== null
+                ? t.closed(formatDateNumeric(f.balancePaidAt), formatCents(f.balanceCents))
+                : null
+            }
+          />
+        );
+      case "en_litige":
+        return (
+          <NextStepCard icon={ShieldAlert} title={tf.next.disputeTitle} text={fr.dispute.ongoing}>
+            {f.openTicketId ? (
+              <LinkText
+                label={fr.dispute.follow}
+                onPress={() => router.push(`/signalement/${f.openTicketId}`)}
+              />
+            ) : null}
+          </NextStepCard>
+        );
+      default:
+        return null;
+    }
+  })();
 
   return (
-    <ChantierLayout
-      coverUrl={f.coverUrl}
-      trade={c.trade}
-      title={c.chantier.title}
-      address={address}
-      pills={
+    <ChantierFrame
+      detail={c}
+      tags={
         <>
           {/* Même pastille que la vue du client et que le site (« Démarrage prévu le … »). */}
-          <StatusPill
+          <FicheTag
             {...chantierTag({
               status,
               startAt,
@@ -114,41 +260,12 @@ export function FollowUpView({
             })}
           />
           {rights.money && f.depositPaid ? (
-            <View style={styles.deposit}>
-              <ShieldCheck size={14} color={colors.success} />
-              <Text style={styles.depositText}>{fr.chantier.depositReceived}</Text>
-            </View>
+            <FicheTag text={fr.chantier.depositReceived} tone="success" dot />
           ) : null}
         </>
       }
-      description={c.description}
-      personLabel={fr.chantier.yourClient}
-      person={
-        <PersonRow label={null} name={clientName} detail={null} photoUrl={null} verified={false} />
-      }
-      onMessage={() => router.push(`/conversation/${id}`)}
-      phone={c.client.phone}
-      step={step}
-      footer={
-        // Maquettes « Date à confirmer » et « Chantier en cours » : action principale en pied.
-        !rights.decisions ? undefined : example &&
-          (status === "acompte_paye" || canDeclareFinished(status)) ? (
-          <ExampleLock locked note>
-            {status === "acompte_paye" ? null : <Button label={t.finish} onPress={() => {}} />}
-          </ExampleLock>
-        ) : status === "acompte_paye" ? (
-          <StartDateForm
-            chantierId={id}
-            quoteStart={f.quote?.startDate ?? null}
-            onConfirmed={() => {
-              setJustConfirmed(true);
-              onChanged();
-            }}
-          />
-        ) : canDeclareFinished(status) ? (
-          <Button label={t.finish} onPress={() => setFinishOpen(true)} />
-        ) : undefined
-      }
+      step={chantierStepIndex(status)}
+      nextStep={nextStep}
     >
       {showConfirmed ? (
         <View style={styles.group}>
@@ -158,52 +275,14 @@ export function FollowUpView({
           <LinkText label={t.dashboard} onPress={() => router.navigate("/pro")} />
         </View>
       ) : null}
-      {status === "en_litige" || f.openTicketId ? (
+      {status !== "en_litige" && f.openTicketId ? (
         <View style={styles.group}>
-          <Notice tone="info">
-            {status === "en_litige" ? fr.dispute.ongoing : fr.dispute.pending}
-          </Notice>
-          {f.openTicketId ? (
-            <LinkText
-              label={fr.dispute.follow}
-              onPress={() => router.push(`/signalement/${f.openTicketId}`)}
-            />
-          ) : null}
+          <Notice tone="info">{fr.dispute.pending}</Notice>
+          <LinkText
+            label={fr.dispute.follow}
+            onPress={() => router.push(`/signalement/${f.openTicketId}`)}
+          />
         </View>
-      ) : null}
-      {status === "travaux_termines" ? (
-        <Notice tone="info">{t.awaitingReception(client)}</Notice>
-      ) : null}
-      {status === "reserves_a_lever" && f.reception?.reserves ? (
-        <View style={styles.reserves}>
-          <Text role="heading" style={styles.reservesTitle}>
-            {t.reservesTitle(client)}
-          </Text>
-          <Text style={styles.text}>{f.reception.reserves}</Text>
-          <Text style={styles.small}>{t.reservesNext}</Text>
-        </View>
-      ) : null}
-      {status === "reserves_a_lever" && f.reception?.liftSignaledAt ? (
-        <Notice tone="info">
-          {t.liftSignaled(client, formatDateNumeric(f.reception.liftSignaledAt))}
-        </Notice>
-      ) : null}
-      {rights.decisions && status === "reserves_a_lever" && !example ? (
-        <LiftPanel chantierId={id} client={client} onDone={onChanged} />
-      ) : null}
-      {rights.money && status === "receptionne" && f.receivedAt ? (
-        <Notice tone="success">
-          {t.received(
-            client,
-            formatDateNumeric(f.receivedAt),
-            formatCents(f.progress?.remainingCents ?? 0),
-          )}
-        </Notice>
-      ) : null}
-      {rights.money && status === "cloture" && f.balancePaidAt && f.balanceCents !== null ? (
-        <Notice tone="success">
-          {t.closed(formatDateNumeric(f.balancePaidAt), formatCents(f.balanceCents))}
-        </Notice>
       ) : null}
       {f.review ? (
         <ReviewCard
@@ -235,100 +314,90 @@ export function FollowUpView({
         )
       ) : null}
 
-      <Segmented
-        label={fr.chantier.tabs.label}
+      <PillTabs
+        label={tf.tabs.label}
         options={[
-          { value: "suivi", label: fr.chantier.tabs.suivi },
-          { value: "dossier", label: fr.chantier.tabs.dossier },
+          { value: "suivi", label: tf.tabs.suivi },
+          { value: "dossier", label: tf.tabs.dossier },
+          { value: "messages", label: tf.tabs.messages, badge: conversation?.unread ?? 0 },
         ]}
         value={tab}
         onChange={setTab}
       />
       {tab === "suivi" ? (
         <>
-          {rights.assign && !example ? <ChantierTeamCard chantierId={id} /> : null}
-          <ConversationCard chantierId={id} name={clientName} example={example} />
-          <JournalCard
-            journal={f.journal}
-            photoUrls={f.photoUrls}
+          <JournalTimelineCard
+            chantierId={id}
+            client={client}
+            open={open}
+            example={example}
+            days={f.timeline}
+            photoUrlByPath={f.photoUrlByPath}
             authors={f.journalAuthors}
-            emptyText={
-              open ? fr.chantier.journal.artisanIntro(client) : fr.chantier.journal.artisanLocked
-            }
-            photoAction={
-              open ? (
-                <ExampleLock locked={example}>
-                  <PhotoUpload chantierId={id} onAdded={onChanged} />
-                </ExampleLock>
-              ) : undefined
-            }
-          >
-            {open ? (
-              <ExampleLock locked={example}>
-                <MessageComposer chantierId={id} onDone={onChanged} />
-              </ExampleLock>
-            ) : null}
-          </JournalCard>
-          {next ? (
-            <View style={styles.group}>
-              <NextInterventionCard next={next} />
-              {rights.decisions && status === "planifie" && startAt && !example ? (
-                <LinkText
-                  label={t.edit}
-                  onPress={() =>
+            onChanged={onChanged}
+          />
+          {rights.money && f.quote ? (
+            <MoneyCard
+              totalCents={f.quote.totalTtcCents}
+              progress={f.progress}
+              deposit={data.deposit}
+              depositInvoiceId={data.depositInvoice?.id ?? null}
+              quoteId={quoteId}
+              balance={
+                f.balancePaidAt && f.balanceCents !== null
+                  ? { paidAt: f.balancePaidAt, cents: f.balanceCents }
+                  : null
+              }
+              example={example}
+            />
+          ) : null}
+          <PlanningCard
+            startAt={startAt}
+            onEdit={
+              rights.decisions && status === "planifie" && startAt && !example
+                ? () =>
                     router.push({
                       pathname: "/pro-chantier/[id]/demarrage",
                       params: { id, debut: startAt },
                     })
-                  }
-                />
-              ) : null}
-            </View>
+                : null
+            }
+          />
+          {rights.assign && !example ? <ChantierTeamCard chantierId={id} /> : null}
+          {c.appointment ? (
+            <NotesCard chantierId={id} notes={c.appointment.notes} example={example} />
           ) : null}
+        </>
+      ) : tab === "dossier" ? (
+        <>
+          {rights.money ? (
+            <ExampleLock locked={example}>
+              <DocumentsCard documents={f.documents} />
+            </ExampleLock>
+          ) : null}
+          <RequestBlocks
+            detail={c}
+            photoUrls={data.photoUrls}
+            variant="rendez-vous"
+            contactActions={false}
+          />
         </>
       ) : (
         <>
-          {rights.money ? (
-            <>
-              <ExampleLock locked={example}>
-                <DocumentsCard documents={f.documents} />
-              </ExampleLock>
-              <ScheduleCard progress={f.progress} totalTtcCents={f.quote?.totalTtcCents ?? null} />
-            </>
-          ) : null}
-          <RequestBlocks detail={c} photoUrls={data.photoUrls} variant="rendez-vous" />
-          {c.appointment ? (
-            <DetailBlock
-              icon={<NotebookPen size={18} color={colors.primary} />}
-              title={fr.proAppointment.notes}
-            >
-              {c.appointment.notes ? <Text style={styles.text}>{c.appointment.notes}</Text> : null}
-              {example ? null : (
-                <LinkText
-                  label={
-                    c.appointment.notes ? fr.proAppointment.editNotes : fr.proAppointment.addNotes
-                  }
-                  onPress={() =>
-                    router.push({
-                      pathname: "/pro-chantier/[id]/notes",
-                      params: { id, notes: c.appointment?.notes ?? "" },
-                    })
-                  }
-                />
-              )}
-            </DetailBlock>
-          ) : null}
+          <ConversationCard chantierId={id} name={clientName} example={example} />
+          <FicheButton
+            label={tf.openConversation}
+            variant="secondary"
+            onPress={() => router.push(`/conversation/${id}`)}
+          />
         </>
       )}
       {example ? null : (
-        <Pressable
-          role="link"
-          hitSlop={8}
+        <FicheLink
+          icon={Flag}
+          label={fr.chantier.report}
           onPress={() => router.push(`/chantier/${id}/signaler`)}
-          style={styles.report}
-        >
-          <Text style={styles.danger}>{fr.chantier.report}</Text>
-        </Pressable>
+        />
       )}
       <BottomSheet
         visible={finishOpen}
@@ -345,17 +414,168 @@ export function FollowUpView({
           }}
         />
       </BottomSheet>
-    </ChantierLayout>
+    </ChantierFrame>
+  );
+}
+
+/** « Aujourd'hui » : il y a 4 h ; sinon « Hier » ou la date. */
+function whenLabel(iso: string): string {
+  const day = formatDayLabel(iso);
+  return capitalize(day === fr.ago.today ? formatAgo(iso) : day);
+}
+
+/**
+ * « Suivi du chantier » : « Photo » et « Message » (pendant les travaux, F-22), puis le fil
+ * chronologique par jour, le plus récent en tête (point bleu), avec auteur, textes et photos.
+ */
+function JournalTimelineCard({
+  chantierId,
+  client,
+  open,
+  example,
+  days,
+  photoUrlByPath,
+  authors,
+  onChanged,
+}: {
+  chantierId: string;
+  client: string;
+  open: boolean;
+  example: boolean;
+  days: JournalDay[];
+  photoUrlByPath: Readonly<Record<string, string>>;
+  authors: Readonly<Record<string, string>>;
+  onChanged: () => void;
+}) {
+  const upload = usePhotoUpload({ chantierId, onAdded: onChanged });
+  const [composing, setComposing] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [viewing, setViewing] = useState<{ photos: string[]; index: number } | null>(null);
+
+  return (
+    <FicheCard padding={4.5}>
+      <CardHeading
+        title={fr.chantier.journal.title}
+        right={<Text style={styles.meta}>{tf.clientSees(capitalize(client))}</Text>}
+      />
+      {open ? (
+        <View style={styles.group}>
+          <ExampleLock locked={example}>
+            <View style={styles.row}>
+              <FicheButton
+                label={tf.photo}
+                icon={Camera}
+                grow
+                loading={upload.progress !== null}
+                onPress={upload.add}
+              />
+              <FicheButton
+                label={tf.message}
+                variant="secondary"
+                icon={PenLine}
+                grow
+                onPress={() => {
+                  setComposing(true);
+                  setSent(false);
+                }}
+              />
+            </View>
+          </ExampleLock>
+          <PhotoUploadStatus progress={upload.progress} notice={upload.notice} />
+          {sent ? <Notice tone="success">{t.messageSent}</Notice> : null}
+          {composing ? (
+            <MessageForm
+              chantierId={chantierId}
+              onCancel={() => setComposing(false)}
+              onDone={() => {
+                setComposing(false);
+                setSent(true);
+                onChanged();
+              }}
+            />
+          ) : null}
+        </View>
+      ) : null}
+      {days.length === 0 ? (
+        <Body muted>
+          {open ? fr.chantier.journal.artisanIntro(client) : fr.chantier.journal.artisanLocked}
+        </Body>
+      ) : (
+        <View style={styles.timeline}>
+          {days.map((day, i) => {
+            const author =
+              day.messages.map((m) => authors[m.id]).find(Boolean) ??
+              (day.messages.length > 0 ? tf.you : null);
+            const last = i === days.length - 1;
+            // Photos du jour, par leur lien signé (celles sans lien ignorées).
+            const photoUrls = day.photos.flatMap((p) => {
+              const url = photoUrlByPath[p];
+              return url ? [url] : [];
+            });
+            return (
+              <View key={day.day} style={styles.entry}>
+                <View style={styles.rail}>
+                  <View style={[styles.dot, i === 0 && styles.dotRecent]} />
+                  {last ? null : <View style={styles.railLine} />}
+                </View>
+                <View style={[styles.entryBody, !last && styles.entrySpace]}>
+                  <Text style={styles.entryWhen}>{tf.entry(whenLabel(day.lastAt), author)}</Text>
+                  {day.messages.map((m) => (
+                    <Text key={m.id} style={styles.entryText}>
+                      {m.message}
+                    </Text>
+                  ))}
+                  {photoUrls.length > 0 ? (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.photos}
+                    >
+                      {photoUrls.map((uri, index) => (
+                        <Pressable
+                          key={uri}
+                          role="button"
+                          aria-label={fr.photoViewer.open(index + 1, photoUrls.length)}
+                          onPress={() => setViewing({ photos: photoUrls, index })}
+                          style={({ pressed }) => pressed && styles.pressed}
+                        >
+                          <Image
+                            source={{ uri }}
+                            style={styles.photo}
+                            alt={`${fr.chantier.journal.photosTitle} ${index + 1}`}
+                          />
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  ) : null}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+      <PhotoViewer
+        photos={viewing?.photos ?? []}
+        index={viewing?.index ?? null}
+        onClose={() => setViewing(null)}
+      />
+    </FicheCard>
   );
 }
 
 /** F-22 « Ajouter un message » au journal, visible par le client. */
-function MessageComposer({ chantierId, onDone }: { chantierId: string; onDone: () => void }) {
-  const [open, setOpen] = useState(false);
+function MessageForm({
+  chantierId,
+  onDone,
+  onCancel,
+}: {
+  chantierId: string;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
   const [pending, setPending] = useState(false);
-  const [sent, setSent] = useState(false);
 
   async function submit() {
     const parsed = chantierMessageSchema.safeParse({ message });
@@ -369,26 +589,9 @@ function MessageComposer({ chantierId, onDone }: { chantierId: string; onDone: (
     setPending(false);
     if (failed) return setError(failed);
     setMessage("");
-    setOpen(false);
-    setSent(true);
     onDone();
   }
 
-  if (!open) {
-    return (
-      <View style={styles.group}>
-        {sent ? <Notice tone="success">{t.messageSent}</Notice> : null}
-        <Button
-          label={t.addMessage}
-          variant="secondary"
-          onPress={() => {
-            setOpen(true);
-            setSent(false);
-          }}
-        />
-      </View>
-    );
-  }
   return (
     <View style={styles.group}>
       <TextField
@@ -404,7 +607,7 @@ function MessageComposer({ chantierId, onDone }: { chantierId: string; onDone: (
         error={error}
       />
       <Button label={t.messageSubmit} onPress={submit} loading={pending} />
-      <Button label={t.messageCancel} variant="ghost" onPress={() => setOpen(false)} />
+      <Button label={t.messageCancel} variant="ghost" onPress={onCancel} />
     </View>
   );
 }
@@ -477,7 +680,9 @@ function LiftPanel({
     onDone();
   }
 
-  if (!open) return <Button label={t.signalLift} onPress={() => setOpen(true)} />;
+  if (!open) {
+    return <FicheButton label={t.signalLift} icon={Check} tall onPress={() => setOpen(true)} />;
+  }
   return (
     <View style={styles.panel}>
       <Text role="heading" style={styles.panelTitle}>
@@ -502,28 +707,43 @@ function LiftPanel({
 }
 
 const styles = StyleSheet.create({
-  deposit: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(1),
-    borderRadius: radius.chip,
-    backgroundColor: colors["success-soft"],
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-  },
-  depositText: { fontFamily: font.medium, fontSize: 12, color: colors.success },
-  group: { gap: spacing(2) },
-  text: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  group: { gap: spacing(2.5) },
+  row: { flexDirection: "row", gap: spacing(2.5) },
+  meta: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   reserves: {
-    gap: spacing(2),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.warning,
+    overflow: "hidden",
+    borderRadius: radius.input,
     backgroundColor: colors.surface,
-    padding: spacing(4),
+    padding: spacing(3),
+    fontFamily: font.regular,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.foreground,
   },
-  reservesTitle: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
+  timeline: { paddingTop: spacing(1.5) },
+  entry: { flexDirection: "row", gap: spacing(3.5) },
+  rail: { alignItems: "center" },
+  dot: {
+    width: 12,
+    height: 12,
+    marginTop: 5,
+    borderRadius: 6,
+    backgroundColor: colors["border-strong"],
+  },
+  dotRecent: { backgroundColor: colors.primary },
+  railLine: { flex: 1, width: 2, backgroundColor: colors.border },
+  entryBody: { flex: 1, minWidth: 0, gap: spacing(2) },
+  entrySpace: { paddingBottom: spacing(4.5) },
+  entryWhen: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
+  entryText: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
+  photos: { gap: spacing(2) },
+  photo: {
+    width: 92,
+    height: 92,
+    borderRadius: 10,
+    backgroundColor: colors["primary-soft"],
+  },
+  pressed: { opacity: 0.85 },
   panel: {
     gap: spacing(3),
     borderRadius: radius.input,
@@ -544,6 +764,4 @@ const styles = StyleSheet.create({
     color: colors["primary-strong"],
   },
   importantLabel: { fontFamily: font.medium },
-  report: { alignSelf: "center", paddingVertical: spacing(2) },
-  danger: { fontFamily: font.medium, fontSize: 14, color: colors.danger },
 });
