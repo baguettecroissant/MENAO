@@ -16,6 +16,7 @@ import { blockedSlotSchema } from "@menao/validation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { exampleAgendaWeek } from "./example-data";
 import { examplesActive } from "./examples";
 
@@ -53,7 +54,7 @@ async function myArtisan() {
   const { data } = await supabase
     .from("artisans")
     .select("id, paused, available_from")
-    .eq("user_id", userId)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   return data;
 }

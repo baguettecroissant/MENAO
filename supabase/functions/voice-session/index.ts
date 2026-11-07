@@ -15,7 +15,7 @@ import {
   signVoiceSession,
   usualPricesText,
 } from "../../../packages/core/src/voice-assistant.ts";
-import { adminClient, json } from "../_shared/artisan.ts";
+import { adminClient, json, teamArtisanId } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 import { env } from "../_shared/env.ts";
 
@@ -80,12 +80,10 @@ Deno.serve(
     const user = userData?.user;
     if (!user) return json({ status: "forbidden" }, 401);
 
-    const { data: artisan } = await admin
-      .from("artisans")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!artisan) return json({ status: "forbidden" }, 403);
+    // Patron ou membre actif de son équipe (ADR 0240).
+    const artisanId = await teamArtisanId(admin, user.id);
+    if (!artisanId) return json({ status: "forbidden" }, 403);
+    const artisan = { id: artisanId };
 
     const body = (await req.json().catch(() => null)) as {
       usage?: unknown;

@@ -1,5 +1,6 @@
 import {
   artisanPageUrl,
+  parseTeam,
   partnerLinks,
   profileHubStatuses,
   profileStrength,
@@ -44,8 +45,10 @@ export default async function MyProfilePage({
     { data: referralData },
     { data: giftData },
     { data: referralRows },
+    { data: teamData },
   ] = await Promise.all([
-    getOnboardingContext(),
+    // Membre de l'équipe (ADR 0240) : fiche de l'entreprise en lecture.
+    getOnboardingContext(true),
     getProShell(),
     space.supabase.rpc("my_public_profile"),
     space.supabase.rpc("artisan_grade"),
@@ -55,7 +58,12 @@ export default async function MyProfilePage({
     space.supabase.rpc("my_welcome_gift"),
     // Suivi de chaque filleul (ADR 0161).
     space.supabase.rpc("my_referrals"),
+    // « Mon équipe » (ADR 0240) : réservé au patron.
+    space.teamPosition === "patron"
+      ? space.supabase.rpc("my_team")
+      : Promise.resolve({ data: null }),
   ]);
+  const team = parseTeam(teamData);
   const referral = parseReferral(referralData);
   const referralLink = referral ? partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros : null;
   // Carte de visite (ADR 0191) : même règle que les cartes à imprimer, artisan validé.
@@ -133,6 +141,7 @@ export default async function MyProfilePage({
               }
             : null,
         welcomeGift: parseWelcomeGift(giftData),
+        team: team ? { used: team.used, seats: team.seats } : null,
       }}
     />
   );

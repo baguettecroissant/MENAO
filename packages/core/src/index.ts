@@ -84,3 +84,4 @@ export * from "./ai-agents";
 export * from "./artisan-assistant";
 export * from "./money-overview";
 export * from "./client-reminders";
+export * from "./team";

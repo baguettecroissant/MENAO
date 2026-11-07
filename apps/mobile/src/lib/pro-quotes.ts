@@ -23,6 +23,7 @@ import {
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { isExampleId } from "@menao/core";
 import { exampleQuoteDraft } from "./example-data";
 
@@ -37,7 +38,7 @@ async function artisanRow() {
   const { data } = await supabase
     .from("artisans")
     .select("id, assujetti_tva, default_deposit_percent")
-    .eq("user_id", userId)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   return data;
 }

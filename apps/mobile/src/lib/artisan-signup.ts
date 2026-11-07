@@ -23,6 +23,7 @@ import { fr } from "@/i18n/fr";
 import { env } from "./env";
 import { kv } from "./kv";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 /**
  * Inscription artisan dans l'application (ADR 0113), comme sur le site (ADR 0110) : mêmes étapes,
@@ -188,7 +189,7 @@ export async function loadWelcome(): Promise<WelcomeData | null> {
     .select(
       "id, siret, raison_sociale, nom_commercial, base_label, radius_km, sirene_checked_at, sirene_active, artisan_trades(trade_code)",
     )
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
   const codes = artisan.artisan_trades.map((t) => t.trade_code);

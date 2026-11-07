@@ -15,6 +15,7 @@ import {
 import { presentationSchema } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 /**
  * « Faire vérifier mon entreprise » dans l'application (ADR 0113), comme sur le site (ADR 0111) :
@@ -61,7 +62,7 @@ export async function loadDossier(): Promise<Dossier | null> {
     .select(
       "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut",
     )
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
 

@@ -2,6 +2,7 @@ import { spaceExamplesShown } from "@menao/core";
 import { useSyncExternalStore } from "react";
 import { clearScreenCache, setScreenCachePersistence } from "./screen-cache";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 /**
  * Mode exemples de l'application (ADR 0184) : l'espace pro rempli de demandes et de chantiers
@@ -52,7 +53,7 @@ export async function loadSpaceExamplesShown(): Promise<boolean> {
     supabase
       .from("artisans")
       .select("status, examples_hidden_at")
-      .eq("user_id", userId)
+      .eq("id", await myArtisanKey())
       .maybeSingle(),
     supabase.rpc("artisan_inbox"),
     supabase.rpc("artisan_chantiers"),

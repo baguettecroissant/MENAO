@@ -1,4 +1,10 @@
-import { artisanPageUrl, parisToday, profileStrength, type ProfileTip } from "@menao/core";
+import {
+  artisanPageUrl,
+  parisToday,
+  profileStrength,
+  teamIncluded,
+  type ProfileTip,
+} from "@menao/core";
 import {
   parseArtisanProfile,
   parseGrade,
@@ -17,6 +23,7 @@ import { hubStatuses, type HubRow, type HubStatus } from "./profile-hub-status";
 import { publicUrl } from "./project";
 import type { ArtisanPage } from "./requests";
 import { supabase } from "./supabase";
+import { loadTeam, myArtisanKey, myTeamContext } from "./team";
 import { loadWelcomeGift } from "./welcome-gift";
 
 /**
@@ -46,7 +53,16 @@ export type ProfileHub = {
   referrals: ReferralRow[];
   /** Cadeau de bienvenue du filleul (ADR 0154). */
   welcomeGift: WelcomeGift | null;
+  /** « Mon équipe » (ADR 0240) : patron d'une formule qui l'inclut, sinon rien. */
+  team?: { used: number; seats: number } | null;
 };
+
+/** Comptes de l'équipe pour « Mon profil » : patron seulement, formule qui les inclut. */
+async function teamSummary(): Promise<{ used: number; seats: number } | null> {
+  if ((await myTeamContext())?.position !== "patron") return null;
+  const team = await loadTeam();
+  return team && teamIncluded(team) ? { used: team.used, seats: team.seats } : null;
+}
 
 /** Nom, e-mail et photo du compte : seules données réelles des exemples (ADR 0184). */
 async function exampleAccount() {
@@ -83,6 +99,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     welcomeGift,
     { data: referralRows },
     { data: artisan },
+    team,
   ] = await Promise.all([
     loadDossier(),
     supabase.rpc("my_public_profile"),
@@ -98,7 +115,12 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     supabase.rpc("my_referral"),
     loadWelcomeGift(),
     supabase.rpc("my_referrals"),
-    supabase.from("artisans").select("slug").eq("user_id", auth.user.id).maybeSingle(),
+    supabase
+      .from("artisans")
+      .select("slug")
+      .eq("id", await myArtisanKey())
+      .maybeSingle(),
+    teamSummary(),
   ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
@@ -151,6 +173,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     referral: parseReferral(referral),
     referrals: parseReferralRows(referralRows),
     welcomeGift,
+    team,
   };
 }
 

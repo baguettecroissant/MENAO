@@ -4,6 +4,7 @@ import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { exampleInvoiceList, exampleQuoteList } from "./example-data";
 import { examplesActive } from "./examples";
 
@@ -30,7 +31,11 @@ async function myArtisanId(): Promise<string | null> {
   const { data: session } = await supabase.auth.getSession();
   const userId = session.session?.user.id;
   if (!userId) return null;
-  const { data } = await supabase.from("artisans").select("id").eq("user_id", userId).maybeSingle();
+  const { data } = await supabase
+    .from("artisans")
+    .select("id")
+    .eq("id", await myArtisanKey())
+    .maybeSingle();
   return data?.id ?? null;
 }
 

@@ -8,17 +8,30 @@ import {
   documentsToRenew as toRenew,
   homePathForRole,
   parisToday,
+  parseTeamContext,
   requestsAwaitingAnswer,
   roleFromAppMetadata,
   spaceExamplesShown,
   subscriptionGrantsAccess,
   type ChantierStatus,
   type SubscriptionStatus,
+  type TeamContext,
 } from "@menao/core";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Place de l'utilisateur dans une entreprise (F-89, ADR 0240) : patron (titulaire de la fiche) ou
+ * membre de son équipe, accès suspendu compris. Null : pas de fiche artisan. Mis en cache pour la
+ * durée de la requête.
+ */
+export const teamContext = cache(async (): Promise<TeamContext | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("my_team_context");
+  return parseTeamContext(data);
+});
 
 /**
  * Espace pro (tableau de bord, demandes, chantiers) : artisans validés (ou suspendus et radiés, qui
@@ -34,30 +47,40 @@ export const requireProSpace = cache(async () => {
   if (role === "artisan_en_attente") redirect("/pro/onboarding");
   if (role !== "artisan") redirect(homePathForRole(role) as Route);
 
-  const { data: artisan } = await supabase
-    .from("artisans")
-    .select(
-      "id, status, suspension_reason, radiation_reason, connect_charges_enabled, paused, available_from, examples_hidden_at",
-    )
-    .eq("user_id", auth.claims.sub)
-    .single();
+  // Patron (titulaire de la fiche) ou membre actif de son équipe (F-89, ADR 0240).
+  const team = await teamContext();
+  if (team?.suspended) redirect("/pro/acces-suspendu");
+  const { data: artisan } = team?.artisanId
+    ? await supabase
+        .from("artisans")
+        .select(
+          "id, status, suspension_reason, radiation_reason, connect_charges_enabled, paused, available_from, examples_hidden_at",
+        )
+        .eq("id", team.artisanId)
+        .single()
+    : { data: null };
   // Un artisan radié garde, comme un suspendu, l'accès à ses chantiers et factures (ADR 0114).
   if (
+    !team ||
     !artisan ||
     (artisan.status !== "valide" && artisan.status !== "suspendu" && artisan.status !== "radie")
   ) {
-    redirect("/pro/onboarding");
+    // Un membre n'a pas d'inscription à finir : seul le patron la reprend.
+    redirect(team && team.position !== "patron" ? "/pro/acces-suspendu" : "/pro/onboarding");
   }
   // Artisan inscrit avant la charte, ou nouvelle version de la charte ou de l'engagement de
-  // l'artisan (ADR 0117) : signature d'abord.
-  const { data: charter } = await supabase
-    .from("artisan_charter_acceptances")
-    .select("id")
-    .eq("artisan_id", artisan.id)
-    .eq("version", CHARTER_VERSION)
-    .eq("engagement_version", ENGAGEMENT_VERSION)
-    .maybeSingle();
-  if (!charter) redirect("/pro/charte");
+  // l'artisan (ADR 0117) : signature d'abord. Engagement de l'entreprise, signé par le patron :
+  // ses membres n'ont rien à signer.
+  if (team.position === "patron") {
+    const { data: charter } = await supabase
+      .from("artisan_charter_acceptances")
+      .select("id")
+      .eq("artisan_id", artisan.id)
+      .eq("version", CHARTER_VERSION)
+      .eq("engagement_version", ENGAGEMENT_VERSION)
+      .maybeSingle();
+    if (!charter) redirect("/pro/charte");
+  }
 
   const today = parisToday();
   const [{ data: profile }, { data: subscription }, { data: documents }, { data: absences }] =
@@ -100,6 +123,9 @@ export const requireProSpace = cache(async () => {
   return {
     supabase,
     artisanId: artisan.id,
+    /** Place dans l'entreprise : patron, chef d'équipe ou ouvrier (ADR 0240). */
+    teamPosition: team.position,
+    company: team.company,
     status: artisan.status,
     suspensionReason: artisan.suspension_reason,
     radiationReason: artisan.radiation_reason,

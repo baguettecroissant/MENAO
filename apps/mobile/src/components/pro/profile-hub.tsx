@@ -23,6 +23,7 @@ import {
   ShoppingCart,
   Star,
   UserRound,
+  Users,
   Wallet,
   Wrench,
   type LucideIcon,
@@ -51,7 +52,15 @@ const t = fr.proHub;
 const { colors, font, radius, spacing } = theme;
 
 type Row = {
-  key: HubRow | "invoices" | "expenses" | "accountant" | "identity" | "notifications" | "help";
+  key:
+    | HubRow
+    | "team"
+    | "invoices"
+    | "expenses"
+    | "accountant"
+    | "identity"
+    | "notifications"
+    | "help";
   icon: LucideIcon;
   href: Href;
 };
@@ -74,6 +83,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
       { key: "trades", icon: Wrench, href: "/pro-metiers" },
       { key: "zone", icon: MapPin, href: "/pro-zone" },
       { key: "availability", icon: CalendarClock, href: "/pro-disponibilites" },
+      // Comptes d'équipe (ADR 0240) : patron d'une formule qui les inclut.
+      { key: "team", icon: Users, href: "/pro-equipe" },
     ],
   },
   {
@@ -207,26 +218,28 @@ export function ProfileHubContent({
       {SECTIONS.map((section, index) => (
         <Animated.View key={section.key} entering={enter(5 + index)}>
           <SettingsSection title={t.sections[section.key]}>
-            {section.rows.map((row) => {
-              const status = statusOf(row.key, hub);
-              const line = (
-                <SettingsRow
-                  key={row.key}
-                  icon={row.icon}
-                  label={t.rows[row.key]}
-                  value={status?.text}
-                  tone={status?.tone}
-                  href={row.href}
-                />
-              );
-              return example && !EXAMPLE_ROWS.includes(row.key) ? (
-                <ExampleLock key={row.key} locked>
-                  {line}
-                </ExampleLock>
-              ) : (
-                line
-              );
-            })}
+            {section.rows
+              .filter((row) => row.key !== "team" || Boolean(hub.team))
+              .map((row) => {
+                const status = statusOf(row.key, hub);
+                const line = (
+                  <SettingsRow
+                    key={row.key}
+                    icon={row.icon}
+                    label={t.rows[row.key]}
+                    value={status?.text}
+                    tone={status?.tone}
+                    href={row.href}
+                  />
+                );
+                return example && !EXAMPLE_ROWS.includes(row.key) ? (
+                  <ExampleLock key={row.key} locked>
+                    {line}
+                  </ExampleLock>
+                ) : (
+                  line
+                );
+              })}
             {section.key === "account" ? (
               <SettingsSwitch
                 key="examples"
@@ -257,6 +270,11 @@ export function ProfileHubContent({
 }
 
 function statusOf(key: Row["key"], hub: ProfileHub): HubStatus {
+  if (key === "team") {
+    return hub.team
+      ? { text: t.values.team(hub.team.used, hub.team.seats), tone: "neutral" }
+      : null;
+  }
   if (key === "identity") return hub.email ? { text: hub.email, tone: "neutral" } : null;
   if (
     key === "invoices" ||

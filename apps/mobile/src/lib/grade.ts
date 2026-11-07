@@ -2,6 +2,7 @@ import type { GradeLevel } from "@menao/core";
 import { parseGrade, type Grade, type RewardClaim } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 import { exampleGradeView } from "./example-data";
 import { examplesActive } from "./examples";
 
@@ -55,7 +56,7 @@ export async function loadDeliveryDefaults(): Promise<{
     supabase
       .from("artisans")
       .select("adresse_ligne, adresse_code_postal, adresse_commune")
-      .eq("user_id", userId)
+      .eq("id", await myArtisanKey())
       .maybeSingle(),
     supabase.from("profiles").select("first_name, phone").eq("user_id", userId).maybeSingle(),
   ]);

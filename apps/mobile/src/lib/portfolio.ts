@@ -1,5 +1,6 @@
 import { publicUrl } from "./project";
 import { supabase } from "./supabase";
+import { myArtisanKey } from "./team";
 
 /** Photo de réalisation de la fiche publique (ADR 0124), comme sur le site. */
 export type PortfolioPhoto = { id: string; path: string; url: string };
@@ -10,7 +11,7 @@ export async function loadPortfolio(): Promise<PortfolioPhoto[] | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select("id")
-    .eq("user_id", auth.user.id)
+    .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
   const { data, error } = await supabase
