@@ -8,7 +8,8 @@ import { checkbox, text, type FormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/server";
 
 const t = fr.pro.onboarding.plans.secretary;
-const PATH = "/pro/onboarding/formule";
+// Rubrique Secrétaire (ADR 0244) et Ma formule (minutes).
+const PATHS = ["/pro/secretaire", "/pro/onboarding/formule"];
 
 /** Appel d'essai de la secrétaire (ADR 0232) : jeton et contexte préparés par voice-session. */
 export async function prepareSecretaryCall(): Promise<VoiceSession> {
@@ -55,7 +56,7 @@ export async function saveSecretarySettings(
     p_instructions: parsed.data.instructions,
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
-  revalidatePath(PATH);
+  for (const path of PATHS) revalidatePath(path);
   return { success: t.saved };
 }
 
@@ -71,6 +72,6 @@ export async function markSecretaryMessage(
     p_done: text(formData, "done") === "oui",
   });
   if (error) return { error: fr.errors.generic };
-  revalidatePath(PATH);
+  for (const path of PATHS) revalidatePath(path);
   return {};
 }

@@ -202,7 +202,12 @@ export const spaceExamples = cache(async () => {
  */
 export const getProShell = cache(async () => {
   const space = await requireProSpace();
-  const [{ inbox, chantiers }, { data: unread }, { count: reviewsToAnswer }] = await Promise.all([
+  const [
+    { inbox, chantiers },
+    { data: unread },
+    { count: reviewsToAnswer },
+    { count: secretaryToHandle },
+  ] = await Promise.all([
     artisanActivity(),
     space.supabase.rpc("my_unread_messages"),
     // Avis publiés sans réponse de l'artisan (F-28).
@@ -212,6 +217,14 @@ export const getProShell = cache(async () => {
       .eq("artisan_id", space.artisanId)
       .eq("status", "publie")
       .is("reply", null),
+    // Appels pris par la secrétaire, pas encore traités (ADR 0244).
+    teamCan(space.teamPosition, "secretary")
+      ? space.supabase
+          .from("secretary_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("artisan_id", space.artisanId)
+          .is("done_at", null)
+      : Promise.resolve({ count: 0 }),
   ]);
   return {
     account: {
@@ -232,6 +245,7 @@ export const getProShell = cache(async () => {
       ),
       messages: unread ?? 0,
       reviews: reviewsToAnswer ?? 0,
+      secretary: secretaryToHandle ?? 0,
     },
     // Visibilité de la fiche (abonnement, paiements en ligne) : l'affaire du patron (ADR 0241).
     visibility:

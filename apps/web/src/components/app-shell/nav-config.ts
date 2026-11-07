@@ -13,6 +13,7 @@ import {
   Gift,
   Handshake,
   HardHat,
+  Headset,
   Inbox,
   LayoutDashboard,
   LayoutGrid,
@@ -41,7 +42,15 @@ import { fr } from "@/i18n/fr";
 // de terrain (ADR 0205).
 export type Space = "client" | "pro" | "admin" | "exemples" | "commercial";
 export type BadgeKey =
-  "actions" | "messages" | "requests" | "quotes" | "reviews" | "dossiers" | "controles" | "tickets";
+  | "actions"
+  | "messages"
+  | "requests"
+  | "quotes"
+  | "reviews"
+  | "dossiers"
+  | "controles"
+  | "tickets"
+  | "secretary";
 export type Badges = Partial<Record<BadgeKey, number>>;
 
 export type NavItem = {
@@ -78,7 +87,7 @@ export const SPACE_MESSAGES: Partial<Record<Space, string>> = {
   pro: "/pro/messages",
 };
 
-// Menu regroupé (ADR 0188) : sept rubriques, comme l'application. « Argent » réunit devis,
+// Menu regroupé (ADR 0188) : huit rubriques depuis la Secrétaire (ADR 0244). « Argent » réunit devis,
 // factures et dépenses ; « Ma vitrine », fiche, avis et grade (onglets en haut de ces pages).
 // « Mon profil » (entreprise, documents, paiements) en dessous.
 const PRO_NAV: readonly NavSection[] = [
@@ -99,6 +108,14 @@ const PRO_NAV: readonly NavSection[] = [
         label: fr.pro.space.messages,
         icon: MessageCircle,
         badge: "messages",
+      },
+      // Secrétaire dédiée (ADR 0244) : rubrique propre, pastille des appels à traiter.
+      {
+        href: "/pro/secretaire",
+        label: fr.pro.space.secretary,
+        icon: Headset,
+        badge: "secretary",
+        team: "secretary",
       },
       {
         href: "/pro/devis",
