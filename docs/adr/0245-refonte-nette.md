@@ -13,4 +13,10 @@
 
 ## Conséquences
 - Les autres écrans profitent tout de suite de la police, des titres et des gris ; on les reprend ensuite un par un avec les mêmes briques.
-- L'application suit dans un lot à part : même police, mêmes gris, accueil sur le même modèle, en gardant en haut la photo du profil, les messages et les notifications.
+- L'application suit dans un lot à part (voir ci-dessous).
+
+## Application (deuxième PR)
+- **Polices** : `@expo-google-fonts/inter` et `@expo-google-fonts/inter-tight` (mêmes polices que le site, fichiers embarqués, aucun appel réseau). `theme.font` passe à Inter (400, 500, 600, 700) et gagne `display` (Inter Tight 700) ; les grands titres et grands montants (18 px et plus) l'utilisent. Google Sans reste installée pour les visuels des boutiques.
+- **Couleurs** : `theme.colors` reprend `netteColors` (gris secondaires plus foncés, `label`).
+- **En-tête des onglets** : la photo du profil, les messages (artisan) et la cloche restent en haut à droite, dans des ronds blancs bordés ; initiales sur fond bleu nuit. Sur l'accueil, la date et ces boutons occupent la première ligne et « Bonjour Prénom » passe dessous, sur toute la largeur.
+- **Accueil** : « Vous avez N choses à faire », bandeau de l'argent (encaissé ce mois en grand, à venir et à recevoir côte à côte), « À faire maintenant » avec sa pastille, raccourcis, chantiers en cours, devis en attente (taux de signature, devis moyen, clients en attente et temps de réponse), chiffre d'affaires, soldes, prochains rendez-vous en liste, grade. Les raccourcis de l'application (dont « Inviter un artisan ») sont gardés.

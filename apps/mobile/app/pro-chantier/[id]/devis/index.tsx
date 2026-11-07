@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   totalLine: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   text: { fontFamily: font.regular, fontSize: 15, color: colors.foreground },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  total: { fontFamily: font.medium, fontSize: 20, color: colors.primary },
+  total: { fontFamily: font.display, fontSize: 20, color: colors.primary },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).

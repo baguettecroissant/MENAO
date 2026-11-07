@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   nameRow: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
-  name: { flexShrink: 1, fontFamily: font.medium, fontSize: 22, color: colors.foreground },
+  name: { flexShrink: 1, fontFamily: font.display, fontSize: 22, color: colors.foreground },
   meta: {
     fontFamily: font.regular,
     fontSize: 13,

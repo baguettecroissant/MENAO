@@ -2,6 +2,7 @@ import { router, type Href } from "expo-router";
 import {
   ArrowRight,
   CalendarDays,
+  ChevronRight,
   Clock,
   MapPin,
   Minus,
@@ -31,6 +32,7 @@ import { GradeCard } from "@/components/grade/grade-card";
 import {
   ActivityShortcuts,
   InProgressCard,
+  MoneyCard,
   QuotesCard,
   ReceivablesCard,
   RevenueCard,
@@ -43,7 +45,13 @@ import { PushPrompt } from "@/components/push-prompt";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
-import { formatCents, formatDayAndTime, formatDuration, formatMonthName } from "@/lib/format";
+import {
+  formatCents,
+  formatDayAndTime,
+  formatDuration,
+  formatMonthName,
+  formatToday,
+} from "@/lib/format";
 import { loadGrade, markBadgesSeen } from "@/lib/grade";
 import { useExamplesActive } from "@/lib/examples";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
@@ -55,8 +63,7 @@ import { Notice, Tappable, useReveal } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proDashboard;
-const { colors, font, radius, spacing } = theme;
-const ON_COLOR = colors["primary-foreground"];
+const { colors, font, spacing } = theme;
 
 /** Arc décoratif bleu clair des cartes de la maquette « Dashboard », comme sur le site. */
 function Arc({ style }: { style: StyleProp<ViewStyle> }) {
@@ -126,10 +133,11 @@ function Trend({ revenue }: { revenue: Dashboard["revenue"] }) {
         : trend.kind === "baisse"
           ? [TrendingDown, false, t.trend.baisse(trend.percent, month)]
           : [Minus, false, t.trend.stable(month)];
+  // Pastille du bandeau de l'argent (ADR 0245) : verte en hausse, grise sinon.
   return (
-    <View style={styles.trend}>
+    <View style={[styles.trend, up ? styles.trendUp : styles.trendFlat]}>
       <Icon size={14} color={up ? colors.success : colors["muted-foreground"]} />
-      <Text style={[styles.kpiDetail, up && styles.success]}>{text}</Text>
+      <Text style={[styles.trendText, up && styles.success]}>{text}</Text>
     </View>
   );
 }
@@ -159,41 +167,68 @@ function SectionHead({ title, link }: { title: string; link?: { label: string; h
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
- * Rendez-vous à venir (maquette « Dashboard avec RDV ») : bandeau bleu pour une visite, vert pour
- * un démarrage, avec le jour et l'heure ; titre et adresse du chantier dessous.
+ * Rendez-vous à venir (refonte « Nette », ADR 0245) : une ligne par rendez-vous dans la carte, icône
+ * bleue pour une visite, verte pour un démarrage, avec le jour, l'heure et l'adresse.
  */
-function AppointmentCard({ appointment: a }: { appointment: Dashboard["appointments"][number] }) {
+function AppointmentRow({
+  appointment: a,
+  first,
+}: {
+  appointment: Dashboard["appointments"][number];
+  first: boolean;
+}) {
   const { day, time } = formatDayAndTime(a.startsAt);
+  const start = a.kind === "demarrage";
   return (
     <Tappable
       role="link"
       aria-label={t.appointment(t.kinds[a.kind], day, time, a.title)}
       onPress={() => router.push(`/pro-chantier/${a.chantierId}`)}
-      style={styles.card}
+      style={[styles.appointment, !first && styles.appointmentBorder]}
     >
-      <View style={[styles.band, a.kind === "demarrage" && styles.bandStart]}>
-        <View style={styles.bandKind}>
-          <Text style={styles.bandKindText}>{fr.proAgenda.kinds[a.kind]}</Text>
-        </View>
-        <View style={styles.bandItem}>
-          <CalendarDays size={15} color={ON_COLOR} />
-          <Text style={styles.bandText}>{capitalize(day)}</Text>
-        </View>
-        <View style={styles.bandItem}>
-          <Clock size={15} color={ON_COLOR} />
-          <Text style={styles.bandText}>{time}</Text>
-        </View>
+      <View style={[styles.appointmentIcon, start && styles.appointmentIconStart]}>
+        <CalendarDays size={20} color={start ? colors.success : colors["primary-strong"]} />
       </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{a.title}</Text>
+      <View style={styles.appointmentText}>
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {a.title}
+        </Text>
+        <View style={styles.row}>
+          <Text style={styles.meta}>
+            {fr.proAgenda.kinds[a.kind]} · {capitalize(day)}
+          </Text>
+          <Clock size={13} color={colors["muted-foreground"]} />
+          <Text style={styles.meta}>{time}</Text>
+        </View>
         {a.place ? (
           <View style={styles.row}>
-            <MapPin size={14} color={colors.primary} />
-            <Text style={styles.meta}>{a.place}</Text>
+            <MapPin size={13} color={colors.primary} />
+            <Text style={styles.meta} numberOfLines={1}>
+              {a.place}
+            </Text>
           </View>
         ) : null}
       </View>
+      <ChevronRight size={18} color={colors["muted-foreground"]} />
     </Tappable>
+  );
+}
+
+/** Carte « Prochains rendez-vous » avec le lien vers l'agenda. */
+function Upcoming({ appointments }: { appointments: Dashboard["appointments"] }) {
+  return (
+    <View style={styles.upcoming}>
+      <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro-agenda" }} />
+      {appointments.length === 0 ? (
+        <Text style={styles.emptyText}>{t.noUpcoming}</Text>
+      ) : (
+        <View>
+          {appointments.map((a, i) => (
+            <AppointmentRow key={`${a.kind}-${a.chantierId}`} appointment={a} first={i === 0} />
+          ))}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -236,19 +271,8 @@ export function DashboardScreen() {
   const shownYear = year !== null && years.includes(year) ? year : (years[0] ?? now.getFullYear());
   const activity = data ? dashboardActivity(data.activityInput, shownYear, now) : null;
   // Rendez-vous des jours suivants : ceux du jour sont dans « À faire maintenant ».
-  const appointments = data ? (
-    <View style={styles.section}>
-      <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro-agenda" }} />
-      {data.later.length === 0 ? (
-        <View style={[styles.card, styles.empty]}>
-          <Text style={styles.emptyText}>{t.noUpcoming}</Text>
-          <Arc style={styles.emptyArc} />
-        </View>
-      ) : (
-        data.later.map((a) => <AppointmentCard key={`${a.kind}-${a.chantierId}`} appointment={a} />)
-      )}
-    </View>
-  ) : null;
+  const appointments = data ? <Upcoming appointments={data.later} /> : null;
+  const todo = data ? todoForPosition(data.todo, position) : [];
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
@@ -267,7 +291,11 @@ export function DashboardScreen() {
           />
         }
       >
-        <TabHeader title={t.greeting(data?.firstName ?? null)} />
+        <TabHeader
+          eyebrow={formatToday(now)}
+          title={t.greeting(data?.firstName ?? null)}
+          subtitle={data && position !== "ouvrier" ? t.todoLead(todo.length) : undefined}
+        />
 
         {data === undefined ? (
           <DashboardSkeleton />
@@ -276,19 +304,7 @@ export function DashboardScreen() {
         ) : position === "ouvrier" ? (
           <Animated.View entering={reveal} style={styles.revealed}>
             {examples ? null : <PushPrompt />}
-            <View style={styles.section}>
-              <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro-agenda" }} />
-              {data.appointments.length === 0 ? (
-                <View style={[styles.card, styles.empty]}>
-                  <Text style={styles.emptyText}>{t.noUpcoming}</Text>
-                  <Arc style={styles.emptyArc} />
-                </View>
-              ) : (
-                data.appointments.map((a) => (
-                  <AppointmentCard key={`${a.kind}-${a.chantierId}`} appointment={a} />
-                ))
-              )}
-            </View>
+            <Upcoming appointments={data.appointments} />
             <Kpi label={t.worker.chantiers} value={t.worker.open} href="/pro/chantiers" wide />
           </Animated.View>
         ) : (
@@ -311,36 +327,14 @@ export function DashboardScreen() {
               />
             ) : null}
             {examples ? null : <PushPrompt />}
-            <View style={styles.kpis}>
-              <Kpi
-                label={t.awaitingQuote}
-                value={t.clients(data.awaitingClients)}
-                href="/pro/chantiers"
+            {activity ? (
+              <MoneyCard
+                monthCents={data.revenue.cents}
+                trend={<Trend revenue={data.revenue} />}
+                activity={activity}
               />
-              <Kpi
-                label={t.responseTime}
-                value={
-                  data.responseTime.minutes === null
-                    ? "—"
-                    : formatDuration(data.responseTime.minutes)
-                }
-                detail={
-                  <Text style={styles.kpiDetail}>
-                    {data.responseTime.minutes === null
-                      ? t.noResponse
-                      : t.responseDetail(data.responseTime.responses)}
-                  </Text>
-                }
-                href="/pro/demandes"
-              />
-              <Kpi
-                wide
-                label={t.revenue}
-                value={formatCents(data.revenue.cents)}
-                detail={<Trend revenue={data.revenue} />}
-                href={{ pathname: "/pro/argent", params: { vue: "factures" } }}
-              />
-            </View>
+            ) : null}
+            <TodoList items={todo} />
             <ActivityShortcuts
               example={examples}
               patron={patron}
@@ -350,18 +344,33 @@ export function DashboardScreen() {
                   : { pathname: "/pro/argent", params: { vue: "devis" } }
               }
             />
-            <TodoList items={todoForPosition(data.todo, position)} />
             {profile && !profile.avatarUrl ? <PhotoNudge /> : null}
             {activity ? (
               <>
+                <InProgressCard activity={activity} />
+                <QuotesCard
+                  activity={activity}
+                  extraStats={[
+                    { label: t.awaitingQuote, value: t.clients(data.awaitingClients) },
+                    {
+                      label: t.responseTime,
+                      value:
+                        data.responseTime.minutes === null
+                          ? "—"
+                          : formatDuration(data.responseTime.minutes),
+                      hint:
+                        data.responseTime.minutes === null
+                          ? t.noResponse
+                          : t.responseDetail(data.responseTime.responses),
+                    },
+                  ]}
+                />
                 <RevenueCard
                   activity={activity}
                   years={years}
                   onYear={setYear}
                   currentMonth={activityCurrentMonth(shownYear, now)}
                 />
-                <QuotesCard activity={activity} />
-                <InProgressCard activity={activity} />
                 <ReceivablesCard activity={activity} />
               </>
             ) : null}
@@ -383,16 +392,15 @@ const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing(5), gap: spacing(7), paddingBottom: spacing(10) },
-  revealed: { gap: spacing(7) },
-  kpis: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
+  content: { padding: spacing(4), gap: spacing(6), paddingBottom: spacing(10) },
+  revealed: { gap: spacing(6) },
   kpi: {
     flexGrow: 1,
     flexBasis: "40%",
     minHeight: 92,
     gap: spacing(1),
     overflow: "hidden",
-    borderRadius: radius.card,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -401,74 +409,85 @@ const styles = StyleSheet.create({
   },
   kpiWide: { flexBasis: "100%" },
   kpiLabel: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  kpiValue: { fontFamily: font.medium, fontSize: 22, lineHeight: 28, color: colors.primary },
-  kpiDetail: {
-    flexShrink: 1,
-    fontFamily: font.regular,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors["muted-foreground"],
-  },
+  kpiValue: { fontFamily: font.display, fontSize: 22, lineHeight: 28, color: colors.primary },
   kpiArc: { position: "absolute", right: -4, bottom: 6, width: 56, height: 36 },
   // Le détail s'arrête avant l'arc, comme sur le site.
   kpiDetailBox: { paddingRight: spacing(10) },
-  trend: { flexDirection: "row", alignItems: "flex-start", gap: spacing(1) },
+  // Évolution de l'encaissé en pastille (ADR 0245).
+  trend: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(1.5),
+    borderRadius: 14,
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(1),
+  },
+  trendUp: { backgroundColor: colors["success-soft"] },
+  trendFlat: { backgroundColor: colors.background },
+  trendText: {
+    flexShrink: 1,
+    fontFamily: font.semibold,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
   success: { color: colors.success },
-  section: { gap: spacing(3) },
   sectionHead: {
     flexDirection: "row",
     alignItems: "baseline",
     justifyContent: "space-between",
     gap: spacing(3),
   },
-  sectionTitle: { flexShrink: 1, fontFamily: font.medium, fontSize: 17, color: colors.foreground },
+  sectionTitle: {
+    flexShrink: 1,
+    fontFamily: font.display,
+    fontSize: 19,
+    letterSpacing: -0.4,
+    color: colors.foreground,
+  },
   sectionLink: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
-  sectionLinkText: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  card: {
-    overflow: "hidden",
-    borderRadius: radius.card,
+  sectionLinkText: { fontFamily: font.semibold, fontSize: 14, color: colors["primary-strong"] },
+  // Prochains rendez-vous : une carte, une ligne par rendez-vous (ADR 0245).
+  upcoming: {
+    gap: spacing(3),
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
+    padding: spacing(5),
     boxShadow: cardShadow,
   },
-  band: {
+  appointment: {
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "center",
-    columnGap: spacing(4),
-    rowGap: spacing(1.5),
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing(4),
-    paddingVertical: spacing(2.5),
+    gap: spacing(3),
+    paddingVertical: spacing(3),
   },
-  bandStart: { backgroundColor: colors.success },
-  bandKind: {
-    borderRadius: radius.chip,
-    backgroundColor: `${ON_COLOR}33`,
-    paddingHorizontal: spacing(2),
-    paddingVertical: 2,
+  appointmentBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  appointmentIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors["primary-soft"],
+    alignItems: "center",
+    justifyContent: "center",
   },
-  bandKindText: { fontFamily: font.medium, fontSize: 12, color: ON_COLOR },
-  bandItem: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
-  bandText: { fontFamily: font.medium, fontSize: 14, color: ON_COLOR },
-  cardBody: { gap: spacing(2), padding: spacing(4) },
-  cardTitle: { fontFamily: font.medium, fontSize: 16, lineHeight: 22, color: colors.foreground },
+  appointmentIconStart: { backgroundColor: colors["success-soft"] },
+  appointmentText: { flex: 1, gap: 3 },
+  cardTitle: { fontFamily: font.semibold, fontSize: 16, lineHeight: 22, color: colors.foreground },
   row: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   meta: {
     flexShrink: 1,
     fontFamily: font.regular,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 19,
     color: colors["muted-foreground"],
   },
-  empty: { paddingHorizontal: spacing(6), paddingVertical: spacing(10) },
   emptyText: {
     fontFamily: font.regular,
     fontSize: 14,
     lineHeight: 20,
     color: colors["muted-foreground"],
-    textAlign: "center",
   },
-  emptyArc: { position: "absolute", right: -6, bottom: 8, width: 80, height: 48 },
 });

@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   },
   todayText: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
   pressed: { opacity: 0.8 },
-  weekTitle: { fontFamily: font.medium, fontSize: 18, color: colors.foreground },
+  weekTitle: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
   status: {
     alignSelf: "flex-start",
     flexDirection: "row",

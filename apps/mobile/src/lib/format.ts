@@ -28,6 +28,12 @@ const hourMinute = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
 });
 
+/** « Samedi 7 novembre », au-dessus de la salutation de l'accueil (ADR 0245). */
+export function formatToday(date: Date = new Date()): string {
+  const text = longDay.format(date);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Montant en centimes (CLAUDE.md règle 5) affiché en euros : « 91,85 € ». */
 export function formatCents(cents: number): string {
   return euros.format(cents / 100);

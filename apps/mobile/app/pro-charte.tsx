@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: colors["primary-strong"],
   },
-  heroTitle: { fontFamily: font.bold, fontSize: 24, lineHeight: 30, color: colors.foreground },
+  heroTitle: { fontFamily: font.display, fontSize: 24, lineHeight: 30, color: colors.foreground },
   accent: { color: colors.primary },
   section: { gap: spacing(3) },
   sectionTitle: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },

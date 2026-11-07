@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(5),
     paddingVertical: spacing(8),
   },
-  name: { fontFamily: font.medium, fontSize: 20, color: colors.foreground },
+  name: { fontFamily: font.display, fontSize: 20, color: colors.foreground },
   description: {
     fontFamily: font.regular,
     fontSize: 14,

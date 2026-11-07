@@ -217,7 +217,7 @@ function ExpenseScreen() {
 const styles = StyleSheet.create({
   head: { gap: spacing(2) },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  amount: { fontFamily: font.medium, fontSize: 26, color: colors.foreground },
+  amount: { fontFamily: font.display, fontSize: 26, color: colors.foreground },
   actions: { gap: spacing(2) },
   cardTitle: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
   document: {

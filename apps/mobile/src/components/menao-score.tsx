@@ -48,7 +48,7 @@ export function MenaoScore({ score }: { score: MenaoScoreParts }) {
 
 const styles = StyleSheet.create({
   body: { gap: spacing(3) },
-  total: { fontFamily: font.bold, fontSize: 32, color: colors["primary-strong"] },
+  total: { fontFamily: font.display, fontSize: 32, color: colors["primary-strong"] },
   outOf: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
   list: { gap: spacing(3) },
   item: { gap: spacing(1) },

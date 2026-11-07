@@ -29,6 +29,12 @@ importers:
       '@expo-google-fonts/google-sans':
         specifier: 0.4.3
         version: 0.4.3
+      '@expo-google-fonts/inter':
+        specifier: 0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/inter-tight':
+        specifier: 0.4.2
+        version: 0.4.2
       '@expo/metro-runtime':
         specifier: ~58.0.15
         version: 58.0.15(@expo/log-box@58.0.13)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
@@ -911,6 +917,12 @@ packages:
 
   '@expo-google-fonts/google-sans@0.4.3':
     resolution: {integrity: sha512-3/xsSIfffcgpAs55f8C4+fV2M7oxnt/X0FX21DhMgyQVj3cQ0YecAA5e9VVDQZ6n5qC+sNkY9rZjKdnx0A0AeQ==}
+
+  '@expo-google-fonts/inter-tight@0.4.2':
+    resolution: {integrity: sha512-/b4YLh8v145nMfrtw0FF2EB8eRhw/SVt/LdhzN1+Faz/uSFvZkF7EtxfipV8iacDSb1PUqyssHd0tZjlzhhf2g==}
+
+  '@expo-google-fonts/inter@0.4.2':
+    resolution: {integrity: sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==}
 
   '@expo/cli@58.1.15':
     resolution: {integrity: sha512-+gBvfvmttvNqs8ceJe1SdiWBa6reocb/ZC8jMxsF8qFlCijAUQNqFMGCPkT/6zasFkQLUL8ZOFhf/9DKj2XaLg==}
@@ -6281,6 +6293,10 @@ snapshots:
       levn: 0.4.1
 
   '@expo-google-fonts/google-sans@0.4.3': {}
+
+  '@expo-google-fonts/inter-tight@0.4.2': {}
+
+  '@expo-google-fonts/inter@0.4.2': {}
 
   '@expo/cli@58.1.15(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(expo-constants@58.0.13)(expo-font@58.0.10(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.26)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)':
     dependencies:

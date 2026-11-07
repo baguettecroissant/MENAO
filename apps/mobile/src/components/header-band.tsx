@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
   pressed: { backgroundColor: colors["primary-strong"] },
   texts: { flex: 1, gap: spacing(1.5), paddingTop: spacing(2.5), paddingRight: spacing(2) },
-  title: { fontFamily: font.medium, fontSize: 18, lineHeight: 24, color: ON_COLOR },
+  title: { fontFamily: font.display, fontSize: 18, lineHeight: 24, color: ON_COLOR },
   meta: { flexDirection: "row", flexWrap: "wrap", columnGap: spacing(4), rowGap: spacing(1) },
   metaItem: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   metaText: { flexShrink: 1, fontFamily: font.regular, fontSize: 13, color: ON_COLOR },

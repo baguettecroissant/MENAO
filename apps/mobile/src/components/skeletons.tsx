@@ -144,27 +144,20 @@ export function DetailSkeleton({
   );
 }
 
-/** Tableau de bord : chiffres clés, raccourcis, « À faire maintenant ». */
+/** Tableau de bord (ADR 0245) : bandeau de l'argent, « À faire maintenant », raccourcis. */
 export function DashboardSkeleton() {
   return (
-    <Loading gap={spacing(7)}>
-      <View style={styles.kpis}>
-        <Skeleton height={88} style={styles.kpi} />
-        <Skeleton height={88} style={styles.kpi} />
-        <Skeleton height={88} style={styles.kpiWide} />
-      </View>
-      <View style={styles.shortcuts}>
-        {Array.from({ length: 4 }, (_, i) => (
-          <View key={i} style={styles.shortcut}>
-            <Skeleton width={52} height={52} round />
-            <Skeleton width={56} height={10} />
-          </View>
-        ))}
-      </View>
+    <Loading gap={spacing(6)}>
+      <Skeleton height={196} style={styles.money} />
       <View style={styles.column}>
-        <Skeleton width="45%" height={18} />
-        <Skeleton height={64} style={styles.block} />
-        <Skeleton height={64} style={styles.block} />
+        <Skeleton width="55%" height={22} />
+        <Skeleton height={72} style={styles.block} />
+        <Skeleton height={72} style={styles.block} />
+      </View>
+      <View style={styles.kpis}>
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton key={i} height={88} style={styles.kpi} />
+        ))}
       </View>
     </Loading>
   );
@@ -208,10 +201,8 @@ const styles = StyleSheet.create({
   },
   separator: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   side: { alignItems: "flex-end", gap: spacing(1.5) },
+  money: { borderRadius: 18 },
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
-  kpi: { flexGrow: 1, flexBasis: "40%", borderRadius: radius.card },
-  kpiWide: { flexBasis: "100%", borderRadius: radius.card },
-  shortcuts: { flexDirection: "row", justifyContent: "space-between" },
-  shortcut: { alignItems: "center", gap: spacing(2) },
+  kpi: { flexGrow: 1, flexBasis: "30%", borderRadius: radius.card },
   block: { borderRadius: radius.card },
 });

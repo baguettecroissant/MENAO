@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     padding: spacing(4),
   },
   titleBlock: { gap: 1 },
-  title: { fontFamily: font.bold, fontSize: 18, color: colors.primary, marginBottom: 2 },
+  title: { fontFamily: font.display, fontSize: 18, color: colors.primary, marginBottom: 2 },
   block: { gap: 1 },
   logo: { width: 120, height: 40, marginBottom: spacing(1) },
   issuer: { ...text, fontFamily: font.bold, fontSize: 13 },
