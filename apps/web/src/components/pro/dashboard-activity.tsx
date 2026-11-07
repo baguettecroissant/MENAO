@@ -1,5 +1,5 @@
 import { revenueTicks, type DashboardActivity } from "@menao/core";
-import { CalendarX2, ChevronRight, FilePen, Share2, UserPlus, type LucideIcon } from "lucide-react";
+import { CalendarX2, ChevronRight, Plus, Share2 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -30,13 +30,15 @@ const monthName = (format: Intl.DateTimeFormat, index: number) =>
 const card = "flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card";
 const rowLink =
   "flex items-center gap-3 rounded-input px-2 py-2.5 -mx-2 transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none";
+/** Grands chiffres de la refonte « Nette » (ADR 0245) : Inter Tight, gras, chiffres alignés. */
+const figure = "font-display font-bold tracking-[-0.03em] tabular-nums leading-none";
 
 /** Ligne de liste : lien vers le chantier, ou ligne simple quand il n'a pas de page (exemples). */
 function Row({ href, children }: { href: string | null; children: ReactNode }) {
   return href ? (
     <Link href={href as Route} className={rowLink}>
       {children}
-      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-subtle-foreground" />
+      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
     </Link>
   ) : (
     <div className="-mx-2 flex items-center gap-3 px-2 py-2.5">{children}</div>
@@ -49,49 +51,125 @@ export type ChantierHref = (chantierId: string) => string | null;
 export type DashboardShortcutLinks = {
   quote: string;
   block: string;
-  /** Partager la fiche, inviter un artisan : le patron seulement (ADR 0241). */
+  /** Partager la fiche : le patron seulement (ADR 0241). */
   share?: string;
-  invite?: string;
 };
 
-/** Raccourcis du tableau de bord (ADR 0185) : les gestes les plus courants, en un geste. */
-export function DashboardShortcuts({ links }: { links: DashboardShortcutLinks }) {
-  const items: { key: keyof DashboardShortcutLinks; icon: LucideIcon }[] = [
-    { key: "quote", icon: FilePen },
-    { key: "block", icon: CalendarX2 },
-    { key: "share", icon: Share2 },
-    { key: "invite", icon: UserPlus },
-  ];
+const pill =
+  "inline-flex items-center justify-center gap-2 rounded-pill font-semibold whitespace-nowrap transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none";
+const pillSecondary = `${pill} min-h-11 border border-border-strong bg-surface px-4 text-sm text-foreground hover:bg-background`;
+
+/**
+ * Actions de l'accueil (ADR 0185, refonte « Nette » ADR 0245) : « Préparer un devis » en bouton
+ * principal, « Bloquer un créneau » et « Partager ma fiche » à côté. Téléphone : le bouton principal
+ * sur toute la largeur, les deux autres côte à côte en dessous.
+ */
+export function DashboardActions({ links }: { links: DashboardShortcutLinks }) {
   return (
-    <nav aria-label={t.shortcuts.title} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {items
-        .flatMap(({ key, icon: Icon }) => {
-          const href = links[key];
-          return href ? [{ key, icon: Icon, href }] : [];
-        })
-        .map(({ key, icon: Icon, href }) => (
-          <Link
-            key={key}
-            href={href as Route}
-            className="flex min-h-touch items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm font-medium shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
-              <Icon aria-hidden="true" className="size-[18px]" />
-            </span>
-            {t.shortcuts[key]}
-          </Link>
-        ))}
+    <nav
+      aria-label={t.shortcuts.title}
+      className="grid w-full grid-cols-2 gap-2.5 sm:flex sm:w-auto sm:flex-wrap sm:items-center"
+    >
+      <Link
+        href={links.quote as Route}
+        className={`${pill} col-span-2 min-h-[3.125rem] bg-primary px-5 text-base text-primary-foreground hover:bg-primary-hover sm:order-last sm:min-h-11 sm:text-sm`}
+      >
+        <Plus aria-hidden="true" className="size-[18px] shrink-0" strokeWidth={2.4} />
+        {t.shortcuts.quote}
+      </Link>
+      <Link
+        href={links.block as Route}
+        className={`${pillSecondary} ${links.share ? "" : "col-span-2"}`}
+      >
+        <CalendarX2 aria-hidden="true" className="hidden size-4 shrink-0 min-[400px]:block" />
+        {t.shortcuts.block}
+      </Link>
+      {links.share && (
+        <Link href={links.share as Route} className={pillSecondary}>
+          <Share2 aria-hidden="true" className="hidden size-4 shrink-0 min-[400px]:block" />
+          {t.shortcuts.share}
+        </Link>
+      )}
     </nav>
   );
 }
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+/**
+ * Bandeau de l'argent (refonte « Nette », ADR 0245) : encaissé ce mois avec son évolution, reste à
+ * payer sur les devis signés et soldes à recevoir. Téléphone : le premier en grand, les deux autres
+ * côte à côte dessous.
+ */
+export function MoneyBand({
+  revenue,
+  activity,
+}: {
+  revenue: { cents: number; trend: ReactNode };
+  activity: DashboardActivity;
+}) {
+  const cells = [
+    {
+      key: "toCollect" as const,
+      label: t.revenue.upcoming,
+      value: euroRound(activity.upcomingCents),
+      hint: t.revenue.upcomingHint,
+    },
+    {
+      key: "receivables" as const,
+      label: t.revenue.toCollect,
+      value: euroRound(activity.toCollectCents),
+      hint: t.revenue.toCollectHint,
+    },
+  ];
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-input bg-background px-3 py-2.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-lg font-medium text-foreground">{value}</span>
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-    </div>
+    <section
+      aria-label={fr.pro.dashboard.money}
+      className="grid grid-cols-2 overflow-hidden rounded-card border border-border bg-surface shadow-card md:grid-cols-3"
+    >
+      <div className="col-span-2 flex flex-col gap-2 border-b border-border p-5 md:col-span-1 md:border-r md:border-b-0 md:px-7 md:py-6">
+        <span className="text-sm font-semibold text-label">{fr.pro.dashboard.revenue}</span>
+        <span className={`${figure} text-[2.375rem] md:text-[2.5rem]`}>{euro(revenue.cents)}</span>
+        {revenue.trend}
+      </div>
+      {cells.map((cell, i) => (
+        <div
+          key={cell.key}
+          className={`flex min-w-0 flex-col gap-1 px-5 py-4 md:gap-2 md:px-7 md:py-6 ${
+            i === 0 ? "border-r border-border" : ""
+          }`}
+        >
+          <span className="text-[0.8125rem] font-semibold text-label md:text-sm">{cell.label}</span>
+          <span className={`${figure} text-2xl md:text-[2.5rem]`}>{cell.value}</span>
+          <span className="text-[0.8125rem] leading-snug text-muted-foreground md:text-sm">
+            {cell.hint}
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+/** Petit chiffre sous le graphique : lien facultatif vers la liste concernée. */
+export type RevenueStat = { label: string; value: string; hint?: string; href?: string };
+
+function Stat({ label, value, hint, href }: RevenueStat) {
+  const body = (
+    <>
+      <span className="text-[0.8125rem] text-muted-foreground">{label}</span>
+      <span className="font-display text-[1.375rem] font-bold tracking-[-0.02em] text-foreground tabular-nums">
+        {value}
+      </span>
+      {hint && <span className="text-xs leading-snug text-muted-foreground">{hint}</span>}
+    </>
+  );
+  return href ? (
+    <Link
+      href={href as Route}
+      className="-mx-2 flex min-w-0 flex-col gap-0.5 rounded-input px-2 py-1.5 transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+    >
+      {body}
+    </Link>
+  ) : (
+    <div className="flex min-w-0 flex-col gap-0.5 py-1.5">{body}</div>
   );
 }
 
@@ -105,12 +183,15 @@ export function RevenueCard({
   years,
   yearHref,
   currentMonth,
+  stats = [],
 }: {
   activity: DashboardActivity;
   years: number[];
   yearHref: (year: number) => string;
   /** Mois en cours (0 à 11) si l'année affichée est l'année en cours : les suivants sont à venir. */
   currentMonth: number | null;
+  /** Chiffres sous le graphique (clients en attente, signature, temps de réponse, ADR 0245). */
+  stats?: RevenueStat[];
 }) {
   const ticks = revenueTicks(activity.months);
   const top = ticks.at(-1) ?? 0;
@@ -120,9 +201,17 @@ export function RevenueCard({
   return (
     <section aria-labelledby="chiffre-affaires" className={card}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="chiffre-affaires" className="text-[1.0625rem] font-medium">
-          {t.revenue.title}
-        </h2>
+        <div className="flex flex-col gap-0.5">
+          <h2 id="chiffre-affaires" className="text-xl">
+            {t.revenue.titleYear(activity.year)}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t.revenue.collected}{" "}
+            <strong className="font-bold text-foreground tabular-nums">
+              {euroRound(activity.yearCents)}
+            </strong>
+          </p>
+        </div>
         {years.length > 1 && (
           <nav aria-label={t.revenue.years} className="flex gap-1 rounded-pill bg-background p-1">
             {years.map((year) => (
@@ -138,20 +227,6 @@ export function RevenueCard({
           </nav>
         )}
       </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <Stat label={t.revenue.year(activity.year)} value={euroRound(activity.yearCents)} />
-        <Stat
-          label={t.revenue.upcoming}
-          value={euroRound(activity.upcomingCents)}
-          hint={t.revenue.upcomingHint}
-        />
-        <Stat
-          label={t.revenue.toCollect}
-          value={euroRound(activity.toCollectCents)}
-          hint={t.revenue.toCollectHint}
-        />
-      </div>
-
       {activity.yearCents === 0 ? (
         <p className="rounded-input bg-background px-4 py-6 text-center text-sm text-muted-foreground">
           {t.revenue.empty(activity.year)}
@@ -179,11 +254,11 @@ export function RevenueCard({
                     {!future && cents > 0 && (
                       <>
                         <div
-                          className="w-[min(60%,1.5rem)] rounded-t bg-primary"
+                          className="w-[min(64%,2rem)] rounded-t-[4px] bg-primary"
                           style={{ height: `${height(cents)}%` }}
                         />
                         <span
-                          className={`pointer-events-none absolute left-1/2 z-[1] -translate-x-1/2 rounded-chip px-1.5 py-0.5 text-[0.6875rem] font-medium whitespace-nowrap ${
+                          className={`pointer-events-none absolute left-1/2 z-[1] -translate-x-1/2 rounded-chip px-1.5 py-0.5 text-xs font-bold whitespace-nowrap tabular-nums ${
                             i === peak
                               ? "text-foreground"
                               : "hidden bg-foreground text-surface group-hover:block"
@@ -205,8 +280,8 @@ export function RevenueCard({
             {activity.months.map((_, i) => (
               <span
                 key={i}
-                className={`text-center text-[0.6875rem] ${
-                  i === currentMonth ? "font-medium text-foreground" : "text-muted-foreground"
+                className={`text-center text-xs ${
+                  i === currentMonth ? "font-bold text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {monthName(monthLong, i).charAt(0).toUpperCase()}
@@ -232,6 +307,13 @@ export function RevenueCard({
           </table>
         </figure>
       )}
+      {stats.length > 0 && (
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 border-t border-border pt-3 sm:grid-cols-4">
+          {stats.map((stat) => (
+            <Stat key={stat.label} {...stat} />
+          ))}
+        </dl>
+      )}
       <p className="text-xs text-muted-foreground">{t.revenue.note}</p>
     </section>
   );
@@ -253,7 +335,7 @@ function ListCard({
   return (
     <section aria-labelledby={id} className={card}>
       <div className="flex flex-col gap-0.5">
-        <h2 id={id} className="text-[1.0625rem] font-medium">
+        <h2 id={id} className="text-lg">
           {title}
         </h2>
         {summary && <p className="text-sm text-muted-foreground">{summary}</p>}
@@ -274,7 +356,7 @@ export function QuotesCard({
   base: string;
   chantierHref: ChantierHref;
 }) {
-  const { pending, pendingTotalCents, signRate, averageSignedCents } = activity.quotes;
+  const { pending, pendingTotalCents } = activity.quotes;
   return (
     <ListCard
       id="devis-en-attente"
@@ -283,21 +365,12 @@ export function QuotesCard({
         pending.length ? t.quotes.summary(pending.length, euro(pendingTotalCents)) : undefined
       }
       footer={
-        <>
-          <dl className="grid grid-cols-2 gap-2">
-            <Stat
-              label={t.quotes.signRate}
-              value={signRate === null ? "—" : fr.review.percent(signRate)}
-            />
-            <Stat
-              label={t.quotes.average}
-              value={averageSignedCents === null ? "—" : euroRound(averageSignedCents)}
-            />
-          </dl>
-          <TextLink href={`${base}/devis?onglet=envoyes` as Route} className="self-start text-sm">
-            {t.quotes.all}
-          </TextLink>
-        </>
+        <TextLink
+          href={`${base}/devis?onglet=envoyes` as Route}
+          className="self-start text-sm font-semibold"
+        >
+          {t.quotes.all}
+        </TextLink>
       }
     >
       {pending.length === 0 ? (
@@ -308,14 +381,16 @@ export function QuotesCard({
             <li key={q.quoteId}>
               <Row href={chantierHref(q.chantierId)}>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium">{q.title}</span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="truncate font-semibold">{q.title}</span>
+                  <span className="truncate text-sm text-muted-foreground">
                     {[q.clientName, q.sentAt ? t.quotes.sentOn(formatDay(q.sentAt)) : null]
                       .filter(Boolean)
                       .join(" · ")}
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-medium">{euro(q.totalTtcCents)}</span>
+                <span className="shrink-0 font-display text-base font-bold tabular-nums">
+                  {euro(q.totalTtcCents)}
+                </span>
               </Row>
             </li>
           ))}
@@ -341,7 +416,10 @@ export function InProgressCard({
       title={t.inProgress.title}
       footer={
         activity.inProgress.length > 0 && (
-          <TextLink href={`${base}/chantiers` as Route} className="self-start text-sm">
+          <TextLink
+            href={`${base}/chantiers` as Route}
+            className="self-start text-sm font-semibold"
+          >
             {t.inProgress.all}
           </TextLink>
         )
@@ -358,13 +436,13 @@ export function InProgressCard({
                 <Row href={chantierHref(c.chantierId)}>
                   <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-                      <span className="truncate text-sm font-medium">{c.title}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="truncate font-semibold">{c.title}</span>
+                      <span className="rounded-chip bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-strong">
                         {fr.pro.chantiers.status[c.status]}
                       </span>
                     </span>
                     {c.clientName && (
-                      <span className="truncate text-xs text-muted-foreground">{c.clientName}</span>
+                      <span className="truncate text-sm text-muted-foreground">{c.clientName}</span>
                     )}
                     <span
                       role="meter"
@@ -372,14 +450,14 @@ export function InProgressCard({
                       aria-valuemax={c.totalCents}
                       aria-valuenow={c.paidCents}
                       aria-label={t.inProgress.paid(euro(c.paidCents), euro(c.totalCents))}
-                      className="h-1.5 overflow-hidden rounded-pill bg-primary-soft"
+                      className="h-2 overflow-hidden rounded-pill bg-background"
                     >
                       <span
                         className="block h-full rounded-pill bg-primary"
                         style={{ width: `${Math.round(share * 100)}%` }}
                       />
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {t.inProgress.paid(euro(c.paidCents), euro(c.totalCents))}
                     </span>
                   </span>
@@ -411,12 +489,14 @@ export function ReceivablesCard({
             <li key={r.chantierId}>
               <Row href={chantierHref(r.chantierId)}>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium">{r.title}</span>
+                  <span className="truncate font-semibold">{r.title}</span>
                   {r.clientName && (
-                    <span className="truncate text-xs text-muted-foreground">{r.clientName}</span>
+                    <span className="truncate text-sm text-muted-foreground">{r.clientName}</span>
                   )}
                 </span>
-                <span className="shrink-0 text-sm font-medium">{euro(r.amountCents)}</span>
+                <span className="shrink-0 font-display text-base font-bold tabular-nums">
+                  {euro(r.amountCents)}
+                </span>
               </Row>
             </li>
           ))}

@@ -8,6 +8,12 @@ const dayLong = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: PARIS,
 });
+const today = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: PARIS,
+});
 const dayMedium = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: PARIS });
 const clock = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
@@ -77,6 +83,9 @@ export const formatDayMonth = (iso: string) => dayMonth.format(new Date(iso));
 export const formatDayMonthShort = (iso: string) => dayMonthShort.format(new Date(iso));
 
 /** « Vendredi 20 févr. 2026 » (maquette « Informations du rendez-vous »). */
+/** « Samedi 7 novembre », au-dessus de la salutation de l'accueil. */
+export const formatToday = (date: Date) => capitalize(today.format(date));
+
 export const formatDayLong = (iso: string) => capitalize(dayLong.format(new Date(iso)));
 
 /** « vendredi 20 févr. 2026 », au fil d'une phrase. */

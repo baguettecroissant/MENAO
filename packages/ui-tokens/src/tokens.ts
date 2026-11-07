@@ -49,9 +49,27 @@ export const shadow = {
   focus: "0 0 0 4px rgb(72 105 246 / 0.18)",
 } as const;
 
+const systemFonts =
+  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
 export const fontFamily = {
   // Google Sans est chargée par next/font (variable --font-google-sans) ; repli système.
-  sans: 'var(--font-google-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  sans: `var(--font-google-sans), ${systemFonts}`,
+  // Refonte « Nette » (ADR 0245), espaces connectés : Inter pour les textes, Inter Tight pour les
+  // titres et les grands chiffres (variables posées par apps/web/src/lib/fonts.ts).
+  app: `var(--font-inter), var(--font-google-sans), ${systemFonts}`,
+  display: `var(--font-inter-tight), var(--font-inter), var(--font-google-sans), ${systemFonts}`,
+} as const;
+
+/**
+ * Refonte « Nette » (ADR 0245) : textes secondaires plus foncés dans les espaces connectés et
+ * l'application (l'ancien gris paraissait « pâlot »). Le site public garde `muted-foreground`.
+ * Reprise telle quelle dans la classe `.app-nette` de apps/web/src/app/globals.css.
+ */
+export const netteColors = {
+  "muted-foreground": "#4a5263",
+  /** Libellés des chiffres et des champs, entre le texte et le gris secondaire. */
+  label: "#2b3242",
 } as const;
 
 /** Taille tactile minimale (spec §5 : 44 px). */

@@ -158,14 +158,25 @@ export function TodoList({
       </div>
     );
   }
+  // Refonte « Nette » (ADR 0245) : titre et nombre en pastille, grandes lignes ; en grand écran,
+  // l'action en bouton (le premier en bleu), sur téléphone une flèche.
   return (
     <section aria-labelledby="todo-title" className="flex flex-col gap-3">
-      <h2 id="todo-title" className="text-lg font-medium">
-        {t.todoTitle}
-      </h2>
+      <div className="flex items-center gap-2.5">
+        <h2 id="todo-title" className="text-xl">
+          {t.todoTitle}
+        </h2>
+        <span
+          aria-hidden="true"
+          className="rounded-pill bg-foreground px-2.5 py-0.5 text-[0.8125rem] font-bold text-surface tabular-nums"
+        >
+          {items.length}
+        </span>
+      </div>
       <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const l = line(item, base);
+          const button = !l.clock;
           return (
             <li key={l.key} className="border-t border-border first:border-t-0">
               <Link
@@ -173,34 +184,43 @@ export function TodoList({
                 aria-label={[l.title, l.detail, l.accessoryLabel ?? l.accessory]
                   .filter(Boolean)
                   .join(", ")}
-                className="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none"
+                className="group flex min-h-[4.5rem] items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none sm:px-5"
               >
                 <span
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-[10px] ${ICON_TONE[l.tone]}`}
+                  className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${ICON_TONE[l.tone]}`}
                 >
-                  <l.icon aria-hidden="true" className="size-[18px]" />
+                  <l.icon aria-hidden="true" className="size-5" />
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate font-medium">{l.title}</span>
+                  <span className="truncate text-base font-semibold">{l.title}</span>
                   {l.detail && (
                     <span className="truncate text-sm text-muted-foreground">{l.detail}</span>
                   )}
                 </span>
-                <span
-                  className={`inline-flex shrink-0 items-center gap-1 text-sm font-medium ${
-                    l.urgent
-                      ? "text-danger"
-                      : l.clock
-                        ? "text-muted-foreground"
-                        : "text-primary-strong"
-                  }`}
-                >
-                  {l.clock && <Clock aria-hidden="true" className="size-3.5" />}
-                  {l.accessory}
-                </span>
+                {button ? (
+                  <span
+                    aria-hidden="true"
+                    className={`hidden h-9 shrink-0 items-center rounded-pill px-4 text-sm font-semibold sm:inline-flex ${
+                      index === 0
+                        ? "bg-primary text-primary-foreground group-hover:bg-primary-hover"
+                        : "border border-border-strong bg-surface text-foreground"
+                    }`}
+                  >
+                    {l.accessory}
+                  </span>
+                ) : (
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 text-sm font-semibold ${
+                      l.urgent ? "text-danger" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Clock aria-hidden="true" className="size-3.5" />
+                    {l.accessory}
+                  </span>
+                )}
                 <ChevronRight
                   aria-hidden="true"
-                  className="size-4 shrink-0 text-subtle-foreground"
+                  className={`size-5 shrink-0 text-muted-foreground ${button ? "sm:hidden" : ""}`}
                 />
               </Link>
             </li>

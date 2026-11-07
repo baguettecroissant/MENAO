@@ -76,7 +76,7 @@ export function SidebarContent({
         </Link>
         {!collapsed && (
           <span
-            className={`rounded-chip px-2 py-1 text-xs font-medium whitespace-nowrap ${
+            className={`rounded-chip px-2 py-1 text-xs font-semibold whitespace-nowrap ${
               space === "exemples"
                 ? "bg-example-soft text-example-strong"
                 : "bg-primary-soft text-primary-strong"
@@ -94,7 +94,7 @@ export function SidebarContent({
               (collapsed ? (
                 index > 0 && <hr className="mx-3 mb-3 border-border" />
               ) : (
-                <p className="px-3 pb-2 text-[0.6875rem] font-semibold tracking-[0.14em] text-subtle-foreground uppercase">
+                <p className="px-3 pb-2 text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase">
                   {section.label}
                 </p>
               ))}
@@ -160,21 +160,13 @@ function NavLink({
       className={`group relative flex min-h-11 items-center gap-3 rounded-xl text-[0.9375rem] lg:min-h-10 transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${
         collapsed ? "justify-center" : "px-3"
       } ${
+        // Refonte « Nette » (ADR 0245) : rubrique active pleine, en bleu nuit.
         active
-          ? "bg-primary-softer font-medium text-primary-strong"
-          : "text-foreground/80 hover:bg-background hover:text-foreground"
+          ? "bg-foreground font-semibold text-surface"
+          : "font-medium text-foreground hover:bg-background"
       }`}
     >
-      {active && (
-        <span
-          aria-hidden="true"
-          className="absolute top-2.5 bottom-2.5 left-0 w-1 rounded-r-full bg-primary"
-        />
-      )}
-      <Icon
-        aria-hidden="true"
-        className={`size-5 shrink-0 ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
-      />
+      <Icon aria-hidden="true" className="size-5 shrink-0" />
       <span className={collapsed ? "sr-only" : "min-w-0 flex-1 truncate"}>{item.label}</span>
       {count > 0 && (
         <>
@@ -184,7 +176,7 @@ function NavLink({
             className={
               collapsed
                 ? "absolute top-2 right-2.5 size-2.5 rounded-full bg-primary ring-2 ring-surface"
-                : "rounded-pill bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground tabular-nums"
+                : "rounded-pill bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground tabular-nums"
             }
           >
             {collapsed ? null : fr.appShell.badge(count)}

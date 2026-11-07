@@ -3613,10 +3613,11 @@ export const fr = {
           quote: "Préparer un devis",
           block: "Bloquer un créneau",
           share: "Partager ma fiche",
-          invite: "Inviter un artisan",
         },
         revenue: {
           title: "Chiffre d'affaires",
+          titleYear: (year: number) => `Chiffre d'affaires ${year}`,
+          collected: "Encaissé :",
           years: "Année",
           year: (year: number) => `Encaissé en ${year}`,
           upcoming: "À venir",
@@ -3658,7 +3659,11 @@ export const fr = {
         text: "Ajoutez votre photo de profil : vos clients sauront qui viendra chez eux.",
         add: "Ajouter ma photo",
       },
-      greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
+      greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName}` : "Bonjour"),
+      /** « Vous avez **2 choses à faire**. » sous la salutation (refonte « Nette », ADR 0245). */
+      todoLead: "Vous avez",
+      /** Bandeau des trois chiffres de l'argent, en haut de l'accueil (ADR 0245). */
+      money: "Argent",
       // « À faire maintenant » (ADR 0131), comme dans l'application (ADR 0130).
       todoTitle: "À faire maintenant",
       todoCount: (n: number) => (n === 1 ? "1 chose à faire" : `${n} choses à faire`),

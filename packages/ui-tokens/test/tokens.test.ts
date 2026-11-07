@@ -6,6 +6,7 @@ import {
   contrastRatio,
   fontFamily,
   minTouchTarget,
+  netteColors,
   radius,
   shadow,
 } from "../src";
@@ -36,6 +37,22 @@ describe("accessibilité (spec §5)", () => {
   });
 });
 
+describe("refonte « Nette » (ADR 0245)", () => {
+  it.each(["background", "surface", "input", "primary-soft"] as const)(
+    "textes secondaires et libellés lisibles sur %s (AA)",
+    (background) => {
+      for (const text of Object.values(netteColors)) {
+        expect(contrastRatio(text, colors[background])).toBeGreaterThanOrEqual(4.5);
+      }
+    },
+  );
+  it("plus foncés que le gris du site public", () => {
+    expect(contrastRatio(netteColors["muted-foreground"], colors.surface)).toBeGreaterThan(
+      contrastRatio(colors["muted-foreground"], colors.surface),
+    );
+  });
+});
+
 describe("theme.css reste aligné sur tokens.ts", () => {
   const vars = cssVariables();
   const expected: Record<string, string> = {
@@ -43,6 +60,8 @@ describe("theme.css reste aligné sur tokens.ts", () => {
     ...Object.fromEntries(Object.entries(radius).map(([k, v]) => [`radius-${k}`, v])),
     ...Object.fromEntries(Object.entries(shadow).map(([k, v]) => [`shadow-${k}`, v])),
     "font-sans": fontFamily.sans,
+    "font-app": fontFamily.app,
+    "font-display": fontFamily.display,
     "spacing-touch": minTouchTarget,
   };
 
