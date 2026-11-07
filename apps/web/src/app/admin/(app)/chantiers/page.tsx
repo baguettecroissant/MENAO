@@ -50,7 +50,9 @@ export default async function AdminChantiersPage({ searchParams }: PageProps<"/a
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium tracking-tight">{c.title}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {c.title}
+        </h1>
         <p className="text-sm text-muted-foreground">{c.intro}</p>
       </div>
       <SearchForm

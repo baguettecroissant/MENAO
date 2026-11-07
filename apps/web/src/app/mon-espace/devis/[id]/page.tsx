@@ -92,7 +92,7 @@ export default async function ClientQuotePage({
           {t.back}
         </Link>
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
             {artisan ? t.title(artisan) : t.titleFallback}
           </h1>
           <div className="flex flex-wrap items-center gap-3">

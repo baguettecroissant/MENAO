@@ -395,7 +395,13 @@ const styles = StyleSheet.create({
   },
   screen: { flexGrow: 1, padding: spacing(5), gap: spacing(4) },
   centered: { justifyContent: "center" },
-  title: { fontFamily: font.display, fontSize: 26, lineHeight: 32, color: colors.foreground },
+  title: {
+    fontFamily: font.display,
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.6,
+    color: colors.foreground,
+  },
   body: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
   muted: { color: colors["muted-foreground"] },
   center: { textAlign: "center" },
@@ -431,7 +437,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(1.5),
   },
   chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipLabel: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  chipLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
   chipLabelSelected: { color: colors["primary-foreground"] },
   button: {
     minHeight: theme.touchTarget + 4,
@@ -447,7 +453,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors["border-strong"],
   },
-  buttonLabel: { fontFamily: font.medium, fontSize: 15 },
+  buttonLabel: { fontFamily: font.semibold, fontSize: 15 },
   buttonLabelPrimary: { color: colors["primary-foreground"] },
   buttonLabelDanger: { color: colors.danger },
   buttonLabelOther: { color: colors["primary-strong"] },
@@ -455,7 +461,7 @@ const styles = StyleSheet.create({
   skeleton: { gap: spacing(3) },
   disabled: { opacity: 0.5 },
   field: { gap: spacing(1.5) },
-  label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  label: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
   input: {
     minHeight: 48,
     borderRadius: radius.input,
@@ -521,5 +527,5 @@ const styles = StyleSheet.create({
     gap: spacing(3),
   },
   cardSoft: { backgroundColor: colors["primary-softer"], borderColor: colors["primary-soft"] },
-  link: { fontFamily: font.medium, fontSize: 15, color: colors["primary-strong"] },
+  link: { fontFamily: font.semibold, fontSize: 15, color: colors["primary-strong"] },
 });

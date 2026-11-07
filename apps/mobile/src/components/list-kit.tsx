@@ -162,7 +162,7 @@ export function ListFilters<V extends string>({
             <Text style={[styles.filterLabel, active && styles.filterLabelActive]}>
               {item.label}
               {item.detail ? (
-                <Text style={{ color: item.tone ? TONES[item.tone] : colors["subtle-foreground"] }}>
+                <Text style={{ color: item.tone ? TONES[item.tone] : colors["muted-foreground"] }}>
                   {` · ${item.detail}`}
                 </Text>
               ) : null}
@@ -277,7 +277,7 @@ export function ListRow({
       {busy ? (
         <ActivityIndicator size="small" color={colors.primary} />
       ) : onPress ? (
-        <ChevronRight size={16} color={colors["subtle-foreground"]} />
+        <ChevronRight size={18} color={colors["muted-foreground"]} />
       ) : null}
     </Pressable>
   );
@@ -365,7 +365,14 @@ const styles = StyleSheet.create({
   swipePressed: { opacity: 0.85 },
   swipeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-foreground"] },
   header: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  title: { flex: 1, fontFamily: font.display, fontSize: 20, color: colors.foreground },
+  title: {
+    flex: 1,
+    fontFamily: font.display,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.5,
+    color: colors.foreground,
+  },
   actions: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   locked: { opacity: 0.5 },
   more: {
@@ -387,7 +394,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: spacing(4),
   },
-  primaryLabel: { fontFamily: font.medium, fontSize: 15, color: colors["primary-foreground"] },
+  primaryLabel: { fontFamily: font.semibold, fontSize: 15, color: colors["primary-foreground"] },
   menu: { gap: spacing(0.5) },
   menuItem: {
     flexDirection: "row",
@@ -427,8 +434,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(2),
   },
   filterActive: { borderBottomColor: colors.foreground },
-  filterLabel: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  filterLabelActive: { fontFamily: font.medium, color: colors.foreground },
+  filterLabel: { fontFamily: font.medium, fontSize: 15, color: colors["muted-foreground"] },
+  filterLabelActive: { fontFamily: font.semibold, color: colors.foreground },
   search: {
     flexDirection: "row",
     alignItems: "center",
@@ -449,7 +456,7 @@ const styles = StyleSheet.create({
   },
   group: {
     overflow: "hidden",
-    borderRadius: radius.card,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -459,32 +466,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(3),
-    minHeight: 64,
+    minHeight: 72,
     // Fond plein : la ligne glisse par-dessus ses boutons (ADR 0196).
     backgroundColor: colors.surface,
     paddingHorizontal: spacing(4),
-    paddingVertical: spacing(3),
+    paddingVertical: spacing(3.5),
   },
   pressed: { backgroundColor: colors.background },
   texts: { flex: 1, alignItems: "flex-start", gap: spacing(0.5) },
   rowTitle: {
     alignSelf: "stretch",
-    fontFamily: font.medium,
-    fontSize: 15,
+    fontFamily: font.semibold,
+    fontSize: 16,
     color: colors.foreground,
   },
   detail: {
     alignSelf: "stretch",
     fontFamily: font.regular,
-    fontSize: 12,
+    fontSize: 14,
     color: colors["muted-foreground"],
   },
   side: { alignItems: "flex-end", gap: spacing(0.5) },
   value: {
-    fontFamily: font.medium,
-    fontSize: 15,
+    fontFamily: font.display,
+    fontSize: 16,
     fontVariant: ["tabular-nums"],
     color: colors.foreground,
   },
-  status: { fontFamily: font.regular, fontSize: 12 },
+  status: { fontFamily: font.semibold, fontSize: 13 },
 });

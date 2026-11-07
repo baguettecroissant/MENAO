@@ -38,7 +38,9 @@ export default async function CommercialGuideSectionPage({
           {t.back}
         </Link>
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{current.title}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {current.title}
+          </h1>
           <p className="text-muted-foreground">{current.summary}</p>
         </div>
         <GuideBody blocks={current.body} />

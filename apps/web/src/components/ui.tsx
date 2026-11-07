@@ -51,7 +51,8 @@ export function buttonClasses({
   size = "md",
   block = true,
 }: { variant?: ButtonVariant; size?: keyof typeof buttonSizes; block?: boolean } = {}) {
-  return `inline-flex items-center justify-center gap-2 rounded-button font-medium transition-colors disabled:cursor-not-allowed [&>svg.lucide-arrow-right]:transition-transform hover:[&>svg.lucide-arrow-right]:translate-x-1 ${
+  // Espaces connectés (refonte « Nette », ADR 0245) : libellés en demi-gras.
+  return `inline-flex items-center justify-center gap-2 rounded-button font-medium in-[.app-nette]:font-semibold transition-colors disabled:cursor-not-allowed [&>svg.lucide-arrow-right]:transition-transform hover:[&>svg.lucide-arrow-right]:translate-x-1 ${
     block ? "w-full" : ""
   } ${buttonSizes[size]} ${buttonVariants[variant]} ${focusRing}`;
 }
@@ -90,7 +91,7 @@ export function ButtonLink({
 export function TextLink({ className = "", ...props }: ComponentProps<typeof Link>) {
   return (
     <Link
-      className={`font-medium text-primary-strong underline-offset-2 hover:underline ${focusRing} rounded-sm ${className}`}
+      className={`font-medium text-primary-strong underline-offset-2 hover:underline in-[.app-nette]:font-semibold ${focusRing} rounded-sm ${className}`}
       {...props}
     />
   );
@@ -155,7 +156,10 @@ export function Field({
   const errorId = errors?.length ? `${inputId}-error` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
+      <label
+        htmlFor={inputId}
+        className="text-sm font-medium text-foreground in-[.app-nette]:font-semibold"
+      >
         {label}
         {labelNote && <span className="font-normal text-subtle-foreground"> {labelNote}</span>}
       </label>
@@ -266,7 +270,10 @@ export function SelectField({
   const errorId = errors?.length ? `${selectId}-error` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={selectId} className="text-sm font-medium text-foreground">
+      <label
+        htmlFor={selectId}
+        className="text-sm font-medium text-foreground in-[.app-nette]:font-semibold"
+      >
         {label}
       </label>
       <Select
@@ -376,7 +383,7 @@ export function Tag({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-chip px-2.5 py-1 text-xs font-medium ${
+      className={`inline-flex items-center gap-1 rounded-chip px-2.5 py-1 text-xs font-medium in-[.app-nette]:font-semibold ${
         tone === "primary"
           ? "bg-primary-soft text-primary-strong"
           : "bg-background text-muted-foreground"
@@ -406,7 +413,7 @@ export function StatusBadge({
   }[tone];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-chip px-2 py-1 text-xs font-medium ${styles}`}
+      className={`inline-flex items-center gap-1.5 rounded-chip px-2 py-1 text-xs font-medium in-[.app-nette]:font-semibold ${styles}`}
     >
       <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
       {children}
@@ -441,7 +448,7 @@ export function CardTitle({
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-1">
-        <Heading className="flex items-center gap-2 text-[1.0625rem] font-medium text-foreground">
+        <Heading className="flex items-center gap-2 text-[1.0625rem] font-medium text-foreground in-[.app-nette]:text-lg">
           {icon && <span className="text-primary [&>svg]:size-[1.125rem]">{icon}</span>}
           {title}
         </Heading>

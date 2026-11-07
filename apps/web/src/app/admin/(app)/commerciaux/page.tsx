@@ -61,7 +61,9 @@ export default async function AdminCommercialsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {t.title}
+        </h1>
         <p className="text-sm text-muted-foreground">{t.intro}</p>
       </div>
       {amountsNotSet && <Alert tone="info">{tr.settings.notSet}</Alert>}

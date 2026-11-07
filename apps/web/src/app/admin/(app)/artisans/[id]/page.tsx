@@ -295,7 +295,9 @@ export default async function AdminArtisanPage({
       {/* En-tête fixe sous la barre du haut (ADR 0133) : statut, décision et sections à portée. */}
       <div className="sticky top-16 z-20 -mx-4 flex flex-col gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-medium tracking-tight">{name}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {name}
+          </h1>
           <span className="rounded-chip bg-primary-soft px-3 py-1 text-sm text-primary">
             {(artisan.status === "suspendu" &&
               t.suspensionReasons[artisan.suspension_reason as keyof typeof t.suspensionReasons]) ||

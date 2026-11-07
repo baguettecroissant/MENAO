@@ -151,7 +151,9 @@ export default async function ReferencesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {t.title}
+        </h1>
         <p className="max-w-3xl text-sm text-muted-foreground">{t.intro}</p>
       </div>
       <Card className="flex flex-col gap-3">

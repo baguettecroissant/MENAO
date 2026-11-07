@@ -48,7 +48,9 @@ export default async function ExchangesPage() {
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {t.title}
+          </h1>
           <p className="text-sm text-muted-foreground">{t.intro}</p>
         </div>
         <ButtonLink href="/contact" variant="outline" size="md" className="shrink-0 self-start">

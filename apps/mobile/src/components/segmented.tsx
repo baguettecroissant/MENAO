@@ -58,6 +58,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(2),
   },
   optionOn: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary },
-  text: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  textOn: { fontFamily: font.medium, color: colors["primary-strong"] },
+  text: { fontFamily: font.medium, fontSize: 14, color: colors["muted-foreground"] },
+  textOn: { fontFamily: font.semibold, color: colors["primary-strong"] },
 });

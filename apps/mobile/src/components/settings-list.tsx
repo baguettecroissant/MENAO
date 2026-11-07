@@ -96,7 +96,7 @@ export function SettingsRow({
       {loading ? (
         <ActivityIndicator color={colors.primary} />
       ) : (
-        <ChevronRight size={18} color={colors["subtle-foreground"]} />
+        <ChevronRight size={18} color={colors["muted-foreground"]} />
       )}
     </Tappable>
   );

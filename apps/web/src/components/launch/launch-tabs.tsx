@@ -55,7 +55,9 @@ export function LaunchHeader({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-medium tracking-tight">{fr.admin.launch.title}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {fr.admin.launch.title}
+          </h1>
           <p className="max-w-3xl text-sm text-muted-foreground">{intro}</p>
         </div>
         {aside}

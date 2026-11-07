@@ -65,7 +65,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  label: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  // Onglet actif en bleu nuit, comme le menu du site (ADR 0245).
+  chipActive: { backgroundColor: colors.foreground, borderColor: colors.foreground },
+  label: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
   labelActive: { color: colors["primary-foreground"] },
 });

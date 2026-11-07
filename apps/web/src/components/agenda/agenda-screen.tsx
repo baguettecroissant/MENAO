@@ -84,7 +84,9 @@ export function AgendaScreen({
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
+            <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+              {t.title}
+            </h1>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </div>
           {canEdit && (

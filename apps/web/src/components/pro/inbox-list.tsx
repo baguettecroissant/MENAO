@@ -1,5 +1,5 @@
 import { timeLeft } from "@menao/core";
-import { Clock, MapPin } from "lucide-react";
+import { ChevronRight, Clock, Inbox, MapPin } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { StatusBadge, Tag } from "@/components/ui";
@@ -51,8 +51,10 @@ export function InboxList({
   base?: string;
   example?: boolean;
 }) {
+  // Refonte « Nette » (ADR 0245) : une ligne par demande dans un seul cadre (ADR 0189), photo ou
+  // icône à gauche, état et temps restant bien visibles.
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
       {rows.map((r) => {
         const left = r.status === "envoyee" ? timeLeft(new Date(r.expires_at), now) : null;
         const start =
@@ -65,43 +67,53 @@ export function InboxList({
           <li key={r.request_id}>
             <Link
               href={`${base}/demandes/${r.request_id}` as Route}
-              className="flex gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:p-5"
+              className="flex items-start gap-3.5 px-4 py-4 transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none sm:px-5"
             >
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
+              {r.thumbUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire
+                <img src={r.thumbUrl} alt="" className="size-14 shrink-0 rounded-xl object-cover" />
+              ) : (
+                <span
+                  className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${
+                    r.urgence ? "bg-danger-soft text-danger" : "bg-primary-soft text-primary-strong"
+                  }`}
+                >
+                  <Inbox aria-hidden="true" className="size-5" />
+                </span>
+              )}
+              <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <span className="flex flex-wrap items-center gap-2">
                   {example && <ExampleBadge />}
                   <StatusBadge tone={statusTone[r.status]}>{t.status[r.status]}</StatusBadge>
                   {r.urgence && <StatusBadge tone="danger">{t.urgent}</StatusBadge>}
-                </div>
-                <p className="font-medium">
+                </span>
+                <span className="text-base font-semibold">
                   {[r.trade_label, r.summary].filter(Boolean).join(" — ")}
-                </p>
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <MapPin aria-hidden="true" className="size-3.5" />
-                  {[r.code_postal, r.ville_nom].filter(Boolean).join(" ")}
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
+                </span>
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin aria-hidden="true" className="size-3.5 text-primary" />
+                    {[r.code_postal, r.ville_nom].filter(Boolean).join(" ")}
+                  </span>
+                  <span>
+                    {r.client_first_name ? `${r.client_first_name} · ` : ""}
+                    {t.received(day.format(new Date(r.created_at)))}
+                  </span>
+                </span>
+                <span className="flex flex-wrap items-center gap-2">
                   <Tag>{start}</Tag>
                   {left && (
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground">
                       <Clock aria-hidden="true" className="size-3.5" />
                       {t.timeLeft(left.hours, left.minutes)}
                     </span>
                   )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {r.client_first_name ? `${r.client_first_name} · ` : ""}
-                  {t.received(day.format(new Date(r.created_at)))}
-                </p>
-              </div>
-              {r.thumbUrl && (
-                // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire
-                <img
-                  src={r.thumbUrl}
-                  alt=""
-                  className="size-16 shrink-0 rounded-lg object-cover sm:size-20"
-                />
-              )}
+                </span>
+              </span>
+              <ChevronRight
+                aria-hidden="true"
+                className="mt-3 size-5 shrink-0 text-muted-foreground"
+              />
             </Link>
           </li>
         );

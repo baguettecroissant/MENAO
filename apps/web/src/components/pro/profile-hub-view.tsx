@@ -440,7 +440,7 @@ function HubLine({
           className={`${line} transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none`}
         >
           {content}
-          <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-subtle-foreground" />
+          <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         </Link>
       ) : (
         <div className={line}>{content}</div>
