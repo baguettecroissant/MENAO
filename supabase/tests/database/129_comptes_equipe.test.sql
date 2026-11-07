@@ -48,8 +48,11 @@ select lives_ok($$ select public.artisan_record_team_invite('c1290000-0000-4000-
 select throws_ok($$ select public.artisan_record_team_invite('c1290000-0000-4000-8000-000000000004', 'ouvrier') $$,
   '22023', 'Toutes les places de votre formule sont prises.', 'pas au-delà des places');
 select is((public.my_team() ->> 'utilisees')::int, 3, 'trois comptes utilisés');
-select is(public.my_team() -> 'membres' -> 0 ->> 'prenom', 'Chef', 'membres : prénom du profil');
-select is((public.my_team() -> 'membres' -> 0 ->> 'en_attente')::boolean, true, 'membres : jamais connecté');
+-- Invitations de la même transaction : même date, on cherche le chef par son compte.
+select is((select m ->> 'prenom' from jsonb_array_elements(public.my_team() -> 'membres') m
+  where m ->> 'user_id' = 'c1290000-0000-4000-8000-000000000002'), 'Chef', 'membres : prénom du profil');
+select is((select (m ->> 'en_attente')::boolean from jsonb_array_elements(public.my_team() -> 'membres') m
+  where m ->> 'user_id' = 'c1290000-0000-4000-8000-000000000002'), true, 'membres : jamais connecté');
 select is((select count(*)::int from public.artisan_members), 2, 'patron : lit ses deux membres');
 select throws_ok($$ insert into public.artisan_members (artisan_id, user_id, role)
   values ('c1291000-0000-4000-8000-000000000001', 'c1290000-0000-4000-8000-000000000004', 'chef') $$,
