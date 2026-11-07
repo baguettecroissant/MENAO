@@ -3395,6 +3395,8 @@ export const fr = {
       home: "Accueil",
       money: "Argent",
       storefront: "Ma vitrine",
+      // Rubrique de la secrétaire dédiée (ADR 0244).
+      secretary: "Secrétaire",
       moneyTabs: { devis: "Devis", factures: "Factures", depenses: "Dépenses", suivi: "Suivi" },
       storefrontTabs: { profil: "Ma fiche", avis: "Avis", grade: "Mon grade" },
     },
@@ -4539,6 +4541,35 @@ export const fr = {
      * Comptes d'équipe (F-89, ADR 0240) : « Mon équipe » du patron (places de la formule, membres,
      * invitation), et page d'un membre dont l'accès est suspendu.
      */
+    /** Rubrique « Secrétaire » (ADR 0244) : appels à traiter, historique, essai, réglages. */
+    secretaryPage: {
+      title: "Secrétaire",
+      lead: (name: string) =>
+        `${name} répond à vos clients quand vous êtes sur un chantier : rendez-vous dans votre agenda ou message transmis tout de suite.`,
+      minutes: (n: number) => `${n} min restantes ce mois-ci`,
+      noMinutes: "Plus de minutes ce mois-ci : elle ne prend plus d'appels.",
+      recharge: "Recharger",
+      filters: "Vues de la secrétaire",
+      todo: "À traiter",
+      history: "Traités",
+      settings: "Réglages",
+      todoEmpty:
+        "Rien à traiter. Quand vous ne pouvez pas décrocher, votre secrétaire prend l'appel : ses messages et rendez-vous arrivent ici.",
+      historyEmpty: "Aucun appel traité pour l'instant.",
+      seeAgenda: "Voir dans l'agenda",
+      tryTitle: "L'essayer",
+      notIncluded: {
+        title: "Une secrétaire qui répond pour vous",
+        text: "Elle décroche quand vous êtes sur un chantier, prend un rendez-vous dans votre agenda ou un message, et vous le transmet tout de suite. Incluse dans les formules Premium et Entreprise.",
+        cta: "Voir les formules",
+        askPatron: "Votre patron peut l'activer depuis sa formule.",
+      },
+      moved: {
+        title: "Votre secrétaire",
+        text: "Ses messages, ses rendez-vous, l'essai et ses réglages ont maintenant leur rubrique dans le menu.",
+        cta: "Ouvrir la rubrique Secrétaire",
+      },
+    },
     /** Équipe d'un chantier (ADR 0241) : le patron ou le chef choisit qui y travaille. */
     chantierTeam: {
       title: "Équipe sur ce chantier",
@@ -6263,7 +6294,7 @@ export const fr = {
         secretary: {
           title: "Votre secrétaire",
           intro:
-            "Elle répond à vos clients au nom de votre entreprise quand vous êtes sur un chantier : rendez-vous dans votre agenda sur vos créneaux libres, ou message transmis tout de suite. Elle dit qu'elle est une intelligence artificielle.",
+            "Elle répond à vos clients au nom de votre entreprise quand vous êtes sur un chantier : rendez-vous dans votre agenda sur vos créneaux libres, ou message transmis tout de suite.",
           testTitle: "L'essayer",
           testText:
             "Appelez-la depuis cette page, comme le ferait un client. Les minutes de l'essai comptent dans votre formule.",

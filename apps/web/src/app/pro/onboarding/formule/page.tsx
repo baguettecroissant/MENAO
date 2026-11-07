@@ -10,8 +10,7 @@ import {
 } from "@menao/core";
 import { AiAgentsCard } from "@/components/pro/ai-agents-card";
 import { ClientRemindersCard } from "@/components/pro/client-reminders-card";
-import { SecretaryCard } from "@/components/pro/secretary-card";
-import { Alert, Card } from "@/components/ui";
+import { Alert, ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { ChoosePlan, ManageSubscription } from "./plan-forms";
@@ -64,28 +63,6 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
         ? await supabase.rpc("my_client_reminders")
         : { data: null };
     const remindersState = reminders ? parseClientReminders(reminders) : null;
-    // Secrétaire dédiée (ADR 0232) : réglages, horaires et derniers messages, si incluse.
-    const [secretarySettings, secretaryMessages, hoursCount] = agentsState.agents.secretary
-      ? await Promise.all([
-          supabase
-            .from("secretary_settings")
-            .select("display_name, can_book, visit_minutes, instructions")
-            .eq("artisan_id", artisan.id)
-            .maybeSingle(),
-          supabase
-            .from("secretary_messages")
-            .select(
-              "id, kind, caller_name, caller_phone, city, reason, urgent, appointment_at, done_at, created_at",
-            )
-            .eq("artisan_id", artisan.id)
-            .order("created_at", { ascending: false })
-            .limit(20),
-          supabase
-            .from("artisan_hours")
-            .select("id", { count: "exact", head: true })
-            .eq("artisan_id", artisan.id),
-        ])
-      : [null, null, null];
     const status = subscription.status as keyof typeof t.status;
     const label =
       status === "trialing"
@@ -157,13 +134,15 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           }
           topUpDone={params.recharge === "ok"}
         />
+        {/* Secrétaire dédiée : sa propre rubrique dans le menu (ADR 0244). */}
         {agentsState.agents.secretary && (
-          <SecretaryCard
-            settings={secretarySettings?.data ?? null}
-            fallbackName={artisan.nom_commercial ?? artisan.raison_sociale ?? ""}
-            hasHours={(hoursCount?.count ?? 0) > 0}
-            messages={secretaryMessages?.data ?? []}
-          />
+          <Card className="flex flex-col items-start gap-2">
+            <h2 className="text-lg font-medium">{fr.pro.secretaryPage.moved.title}</h2>
+            <p className="text-sm text-muted-foreground">{fr.pro.secretaryPage.moved.text}</p>
+            <ButtonLink href="/pro/secretaire" variant="secondary" className="sm:w-auto sm:px-6">
+              {fr.pro.secretaryPage.moved.cta}
+            </ButtonLink>
+          </Card>
         )}
         {remindersState?.included && <ClientRemindersCard state={remindersState} />}
       </div>
