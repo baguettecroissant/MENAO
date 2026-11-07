@@ -231,6 +231,29 @@ export function artisanAccountText(raw: unknown): string {
   const c = record(raw);
   if (Object.keys(c).length === 0) return "";
   const lines: string[] = [];
+  // Place dans l'entreprise (ADR 0242) : l'ouvrier n'a que ses chantiers et son prochain rendez-vous.
+  const chantierLine = () => {
+    const chantiers = Object.entries(record(c.chantiers))
+      .flatMap(([status, n]) =>
+        count(n) && CHANTIER[status] ? [`${CHANTIER[status]} (${count(n)})`] : [],
+      )
+      .join(" ; ");
+    return `Chantiers : ${chantiers || "aucun"}.`;
+  };
+  if (c.place === "ouvrier") {
+    lines.push(
+      "Place : ouvrier de l'entreprise. Il ne voit que les chantiers qui lui sont attribués (journal, photos, messages avec le client, rendez-vous), sans aucun montant ni demande ; le reste revient au patron ou au chef d'équipe.",
+      chantierLine(),
+    );
+    const next = parisDay(c.prochain_rendez_vous, true);
+    if (next) lines.push(`Prochain rendez-vous : ${next}.`);
+    return lines.join("\n");
+  }
+  if (c.place === "chef") {
+    lines.push(
+      "Place : chef d'équipe de l'entreprise. Il s'occupe des demandes, des chantiers, de l'argent, de l'agenda et de la secrétaire ; la formule, les paiements en ligne, la vitrine, le dossier, l'envoi au comptable et l'équipe reviennent au patron.",
+    );
+  }
   const dossier = typeof c.dossier === "string" ? DOSSIER[c.dossier] : undefined;
   if (dossier) lines.push(`Dossier : ${dossier}.`);
   if (c.en_pause === true) lines.push("Réception des demandes : en pause (il l'a choisi).");
@@ -265,12 +288,7 @@ export function artisanAccountText(raw: unknown): string {
       ? `Demandes en attente de sa réponse : ${requests}${expires ? ` (la plus proche expire le ${expires})` : ""}.`
       : "Demandes en attente de sa réponse : aucune.",
   );
-  const chantiers = Object.entries(record(c.chantiers))
-    .flatMap(([status, n]) =>
-      count(n) && CHANTIER[status] ? [`${CHANTIER[status]} (${count(n)})`] : [],
-    )
-    .join(" ; ");
-  lines.push(`Chantiers : ${chantiers || "aucun"}.`);
+  lines.push(chantierLine());
   if (count(c.devis_brouillons))
     lines.push(`Devis commencés, pas encore envoyés : ${count(c.devis_brouillons)}.`);
   if (count(c.devis_en_attente_client))

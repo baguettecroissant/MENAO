@@ -12,6 +12,8 @@ import { preloadArtisanTabs } from "@/lib/preload";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { theme } from "@/ui/theme";
+import { teamCan } from "@menao/core";
+import { useTeamPosition } from "@/lib/team";
 
 /**
  * Espace artisan (F-16, ADR 0084, 0130 puis 0188) : accueil « À faire maintenant », demandes (72 h
@@ -40,6 +42,10 @@ export default function ProLayout() {
   // Onglets chargés d'avance pendant que l'accueil s'affiche (ADR 0192), puis de nouveau à
   // l'entrée ou à la sortie des exemples, qui vident les écrans gardés.
   const examples = useExamplesActive();
+  // Place dans l'entreprise (ADR 0241) : un ouvrier n'a ni demandes ni argent.
+  const position = useTeamPosition();
+  const requestsTab = !position || teamCan(position, "requests");
+  const moneyTab = !position || teamCan(position, "money");
   useEffect(() => {
     if (space !== "artisan" || charter !== "ok") return;
     const timer = setTimeout(preloadArtisanTabs, 800);
@@ -60,6 +66,7 @@ export default function ProLayout() {
         <Tabs.Screen
           name="demandes"
           options={{
+            href: requestsTab ? undefined : null,
             title: fr.tabs.requests,
             tabBarIcon: ({ color, size }) => <Inbox color={color} size={size} />,
             tabBarBadge: requests > 0 ? requests : undefined,
@@ -91,6 +98,7 @@ export default function ProLayout() {
         <Tabs.Screen
           name="argent"
           options={{
+            href: moneyTab ? undefined : null,
             title: fr.tabs.money,
             tabBarIcon: ({ color, size }) => <Wallet color={color} size={size} />,
           }}

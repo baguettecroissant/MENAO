@@ -36,6 +36,7 @@ import {
   toast,
 } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAccountant;
 const { colors, font, spacing } = theme;
@@ -44,7 +45,7 @@ const { colors, font, spacing } = theme;
  * Envoi au comptable (F-63), comme sur le site : réglages de l'envoi automatique, « Envoyer
  * maintenant » pour la dernière période complète et derniers envois.
  */
-export default function AccountantScreen() {
+function AccountantScreen() {
   const [view, reload] = useFocusData(loadAccountant);
   if (view === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
@@ -232,3 +233,6 @@ const styles = StyleSheet.create({
   ok: { color: colors.success },
   ko: { color: colors.danger },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("accounting", AccountantScreen);

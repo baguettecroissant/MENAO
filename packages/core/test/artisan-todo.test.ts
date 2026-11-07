@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   artisanTodo,
+  todoForPosition,
   laterAppointments,
   URGENT_REQUEST_HOURS,
   type TodoInput,
@@ -131,5 +132,21 @@ describe("accueil « À faire maintenant » (ADR 0130)", () => {
       { at: inHours(26), id: "demain" },
     ];
     expect(laterAppointments(list, now).map((a) => a.id)).toEqual(["demain"]);
+  });
+
+  it("« À faire » selon la place dans l'entreprise (ADR 0241)", () => {
+    const items = [
+      { kind: "demande", requestId: "r", expiresAt: "", title: "", place: "" },
+      { kind: "rdv", chantierId: "c", at: "", title: "", place: "" },
+      { kind: "devis", chantierId: "c", title: "", place: "" },
+      { kind: "documents", types: [] },
+      { kind: "urssaf" },
+      { kind: "paiements" },
+      { kind: "avis", count: 1 },
+      { kind: "cadeau" },
+    ] as unknown as Parameters<typeof todoForPosition>[0];
+    expect(todoForPosition(items, "patron")).toHaveLength(8);
+    expect(todoForPosition(items, "chef").map((i) => i.kind)).toEqual(["demande", "rdv", "devis"]);
+    expect(todoForPosition(items, "ouvrier").map((i) => i.kind)).toEqual(["rdv"]);
   });
 });

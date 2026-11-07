@@ -23,6 +23,7 @@ import { runUndoable } from "@/lib/undo";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, LinkText, Notice, Screen, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proExpenses;
 const d = t.detail;
@@ -44,7 +45,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  * totaux et lignes lues ; « Marquer comme payée », « Modifier » et « Supprimer la dépense ».
  * Exemples (ADR 0184) : la fiche se lit, les boutons sont inactifs.
  */
-export default function ExpenseScreen() {
+function ExpenseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadExpenseView(id), [id]);
   const [expense, reload] = useFocusData(load, undefined, expenseScreenKey(id));
@@ -244,3 +245,6 @@ const styles = StyleSheet.create({
   },
   ttc: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", ExpenseScreen);

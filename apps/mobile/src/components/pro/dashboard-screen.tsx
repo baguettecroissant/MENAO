@@ -21,7 +21,12 @@ import {
 import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { activityCurrentMonth, activityYears, dashboardActivity } from "@menao/core";
+import {
+  activityCurrentMonth,
+  activityYears,
+  dashboardActivity,
+  todoForPosition,
+} from "@menao/core";
 import { GradeCard } from "@/components/grade/grade-card";
 import {
   ActivityShortcuts,
@@ -43,6 +48,7 @@ import { loadGrade, markBadgesSeen } from "@/lib/grade";
 import { useExamplesActive } from "@/lib/examples";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
 import { useProfileSummary } from "@/lib/profile-summary";
+import { useTeamPosition } from "@/lib/team";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
 import { Notice, Tappable, useReveal } from "@/ui";
@@ -207,6 +213,10 @@ export function DashboardScreen() {
   const { refresh } = useUnread();
   const [refreshing, setRefreshing] = useState(false);
   const examples = useExamplesActive();
+  // Place dans l'entreprise (ADR 0241) : l'ouvrier voit ses rendez-vous et ses chantiers ; le chef,
+  // tout sauf ce qui revient au patron (dossier, paiements en ligne, avis, grade, parrainage).
+  const position = useTeamPosition() ?? "patron";
+  const patron = position === "patron";
   // Année du chiffre d'affaires (ADR 0185) : l'année en cours, puis celle choisie.
   const [year, setYear] = useState<number | null>(null);
   // Squelette du tableau de bord pendant le premier chargement, puis fondu (ADR 0192).
@@ -263,6 +273,24 @@ export function DashboardScreen() {
           <DashboardSkeleton />
         ) : data === null ? (
           <Notice tone="error">{t.error}</Notice>
+        ) : position === "ouvrier" ? (
+          <Animated.View entering={reveal} style={styles.revealed}>
+            {examples ? null : <PushPrompt />}
+            <View style={styles.section}>
+              <SectionHead title={t.upcoming} link={{ label: t.openAgenda, href: "/pro-agenda" }} />
+              {data.appointments.length === 0 ? (
+                <View style={[styles.card, styles.empty]}>
+                  <Text style={styles.emptyText}>{t.noUpcoming}</Text>
+                  <Arc style={styles.emptyArc} />
+                </View>
+              ) : (
+                data.appointments.map((a) => (
+                  <AppointmentCard key={`${a.kind}-${a.chantierId}`} appointment={a} />
+                ))
+              )}
+            </View>
+            <Kpi label={t.worker.chantiers} value={t.worker.open} href="/pro/chantiers" wide />
+          </Animated.View>
         ) : (
           <Animated.View entering={reveal} style={styles.revealed}>
             {data.suspended ? <Notice tone="error">{t.suspended}</Notice> : null}
@@ -270,7 +298,7 @@ export function DashboardScreen() {
               <Notice tone="error">{t.radiated(data.radiated.reason)}</Notice>
             ) : null}
             {/* Inscription non finalisée : aucune action possible dans l'application (règle 10). */}
-            {data.visibility && data.visibility.missing.includes("abonnement") ? (
+            {patron && data.visibility && data.visibility.missing.includes("abonnement") ? (
               <Notice tone="info">{t.hiddenSignup}</Notice>
             ) : null}
             {/* Rien reçu pour l'instant : l'espace rempli d'exemples (ADR 0184). */}
@@ -315,13 +343,14 @@ export function DashboardScreen() {
             </View>
             <ActivityShortcuts
               example={examples}
+              patron={patron}
               quoteHref={
                 data.quoteChantierId
                   ? `/pro-chantier/${data.quoteChantierId}/devis`
                   : { pathname: "/pro/argent", params: { vue: "devis" } }
               }
             />
-            <TodoList items={data.todo} />
+            <TodoList items={todoForPosition(data.todo, position)} />
             {profile && !profile.avatarUrl ? <PhotoNudge /> : null}
             {activity ? (
               <>
@@ -337,7 +366,7 @@ export function DashboardScreen() {
               </>
             ) : null}
             {appointments}
-            {grade ? <GradeCard grade={grade} /> : null}
+            {patron && grade ? <GradeCard grade={grade} /> : null}
           </Animated.View>
         )}
       </ScrollView>

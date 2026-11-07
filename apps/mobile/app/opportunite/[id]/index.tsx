@@ -17,6 +17,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { readScreenPreview } from "@/lib/screen-cache";
 import { Button, LinkText, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proRequests;
 const { spacing } = theme;
@@ -28,7 +29,7 @@ const { spacing } = theme;
  * besoin d'une expertise ». Une fois le rendez-vous fixé, la demande s'ouvre sur
  * la vue du chantier (F-18).
  */
-export default function OpportunityScreen() {
+function OpportunityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadOpportunity(id), [id]);
   const [opportunity] = useFocusData(load, undefined, opportunityScreenKey(id));
@@ -144,3 +145,6 @@ const styles = StyleSheet.create({
   actions: { gap: spacing(1) },
   expertise: { paddingBottom: spacing(3) },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("requests", OpportunityScreen);

@@ -4,6 +4,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { reportFakeClient } from "@/lib/pro-requests";
 import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proFakeClient;
 
@@ -11,7 +12,7 @@ const t = fr.proFakeClient;
  * « Je pense que ce n'est pas un vrai particulier » (ADR 0157), comme sur le site : ticket pour
  * l'équipe MENAO, qui vérifie la demande en toute discrétion. `id` : la demande.
  */
-export default function FakeClientScreen() {
+function FakeClientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [detail, setDetail] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
@@ -56,3 +57,6 @@ export default function FakeClientScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("requests", FakeClientScreen);

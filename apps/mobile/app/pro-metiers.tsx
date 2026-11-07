@@ -27,6 +27,7 @@ import {
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proTrades;
 const { colors, font, radius, spacing } = theme;
@@ -37,7 +38,7 @@ type Message = { tone: "error" | "success"; text: string } | null;
  * Métiers, spécialités, expérience, certifications et RGE (ADR 0125), comme l'étape « Métiers »
  * du site : mêmes contrôles, mêmes écritures (set_artisan_trades, certifications, rge-check).
  */
-export default function TradesScreen() {
+function TradesScreen() {
   const [data, reload] = useFocusData(loadTrades);
   if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
@@ -327,3 +328,6 @@ const styles = StyleSheet.create({
   certHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   pressed: { opacity: 0.7 },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", TradesScreen);

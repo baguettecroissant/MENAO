@@ -6,9 +6,10 @@ import { fr } from "@/i18n/fr";
 import { loadExpenseChantiers } from "@/lib/pro-expenses";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Screen, ScreenSkeleton, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 /** Nouvelle dépense (F-62), comme sur le site ; `?chantier=` pré-choisit le chantier. */
-export default function NewExpenseScreen() {
+function NewExpenseScreen() {
   const { chantier } = useLocalSearchParams<{ chantier?: string }>();
   const [chantiers] = useFocusData(loadExpenseChantiers);
   if (chantiers === undefined) return <ScreenSkeleton header={<TopBar />} />;
@@ -40,3 +41,6 @@ export default function NewExpenseScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", NewExpenseScreen);

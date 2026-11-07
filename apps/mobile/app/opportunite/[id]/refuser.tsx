@@ -8,12 +8,13 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { refuseRequest } from "@/lib/pro-requests";
 import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proRequests;
 const REASONS = REFUSAL_REASONS.map((value) => ({ value, label: t.reasons[value] }));
 
 /** F-17 « Refuser le chantier », comme sur le site : motif de la liste, précisé si « Autre ». */
-export default function RefuseRequestScreen() {
+function RefuseRequestScreen() {
   const { id, partenaires } = useLocalSearchParams<{ id: string; partenaires?: string }>();
   const [reason, setReason] = useState<RefusalReason | null>(null);
   const [detail, setDetail] = useState("");
@@ -69,3 +70,6 @@ export default function RefuseRequestScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("requests", RefuseRequestScreen);

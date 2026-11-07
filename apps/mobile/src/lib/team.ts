@@ -1,11 +1,15 @@
 import {
+  parseChantierTeam,
   parseTeam,
   parseTeamContext,
+  type ChantierTeamMember,
   type Team,
   type TeamContext,
+  type TeamPosition,
   type TeamRole,
 } from "@menao/core";
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 
 /**
@@ -26,6 +30,26 @@ export async function myTeamContext(): Promise<TeamContext | null> {
   const context = parseTeamContext(data);
   cached = { userId, at: Date.now(), context };
   return context;
+}
+
+/**
+ * Place dans l'entreprise pour les écrans (ADR 0241) : `undefined` pendant la lecture, `null` sans
+ * fiche artisan. Lue d'abord dans le contexte gardé, pour éviter un clignotement des onglets.
+ */
+export function useTeamPosition(): TeamPosition | null | undefined {
+  const [position, setPosition] = useState<TeamPosition | null | undefined>(() =>
+    cached && Date.now() - cached.at < TTL_MS ? (cached.context?.position ?? null) : undefined,
+  );
+  useEffect(() => {
+    let active = true;
+    myTeamContext()
+      .then((context) => active && setPosition(context?.position ?? null))
+      .catch(() => active && setPosition(null));
+    return () => {
+      active = false;
+    };
+  }, []);
+  return position;
 }
 
 /** Identifiant à filtrer : la fiche de l'entreprise, ou un identifiant nul qui ne trouve rien. */
@@ -79,4 +103,21 @@ export async function updateTeamMember(
         });
   if (!error) return null;
   return error.code === "22023" || error.code === "42501" ? error.message : "";
+}
+
+/** Équipe d'un chantier pour le patron ou le chef (ADR 0241) ; null sans membre ou sans droit. */
+export async function loadChantierTeam(chantierId: string): Promise<ChantierTeamMember[] | null> {
+  const { data, error } = await supabase.rpc("chantier_team", { p_chantier_id: chantierId });
+  if (error) return null;
+  const members = parseChantierTeam(data);
+  return members.length > 0 ? members : null;
+}
+
+/** Membres qui travaillent sur un chantier, choisis par le patron ou le chef (ADR 0241). */
+export async function saveChantierTeam(chantierId: string, userIds: string[]): Promise<boolean> {
+  const { error } = await supabase.rpc("set_chantier_team", {
+    p_chantier_id: chantierId,
+    p_user_ids: userIds,
+  });
+  return !error;
 }

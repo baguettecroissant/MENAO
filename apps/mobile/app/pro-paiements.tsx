@@ -16,6 +16,7 @@ import {
 } from "@/lib/payments";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Card, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proPayments;
 
@@ -27,7 +28,7 @@ const t = fr.proPayments;
  * relu à la sortie du formulaire. En secours, le site de Stripe dans la fenêtre sécurisée.
  * Paiements directs sur le compte de l'artisan, sans commission MENAO (CLAUDE.md règle 12).
  */
-export default function PaymentsScreen() {
+function PaymentsScreen() {
   const [data, reload] = useFocusData(loadPayments);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -131,3 +132,6 @@ export default function PaymentsScreen() {
     </>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("subscription", PaymentsScreen);

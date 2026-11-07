@@ -14,32 +14,55 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fr } from "@/i18n/fr";
 import { Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
+import { teamCan, type TeamPermission } from "@menao/core";
 import { ExampleLock } from "@/components/examples";
 import { useExamplesActive } from "@/lib/examples";
+import { useTeamPosition } from "@/lib/team";
 
 const t = fr.proQuickActions;
 const { colors, font, radius, spacing } = theme;
 
-const ACTIONS: { icon: LucideIcon; label: string; detail: string; href: Href }[] = [
+/** `team` : action réservée aux places qui ont ce droit (ADR 0241). */
+const ACTIONS: {
+  icon: LucideIcon;
+  label: string;
+  detail: string;
+  href: Href;
+  team?: TeamPermission;
+}[] = [
   {
     icon: FilePen,
     label: t.quote,
     detail: t.quoteDetail,
     href: { pathname: "/pro-choisir", params: { action: "devis" } },
+    team: "money",
   },
-  { icon: CalendarX, label: t.block, detail: t.blockDetail, href: "/pro-agenda/bloquer" },
+  {
+    icon: CalendarX,
+    label: t.block,
+    detail: t.blockDetail,
+    href: "/pro-agenda/bloquer",
+    team: "agenda",
+  },
   {
     icon: Camera,
     label: t.photo,
     detail: t.photoDetail,
     href: { pathname: "/pro-choisir", params: { action: "photo" } },
   },
-  { icon: ShoppingCart, label: t.expense, detail: t.expenseDetail, href: "/pro-depense/nouvelle" },
+  {
+    icon: ShoppingCart,
+    label: t.expense,
+    detail: t.expenseDetail,
+    href: "/pro-depense/nouvelle",
+    team: "money",
+  },
   {
     icon: CalendarClock,
     label: t.availability,
     detail: t.availabilityDetail,
     href: "/pro-disponibilites",
+    team: "agenda",
   },
   { icon: CalendarDays, label: t.agenda, detail: t.agendaDetail, href: "/pro-agenda" },
 ];
@@ -56,6 +79,8 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
   const insets = useSafeAreaInsets();
   // Exemples (ADR 0184) : seuls le devis (sur un chantier d'exemple) et l'agenda s'ouvrent.
   const example = useExamplesActive();
+  const position = useTeamPosition();
+  const actions = ACTIONS.filter(({ team }) => !team || !position || teamCan(position, team));
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} aria-label={t.close} role="button" onPress={onClose} />
@@ -64,7 +89,7 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
         <Text role="heading" style={styles.title}>
           {t.title}
         </Text>
-        {ACTIONS.map(({ icon: Icon, label, detail, href }) => (
+        {actions.map(({ icon: Icon, label, detail, href }) => (
           <ExampleLock key={label} locked={example && !EXAMPLE_ACTIONS.includes(label)}>
             <Tappable
               key={label}

@@ -18,6 +18,7 @@ import { loadZone, saveZone, type Zone } from "@/lib/my-company";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, Title, toast } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proZone;
 const { colors, font, radius, spacing } = theme;
@@ -37,7 +38,7 @@ type Message = { tone: "error" | "success"; text: string } | null;
  * de départ (gardée si seul le rayon change), une liste de communes, ou des départements, des
  * régions ou toute la France avec l'adresse de départ (ADR 0213, set_artisan_zone).
  */
-export default function ZoneScreen() {
+function ZoneScreen() {
   const [zone, reload] = useFocusData(loadZone);
   if (zone === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
@@ -238,3 +239,6 @@ const styles = StyleSheet.create({
   },
   chipText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", ZoneScreen);

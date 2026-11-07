@@ -12,6 +12,7 @@ import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { rescheduleAppointment } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAppointment;
 /** Date et heure de Paris du rendez-vous actuel, pour pré-remplir les champs. */
@@ -23,7 +24,7 @@ function parisValues(iso: string | undefined): { date: string | null; time: stri
  * F-18 « Modifier le rendez-vous », comme sur le site : nouvelle date et heure d'arrivée, avec les
  * créneaux libres et les avertissements de l'agenda (F-44), hors de ce rendez-vous.
  */
-export default function RescheduleScreen() {
+function RescheduleScreen() {
   const { id, starts } = useLocalSearchParams<{ id: string; starts?: string }>();
   const initial = parisValues(starts);
   const [date, setDate] = useState<string | null>(initial.date);
@@ -91,3 +92,6 @@ export default function RescheduleScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("chantierDecisions", RescheduleScreen);

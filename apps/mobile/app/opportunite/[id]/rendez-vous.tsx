@@ -11,6 +11,7 @@ import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { fixAppointment } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Notice, Screen, Title, celebrate } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAppointment;
 
@@ -19,7 +20,7 @@ const t = fr.proAppointment;
  * contrôlées à l'avance (à venir, dans les 6 mois) ; le chantier est créé et le client prévenu.
  * Agenda (F-44) : créneaux libres proposés et avertissements.
  */
-export default function FixAppointmentScreen() {
+function FixAppointmentScreen() {
   const { id, client = "" } = useLocalSearchParams<{ id: string; client?: string }>();
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>("09:00");
@@ -88,3 +89,6 @@ export default function FixAppointmentScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("requests", FixAppointmentScreen);

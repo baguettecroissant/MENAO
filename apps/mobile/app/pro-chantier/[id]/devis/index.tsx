@@ -24,6 +24,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proQuote;
 const { colors, font, radius, spacing } = theme;
@@ -35,7 +36,7 @@ const newKey = () => `${Date.now().toString(36)}${Math.random().toString(36).sli
 const withoutKey = ({ key: _key, generated: _generated, ...line }: Line): QuoteLineInput => line;
 
 /** Création ou modification du devis (F-19), une fois le brouillon chargé. */
-export default function QuoteEditorScreen() {
+function QuoteEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuoteDraft(id), [id]);
   const [draft] = useFocusData(load);
@@ -373,3 +374,6 @@ const styles = StyleSheet.create({
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   total: { fontFamily: font.medium, fontSize: 20, color: colors.primary },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", QuoteEditorScreen);

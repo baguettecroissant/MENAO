@@ -97,6 +97,7 @@ select throws_ok($$ select public.set_chantier_team('c1304000-0000-4000-8000-000
   array['c1300000-0000-4000-8000-000000000006']::uuid[]) $$, '22023', 'Membre de l''équipe introuvable.',
   'attribution : membres de l''entreprise seulement');
 select ok(public.my_money_overview(now())::text like '%13700%', 'patron : suivi de l''argent');
+select is(public.my_assistant_context() ->> 'place', 'patron', 'assistant : place du patron');
 
 -- ---------- Chef d'équipe ----------
 select set_config('request.jwt.claims', jsonb_build_object('sub', 'c1300000-0000-4000-8000-000000000002',
@@ -110,6 +111,8 @@ select is((select count(*)::int from public.expenses), 1, 'chef : dépenses');
 select is((select count(*)::int from public.requests), 2, 'chef : demandes');
 select is((select count(*)::int from public.artisan_quotes()), 1, 'chef : liste des devis');
 select ok(public.my_money_overview(now())::text like '%13700%', 'chef : suivi de l''argent');
+select is(public.my_assistant_context() ->> 'place', 'chef', 'assistant : place du chef');
+select is((public.my_assistant_context() -> 'chantiers' ->> 'en_cours')::int, 2, 'assistant : tous les chantiers du chef');
 select lives_ok($$ select public.set_chantier_team('c1304000-0000-4000-8000-000000000002',
   array['c1300000-0000-4000-8000-000000000002']::uuid[]) $$, 'chef : attribue un chantier');
 select lives_ok($$ select public.set_artisan_paused(false) $$, 'chef : disponibilité');
@@ -143,6 +146,10 @@ select is((select count(*)::int from public.requests), 0, 'ouvrier : aucune dema
 select is((select count(*)::int from public.artisan_quotes()), 0, 'ouvrier : liste des devis vide');
 select is((select count(*)::int from public.artisan_inbox()), 0, 'ouvrier : demandes vides');
 select ok(coalesce(public.my_money_overview(now())::text, '') not like '%13700%', 'ouvrier : aucun montant dans le suivi');
+select is(public.my_assistant_context() ->> 'place', 'ouvrier', 'assistant : place de l''ouvrier');
+select is((public.my_assistant_context() -> 'chantiers' ->> 'en_cours')::int, 1, 'assistant : ses chantiers seulement');
+select ok(not (public.my_assistant_context() ? 'demandes_en_attente') and not (public.my_assistant_context() ? 'abonnement'),
+  'assistant : ni demandes ni formule pour l''ouvrier');
 select lives_ok($$ select public.send_message('c1304000-0000-4000-8000-000000000001', 'Je passe demain matin.') $$,
   'ouvrier : écrit au client de son chantier');
 select throws_ok($$ select public.send_message('c1304000-0000-4000-8000-000000000002', 'Bonjour') $$, '42501', null,

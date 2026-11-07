@@ -31,6 +31,7 @@ import {
   toast,
 } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proCompany;
 const { colors, font, radius, spacing } = theme;
@@ -42,7 +43,7 @@ type Message = { tone: "error" | "success" | "info"; text: string } | null;
  * que le dossier est en brouillon) et sa vérification auprès de l'INSEE, nom commercial, TVA,
  * logo des documents, puis accès aux métiers et à la zone d'intervention.
  */
-export default function CompanyScreen() {
+function CompanyScreen() {
   const [company, reload] = useFocusData(loadCompany);
   if (company === undefined) return <ScreenSkeleton header={<TopBar />} />;
   return (
@@ -345,3 +346,6 @@ const styles = StyleSheet.create({
   rowTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
   rowHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", CompanyScreen);

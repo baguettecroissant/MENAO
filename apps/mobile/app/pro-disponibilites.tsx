@@ -9,6 +9,7 @@ import { fr } from "@/i18n/fr";
 import { loadAvailability } from "@/lib/pro-availability";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAvailability;
 
@@ -17,7 +18,7 @@ const t = fr.proAvailability;
  * horaires de travail, congés et absences, score MENAO et « Mon planning est à jour » (ADR 0105),
  * calendrier du téléphone (ADR 0203) et abonnement .ics. Aucun lien vers les pages du site (règle 10).
  */
-export default function AvailabilityScreen() {
+function AvailabilityScreen() {
   const [data, reload] = useFocusData(loadAvailability);
 
   if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
@@ -46,3 +47,6 @@ export default function AvailabilityScreen() {
     </Screen>
   );
 }
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("agenda", AvailabilityScreen);

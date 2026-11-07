@@ -20,6 +20,7 @@ import { loadQuoteSendContext, sendQuote } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Checkbox, Notice, Screen, ScreenSkeleton, TextField, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proQuote;
 const s = t.send;
@@ -40,7 +41,7 @@ const nextDay = (date: string) =>
  * la signature, solde à la réception, montants de @menao/core), dates des travaux (F-20), puis
  * envoi : la base attribue le numéro et fige le devis.
  */
-export default function QuoteSendScreen() {
+function QuoteSendScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuoteSendContext(id), [id]);
   const [context] = useFocusData(load);
@@ -266,3 +267,6 @@ const styles = StyleSheet.create({
   },
   notice: { fontFamily: font.regular, fontSize: 12, color: colors["primary-strong"] },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("money", QuoteSendScreen);

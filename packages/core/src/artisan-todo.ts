@@ -11,6 +11,7 @@
 import type { AgendaKind } from "./appointment";
 import type { MonitoredDocumentType } from "./expiry";
 import { parisToday } from "./project";
+import { teamCan, type TeamPosition } from "./team";
 
 /** Sous ce délai restant, une demande passe avant tout le reste. */
 export const URGENT_REQUEST_HOURS = 12;
@@ -134,4 +135,21 @@ export function laterAppointments<T extends { at: string }>(
 ): T[] {
   const today = parisToday(now);
   return appointments.filter((a) => parisToday(new Date(a.at)) !== today);
+}
+
+/**
+ * « À faire maintenant » selon la place dans l'entreprise (ADR 0241) : le chef d'équipe garde les
+ * demandes, rendez-vous et devis ; l'ouvrier, ses rendez-vous ; le dossier, les paiements en
+ * ligne, les avis et le cadeau restent au patron.
+ */
+export function todoForPosition(items: readonly TodoItem[], position: TeamPosition): TodoItem[] {
+  return items.filter((item) => {
+    if (item.kind === "demande") return teamCan(position, "requests");
+    if (item.kind === "devis") return teamCan(position, "money");
+    if (item.kind === "rdv") return true;
+    if (item.kind === "avis") return teamCan(position, "storefront");
+    if (item.kind === "cadeau") return teamCan(position, "referral");
+    if (item.kind === "paiements") return teamCan(position, "subscription");
+    return teamCan(position, "dossier");
+  });
 }

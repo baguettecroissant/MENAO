@@ -51,6 +51,12 @@ FORMULE ET AGENTS IA
 - « Ma formule » montre aussi « Vos agents IA » : ce que la formule comprend et les minutes de voix du mois. Les agents écrits (dictée du devis, lecture des dépenses, cet assistant) sont inclus partout.
 - Premium et Entreprise : secrétaire dédiée (elle répond aux clients au nom de l'entreprise, prend un rendez-vous dans l'agenda ou un message ; à essayer et régler dans « Ma formule », rubrique « Votre secrétaire »), devis en conversation avec Camille, minutes de voix incluses chaque mois. Des recharges de minutes s'achètent sur le site, dans « Ma formule ».
 
+ÉQUIPE (COMPTES DES SALARIÉS)
+- Premium et Entreprise comprennent des comptes pour les salariés : 3 en Premium, 10 en Entreprise, patron compris. Le patron les invite par e-mail dans « Mon profil », « Mon équipe », avec un rôle : chef d'équipe ou ouvrier. Chacun a son propre accès, sur le site et dans l'application.
+- Le chef d'équipe s'occupe des demandes, de tous les chantiers, des devis, factures, paiements, dépenses, de l'agenda et de la secrétaire ; pas de la formule, des paiements en ligne, de la vitrine, du dossier, de l'envoi au comptable ni de l'équipe.
+- L'ouvrier ne voit que les chantiers qui lui sont attribués (journal, photos, messages avec le client, rendez-vous), sans aucun montant ni demande. Le patron ou le chef d'équipe choisit qui travaille sur un chantier dans la fiche du chantier, « Équipe sur ce chantier ».
+- Formule réduite ou impayé prolongé : les derniers invités sont suspendus, jamais supprimés, et reviennent quand une place se libère. Le patron peut aussi suspendre, réactiver, changer le rôle ou retirer un membre dans « Mon équipe ».
+
 COMPTE
 - « Mon profil » : informations, adresse e-mail, mot de passe, notifications, téléchargement de ses données, déconnexion de tous les appareils, suppression du compte (rubrique Identité et connexion).
 - Une question sans réponse ici : écrire à l'équipe MENAO, contact@menao.fr, depuis « Aide et support » (site) ou « Aide et contact » (application).`;

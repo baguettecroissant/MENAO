@@ -1,10 +1,16 @@
-import { ARTISAN_CANCELLABLE_STATUSES, type ChantierStatus, isExampleId } from "@menao/core";
+import {
+  ARTISAN_CANCELLABLE_STATUSES,
+  chantierRights,
+  type ChantierStatus,
+  isExampleId,
+} from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { NotebookPen } from "lucide-react-native";
 import { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { StatusPill } from "@/components/chantier/parts";
 import { HeaderBand, whenMeta } from "@/components/header-band";
+import { ChantierTeamCard } from "@/components/pro/chantier-team-card";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
 import { FollowUpView } from "@/components/pro/follow-up-view";
 import { SentQuoteBlock } from "@/components/pro/sent-quote-block";
@@ -13,6 +19,7 @@ import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { chantierScreenKey, loadArtisanChantierScreen } from "@/lib/pro-chantiers";
+import { useTeamPosition } from "@/lib/team";
 import { useFocusData } from "@/lib/use-focus-data";
 import { readScreenPreview } from "@/lib/screen-cache";
 import { Button, Notice, Screen } from "@/ui";
@@ -38,6 +45,8 @@ export default function ArtisanChantierScreen() {
   }>();
   const load = useCallback(() => loadArtisanChantierScreen(id), [id]);
   const [loaded, reload] = useFocusData(load, undefined, chantierScreenKey(id));
+  // Place dans l'équipe (ADR 0241) : argent, décisions et attribution selon les droits.
+  const rights = chantierRights(useTeamPosition() ?? "patron");
 
   if (loaded === undefined) {
     return <DetailSkeleton preview={readScreenPreview(chantierScreenKey(id))} band />;
@@ -57,6 +66,7 @@ export default function ArtisanChantierScreen() {
         confirmed={demarrage === "confirme"}
         onChanged={reload}
         example={isExampleId(id)}
+        rights={rights}
       />
     );
   }
@@ -66,7 +76,8 @@ export default function ArtisanChantierScreen() {
   const status = c.chantier.status;
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const planned = status === "rdv_planifie" && appointment !== null;
-  const awaitingQuote = status === "rdv_planifie" || status === "devis_en_revision";
+  const awaitingQuote =
+    rights.money && (status === "rdv_planifie" || status === "devis_en_revision");
   // « Ce chantier a besoin d'une expertise » tant que le chantier est actif, comme sur le site.
   const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
 
@@ -76,7 +87,7 @@ export default function ArtisanChantierScreen() {
       : data.hasDraft
         ? fr.proQuote.resume
         : fr.proQuote.create;
-  const cancellable = CANCELLABLE.includes(status);
+  const cancellable = rights.decisions && CANCELLABLE.includes(status);
   // Exemple (ADR 0184) : on navigue (devis, conversation), les actions sont inactives.
   const example = isExampleId(id);
 
@@ -87,7 +98,7 @@ export default function ArtisanChantierScreen() {
           title={planned ? t.bandTitle : c.chantier.title}
           meta={whenMeta(appointment?.starts_at)}
         >
-          {active ? (
+          {rights.decisions && active ? (
             <ExampleLock locked={example}>
               <View style={styles.expertise}>
                 <Button
@@ -124,7 +135,7 @@ export default function ArtisanChantierScreen() {
           text={fr.proChantiers.status[status]}
           tone={status === "annule" || status === "devis_refuse" ? "neutral" : "primary"}
         />
-        {planned && !example ? (
+        {rights.decisions && planned && !example ? (
           <Pressable
             role="button"
             hitSlop={8}
@@ -148,7 +159,8 @@ export default function ArtisanChantierScreen() {
         </Notice>
       ) : null}
 
-      {data.sentQuote ? (
+      {rights.assign && !example ? <ChantierTeamCard chantierId={id} /> : null}
+      {rights.money && data.sentQuote ? (
         <ExampleLock locked={example}>
           <SentQuoteBlock
             quote={data.sentQuote}

@@ -111,4 +111,22 @@ describe("assistant de l'espace artisan (ADR 0236)", () => {
     expect(artisanAssistantQuestionCount(history)).toBe(1);
     expect(normalizeArtisanAssistantHistory("non")).toEqual([]);
   });
+
+  it("compte d'un membre de l'équipe (ADR 0242)", () => {
+    const worker = artisanAccountText({
+      place: "ouvrier",
+      chantiers: { en_cours: 2 },
+      prochain_rendez_vous: "2026-11-09T08:00:00Z",
+    });
+    expect(worker).toContain("Place : ouvrier");
+    expect(worker).toContain("Chantiers : ");
+    expect(worker).toContain("Prochain rendez-vous : ");
+    expect(worker).not.toContain("Formule");
+    expect(worker).not.toContain("Paiements en ligne");
+    expect(worker).not.toContain("Demandes");
+    const chef = artisanAccountText({ place: "chef", dossier: "valide" });
+    expect(chef).toContain("Place : chef d'équipe");
+    expect(chef).toContain("Formule : aucune");
+    expect(artisanAccountText({ place: "patron", dossier: "valide" })).not.toContain("Place");
+  });
 });

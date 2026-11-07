@@ -5,6 +5,7 @@ import {
   chantierStepIndex,
   isJournalOpen,
   nextIntervention,
+  type ChantierRights,
 } from "@menao/core";
 import { chantierMessageSchema, liftMessageSchema } from "@menao/validation";
 import { router } from "expo-router";
@@ -22,6 +23,7 @@ import {
   chantierTag,
 } from "@/components/chantier/parts";
 import { ConversationCard } from "@/components/messages/conversation-card";
+import { ChantierTeamCard } from "@/components/pro/chantier-team-card";
 import { ClientRatingForm } from "@/components/pro/client-rating-form";
 import { PhotoUpload } from "@/components/pro/photo-upload";
 import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
@@ -43,6 +45,12 @@ import { ExampleLock } from "@/components/examples";
 
 const t = fr.proFollowUp;
 const { colors, font, radius, spacing } = theme;
+const FULL_RIGHTS: ChantierRights = {
+  money: true,
+  decisions: true,
+  replyReviews: true,
+  assign: true,
+};
 
 /**
  * Vue d'un chantier côté artisan après l'acompte (F-22), comme sur le site et avec la mise en page
@@ -58,6 +66,7 @@ export function FollowUpView({
   confirmed,
   onChanged,
   example = false,
+  rights = FULL_RIGHTS,
 }: {
   data: ArtisanChantier;
   followUp: ArtisanFollowUp;
@@ -66,6 +75,8 @@ export function FollowUpView({
   onChanged: () => void;
   /** Exemple (ADR 0184) : on navigue (conversation, onglets), les actions sont inactives. */
   example?: boolean;
+  /** Ce que la place dans l'équipe permet (ADR 0241) ; tout par défaut (patron, exemples). */
+  rights?: ChantierRights;
 }) {
   const [tab, setTab] = useState<"suivi" | "dossier">("suivi");
   const [justConfirmed, setJustConfirmed] = useState(false);
@@ -102,7 +113,7 @@ export function FollowUpView({
               receivedAt: f.receivedAt,
             })}
           />
-          {f.depositPaid ? (
+          {rights.money && f.depositPaid ? (
             <View style={styles.deposit}>
               <ShieldCheck size={14} color={colors.success} />
               <Text style={styles.depositText}>{fr.chantier.depositReceived}</Text>
@@ -120,7 +131,8 @@ export function FollowUpView({
       step={step}
       footer={
         // Maquettes « Date à confirmer » et « Chantier en cours » : action principale en pied.
-        example && (status === "acompte_paye" || canDeclareFinished(status)) ? (
+        !rights.decisions ? undefined : example &&
+          (status === "acompte_paye" || canDeclareFinished(status)) ? (
           <ExampleLock locked note>
             {status === "acompte_paye" ? null : <Button label={t.finish} onPress={() => {}} />}
           </ExampleLock>
@@ -176,10 +188,10 @@ export function FollowUpView({
           {t.liftSignaled(client, formatDateNumeric(f.reception.liftSignaledAt))}
         </Notice>
       ) : null}
-      {status === "reserves_a_lever" && !example ? (
+      {rights.decisions && status === "reserves_a_lever" && !example ? (
         <LiftPanel chantierId={id} client={client} onDone={onChanged} />
       ) : null}
-      {status === "receptionne" && f.receivedAt ? (
+      {rights.money && status === "receptionne" && f.receivedAt ? (
         <Notice tone="success">
           {t.received(
             client,
@@ -188,17 +200,22 @@ export function FollowUpView({
           )}
         </Notice>
       ) : null}
-      {status === "cloture" && f.balancePaidAt && f.balanceCents !== null ? (
+      {rights.money && status === "cloture" && f.balancePaidAt && f.balanceCents !== null ? (
         <Notice tone="success">
           {t.closed(formatDateNumeric(f.balancePaidAt), formatCents(f.balanceCents))}
         </Notice>
       ) : null}
       {f.review ? (
-        <ReviewCard review={f.review} heading={t.reviewTitle(client)} onReplied={onChanged} />
+        <ReviewCard
+          review={f.review}
+          heading={t.reviewTitle(client)}
+          onReplied={onChanged}
+          canReply={rights.replyReviews}
+        />
       ) : status === "cloture" ? (
         <Notice tone="info">{t.reviewPending(client)}</Notice>
       ) : null}
-      {status === "cloture" ? (
+      {rights.decisions && status === "cloture" ? (
         f.clientRating ? (
           <Notice tone="info">
             {fr.proClientRating.done(
@@ -229,6 +246,7 @@ export function FollowUpView({
       />
       {tab === "suivi" ? (
         <>
+          {rights.assign && !example ? <ChantierTeamCard chantierId={id} /> : null}
           <ConversationCard chantierId={id} name={clientName} example={example} />
           <JournalCard
             journal={f.journal}
@@ -253,7 +271,7 @@ export function FollowUpView({
           {next ? (
             <View style={styles.group}>
               <NextInterventionCard next={next} />
-              {status === "planifie" && startAt && !example ? (
+              {rights.decisions && status === "planifie" && startAt && !example ? (
                 <LinkText
                   label={t.edit}
                   onPress={() =>
@@ -269,10 +287,14 @@ export function FollowUpView({
         </>
       ) : (
         <>
-          <ExampleLock locked={example}>
-            <DocumentsCard documents={f.documents} />
-          </ExampleLock>
-          <ScheduleCard progress={f.progress} totalTtcCents={f.quote?.totalTtcCents ?? null} />
+          {rights.money ? (
+            <>
+              <ExampleLock locked={example}>
+                <DocumentsCard documents={f.documents} />
+              </ExampleLock>
+              <ScheduleCard progress={f.progress} totalTtcCents={f.quote?.totalTtcCents ?? null} />
+            </>
+          ) : null}
           <RequestBlocks detail={c} photoUrls={data.photoUrls} variant="rendez-vous" />
           {c.appointment ? (
             <DetailBlock

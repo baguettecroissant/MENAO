@@ -14,6 +14,7 @@ import { loadGrade, type GradeView } from "@/lib/grade";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Button, Notice, Screen, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.grade;
 const { colors, font, radius, spacing } = theme;
@@ -26,7 +27,7 @@ type Badge = GradeView["badges"][number];
  * atteints, badges à obtenir puis obtenus (un appui ouvre la progression du badge), récompense du
  * niveau 5 à réclamer.
  */
-export default function GradeScreen() {
+function GradeScreen() {
   // Rechargé à chaque retour sur l'écran (récompense demandée, nouveau badge).
   const [grade] = useFocusData(loadGrade);
   const [tab, setTab] = useState<"objectives" | "badges">("objectives");
@@ -312,3 +313,6 @@ const styles = StyleSheet.create({
   sheetProgress: { alignSelf: "stretch", gap: spacing(2) },
   between: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("storefront", GradeScreen);

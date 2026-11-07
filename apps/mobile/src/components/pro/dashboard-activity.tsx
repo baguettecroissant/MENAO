@@ -46,16 +46,23 @@ const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 export function ActivityShortcuts({
   quoteHref,
   example = false,
+  patron = true,
 }: {
   quoteHref: Href;
   /** Exemples (ADR 0184) : pas de raccourci vers les vrais réglages (disponibilités). */
   example?: boolean;
+  /** Partager la fiche, inviter un artisan : le patron seulement (ADR 0241). */
+  patron?: boolean;
 }) {
   const items: { icon: LucideIcon; label: string; href: Href }[] = [
     { icon: FilePen, label: t.shortcuts.quote, href: quoteHref },
     { icon: CalendarX2, label: t.shortcuts.block, href: "/pro-agenda" },
-    { icon: Share2, label: t.shortcuts.share, href: "/pro-ma-fiche" },
-    { icon: UserPlus, label: t.shortcuts.invite, href: "/compte" },
+    ...(patron
+      ? [
+          { icon: Share2, label: t.shortcuts.share, href: "/pro-ma-fiche" as Href },
+          { icon: UserPlus, label: t.shortcuts.invite, href: "/compte" as Href },
+        ]
+      : []),
     {
       icon: ReceiptText,
       label: fr.proInvoices.open,

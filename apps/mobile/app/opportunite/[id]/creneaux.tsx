@@ -10,6 +10,7 @@ import { loadProposedSlots, proposeSlots } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Body, Button, Chip, Notice, Screen, Title, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
+import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAppointment;
 
@@ -17,7 +18,7 @@ const t = fr.proAppointment;
  * Accepter en un toucher (ADR 0222), comme sur le site : créneaux libres de l'agenda, les 3
  * premiers cochés ; le client en choisit un, ce qui fixe le rendez-vous.
  */
-export default function ProposeSlotsScreen() {
+function ProposeSlotsScreen() {
   const { id, client = "" } = useLocalSearchParams<{ id: string; client?: string }>();
   const [agenda] = useFocusData(useCallback(() => loadAppointmentAgenda(), []));
   const [proposed] = useFocusData(useCallback(() => loadProposedSlots(id), [id]));
@@ -107,3 +108,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   hint: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
 });
+
+// Réservé selon la place dans l'entreprise (ADR 0241).
+export default withTeamPermission("requests", ProposeSlotsScreen);
