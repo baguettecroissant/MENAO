@@ -149,9 +149,9 @@ Deno.serve(
         return await saveTicketPhoto(admin, user.id, body?.ticketId, file);
       }
 
-      // Justificatif d'une dépense : patron ou membre actif de son équipe (ADR 0240).
+      // Justificatif d'une dépense : patron ou chef d'équipe (ADR 0241), jamais un ouvrier.
       if (purpose === "expense_document") {
-        const artisanId = await teamArtisanId(admin, user.id);
+        const artisanId = await teamArtisanId(admin, user.id, { managers: true });
         if (!artisanId) return respond("forbidden", 403);
         return await saveExpenseDocument(admin, artisanId, body?.expenseId, file);
       }

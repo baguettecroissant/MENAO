@@ -119,3 +119,59 @@ export function parseTeam(raw: unknown): Team | null {
 export function teamMemberName(member: Pick<TeamMember, "firstName" | "lastName" | "email">) {
   return [member.firstName, member.lastName].filter(Boolean).join(" ") || member.email || "";
 }
+
+/**
+ * Droits de chaque place (ADR 0241), mêmes règles que la base : le patron peut tout ; le chef
+ * d'équipe encadre (tous les chantiers, demandes, argent, agenda, secrétaire) sans les réglages du
+ * patron ; l'ouvrier ne travaille que sur les chantiers qui lui sont attribués (journal, photos,
+ * messages, rendez-vous), sans aucun montant.
+ */
+export const TEAM_PERMISSIONS = [
+  /** Tous les chantiers de l'entreprise (sinon ceux qui lui sont attribués). */
+  "allChantiers",
+  /** Devis, factures, paiements, relances, dépenses, suivi de l'argent. */
+  "money",
+  /** Demandes reçues : accepter, refuser, proposer des créneaux. */
+  "requests",
+  /** Planning, rendez-vous, démarrage, fin, réception, annulation d'un chantier. */
+  "chantierDecisions",
+  /** Choisir qui travaille sur un chantier. */
+  "assignChantiers",
+  /** Créneaux bloqués, absences, horaires, disponibilité, lien d'abonnement à l'agenda. */
+  "agenda",
+  /** Secrétaire : réglages et messages pris. */
+  "secretary",
+  /** Abonnement, paiements en ligne (Stripe), recharges de la secrétaire. */
+  "subscription",
+  /** Export pour le comptable. */
+  "accounting",
+  /** Ma vitrine : fiche, métiers, zone, réalisations, certifications, réponses aux avis. */
+  "storefront",
+  /** Dossier et documents de l'entreprise. */
+  "dossier",
+  /** Mon équipe : invitations, rôles, suspensions. */
+  "team",
+  /** Parrainage, cadeau de bienvenue, récompenses. */
+  "referral",
+] as const;
+export type TeamPermission = (typeof TEAM_PERMISSIONS)[number];
+
+const CHEF_PERMISSIONS: ReadonlySet<TeamPermission> = new Set<TeamPermission>([
+  "allChantiers",
+  "money",
+  "requests",
+  "chantierDecisions",
+  "assignChantiers",
+  "agenda",
+  "secretary",
+]);
+
+/** Ce que peut faire une place ; rien sans place (compte sans fiche ou membre suspendu). */
+export function teamCan(
+  position: TeamPosition | null | undefined,
+  permission: TeamPermission,
+): boolean {
+  if (position === "patron") return true;
+  if (position === "chef") return CHEF_PERMISSIONS.has(permission);
+  return false;
+}

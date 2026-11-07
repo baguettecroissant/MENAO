@@ -80,8 +80,8 @@ Deno.serve(
     const user = userData?.user;
     if (!user) return json({ status: "forbidden" }, 401);
 
-    // Patron ou membre actif de son équipe (ADR 0240).
-    const artisanId = await teamArtisanId(admin, user.id);
+    // Patron ou chef d'équipe (ADR 0241) : devis et secrétaire, jamais un ouvrier.
+    const artisanId = await teamArtisanId(admin, user.id, { managers: true });
     if (!artisanId) return json({ status: "forbidden" }, 403);
     const artisan = { id: artisanId };
 
