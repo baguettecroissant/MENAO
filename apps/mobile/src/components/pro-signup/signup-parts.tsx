@@ -173,7 +173,7 @@ export function Muted({ children }: { children: ReactNode }) {
 
 const styles = StyleSheet.create({
   title: { gap: spacing(2) },
-  heading: { fontFamily: font.bold, fontSize: 24, lineHeight: 30, color: colors.foreground },
+  heading: { fontFamily: font.display, fontSize: 24, lineHeight: 30, color: colors.foreground },
   progress: { gap: spacing(2) },
   progressRow: { flexDirection: "row", justifyContent: "space-between" },
   progressText: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },

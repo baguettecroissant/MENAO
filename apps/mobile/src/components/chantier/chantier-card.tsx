@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     boxShadow: "0 1px 3px rgba(17, 23, 40, 0.06)",
   },
   body: { gap: spacing(2.5), padding: spacing(4) },
-  title: { fontFamily: font.medium, fontSize: 18, lineHeight: 24, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 18, lineHeight: 24, color: colors.foreground },
   address: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   meta: {
     flexShrink: 1,

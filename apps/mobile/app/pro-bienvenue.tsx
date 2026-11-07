@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   head: { gap: spacing(2) },
-  title: { fontFamily: font.bold, fontSize: 26, lineHeight: 32, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 26, lineHeight: 32, color: colors.foreground },
   preview: { flexDirection: "row", alignItems: "center", gap: spacing(3.5) },
   avatar: {
     width: 56,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontFamily: font.bold, fontSize: 20, color: colors["primary-foreground"] },
   previewText: { flex: 1, gap: 2 },
-  name: { fontFamily: font.bold, fontSize: 18, color: colors.foreground },
+  name: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
   muted: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
   flex: { flex: 1 },
   line: { flexDirection: "row", alignItems: "center", gap: spacing(2.5) },

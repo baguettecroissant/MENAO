@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   avatarImage: { width: 64, height: 64 },
   initials: { fontFamily: font.bold, fontSize: 22, color: colors["primary-foreground"] },
   identity: { flex: 1, gap: 2 },
-  name: { fontFamily: font.bold, fontSize: 19, color: colors.foreground },
+  name: { fontFamily: font.display, fontSize: 19, color: colors.foreground },
   email: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
   badge: {
     alignSelf: "flex-start",

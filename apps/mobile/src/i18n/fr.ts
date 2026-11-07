@@ -1972,6 +1972,7 @@ export const fr = {
         previousYear: "Année précédente",
         nextYear: "Année suivante",
         year: (year: number) => `Encaissé en ${year}`,
+        collected: (year: number, amount: string) => `Encaissé en ${year} : ${amount}`,
         upcoming: "À venir",
         upcomingHint: "Reste à payer sur vos devis signés",
         toCollect: "À recevoir",
@@ -2009,7 +2010,17 @@ export const fr = {
       sending: "Envoi de la photo…",
       choose: "Votre photo de profil",
     },
-    greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),
+    greeting: (firstName: string | null) => (firstName ? `Bonjour ${firstName}` : "Bonjour"),
+    /** Sous la salutation (refonte « Nette », ADR 0245). */
+    todoLead: (n: number) =>
+      n === 0
+        ? "Tout est à jour."
+        : n === 1
+          ? "Vous avez 1 chose à faire."
+          : `Vous avez ${n} choses à faire.`,
+    /** Bandeau des trois chiffres de l'argent, en haut de l'accueil (ADR 0245). */
+    money: "Argent",
+    quotesTitle: "Vos devis",
     // Accueil « À faire maintenant » (ADR 0130).
     todoTitle: "À faire maintenant",
     allDone: "Tout est à jour",

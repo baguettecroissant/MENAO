@@ -42,5 +42,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   pressed: { backgroundColor: theme.colors["primary-soft"] },
-  title: { flex: 1, fontFamily: theme.font.medium, fontSize: 18, color: theme.colors.foreground },
+  title: { flex: 1, fontFamily: theme.font.display, fontSize: 18, color: theme.colors.foreground },
 });

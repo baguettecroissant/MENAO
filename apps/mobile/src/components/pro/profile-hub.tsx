@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   identity: { flex: 1, gap: spacing(1) },
-  name: { fontFamily: font.bold, fontSize: 22, lineHeight: 28, color: colors.foreground },
+  name: { fontFamily: font.display, fontSize: 22, lineHeight: 28, color: colors.foreground },
   company: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: spacing(1.5), marginTop: spacing(1) },
   pill: {

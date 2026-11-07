@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: colors["muted-foreground"],
   },
-  title: { fontFamily: font.medium, fontSize: 18, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
   text: {
     fontFamily: font.regular,
     fontSize: 14,

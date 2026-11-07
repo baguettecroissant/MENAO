@@ -100,7 +100,10 @@ export function ActivityShortcuts({
   );
 }
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+/** Petit chiffre d'une carte : intitulé, valeur en Inter Tight, précision facultative. */
+export type ActivityStat = { label: string; value: string; hint?: string };
+
+function Stat({ label, value, hint }: ActivityStat) {
   return (
     <View style={styles.stat} accessible aria-label={`${label} : ${value}`}>
       <Text style={styles.statLabel}>{label}</Text>
@@ -137,8 +140,63 @@ function Row({ href, children }: { href: Href; children: ReactNode }) {
   return (
     <Tappable role="link" onPress={() => router.push(href)} style={styles.row}>
       <View style={styles.rowBody}>{children}</View>
-      <ChevronRight size={16} color={colors["subtle-foreground"]} />
+      <ChevronRight size={18} color={colors["muted-foreground"]} />
     </Tappable>
+  );
+}
+
+/**
+ * Bandeau de l'argent (refonte « Nette », ADR 0245), comme sur le site : encaissé ce mois en grand
+ * avec son évolution, puis à venir (reste à payer sur les devis signés) et à recevoir (soldes des
+ * chantiers réceptionnés) côte à côte.
+ */
+export function MoneyCard({
+  monthCents,
+  trend,
+  activity,
+}: {
+  monthCents: number;
+  trend: ReactNode;
+  activity: DashboardActivity;
+}) {
+  const cells = [
+    {
+      label: t.revenue.upcoming,
+      value: euroRound(activity.upcomingCents),
+      hint: t.revenue.upcomingHint,
+    },
+    {
+      label: t.revenue.toCollect,
+      value: euroRound(activity.toCollectCents),
+      hint: t.revenue.toCollectHint,
+    },
+  ];
+  return (
+    <View style={styles.money} aria-label={fr.proDashboard.money}>
+      <View
+        style={styles.moneyTop}
+        accessible
+        aria-label={`${fr.proDashboard.revenue} : ${formatCents(monthCents)}`}
+      >
+        <Text style={styles.moneyLabel}>{fr.proDashboard.revenue}</Text>
+        <Text style={styles.moneyValue}>{formatCents(monthCents)}</Text>
+      </View>
+      {trend ? <View style={styles.moneyTrend}>{trend}</View> : null}
+      <View style={styles.moneyCells}>
+        {cells.map((cell, i) => (
+          <View
+            key={cell.label}
+            style={[styles.moneyCell, i === 0 && styles.moneyCellBorder]}
+            accessible
+            aria-label={`${cell.label} : ${cell.value}, ${cell.hint}`}
+          >
+            <Text style={styles.moneyCellLabel}>{cell.label}</Text>
+            <Text style={styles.moneyCellValue}>{cell.value}</Text>
+            <Text style={styles.moneyCellHint}>{cell.hint}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -171,9 +229,14 @@ export function RevenueCard({
   return (
     <View style={styles.card}>
       <View style={styles.yearHead}>
-        <Text role="heading" style={styles.cardTitle}>
-          {t.revenue.title}
-        </Text>
+        <View style={styles.cardHead}>
+          <Text role="heading" style={styles.cardTitle}>
+            {t.revenue.title}
+          </Text>
+          <Text style={styles.summary}>
+            {t.revenue.collected(activity.year, euroRound(activity.yearCents))}
+          </Text>
+        </View>
         <View style={styles.yearSwitch}>
           <Tappable
             role="button"
@@ -195,19 +258,6 @@ export function RevenueCard({
             <ChevronRight size={16} color={colors.foreground} />
           </Tappable>
         </View>
-      </View>
-      <View style={styles.stats}>
-        <Stat label={t.revenue.year(activity.year)} value={euroRound(activity.yearCents)} />
-        <Stat
-          label={t.revenue.upcoming}
-          value={euroRound(activity.upcomingCents)}
-          hint={t.revenue.upcomingHint}
-        />
-        <Stat
-          label={t.revenue.toCollect}
-          value={euroRound(activity.toCollectCents)}
-          hint={t.revenue.toCollectHint}
-        />
       </View>
       {activity.yearCents === 0 ? (
         <Text style={styles.empty}>{t.revenue.empty(activity.year)}</Text>
@@ -268,7 +318,14 @@ export function RevenueCard({
 }
 
 /** Devis en attente de réponse, taux de signature et devis signé moyen (ADR 0185). */
-export function QuotesCard({ activity }: { activity: DashboardActivity }) {
+export function QuotesCard({
+  activity,
+  extraStats = [],
+}: {
+  activity: DashboardActivity;
+  /** Chiffres ajoutés à la grille (clients en attente, temps de réponse, ADR 0245). */
+  extraStats?: ActivityStat[];
+}) {
   const { pending, pendingTotalCents, signRate, averageSignedCents } = activity.quotes;
   return (
     <Section
@@ -306,6 +363,9 @@ export function QuotesCard({ activity }: { activity: DashboardActivity }) {
           label={t.quotes.average}
           value={averageSignedCents === null ? "—" : euroRound(averageSignedCents)}
         />
+        {extraStats.map((stat) => (
+          <Stat key={stat.label} {...stat} />
+        ))}
       </View>
       <Tappable
         role="link"
@@ -410,19 +470,62 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tileLabel: { fontFamily: font.medium, fontSize: 13, lineHeight: 17, color: colors.foreground },
+  tileLabel: { fontFamily: font.semibold, fontSize: 13, lineHeight: 17, color: colors.foreground },
   card: {
     gap: spacing(4),
-    borderRadius: radius.card,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    padding: spacing(4),
+    padding: spacing(5),
     boxShadow: cardShadow,
   },
-  cardHead: { gap: spacing(0.5) },
-  cardTitle: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  summary: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  cardHead: { flexShrink: 1, gap: spacing(0.5) },
+  cardTitle: {
+    fontFamily: font.display,
+    fontSize: 19,
+    letterSpacing: -0.4,
+    color: colors.foreground,
+  },
+  summary: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  // Bandeau de l'argent (ADR 0245).
+  money: {
+    overflow: "hidden",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    boxShadow: cardShadow,
+  },
+  moneyTop: { gap: spacing(2), paddingHorizontal: spacing(5), paddingTop: spacing(5) },
+  moneyLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
+  moneyValue: {
+    fontFamily: font.display,
+    fontSize: 38,
+    lineHeight: 42,
+    letterSpacing: -1.1,
+    color: colors.foreground,
+    fontVariant: ["tabular-nums"],
+  },
+  moneyTrend: { paddingHorizontal: spacing(5), paddingTop: spacing(2), paddingBottom: spacing(5) },
+  moneyCells: { flexDirection: "row", borderTopWidth: 1, borderTopColor: colors.border },
+  moneyCell: { flex: 1, gap: 2, paddingHorizontal: spacing(5), paddingVertical: spacing(4) },
+  moneyCellBorder: { borderRightWidth: 1, borderRightColor: colors.border },
+  moneyCellLabel: { fontFamily: font.semibold, fontSize: 13, color: colors.label },
+  moneyCellValue: {
+    fontFamily: font.display,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.5,
+    color: colors.foreground,
+    fontVariant: ["tabular-nums"],
+  },
+  moneyCellHint: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 17,
+    color: colors["muted-foreground"],
+  },
   yearHead: {
     flexDirection: "row",
     alignItems: "center",
@@ -446,22 +549,29 @@ const styles = StyleSheet.create({
     minWidth: 40,
     textAlign: "center",
   },
-  stats: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  stat: {
-    flexGrow: 1,
-    flexBasis: "30%",
-    gap: 2,
-    borderRadius: radius.input,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing(3),
-    paddingVertical: spacing(2.5),
+  stats: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: spacing(3.5),
+    columnGap: spacing(4),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing(3.5),
   },
-  statLabel: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  statValue: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
+  stat: { flexGrow: 1, flexBasis: "40%", gap: 2 },
+  statLabel: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  statValue: {
+    fontFamily: font.display,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+    color: colors.foreground,
+    fontVariant: ["tabular-nums"],
+  },
   statHint: {
     fontFamily: font.regular,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     color: colors["muted-foreground"],
   },
   empty: {
@@ -474,7 +584,7 @@ const styles = StyleSheet.create({
     color: colors["muted-foreground"],
   },
   chartBox: { gap: spacing(2) },
-  selected: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  selected: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
   chart: { height: CHART_HEIGHT, marginLeft: 44 },
   grid: {
     position: "absolute",
@@ -500,7 +610,8 @@ const styles = StyleSheet.create({
     maxWidth: 20,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
-    backgroundColor: colors["primary-soft"],
+    // Colonnes non choisies : bleu MENAO estompé, plus lisible que le bleu très clair d'avant.
+    backgroundColor: `${colors.primary}5c`,
   },
   barSelected: { backgroundColor: colors.primary },
   monthRow: { flexDirection: "row", marginLeft: 44 },
@@ -529,16 +640,21 @@ const styles = StyleSheet.create({
   },
   rowBody: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing(3) },
   rowText: { flex: 1, gap: spacing(1) },
-  rowTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  rowMeta: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  amount: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  rowTitle: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
+  rowMeta: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  amount: {
+    fontFamily: font.display,
+    fontSize: 17,
+    color: colors.foreground,
+    fontVariant: ["tabular-nums"],
+  },
   meter: {
-    height: 6,
+    height: 8,
     overflow: "hidden",
     borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
+    backgroundColor: colors.background,
   },
   meterFill: { height: "100%", borderRadius: radius.pill, backgroundColor: colors.primary },
   linkButton: { alignSelf: "flex-start", paddingVertical: spacing(1) },
-  link: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
+  link: { fontFamily: font.semibold, fontSize: 14, color: colors["primary-strong"] },
 });

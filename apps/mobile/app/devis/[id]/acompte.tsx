@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   text: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
   strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   muted: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  amount: { fontFamily: font.medium, fontSize: 20, color: colors.primary },
+  amount: { fontFamily: font.display, fontSize: 20, color: colors.primary },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   secure: {
     flexDirection: "row",

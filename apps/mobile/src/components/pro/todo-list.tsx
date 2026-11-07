@@ -166,9 +166,14 @@ export function TodoList({ items }: { items: TodoItem[] }) {
   }
   return (
     <View style={styles.section}>
-      <Text role="heading" style={styles.heading}>
-        {t.todoTitle}
-      </Text>
+      <View style={styles.headingRow}>
+        <Text role="heading" style={styles.heading}>
+          {t.todoTitle}
+        </Text>
+        <View style={styles.count} aria-hidden>
+          <Text style={styles.countText}>{items.length}</Text>
+        </View>
+      </View>
       <View style={styles.group}>
         {items.map((item, index) => {
           const l = line(item);
@@ -190,7 +195,7 @@ export function TodoList({ items }: { items: TodoItem[] }) {
                 style={[styles.row, index > 0 && styles.rowBorder]}
               >
                 <View style={[styles.icon, { backgroundColor: palette.bg }]}>
-                  <l.icon size={18} color={palette.fg} />
+                  <l.icon size={20} color={palette.fg} />
                 </View>
                 <View style={styles.texts}>
                   <Text style={styles.title} numberOfLines={1}>
@@ -220,7 +225,7 @@ export function TodoList({ items }: { items: TodoItem[] }) {
                     {l.accessory}
                   </Text>
                 </View>
-                <ChevronRight size={18} color={colors["subtle-foreground"]} />
+                <ChevronRight size={20} color={colors["muted-foreground"]} />
               </Tappable>
             </Animated.View>
           );
@@ -232,9 +237,25 @@ export function TodoList({ items }: { items: TodoItem[] }) {
 
 const styles = StyleSheet.create({
   section: { gap: spacing(2.5) },
-  heading: { fontFamily: font.bold, fontSize: 18, color: colors.foreground },
+  // Refonte « Nette » (ADR 0245) : titre en Inter Tight et nombre en pastille bleu nuit.
+  headingRow: { flexDirection: "row", alignItems: "center", gap: spacing(2.5) },
+  heading: {
+    fontFamily: font.display,
+    fontSize: 22,
+    letterSpacing: -0.5,
+    color: colors.foreground,
+  },
+  count: {
+    minWidth: 26,
+    borderRadius: radius.pill,
+    backgroundColor: colors.foreground,
+    paddingHorizontal: spacing(2.25),
+    paddingVertical: 2,
+    alignItems: "center",
+  },
+  countText: { fontFamily: font.bold, fontSize: 13, color: colors.surface },
   group: {
-    borderRadius: radius.card,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -244,25 +265,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(3),
-    minHeight: 60,
-    paddingHorizontal: spacing(3.5),
-    paddingVertical: spacing(3),
+    minHeight: 72,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3.5),
     backgroundColor: colors.surface,
   },
   rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
   icon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   texts: { flex: 1, gap: 2 },
-  title: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
-  detail: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  title: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
+  detail: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
   accessoryWrap: { flexDirection: "row", alignItems: "center", gap: 4, maxWidth: "30%" },
   accessory: {
-    fontFamily: font.medium,
+    fontFamily: font.semibold,
     fontSize: 13,
     color: colors["primary-strong"],
   },

@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  title: { fontFamily: font.medium, fontSize: 22, lineHeight: 28, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 22, lineHeight: 28, color: colors.foreground },
   row: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   meta: {
     flexShrink: 1,

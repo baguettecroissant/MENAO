@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   swipePressed: { opacity: 0.85 },
   swipeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-foreground"] },
   header: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  title: { flex: 1, fontFamily: font.medium, fontSize: 20, color: colors.foreground },
+  title: { flex: 1, fontFamily: font.display, fontSize: 20, color: colors.foreground },
   actions: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   locked: { opacity: 0.5 },
   more: {

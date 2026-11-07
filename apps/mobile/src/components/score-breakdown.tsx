@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing(3),
   },
   globalLabel: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  globalValue: { fontFamily: font.medium, fontSize: 24, color: colors["primary-strong"] },
+  globalValue: { fontFamily: font.display, fontSize: 24, color: colors["primary-strong"] },
   basis: {
     fontFamily: font.regular,
     fontSize: 13,

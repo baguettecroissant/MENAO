@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: colors["primary-strong"],
   },
-  title: { fontFamily: font.bold, fontSize: 28, lineHeight: 34, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 28, lineHeight: 34, color: colors.foreground },
   phases: { gap: spacing(3) },
   phase: {
     flexDirection: "row",

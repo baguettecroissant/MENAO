@@ -81,6 +81,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing(1),
   },
   head: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  title: { flex: 1, fontFamily: font.medium, fontSize: 18, color: colors.foreground },
+  title: { flex: 1, fontFamily: font.display, fontSize: 18, color: colors.foreground },
   close: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
 });

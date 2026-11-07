@@ -1,9 +1,11 @@
 import {
-  GoogleSans_400Regular,
-  GoogleSans_500Medium,
-  GoogleSans_700Bold,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
   useFonts,
-} from "@expo-google-fonts/google-sans";
+} from "@expo-google-fonts/inter";
+import { InterTight_700Bold } from "@expo-google-fonts/inter-tight";
 import { ARTISAN_SIGNUP_DRAFT_KEY, signupPending } from "@menao/core";
 import { router, Stack, usePathname, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -29,10 +31,13 @@ import { SuccessHost, ToastHost } from "@/ui";
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
+  // Refonte « Nette » (ADR 0245) : Inter et Inter Tight, comme les espaces connectés du site.
   const [fontsLoaded] = useFonts({
-    GoogleSans_400Regular,
-    GoogleSans_500Medium,
-    GoogleSans_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    InterTight_700Bold,
   });
   return (
     // Gestes des listes (glisser pour agir, ADR 0196).

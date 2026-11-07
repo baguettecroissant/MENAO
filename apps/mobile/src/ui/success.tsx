@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.hero,
     backgroundColor: colors.surface,
   },
-  title: { fontFamily: font.bold, fontSize: 21, textAlign: "center", color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 21, textAlign: "center", color: colors.foreground },
   text: {
     fontFamily: font.regular,
     fontSize: 15,

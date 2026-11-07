@@ -299,7 +299,7 @@ export function AvatarFramerHost() {
 
 const styles = StyleSheet.create({
   sheet: { flex: 1, gap: spacing(4), padding: spacing(5), backgroundColor: colors.background },
-  title: { fontFamily: font.medium, fontSize: 20, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 20, color: colors.foreground },
   hint: {
     fontFamily: font.regular,
     fontSize: 14,

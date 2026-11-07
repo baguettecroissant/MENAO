@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   body: { gap: spacing(2.5), padding: spacing(4) },
-  title: { fontFamily: font.medium, fontSize: 18, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
   row: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   meta: {
     flexShrink: 1,

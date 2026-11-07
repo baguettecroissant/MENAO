@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   wrongCompany: { gap: spacing(1) },
   taken: { gap: spacing(2) },
   cardTitle: { flex: 1, gap: 2 },
-  cardName: { fontFamily: font.bold, fontSize: 18, color: colors.foreground },
+  cardName: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
   active: {
     flexDirection: "row",
     alignItems: "center",
