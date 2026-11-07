@@ -221,7 +221,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
           quote: awaitingQuote ? `/pro/chantiers/${awaitingQuote.chantier_id}/devis` : "/pro/devis",
           block: "/pro/agenda",
           share: patron ? "/pro/profil" : undefined,
-          invite: patron ? "/pro/mon-profil?onglet=parrainage#parrainage" : undefined,
         },
       }}
     />

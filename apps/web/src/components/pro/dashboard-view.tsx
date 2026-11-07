@@ -16,8 +16,9 @@ import type { ComponentProps, ReactNode } from "react";
 import { ChantierList } from "@/components/pro/chantier-list";
 import { BadgeIcon } from "@/components/pro/grade/badge-icon";
 import {
-  DashboardShortcuts,
+  DashboardActions,
   InProgressCard,
+  MoneyBand,
   QuotesCard,
   ReceivablesCard,
   RevenueCard,
@@ -27,10 +28,16 @@ import {
 import { TodoList } from "@/components/pro/todo-list";
 import { Alert, StatusBadge, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { formatDayLong, formatDuration, formatTime } from "@/lib/format";
+import { appTheme } from "@/lib/fonts";
+import { formatDayLong, formatDuration, formatTime, formatToday } from "@/lib/format";
 
 const t = fr.pro.dashboard;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const roundEuros = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
 const cardLink =
   "rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none";
 
@@ -174,79 +181,175 @@ export function DashboardView({
         <Camera aria-hidden="true" className="size-5" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="font-medium">{t.photo.title}</span>
-        <span className="text-xs text-muted-foreground">{t.photo.text}</span>
+        <span className="font-semibold">{t.photo.title}</span>
+        <span className="text-sm text-muted-foreground">{t.photo.text}</span>
       </span>
-      <span className="inline-flex items-center gap-1 text-sm font-medium text-primary-strong">
+      <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary-strong">
         {t.photo.add}
         <ArrowRight aria-hidden="true" className="size-3.5" />
       </span>
     </Link>
   );
   const gradeCard = grade && (
-    <Link
-      href="/pro/grade"
-      className="flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-    >
+    <Link href="/pro/grade" className={`flex items-center gap-4 p-4 sm:px-5 ${cardLink}`}>
       <BadgeIcon
         code={grade.badge ?? "main_d_argent"}
         unlocked={Boolean(grade.badge)}
         className="size-11"
       />
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex items-center gap-2">
-          <span className="font-medium">{fr.pro.grade.title}</span>
-          {grade.newBadge && (
-            <span className="rounded-pill bg-primary px-2 py-0.5 text-[0.6875rem] font-medium text-primary-foreground">
-              {fr.pro.grade.newBadgeShort}
-            </span>
-          )}
+      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <span className="flex items-center gap-2">
+            <span className="font-semibold">{fr.pro.grade.title}</span>
+            {grade.newBadge && (
+              <span className="rounded-pill bg-primary px-2 py-0.5 text-[0.6875rem] font-semibold text-primary-foreground">
+                {fr.pro.grade.newBadgeShort}
+              </span>
+            )}
+          </span>
+          <span className="text-[0.8125rem] text-muted-foreground tabular-nums">
+            {fr.pro.grade.card(grade.level)} · {fr.pro.grade.xp(grade.xp, grade.nextXp)}
+          </span>
         </span>
-        <span className="text-xs text-muted-foreground">
-          {fr.pro.grade.card(grade.level)} · {fr.pro.grade.xp(grade.xp, grade.nextXp)}
-        </span>
-        <span className="h-1.5 overflow-hidden rounded-pill bg-primary-soft">
+        <span className="h-1.5 overflow-hidden rounded-pill bg-background">
           <span
             className="block h-full rounded-pill bg-primary"
             style={{ width: `${Math.round(grade.progress * 100)}%` }}
           />
         </span>
       </span>
-      <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
+      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
     </Link>
   );
 
-  return (
-    <main className="flex-1">
-      <div
-        className={`mx-auto flex w-full flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10 ${
-          activity ? "max-w-5xl" : "max-w-3xl"
-        }`}
-      >
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {todo ? t.greeting(firstName) : t.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {todo
-              ? todo.length > 0
-                ? t.todoCount(todo.length)
-                : t.allDone
-              : t.greeting(firstName)}
-          </p>
-        </div>
-        {banner}
-        {notices.map((notice) => (
-          <Alert key={notice} tone="error">
-            {notice} <TextLink href="/pro/onboarding/documents">{t.documents}</TextLink>
-          </Alert>
-        ))}
-        {!visible && (
-          <Alert tone="info">
-            {t.hiddenProfile} <TextLink href="/pro/onboarding">{t.completeFile}</TextLink>
-          </Alert>
+  const greeting = (
+    <div className="flex flex-col gap-1.5">
+      {todo && (
+        <p className="text-sm font-semibold text-muted-foreground">{formatToday(new Date())}</p>
+      )}
+      <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">
+        {todo ? t.greeting(firstName) : t.title}
+      </h1>
+      <p className="text-base text-label">
+        {todo ? (
+          todo.length > 0 ? (
+            <>
+              {t.todoLead}{" "}
+              <strong className="font-bold text-foreground">{t.todoCount(todo.length)}</strong>.
+            </>
+          ) : (
+            t.allDone
+          )
+        ) : (
+          t.greeting(firstName)
         )}
-        {activity && <DashboardShortcuts links={activity.shortcuts} />}
+      </p>
+    </div>
+  );
+  const alerts = (
+    <>
+      {banner}
+      {notices.map((notice) => (
+        <Alert key={notice} tone="error">
+          {notice} <TextLink href="/pro/onboarding/documents">{t.documents}</TextLink>
+        </Alert>
+      ))}
+      {!visible && (
+        <Alert tone="info">
+          {t.hiddenProfile} <TextLink href="/pro/onboarding">{t.completeFile}</TextLink>
+        </Alert>
+      )}
+    </>
+  );
+
+  // Refonte « Nette » (F-91, ADR 0245) : salutation et actions, bandeau des trois chiffres de
+  // l'argent, puis deux colonnes (à faire et chiffre d'affaires ; chantiers, devis, soldes, à venir).
+  if (activity) {
+    return (
+      <main className={`flex-1 ${appTheme}`}>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-6 sm:px-6 sm:py-10 lg:px-10">
+          <header className="flex flex-wrap items-end justify-between gap-5">
+            {greeting}
+            <DashboardActions links={activity.shortcuts} />
+          </header>
+          {alerts}
+          <MoneyBand
+            revenue={{
+              cents: revenue.cents,
+              trend: <Trend trend={revenue.trend} month={revenue.previousMonth} chip />,
+            }}
+            activity={activity.data}
+          />
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+            <div className="flex min-w-0 flex-col gap-6">
+              {todoList}
+              <RevenueCard
+                activity={activity.data}
+                years={activity.years}
+                yearHref={activity.yearHref}
+                currentMonth={activity.currentMonth}
+                stats={[
+                  {
+                    label: t.awaitingQuote,
+                    value: t.clients(awaitingClients),
+                    href: `${base}/chantiers`,
+                  },
+                  {
+                    label: fr.pro.dashboard.activity.quotes.signRate,
+                    value:
+                      activity.data.quotes.signRate === null
+                        ? "—"
+                        : fr.review.percent(activity.data.quotes.signRate),
+                  },
+                  {
+                    label: fr.pro.dashboard.activity.quotes.average,
+                    value:
+                      activity.data.quotes.averageSignedCents === null
+                        ? "—"
+                        : roundEuros.format(
+                            Math.round(activity.data.quotes.averageSignedCents / 100),
+                          ),
+                  },
+                  {
+                    label: t.responseTime,
+                    value:
+                      responseTime.minutes === null ? "—" : formatDuration(responseTime.minutes),
+                    hint:
+                      responseTime.minutes === null
+                        ? t.noResponse
+                        : t.responseDetail(responseTime.responses),
+                    href: `${base}/demandes`,
+                  },
+                ]}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-6">
+              <InProgressCard
+                activity={activity.data}
+                base={base}
+                chantierHref={activity.chantierHref}
+              />
+              <QuotesCard
+                activity={activity.data}
+                base={base}
+                chantierHref={activity.chantierHref}
+              />
+              <ReceivablesCard activity={activity.data} chantierHref={activity.chantierHref} />
+              {appointmentSection}
+              {photoCard}
+              {gradeCard}
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className={`flex-1 ${appTheme}`}>
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
+        {greeting}
+        {alerts}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Kpi
             href={`${base}/chantiers`}
@@ -272,53 +375,21 @@ export function DashboardView({
             detail={<Trend trend={revenue.trend} month={revenue.previousMonth} />}
           />
         </div>
-        {activity ? (
-          <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="flex min-w-0 flex-col gap-7">
-              {todoList}
-              <RevenueCard
-                activity={activity.data}
-                years={activity.years}
-                yearHref={activity.yearHref}
-                currentMonth={activity.currentMonth}
-              />
-              <InProgressCard
-                activity={activity.data}
-                base={base}
-                chantierHref={activity.chantierHref}
-              />
-            </div>
-            <div className="flex min-w-0 flex-col gap-7">
-              <QuotesCard
-                activity={activity.data}
-                base={base}
-                chantierHref={activity.chantierHref}
-              />
-              <ReceivablesCard activity={activity.data} chantierHref={activity.chantierHref} />
-              {appointmentSection}
-              {photoCard}
-              {gradeCard}
-            </div>
-          </div>
+        {todoList}
+        {photoCard}
+        {gradeCard}
+        {todo ? (
+          appointmentSection
+        ) : /* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */
+        appointments.length > 0 ? (
+          <>
+            {appointmentSection}
+            {requestSection}
+          </>
         ) : (
           <>
-            {todoList}
-            {photoCard}
-            {gradeCard}
-            {todo ? (
-              appointmentSection
-            ) : /* Maquettes : les rendez-vous passent en premier dès qu'il y en a. */
-            appointments.length > 0 ? (
-              <>
-                {appointmentSection}
-                {requestSection}
-              </>
-            ) : (
-              <>
-                {requestSection}
-                {appointmentSection}
-              </>
-            )}
+            {requestSection}
+            {appointmentSection}
           </>
         )}
       </div>
@@ -326,7 +397,10 @@ export function DashboardView({
   );
 }
 
-/** Rendez-vous et démarrages des jours suivants (F-16), avec le lien vers l'agenda. */
+/**
+ * Rendez-vous et démarrages des jours suivants (F-16), avec le lien vers l'agenda : une carte et
+ * une ligne par rendez-vous (refonte « Nette », ADR 0245).
+ */
 function UpcomingSection({
   appointments,
   base,
@@ -337,60 +411,74 @@ function UpcomingSection({
   agendaHref: string | null;
 }) {
   return (
-    <Section
-      title={t.upcoming}
-      action={
-        agendaHref && (
-          <TextLink href={agendaHref as Route} className="inline-flex items-center gap-1 text-sm">
+    <section
+      aria-labelledby="a-venir"
+      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="a-venir" className="text-lg">
+          {t.upcoming}
+        </h2>
+        {agendaHref && (
+          <TextLink
+            href={agendaHref as Route}
+            className="inline-flex items-center gap-1 text-sm font-semibold"
+          >
             {t.openAgenda}
             <ArrowRight aria-hidden="true" className="size-3.5" />
           </TextLink>
-        )
-      }
-    >
+        )}
+      </div>
       {appointments.length === 0 ? (
-        <p className="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-12 text-center text-sm text-muted-foreground shadow-card">
-          {t.noUpcoming}
-          <Arc className="absolute -right-2 bottom-2 h-12 w-20" />
-        </p>
+        <p className="text-sm text-muted-foreground">{t.noUpcoming}</p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="-mx-2 flex flex-col">
           {appointments.map((a) => (
             <li key={`${a.kind}-${a.chantierId}`}>
               <Link
                 href={`${base}/chantiers/${a.chantierId}` as Route}
-                className={`block overflow-hidden ${cardLink}`}
+                className="flex items-center gap-3 rounded-input px-2 py-2.5 transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
               >
-                <div
-                  className={`flex flex-wrap items-center gap-x-5 gap-y-1 px-4 py-2.5 text-sm text-primary-foreground ${
-                    a.kind === "demarrage" ? "bg-success" : "bg-primary"
+                <span
+                  className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${
+                    a.kind === "demarrage"
+                      ? "bg-success-soft text-success"
+                      : "bg-primary-soft text-primary-strong"
                   }`}
                 >
-                  <span className="rounded-chip bg-white/20 px-2 py-0.5 text-xs font-medium">
-                    {t.kinds[a.kind]}
+                  <CalendarDays aria-hidden="true" className="size-5" />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate font-semibold">{a.title}</span>
+                  <span className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                    <span>{t.kinds[a.kind]}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{formatDayLong(a.startsAt)}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock aria-hidden="true" className="size-3.5" />
+                      {formatTime(a.startsAt)}
+                    </span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays aria-hidden="true" className="size-4" />
-                    {formatDayLong(a.startsAt)}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock aria-hidden="true" className="size-4" />
-                    {formatTime(a.startsAt)}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 p-4">
-                  <p className="font-medium">{a.title}</p>
-                  <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <MapPin aria-hidden="true" className="mt-px size-3.5 shrink-0 text-primary" />
-                    {a.place}
-                  </p>
-                </div>
+                  {a.place && (
+                    <span className="flex items-start gap-1 truncate text-sm text-muted-foreground">
+                      <MapPin
+                        aria-hidden="true"
+                        className="mt-0.5 size-3.5 shrink-0 text-primary"
+                      />
+                      {a.place}
+                    </span>
+                  )}
+                </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-muted-foreground"
+                />
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </Section>
+    </section>
   );
 }
 
@@ -410,13 +498,12 @@ export function WorkerDashboardView({
   chantiers: ComponentProps<typeof ChantierList>["rows"];
 }) {
   return (
-    <main className="flex-1">
+    <main className={`flex-1 ${appTheme}`}>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.greeting(firstName)}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t.worker.subtitle(company)}</p>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm font-semibold text-muted-foreground">{formatToday(new Date())}</p>
+          <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.greeting(firstName)}</h1>
+          <p className="text-base text-label">{t.worker.subtitle(company)}</p>
         </div>
         <UpcomingSection appointments={appointments} base="/pro" agendaHref="/pro/agenda" />
         <Section title={t.worker.chantiers}>
@@ -446,7 +533,7 @@ function Section({
   return (
     <section aria-label={title} className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[0.9375rem] font-medium text-foreground/80">{title}</h2>
+        <h2 className="text-lg">{title}</h2>
         {action}
       </div>
       {children}
@@ -454,20 +541,44 @@ function Section({
   );
 }
 
-/** Évolution du chiffre encaissé : hausse en vert, baisse et stabilité en gris. */
-function Trend({ trend, month }: { trend: RevenueTrend; month: string }) {
+/**
+ * Évolution du chiffre encaissé : hausse en vert, baisse et stabilité en gris. `chip` : pastille du
+ * bandeau de l'argent (ADR 0245).
+ */
+function Trend({
+  trend,
+  month,
+  chip = false,
+}: {
+  trend: RevenueTrend;
+  month: string;
+  chip?: boolean;
+}) {
   if (!trend) return null;
-  const [Icon, tone, text] =
+  const up = trend.kind === "nouveau" || trend.kind === "hausse";
+  const [Icon, text] =
     trend.kind === "nouveau"
-      ? [TrendingUp, "text-success", t.trend.nouveau(euros.format(trend.deltaCents / 100), month)]
+      ? [TrendingUp, t.trend.nouveau(euros.format(trend.deltaCents / 100), month)]
       : trend.kind === "hausse"
-        ? [TrendingUp, "text-success", t.trend.hausse(trend.percent, month)]
+        ? [TrendingUp, t.trend.hausse(trend.percent, month)]
         : trend.kind === "baisse"
-          ? [TrendingDown, "text-muted-foreground", t.trend.baisse(trend.percent, month)]
-          : [Minus, "text-muted-foreground", t.trend.stable(month)];
+          ? [TrendingDown, t.trend.baisse(trend.percent, month)]
+          : [Minus, t.trend.stable(month)];
+  const tone = up ? "text-success" : "text-muted-foreground";
   return (
-    <span className={`flex items-start gap-1 ${tone}`}>
-      <Icon aria-hidden="true" className="mt-px size-3.5 shrink-0" />
+    <span
+      className={`flex items-start gap-1.5 ${tone} ${
+        chip
+          ? `self-start rounded-[0.875rem] px-2.5 py-1 text-[0.8125rem] leading-snug font-semibold ${
+              up ? "bg-success-soft" : "bg-background"
+            }`
+          : ""
+      }`}
+    >
+      <Icon
+        aria-hidden="true"
+        className={`shrink-0 ${chip ? "mt-0.5 size-3.5" : "mt-px size-3.5"}`}
+      />
       <span>{text}</span>
     </span>
   );

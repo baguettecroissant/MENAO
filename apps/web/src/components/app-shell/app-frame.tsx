@@ -9,6 +9,7 @@ import { Logo, LogoMark } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { fr } from "@/i18n/fr";
 import type { ShellAccount } from "@/lib/client/shell";
+import { appTheme } from "@/lib/fonts";
 import { useLiveUnreadMessages } from "@/lib/messages/use-live-unread";
 import { AccountMenu } from "./account-menu";
 import {
@@ -79,7 +80,7 @@ export function AppFrame({
   }
 
   return (
-    <div className="flex min-h-dvh bg-background">
+    <div className={`flex min-h-dvh bg-background ${appTheme}`}>
       <a
         href="#contenu"
         className="sr-only z-50 rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"

@@ -104,7 +104,6 @@ export default async function ExampleDashboardPage({
           quote: `${EXAMPLES_BASE}/chantiers/${EXAMPLE_IDS.chantierChauffeEau}/devis`,
           block: `${EXAMPLES_BASE}/agenda`,
           share: `${EXAMPLES_BASE}/profil`,
-          invite: `${EXAMPLES_BASE}/mon-profil`,
         },
       }}
     />

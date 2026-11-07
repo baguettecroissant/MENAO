@@ -101,7 +101,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await proPage.getByRole("button", { name: "Me connecter" }).click();
   await expect(proPage).toHaveURL(/\/pro\/tableau-de-bord$/);
   // Accueil « À faire maintenant » (ADR 0131) : la nouvelle demande y figure.
-  await expect(proPage.getByRole("heading", { level: 1, name: "Bonjour Noé !" })).toBeVisible();
+  await expect(proPage.getByRole("heading", { level: 1, name: "Bonjour Noé" })).toBeVisible();
   await expect(
     proPage.getByRole("region", { name: "À faire maintenant" }).getByRole("link", {
       name: /^Nouvelle demande, /,

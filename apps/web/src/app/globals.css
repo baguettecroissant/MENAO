@@ -350,3 +350,27 @@
     }
   }
 }
+
+/* Refonte « Nette » (F-91, ADR 0245) : espaces connectés (classe posée par lib/fonts.ts). Textes en
+   Inter, titres en Inter Tight bien gras, gris secondaires plus foncés (netteColors de
+   @menao/ui-tokens). Hors couche exprès : les titres passent en gras même quand un composant leur
+   donne `font-medium`. */
+@theme {
+  --color-label: #2b3242;
+}
+.app-nette {
+  --color-muted-foreground: #4a5263;
+  font-family: var(--font-app);
+  font-feature-settings: "cv11";
+}
+.app-nette :where(h1, h2, h3) {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.app-nette :where(h1) {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.app-nette :where(h2, h3) {
+  font-weight: 650;
+}
