@@ -7198,12 +7198,6 @@ export type Database = {
         Args: { p_project_id: string; p_trade_codes: string[] };
         Returns: undefined;
       };
-      settle_voice_quote_drafts: { Args: { p_chantier_id: string }; Returns: undefined };
-      siret_registered: { Args: { p_siret: string }; Returns: boolean };
-      staff_review_held_requests: {
-        Args: { p_project_id: string; p_reason?: string; p_release: boolean };
-        Returns: number;
-      };
       set_team_member_active: {
         Args: { p_active: boolean; p_user_id: string };
         Returns: undefined;
@@ -7211,6 +7205,12 @@ export type Database = {
       set_team_member_role: {
         Args: { p_role: Database["public"]["Enums"]["team_role"]; p_user_id: string };
         Returns: undefined;
+      };
+      settle_voice_quote_drafts: { Args: { p_chantier_id: string }; Returns: undefined };
+      siret_registered: { Args: { p_siret: string }; Returns: boolean };
+      staff_review_held_requests: {
+        Args: { p_project_id: string; p_reason?: string; p_release: boolean };
+        Returns: number;
       };
       staff_set_ticket_status: {
         Args: { p_status: Database["public"]["Enums"]["ticket_status"]; p_ticket_id: string };
