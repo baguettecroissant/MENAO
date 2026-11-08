@@ -1,153 +1,121 @@
-import { router } from "expo-router";
+import { reviewFigures, reviewMatches, type ReviewFilter } from "@menao/core";
 import { Info } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusPill } from "@/components/chantier/parts";
-import { ReviewCard } from "@/components/pro/review-card";
+import { StyleSheet, Text, View } from "react-native";
+import { FigureStrip, ListFilters, ListGroup } from "@/components/list-kit";
+import { CardHeading, FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { ReviewItem } from "@/components/pro/review-item";
 import { ScoreBreakdown } from "@/components/score-breakdown";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { formatLongDate } from "@/lib/dates";
-import { formatDay } from "@/lib/format";
 import { loadMyReviews } from "@/lib/pro-reviews";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Card, Notice, ScreenSkeleton, Title } from "@/ui";
+import { Body, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 import { useExamplesActive } from "@/lib/examples";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proReviews;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
+
+const FILTERS: readonly ReviewFilter[] = ["tous", "sans_reponse", "note_basse"];
 
 /**
- * « Mes avis » de l'artisan (F-28), comme sur le site : avis reçus (publiés ou masqués par
- * l'équipe) avec réponse publique et signalement, nombre d'avis sans réponse, score MENAO détaillé
- * et fonctionnement des avis. Aucun lien vers le site (règle 10).
+ * « Avis » de l'artisan (F-28), refonte « Nette » (lot 5) : trois chiffres (note globale, avis
+ * vérifiés, sans réponse), filtres en pastilles, puis un avis par bloc dans une seule carte, avec
+ * réponse publique et signalement comme sur le site ; ensuite la note détaillée et le
+ * fonctionnement des avis. Aucun lien vers le site (règle 10).
  */
 function MyReviews() {
   const [data, reload] = useFocusData(loadMyReviews);
   const examples = useExamplesActive();
-  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<ReviewFilter>("tous");
 
-  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (data === undefined) return <FicheSkeleton title={t.screenTitle} />;
   const reviews = data?.reviews ?? [];
-  const toAnswer = reviews.filter((r) => r.status === "publie" && r.reply === null).length;
+  const figures = reviewFigures(reviews, data?.score?.global ?? null);
+  const shown = reviews.filter((review) => reviewMatches(review, filter));
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <View style={styles.header}>
-        <TopBar />
-      </View>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            tintColor={colors.primary}
-            onRefresh={async () => {
-              setRefreshing(true);
-              await reload();
-              setRefreshing(false);
-            }}
+    <FicheScreen title={t.screenTitle} onRefresh={reload}>
+      {data === null ? <Notice tone="error">{t.error}</Notice> : null}
+      {reviews.length > 0 ? (
+        <>
+          <FigureStrip
+            label={t.figuresLabel}
+            figures={[
+              {
+                label: t.rating,
+                value: figures.rating === null ? "—" : fr.clientReview.percent(figures.rating),
+                spoken: figures.rating === null ? t.noRating : undefined,
+              },
+              { label: t.published, value: String(figures.published) },
+              {
+                label: t.toAnswerShort,
+                value: String(figures.toAnswer),
+                danger: figures.toAnswer > 0,
+              },
+            ]}
           />
-        }
-      >
-        <View style={styles.head}>
-          <Title>{t.title}</Title>
+          <ListFilters
+            chips
+            gutter={spacing(4)}
+            label={t.filtersLabel}
+            value={filter}
+            onChange={setFilter}
+            // « 4 étoiles ou moins » seulement s'il y en a (ou s'il est déjà choisi).
+            items={FILTERS.filter(
+              (value) => value !== "note_basse" || figures.counts[value] > 0 || filter === value,
+            ).map((value) => ({
+              value,
+              label: t.filters[value],
+              detail: String(figures.counts[value]),
+            }))}
+          />
+          {shown.length > 0 ? (
+            <ListGroup>
+              {shown.map((review) => (
+                <ReviewItem
+                  key={review.id}
+                  review={review}
+                  chantierTitle={data?.chantierTitles.get(review.chantierId) ?? null}
+                  onReplied={reload}
+                  example={examples}
+                />
+              ))}
+            </ListGroup>
+          ) : (
+            <Body muted>{t.filterEmpty}</Body>
+          )}
+        </>
+      ) : data ? (
+        <>
           <Body muted>{t.subtitle}</Body>
-        </View>
-        {data === null ? <Notice tone="error">{t.error}</Notice> : null}
-        {reviews.length > 0 ? (
-          <Text
-            style={[styles.toAnswer, toAnswer > 0 ? styles.toAnswerWarning : styles.toAnswerDone]}
-          >
-            {t.toAnswer(toAnswer)}
-          </Text>
-        ) : null}
-        {data && reviews.length === 0 ? (
           <EmptyState illustration="avis">{t.empty}</EmptyState>
-        ) : null}
-        {reviews.map((review) => {
-          const title = data?.chantierTitles.get(review.chantierId);
-          return (
-            <ReviewCard
-              key={review.id}
-              review={review}
-              heading={review.authorName}
-              onReplied={reload}
-              example={examples}
-              meta={
-                <View style={styles.meta}>
-                  <Text style={styles.small}>{t.publishedOn(formatDay(review.createdAt))}</Text>
-                  <Text style={styles.small}>
-                    {fr.profile.receivedOn(formatLongDate(review.experienceOn))}
-                  </Text>
-                  {title ? (
-                    <Pressable
-                      role="link"
-                      hitSlop={8}
-                      onPress={() => router.push(`/pro-chantier/${review.chantierId}`)}
-                    >
-                      <Text style={styles.link}>{t.chantier(title)}</Text>
-                    </Pressable>
-                  ) : null}
-                  {review.status === "masque" ? (
-                    <StatusPill text={t.hidden} tone="neutral" />
-                  ) : review.reply === null ? (
-                    <StatusPill text={t.noReply} tone="warning" />
-                  ) : null}
-                </View>
-              }
-            />
-          );
-        })}
-        {data ? (
-          <Card>
-            <Text role="heading" style={styles.heading}>
-              {t.scoreTitle}
-            </Text>
-            {data.score ? <ScoreBreakdown score={data.score} /> : <Body muted>{t.scoreEmpty}</Body>}
-          </Card>
-        ) : null}
-        <Card>
-          <View style={styles.row}>
-            <Info size={18} color={colors.primary} />
-            <Text role="heading" style={styles.heading}>
-              {t.howTitle}
-            </Text>
+        </>
+      ) : null}
+      {data ? (
+        <FicheCard>
+          <CardHeading title={t.scoreTitle} size={17} />
+          {data.score ? <ScoreBreakdown score={data.score} /> : <Body muted>{t.scoreEmpty}</Body>}
+        </FicheCard>
+      ) : null}
+      <FicheCard>
+        <View style={styles.row}>
+          <Info size={18} color={colors.primary} />
+          <CardHeading title={t.howTitle} size={17} />
+        </View>
+        {t.how.map((line) => (
+          <View key={line} style={styles.bullet}>
+            <Text style={styles.dot}>•</Text>
+            <Text style={styles.text}>{line}</Text>
           </View>
-          {t.how.map((line) => (
-            <View key={line} style={styles.bullet}>
-              <Text style={styles.dot}>•</Text>
-              <Text style={styles.text}>{line}</Text>
-            </View>
-          ))}
-        </Card>
-      </ScrollView>
-    </SafeAreaView>
+        ))}
+      </FicheCard>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
-  content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
-  head: { gap: spacing(2) },
-  toAnswer: {
-    overflow: "hidden",
-    borderRadius: radius.input,
-    paddingHorizontal: spacing(3),
-    paddingVertical: spacing(2),
-    fontFamily: font.medium,
-    fontSize: 13,
-  },
-  toAnswerWarning: { backgroundColor: colors["warning-soft"], color: colors.warning },
-  toAnswerDone: { backgroundColor: colors["success-soft"], color: colors.success },
-  meta: { gap: spacing(1) },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  link: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
   row: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   bullet: { flexDirection: "row", gap: spacing(2) },
   dot: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.primary },

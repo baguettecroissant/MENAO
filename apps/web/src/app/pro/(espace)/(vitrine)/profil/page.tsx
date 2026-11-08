@@ -1,4 +1,4 @@
-import { profileTips } from "@menao/core";
+import { profileStrength, profileTips } from "@menao/core";
 import type { Metadata } from "next";
 import { formatProfileDay } from "@/components/artisan-profile/profile-view";
 import { PublicProfileScreen } from "@/components/artisan-profile/public-profile-screen";
@@ -68,7 +68,7 @@ export default async function MyPublicProfilePage() {
   }));
   const photos = profile.photos.map((p) => publicUrl(supabase, "portfolio", p));
   const avatar = profile.avatar_path ? publicUrl(supabase, "avatars", profile.avatar_path) : null;
-  const tips = profileTips({
+  const facts = {
     hasAvatar: profile.avatar_path !== null,
     presentationLength: profile.presentation?.length ?? 0,
     photoCount: profile.photos.length,
@@ -76,7 +76,8 @@ export default async function MyPublicProfilePage() {
     // Domaines RGE lus dans l'annuaire officiel (ADR 0118) : comptent comme une certification.
     certificationCount: (certifications ?? 0) + profile.rge.length,
     verified: profile.verified,
-  });
+  };
+  const tips = profileTips(facts);
   return (
     <PublicProfileScreen
       profile={profile}
@@ -84,6 +85,7 @@ export default async function MyPublicProfilePage() {
       photos={photos}
       reviews={reviews}
       tips={tips}
+      strength={profileStrength(facts).percent}
       structurallyVisible={space.visibility.visible}
       availability={space.availability}
       publicHref={page?.slug ? `/artisans/${page.slug}` : null}

@@ -139,12 +139,15 @@ export function ListFilters<V extends string>({
   value,
   onChange,
   chips = false,
+  gutter = spacing(5),
 }: {
   label: string;
   items: readonly { value: V; label: string; detail?: string; tone?: ListTone }[];
   value: V;
   onChange: (value: V) => void;
   chips?: boolean;
+  /** Marge de l'écran sous les pastilles (20 px dans les listes, 16 px dans les fiches). */
+  gutter?: number;
 }) {
   return (
     <ScrollView
@@ -152,8 +155,10 @@ export function ListFilters<V extends string>({
       showsHorizontalScrollIndicator={false}
       role="tablist"
       aria-label={label}
-      style={chips ? styles.chips : styles.filters}
-      contentContainerStyle={chips ? styles.chipsContent : styles.filtersContent}
+      style={chips ? [styles.chips, { marginHorizontal: -gutter }] : styles.filters}
+      contentContainerStyle={
+        chips ? [styles.chipsContent, { paddingHorizontal: gutter }] : styles.filtersContent
+      }
     >
       {items.map((item) => {
         const active = item.value === value;
@@ -550,9 +555,9 @@ const styles = StyleSheet.create({
   filterActive: { borderBottomColor: colors.foreground },
   filterLabel: { fontFamily: font.medium, fontSize: 15, color: colors["muted-foreground"] },
   filterLabelActive: { fontFamily: font.semibold, color: colors.foreground },
-  // Pastilles jusqu'au bord de l'écran (marge des listes : 20 px).
-  chips: { flexGrow: 0, marginHorizontal: -spacing(5) },
-  chipsContent: { gap: spacing(2), paddingHorizontal: spacing(5) },
+  // Pastilles jusqu'au bord de l'écran (marge `gutter`).
+  chips: { flexGrow: 0 },
+  chipsContent: { gap: spacing(2) },
   chip: {
     height: 36,
     justifyContent: "center",

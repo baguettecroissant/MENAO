@@ -89,3 +89,4 @@ export * from "./money-figures";
 export * from "./list-figures";
 export * from "./secretary-figures";
 export * from "./agenda-day";
+export * from "./review-figures";
