@@ -32,6 +32,8 @@ const { colors, font, spacing } = theme;
  */
 export function ActionScreen({
   bar,
+  band,
+  back,
   title,
   lead,
   steps,
@@ -41,6 +43,10 @@ export function ActionScreen({
   children,
 }: {
   bar?: string;
+  /** Bandeau à la place de la barre du haut (résumé du besoin du parcours de demande). */
+  band?: ReactNode;
+  /** `false` : pas de retour (confirmation de fin de parcours). */
+  back?: boolean;
   title: string;
   lead?: string | null;
   /** Barre d'étapes d'un parcours (signature → acompte, réception → solde → avis), au-dessus du titre. */
@@ -52,7 +58,7 @@ export function ActionScreen({
   children?: ReactNode;
 }) {
   return (
-    <FicheScreen title={bar} footer={footer} onRefresh={onRefresh}>
+    <FicheScreen title={bar} band={band} back={back} footer={footer} onRefresh={onRefresh}>
       {steps}
       <PageHead title={title} lead={lead} />
       {meta ? (
@@ -177,6 +183,7 @@ export function ActionSubmit({
   disabled = false,
   danger = false,
   variant = "primary",
+  icon,
   note,
   noteDone = false,
   footnote,
@@ -187,7 +194,10 @@ export function ActionSubmit({
   loading?: boolean;
   disabled?: boolean;
   danger?: boolean;
-  variant?: "primary" | "secondary";
+  /** « dark » : bleu nuit (choix d'un artisan, parcours de demande). */
+  variant?: "primary" | "secondary" | "dark";
+  /** Icône avant le libellé (loupe de « Trouver mon artisan »). */
+  icon?: LucideIcon;
   note?: string;
   noteDone?: boolean;
   /** Mention sous le bouton (« Paiement sécurisé par Stripe »), avec une icône facultative. */
@@ -205,6 +215,7 @@ export function ActionSubmit({
         label={label}
         onPress={onPress}
         variant={danger ? "danger" : variant}
+        icon={icon}
         tall
         loading={loading}
         disabled={disabled}

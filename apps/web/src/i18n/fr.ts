@@ -1825,6 +1825,9 @@ export const fr = {
     },
     review: {
       title: "Vérifiez vos critères de recherche",
+      // Refonte « Nette » (ADR 0257) : résumé à droite.
+      summaryTitle: "Votre projet",
+      summaryPlace: "Ville",
       intro:
         "Assurez-vous que ces informations correspondent à votre besoin et complétez-les si nécessaire.",
       back: "Retour",

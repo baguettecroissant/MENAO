@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { SiteHeader } from "@/components/site/header";
+import { appTheme } from "@/lib/fonts";
 import { getShellAccount } from "@/lib/client/shell";
 
 /**
@@ -22,9 +23,10 @@ export default async function ProjectSearchLayout({ children }: { children: Reac
     );
   }
   return (
-    <>
+    // Refonte « Nette » (ADR 0257) : le parcours de demande passe aux polices Inter.
+    <div className={`${appTheme} flex flex-1 flex-col`}>
       <SiteHeader />
       <div className="flex flex-1 flex-col">{children}</div>
-    </>
+    </div>
   );
 }

@@ -1,18 +1,21 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, SentCard } from "@/components/pro/action-kit";
+import { FicheCard } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { sendProjectToMenao } from "@/lib/project";
 import { useSession } from "@/lib/session";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 
 const t = fr.dossier;
 
 /**
  * « Envoyer mon dossier à MENAO » (F-09, F-56), depuis la dernière carte des résultats, comme sur
  * le site : message facultatif ; l'adresse e-mail est demandée tant qu'aucun compte n'est connecté
- * (recherche anonyme, ADR 0012), pour que l'équipe puisse répondre.
+ * (recherche anonyme, ADR 0012), pour que l'équipe puisse répondre. Écran « Nette » (lot 12) :
+ * grand titre, champs en carte et bouton collé en bas.
  */
 export default function DossierScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,43 +43,50 @@ export default function DossierScreen() {
 
   if (sent) {
     return (
-      <Screen header={<TopBar />} footer={<Button label={t.back} onPress={() => router.back()} />}>
-        <Title>{t.title}</Title>
-        <Notice tone="success">{t.sent}</Notice>
-      </Screen>
+      <ActionScreen
+        title={t.title}
+        footer={<ActionSubmit label={t.back} onPress={() => router.back()} />}
+      >
+        <SentCard text={t.sent} />
+      </ActionScreen>
     );
   }
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    <ActionScreen
+      title={t.title}
+      lead={t.intro}
+      footer={
+        <>
+          {failure ? <Notice tone="error">{failure}</Notice> : null}
+          <ActionSubmit label={t.submit} onPress={submit} loading={pending} />
+        </>
+      }
     >
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
-      {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <TextField
-        label={t.message}
-        value={message}
-        onChangeText={setMessage}
-        maxLength={2000}
-        multiline
-      />
-      {signedIn ? null : (
-        <TextField
-          label={t.email}
-          value={email}
-          onChangeText={(value) => {
-            setEmail(value);
-            setEmailError(undefined);
-          }}
-          hint={t.emailHint}
-          error={emailError}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          textContentType="emailAddress"
+      <FicheCard padding={4.5} gap={4}>
+        <ToolField
+          label={t.message}
+          value={message}
+          onChangeText={setMessage}
+          maxLength={2000}
+          multiline
         />
-      )}
-    </Screen>
+        {signedIn ? null : (
+          <ToolField
+            label={t.email}
+            value={email}
+            onChangeText={(value) => {
+              setEmail(value);
+              setEmailError(undefined);
+            }}
+            hint={t.emailHint}
+            error={emailError}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+          />
+        )}
+      </FicheCard>
+    </ActionScreen>
   );
 }

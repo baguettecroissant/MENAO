@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { AccountStep } from "@/app/recherche/[id]/envoyer/account-step";
 import { Alert, ButtonLink, Card, CardTitle, PageShell } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { appTheme } from "@/lib/fonts";
 import { oauthProviders } from "@/lib/auth/oauth";
 import { matchArtisans } from "@/lib/project/artisans";
 import { preparedRequestPath, sendPagePath } from "@/lib/project/paths";
@@ -103,34 +104,39 @@ export default async function PreparedRequestPage({
   if (!preview) return <Expired />;
   const place = [preview.trade_label, preview.ville_nom].filter(Boolean).join(" · ");
 
+  // Refonte « Nette » (ADR 0257) : la demande à gauche, le compte à droite, polices Inter.
   return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
-            {t.title(preview.first_name)}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+    <main className={`${appTheme} bg-background`}>
+      <div className="mx-auto grid w-full max-w-5xl items-start gap-8 px-4 py-8 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.75rem]">
+              {t.title(preview.first_name)}
+            </h1>
+            <p className="text-[0.9375rem] leading-relaxed text-label sm:text-base">{t.intro}</p>
+          </div>
+          {(preview.summary || place) && (
+            <Card className="flex flex-col gap-2">
+              <CardTitle title={t.project} description={place || undefined} />
+              {preview.summary && <p className="text-[0.9375rem] text-label">{preview.summary}</p>}
+            </Card>
+          )}
         </div>
-        {(preview.summary || place) && (
-          <Card className="flex flex-col gap-2">
-            <CardTitle title={t.project} description={place || undefined} />
-            {preview.summary && <p className="text-sm">{preview.summary}</p>}
-          </Card>
-        )}
-        <AccountStep
-          actions={{
-            signUp: signUpForPreparedRequest.bind(null, jeton),
-            signIn: signInForPreparedRequest.bind(null, jeton),
-            provider: continueWithProviderForPreparedRequest.bind(null, jeton),
-          }}
-          providers={oauthProviders}
-          defaults={{
-            firstName: preview.first_name,
-            email: preview.email,
-            phone: preview.phone.replace(/^\+33/, ""),
-          }}
-        />
+        <div className="flex flex-col gap-4">
+          <AccountStep
+            actions={{
+              signUp: signUpForPreparedRequest.bind(null, jeton),
+              signIn: signInForPreparedRequest.bind(null, jeton),
+              provider: continueWithProviderForPreparedRequest.bind(null, jeton),
+            }}
+            providers={oauthProviders}
+            defaults={{
+              firstName: preview.first_name,
+              email: preview.email,
+              phone: preview.phone.replace(/^\+33/, ""),
+            }}
+          />
+        </div>
       </div>
     </main>
   );

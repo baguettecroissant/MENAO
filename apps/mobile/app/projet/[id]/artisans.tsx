@@ -6,26 +6,31 @@ import {
   showWiderZone,
 } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { ArrowLeft, ChevronRight } from "lucide-react-native";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { ArtisanTile, HelpTile, TILE_WIDTH, type CardSelection } from "@/components/artisan-card";
+import { StyleSheet, Text, View } from "react-native";
+import { ArtisanPickCard, HelpCard, type CardSelection } from "@/components/artisan-card";
 import { LotStart } from "@/components/lot-start";
 import { NeedSummaryBand } from "@/components/need-summary";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit } from "@/components/pro/action-kit";
+import { FicheLink, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { loadResults, type MatchedArtisan, type ProjectResults } from "@/lib/project";
 import { loadProjectRequests, sendScreenParams, type ProjectRequests } from "@/lib/requests";
-import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.results;
 const s = fr.selection;
-const GAP = theme.spacing(3);
+const { colors, font, spacing } = theme;
 
 /**
  * Artisans proposés pour le projet (F-09) : fiche de chacun, et sélection de 3 artisans au plus
  * (moins ceux déjà sollicités) avant l'envoi de la demande (F-11). Dans un chantier à plusieurs
  * métiers, les artisans des autres métiers se cochent ici aussi, pour un seul envoi (ADR 0170).
+ * Écran « Nette » (lot 12, maquette « ResultatsApp ») : résumé du besoin en haut, grand titre,
+ * une carte par artisan avec son rond de sélection, et barre collée en bas (« N sélectionnés sur
+ * 3 » et bouton d'envoi).
  */
 export default function ProjetArtisans() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -73,13 +78,13 @@ export default function ProjetArtisans() {
   }, [id]);
   useFocusEffect(load);
 
-  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (data === undefined) return <FicheSkeleton />;
   const { results, requests } = data;
   if (results === null) {
     return (
-      <Screen header={<TopBar />}>
+      <ActionScreen title={t.noneTitle}>
         <Notice tone="error">{t.error}</Notice>
-      </Screen>
+      </ActionScreen>
     );
   }
 
@@ -140,7 +145,7 @@ export default function ProjetArtisans() {
   );
 
   const rootTile = (artisan: MatchedArtisan, recommendedBy?: string | null) => (
-    <ArtisanTile
+    <ArtisanPickCard
       key={artisan.id}
       artisan={artisan}
       tradeLabel={results.tradeLabel}
@@ -162,7 +167,7 @@ export default function ProjetArtisans() {
     />
   );
   const lotTile = (lot: Lot, artisan: MatchedArtisan, recommendedBy?: string | null) => (
-    <ArtisanTile
+    <ArtisanPickCard
       key={artisan.id}
       artisan={artisan}
       tradeLabel={lot.trade}
@@ -207,20 +212,45 @@ export default function ProjetArtisans() {
       params: sendScreenParams(id, selected, lotChoices),
     });
 
+  // Compteur de la maquette, pour le seul métier principal (3 places au plus par métier).
+  const countNote =
+    !direct && lotChoices.length === 0 ? s.count(selected.length, requests.slots) : undefined;
+
   return (
-    <Screen
+    <ActionScreen
       band={
         <NeedSummaryBand
           summary={results.summary}
           onEdit={() => router.dismissTo({ pathname: "/projet/[id]", params: { id } })}
         />
       }
+      title={
+        direct
+          ? t.direct.title(directName)
+          : !empty
+            ? t.title
+            : wider.length
+              ? t.wider.emptyTitle
+              : t.noneTitle
+      }
+      lead={
+        direct === "a_envoyer"
+          ? t.direct.lead(directName)
+          : direct === "envoyee"
+            ? t.direct.sentLead(directName)
+            : !empty
+              ? t.found(results.artisans.length)
+              : wider.length
+                ? t.wider.emptyLead
+                : t.none
+      }
       footer={
         total > 0 ? (
-          <Button
+          <ActionSubmit
             label={
               direct && lotChoices.length === 0 ? t.direct.submit(directName) : s.submit(total)
             }
+            note={countNote}
             onPress={send}
           />
         ) : undefined
@@ -228,7 +258,8 @@ export default function ProjetArtisans() {
     >
       {results.parentId ? <Notice tone="info">{t.lots.lotOf(results.tradeLabel)}</Notice> : null}
       {results.parentId ? (
-        <LinkText
+        <FicheLink
+          icon={ArrowLeft}
           label={t.lots.back}
           onPress={() =>
             router.push({
@@ -238,26 +269,6 @@ export default function ProjetArtisans() {
           }
         />
       ) : null}
-      <Title>
-        {direct
-          ? t.direct.title(directName)
-          : !empty
-            ? t.title
-            : wider.length
-              ? t.wider.emptyTitle
-              : t.noneTitle}
-      </Title>
-      <Body muted>
-        {direct === "a_envoyer"
-          ? t.direct.lead(directName)
-          : direct === "envoyee"
-            ? t.direct.sentLead(directName)
-            : !empty
-              ? t.found(results.artisans.length)
-              : wider.length
-                ? t.wider.emptyLead
-                : t.none}
-      </Body>
       {!direct && results.preferredId && !results.preferred && results.preferredName ? (
         <Notice tone="info">{t.knownUnavailable(results.preferredName)}</Notice>
       ) : null}
@@ -267,12 +278,12 @@ export default function ProjetArtisans() {
       )}
       {direct ? (
         severalTrades ? (
-          <Body muted>{s.hintLots}</Body>
+          <Text style={styles.hint}>{s.hintLots}</Text>
         ) : null
       ) : (
         shown.length > 0 &&
         (requests.slots > 0 ? (
-          <Body muted>{severalTrades ? s.hintLots : s.hint}</Body>
+          <Text style={styles.hint}>{severalTrades ? s.hintLots : s.hint}</Text>
         ) : (
           <Notice tone="info">{s.noSlot}</Notice>
         ))
@@ -280,43 +291,27 @@ export default function ProjetArtisans() {
       {limitReached === "" && <Notice tone="info">{s.limit}</Notice>}
       {/* Partenaires recommandés par un artisan du chantier (ADR 0174), hors du classement. */}
       {results.recommended.length > 0 ? (
-        <View style={styles.recommended}>
-          <Text role="heading" style={styles.lotsHeading}>
+        <View style={styles.group}>
+          <Text role="heading" style={styles.heading}>
             {t.recommended.title}
           </Text>
-          <Body muted>{t.recommended.lead}</Body>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={TILE_WIDTH + GAP}
-            decelerationRate="fast"
-            style={styles.carousel}
-            contentContainerStyle={styles.carouselContent}
-          >
-            {results.recommended.map((r) => rootTile(r.artisan, r.by))}
-          </ScrollView>
+          <Text style={styles.hint}>{t.recommended.lead}</Text>
+          {results.recommended.map((r) => rootTile(r.artisan, r.by))}
         </View>
       ) : null}
-      {/* Carrousel de la maquette « Résultat de recherche - in app », bord à bord. */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={TILE_WIDTH + GAP}
-        decelerationRate="fast"
-        style={styles.carousel}
-        contentContainerStyle={styles.carouselContent}
-      >
+      {/* Une carte par artisan (maquette « ResultatsApp »). */}
+      <View style={styles.list}>
         {shown.map((artisan) => rootTile(artisan))}
         {/* Demande directe (ADR 0198) : le client a déjà choisi son artisan. */}
         {direct ? null : (
-          <HelpTile
+          <HelpCard
             onPress={() => router.push({ pathname: "/projet/[id]/dossier", params: { id } })}
           />
         )}
-      </ScrollView>
+      </View>
       {results.lots.length > 0 ? (
         <View style={styles.lots}>
-          <Text role="heading" style={styles.lotsHeading}>
+          <Text role="heading" style={styles.heading}>
             {t.lots.title}
           </Text>
           {results.workOrder.length > 1 ? (
@@ -335,7 +330,8 @@ export default function ProjetArtisans() {
                 </View>
                 {/* Pas d'artisan de la zone : la page du métier propose ceux d'un peu plus loin. */}
                 {lot.artisans.length === 0 ? (
-                  <LinkText
+                  <FicheLink
+                    icon={ChevronRight}
                     label={t.lots.see}
                     onPress={() =>
                       router.push({ pathname: "/projet/[id]/artisans", params: { id: lot.id } })
@@ -356,57 +352,42 @@ export default function ProjetArtisans() {
                 />
               ) : null}
               {limitReached === lot.id && <Notice tone="info">{s.limitLots}</Notice>}
-              {lot.artisans.length > 0 || lot.recommended.length > 0 ? (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  snapToInterval={TILE_WIDTH + GAP}
-                  decelerationRate="fast"
-                  style={styles.carousel}
-                  contentContainerStyle={styles.carouselContent}
-                >
-                  {/* Partenaires recommandés (ADR 0174), avant les artisans du classement. */}
-                  {lot.recommended.map((r) => lotTile(lot, r.artisan, r.by))}
-                  {lot.artisans.map((artisan) => lotTile(lot, artisan))}
-                </ScrollView>
-              ) : null}
+              {/* Partenaires recommandés (ADR 0174), avant les artisans du classement. */}
+              {lot.recommended.map((r) => lotTile(lot, r.artisan, r.by))}
+              {lot.artisans.map((artisan) => lotTile(lot, artisan))}
             </View>
           ))}
         </View>
       ) : null}
-    </Screen>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  recommended: { gap: theme.spacing(2) },
-  lots: { gap: theme.spacing(3), paddingTop: theme.spacing(2) },
-  lotsHeading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
+  hint: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  group: { gap: spacing(2.5) },
+  list: { gap: spacing(3) },
+  lots: { gap: spacing(3), paddingTop: spacing(2) },
+  heading: {
+    fontFamily: font.display,
+    fontSize: 20,
+    lineHeight: 24,
+    letterSpacing: -0.4,
+    color: colors.foreground,
+  },
   lot: {
-    gap: theme.spacing(2),
+    gap: spacing(3),
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: theme.spacing(2.5),
+    borderTopColor: colors.border,
+    paddingTop: spacing(3),
   },
   lotRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: theme.spacing(3),
+    gap: spacing(3),
   },
-  lotText: { flex: 1, gap: theme.spacing(0.5) },
-  lotTrade: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },
-  lotFound: {
-    fontFamily: theme.font.regular,
-    fontSize: 13,
-    color: theme.colors["muted-foreground"],
-  },
-  // Le carrousel déborde des marges de l'écran, les cartes restent alignées sur le texte.
-  carousel: { marginHorizontal: -theme.spacing(5), flexGrow: 0 },
-  carouselContent: {
-    gap: GAP,
-    paddingHorizontal: theme.spacing(5),
-    paddingVertical: theme.spacing(1),
-    alignItems: "stretch",
-  },
+  lotText: { flex: 1, gap: spacing(0.5) },
+  lotTrade: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
+  lotFound: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
 });

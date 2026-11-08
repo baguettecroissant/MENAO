@@ -17,7 +17,8 @@ const ERRORS = {
 
 /**
  * Dictée du projet (F-05), comme sur le site (bouton micro dans la zone de saisie des maquettes) :
- * seul le bouton rond s'affiche au repos ; pendant l'écoute, le niveau du micro et la durée.
+ * seul le bouton rond s'affiche au repos ; pendant l'écoute, le niveau du micro et la durée, à
+ * droite du bouton. Bouton rond contour de 44 px (refonte « Nette », lot 12), bleu pendant l'écoute.
  * 2 minutes au plus ; le texte transcrit est ajouté à la description.
  */
 export function DictationButton({
@@ -42,14 +43,6 @@ export function DictationButton({
 
   return (
     <View style={styles.row}>
-      {state !== "idle" ? (
-        <View aria-live="polite" style={styles.status}>
-          {listening ? <LevelBars level={level} /> : null}
-          <Text style={[styles.statusText, listening && quiet && styles.quiet]}>
-            {state === "transcribing" ? t.transcribing : quiet ? t.quiet : t.listening(seconds)}
-          </Text>
-        </View>
-      ) : null}
       <Pressable
         role="button"
         aria-label={label}
@@ -64,13 +57,21 @@ export function DictationButton({
         ]}
       >
         {state === "transcribing" ? (
-          <ActivityIndicator color={colors["primary-foreground"]} />
+          <ActivityIndicator color={colors.primary} />
         ) : listening ? (
           <AudioLines size={20} color={colors["primary-foreground"]} />
         ) : (
-          <Mic size={20} color={colors["primary-foreground"]} />
+          <Mic size={20} color={colors.foreground} />
         )}
       </Pressable>
+      {state !== "idle" ? (
+        <View aria-live="polite" style={styles.status}>
+          {listening ? <LevelBars level={level} /> : null}
+          <Text style={[styles.statusText, listening && quiet && styles.quiet]}>
+            {state === "transcribing" ? t.transcribing : quiet ? t.quiet : t.listening(seconds)}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -94,24 +95,21 @@ export function LevelBars({ level }: { level: number }) {
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: spacing(3),
-  },
+  row: { flexShrink: 1, flexDirection: "row", alignItems: "center", gap: spacing(3) },
   status: { flexShrink: 1, flexDirection: "row", alignItems: "center", gap: spacing(2) },
   statusText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
   quiet: { color: colors.warning },
   button: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonActive: { backgroundColor: colors["primary-strong"] },
+  buttonActive: { borderColor: colors.primary, backgroundColor: colors.primary },
   pressed: { opacity: 0.8 },
   bars: { flexDirection: "row", alignItems: "flex-end", gap: 2, height: 16 },
   bar: { width: 3, borderRadius: 2, backgroundColor: colors["primary-soft"] },

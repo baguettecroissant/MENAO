@@ -75,8 +75,8 @@ export function SelectionBar({
 
   const several = groups.length > 1;
   return (
-    <div className="sticky bottom-4 z-20 flex flex-col items-center justify-between gap-3 rounded-card border border-border bg-surface/95 p-4 shadow-raised backdrop-blur sm:flex-row">
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+    <div className="sticky bottom-4 z-20 flex flex-col items-center justify-between gap-3 rounded-[1.125rem] border border-border bg-surface/95 p-4 shadow-[0_12px_32px_rgb(17_23_40/0.12)] backdrop-blur sm:flex-row sm:px-5">
+      <p className="text-sm font-semibold text-foreground" aria-live="polite">
         {hint ?? (several ? (full ? t.limitLots : t.hintLots) : full ? t.limit : t.hint)}
       </p>
       <Button

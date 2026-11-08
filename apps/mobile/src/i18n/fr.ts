@@ -1238,6 +1238,9 @@ export const fr = {
     noSlot: "Vous avez déjà contacté 3 artisans pour ce projet.",
     sentBanner: (names: string) => `Votre demande est déjà envoyée à ${names}.`,
     viewProfile: "Voir le profil",
+    // Barre collée en bas du choix des artisans (refonte « Nette », lot 12).
+    count: (n: number, max: number) =>
+      n <= 1 ? `${n} sélectionné sur ${max}` : `${n} sélectionnés sur ${max}`,
   },
   profile: {
     request: "Envoyer une demande",
@@ -1385,6 +1388,14 @@ export const fr = {
       choose: (trade: string) => `Choisir un artisan : ${trade}`,
     },
     workOrder: (trades: string) => `Ordre habituel des travaux : ${trades}.`,
+    // Étapes de la confirmation (refonte « Nette », lot 12), d'après « Comment ça marche ».
+    steps: {
+      label: "Suite de votre demande",
+      sent: "Envoyée",
+      replies: "Réponses",
+      visit: "Rendez-vous et devis",
+      visitText: "L'artisan vient voir votre chantier, puis vous envoie son devis.",
+    },
   },
   // Suivi des demandes et des chantiers (F-11, F-12) : textes repris de l'espace client du site.
   myChantiers: {

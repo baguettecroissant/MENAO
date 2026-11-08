@@ -1,5 +1,5 @@
 import { AI_CONFIDENCE_THRESHOLD, parisToday, photosAdvised, storedLotTrades } from "@menao/core";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -91,20 +91,19 @@ export default async function ProjectReviewPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Link
           href={back}
-          className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           {t.back}
         </Link>
-        <div className="flex flex-col gap-2">
-          <h1 className="flex items-center gap-2.5 text-2xl font-medium tracking-tight sm:text-[1.75rem]">
-            <Sparkles aria-hidden="true" className="size-6 shrink-0 text-primary" />
+        <div className="flex max-w-3xl flex-col gap-2">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[0.9375rem] text-label sm:text-base">
             {project.analyzed_at ? t.intro : t.noAnalysis}
           </p>
         </div>

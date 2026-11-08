@@ -1,19 +1,16 @@
 import { availability, parisToday, specialtiesPreview } from "@menao/core";
-import { BadgeCheck, BriefcaseBusiness, Check, MapPin, ShieldCheck } from "lucide-react-native";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import { BadgeCheck, Check, ShieldCheck } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { FicheButton, FicheTag } from "@/components/pro/fiche-kit";
+import { ArtisanAvatar, SelectionDot } from "@/components/request-kit";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
+import { haptic } from "@/lib/haptics";
 import type { MatchedArtisan } from "@/lib/project";
-import { Button } from "@/ui";
 import { theme } from "@/ui/theme";
-import { ArtisanPlaceholder } from "@/components/artisan-placeholder";
 
 const t = fr.results;
-const { colors, font, radius, spacing } = theme;
-
-/** Largeur d'une carte du carrousel : la suivante dépasse, pour inviter à faire défiler. */
-export const TILE_WIDTH = 236;
+const { colors, font, spacing } = theme;
 
 /** Spécialités affichées sur une carte, comme la maquette (les autres en « +N »). */
 const SHOWN_SPECIALTIES = 2;
@@ -28,12 +25,13 @@ function zoneLabel(zone: MatchedArtisan["zone"]): string {
 export type CardSelection = "selectable" | "selected" | "sent" | "none";
 
 /**
- * Carte d'un artisan proposé (F-09), dans le carrousel de la maquette « Résultat de recherche - in
- * app » : photo, métier et expérience, zone et distance, disponibilité, puis les spécialités
- * demandées par le projet en premier. Un appui ouvre la fiche ; la coche, en haut à droite de la
- * photo, ajoute l'artisan à la demande.
+ * Carte d'un artisan proposé (F-09), d'après la maquette « ResultatsApp » (refonte « Nette »,
+ * lot 12) : photo ronde, nom (Inter Tight), métier et expérience, zone et distance, pastilles
+ * (disponibilité en couleur, Score MENAO, vérification), spécialités demandées par le projet en
+ * premier, et rond de sélection à droite (bleu nuit avec coche, carte bordée de 2 px bleu nuit).
+ * Un appui sur la carte ouvre la fiche ; le rond ajoute l'artisan à la demande.
  */
-export function ArtisanTile({
+export function ArtisanPickCard({
   artisan,
   tradeLabel,
   projectWorkTypes,
@@ -63,109 +61,81 @@ export function ArtisanTile({
       ? t.distance(artisan.distanceKm.toLocaleString("fr-FR", { maximumFractionDigits: 1 }))
       : null;
   const selected = selection === "selected";
+  const toggleable = selection === "selectable" || selected;
   return (
-    <View style={[styles.tile, selected && styles.tileSelected]}>
+    <View style={[styles.card, !toggleable && styles.cardPlain, selected && styles.cardOn]}>
       <Pressable
         role="link"
         aria-label={`${fr.selection.viewProfile} : ${artisan.name}`}
         onPress={onOpen}
-        style={({ pressed }) => pressed && styles.pressed}
+        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
-        {artisan.avatarUrl ? (
-          <Image source={{ uri: artisan.avatarUrl }} style={styles.photo} alt="" />
-        ) : (
-          <ArtisanPlaceholder name={artisan.name} style={styles.photo} medallion={72} />
-        )}
+        <ArtisanAvatar name={artisan.name} uri={artisan.avatarUrl} size={52} />
         <View style={styles.body}>
           <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={styles.name} numberOfLines={2}>
               {artisan.name}
             </Text>
-            <BadgeCheck size={16} color={colors.primary} />
+            <BadgeCheck size={15} color={colors.primary} style={styles.badgeIcon} />
           </View>
-          <View style={styles.row}>
-            <BriefcaseBusiness size={13} color={colors["muted-foreground"]} />
-            <Text style={styles.meta} numberOfLines={1}>
-              {t.since(tradeLabel, artisan.experienceYears)}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <MapPin size={13} color={colors["muted-foreground"]} />
-            <Text style={styles.meta} numberOfLines={1}>
-              {zoneLabel(artisan.zone)}
-              {distance ? ` · ${distance}` : ""}
-            </Text>
-          </View>
-          {recommendedBy !== undefined ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {t.recommended.by(recommendedBy ?? t.recommended.someone)}
-              </Text>
-            </View>
-          ) : null}
-          {artisan.outsideZone ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{t.wider.badge}</Text>
-            </View>
-          ) : null}
-          {artisan.score !== null ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{t.score(artisan.score)}</Text>
-            </View>
-          ) : null}
-          {artisan.verified ? (
-            <View style={styles.badge}>
-              <ShieldCheck size={13} color={colors["primary-strong"]} />
-              <Text style={styles.badgeText}>{t.verified}</Text>
-            </View>
-          ) : null}
-          <View style={[styles.badge, avail.kind === "immediate" && styles.badgeNow]}>
-            {avail.kind === "immediate" ? <View style={styles.dot} /> : null}
-            <Text style={[styles.badgeText, avail.kind === "immediate" && styles.badgeTextNow]}>
-              {avail.kind === "from" ? t.availableFrom(formatLongDate(avail.date)) : t.availableNow}
-            </Text>
+          <Text style={styles.meta} numberOfLines={1}>
+            {[t.since(tradeLabel, artisan.experienceYears), distance].filter(Boolean).join(" · ")}
+          </Text>
+          <Text style={styles.meta} numberOfLines={1}>
+            {zoneLabel(artisan.zone)}
+          </Text>
+          <View style={styles.tags}>
+            {/* Déjà sollicité : l'état prend la place du rond de sélection. */}
+            {selection === "sent" ? (
+              <View style={styles.sent}>
+                <Check size={13} color={colors["primary-foreground"]} strokeWidth={3} />
+                <Text style={styles.sentText}>{fr.selection.alreadySent}</Text>
+              </View>
+            ) : null}
+            <FicheTag
+              dot
+              tone={avail.kind === "immediate" ? "success" : "warning"}
+              text={
+                avail.kind === "from" ? t.availableFrom(formatLongDate(avail.date)) : t.availableNow
+              }
+            />
+            {artisan.score !== null ? (
+              <FicheTag tone="primary" text={t.score(artisan.score)} />
+            ) : null}
+            {artisan.verified ? (
+              <View style={styles.verified}>
+                <ShieldCheck size={13} color={colors.success} />
+                <Text style={styles.verifiedText}>{t.verified}</Text>
+              </View>
+            ) : null}
+            {artisan.outsideZone ? <FicheTag tone="neutral" text={t.wider.badge} /> : null}
+            {recommendedBy !== undefined ? (
+              <FicheTag
+                tone="neutral"
+                text={t.recommended.by(recommendedBy ?? t.recommended.someone)}
+              />
+            ) : null}
           </View>
           {shown.length > 0 ? (
-            <View style={styles.specialties}>
-              {shown.map((label) => (
-                <View key={label} style={styles.specialty}>
-                  <Text style={styles.specialtyText} numberOfLines={1}>
-                    {label}
-                  </Text>
-                </View>
-              ))}
-              {more > 0 ? (
-                <View style={styles.specialty}>
-                  <Text style={styles.specialtyText}>{t.more(more)}</Text>
-                </View>
-              ) : null}
-            </View>
+            <Text style={styles.specialties} numberOfLines={2}>
+              {[...shown, ...(more > 0 ? [t.more(more)] : [])].join(" · ")}
+            </Text>
           ) : null}
         </View>
       </Pressable>
-      {selection === "sent" ? (
-        <View style={styles.sent}>
-          <Check size={13} color={colors.success} strokeWidth={2.6} />
-          <Text style={styles.sentText}>{fr.selection.alreadySent}</Text>
-        </View>
-      ) : selection !== "none" ? (
+      {toggleable ? (
         <Pressable
           role="checkbox"
           aria-checked={selected}
           aria-label={`${fr.selection.select} ${artisan.name}${otherTrade ? `, ${tradeLabel}` : ""}`}
-          onPress={onToggle}
-          hitSlop={8}
-          style={({ pressed }) => [
-            styles.check,
-            selected && styles.checkOn,
-            pressed && styles.pressed,
-          ]}
+          onPress={() => {
+            haptic.select();
+            onToggle?.();
+          }}
+          hitSlop={6}
+          style={({ pressed }) => [styles.toggle, pressed && styles.pressed]}
         >
-          <Check
-            size={18}
-            color={selected ? colors["primary-foreground"] : colors["primary-strong"]}
-            strokeWidth={2.6}
-          />
+          <SelectionDot selected={selected} />
         </Pressable>
       ) : null}
     </View>
@@ -173,124 +143,100 @@ export function ArtisanTile({
 }
 
 /**
- * Dernière carte du carrousel (maquette) : « Vous ne trouvez pas votre artisan idéal ? », vers
- * l'envoi du dossier à l'équipe MENAO, comme sur le site.
+ * Dernière carte de la liste : « Vous ne trouvez pas votre artisan idéal ? », vers l'envoi du
+ * dossier à l'équipe MENAO, comme sur le site.
  */
-export function HelpTile({ onPress }: { onPress: () => void }) {
+export function HelpCard({ onPress }: { onPress: () => void }) {
   return (
-    <View style={[styles.tile, styles.help]}>
+    <View style={styles.help}>
       <Text role="heading" style={styles.helpTitle}>
         {t.help.title}
       </Text>
       <Text style={styles.helpText}>{t.help.text}</Text>
-      <Button label={t.help.cta} onPress={onPress} />
-      <View pointerEvents="none" aria-hidden style={styles.helpArc}>
-        <Svg viewBox="0 0 64 40" width="100%" height="100%">
-          <Path
-            d="M6 36 A28 28 0 0 1 58 22"
-            fill="none"
-            stroke={colors["primary-soft"]}
-            strokeWidth={8}
-            strokeLinecap="round"
-          />
-        </Svg>
-      </View>
+      <FicheButton label={t.help.cta} variant="secondary" onPress={onPress} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tile: {
-    width: TILE_WIDTH,
-    overflow: "hidden",
-    borderRadius: radius.card,
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2),
+    paddingVertical: 14,
+    paddingLeft: 14,
+    paddingRight: spacing(2),
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    boxShadow: "0 1px 3px rgba(17, 23, 40, 0.06)",
   },
-  tileSelected: { borderColor: colors.primary, borderWidth: 2 },
-  pressed: { opacity: 0.85 },
-  photo: { width: "100%", height: 140, backgroundColor: colors["primary-soft"] },
-  body: { gap: spacing(1.5), padding: spacing(3.5) },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
-  name: { flexShrink: 1, fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
-  meta: {
+  cardPlain: { paddingRight: 14 },
+  // Bordure de 2 px : la marge intérieure perd 1 px, la carte garde sa taille.
+  cardOn: {
+    borderWidth: 2,
+    borderColor: colors.foreground,
+    paddingVertical: 13,
+    paddingLeft: 13,
+    paddingRight: spacing(2) - 1,
+  },
+  pressed: { opacity: 0.8 },
+  main: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "flex-start", gap: spacing(3) },
+  body: { flex: 1, minWidth: 0, gap: spacing(1) },
+  nameRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing(1.5) },
+  name: {
     flexShrink: 1,
-    fontFamily: font.regular,
-    fontSize: 12,
-    color: colors["muted-foreground"],
+    fontFamily: font.display,
+    fontSize: 16,
+    lineHeight: 20,
+    letterSpacing: -0.3,
+    color: colors.foreground,
   },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: spacing(1.5),
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-softer"],
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-    marginTop: spacing(0.5),
-  },
-  badgeNow: { backgroundColor: colors["success-soft"] },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
-  badgeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  badgeTextNow: { color: colors.success },
-  specialties: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing(1.5),
-    marginTop: spacing(0.5),
-  },
-  specialty: {
-    maxWidth: "100%",
-    borderRadius: radius.chip,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing(2),
-    paddingVertical: spacing(1),
-  },
-  specialtyText: { fontFamily: font.regular, fontSize: 12, color: colors.foreground },
-  check: {
-    position: "absolute",
-    top: spacing(2.5),
-    right: spacing(2.5),
-    width: 36,
-    height: 36,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkOn: { backgroundColor: colors.primary },
-  sent: {
-    position: "absolute",
-    top: spacing(2.5),
-    right: spacing(2.5),
+  badgeIcon: { marginTop: 2, flexShrink: 0 },
+  meta: { fontFamily: font.regular, fontSize: 12, lineHeight: 17, color: colors.label },
+  tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 2 },
+  verified: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(1),
-    borderRadius: radius.pill,
-    backgroundColor: colors["success-soft"],
-    paddingHorizontal: spacing(2.5),
     paddingVertical: spacing(1),
   },
-  sentText: { fontFamily: font.medium, fontSize: 12, color: colors.success },
-  help: {
-    justifyContent: "center",
-    gap: spacing(3),
-    backgroundColor: colors["primary-softer"],
-    borderColor: colors["primary-soft"],
-    padding: spacing(4),
-  },
-  helpTitle: { fontFamily: font.medium, fontSize: 17, lineHeight: 23, color: colors.foreground },
-  helpText: {
+  verifiedText: { fontFamily: font.semibold, fontSize: 12, color: colors.success },
+  specialties: {
     fontFamily: font.regular,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 17,
     color: colors["muted-foreground"],
   },
-  helpArc: { position: "absolute", right: -6, bottom: 8, width: 72, height: 44 },
+  sent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(1),
+    borderRadius: theme.radius.chip,
+    backgroundColor: colors.success,
+    paddingHorizontal: 9,
+    paddingVertical: spacing(1),
+  },
+  sentText: { fontFamily: font.bold, fontSize: 12, color: colors["primary-foreground"] },
+  // Cible tactile de 44 px autour du rond de 28 px.
+  toggle: {
+    width: theme.touchTarget,
+    height: theme.touchTarget,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  help: {
+    gap: spacing(3),
+    padding: spacing(4.5),
+    borderRadius: 16,
+    backgroundColor: colors["primary-soft"],
+  },
+  helpTitle: {
+    fontFamily: font.display,
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: -0.36,
+    color: colors.foreground,
+  },
+  helpText: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
 });

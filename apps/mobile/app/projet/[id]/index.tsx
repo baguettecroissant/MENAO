@@ -2,7 +2,8 @@ import { AI_CONFIDENCE_THRESHOLD } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { CriteriaReview } from "@/components/criteria-review";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen } from "@/components/pro/action-kit";
+import { FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import {
   loadProject,
@@ -10,7 +11,7 @@ import {
   type ProjectForReview,
   type ProjectPhoto,
 } from "@/lib/project";
-import { Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 
 /** Critères d'un projet analysé (F-07), et ses photos (F-05). */
 export default function ProjetCriteres() {
@@ -37,12 +38,12 @@ export default function ProjetCriteres() {
     };
   }, [id]);
 
-  if (loaded === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (loaded === undefined) return <FicheSkeleton />;
   if (loaded.project === null) {
     return (
-      <Screen header={<TopBar title={fr.review.title} />}>
+      <ActionScreen title={fr.review.title}>
         <Notice tone="error">{fr.review.notFound}</Notice>
-      </Screen>
+      </ActionScreen>
     );
   }
   return (

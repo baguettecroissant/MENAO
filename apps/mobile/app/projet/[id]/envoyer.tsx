@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { AccountStep } from "@/components/account-step";
 import { NeedSummaryBand } from "@/components/need-summary";
+import { FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { RequestForm } from "@/components/request-form";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadNeedSummary, type NeedSummary } from "@/lib/project";
 import { loadSendContext, type SendContext } from "@/lib/requests";
 import { useSession } from "@/lib/session";
-import { Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const r = fr.request;
@@ -45,7 +45,7 @@ export default function Envoyer() {
     return <AccountScreen projectId={id} artisanIds={artisanIds} lots={lotChoices} />;
   } else if (role !== "particulier") content = <Notice tone="error">{r.notParticulier}</Notice>;
   else return <SignedInSend projectId={id} artisanIds={artisanIds} lots={lotChoices} />;
-  return <Screen header={<TopBar />}>{content}</Screen>;
+  return <FicheScreen>{content}</FicheScreen>;
 }
 
 /**
@@ -73,21 +73,20 @@ function AccountScreen({
     };
   }, [projectId]);
 
-  if (summary === undefined) return <ScreenSkeleton header={<TopBar />} />;
-  const step = <AccountStep projectId={projectId} artisanIds={artisanIds} lots={lots} />;
-  return summary ? (
-    <Screen
+  if (summary === undefined) return <FicheSkeleton />;
+  return (
+    <FicheScreen
       band={
-        <NeedSummaryBand
-          summary={summary}
-          onEdit={() => router.dismissTo({ pathname: "/projet/[id]", params: { id: projectId } })}
-        />
+        summary ? (
+          <NeedSummaryBand
+            summary={summary}
+            onEdit={() => router.dismissTo({ pathname: "/projet/[id]", params: { id: projectId } })}
+          />
+        ) : undefined
       }
     >
-      {step}
-    </Screen>
-  ) : (
-    <Screen header={<TopBar />}>{step}</Screen>
+      <AccountStep projectId={projectId} artisanIds={artisanIds} lots={lots} />
+    </FicheScreen>
   );
 }
 
@@ -133,9 +132,9 @@ function SignedInSend({
   }
   if (!loaded.context || !loaded.summary) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen>
         <Notice tone="info">{r.nothingToSend}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   return <RequestForm projectId={projectId} context={loaded.context} summary={loaded.summary} />;
