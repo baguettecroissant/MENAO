@@ -247,9 +247,6 @@ export function RequestDetails({ detail: r }: { detail: RequestDetail }) {
       : []),
     ...(r.budget ? [[st.detail.budget, s.budgets[r.budget]] as [string, string]] : []),
     [st.detail.start, wished],
-    ...(r.autres_metiers.length
-      ? [[st.detail.others, st.othersOwnQuote(r.autres_metiers.join(", "))] as [string, string]]
-      : []),
   ];
   return (
     <SheetSection id="details-chantier" title={st.details}>
@@ -261,6 +258,12 @@ export function RequestDetails({ detail: r }: { detail: RequestDetail }) {
           </div>
         ))}
       </dl>
+      {r.autres_metiers.length > 0 && (
+        // Chantier à plusieurs métiers (ADR 0167) : phrase complète, bien visible.
+        <p className="rounded-input bg-primary-softer px-4 py-3 text-sm text-primary-strong">
+          {t.otherTrades(r.autres_metiers.join(", "))}
+        </p>
+      )}
     </SheetSection>
   );
 }
