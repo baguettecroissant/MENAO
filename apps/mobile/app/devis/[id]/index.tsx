@@ -1,26 +1,18 @@
 import { depositAboveAdvice } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Download, FilePen, X } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
-import { StatusPill } from "@/components/chantier/parts";
 import { QuotePaper } from "@/components/documents/quote-paper";
-import { TopBar } from "@/components/top-bar";
+import { ActionSubmit, SectionLabel, TipNote } from "@/components/pro/action-kit";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { FicheButton, FicheScreen, FicheSkeleton, FicheTag } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDay } from "@/lib/format";
 import { sharePdf, type PdfTarget } from "@/lib/pdf";
 import { loadQuote, type ClientQuote } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import {
-  Body,
-  Button,
-  celebrate,
-  LinkText,
-  Notice,
-  Screen,
-  ScreenSkeleton,
-  Section,
-  Title,
-} from "@/ui";
+import { celebrate, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
@@ -41,6 +33,8 @@ const depositDue = (q: ClientQuote) =>
 /**
  * Devis reçu par le client (F-21), comme sur le site : contenu figé à l'envoi, PDF, signature,
  * acompte, demande de modification ou refus. `retour` : fin de la signature ou du paiement.
+ * Refonte « Nette » (lot 11) : barre du haut, grand titre et pastille d'état, conseil MENAO sur
+ * fond jaune clair, bouton principal collé en bas.
  */
 export default function QuoteScreen() {
   const { id, retour } = useLocalSearchParams<{ id: string; retour?: string }>();
@@ -75,12 +69,12 @@ export default function QuoteScreen() {
     setPdfFailed(!ok);
   }
 
-  if (quote === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (quote === undefined) return <FicheSkeleton title={t.titleFallback} />;
   if (quote === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.titleFallback}>
         <Notice tone="error">{t.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
 
@@ -90,20 +84,20 @@ export default function QuoteScreen() {
   const name = quote.data.numero ?? "devis";
   const footer =
     quote.status === "envoye" ? (
-      <Button label={t.sign} onPress={() => router.push(`/devis/${id}/signature`)} />
+      <ActionSubmit label={t.sign} onPress={() => router.push(`/devis/${id}/signature`)} />
     ) : depositDue(quote) ? (
-      <Button
+      <ActionSubmit
         label={t.payDeposit(formatCents(deposit?.amountCents ?? 0))}
         onPress={() => router.push(`/devis/${id}/acompte`)}
       />
     ) : undefined;
 
   return (
-    <Screen header={<TopBar />} footer={footer}>
+    <FicheScreen title={t.titleFallback} footer={footer}>
       <View style={styles.head}>
-        <Title>{quote.artisan ? t.title(quote.artisan) : t.titleFallback}</Title>
+        <PageHead title={quote.artisan ? t.title(quote.artisan) : t.titleFallback} />
         <View style={styles.status}>
-          <StatusPill text={t.statuses[quote.status]} tone={TONE[quote.status]} />
+          <FicheTag text={t.statuses[quote.status]} tone={TONE[quote.status]} />
           {quote.status === "envoye" && quote.validUntil ? (
             <Text style={styles.validity}>{t.validUntil(formatDay(quote.validUntil))}</Text>
           ) : null}
@@ -115,7 +109,7 @@ export default function QuoteScreen() {
         (quote.status === "signe" &&
           quote.deposit?.status !== "paye" &&
           quote.deposit?.status !== "en_cours")) ? (
-        <Notice tone="info">{t.depositAdvice(advisedDeposit)}</Notice>
+        <TipNote label={t.depositAdviceLabel} text={t.depositAdvice(advisedDeposit)} />
       ) : null}
       {quote.status === "envoye" && retour === "signature" ? (
         <Notice tone="info">{t.signatureReturned}</Notice>
@@ -160,39 +154,50 @@ export default function QuoteScreen() {
         </View>
       ) : null}
 
-      <Section title={t.document}>
+      <View style={styles.paper}>
+        <SectionLabel text={t.document} />
         <QuotePaper model={quote.model} logoUrl={quote.logoUrl} />
-      </Section>
+      </View>
       {pdfFailed ? <Notice tone="error">{fr.pdf.failed}</Notice> : null}
-      <Button
+      <FicheButton
         label={quote.status === "signe" ? t.signedPdf : t.pdf}
         variant="secondary"
+        icon={Download}
         loading={downloading !== null && "quoteId" in downloading}
         onPress={() => download({ quoteId: id }, name)}
       />
       {quote.status === "envoye" ? (
         <View style={styles.responses}>
-          <Body muted>{t.signature.depositNext}</Body>
-          <Button
+          <Text style={styles.small}>{t.signature.depositNext}</Text>
+          <FicheButton
             label={t.requestChange}
-            variant="ghost"
+            variant="secondary"
+            icon={FilePen}
             onPress={() => router.push(`/devis/${id}/modifier`)}
           />
-          <Button
+          <FicheButton
             label={t.refuse}
-            variant="ghost"
+            variant="secondary"
+            icon={X}
             onPress={() => router.push(`/devis/${id}/refuser`)}
           />
         </View>
       ) : null}
-    </Screen>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  head: { gap: spacing(2) },
+  head: { gap: spacing(2.5) },
   status: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(3) },
   validity: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   paid: { gap: spacing(2) },
-  responses: { gap: spacing(1) },
+  paper: { gap: spacing(2.5) },
+  responses: { gap: spacing(2.5) },
+  small: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors["muted-foreground"],
+  },
 });

@@ -192,7 +192,13 @@ export function chantierDocuments(input: {
   ];
 }
 
-export type DocumentSection = { chantierId: string; title: string; documents: ChantierDocument[] };
+export type DocumentSection = {
+  chantierId: string;
+  title: string;
+  /** Artisan du chantier, sous son titre (refonte « Nette », lot 11). */
+  artisan: string | null;
+  documents: ChantierDocument[];
+};
 
 /**
  * « Mes documents » (maquette « Mes chantiers - Mobile », onglet Documents), comme sur le site :
@@ -226,7 +232,16 @@ export async function loadMyDocuments(): Promise<DocumentSection[] | null> {
       reception: (receptions ?? []).find((r) => r.chantier_id === c.chantier_id),
       createdAt: c.created_at,
     });
-    return documents.length ? [{ chantierId: c.chantier_id, title: c.title, documents }] : [];
+    return documents.length
+      ? [
+          {
+            chantierId: c.chantier_id,
+            title: c.title,
+            artisan: c.artisan_name ?? null,
+            documents,
+          },
+        ]
+      : [];
   });
 }
 

@@ -3,16 +3,19 @@ import { refuseQuoteSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
-import { RadioGroup } from "@/components/radio-group";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, DangerBanner, RadioCards } from "@/components/pro/action-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { refuseQuote } from "@/lib/quotes";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 
 const t = fr.quote.refusal;
 const REASONS = QUOTE_REFUSAL_REASONS.map((value) => ({ value, label: t.reasons[value] }));
 
-/** F-21 : refus du devis, avec la raison et un message facultatif pour l'artisan. Définitif. */
+/**
+ * F-21 : refus du devis, avec la raison et un message facultatif pour l'artisan. Définitif.
+ * Écran d'action « Nette » (lot 11) : bandeau rouge clair, raisons en cartes, bouton rouge en bas.
+ */
 export default function RefuseQuoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [reason, setReason] = useState<QuoteRefusalReason | null>(null);
@@ -38,10 +41,13 @@ export default function RefuseQuoteScreen() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
-      <RadioGroup
+    <ActionScreen
+      bar={fr.quote.titleFallback}
+      title={t.title}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} danger />}
+    >
+      <DangerBanner text={t.intro} />
+      <RadioCards
         legend={t.reason}
         options={REASONS}
         value={reason}
@@ -51,7 +57,7 @@ export default function RefuseQuoteScreen() {
         }}
         error={errors.reason}
       />
-      <TextField
+      <ToolField
         label={t.comment}
         value={comment}
         onChangeText={setComment}
@@ -60,7 +66,6 @@ export default function RefuseQuoteScreen() {
         error={errors.comment}
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={t.submit} onPress={submit} loading={pending} />
-    </Screen>
+    </ActionScreen>
   );
 }

@@ -9,7 +9,9 @@ const THUMB = 28;
 /**
  * Curseur de note de 0 à 100 %, par pas de 5 (avis du client, F-28), comme sur le site : rien
  * n'est choisi tant que le client n'y a pas touché. On le fait glisser ou on touche la piste ;
- * avec un lecteur d'écran, on l'ajuste en balayant vers le haut ou le bas.
+ * avec un lecteur d'écran, on l'ajuste en balayant vers le haut ou le bas. `nette` : présentation
+ * de la refonte (avis du client, lot 11) : libellé de la tranche en vert à droite (« Très soigné ·
+ * 85 % ») et barre verte plus épaisse.
  */
 export function RatingSlider({
   label,
@@ -18,6 +20,7 @@ export function RatingSlider({
   valueText,
   caption,
   error,
+  nette = false,
 }: {
   label: string;
   value: number | null;
@@ -27,6 +30,7 @@ export function RatingSlider({
   /** Libellé de la tranche (« Très soigné »), ou l'invitation à noter. */
   caption: string;
   error?: string;
+  nette?: boolean;
 }) {
   const [width, setWidth] = useState(0);
 
@@ -44,8 +48,12 @@ export function RatingSlider({
   return (
     <View style={styles.field}>
       <View style={styles.head}>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{valueText}</Text>
+        <Text style={[styles.label, nette && styles.labelNette]}>{label}</Text>
+        {nette && value !== null ? (
+          <Text style={styles.valueNette}>{`${caption} · ${valueText}`}</Text>
+        ) : (
+          <Text style={styles.value}>{valueText}</Text>
+        )}
       </View>
       <View
         role="slider"
@@ -68,19 +76,22 @@ export function RatingSlider({
         onResponderGrant={pick}
         onResponderMove={pick}
       >
-        <View style={styles.track} pointerEvents="none">
-          <View style={[styles.fill, { width: `${value ?? 0}%` }]} />
+        <View style={[styles.track, nette && styles.trackNette]} pointerEvents="none">
+          <View style={[styles.fill, nette && styles.fillNette, { width: `${value ?? 0}%` }]} />
         </View>
         <View
           pointerEvents="none"
           style={[
             styles.thumb,
+            nette && styles.thumbNette,
             value === null && styles.thumbUnset,
             { left: Math.max(0, (width - THUMB) * (position / 100)) },
           ]}
         />
       </View>
-      <Text style={[styles.caption, value === null && styles.captionUnset]}>{caption}</Text>
+      {nette && value !== null ? null : (
+        <Text style={[styles.caption, value === null && styles.captionUnset]}>{caption}</Text>
+      )}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
@@ -88,9 +99,16 @@ export function RatingSlider({
 
 const styles = StyleSheet.create({
   field: { gap: spacing(2) },
-  head: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+  head: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: spacing(3),
+  },
   label: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   value: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  labelNette: { flexShrink: 1, fontFamily: font.semibold, fontSize: 14 },
+  valueNette: { fontFamily: font.bold, fontSize: 14, color: colors.success },
   touchArea: { height: theme.touchTarget, justifyContent: "center" },
   track: {
     height: 6,
@@ -100,6 +118,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   fill: { height: "100%", backgroundColor: colors.primary },
+  trackNette: { height: 10 },
+  fillNette: { backgroundColor: colors.success },
+  thumbNette: { borderColor: colors.success },
   thumb: {
     position: "absolute",
     width: THUMB,

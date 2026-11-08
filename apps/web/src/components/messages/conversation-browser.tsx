@@ -22,7 +22,7 @@ export function ConversationBrowser({
   activeId,
   base = "/pro/messages",
 }: {
-  base?: "/pro/messages" | "/pro/decouvrir/messages";
+  base?: "/pro/messages" | "/pro/decouvrir/messages" | "/mon-espace/messages";
   rows: readonly ConversationRow[];
   avatarUrls: ReadonlyMap<string, string>;
   now: Date;

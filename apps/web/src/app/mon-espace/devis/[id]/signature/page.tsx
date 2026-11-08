@@ -1,8 +1,8 @@
 import { quoteDocumentModel, quotePdfData, type QuoteDocument } from "@menao/documents";
-import { ArrowLeft, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { Metadata, Route } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ClientFlowPage, ClientSteps } from "@/components/chantier/client-steps";
 import { QuoteSignatureForm } from "@/components/project/quote-signature-form";
 import { buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -37,63 +37,61 @@ export default async function QuoteSignaturePage({
   const model = quoteDocumentModel(data);
   const [deposit, balance] = data.schedule;
 
+  // Refonte « Nette » (ADR 0256) : le devis à gauche, les cases et la signature à droite.
   return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
-        <Link
-          href={quoteHref as Route}
-          className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {t.backToQuote}
-        </Link>
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-          {t.signature.title}
-        </h1>
-        <nav aria-label={t.signature.tabs.label} className="flex border-b border-border">
-          <span
-            aria-current="step"
-            className="flex-1 border-b-2 border-primary pb-3 text-center text-sm font-medium text-primary-strong"
-          >
-            {t.signature.tabs.sign}
-          </span>
-          <span className="flex-1 pb-3 text-center text-sm text-subtle-foreground">
-            {t.signature.tabs.deposit}
-          </span>
-        </nav>
-        <p className="text-sm text-muted-foreground">{t.signature.intro}</p>
-
-        <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
-          {data.numero && (
-            <p className="font-medium">
-              {t.signature.summary(data.numero, euros.format(data.totals.totalTtcCents / 100))}
-            </p>
-          )}
-          <ul className="flex flex-col gap-0.5 text-sm text-muted-foreground">
-            {model.scheduleLines.map((line) => (
-              <li key={line}>• {line}</li>
-            ))}
-          </ul>
-          <p className="text-sm text-muted-foreground">{model.datesLine}</p>
-          <a
-            href={`/devis/${id}/pdf`}
-            target="_blank"
-            rel="noopener"
-            className={`${buttonClasses({ variant: "outline", size: "sm", block: false })} mt-1 self-start`}
-          >
-            <Eye aria-hidden="true" className="size-4" />
-            {t.viewPdf}
-            <span className="sr-only"> {t.newTab}</span>
-          </a>
-        </section>
-
-        <QuoteSignatureForm
-          quoteId={id}
-          deposit={euros.format((deposit?.amountCents ?? 0) / 100)}
-          balance={euros.format((balance?.amountCents ?? 0) / 100)}
+    <ClientFlowPage
+      backHref={quoteHref as Route}
+      backLabel={t.backToQuote}
+      title={t.signature.title}
+      lead={t.signature.intro}
+      steps={
+        <ClientSteps
+          label={t.signature.tabs.label}
+          steps={[
+            { label: t.signature.tabs.sign, state: "current" },
+            { label: t.signature.tabs.deposit, state: "todo" },
+          ]}
         />
-        <p className="text-center text-xs text-muted-foreground">{t.signature.depositNext}</p>
-      </div>
-    </main>
+      }
+      aside={
+        <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+          <QuoteSignatureForm
+            quoteId={id}
+            deposit={euros.format((deposit?.amountCents ?? 0) / 100)}
+            balance={euros.format((balance?.amountCents ?? 0) / 100)}
+          />
+          <p className="text-center text-xs text-muted-foreground">{t.signature.depositNext}</p>
+        </section>
+      }
+    >
+      <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+        {data.numero && (
+          <p className="text-sm font-semibold text-label">
+            {t.signature.summary(data.numero, euros.format(data.totals.totalTtcCents / 100))}
+          </p>
+        )}
+        <p className="font-display text-[2.5rem] leading-none font-bold tracking-tight">
+          {euros.format(data.totals.totalTtcCents / 100)}
+        </p>
+        <ul className="flex flex-col divide-y divide-border border-y border-border text-[0.9375rem]">
+          {model.scheduleLines.map((line) => (
+            <li key={line} className="py-2.5 text-label">
+              {line}
+            </li>
+          ))}
+        </ul>
+        <p className="text-sm text-muted-foreground">{model.datesLine}</p>
+        <a
+          href={`/devis/${id}/pdf`}
+          target="_blank"
+          rel="noopener"
+          className={`${buttonClasses({ variant: "outline", size: "sm", block: false })} mt-1 self-start`}
+        >
+          <Eye aria-hidden="true" className="size-4" />
+          {t.viewPdf}
+          <span className="sr-only"> {t.newTab}</span>
+        </a>
+      </section>
+    </ClientFlowPage>
   );
 }

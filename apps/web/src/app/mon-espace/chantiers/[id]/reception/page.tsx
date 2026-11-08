@@ -1,9 +1,8 @@
 import { parisToday, paymentProgress } from "@menao/core";
 import { receptionPreviewData, type QuoteDocument } from "@menao/documents";
-import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ClientFlowPage } from "@/components/chantier/client-steps";
 import { ReceptionForm } from "@/components/project/reception-form";
 import { fr } from "@/i18n/fr";
 import { documentLogoUrl } from "@/lib/documents/logo";
@@ -56,31 +55,17 @@ export default async function ReceptionPage({
   });
   const logoUrl = await documentLogoUrl(supabase, quote.issuer.logo_path);
 
+  // Refonte « Nette » (ADR 0256).
   return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
-        <Link
-          href={chantierHref}
-          className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {t.back}
-        </Link>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{c.title}</p>
-        </div>
-        <ReceptionForm
-          chantierId={id}
-          preview={preview}
-          withReserves={reserves === "1"}
-          artisanName={c.artisan_name}
-          balance={euros.format(progress.remainingCents / 100)}
-          logoUrl={logoUrl}
-        />
-      </div>
-    </main>
+    <ClientFlowPage backHref={chantierHref} backLabel={t.back} title={t.title} lead={c.title}>
+      <ReceptionForm
+        chantierId={id}
+        preview={preview}
+        withReserves={reserves === "1"}
+        artisanName={c.artisan_name}
+        balance={euros.format(progress.remainingCents / 100)}
+        logoUrl={logoUrl}
+      />
+    </ClientFlowPage>
   );
 }

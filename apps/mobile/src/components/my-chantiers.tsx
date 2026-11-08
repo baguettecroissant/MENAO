@@ -5,14 +5,15 @@ import { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chantier-card";
-import { StatusPill } from "@/components/chantier/parts";
 import { RequestGroup } from "@/components/chantier/request-group";
+import { GroupTitle } from "@/components/list-kit";
+import { CardHeading, FicheCard, FicheTag } from "@/components/pro/fiche-kit";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar, loadMyChantiers, type MyChantiers } from "@/lib/chantiers";
 import { chooseSlot, loadSlotProposals, type SlotProposal } from "@/lib/requests";
 import { formatDateNumeric, formatDayMonthShort, formatTime } from "@/lib/format";
-import { Body, Card, Chip, LinkText, Notice, ScreenSkeleton, celebrate } from "@/ui";
+import { Body, Chip, LinkText, Notice, ScreenSkeleton, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
@@ -22,7 +23,8 @@ const { colors, font, radius, spacing } = theme;
 /**
  * « Mes chantiers » (F-12), d'après la maquette « Mes chantiers - Mobile » et comme sur le site :
  * sur une seule page, chantiers en cours (avancement, action attendue, prochaine intervention),
- * demandes en attente, recherches non envoyées, puis chantiers terminés.
+ * demandes en attente, recherches non envoyées, puis chantiers terminés. Refonte « Nette »
+ * (lot 11) : titres de groupe avec leur nombre, cartes blanches bordées, pastilles d'état.
  */
 export function MyChantiersScreen() {
   const [data, setData] = useState<MyChantiers | null | undefined>(undefined);
@@ -106,7 +108,7 @@ export function MyChantiersScreen() {
                   <Text style={styles.countText}>{t.countToSign(toSign)}</Text>
                 </View>
               )}
-              {pending > toSign && <StatusPill text={fr.chantier.action.payTitle} tone="primary" />}
+              {pending > toSign && <FicheTag text={fr.chantier.action.payTitle} tone="primary" />}
             </View>
           )}
         </TabHeader>
@@ -115,10 +117,10 @@ export function MyChantiersScreen() {
 
         {proposals.length > 0 && (
           <View style={styles.slots}>
-            <Text style={styles.section}>{t.slots.title}</Text>
+            <GroupTitle title={t.slots.title} count={proposals.length} />
             {slotError ? <Notice tone="error">{slotError}</Notice> : null}
             {proposals.map((p) => (
-              <Card key={p.id}>
+              <FicheCard key={p.id} padding={4} gap={0}>
                 <Text style={styles.slotsFrom}>{t.slots.from(p.artisan)}</Text>
                 <View style={styles.slotsChips}>
                   {p.slots.map((iso) => (
@@ -133,7 +135,7 @@ export function MyChantiersScreen() {
                   ))}
                 </View>
                 <Body muted>{t.slots.hint}</Body>
-              </Card>
+              </FicheCard>
             ))}
           </View>
         )}
@@ -145,7 +147,7 @@ export function MyChantiersScreen() {
         ) : (
           // Maquette « Mes chantiers - Mobile » : en cours, demandes, puis terminés, sur une page.
           <>
-            <Text style={styles.section}>{t.inProgress}</Text>
+            <GroupTitle title={t.inProgress} count={active.length} />
             {active.length === 0 ? (
               <EmptyState illustration="chantiers">{t.noActive}</EmptyState>
             ) : (
@@ -158,7 +160,9 @@ export function MyChantiersScreen() {
                 />
               ))
             )}
-            {pendingProjects.length > 0 && <Text style={styles.section}>{t.pending}</Text>}
+            {pendingProjects.length > 0 && (
+              <GroupTitle title={t.pending} count={pendingProjects.length} />
+            )}
             {pendingProjects.map((projectId) => (
               <RequestGroup
                 key={projectId}
@@ -173,8 +177,8 @@ export function MyChantiersScreen() {
         )}
 
         {(data?.drafts.length ?? 0) > 0 && (
-          <Card>
-            <Text style={styles.heading}>{t.drafts.title}</Text>
+          <FicheCard padding={4} gap={3}>
+            <CardHeading title={t.drafts.title} size={17} />
             <Body muted>{t.drafts.intro}</Body>
             {data?.drafts.map((d) => (
               <View key={d.id} style={styles.draft}>
@@ -194,12 +198,12 @@ export function MyChantiersScreen() {
                 />
               </View>
             ))}
-          </Card>
+          </FicheCard>
         )}
 
         {finished.length > 0 ? (
           <>
-            <Text style={styles.section}>{t.finished}</Text>
+            <GroupTitle title={t.finished} count={finished.length} />
             {finished.map((c) => (
               <FinishedChantierCard key={c.chantier_id} c={c} photoUrl={photoOf(c.photo_path)} />
             ))}
@@ -213,7 +217,7 @@ export function MyChantiersScreen() {
 const styles = StyleSheet.create({
   slots: { gap: spacing(3) },
   slotsFrom: {
-    fontFamily: font.medium,
+    fontFamily: font.semibold,
     fontSize: 15,
     color: colors["primary-strong"],
     marginBottom: spacing(2),
@@ -234,14 +238,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(3),
     paddingVertical: spacing(1.5),
   },
-  countText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  section: {
-    fontFamily: font.medium,
-    fontSize: 18,
-    color: colors.foreground,
-    marginTop: spacing(2),
-  },
-  heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
+  countText: { fontFamily: font.semibold, fontSize: 12, color: colors["primary-strong"] },
   draft: {
     flexDirection: "row",
     alignItems: "center",
@@ -250,7 +247,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: spacing(3),
   },
-  draftTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  draftTitle: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
   meta: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   flex: { flex: 1, gap: 2 },
 });

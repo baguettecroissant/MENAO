@@ -1,7 +1,11 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { TopBar } from "@/components/top-bar";
+import { Avatar } from "@/components/avatar";
+import { ActionScreen, ActionSubmit, SectionLabel, SentCard } from "@/components/pro/action-kit";
+import { PrivacyNote } from "@/components/pro/dossier-kit";
+import { FicheButton, FicheCard, FicheTag } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
 import {
@@ -10,7 +14,7 @@ import {
   type InvitationForm,
   type MyInvitation,
 } from "@/lib/invitations";
-import { Body, Button, Card, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -28,6 +32,8 @@ const EMPTY: InvitationForm = {
 /**
  * « Invitez votre artisan de confiance » (ADR 0162), comme sur le site : l'équipe MENAO contacte
  * de la part du client un artisan qui n'est pas encore sur MENAO. Suivi de ses invitations.
+ * Écran « Nette » (lot 11) : formulaire en carte (champs en 16 points), invitations en lignes
+ * avec leur pastille d'état, bouton collé en bas.
  */
 function InviteArtisanScreen() {
   const [values, setValues] = useState<InvitationForm>(EMPTY);
@@ -60,91 +66,96 @@ function InviteArtisanScreen() {
   }
 
   const list = invitations.length ? (
-    <Card>
-      <Text role="heading" style={styles.heading}>
-        {t.listTitle}
-      </Text>
+    <FicheCard padding={0} gap={0}>
+      <View style={styles.listHead}>
+        <SectionLabel text={t.listTitle} />
+      </View>
       {invitations.map((invitation) => (
         <View key={invitation.id} style={styles.row}>
+          <Avatar url={null} name={invitation.company} size={36} initials />
           <View style={styles.rowText}>
             <Text style={styles.strong} numberOfLines={1}>
               {invitation.company}
             </Text>
             <Text style={styles.meta}>{formatDateNumeric(invitation.created_at)}</Text>
           </View>
-          <Text style={[styles.meta, invitation.status === "inscrit" && styles.done]}>
-            {t.status[invitation.status]}
-          </Text>
+          <View style={styles.tag}>
+            <FicheTag
+              text={t.status[invitation.status]}
+              tone={invitation.status === "inscrit" ? "success" : "neutral"}
+            />
+          </View>
         </View>
       ))}
-    </Card>
+    </FicheCard>
   ) : null;
 
   if (sent) {
     return (
-      <Screen
-        header={<TopBar />}
+      <ActionScreen
+        bar={t.cardAction}
+        title={t.title}
         footer={
-          <View style={styles.actions}>
-            <Button label={t.another} onPress={() => setSent(false)} />
-            <Button label={t.back} variant="secondary" onPress={() => router.back()} />
-          </View>
+          <>
+            <ActionSubmit label={t.another} onPress={() => setSent(false)} />
+            <FicheButton label={t.back} variant="secondary" tall onPress={() => router.back()} />
+          </>
         }
       >
-        <Title>{t.title}</Title>
-        <Notice tone="success">{t.sent}</Notice>
+        <SentCard text={t.sent} />
         {list}
-      </Screen>
+      </ActionScreen>
     );
   }
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    <ActionScreen
+      bar={t.cardAction}
+      title={t.title}
+      lead={t.intro}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
     >
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <TextField label={t.company} maxLength={120} {...field("company")} />
-      <TextField label={t.contactName} maxLength={120} {...field("contact_name")} />
-      <TextField
-        label={t.phone}
-        keyboardType="phone-pad"
-        autoComplete="off"
-        hint={t.contactHint}
-        {...field("phone")}
-      />
-      <TextField
-        label={t.email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="off"
-        {...field("email")}
-      />
-      <TextField label={t.city} maxLength={100} {...field("city")} />
-      <TextField label={t.message} maxLength={500} multiline {...field("message")} />
-      <Body muted>{t.privacy}</Body>
+      <FicheCard padding={4} gap={3.5}>
+        <ToolField label={t.company} maxLength={120} {...field("company")} />
+        <ToolField label={t.contactName} maxLength={120} {...field("contact_name")} />
+        <ToolField
+          label={t.phone}
+          keyboardType="phone-pad"
+          autoComplete="off"
+          hint={t.contactHint}
+          {...field("phone")}
+        />
+        <ToolField
+          label={t.email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="off"
+          {...field("email")}
+        />
+        <ToolField label={t.city} maxLength={100} {...field("city")} />
+        <ToolField label={t.message} maxLength={500} multiline {...field("message")} />
+      </FicheCard>
+      <PrivacyNote text={t.privacy} />
       {list}
-    </Screen>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  actions: { gap: spacing(2) },
-  heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
+  listHead: { paddingHorizontal: spacing(4), paddingTop: spacing(4), paddingBottom: spacing(2) },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing(3),
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3),
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: spacing(2.5),
   },
-  rowText: { flex: 1, gap: spacing(0.5) },
-  strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  rowText: { flex: 1, minWidth: 0, gap: 2 },
+  strong: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
   meta: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  done: { color: colors.success },
+  tag: { flexShrink: 1, maxWidth: "45%" },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).

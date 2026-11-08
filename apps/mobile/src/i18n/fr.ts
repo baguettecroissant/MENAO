@@ -22,6 +22,8 @@ export const fr = {
     back: "Retour",
     currentStep: "étape en cours",
     doneStep: "étape terminée",
+    /** Barre d'étapes des parcours du client (refonte « Nette », lot 11). */
+    stepOf: (step: number, total: number, name: string) => `Étape ${step} sur ${total} · ${name}`,
     loading: "Chargement",
     refreshing: "Actualisation",
   },
@@ -1438,6 +1440,7 @@ export const fr = {
     seeChantier: "Voir le chantier",
   },
   clientCancel: {
+    bar: "Annulation",
     reasonsLegend: "Pourquoi annulez-vous ?",
     reasons: {
       plus_besoin: "Je n'ai plus besoin de ces travaux",
@@ -1733,6 +1736,7 @@ export const fr = {
   /** Réception des travaux (F-25, F-26) : réserves, PV signé chez DocuSeal. */
   reception: {
     title: "Réception des travaux",
+    stepsLabel: "Étapes de la réception",
     steps: {
       reserves: "Ajout des réserves",
       pv: "Signature du PV",
@@ -1781,6 +1785,7 @@ export const fr = {
     paid: "Montant déjà payé",
     today: "Montant à payer aujourd'hui",
     total: "Total du chantier",
+    chantierTitle: "Votre chantier",
     beneficiary: (name: string) => `Bénéficiaire : ${name}`,
     direct: "Le solde est versé directement à l'entreprise, dès la réception de votre paiement.",
     submit: (amount: string) => `Payer ${amount}`,
@@ -1812,8 +1817,9 @@ export const fr = {
     refuse: "Refuser le devis",
     sign: "Signer le devis",
     signedNotice: (date: string) => `Vous avez signé ce devis le ${date}.`,
+    depositAdviceLabel: "Conseil MENAO :",
     depositAdvice: (percent: number) =>
-      `Conseil MENAO : l'acompte demandé est de ${percent} %. Nous vous conseillons de ne pas verser plus de 30 % du montant avant le début des travaux. N'hésitez pas à en parler avec l'artisan.`,
+      `L'acompte demandé est de ${percent} %. Nous vous conseillons de ne pas verser plus de 30 % du montant avant le début des travaux. N'hésitez pas à en parler avec l'artisan.`,
     payDeposit: (amount: string) => `Payer l'acompte (${amount})`,
     depositPaid: (amount: string, date: string) => `Acompte de ${amount} payé le ${date}.`,
     depositInvoice: (numero: string) => `Télécharger la facture d'acompte ${numero}`,
@@ -1833,6 +1839,11 @@ export const fr = {
       intro:
         "Vérifiez le devis et cochez les cases ci-dessous : vous signerez ensuite chez notre prestataire de signature électronique, DocuSeal.",
       summary: (numero: string, amount: string) => `Devis n° ${numero} · ${amount} TTC`,
+      // Carte du total (refonte « Nette », lot 11).
+      number: (numero: string) => `Devis n° ${numero}`,
+      ttc: (artisan: string) => `TTC · ${artisan}`,
+      reread: "Relire le devis (PDF)",
+      provider: "Signature chez DocuSeal, notre prestataire",
       consents: {
         document: "J'ai lu et j'accepte le devis.",
         cgu_prestataire:
@@ -1861,6 +1872,12 @@ export const fr = {
       today: "À payer aujourd'hui",
       later: "À la réception des travaux",
       beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+      // Carte de paiement et échéancier (refonte « Nette », lot 11).
+      beneficiaryLabel: "Bénéficiaire",
+      startLabel: "Démarrage prévu",
+      scheduleTitle: "Votre échéancier",
+      depositLine: (percent: number) => `Acompte · ${percent} %`,
+      balanceLine: (percent: number) => `Solde · ${percent} %`,
       methods: "Carte bancaire, Apple Pay ou Google Pay, selon les moyens acceptés par l'artisan.",
       secure: "Paiement sécurisé par Stripe",
       submit: (amount: string) => `Payer ${amount}`,
@@ -3517,6 +3534,8 @@ export const fr = {
     subtitle: "Devis signés, factures et procès-verbaux de vos chantiers.",
     empty: "Vos documents (devis signés, factures, PV de réception) apparaîtront ici.",
     error: "Vos documents n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
+    kinds: { devis: "Devis", facture: "Facture", pv: "PV" },
+    count: (n: number) => (n <= 1 ? `${n} document` : `${n} documents`),
   },
   /** Bouton (+) de l'artisan (ADR 0084) : actions rapides et choix du chantier. */
   proQuickActions: {

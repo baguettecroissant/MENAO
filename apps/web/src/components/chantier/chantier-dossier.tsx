@@ -5,7 +5,19 @@ const t = fr.chantier.dossier;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const card = "flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card";
 
-export type ChantierDocument = { href: string; title: string; meta: string };
+export type ChantierDocument = {
+  href: string;
+  title: string;
+  meta: string;
+  /** Pastille du type (Mes documents, refonte « Nette », ADR 0256). */
+  kind?: "devis" | "facture" | "pv";
+};
+
+const kindTone = {
+  devis: "bg-primary-soft text-primary-strong",
+  facture: "bg-success-soft text-success",
+  pv: "bg-background text-label",
+} as const;
 
 /**
  * « Documents liés » (maquette « Dossier du chantier ») : devis et factures en PDF. Dans « Mes
@@ -22,31 +34,49 @@ export function ChantierDocuments({
 }) {
   return (
     <section aria-labelledby={headingId} className={card}>
-      <h2 id={headingId} className="text-[1.0625rem] font-medium">
-        {title}
-      </h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id={headingId} className="text-[1.0625rem] font-medium">
+          {title}
+        </h2>
+        {documents.length > 0 && (
+          <span className="text-sm font-semibold whitespace-nowrap text-muted-foreground">
+            {t.count(documents.length)}
+          </span>
+        )}
+      </div>
       {documents.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t.noDocuments}</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 in-[.app-nette]:-mx-5 in-[.app-nette]:gap-0 in-[.app-nette]:divide-y in-[.app-nette]:divide-border in-[.app-nette]:border-t in-[.app-nette]:border-border">
           {documents.map((d) => (
             <li key={d.href}>
               <a
                 href={d.href}
                 target="_blank"
                 rel="noopener"
-                className="flex items-center gap-3 rounded-input border border-border p-3 transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+                className="flex items-center gap-3 rounded-input border border-border p-3 transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none in-[.app-nette]:rounded-none in-[.app-nette]:border-0 in-[.app-nette]:px-5"
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary in-[.app-nette]:rounded-input in-[.app-nette]:bg-background in-[.app-nette]:text-label"
                 >
                   <FileText className="size-5" />
                 </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-sm font-medium">{d.title}</span>
-                  <span className="text-xs text-muted-foreground">{d.meta}</span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-sm font-medium in-[.app-nette]:text-[0.9375rem] in-[.app-nette]:font-semibold">
+                    {d.title}
+                  </span>
+                  <span className="text-xs text-muted-foreground in-[.app-nette]:text-[0.8125rem]">
+                    {d.meta}
+                  </span>
                 </span>
+                {d.kind && (
+                  <span
+                    className={`shrink-0 rounded-chip px-2.5 py-1 text-xs font-bold ${kindTone[d.kind]}`}
+                  >
+                    {t.kinds[d.kind]}
+                  </span>
+                )}
                 <span className="sr-only"> ({t.openPdf})</span>
               </a>
             </li>

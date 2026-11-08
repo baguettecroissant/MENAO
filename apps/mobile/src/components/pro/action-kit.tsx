@@ -1,6 +1,14 @@
-import { Check, CircleCheck, TriangleAlert, type LucideIcon } from "lucide-react-native";
+import {
+  Check,
+  CircleCheck,
+  CircleHelp,
+  MapPin,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { fr } from "@/i18n/fr";
 import { haptic } from "@/lib/haptics";
 import { theme } from "@/ui/theme";
 import { PageHead } from "./dossier-kit";
@@ -14,6 +22,8 @@ const { colors, font, spacing } = theme;
  * validées (« CreneauxApp », « RefusApp », versions ordinateur transposées) : barre du haut avec
  * retour et titre court, grand titre et phrase d'explication, cartes à cocher ou à choix unique,
  * bandeau d'action définitive, lignes d'alerte et bouton principal collé en bas.
+ * Espace client (lot 11, maquettes « ReceptionApp », « AvisClientApp », versions ordinateur
+ * transposées) : barre d'étapes des parcours, carte de paiement et conseil sur fond jaune clair.
  */
 
 /**
@@ -24,20 +34,135 @@ export function ActionScreen({
   bar,
   title,
   lead,
+  steps,
+  meta,
   footer,
+  onRefresh,
   children,
 }: {
   bar?: string;
   title: string;
   lead?: string | null;
+  /** Barre d'étapes d'un parcours (signature → acompte, réception → solde → avis), au-dessus du titre. */
+  steps?: ReactNode;
+  /** Chantier concerné (titre, adresse), en petit sous la phrase. */
+  meta?: string | null;
   footer?: ReactNode;
+  onRefresh?: () => Promise<unknown>;
   children?: ReactNode;
 }) {
   return (
-    <FicheScreen title={bar} footer={footer}>
+    <FicheScreen title={bar} footer={footer} onRefresh={onRefresh}>
+      {steps}
       <PageHead title={title} lead={lead} />
+      {meta ? (
+        <View style={styles.meta}>
+          <MapPin size={14} color={colors["muted-foreground"]} style={styles.metaIcon} />
+          <Text style={styles.metaText}>{meta}</Text>
+        </View>
+      ) : null}
       {children}
     </FicheScreen>
+  );
+}
+
+/**
+ * Barre d'étapes segmentée d'un parcours du client : segments bleu nuit jusqu'à l'étape en cours,
+ * puis « Étape N sur M · nom de l'étape ».
+ */
+export function JourneySteps({
+  label,
+  steps,
+  current,
+}: {
+  /** Nom du parcours, lu par les lecteurs d'écran (« Étapes de la signature »). */
+  label: string;
+  steps: readonly string[];
+  /** Index de l'étape en cours, à partir de 0. */
+  current: number;
+}) {
+  const total = steps.length;
+  const step = Math.min(Math.max(current, 0), total - 1);
+  const text = fr.nav.stepOf(step + 1, total, steps[step] ?? "");
+  return (
+    <View style={styles.steps}>
+      <View
+        role="progressbar"
+        aria-label={`${label} : ${text}`}
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-valuenow={step + 1}
+        style={styles.segments}
+      >
+        {steps.map((name, i) => (
+          <View key={name} style={[styles.segment, i <= step && styles.segmentOn]} />
+        ))}
+      </View>
+      <Text style={styles.stepsText}>{text}</Text>
+    </View>
+  );
+}
+
+/**
+ * Carte de paiement (acompte, solde) : intitulé, montant à payer en gros (Inter Tight), lignes
+ * « intitulé · valeur » séparées par un trait fin, puis `children` (précisions en petit).
+ */
+export function PayCard({
+  title,
+  amount,
+  rows,
+  children,
+}: {
+  title: string;
+  amount: string;
+  rows: readonly { label: string; value: string; strong?: boolean }[];
+  children?: ReactNode;
+}) {
+  return (
+    <View style={styles.pay}>
+      <Text style={styles.payTitle}>{title}</Text>
+      <Text style={styles.payAmount} numberOfLines={1} adjustsFontSizeToFit>
+        {amount}
+      </Text>
+      {rows.length > 0 ? (
+        <View>
+          {rows.map((row) => (
+            <MoneyRow key={row.label} {...row} />
+          ))}
+        </View>
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
+/** Ligne « intitulé · valeur » des cartes d'argent, séparée par un trait fin au-dessus. */
+export function MoneyRow({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
+  return (
+    <View style={styles.moneyRow}>
+      <Text style={styles.moneyLabel}>{label}</Text>
+      <Text style={[styles.moneyValue, strong && styles.moneyStrong]}>{value}</Text>
+    </View>
+  );
+}
+
+/** Conseil MENAO sur fond jaune clair : intitulé en gras orange, puis le conseil. */
+export function TipNote({ label, text }: { label: string; text: string }) {
+  return (
+    <View style={styles.tip}>
+      <CircleHelp size={18} color={colors.warning} style={styles.metaIcon} />
+      <Text style={styles.tipText}>
+        <Text style={styles.tipLabel}>{label}</Text> {text}
+      </Text>
+    </View>
   );
 }
 
@@ -54,6 +179,8 @@ export function ActionSubmit({
   variant = "primary",
   note,
   noteDone = false,
+  footnote,
+  footnoteIcon: FootIcon,
 }: {
   label: string;
   onPress: () => void;
@@ -63,6 +190,9 @@ export function ActionSubmit({
   variant?: "primary" | "secondary";
   note?: string;
   noteDone?: boolean;
+  /** Mention sous le bouton (« Paiement sécurisé par Stripe »), avec une icône facultative. */
+  footnote?: string;
+  footnoteIcon?: LucideIcon;
 }) {
   return (
     <>
@@ -79,6 +209,12 @@ export function ActionSubmit({
         loading={loading}
         disabled={disabled}
       />
+      {footnote ? (
+        <View style={styles.footnote}>
+          {FootIcon ? <FootIcon size={14} color={colors["muted-foreground"]} /> : null}
+          <Text style={styles.footnoteText}>{footnote}</Text>
+        </View>
+      ) : null}
     </>
   );
 }
@@ -298,6 +434,91 @@ export function AlertLine({
 }
 
 const styles = StyleSheet.create({
+  meta: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(1.5),
+    marginTop: -spacing(1),
+  },
+  metaIcon: { marginTop: 2, flexShrink: 0 },
+  metaText: {
+    flex: 1,
+    fontFamily: font.semibold,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
+  steps: { gap: spacing(2) },
+  segments: { flexDirection: "row", gap: 6 },
+  segment: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border },
+  segmentOn: { backgroundColor: colors.foreground },
+  stepsText: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
+  pay: {
+    gap: spacing(2),
+    padding: spacing(4.5),
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  payTitle: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
+  payAmount: {
+    fontFamily: font.display,
+    fontSize: 38,
+    lineHeight: 42,
+    letterSpacing: -1.1,
+    color: colors.foreground,
+    marginBottom: spacing(1),
+  },
+  moneyRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: spacing(3),
+    paddingVertical: spacing(2.5),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  moneyLabel: {
+    flexShrink: 1,
+    fontFamily: font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
+  moneyValue: {
+    flexShrink: 1,
+    textAlign: "right",
+    fontFamily: font.semibold,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.foreground,
+  },
+  moneyStrong: { fontFamily: font.bold },
+  tip: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(3),
+    paddingVertical: 14,
+    paddingHorizontal: spacing(4),
+    borderRadius: 16,
+    backgroundColor: colors["warning-soft"],
+  },
+  tipText: { flex: 1, fontFamily: font.regular, fontSize: 14, lineHeight: 21, color: colors.label },
+  tipLabel: { fontFamily: font.bold, color: colors.warning },
+  footnote: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing(1.5),
+  },
+  footnoteText: {
+    flexShrink: 1,
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors["muted-foreground"],
+  },
   note: {
     textAlign: "center",
     fontFamily: font.semibold,

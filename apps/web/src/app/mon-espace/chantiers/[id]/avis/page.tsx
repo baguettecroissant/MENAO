@@ -4,6 +4,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PersonCard } from "@/components/chantier/chantier-parts";
+import { ClientSteps } from "@/components/chantier/client-steps";
 import { ReviewForm } from "@/components/review/review-form";
 import { ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -52,7 +53,7 @@ export default async function ReviewPage({ params }: PageProps<"/mon-espace/chan
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
         <Link
           href={chantierHref}
           className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
@@ -60,28 +61,15 @@ export default async function ReviewPage({ params }: PageProps<"/mon-espace/chan
           <ArrowLeft aria-hidden="true" className="size-4" />
           {t.back}
         </Link>
-        <nav aria-label={fr.reception.stepsLabel} className="flex border-b border-border">
-          {[
-            { label: fr.reception.steps.pv, done: true },
-            { label: fr.reception.steps.solde, done: closed },
-          ].map((step) => (
-            <span
-              key={step.label}
-              className={`inline-flex flex-1 items-center justify-center gap-1 pb-3 text-center text-xs sm:gap-1.5 sm:text-sm ${
-                step.done ? "text-success" : "text-subtle-foreground"
-              }`}
-            >
-              {step.done && <Check aria-hidden="true" className="size-4 shrink-0" />}
-              {step.label}
-            </span>
-          ))}
-          <span
-            aria-current="step"
-            className="flex-1 border-b-2 border-primary pb-3 text-center text-xs font-medium text-primary-strong sm:text-sm"
-          >
-            {fr.reception.steps.avis}
-          </span>
-        </nav>
+        {/* Refonte « Nette » (ADR 0256) : mêmes étapes que la réception. */}
+        <ClientSteps
+          label={fr.reception.stepsLabel}
+          steps={[
+            { label: fr.reception.steps.pv, state: "done" },
+            { label: fr.reception.steps.solde, state: closed ? "done" : "todo" },
+            { label: fr.reception.steps.avis, state: "current" },
+          ]}
+        />
 
         {review ? (
           <section className="relative flex flex-col items-center gap-4 overflow-hidden rounded-card border border-border bg-surface px-6 pt-14 pb-8 text-center shadow-card">
@@ -113,10 +101,10 @@ export default async function ReviewPage({ params }: PageProps<"/mon-espace/chan
               <span className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <CircleCheck aria-hidden="true" className="size-6" />
               </span>
-              <h1 className="max-w-md text-xl font-medium tracking-tight sm:text-2xl">
+              <h1 className="max-w-xl text-[1.75rem] leading-[1.1] font-medium tracking-tight sm:text-[2.25rem]">
                 {t.title(c.artisan_name)}
               </h1>
-              <p className="max-w-md text-sm text-muted-foreground">{t.intro}</p>
+              <p className="max-w-lg text-[0.9375rem] text-label">{t.intro}</p>
             </div>
             <ReviewForm
               chantierId={id}

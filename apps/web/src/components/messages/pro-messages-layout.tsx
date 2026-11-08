@@ -23,9 +23,11 @@ export function ProMessagesLayout({
   empty,
   children,
   base = "/pro/messages",
+  subtitle = t.subtitlePro,
 }: {
-  /** Pages d'exemples (ADR 0184) : /pro/decouvrir/messages. */
-  base?: "/pro/messages" | "/pro/decouvrir/messages";
+  /** Pages d'exemples (ADR 0184) : /pro/decouvrir/messages ; particulier (ADR 0256). */
+  base?: "/pro/messages" | "/pro/decouvrir/messages" | "/mon-espace/messages";
+  subtitle?: string;
   rows: readonly ConversationRow[];
   avatarUrls: ReadonlyMap<string, string>;
   now: Date;
@@ -43,7 +45,7 @@ export function ProMessagesLayout({
       >
         <div className={`flex flex-col gap-1.5 ${open ? "max-lg:sr-only" : ""}`}>
           <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
-          <p className="text-[0.9375rem] text-label sm:text-base">{t.subtitlePro}</p>
+          <p className="text-[0.9375rem] text-label sm:text-base">{subtitle}</p>
         </div>
         {empty ?? (
           <div className="lg:grid lg:h-[calc(100dvh-14rem)] lg:min-h-[34rem] lg:grid-cols-[22rem_minmax(0,1fr)] lg:overflow-hidden lg:rounded-card lg:border lg:border-border lg:bg-surface lg:shadow-card">

@@ -35,8 +35,11 @@ export function DocumentsCard({
   );
 }
 
-/** Document du chantier : un appui ouvre son aperçu, d'où il se télécharge en PDF. */
-function DocumentRow({ document: d }: { document: ChantierDocument }) {
+/**
+ * Titre, type d'aperçu (`/document/<type>/<id>`) et ligne « numéro · date » d'un document du
+ * chantier, partagés avec « Mes documents ».
+ */
+export function documentInfo(d: ChantierDocument) {
   const title =
     d.kind === "devis"
       ? d.signed
@@ -45,8 +48,15 @@ function DocumentRow({ document: d }: { document: ChantierDocument }) {
       : d.kind === "pv"
         ? t.reception.pvDocument
         : t.dossier.invoice[d.kind];
-  const type = d.kind === "devis" || d.kind === "pv" ? d.kind : "facture";
+  const type: "devis" | "pv" | "facture" =
+    d.kind === "devis" || d.kind === "pv" ? d.kind : "facture";
   const meta = t.dossier.meta(d.numero, formatDateNumeric(d.date));
+  return { title, type, meta };
+}
+
+/** Document du chantier : un appui ouvre son aperçu, d'où il se télécharge en PDF. */
+function DocumentRow({ document: d }: { document: ChantierDocument }) {
+  const { title, type, meta } = documentInfo(d);
   return (
     <Pressable
       role="link"

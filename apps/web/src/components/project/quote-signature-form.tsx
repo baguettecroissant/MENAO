@@ -50,14 +50,14 @@ export function QuoteSignatureForm({
           const error = errors[item.name]?.[0];
           return (
             <div key={item.name} className="flex flex-col gap-1">
-              <label className="flex items-start gap-3 text-sm">
+              <label className="flex items-start gap-3 text-sm in-[.app-nette]:text-[0.9375rem]">
                 <input
                   type="checkbox"
                   name={item.name}
                   defaultChecked={state.values?.[item.name] === "on"}
                   aria-invalid={error ? true : undefined}
                   aria-describedby={error ? `${item.name}-error` : undefined}
-                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                  className="mt-0.5 size-4 shrink-0 accent-primary in-[.app-nette]:size-[1.125rem] in-[.app-nette]:accent-foreground"
                 />
                 <span>{item.label}</span>
               </label>

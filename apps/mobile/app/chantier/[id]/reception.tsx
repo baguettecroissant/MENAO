@@ -2,33 +2,40 @@ import { RESERVES_LIMITS, SIGNATURE_CONSENTS, type SignatureConsent } from "@men
 import { receptionDocumentModel } from "@menao/documents";
 import { receptionConsentsSchema, reservesSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { MapPin } from "lucide-react-native";
+import { Info, PenLine } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { z } from "zod";
 import { ConsentList, type ConsentItem } from "@/components/consents";
 import { ReceptionPaper } from "@/components/documents/reception-paper";
-import { HeaderBand } from "@/components/header-band";
-import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
+import {
+  ActionScreen,
+  ActionSubmit,
+  JourneySteps,
+  SectionLabel,
+} from "@/components/pro/action-kit";
+import { SoftBanner } from "@/components/pro/dossier-kit";
+import { FicheButton, FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { providerLinks, siteLinks } from "@/lib/env";
 import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadReception, startReceptionSignature } from "@/lib/reception";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton, Section, TextField } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.reception;
 const links = fr.quote.signature.links;
-const { colors, font, radius, spacing } = theme;
+const { colors, font } = theme;
 
 /**
  * Réception des travaux (F-25, F-26), comme sur le site : réserves éventuelles (`reserves=1`),
  * aperçu du PV tel qu'il sera signé, cases à cocher, puis signature chez DocuSeal dans la fenêtre
  * sécurisée. Le PV signé fait foi : ses données sont figées par la base à l'ouverture de la
- * signature.
+ * signature. Écran « Nette » (lot 11) : barre d'étapes (réserves, PV, solde, avis), réserves dans
+ * une carte, PV et cases bleu nuit, bouton collé en bas.
  */
 export default function ReceptionScreen() {
   const { id, reserves: reservesParam } = useLocalSearchParams<{
@@ -46,22 +53,24 @@ export default function ReceptionScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (reception === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (reception === undefined) return <FicheSkeleton title={t.title} />;
   if (reception === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.title}>
         <Notice tone="error">{fr.chantier.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   // Chantier pas (ou plus) en attente de réception : retour au chantier.
   if (!reception.ready) return <Redirect href={`/chantier/${id}`} />;
 
   const balance = formatCents(reception.balanceCents);
+  // Fin de chantier (F-27) : réserves éventuelles, PV, solde, puis avis.
   const steps = [
-    ...(withReserves ? [{ key: "reserves" as const, label: t.steps.reserves }] : []),
-    { key: "pv" as const, label: t.steps.pv },
-    { key: "solde" as const, label: t.steps.solde },
+    ...(withReserves ? [t.steps.reserves] : []),
+    t.steps.pv,
+    t.steps.solde,
+    fr.clientReview.steps.avis,
   ];
   const model = {
     ...receptionDocumentModel({
@@ -128,24 +137,33 @@ export default function ReceptionScreen() {
   }
 
   const address = reception.preview.site.addressLines.join(", ");
-  const band = (
-    <HeaderBand title={reception.title} meta={address ? [{ icon: MapPin, text: address }] : []}>
-      <StepTabs steps={steps} current={step} />
-    </HeaderBand>
+  const meta = [reception.title, address].filter(Boolean).join(" · ");
+  const journey = (
+    <JourneySteps
+      label={t.stepsLabel}
+      steps={steps}
+      current={step === "reserves" || !withReserves ? 0 : 1}
+    />
   );
 
   if (step === "reserves") {
     return (
-      <Screen
-        band={band}
+      <ActionScreen
+        bar={t.title}
+        steps={journey}
+        title={t.reservesTitle}
+        lead={t.reservesQuestion}
+        meta={meta}
         footer={
-          <Button label={t.continue} onPress={() => checkReserves() !== null && setStep("pv")} />
+          <ActionSubmit
+            label={t.continue}
+            onPress={() => checkReserves() !== null && setStep("pv")}
+          />
         }
       >
-        <Section title={t.reservesTitle}>
-          <Text style={styles.strong}>{t.reservesQuestion}</Text>
-          <Body muted>{t.reservesHelp(reception.artisanName)}</Body>
-          <TextField
+        <FicheCard padding={4} gap={3}>
+          <Text style={styles.text}>{t.reservesHelp(reception.artisanName)}</Text>
+          <ToolField
             label={t.reservesLabel}
             value={reserves}
             onChangeText={(value) => {
@@ -157,31 +175,37 @@ export default function ReceptionScreen() {
             multiline
             error={reservesError}
           />
-        </Section>
-      </Screen>
+        </FicheCard>
+      </ActionScreen>
     );
   }
 
   return (
-    <Screen band={band} footer={<Button label={t.submit} onPress={submit} loading={pending} />}>
+    <ActionScreen
+      bar={t.title}
+      steps={journey}
+      title={withReserves ? t.pvTitle : t.conformTitle}
+      lead={withReserves ? t.pvIntro : t.conformText(reception.artisanName)}
+      meta={meta}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
+    >
       {withReserves ? null : (
-        <Card tone="soft">
-          <View style={styles.conform}>
-            <Text role="heading" style={styles.strong}>
-              {t.conformTitle}
-            </Text>
-            <Body muted>{t.conformText(reception.artisanName)}</Body>
-            <Text style={styles.important}>
-              <Text style={styles.importantLabel}>{t.important}</Text> {t.conformNext(balance)}
-            </Text>
-          </View>
-        </Card>
+        <SoftBanner icon={Info}>
+          <Text style={styles.text}>
+            <Text style={styles.strong}>{t.important}</Text> {t.conformNext(balance)}
+          </Text>
+        </SoftBanner>
       )}
-      <Section title={t.pvTitle} text={t.pvIntro}>
-        <ReceptionPaper model={model} logoUrl={reception.logoUrl} />
-      </Section>
+      <SectionLabel text={withReserves ? t.pvLabel : t.pvTitle} />
+      {withReserves ? null : <Text style={styles.text}>{t.pvIntro}</Text>}
+      <ReceptionPaper model={model} logoUrl={reception.logoUrl} />
       {withReserves ? (
-        <Button label={t.editReserves} variant="secondary" onPress={() => setStep("reserves")} />
+        <FicheButton
+          label={t.editReserves}
+          variant="secondary"
+          icon={PenLine}
+          onPress={() => setStep("reserves")}
+        />
       ) : null}
       <ConsentList
         items={items}
@@ -193,26 +217,20 @@ export default function ReceptionScreen() {
         errors={errors}
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Body muted>{t.otp}</Body>
-      <Body muted center>
-        {t.balanceNext}
-      </Body>
-    </Screen>
+      <Text style={styles.small}>{t.otp}</Text>
+      <Text style={[styles.small, styles.center]}>{t.balanceNext}</Text>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  conform: { gap: spacing(2) },
-  important: {
+  text: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.label },
+  strong: { fontFamily: font.bold, color: colors.foreground },
+  small: {
     fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors["primary-strong"],
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-softer"],
-    padding: spacing(3),
-    overflow: "hidden",
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors["muted-foreground"],
   },
-  importantLabel: { fontFamily: font.medium },
+  center: { textAlign: "center" },
 });

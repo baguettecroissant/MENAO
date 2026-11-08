@@ -1,14 +1,12 @@
 import { SIGNATURE_CONSENTS, type SignatureConsent } from "@menao/core";
 import { signatureConsentsSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { MapPin } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { z } from "zod";
 import { ConsentList, type ConsentItem } from "@/components/consents";
-import { HeaderBand } from "@/components/header-band";
-import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, JourneySteps } from "@/components/pro/action-kit";
+import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { providerLinks, siteLinks } from "@/lib/env";
 import { formatCents } from "@/lib/format";
@@ -16,19 +14,18 @@ import { openHostedPage } from "@/lib/hosted";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuote, startQuoteSignature } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
 const { colors, font, spacing } = theme;
-const STEPS = [
-  { key: "sign", label: t.steps.sign },
-  { key: "deposit", label: t.steps.deposit },
-] as const;
+const STEPS = [t.steps.sign, t.steps.deposit];
 
 /**
  * Signature du devis (F-13), comme sur le site : rappel du devis et de l'échéancier, cases à
  * cocher, puis signature chez DocuSeal (code à usage unique) dans la fenêtre sécurisée.
+ * Écran « Nette » (lot 11) : étape 1 sur 2, carte du total, cases bleu nuit en carte et
+ * « Signer le devis » collé en bas avec la mention du prestataire.
  */
 export default function QuoteSignatureScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,12 +37,12 @@ export default function QuoteSignatureScreen() {
   const [pending, setPending] = useState(false);
   const [pdfFailed, setPdfFailed] = useState(false);
 
-  if (quote === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (quote === undefined) return <FicheSkeleton title={t.signature.title} />;
   if (quote === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.signature.title}>
         <Notice tone="error">{t.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   // Devis déjà signé, refusé ou remplacé : retour à son écran.
@@ -102,42 +99,55 @@ export default function QuoteSignatureScreen() {
     }
   }
 
+  const site = [quote.data.site.title, quote.data.site.addressLines.join(", ")]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <Screen
-      band={
-        <HeaderBand
-          title={quote.data.site.title}
-          meta={[{ icon: MapPin, text: quote.data.site.addressLines.join(", ") }]}
-        >
-          <StepTabs steps={STEPS} current="sign" />
-        </HeaderBand>
+    <ActionScreen
+      bar={t.signature.title}
+      steps={<JourneySteps label={t.steps.label} steps={STEPS} current={0} />}
+      title={t.signature.title}
+      lead={t.signature.intro}
+      meta={site}
+      footer={
+        <ActionSubmit
+          label={t.signature.submit}
+          onPress={submit}
+          loading={pending}
+          footnote={t.signature.provider}
+        />
       }
-      footer={<Button label={t.signature.submit} onPress={submit} loading={pending} />}
     >
-      <Body muted>{t.signature.intro}</Body>
-      <Card>
-        <View style={styles.summary}>
-          {quote.data.numero ? (
-            <Text style={styles.summaryTitle}>
-              {t.signature.summary(quote.data.numero, formatCents(quote.data.totals.totalTtcCents))}
-            </Text>
-          ) : null}
-          {quote.model.scheduleLines.map((line) => (
-            <Text key={line} style={styles.summaryText}>
-              • {line}
-            </Text>
-          ))}
-          <Text style={styles.summaryText}>{quote.model.datesLine}</Text>
-          <LinkText
-            label={t.pdf}
-            onPress={async () => {
-              setPdfFailed(false);
-              setPdfFailed(!(await sharePdf({ quoteId: id }, quote.data.numero ?? "devis")));
-            }}
-          />
-        </View>
-      </Card>
+      <FicheCard padding={4.5} gap={1}>
+        {quote.data.numero ? (
+          <Text style={styles.number}>{t.signature.number(quote.data.numero)}</Text>
+        ) : null}
+        <Text style={styles.total} numberOfLines={1} adjustsFontSizeToFit>
+          {formatCents(quote.data.totals.totalTtcCents)}
+        </Text>
+        <Text style={styles.small}>{t.signature.ttc(quote.data.issuer.name)}</Text>
+        <Pressable
+          role="link"
+          hitSlop={8}
+          style={styles.reread}
+          onPress={async () => {
+            setPdfFailed(false);
+            setPdfFailed(!(await sharePdf({ quoteId: id }, quote.data.numero ?? "devis")));
+          }}
+        >
+          <Text style={styles.link}>{t.signature.reread}</Text>
+        </Pressable>
+      </FicheCard>
       {pdfFailed ? <Notice tone="error">{fr.pdf.failed}</Notice> : null}
+      <FicheCard padding={4} gap={1.5}>
+        {quote.model.scheduleLines.map((line) => (
+          <Text key={line} style={styles.line}>
+            • {line}
+          </Text>
+        ))}
+        <Text style={styles.small}>{quote.model.datesLine}</Text>
+      </FicheCard>
       <ConsentList
         items={items}
         checked={checked}
@@ -148,16 +158,34 @@ export default function QuoteSignatureScreen() {
         errors={errors}
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Body muted>{t.signature.otp}</Body>
-      <Body muted center>
-        {t.signature.depositNext}
-      </Body>
-    </Screen>
+      <Text style={styles.small}>{t.signature.otp}</Text>
+      <Text style={[styles.small, styles.center]}>{t.signature.depositNext}</Text>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  summary: { gap: spacing(1.5) },
-  summaryTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  summaryText: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  number: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
+  total: {
+    fontFamily: font.display,
+    fontSize: 34,
+    lineHeight: 40,
+    letterSpacing: -1,
+    color: colors.foreground,
+  },
+  small: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors["muted-foreground"],
+  },
+  center: { textAlign: "center" },
+  line: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  reread: { alignSelf: "flex-start", marginTop: spacing(1.5) },
+  link: {
+    fontFamily: font.semibold,
+    fontSize: 14,
+    color: colors["primary-strong"],
+    textDecorationLine: "underline",
+  },
 });

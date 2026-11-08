@@ -1,28 +1,35 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Check, CircleDashed, Lock, MapPin } from "lucide-react-native";
+import { Lock } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { HeaderBand } from "@/components/header-band";
-import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
+import {
+  ActionScreen,
+  ActionSubmit,
+  JourneySteps,
+  MoneyRow,
+  PayCard,
+  SectionLabel,
+} from "@/components/pro/action-kit";
+import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadBalance, startBalancePayment } from "@/lib/reception";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.balance;
+const d = fr.quote.deposit;
 const { colors, font, spacing } = theme;
-const STEPS = [
-  { key: "pv", label: fr.reception.steps.pv },
-  { key: "solde", label: fr.reception.steps.solde },
-] as const;
+// Fin de chantier (F-27) : PV, solde, puis avis.
+const STEPS = [fr.reception.steps.pv, fr.reception.steps.solde, fr.clientReview.steps.avis];
 
 /**
  * Paiement du solde (F-32), comme sur le site : montant déjà payé, solde calculé par la base,
  * puis Stripe Checkout sur le compte de l'artisan (aucune commission MENAO, règle 12).
+ * Écran « Nette » (lot 11) : carte de paiement, récapitulatif du chantier et bouton « Payer … »
+ * collé en bas.
  */
 export default function BalanceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,12 +38,12 @@ export default function BalanceScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (balance === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (balance === undefined) return <FicheSkeleton title={t.title} />;
   if (balance === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.title}>
         <Notice tone="error">{fr.chantier.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   // Chantier pas encore réceptionné, ou solde déjà payé : retour au chantier.
@@ -61,91 +68,52 @@ export default function BalanceScreen() {
   }
 
   return (
-    <Screen
-      band={
-        <HeaderBand
-          title={balance.title}
-          meta={balance.address ? [{ icon: MapPin, text: balance.address }] : []}
-        >
-          <StepTabs steps={STEPS} current="solde" />
-        </HeaderBand>
-      }
+    <ActionScreen
+      bar={t.title}
+      steps={<JourneySteps label={fr.reception.stepsLabel} steps={STEPS} current={1} />}
+      title={t.title}
+      lead={t.intro}
+      meta={[balance.title, balance.address].filter(Boolean).join(" · ")}
       footer={
         balance.inProgress ? undefined : (
-          <Button label={t.submit(amount)} onPress={pay} loading={pending} />
+          <ActionSubmit
+            label={t.submit(amount)}
+            onPress={pay}
+            loading={pending}
+            footnote={d.secure}
+            footnoteIcon={Lock}
+          />
         )
       }
     >
-      <Body muted>{t.intro}</Body>
-      <Card>
-        <View style={styles.summary}>
-          <View style={styles.line}>
-            <View style={styles.label}>
-              <View style={[styles.dot, styles.dotDone]}>
-                <Check size={13} color={colors["primary-strong"]} strokeWidth={2.6} />
-              </View>
-              <Text style={styles.muted}>{t.paid}</Text>
-            </View>
-            <Text style={styles.muted}>{formatCents(balance.paidCents)}</Text>
-          </View>
-          <View style={styles.line}>
-            <View style={styles.label}>
-              <View style={styles.dot}>
-                <CircleDashed size={13} color={colors.primary} />
-              </View>
-              <Text style={styles.strong}>{t.today}</Text>
-            </View>
-            <Text style={styles.amount}>{amount}</Text>
-          </View>
-          <View style={[styles.line, styles.total]}>
-            <Text style={styles.muted}>{t.total}</Text>
-            <Text style={styles.muted}>{formatCents(balance.totalCents)}</Text>
-          </View>
-          <Text style={styles.text}>{t.beneficiary(balance.company)}</Text>
-          <Text style={styles.small}>{t.direct}</Text>
-          <Text style={styles.small}>{fr.quote.deposit.methods}</Text>
-        </View>
-      </Card>
+      <PayCard
+        title={t.today}
+        amount={amount}
+        rows={[{ label: d.beneficiaryLabel, value: balance.company }]}
+      >
+        <Text style={styles.small}>{t.direct}</Text>
+        <Text style={styles.small}>{d.methods}</Text>
+      </PayCard>
       {balance.inProgress ? <Notice tone="info">{t.inProgress}</Notice> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <View style={styles.secure}>
-        <Lock size={14} color={colors["muted-foreground"]} />
-        <Text style={styles.small}>{fr.quote.deposit.secure}</Text>
-      </View>
-    </Screen>
+      <FicheCard padding={4} gap={0}>
+        <View style={styles.head}>
+          <SectionLabel text={t.chantierTitle} />
+        </View>
+        <MoneyRow label={t.total} value={formatCents(balance.totalCents)} />
+        <MoneyRow label={t.paid} value={formatCents(balance.paidCents)} />
+        <MoneyRow label={t.today} value={amount} strong />
+      </FicheCard>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  summary: { gap: spacing(3) },
-  line: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing(3),
-  },
-  label: { flexDirection: "row", alignItems: "center", gap: spacing(3), flexShrink: 1 },
-  dot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dotDone: { backgroundColor: colors["primary-soft"] },
-  total: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing(3) },
-  text: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
-  strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  muted: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  amount: { fontFamily: font.display, fontSize: 20, color: colors.primary },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  secure: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing(1.5),
+  head: { paddingBottom: spacing(2) },
+  small: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors["muted-foreground"],
   },
 });

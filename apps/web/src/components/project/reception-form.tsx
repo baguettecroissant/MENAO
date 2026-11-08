@@ -3,6 +3,7 @@
 import { RESERVES_LIMITS } from "@menao/core";
 import { receptionDocumentModel, type ReceptionPdfData } from "@menao/documents";
 import { useActionState, useState } from "react";
+import { ClientSteps } from "@/components/chantier/client-steps";
 import { ReceptionPaper } from "@/components/chantier/reception-paper";
 import { Alert, Button, FieldError, Hint, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -78,25 +79,21 @@ export function ReceptionForm({
 
   return (
     <div className="flex flex-col gap-5">
-      <nav aria-label={t.stepsLabel} className="flex border-b border-border">
-        {steps.map((s) => (
-          <span
-            key={s}
-            aria-current={s === step ? "step" : undefined}
-            className={`flex-1 pb-3 text-center text-sm ${
-              s === step
-                ? "border-b-2 border-primary font-medium text-primary-strong"
-                : "text-subtle-foreground"
-            }`}
-          >
-            {t.steps[s]}
-          </span>
-        ))}
-      </nav>
+      {/* Refonte « Nette » (ADR 0256) : les étapes de la réception, puis l'étape en carte. */}
+      <ClientSteps
+        label={t.stepsLabel}
+        steps={[...steps, "avis" as const].map((s, index, all) => ({
+          label: t.steps[s],
+          state: s === step ? "current" : index < all.indexOf(step) ? "done" : ("todo" as const),
+        }))}
+      />
 
       {step === "reserves" ? (
-        <section className="flex flex-col gap-3" aria-labelledby="reserves-title">
-          <h2 id="reserves-title" className="text-lg font-medium">
+        <section
+          className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
+          aria-labelledby="reserves-title"
+        >
+          <h2 id="reserves-title" className="text-lg">
             {t.reservesTitle}
           </h2>
           <p className="text-sm font-medium">{fr.chantier.reception.reservesQuestion}</p>
@@ -131,8 +128,11 @@ export function ReceptionForm({
           </Button>
         </section>
       ) : (
-        <section className="flex flex-col gap-4" aria-labelledby="pv-title">
-          <h2 id="pv-title" className="text-lg font-medium">
+        <section
+          className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
+          aria-labelledby="pv-title"
+        >
+          <h2 id="pv-title" className="text-lg">
             {t.pvTitle}
           </h2>
           <p className="text-sm text-muted-foreground">{t.pvIntro}</p>
@@ -156,14 +156,14 @@ export function ReceptionForm({
                 const error = errors[item.name]?.[0];
                 return (
                   <div key={item.name} className="flex flex-col gap-1">
-                    <label className="flex items-start gap-3 text-sm">
+                    <label className="flex items-start gap-3 text-sm in-[.app-nette]:text-[0.9375rem]">
                       <input
                         type="checkbox"
                         name={item.name}
                         defaultChecked={state.values?.[item.name] === "on"}
                         aria-invalid={error ? true : undefined}
                         aria-describedby={error ? `${item.name}-error` : undefined}
-                        className="mt-0.5 size-4 shrink-0 accent-primary"
+                        className="mt-0.5 size-4 shrink-0 accent-primary in-[.app-nette]:size-[1.125rem] in-[.app-nette]:accent-foreground"
                       />
                       <span>
                         {item.label}

@@ -28,42 +28,48 @@ export default async function InviteArtisanPage() {
       .order("created_at", { ascending: false }),
   ]);
 
+  const hasList = Boolean(invitations && invitations.length > 0);
+  // Refonte « Nette » (ADR 0256) : le formulaire à gauche, les invitations à droite.
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <div className="flex max-w-3xl flex-col gap-2">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {t.title}
         </h1>
-        <p className="text-sm text-muted-foreground">{t.intro}</p>
+        <p className="text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
       </div>
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
-        <InviteArtisanForm trades={trades ?? []} />
-      </section>
-      {invitations && invitations.length > 0 && (
-        <section aria-labelledby="invitations" className="flex flex-col gap-3">
-          <h2 id="invitations" className="text-lg font-medium">
-            {t.listTitle}
-          </h2>
-          <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-            {invitations.map((invitation) => (
-              <li
-                key={invitation.id}
-                className="flex flex-col gap-1 border-t border-border px-4 py-3 first:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-              >
-                <span className="flex min-w-0 flex-col">
-                  <span className="truncate font-medium">{invitation.company}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {t.sentOn(formatDay(invitation.created_at))}
-                  </span>
-                </span>
-                <StatusBadge tone={invitation.status === "inscrit" ? "success" : "neutral"}>
-                  {t.status[invitation.status]}
-                </StatusBadge>
-              </li>
-            ))}
-          </ul>
+      <div
+        className={`grid items-start gap-6 ${hasList ? "lg:grid-cols-[minmax(0,1fr)_22rem]" : "max-w-3xl"}`}
+      >
+        <section className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+          <InviteArtisanForm trades={trades ?? []} />
         </section>
-      )}
+        {invitations && invitations.length > 0 && (
+          <section
+            aria-labelledby="invitations"
+            className="overflow-hidden rounded-card border border-border bg-surface shadow-card"
+          >
+            <h2 id="invitations" className="px-5 pt-4 pb-2.5 text-lg">
+              {t.listTitle}
+            </h2>
+            <ul className="divide-y divide-border border-t border-border">
+              {invitations.map((invitation) => (
+                <li key={invitation.id} className="flex items-center gap-3 px-5 py-3">
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-semibold">{invitation.company}</span>
+                    <span className="text-[0.8125rem] text-muted-foreground">
+                      {t.sentOn(formatDay(invitation.created_at))}
+                    </span>
+                  </span>
+                  <StatusBadge tone={invitation.status === "inscrit" ? "success" : "neutral"}>
+                    {t.status[invitation.status]}
+                  </StatusBadge>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
