@@ -6,19 +6,26 @@ import {
 } from "@menao/core";
 import { sendQuoteSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { User, Wrench } from "lucide-react-native";
-import { useCallback, useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
-import { DetailBlock } from "@/components/pro/request-blocks";
-import { FicheButton, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { RadioCards } from "@/components/pro/action-kit";
+import { PageHead } from "@/components/pro/dossier-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheScreen,
+  FicheSkeleton,
+} from "@/components/pro/fiche-kit";
 import { QuoteSteps } from "@/components/pro/quote-kit";
+import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteSendContext, sendQuote } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Checkbox, Notice, TextField, celebrate } from "@/ui";
+import { Notice, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -35,7 +42,8 @@ const nextDay = (date: string) =>
 /**
  * « Envoi du devis » (F-21), comme sur le site : échéancier par défaut ou personnalisé (acompte à
  * la signature, solde à la réception, montants de @menao/core), dates des travaux (F-20), puis
- * envoi : la base attribue le numéro et fige le devis.
+ * envoi : la base attribue le numéro et fige le devis. Écran d'action « Nette » (lot 10) : cartes
+ * Échéancier, Dates et récapitulatif (total TTC, client, chantier), bouton collé en bas.
  */
 function QuoteSendScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -90,26 +98,6 @@ function QuoteSendScreen() {
     router.dismissTo({ pathname: "/pro-chantier/[id]", params: { id, envoye: "1" } });
   }
 
-  const option = (value: Schedule, title: string, body: ReactNode) => (
-    <Pressable
-      role="radio"
-      aria-checked={schedule === value}
-      onPress={() => {
-        setSchedule(value);
-        setFailure(null);
-      }}
-      style={[styles.option, schedule === value && styles.optionOn]}
-    >
-      <View style={[styles.radio, schedule === value && styles.radioOn]}>
-        {schedule === value ? <View style={styles.radioDot} /> : null}
-      </View>
-      <View style={styles.optionText}>
-        <Text style={styles.strong}>{title}</Text>
-        {body}
-      </View>
-    </Pressable>
-  );
-
   return (
     <FicheScreen
       title={t.barTitle}
@@ -124,32 +112,32 @@ function QuoteSendScreen() {
       }
     >
       <QuoteSteps current="send" />
+      <PageHead title={s.title} />
       {!ctx.insured ? <Notice tone="error">{s.insuranceMissing}</Notice> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
 
-      <View style={styles.section}>
-        <Text role="heading" style={styles.heading}>
-          {s.scheduleTitle}
-        </Text>
-        <View role="radiogroup" aria-label={s.scheduleTitle} style={styles.options}>
-          {option(
-            "defaut",
-            s.defaultSchedule,
-            tranches(ctx.defaultDeposit).map((line) => (
-              <Text key={line} style={styles.small}>
-                • {line}
-              </Text>
-            )),
-          )}
-          {option(
-            "personnalise",
-            s.customSchedule,
-            <Text style={styles.small}>{s.customHint}</Text>,
-          )}
-        </View>
+      <FicheCard padding={4}>
+        <CardHeading title={s.scheduleTitle} size={17} />
+        <RadioCards
+          legend={s.scheduleTitle}
+          hideLegend
+          options={[
+            {
+              value: "defaut" as const,
+              label: s.defaultSchedule,
+              detail: tranches(ctx.defaultDeposit).join("\n"),
+            },
+            { value: "personnalise" as const, label: s.customSchedule, detail: s.customHint },
+          ]}
+          value={schedule}
+          onChange={(value) => {
+            setSchedule(value);
+            setFailure(null);
+          }}
+        />
         {schedule === "personnalise" ? (
           <View style={styles.custom}>
-            <TextField
+            <ToolField
               label={s.deposit}
               value={customDeposit}
               onChangeText={(value) => {
@@ -163,19 +151,17 @@ function QuoteSendScreen() {
             {isValidDepositPercent(custom)
               ? tranches(custom).map((line) => (
                   <Text key={line} style={styles.small}>
-                    • {line}
+                    {line}
                   </Text>
                 ))
               : null}
-            <Checkbox label={s.saveDefault} checked={saveDefault} onChange={setSaveDefault} />
+            <CheckRow label={s.saveDefault} checked={saveDefault} onChange={setSaveDefault} />
           </View>
         ) : null}
-      </View>
+      </FicheCard>
 
-      <View style={styles.section}>
-        <Text role="heading" style={styles.heading}>
-          {s.datesTitle}
-        </Text>
+      <FicheCard padding={4}>
+        <CardHeading title={s.datesTitle} size={17} />
         <DateTimeFields
           date={startDate}
           minDate={nextDay(parisToday())}
@@ -186,7 +172,7 @@ function QuoteSendScreen() {
           }}
           error={errors.startDate}
         />
-        <TextField
+        <ToolField
           label={s.duration}
           value={duration}
           onChangeText={(value) => {
@@ -197,79 +183,66 @@ function QuoteSendScreen() {
           maxLength={4}
           error={errors.durationDays}
         />
-        <Body muted>{s.datesHint}</Body>
+        <Text style={styles.small}>{s.datesHint}</Text>
         <Text style={styles.small}>{s.validity(QUOTE_VALIDITY_DAYS)}</Text>
-      </View>
+      </FicheCard>
 
-      <View style={styles.section}>
-        <Text role="heading" style={styles.heading}>
-          {s.attachTitle}
-        </Text>
-        <DetailBlock icon={<User size={18} color={colors.primary} />} title={s.client}>
+      <FicheCard padding={4}>
+        <View style={styles.total}>
+          <Text style={styles.totalLabel}>{t.totalTtc}</Text>
+          <Text style={styles.totalValue}>{formatCents(ctx.totalTtcCents)}</Text>
+        </View>
+        <CardHeading title={s.attachTitle} size={16} />
+        <View style={styles.block}>
+          <Text style={styles.eyebrow}>{s.client}</Text>
           {ctx.client.name ? <Text style={styles.strong}>{ctx.client.name}</Text> : null}
           {ctx.client.email ? <Text style={styles.text}>{ctx.client.email}</Text> : null}
           {ctx.client.phone ? <Text style={styles.text}>{ctx.client.phone}</Text> : null}
-          <Text style={styles.notice}>{s.clientNotice}</Text>
-        </DetailBlock>
-        <DetailBlock icon={<Wrench size={18} color={colors.primary} />} title={s.chantier}>
+        </View>
+        <View style={[styles.block, styles.blockBorder]}>
+          <Text style={styles.eyebrow}>{s.chantier}</Text>
           <Text style={styles.strong}>{ctx.chantier.title}</Text>
           {ctx.chantier.summary ? <Text style={styles.small}>{ctx.chantier.summary}</Text> : null}
-        </DetailBlock>
-      </View>
+        </View>
+        <Text style={styles.notice}>{s.clientNotice}</Text>
+      </FicheCard>
     </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: spacing(3) },
-  heading: {
+  custom: { gap: spacing(2) },
+  total: { gap: spacing(1) },
+  totalLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
+  totalValue: {
     fontFamily: font.display,
-    fontSize: 18,
-    letterSpacing: -0.36,
+    fontSize: 34,
+    lineHeight: 38,
+    letterSpacing: -1,
     color: colors.foreground,
   },
-  options: { gap: spacing(3) },
-  option: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-  },
-  optionOn: { borderColor: colors.primary, backgroundColor: colors["primary-softer"] },
-  optionText: { flex: 1, gap: spacing(1) },
-  radio: {
-    width: 22,
-    height: 22,
-    marginTop: 1,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: colors["border-strong"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioOn: { borderColor: colors.primary },
-  radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: colors.primary },
-  custom: {
-    gap: spacing(2),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-  },
-  strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  text: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
+  block: { gap: 2 },
+  blockBorder: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing(3) },
+  eyebrow: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
+  strong: { fontFamily: font.semibold, fontSize: 15, lineHeight: 21, color: colors.foreground },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
   small: {
     fontFamily: font.regular,
     fontSize: 13,
     lineHeight: 18,
     color: colors["muted-foreground"],
   },
-  notice: { fontFamily: font.regular, fontSize: 12, color: colors["primary-strong"] },
+  notice: {
+    overflow: "hidden",
+    borderRadius: radius.input,
+    backgroundColor: colors["primary-soft"],
+    paddingVertical: spacing(2.5),
+    paddingHorizontal: spacing(3),
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["primary-strong"],
+  },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).

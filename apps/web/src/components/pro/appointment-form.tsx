@@ -64,7 +64,7 @@ export function AppointmentForm({
       {state.error && <Alert tone="error">{state.error}</Alert>}
       {agenda && agenda.suggestions.length > 0 && (
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+          <legend className="mb-2 flex items-center gap-1.5 text-[0.9375rem] font-bold">
             <Sparkles aria-hidden="true" className="size-4 text-primary" />
             {t.suggestions}
           </legend>
@@ -80,7 +80,7 @@ export function AppointmentForm({
                     setDate(values.date);
                     setTime(values.time);
                   }}
-                  className="inline-flex min-h-10 items-center rounded-pill border border-border bg-surface px-3.5 text-sm transition-colors hover:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none aria-pressed:border-primary aria-pressed:bg-primary-softer aria-pressed:font-medium aria-pressed:text-primary-strong"
+                  className="inline-flex min-h-10 items-center rounded-pill border border-border bg-surface px-3.5 text-sm transition-colors hover:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-white"
                 >
                   {t.suggestion(formatDayMonthShort(iso), formatTime(iso))}
                 </button>
@@ -90,55 +90,58 @@ export function AppointmentForm({
           <p className="text-xs text-muted-foreground">{t.suggestionsHint}</p>
         </fieldset>
       )}
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="rdv-date" className="text-sm font-medium">
-          {dateLabel}
-        </label>
-        <div className="relative">
-          <Calendar
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            id="rdv-date"
-            name="date"
-            type="date"
-            required
-            min={minDate}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            aria-invalid={dateError ? true : undefined}
-            aria-describedby={dateError ? "rdv-date-error" : undefined}
-            onClick={openPicker}
-            className={`${inputClasses} ${pickerInput}`}
-          />
+      {/* Refonte « Nette » (ADR 0255) : la date et l'heure côte à côte dès qu'il y a la place. */}
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="rdv-date" className="text-sm font-semibold">
+            {dateLabel}
+          </label>
+          <div className="relative">
+            <Calendar
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              id="rdv-date"
+              name="date"
+              type="date"
+              required
+              min={minDate}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              aria-invalid={dateError ? true : undefined}
+              aria-describedby={dateError ? "rdv-date-error" : undefined}
+              onClick={openPicker}
+              className={`${inputClasses} ${pickerInput}`}
+            />
+          </div>
+          {dateError && <FieldError id="rdv-date-error">{dateError}</FieldError>}
         </div>
-        {dateError && <FieldError id="rdv-date-error">{dateError}</FieldError>}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="rdv-time" className="text-sm font-medium">
-          {timeLabel}
-        </label>
-        <div className="relative">
-          <Clock
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            id="rdv-time"
-            name="time"
-            type="time"
-            required
-            step={300}
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            aria-invalid={timeError ? true : undefined}
-            aria-describedby={timeError ? "rdv-time-error" : undefined}
-            onClick={openPicker}
-            className={`${inputClasses} ${pickerInput}`}
-          />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="rdv-time" className="text-sm font-semibold">
+            {timeLabel}
+          </label>
+          <div className="relative">
+            <Clock
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              id="rdv-time"
+              name="time"
+              type="time"
+              required
+              step={300}
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              aria-invalid={timeError ? true : undefined}
+              aria-describedby={timeError ? "rdv-time-error" : undefined}
+              onClick={openPicker}
+              className={`${inputClasses} ${pickerInput}`}
+            />
+          </div>
+          {timeError && <FieldError id="rdv-time-error">{timeError}</FieldError>}
         </div>
-        {timeError && <FieldError id="rdv-time-error">{timeError}</FieldError>}
       </div>
       {agenda && <SlotWarnings date={date} time={time} agenda={agenda} />}
       {hint && <Hint>{hint}</Hint>}

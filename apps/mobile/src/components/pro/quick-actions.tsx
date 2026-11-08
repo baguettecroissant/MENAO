@@ -7,6 +7,7 @@ import {
   ChevronRight,
   FilePen,
   ShoppingCart,
+  X,
   type LucideIcon,
 } from "lucide-react-native";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
@@ -18,9 +19,10 @@ import { teamCan, type TeamPermission } from "@menao/core";
 import { ExampleLock } from "@/components/examples";
 import { useExamplesActive } from "@/lib/examples";
 import { useTeamPosition } from "@/lib/team";
+import { TAG_TONES } from "./fiche-kit";
 
 const t = fr.proQuickActions;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 
 /** `team` : action réservée aux places qui ont ce droit (ADR 0241). */
 const ACTIONS: {
@@ -70,7 +72,9 @@ const ACTIONS: {
 /**
  * Menu du bouton (+) de l'artisan, comme la barre d'onglets des maquettes : créer un devis,
  * bloquer un créneau, ajouter une photo au suivi d'un chantier, ajouter une dépense (F-62), gérer
- * ses disponibilités, ouvrir l'agenda (ADR 0130). Montée simple de la feuille, sans effet ajouté (choix de l'utilisateur).
+ * ses disponibilités, ouvrir l'agenda (ADR 0130). Montée simple de la feuille, sans effet ajouté
+ * (choix de l'utilisateur). Refonte « Nette » (lot 10) : grand titre et rond de fermeture, lignes
+ * avec carré d'icône de 44 px, le premier en bleu nuit.
  */
 /** Actions qui ont leurs exemples (ADR 0184). */
 const EXAMPLE_ACTIONS: readonly string[] = [t.quote, t.agenda];
@@ -86,84 +90,115 @@ export function QuickActions({ open, onClose }: { open: boolean; onClose: () => 
       <Pressable style={styles.backdrop} aria-label={t.close} role="button" onPress={onClose} />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing(4) }]}>
         <View style={styles.handle} />
-        <Text role="heading" style={styles.title}>
-          {t.title}
-        </Text>
-        {actions.map(({ icon: Icon, label, detail, href }) => (
-          <ExampleLock key={label} locked={example && !EXAMPLE_ACTIONS.includes(label)}>
-            <Tappable
-              key={label}
-              role="link"
-              aria-label={label}
-              onPress={() => {
-                onClose();
-                router.push(href);
-              }}
-              style={styles.row}
-            >
-              <View style={styles.icon}>
-                <Icon size={20} color={colors.primary} />
-              </View>
-              <View style={styles.texts}>
-                <Text style={styles.label}>{label}</Text>
-                <Text style={styles.detail}>{detail}</Text>
-              </View>
-              <ChevronRight size={18} color={colors["muted-foreground"]} />
-            </Tappable>
-          </ExampleLock>
-        ))}
-        <Tappable role="button" onPress={onClose} style={styles.close}>
-          <Text style={styles.closeText}>{t.close}</Text>
-        </Tappable>
+        <View style={styles.head}>
+          <Text role="heading" style={styles.title}>
+            {t.title}
+          </Text>
+          <Pressable
+            role="button"
+            aria-label={t.close}
+            hitSlop={6}
+            onPress={onClose}
+            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+          >
+            <X size={18} color={colors.foreground} strokeWidth={2.2} />
+          </Pressable>
+        </View>
+        <View>
+          {actions.map(({ icon: Icon, label, detail, href }, i) => {
+            // « Créer un devis » en bleu nuit, les autres en gris clair.
+            const first = label === t.quote;
+            return (
+              <ExampleLock key={label} locked={example && !EXAMPLE_ACTIONS.includes(label)}>
+                <Tappable
+                  role="link"
+                  aria-label={`${label}, ${detail}`}
+                  onPress={() => {
+                    onClose();
+                    router.push(href);
+                  }}
+                  style={[styles.row, i > 0 && styles.rowBorder]}
+                >
+                  <View style={[styles.icon, first && styles.iconFirst]}>
+                    <Icon size={20} color={first ? colors["primary-foreground"] : colors.label} />
+                  </View>
+                  <View style={styles.texts}>
+                    <Text style={styles.label}>{label}</Text>
+                    <Text style={styles.detail}>{detail}</Text>
+                  </View>
+                  <ChevronRight size={16} color={colors["muted-foreground"]} />
+                </Tappable>
+              </ExampleLock>
+            );
+          })}
+        </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: `${colors.foreground}66` },
+  backdrop: { flex: 1, backgroundColor: `${colors.foreground}73` },
   sheet: {
-    gap: spacing(2),
-    borderTopLeftRadius: radius.hero,
-    borderTopRightRadius: radius.hero,
+    gap: spacing(1.5),
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing(5),
-    paddingTop: spacing(3),
+    paddingTop: spacing(2.5),
   },
   handle: {
     alignSelf: "center",
     width: 40,
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors["border-strong"],
-    marginBottom: spacing(2),
   },
-  title: {
-    fontFamily: font.medium,
-    fontSize: 18,
-    color: colors.foreground,
-    marginBottom: spacing(1),
-  },
-  row: {
+  head: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing(3.5),
+    paddingTop: spacing(2),
   },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors["primary-soft"],
+  title: {
+    flexShrink: 1,
+    fontFamily: font.display,
+    fontSize: 24,
+    letterSpacing: -0.6,
+    color: colors.foreground,
+  },
+  close: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: TAG_TONES.neutral.bg,
     alignItems: "center",
     justifyContent: "center",
   },
+  pressed: { opacity: 0.7 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingVertical: spacing(3),
+  },
+  rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: TAG_TONES.neutral.bg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconFirst: { backgroundColor: colors.foreground },
   texts: { flex: 1, gap: 2 },
-  label: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  detail: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  close: { alignItems: "center", paddingVertical: spacing(3) },
-  closeText: { fontFamily: font.medium, fontSize: 15, color: colors["primary-strong"] },
+  label: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
+  detail: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
 });

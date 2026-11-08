@@ -1,16 +1,18 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, SentCard } from "@/components/pro/action-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { reportFakeClient } from "@/lib/pro-requests";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proFakeClient;
 
 /**
  * « Je pense que ce n'est pas un vrai particulier » (ADR 0157), comme sur le site : ticket pour
- * l'équipe MENAO, qui vérifie la demande en toute discrétion. `id` : la demande.
+ * l'équipe MENAO, qui vérifie la demande en toute discrétion. `id` : la demande. Écran d'action
+ * « Nette » (lot 10).
  */
 function FakeClientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,31 +32,31 @@ function FakeClientScreen() {
 
   if (sent) {
     return (
-      <Screen
-        header={<TopBar />}
-        footer={<Button label={t.back} variant="secondary" onPress={() => router.back()} />}
+      <ActionScreen
+        bar={t.bar}
+        title={t.title}
+        footer={<ActionSubmit label={t.back} variant="secondary" onPress={() => router.back()} />}
       >
-        <Title>{t.title}</Title>
-        <Notice tone="success">{t.sent}</Notice>
-      </Screen>
+        <SentCard text={t.sent} />
+      </ActionScreen>
     );
   }
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    <ActionScreen
+      bar={t.bar}
+      title={t.title}
+      lead={t.intro}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
     >
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <TextField
+      <ToolField
         label={t.detail}
         value={detail}
         onChangeText={setDetail}
         maxLength={1000}
         multiline
       />
-    </Screen>
+    </ActionScreen>
   );
 }
 

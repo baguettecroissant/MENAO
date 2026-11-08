@@ -2,14 +2,18 @@ import { appointmentNotesSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit } from "@/components/pro/action-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { saveAppointmentNotes } from "@/lib/pro-chantiers";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 
 const t = fr.proAppointment;
 
-/** F-18 « Ajouter des notes », comme sur le site : notes privées, visibles par l'artisan seul. */
+/**
+ * F-18 « Ajouter des notes », comme sur le site : notes privées, visibles par l'artisan seul.
+ * Écran d'action « Nette » (lot 10), bouton collé en bas.
+ */
 export default function NotesScreen() {
   const { id, notes: initial = "" } = useLocalSearchParams<{ id: string; notes?: string }>();
   const [notes, setNotes] = useState(initial);
@@ -33,11 +37,14 @@ export default function NotesScreen() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{t.notes}</Title>
-      <Body muted>{t.notesHint}</Body>
-      <TextField
-        label={t.notes}
+    <ActionScreen
+      bar={t.notesBar}
+      title={t.notes}
+      lead={t.notesHint}
+      footer={<ActionSubmit label={t.saveNotes} onPress={save} loading={pending} />}
+    >
+      <ToolField
+        label={t.notesField}
         value={notes}
         onChangeText={(value) => {
           setNotes(value);
@@ -49,7 +56,6 @@ export default function NotesScreen() {
         error={error}
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={t.saveNotes} onPress={save} loading={pending} />
-    </Screen>
+    </ActionScreen>
   );
 }

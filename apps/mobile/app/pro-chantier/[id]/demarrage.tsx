@@ -5,14 +5,15 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
+import { ActionScreen, ActionSubmit, CreamNote } from "@/components/pro/action-kit";
+import { FicheCard } from "@/components/pro/fiche-kit";
 import { SlotWarnings } from "@/components/pro/slot-helpers";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { parisDateTime } from "@/lib/format";
 import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { confirmChantierStart } from "@/lib/pro-chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proFollowUp;
@@ -20,7 +21,8 @@ const t = fr.proFollowUp;
 /**
  * F-22 « Confirmer la date de démarrage » après l'acompte (`devis` : date prévue au devis), ou la
  * modifier tant que les travaux n'ont pas commencé (`debut` : démarrage actuel), comme sur le
- * site, avec les avertissements de l'agenda (F-44). Le client est prévenu par la base.
+ * site, avec les avertissements de l'agenda (F-44). Le client est prévenu par la base. Écran
+ * d'action « Nette » (lot 10) : date prévue au devis rappelée sur fond crème.
  */
 function ChantierStartScreen() {
   const { id, devis, debut } = useLocalSearchParams<{
@@ -69,32 +71,38 @@ function ChantierStartScreen() {
   }
 
   return (
-    <Screen
-      header={<TopBar />}
+    <ActionScreen
+      bar={t.startBar}
+      title={editing ? t.editTitle : t.confirm}
       footer={
-        <Button label={editing ? t.editSubmit : t.confirm} onPress={submit} loading={pending} />
+        <ActionSubmit
+          label={editing ? t.editSubmit : t.confirm}
+          onPress={submit}
+          loading={pending}
+        />
       }
     >
-      <Title>{editing ? t.editTitle : t.confirm}</Title>
-      {!editing && devis ? <Body muted>{t.quoteStart(dateLong(devis))}</Body> : null}
-      <DateTimeFields
-        date={date}
-        time={time}
-        minDate={today}
-        dateLabel={t.startDate}
-        onDate={(value) => {
-          setDate(value);
-          setError(undefined);
-        }}
-        onTime={(value) => {
-          setTime(value);
-          setError(undefined);
-        }}
-        error={error}
-      />
-      {agenda ? <SlotWarnings date={date} time={time} agenda={agenda} /> : null}
+      <FicheCard padding={4}>
+        {!editing && devis ? <CreamNote>{t.quoteStart(dateLong(devis))}</CreamNote> : null}
+        <DateTimeFields
+          date={date}
+          time={time}
+          minDate={today}
+          dateLabel={t.startDate}
+          onDate={(value) => {
+            setDate(value);
+            setError(undefined);
+          }}
+          onTime={(value) => {
+            setTime(value);
+            setError(undefined);
+          }}
+          error={error}
+        />
+        {agenda ? <SlotWarnings date={date} time={time} agenda={agenda} /> : null}
+      </FicheCard>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-    </Screen>
+    </ActionScreen>
   );
 }
 

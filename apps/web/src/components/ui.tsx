@@ -334,23 +334,31 @@ export function RadioGroup({
   const errorId = errors?.length ? `${name}-error` : undefined;
   return (
     <fieldset className="flex flex-col gap-2.5" aria-describedby={errorId}>
-      <legend className={hideLegend ? "sr-only" : "mb-1 text-sm font-medium"}>{legend}</legend>
+      <legend
+        className={
+          hideLegend
+            ? "sr-only"
+            : "mb-1 text-sm font-medium in-[.app-nette]:text-[0.9375rem] in-[.app-nette]:font-bold"
+        }
+      >
+        {legend}
+      </legend>
       {options.map((option) => {
         const checked = value !== undefined ? value === option.value : undefined;
         const extra = checked && renderSelected ? renderSelected(option.value) : null;
         return (
           <div
             key={option.value}
-            className={`rounded-input border bg-surface transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-softer ${
-              extra ? "border-primary" : "border-border"
+            className={`rounded-input border bg-surface transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-softer in-[.app-nette]:has-[:checked]:border-foreground in-[.app-nette]:has-[:checked]:bg-surface in-[.app-nette]:has-[:checked]:shadow-[inset_0_0_0_1px_var(--color-foreground)] ${
+              extra ? "border-primary in-[.app-nette]:border-foreground" : "border-border"
             }`}
           >
-            <label className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-[0.9375rem]">
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-[0.9375rem] in-[.app-nette]:min-h-13 in-[.app-nette]:font-semibold">
               <input
                 type="radio"
                 name={name}
                 value={option.value}
-                className="size-[1.125rem] shrink-0 accent-primary"
+                className="size-[1.125rem] shrink-0 accent-primary in-[.app-nette]:accent-foreground"
                 {...(value !== undefined
                   ? { checked: value === option.value, onChange: () => onChange?.(option.value) }
                   : { defaultChecked: defaultValue === option.value })}

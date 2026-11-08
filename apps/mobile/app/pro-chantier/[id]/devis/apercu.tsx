@@ -1,20 +1,22 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { Download } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { QuotePaper } from "@/components/documents/quote-paper";
-import { FicheButton, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { FicheButton, FicheLink, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { QuoteSteps } from "@/components/pro/quote-kit";
 import { fr } from "@/i18n/fr";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuoteSendContext } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, LinkText, Notice, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proQuote;
 
 /**
  * Aperçu du devis (F-20), comme sur le site : le devis tel qu'il sera envoyé, puis l'envoi. Barre
- * du haut et étapes « Nette » (lot 2), comme l'éditeur.
+ * du haut et étapes « Nette » (lot 2), comme l'éditeur ; grand titre et lien du PDF (lot 10).
  */
 function QuotePreviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,10 +40,10 @@ function QuotePreviewScreen() {
       }
     >
       <QuoteSteps current="preview" />
-      <Title>{t.preview.ready}</Title>
-      <Body muted>{t.preview.check(context.client.firstName)}</Body>
+      <PageHead title={t.preview.ready} lead={t.preview.check(context.client.firstName)} />
       <QuotePaper model={context.model} />
-      <LinkText
+      <FicheLink
+        icon={Download}
         label={t.preview.pdf}
         onPress={async () => {
           setPdfFailed(false);

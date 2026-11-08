@@ -1,6 +1,7 @@
 "use client";
 
 import { REFUSAL_REASONS } from "@menao/core";
+import { Users } from "lucide-react";
 import { useActionState, useCallback, useState } from "react";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
@@ -171,7 +172,10 @@ export function OpportunityActions({
           <form action={refuse} className="flex flex-col gap-4" noValidate>
             {refused.error && <Alert tone="error">{refused.error}</Alert>}
             {partnersAfterRefusal && (
-              <p className="text-sm text-muted-foreground">{fr.pro.partners.afterRefusal}</p>
+              <p className="flex gap-2.5 rounded-input bg-primary-softer px-3.5 py-3 text-sm text-label">
+                <Users aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary-strong" />
+                {fr.pro.partners.afterRefusal}
+              </p>
             )}
             <RadioGroup
               legend={t.refusalLegend}

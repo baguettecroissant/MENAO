@@ -1,14 +1,24 @@
 import { PROPOSED_SLOTS_MAX, proposedSlotsError } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
+import { CalendarClock } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { TopBar } from "@/components/top-bar";
+import { StyleSheet, View } from "react-native";
+import { ActionScreen, ActionSubmit, SectionLabel, SlotCard } from "@/components/pro/action-kit";
+import { SoftBanner } from "@/components/pro/dossier-kit";
+import { capitalize } from "@/components/pro/fiche-kit";
+import { slotWarningTexts } from "@/components/pro/slot-helpers";
 import { fr } from "@/i18n/fr";
-import { formatDayMonthShort, formatTime } from "@/lib/format";
+import {
+  formatDayAndTime,
+  formatDayMonthShort,
+  formatHour,
+  formatTime,
+  parisDateTime,
+} from "@/lib/format";
 import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { loadProposedSlots, proposeSlots } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Chip, Notice, Screen, Title, celebrate } from "@/ui";
+import { Notice, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -16,7 +26,8 @@ const t = fr.proAppointment;
 
 /**
  * Accepter en un toucher (ADR 0222), comme sur le site : créneaux libres de l'agenda, les 3
- * premiers cochés ; le client en choisit un, ce qui fixe le rendez-vous.
+ * premiers cochés ; le client en choisit un, ce qui fixe le rendez-vous. Écran d'action « Nette »
+ * (lot 10) : un créneau par carte à cocher, compteur au-dessus du bouton collé en bas.
  */
 function ProposeSlotsScreen() {
   const { id, client = "" } = useLocalSearchParams<{ id: string; client?: string }>();
@@ -55,58 +66,62 @@ function ProposeSlotsScreen() {
   }
 
   return (
-    <Screen
-      header={<TopBar />}
+    <ActionScreen
+      bar={t.propose}
+      title={t.proposeTitle(client || null)}
+      lead={t.proposeHint}
       footer={
         suggestions.length >= 2 ? (
-          <Button
+          <ActionSubmit
             label={t.proposeSubmit}
             onPress={submit}
             loading={pending}
             disabled={selected.length < 2}
+            note={t.proposeCount(selected.length)}
+            noteDone={selected.length >= 2}
           />
         ) : undefined
       }
     >
-      <Title>{t.proposeTitle(client || null)}</Title>
       {proposed && proposed.length > 0 ? (
-        <Notice tone="info">
-          {`${t.proposedTitle} : ${proposed
+        <SoftBanner
+          icon={CalendarClock}
+          title={t.proposedTitle}
+          text={`${proposed
             .map((iso) => t.suggestion(formatDayMonthShort(iso), formatTime(iso)))
             .join(" · ")}. ${t.proposedWaiting}`}
-        </Notice>
+        />
       ) : null}
-      {agenda && suggestions.length < 2 ? <Notice tone="info">{t.proposeNone}</Notice> : null}
-      {suggestions.length >= 2 ? (
-        <View style={styles.group}>
-          <Text role="heading" style={styles.title}>
-            {t.proposeLegend}
-          </Text>
-          <View style={styles.chips}>
-            {suggestions.map((iso) => (
-              <Chip
+      {agenda && suggestions.length < 2 ? (
+        <SoftBanner icon={CalendarClock} text={t.proposeNone} />
+      ) : null}
+      {agenda && suggestions.length >= 2 ? (
+        <View style={styles.slots}>
+          <SectionLabel text={t.proposeLegend} />
+          {suggestions.map((iso) => {
+            const values = parisDateTime(iso);
+            const on = selected.includes(iso);
+            return (
+              <SlotCard
                 key={iso}
-                label={t.suggestion(formatDayMonthShort(iso), formatTime(iso))}
-                selected={selected.includes(iso)}
-                onPress={() => toggle(iso)}
+                day={capitalize(formatDayAndTime(iso).day)}
+                time={formatHour(values.time)}
+                warning={slotWarningTexts(values.date, values.time, agenda)[0]}
+                checked={on}
+                disabled={!on && selected.length >= PROPOSED_SLOTS_MAX}
+                onToggle={() => toggle(iso)}
               />
-            ))}
-          </View>
-          <Text style={styles.hint}>{t.proposeCount(selected.length)}</Text>
+            );
+          })}
         </View>
       ) : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Body muted>{t.proposeHint}</Body>
-    </Screen>
+    </ActionScreen>
   );
 }
 
-const { colors, font, spacing } = theme;
 const styles = StyleSheet.create({
-  group: { gap: spacing(2) },
-  title: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  hint: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  slots: { gap: theme.spacing(2.5) },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).
