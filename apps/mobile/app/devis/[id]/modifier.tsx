@@ -3,14 +3,18 @@ import { quoteRevisionSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit } from "@/components/pro/action-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { requestQuoteRevision } from "@/lib/quotes";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 
 const t = fr.quote.revision;
 
-/** F-21 : demande de modification du devis ; l'artisan enverra une nouvelle version. */
+/**
+ * F-21 : demande de modification du devis ; l'artisan enverra une nouvelle version. Écran
+ * d'action « Nette » (lot 11) : champ en 16 points, bouton collé en bas.
+ */
 export default function QuoteRevisionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [message, setMessage] = useState("");
@@ -34,10 +38,13 @@ export default function QuoteRevisionScreen() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
-      <TextField
+    <ActionScreen
+      bar={fr.quote.titleFallback}
+      title={t.title}
+      lead={t.intro}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
+    >
+      <ToolField
         label={t.label}
         value={message}
         onChangeText={(value) => {
@@ -49,7 +56,6 @@ export default function QuoteRevisionScreen() {
         error={error}
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={t.submit} onPress={submit} loading={pending} />
-    </Screen>
+    </ActionScreen>
   );
 }

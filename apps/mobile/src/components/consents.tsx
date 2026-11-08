@@ -1,10 +1,10 @@
 import type { SignatureConsent } from "@menao/core";
 import * as WebBrowser from "expo-web-browser";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Checkbox } from "@/ui";
+import { CheckRow } from "@/components/pro/tools-kit";
 import { theme } from "@/ui/theme";
 
-const { colors, font, spacing } = theme;
+const { colors, font, radius, spacing } = theme;
 
 export type ConsentItem = {
   name: SignatureConsent;
@@ -15,7 +15,8 @@ export type ConsentItem = {
 
 /**
  * Cases à cocher avant une signature (F-13, F-25), toutes obligatoires : mêmes cases et mêmes
- * liens que sur le site.
+ * liens que sur le site. Refonte « Nette » (lot 11) : cases bleu nuit dans une carte blanche,
+ * séparées par un trait fin.
  */
 export function ConsentList({
   items,
@@ -29,10 +30,10 @@ export function ConsentList({
   errors: Partial<Record<SignatureConsent, string>>;
 }) {
   return (
-    <View style={styles.list}>
-      {items.map((item) => (
-        <View key={item.name} style={styles.item}>
-          <Checkbox
+    <View style={styles.card}>
+      {items.map((item, index) => (
+        <View key={item.name} style={[styles.item, index > 0 && styles.separator]}>
+          <CheckRow
             label={item.label}
             checked={checked[item.name] === true}
             onChange={(value) => onChange(item.name, value)}
@@ -60,12 +61,34 @@ export function ConsentList({
 }
 
 const styles = StyleSheet.create({
-  list: { gap: spacing(3) },
-  item: { gap: spacing(1) },
-  links: { flexDirection: "row", flexWrap: "wrap", gap: spacing(4), paddingLeft: spacing(8) },
-  error: { fontFamily: font.regular, fontSize: 13, color: colors.danger, paddingLeft: spacing(8) },
+  card: {
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(1),
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  item: { gap: spacing(1), paddingVertical: spacing(1) },
+  separator: { borderTopWidth: 1, borderTopColor: colors.border },
+  // Alignés sur le texte de la case (24 px de case et 12 px d'écart).
+  links: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing(4),
+    paddingLeft: 36,
+    paddingBottom: spacing(2),
+  },
+  error: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.danger,
+    paddingLeft: 36,
+    paddingBottom: spacing(2),
+  },
   link: {
-    fontFamily: font.medium,
+    fontFamily: font.semibold,
     fontSize: 13,
     color: colors["primary-strong"],
     textDecorationLine: "underline",

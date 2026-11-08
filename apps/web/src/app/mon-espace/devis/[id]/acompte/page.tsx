@@ -1,8 +1,8 @@
 import { dateLong, quotePdfData, type QuoteDocument } from "@menao/documents";
-import { ArrowLeft, Check, Lock } from "lucide-react";
+import { CalendarDays, Lock } from "lucide-react";
 import type { Metadata, Route } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ClientFlowPage, ClientSteps } from "@/components/chantier/client-steps";
 import { DepositPayButton } from "@/components/project/deposit-pay-button";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -44,63 +44,70 @@ export default async function DepositPage({ params }: PageProps<"/mon-espace/dev
   const [deposit, balance] = data.schedule;
   const depositAmount = euros.format((deposit?.amountCents ?? 0) / 100);
 
+  // Refonte « Nette » (ADR 0256) : l'échéancier à gauche, le paiement à droite.
   return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
-        <Link
-          href={quoteHref as Route}
-          className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {t.backToQuote}
-        </Link>
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-          {t.deposit.title}
-        </h1>
-        <nav aria-label={t.signature.tabs.label} className="flex border-b border-border">
-          <span className="inline-flex flex-1 items-center justify-center gap-1.5 pb-3 text-center text-sm text-success">
-            <Check aria-hidden="true" className="size-4" />
-            {t.signature.tabs.sign}
+    <ClientFlowPage
+      backHref={quoteHref as Route}
+      backLabel={t.backToQuote}
+      title={t.deposit.title}
+      lead={t.deposit.intro}
+      steps={
+        <ClientSteps
+          label={t.signature.tabs.label}
+          steps={[
+            { label: t.signature.tabs.sign, state: "done" },
+            { label: t.signature.tabs.deposit, state: "current" },
+          ]}
+        />
+      }
+      aside={
+        <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+          <span className="text-sm font-semibold text-label">{t.deposit.today}</span>
+          <span className="font-display text-[2.75rem] leading-none font-bold tracking-tight">
+            {depositAmount}
           </span>
-          <span
-            aria-current="step"
-            className="flex-1 border-b-2 border-primary pb-3 text-center text-sm font-medium text-primary-strong"
-          >
-            {t.signature.tabs.deposit}
-          </span>
-        </nav>
-        <p className="text-sm text-muted-foreground">{t.deposit.intro}</p>
-
-        <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
-          {data.startDate && (
-            <p className="text-sm text-muted-foreground">
-              {t.deposit.start(dateLong(data.startDate))}
-            </p>
-          )}
-          <dl className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="font-medium">{t.deposit.today}</dt>
-              <dd className="text-xl font-medium text-primary">{depositAmount}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-3 text-sm text-muted-foreground">
-              <dt>{t.deposit.later}</dt>
-              <dd>{euros.format((balance?.amountCents ?? 0) / 100)}</dd>
-            </div>
-          </dl>
-          <p className="text-sm">{t.deposit.beneficiary(data.issuer.name)}</p>
+          <p className="border-t border-border pt-3 text-sm">
+            {t.deposit.beneficiary(data.issuer.name)}
+          </p>
           <p className="text-xs text-muted-foreground">{t.deposit.methods}</p>
+          {payment?.status === "en_cours" ? (
+            <Alert tone="info">{t.depositInProgress}</Alert>
+          ) : (
+            <DepositPayButton quoteId={id} amount={depositAmount} />
+          )}
+          <p className="inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <Lock aria-hidden="true" className="size-3.5" />
+            {t.deposit.secure}
+          </p>
         </section>
-
-        {payment?.status === "en_cours" ? (
-          <Alert tone="info">{t.depositInProgress}</Alert>
-        ) : (
-          <DepositPayButton quoteId={id} amount={depositAmount} />
+      }
+    >
+      <section className="flex flex-col rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="pb-2 text-lg">{t.deposit.scheduleTitle}</h2>
+        <dl className="flex flex-col divide-y divide-border border-t border-border">
+          <div className="flex items-center gap-3.5 py-3.5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-input bg-primary-soft text-primary-strong">
+              <Lock aria-hidden="true" className="size-[1.125rem]" />
+            </span>
+            <dt className="flex-1 font-bold">{t.deposit.today}</dt>
+            <dd className="font-display text-lg font-bold">{depositAmount}</dd>
+          </div>
+          <div className="flex items-center gap-3.5 py-3.5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-input bg-background text-label">
+              <CalendarDays aria-hidden="true" className="size-[1.125rem]" />
+            </span>
+            <dt className="flex-1 font-bold">{t.deposit.later}</dt>
+            <dd className="font-display text-lg font-bold">
+              {euros.format((balance?.amountCents ?? 0) / 100)}
+            </dd>
+          </div>
+        </dl>
+        {data.startDate && (
+          <p className="border-t border-border pt-3 text-sm text-muted-foreground">
+            {t.deposit.start(dateLong(data.startDate))}
+          </p>
         )}
-        <p className="inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-          <Lock aria-hidden="true" className="size-3.5" />
-          {t.deposit.secure}
-        </p>
-      </div>
-    </main>
+      </section>
+    </ClientFlowPage>
   );
 }

@@ -1,27 +1,31 @@
 import { CLIENT_CANCEL_REASONS, type ClientCancelReason } from "@menao/core";
 import { router } from "expo-router";
 import { useState } from "react";
-import { RadioGroup } from "@/components/radio-group";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, DangerBanner, RadioCards } from "@/components/pro/action-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 
 const t = fr.clientCancel;
 const REASONS = CLIENT_CANCEL_REASONS.map((value) => ({ value, label: t.reasons[value] }));
 
 /**
  * Annulation par le client (F-11, F-12), comme sur le site : motif de la liste et mot facultatif
- * pour l'artisan, puis retour à l'écran précédent, rechargé.
+ * pour l'artisan, puis retour à l'écran précédent, rechargé. Écran d'action « Nette » (lot 11) :
+ * motifs en cartes radio bleu nuit, bouton rouge collé en bas ; `definitive` : l'explication
+ * sur le bandeau rouge clair des actions définitives (annulation du chantier).
  */
 export function CancelForm({
   title,
   intro,
   submit,
+  definitive = false,
   onSubmit,
 }: {
   title: string;
   intro: string;
   submit: string;
+  definitive?: boolean;
   /** Message d'erreur, ou null si l'annulation est enregistrée. */
   onSubmit: (reason: ClientCancelReason, comment: string) => Promise<string | null>;
 }) {
@@ -41,11 +45,17 @@ export function CancelForm({
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{title}</Title>
-      <Body muted>{intro}</Body>
-      <RadioGroup legend={t.reasonsLegend} options={REASONS} value={reason} onChange={setReason} />
-      <TextField
+    <ActionScreen
+      bar={t.bar}
+      title={title}
+      lead={definitive ? null : intro}
+      footer={
+        <ActionSubmit label={submit} onPress={send} loading={pending} disabled={!reason} danger />
+      }
+    >
+      {definitive ? <DangerBanner text={intro} /> : null}
+      <RadioCards legend={t.reasonsLegend} options={REASONS} value={reason} onChange={setReason} />
+      <ToolField
         label={t.comment}
         value={comment}
         onChangeText={setComment}
@@ -53,7 +63,6 @@ export function CancelForm({
         multiline
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={submit} onPress={send} loading={pending} disabled={!reason} />
-    </Screen>
+    </ActionScreen>
   );
 }

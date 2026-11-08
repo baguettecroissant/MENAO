@@ -13,6 +13,7 @@ export default function CancelChantier() {
       title={t.title}
       intro={t.intro(artisan)}
       submit={t.submit}
+      definitive
       onSubmit={(reason, comment) => cancelChantier(id, reason, comment)}
     />
   );

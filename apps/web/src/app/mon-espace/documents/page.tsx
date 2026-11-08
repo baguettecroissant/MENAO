@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { ChantierDocuments, type ChantierDocument } from "@/components/chantier/chantier-dossier";
+import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,7 @@ export default async function ClientDocumentsPage() {
             {
               href: `/devis/${quote.id}/pdf`,
               title: quote.status === "signe" ? d.signedQuote : d.quote,
+              kind: "devis" as const,
               meta: d.meta(
                 quote.numero,
                 formatDateNumeric(quote.signed_at ?? quote.sent_at ?? c.created_at),
@@ -58,6 +60,7 @@ export default async function ClientDocumentsPage() {
         .map((i) => ({
           href: `/factures/${i.id}/pdf`,
           title: d.invoice[i.kind],
+          kind: "facture" as const,
           meta: d.meta(i.numero, formatDateNumeric(i.issued_on)),
         })),
       ...(receptions ?? [])
@@ -65,21 +68,35 @@ export default async function ClientDocumentsPage() {
         .map((r) => ({
           href: `/receptions/${r.id}/pdf`,
           title: fr.chantier.reception.pvDocument,
+          kind: "pv" as const,
           meta: d.meta(r.numero, formatDateNumeric(r.signed_at ?? c.created_at)),
         })),
     ];
     return documents.length ? [{ id: c.chantier_id, title: c.title, documents }] : [];
   });
 
+  const signedQuotes = (quotes ?? []).filter((q) => q.status === "signe").length;
+  // Refonte « Nette » (ADR 0256) : grand titre, chiffres, une carte par chantier.
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+          <p className="text-[0.9375rem] text-label sm:text-base">{t.subtitle}</p>
         </div>
+        {sections.length > 0 && (
+          <MoneyFigures
+            label={t.figuresLabel}
+            dense
+            cells={[
+              { label: t.figQuotes, value: String(signedQuotes) },
+              { label: t.figInvoices, value: String((invoices ?? []).length) },
+              { label: t.figReceptions, value: String((receptions ?? []).length) },
+            ]}
+          />
+        )}
         {sections.length ? (
           sections.map((section) => (
             <ChantierDocuments

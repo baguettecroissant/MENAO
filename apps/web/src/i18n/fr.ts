@@ -2616,6 +2616,9 @@ export const fr = {
       invoice: { acompte: "Facture d'acompte", solde: "Facture de solde" },
       meta: (numero: string, date: string) => `${numero} · ${date}`,
       openPdf: "PDF, nouvel onglet",
+      // Refonte « Nette » (ADR 0256) : Mes documents.
+      count: (n: number) => (n <= 1 ? `${n} document` : `${n} documents`),
+      kinds: { devis: "Devis", facture: "Facture", pv: "PV" },
       noDocuments: "Les documents du chantier (devis, factures) apparaîtront ici.",
       schedule: "Échéancier de paiement",
       paid: "Déjà payé",
@@ -2720,6 +2723,8 @@ export const fr = {
     back: "Retour au chantier",
     intro:
       "Réglez le solde de votre chantier. Le paiement est fait directement à l'entreprise de l'artisan, par Stripe.",
+    // Refonte « Nette » (ADR 0256).
+    summaryTitle: "Votre chantier",
     paid: "Montant déjà payé",
     today: "Montant à payer aujourd'hui",
     total: "Total du chantier",
@@ -2883,6 +2888,10 @@ export const fr = {
     title: "Mes documents",
     subtitle: "Devis signés, factures et procès-verbaux de vos chantiers.",
     empty: "Vos documents (devis signés, factures, PV de réception) apparaîtront ici.",
+    figuresLabel: "Vos documents en chiffres",
+    figQuotes: "Devis signés",
+    figInvoices: "Factures",
+    figReceptions: "PV de réception",
   },
   notificationCenter: {
     title: "Notifications",
@@ -3045,6 +3054,8 @@ export const fr = {
       intro:
         "L'acompte est versé directement à l'artisan, sur son compte Stripe. MENAO ne perçoit aucune commission.",
       start: (date: string) => `Démarrage prévu le ${date}`,
+      // Refonte « Nette » (ADR 0256).
+      scheduleTitle: "Votre échéancier",
       today: "À payer aujourd'hui",
       later: "À la réception des travaux",
       beneficiary: (name: string) => `Bénéficiaire : ${name}`,

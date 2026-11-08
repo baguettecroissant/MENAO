@@ -8,31 +8,41 @@ import {
 } from "@menao/core";
 import { reviewSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Check, CircleCheck, MapPin } from "lucide-react-native";
+import { Check, CircleCheck, Eye } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { PersonRow } from "@/components/chantier/parts";
-import { HeaderBand } from "@/components/header-band";
-import { RadioGroup } from "@/components/radio-group";
+import {
+  ActionScreen,
+  ActionSubmit,
+  JourneySteps,
+  RadioCards,
+  SectionLabel,
+  SentCard,
+} from "@/components/pro/action-kit";
+import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { IconSquare, ToolField } from "@/components/pro/tools-kit";
 import { RatingSlider } from "@/components/rating-slider";
-import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadReviewState, submitReview } from "@/lib/reviews";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, TextField } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.clientReview;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
+// Fin de chantier (F-27) : PV, solde, puis avis.
+const STEPS = [fr.reception.steps.pv, fr.reception.steps.solde, t.steps.avis];
 const VALUES = VALUE_FOR_MONEY.map((value) => ({ value, label: t.values[value] }));
 type Field = ReviewCriterion | "value_for_money" | "comment";
 
 /**
  * Avis du client (F-28), comme sur le site (maquettes « Comment s'est passée votre expérience ? »
  * et « Merci pour votre évaluation ») : trois curseurs, rapport qualité/prix, commentaire de
- * 50 caractères au moins. Ordre de fin de chantier (F-27) : PV, solde, puis avis.
+ * 50 caractères au moins. Ordre de fin de chantier (F-27) : PV, solde, puis avis. Écran « Nette »
+ * (lot 11) : critères en barres vertes avec leur libellé, rapport qualité/prix en cartes,
+ * commentaire en 16 points avec son compteur, « Publier mon avis » collé en bas.
  */
 export default function ReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,58 +60,43 @@ export default function ReviewScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (state === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (state === undefined) return <FicheSkeleton title={t.steps.avis} />;
   if (state === null) {
     return (
-      <Screen onRefresh={reload} header={<TopBar />}>
+      <FicheScreen title={t.steps.avis} onRefresh={reload}>
         <Notice tone="error">{fr.chantier.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   if (!state.reviewed && !state.allowed) return <Redirect href={`/chantier/${id}`} />;
 
-  const steps = [
-    { key: "pv", label: fr.reception.steps.pv },
-    { key: "solde", label: fr.reception.steps.solde },
-    { key: "avis", label: t.steps.avis },
-  ] as const;
-
-  const band = (
-    <HeaderBand
-      title={state.title}
-      meta={state.address ? [{ icon: MapPin, text: state.address }] : []}
-    >
-      <StepTabs steps={steps} current="avis" />
-    </HeaderBand>
-  );
+  const journey = <JourneySteps label={fr.reception.stepsLabel} steps={STEPS} current={2} />;
+  const meta = [state.title, state.address].filter(Boolean).join(" · ");
 
   if (state.reviewed) {
     return (
-      <Screen band={band}>
-        <Card>
-          <View style={styles.thanks}>
-            <View style={styles.badge}>
-              <Check size={24} color={colors["primary-foreground"]} strokeWidth={2.5} />
-            </View>
-            <Text role="heading" style={styles.thanksTitle}>
-              {t.thanksTitle}
-            </Text>
-            <Body muted center>
-              {t.thanksText}
-            </Body>
-            <Button label={t.back} onPress={() => router.dismissTo(`/chantier/${id}`)} />
-            <LinkText
-              label={t.seeProfile(state.artisanName)}
-              onPress={() =>
-                router.push({
-                  pathname: "/projet/[id]/artisan/[artisanId]",
-                  params: { id: state.projectId, artisanId: state.artisanId },
-                })
-              }
-            />
-          </View>
-        </Card>
-      </Screen>
+      <ActionScreen
+        bar={t.steps.avis}
+        steps={journey}
+        title={t.thanksTitle}
+        meta={meta}
+        footer={<ActionSubmit label={t.back} onPress={() => router.dismissTo(`/chantier/${id}`)} />}
+      >
+        <SentCard text={t.thanksText} />
+        <Pressable
+          role="link"
+          hitSlop={8}
+          style={styles.linkBox}
+          onPress={() =>
+            router.push({
+              pathname: "/projet/[id]/artisan/[artisanId]",
+              params: { id: state.projectId, artisanId: state.artisanId },
+            })
+          }
+        >
+          <Text style={styles.link}>{t.seeProfile(state.artisanName)}</Text>
+        </Pressable>
+      </ActionScreen>
     );
   }
 
@@ -137,31 +132,23 @@ export default function ReviewScreen() {
   const length = comment.trim().length;
   const enough = length >= REVIEW_COMMENT_LIMITS.min;
   return (
-    <Screen band={band} footer={<Button label={t.submit} onPress={submit} loading={pending} />}>
-      <View style={styles.intro}>
-        <View style={styles.badge}>
-          <CircleCheck size={24} color={colors["primary-foreground"]} />
-        </View>
-        <Text role="heading" style={styles.title}>
-          {t.title(state.artisanName)}
-        </Text>
-        <Body muted center>
-          {t.intro}
-        </Body>
-      </View>
+    <ActionScreen
+      bar={t.steps.avis}
+      steps={journey}
+      title={t.title(state.artisanName)}
+      lead={t.intro}
+      meta={meta}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
+    >
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Card>
-        <View style={styles.criteria}>
-          <PersonRow
-            name={state.artisanName}
-            detail={state.tradeLabel}
-            photoUrl={state.avatarUrl}
-          />
-          {REVIEW_CRITERIA.map((criterion) => {
-            const rating = ratings[criterion];
-            return (
+      <FicheCard padding={4} gap={0}>
+        <PersonRow name={state.artisanName} detail={state.tradeLabel} photoUrl={state.avatarUrl} />
+        {REVIEW_CRITERIA.map((criterion) => {
+          const rating = ratings[criterion];
+          return (
+            <View key={criterion} style={styles.criterion}>
               <RatingSlider
-                key={criterion}
+                nette
                 label={t.criteria[criterion]}
                 value={rating}
                 onChange={(next) => {
@@ -172,26 +159,29 @@ export default function ReviewScreen() {
                 caption={rating === null ? t.dragToRate : t.bands[criterion][reviewBand(rating)]}
                 error={errors[criterion]}
               />
-            );
-          })}
-          <RadioGroup
-            legend={t.valueTitle}
-            options={VALUES}
-            value={value}
-            onChange={(next) => {
-              setValue(next);
-              setErrors((prev) => ({ ...prev, value_for_money: undefined }));
-            }}
-            error={errors.value_for_money}
-          />
+            </View>
+          );
+        })}
+      </FicheCard>
+      <RadioCards
+        legend={t.valueTitle}
+        options={VALUES}
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          setErrors((prev) => ({ ...prev, value_for_money: undefined }));
+        }}
+        error={errors.value_for_money}
+      />
+      <FicheCard padding={4} gap={2.5}>
+        <View style={styles.commentHead}>
+          <IconSquare icon={CircleCheck} tone="primary" size={36} />
+          <View style={styles.commentTexts}>
+            <SectionLabel text={t.commentTitle} />
+            <Text style={styles.small}>{t.commentHelp}</Text>
+          </View>
         </View>
-      </Card>
-      <View style={styles.comment}>
-        <Text role="heading" style={styles.commentTitle}>
-          {t.commentTitle}
-        </Text>
-        <Body muted>{t.commentHelp}</Body>
-        <TextField
+        <ToolField
           label={t.commentLabel}
           value={comment}
           onChangeText={(next) => {
@@ -204,57 +194,51 @@ export default function ReviewScreen() {
           error={errors.comment}
         />
         <View style={styles.count}>
-          <Text style={[styles.countText, enough && styles.countOk]}>{t.commentCount(length)}</Text>
-          {enough ? <Check size={14} color={colors.success} /> : null}
+          <Text aria-live="polite" style={[styles.countText, enough && styles.countOk]}>
+            {t.commentCount(length)}
+          </Text>
+          {enough ? <Check size={14} color={colors.success} strokeWidth={2.6} /> : null}
         </View>
+      </FicheCard>
+      <View style={styles.visibility}>
+        <Eye size={16} color={colors["muted-foreground"]} style={styles.visibilityIcon} />
+        <Text style={[styles.small, styles.flex]}>{t.visibility(state.artisanName)}</Text>
       </View>
-      <Body muted center>
-        {t.visibility(state.artisanName)}
-      </Body>
-    </Screen>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  intro: { alignItems: "center", gap: spacing(3) },
-  badge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
+  criterion: {
+    marginTop: spacing(3),
+    paddingTop: spacing(3),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  title: {
-    fontFamily: font.medium,
-    fontSize: 21,
-    lineHeight: 27,
-    textAlign: "center",
-    color: colors.foreground,
+  commentHead: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3) },
+  commentTexts: { flex: 1, gap: spacing(1) },
+  small: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors["muted-foreground"],
   },
-  criteria: { gap: spacing(5) },
-  comment: {
-    gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-  },
-  commentTitle: { fontFamily: font.medium, fontSize: 16, color: colors["primary-strong"] },
+  flex: { flex: 1 },
   count: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: spacing(1),
   },
-  countText: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  countText: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
   countOk: { color: colors.success },
-  thanks: { alignItems: "center", gap: spacing(4), paddingVertical: spacing(4) },
-  thanksTitle: {
-    fontFamily: font.medium,
-    fontSize: 20,
-    textAlign: "center",
-    color: colors.foreground,
+  visibility: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2) },
+  visibilityIcon: { marginTop: 2, flexShrink: 0 },
+  linkBox: { alignSelf: "flex-start" },
+  link: {
+    fontFamily: font.semibold,
+    fontSize: 14,
+    color: colors["primary-strong"],
+    textDecorationLine: "underline",
   },
 });

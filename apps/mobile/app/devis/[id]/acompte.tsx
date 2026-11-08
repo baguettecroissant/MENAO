@@ -1,29 +1,34 @@
 import { dateLong } from "@menao/documents";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { Lock, MapPin } from "lucide-react-native";
+import { CalendarDays, Lock } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { HeaderBand } from "@/components/header-band";
-import { StepTabs } from "@/components/step-tabs";
-import { TopBar } from "@/components/top-bar";
+import {
+  ActionScreen,
+  ActionSubmit,
+  JourneySteps,
+  PayCard,
+  SectionLabel,
+} from "@/components/pro/action-kit";
+import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { openHostedPage } from "@/lib/hosted";
 import { loadQuote, startDepositPayment } from "@/lib/quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
 const { colors, font, spacing } = theme;
-const STEPS = [
-  { key: "sign", label: t.steps.sign },
-  { key: "deposit", label: t.steps.deposit },
-] as const;
+const STEPS = [t.steps.sign, t.steps.deposit];
 
 /**
  * Paiement de l'acompte (F-31), comme sur le site : montant de l'échéancier figé à l'envoi, puis
  * Stripe Checkout sur le compte de l'artisan (aucune commission MENAO, CLAUDE.md règle 12).
+ * Écran « Nette » (lot 11) : étape 2 sur 2, carte de paiement, échéancier en lignes et bouton
+ * « Payer … » collé en bas.
  */
 export default function DepositScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,12 +37,12 @@ export default function DepositScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (quote === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (quote === undefined) return <FicheSkeleton title={t.deposit.title} />;
   if (quote === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.deposit.title}>
         <Notice tone="error">{t.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   // Devis pas encore signé, ou acompte déjà payé : retour au devis.
@@ -65,67 +70,100 @@ export default function DepositScreen() {
     }
   }
 
+  const site = [quote.data.site.title, quote.data.site.addressLines.join(", ")]
+    .filter(Boolean)
+    .join(" · ");
+  const rows = [
+    { label: t.deposit.beneficiaryLabel, value: quote.data.issuer.name },
+    ...(quote.data.startDate
+      ? [{ label: t.deposit.startLabel, value: dateLong(quote.data.startDate) }]
+      : []),
+  ];
+  const schedule = [
+    {
+      icon: Lock,
+      tone: "primary" as const,
+      label: t.deposit.depositLine(deposit?.percent ?? 0),
+      detail: t.deposit.today,
+      amount,
+    },
+    ...(balance
+      ? [
+          {
+            icon: CalendarDays,
+            tone: "neutral" as const,
+            label: t.deposit.balanceLine(balance.percent),
+            detail: t.deposit.later,
+            amount: formatCents(balance.amountCents),
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <Screen
-      band={
-        <HeaderBand
-          title={quote.data.site.title}
-          meta={[{ icon: MapPin, text: quote.data.site.addressLines.join(", ") }]}
-        >
-          <StepTabs steps={STEPS} current="deposit" />
-        </HeaderBand>
-      }
+    <ActionScreen
+      bar={t.deposit.title}
+      steps={<JourneySteps label={t.steps.label} steps={STEPS} current={1} />}
+      title={t.deposit.title}
+      lead={t.deposit.intro}
+      meta={site}
       footer={
         inProgress ? undefined : (
-          <Button label={t.deposit.submit(amount)} onPress={pay} loading={pending} />
+          <ActionSubmit
+            label={t.deposit.submit(amount)}
+            onPress={pay}
+            loading={pending}
+            footnote={t.deposit.secure}
+            footnoteIcon={Lock}
+          />
         )
       }
     >
-      <Body muted>{t.deposit.intro}</Body>
-      <Card>
-        <View style={styles.summary}>
-          {quote.data.startDate ? (
-            <Text style={styles.muted}>{t.deposit.start(dateLong(quote.data.startDate))}</Text>
-          ) : null}
-          <View style={styles.line}>
-            <Text style={styles.strong}>{t.deposit.today}</Text>
-            <Text style={styles.amount}>{amount}</Text>
-          </View>
-          <View style={styles.line}>
-            <Text style={styles.muted}>{t.deposit.later}</Text>
-            <Text style={styles.muted}>{formatCents(balance?.amountCents ?? 0)}</Text>
-          </View>
-          <Text style={styles.text}>{t.deposit.beneficiary(quote.data.issuer.name)}</Text>
-          <Text style={styles.small}>{t.deposit.methods}</Text>
-        </View>
-      </Card>
+      <PayCard title={t.deposit.today} amount={amount} rows={rows}>
+        <Text style={styles.small}>{t.deposit.methods}</Text>
+      </PayCard>
       {inProgress ? <Notice tone="info">{t.depositInProgress}</Notice> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <View style={styles.secure}>
-        <Lock size={14} color={colors["muted-foreground"]} />
-        <Text style={styles.small}>{t.deposit.secure}</Text>
-      </View>
-    </Screen>
+      <FicheCard padding={4} gap={0}>
+        <View style={styles.scheduleHead}>
+          <SectionLabel text={t.deposit.scheduleTitle} />
+        </View>
+        {schedule.map((line, i) => (
+          <View
+            key={line.label}
+            style={[styles.tranche, i === schedule.length - 1 && styles.trancheLast]}
+          >
+            <IconSquare icon={line.icon} tone={line.tone} size={40} />
+            <View style={styles.trancheText}>
+              <Text style={styles.trancheLabel}>{line.label}</Text>
+              <Text style={styles.small}>{line.detail}</Text>
+            </View>
+            <Text style={styles.trancheAmount}>{line.amount}</Text>
+          </View>
+        ))}
+      </FicheCard>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  summary: { gap: spacing(2.5) },
-  line: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    gap: spacing(3),
+  small: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors["muted-foreground"],
   },
-  text: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
-  strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  muted: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  amount: { fontFamily: font.display, fontSize: 20, color: colors.primary },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  secure: {
+  tranche: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: spacing(1.5),
+    gap: spacing(3),
+    paddingVertical: spacing(3),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
+  trancheLast: { paddingBottom: 0 },
+  scheduleHead: { paddingBottom: spacing(2) },
+  trancheText: { flex: 1, minWidth: 0, gap: 2 },
+  trancheLabel: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
+  trancheAmount: { fontFamily: font.display, fontSize: 17, color: colors.foreground },
 });

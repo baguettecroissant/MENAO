@@ -101,7 +101,7 @@ export function ReviewForm({
                 onChange={() => markEdited("value_for_money")}
                 className="peer sr-only"
               />
-              <span className="flex min-h-12 cursor-pointer items-center justify-center rounded-input border border-border bg-surface px-4 text-center text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:bg-background">
+              <span className="flex min-h-12 cursor-pointer items-center justify-center rounded-input border border-border bg-surface px-4 text-center text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:bg-background in-[.app-nette]:font-semibold in-[.app-nette]:peer-checked:border-foreground in-[.app-nette]:peer-checked:bg-surface in-[.app-nette]:peer-checked:text-foreground in-[.app-nette]:peer-checked:shadow-[inset_0_0_0_1px_var(--color-foreground)]">
                 {t.values[value]}
               </span>
             </label>
@@ -112,7 +112,7 @@ export function ReviewForm({
 
       <section
         aria-labelledby="comment-title"
-        className="flex flex-col gap-3 rounded-card border border-primary bg-surface p-5 shadow-card"
+        className="flex flex-col gap-3 rounded-card border border-primary bg-surface p-5 shadow-card in-[.app-nette]:border-border"
       >
         <h2 id="comment-title" className="font-medium text-primary-strong">
           {t.commentTitle}
@@ -202,7 +202,7 @@ function CriterionSlider({
         aria-valuetext={value === null ? t.dragToRate : `${t.percent(value)}, ${caption}`}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="h-2 w-full cursor-pointer accent-primary"
+        className="h-2 w-full cursor-pointer accent-primary in-[.app-nette]:accent-success"
       />
       <p
         aria-hidden="true"
