@@ -1,132 +1,14 @@
-import type { JournalSummary } from "@menao/core";
 import { router } from "expo-router";
 import { ChevronRight, FileText } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { PhotoViewer } from "@/components/photo-viewer";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import type { ChantierDocument } from "@/lib/chantiers";
-import { formatAgo, formatCents, formatDateNumeric } from "@/lib/format";
+import { formatDateNumeric } from "@/lib/format";
 import { Body, Card } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.chantier;
 const { colors, font, radius, spacing } = theme;
-
-/**
- * Journal du chantier (F-22, F-12) : photos (ouvertes en grand d'un appui) et messages de
- * l'artisan, du plus récent au plus ancien, communs aux vues du client et de l'artisan.
- * `emptyText` : texte quand rien n'est publié ; `photoAction` et `children` : actions de
- * l'artisan (photos, message).
- */
-export function JournalCard({
-  journal,
-  photoUrls,
-  emptyText,
-  photoAction,
-  children,
-  authors,
-}: {
-  journal: JournalSummary;
-  photoUrls: string[];
-  emptyText: string | null;
-  /** Auteur de certaines entrées (ADR 0243) : collègue, ou membre de l'équipe vu par le client. */
-  authors?: Readonly<Record<string, string>>;
-  /** « Ajouter une photo » (artisan, pendant les travaux), sous les photos comme sur le site. */
-  photoAction?: ReactNode;
-  children?: ReactNode;
-}) {
-  const empty = journal.messages.length === 0 && photoUrls.length === 0;
-  const [viewing, setViewing] = useState<number | null>(null);
-  return (
-    <Card>
-      <View style={styles.card}>
-        <Text role="heading" style={styles.heading}>
-          {t.journal.title}
-        </Text>
-        {journal.lastUpdateAt ? (
-          <Text style={styles.meta}>{t.journal.lastUpdate(formatAgo(journal.lastUpdateAt))}</Text>
-        ) : null}
-        {empty && emptyText ? <Body muted>{emptyText}</Body> : null}
-        {photoUrls.length > 0 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.photos}
-          >
-            {photoUrls.map((uri, i) => (
-              <Pressable
-                key={uri}
-                role="button"
-                aria-label={fr.photoViewer.open(i + 1, photoUrls.length)}
-                onPress={() => setViewing(i)}
-                style={({ pressed }) => pressed && styles.pressed}
-              >
-                <Image
-                  source={{ uri }}
-                  style={styles.photo}
-                  alt={`${t.journal.photosTitle} ${i + 1}`}
-                />
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
-        <PhotoViewer photos={photoUrls} index={viewing} onClose={() => setViewing(null)} />
-        {photoAction}
-        {journal.messages.map((m) => (
-          <View key={m.id} style={styles.message}>
-            {authors?.[m.id] ? <Text style={styles.small}>{authors[m.id]}</Text> : null}
-            <Text style={styles.messageText}>{m.message}</Text>
-            <Text style={styles.small}>{t.journal.messageLeft(formatAgo(m.createdAt))}</Text>
-          </View>
-        ))}
-        {children}
-      </View>
-    </Card>
-  );
-}
-
-/** Échéancier du devis signé, toujours recalculé à partir des paiements (CLAUDE.md règle 5). */
-export function ScheduleCard({
-  progress,
-  totalTtcCents,
-}: {
-  progress: { paidCents: number; remainingCents: number } | null;
-  totalTtcCents: number | null;
-}) {
-  return (
-    <Card>
-      <View style={styles.card}>
-        <Text role="heading" style={styles.heading}>
-          {t.dossier.schedule}
-        </Text>
-        {progress && totalTtcCents !== null ? (
-          // Frise de la maquette « Dossier du chantier » : déjà payé, puis restant à payer.
-          <View>
-            <View style={styles.step}>
-              <View style={[styles.stepDot, styles.stepDotDone]}>
-                <View style={styles.stepDotInner} />
-              </View>
-              <Text style={[styles.meta, styles.stepLabel]}>{t.dossier.paid}</Text>
-              <Text style={styles.paid}>{formatCents(progress.paidCents)}</Text>
-            </View>
-            <View style={styles.stepLine} />
-            <View style={styles.step}>
-              <View style={styles.stepDot} />
-              <Text style={[styles.meta, styles.stepLabel]}>{t.dossier.remaining}</Text>
-              <Text style={styles.lineValue}>{formatCents(progress.remainingCents)}</Text>
-            </View>
-            <Text style={[styles.small, styles.total]}>
-              {t.dossier.totalLine(formatCents(totalTtcCents))}
-            </Text>
-          </View>
-        ) : (
-          <Body muted>{t.dossier.noSchedule}</Body>
-        )}
-      </View>
-    </Card>
-  );
-}
 
 /** Documents du chantier (devis, factures, PV) : aperçu, puis PDF à télécharger ou partager. */
 export function DocumentsCard({
@@ -194,49 +76,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors["muted-foreground"],
   },
-  photos: { gap: spacing(3) },
-  photo: {
-    width: 150,
-    height: 112,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-soft"],
-  },
   pressed: { opacity: 0.85 },
-  step: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  stepDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
-  },
-  stepDotDone: {
-    borderStyle: "solid",
-    borderColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepDotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  stepLine: {
-    width: 1.5,
-    height: spacing(5),
-    marginLeft: 10,
-    backgroundColor: colors["border-strong"],
-  },
-  stepLabel: { flex: 1 },
-  paid: { fontFamily: font.medium, fontSize: 15, color: colors.primary },
-  total: { marginTop: spacing(3) },
-  message: {
-    gap: spacing(1),
-    borderRadius: radius.input,
-    backgroundColor: colors.background,
-    padding: spacing(3),
-  },
-  messageText: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.foreground },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  lineValue: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   document: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,11 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import { ChantierView } from "@/components/chantier/chantier-view";
-import { TopBar } from "@/components/top-bar";
+import { FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { loadChantier, type ChantierDetail } from "@/lib/chantiers";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 
 /**
  * Vue d'un chantier (F-12), rechargée à chaque retour sur l'écran. `retour` : fin de la signature
@@ -25,12 +25,12 @@ export default function ChantierScreen() {
   );
   const [detail, reload] = useFocusData(load, waiting, `chantier:${id}`);
 
-  if (detail === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (detail === undefined) return <FicheSkeleton title={fr.chantier.fiche.title} />;
   if (detail === null) {
     return (
-      <Screen onRefresh={reload} header={<TopBar />}>
+      <FicheScreen title={fr.chantier.fiche.title} onRefresh={reload}>
         <Notice tone="error">{fr.chantier.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   return <ChantierView detail={detail} retour={retour} onChanged={reload} />;

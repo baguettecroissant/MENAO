@@ -1,12 +1,12 @@
 import { depositAboveAdvice } from "@menao/core";
 import { quoteDocumentModel, quotePdfData, type QuoteDocument } from "@menao/documents";
-import { ArrowLeft, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { Metadata, Route } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { QuoteResponse } from "@/components/project/quote-response";
 import { QuotePaper } from "@/components/pro/quote-paper";
-import { Alert, ButtonLink, StatusBadge, TextLink, buttonClasses } from "@/components/ui";
+import { SheetChip, SheetHeader, SheetPage, SheetRow, sheetCard } from "@/components/pro/sheet";
+import { Alert, ButtonLink, TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { documentLogoUrl } from "@/lib/documents/logo";
 import { formatDay } from "@/lib/format";
@@ -81,108 +81,152 @@ export default async function ClientQuotePage({
 
   // Conseil au client (ADR 0158) : acompte de plus de 30 %.
   const advisedDeposit = depositAboveAdvice(data.schedule);
-  return (
-    <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
-        <Link
-          href="/mon-espace"
-          className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {t.back}
-        </Link>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {artisan ? t.title(artisan) : t.titleFallback}
-          </h1>
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusBadge tone={tone[quote.status]}>{t.statuses[quote.status]}</StatusBadge>
-            {quote.status === "envoye" && quote.valid_until && (
-              <span className="text-sm text-muted-foreground">
-                {t.validUntil(formatDay(quote.valid_until))}
-              </span>
-            )}
-          </div>
+  const actions = (
+    <>
+      {quote.status === "signe" && deposit?.status !== "paye" && deposit?.status !== "en_cours" && (
+        <ButtonLink href={`/mon-espace/devis/${id}/acompte` as Route} size="lg" block>
+          {t.payDeposit(euros.format((data.schedule[0]?.amountCents ?? 0) / 100))}
+        </ButtonLink>
+      )}
+      {quote.status === "envoye" && (
+        <div className="flex flex-col gap-3">
+          <ButtonLink href={`/mon-espace/devis/${id}/signature` as Route} size="lg" block>
+            {t.sign}
+          </ButtonLink>
+          <QuoteResponse quoteId={id} />
         </div>
-        {quote.status === "envoye" && signature === "terminee" && (
-          <Alert tone="info">{t.signatureReturned}</Alert>
-        )}
-        {quote.status === "signe" && quote.signed_at && (
-          <Alert tone="success">{t.signedNotice(formatDay(quote.signed_at))}</Alert>
-        )}
-        {deposit?.status === "paye" && deposit.paid_at ? (
-          <Alert tone="success">
-            {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}{" "}
-            {invoice && (
-              <a
-                href={`/factures/${invoice.id}/pdf`}
-                target="_blank"
-                rel="noopener"
-                className="font-medium underline-offset-2 hover:underline"
-              >
-                {t.depositInvoice(invoice.numero)}
-              </a>
+      )}
+    </>
+  );
+  // Refonte « Nette » (ADR 0251) : en-tête à grand titre, le devis à gauche, le total, l'échéancier
+  // et les boutons à droite (dessous sur téléphone).
+  return (
+    <SheetPage>
+      <SheetHeader
+        backHref="/mon-espace"
+        backLabel={t.back}
+        chips={
+          <>
+            <SheetChip tone={tone[quote.status]} dot>
+              {t.statuses[quote.status]}
+            </SheetChip>
+            {quote.status === "envoye" && quote.valid_until && (
+              <SheetChip tone="neutral">{t.validUntil(formatDay(quote.valid_until))}</SheetChip>
             )}
-          </Alert>
-        ) : deposit?.status === "en_cours" ? (
-          <Alert tone="info">{t.depositInProgress}</Alert>
-        ) : (
-          quote.status === "signe" &&
-          paiement === "termine" && <Alert tone="info">{t.paymentReturned}</Alert>
-        )}
-        {quote.status === "revision_demandee" && (
-          <Alert tone="info">
-            {t.revisionNotice} {quote.client_message}
-          </Alert>
-        )}
-        {quote.status === "refuse" && <Alert tone="info">{t.refusedNotice}</Alert>}
-        {quote.status === "remplace" && (
-          <Alert tone="info">
-            {t.replacedNotice}{" "}
-            {newer && (
-              <TextLink href={`/mon-espace/devis/${newer.id}` as Route}>{t.seeNewVersion}</TextLink>
+          </>
+        }
+        title={artisan ? t.title(artisan) : t.titleFallback}
+      />
+      <div className="grid items-start gap-6 pb-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex min-w-0 flex-col gap-5">
+          {quote.status === "envoye" && signature === "terminee" && (
+            <Alert tone="info">{t.signatureReturned}</Alert>
+          )}
+          {quote.status === "signe" && quote.signed_at && (
+            <Alert tone="success">{t.signedNotice(formatDay(quote.signed_at))}</Alert>
+          )}
+          {deposit?.status === "paye" && deposit.paid_at ? (
+            <Alert tone="success">
+              {t.depositPaid(euros.format(deposit.amount_cents / 100), formatDay(deposit.paid_at))}{" "}
+              {invoice && (
+                <a
+                  href={`/factures/${invoice.id}/pdf`}
+                  target="_blank"
+                  rel="noopener"
+                  className="font-medium underline-offset-2 hover:underline"
+                >
+                  {t.depositInvoice(invoice.numero)}
+                </a>
+              )}
+            </Alert>
+          ) : deposit?.status === "en_cours" ? (
+            <Alert tone="info">{t.depositInProgress}</Alert>
+          ) : (
+            quote.status === "signe" &&
+            paiement === "termine" && <Alert tone="info">{t.paymentReturned}</Alert>
+          )}
+          {quote.status === "revision_demandee" && (
+            <Alert tone="info">
+              {t.revisionNotice} {quote.client_message}
+            </Alert>
+          )}
+          {quote.status === "refuse" && <Alert tone="info">{t.refusedNotice}</Alert>}
+          {quote.status === "remplace" && (
+            <Alert tone="info">
+              {t.replacedNotice}{" "}
+              {newer && (
+                <TextLink href={`/mon-espace/devis/${newer.id}` as Route}>
+                  {t.seeNewVersion}
+                </TextLink>
+              )}
+            </Alert>
+          )}
+          {advisedDeposit !== null &&
+            (quote.status === "envoye" ||
+              (quote.status === "signe" &&
+                deposit?.status !== "paye" &&
+                deposit?.status !== "en_cours")) && (
+              <Alert tone="info">{t.depositAdvice(advisedDeposit)}</Alert>
             )}
-          </Alert>
-        )}
-        {advisedDeposit !== null &&
-          (quote.status === "envoye" ||
-            (quote.status === "signe" &&
-              deposit?.status !== "paye" &&
-              deposit?.status !== "en_cours")) && (
-            <Alert tone="info">{t.depositAdvice(advisedDeposit)}</Alert>
-          )}
-        <QuotePaper
-          model={quoteDocumentModel(data)}
-          label={t.document}
-          clipped={false}
-          logoUrl={logoUrl}
-        />
-        <a
-          href={`/devis/${id}/pdf`}
-          target="_blank"
-          rel="noopener"
-          className={`${buttonClasses({ variant: "outline", block: false })} self-start`}
-        >
-          <Eye aria-hidden="true" className="size-4" />
-          {quote.status === "signe" ? t.downloadSigned : t.viewPdf}
-          <span className="sr-only"> {t.newTab}</span>
-        </a>
-        {quote.status === "signe" &&
-          deposit?.status !== "paye" &&
-          deposit?.status !== "en_cours" && (
-            <ButtonLink href={`/mon-espace/devis/${id}/acompte` as Route} size="lg" block>
-              {t.payDeposit(euros.format((data.schedule[0]?.amountCents ?? 0) / 100))}
-            </ButtonLink>
-          )}
-        {quote.status === "envoye" && (
-          <div className="flex flex-col gap-3">
-            <ButtonLink href={`/mon-espace/devis/${id}/signature` as Route} size="lg" block>
-              {t.sign}
-            </ButtonLink>
-            <QuoteResponse quoteId={id} />
-          </div>
-        )}
+          <QuotePaper
+            model={quoteDocumentModel(data)}
+            label={t.document}
+            clipped={false}
+            logoUrl={logoUrl}
+          />
+          <a
+            href={`/devis/${id}/pdf`}
+            target="_blank"
+            rel="noopener"
+            className={`${buttonClasses({ variant: "outline", block: false })} self-start`}
+          >
+            <Eye aria-hidden="true" className="size-4" />
+            {quote.status === "signe" ? t.downloadSigned : t.viewPdf}
+            <span className="sr-only"> {t.newTab}</span>
+          </a>
+        </div>
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
+          <section aria-labelledby="total-devis" className={sheetCard}>
+            <div className="flex flex-col gap-1">
+              <h2 id="total-devis" className="font-sans text-sm font-semibold text-label">
+                {t.totalTtc}
+              </h2>
+              <span className="font-display text-[2.25rem] leading-none font-bold tracking-[-0.03em] tabular-nums">
+                {euros.format(data.totals.totalTtcCents / 100)}
+              </span>
+            </div>
+            <dl>
+              <SheetRow label={t.totalHt}>{euros.format(data.totals.totalHtCents / 100)}</SheetRow>
+              <SheetRow label={t.totalTva}>
+                {euros.format(data.totals.totalTvaCents / 100)}
+              </SheetRow>
+            </dl>
+            {data.schedule.length > 0 && (
+              <div className="flex flex-col gap-2 rounded-xl bg-background p-3.5">
+                <span className="text-[0.8125rem] font-bold tracking-[0.04em] text-muted-foreground uppercase">
+                  {t.toPay}
+                </span>
+                {data.schedule.map((tranche) => (
+                  <div
+                    key={`${tranche.trigger}-${tranche.percent}`}
+                    className="flex justify-between gap-3 text-sm"
+                  >
+                    <span className="text-label">
+                      {tranche.trigger === "signature"
+                        ? t.trancheSignature(tranche.percent)
+                        : t.trancheReception}
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {euros.format(tranche.amountCents / 100)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {actions}
+          </section>
+        </aside>
       </div>
-    </main>
+    </SheetPage>
   );
 }

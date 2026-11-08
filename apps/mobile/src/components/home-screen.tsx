@@ -7,7 +7,6 @@ import {
   Bell,
   Clock,
   CreditCard,
-  HardHat,
   LifeBuoy,
   MessageCircle,
   Search,
@@ -108,15 +107,7 @@ function ClientHome() {
   const { messages } = useUnread();
   const counters: { icon: LucideIcon; label: string; onPress: () => void }[] = home
     ? [
-        ...(home.activeCount > 0
-          ? [
-              {
-                icon: HardHat,
-                label: fr.myChantiers.countActive(home.activeCount),
-                onPress: () => openTab("/chantiers"),
-              },
-            ]
-          : []),
+        // Chantiers en cours : dans les chiffres serrés du tableau de bord (lot 6).
         ...(home.awaitingRequests > 0
           ? [
               {

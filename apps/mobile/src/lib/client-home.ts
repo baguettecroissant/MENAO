@@ -1,4 +1,5 @@
 import {
+  clientHomeFigures,
   clientHomeSummary,
   clientTodos,
   isChantierFinished,
@@ -6,6 +7,7 @@ import {
   upcomingAgenda,
   type AgendaKind,
   type ChantierStatus,
+  type ClientHomeFigures,
   type ClientHomeSummary,
   type ClientTodo,
 } from "@menao/core";
@@ -19,6 +21,8 @@ const SHOWN_APPOINTMENTS = 3;
 export type ClientHome = {
   firstName: string | null;
   summary: ClientHomeSummary;
+  /** Chiffres serrés de l'accueil (refonte « Nette », lot 6) : en cours, prochain RDV… */
+  figures: ClientHomeFigures;
   todos: ClientTodo<{ c: ClientChantier }>[];
   appointments: { kind: AgendaKind; at: string; c: ClientChantier }[];
   /** Chantiers en cours, les plus récents d'abord, et leur nombre total. */
@@ -81,6 +85,7 @@ export async function loadClientHome(): Promise<ClientHome | null> {
       activeChantiers: active.length,
       awaitingRequests,
     }),
+    figures: clientHomeFigures(mine.chantiers, now),
     todos,
     appointments: upcomingAgenda(rows, now, SHOWN_APPOINTMENTS).map(({ kind, at, row }) => ({
       kind,
