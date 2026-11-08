@@ -15,7 +15,18 @@ import {
   type QuoteUnit,
 } from "@menao/core";
 import { quoteLineFormSchema, type QuoteLineInput } from "@menao/validation";
-import { Check, Euro, Pencil, Plus, Save, Search, Sparkles, Trash2, X } from "lucide-react";
+import {
+  Check,
+  Euro,
+  Headset,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
@@ -248,16 +259,27 @@ export function QuoteEditor({
             </span>
           </button>
           {conversation && (
-            <div className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card">
-              <QuoteConversation
-                chantierId={chantierId}
-                assujettiTva={assujettiTva}
-                onStart={() => {
-                  camille.current = new Set();
-                }}
-                onLines={setCamilleLines}
-              />
-            </div>
+            <QuoteConversation
+              chantierId={chantierId}
+              assujettiTva={assujettiTva}
+              onStart={() => {
+                camille.current = new Set();
+              }}
+              onLines={setCamilleLines}
+              trigger={(start) => (
+                <button type="button" onClick={start} className={`${quick} w-full flex-1`}>
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-strong">
+                    <Headset aria-hidden="true" className="size-5" />
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-semibold">{t.conversation.start}</span>
+                    <span className="text-[0.8125rem] text-muted-foreground first-letter:uppercase">
+                      {t.conversation.hint}
+                    </span>
+                  </span>
+                </button>
+              )}
+            />
           )}
           <button type="button" onClick={() => setEditing("search")} className={quick}>
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-background text-label">

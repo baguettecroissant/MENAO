@@ -8,7 +8,7 @@ import {
   rawVoiceLinesFrom,
 } from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { VoiceCall } from "@/components/assistant/voice-call";
 import { fr } from "@/i18n/fr";
 import { prepareQuoteCall, voiceQuoteDraftForCall } from "@/lib/artisan/quote-actions";
@@ -26,6 +26,7 @@ export function QuoteConversation({
   assujettiTva,
   onStart,
   onLines,
+  trigger,
 }: {
   chantierId: string;
   assujettiTva: boolean;
@@ -33,6 +34,8 @@ export function QuoteConversation({
   onStart: () => void;
   /** Liste complète des lignes de l'appel en cours. */
   onLines: (lines: QuoteLineInput[]) => void;
+  /** Carte de lancement de l'éditeur (refonte « Nette », ADR 0247). */
+  trigger?: (start: () => void) => ReactNode;
 }) {
   const callId = useRef<string | null>(null);
   const options = {
@@ -63,6 +66,7 @@ export function QuoteConversation({
       session={() => prepareQuoteCall(chantierId)}
       labels={{ start: t.start, hint: t.hint, live: t.live, speaking: t.speaking }}
       hintOnMobile={false}
+      trigger={trigger}
       onMessage={onMessage}
       onCallStarted={(id) => {
         callId.current = id;

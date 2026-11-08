@@ -3,7 +3,7 @@
 import type Vapi from "@vapi-ai/web";
 import { voiceSquad, type VoiceSide } from "@menao/core";
 import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button, focusRing } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
@@ -43,6 +43,7 @@ export function VoiceCall({
   onCallEnded,
   hintOnMobile = true,
   autoStart = false,
+  trigger,
 }: {
   /** « quote » : devis en conversation, l'assistante est donnée par le serveur (session). */
   assistant?: VoiceAssistant | "secretary" | "quote";
@@ -57,6 +58,8 @@ export function VoiceCall({
   hintOnMobile?: boolean;
   /** Appel lancé dès l'affichage (page intégrée à l'application, ADR 0235). */
   autoStart?: boolean;
+  /** Bouton de lancement dessiné par l'appelant (carte de l'éditeur de devis, ADR 0247). */
+  trigger?: (start: () => void) => ReactNode;
 }) {
   const ASSISTANT_ID =
     assistant === "secretary"
@@ -199,16 +202,20 @@ export function VoiceCall({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Button type="button" variant="outline" size="sm" onClick={start}>
-        <Phone aria-hidden="true" className="size-4" />
-        {text.start}
-        <span
-          className={`font-normal text-muted-foreground ${hintOnMobile ? "" : "max-sm:hidden"}`}
-        >
-          · {text.hint}
-        </span>
-      </Button>
+    <div className={`flex flex-col gap-1.5 ${trigger ? "h-full" : ""}`}>
+      {trigger ? (
+        trigger(() => void start())
+      ) : (
+        <Button type="button" variant="outline" size="sm" onClick={start}>
+          <Phone aria-hidden="true" className="size-4" />
+          {text.start}
+          <span
+            className={`font-normal text-muted-foreground ${hintOnMobile ? "" : "max-sm:hidden"}`}
+          >
+            · {text.hint}
+          </span>
+        </Button>
+      )}
       {state === "ended" && <p className="text-xs text-muted-foreground">{t.ended}</p>}
       {refusal && (
         <p role="alert" className="text-xs text-danger">
