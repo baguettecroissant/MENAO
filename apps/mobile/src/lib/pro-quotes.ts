@@ -54,7 +54,23 @@ export type QuoteDraft = {
   conversation: boolean;
   /** Lignes d'un appel précédent avec Camille, pas encore reprises ni écartées. */
   voiceDraft: QuoteLineInput[] | null;
+  /** En-tête de l'éditeur : titre du chantier et « Client · CP Ville » (null si inconnus). */
+  chantierTitle: string | null;
+  clientLine: string | null;
+  /** Acompte de l'échéancier par défaut (%), pour l'acompte prévu dans les totaux. */
+  defaultDeposit: number;
 };
+
+/** « Marc Fabre · 06800 Cagnes-sur-Mer » à partir du détail du chantier. */
+export function quoteClientLine(detail: {
+  client: { first_name: string | null; last_name: string | null };
+  code_postal: string | null;
+  ville_nom: string | null;
+}): string | null {
+  const name = [detail.client.first_name, detail.client.last_name].filter(Boolean).join(" ");
+  const place = [detail.code_postal, detail.ville_nom].filter(Boolean).join(" ");
+  return [name, place].filter(Boolean).join(" · ") || null;
+}
 
 /** Brouillon du devis du chantier (F-19), comme sur le site : lignes dans l'ordre. */
 export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | null> {
@@ -65,6 +81,7 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
     { data: appointment },
     { data: agents },
     { data: voiceDraft },
+    { data: detail },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -90,9 +107,11 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId }),
   ]);
   if (error || !artisan) return null;
   const pending = voiceDraftLines(voiceDraft?.lines);
+  const chantier = parseArtisanChantierDetail(detail);
   return {
     appointmentAt: appointment?.starts_at ?? null,
     lines: [...(draft?.quote_lines ?? [])]
@@ -110,6 +129,9 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
     assujettiTva: artisan.assujetti_tva ?? true,
     conversation: parseAiAgents(agents).agents.conversationalQuote,
     voiceDraft: pending.length ? pending : null,
+    chantierTitle: chantier?.chantier.title ?? null,
+    clientLine: chantier ? quoteClientLine(chantier) : null,
+    defaultDeposit: artisan.default_deposit_percent,
   };
 }
 

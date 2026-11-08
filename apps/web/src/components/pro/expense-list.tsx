@@ -1,4 +1,5 @@
 import {
+  expenseMonthFigures,
   expenseStatus,
   expensesSummary,
   matchesExpenseFilter,
@@ -7,7 +8,7 @@ import {
   type ExpenseRow,
   type ExpenseStatus,
 } from "@menao/core";
-import { Plus, Search } from "lucide-react";
+import { Plus, Receipt, Search } from "lucide-react";
 import type { Route } from "next";
 import { EmptyState } from "@/components/empty-state";
 import { ListFilters, ListHeader, ListPanel, ListRow, type ListTone } from "@/components/list-kit";
@@ -15,9 +16,15 @@ import { MoreMenu } from "@/components/more-menu";
 import { ButtonLink, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { ExampleBadge, ExampleLock } from "./examples";
+import { MoneyFigures } from "./money-figures";
 
 const t = fr.pro.expenses;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const roundEuros = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
 const shortDate = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "2-digit",
@@ -62,11 +69,38 @@ export function ExpenseList({
   const href = (value: ExpenseFilter) =>
     `${base}/depenses${value === "toutes" ? "" : `?statut=${value}`}`;
   const paidCount = expenses.length - summary.toPayCount;
+  const fig = fr.pro.sheet.figures;
+  const month = expenseMonthFigures(
+    expenses.map((e) => ({
+      issuedOn: e.issued_on,
+      totalTtcCents: e.total_ttc_cents,
+      totalTvaCents: e.total_tva_cents,
+    })),
+    today,
+  );
 
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+        <MoneyFigures
+          label={fig.expensesLabel}
+          cells={[
+            {
+              label: fig.spentMonth,
+              value: roundEuros.format(Math.round(month.monthCents / 100)),
+              hint: fig.spentMonthHint(month.monthCount, euros.format(month.monthTvaCents / 100)),
+            },
+            {
+              label: fig.toPay,
+              value: roundEuros.format(Math.round(summary.toPayCents / 100)),
+              hint: fig.toPayHint(
+                summary.overdueCount > 0 ? euros.format(summary.overdueCents / 100) : null,
+              ),
+            },
+          ]}
+        />
         <ListHeader
+          level={2}
           title={t.title}
           actions={
             <ExampleLock locked={example}>
@@ -179,6 +213,15 @@ export function ExpenseList({
                       key={expense.id}
                       href={example ? undefined : `/pro/depenses/${expense.id}`}
                       label={t.open(expense.title)}
+                      icon={{
+                        icon: Receipt,
+                        tone:
+                          EXPENSE_STATUS_TONE[status] === "danger"
+                            ? "danger"
+                            : expense.document_mime
+                              ? "primary"
+                              : "warning",
+                      }}
                       title={expense.title}
                       badge={example ? <ExampleBadge /> : undefined}
                       detail={

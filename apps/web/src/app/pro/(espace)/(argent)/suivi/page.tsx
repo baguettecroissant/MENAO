@@ -63,11 +63,11 @@ export default async function MoneyOverviewPage() {
 
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pt-5 pb-10 sm:px-6">
         <section aria-labelledby="mois" className="flex flex-col gap-3">
-          <h1 id="mois" className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+          <h2 id="mois" className="text-xl leading-tight">
             {month ? t.monthTitle(month) : t.title}
-          </h1>
+          </h2>
           <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {tiles.map((tile) => (
               <Card key={tile.label} className="flex flex-col gap-1">

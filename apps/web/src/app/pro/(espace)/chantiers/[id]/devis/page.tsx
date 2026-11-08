@@ -73,6 +73,11 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
         title={t.title}
         chantierTitle={c.chantier.title}
         appointmentAt={appointment?.starts_at ?? null}
+        step="lignes"
+        chantierId={id}
+        client={[c.client.first_name, c.client.last_name].filter(Boolean).join(" ") || null}
+        place={[c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null}
+        wide
       />
       <QuoteEditor
         chantierId={id}

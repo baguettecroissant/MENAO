@@ -738,6 +738,7 @@ export const fr = {
     title: "Suivi",
     monthTitle: (month: string) => `${month.charAt(0).toUpperCase()}${month.slice(1)} en bref`,
     ttc: "Montants TTC, tirés de votre espace : ils ne remplacent pas votre comptabilité.",
+    inMonth: (label: string, month: string) => `${label} en ${month}`,
     collected: "Encaissé",
     signed: "Devis signés",
     signedCount: (n: number) => `${n} devis`,
@@ -2269,13 +2270,30 @@ export const fr = {
     resume: "Reprendre le devis",
     edit: "Modifier le devis",
     statusDraft: "Brouillon",
-    statusDirty: "Modifications apportées",
-    statusSaved: "Enregistré et à jour",
+    statusDirty: "Modifications non enregistrées",
+    statusSaved: "Enregistré",
     save: "Enregistrer",
-    generate: "Générer le devis",
+    generate: "Suivant : aperçu",
     lines: "Lignes du devis",
     lineCount: (n: number) => (n <= 1 ? `${n} ligne` : `${n} lignes`),
-    addManual: "Ajouter manuellement",
+    addManual: "Ajouter une ligne",
+    /** Éditeur « Nette » (lot 2) : barre du haut, cartes « créer vite », lignes et totaux. */
+    barTitle: "Devis",
+    quick: {
+      label: "Créer les lignes plus vite",
+      dictationHint: "Dites vos lignes, MENAO les écrit",
+      conversationHint: "Elle vous pose les questions",
+      articles: "Mes articles",
+      articlesHint: "Reprendre un article déjà chiffré",
+      premium: "Premium",
+    },
+    lineAmount: (quantity: string, price: string) => `${quantity} × ${price} HT`,
+    ttc: "TTC",
+    ht: "HT",
+    totalsTitle: "TOTAUX",
+    vatLine: (rate: string) => `TVA ${rate}`,
+    depositLine: (percent: number) => `Acompte ${percent} % à la signature`,
+    visit: (day: string, time: string) => `visite du ${day} à ${time}`,
     addLine: "Ajout d'une ligne",
     editLine: "Modification de la ligne",
     lineType: "Type de ligne",
@@ -2300,6 +2318,19 @@ export const fr = {
       l: "Litres (l)",
       forfait: "Forfait",
     },
+    /** Unité après la quantité, sur la carte d'une ligne (« 3 h », « 1 forfait »). */
+    unitsShort: {
+      u: "u",
+      h: "h",
+      jour: "jour",
+      m: "m",
+      ml: "ml",
+      m2: "m²",
+      m3: "m³",
+      kg: "kg",
+      l: "l",
+      forfait: "forfait",
+    },
     unitPrice: "Prix unitaire HT (€)",
     hourlyRate: "Taux horaire HT (€)",
     price: "Prix HT (€)",
@@ -2321,8 +2352,9 @@ export const fr = {
     leave: "Quitter",
     steps: {
       label: "Étapes de l'envoi du devis",
-      preview: "Aperçu du devis",
-      send: "Envoi du devis",
+      lines: "Lignes",
+      preview: "Aperçu",
+      send: "Envoi",
     },
     next: "Suivant",
     preview: {
@@ -2764,6 +2796,21 @@ export const fr = {
       remplace: "Remplacé",
     },
     openQuote: (title: string) => `Ouvrir le devis ${title}`,
+    /** Chiffres clés de l'onglet (refonte « Nette », lot 2), comme sur le site. */
+    figures: {
+      pending: "En attente de signature",
+      pendingHint: (n: number) =>
+        n === 0
+          ? "Aucun devis envoyé en attente"
+          : n === 1
+            ? "1 devis envoyé"
+            : `${n} devis envoyés`,
+      toSend: "À envoyer",
+      toSendHint: "Brouillons à finir",
+      signRate: "Taux de signature",
+      signRateHint: "Sur les 6 derniers mois",
+      none: "—",
+    },
     error: "Impossible d'afficher vos devis pour le moment. Réessayez dans quelques instants.",
   },
   /** Factures de l'artisan (F-35) : mêmes textes que l'espace pro du site. */
@@ -2775,6 +2822,14 @@ export const fr = {
     exportFailed: "L'export n'a pas pu être préparé. Réessayez dans un instant.",
     kinds: { acompte: "Acompte", solde: "Solde" },
     view: (numero: string) => `Partager la facture ${numero} (PDF)`,
+    /** Chiffres clés de l'onglet (refonte « Nette », lot 2), comme sur le site. */
+    figures: {
+      month: "Facturé ce mois",
+      monthHint: (n: number) =>
+        n === 0 ? "Aucune facture ce mois-ci" : n === 1 ? "1 facture" : `${n} factures`,
+      year: "Facturé cette année",
+      hint: "Les factures se créent toutes seules à chaque paiement reçu : rien à saisir.",
+    },
     error: "Impossible d'afficher vos factures pour le moment. Réessayez dans quelques instants.",
     csv: {
       filename: "factures-menao.csv",
@@ -2864,6 +2919,17 @@ export const fr = {
     },
     toClassify: "À classer",
     open: (title: string) => `Ouvrir la dépense ${title}`,
+    /** Chiffres clés et actions de l'onglet (refonte « Nette », lot 2). */
+    figures: {
+      month: (month: string) => (month ? `Dépenses de ${month}` : "Dépenses du mois"),
+      monthHint: (n: number, tva: string) =>
+        `${n <= 1 ? `${n} dépense` : `${n} dépenses`} · dont ${tva} de TVA`,
+      toPay: "Reste à payer",
+      toPayHint: (n: number) => (n <= 1 ? `${n} dépense` : `${n} dépenses`),
+      overdue: (amount: string) => `dont ${amount} en retard`,
+    },
+    photo: "Photo du ticket",
+    manual: "Saisir",
     // Bouton prévu pour la réception par la plateforme agréée (décision D13), pas encore active.
     einvoice: {
       button: "Factures électroniques",

@@ -86,12 +86,15 @@ export function ExpenseFormView({
   initialLines,
   hasDocument,
   chantiers,
+  takePhoto = false,
 }: {
   expenseId: string | null;
   initial: ExpenseFormValues;
   initialLines: ExpenseLinePrefill[];
   hasDocument: boolean;
   chantiers: { id: string; label: string }[];
+  /** « Photo du ticket » (rubrique Argent) : l'appareil photo s'ouvre dès l'arrivée. */
+  takePhoto?: boolean;
 }) {
   const [values, setValues] = useState(initial);
   const [lines, setLines] = useState(initialLines);
@@ -112,6 +115,14 @@ export function ExpenseFormView({
     },
     [],
   );
+
+  // Une seule fois à l'ouverture : l'artisan peut ensuite changer de pièce comme d'habitude.
+  const photoAsked = useRef(false);
+  useEffect(() => {
+    if (!takePhoto || photoAsked.current) return;
+    photoAsked.current = true;
+    void pick("camera");
+  }, [takePhoto]);
 
   const set = <K extends keyof ExpenseFormValues>(name: K, value: ExpenseFormValues[K]) =>
     setValues((current) => ({ ...current, [name]: value }));

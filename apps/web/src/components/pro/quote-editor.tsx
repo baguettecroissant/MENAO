@@ -15,7 +15,7 @@ import {
   type QuoteUnit,
 } from "@menao/core";
 import { quoteLineFormSchema, type QuoteLineInput } from "@menao/validation";
-import { Euro, Mic, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { Check, Euro, Pencil, Plus, Save, Search, Sparkles, Trash2, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
@@ -207,42 +207,69 @@ export function QuoteEditor({
     setReveal({ key: target });
   }
 
-  return (
-    <div className="flex flex-1 flex-col">
-      <div className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-          <span
-            role="status"
-            className={`inline-flex items-center rounded-chip px-2.5 py-1 text-xs font-medium ${
-              status === "dirty"
-                ? "bg-warning-soft text-warning"
-                : status === "saved"
-                  ? "bg-success-soft text-success"
-                  : "bg-background text-muted-foreground"
-            }`}
-          >
-            {status === "dirty"
-              ? t.statusDirty
-              : status === "saved"
-                ? t.statusSaved
-                : t.statusDraft}
-          </span>
-          <button
-            type="button"
-            onClick={save}
-            disabled={!dirty || pending || generating}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-pill px-2 text-sm font-medium text-primary-strong hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none disabled:text-subtle-foreground disabled:hover:bg-transparent"
-          >
-            {pending ? t.saving : t.save}
-            <Save aria-hidden="true" className="size-4" />
-          </button>
-        </div>
-      </div>
+  const statusChip = (
+    <span
+      role="status"
+      className={`inline-flex items-center gap-1.5 rounded-chip px-2.5 py-1 text-xs font-bold ${
+        status === "dirty"
+          ? "bg-warning-soft text-warning"
+          : status === "saved"
+            ? "bg-success-soft text-success"
+            : "bg-border/70 text-label"
+      }`}
+    >
+      {status === "saved" ? (
+        <Check aria-hidden="true" className="size-3.5" strokeWidth={3} />
+      ) : (
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+      )}
+      {status === "dirty" ? t.statusDirty : status === "saved" ? t.statusSaved : t.statusDraft}
+    </span>
+  );
+  const quick =
+    "flex items-center gap-3 rounded-card border border-border bg-surface p-4 text-left shadow-card transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:flex-col lg:items-start";
 
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-3 px-4 py-5 sm:px-6">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-[0.9375rem] font-medium text-foreground/80">{t.lines}</h2>
-          <span className="text-xs text-muted-foreground">{t.lineCount(lines.length)}</span>
+  // Refonte « Nette » (ADR 0247) : cartes pour créer vite, lignes dans une carte, total à droite
+  // en grand écran et collé en bas de l'écran sur téléphone (un seul bloc, déplacé en CSS).
+  return (
+    <div className="mx-auto grid w-full max-w-6xl flex-1 items-start gap-6 px-4 pt-6 pb-0 sm:px-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:px-10 lg:pb-12">
+      <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex flex-wrap items-center gap-3">{statusChip}</div>
+        <div className={`grid gap-3 ${conversation ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
+          <button type="button" onClick={() => setDictating(true)} className={quick}>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-strong">
+              <Sparkles aria-hidden="true" className="size-5" />
+            </span>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-semibold">{t.dictation.open}</span>
+              <span className="text-[0.8125rem] text-muted-foreground">
+                {fr.pro.sheet.quick.dictation}
+              </span>
+            </span>
+          </button>
+          {conversation && (
+            <div className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card">
+              <QuoteConversation
+                chantierId={chantierId}
+                assujettiTva={assujettiTva}
+                onStart={() => {
+                  camille.current = new Set();
+                }}
+                onLines={setCamilleLines}
+              />
+            </div>
+          )}
+          <button type="button" onClick={() => setEditing("search")} className={quick}>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-background text-label">
+              <Search aria-hidden="true" className="size-5" />
+            </span>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-semibold">{fr.pro.sheet.quick.articles}</span>
+              <span className="text-[0.8125rem] text-muted-foreground">
+                {fr.pro.sheet.quick.articlesHint}
+              </span>
+            </span>
+          </button>
         </div>
         {error && <Alert tone="error">{error}</Alert>}
         {notice && <Alert tone="success">{notice}</Alert>}
@@ -267,94 +294,134 @@ export function QuoteEditor({
             </div>
           </div>
         )}
-        {lines.length > 0 && (
-          <ul className="flex flex-col gap-3">
-            {lines.map((line) => (
-              <li key={line.key} id={`ligne-${line.key}`} className="scroll-mt-24">
-                {editing === line.key ? (
-                  <LineForm
-                    title={t.editLine}
-                    initial={line}
-                    rates={rates}
-                    defaultVat={defaultVat}
-                    onSubmit={(next) => upsert(line.key, next)}
-                    onCancel={() => setEditing(null)}
-                  />
-                ) : (
-                  <LineCard
-                    line={line}
-                    generated={line.generated}
-                    assujettiTva={assujettiTva}
-                    onEdit={() => setEditing(line.key)}
-                    onDelete={() =>
-                      setLines((current) => current.filter((l) => l.key !== line.key))
-                    }
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        {editing === "new" ? (
-          <LineForm
-            title={t.addLine}
-            initial={null}
-            rates={rates}
-            defaultVat={defaultVat}
-            onSubmit={(next) => upsert(null, next)}
-            onCancel={() => setEditing(null)}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setEditing("new")}
-            className="flex min-h-14 items-center justify-center gap-2 rounded-card border border-dashed border-border-strong bg-surface/60 text-sm font-medium text-primary-strong hover:bg-surface focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-          >
-            <Plus aria-hidden="true" className="size-4" />
-            {t.addManual}
-          </button>
-        )}
+        <section
+          aria-labelledby="lignes-du-devis"
+          className="overflow-hidden rounded-card border border-border bg-surface shadow-card"
+        >
+          <div className="flex items-baseline justify-between gap-3 px-4 pt-5 pb-2 sm:px-5">
+            <h2 id="lignes-du-devis" className="text-lg sm:text-xl">
+              {t.lines}
+            </h2>
+            <span className="text-sm text-muted-foreground">{t.lineCount(lines.length)}</span>
+          </div>
+          {lines.length > 0 && (
+            <ul className="divide-y divide-border">
+              {lines.map((line) => (
+                <li key={line.key} id={`ligne-${line.key}`} className="scroll-mt-24">
+                  {editing === line.key ? (
+                    <div className="p-3 sm:p-4">
+                      <LineForm
+                        title={t.editLine}
+                        initial={line}
+                        rates={rates}
+                        defaultVat={defaultVat}
+                        onSubmit={(next) => upsert(line.key, next)}
+                        onCancel={() => setEditing(null)}
+                      />
+                    </div>
+                  ) : (
+                    <LineCard
+                      line={line}
+                      generated={line.generated}
+                      assujettiTva={assujettiTva}
+                      onEdit={() => setEditing(line.key)}
+                      onDelete={() =>
+                        setLines((current) => current.filter((l) => l.key !== line.key))
+                      }
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="border-t border-border p-3 sm:p-4">
+            {editing === "new" || editing === "search" ? (
+              <LineForm
+                title={t.addLine}
+                initial={null}
+                rates={rates}
+                defaultVat={defaultVat}
+                startSearching={editing === "search"}
+                onSubmit={(next) => upsert(null, next)}
+                onCancel={() => setEditing(null)}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditing("new")}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-input border-[1.5px] border-dashed border-border-strong text-[0.9375rem] font-semibold text-primary-strong hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+              >
+                <Plus aria-hidden="true" className="size-4" strokeWidth={2.4} />
+                {t.addManual}
+              </button>
+            )}
+          </div>
+        </section>
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
-          <dl className="flex flex-col gap-0.5">
-            <div className="flex items-baseline justify-between text-xs text-muted-foreground">
-              <dt>{t.totalHt}</dt>
-              <dd>{lines.length ? money(totals.totalHtCents) : t.none}</dd>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <dt className="text-[0.9375rem]">{t.totalTtc}</dt>
-              <dd className="text-xl font-medium text-primary">
+      <aside
+        aria-label={t.totalTtc}
+        className="sticky bottom-0 z-20 -mx-4 border-t border-border bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6 lg:top-24 lg:bottom-auto lg:mx-0 lg:flex lg:flex-col lg:gap-4 lg:rounded-card lg:border lg:bg-surface lg:p-6 lg:shadow-card lg:backdrop-blur-none"
+      >
+        <div className="flex items-center gap-4 lg:flex-col lg:items-stretch lg:gap-3">
+          <dl className="flex min-w-0 flex-1 flex-col lg:gap-3">
+            <div className="flex flex-col lg:gap-1">
+              <dt className="text-[0.8125rem] text-muted-foreground lg:text-sm lg:font-semibold lg:text-label">
+                {t.totalTtc}
+              </dt>
+              <dd className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] tabular-nums lg:text-[2.375rem] lg:leading-none lg:tracking-[-0.03em]">
                 {lines.length ? money(totals.totalTtcCents) : t.none}
               </dd>
             </div>
+            <div className="hidden flex-col lg:flex">
+              <div className="flex justify-between border-t border-border py-2 text-[0.9375rem]">
+                <dt className="text-muted-foreground">{t.totalHt}</dt>
+                <dd className="font-semibold tabular-nums">
+                  {lines.length ? money(totals.totalHtCents) : t.none}
+                </dd>
+              </div>
+              {totals.vat.map((v) => (
+                <div
+                  key={v.rateBp}
+                  className="flex justify-between border-t border-border py-2 text-[0.9375rem]"
+                >
+                  <dt className="text-muted-foreground">
+                    {t.vat} {vatLabel(v.rateBp)}
+                  </dt>
+                  <dd className="font-semibold tabular-nums">{money(v.tvaCents)}</dd>
+                </div>
+              ))}
+            </div>
           </dl>
-          {!assujettiTva && <p className="text-xs text-muted-foreground">{t.vatExempt}</p>}
-          {conversation && (
-            <QuoteConversation
-              chantierId={chantierId}
-              assujettiTva={assujettiTva}
-              onStart={() => {
-                camille.current = new Set();
-              }}
-              onLines={setCamilleLines}
-            />
-          )}
-          <Button type="button" variant="outline" size="lg" onClick={() => setDictating(true)}>
-            {t.dictation.open}
-            <Mic aria-hidden="true" className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            size="lg"
-            onClick={generate}
-            disabled={lines.length === 0 || pending || generating}
-          >
-            {generating ? t.generating : t.generate}
-          </Button>
+          <div className="flex shrink-0 items-center gap-2 lg:flex-col lg:items-stretch">
+            <button
+              type="button"
+              onClick={save}
+              disabled={!dirty || pending || generating}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-pill border border-border-strong bg-surface px-3 text-sm font-semibold text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none disabled:text-subtle-foreground disabled:hover:bg-surface sm:px-4 lg:order-last"
+            >
+              <Save aria-hidden="true" className="size-4" />
+              <span className="sr-only sm:not-sr-only">{pending ? t.saving : t.save}</span>
+            </button>
+            <Button
+              type="button"
+              size="lg"
+              block={false}
+              className="lg:w-full"
+              onClick={generate}
+              disabled={lines.length === 0 || pending || generating}
+            >
+              {generating ? t.generating : t.generate}
+            </Button>
+          </div>
         </div>
-      </div>
+        {!assujettiTva && (
+          <p className="hidden text-xs text-muted-foreground lg:block">{t.vatExempt}</p>
+        )}
+        <p className="hidden text-[0.8125rem] text-muted-foreground lg:block">
+          {fr.pro.sheet.quick.nextSteps}
+        </p>
+      </aside>
 
       <Drawer
         open={dictating}
@@ -388,25 +455,46 @@ function LineCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const typeTone =
+    line.type === "materiel"
+      ? "bg-primary-soft text-primary-strong"
+      : line.type === "main_oeuvre"
+        ? "bg-success-soft text-success"
+        : "bg-border/70 text-label";
   return (
-    <article className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card">
-      <div className="flex items-start justify-between gap-3">
+    <article className="flex items-start gap-4 px-4 py-4 sm:px-5">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex flex-wrap gap-1.5">
-          <span className="rounded-chip bg-background px-2 py-1 text-xs text-muted-foreground">
+          <span className={`rounded-chip px-2 py-0.5 text-xs font-bold ${typeTone}`}>
             {t.types[line.type]}
           </span>
           {generated && (
-            <span className="rounded-chip bg-warning-soft px-2 py-1 text-xs font-medium text-warning">
+            <span className="inline-flex items-center gap-1.5 rounded-chip bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning">
+              <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
               {t.toReview}
             </span>
           )}
         </span>
-        <div className="-mt-1 -mr-1 flex">
+        <p className="text-base font-semibold">{line.designation}</p>
+        {line.description && <p className="text-sm text-muted-foreground">{line.description}</p>}
+        <p className="text-sm text-label">
+          {formatQuantity(line.quantityMilli)} {t.unitsShort[line.unit]} ×{" "}
+          {money(line.unitPriceHtCents)} HT
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <p className="text-right">
+          <span className="font-display block text-[1.0625rem] font-bold tabular-nums">
+            {money(lineTtcCents(line))}
+          </span>
+          <span className="text-xs text-muted-foreground">{assujettiTva ? t.ttc : "HT"}</span>
+        </p>
+        <div className="-mr-2 flex">
           <button
             type="button"
             onClick={onEdit}
             aria-label={t.edit(line.designation)}
-            className="inline-flex size-9 items-center justify-center rounded-full text-primary hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+            className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
           >
             <Pencil aria-hidden="true" className="size-4" />
           </button>
@@ -414,29 +502,11 @@ function LineCard({
             type="button"
             onClick={onDelete}
             aria-label={t.remove(line.designation)}
-            className="inline-flex size-9 items-center justify-center rounded-full text-danger hover:bg-danger-soft focus-visible:ring-4 focus-visible:ring-danger/20 focus-visible:outline-none"
+            className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-danger-soft hover:text-danger focus-visible:ring-4 focus-visible:ring-danger/20 focus-visible:outline-none"
           >
             <Trash2 aria-hidden="true" className="size-4" />
           </button>
         </div>
-      </div>
-      <p className="font-medium">{line.designation}</p>
-      {line.description && <p className="text-xs text-muted-foreground">{line.description}</p>}
-      <div className="flex flex-wrap items-end justify-between gap-3 text-xs">
-        <dl className="flex gap-8">
-          <div>
-            <dt className="font-medium">{t.quantity}</dt>
-            <dd className="text-muted-foreground">{formatQuantity(line.quantityMilli)}</dd>
-          </div>
-          <div>
-            <dt className="font-medium">{t.unit}</dt>
-            <dd className="text-muted-foreground">{t.units[line.unit]}</dd>
-          </div>
-        </dl>
-        <p>
-          <span className="text-base font-medium">{money(lineTtcCents(line))}</span>{" "}
-          <span className="text-muted-foreground">{assujettiTva ? t.ttc : "HT"}</span>
-        </p>
       </div>
     </article>
   );
@@ -475,6 +545,7 @@ function LineForm({
   initial,
   rates,
   defaultVat,
+  startSearching = false,
   onSubmit,
   onCancel,
 }: {
@@ -482,6 +553,8 @@ function LineForm({
   initial: QuoteLineInput | null;
   rates: readonly number[];
   defaultVat: number;
+  /** « Mes articles » : la recherche des articles déjà chiffrés s'ouvre tout de suite. */
+  startSearching?: boolean;
   onSubmit: (line: QuoteLineInput) => void;
   onCancel: () => void;
 }) {
@@ -496,7 +569,7 @@ function LineForm({
     initial && rates.includes(initial.vatRateBp) ? initial.vatRateBp : defaultVat,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [searching, setSearching] = useState(false);
+  const [searching, setSearching] = useState(startSearching);
 
   const quantityMilli = parseQuantity(quantity);
   const unitPrice = parseEuros(price);

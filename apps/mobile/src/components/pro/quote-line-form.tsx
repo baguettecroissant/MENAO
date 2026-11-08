@@ -37,6 +37,7 @@ export function LineForm({
   initial,
   rates,
   defaultVat,
+  startSearching = false,
   onSubmit,
   onCancel,
 }: {
@@ -44,6 +45,8 @@ export function LineForm({
   initial: QuoteLineInput | null;
   rates: readonly number[];
   defaultVat: number;
+  /** « Mes articles » : la recherche des articles déjà utilisés est ouverte d'emblée. */
+  startSearching?: boolean;
   onSubmit: (line: QuoteLineInput) => void;
   onCancel: () => void;
 }) {
@@ -57,7 +60,7 @@ export function LineForm({
     initial && rates.includes(initial.vatRateBp) ? initial.vatRateBp : defaultVat,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [searching, setSearching] = useState(false);
+  const [searching, setSearching] = useState(startSearching);
 
   const quantityMilli = parseQuantity(quantity);
   const unitPrice = parseEuros(price);
@@ -123,7 +126,7 @@ export function LineForm({
         value={designation}
         onChangeText={setDesignation}
         maxLength={200}
-        autoFocus={initial === null}
+        autoFocus={initial === null && !startSearching}
         error={errors.designation}
       />
       <Pressable

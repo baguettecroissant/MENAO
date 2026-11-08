@@ -1,17 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { PillTabs } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
-import { haptic } from "@/lib/haptics";
-import { Tappable } from "@/ui";
-import { theme } from "@/ui/theme";
-
-const { colors, font, radius, spacing } = theme;
 
 export const MONEY_VIEWS = ["devis", "factures", "depenses", "suivi"] as const;
 export type MoneyView = (typeof MONEY_VIEWS)[number];
 
 /**
- * Puces « Devis », « Factures » et « Dépenses » en tête de l'onglet Argent (ADR 0188), comme les
- * onglets de la rubrique « Argent » du site.
+ * Onglets « Devis », « Factures », « Dépenses » (et « Suivi ») en tête de l'onglet Argent
+ * (ADR 0188) : pilules pleine largeur, l'onglet actif en bleu nuit (refonte « Nette », lot 2).
  */
 export function MoneySwitcher({
   value,
@@ -20,7 +15,7 @@ export function MoneySwitcher({
 }: {
   value: MoneyView;
   onChange: (value: MoneyView) => void;
-  /** Puce « Suivi » : agent comptable avancé (Premium et Entreprise, ADR 0237). */
+  /** Onglet « Suivi » : agent comptable avancé (Premium et Entreprise, ADR 0237). */
   overview?: boolean;
 }) {
   const options: { value: MoneyView; label: string }[] = [
@@ -29,44 +24,5 @@ export function MoneySwitcher({
     { value: "depenses", label: fr.tabs.expenses },
     ...(overview ? [{ value: "suivi" as const, label: fr.tabs.overview }] : []),
   ];
-  return (
-    <View role="tablist" style={styles.row}>
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <Tappable
-            key={option.value}
-            role="tab"
-            aria-label={option.label}
-            aria-selected={active}
-            onPress={() => {
-              if (active) return;
-              haptic.select();
-              onChange(option.value);
-            }}
-            style={[styles.chip, active && styles.chipActive]}
-          >
-            <Text style={[styles.label, active && styles.labelActive]}>{option.label}</Text>
-          </Tappable>
-        );
-      })}
-    </View>
-  );
+  return <PillTabs label={fr.tabs.money} options={options} value={value} onChange={onChange} />;
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  chip: {
-    minHeight: 40,
-    paddingHorizontal: spacing(4.5),
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  // Onglet actif en bleu nuit, comme le menu du site (ADR 0245).
-  chipActive: { backgroundColor: colors.foreground, borderColor: colors.foreground },
-  label: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
-  labelActive: { color: colors["primary-foreground"] },
-});

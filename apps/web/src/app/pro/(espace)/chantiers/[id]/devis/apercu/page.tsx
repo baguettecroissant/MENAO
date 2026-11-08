@@ -5,7 +5,6 @@ import { notFound, redirect } from "next/navigation";
 import { StickyActions } from "@/components/pro/detail";
 import { QuoteHeader } from "@/components/pro/quote-header";
 import { QuotePaper } from "@/components/pro/quote-paper";
-import { QuoteTabs } from "@/components/pro/quote-tabs";
 import { ButtonLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
@@ -57,8 +56,11 @@ export default async function QuotePreviewPage({
         title={t.title}
         chantierTitle={c.chantier.title}
         appointmentAt={appointment?.starts_at ?? null}
+        step="apercu"
+        chantierId={id}
+        client={[c.client.first_name, c.client.last_name].filter(Boolean).join(" ") || null}
+        place={[c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null}
       />
-      <QuoteTabs chantierId={id} active="apercu" />
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-5 px-4 py-6 sm:px-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-success-soft text-success">

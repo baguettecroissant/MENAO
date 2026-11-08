@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -20,13 +20,41 @@ const TONES: Record<ListTone, string> = {
   example: "text-example-strong",
 };
 
-/** En-tête d'une liste : titre à gauche, actions à droite (bouton principal en dernier). */
-export function ListHeader({ title, actions }: { title: string; actions?: ReactNode }) {
+/** Pastilles d'état et icônes des lignes (refonte « Nette », ADR 0247). */
+const CHIPS: Record<ListTone, string> = {
+  success: "bg-success-soft text-success",
+  danger: "bg-danger-soft text-danger",
+  warning: "bg-warning-soft text-warning",
+  neutral: "bg-border/70 text-label",
+  primary: "bg-primary-soft text-primary-strong",
+  example: "bg-example-soft text-example-strong",
+};
+
+/**
+ * En-tête d'une liste : titre à gauche, actions à droite (bouton principal en dernier). `level`
+ * 2 : sous une page qui a déjà son grand titre (rubrique « Argent », ADR 0247).
+ */
+export function ListHeader({
+  title,
+  actions,
+  level = 1,
+}: {
+  title: string;
+  actions?: ReactNode;
+  level?: 1 | 2;
+}) {
+  const Heading = level === 1 ? "h1" : "h2";
   return (
     <div className="flex items-center justify-between gap-3">
-      <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+      <Heading
+        className={
+          level === 1
+            ? "text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]"
+            : "text-xl leading-tight"
+        }
+      >
         {title}
-      </h1>
+      </Heading>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   );
@@ -98,6 +126,7 @@ export function ListRow({
   value,
   status,
   badge,
+  icon,
 }: {
   href?: string;
   /** Fichier ouvert dans un nouvel onglet (PDF), pas une page. */
@@ -112,9 +141,19 @@ export function ListRow({
   status?: { text: string; tone: ListTone };
   /** Pastille après le titre (« Exemple »). */
   badge?: ReactNode;
+  /** Icône à gauche, sur fond de la couleur de l'état (ADR 0247). */
+  icon?: { icon: LucideIcon; tone: ListTone };
 }) {
+  const Icon = icon?.icon;
   const body = (
     <>
+      {Icon && icon && (
+        <span
+          className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${CHIPS[icon.tone]}`}
+        >
+          <Icon aria-hidden="true" className="size-5" />
+        </span>
+      )}
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 items-center gap-2">
           <span className="line-clamp-2 text-base font-semibold">{title}</span>
@@ -128,12 +167,14 @@ export function ListRow({
         </span>
       )}
       {(value !== undefined || status) && (
-        <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+        <span className="flex shrink-0 flex-col items-end gap-1 text-right">
           {value !== undefined && (
             <span className="font-display text-base font-bold tabular-nums">{value}</span>
           )}
           {status && (
-            <span className={`text-[0.8125rem] font-semibold ${TONES[status.tone]}`}>
+            <span
+              className={`rounded-chip px-2 py-0.5 text-xs font-bold whitespace-nowrap ${CHIPS[status.tone]}`}
+            >
               {status.text}
             </span>
           )}

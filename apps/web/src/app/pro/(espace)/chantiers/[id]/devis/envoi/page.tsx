@@ -6,7 +6,6 @@ import { notFound, redirect } from "next/navigation";
 import { DetailBlock } from "@/components/pro/detail";
 import { QuoteHeader } from "@/components/pro/quote-header";
 import { QuoteSendForm } from "@/components/pro/quote-send-form";
-import { QuoteTabs } from "@/components/pro/quote-tabs";
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
@@ -66,8 +65,11 @@ export default async function QuoteSendPage({
         title={t.title}
         chantierTitle={c.chantier.title}
         appointmentAt={appointment?.starts_at ?? null}
+        step="envoi"
+        chantierId={id}
+        client={[c.client.first_name, c.client.last_name].filter(Boolean).join(" ") || null}
+        place={[c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null}
       />
-      <QuoteTabs chantierId={id} active="envoi" />
       {!insured && (
         <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6">
           <Alert tone="error">

@@ -1,7 +1,8 @@
-import { formatQuantity, lineTotalHtCents } from "@menao/core";
+import { formatQuantity, lineTtcCents } from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
 import { Pencil, Trash2 } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { FicheTag, type FicheTone } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { theme } from "@/ui/theme";
@@ -10,7 +11,19 @@ const t = fr.proQuote;
 const { colors, font, radius, spacing } = theme;
 const vatLabel = (bp: number) => `${(bp / 100).toLocaleString("fr-FR")} %`;
 
-/** Ligne du devis, comme sur le site : type, désignation, quantité × prix, TVA, total HT. */
+/** Couleur de la puce du type, comme la maquette : matériel en bleu, main d'œuvre en vert. */
+const TYPE_TONE: Record<QuoteLineInput["type"], FicheTone> = {
+  materiel: "primary",
+  main_oeuvre: "success",
+  autre: "neutral",
+};
+
+/**
+ * Ligne du devis dans la carte « Lignes du devis » (maquette « DevisApp ») : puce du type,
+ * « À vérifier » si la ligne vient de la dictée, désignation, description, « quantité × prix HT »
+ * (et le taux de TVA), total TTC de la ligne à droite (calcul de @menao/core), modifier et
+ * supprimer dessous.
+ */
 export function LineCard({
   line,
   generated = false,
@@ -25,92 +38,90 @@ export function LineCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const amount = t.lineAmount(
+    `${formatQuantity(line.quantityMilli)} ${t.unitsShort[line.unit]}`,
+    formatCents(line.unitPriceHtCents),
+  );
   return (
-    <View style={styles.card}>
-      <View style={styles.top}>
+    <View style={styles.row}>
+      <View style={styles.main}>
         <View style={styles.tags}>
-          <Text style={styles.tag}>{t.types[line.type]}</Text>
-          {generated ? <Text style={[styles.tag, styles.review]}>{t.toReview}</Text> : null}
+          <FicheTag text={t.types[line.type]} tone={TYPE_TONE[line.type]} />
+          {generated ? <FicheTag text={t.toReview} tone="warning" dot /> : null}
         </View>
+        <Text style={styles.designation}>{line.designation}</Text>
+        {line.description ? <Text style={styles.description}>{line.description}</Text> : null}
+        <Text style={styles.amount}>
+          {assujettiTva ? `${amount} · ${t.vat} ${vatLabel(line.vatRateBp)}` : amount}
+        </Text>
+      </View>
+      <View style={styles.side}>
+        <Text style={styles.total}>{formatCents(lineTtcCents(line))}</Text>
+        <Text style={styles.totalLabel}>{assujettiTva ? t.ttc : t.ht}</Text>
         <View style={styles.actions}>
           <Pressable
             role="button"
             aria-label={t.editAction(line.designation)}
             onPress={onEdit}
-            style={styles.icon}
+            hitSlop={4}
+            style={({ pressed }) => [styles.icon, pressed && styles.pressed]}
           >
-            <Pencil size={16} color={colors.primary} />
+            <Pencil size={16} color={colors["muted-foreground"]} />
           </Pressable>
           <Pressable
             role="button"
             aria-label={t.remove(line.designation)}
             onPress={onDelete}
-            style={styles.icon}
+            hitSlop={4}
+            style={({ pressed }) => [styles.icon, pressed && styles.pressed]}
           >
             <Trash2 size={16} color={colors.danger} />
           </Pressable>
         </View>
-      </View>
-      <Text style={styles.designation}>{line.designation}</Text>
-      {line.description ? <Text style={styles.small}>{line.description}</Text> : null}
-      <View style={styles.amounts}>
-        <Text style={styles.small}>
-          {`${formatQuantity(line.quantityMilli)} ${t.units[line.unit]} × ${formatCents(line.unitPriceHtCents)}`}
-          {assujettiTva ? ` · ${t.vat} ${vatLabel(line.vatRateBp)}` : ""}
-        </Text>
-        <Text style={styles.total}>
-          {formatCents(lineTotalHtCents(line.quantityMilli, line.unitPriceHtCents))}
-        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: spacing(1.5),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(3.5),
+    paddingHorizontal: spacing(4),
+    paddingTop: spacing(4),
+    paddingBottom: spacing(2),
   },
-  top: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  main: { flex: 1, minWidth: 0, gap: spacing(1) },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(1.5) },
-  tag: {
-    overflow: "hidden",
-    borderRadius: radius.chip,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing(2),
-    paddingVertical: spacing(1),
+  designation: {
+    fontFamily: font.semibold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.foreground,
+  },
+  description: {
     fontFamily: font.regular,
-    fontSize: 12,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors["muted-foreground"],
   },
-  review: {
-    backgroundColor: colors["warning-soft"],
-    color: colors.warning,
-    fontFamily: font.medium,
+  amount: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  side: { alignItems: "flex-end", gap: spacing(1) },
+  total: {
+    fontFamily: font.display,
+    fontSize: 17,
+    fontVariant: ["tabular-nums"],
+    color: colors.foreground,
   },
-  actions: { flexDirection: "row", marginTop: -spacing(2), marginRight: -spacing(2) },
+  totalLabel: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  actions: { flexDirection: "row", gap: spacing(1), marginRight: -spacing(2) },
   icon: {
-    width: theme.touchTarget,
-    height: theme.touchTarget,
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
-  designation: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  small: {
-    flexShrink: 1,
-    fontFamily: font.regular,
-    fontSize: 12,
-    color: colors["muted-foreground"],
-  },
-  amounts: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    gap: spacing(3),
-  },
-  total: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  pressed: { backgroundColor: colors["primary-soft"] },
 });
