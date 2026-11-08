@@ -35,8 +35,10 @@ export function WebPresence({
       aria-labelledby="sur-internet"
       className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card"
     >
-      <h2 id="sur-internet" className="flex items-center gap-2 text-[1.0625rem] font-medium">
-        <Globe aria-hidden="true" className="size-[1.125rem] text-primary" />
+      <h2 id="sur-internet" className="flex items-center gap-2.5 text-lg">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-primary-soft text-primary-strong">
+          <Globe aria-hidden="true" className="size-[1.125rem]" />
+        </span>
         {t.title}
       </h2>
       {badge ? (
@@ -56,7 +58,7 @@ export function WebPresence({
       <GoogleListingForm indexable={indexable} />
       {badge && (
         <div className="flex flex-col gap-3 border-t border-border pt-4">
-          <h3 className="font-medium">{t.badgeTitle}</h3>
+          <h3 className="font-semibold">{t.badgeTitle}</h3>
           <p className="text-sm text-foreground/85">
             {t.badgeLead} {verified ? t.badgeVerified : t.badgeNeutral}
           </p>

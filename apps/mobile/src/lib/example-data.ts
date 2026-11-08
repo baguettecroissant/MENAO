@@ -370,13 +370,16 @@ export function exampleProfileHub(
   const name = [account.firstName, account.lastName].filter(Boolean).join(" ") || null;
   const profile = exampleArtisanProfile(name, now);
   const score = exampleScore();
+  const facts = exampleHubFacts(now);
   return {
     name: profile.display_name,
     initials:
       (account.firstName.charAt(0) + account.lastName.charAt(0)).toUpperCase() ||
       profile.display_name.charAt(0).toUpperCase(),
     company: profile.company_name,
+    trade: profile.trades[0]?.label ?? null,
     city: profile.zone.city,
+    gradeLevel: facts.level,
     avatarUrl: account.avatarUrl,
     email: account.email,
     status: "valide",
@@ -391,7 +394,7 @@ export function exampleProfileHub(
       verified: true,
     }),
     itemsLeft: 0,
-    statuses: hubStatuses(exampleHubFacts(now), now),
+    statuses: hubStatuses(facts, now),
     pageUrl: null,
     referral: null,
     referrals: [],

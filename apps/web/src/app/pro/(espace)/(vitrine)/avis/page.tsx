@@ -9,7 +9,8 @@ export const metadata: Metadata = { title: `${fr.pro.reviews.title} — MENAO` }
  * « Mes avis » (F-28) : score MENAO détaillé, tous les avis reçus (publiés ou masqués par
  * l'équipe), réponse publique et signalement, du plus récent au plus ancien.
  */
-export default async function MyReviewsPage() {
+export default async function MyReviewsPage({ searchParams }: PageProps<"/pro/avis">) {
+  const { filtre } = await searchParams;
   const space = await requireTeamPermission("storefront");
   const { supabase } = space;
   const [{ data: rows }, { data: score }, { chantiers }] = await Promise.all([
@@ -32,6 +33,7 @@ export default async function MyReviewsPage() {
       reviews={rows ?? []}
       score={score}
       chantierTitles={Object.fromEntries(chantiers.map((c) => [c.chantier_id, c.title]))}
+      filter={filtre === "sans-reponse" || filtre === "note-basse" ? filtre : "tous"}
     />
   );
 }

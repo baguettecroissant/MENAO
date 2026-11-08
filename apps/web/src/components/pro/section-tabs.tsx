@@ -10,8 +10,14 @@ const t = fr.pro.space;
 /** Rubriques regroupées du menu (ADR 0188) et leurs onglets (adresse sous l'espace pro). */
 const SECTIONS = {
   // « Argent » : grand titre et phrase d'introduction au-dessus des onglets (ADR 0247).
-  argent: { label: t.money, tabs: t.moneyTabs, intro: t.moneyIntro, wide: true },
-  vitrine: { label: t.storefront, tabs: t.storefrontTabs, intro: null, wide: false },
+  argent: { label: t.money, tabs: t.moneyTabs, intro: t.moneyIntro, width: "max-w-5xl" },
+  // « Ma vitrine » : même en-tête (ADR 0250).
+  vitrine: {
+    label: t.storefront,
+    tabs: t.storefrontTabs,
+    intro: t.storefrontIntro,
+    width: "max-w-6xl",
+  },
 } as const;
 
 /**
@@ -30,17 +36,13 @@ export function SectionTabs({
   hidden?: readonly string[];
 }) {
   const pathname = usePathname();
-  const { label, tabs, intro, wide } = SECTIONS[section];
+  const { label, tabs, intro, width } = SECTIONS[section];
   const entries = (Object.entries(tabs) as [string, string][]).filter(
     ([slug]) => !hidden.includes(slug),
   );
   if (!entries.some(([slug]) => pathname === `${base}/${slug}`)) return null;
   return (
-    <div
-      className={`mx-auto flex w-full flex-col gap-5 px-4 pt-6 sm:px-6 sm:pt-8 ${
-        wide ? "max-w-5xl" : "max-w-3xl"
-      }`}
-    >
+    <div className={`mx-auto flex w-full flex-col gap-5 px-4 pt-6 sm:px-6 sm:pt-8 ${width}`}>
       {intro && (
         <div className="flex flex-col gap-1.5">
           <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{label}</h1>

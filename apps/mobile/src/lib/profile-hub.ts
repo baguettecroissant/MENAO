@@ -36,7 +36,11 @@ export type ProfileHub = {
   name: string;
   initials: string;
   company: string | null;
+  /** Premier métier de la fiche (« entreprise · métier · ville » de l'en-tête). */
+  trade: string | null;
   city: string | null;
+  /** Niveau du grade MENAO (F-24), s'il a pu être lu. */
+  gradeLevel: number | null;
   avatarUrl: string | null;
   email: string | null;
   status: Dossier["status"];
@@ -134,6 +138,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
   const last = account.data?.last_name?.trim() ?? "";
   const name = [first, last].filter(Boolean).join(" ") || profile.display_name;
   const initials = (first.charAt(0) + last.charAt(0)).toUpperCase() || name.charAt(0).toUpperCase();
+  const level = parseGrade(grade)?.level ?? null;
   const facts = {
     hasAvatar: profile.avatar_path !== null,
     presentationLength: profile.presentation?.trim().length ?? 0,
@@ -147,7 +152,9 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     name,
     initials,
     company: profile.company_name,
+    trade: profile.trades[0]?.label ?? null,
     city: profile.zone.city,
+    gradeLevel: level,
     avatarUrl: profile.avatar_path ? publicUrl("avatars", profile.avatar_path) : null,
     email: auth.user.email ?? null,
     status: dossier.status,
@@ -164,7 +171,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       photoCount: profile.photos.length,
       reviewsToAnswer,
       reviewCount: profile.score?.review_count ?? 0,
-      level: parseGrade(grade)?.level ?? null,
+      level,
       hasRge: profile.rge.length > 0,
       paused: profile.paused,
       availableFrom: profile.available_from,
