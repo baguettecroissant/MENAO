@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, RotateCcw } from "lucide-react";
+import { Check, Play, RotateCcw } from "lucide-react";
 import { useActionState } from "react";
 import { VoiceCall } from "@/components/assistant/voice-call";
 import { Alert, Button, CheckboxField, Field, Hint, inputClasses } from "@/components/ui";
@@ -15,12 +15,30 @@ import {
 const t = fr.pro.onboarding.plans.secretary;
 
 /** Appel d'essai : le serveur prépare le jeton et le contexte juste avant l'appel. */
-export function SecretaryTestCall() {
+/**
+ * Appel d'essai de la secrétaire. `compact` : bouton plein « L'essayer » de la carte de la
+ * secrétaire (refonte « Nette », ADR 0249), au lieu du bouton avec sa précision.
+ */
+export function SecretaryTestCall({ compact = false }: { compact?: boolean }) {
   return (
     <VoiceCall
       assistant="secretary"
       session={prepareSecretaryCall}
       labels={{ start: t.testStart, hint: t.testHint, live: t.live, speaking: t.speaking }}
+      trigger={
+        compact
+          ? (start) => (
+              <button
+                type="button"
+                onClick={start}
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-pill bg-foreground px-4 text-sm font-semibold text-surface hover:opacity-90 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+              >
+                <Play aria-hidden="true" className="size-4" />
+                {t.testTitle}
+              </button>
+            )
+          : undefined
+      }
     />
   );
 }

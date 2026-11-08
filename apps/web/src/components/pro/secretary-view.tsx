@@ -243,7 +243,7 @@ export function SecretaryView({
                   </span>
                 </SheetRow>
               </dl>
-              <SecretaryTestCall />
+              <SecretaryTestCall compact />
               <Link
                 href="/pro/secretaire?vue=reglages"
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
