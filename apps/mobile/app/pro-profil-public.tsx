@@ -1,16 +1,29 @@
 import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH } from "@menao/core";
 import { Camera, ImagePlus, Sparkles, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Switch, Text, View } from "react-native";
-import { TopBar } from "@/components/top-bar";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { PageHead } from "@/components/pro/dossier-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheScreen,
+  FicheSkeleton,
+} from "@/components/pro/fiche-kit";
+import { SwitchCard, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
-import { loadDossier, saveGoogleListing, savePresentation } from "@/lib/artisan-dossier";
-import { haptic } from "@/lib/haptics";
+import {
+  loadDossier,
+  saveGoogleListing,
+  savePresentation,
+  type Dossier,
+} from "@/lib/artisan-dossier";
 import { choosePhotoSource, pickAvatar, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { deletePortfolioPhoto, loadPortfolio, type PortfolioPhoto } from "@/lib/portfolio";
 import { forgetProfileSummary } from "@/lib/profile-summary";
+import { publicUrl } from "@/lib/project";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
+import { Notice, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -21,28 +34,82 @@ const { colors, font, radius, spacing } = theme;
  * Photo de profil, présentation et photos de réalisations de la fiche (ADR 0113, 0124), comme sur
  * le site : photo recadrée au carré et réduite à 512 px, présentation de 100 caractères au moins,
  * 12 photos de réalisations au plus. Puis le choix d'afficher la fiche dans Google (ADR 0171).
+ * Refonte « Nette » (lot 9, maquette « ProfilDossierNette ») : grand titre, cartes, photo ronde,
+ * interrupteur en carte et « Enregistrer la présentation » collé en bas.
  */
 function PublicProfileScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
-  if (dossier === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (dossier === undefined) return <FicheSkeleton />;
+  return <PublicProfileContent dossier={dossier} onSaved={reload} />;
+}
+
+/**
+ * Présentation (100 caractères au moins), avec le compteur « 12 / 100 » et, tant que le minimum
+ * n'est pas atteint, « Proposer un texte » : un brouillon que l'artisan relit et modifie.
+ * « Enregistrer la présentation » est collé en bas ; photo, réalisations et Google s'enregistrent
+ * aussitôt.
+ */
+function PublicProfileContent({
+  dossier,
+  onSaved,
+}: {
+  dossier: Dossier | null;
+  onSaved: () => Promise<void>;
+}) {
+  const [value, setValue] = useState(dossier?.presentation ?? "");
+  const [error, setError] = useState<string | undefined>();
+  const [sending, setSending] = useState(false);
+  // Présentation proposée (presentationDraft).
+  const draft = dossier?.presentationDraft ?? null;
+
+  async function save() {
+    setSending(true);
+    const failure = await savePresentation(value);
+    setSending(false);
+    setError(failure ?? undefined);
+    if (!failure) {
+      toast.success(t.saved);
+      void onSaved();
+    }
+  }
+
   return (
-    <Screen onRefresh={reload} header={<TopBar />}>
-      <Title>{t.title}</Title>
-      <PhotoCard hasPhoto={Boolean(dossier?.avatarPath)} onSaved={reload} />
-      <PresentationCard
-        initial={dossier?.presentation ?? ""}
-        draft={dossier?.presentationDraft ?? null}
-        onSaved={reload}
-      />
+    <FicheScreen
+      onRefresh={onSaved}
+      footer={<FicheButton label={t.save} tall onPress={() => void save()} loading={sending} />}
+    >
+      <PageHead title={t.title} lead={fr.proDossier.profilHint} />
+      <PhotoCard avatarPath={dossier?.avatarPath ?? null} onSaved={() => void onSaved()} />
+      <FicheCard padding={4.5} gap={3}>
+        <ToolField
+          label={t.presentation}
+          value={value}
+          onChangeText={setValue}
+          multiline
+          numberOfLines={6}
+          maxLength={2000}
+          hint={t.presentationHint(PRESENTATION_MIN_LENGTH, value.trim().length)}
+          error={error}
+        />
+        {draft && value.trim().length < PRESENTATION_MIN_LENGTH ? (
+          <FicheButton
+            label={t.presentationDraft}
+            variant="secondary"
+            icon={Sparkles}
+            onPress={() => setValue(draft)}
+          />
+        ) : null}
+      </FicheCard>
       <PortfolioCard />
       {dossier ? <GoogleCard initial={dossier.indexable} /> : null}
-    </Screen>
+    </FicheScreen>
   );
 }
 
-function PhotoCard({ hasPhoto, onSaved }: { hasPhoto: boolean; onSaved: () => void }) {
+function PhotoCard({ avatarPath, onSaved }: { avatarPath: string | null; onSaved: () => void }) {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const hasPhoto = avatarPath !== null;
 
   async function add() {
     setMessage(null);
@@ -67,72 +134,33 @@ function PhotoCard({ hasPhoto, onSaved }: { hasPhoto: boolean; onSaved: () => vo
   }
 
   return (
-    <Card>
-      <Text style={styles.heading}>{t.photoTitle}</Text>
-      <Body muted>{t.photoHint}</Body>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading title={t.photoTitle} size={17} />
+      <View style={styles.photoRow}>
+        {avatarPath ? (
+          <Image
+            source={{ uri: publicUrl("avatars", avatarPath) }}
+            style={styles.avatar}
+            alt={t.photoTitle}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarEmpty]}>
+            <Camera size={26} color={colors["primary-strong"]} />
+          </View>
+        )}
+        <View style={styles.photoText}>
+          <Text style={styles.text}>{t.photoHint}</Text>
+          <FicheButton
+            label={hasPhoto ? t.changePhoto : t.addPhoto}
+            icon={Camera}
+            variant="secondary"
+            onPress={() => void add()}
+            loading={sending}
+          />
+        </View>
+      </View>
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Button
-        label={hasPhoto ? t.changePhoto : t.addPhoto}
-        icon={Camera}
-        variant={hasPhoto ? "secondary" : "primary"}
-        onPress={add}
-        loading={sending}
-      />
-    </Card>
-  );
-}
-
-/**
- * Présentation (100 caractères au moins), avec le compteur « 12 / 100 » et, tant que le minimum
- * n'est pas atteint, « Proposer un texte » : un brouillon que l'artisan relit et modifie.
- */
-function PresentationCard({
-  initial,
-  draft,
-  onSaved,
-}: {
-  initial: string;
-  /** Présentation proposée (presentationDraft). */
-  draft: string | null;
-  onSaved: () => void;
-}) {
-  const [value, setValue] = useState(initial);
-  const [error, setError] = useState<string | undefined>();
-  const [sending, setSending] = useState(false);
-
-  async function save() {
-    setSending(true);
-    const failure = await savePresentation(value);
-    setSending(false);
-    setError(failure ?? undefined);
-    if (!failure) {
-      toast.success(t.saved);
-      onSaved();
-    }
-  }
-
-  return (
-    <Card>
-      <TextField
-        label={t.presentation}
-        value={value}
-        onChangeText={setValue}
-        multiline
-        numberOfLines={6}
-        maxLength={2000}
-        hint={t.presentationHint(PRESENTATION_MIN_LENGTH, value.trim().length)}
-        error={error}
-      />
-      {draft && value.trim().length < PRESENTATION_MIN_LENGTH ? (
-        <Button
-          label={t.presentationDraft}
-          variant="ghost"
-          icon={Sparkles}
-          onPress={() => setValue(draft)}
-        />
-      ) : null}
-      <Button label={t.save} onPress={save} loading={sending} />
-    </Card>
+    </FicheCard>
   );
 }
 
@@ -145,7 +173,6 @@ function GoogleCard({ initial }: { initial: boolean }) {
   const [error, setError] = useState<string | null>(null);
 
   async function change(next: boolean) {
-    haptic.select();
     setValue(next);
     const failure = await saveGoogleListing(next);
     setError(failure);
@@ -154,20 +181,14 @@ function GoogleCard({ initial }: { initial: boolean }) {
   }
 
   return (
-    <Card>
-      <View style={styles.switchRow}>
-        <Text style={[styles.heading, styles.switchLabel]}>{t.google}</Text>
-        <Switch
-          accessibilityLabel={t.google}
-          value={value}
-          onValueChange={change}
-          trackColor={{ true: colors.primary, false: colors["border-strong"] }}
-          thumbColor={colors.surface}
-        />
-      </View>
-      <Body muted>{value ? t.googleHint : t.googleOff}</Body>
+    <SwitchCard
+      label={t.google}
+      hint={value ? t.googleHint : t.googleOff}
+      value={value}
+      onChange={(next) => void change(next)}
+    >
       {error ? <Notice tone="error">{error}</Notice> : null}
-    </Card>
+    </SwitchCard>
   );
 }
 
@@ -216,14 +237,14 @@ function PortfolioCard() {
   }
 
   return (
-    <Card>
-      <Text style={styles.heading}>{t.portfolioTitle}</Text>
-      <Body muted>{t.portfolioHint(PORTFOLIO_MAX_PHOTOS)}</Body>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading title={t.portfolioTitle} size={17} />
+      <Text style={styles.text}>{t.portfolioHint(PORTFOLIO_MAX_PHOTOS)}</Text>
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
       {photos === undefined ? (
         <ActivityIndicator color={colors.primary} />
       ) : list.length === 0 ? (
-        <Body muted>{t.portfolioEmpty}</Body>
+        <Text style={styles.text}>{t.portfolioEmpty}</Text>
       ) : (
         <View style={styles.grid}>
           {list.map((photo, index) => (
@@ -246,31 +267,28 @@ function PortfolioCard() {
           ))}
         </View>
       )}
-      {progress ? <Body muted>{progress}</Body> : null}
+      {progress ? <Text style={styles.text}>{progress}</Text> : null}
       {remaining > 0 ? (
-        <Button
+        <FicheButton
           label={t.portfolioAdd}
           icon={ImagePlus}
           variant="secondary"
-          onPress={add}
+          onPress={() => void add()}
           loading={progress !== null}
         />
       ) : (
-        <Body muted>{t.portfolioFull(PORTFOLIO_MAX_PHOTOS)}</Body>
+        <Text style={styles.text}>{t.portfolioFull(PORTFOLIO_MAX_PHOTOS)}</Text>
       )}
-    </Card>
+    </FicheCard>
   );
 }
 
 const styles = StyleSheet.create({
-  switchRow: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  switchLabel: { flex: 1 },
-  heading: {
-    fontFamily: font.bold,
-    fontSize: 17,
-    color: colors.foreground,
-    marginBottom: spacing(1),
-  },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  photoRow: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
+  photoText: { flex: 1, gap: spacing(2.5), alignItems: "flex-start" },
+  avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors["primary-soft"] },
+  avatarEmpty: { alignItems: "center", justifyContent: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   tile: { width: "31%", aspectRatio: 1 },
   thumb: {

@@ -33,7 +33,8 @@ export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.
 /**
  * Écran d'une fiche : barre du haut (retour, titre centré, action facultative à droite), contenu
  * défilant sur le fond crème et barre d'actions facultative fixée en bas (fond blanc, bordure
- * haute, marge du bas du téléphone).
+ * haute, marge du bas du téléphone). Sans `title`, la barre ne garde que le retour (le grand titre
+ * est alors dans le contenu, écrans du dossier).
  */
 export function FicheScreen({
   title,
@@ -42,7 +43,7 @@ export function FicheScreen({
   onRefresh,
   children,
 }: {
-  title: string;
+  title?: string;
   right?: ReactNode;
   footer?: ReactNode;
   onRefresh?: () => Promise<unknown>;
@@ -72,9 +73,13 @@ export function FicheScreen({
         >
           <ChevronLeft size={26} color={colors.foreground} strokeWidth={2.2} />
         </Pressable>
-        <Text role="heading" style={styles.barTitle} numberOfLines={1}>
-          {title}
-        </Text>
+        {title ? (
+          <Text role="heading" style={styles.barTitle} numberOfLines={1}>
+            {title}
+          </Text>
+        ) : (
+          <View style={styles.barSpacer} />
+        )}
         <View style={[styles.barButton, right ? styles.barRight : null]}>{right}</View>
       </View>
       <ScrollView
@@ -105,7 +110,7 @@ export function FicheScreen({
 }
 
 /** Fiche en cours de chargement : barre du haut, titre connu de la liste, cartes grises. */
-export function FicheSkeleton({ title, preview }: { title: string; preview?: ScreenPreview }) {
+export function FicheSkeleton({ title, preview }: { title?: string; preview?: ScreenPreview }) {
   return (
     <FicheScreen title={title}>
       <View role="progressbar" aria-label={fr.nav.loading} aria-busy style={styles.skeleton}>
@@ -152,7 +157,7 @@ export function FicheHead({
   );
 }
 
-export type FicheTone = "primary" | "success" | "warning" | "danger" | "neutral";
+export type FicheTone = "primary" | "success" | "warning" | "danger" | "neutral" | "dark";
 
 /** Couleurs des puces (texte, fond), reprises par les icônes des listes « Nette ». */
 export const TAG_TONES: Record<FicheTone, { fg: string; bg: string }> = {
@@ -161,6 +166,8 @@ export const TAG_TONES: Record<FicheTone, { fg: string; bg: string }> = {
   warning: { fg: colors.warning, bg: colors["warning-soft"] },
   danger: { fg: colors.danger, bg: colors["danger-soft"] },
   neutral: { fg: colors.label, bg: "#f1f2f5" },
+  // Carré d'icône bleu nuit (lecture automatique, demande de la zone : refonte « Nette », lot 9).
+  dark: { fg: colors["primary-foreground"], bg: colors.foreground },
 };
 
 /** Puce carrée des maquettes : métier en gris, état en couleur, point facultatif. */
@@ -487,6 +494,7 @@ const styles = StyleSheet.create({
   // Action de droite plus large qu'une icône (« Enregistré » de l'éditeur de devis).
   barRight: { width: "auto", minWidth: theme.touchTarget, paddingHorizontal: spacing(2) },
   barPressed: { backgroundColor: colors["primary-soft"] },
+  barSpacer: { flex: 1 },
   barTitle: {
     flex: 1,
     textAlign: "center",

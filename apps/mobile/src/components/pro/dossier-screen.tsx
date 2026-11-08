@@ -2,18 +2,18 @@ import {
   CHARTER_RULE_COUNT,
   REQUIRED_DOCUMENT_TYPES,
   documentState,
+  dossierGroups,
   dossierItemCount,
   zoneDemandShown,
   type DocumentState,
+  type RequiredDocumentType,
 } from "@menao/core";
-import { router, type Href } from "expo-router";
 import {
   Building2,
-  ChevronRight,
+  Camera,
   FileText,
-  Lock,
   PenLine,
-  UserRound,
+  ShieldCheck,
   Users,
   Wallet,
   type LucideIcon,
@@ -25,23 +25,24 @@ import { fr } from "@/i18n/fr";
 import { loadDossier, loadZoneDemand, submitDossier } from "@/lib/artisan-dossier";
 import { useTrades } from "@/lib/trades";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton, Tappable } from "@/ui";
+import { Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExamplesCard } from "@/components/examples";
+import {
+  DossierChecks,
+  DossierGroup,
+  DossierRow,
+  PrivacyNote,
+  SoftBanner,
+  type DossierTone,
+} from "./dossier-kit";
+import { FicheButton } from "./fiche-kit";
+import { ProgressBar } from "./tools-kit";
 
 const t = fr.proDossier;
 const { colors, font, radius, spacing } = theme;
 
-type Tone = "todo" | "pending" | "done" | "danger";
-
-const toneColors: Record<Tone, { bg: string; fg: string }> = {
-  todo: { bg: colors["primary-softer"], fg: colors["primary-strong"] },
-  pending: { bg: colors["warning-soft"], fg: colors.warning },
-  done: { bg: colors["success-soft"], fg: colors.success },
-  danger: { bg: colors["danger-soft"], fg: colors.danger },
-};
-
-const documentTone: Record<DocumentState, Tone> = {
+const documentTone: Record<DocumentState, DossierTone> = {
   missing: "todo",
   en_attente: "pending",
   valide: "done",
@@ -49,10 +50,21 @@ const documentTone: Record<DocumentState, Tone> = {
   a_refaire: "danger",
 };
 
+/** Icône de chaque document : bouclier pour les assurances, feuille pour les autres. */
+const documentIcon: Record<RequiredDocumentType, LucideIcon> = {
+  kbis: FileText,
+  decennale: ShieldCheck,
+  rc_pro: ShieldCheck,
+  identite: FileText,
+  urssaf: FileText,
+};
+
 /**
  * « Faire vérifier mon entreprise » (ADR 0113), comme sur le site (ADR 0111) : ce qu'il reste à
  * faire avant l'envoi du dossier, chaque élément ouvrant son écran, puis l'envoi. Rien sur la
  * formule ni l'abonnement (règle 10) : MENAO écrit à l'artisan une fois son entreprise vérifiée.
+ * Refonte « Nette » (lot 9, maquette « DossierApp ») : carte d'avancement, trois groupes en cartes
+ * avec leur compteur (entreprise, documents, fiche), barre du bas avec ce qu'il reste et l'envoi.
  */
 export function DossierScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
@@ -76,7 +88,9 @@ export function DossierScreen() {
   const editable = dossier.status === "brouillon" || dossier.status === "refuse";
   const total = dossierItemCount(snapshot);
   const done = total - dossier.itemsLeft;
+  const groups = dossierGroups(snapshot);
   const profileDone = progress.entreprise && progress.metiers && progress.zone;
+  const count = (g: { done: number; total: number }) => t.progress(g.done, g.total);
 
   async function submit() {
     setSending(true);
@@ -91,17 +105,18 @@ export function DossierScreen() {
     <Screen
       footer={
         editable ? (
-          <View style={styles.footer}>
+          <>
             <Text style={styles.footerText}>
               {dossier.canSubmit ? t.ready : t.left(dossier.itemsLeft)}
             </Text>
-            <Button
+            <FicheButton
               label={t.submit}
-              onPress={submit}
+              tall
+              onPress={() => void submit()}
               loading={sending}
               disabled={!dossier.canSubmit}
             />
-          </View>
+          </>
         ) : undefined
       }
     >
@@ -122,15 +137,24 @@ export function DossierScreen() {
         <Notice tone="error">{t.complement(dossier.refusalReason)}</Notice>
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
+
+      <View style={styles.progress}>
+        <View style={styles.progressRow}>
+          <Text style={styles.progressLabel}>{t.progressLabel}</Text>
+          <Text style={styles.progressValue}>{t.progress(done, total)}</Text>
+        </View>
+        <ProgressBar value={done} target={total} label={t.progressLabel} color={colors.success} />
+        {editable ? <Text style={styles.progressHint}>{t.lead}</Text> : null}
+      </View>
+
       {progress.metiers && progress.zone && zoneDemand && zoneDemandShown(zoneDemand.recherches) ? (
-        <Card tone="soft">
-          <View style={styles.demandHead}>
-            <Users size={18} color={colors["primary-strong"]} />
-            <Text style={styles.demandTitle}>{t.zoneDemand.title}</Text>
-          </View>
-          <Body>{t.zoneDemand.body(zoneDemand.recherches, zoneDemand.jours)}</Body>
+        <SoftBanner
+          icon={Users}
+          title={t.zoneDemand.title}
+          text={t.zoneDemand.body(zoneDemand.recherches, zoneDemand.jours)}
+        >
           {zoneDemand.metiers.length > 1 ? (
-            <Body muted>
+            <Text style={styles.demandTrades}>
               {zoneDemand.metiers
                 .map((m) =>
                   t.zoneDemand.trade(
@@ -139,40 +163,31 @@ export function DossierScreen() {
                   ),
                 )
                 .join(" · ")}
-            </Body>
+            </Text>
           ) : null}
           <Text style={styles.demandNext}>{t.zoneDemand.next}</Text>
-        </Card>
+        </SoftBanner>
       ) : null}
-      {editable ? <Body muted>{t.lead}</Body> : null}
 
-      <View style={styles.progress}>
-        <View style={styles.progressRow}>
-          <Text style={styles.progressText}>{t.progressLabel}</Text>
-          <Text style={styles.progressText}>{t.progress(done, total)}</Text>
-        </View>
-        <View
-          role="progressbar"
-          aria-label={t.progressLabel}
-          aria-valuemin={0}
-          aria-valuemax={total}
-          aria-valuenow={done}
-          style={styles.track}
-        >
-          <View style={[styles.bar, { width: `${(done / total) * 100}%` }]} />
-        </View>
-      </View>
-
-      <View style={styles.list}>
-        <Row
+      <DossierGroup title={t.groups.company} count={count(groups.company)}>
+        <DossierRow
           icon={Building2}
           title={t.profileTitle}
           hint={profileDone ? undefined : t.profileTodo}
+          sub={
+            <DossierChecks
+              items={[
+                { label: t.profileParts.entreprise, done: progress.entreprise },
+                { label: t.profileParts.metiers, done: progress.metiers },
+                { label: t.profileParts.zone, done: progress.zone },
+              ]}
+            />
+          }
           tone={profileDone ? "done" : "todo"}
           status={profileDone ? t.states.done : t.states.todo}
           href="/pro-entreprise"
         />
-        <Row
+        <DossierRow
           icon={PenLine}
           title={t.charterTitle}
           hint={t.charterHint(CHARTER_RULE_COUNT)}
@@ -180,13 +195,16 @@ export function DossierScreen() {
           status={progress.charte ? t.states.signed : t.states.todo}
           href="/pro-charte"
         />
+      </DossierGroup>
+
+      <DossierGroup title={t.groups.documents} count={count(groups.documents)}>
         {REQUIRED_DOCUMENT_TYPES.map((type) => {
           // « Non soumis » à la décennale (ADR 0116) : pas exigée, l'équipe le vérifie.
           if (type === "decennale" && snapshot.decennaleExempt) {
             return (
-              <Row
+              <DossierRow
                 key={type}
-                icon={FileText}
+                icon={documentIcon[type]}
                 title={t.documents[type]}
                 hint={t.exemptHint}
                 tone="pending"
@@ -207,9 +225,9 @@ export function DossierScreen() {
             dossier.registryStatus !== null &&
             dossier.registryStatus !== "verifie";
           return (
-            <Row
+            <DossierRow
               key={type}
-              icon={FileText}
+              icon={documentIcon[type]}
               title={t.documents[type]}
               hint={
                 state === "refuse" && refused?.refusal_reason
@@ -226,8 +244,11 @@ export function DossierScreen() {
             />
           );
         })}
-        <Row
-          icon={UserRound}
+      </DossierGroup>
+
+      <DossierGroup title={t.groups.profile} count={count(groups.profile)}>
+        <DossierRow
+          icon={Camera}
           title={t.profilTitle}
           hint={t.profilHint}
           tone={progress.profil ? "done" : "todo"}
@@ -236,7 +257,7 @@ export function DossierScreen() {
         />
         {/* Paiements ouverts dès l'envoi du dossier, comme sur le site (ADR 0215). */}
         {dossier.status === "en_verification" ? (
-          <Row
+          <DossierRow
             icon={Wallet}
             title={t.paiementsTitle}
             hint={t.paiementsHintNow}
@@ -245,115 +266,54 @@ export function DossierScreen() {
             href="/pro-paiements"
           />
         ) : null}
-      </View>
+      </DossierGroup>
 
-      <View style={styles.privacy}>
-        <Lock size={16} color={colors["muted-foreground"]} />
-        <Text style={styles.privacyText}>{t.privacy}</Text>
-      </View>
-      <Body muted>{t.after}</Body>
+      <PrivacyNote text={t.privacy} />
+      <Text style={styles.after}>{t.after}</Text>
     </Screen>
   );
 }
 
-function Row({
-  icon: Icon,
-  title,
-  hint,
-  tone,
-  status,
-  href,
-}: {
-  icon: LucideIcon;
-  title: string;
-  hint?: string;
-  tone: Tone;
-  status: string;
-  href?: Href;
-}) {
-  const chip = toneColors[tone];
-  const content = (
-    <>
-      <View style={styles.icon}>
-        <Icon size={20} color={colors["primary-strong"]} />
-      </View>
-      <View style={styles.rowText}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        {hint ? <Text style={styles.rowHint}>{hint}</Text> : null}
-      </View>
-      <Text style={[styles.chip, { backgroundColor: chip.bg, color: chip.fg }]}>{status}</Text>
-      {href ? <ChevronRight size={20} color={colors["muted-foreground"]} /> : null}
-    </>
-  );
-  if (!href) return <View style={styles.row}>{content}</View>;
-  return (
-    <Tappable
-      role="link"
-      aria-label={`${title}, ${status}`}
-      onPress={() => router.push(href)}
-      style={styles.row}
-    >
-      {content}
-    </Tappable>
-  );
-}
-
 const styles = StyleSheet.create({
-  demandHead: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
-  demandTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
-  demandNext: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  progress: { gap: spacing(2) },
-  progressRow: { flexDirection: "row", justifyContent: "space-between" },
-  progressText: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },
-  track: {
-    height: 6,
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
-    overflow: "hidden",
-  },
-  bar: { height: "100%", borderRadius: radius.pill, backgroundColor: colors.success },
-  list: { gap: spacing(2.5) },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(3),
+  progress: {
+    gap: spacing(2.5),
     padding: spacing(4),
     borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: spacing(3),
   },
-  rowText: { flex: 1, gap: 2 },
-  rowTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
-  rowHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  chip: {
-    fontFamily: font.bold,
-    fontSize: 12,
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-    overflow: "hidden",
+  progressLabel: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
+  progressValue: {
+    fontFamily: font.display,
+    fontSize: 22,
+    letterSpacing: -0.4,
+    color: colors.foreground,
   },
-  privacy: { flexDirection: "row", gap: spacing(2), alignItems: "flex-start" },
-  privacyText: {
-    flex: 1,
+  progressHint: {
     fontFamily: font.regular,
     fontSize: 13,
+    lineHeight: 18,
     color: colors["muted-foreground"],
   },
-  footer: { gap: spacing(2) },
-  footerText: {
+  demandTrades: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  demandNext: { fontFamily: font.semibold, fontSize: 13, color: colors["primary-strong"] },
+  after: {
     fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
+  footerText: {
+    fontFamily: font.semibold,
     fontSize: 13,
     textAlign: "center",
-    color: colors["muted-foreground"],
+    color: colors.foreground,
   },
 });

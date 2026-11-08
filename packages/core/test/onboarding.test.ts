@@ -6,6 +6,7 @@ import {
   documentState,
   dossierItemCount,
   dossierItemsLeft,
+  dossierGroups,
   requiredDocumentTypes,
   firstIncompleteStep,
   onboardingProgress,
@@ -298,6 +299,32 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
     };
     expect(dossierItemsLeft(complet, today)).toBe(0);
     expect(canSubmitOnboarding(complet, today)).toBe(true);
+  });
+
+  it("répartit les éléments par groupe (ADR 0254)", () => {
+    expect(dossierGroups(vide, today)).toEqual({
+      company: { done: 0, total: 2 },
+      documents: { done: 0, total: 5 },
+      profile: { done: 0, total: 1 },
+    });
+    const profilFait = {
+      ...entrepriseOk,
+      tradeCount: 1,
+      zoneMode: "rayon" as const,
+      hasBaseLocation: true,
+      radiusKm: 20,
+      charterAccepted: true,
+      documents: {
+        kbis: { status: "en_attente" as const, dateEmission: "2026-09-20", dateFin: null },
+      },
+    };
+    const groups = dossierGroups(profilFait, today);
+    expect(groups.company).toEqual({ done: 2, total: 2 });
+    expect(groups.documents).toEqual({ done: 1, total: 5 });
+    expect(dossierGroups({ ...vide, decennaleExempt: true }, today).documents.total).toBe(4);
+    const left = dossierItemsLeft(profilFait, today);
+    const g = Object.values(groups);
+    expect(g.reduce((n, x) => n + x.total - x.done, 0)).toBe(left);
   });
 
   it("« non soumis » à la décennale : elle n'est pas exigée (ADR 0116)", () => {

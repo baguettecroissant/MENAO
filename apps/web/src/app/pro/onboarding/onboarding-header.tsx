@@ -31,12 +31,12 @@ export function OnboardingHeader({
       : t.dossier.title;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <div className="flex min-h-11 flex-wrap items-center justify-between gap-2">
         {step ? (
           <Link
             href="/pro/onboarding"
-            className={`inline-flex min-h-touch items-center gap-2 rounded-sm font-medium text-primary-strong hover:underline ${focusRing}`}
+            className={`inline-flex min-h-touch items-center gap-1.5 rounded-sm text-sm font-semibold text-muted-foreground hover:text-foreground ${focusRing}`}
           >
             <ArrowLeft aria-hidden="true" className="size-4" />
             {t.dossier.back}
@@ -46,7 +46,7 @@ export function OnboardingHeader({
         )}
         {actions}
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{title}</h1>
     </div>
   );
 }

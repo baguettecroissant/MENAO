@@ -15,6 +15,8 @@ import { CompanyStep } from "@/components/pro-signup/company-step";
 import { Progress } from "@/components/pro-signup/signup-parts";
 import { TradesStep } from "@/components/pro-signup/trades-step";
 import { ZoneStep } from "@/components/pro-signup/zone-step";
+import { FicheButton, FicheTag } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import {
@@ -28,11 +30,11 @@ import { signOut } from "@/lib/auth";
 import { goBack } from "@/lib/navigation";
 import { useTrades } from "@/lib/trades";
 import { useSession } from "@/lib/session";
-import { Body, Button, LinkText, Notice, Screen } from "@/ui";
+import { LinkText, Notice, Screen } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proSignup;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 
 type Step = "intro" | ArtisanSignupStep | "code";
 type Identity = { firstName: string; lastName: string };
@@ -40,7 +42,9 @@ type Identity = { firstName: string; lastName: string };
 /**
  * Inscription artisan dans l'application (ADR 0113), comme sur le site (ADR 0110) : une question
  * par écran, bouton principal en bas, choix gardés sur le téléphone. Après Google ou Apple, le
- * compte se finalise ici. Jamais d'abonnement dans l'application (règle 10).
+ * compte se finalise ici. Jamais d'abonnement dans l'application (règle 10). Refonte « Nette »
+ * (lot 9, maquettes « InscriptionNette », « MetiersMobile ») : barre d'étapes segmentée, grand
+ * titre, métiers en pastilles, entreprise trouvée bordée de bleu nuit, bouton collé en bas.
  */
 export default function ArtisanSignupScreen() {
   const { session, signedIn, role } = useSession();
@@ -145,12 +149,14 @@ export default function ArtisanSignupScreen() {
   const started = signupStepDone("metiers", current);
   const footer =
     step === "intro" ? (
-      <Button
+      <FicheButton
         label={started ? t.intro.resume : t.intro.start}
+        tall
         onPress={() => setStep(started ? firstOpenSignupStep(current) : "metiers")}
       />
     ) : step === "metiers" || step === "entreprise" || step === "zone" ? (
-      <Button
+      <FicheButton
+        tall
         label={
           step === "metiers" && current.tradeCodes.length
             ? t.trades.continue(current.tradeCodes.length)
@@ -212,17 +218,17 @@ function Intro() {
   return (
     <>
       <View style={styles.intro}>
-        <Text style={styles.eyebrow}>{t.intro.eyebrow}</Text>
-        <Text role="heading" style={styles.title}>
+        <FicheTag text={t.intro.eyebrow} tone="primary" />
+        <Text role="heading" aria-level={1} style={styles.title}>
           {t.intro.title}
         </Text>
-        <Body muted>{t.intro.lead}</Body>
+        <Text style={styles.lead}>{t.intro.lead}</Text>
       </View>
       <View style={styles.phases}>
         {t.intro.phases.map((phase, i) => (
           <View key={phase.title} style={styles.phase}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{i + 1}</Text>
+            <View style={[styles.badge, i === 0 && styles.badgeOn]}>
+              <Text style={[styles.badgeText, i === 0 && styles.badgeTextOn]}>{i + 1}</Text>
             </View>
             <View style={styles.phaseText}>
               <Text style={styles.phaseTitle}>{phase.title}</Text>
@@ -232,7 +238,7 @@ function Intro() {
         ))}
       </View>
       <View style={styles.trust}>
-        <ShieldCheck size={20} color={colors.success} />
+        <IconSquare icon={ShieldCheck} tone="success" />
         <Text style={styles.trustText}>{t.intro.trust}</Text>
       </View>
     </>
@@ -247,48 +253,47 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   intro: { gap: spacing(3) },
-  eyebrow: {
-    fontFamily: font.bold,
-    fontSize: 12,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    color: colors["primary-strong"],
+  title: {
+    fontFamily: font.display,
+    fontSize: 32,
+    lineHeight: 35,
+    letterSpacing: -1,
+    color: colors.foreground,
   },
-  title: { fontFamily: font.display, fontSize: 28, lineHeight: 34, color: colors.foreground },
-  phases: { gap: spacing(3) },
-  phase: {
+  lead: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.label },
+  phases: { gap: spacing(4.5), paddingVertical: spacing(1) },
+  phase: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3.5) },
+  badge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeOn: { borderColor: colors.foreground, backgroundColor: colors.foreground },
+  badgeText: { fontFamily: font.display, fontSize: 16, color: colors.foreground },
+  badgeTextOn: { color: colors["primary-foreground"] },
+  phaseText: { flex: 1, gap: 2, paddingTop: 1 },
+  phaseTitle: { fontFamily: font.bold, fontSize: 16, lineHeight: 22, color: colors.foreground },
+  phaseSub: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  trust: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing(3.5),
+    alignItems: "center",
+    gap: spacing(3),
     padding: spacing(4),
-    borderRadius: radius.card,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: { fontFamily: font.bold, fontSize: 14, color: colors["primary-strong"] },
-  phaseText: { flex: 1, gap: 2 },
-  phaseTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
-  phaseSub: {
-    fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors["muted-foreground"],
-  },
-  trust: { flexDirection: "row", gap: spacing(2.5), alignItems: "flex-start" },
   trustText: {
     flex: 1,
     fontFamily: font.regular,
     fontSize: 14,
     lineHeight: 20,
-    color: colors["muted-foreground"],
+    color: colors.label,
   },
 });

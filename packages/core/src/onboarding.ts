@@ -186,3 +186,33 @@ export function dossierItemsLeft(a: ArtisanOnboardingSnapshot, today: Date = new
   const documents = requiredDocumentTypes(a).map((t) => documentIsValid(t, a.documents[t], today));
   return [...items, ...documents].filter((done) => !done).length;
 }
+
+/** Avancement d'un groupe de « Faire vérifier mon entreprise » (refonte « Nette », ADR 0254). */
+export type DossierGroupProgress = { done: number; total: number };
+
+/**
+ * Les éléments du dossier par groupe : l'entreprise (entreprise, métiers et zone, puis la charte),
+ * les documents exigés, puis la fiche (profil public). Même compte que `dossierItemsLeft`.
+ */
+export function dossierGroups(
+  a: ArtisanOnboardingSnapshot,
+  today: Date = new Date(),
+): {
+  company: DossierGroupProgress;
+  documents: DossierGroupProgress;
+  profile: DossierGroupProgress;
+} {
+  const p = onboardingProgress(a, today);
+  const types = requiredDocumentTypes(a);
+  return {
+    company: {
+      done: [p.entreprise && p.metiers && p.zone, p.charte].filter(Boolean).length,
+      total: 2,
+    },
+    documents: {
+      done: types.filter((t) => documentIsValid(t, a.documents[t], today)).length,
+      total: types.length,
+    },
+    profile: { done: p.profil ? 1 : 0, total: 1 },
+  };
+}

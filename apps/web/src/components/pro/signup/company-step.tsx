@@ -298,7 +298,7 @@ function CompanyCard({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card">
+      <div className="flex flex-col gap-4 rounded-card border-2 border-foreground bg-surface p-5 shadow-card">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <p className="text-lg font-semibold">{company.name ?? t.manualName}</p>

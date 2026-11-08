@@ -36,21 +36,23 @@ export function TradesStep({
       <SearchInput label={t.trades.search} value={query} onChange={setQuery} />
       <fieldset className="min-w-0">
         <legend className="sr-only">{t.trades.title}</legend>
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-wrap gap-2">
           {visible.map((trade) => {
             const on = selected.includes(trade.code);
             return (
               <li key={trade.code}>
                 <label
-                  className={`flex min-h-[3.25rem] cursor-pointer items-center gap-3 rounded-input border-[1.5px] px-4 text-base transition-colors focus-within:ring-4 focus-within:ring-primary/20 hover:border-primary ${
-                    on ? "border-primary bg-primary-softer" : "border-border bg-surface"
+                  className={`flex min-h-11 cursor-pointer items-center gap-2.5 rounded-pill border px-4 text-[0.9375rem] font-semibold transition-colors focus-within:ring-4 focus-within:ring-primary/20 ${
+                    on
+                      ? "border-foreground bg-foreground text-white"
+                      : "border-border-strong bg-surface hover:border-foreground"
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={on}
                     onChange={() => toggle(trade.code)}
-                    className="size-5 shrink-0 accent-primary"
+                    className="size-4 shrink-0 accent-white"
                   />
                   {trade.label}
                 </label>

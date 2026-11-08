@@ -10,11 +10,13 @@ import {
 import { documentMetadataSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { Camera, FileText, ImageIcon } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
-import { TopBar } from "@/components/top-bar";
+import { PageHead, PrivacyNote, SoftBanner } from "@/components/pro/dossier-kit";
+import { CardHeading, FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
+import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
@@ -30,7 +32,7 @@ import {
   type PickedPhoto,
 } from "@/lib/photos";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Checkbox, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -38,6 +40,9 @@ const t = fr.proDocument;
 const r = fr.proDocument.reading;
 const d = fr.proDossier;
 const { colors, font, radius, spacing } = theme;
+
+/** Fond « papier » derrière la photo du document (maquette « DocumentDossierApp »). */
+const PAPER = "#efebe2";
 
 const isoDay = (date: Date) => date.toISOString().slice(0, 10);
 /** Date de fin : à partir de demain (celle du jour est refusée, ADR 0176). */
@@ -58,7 +63,9 @@ function monthsAgo(months: number): string {
  * Un document du dossier, en photo ou en PDF (ADR 0113, 0123) : appareil photo, photothèque ou
  * fichiers du téléphone, puis les mêmes champs et contrôles que le site (documentMetadataSchema),
  * envoi par process-upload. Pendant l'inscription, ou pour renouveler un document surveillé d'un
- * artisan validé (F-51).
+ * artisan validé (F-51). Refonte « Nette » (lot 9, maquette « DocumentDossierApp ») : grand titre,
+ * photo du document en grand avec « Reprendre », bandeau de lecture automatique, champs arrondis
+ * en 16 points, métiers couverts en cases bleu nuit et « Déposer le document » collé en bas.
  */
 function DocumentScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
@@ -66,9 +73,9 @@ function DocumentScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
   if (!type) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen>
         <Notice tone="error">{fr.errors.generic}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   const locked = dossier?.status === "en_verification";
@@ -84,34 +91,46 @@ function DocumentScreen() {
     type === "kbis" && draft && kbis.length === 0 && dossier?.registryStatus
       ? (t.registryReasons[dossier.registryStatus] ?? null)
       : null;
+  const blocked = locked ? (
+    <Notice tone="info">{t.locked}</Notice>
+  ) : dossier?.status === "radie" ? (
+    <Notice tone="info">{t.radiated}</Notice>
+  ) : kbisDone ? (
+    <Notice tone="info">{t.kbisDone}</Notice>
+  ) : type === "kbis" && registry ? (
+    <Notice tone="success">
+      {t.registryVerified(formatLongDate(registry.date_emission ?? ""))}
+    </Notice>
+  ) : null;
+  const intro = (
+    <>
+      <PageHead title={d.documents[type]} lead={exempt || blocked ? null : t.photoHint} />
+      {blocked}
+      {!blocked && registryFailed ? (
+        <RegistryRecheck reason={registryFailed} onDone={reload} />
+      ) : null}
+    </>
+  );
+  // « Non soumis » à la décennale : sous le formulaire, comme la colonne de la maquette.
+  const exemptChoice =
+    !blocked && type === "decennale" && draft ? (
+      <ExemptChoice exempt={exempt} onChange={reload} />
+    ) : null;
+  if (!blocked && !exempt && dossier) {
+    return (
+      <DocumentForm
+        type={type}
+        trades={type === "decennale" ? dossier.trades : []}
+        intro={intro}
+        after={exemptChoice}
+      />
+    );
+  }
   return (
-    <Screen header={<TopBar />}>
-      <Title>{d.documents[type]}</Title>
-      {exempt || kbisDone || locked || (type === "kbis" && registry) ? null : (
-        <Body muted>{t.photoHint}</Body>
-      )}
-      {locked ? (
-        <Notice tone="info">{t.locked}</Notice>
-      ) : dossier?.status === "radie" ? (
-        <Notice tone="info">{t.radiated}</Notice>
-      ) : kbisDone ? (
-        <Notice tone="info">{t.kbisDone}</Notice>
-      ) : type === "kbis" && registry ? (
-        <Notice tone="success">
-          {t.registryVerified(formatLongDate(registry.date_emission ?? ""))}
-        </Notice>
-      ) : (
-        <>
-          {registryFailed ? <RegistryRecheck reason={registryFailed} onDone={reload} /> : null}
-          {type === "decennale" && draft ? (
-            <ExemptChoice exempt={exempt} onChange={reload} />
-          ) : null}
-          {exempt || !dossier ? null : (
-            <DocumentForm type={type} trades={type === "decennale" ? dossier.trades : []} />
-          )}
-        </>
-      )}
-    </Screen>
+    <FicheScreen>
+      {intro}
+      {exemptChoice}
+    </FicheScreen>
   );
 }
 
@@ -125,10 +144,15 @@ function RegistryRecheck({ reason, onDone }: { reason: string; onDone: () => Pro
     setBusy(false);
   }
   return (
-    <Card tone="soft">
+    <FicheCard padding={4} gap={3}>
       <Notice tone="info">{reason}</Notice>
-      <Button label={t.registryRecheck} variant="secondary" onPress={recheck} loading={busy} />
-    </Card>
+      <FicheButton
+        label={t.registryRecheck}
+        variant="secondary"
+        onPress={() => void recheck()}
+        loading={busy}
+      />
+    </FicheCard>
   );
 }
 
@@ -143,32 +167,38 @@ function ExemptChoice({ exempt, onChange }: { exempt: boolean; onChange: () => P
     setBusy(false);
   }
   return (
-    <Card tone="soft">
+    <FicheCard padding={4.5} gap={3}>
       {exempt ? (
         <Notice tone="info">{t.exemptDeclared}</Notice>
       ) : (
         <>
-          <Text style={styles.exemptTitle}>{t.exemptTitle}</Text>
-          <Body muted>{t.exemptText}</Body>
+          <CardHeading title={t.exemptTitle} size={16} />
+          <Text style={styles.text}>{t.exemptText}</Text>
         </>
       )}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button
+      <FicheButton
         label={exempt ? t.exemptCancel : t.exemptDeclare}
         variant="secondary"
-        onPress={toggle}
+        onPress={() => void toggle()}
         loading={busy}
       />
-    </Card>
+    </FicheCard>
   );
 }
 
 function DocumentForm({
   type,
   trades,
+  intro,
+  after,
 }: {
   type: RequiredDocumentType;
   trades: { code: string; label: string }[];
+  /** En-tête de l'écran (titre, raison d'un Kbis demandé). */
+  intro: ReactNode;
+  /** Sous le formulaire (« non soumis » à la décennale). */
+  after: ReactNode;
 }) {
   // Décennale : métiers couverts, tous cochés au départ (ADR 0116).
   const [covered, setCovered] = useState(() => new Set(trades.map((trade) => trade.code)));
@@ -291,33 +321,59 @@ function DocumentForm({
   }
 
   return (
-    <>
-      {photo ? (
-        photo.pdf ? (
-          <View style={styles.file}>
-            <FileText size={22} color={colors["primary-strong"]} />
-            <Text style={[styles.added, styles.fileName]}>{t.fileReady(photo.pdf.name)}</Text>
+    <FicheScreen
+      footer={
+        <>
+          {failure ? <Notice tone="error">{failure}</Notice> : null}
+          <FicheButton label={t.send} tall onPress={() => void send()} loading={sending} />
+        </>
+      }
+    >
+      {intro}
+      <View style={styles.photoBlock}>
+        {photo ? (
+          <View style={styles.stage}>
+            {photo.pdf ? (
+              <View style={styles.stagePdf}>
+                <View style={styles.page}>
+                  <FileText size={30} color={colors["muted-foreground"]} />
+                </View>
+              </View>
+            ) : (
+              <Image source={{ uri: photo.uri }} style={styles.image} resizeMode="cover" alt="" />
+            )}
+            <View style={styles.retake}>
+              <FicheButton
+                label={t.replace}
+                icon={Camera}
+                variant="secondary"
+                onPress={() => void pick("camera")}
+              />
+            </View>
           </View>
         ) : (
-          <View style={styles.preview}>
-            <Image source={{ uri: photo.uri }} style={styles.image} resizeMode="cover" alt="" />
-            <Text style={styles.added}>{t.added}</Text>
+          <View style={[styles.stage, styles.stageEmpty]}>
+            <View style={styles.page}>
+              <FileText size={30} color={colors["muted-foreground"]} />
+            </View>
           </View>
-        )
-      ) : null}
-      <View style={styles.buttons}>
-        <Button label={photo ? t.replace : t.take} icon={Camera} onPress={() => pick("camera")} />
-        <Button
+        )}
+        {photo ? (
+          <Text style={styles.added}>{photo.pdf ? t.fileReady(photo.pdf.name) : t.added}</Text>
+        ) : (
+          <FicheButton label={t.take} icon={Camera} tall onPress={() => void pick("camera")} />
+        )}
+        <FicheButton
           label={t.choose}
           icon={ImageIcon}
           variant="secondary"
-          onPress={() => pick("library")}
+          onPress={() => void pick("library")}
         />
-        <Button
+        <FicheButton
           label={t.chooseFile}
           icon={FileText}
           variant="secondary"
-          onPress={() => pick("file")}
+          onPress={() => void pick("file")}
         />
       </View>
       {errors.photo ? <Notice tone="error">{errors.photo}</Notice> : null}
@@ -333,7 +389,7 @@ function DocumentForm({
             </Notice>
           ))}
           {reading.filled ? (
-            <Notice tone="success">{r.done}</Notice>
+            <SoftBanner text={r.done} />
           ) : reading.warnings.length === 0 ? (
             <Notice tone="info">{r.empty}</Notice>
           ) : null}
@@ -351,13 +407,13 @@ function DocumentForm({
       ) : null}
       {insurance ? (
         <>
-          <TextField
+          <ToolField
             label={t.assureur}
             value={values.assureur}
             onChangeText={(assureur) => setValues((v) => ({ ...v, assureur }))}
             error={errors.assureur}
           />
-          <TextField
+          <ToolField
             label={t.numero}
             value={values.numero}
             onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
@@ -374,7 +430,7 @@ function DocumentForm({
         </>
       ) : null}
       {type === "decennale" ? (
-        <TextField
+        <ToolField
           label={t.couverture}
           value={values.couverture}
           onChangeText={(couverture) => setValues((v) => ({ ...v, couverture }))}
@@ -383,10 +439,10 @@ function DocumentForm({
         />
       ) : null}
       {type === "decennale" && trades.length > 0 ? (
-        <View style={styles.coverage}>
-          <Text style={styles.exemptTitle}>{t.coverageLegend}</Text>
+        <FicheCard padding={3.5} gap={0}>
+          <Text style={styles.coverageTitle}>{t.coverageLegend}</Text>
           {trades.map((trade) => (
-            <Checkbox
+            <CheckRow
               key={trade.code}
               label={trade.label}
               checked={covered.has(trade.code)}
@@ -400,8 +456,8 @@ function DocumentForm({
               }
             />
           ))}
-          <Body muted>{t.coverageHint}</Body>
-        </View>
+          <Text style={styles.hint}>{t.coverageHint}</Text>
+        </FicheCard>
       ) : null}
       {type === "urssaf" ? (
         <>
@@ -412,7 +468,7 @@ function DocumentForm({
             dateLabel={t.dateEmissionUrssaf}
             error={errors.dateEmission}
           />
-          <TextField
+          <ToolField
             label={t.securityCode}
             value={values.numero}
             onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
@@ -431,33 +487,49 @@ function DocumentForm({
           error={errors.dateFin}
         />
       ) : null}
-      {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={t.send} onPress={send} loading={sending} />
-    </>
+      {after}
+      <PrivacyNote text={d.privacy} />
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  preview: { gap: spacing(2) },
-  image: {
-    width: "100%",
-    aspectRatio: 4 / 3,
+  photoBlock: { gap: spacing(2.5) },
+  // Photo du document en grand, sur un fond papier, avec « Reprendre » en bas à droite.
+  stage: {
+    overflow: "hidden",
     borderRadius: radius.card,
-    backgroundColor: colors["primary-softer"],
+    backgroundColor: PAPER,
   },
-  fileName: { flex: 1 },
-  added: { fontFamily: font.medium, fontSize: 14, color: colors.success },
-  buttons: { gap: spacing(2.5) },
-  file: {
-    flexDirection: "row",
+  stageEmpty: { height: 200, alignItems: "center", justifyContent: "center" },
+  stagePdf: { height: 220, alignItems: "center", justifyContent: "center" },
+  page: {
+    width: 110,
+    height: 148,
+    borderRadius: 6,
     alignItems: "center",
-    gap: spacing(2.5),
-    padding: spacing(4),
-    borderRadius: radius.card,
-    backgroundColor: colors["primary-softer"],
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.08)",
   },
-  coverage: { gap: spacing(2) },
-  exemptTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
+  image: { width: "100%", aspectRatio: 4 / 3 },
+  retake: { position: "absolute", right: spacing(3), bottom: spacing(3) },
+  added: { fontFamily: font.semibold, fontSize: 14, color: colors.success },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  coverageTitle: {
+    fontFamily: font.bold,
+    fontSize: 15,
+    lineHeight: 21,
+    color: colors.foreground,
+    marginBottom: spacing(1),
+  },
+  hint: {
+    marginTop: spacing(1),
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).

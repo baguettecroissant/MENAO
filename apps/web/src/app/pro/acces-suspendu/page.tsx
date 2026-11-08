@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
+import { appTheme } from "@/lib/fonts";
 import { teamContext } from "@/lib/artisan/space";
 import { signOut } from "@/lib/auth/actions";
 
@@ -18,7 +19,7 @@ export default async function SuspendedAccessPage() {
   const team = await teamContext();
   if (!team?.suspended) redirect("/pro/tableau-de-bord");
   return (
-    <div className="app-nette flex min-h-dvh flex-col bg-background">
+    <div className={`${appTheme} flex min-h-dvh flex-col bg-background`}>
       <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center gap-3 px-4">
           <Logo />

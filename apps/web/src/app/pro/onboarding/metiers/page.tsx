@@ -45,7 +45,7 @@ export default async function TradesStepPage({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex max-w-3xl flex-col gap-6">
       <Card>
         <TradesForm
           trades={(trades ?? []).map((trade) => ({

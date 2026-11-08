@@ -26,24 +26,33 @@ export default async function CharterPage({
       .single();
     const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
     return (
-      <CharterForm
-        defaults={{
-          name,
-          company: artisan.nom_commercial ?? artisan.raison_sociale ?? "",
-          siret: artisan.siret ?? "",
-        }}
-      />
+      <div className="max-w-3xl">
+        <CharterForm
+          defaults={{
+            name,
+            company: artisan.nom_commercial ?? artisan.raison_sociale ?? "",
+            siret: artisan.siret ?? "",
+          }}
+        />
+      </div>
     );
   }
 
-  if (relire) return <SignedCharter backHref="/pro/onboarding/charte" />;
+  if (relire)
+    return (
+      <div className="max-w-3xl">
+        <SignedCharter backHref="/pro/onboarding/charte" />
+      </div>
+    );
 
   return (
-    <CharterDone
-      charter={charter}
-      continueHref="/pro/onboarding"
-      continueLabel={t.next}
-      rereadHref="/pro/onboarding/charte?relire=1"
-    />
+    <div className="max-w-3xl">
+      <CharterDone
+        charter={charter}
+        continueHref="/pro/onboarding"
+        continueLabel={t.next}
+        rereadHref="/pro/onboarding/charte?relire=1"
+      />
+    </div>
   );
 }
