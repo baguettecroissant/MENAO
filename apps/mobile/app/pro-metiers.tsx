@@ -11,8 +11,17 @@ import { Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DateTimeFields } from "@/components/date-time-fields";
+import { PageHead } from "@/components/pro/dossier-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheScreen,
+  FicheSkeleton,
+  FicheTag,
+} from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { CheckRow, ChoiceGroup } from "@/components/pro-signup/signup-parts";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
 import {
@@ -25,7 +34,7 @@ import {
   type TradesData,
 } from "@/lib/my-company";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton, TextField, Title, toast } from "@/ui";
+import { Notice, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -37,27 +46,24 @@ type Message = { tone: "error" | "success"; text: string } | null;
 /**
  * Métiers, spécialités, expérience, certifications et RGE (ADR 0125), comme l'étape « Métiers »
  * du site : mêmes contrôles, mêmes écritures (set_artisan_trades, certifications, rge-check).
+ * Refonte « Nette » (lot 9) : grand titre, cartes, « Enregistrer mes métiers » collé en bas.
  */
 function TradesScreen() {
   const [data, reload] = useFocusData(loadTrades);
-  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
-  return (
-    <Screen onRefresh={reload} header={<TopBar />}>
-      <Title>{t.title}</Title>
-      {data === null ? (
+  if (data === undefined) return <FicheSkeleton />;
+  if (data === null) {
+    return (
+      <FicheScreen onRefresh={reload}>
+        <PageHead title={t.title} />
         <Notice tone="error">{t.loadError}</Notice>
-      ) : (
-        <>
-          <TradesCard data={data} onSaved={reload} />
-          <RgeCard data={data} onChange={reload} />
-          <CertificationsCard data={data} onChange={reload} />
-        </>
-      )}
-    </Screen>
-  );
+      </FicheScreen>
+    );
+  }
+  return <TradesContent data={data} onChange={reload} />;
 }
 
-function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promise<void> }) {
+/** Métiers (avec « Enregistrer mes métiers » collé en bas), puis RGE et certifications. */
+function TradesContent({ data, onChange }: { data: TradesData; onChange: () => Promise<void> }) {
   const [trades, setTrades] = useState(() => new Set(data.selectedTrades));
   const [workTypes, setWorkTypes] = useState(() => new Set(data.selectedWorkTypes));
   const [experience, setExperience] = useState(
@@ -94,71 +100,76 @@ function TradesCard({ data, onSaved }: { data: TradesData; onSaved: () => Promis
     if (!result.ok && result.error) setMessage({ tone: "error", text: result.error });
     if (result.ok) {
       toast.success(t.saved);
-      await onSaved();
+      await onChange();
     }
   }
 
   return (
-    <Card>
-      <Text role="heading" style={styles.heading}>
-        {t.legend}
-      </Text>
-      <Body muted>{t.hint}</Body>
-      {errors.tradeCodes ? <Notice tone="error">{errors.tradeCodes}</Notice> : null}
-      <View style={styles.list}>
-        {data.trades.map((trade) => (
-          <View key={trade.code} style={styles.list}>
-            <CheckRow
-              label={trade.label}
-              checked={trades.has(trade.code)}
-              onToggle={() => setTrades((current) => toggle(current, trade.code))}
-            />
-            {trades.has(trade.code) && trade.workTypes.length > 0 ? (
-              <View style={styles.specialties}>
-                <Text style={styles.subheading}>{t.specialties(trade.label)}</Text>
-                {trade.workTypes.map((work) => (
-                  <CheckRow
-                    key={work.code}
-                    label={work.label}
-                    checked={workTypes.has(work.code)}
-                    onToggle={() => setWorkTypes((current) => toggle(current, work.code))}
-                  />
-                ))}
-              </View>
-            ) : null}
-          </View>
-        ))}
-      </View>
-      <TextField
-        label={t.experience}
-        value={experience}
-        onChangeText={setExperience}
-        keyboardType="number-pad"
-        error={errors.experienceYears}
-      />
-      <ChoiceGroup<DiplomeMetier | "">
-        legend={t.diploma}
-        hint={t.diplomaHint}
-        value={diploma}
-        options={[
-          { value: "", label: t.diplomaNone },
-          ...DIPLOMES_METIER.map((d) => ({ value: d, label: fr.diplomesMetier[d] })),
-        ]}
-        onChange={setDiploma}
-      />
-      <ChoiceGroup<BudgetMinimum | "">
-        legend={t.budgetMinimum}
-        hint={t.budgetMinimumHint}
-        value={budgetMinimum}
-        options={[
-          { value: "", label: t.budgetMinimumAll },
-          ...BUDGET_MINIMUM_OPTIONS.map((b) => ({ value: b, label: t.budgetMinimumOptions[b] })),
-        ]}
-        onChange={setBudgetMinimum}
-      />
-      {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Button label={t.save} onPress={save} loading={busy} />
-    </Card>
+    <FicheScreen
+      onRefresh={onChange}
+      footer={<FicheButton label={t.save} tall onPress={() => void save()} loading={busy} />}
+    >
+      <PageHead title={t.title} />
+      <FicheCard padding={4.5} gap={3.5}>
+        <CardHeading title={t.legend} size={17} />
+        <Text style={styles.text}>{t.hint}</Text>
+        {errors.tradeCodes ? <Notice tone="error">{errors.tradeCodes}</Notice> : null}
+        <View style={styles.list}>
+          {data.trades.map((trade) => (
+            <View key={trade.code} style={styles.list}>
+              <CheckRow
+                label={trade.label}
+                checked={trades.has(trade.code)}
+                onToggle={() => setTrades((current) => toggle(current, trade.code))}
+              />
+              {trades.has(trade.code) && trade.workTypes.length > 0 ? (
+                <View style={styles.specialties}>
+                  <Text style={styles.subheading}>{t.specialties(trade.label)}</Text>
+                  {trade.workTypes.map((work) => (
+                    <CheckRow
+                      key={work.code}
+                      label={work.label}
+                      checked={workTypes.has(work.code)}
+                      onToggle={() => setWorkTypes((current) => toggle(current, work.code))}
+                    />
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </View>
+        <ToolField
+          label={t.experience}
+          value={experience}
+          onChangeText={setExperience}
+          keyboardType="number-pad"
+          error={errors.experienceYears}
+        />
+        <ChoiceGroup<DiplomeMetier | "">
+          legend={t.diploma}
+          hint={t.diplomaHint}
+          value={diploma}
+          options={[
+            { value: "", label: t.diplomaNone },
+            ...DIPLOMES_METIER.map((d) => ({ value: d, label: fr.diplomesMetier[d] })),
+          ]}
+          onChange={setDiploma}
+        />
+        <ChoiceGroup<BudgetMinimum | "">
+          legend={t.budgetMinimum}
+          hint={t.budgetMinimumHint}
+          value={budgetMinimum}
+          options={[
+            { value: "", label: t.budgetMinimumAll },
+            ...BUDGET_MINIMUM_OPTIONS.map((b) => ({ value: b, label: t.budgetMinimumOptions[b] })),
+          ]}
+          onChange={setBudgetMinimum}
+        />
+        {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+      </FicheCard>
+      <RgeCard data={data} onChange={onChange} />
+      <CertificationsCard data={data} onChange={onChange} />
+    </FicheScreen>
   );
 }
 
@@ -177,30 +188,31 @@ function RgeCard({ data, onChange }: { data: TradesData; onChange: () => Promise
   }
 
   return (
-    <Card>
-      <Text role="heading" style={styles.heading}>
-        {t.rgeTitle}
-      </Text>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading title={t.rgeTitle} size={17} />
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
       {domains.length > 0 ? (
         <>
-          <Body>{t.rgeFound}</Body>
+          <Text style={styles.body}>{t.rgeFound}</Text>
           <View style={styles.tags}>
             {domains.map((domain) => (
-              <Text key={domain} style={styles.tag}>
-                {domain}
-              </Text>
+              <FicheTag key={domain} text={domain} tone="primary" />
             ))}
           </View>
         </>
       ) : (
-        <Body muted>{t.rgeNone}</Body>
+        <Text style={styles.text}>{t.rgeNone}</Text>
       )}
       {data.rgeCheckedAt ? (
-        <Body muted>{t.rgeCheckedOn(formatLongDate(data.rgeCheckedAt))}</Body>
+        <Text style={styles.text}>{t.rgeCheckedOn(formatLongDate(data.rgeCheckedAt))}</Text>
       ) : null}
-      <Button label={t.rgeRefresh} variant="secondary" onPress={refresh} loading={busy} />
-    </Card>
+      <FicheButton
+        label={t.rgeRefresh}
+        variant="secondary"
+        onPress={() => void refresh()}
+        loading={busy}
+      />
+    </FicheCard>
   );
 }
 
@@ -240,13 +252,11 @@ function CertificationsCard({
   }
 
   return (
-    <Card>
-      <Text role="heading" style={styles.heading}>
-        {t.certifications}
-      </Text>
-      <Body muted>{t.certificationsHint}</Body>
+    <FicheCard padding={4.5} gap={3.5}>
+      <CardHeading title={t.certifications} size={17} />
+      <Text style={styles.text}>{t.certificationsHint}</Text>
       {data.certifications.length === 0 ? (
-        <Body muted>{t.noCertification}</Body>
+        <Text style={styles.text}>{t.noCertification}</Text>
       ) : (
         <View style={styles.list}>
           {data.certifications.map((c) => {
@@ -278,7 +288,7 @@ function CertificationsCard({
         onChange={setType}
       />
       {errors.type ? <Notice tone="error">{errors.type}</Notice> : null}
-      <TextField
+      <ToolField
         label={t.certNumber}
         value={numero}
         onChangeText={setNumero}
@@ -293,27 +303,23 @@ function CertificationsCard({
         error={errors.dateFin}
       />
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Button label={t.certAdd} variant="secondary" onPress={add} loading={busy} />
-    </Card>
+      <FicheButton
+        label={t.certAdd}
+        variant="secondary"
+        onPress={() => void add()}
+        loading={busy}
+      />
+    </FicheCard>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  subheading: { fontFamily: font.medium, fontSize: 14, color: colors["muted-foreground"] },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  body: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.foreground },
+  subheading: { fontFamily: font.semibold, fontSize: 14, color: colors["muted-foreground"] },
   list: { gap: spacing(2) },
   specialties: { gap: spacing(2), paddingLeft: spacing(4) },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(1.5) },
-  tag: {
-    fontFamily: font.medium,
-    fontSize: 13,
-    color: colors["primary-strong"],
-    backgroundColor: colors["primary-softer"],
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-    overflow: "hidden",
-  },
   cert: {
     flexDirection: "row",
     alignItems: "center",
@@ -324,7 +330,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   certText: { flex: 1, gap: 2 },
-  certTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  certTitle: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
   certHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
   pressed: { opacity: 0.7 },
 });

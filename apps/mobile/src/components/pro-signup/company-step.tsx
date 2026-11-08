@@ -7,13 +7,15 @@ import {
   type ArtisanSignupDraft,
 } from "@menao/core";
 import { messages } from "@menao/validation";
-import { ArrowLeftRight, Building2, ChevronRight, CircleCheck } from "lucide-react-native";
+import { ArrowLeftRight, Building2, ChevronRight } from "lucide-react-native";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { FicheButton, FicheTag } from "@/components/pro/fiche-kit";
+import { IconSquare, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { searchCompanies, type CompanySuggestion } from "@/lib/artisan-signup";
-import { Button, Card, LinkText, Notice, TextField } from "@/ui";
+import { LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ChoiceGroup, Muted, SearchField, StepTitle } from "./signup-parts";
 
@@ -30,6 +32,18 @@ const formatSiret = (siret: string) =>
   siret.replace(/^(\d{3})(\d{3})(\d{3})(\d{5})$/, "$1 $2 $3 $4");
 const legalForm = (code: string | null) => (code ? (FORMES_JURIDIQUES[code] ?? null) : null);
 const managerName = (m: { firstName: string; lastName: string }) => `${m.firstName} ${m.lastName}`;
+
+/** Initiales de l'entreprise (« Plomberie des Oliviers » → « PO »), comme l'aperçu de la fiche. */
+function initials(name: string | null): string {
+  return (
+    (name ?? "")
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+      .slice(0, 2)
+      .map((w) => w.charAt(0).toUpperCase())
+      .join("") || "?"
+  );
+}
 
 function toDraftCompany(c: CompanySuggestion): ArtisanSignupCompany {
   const { siren: _siren, active: _active, ...company } = c;
@@ -148,9 +162,7 @@ function CompanyFinder({
                 pressed && styles.pressed,
               ]}
             >
-              <View style={styles.resultIcon}>
-                <Building2 size={20} color={colors["primary-strong"]} />
-              </View>
+              <IconSquare icon={Building2} tone="neutral" />
               <View style={styles.resultText}>
                 <Text style={styles.resultName}>{c.name}</Text>
                 <Text style={styles.resultMeta}>
@@ -166,9 +178,9 @@ function CompanyFinder({
                 </Text>
               </View>
               {c.active ? (
-                <ChevronRight size={20} color={colors["muted-foreground"]} />
+                <ChevronRight size={18} color={colors["muted-foreground"]} />
               ) : (
-                <Text style={styles.closed}>{t.closed}</Text>
+                <FicheTag text={t.closed} tone="danger" />
               )}
             </Pressable>
           ))
@@ -189,7 +201,7 @@ function ManualSiret({
   const [error, setError] = useState<string | undefined>();
   return (
     <View style={styles.finder}>
-      <TextField
+      <ToolField
         label={t.manualLabel}
         value={value}
         onChangeText={setValue}
@@ -197,7 +209,7 @@ function ManualSiret({
         hint={t.manualHint}
         error={error}
       />
-      <Button
+      <FicheButton
         label={t.manualSubmit}
         variant="secondary"
         onPress={() => {
@@ -231,8 +243,12 @@ function CompanyCard({
   ];
   return (
     <>
-      <Card>
+      {/* Entreprise trouvée : carte bordée de bleu nuit (maquette « InscriptionEntrepriseNette »). */}
+      <View style={styles.company}>
         <View style={styles.cardHead}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials(company.name)}</Text>
+          </View>
           <View style={styles.cardTitle}>
             <Text style={styles.cardName}>{company.name ?? t.manualName}</Text>
             {form || company.creationYear ? (
@@ -243,24 +259,21 @@ function CompanyCard({
               </Text>
             ) : null}
           </View>
-          {company.name ? (
-            <View style={styles.active}>
-              <CircleCheck size={14} color={colors.success} />
-              <Text style={styles.activeText}>{t.active}</Text>
-            </View>
-          ) : null}
+          {company.name ? <FicheTag text={t.active} tone="success" dot /> : null}
         </View>
         {/* Changer d'entreprise, en haut de la carte, là où se pose le regard. */}
-        <Button label={t.change} variant="secondary" icon={ArrowLeftRight} onPress={reset} />
-        {rows
-          .filter((row): row is [string, string] => row[1] !== null)
-          .map(([label, value]) => (
-            <View key={label} style={styles.detail}>
-              <Text style={styles.detailLabel}>{label}</Text>
-              <Text style={styles.detailValue}>{value}</Text>
-            </View>
-          ))}
-      </Card>
+        <FicheButton label={t.change} variant="secondary" icon={ArrowLeftRight} onPress={reset} />
+        <View style={styles.details}>
+          {rows
+            .filter((row): row is [string, string] => row[1] !== null)
+            .map(([label, value]) => (
+              <View key={label} style={styles.detail}>
+                <Text style={styles.detailLabel}>{label}</Text>
+                <Text style={styles.detailValue}>{value}</Text>
+              </View>
+            ))}
+        </View>
+      </View>
       <ChoiceGroup<boolean>
         legend={single ? t.isManager(managerName(single)) : t.isManagerGeneric}
         value={draft.isDirigeant}
@@ -300,58 +313,47 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(3),
-    padding: spacing(3.5),
-    borderRadius: radius.input,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   resultClosed: { opacity: 0.6 },
   pressed: { opacity: 0.85 },
-  resultIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
   resultText: { flex: 1, gap: 2 },
   resultName: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
   resultMeta: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  resultSiret: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  closed: {
-    fontFamily: font.bold,
-    fontSize: 12,
-    color: colors.danger,
-    backgroundColor: colors["danger-soft"],
-    paddingHorizontal: spacing(2),
-    paddingVertical: spacing(1),
-    borderRadius: radius.chip,
-    overflow: "hidden",
+  resultSiret: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  company: {
+    gap: spacing(3.5),
+    padding: spacing(4.5),
+    borderRadius: radius.card,
+    borderWidth: 2,
+    borderColor: colors.foreground,
+    backgroundColor: colors.surface,
   },
-  cardHead: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
+  cardHead: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.foreground,
+  },
+  avatarText: { fontFamily: font.bold, fontSize: 16, color: colors["primary-foreground"] },
   wrongCompany: { gap: spacing(1) },
   taken: { gap: spacing(2) },
   cardTitle: { flex: 1, gap: 2 },
-  cardName: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
-  active: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(1),
-    alignSelf: "flex-start",
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-    backgroundColor: colors["success-soft"],
+  cardName: {
+    fontFamily: font.display,
+    fontSize: 18,
+    letterSpacing: -0.36,
+    color: colors.foreground,
   },
-  activeText: { fontFamily: font.bold, fontSize: 12, color: colors.success },
-  detail: { flexDirection: "row", gap: spacing(3) },
-  detailLabel: {
-    width: 76,
-    fontFamily: font.regular,
-    fontSize: 14,
-    color: colors["muted-foreground"],
-  },
-  detailValue: { flex: 1, fontFamily: font.regular, fontSize: 14, color: colors.foreground },
+  details: { flexDirection: "row", flexWrap: "wrap", rowGap: spacing(2.5), columnGap: spacing(4) },
+  detail: { flexBasis: "45%", flexGrow: 1, gap: 2 },
+  detailLabel: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  detailValue: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
 });

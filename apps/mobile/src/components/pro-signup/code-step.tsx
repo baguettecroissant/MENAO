@@ -1,14 +1,16 @@
 import { Mail } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
+import { FicheButton } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { resendArtisanCode, verifyArtisanCode } from "@/lib/artisan-signup";
-import { Button, LinkText, Notice } from "@/ui";
+import { LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { StepTitle } from "./signup-parts";
 
 const t = fr.proSignup.code;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 
 /** Code à 6 chiffres reçu par e-mail : confirme l'adresse sans quitter l'application. */
 export function CodeStep({
@@ -36,9 +38,7 @@ export function CodeStep({
 
   return (
     <>
-      <View style={styles.icon}>
-        <Mail size={28} color={colors["primary-strong"]} />
-      </View>
+      <IconSquare icon={Mail} size={56} />
       <StepTitle title={t.title} lead={t.lead(email)} />
       <TextInput
         aria-label={t.label}
@@ -54,7 +54,13 @@ export function CodeStep({
       />
       {error ? <Notice tone="error">{error}</Notice> : null}
       {resent ? <Notice tone="success">{t.resent}</Notice> : null}
-      <Button label={t.submit} onPress={submit} loading={pending} disabled={code.length !== 6} />
+      <FicheButton
+        label={t.submit}
+        tall
+        onPress={() => void submit()}
+        loading={pending}
+        disabled={code.length !== 6}
+      />
       <View style={styles.links}>
         <LinkText
           label={t.resend}
@@ -71,18 +77,10 @@ export function CodeStep({
 }
 
 const styles = StyleSheet.create({
-  icon: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.card,
-    backgroundColor: colors["primary-soft"],
-    alignItems: "center",
-    justifyContent: "center",
-  },
   code: {
     minHeight: 64,
-    borderRadius: radius.input,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    borderWidth: 1,
     borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
     textAlign: "center",

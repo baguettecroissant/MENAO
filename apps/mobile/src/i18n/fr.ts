@@ -270,6 +270,13 @@ export const fr = {
         ? `Votre dossier n'a pas été validé. Motif : ${motif}`
         : "Votre dossier n'a pas été validé. Corrigez-le et renvoyez-le.",
     complement: (motif: string) => `L'équipe MENAO demande un complément : ${motif}`,
+    // Groupes du dossier (refonte « Nette », lot 9), comme sur le site.
+    groups: {
+      company: "Votre entreprise",
+      documents: "Vos documents",
+      profile: "Votre fiche",
+    },
+    profileParts: { entreprise: "Entreprise", metiers: "Métiers", zone: "Zone" },
     profileTitle: "Votre entreprise, vos métiers, votre zone",
     profileTodo: "À compléter",
     charterTitle: "Charte qualité MENAO",
@@ -656,7 +663,7 @@ export const fr = {
     exemptDeclared:
       "Vous avez déclaré vos métiers non soumis à la décennale : l'équipe MENAO vérifiera votre déclaration avec votre dossier.",
     exemptCancel: "Annuler : je dépose mon attestation décennale",
-    send: "Envoyer le document",
+    send: "Déposer le document",
     sent: "Document envoyé : l'équipe MENAO le vérifie.",
     photoRequired: "Ajoutez une photo ou un fichier PDF du document.",
     locked:

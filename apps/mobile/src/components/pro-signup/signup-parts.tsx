@@ -1,13 +1,17 @@
 import { Check, Search } from "lucide-react-native";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Body } from "@/ui";
+import { PageHead, StepsBar } from "@/components/pro/dossier-kit";
 import { theme } from "@/ui/theme";
 import { haptic } from "@/lib/haptics";
 
 const { colors, font, radius, spacing } = theme;
 
-/** Briques communes aux étapes de l'inscription artisan (ADR 0113). */
+/**
+ * Briques communes aux étapes de l'inscription artisan (ADR 0113), reprises par les écrans du
+ * dossier (entreprise, métiers, zone). Refonte « Nette » (lot 9) : grand titre, barre d'étapes
+ * segmentée, champ de recherche en 16 points, questions en cartes de choix bordées de bleu nuit.
+ */
 
 /** Comparaison sans accents ni majuscules (« electricien » trouve « Électricien »). */
 export function normalizeSearch(value: string): string {
@@ -15,14 +19,7 @@ export function normalizeSearch(value: string): string {
 }
 
 export function StepTitle({ title, lead }: { title: string; lead?: string }) {
-  return (
-    <View style={styles.title}>
-      <Text role="heading" style={styles.heading}>
-        {title}
-      </Text>
-      {lead ? <Body muted>{lead}</Body> : null}
-    </View>
-  );
+  return <PageHead title={title} lead={lead} />;
 }
 
 export function Progress({
@@ -36,24 +33,7 @@ export function Progress({
   total: number;
   text: string;
 }) {
-  return (
-    <View style={styles.progress}>
-      <View style={styles.progressRow}>
-        <Text style={styles.progressText}>{label}</Text>
-        <Text style={styles.progressText}>{text}</Text>
-      </View>
-      <View
-        role="progressbar"
-        aria-label={label}
-        aria-valuemin={1}
-        aria-valuemax={total}
-        aria-valuenow={step}
-        style={styles.track}
-      >
-        <View style={[styles.bar, { width: `${(step / total) * 100}%` }]} />
-      </View>
-    </View>
-  );
+  return <StepsBar label={label} step={step} total={total} text={text} />;
 }
 
 export function SearchField({
@@ -67,16 +47,19 @@ export function SearchField({
   onChangeText: (value: string) => void;
   hint?: string;
 }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.searchWrap}>
-      <View style={styles.search}>
-        <Search size={20} color={colors["muted-foreground"]} />
+      <View style={[styles.search, focused && styles.searchFocused]}>
+        <Search size={18} color={colors["muted-foreground"]} />
         <TextInput
           aria-label={label}
           placeholder={label}
-          placeholderTextColor={colors["subtle-foreground"]}
+          placeholderTextColor={colors["muted-foreground"]}
           value={value}
           onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           autoCorrect={false}
           autoCapitalize="none"
           style={styles.searchInput}
@@ -87,7 +70,7 @@ export function SearchField({
   );
 }
 
-/** Question à réponses en gros boutons (boutons radio). */
+/** Question à réponses en cartes de choix (boutons radio) : la carte choisie bordée de bleu nuit. */
 export function ChoiceGroup<T extends string | number | boolean>({
   legend,
   hint,
@@ -105,7 +88,10 @@ export function ChoiceGroup<T extends string | number | boolean>({
 }) {
   return (
     <View style={styles.choice}>
-      <Text style={styles.legend}>{legend}</Text>
+      <View style={styles.legendBox}>
+        <Text style={styles.legend}>{legend}</Text>
+        {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      </View>
       <View role="radiogroup" aria-label={legend} style={styles.options}>
         {options.map((option) => {
           const selected = value === option.value;
@@ -126,19 +112,16 @@ export function ChoiceGroup<T extends string | number | boolean>({
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={[styles.optionText, selected && styles.optionTextOn]}>
-                {option.label}
-              </Text>
+              <Text style={styles.optionText}>{option.label}</Text>
             </Pressable>
           );
         })}
       </View>
-      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
   );
 }
 
-/** Ligne à cocher (métiers). */
+/** Ligne à cocher (métiers, spécialités) : case bleu nuit, ligne bordée de bleu nuit une fois cochée. */
 export function CheckRow({
   label,
   checked,
@@ -172,81 +155,80 @@ export function Muted({ children }: { children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  title: { gap: spacing(2) },
-  heading: { fontFamily: font.display, fontSize: 24, lineHeight: 30, color: colors.foreground },
-  progress: { gap: spacing(2) },
-  progressRow: { flexDirection: "row", justifyContent: "space-between" },
-  progressText: { fontFamily: font.medium, fontSize: 13, color: colors["muted-foreground"] },
-  track: {
-    height: 6,
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
-    overflow: "hidden",
-  },
-  bar: { height: "100%", borderRadius: radius.pill, backgroundColor: colors.primary },
-  searchWrap: { gap: spacing(1) },
+  searchWrap: { gap: spacing(1.5) },
   search: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing(3),
-    minHeight: 52,
-    paddingHorizontal: spacing(4),
-    borderRadius: radius.input,
+    gap: spacing(2.5),
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
   },
-  searchInput: { flex: 1, fontFamily: font.regular, fontSize: 16, color: colors.foreground },
+  searchFocused: { borderColor: colors.primary },
+  searchInput: {
+    flex: 1,
+    alignSelf: "stretch",
+    fontFamily: font.regular,
+    // 16 points au moins : pas de zoom automatique sur iPhone (version web).
+    fontSize: 16,
+    color: colors.foreground,
+    outlineWidth: 0,
+  },
   hint: {
     fontFamily: font.regular,
     fontSize: 13,
     lineHeight: 18,
     color: colors["muted-foreground"],
   },
-  choice: { gap: spacing(3) },
-  legend: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  options: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  choice: { gap: spacing(2.5) },
+  legendBox: { gap: spacing(1) },
+  legend: { fontFamily: font.bold, fontSize: 16, lineHeight: 22, color: colors.foreground },
+  options: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2.5) },
   option: {
     flexGrow: 1,
     minHeight: 52,
-    alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing(3),
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: radius.input,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
   },
-  optionOn: { borderColor: colors.primary, backgroundColor: colors["primary-softer"] },
-  optionText: {
-    fontFamily: font.bold,
-    fontSize: 15,
-    color: colors.foreground,
-    textAlign: "center",
+  // Bordure de 2 px : la marge intérieure perd 1 px, la carte garde sa taille.
+  optionOn: {
+    borderWidth: 2,
+    borderColor: colors.foreground,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
   },
-  optionTextOn: { color: colors["primary-strong"] },
+  optionText: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
   pressed: { opacity: 0.85 },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(3),
     minHeight: 52,
-    paddingHorizontal: spacing(4),
+    paddingHorizontal: 14,
     borderRadius: radius.input,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderWidth: 1,
+    borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
   },
-  rowOn: { borderColor: colors.primary, backgroundColor: colors["primary-softer"] },
+  rowOn: { borderWidth: 2, borderColor: colors.foreground, paddingHorizontal: 13 },
   box: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: 7,
     borderWidth: 2,
     borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
-  boxOn: { borderColor: colors.primary, backgroundColor: colors.primary },
+  boxOn: { borderColor: colors.foreground, backgroundColor: colors.foreground },
   rowText: { flex: 1, fontFamily: font.regular, fontSize: 16, color: colors.foreground },
 });

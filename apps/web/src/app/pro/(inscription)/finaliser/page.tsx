@@ -34,8 +34,8 @@ export default async function ArtisanFinalizePage() {
     if (role !== "particulier") redirect(homePathForRole(role) as Route);
     // Compte client déjà en service : il ne devient pas un compte pro.
     return (
-      <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
+      <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-10 sm:py-16">
+        <h1 className="text-[2rem] leading-[1.05]">{t.title}</h1>
         <Alert tone="info">{t.notAvailable}</Alert>
         <form action={signOut}>
           <Button type="submit" variant="outline">

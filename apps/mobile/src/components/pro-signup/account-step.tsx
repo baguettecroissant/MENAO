@@ -7,13 +7,15 @@ import {
 } from "@menao/validation";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { OAuthButtons } from "@/components/oauth-buttons";
+import { FicheButton } from "@/components/pro/fiche-kit";
+import { CheckRow, FieldPair, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { completeArtisanOAuth, signUpArtisan } from "@/lib/artisan-signup";
 import { siteLinks } from "@/lib/env";
-import { Button, Checkbox, LinkText, Notice, TextField } from "@/ui";
+import { LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { StepTitle } from "./signup-parts";
 
@@ -111,29 +113,27 @@ export function AccountStep({
           à finaliser ici, artisan existant vers son espace). */}
       {!oauth ? <OAuthButtons onSignedIn={() => undefined} /> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <TextField
-            label={a.firstName}
-            value={values.firstName}
-            onChangeText={set("firstName")}
-            autoComplete="given-name"
-            error={errors.firstName}
-          />
-        </View>
-        <View style={styles.half}>
-          <TextField
-            label={a.lastName}
-            value={values.lastName}
-            onChangeText={set("lastName")}
-            autoComplete="family-name"
-            error={errors.lastName}
-          />
-        </View>
-      </View>
+      <FieldPair>
+        <ToolField
+          label={a.firstName}
+          value={values.firstName}
+          onChangeText={set("firstName")}
+          autoComplete="given-name"
+          error={errors.firstName}
+          style={styles.half}
+        />
+        <ToolField
+          label={a.lastName}
+          value={values.lastName}
+          onChangeText={set("lastName")}
+          autoComplete="family-name"
+          error={errors.lastName}
+          style={styles.half}
+        />
+      </FieldPair>
       {!oauth ? (
         <>
-          <TextField
+          <ToolField
             label={t.email}
             value={values.email}
             onChangeText={set("email")}
@@ -142,7 +142,7 @@ export function AccountStep({
             autoCapitalize="none"
             error={errors.email}
           />
-          <TextField
+          <ToolField
             label={a.password}
             value={values.password}
             onChangeText={set("password")}
@@ -153,7 +153,7 @@ export function AccountStep({
           />
         </>
       ) : null}
-      <TextField
+      <ToolField
         label={t.phone}
         value={values.phone}
         onChangeText={set("phone")}
@@ -163,7 +163,7 @@ export function AccountStep({
         error={errors.phone}
       />
       {referralOpen ? (
-        <TextField
+        <ToolField
           label={t.referralLabel}
           value={referralCode}
           onChangeText={setReferralCode}
@@ -174,12 +174,10 @@ export function AccountStep({
       ) : (
         <LinkText label={t.referralToggle} onPress={() => setReferralOpen(true)} />
       )}
-      <Checkbox
-        label={a.acceptTerms}
-        checked={acceptTerms}
-        onChange={setAcceptTerms}
-        error={errors.acceptTerms}
-      />
+      <View>
+        <CheckRow label={a.acceptTerms} checked={acceptTerms} onChange={setAcceptTerms} />
+        {errors.acceptTerms ? <Text style={styles.error}>{errors.acceptTerms}</Text> : null}
+      </View>
       <View style={styles.links}>
         <LinkText
           label={a.readTerms}
@@ -190,24 +188,32 @@ export function AccountStep({
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.privacy)}
         />
       </View>
-      <Checkbox
-        label={t.acceptCgv}
-        checked={acceptCgv}
-        onChange={setAcceptCgv}
-        error={errors.acceptCgv}
-      />
+      <View>
+        <CheckRow label={t.acceptCgv} checked={acceptCgv} onChange={setAcceptCgv} />
+        {errors.acceptCgv ? <Text style={styles.error}>{errors.acceptCgv}</Text> : null}
+      </View>
       <LinkText
         label={t.readCgv}
         onPress={() => WebBrowser.openBrowserAsync(siteLinks.cgvArtisans)}
       />
-      <Checkbox label={a.marketing} checked={marketingOptIn} onChange={setMarketingOptIn} />
-      <Button label={oauth ? t.oauthSubmit : t.submit} onPress={submit} loading={pending} />
+      <CheckRow label={a.marketing} checked={marketingOptIn} onChange={setMarketingOptIn} />
+      <FicheButton
+        label={oauth ? t.oauthSubmit : t.submit}
+        tall
+        onPress={() => void submit()}
+        loading={pending}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: theme.spacing(3) },
   half: { flex: 1 },
   links: { gap: theme.spacing(2) },
+  error: {
+    fontFamily: theme.font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: theme.colors.danger,
+  },
 });

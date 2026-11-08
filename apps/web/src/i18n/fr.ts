@@ -6022,6 +6022,13 @@ export const fr = {
       back: "Retour",
       progressLabel: "Créer mon profil",
       progress: (step: number, total: number) => `Étape ${step} sur ${total}`,
+      // Refonte « Nette » (ADR 0254) : avancement à droite des étapes.
+      asideSteps: {
+        metiers: "Vos métiers",
+        entreprise: "Votre entreprise",
+        zone: "Votre zone",
+        compte: "Votre compte",
+      },
       continue: "Continuer",
       intro: {
         eyebrow: "Espace pro",
@@ -6246,6 +6253,12 @@ export const fr = {
         },
         exemptHint: "Vous avez déclaré vos métiers non soumis : l'équipe MENAO le vérifie.",
         privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
+        // Refonte « Nette » (ADR 0254) : éléments par groupe.
+        groups: {
+          company: "Votre entreprise",
+          documents: "Vos documents",
+          profile: "Votre fiche",
+        },
         afterTitle: "Après la vérification",
         afterLead: "Pour recevoir des demandes, il faudra aussi :",
         paiementsTitle: "Recevoir les paiements de vos clients",
@@ -6429,6 +6442,15 @@ export const fr = {
         fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
         notValidated:
           "La configuration des paiements sera disponible dès l'envoi de votre dossier à l'équipe MENAO.",
+        // Refonte « Nette » (ADR 0254) : à côté de la configuration.
+        how: {
+          title: "Comment vous êtes payé",
+          steps: [
+            "Vos clients paient par carte : l'acompte à la signature du devis, le solde après la réception.",
+            "L'argent arrive sur votre compte Stripe, puis sur votre compte bancaire.",
+            "Aucune commission MENAO sur vos chantiers : seul votre abonnement est payant.",
+          ],
+        },
         start: "Configurer mes paiements avec Stripe",
         // Compléments saisis dans MENAO, transmis directement à Stripe (ADR 0215).
         prepare: {
@@ -6879,6 +6901,28 @@ export const fr = {
         couverture: "Couverture géographique",
         couverturePlaceholder: "France métropolitaine",
         refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
+        // Refonte « Nette » (ADR 0254) : à côté du dépôt d'une pièce.
+        checksTitle: "Ce que l'équipe vérifie",
+        checks: {
+          kbis: ["Le nom de l'entreprise et le SIRET", "La date : moins de 3 mois", "Le dirigeant"],
+          decennale: [
+            "Le nom de l'entreprise et le SIRET",
+            "Les dates de validité",
+            "Les métiers couverts",
+            "La couverture géographique",
+          ],
+          rc_pro: [
+            "Le nom de l'entreprise",
+            "Les dates de validité",
+            "L'assureur et le numéro de contrat",
+          ],
+          identite: ["Le nom du dirigeant", "La date d'expiration", "Une photo nette et lisible"],
+          urssaf: [
+            "Le SIRET",
+            "La date : moins de 6 mois",
+            "Le code de sécurité, sur le site de l'URSSAF",
+          ],
+        },
         validUntil: (date: string) => `valable jusqu'au ${date}`,
         renew: "Déposer le document à jour",
         photo: "Prendre en photo",
@@ -6917,6 +6961,9 @@ export const fr = {
         issuedOn: (date: string) => `émis le ${date}`,
       },
       profile: {
+        // Refonte « Nette » (ADR 0254) : aperçu de la fiche à côté du formulaire.
+        previewTitle: "Ce que verront les clients",
+        previewEmpty: "Votre présentation apparaîtra ici.",
         avatar: "Photo de profil",
         avatarHint: "Votre portrait ou votre logo. Elle apparaît sur votre fiche publique.",
         avatarAlt: "Photo de profil",

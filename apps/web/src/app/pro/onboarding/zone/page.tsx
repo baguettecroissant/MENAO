@@ -10,7 +10,7 @@ export default async function ZoneStepPage() {
   const supabase = await createClient();
   const { data: points } = await supabase.rpc("my_artisan_base_point");
   return (
-    <Card>
+    <Card className="max-w-3xl">
       <ZoneForm
         radiusOptions={RADIUS_OPTIONS_KM}
         initial={{

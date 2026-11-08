@@ -6,6 +6,8 @@ import {
   expiryStatus,
 } from "@menao/core";
 import { Alert, ButtonLink, Card } from "@/components/ui";
+import { Check, Lock } from "lucide-react";
+import { sheetCard } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { recheckRegistry, setDecennaleExempt } from "@/lib/artisan/actions";
@@ -53,11 +55,10 @@ export default async function DocumentsStepPage({
     : { data: [] };
   const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
 
-  return (
+  // Refonte « Nette » (ADR 0254) : une pièce à gauche, ce que l'équipe vérifie à droite.
+  const cards = (
     <div className="flex flex-col gap-6">
-      <p className="text-muted-foreground">
-        {focused ? fr.pro.onboarding.documents.photoHint : t.intro}
-      </p>
+      <p className="text-label">{focused ? fr.pro.onboarding.documents.photoHint : t.intro}</p>
       {artisan.status === "en_verification" && (
         <Alert tone="success">{fr.pro.onboarding.upload.status.locked}</Alert>
       )}
@@ -79,11 +80,11 @@ export default async function DocumentsStepPage({
           <Card key={type}>
             <section aria-labelledby={`doc-${type}`} className="flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 id={`doc-${type}`} className="text-lg font-medium">
+                <h2 id={`doc-${type}`} className="text-lg">
                   {t.types[type]}
                 </h2>
                 <span
-                  className={`rounded-chip px-3 py-1 text-sm ${
+                  className={`rounded-pill px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${
                     !current && type === "decennale" && exempt
                       ? chip.en_attente
                       : chip[current?.status ?? "missing"]
@@ -208,11 +209,36 @@ export default async function DocumentsStepPage({
           </Card>
         );
       })}
-      {focused && (
+    </div>
+  );
+  if (!focused) return <div className="max-w-3xl">{cards}</div>;
+  const focusedType = types[0];
+  return (
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      {cards}
+      <aside className="flex flex-col gap-4">
+        {focusedType && (
+          // Pas de « region » ici : la page d'une pièce n'en compte qu'une (la pièce elle-même).
+          <div className={sheetCard}>
+            <h2 className="text-[1.0625rem]">{t.checksTitle}</h2>
+            <ul className="flex flex-col gap-2.5 text-sm text-label">
+              {t.checks[focusedType].map((line) => (
+                <li key={line} className="flex gap-2.5">
+                  <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <p className="flex items-start gap-2 px-1 text-sm text-muted-foreground">
+          <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          {fr.pro.onboarding.dossier.privacy}
+        </p>
         <ButtonLink href="/pro/onboarding" variant="outline" block>
           {t.backToDossier}
         </ButtonLink>
-      )}
+      </aside>
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import { completeConnectPrefill, parisToday, type ConnectDetails } from "@menao/core";
 import { useCallback, useState } from "react";
+import { StyleSheet, Text } from "react-native";
 import { ConnectPrepare } from "@/components/pro/connect-prepare";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { MoneyPanel } from "@/components/pro/money-panel";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
 import { StripeOnboarding } from "@/components/pro/stripe-onboarding";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { openHostedPage } from "@/lib/hosted";
 import {
@@ -15,7 +17,8 @@ import {
   startConnect,
 } from "@/lib/payments";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Card, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { Notice } from "@/ui";
+import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proPayments;
@@ -27,6 +30,8 @@ const t = fr.proPayments;
  * sa vérification, ou compte actif, avec « Votre argent » (solde et virements, ADR 0152). L'état est
  * relu à la sortie du formulaire. En secours, le site de Stripe dans la fenêtre sécurisée.
  * Paiements directs sur le compte de l'artisan, sans commission MENAO (CLAUDE.md règle 12).
+ * Refonte « Nette » (lot 9) : grand titre et cartes ; ni formule ni prix dans l'application
+ * (règle 10).
  */
 function PaymentsScreen() {
   const [data, reload] = useFocusData(loadPayments);
@@ -93,18 +98,18 @@ function PaymentsScreen() {
     setBusy(false);
   }
 
-  if (data === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (data === undefined) return <FicheSkeleton />;
   return (
     <>
-      <Screen onRefresh={reload} header={<TopBar />}>
-        <Title>{t.title}</Title>
+      <FicheScreen onRefresh={reload}>
+        <PageHead title={t.title} />
         {message ? <Notice tone="error">{message}</Notice> : null}
         {data === null ? (
           <Notice tone="error">{t.loadError}</Notice>
         ) : !data.open ? (
-          <Card>
-            <Body>{t.notValidated}</Body>
-          </Card>
+          <FicheCard padding={4.5}>
+            <Text style={styles.body}>{t.notValidated}</Text>
+          </FicheCard>
         ) : (
           <>
             <PaymentsPanel
@@ -124,7 +129,7 @@ function PaymentsScreen() {
             {data.money ? <MoneyPanel data={data.money} /> : null}
           </>
         )}
-      </Screen>
+      </FicheScreen>
       {/* Plein écran, au-dessus de l'écran Paiements. */}
       {embedded ? (
         <StripeOnboarding onExit={() => void closeStripe()} onUnavailable={fallback} />
@@ -132,6 +137,15 @@ function PaymentsScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  body: {
+    fontFamily: theme.font.regular,
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.colors.foreground,
+  },
+});
 
 // Réservé selon la place dans l'entreprise (ADR 0241).
 export default withTeamPermission("subscription", PaymentsScreen);

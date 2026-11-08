@@ -10,6 +10,7 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { getProShell } from "@/lib/artisan/space";
 import { signOut } from "@/lib/auth/actions";
 import { getShellAccount } from "@/lib/client/shell";
+import { appTheme } from "@/lib/fonts";
 import { OnboardingHeader } from "./onboarding-header";
 
 export const metadata: Metadata = { title: `${fr.pro.onboarding.title} — MENAO` };
@@ -36,7 +37,7 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
     </form>
   );
   const content = (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <OnboardingHeader inProSpace={inProSpace} actions={signOutButton} />
       {artisan.status === "brouillon" && artisan.refusal_reason && (
         <Alert tone="error">{fr.pro.onboarding.status.complement(artisan.refusal_reason)}</Alert>
@@ -65,9 +66,9 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
   }
   return (
     // Inscription de l'artisan (ADR 0034) : coque de l'Espace Pro, sans le site vitrine.
-    <div className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-30 border-b border-primary/10 bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-3xl items-center gap-3 px-4">
+    <div className={`${appTheme} flex min-h-dvh flex-col bg-background`}>
+      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link href="/pro/onboarding" aria-label={fr.pro.onboarding.title} className="rounded-md">
             <Logo />
           </Link>

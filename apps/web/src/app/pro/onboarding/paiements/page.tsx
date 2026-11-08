@@ -6,6 +6,8 @@ import {
   connectRequirementGroups,
   parisToday,
 } from "@menao/core";
+import { Wallet } from "lucide-react";
+import { sheetCard } from "@/components/pro/sheet";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { loadConnectPrefill } from "@/lib/artisan/actions";
@@ -74,34 +76,55 @@ export default async function PaymentsStepPage({
           ),
         }))
       : null;
+  // Refonte « Nette » (ADR 0254) : la configuration à gauche, comment l'argent arrive à droite.
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
-        <section aria-labelledby="paiements" className="flex flex-col gap-4">
-          <h2 id="paiements" className="text-lg font-medium">
-            {fr.pro.onboarding.steps.paiements}
-          </h2>
-          {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
-          <ConnectStatusPanel
-            status={status}
-            payoutsEnabled={artisan.connect_payouts_enabled}
-            due={connectRequirementGroups(artisan.connect_requirements_due)}
-            pending={connectRequirementGroups(artisan.connect_requirements_pending)}
-            deadline={
-              artisan.connect_requirements_deadline
-                ? formatDay(artisan.connect_requirements_deadline)
-                : null
-            }
-            prefill={prefill}
-            today={parisToday()}
-          />
-        </section>
-      </Card>
-      {money && (
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      <div className="flex flex-col gap-4">
         <Card>
-          <ConnectOverviewPanel overview={money.overview} collected={money.collected} />
+          <section aria-labelledby="paiements" className="flex flex-col gap-4">
+            <h2 id="paiements" className="text-lg">
+              {fr.pro.onboarding.steps.paiements}
+            </h2>
+            {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
+            <ConnectStatusPanel
+              status={status}
+              payoutsEnabled={artisan.connect_payouts_enabled}
+              due={connectRequirementGroups(artisan.connect_requirements_due)}
+              pending={connectRequirementGroups(artisan.connect_requirements_pending)}
+              deadline={
+                artisan.connect_requirements_deadline
+                  ? formatDay(artisan.connect_requirements_deadline)
+                  : null
+              }
+              prefill={prefill}
+              today={parisToday()}
+            />
+          </section>
         </Card>
-      )}
+        {money && (
+          <Card>
+            <ConnectOverviewPanel overview={money.overview} collected={money.collected} />
+          </Card>
+        )}
+      </div>
+      <aside aria-labelledby="comment-paye" className={sheetCard}>
+        <span className="flex size-10 items-center justify-center rounded-input bg-success-soft text-success">
+          <Wallet aria-hidden="true" className="size-5" />
+        </span>
+        <h2 id="comment-paye" className="text-[1.0625rem]">
+          {t.how.title}
+        </h2>
+        <ol className="flex flex-col divide-y divide-border">
+          {t.how.steps.map((step, index) => (
+            <li key={step} className="flex gap-3 py-2.5 text-sm leading-relaxed text-label">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
+                {index + 1}
+              </span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </aside>
     </div>
   );
 }

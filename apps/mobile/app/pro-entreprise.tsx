@@ -3,8 +3,17 @@ import { router, type Href } from "expo-router";
 import { ChevronRight, ImagePlus, MapPin, Wrench, type LucideIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import { PageHead } from "@/components/pro/dossier-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheRow,
+  FicheScreen,
+  FicheSkeleton,
+} from "@/components/pro/fiche-kit";
+import { IconSquare, ToolField } from "@/components/pro/tools-kit";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { formatLongDate } from "@/lib/dates";
 import {
@@ -18,18 +27,7 @@ import {
 } from "@/lib/my-company";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { useFocusData } from "@/lib/use-focus-data";
-import {
-  Body,
-  Button,
-  Card,
-  Notice,
-  Screen,
-  ScreenSkeleton,
-  Tappable,
-  TextField,
-  Title,
-  toast,
-} from "@/ui";
+import { Notice, Tappable, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -41,31 +39,100 @@ type Message = { tone: "error" | "success" | "info"; text: string } | null;
 /**
  * « Mon entreprise » (ADR 0125), comme l'étape « Entreprise » du site : SIRET (modifiable tant
  * que le dossier est en brouillon) et sa vérification auprès de l'INSEE, nom commercial, TVA,
- * logo des documents, puis accès aux métiers et à la zone d'intervention.
+ * logo des documents, puis accès aux métiers et à la zone d'intervention. Refonte « Nette »
+ * (lot 9) : grand titre, cartes, « Enregistrer » (nom commercial et TVA) collé en bas.
  */
 function CompanyScreen() {
   const [company, reload] = useFocusData(loadCompany);
-  if (company === undefined) return <ScreenSkeleton header={<TopBar />} />;
-  return (
-    <Screen onRefresh={reload} header={<TopBar />}>
-      <Title>{t.title}</Title>
-      <Body muted>{t.lead}</Body>
-      {company === null ? (
+  if (company === undefined) return <FicheSkeleton />;
+  if (company === null) {
+    return (
+      <FicheScreen onRefresh={reload}>
+        <PageHead title={t.title} lead={t.lead} />
         <Notice tone="error">{t.loadError}</Notice>
-      ) : (
-        <>
-          <SiretCard company={company} onChange={reload} />
-          {company.checkedAt && company.active ? (
-            <CompanyCard key={company.checkedAt} company={company} onSaved={reload} />
-          ) : null}
-          <LogoCard logoUrl={company.logoUrl} onChange={reload} />
-          <View style={styles.links}>
-            <LinkRow icon={Wrench} title={t.trades} hint={t.tradesHint} href="/pro-metiers" />
-            <LinkRow icon={MapPin} title={t.zone} hint={t.zoneHint} href="/pro-zone" />
-          </View>
-        </>
-      )}
-    </Screen>
+      </FicheScreen>
+    );
+  }
+  return <CompanyContent company={company} onChange={reload} />;
+}
+
+type CompanyForm = {
+  /** Vérification INSEE à laquelle se rapporte la saisie : une nouvelle repart de la fiche. */
+  key: string;
+  nomCommercial: string;
+  raisonSociale: string;
+  tva: boolean | null;
+  errors: FieldErrors;
+  message: Message;
+};
+
+const formKey = (company: Company) => `${company.checkedAt ?? ""}|${String(company.active)}`;
+
+const initialForm = (company: Company): CompanyForm => ({
+  key: formKey(company),
+  nomCommercial: company.nomCommercial ?? "",
+  raisonSociale: company.raisonSociale ?? "",
+  tva: company.assujettiTva,
+  errors: {},
+  message: null,
+});
+
+function CompanyContent({
+  company,
+  onChange,
+}: {
+  company: Company;
+  onChange: () => Promise<void>;
+}) {
+  // Saisie du nom commercial et de la TVA, reprise de la fiche à chaque nouvelle vérification.
+  const key = formKey(company);
+  const [stored, setStored] = useState(() => initialForm(company));
+  const form = stored.key === key ? stored : initialForm(company);
+  const [busy, setBusy] = useState(false);
+  const editable = Boolean(company.checkedAt && company.active);
+
+  function patch(next: Partial<CompanyForm>) {
+    setStored((prev) => ({ ...(prev.key === key ? prev : initialForm(company)), ...next }));
+  }
+
+  async function save() {
+    setBusy(true);
+    patch({ message: null });
+    const result = await saveCompany({
+      nomCommercial: form.nomCommercial,
+      raisonSociale: form.raisonSociale,
+      assujettiTva: form.tva,
+      partial: company.partial,
+    });
+    setBusy(false);
+    patch({
+      errors: result.ok ? {} : (result.fields ?? {}),
+      ...(!result.ok && result.error ? { message: { tone: "error", text: result.error } } : {}),
+    });
+    if (result.ok) {
+      toast.success(t.saved);
+      await onChange();
+    }
+  }
+
+  return (
+    <FicheScreen
+      onRefresh={onChange}
+      footer={
+        editable ? (
+          <FicheButton label={t.save} tall onPress={() => void save()} loading={busy} />
+        ) : undefined
+      }
+    >
+      <PageHead title={t.title} lead={t.lead} />
+      <SiretCard company={company} onChange={onChange} />
+      {editable ? <CompanyCard company={company} form={form} onPatch={patch} /> : null}
+      <LogoCard logoUrl={company.logoUrl} onChange={onChange} />
+      <View style={styles.links}>
+        <LinkRow icon={Wrench} title={t.trades} hint={t.tradesHint} href="/pro-metiers" />
+        <LinkRow icon={MapPin} title={t.zone} hint={t.zoneHint} href="/pro-zone" border />
+      </View>
+    </FicheScreen>
   );
 }
 
@@ -99,10 +166,10 @@ function SiretCard({ company, onChange }: { company: Company; onChange: () => Pr
   }
 
   return (
-    <Card>
-      <Text style={styles.heading}>{t.siret}</Text>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading title={t.siret} size={17} />
       {editable ? (
-        <TextField
+        <ToolField
           label={t.siret}
           value={siret}
           onChangeText={setSiret}
@@ -113,95 +180,88 @@ function SiretCard({ company, onChange }: { company: Company; onChange: () => Pr
       ) : (
         <Text style={styles.value}>{company.siret ?? "—"}</Text>
       )}
-      {!editable ? <Body muted>{t.siretLocked}</Body> : null}
+      {!editable ? <Text style={styles.text}>{t.siretLocked}</Text> : null}
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Body muted>
+      <Text style={styles.text}>
         {company.checkedAt ? t.verifiedOn(formatLongDate(company.checkedAt)) : t.notVerified}
-      </Body>
+      </Text>
       {company.checkedAt && company.active === false ? (
         <Notice tone="error">{t.status.inactive}</Notice>
       ) : null}
-      {company.checkedAt && !company.partial && company.raisonSociale ? (
-        <Info label={t.raisonSociale} value={company.raisonSociale} />
+      {(company.checkedAt && !company.partial && company.raisonSociale) || company.address ? (
+        <View>
+          {company.checkedAt && !company.partial && company.raisonSociale ? (
+            <FicheRow label={t.raisonSociale} value={company.raisonSociale} />
+          ) : null}
+          {company.address ? <FicheRow label={t.address} value={company.address} /> : null}
+        </View>
       ) : null}
-      {company.address ? <Info label={t.address} value={company.address} /> : null}
-      {company.apeEligible === false ? <Body muted>{t.apeWarning}</Body> : null}
+      {company.apeEligible === false ? <Text style={styles.text}>{t.apeWarning}</Text> : null}
       {editable ? (
-        <Button label={t.siretSave} variant="secondary" onPress={save} loading={busy === "save"} />
+        <FicheButton
+          label={t.siretSave}
+          variant="secondary"
+          onPress={() => void save()}
+          loading={busy === "save"}
+        />
       ) : null}
       {editable || !company.checkedAt ? (
-        <Button
+        <FicheButton
           label={company.checkedAt ? t.reverify : t.verify}
-          onPress={verify}
+          variant={company.checkedAt ? "secondary" : "primary"}
+          onPress={() => void verify()}
           loading={busy === "verify"}
         />
       ) : null}
-    </Card>
+    </FicheCard>
   );
 }
 
-function CompanyCard({ company, onSaved }: { company: Company; onSaved: () => Promise<void> }) {
-  const [nomCommercial, setNomCommercial] = useState(company.nomCommercial ?? "");
-  const [raisonSociale, setRaisonSociale] = useState(company.raisonSociale ?? "");
-  const [tva, setTva] = useState<boolean | null>(company.assujettiTva);
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [message, setMessage] = useState<Message>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function save() {
-    setBusy(true);
-    setMessage(null);
-    const result = await saveCompany({
-      nomCommercial,
-      raisonSociale,
-      assujettiTva: tva,
-      partial: company.partial,
-    });
-    setBusy(false);
-    setErrors(result.ok ? {} : (result.fields ?? {}));
-    if (!result.ok && result.error) setMessage({ tone: "error", text: result.error });
-    if (result.ok) {
-      toast.success(t.saved);
-      await onSaved();
-    }
-  }
-
+function CompanyCard({
+  company,
+  form,
+  onPatch,
+}: {
+  company: Company;
+  form: CompanyForm;
+  onPatch: (next: Partial<CompanyForm>) => void;
+}) {
+  const { errors } = form;
   return (
-    <Card>
+    <FicheCard padding={4.5} gap={3.5}>
       {company.partial ? (
         <>
-          <Body muted>{t.partialDiffusion}</Body>
-          <TextField
+          <Text style={styles.text}>{t.partialDiffusion}</Text>
+          <ToolField
             label={t.raisonSociale}
-            value={raisonSociale}
-            onChangeText={setRaisonSociale}
+            value={form.raisonSociale}
+            onChangeText={(raisonSociale) => onPatch({ raisonSociale })}
             error={errors.raisonSociale}
           />
         </>
       ) : null}
-      <TextField
+      <ToolField
         label={t.nomCommercial}
-        value={nomCommercial}
-        onChangeText={setNomCommercial}
+        value={form.nomCommercial}
+        onChangeText={(nomCommercial) => onPatch({ nomCommercial })}
         hint={t.nomCommercialHint}
         error={errors.nomCommercial}
       />
       <ChoiceGroup<boolean>
         legend={t.tva}
-        value={tva}
+        value={form.tva}
         options={[
           { value: true, label: t.tvaYes },
           { value: false, label: t.tvaNo },
         ]}
-        onChange={setTva}
+        onChange={(tva) => onPatch({ tva })}
       />
       {errors.assujettiTva ? <Notice tone="error">{errors.assujettiTva}</Notice> : null}
-      {tva && company.siren ? (
-        <Body muted>{t.tvaNumber(frenchVatNumber(company.siren))}</Body>
+      {form.tva && company.siren ? (
+        <Text style={styles.text}>{t.tvaNumber(frenchVatNumber(company.siren))}</Text>
       ) : null}
-      {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Button label={t.save} onPress={save} loading={busy} />
-    </Card>
+      {form.message ? <Notice tone={form.message.tone}>{form.message.text}</Notice> : null}
+    </FicheCard>
   );
 }
 
@@ -247,104 +307,94 @@ function LogoCard({
   }
 
   return (
-    <Card>
-      <Text style={styles.heading}>{t.logoTitle}</Text>
-      <Body muted>{t.logoIntro}</Body>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading title={t.logoTitle} size={17} />
+      <Text style={styles.text}>{t.logoIntro}</Text>
       {logoUrl ? (
         <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="contain" alt={t.logoAlt} />
       ) : null}
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Button
+      <FicheButton
         label={logoUrl ? t.logoChange : t.logoSend}
         icon={ImagePlus}
         variant="secondary"
-        onPress={send}
+        onPress={() => void send()}
         loading={busy === "send"}
       />
       {logoUrl ? (
-        <Button
+        <FicheButton
           label={t.logoRemove}
           variant="secondary"
-          onPress={remove}
+          onPress={() => void remove()}
           loading={busy === "remove"}
         />
       ) : null}
-    </Card>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.info}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
-    </View>
+    </FicheCard>
   );
 }
 
 function LinkRow({
-  icon: Icon,
+  icon,
   title,
   hint,
   href,
+  border = false,
 }: {
   icon: LucideIcon;
   title: string;
   hint: string;
   href: Href;
+  border?: boolean;
 }) {
   return (
-    <Tappable role="link" aria-label={title} onPress={() => router.push(href)} style={styles.row}>
-      <View style={styles.icon}>
-        <Icon size={20} color={colors["primary-strong"]} />
-      </View>
+    <Tappable
+      role="link"
+      aria-label={title}
+      onPress={() => router.push(href)}
+      style={[styles.row, border && styles.rowBorder]}
+    >
+      <IconSquare icon={icon} tone="neutral" />
       <View style={styles.rowText}>
         <Text style={styles.rowTitle}>{title}</Text>
         <Text style={styles.rowHint}>{hint}</Text>
       </View>
-      <ChevronRight size={20} color={colors["muted-foreground"]} />
+      <ChevronRight size={18} color={colors["muted-foreground"]} />
     </Tappable>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: {
-    fontFamily: font.bold,
-    fontSize: 17,
-    color: colors.foreground,
-    marginBottom: spacing(1),
-  },
-  value: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  info: { gap: 2 },
-  infoLabel: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  value: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
   logo: {
     width: "100%",
     height: 96,
     borderRadius: radius.input,
     backgroundColor: colors["primary-softer"],
   },
-  links: { gap: spacing(2.5) },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(3),
-    padding: spacing(4),
+  links: {
+    overflow: "hidden",
     borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-soft"],
+  row: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: spacing(3),
+    paddingVertical: spacing(3),
+    paddingHorizontal: 14,
   },
+  rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
   rowText: { flex: 1, gap: 2 },
-  rowTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
-  rowHint: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  rowTitle: { fontFamily: font.semibold, fontSize: 15, lineHeight: 20, color: colors.foreground },
+  rowHint: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).

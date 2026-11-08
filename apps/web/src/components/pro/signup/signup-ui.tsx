@@ -14,8 +14,10 @@ export function normalizeSearch(value: string): string {
 export function StepTitle({ title, lead }: { title: string; lead?: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="text-[1.625rem] leading-tight font-semibold tracking-tight">{title}</h1>
-      {lead && <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">{lead}</p>}
+      <h1 className="text-[1.875rem] leading-[1.08] font-semibold tracking-tight sm:text-[2.25rem]">
+        {title}
+      </h1>
+      {lead && <p className="text-[0.9375rem] leading-relaxed text-label sm:text-base">{lead}</p>}
     </div>
   );
 }
@@ -106,7 +108,7 @@ export function ChoiceGroup<T extends string | number | boolean>({
               className="peer absolute inset-0 z-10 m-0 size-full cursor-pointer opacity-0"
             />
             <span
-              className={`flex min-h-[3.25rem] cursor-pointer items-center justify-center rounded-input border-[1.5px] border-border-strong bg-surface px-3 text-center text-[0.9375rem] font-semibold transition-colors peer-checked:border-primary peer-checked:bg-primary-softer peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:border-primary`}
+              className={`flex min-h-[3.25rem] cursor-pointer items-center justify-center rounded-input border-[1.5px] border-border-strong bg-surface px-3 text-center text-[0.9375rem] font-semibold transition-colors peer-checked:border-2 peer-checked:border-foreground peer-checked:bg-surface peer-checked:text-foreground peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:border-primary`}
             >
               {option.label}
             </span>

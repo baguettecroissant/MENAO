@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { TradePill } from "@/components/pro/dossier-kit";
 import { fr } from "@/i18n/fr";
 import { theme } from "@/ui/theme";
-import { CheckRow, Muted, SearchField, StepTitle, normalizeSearch } from "./signup-parts";
+import { Muted, SearchField, StepTitle, normalizeSearch } from "./signup-parts";
 
 const t = fr.proSignup.trades;
 
 export type SignupTrade = { code: string; label: string };
 
-/** Étape « métiers » : liste à cocher, avec une recherche. */
+/** Étape « métiers » : métiers en pastilles (choisis en bleu nuit), avec une recherche. */
 export function TradesStep({
   trades,
   selected,
@@ -29,10 +30,10 @@ export function TradesStep({
         {visible.map((trade) => {
           const on = selected.includes(trade.code);
           return (
-            <CheckRow
+            <TradePill
               key={trade.code}
               label={trade.label}
-              checked={on}
+              selected={on}
               onToggle={() =>
                 onChange(on ? selected.filter((c) => c !== trade.code) : [...selected, trade.code])
               }
@@ -45,4 +46,6 @@ export function TradesStep({
   );
 }
 
-const styles = StyleSheet.create({ list: { gap: theme.spacing(2) } });
+const styles = StyleSheet.create({
+  list: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
+});

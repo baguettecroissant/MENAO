@@ -4,8 +4,10 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
-import { Body, Button, Checkbox, TextField } from "@/ui";
+import { Button } from "@/ui";
 import { theme } from "@/ui/theme";
+import { CardHeading, FicheButton, FicheCard } from "./fiche-kit";
+import { CheckRow, FieldPair, SwitchCard, ToolField } from "./tools-kit";
 
 const t = fr.proPayments.prepare;
 const { colors, font, spacing } = theme;
@@ -14,7 +16,8 @@ const { colors, font, spacing } = theme;
  * Premier passage à l'écran Paiements (ADR 0215), comme sur le site : l'artisan saisit dans MENAO
  * ce que Stripe demanderait encore (date de naissance, adresse personnelle, IBAN, associé unique).
  * Ces données partent directement chez Stripe dans des jetons créés par l'application. Sans clé
- * publique, un simple bouton.
+ * publique, un simple bouton. Refonte « Nette » (lot 9) : carte, champs arrondis en 16 points,
+ * case bleu nuit et interrupteur en carte.
  */
 export function ConnectPrepare({
   prefill,
@@ -40,7 +43,14 @@ export function ConnectPrepare({
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
 
   if (!prefill) {
-    return <Button label={fr.proPayments.start} onPress={() => onContinue(null)} loading={busy} />;
+    return (
+      <FicheButton
+        label={fr.proPayments.start}
+        tall
+        onPress={() => onContinue(null)}
+        loading={busy}
+      />
+    );
   }
 
   const personal = prefill.person != null || prefill.account?.business_type === "individual";
@@ -68,14 +78,14 @@ export function ConnectPrepare({
   }
 
   return (
-    <View style={styles.form}>
+    <FicheCard padding={4.5} gap={3.5}>
       <View style={styles.head}>
-        <Text style={styles.title}>{t.title}</Text>
-        <Body muted>{t.intro}</Body>
+        <CardHeading title={t.title} size={18} />
+        <Text style={styles.intro}>{t.intro}</Text>
       </View>
       {personal ? (
         <>
-          <TextField
+          <ToolField
             label={t.birthDate}
             placeholder={t.birthDatePlaceholder}
             value={birthDate}
@@ -89,11 +99,11 @@ export function ConnectPrepare({
           <View style={styles.group}>
             <Text style={styles.legend}>{t.homeAddress}</Text>
             {businessAddress ? (
-              <Checkbox label={t.sameAddress} checked={sameAddress} onChange={setSameAddress} />
+              <CheckRow label={t.sameAddress} checked={sameAddress} onChange={setSameAddress} />
             ) : null}
             {sameAddress && businessAddress ? null : (
               <>
-                <TextField
+                <ToolField
                   label={t.line1}
                   value={line1}
                   onChangeText={setLine1}
@@ -101,36 +111,43 @@ export function ConnectPrepare({
                   textContentType="streetAddressLine1"
                   error={error("line1")}
                 />
-                <TextField
-                  label={t.postalCode}
-                  value={postalCode}
-                  onChangeText={setPostalCode}
-                  keyboardType="number-pad"
-                  autoComplete="postal-code"
-                  textContentType="postalCode"
-                  maxLength={5}
-                  error={error("postalCode")}
-                />
-                <TextField
-                  label={t.city}
-                  value={city}
-                  onChangeText={setCity}
-                  autoComplete="address-line2"
-                  textContentType="addressCity"
-                  error={error("city")}
-                />
+                <FieldPair>
+                  <ToolField
+                    label={t.postalCode}
+                    value={postalCode}
+                    onChangeText={setPostalCode}
+                    keyboardType="number-pad"
+                    autoComplete="postal-code"
+                    textContentType="postalCode"
+                    maxLength={5}
+                    error={error("postalCode")}
+                    style={styles.postal}
+                  />
+                  <ToolField
+                    label={t.city}
+                    value={city}
+                    onChangeText={setCity}
+                    autoComplete="address-line2"
+                    textContentType="addressCity"
+                    error={error("city")}
+                    style={styles.city}
+                  />
+                </FieldPair>
               </>
             )}
           </View>
         </>
       ) : null}
       {askSoleOwner ? (
-        <View>
-          <Checkbox label={t.soleOwner} checked={soleOwner} onChange={setSoleOwner} />
-          <Body muted>{t.soleOwnerHint}</Body>
-        </View>
+        <SwitchCard
+          label={t.soleOwner}
+          hint={t.soleOwnerHint}
+          value={soleOwner}
+          onChange={setSoleOwner}
+          soft
+        />
       ) : null}
-      <TextField
+      <ToolField
         label={t.iban}
         hint={t.ibanHint}
         value={iban}
@@ -140,7 +157,7 @@ export function ConnectPrepare({
         autoComplete="off"
         error={error("iban")}
       />
-      <TextField
+      <ToolField
         label={t.website}
         hint={t.websiteHint}
         value={website}
@@ -152,16 +169,17 @@ export function ConnectPrepare({
         textContentType="URL"
         error={error("website")}
       />
-      <Button label={t.submit} onPress={submit} loading={busy} />
+      <FicheButton label={t.submit} tall onPress={submit} loading={busy} />
       <Button label={t.skip} variant="ghost" onPress={() => onContinue(null)} disabled={busy} />
-    </View>
+    </FicheCard>
   );
 }
 
 const styles = StyleSheet.create({
-  form: { gap: spacing(3) },
-  head: { gap: spacing(1) },
-  title: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
-  group: { gap: spacing(2) },
-  legend: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  head: { gap: spacing(1.5) },
+  intro: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  group: { gap: spacing(2.5) },
+  legend: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  postal: { flex: 2 },
+  city: { flex: 3 },
 });

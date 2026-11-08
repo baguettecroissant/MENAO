@@ -3,9 +3,11 @@ import { MapPin, X } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { FicheButton, FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
 import { TerritoryField } from "@/components/territory-field";
-import { TopBar } from "@/components/top-bar";
 import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
 import {
@@ -16,7 +18,7 @@ import {
 } from "@/lib/geo";
 import { loadZone, saveZone, type Zone } from "@/lib/my-company";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, LinkText, Notice, Screen, ScreenSkeleton, Title, toast } from "@/ui";
+import { LinkText, Notice, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -36,22 +38,21 @@ type Message = { tone: "error" | "success"; text: string } | null;
 /**
  * Zone d'intervention (ADR 0125), comme l'étape « Zone » du site : un rayon autour d'une adresse
  * de départ (gardée si seul le rayon change), une liste de communes, ou des départements, des
- * régions ou toute la France avec l'adresse de départ (ADR 0213, set_artisan_zone).
+ * régions ou toute la France avec l'adresse de départ (ADR 0213, set_artisan_zone). Refonte
+ * « Nette » (lot 9) : grand titre, cartes, « Enregistrer ma zone » collé en bas.
  */
 function ZoneScreen() {
   const [zone, reload] = useFocusData(loadZone);
-  if (zone === undefined) return <ScreenSkeleton header={<TopBar />} />;
-  return (
-    <Screen onRefresh={reload} header={<TopBar />}>
-      <Title>{t.title}</Title>
-      <Body muted>{t.lead}</Body>
-      {zone === null ? (
+  if (zone === undefined) return <FicheSkeleton />;
+  if (zone === null) {
+    return (
+      <FicheScreen onRefresh={reload}>
+        <PageHead title={t.title} lead={t.lead} />
         <Notice tone="error">{t.loadError}</Notice>
-      ) : (
-        <ZoneForm zone={zone} onSaved={reload} />
-      )}
-    </Screen>
-  );
+      </FicheScreen>
+    );
+  }
+  return <ZoneForm zone={zone} onSaved={reload} />;
 }
 
 function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> }) {
@@ -128,92 +129,105 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
   }
 
   return (
-    <Card>
-      <ChoiceGroup<ZoneMode> legend={t.mode} value={mode} options={MODES} onChange={chooseMode} />
-      {withBase ? (
+    <FicheScreen
+      onRefresh={onSaved}
+      footer={
         <>
-          {!editingBase && (base || zone.baseLabel) ? (
-            <View style={styles.base}>
-              <MapPin size={18} color={colors["primary-strong"]} />
-              <Text style={styles.baseText}>{t.current(base?.label ?? zone.baseLabel ?? "")}</Text>
-              <LinkText label={t.change} onPress={() => setEditingBase(true)} />
-            </View>
-          ) : (
-            <AutocompleteField<AddressSuggestion>
-              label={t.address}
-              hint={t.addressHint}
-              search={searchStartAddress}
-              itemLabel={(a) => a.label}
-              onSelect={(a) => {
-                setBase(a);
-                setEditingBase(false);
-              }}
-            />
-          )}
-          {mode === "rayon" ? (
-            <>
-              <ChoiceGroup<number>
-                legend={t.radius}
-                value={radiusKm}
-                options={ZONE_RADIUS_OPTIONS_KM.map((km) => ({ value: km, label: t.km(km) }))}
-                onChange={setRadiusKm}
-                columns={3}
+          {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+          <FicheButton label={t.save} tall onPress={() => void save()} loading={busy} />
+        </>
+      }
+    >
+      <PageHead title={t.title} lead={t.lead} />
+      <FicheCard padding={4.5} gap={4}>
+        <ChoiceGroup<ZoneMode> legend={t.mode} value={mode} options={MODES} onChange={chooseMode} />
+        {withBase ? (
+          <>
+            {!editingBase && (base || zone.baseLabel) ? (
+              <View style={styles.base}>
+                <IconSquare icon={MapPin} white />
+                <Text style={styles.baseText}>
+                  {t.current(base?.label ?? zone.baseLabel ?? "")}
+                </Text>
+                <LinkText label={t.change} onPress={() => setEditingBase(true)} />
+              </View>
+            ) : (
+              <AutocompleteField<AddressSuggestion>
+                label={t.address}
+                hint={t.addressHint}
+                search={searchStartAddress}
+                itemLabel={(a) => a.label}
+                onSelect={(a) => {
+                  setBase(a);
+                  setEditingBase(false);
+                }}
               />
-              {point && radiusKm !== null ? (
-                <ZoneMap lon={point.lon} lat={point.lat} radiusKm={radiusKm} />
-              ) : null}
-            </>
-          ) : null}
-          {mode === "departements" || mode === "regions" ? (
-            <TerritoryField
-              mode={mode}
-              codes={territories}
-              onChange={setTerritories}
-              labels={{
-                search: mode === "regions" ? t.regionSearch : t.departementSearch,
-                hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
-                remove: t.territoryRemove,
-              }}
+            )}
+            {mode === "rayon" ? (
+              <>
+                <ChoiceGroup<number>
+                  legend={t.radius}
+                  value={radiusKm}
+                  options={ZONE_RADIUS_OPTIONS_KM.map((km) => ({ value: km, label: t.km(km) }))}
+                  onChange={setRadiusKm}
+                  columns={3}
+                />
+                {point && radiusKm !== null ? (
+                  <ZoneMap lon={point.lon} lat={point.lat} radiusKm={radiusKm} />
+                ) : null}
+              </>
+            ) : null}
+            {mode === "departements" || mode === "regions" ? (
+              <TerritoryField
+                mode={mode}
+                codes={territories}
+                onChange={setTerritories}
+                labels={{
+                  search: mode === "regions" ? t.regionSearch : t.departementSearch,
+                  hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
+                  remove: t.territoryRemove,
+                }}
+              />
+            ) : null}
+            {mode === "france" ? <Text style={styles.text}>{t.franceNote}</Text> : null}
+            {mode === "regions" || mode === "france" ? (
+              <Text style={styles.text}>{t.wideNote}</Text>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {communes.length === 0 ? (
+              <Text style={styles.text}>{t.communesEmpty}</Text>
+            ) : (
+              <View style={styles.chips}>
+                {communes.map((c) => (
+                  <View key={c.code} style={styles.chip}>
+                    <Text style={styles.chipText}>{c.nom}</Text>
+                    <Pressable
+                      role="button"
+                      aria-label={t.communeRemove(c.nom)}
+                      onPress={() =>
+                        setCommunes((current) => current.filter((x) => x.code !== c.code))
+                      }
+                      hitSlop={8}
+                    >
+                      <X size={14} color={colors["primary-strong"]} />
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            )}
+            <AutocompleteField<CommuneSuggestion>
+              label={t.communes}
+              hint={t.communesHint}
+              search={searchCommunes}
+              itemLabel={(c) => (c.postcode ? `${c.nom} (${c.postcode})` : c.nom)}
+              onSelect={addCommune}
             />
-          ) : null}
-          {mode === "france" ? <Body muted>{t.franceNote}</Body> : null}
-          {mode === "regions" || mode === "france" ? <Body muted>{t.wideNote}</Body> : null}
-        </>
-      ) : (
-        <>
-          {communes.length === 0 ? (
-            <Body muted>{t.communesEmpty}</Body>
-          ) : (
-            <View style={styles.chips}>
-              {communes.map((c) => (
-                <View key={c.code} style={styles.chip}>
-                  <Text style={styles.chipText}>{c.nom}</Text>
-                  <Pressable
-                    role="button"
-                    aria-label={t.communeRemove(c.nom)}
-                    onPress={() =>
-                      setCommunes((current) => current.filter((x) => x.code !== c.code))
-                    }
-                    hitSlop={8}
-                  >
-                    <X size={14} color={colors["primary-strong"]} />
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
-          <AutocompleteField<CommuneSuggestion>
-            label={t.communes}
-            hint={t.communesHint}
-            search={searchCommunes}
-            itemLabel={(c) => (c.postcode ? `${c.nom} (${c.postcode})` : c.nom)}
-            onSelect={addCommune}
-          />
-        </>
-      )}
-      {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-      <Button label={t.save} onPress={save} loading={busy} />
-    </Card>
+          </>
+        )}
+      </FicheCard>
+    </FicheScreen>
   );
 }
 
@@ -221,12 +235,13 @@ const styles = StyleSheet.create({
   base: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing(2),
+    gap: spacing(3),
     padding: spacing(3),
     borderRadius: radius.input,
     backgroundColor: colors["primary-softer"],
   },
-  baseText: { flex: 1, fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  baseText: { flex: 1, fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   chip: {
     flexDirection: "row",

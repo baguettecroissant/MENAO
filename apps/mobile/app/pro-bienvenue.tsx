@@ -1,14 +1,38 @@
 import { router } from "expo-router";
-import { Camera, CircleCheck, Clock, FileText, MapPin } from "lucide-react-native";
+import {
+  Camera,
+  Check,
+  Clock,
+  FileText,
+  MapPin,
+  PenLine,
+  ShieldCheck,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { CardHeading, FicheButton, FicheCard, FicheTag } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { loadWelcome } from "@/lib/artisan-signup";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Card, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice, Screen, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proSignup.welcome;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
+
+/** Icônes de la liste « Dernière étape », dans l'ordre de `t.items` (charte, documents, photo). */
+const ITEM_ICONS: LucideIcon[] = [
+  PenLine,
+  FileText,
+  ShieldCheck,
+  ShieldCheck,
+  UserRound,
+  FileText,
+  Camera,
+];
 
 /** Initiales de l'entreprise pour l'aperçu de la fiche (« Plomberie des Oliviers » → « PO »). */
 function initials(name: string): string {
@@ -24,65 +48,58 @@ function initials(name: string): string {
 
 /**
  * « Votre profil est créé » (ADR 0113), comme sur le site : aperçu de la fiche avec les choix du
- * parcours, puis la suite (charte, documents, photo et présentation).
+ * parcours, puis la suite (charte, documents, photo et présentation). Refonte « Nette » (lot 9,
+ * maquette « BienvenueNette ») : rond vert, grand titre, aperçu en carte et carte « Dernière
+ * étape » avec la liste et le bouton.
  */
 export default function ArtisanWelcomeScreen() {
   const [data] = useFocusData(loadWelcome);
   if (data === undefined) return <ScreenSkeleton />;
   const name = data?.name ?? t.companyFallback;
   return (
-    <Screen
-      footer={
-        <View style={styles.footer}>
-          <Button label={t.cta} onPress={() => router.replace("/pro")} />
-          <Text style={styles.later}>{t.later}</Text>
-        </View>
-      }
-    >
+    <Screen>
       <View style={styles.success}>
-        <CircleCheck size={28} color={colors["primary-foreground"]} />
+        <Check size={28} color={colors["primary-foreground"]} strokeWidth={2.6} />
       </View>
-      <View style={styles.head}>
-        <Text role="heading" style={styles.title}>
-          {t.title}
-        </Text>
-        <Body muted>{t.lead}</Body>
-      </View>
+      <PageHead title={t.title} lead={t.lead} />
       {data?.sirene ? <Notice tone="info">{t.sirene[data.sirene]}</Notice> : null}
-      <Card>
+      <FicheCard padding={5} gap={3.5}>
         <View style={styles.preview}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials(name)}</Text>
           </View>
           <View style={styles.previewText}>
             <Text style={styles.name}>{name}</Text>
-            <Text style={styles.muted}>{data?.trades.join(" · ")}</Text>
+            {data?.trades.length ? (
+              <Text style={styles.muted}>{data.trades.join(" · ")}</Text>
+            ) : null}
           </View>
         </View>
         {data?.baseLabel && data.radiusKm ? (
           <View style={styles.line}>
-            <MapPin size={16} color={colors["muted-foreground"]} />
-            <Text style={[styles.muted, styles.flex]}>{t.zone(data.baseLabel, data.radiusKm)}</Text>
+            <MapPin size={16} color={colors.label} />
+            <Text style={[styles.zone, styles.flex]}>{t.zone(data.baseLabel, data.radiusKm)}</Text>
           </View>
         ) : null}
-        <View style={styles.pending}>
-          <Clock size={14} color={colors.warning} />
-          <Text style={styles.pendingText}>{t.toVerify}</Text>
-        </View>
-      </Card>
-      <View style={styles.next}>
-        <Text style={styles.nextTitle}>{t.nextTitle}</Text>
-        {t.items.map((item) => (
-          <View key={item} style={styles.line}>
-            <FileText size={16} color={colors["primary-strong"]} />
-            <Text style={[styles.item, styles.flex]}>{item}</Text>
-          </View>
-        ))}
+        <FicheTag text={t.toVerify} tone="warning" dot />
+      </FicheCard>
+      <FicheCard padding={5} gap={3.5}>
+        <CardHeading title={t.nextTitle} size={19} />
         <View style={styles.line}>
-          <Camera size={16} color={colors["primary-strong"]} />
+          <Clock size={15} color={colors["primary-strong"]} />
           <Text style={[styles.duration, styles.flex]}>{t.duration}</Text>
         </View>
-      </View>
+        <View>
+          {t.items.map((item, i) => (
+            <View key={item} style={styles.item}>
+              <IconSquare icon={ITEM_ICONS[i] ?? FileText} tone="neutral" size={34} />
+              <Text style={[styles.itemText, styles.flex]}>{item}</Text>
+            </View>
+          ))}
+        </View>
+        <FicheButton label={t.cta} tall onPress={() => router.replace("/pro")} />
+        <Text style={styles.later}>{t.later}</Text>
+      </FicheCard>
     </Screen>
   );
 }
@@ -96,47 +113,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  head: { gap: spacing(2) },
-  title: { fontFamily: font.display, fontSize: 26, lineHeight: 32, color: colors.foreground },
-  preview: { flexDirection: "row", alignItems: "center", gap: spacing(3.5) },
+  preview: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontFamily: font.bold, fontSize: 20, color: colors["primary-foreground"] },
+  avatarText: { fontFamily: font.bold, fontSize: 22, color: colors["primary-foreground"] },
   previewText: { flex: 1, gap: 2 },
-  name: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
-  muted: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  name: {
+    fontFamily: font.display,
+    fontSize: 22,
+    lineHeight: 26,
+    letterSpacing: -0.44,
+    color: colors.foreground,
+  },
+  muted: { fontFamily: font.regular, fontSize: 15, color: colors["muted-foreground"] },
+  zone: { fontFamily: font.regular, fontSize: 14, color: colors.label },
   flex: { flex: 1 },
-  line: { flexDirection: "row", alignItems: "center", gap: spacing(2.5) },
-  pending: {
+  line: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
+  duration: { fontFamily: font.semibold, fontSize: 14, color: colors["primary-strong"] },
+  item: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing(1.5),
-    alignSelf: "flex-start",
-    paddingHorizontal: spacing(3),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-    backgroundColor: colors["warning-soft"],
-  },
-  pendingText: { fontFamily: font.bold, fontSize: 13, color: colors.warning },
-  next: {
     gap: spacing(3),
-    padding: spacing(5),
-    borderRadius: radius.card,
-    backgroundColor: colors["primary-softer"],
+    paddingVertical: 11,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  nextTitle: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  item: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
-  duration: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  footer: { gap: spacing(2) },
+  itemText: { fontFamily: font.semibold, fontSize: 15, lineHeight: 20, color: colors.foreground },
   later: {
     fontFamily: font.regular,
     fontSize: 13,
+    lineHeight: 18,
     textAlign: "center",
     color: colors["muted-foreground"],
   },

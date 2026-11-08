@@ -10,6 +10,7 @@ import {
   UserRound,
 } from "lucide-react";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Alert, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -56,76 +57,82 @@ export default async function ArtisanWelcomePage() {
   const documents = fr.pro.onboarding.documents.types;
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8">
+    // Refonte « Nette » (ADR 0254) : l'aperçu de la fiche à gauche, la dernière étape à droite.
+    <main className="mx-auto grid w-full max-w-5xl flex-1 items-start gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_27rem] lg:gap-12 lg:py-16">
       <ClearSignupDraft />
-      <span className="flex size-14 items-center justify-center rounded-full bg-success text-primary-foreground">
-        <CircleCheck aria-hidden="true" className="size-7" />
-      </span>
-      <div className="flex flex-col gap-2">
-        <h1 className="text-[1.625rem] leading-tight font-semibold tracking-tight">{t.title}</h1>
-        <p className="leading-relaxed text-muted-foreground">{t.lead}</p>
+      <div className="flex flex-col gap-5">
+        <span className="flex size-14 items-center justify-center rounded-full bg-success text-primary-foreground">
+          <CircleCheck aria-hidden="true" className="size-7" />
+        </span>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-[2rem] leading-[1.05] sm:text-[2.75rem]">{t.title}</h1>
+          <p className="max-w-lg leading-relaxed text-label sm:text-[1.0625rem]">{t.lead}</p>
+        </div>
+
+        {sirene && <Alert tone="info">{t.sirene[sirene]}</Alert>}
+
+        <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-card">
+          <div className="flex items-center gap-4">
+            <span
+              aria-hidden="true"
+              className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground"
+            >
+              {initials(name)}
+            </span>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-display text-xl font-bold tracking-tight">{name}</span>
+              <span className="text-[0.9375rem] text-muted-foreground">
+                {(trades ?? []).map((trade) => trade.label).join(" · ")}
+              </span>
+            </span>
+          </div>
+          {artisan.base_label && artisan.radius_km && (
+            <p className="flex items-center gap-2 text-sm text-label">
+              <MapPin aria-hidden="true" className="size-4 shrink-0" />
+              {t.zone(artisan.base_label, artisan.radius_km)}
+            </p>
+          )}
+          <span className="inline-flex items-center gap-1.5 self-start rounded-chip bg-warning-soft px-2.5 py-1 text-xs font-bold text-warning">
+            <Clock aria-hidden="true" className="size-3.5" />
+            {t.toVerify}
+          </span>
+        </section>
       </div>
 
-      {sirene && <Alert tone="info">{t.sirene[sirene]}</Alert>}
-
-      <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-raised">
-        <div className="flex items-center gap-3.5">
-          <span
-            aria-hidden="true"
-            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground"
-          >
-            {initials(name)}
-          </span>
-          <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-lg font-semibold">{name}</span>
-            <span className="text-sm text-muted-foreground">
-              {(trades ?? []).map((trade) => trade.label).join(" · ")}
-            </span>
-          </span>
-        </div>
-        {artisan.base_label && artisan.radius_km && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin aria-hidden="true" className="size-4 shrink-0" />
-            {t.zone(artisan.base_label, artisan.radius_km)}
-          </p>
-        )}
-        <span className="inline-flex items-center gap-1.5 self-start rounded-pill bg-warning-soft px-3 py-1 text-[0.8125rem] font-semibold text-warning">
-          <Clock aria-hidden="true" className="size-3.5" />
-          {t.toVerify}
-        </span>
-      </section>
-
-      <section className="flex flex-col gap-3 rounded-card bg-primary-softer p-5">
-        <h2 className="text-[1.0625rem] font-semibold">{t.nextTitle}</h2>
-        <ul className="flex flex-col gap-2 text-sm">
-          <li className="flex items-center gap-2.5">
-            <PenLine aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
-            {t.charter}
-          </li>
-          {REQUIRED_DOCUMENT_TYPES.map((type) => (
-            <li key={type} className="flex items-center gap-2.5">
-              <FileText aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
-              {documents[type]}
-            </li>
-          ))}
-          <li className="flex items-center gap-2.5">
-            <UserRound aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
-            {t.profil}
-          </li>
-        </ul>
-        <p className="flex items-center gap-2 text-sm font-medium text-primary-strong">
+      <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-card lg:p-7">
+        <h2 className="text-[1.1875rem] leading-snug">{t.nextTitle}</h2>
+        <p className="flex items-center gap-2 text-sm font-semibold text-primary-strong">
           <Camera aria-hidden="true" className="size-4 shrink-0" />
           {t.duration}
         </p>
+        <ul className="flex flex-col divide-y divide-border border-t border-border text-[0.9375rem]">
+          <NextItem icon={<PenLine aria-hidden="true" className="size-4" />}>{t.charter}</NextItem>
+          {REQUIRED_DOCUMENT_TYPES.map((type) => (
+            <NextItem key={type} icon={<FileText aria-hidden="true" className="size-4" />}>
+              {documents[type]}
+            </NextItem>
+          ))}
+          <NextItem icon={<UserRound aria-hidden="true" className="size-4" />}>{t.profil}</NextItem>
+        </ul>
+        <div className="sticky bottom-0 -mx-6 mt-1 border-t border-border bg-surface px-6 pt-3 pb-4 lg:static lg:mx-0 lg:border-0 lg:p-0">
+          <ButtonLink href="/pro/onboarding" size="lg" block>
+            {t.cta}
+            <ArrowRight aria-hidden="true" className="size-5" />
+          </ButtonLink>
+          <p className="mt-2 text-center text-sm text-muted-foreground">{t.later}</p>
+        </div>
       </section>
-
-      <div className="sticky bottom-0 -mx-4 mt-auto border-t border-border bg-surface px-4 pt-3 pb-4 sm:mx-0 sm:rounded-card sm:border sm:shadow-raised">
-        <ButtonLink href="/pro/onboarding" size="lg" block>
-          {t.cta}
-          <ArrowRight aria-hidden="true" className="size-5" />
-        </ButtonLink>
-        <p className="mt-2 text-center text-sm text-muted-foreground">{t.later}</p>
-      </div>
     </main>
+  );
+}
+
+function NextItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <li className="flex items-center gap-3 py-2.5">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-input bg-background text-label">
+        {icon}
+      </span>
+      <span className="font-semibold">{children}</span>
+    </li>
   );
 }
