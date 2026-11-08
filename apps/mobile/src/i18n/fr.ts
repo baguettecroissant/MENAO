@@ -3410,6 +3410,8 @@ export const fr = {
     step: (label: string, n: number, total: number) => `${label} · ${n}/${total}`,
     stepSpoken: (label: string, n: number, total: number) =>
       `Avancement : ${label}, étape ${n} sur ${total}`,
+    // Visite passée, devis pas encore envoyé (chantierNext).
+    quoteToSend: "Devis à envoyer",
     stepsDone: "Terminé",
     stepsDoneSpoken: "Avancement : toutes les étapes franchies",
     // Prochaine étape quand il n'y a pas de date de rendez-vous ou de démarrage.

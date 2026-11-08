@@ -5066,6 +5066,7 @@ export const fr = {
       stepOf: (label: string, n: number, total: number) => `${label} · ${n}/${total}`,
       stepsDone: "Terminé",
       progressLabel: "Avancement : ",
+      quoteToSend: "Devis à envoyer",
       next: {
         demande_envoyee: "Rendez-vous à fixer",
         rdv_planifie: "Rendez-vous à fixer",

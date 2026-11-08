@@ -1,4 +1,10 @@
-import { CHANTIER_STEPS, chantierStepIndex, isExampleId, type ChantierStatus } from "@menao/core";
+import {
+  CHANTIER_STEPS,
+  chantierNext,
+  chantierStepIndex,
+  isExampleId,
+  type ChantierStatus,
+} from "@menao/core";
 import { CalendarDays, ChevronRight, Clock, HardHat } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ExampleBadge } from "@/components/examples";
@@ -38,17 +44,14 @@ export function chantierTone(status: ChantierStatus): FicheTone {
 
 /** Prochaine étape : rendez-vous ou démarrage daté, sinon un libellé court selon l'état. */
 function nextStep(r: ArtisanChantierRow, status: ChantierStatus) {
-  const at =
-    status === "rdv_planifie" && r.appointment_at
-      ? r.appointment_at
-      : status === "planifie" && r.start_at
-        ? r.start_at
-        : null;
-  if (!at) return { text: t.next[status], dated: false };
-  const day = formatDayMonthShort(at);
-  const time = formatTime(at);
+  // Date à venir, devis à envoyer une fois la visite passée, ou l'attendu (@menao/core).
+  const next = chantierNext({ status, appointment_at: r.appointment_at, start_at: r.start_at });
+  if (next.kind === "devis_a_envoyer") return { text: t.quoteToSend, dated: false };
+  if (!next.at) return { text: t.next[status], dated: false };
+  const day = formatDayMonthShort(next.at);
+  const time = formatTime(next.at);
   return {
-    text: status === "rdv_planifie" ? t.appointmentOn(day, time) : t.startOn(day, time),
+    text: next.kind === "rdv" ? t.appointmentOn(day, time) : t.startOn(day, time),
     dated: true,
   };
 }

@@ -95,3 +95,20 @@ export function chantierFigures(
     closed: count("cloture"),
   };
 }
+
+/**
+ * Prochaine étape d'un chantier dans la liste : le rendez-vous ou le démarrage à venir (avec sa
+ * date), le devis à envoyer une fois la visite passée, sinon ce qu'attend l'état du chantier.
+ */
+export function chantierNext(
+  r: { status: ChantierStatus; appointment_at: string | null; start_at: string | null },
+  now: Date = new Date(),
+): { kind: "rdv" | "demarrage" | "devis_a_envoyer" | "etat"; at: string | null } {
+  if (r.status === "rdv_planifie" && r.appointment_at) {
+    return Date.parse(r.appointment_at) >= now.getTime()
+      ? { kind: "rdv", at: r.appointment_at }
+      : { kind: "devis_a_envoyer", at: null };
+  }
+  if (r.status === "planifie" && r.start_at) return { kind: "demarrage", at: r.start_at };
+  return { kind: "etat", at: null };
+}

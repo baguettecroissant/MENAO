@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CHANTIER_STATUSES, chantierFigures, chantierPhase, requestFigures } from "../src";
+import {
+  CHANTIER_STATUSES,
+  chantierFigures,
+  chantierNext,
+  chantierPhase,
+  requestFigures,
+} from "../src";
 
 describe("requestFigures", () => {
   const now = new Date("2026-11-08T10:00:00Z");
@@ -118,6 +124,38 @@ describe("chantierFigures", () => {
       planned: 1,
       ongoing: 2,
       closed: 1,
+    });
+  });
+});
+
+describe("chantierNext", () => {
+  const now = new Date("2026-11-08T10:00:00Z");
+  const base = { appointment_at: null, start_at: null };
+  it("rendez-vous à venir, puis devis à envoyer une fois la visite passée", () => {
+    expect(
+      chantierNext(
+        { ...base, status: "rdv_planifie", appointment_at: "2026-11-10T08:00:00Z" },
+        now,
+      ),
+    ).toEqual({ kind: "rdv", at: "2026-11-10T08:00:00Z" });
+    expect(
+      chantierNext(
+        { ...base, status: "rdv_planifie", appointment_at: "2026-11-07T08:00:00Z" },
+        now,
+      ),
+    ).toEqual({ kind: "devis_a_envoyer", at: null });
+  });
+  it("démarrage daté, sinon l'état", () => {
+    expect(
+      chantierNext({ ...base, status: "planifie", start_at: "2026-11-16T07:00:00Z" }, now),
+    ).toEqual({ kind: "demarrage", at: "2026-11-16T07:00:00Z" });
+    expect(chantierNext({ ...base, status: "rdv_planifie" }, now)).toEqual({
+      kind: "etat",
+      at: null,
+    });
+    expect(chantierNext({ ...base, status: "devis_signe" }, now)).toEqual({
+      kind: "etat",
+      at: null,
     });
   });
 });

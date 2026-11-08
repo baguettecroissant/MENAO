@@ -1,4 +1,4 @@
-import { CHANTIER_STEPS, chantierStepIndex, type ChantierStatus } from "@menao/core";
+import { CHANTIER_STEPS, chantierNext, chantierStepIndex, type ChantierStatus } from "@menao/core";
 import { CalendarDays, ChevronRight, Clock, HardHat } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -47,15 +47,14 @@ export type ChantierListItem = {
   start_at: string | null;
 };
 
-/** Prochaine étape d'un chantier : la date du rendez-vous ou du démarrage, sinon ce qui est attendu. */
-function nextStep(r: ChantierListItem): { text: string; dated: boolean } {
-  if (r.status === "rdv_planifie" && r.appointment_at)
-    return {
-      text: t.appointmentOn(formatDayInline(r.appointment_at), formatTime(r.appointment_at)),
-      dated: true,
-    };
-  if (r.status === "planifie" && r.start_at)
-    return { text: t.startOn(formatDayInline(r.start_at), formatTime(r.start_at)), dated: true };
+/** Prochaine étape d'un chantier (`chantierNext`) : date à venir, devis à envoyer, ou l'attendu. */
+function nextStep(r: ChantierListItem, now: Date): { text: string; dated: boolean } {
+  const next = chantierNext(r, now);
+  if (next.kind === "rdv" && next.at)
+    return { text: t.appointmentOn(formatDayInline(next.at), formatTime(next.at)), dated: true };
+  if (next.kind === "demarrage" && next.at)
+    return { text: t.startOn(formatDayInline(next.at), formatTime(next.at)), dated: true };
+  if (next.kind === "devis_a_envoyer") return { text: l.quoteToSend, dated: false };
   return { text: l.next[r.status], dated: false };
 }
 
@@ -105,6 +104,7 @@ export function ChantierList({
   base?: string;
   example?: boolean;
 }) {
+  const now = new Date();
   return (
     <div className="@container overflow-hidden rounded-card border border-border bg-surface shadow-card">
       <div
@@ -119,7 +119,7 @@ export function ChantierList({
       <ul aria-label={label} className="divide-y divide-border">
         {rows.map((r) => {
           const client = [r.client_first_name, r.client_last_name].filter(Boolean).join(" ");
-          const next = nextStep(r);
+          const next = nextStep(r, now);
           const tone = chantierTone(r.status);
           const NextIcon = next.dated ? CalendarDays : Clock;
           return (
