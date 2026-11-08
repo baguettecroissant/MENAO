@@ -87,3 +87,5 @@ export * from "./client-reminders";
 export * from "./team";
 export * from "./money-figures";
 export * from "./list-figures";
+export * from "./secretary-figures";
+export * from "./agenda-day";

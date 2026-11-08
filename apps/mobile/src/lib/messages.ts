@@ -21,6 +21,27 @@ export async function loadConversations(): Promise<ConversationItem[] | null> {
   return (data ?? []).map((row) => ({ ...row, avatarUrl: artisanAvatar(row.other_avatar_path) }));
 }
 
+const fold = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+/**
+ * Liste « Messages » filtrée sur le téléphone (refonte « Nette », lot 4) : non lus seulement, et
+ * recherche dans le nom de l'interlocuteur et le titre du chantier, sans accents ni majuscules.
+ */
+export function filterConversations<
+  T extends Pick<ConversationRow, "other_name" | "title" | "unread">,
+>(rows: readonly T[], { query, unreadOnly }: { query: string; unreadOnly: boolean }): T[] {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  return rows.filter((row) => {
+    if (unreadOnly && row.unread === 0) return false;
+    const haystack = fold(`${row.other_name} ${row.title}`);
+    return words.every((word) => haystack.includes(word));
+  });
+}
+
 /** Dernier échange d'un chantier : carte « Messagerie avec … » de la vue de l'artisan (RLS). */
 export async function loadConversationPreview(
   chantierId: string,
@@ -57,7 +78,11 @@ export type ConversationMessage = {
 export type Conversation = {
   title: string;
   otherName: string;
+  /** Prénom du client (« Écrire à Thomas… »), ou nom de l'artisan vu par le client. */
+  shortName: string;
   avatarUrl: string | null;
+  /** Téléphone de l'interlocuteur, déjà lu avec le chantier (bouton « Appeler »), sinon null. */
+  phone: string | null;
   /** Vue du chantier de l'utilisateur : côté client, ou côté artisan. */
   chantierPath: `/chantier/${string}` | `/pro-chantier/${string}`;
   /** Lecture seule : chantier annulé ou devis refusé. */
@@ -71,10 +96,13 @@ async function conversationParty(chantierId: string, artisan: boolean) {
     const { data } = await supabase.rpc("artisan_chantier_detail", { p_chantier_id: chantierId });
     const c = parseArtisanChantierDetail(data);
     if (!c) return null;
+    const otherName = [c.client.first_name, c.client.last_name].filter(Boolean).join(" ");
     return {
       title: c.chantier.title,
-      otherName: [c.client.first_name, c.client.last_name].filter(Boolean).join(" "),
+      otherName,
+      shortName: c.client.first_name || otherName,
       avatarUrl: null,
+      phone: c.client.phone,
       chantierPath: `/pro-chantier/${chantierId}` as const,
       closed: conversationClosed(c.chantier.status),
     };
@@ -87,7 +115,9 @@ async function conversationParty(chantierId: string, artisan: boolean) {
   return {
     title: c.title,
     otherName: c.artisan_name,
+    shortName: c.artisan_name,
     avatarUrl: artisanAvatar(c.artisan_avatar_path),
+    phone: c.artisan_phone || null,
     chantierPath: `/chantier/${chantierId}` as const,
     closed: conversationClosed(c.status),
   };

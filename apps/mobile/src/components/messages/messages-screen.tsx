@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationRow } from "./conversation-row";
+import { ListFilters, ListGroup, ListSearch } from "@/components/list-kit";
 import { ListRowsSkeleton } from "@/components/skeletons";
 import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { loadConversations, type ConversationItem } from "@/lib/messages";
+import { filterConversations, loadConversations, type ConversationItem } from "@/lib/messages";
 import { PREFETCH_DELAY_MS, PREFETCH_FIRST, prefetchConversation } from "@/lib/prefetch";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
@@ -17,11 +18,12 @@ import { theme } from "@/ui/theme";
 import { EmptyState } from "@/components/empty-state";
 
 const t = fr.messages;
-const { colors, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 
 /**
  * Messages (F-40), du client avec ses artisans ou de l'artisan avec ses clients : une conversation
- * par chantier, rechargées à chaque retour. `standalone` : écran ouvert par-dessus les onglets
+ * par chantier, rechargées à chaque retour. Refonte « Nette » (lot 4) : recherche (nom, chantier),
+ * pastilles « Tous » / « Non lus », puis les conversations dans un seul cadre. `standalone` : écran ouvert par-dessus les onglets
  * (bulle de l'en-tête de l'artisan, ADR 0188), avec la barre de retour.
  */
 export function MessagesScreen({ standalone = false }: { standalone?: boolean } = {}) {
@@ -34,6 +36,8 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
   }, [refresh]);
   const [rows, reload] = useFocusData(load, undefined, "tab:messages");
   const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
   // Squelette des conversations pendant le premier chargement, puis fondu (ADR 0192).
   const reveal = useReveal(rows !== undefined);
   // Premières conversations chargées d'avance : les ouvrir est instantané (ADR 0193).
@@ -47,6 +51,8 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
     return () => clearTimeout(timer);
   }, [rows, artisan]);
   const now = new Date();
+  const unreadCount = rows ? rows.filter((r) => r.unread > 0).length : 0;
+  const shown = rows ? filterConversations(rows, { query, unreadOnly: filter === "unread" }) : [];
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       {standalone ? (
@@ -56,6 +62,8 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
       ) : null}
       <ScrollView
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -81,11 +89,32 @@ export function MessagesScreen({ standalone = false }: { standalone?: boolean } 
           <EmptyState illustration="messages">{artisan ? t.emptyPro : t.empty}</EmptyState>
         ) : (
           <Animated.View entering={reveal} style={styles.list}>
-            {rows.map((row, i) => (
-              <View key={row.chantier_id} style={i > 0 ? styles.separator : undefined}>
-                <ConversationRow row={row} now={now} />
-              </View>
-            ))}
+            <ListSearch
+              value={query}
+              onChangeText={setQuery}
+              placeholder={artisan ? t.searchPlaceholder : t.searchPlaceholderClient}
+            />
+            <ListFilters
+              chips
+              label={t.filtersLabel}
+              value={filter}
+              onChange={setFilter}
+              items={[
+                { value: "all", label: t.filterAll, detail: `· ${rows.length}` },
+                { value: "unread", label: t.filterUnread, detail: `· ${unreadCount}` },
+              ]}
+            />
+            {shown.length === 0 ? (
+              <Text role="status" style={styles.none}>
+                {filter === "unread" && !query.trim() ? t.noUnread : t.noMatch}
+              </Text>
+            ) : (
+              <ListGroup>
+                {shown.map((row) => (
+                  <ConversationRow key={row.chantier_id} row={row} now={now} />
+                ))}
+              </ListGroup>
+            )}
           </Animated.View>
         )}
       </ScrollView>
@@ -97,12 +126,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: spacing(5), paddingTop: spacing(2) },
   content: { padding: spacing(5), gap: spacing(4), paddingBottom: spacing(10) },
-  list: {
-    overflow: "hidden",
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+  list: { gap: spacing(4) },
+  none: {
+    paddingVertical: spacing(6),
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 15,
+    color: colors["muted-foreground"],
   },
-  separator: { borderTopWidth: 1, borderTopColor: colors.border },
 });

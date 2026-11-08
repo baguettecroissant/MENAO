@@ -37,6 +37,7 @@ import {
   requestsAwaitingAnswer,
   revenueTrend,
   upcomingAgenda,
+  weekdayOf,
   type ExamplePhoto,
 } from "@menao/core";
 import type { ArtisanProfile, Grade } from "@menao/validation";
@@ -205,7 +206,9 @@ export function exampleConversation(id: string, now = new Date()): Conversation 
   return {
     title: c.chantier.title,
     otherName: [c.client.first_name, c.client.last_name].filter(Boolean).join(" "),
+    shortName: c.client.first_name ?? "",
     avatarUrl: null,
+    phone: c.client.phone,
     chantierPath: `/pro-chantier/${id}`,
     closed: false,
     messages: exampleMessages(id, now).map((m) => ({
@@ -222,18 +225,52 @@ export function exampleConversation(id: string, now = new Date()): Conversation 
   };
 }
 
+/** Rendez-vous d'exemple pris par la secrétaire (ADR 0232) : identifiant fixe, jamais en base. */
+const EXAMPLE_SECRETARY_SLOT = EXAMPLE_IDS.creneauFournisseur.replace(/601$/, "602");
+
 export function exampleAgendaWeek(monday: string, now = new Date()): AgendaWeek {
   const today = parisToday(now);
+  const from = parisLocalToDate(monday, "00:00");
+  const to = parisLocalToDate(addDays(monday, 7), "00:00");
+  const clients = new Map(
+    exampleChantierRows(now).map((c) => [
+      c.chantier_id,
+      [c.client_first_name, c.client_last_name].filter(Boolean).join(" ") || null,
+    ]),
+  );
+  // Visite prise par Camille le prochain jour ouvré, à 8 h, pour montrer la pastille.
+  let next = addDays(today, 1);
+  while (weekdayOf(next) > 5) next = addDays(next, 1);
+  const camille = parisLocalToDate(next, "08:00");
+  const secretary =
+    camille >= from && camille < to
+      ? [
+          {
+            id: EXAMPLE_SECRETARY_SLOT,
+            kind: "creneau" as const,
+            start: camille.toISOString(),
+            durationMinutes: 60,
+            title: "RDV pris par votre secrétaire : Sophie Lambert",
+            place: null,
+            chantierId: null,
+            client: null,
+            secretary: { reason: "Fuite sous l'évier", caller: "Sophie Lambert", city: "Antibes" },
+          },
+        ]
+      : [];
   return {
     monday,
     today,
     availability: availabilityStatus({ paused: false, availableFrom: null, absences: [], today }),
     hours: [...EXAMPLE_HOURS],
-    items: exampleAgendaItems(
-      parisLocalToDate(monday, "00:00"),
-      parisLocalToDate(addDays(monday, 7), "00:00"),
-      now,
-    ),
+    items: [
+      ...exampleAgendaItems(from, to, now).map((i) => ({
+        ...i,
+        client: i.chantierId ? (clients.get(i.chantierId) ?? null) : null,
+        secretary: null,
+      })),
+      ...secretary,
+    ].sort((a, b) => a.start.localeCompare(b.start)),
     absences: [],
   };
 }

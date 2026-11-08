@@ -1857,6 +1857,16 @@ export const fr = {
       "Aucun message pour le moment. Écrivez à votre client depuis la fiche du chantier (bouton « Écrire au client »).",
     error: "Vos messages n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
     unread: (n: number) => (n <= 1 ? "1 message non lu" : `${n} messages non lus`),
+    // Recherche et filtres de la liste (refonte « Nette », lot 4).
+    searchPlaceholder: "Rechercher un client, un chantier…",
+    searchPlaceholderClient: "Rechercher un artisan, un chantier…",
+    filtersLabel: "Filtrer les conversations",
+    filterAll: "Tous",
+    filterUnread: "Non lus",
+    noMatch: "Aucune conversation ne correspond.",
+    noUnread: "Aucun message non lu.",
+    call: (name: string) => `Appeler ${name}`,
+    writeTo: (name: string) => `Écrire à ${name}…`,
     you: "Vous : ",
     photo: "Photo",
     file: "Document PDF",
@@ -3122,6 +3132,33 @@ export const fr = {
       "Vos visites, démarrages de chantier, créneaux bloqués et absences, semaine par semaine.",
     weekdays: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
     week: (from: string, to: string) => `Du ${from} au ${to}`,
+    // Refonte « Nette », lot 4 : bande des 7 jours, journée choisie, suite de la semaine.
+    weekdaysShort: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+    weekShort: (from: string, to: string) => `${from} – ${to}`,
+    daysLabel: "Jours de la semaine",
+    dayTitle: (weekday: string, date: string) => `${weekday} ${date}`,
+    appointments: (n: number) =>
+      n === 0 ? "aucun rendez-vous" : n === 1 ? "1 rendez-vous" : `${n} rendez-vous`,
+    dayOption: (day: string, n: number, absent: boolean, selected: boolean) =>
+      [
+        day,
+        n === 0 ? "aucun rendez-vous" : n === 1 ? "1 rendez-vous" : `${n} rendez-vous`,
+        absent ? "absent" : null,
+        selected ? "sélectionné" : null,
+      ]
+        .filter(Boolean)
+        .join(", "),
+    later: "Plus tard cette semaine",
+    seeDay: (day: string) => `Voir le ${day}`,
+    free: (ranges: readonly { from: string; to: string }[]) => {
+      const parts = ranges.map((r) => `de ${r.from} à ${r.to}`);
+      const last = parts.pop();
+      return `Libre ${parts.length > 0 ? `${parts.join(", ")} et ${last}` : last}`;
+    },
+    freeBlock: "Bloquer",
+    freeBlockLabel: (day: string, from: string, to: string) =>
+      `Bloquer un créneau le ${day} de ${from} à ${to}`,
+    secretary: "Prise par Camille",
     previousWeek: "Semaine précédente",
     nextWeek: "Semaine suivante",
     thisWeek: "Aujourd'hui",

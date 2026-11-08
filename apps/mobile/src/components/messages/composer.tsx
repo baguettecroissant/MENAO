@@ -1,6 +1,6 @@
 import { MESSAGE_MAX_LENGTH } from "@menao/core";
 import { conversationMessageSchema } from "@menao/validation";
-import { ImagePlus, Send } from "lucide-react-native";
+import { Paperclip, Send } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,14 +18,18 @@ const { colors, font, radius, spacing } = theme;
  * Saisie d'un message (F-40), contrôlé comme sur le site (2 000 caractères au plus), et photo
  * jointe : prise de vue ou photothèque, réduite sur le téléphone puis vérifiée par process-upload.
  * Envoi instantané (ADR 0195) : le champ se vide et le message s'affiche aussitôt (`onPending`) ;
- * en cas d'échec, le texte revient dans le champ avec l'erreur.
+ * en cas d'échec, le texte revient dans le champ avec l'erreur. Refonte « Nette » (lot 4) : rond
+ * trombone, champ arrondi sur fond crème (« Écrire à Thomas… »), rond d'envoi bleu.
  */
 export function Composer({
   chantierId,
   onSent,
   onPending,
+  placeholder = t.composerPlaceholder,
 }: {
   chantierId: string;
+  /** Invite du champ (« Écrire à Thomas… »). */
+  placeholder?: string;
   onSent: () => void | Promise<void>;
   /** Message affiché avant la réponse du serveur ; renvoie de quoi le retirer. */
   onPending?: (body: string) => () => void;
@@ -106,7 +110,7 @@ export function Composer({
           {uploading ? (
             <ActivityIndicator color={colors.primary} />
           ) : (
-            <ImagePlus size={20} color={colors["primary-strong"]} />
+            <Paperclip size={20} color={colors.foreground} />
           )}
         </Pressable>
         <TextInput
@@ -116,7 +120,7 @@ export function Composer({
             setBody(value);
             setError(null);
           }}
-          placeholder={t.composerPlaceholder}
+          placeholder={placeholder}
           placeholderTextColor={colors["subtle-foreground"]}
           maxLength={MESSAGE_MAX_LENGTH}
           multiline
@@ -137,7 +141,7 @@ export function Composer({
           {pending ? (
             <ActivityIndicator color={colors["primary-foreground"]} />
           ) : (
-            <Send size={20} color={colors["primary-foreground"]} />
+            <Send size={18} strokeWidth={2.2} color={colors["primary-foreground"]} />
           )}
         </Pressable>
       </View>
@@ -154,36 +158,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing(4),
     paddingTop: spacing(3),
   },
-  row: { flexDirection: "row", alignItems: "flex-end", gap: spacing(2) },
+  row: { flexDirection: "row", alignItems: "flex-end", gap: 10 },
   input: {
     flex: 1,
-    minHeight: 48,
+    minHeight: theme.touchTarget,
     maxHeight: 140,
-    borderRadius: radius.input,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: colors["border-strong"],
-    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     paddingHorizontal: spacing(4),
-    paddingTop: spacing(3),
-    paddingBottom: spacing(3),
+    paddingTop: 11,
+    paddingBottom: 11,
     fontFamily: font.regular,
-    fontSize: 15,
+    // 16 px au moins : pas de zoom de l'iPhone sur le champ.
+    fontSize: 16,
     color: colors.foreground,
   },
   send: {
-    width: 48,
-    height: 48,
+    width: theme.touchTarget,
+    height: theme.touchTarget,
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   attach: {
-    width: 48,
-    height: 48,
+    width: theme.touchTarget,
+    height: theme.touchTarget,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors["border-strong"],
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },

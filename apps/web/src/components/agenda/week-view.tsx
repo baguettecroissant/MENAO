@@ -1,5 +1,7 @@
 import {
   absenceOn,
+  agendaItemsAfter,
+  freeRangesOn,
   gridSpan,
   layoutDay,
   minutesToTime,
@@ -11,6 +13,7 @@ import {
 } from "@menao/core";
 import {
   CalendarOff,
+  ChevronRight,
   HardHat,
   Headset,
   MapPin,
@@ -29,7 +32,7 @@ import { AgendaItemDetails } from "./agenda-item-details";
 
 const t = fr.pro.agenda;
 /** Hauteur d'une heure dans la grille, en pixels. */
-const HOUR = 52;
+const HOUR = 60;
 
 const KIND_STYLES: Record<AgendaKind, string> = {
   visite: "border-primary bg-primary-soft text-primary-strong",
@@ -60,6 +63,22 @@ const HOUR_LINES: CSSProperties = {
 
 type Placed = AgendaItem & { date: string; startMinutes: number; endMinutes: number };
 
+/** Couleur du point (bande des jours) et du filet (liste) d'un rendez-vous. */
+const DOTS: Record<AgendaKind, string> = {
+  visite: "bg-primary",
+  demarrage: "bg-success",
+  creneau: "bg-border-strong",
+  occupe: "bg-subtle-foreground",
+};
+const BARS: Record<AgendaKind, string> = {
+  visite: "border-primary",
+  demarrage: "border-success",
+  creneau: "border-border-strong",
+  occupe: "border-subtle-foreground",
+};
+const dotOf = (item: Placed) => (item.secretary ? DOTS.visite : DOTS[item.kind]);
+const barOf = (item: Placed) => (item.secretary ? BARS.visite : BARS[item.kind]);
+
 const clockOf = (minutes: number) => formatClock(minutesToTime(minutes));
 
 function describe(item: Placed): string {
@@ -86,7 +105,13 @@ export function WeekView({
   base = "/pro",
   example = false,
   readOnly = false,
+  selected,
+  dayHref,
 }: {
+  /** Jour affiché sur téléphone (AAAA-MM-JJ). */
+  selected: string;
+  /** Lien vers un jour de la semaine (?semaine=…&jour=…). */
+  dayHref: (date: string) => string;
   days: string[];
   today: string;
   now: Date;
@@ -134,20 +159,18 @@ export function WeekView({
     <>
       {/* Ordinateur : grille horaire */}
       <div className="hidden overflow-hidden rounded-card border border-border bg-surface shadow-card lg:block">
-        <div className="grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))] border-b border-border">
+        <div className="grid grid-cols-[3.5rem_repeat(5,minmax(0,1fr))_repeat(2,minmax(0,0.65fr))] border-b border-border">
           <div />
           {days.map((day, i) => {
             const isToday = day === today;
             return (
               <div key={day} className="border-l border-border px-1 py-2.5 text-center">
-                <p
-                  className={`text-xs font-medium tracking-wide uppercase ${isToday ? "text-primary" : "text-muted-foreground"}`}
-                >
+                <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
                   {t.weekdaysShort[i]}
                 </p>
                 <p
                   aria-current={isToday ? "date" : undefined}
-                  className={`mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-[0.9375rem] font-medium tabular-nums ${isToday ? "bg-primary text-primary-foreground" : ""}`}
+                  className={`mx-auto mt-1 flex size-9 items-center justify-center rounded-full font-display text-lg font-bold tabular-nums ${isToday ? "bg-foreground text-surface" : ""}`}
                 >
                   {Number(day.slice(8, 10))}
                 </p>
@@ -157,11 +180,11 @@ export function WeekView({
         </div>
 
         {weekAbsences.length > 0 && (
-          <div className="grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))] border-b border-border">
+          <div className="grid grid-cols-[3.5rem_repeat(5,minmax(0,1fr))_repeat(2,minmax(0,0.65fr))] border-b border-border">
             <p className="self-center pr-2 text-right text-[0.6875rem] text-subtle-foreground">
               {t.allDay}
             </p>
-            <div className="col-span-7 grid grid-cols-7 py-1.5">
+            <div className="col-span-7 grid grid-cols-[repeat(5,minmax(0,1fr))_repeat(2,minmax(0,0.65fr))] py-1.5">
               {weekAbsences.map(({ absence, from, to }) => (
                 <p
                   key={absence.id}
@@ -177,7 +200,7 @@ export function WeekView({
           </div>
         )}
 
-        <div className="grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))]">
+        <div className="grid grid-cols-[3.5rem_repeat(5,minmax(0,1fr))_repeat(2,minmax(0,0.65fr))]">
           <div aria-hidden="true" className="relative" style={{ height }}>
             {hourMarks.slice(0, -1).map((m) => (
               <span
@@ -242,60 +265,152 @@ export function WeekView({
         </div>
       </div>
 
-      {/* Mobile : liste jour par jour */}
-      <ol className="flex flex-col gap-3 lg:hidden">
-        {days.map((day, i) => {
-          const ranges = rangesOn(hours, weekdayOf(day));
-          const absence = absenceOn(absences, day);
-          const dayItems = placed.filter((p) => p.date === day);
-          const isToday = day === today;
-          return (
-            <li
-              key={day}
-              aria-current={isToday ? "date" : undefined}
-              className={`rounded-card border bg-surface p-4 shadow-card ${isToday ? "border-primary/50" : "border-border"}`}
-            >
-              <div className="flex items-baseline justify-between gap-3">
-                <h3 className="font-medium">
-                  {t.weekdays[i]} {formatDayMonth(day)}
-                </h3>
-                {isToday && <span className="text-xs font-medium text-primary">{t.thisWeek}</span>}
-              </div>
-              {hours.length > 0 && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {ranges.length > 0
-                    ? ranges
-                        .map((r) => t.range(formatClock(r.start), formatClock(r.end)))
-                        .join(" · ")
-                    : t.closed}
-                </p>
-              )}
-              {absence && (
-                <p className="mt-2 flex items-center gap-1.5 rounded-chip bg-warning-soft px-2 py-1 text-xs font-medium text-warning">
-                  <Palmtree aria-hidden="true" className="size-3.5" />
-                  {[t.kinds.absence, absence.label].filter(Boolean).join(" · ")}
-                </p>
-              )}
-              {dayItems.length > 0 ? (
-                <ul className="mt-3 flex flex-col gap-2">
-                  {dayItems.map((item) => (
-                    <li key={item.id}>
-                      <AgendaBlock
-                        item={item}
-                        variant="row"
-                        base={base}
-                        example={example || readOnly}
-                      />
-                    </li>
+      {/* Téléphone (ADR 0249) : bande des 7 jours, le jour choisi, puis la suite de la semaine. */}
+      <div className="flex flex-col gap-4 lg:hidden">
+        <nav
+          aria-label={t.daysLabel}
+          className="flex gap-0.5 rounded-[1.125rem] border border-border bg-surface p-1 shadow-card"
+        >
+          {days.map((day, i) => {
+            const on = day === selected;
+            const kinds = placed.filter((p) => p.date === day).map((p) => dotOf(p));
+            return (
+              <Link
+                key={day}
+                href={dayHref(day) as Route}
+                scroll={false}
+                aria-current={on ? "date" : undefined}
+                aria-label={t.dayLabel(`${t.weekdays[i]} ${formatDayMonth(day)}`, kinds.length)}
+                className={`flex flex-1 flex-col items-center gap-1 rounded-[0.875rem] pt-2 pb-2.5 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${on ? "bg-foreground text-surface" : ""}`}
+              >
+                <span
+                  className={`text-[0.6875rem] font-bold uppercase ${on ? "" : "text-muted-foreground"}`}
+                >
+                  {t.weekdaysShort[i]?.replace(".", "")}
+                </span>
+                <span className="font-display text-[1.1875rem] leading-none font-bold tabular-nums">
+                  {Number(day.slice(8, 10))}
+                </span>
+                <span aria-hidden="true" className="flex h-1.5 gap-[3px]">
+                  {kinds.slice(0, 3).map((k, j) => (
+                    <span key={j} className={`size-1.5 rounded-full ${on ? "bg-surface" : k}`} />
                   ))}
-                </ul>
-              ) : (
-                !absence && <p className="mt-2 text-sm text-subtle-foreground">{t.emptyDay}</p>
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+        {(() => {
+          const index = Math.max(0, days.indexOf(selected));
+          const ranges = rangesOn(hours, weekdayOf(selected));
+          const absence = absenceOn(absences, selected);
+          const dayItems = placed.filter((p) => p.date === selected);
+          const later = agendaItemsAfter(placed, selected, days[days.length - 1] ?? selected);
+          const free = freeRangesOn({ date: selected, hours, absences, items: placed, now });
+          return (
+            <>
+              <section aria-labelledby="agenda-jour" className="flex flex-col gap-3">
+                <h3 id="agenda-jour" className="flex items-baseline gap-2 text-lg">
+                  {t.weekdays[index]} {formatDayMonth(selected)}
+                  <span className="font-sans text-sm font-semibold text-muted-foreground">
+                    {t.dayCount(dayItems.length)}
+                  </span>
+                </h3>
+                {hours.length > 0 && (
+                  <p className="-mt-2 text-[0.8125rem] text-muted-foreground">
+                    {ranges.length > 0
+                      ? ranges
+                          .map((r) => t.range(formatClock(r.start), formatClock(r.end)))
+                          .join(" · ")
+                      : t.closed}
+                  </p>
+                )}
+                {absence && (
+                  <p className="flex items-center gap-1.5 rounded-chip bg-warning-soft px-2.5 py-1.5 text-sm font-medium text-warning">
+                    <Palmtree aria-hidden="true" className="size-4" />
+                    {[t.kinds.absence, absence.label].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+                {dayItems.length > 0 ? (
+                  <ul className="flex flex-col gap-2">
+                    {dayItems.map((item) => (
+                      <li key={item.id}>
+                        <AgendaBlock
+                          item={item}
+                          variant="row"
+                          base={base}
+                          example={example || readOnly}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  !absence && (
+                    <p className="rounded-card border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                      {t.emptyDay}
+                    </p>
+                  )
+                )}
+                {free.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {t.free(free.map((r) => t.range(formatClock(r.start), formatClock(r.end))))}
+                  </p>
+                )}
+              </section>
+              {later.length > 0 && (
+                <section aria-labelledby="agenda-plus-tard" className="flex flex-col gap-3">
+                  <h3 id="agenda-plus-tard" className="flex items-baseline gap-2 text-lg">
+                    {t.later}
+                    <span className="font-sans text-sm font-semibold text-muted-foreground">
+                      {later.length}
+                    </span>
+                  </h3>
+                  <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
+                    {later.map((item) => (
+                      <li key={item.id}>
+                        <Link
+                          href={dayHref(item.date) as Route}
+                          scroll={false}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-background focus-visible:bg-background focus-visible:outline-none"
+                        >
+                          <span className="flex w-14 shrink-0 flex-col">
+                            <span className="text-xs font-bold text-muted-foreground uppercase">
+                              {t.weekdaysShort[days.indexOf(item.date)]}{" "}
+                              {Number(item.date.slice(8, 10))}
+                            </span>
+                            <span className="font-display font-bold tabular-nums">
+                              {clockOf(item.startMinutes)}
+                            </span>
+                          </span>
+                          <span
+                            className={`flex min-w-0 flex-1 flex-col gap-0.5 border-l-[3px] pl-3 ${barOf(item)}`}
+                          >
+                            <span className="truncate font-semibold">
+                              {item.secretary ? item.secretary.callerName : item.title}
+                            </span>
+                            <span className="truncate text-sm text-muted-foreground">
+                              {[
+                                item.secretary ? t.details.secretaryKind : t.kinds[item.kind],
+                                item.secretary ? item.secretary.city : item.place,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
+                          </span>
+                          <ChevronRight
+                            aria-hidden="true"
+                            className="size-5 shrink-0 text-muted-foreground"
+                          />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
-            </li>
+            </>
           );
-        })}
-      </ol>
+        })()}
+      </div>
     </>
   );
 }
@@ -342,8 +457,10 @@ function AgendaBlock({
       )}
     </>
   );
-  const classes = `${s ? SECRETARY_STYLE : KIND_STYLES[item.kind]} border-l-[3px] text-xs leading-4 ${
-    grid ? "absolute z-[1] overflow-hidden rounded-md px-1.5 py-1" : "flex rounded-lg px-3 py-2"
+  const classes = `${s ? SECRETARY_STYLE : KIND_STYLES[item.kind]} border-l-[3px] ${
+    grid
+      ? "absolute z-[1] overflow-hidden rounded-lg px-2 py-1.5 text-xs leading-4"
+      : "flex rounded-xl px-3.5 py-3 text-sm leading-5"
   }`;
 
   if (item.chantierId) {
