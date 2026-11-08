@@ -114,7 +114,7 @@ export function PlanningCard() {
 const styles = StyleSheet.create({
   body: { gap: spacing(4) },
   headText: { gap: spacing(1) },
-  title: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
+  title: { fontFamily: font.display, fontSize: 17, letterSpacing: -0.3, color: colors.foreground },
   tips: {
     gap: spacing(1),
     borderTopWidth: 1,

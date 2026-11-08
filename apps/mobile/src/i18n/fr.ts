@@ -2671,6 +2671,10 @@ export const fr = {
       "Nouveau : la charte qualité MENAO. Prends quelques minutes pour la lire et la signer, ton espace pro s'ouvre juste après.",
     ruleLabel: (code: string, title: string) => `Règle ${code} : ${title}`,
     progress: (n: number, total: number) => `${n} / ${total} règles validées`,
+    // Barre du bas et cartes des parties (refonte « Nette », lot 8).
+    engagements: (n: number, total: number) => `${n} engagement${n > 1 ? "s" : ""} sur ${total}`,
+    sectionCount: (n: number, total: number) => `${n} sur ${total}`,
+    progressLabel: "Engagements cochés",
     name: "Nom et prénom",
     company: "Entreprise",
     siret: "N° SIRET",
@@ -2732,6 +2736,16 @@ export const fr = {
   grade: {
     title: "Mon grade MENAO",
     subtitle: "Vos objectifs, vos badges et vos récompenses.",
+    // Carte de niveau bleu nuit (refonte « Nette », lot 8).
+    levelEyebrow: "VOTRE NIVEAU",
+    levelBig: (n: number) => `Niveau ${n}`,
+    levelProgress: "Progression vers le niveau suivant",
+    nextRewardText: (reward: string) => `Prochaine récompense de niveau : ${reward}.`,
+    badgesCount: (earned: number, total: number) => `${earned} sur ${total}`,
+    objectiveProgress: (title: string) => `Progression : ${title}`,
+    badgeEarned: (label: string) => `${label}, obtenu`,
+    badgeToEarn: (label: string, done: number, target: number) =>
+      `${label}, à obtenir, ${done} sur ${target}`,
     xp: (xp: number, next: number | null) =>
       next === null ? `${xp}\u00a0XP` : `${xp} / ${next}\u00a0XP`,
     level: (n: number) => `Niv. ${n}`,
@@ -2947,6 +2961,17 @@ export const fr = {
         .filter(Boolean)
         .join(" · "),
     error: "Impossible d'afficher l'envoi au comptable pour le moment. Réessayez plus tard.",
+    // Chiffres en tête (refonte « Nette », lot 8), d'après les données déjà enregistrées.
+    figures: {
+      next: "Prochain envoi",
+      nextHint: (period: string) => `Automatique · ${period.toLowerCase()}`,
+      auto: "Envoi automatique",
+      off: "Désactivé",
+      offHint: "Vous pouvez toujours envoyer à la main.",
+      last: "Dernier envoi",
+      lastHint: (status: string, date: string) => `${status} le ${date}`,
+    },
+    settingsTitle: "Réglages",
   },
   // Dépenses de l'artisan (F-62, ADR 0186), comme sur le site.
   proExpenses: {
@@ -3004,6 +3029,14 @@ export const fr = {
         remove: "Retirer la pièce choisie",
         failed: "La pièce n'a pas pu être envoyée. Réessayez.",
         tooLarge: "Fichier trop lourd : 10 Mo au plus.",
+        // Bandeau de la pièce lue (refonte « Nette », lot 8).
+        readTicket: "Ticket lu par l'IA",
+        readFile: "Document lu par l'IA",
+        readText: "Montants et fournisseur remplis : vérifiez-les.",
+        reading: "Lecture de la pièce…",
+        attached: "Pièce jointe",
+        retake: "Reprendre la photo",
+        otherFile: "Choisir un autre fichier",
       },
       reading: {
         done: "Champs remplis d'après la pièce : vérifiez-les avant d'enregistrer.",
@@ -3031,9 +3064,14 @@ export const fr = {
         totalHt: "Montant HT (€)",
         totalTva: "Montant de la TVA (€)",
         totalTtc: "Total TTC",
+        totalHtShort: "Total HT (€)",
+        totalTvaShort: "TVA (€)",
         chantier: "Chantier",
+        chantierHint: "Pour suivre ce que coûte chaque chantier",
         chantierNone: "À classer",
+        categoryNone: "Aucune",
         paid: "Déjà payée",
+        paidHint: "Sinon, elle reste dans « À payer »",
         paidOn: "Date du paiement",
         notes: "Note (visible de vous seul)",
       },
@@ -3062,12 +3100,15 @@ export const fr = {
       openDocument: "Ouvrir la pièce",
       documentAlt: (title: string) => `Pièce de la dépense ${title}`,
       info: "Informations",
+      details: "Détails",
+      statusDue: (status: string, date: string) => `${status} · échéance ${date}`,
       rows: {
         supplier: "Fournisseur",
         reference: "Numéro",
         chantier: "Chantier",
         issuedOn: "Date",
         dueOn: "Échéance",
+        paidOn: "Payée le",
         kind: "Type",
         category: "Catégorie",
         notes: "Note",
@@ -3255,6 +3296,13 @@ export const fr = {
       "Impossible d'afficher vos disponibilités pour le moment. Réessayez dans quelques instants.",
     status: {
       title: "Votre statut",
+      // Mot court de la carte de statut (refonte « Nette », lot 8).
+      short: {
+        disponible: "Disponible",
+        a_partir_du: "Disponible",
+        pause: "En pause",
+        conges: "En congés",
+      } as Record<"disponible" | "a_partir_du" | "pause" | "conges", string>,
       disponible: {
         title: "Vous recevez de nouvelles demandes",
         text: "Vous apparaissez dans les recherches des particuliers de votre zone.",
@@ -3317,6 +3365,9 @@ export const fr = {
       },
       copyMonday: "Appliquer les horaires du lundi au mardi, mercredi, jeudi et vendredi",
       copyMondayShort: "Copier le lundi sur la semaine",
+      edit: "Modifier",
+      editDay: (day: string) => `Modifier les horaires du ${day}`,
+      done: "Terminé",
       save: "Enregistrer mes horaires",
       saved: "Horaires enregistrés.",
       unsaved: "Modifications non enregistrées",
@@ -3336,6 +3387,8 @@ export const fr = {
       title: "Congés et absences",
       text: "Pendant une absence, vous n'apparaissez plus dans les recherches et votre profil indique que vous êtes indisponible. Vos chantiers en cours et vos rendez-vous ne changent pas.",
       empty: "Aucune absence prévue.",
+      planned: "Absences prévues",
+      addTitle: "Ajouter une absence",
       from: "Premier jour",
       to: "Dernier jour",
       label: "Motif (facultatif, visible par vous seul)",
@@ -3722,6 +3775,19 @@ export const fr = {
     lead: "Invitez vos salariés : chacun a son propre accès à MENAO, dans l'application et sur le site.",
     seats: (used: number, seats: number) =>
       `${used} compte${used > 1 ? "s" : ""} sur ${seats}, vous compris`,
+    // Refonte « Nette », lot 8 : carte des comptes, liste des membres, rôles en cartes.
+    seatsTitle: "Comptes utilisés",
+    seatsValue: (used: number, seats: number) => `${used} sur ${seats}`,
+    membersTitle: "Membres",
+    youPatron: "Vous · Patron",
+    roleDetails: {
+      chef: "Chantiers, demandes, argent et agenda",
+      ouvrier: "Ses chantiers, sans aucun montant",
+    } as Record<"chef" | "ouvrier", string>,
+    workerNote:
+      "Un ouvrier ne voit que les chantiers qui lui sont attribués : journal, photos, messages et rendez-vous, sans aucun montant.",
+    memberActions: (name: string) => `Actions pour ${name}`,
+    changeRole: "Rôle",
     notIncluded: "Les comptes d'équipe ne sont pas inclus dans votre formule actuelle.",
     full: "Toutes les places sont prises : retirez ou suspendez un membre pour en inviter un autre.",
     you: "Vous",
@@ -3966,12 +4032,23 @@ export const fr = {
    * Aide de l'artisan dans l'application (ADR 0129) : questions fréquentes et contact par
    * e-mail, sans lien vers le site (règle 10).
    */
+  /** Briques des outils de l'artisan (refonte « Nette », lot 8). */
+  proTools: {
+    close: "Fermer",
+    selectLabel: (label: string, value: string) => (value ? `${label} : ${value}` : label),
+    datePlaceholder: "AAAA-MM-JJ",
+    pickDate: "Choisir une date",
+  },
   help: {
     title: "Aide et contact",
     lead: "Les réponses aux questions les plus courantes. Une autre question ? Écrivez-nous.",
     // Assistant de l'espace artisan (F-86, ADR 0236), comme sur le site.
     assistant: {
       title: "Posez votre question",
+      // En-tête de la carte (refonte « Nette », lot 8).
+      name: "Assistant MENAO",
+      knows: "Connaît votre espace et votre compte",
+      quickTitle: "Questions fréquentes",
       quick: [
         "Qu'est-ce que je dois faire maintenant ?",
         "Comment envoyer un devis ?",
@@ -4036,6 +4113,9 @@ export const fr = {
     ],
     contactTitle: "Écrire à l'équipe MENAO",
     contactText: "Nous vous répondons par e-mail.",
+    contactLead: "Réponse par e-mail, sous 7 jours au plus.",
+    writeTeam: "Écrire à l'équipe",
+    faqTitle: "Réponses aux questions courantes",
     email: "contact@menao.fr",
     write: "Écrire un e-mail",
     subject: "Question depuis l'application MENAO",

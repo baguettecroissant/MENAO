@@ -6,14 +6,14 @@ import {
 } from "@menao/core";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { router, type Href } from "expo-router";
-import { ArrowRight, Mail, RotateCcw, Send } from "lucide-react-native";
+import { ArrowRight, Mail, RotateCcw, Send, Sparkles } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { haptic } from "@/lib/haptics";
 import { supabase } from "@/lib/supabase";
-import { Card, Chip } from "@/ui";
 import { theme } from "@/ui/theme";
+import { IconSquare } from "./tools-kit";
 
 const t = fr.help.assistant;
 const { colors, font, radius, spacing } = theme;
@@ -52,7 +52,9 @@ type Message = ArtisanAssistantMessage & {
 /**
  * Assistant de l'espace artisan (F-86, ADR 0236), en haut de « Aide et contact » : il connaît
  * l'espace et le compte de l'artisan, répond en quelques phrases et propose l'écran à ouvrir.
- * L'historique reste dans l'écran et n'est jamais conservé.
+ * L'historique reste dans l'écran et n'est jamais conservé. Refonte « Nette » (lot 8) : une carte
+ * avec en-tête, bulles (les questions en bleu nuit à droite), questions en pastilles bleu clair et
+ * barre d'écriture arrondie.
  */
 export function ArtisanAssistant({ onWrite }: { onWrite: () => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -103,11 +105,15 @@ export function ArtisanAssistant({ onWrite }: { onWrite: () => void }) {
   }
 
   return (
-    <Card>
+    <View style={styles.card}>
       <View style={styles.head}>
-        <Text role="heading" style={styles.heading}>
-          {t.title}
-        </Text>
+        <IconSquare icon={Sparkles} />
+        <View style={styles.headText}>
+          <Text role="heading" style={styles.heading}>
+            {t.name}
+          </Text>
+          <Text style={styles.knows}>{t.knows}</Text>
+        </View>
         {messages.length > 0 ? (
           <Pressable
             role="button"
@@ -117,62 +123,70 @@ export function ArtisanAssistant({ onWrite }: { onWrite: () => void }) {
               setStopped(false);
             }}
             hitSlop={8}
+            style={styles.restart}
           >
             <RotateCcw size={18} color={colors["muted-foreground"]} />
           </Pressable>
         ) : null}
       </View>
 
-      {messages.length === 0 ? (
-        <View style={styles.chips}>
-          {t.quick.map((item) => (
-            <Chip key={item} label={item} onPress={() => void ask(item)} />
-          ))}
-        </View>
-      ) : (
-        <View style={styles.thread} aria-live="polite">
-          {messages.map((m, i) => (
-            <View key={i} style={styles.turn}>
-              <View style={[styles.bubble, m.role === "user" ? styles.mine : styles.theirs]}>
-                <Text style={m.role === "user" ? styles.mineText : styles.theirsText}>
-                  {m.text}
-                </Text>
+      <View style={styles.body}>
+        {messages.length > 0 ? (
+          <View style={styles.thread} aria-live="polite">
+            {messages.map((m, i) => (
+              <View key={i} style={styles.turn}>
+                <View style={[styles.bubble, m.role === "user" ? styles.mine : styles.theirs]}>
+                  <Text style={m.role === "user" ? styles.mineText : styles.theirsText}>
+                    {m.text}
+                  </Text>
+                </View>
+                {m.role === "assistant" && (m.screens?.length || m.suggestHuman) ? (
+                  <View style={styles.actions}>
+                    {m.screens?.map((screen) => (
+                      <Pressable
+                        key={screen}
+                        role="button"
+                        onPress={() => router.push(SCREEN_HREF[screen] as Href)}
+                        style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+                      >
+                        <Text style={styles.actionText}>{t.screens[screen] ?? screen}</Text>
+                        <ArrowRight size={15} color={colors.foreground} />
+                      </Pressable>
+                    ))}
+                    {m.suggestHuman ? (
+                      <Pressable
+                        role="button"
+                        onPress={onWrite}
+                        style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+                      >
+                        <Mail size={15} color={colors.foreground} />
+                        <Text style={styles.actionText}>{t.writeTeam}</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : null}
               </View>
-              {m.role === "assistant"
-                ? m.screens?.map((screen) => (
-                    <Pressable
-                      key={screen}
-                      role="button"
-                      onPress={() => router.push(SCREEN_HREF[screen] as Href)}
-                      style={styles.screen}
-                    >
-                      <Text style={styles.screenText}>{t.screens[screen] ?? screen}</Text>
-                      <ArrowRight size={16} color={colors["primary-strong"]} />
-                    </Pressable>
-                  ))
-                : null}
-              {m.role === "assistant" && m.suggestHuman ? (
-                <Pressable role="button" onPress={onWrite} style={styles.write}>
-                  <Mail size={16} color={colors["primary-strong"]} />
-                  <Text style={styles.screenText}>{t.writeTeam}</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ))}
-          {pending ? (
-            <View style={[styles.bubble, styles.theirs]}>
-              <ActivityIndicator color={colors["muted-foreground"]} accessibilityLabel={t.typing} />
-            </View>
-          ) : null}
-          {!pending && last?.role === "assistant" && !limitReached && last.suggestions?.length ? (
-            <View style={styles.chips}>
-              {last.suggestions.map((item) => (
-                <Chip key={item} label={item} onPress={() => void ask(item)} />
-              ))}
-            </View>
-          ) : null}
-        </View>
-      )}
+            ))}
+            {pending ? (
+              <View style={[styles.bubble, styles.theirs]}>
+                <ActivityIndicator
+                  color={colors["muted-foreground"]}
+                  accessibilityLabel={t.typing}
+                />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {messages.length === 0 ? (
+          <View style={styles.quick}>
+            <Text style={styles.quickTitle}>{t.quickTitle}</Text>
+            <Suggestions items={t.quick} onAsk={(item) => void ask(item)} />
+          </View>
+        ) : !pending && last?.role === "assistant" && !limitReached && last.suggestions?.length ? (
+          <Suggestions items={last.suggestions} onAsk={(item) => void ask(item)} />
+        ) : null}
+      </View>
 
       {!limitReached ? (
         <View style={styles.composer}>
@@ -180,7 +194,7 @@ export function ArtisanAssistant({ onWrite }: { onWrite: () => void }) {
             value={question}
             onChangeText={setQuestion}
             placeholder={t.placeholder}
-            placeholderTextColor={colors["subtle-foreground"]}
+            placeholderTextColor={colors["muted-foreground"]}
             aria-label={t.label}
             maxLength={ARTISAN_ASSISTANT_QUESTION_MAX_LENGTH}
             onSubmitEditing={() => void ask(question)}
@@ -196,74 +210,144 @@ export function ArtisanAssistant({ onWrite }: { onWrite: () => void }) {
             onPress={() => void ask(question)}
             style={[styles.send, (pending || !question.trim()) && styles.sendDisabled]}
           >
-            <Send size={18} color={colors["primary-foreground"]} />
+            <Send size={18} color={colors["primary-foreground"]} strokeWidth={2.2} />
           </Pressable>
         </View>
       ) : null}
-    </Card>
+    </View>
+  );
+}
+
+/** Questions proposées, en pastilles bleu clair. */
+function Suggestions({
+  items,
+  onAsk,
+}: {
+  items: readonly string[];
+  onAsk: (item: string) => void;
+}) {
+  return (
+    <View style={styles.chips}>
+      {items.map((item) => (
+        <Pressable
+          key={item}
+          role="button"
+          onPress={() => onAsk(item)}
+          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+        >
+          <Text style={styles.chipText}>{item}</Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  heading: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  card: {
+    overflow: "hidden",
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  head: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(4),
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headText: { flex: 1, gap: 1 },
+  heading: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
+  knows: { fontFamily: font.semibold, fontSize: 13, color: colors.success },
+  restart: {
+    width: theme.touchTarget,
+    height: theme.touchTarget,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: -spacing(2),
+  },
+  body: { gap: spacing(3), paddingHorizontal: spacing(4), paddingVertical: spacing(5) },
   thread: { gap: spacing(3) },
   turn: { gap: spacing(2) },
   bubble: {
-    maxWidth: "90%",
-    borderRadius: radius.card,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    maxWidth: "88%",
+    borderRadius: 18,
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3),
   },
-  mine: { alignSelf: "flex-end", backgroundColor: colors.primary },
-  theirs: { alignSelf: "flex-start", backgroundColor: colors.background },
+  mine: { alignSelf: "flex-end", borderBottomRightRadius: 6, backgroundColor: colors.foreground },
+  theirs: {
+    alignSelf: "flex-start",
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
   mineText: {
     fontFamily: font.regular,
     fontSize: 15,
-    lineHeight: 21,
+    lineHeight: 22,
     color: colors["primary-foreground"],
   },
-  theirsText: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.foreground },
-  screen: {
+  theirsText: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  action: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
     gap: spacing(1.5),
-    minHeight: theme.touchTarget,
-    paddingHorizontal: spacing(3.5),
-    borderRadius: radius.input,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  write: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: spacing(1.5),
-    minHeight: theme.touchTarget,
-  },
-  screenText: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  composer: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
-  input: {
-    flex: 1,
-    minHeight: theme.touchTarget,
-    borderRadius: radius.input,
+    minHeight: 40,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors["border-strong"],
-    paddingHorizontal: spacing(3),
+    backgroundColor: colors.surface,
+  },
+  actionText: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  pressed: { opacity: 0.7 },
+  quick: { gap: spacing(2) },
+  quickTitle: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  chip: {
+    maxWidth: "100%",
+    minHeight: 36,
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: spacing(1.5),
+    borderRadius: 18,
+    backgroundColor: colors["primary-soft"],
+  },
+  chipText: { fontFamily: font.semibold, fontSize: 14, color: colors["primary-strong"] },
+  composer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2.5),
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  input: {
+    flex: 1,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing(4),
     fontFamily: font.regular,
     // 16 points au moins : pas de zoom automatique sur iPhone.
     fontSize: 16,
     color: colors.foreground,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
   },
   send: {
     alignItems: "center",
     justifyContent: "center",
-    width: theme.touchTarget,
-    height: theme.touchTarget,
-    borderRadius: radius.input,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: colors.primary,
   },
   sendDisabled: { opacity: 0.5 },

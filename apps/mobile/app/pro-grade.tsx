@@ -1,18 +1,26 @@
 import { claimableReward } from "@menao/core";
 import { router } from "expo-router";
+import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { BadgeIcon } from "@/components/grade/badge-icon";
 import { LevelCard } from "@/components/grade/level-card";
-import { HeaderBand } from "@/components/header-band";
+import { GroupTitle, ListGroup } from "@/components/list-kit";
+import {
+  FicheButton,
+  FicheScreen,
+  FicheSkeleton,
+  FicheTag,
+  NextStepCard,
+} from "@/components/pro/fiche-kit";
 import { MenaoScoreCard } from "@/components/pro/menao-score-card";
-import { Segmented } from "@/components/segmented";
+import { IconSquare, ProgressBar } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { formatDateNumeric } from "@/lib/format";
 import { loadGrade, type GradeView } from "@/lib/grade";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, Tappable } from "@/ui";
+import { Notice, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -22,24 +30,23 @@ const { colors, font, radius, spacing } = theme;
 type Badge = GradeView["badges"][number];
 
 /**
- * « Mon grade MENAO » (F-24, maquettes « Mon grade Menao - Objectifs / Badges ») : niveau et
- * points, score MENAO de la charte (ADR 0105), prochaine récompense, objectifs en cours puis
- * atteints, badges à obtenir puis obtenus (un appui ouvre la progression du badge), récompense du
- * niveau 5 à réclamer.
+ * « Mon grade MENAO » (F-24) : niveau et points, score MENAO de la charte (ADR 0105), prochaine
+ * récompense, objectifs en cours puis atteints, badges obtenus puis à obtenir (un appui ouvre la
+ * progression du badge), récompense du niveau 5 à réclamer. Refonte « Nette » (lot 8, maquette
+ * « GradeNette » en une colonne) : carte de niveau bleu nuit, objectifs avec leur barre et leurs
+ * points, badges en grille (à obtenir estompés).
  */
 function GradeScreen() {
   // Rechargé à chaque retour sur l'écran (récompense demandée, nouveau badge).
   const [grade] = useFocusData(loadGrade);
-  const [tab, setTab] = useState<"objectives" | "badges">("objectives");
   const [open, setOpen] = useState<Badge | null>(null);
 
-  const band = <HeaderBand title={t.title} />;
-  if (grade === undefined) return <Screen band={band}>{null}</Screen>;
+  if (grade === undefined) return <FicheSkeleton title={t.title} />;
   if (grade === null) {
     return (
-      <Screen band={band}>
+      <FicheScreen title={t.title}>
         <Notice tone="error">{t.error}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   const claimable = claimableReward(grade.levels, grade.level, grade.claimedLevels);
@@ -50,96 +57,71 @@ function GradeScreen() {
   const earned = grade.badges.filter((b) => b.unlocked_at);
 
   return (
-    <Screen band={band}>
+    <FicheScreen title={t.title}>
       <LevelCard xp={grade.xp} levels={grade.levels} />
-      <MenaoScoreCard />
       {claimable ? (
-        <View style={styles.claim}>
-          <Text style={styles.claimTitle}>{t.rewardReady}</Text>
-          <Text style={styles.small}>{claimable.reward}</Text>
-          <Button
+        <NextStepCard title={t.rewardReady} text={claimable.reward}>
+          <FicheButton
             label={t.claim}
+            tall
             onPress={() =>
               router.push({ pathname: "/pro-recompense", params: { niveau: claimable.level } })
             }
           />
-        </View>
+        </NextStepCard>
       ) : claimed ? (
         <Notice tone="success">{t.claimed}</Notice>
       ) : null}
+      <MenaoScoreCard />
 
-      <Segmented
-        label={t.tabs.label}
-        options={[
-          { value: "objectives", label: t.tabs.objectives },
-          { value: "badges", label: t.tabs.badges },
-        ]}
-        value={tab}
-        onChange={setTab}
-      />
-
-      {tab === "objectives" ? (
-        <>
-          <Text role="heading" style={styles.section}>
-            {t.objectivesTitle}
-          </Text>
-          {current.length === 0 ? <Notice tone="success">{t.noObjective}</Notice> : null}
+      <GroupTitle title={t.objectivesTitle} count={current.length} />
+      {current.length === 0 ? (
+        <Notice tone="success">{t.noObjective}</Notice>
+      ) : (
+        <ListGroup>
           {current.map((o) => (
             <View key={o.code} style={styles.objective}>
               <View style={styles.objectiveHead}>
-                <View style={styles.objectiveText}>
-                  <Text style={styles.objectiveTitle}>{o.title}</Text>
-                  <Text style={styles.small}>{o.description}</Text>
-                </View>
-                <View style={styles.xp}>
-                  <Text style={styles.xpText}>{t.xpGain(o.xp)}</Text>
-                </View>
+                <Text style={styles.objectiveTitle}>{o.title}</Text>
+                <FicheTag text={t.xpGain(o.xp)} tone="primary" />
               </View>
-              <ProgressBar value={o.progress} target={o.target} />
+              <Text style={styles.small}>{o.description}</Text>
+              <ProgressBar
+                value={o.progress}
+                target={o.target}
+                label={t.objectiveProgress(o.title)}
+              />
+              <Text style={styles.small}>{t.badgesCount(o.progress, o.target)}</Text>
             </View>
           ))}
-          {achieved.length > 0 ? (
-            <>
-              <Text role="heading" style={styles.section}>
-                {t.achievedTitle}
-              </Text>
-              {achieved.map((o) => (
-                <View key={o.code} style={[styles.objective, styles.objectiveDone]}>
-                  <View style={styles.objectiveHead}>
-                    <View style={styles.objectiveText}>
-                      <Text style={styles.objectiveTitle}>{o.title}</Text>
-                      <Text style={styles.small}>{o.description}</Text>
-                      {o.achieved_at ? (
-                        <Text style={styles.small}>
-                          {t.achievedOn(formatDateNumeric(o.achieved_at))}
-                        </Text>
-                      ) : null}
-                    </View>
-                    <View style={styles.xp}>
-                      <Text style={styles.xpText}>{t.xpGain(o.xp)}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </>
-          ) : null}
-        </>
-      ) : (
-        <>
-          <Text role="heading" style={styles.section}>
-            {t.badgesToEarn}
-          </Text>
-          <BadgeGrid badges={toEarn} onOpen={setOpen} />
-          <Text role="heading" style={styles.section}>
-            {t.badgesEarned}
-          </Text>
-          {earned.length === 0 ? (
-            <Text style={styles.small}>{t.noBadge}</Text>
-          ) : (
-            <BadgeGrid badges={earned} onOpen={setOpen} />
-          )}
-        </>
+        </ListGroup>
       )}
+
+      {achieved.length > 0 ? (
+        <>
+          <GroupTitle title={t.achievedTitle} count={achieved.length} />
+          <ListGroup>
+            {achieved.map((o) => (
+              <View key={o.code} style={styles.achieved}>
+                <IconSquare icon={Check} tone="success" />
+                <View style={styles.achievedText}>
+                  <Text style={styles.objectiveTitle}>{o.title}</Text>
+                  {o.achieved_at ? (
+                    <Text style={styles.small}>
+                      {t.achievedOn(formatDateNumeric(o.achieved_at))}
+                    </Text>
+                  ) : null}
+                </View>
+                <FicheTag text={t.xpGain(o.xp)} tone="success" />
+              </View>
+            ))}
+          </ListGroup>
+        </>
+      ) : null}
+
+      <GroupTitle title={t.tabs.badges} count={t.badgesCount(earned.length, grade.badges.length)} />
+      {earned.length === 0 ? <Text style={styles.small}>{t.noBadge}</Text> : null}
+      <BadgeGrid badges={[...earned, ...toEarn]} onOpen={setOpen} />
 
       {/* Maquette « Artisan exceptionnel » : progression d'un badge. */}
       <BottomSheet
@@ -162,146 +144,106 @@ function GradeScreen() {
                 <Text style={styles.objectiveTitle}>{t.progression}</Text>
                 <Text style={styles.percent}>{t.progress(open.progress, open.target)}</Text>
               </View>
-              <ProgressBar value={open.progress} target={open.target} hideCount />
+              <ProgressBar value={open.progress} target={open.target} label={t.progression} />
               {!open.unlocked_at ? (
                 <Text style={styles.small}>{t.remaining(open.target - open.progress)}</Text>
               ) : null}
             </View>
-            <Button label={t.continue} onPress={() => setOpen(null)} />
+            <FicheButton label={t.continue} tall onPress={() => setOpen(null)} />
           </View>
         ) : null}
       </BottomSheet>
-    </Screen>
-  );
-}
-
-function ProgressBar({
-  value,
-  target,
-  hideCount = false,
-}: {
-  value: number;
-  target: number;
-  hideCount?: boolean;
-}) {
-  const ratio = target > 0 ? Math.min(1, value / target) : 0;
-  return (
-    <View style={styles.progressRow}>
-      <View
-        style={styles.track}
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={target}
-        aria-valuenow={value}
-      >
-        <View style={[styles.fill, { width: `${ratio * 100}%` }]} />
-      </View>
-      {hideCount ? null : <Text style={styles.small}>{t.progress(value, target)}</Text>}
-    </View>
+    </FicheScreen>
   );
 }
 
 function BadgeGrid({ badges, onOpen }: { badges: Badge[]; onOpen: (badge: Badge) => void }) {
   return (
     <View style={styles.grid}>
-      {badges.map((b) => (
-        <Tappable
-          key={b.code}
-          role="button"
-          aria-label={b.label}
-          onPress={() => onOpen(b)}
-          style={styles.badge}
-        >
-          <BadgeIcon code={b.code} unlocked={Boolean(b.unlocked_at)} />
-          <Text style={styles.badgeLabel} numberOfLines={2}>
-            {b.label}
-          </Text>
-          {b.unlocked_at ? null : (
-            <View style={styles.badgeTrack}>
-              <View
-                style={[styles.fill, { width: `${Math.min(1, b.progress / b.target) * 100}%` }]}
-              />
+      {badges.map((b) => {
+        const on = Boolean(b.unlocked_at);
+        return (
+          <Tappable
+            key={b.code}
+            role="button"
+            aria-label={on ? t.badgeEarned(b.label) : t.badgeToEarn(b.label, b.progress, b.target)}
+            onPress={() => onOpen(b)}
+            style={styles.badge}
+          >
+            <View style={on ? null : styles.faded}>
+              <BadgeIcon code={b.code} unlocked={on} />
             </View>
-          )}
-        </Tappable>
-      ))}
+            <Text style={[styles.badgeLabel, !on && styles.badgeLabelOff]} numberOfLines={2}>
+              {b.label}
+            </Text>
+            {on ? null : (
+              <View style={styles.badgeBar}>
+                <ProgressBar value={b.progress} target={b.target} label={b.label} height={4} />
+              </View>
+            )}
+          </Tappable>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  claim: {
-    gap: spacing(2),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-  },
-  claimTitle: { fontFamily: font.medium, fontSize: 16, color: colors["primary-strong"] },
-  section: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
   small: {
     fontFamily: font.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     color: colors["muted-foreground"],
   },
   center: { textAlign: "center" },
-  percent: { fontFamily: font.medium, fontSize: 13, color: colors.primary },
-  objective: {
+  percent: { fontFamily: font.semibold, fontSize: 13, color: colors["primary-strong"] },
+  objective: { gap: spacing(2), paddingHorizontal: spacing(5), paddingVertical: spacing(4) },
+  objectiveHead: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
   },
-  objectiveDone: { backgroundColor: colors.background },
-  objectiveHead: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3) },
-  objectiveText: { flex: 1, gap: 2 },
-  objectiveTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  xp: {
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
+  objectiveTitle: {
+    flexShrink: 1,
+    fontFamily: font.bold,
+    fontSize: 15,
+    lineHeight: 21,
+    color: colors.foreground,
   },
-  xpText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  progressRow: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  track: {
-    flex: 1,
-    height: 6,
-    overflow: "hidden",
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
+  achieved: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3.5),
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3.5),
   },
-  fill: { height: 6, borderRadius: radius.pill, backgroundColor: colors.primary },
+  achievedText: { flex: 1, gap: 2 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing(3) },
   badge: {
     width: "31%",
+    flexGrow: 1,
+    maxWidth: "32%",
     alignItems: "center",
     gap: spacing(2),
-    borderRadius: radius.card,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing(2),
-    paddingVertical: spacing(3),
+    paddingVertical: spacing(4),
   },
+  faded: { opacity: 0.45 },
+  badgeBar: { alignSelf: "stretch", paddingHorizontal: spacing(2) },
   badgeLabel: {
     minHeight: 32,
-    fontFamily: font.medium,
-    fontSize: 12,
+    fontFamily: font.bold,
+    fontSize: 13,
+    lineHeight: 16,
     textAlign: "center",
     color: colors.foreground,
   },
-  badgeTrack: {
-    alignSelf: "stretch",
-    height: 4,
-    overflow: "hidden",
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
-  },
+  badgeLabelOff: { color: colors["muted-foreground"] },
   sheet: { alignItems: "center", gap: spacing(3) },
   status: {
     borderRadius: radius.pill,

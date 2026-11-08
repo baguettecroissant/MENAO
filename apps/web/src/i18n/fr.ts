@@ -3361,6 +3361,7 @@ export const fr = {
         next === null ? `${xp}\u00a0XP` : `${xp} / ${next}\u00a0XP`,
       level: (n: number) => `Niv. ${n}`,
       levelLong: (n: number) => `Niveau ${n}`,
+      yourLevel: "Votre niveau",
       maxLevel: "Niveau maximal atteint",
       nextReward: "Prochaine récompense de niveau :",
       outfitAlt:
@@ -4035,6 +4036,11 @@ export const fr = {
       printHint:
         "10 cartes de 85 × 55 mm par feuille A4 : imprimez à 100 %, sans mise à l'échelle.",
       print: "Imprimer la planche",
+      // Refonte « Nette » (ADR 0253).
+      printTitle: "Imprimer",
+      screenTitle: "Ou montrez-la à l'écran",
+      screenText:
+        "Dans l'application, Mon profil puis Carte de visite : votre client scanne le QR code avec son téléphone.",
       back: "Mon profil",
       unavailable: "Vos cartes seront disponibles quand votre fiche sera visible des particuliers.",
       qrAlt: "QR code de votre fiche MENAO",
@@ -4743,6 +4749,12 @@ export const fr = {
       lead: "Invitez vos salariés : chacun a son propre accès à MENAO, sur le site et dans l'application.",
       seats: (used: number, seats: number) =>
         `${used} compte${used > 1 ? "s" : ""} sur ${seats}, vous compris`,
+      // Refonte « Nette » (ADR 0253).
+      seatsTitle: "Comptes utilisés",
+      seatsValue: (used: number, seats: number) => `${used} sur ${seats}`,
+      membersTitle: "Membres",
+      workerNote:
+        "Un ouvrier ne voit que les chantiers qui lui sont attribués : journal, photos, messages et rendez-vous, sans aucun montant.",
       notIncluded: {
         title: "Avec Premium et Entreprise",
         text: "Donnez un accès à vos chefs d'équipe et à vos ouvriers : 3 comptes en Premium, 10 en Entreprise, vous compris.",
@@ -4792,6 +4804,9 @@ export const fr = {
       } as Record<string, string>,
       suspended: {
         title: "Accès suspendu",
+        heading: "Votre accès est suspendu",
+        contact: "Une question ? L'équipe MENAO répond à",
+        email: "contact@menao.fr",
         text: (company: string | null) =>
           `Votre accès à l'espace${company ? ` de ${company}` : " de votre entreprise"} est suspendu. Votre patron peut le réactiver depuis « Mon équipe ».`,
       },
@@ -4802,6 +4817,15 @@ export const fr = {
       subtitle: "Posez votre question : l'assistant connaît votre espace et votre compte.",
       assistantTitle: "Posez votre question",
       speaker: "Assistant MENAO",
+      knows: "Connaît votre espace et votre compte",
+      // Guides pas à pas de la colonne de droite (refonte « Nette », ADR 0253).
+      guidesTitle: "Guides pas à pas",
+      guides: {
+        devis: "Envoyer mon premier devis",
+        paiements: "Être payé en ligne",
+        agenda: "Brancher mon agenda",
+        secretaire: "Ma secrétaire",
+      },
       you: "Vous",
       quick: [
         "Qu'est-ce que je dois faire maintenant ?",
@@ -4885,6 +4909,19 @@ export const fr = {
       },
       historyTitle: "Derniers envois",
       historyEmpty: "Aucun envoi pour le moment.",
+      // Chiffres de l'envoi au comptable (refonte « Nette », ADR 0253).
+      figuresLabel: "Envoi au comptable en chiffres",
+      figNext: "Prochain envoi",
+      figNextShort: "prochain envoi",
+      figNextOff: "désactivé",
+      figNextHint: (period: string) => `automatique, pour ${period}`,
+      figNextOffHint: "envoi automatique désactivé",
+      figLast: "Dernier envoi",
+      figLastShort: "dernier envoi",
+      figLastNone: "aucun envoi pour le moment",
+      figMissing: "Dépenses sans pièce",
+      figMissingShort: "sans pièce",
+      figMissingHint: "ajoutez la facture ou le ticket",
       kinds: { automatique: "Automatique", manuel: "À la main" },
       statuses: { envoye: "Envoyé", echec: "Échec" },
       historyLine: (date: string, recipient: string) => `${date} · ${recipient}`,

@@ -13,9 +13,8 @@ import { expenseFormSchema } from "@menao/validation";
 import { router } from "expo-router";
 import { Camera, FileText, ImageIcon, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
-import { DateTimeFields } from "@/components/date-time-fields";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
 import { formatCents } from "@/lib/format";
@@ -27,9 +26,11 @@ import {
   type PickedPhoto,
 } from "@/lib/photos";
 import { readExpense, saveExpense } from "@/lib/pro-expenses";
-import { Body, Button, Card, Checkbox, Chip, Notice, Tappable, TextField, toast } from "@/ui";
+import { Notice, Tappable, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExpenseLines } from "./expense-parts";
+import { CardHeading, FicheButton, FicheCard, FicheScreen } from "./fiche-kit";
+import { DateField, FieldPair, SelectField, SwitchCard, ToolField } from "./tools-kit";
 
 const t = fr.proExpenses;
 const f = t.form;
@@ -78,9 +79,12 @@ function applyPrefill(values: ExpenseFormValues, fields: ExpensePrefill): Expens
 /**
  * Formulaire d'une dépense (F-62), comme sur le site : la pièce d'abord (appareil photo,
  * photothèque ou PDF), déposée et lue par l'IA pour pré-remplir les champs, que l'artisan vérifie ;
- * puis le chantier et le paiement. La pièce est rangée à l'enregistrement.
+ * puis le chantier et le paiement. La pièce est rangée à l'enregistrement. Refonte « Nette »
+ * (lot 8, maquette « DepenseApp ») : bandeau bleu clair de la pièce lue, champs arrondis deux par
+ * deux, listes de choix dans une feuille, carte « Déjà payée » et bouton fixé en bas.
  */
 export function ExpenseFormView({
+  title,
   expenseId,
   initial,
   initialLines,
@@ -88,6 +92,8 @@ export function ExpenseFormView({
   chantiers,
   takePhoto = false,
 }: {
+  /** Titre de la barre du haut (« Nouvelle dépense », « Modifier la dépense »). */
+  title: string;
   expenseId: string | null;
   initial: ExpenseFormValues;
   initialLines: ExpenseLinePrefill[];
@@ -198,43 +204,76 @@ export function ExpenseFormView({
   const tva = parseEuros(values.totalTva);
   const ttc = ht !== null && tva !== null ? ht + tva : null;
 
+  const busy = reading?.step === "reading";
+  const read = reading?.step === "done" && reading.filled;
+  const chantierOptions = [
+    { value: "", label: f.fields.chantierNone },
+    ...chantiers.map((c) => ({ value: c.id, label: c.label })),
+  ];
+  const categoryOptions = [
+    { value: "", label: f.fields.categoryNone },
+    ...EXPENSE_CATEGORIES.map((c) => ({ value: c as string, label: t.categories[c] })),
+  ];
+  const kindOptions = EXPENSE_KINDS.map((k) => ({ value: k as string, label: t.kinds[k] }));
+
   return (
-    <>
-      <Card>
-        <Text style={styles.cardTitle}>{f.document.title}</Text>
-        <Body muted>{f.document.lead}</Body>
-        <Button
-          label={f.document.camera}
-          variant="secondary"
-          icon={Camera}
-          disabled={reading?.step === "reading"}
-          onPress={() => void pick("camera")}
-        />
-        <Button
-          label={f.document.library}
-          variant="secondary"
-          icon={ImageIcon}
-          disabled={reading?.step === "reading"}
-          onPress={() => void pick("library")}
-        />
-        <Button
-          label={f.document.file}
-          variant="secondary"
-          icon={FileText}
-          disabled={reading?.step === "reading"}
-          onPress={() => void pick("file")}
-        />
-        {photo ? (
-          <View style={styles.chosen}>
-            {photo.pdf ? (
-              <Text style={styles.chosenText}>{f.document.chosenPdf(photo.pdf.name)}</Text>
-            ) : (
-              <Image
-                source={{ uri: photo.uri }}
-                style={styles.thumbnail}
-                accessibilityLabel={f.document.chosen}
-              />
-            )}
+    <FicheScreen
+      title={title}
+      footer={
+        <>
+          {failure ? <Notice tone="error">{failure}</Notice> : null}
+          <FicheButton
+            label={f.save}
+            tall
+            loading={saving}
+            disabled={busy}
+            onPress={() => void save()}
+          />
+        </>
+      }
+    >
+      {photo ? (
+        <View style={styles.read}>
+          <View style={styles.readHead}>
+            <View style={styles.thumb}>
+              {photo.pdf ? (
+                <FileText size={22} color={colors["muted-foreground"]} />
+              ) : (
+                <Image
+                  source={{ uri: photo.uri }}
+                  style={styles.thumbImage}
+                  accessibilityLabel={f.document.chosen}
+                />
+              )}
+            </View>
+            <View style={styles.readText}>
+              <Text style={styles.readTitle}>
+                {busy
+                  ? f.document.reading
+                  : read
+                    ? photo.pdf
+                      ? f.document.readFile
+                      : f.document.readTicket
+                    : f.document.attached}
+              </Text>
+              {read ? <Text style={styles.readBody}>{f.document.readText}</Text> : null}
+              {photo.pdf ? (
+                <Text style={styles.readBody} numberOfLines={1}>
+                  {f.document.chosenPdf(photo.pdf.name)}
+                </Text>
+              ) : null}
+              {busy ? null : (
+                <Pressable
+                  role="button"
+                  hitSlop={6}
+                  onPress={() => void pick(photo.pdf ? "file" : "camera")}
+                >
+                  <Text style={styles.readLink}>
+                    {photo.pdf ? f.document.otherFile : f.document.retake}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
             <Tappable
               role="button"
               aria-label={f.document.remove}
@@ -245,209 +284,233 @@ export function ExpenseFormView({
               <X size={18} color={colors["muted-foreground"]} />
             </Tappable>
           </View>
-        ) : hasDocument ? (
-          <Body muted>{f.document.current}</Body>
-        ) : null}
-        {reading?.step === "reading" ? <AiProgress steps={fr.aiProgress.expense} /> : null}
-        {reading?.step === "failed" ? <Notice tone="info">{f.reading.failed}</Notice> : null}
-        {reading?.step === "done" && reading.filled ? (
-          <Notice tone="success">{f.reading.done}</Notice>
-        ) : null}
-        {reading?.step === "done"
-          ? reading.warnings.map((warning) => (
-              <Notice key={warning} tone="info">
-                {f.reading.warnings[warning]}
-              </Notice>
-            ))
-          : null}
-      </Card>
+          {busy ? <AiProgress steps={fr.aiProgress.expense} /> : null}
+        </View>
+      ) : (
+        <FicheCard padding={4.5} gap={3}>
+          <CardHeading title={f.document.title} size={17} />
+          <Text style={styles.lead}>{hasDocument ? f.document.current : f.document.lead}</Text>
+          <FicheButton
+            label={f.document.camera}
+            icon={Camera}
+            onPress={() => void pick("camera")}
+          />
+          <FicheButton
+            label={f.document.library}
+            variant="secondary"
+            icon={ImageIcon}
+            onPress={() => void pick("library")}
+          />
+          <FicheButton
+            label={f.document.file}
+            variant="secondary"
+            icon={FileText}
+            onPress={() => void pick("file")}
+          />
+        </FicheCard>
+      )}
+      {reading?.step === "failed" ? <Notice tone="info">{f.reading.failed}</Notice> : null}
+      {reading?.step === "done"
+        ? reading.warnings.map((warning) => (
+            <Notice key={warning} tone="info">
+              {f.reading.warnings[warning]}
+            </Notice>
+          ))
+        : null}
 
-      <Card>
-        <TextField
-          label={f.fields.title}
-          value={values.title}
-          onChangeText={(value) => set("title", value)}
-          maxLength={EXPENSE_LIMITS.titleMaxLength}
-          hint={f.fields.titleHint}
-          error={errors.title}
+      <ToolField
+        label={f.fields.title}
+        value={values.title}
+        onChangeText={(value) => set("title", value)}
+        maxLength={EXPENSE_LIMITS.titleMaxLength}
+        hint={f.fields.titleHint}
+        error={errors.title}
+      />
+      <FieldPair>
+        <ToolField
+          label={f.fields.totalHtShort}
+          value={values.totalHt}
+          onChangeText={(value) => set("totalHt", value)}
+          keyboardType="decimal-pad"
+          error={errors.totalHt}
+          style={styles.half}
         />
-        <TextField
+        <ToolField
+          label={f.fields.totalTvaShort}
+          value={values.totalTva}
+          onChangeText={(value) => set("totalTva", value)}
+          keyboardType="decimal-pad"
+          error={errors.totalTva}
+          style={styles.half}
+        />
+      </FieldPair>
+      <View style={styles.total} accessible aria-live="polite">
+        <Text style={styles.totalLabel}>{f.fields.totalTtc}</Text>
+        <Text style={styles.totalValue}>{ttc === null ? "—" : formatCents(ttc)}</Text>
+      </View>
+      <FieldPair>
+        <ToolField
           label={f.fields.supplier}
           value={values.supplierName}
           onChangeText={(value) => set("supplierName", value)}
           maxLength={EXPENSE_LIMITS.supplierMaxLength}
           error={errors.supplierName}
+          style={styles.half}
         />
-        <TextField
+        <ToolField
           label={f.fields.reference}
           value={values.reference}
           onChangeText={(value) => set("reference", value)}
           maxLength={EXPENSE_LIMITS.referenceMaxLength}
           autoCapitalize="characters"
           error={errors.reference}
+          style={styles.half}
         />
-        <Text style={styles.label}>{f.fields.kind}</Text>
-        <View style={styles.chips}>
-          {EXPENSE_KINDS.map((kind) => (
-            <Chip
-              key={kind}
-              label={t.kinds[kind]}
-              selected={values.kind === kind}
-              onPress={() => set("kind", kind)}
-            />
-          ))}
-        </View>
-        <Text style={styles.label}>{f.fields.category}</Text>
-        <View style={styles.chips}>
-          {EXPENSE_CATEGORIES.map((category) => (
-            <Chip
-              key={category}
-              label={t.categories[category]}
-              selected={values.category === category}
-              onPress={() => set("category", values.category === category ? "" : category)}
-            />
-          ))}
-        </View>
-      </Card>
-
-      <Card>
-        <TextField
-          label={f.fields.totalHt}
-          value={values.totalHt}
-          onChangeText={(value) => set("totalHt", value)}
-          keyboardType="decimal-pad"
-          error={errors.totalHt}
-        />
-        <TextField
-          label={f.fields.totalTva}
-          value={values.totalTva}
-          onChangeText={(value) => set("totalTva", value)}
-          keyboardType="decimal-pad"
-          error={errors.totalTva}
-        />
-        <View style={styles.total}>
-          <Text style={styles.totalLabel}>{f.fields.totalTtc}</Text>
-          <Text style={styles.totalValue}>{ttc === null ? "—" : formatCents(ttc)}</Text>
-        </View>
-        <DateTimeFields
-          date={values.issuedOn || null}
+      </FieldPair>
+      <SelectField
+        label={f.fields.chantier}
+        value={values.chantierId}
+        options={chantierOptions}
+        onChange={(value) => set("chantierId", value)}
+        hint={f.fields.chantierHint}
+        error={errors.chantierId}
+      />
+      <FieldPair>
+        <DateField
+          label={f.fields.issuedOn}
+          date={values.issuedOn}
           minDate={MIN_DATE}
           onDate={(date) => set("issuedOn", date)}
-          dateLabel={f.fields.issuedOn}
           error={errors.issuedOn}
-          compact
+          style={styles.half}
+        />
+        <SelectField
+          label={f.fields.category}
+          value={values.category}
+          options={categoryOptions}
+          onChange={(value) => set("category", value)}
+          error={errors.category}
+          style={styles.half}
+        />
+      </FieldPair>
+      <FieldPair>
+        <SelectField
+          label={f.fields.kind}
+          value={values.kind}
+          options={kindOptions}
+          onChange={(value) => set("kind", value)}
+          error={errors.kind}
+          style={styles.half}
         />
         {values.dueOn ? (
-          <>
-            <DateTimeFields
-              date={values.dueOn}
-              minDate={values.issuedOn || MIN_DATE}
-              onDate={(date) => set("dueOn", date)}
-              dateLabel={f.fields.dueOn}
-              error={errors.dueOn}
-              compact
-            />
-            <Button label={f.fields.dueOnRemove} variant="ghost" onPress={() => set("dueOn", "")} />
-          </>
+          <DateField
+            label={f.fields.dueOn}
+            date={values.dueOn}
+            minDate={values.issuedOn || MIN_DATE}
+            onDate={(date) => set("dueOn", date)}
+            error={errors.dueOn}
+            style={styles.half}
+          />
         ) : (
-          <Button
-            label={f.fields.dueOnAdd}
-            variant="ghost"
-            onPress={() => set("dueOn", values.issuedOn || parisToday())}
-          />
+          <View style={styles.half} />
         )}
-      </Card>
+      </FieldPair>
+      <Pressable
+        role="button"
+        hitSlop={6}
+        onPress={() => set("dueOn", values.dueOn ? "" : values.issuedOn || parisToday())}
+        style={styles.dueLink}
+      >
+        <Text style={styles.readLink}>
+          {values.dueOn ? f.fields.dueOnRemove : f.fields.dueOnAdd}
+        </Text>
+      </Pressable>
 
-      <Card>
-        <Text style={styles.label}>{f.fields.chantier}</Text>
-        <View style={styles.chips}>
-          <Chip
-            label={f.fields.chantierNone}
-            selected={values.chantierId === ""}
-            onPress={() => set("chantierId", "")}
-          />
-          {chantiers.map((chantier) => (
-            <Chip
-              key={chantier.id}
-              label={chantier.label}
-              selected={values.chantierId === chantier.id}
-              onPress={() => set("chantierId", chantier.id)}
-            />
-          ))}
-        </View>
-        <Checkbox
-          label={f.fields.paid}
-          checked={values.paid}
-          onChange={(checked) => {
-            set("paid", checked);
-            if (checked && !values.paidOn) set("paidOn", parisToday());
-          }}
-        />
+      <SwitchCard
+        label={f.fields.paid}
+        hint={f.fields.paidHint}
+        value={values.paid}
+        onChange={(checked) => {
+          set("paid", checked);
+          if (checked && !values.paidOn) set("paidOn", parisToday());
+        }}
+      >
         {values.paid ? (
-          <DateTimeFields
-            date={values.paidOn || null}
+          <DateField
+            label={f.fields.paidOn}
+            date={values.paidOn}
             minDate={MIN_DATE}
             onDate={(date) => set("paidOn", date)}
-            dateLabel={f.fields.paidOn}
             error={errors.paidOn}
-            compact
           />
         ) : null}
-        <TextField
-          label={f.fields.notes}
-          value={values.notes}
-          onChangeText={(value) => set("notes", value)}
-          maxLength={EXPENSE_LIMITS.notesMaxLength}
-          multiline
-          error={errors.notes}
-        />
-      </Card>
+      </SwitchCard>
+
+      <ToolField
+        label={f.fields.notes}
+        value={values.notes}
+        onChangeText={(value) => set("notes", value)}
+        maxLength={EXPENSE_LIMITS.notesMaxLength}
+        multiline
+        error={errors.notes}
+      />
 
       {lines.length > 0 ? (
-        <Card>
-          <Text style={styles.cardTitle}>{f.lines.title}</Text>
+        <FicheCard padding={4.5} gap={3}>
+          <CardHeading title={f.lines.title} size={17} />
           <ExpenseLines
             lines={lines}
             onRemove={(index) => setLines((current) => current.filter((_, i) => i !== index))}
           />
-        </Card>
+        </FicheCard>
       ) : null}
-
-      {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button
-        label={f.save}
-        loading={saving}
-        disabled={reading?.step === "reading"}
-        onPress={() => void save()}
-      />
-    </>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  cardTitle: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  chosen: {
-    flexDirection: "row",
-    alignItems: "center",
+  lead: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  read: {
     gap: spacing(3),
-    borderRadius: radius.input,
-    backgroundColor: colors.background,
-    padding: spacing(3),
+    borderRadius: radius.card,
+    backgroundColor: colors["primary-soft"],
+    padding: 14,
   },
-  chosenText: { flex: 1, fontFamily: font.regular, fontSize: 14, color: colors.foreground },
-  thumbnail: { flex: 1, height: 160, borderRadius: radius.input, resizeMode: "contain" },
-  removePhoto: { padding: 2 },
+  readHead: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
+  thumb: {
+    width: 64,
+    height: 80,
+    overflow: "hidden",
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbImage: { width: 64, height: 80, resizeMode: "cover" },
+  readText: { flex: 1, gap: 3 },
+  readTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
+  readBody: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  readLink: { fontFamily: font.semibold, fontSize: 14, color: colors["primary-strong"] },
+  removePhoto: { alignSelf: "flex-start", padding: 2 },
+  half: { flex: 1, minWidth: 0 },
+  dueLink: {
+    alignSelf: "flex-start",
+    minHeight: 32,
+    justifyContent: "center",
+    marginTop: -spacing(2),
+  },
   total: {
     flexDirection: "row",
     alignItems: "baseline",
     justifyContent: "space-between",
+    marginTop: -spacing(1),
     borderRadius: radius.input,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing(4),
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
     paddingVertical: spacing(3),
   },
-  totalLabel: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  totalValue: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
+  totalLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
+  totalValue: { fontFamily: font.display, fontSize: 20, color: colors.foreground },
 });

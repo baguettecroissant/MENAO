@@ -100,7 +100,10 @@ export function CharterForm({
       <CharterHero />
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
-        <nav aria-label={t.summary} className="rounded-card border border-border bg-surface p-4">
+        <nav
+          aria-label={t.summary}
+          className="rounded-card border border-border bg-surface p-4 shadow-card"
+        >
           <h3 className="font-semibold">{t.progressTitle}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{t.progressCount(n, CHARTER_TOTAL)}</p>
           <ul className="mt-2.5 flex flex-col gap-0.5">
@@ -147,7 +150,7 @@ export function CharterForm({
             key={section.id}
             id={section.id}
             aria-labelledby={`h-${section.id}`}
-            className="scroll-mt-24 rounded-card border border-border bg-surface p-5"
+            className="scroll-mt-24 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
           >
             <SectionHeader
               section={section}
@@ -177,7 +180,7 @@ export function CharterForm({
                       onClick={() => toggle(code)}
                       className={`flex w-full items-start gap-3 rounded-input border-[1.5px] p-3 text-left transition-colors ${
                         on
-                          ? "border-primary bg-[#f7f8ff]"
+                          ? "border-foreground bg-background"
                           : "border-border bg-surface hover:border-primary/40"
                       }`}
                     >
@@ -199,7 +202,7 @@ export function CharterForm({
         action={action}
         onSubmit={validate}
         aria-labelledby="h-sig"
-        className="flex scroll-mt-24 flex-col gap-3.5 rounded-card border border-border bg-surface p-5"
+        className="flex scroll-mt-24 flex-col gap-3.5 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
         noValidate
       >
         <div className="flex items-start gap-3.5">
@@ -318,13 +321,15 @@ function CheckButton({
       aria-checked={checked}
       onClick={onToggle}
       className={`flex w-full items-start gap-3 rounded-input border-[1.5px] p-3 text-left ${
-        checked ? "border-primary bg-[#f7f8ff]" : "border-border bg-surface hover:border-primary/40"
+        checked
+          ? "border-foreground bg-background"
+          : "border-border bg-surface hover:border-primary/40"
       }`}
     >
       <span
         aria-hidden="true"
         className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-[7px] border-2 ${
-          checked ? "border-primary bg-primary" : "border-[#a9b0c6] bg-surface"
+          checked ? "border-foreground bg-foreground" : "border-[#a9b0c6] bg-surface"
         }`}
       >
         {checked && <Check className="size-4 text-white" strokeWidth={3.2} />}
@@ -339,7 +344,9 @@ function Dot({ done, label }: { done: boolean; label: number }) {
     <span
       aria-hidden="true"
       className={`flex size-[22px] shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-extrabold ${
-        done ? "border-primary bg-primary text-white" : "border-primary/40 text-primary-strong"
+        done
+          ? "border-foreground bg-foreground text-white"
+          : "border-primary/40 text-primary-strong"
       }`}
     >
       {done ? <Check className="size-3" strokeWidth={3.4} /> : label}

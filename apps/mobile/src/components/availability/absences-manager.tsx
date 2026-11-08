@@ -1,14 +1,16 @@
 import { AGENDA_LABEL_MAX_LENGTH, daysBetween } from "@menao/core";
-import { Palmtree, X } from "lucide-react-native";
+import { CalendarDays, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { StatusPill } from "@/components/chantier/parts";
 import { DateTimeFields } from "@/components/date-time-fields";
+import { GroupTitle, ListGroup } from "@/components/list-kit";
+import { CardHeading, FicheButton, FicheCard, FicheTag } from "@/components/pro/fiche-kit";
+import { IconSquare, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { formatDayMonthShort } from "@/lib/format";
 import type { AgendaAbsence } from "@/lib/pro-agenda";
 import { addAbsence, deleteAbsence, type AbsenceErrors } from "@/lib/pro-availability";
-import { Button, Card, Chip, Notice, TextField, toast } from "@/ui";
+import { Chip, Notice, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAvailability.absences;
@@ -20,7 +22,8 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 /**
  * Congés et absences (F-44), comme sur le site : pendant une absence, l'artisan n'est plus proposé
- * dans les recherches. Absences en cours et à venir, ajout avec motifs fréquents.
+ * dans les recherches. Absences en cours et à venir, ajout avec motifs fréquents. Refonte « Nette »
+ * (lot 8) : « Absences prévues » en lignes, puis la carte « Ajouter une absence ».
  */
 export function AbsencesManager({
   absences,
@@ -46,58 +49,59 @@ export function AbsencesManager({
   }
 
   return (
-    <Card>
-      <View style={styles.titleRow}>
-        <Palmtree size={18} color={colors.primary} />
-        <Text role="heading" style={styles.heading}>
-          {t.title}
-        </Text>
-      </View>
+    <>
+      <GroupTitle title={t.planned} count={absences.length} />
       <Text style={styles.text}>{t.text}</Text>
       {absences.length === 0 ? (
         <Text style={styles.empty}>{t.empty}</Text>
       ) : (
-        absences.map((a) => {
-          const period = t.period(formatDayMonthShort(a.startsOn), formatDayMonthShort(a.endsOn));
-          return (
-            <View key={a.id} style={styles.item}>
-              <View style={styles.itemText}>
-                <Text style={styles.itemTitle}>{capitalize(period)}</Text>
-                <Text style={styles.small}>
-                  {[t.days(daysBetween(a.startsOn, a.endsOn) + 1), a.label]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </Text>
+        <ListGroup>
+          {absences.map((a) => {
+            const period = t.period(formatDayMonthShort(a.startsOn), formatDayMonthShort(a.endsOn));
+            return (
+              <View key={a.id} style={styles.item}>
+                <IconSquare icon={CalendarDays} tone="warning" />
+                <View style={styles.itemText}>
+                  <Text style={styles.itemTitle}>{capitalize(period)}</Text>
+                  <Text style={styles.small}>
+                    {[t.days(daysBetween(a.startsOn, a.endsOn) + 1), a.label]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </Text>
+                  {a.startsOn <= today ? <FicheTag text={t.ongoing} tone="warning" dot /> : null}
+                </View>
+                <Pressable
+                  role="button"
+                  aria-label={t.remove(period)}
+                  aria-disabled={removing === a.id}
+                  disabled={removing === a.id}
+                  hitSlop={8}
+                  onPress={() => void remove(a.id)}
+                  style={styles.iconButton}
+                >
+                  {removing === a.id ? (
+                    <ActivityIndicator size="small" color={colors["muted-foreground"]} />
+                  ) : (
+                    <X size={18} color={colors["muted-foreground"]} />
+                  )}
+                </Pressable>
               </View>
-              {a.startsOn <= today ? <StatusPill text={t.ongoing} tone="warning" /> : null}
-              <Pressable
-                role="button"
-                aria-label={t.remove(period)}
-                aria-disabled={removing === a.id}
-                disabled={removing === a.id}
-                hitSlop={8}
-                onPress={() => remove(a.id)}
-                style={styles.iconButton}
-              >
-                {removing === a.id ? (
-                  <ActivityIndicator size="small" color={colors["muted-foreground"]} />
-                ) : (
-                  <X size={16} color={colors["muted-foreground"]} />
-                )}
-              </Pressable>
-            </View>
-          );
-        })
+            );
+          })}
+        </ListGroup>
       )}
       {outcome && "error" in outcome ? <Notice tone="error">{outcome.error}</Notice> : null}
-      <AddAbsenceForm
-        today={today}
-        onAdded={() => {
-          setOutcome(null);
-          onChanged();
-        }}
-      />
-    </Card>
+      <FicheCard gap={3}>
+        <CardHeading title={t.addTitle} size={17} />
+        <AddAbsenceForm
+          today={today}
+          onAdded={() => {
+            setOutcome(null);
+            onChanged();
+          }}
+        />
+      </FicheCard>
+    </>
   );
 }
 
@@ -159,7 +163,7 @@ function AddAbsenceForm({ today, onAdded }: { today: string; onAdded: () => void
         error={errors.endsOn}
         compact
       />
-      <TextField
+      <ToolField
         label={t.label}
         value={label}
         onChangeText={setLabel}
@@ -173,22 +177,20 @@ function AddAbsenceForm({ today, onAdded }: { today: string; onAdded: () => void
       </View>
       {outcome && "error" in outcome ? <Notice tone="error">{outcome.error}</Notice> : null}
       {outcome && "success" in outcome ? <Notice tone="success">{outcome.success}</Notice> : null}
-      <Button label={t.add} variant="secondary" onPress={submit} loading={pending} />
+      <FicheButton
+        label={t.add}
+        variant="secondary"
+        onPress={() => void submit()}
+        loading={pending}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
-  heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  text: {
-    fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors["muted-foreground"],
-  },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
   empty: {
-    borderRadius: radius.input,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderStyle: "dashed",
     borderColor: colors["border-strong"],
@@ -202,24 +204,20 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing(3),
-    borderRadius: radius.input,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-    paddingVertical: spacing(2),
-    paddingLeft: spacing(3.5),
-    paddingRight: spacing(1.5),
+    gap: spacing(3.5),
+    paddingVertical: spacing(3.5),
+    paddingLeft: spacing(4),
+    paddingRight: spacing(2),
   },
-  itemText: { flex: 1, gap: spacing(0.5) },
-  itemTitle: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  iconButton: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
-  form: {
-    gap: spacing(3),
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing(4),
+  itemText: { flex: 1, gap: 3, alignItems: "flex-start" },
+  itemTitle: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
+  small: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  iconButton: {
+    width: theme.touchTarget,
+    height: theme.touchTarget,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  form: { gap: spacing(3) },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
 });

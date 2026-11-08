@@ -7,12 +7,12 @@ import {
   type AssistantScreen,
 } from "@menao/core";
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { ArrowRight, Mail, RotateCcw } from "lucide-react";
+import { ArrowRight, Mail, RotateCcw, Sparkles } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Bubble, Chips, Composer, Typing } from "@/components/assistant/assistant-ui";
-import { Card, focusRing } from "@/components/ui";
+import { focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createClient } from "@/lib/supabase/client";
 
@@ -105,9 +105,23 @@ export function ArtisanAssistant() {
   }
 
   return (
-    <Card className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-medium">{t.assistantTitle}</h2>
+    // Refonte « Nette » (ADR 0253) : carte de conversation avec son en-tête.
+    <section
+      aria-labelledby="assistant-titre"
+      className="flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card"
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-6">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-strong">
+            <Sparkles aria-hidden="true" className="size-5" />
+          </span>
+          <div className="flex flex-col">
+            <h2 id="assistant-titre" className="font-sans text-base font-bold">
+              {t.speaker}
+            </h2>
+            <span className="text-[0.8125rem] font-semibold text-success">{t.knows}</span>
+          </div>
+        </div>
         {messages.length > 0 && (
           <button
             type="button"
@@ -123,65 +137,69 @@ export function ArtisanAssistant() {
         )}
       </div>
 
-      {messages.length === 0 ? (
-        <Chips items={t.quick} onPick={(text) => void ask(text)} label={t.quickLabel} />
-      ) : (
-        <div aria-live="polite" className="flex flex-col gap-3">
-          {messages.map((m, i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <Bubble role={m.role} speaker={m.role === "user" ? t.you : t.speaker}>
-                {m.text}
-              </Bubble>
-              {m.role === "assistant" && (m.screens?.length ?? 0) > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {m.screens?.map((screen) => (
-                    <Link
-                      key={screen}
-                      href={SCREEN_HREF[screen] as Route}
-                      className={`inline-flex min-h-10 items-center gap-1.5 rounded-input border border-primary px-3.5 text-sm font-medium text-primary-strong hover:bg-primary-softer ${focusRing}`}
-                    >
-                      {t.screens[screen] ?? screen}
-                      <ArrowRight aria-hidden="true" className="size-4" />
-                    </Link>
-                  ))}
-                </div>
-              )}
-              {m.role === "assistant" && m.suggestHuman && (
-                <a
-                  href={`mailto:${t.email}`}
-                  className={`inline-flex min-h-10 items-center gap-1.5 self-start rounded-input px-1 text-sm font-medium text-primary-strong hover:underline ${focusRing}`}
-                >
-                  <Mail aria-hidden="true" className="size-4" />
-                  {t.writeTeam}
-                </a>
-              )}
-            </div>
-          ))}
-          {pending && <Typing label={t.typing} />}
-          {!pending && last?.role === "assistant" && !limitReached && (
-            <Chips
-              items={last.suggestions ?? []}
-              onPick={(text) => void ask(text)}
-              label={t.suggestionsLabel}
-            />
-          )}
-          <div ref={endRef} />
-        </div>
-      )}
+      <div className="flex min-h-[18rem] flex-col justify-end gap-3 px-4 py-5 sm:min-h-[24rem] sm:px-6">
+        {messages.length === 0 ? (
+          <Chips items={t.quick} onPick={(text) => void ask(text)} label={t.quickLabel} />
+        ) : (
+          <div aria-live="polite" className="flex flex-col gap-3">
+            {messages.map((m, i) => (
+              <div key={i} className="flex flex-col gap-2">
+                <Bubble role={m.role} speaker={m.role === "user" ? t.you : t.speaker}>
+                  {m.text}
+                </Bubble>
+                {m.role === "assistant" && (m.screens?.length ?? 0) > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {m.screens?.map((screen) => (
+                      <Link
+                        key={screen}
+                        href={SCREEN_HREF[screen] as Route}
+                        className={`inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold text-foreground hover:bg-background ${focusRing}`}
+                      >
+                        {t.screens[screen] ?? screen}
+                        <ArrowRight aria-hidden="true" className="size-4" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {m.role === "assistant" && m.suggestHuman && (
+                  <a
+                    href={`mailto:${t.email}`}
+                    className={`inline-flex min-h-10 items-center gap-1.5 self-start rounded-input px-1 text-sm font-medium text-primary-strong hover:underline ${focusRing}`}
+                  >
+                    <Mail aria-hidden="true" className="size-4" />
+                    {t.writeTeam}
+                  </a>
+                )}
+              </div>
+            ))}
+            {pending && <Typing label={t.typing} />}
+            {!pending && last?.role === "assistant" && !limitReached && (
+              <Chips
+                items={last.suggestions ?? []}
+                onPick={(text) => void ask(text)}
+                label={t.suggestionsLabel}
+              />
+            )}
+            <div ref={endRef} />
+          </div>
+        )}
+      </div>
 
       {!limitReached && (
-        <Composer
-          id="artisan-assistant-question"
-          value={question}
-          onChange={setQuestion}
-          onSubmit={() => void ask(question)}
-          pending={pending}
-          maxLength={ARTISAN_ASSISTANT_QUESTION_MAX_LENGTH}
-          placeholder={t.placeholder}
-          label={t.label}
-          sendLabel={t.send}
-        />
+        <div className="border-t border-border px-4 py-3 sm:px-6">
+          <Composer
+            id="artisan-assistant-question"
+            value={question}
+            onChange={setQuestion}
+            onSubmit={() => void ask(question)}
+            pending={pending}
+            maxLength={ARTISAN_ASSISTANT_QUESTION_MAX_LENGTH}
+            placeholder={t.placeholder}
+            label={t.label}
+            sendLabel={t.send}
+          />
+        </div>
       )}
-    </Card>
+    </section>
   );
 }

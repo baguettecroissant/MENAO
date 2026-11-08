@@ -7,6 +7,7 @@ import { formatAgo } from "@/lib/format";
 import { disableCalendarFeed, renewCalendarFeed } from "@/lib/pro-availability";
 import { Button, Card, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+import { IconSquare } from "@/components/pro/tools-kit";
 
 const t = fr.proAvailability.sync;
 const { colors, font, radius, spacing } = theme;
@@ -50,7 +51,7 @@ export function CalendarSync({
   return (
     <Card>
       <View style={styles.titleRow}>
-        <RefreshCw size={18} color={colors.primary} />
+        <IconSquare icon={RefreshCw} size={36} />
         <Text role="heading" style={styles.heading}>
           {t.title}
         </Text>
@@ -156,8 +157,14 @@ function CalendarLink({ label, onPress }: { label: string; onPress: () => void }
 }
 
 const styles = StyleSheet.create({
-  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
-  heading: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing(2.5) },
+  heading: {
+    flexShrink: 1,
+    fontFamily: font.display,
+    fontSize: 16,
+    letterSpacing: -0.3,
+    color: colors.foreground,
+  },
   text: {
     fontFamily: font.regular,
     fontSize: 14,

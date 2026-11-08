@@ -16,7 +16,15 @@ import { DateTimeFields } from "@/components/date-time-fields";
 import { fr } from "@/i18n/fr";
 import { formatDayMonth, formatDayMonthShort } from "@/lib/format";
 import { setAvailableFrom, setPaused } from "@/lib/pro-availability";
-import { Button, Card, Chip, Notice } from "@/ui";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  TAG_TONES,
+  type FicheTone,
+} from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
+import { Chip, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proAvailability;
@@ -24,11 +32,11 @@ const { colors, font, radius, spacing } = theme;
 
 type Outcome = { success: string } | { error: string };
 
-const LOOK: Record<AvailabilityStatus["kind"], { icon: LucideIcon; bg: string; fg: string }> = {
-  disponible: { icon: CircleCheck, bg: colors["success-soft"], fg: colors.success },
-  a_partir_du: { icon: CalendarClock, bg: colors["primary-soft"], fg: colors["primary-strong"] },
-  pause: { icon: CirclePause, bg: colors["warning-soft"], fg: colors.warning },
-  conges: { icon: Palmtree, bg: colors["warning-soft"], fg: colors.warning },
+const LOOK: Record<AvailabilityStatus["kind"], { icon: LucideIcon; tone: FicheTone }> = {
+  disponible: { icon: CircleCheck, tone: "success" },
+  a_partir_du: { icon: CalendarClock, tone: "primary" },
+  pause: { icon: CirclePause, tone: "warning" },
+  conges: { icon: Palmtree, tone: "warning" },
 };
 
 function statusText(status: AvailabilityStatus): { title: string; text: string } {
@@ -61,7 +69,8 @@ function OutcomeNotice({ outcome }: { outcome: Outcome | null }) {
 
 /**
  * Statut de disponibilité (F-44), comme sur le site : recevoir ou non de nouvelles demandes
- * (pause), et date à partir de laquelle un nouveau chantier peut commencer.
+ * (pause), et date à partir de laquelle un nouveau chantier peut commencer. Refonte « Nette »
+ * (lot 8) : carte colorée « VOTRE STATUT » (vert si disponible), puis la date dans sa carte.
  */
 export function StatusCard({
   status,
@@ -76,10 +85,13 @@ export function StatusCard({
   today: string;
   onChanged: () => void;
 }) {
-  const { icon: Icon, bg, fg } = LOOK[status.kind];
+  const { icon, tone } = LOOK[status.kind];
+  const c = TAG_TONES[tone];
   const { title, text } = statusText(status);
   const [pending, setPending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  // La date (congés, reprise) se lit sous le mot court ; « Disponible » et « En pause » s'en passent.
+  const dated = status.kind === "conges" || status.kind === "a_partir_du";
 
   async function togglePause() {
     setPending(true);
@@ -90,28 +102,31 @@ export function StatusCard({
   }
 
   return (
-    <Card>
-      <View style={styles.head}>
-        <View style={[styles.icon, { backgroundColor: bg }]}>
-          <Icon size={24} color={fg} />
+    <>
+      <View style={[styles.status, { backgroundColor: c.bg }]}>
+        <View style={styles.head}>
+          <IconSquare icon={icon} tone={tone} size={44} white />
+          <View style={styles.headText}>
+            <Text style={[styles.eyebrow, { color: c.fg }]}>{t.status.title.toUpperCase()}</Text>
+            <Text role="heading" style={styles.title}>
+              {t.status.short[status.kind]}
+            </Text>
+            {dated ? <Text style={styles.dated}>{title}</Text> : null}
+            <Text style={styles.text}>{text}</Text>
+          </View>
         </View>
-        <View style={styles.headText}>
-          <Text style={styles.eyebrow}>{t.status.title}</Text>
-          <Text role="heading" style={styles.title}>
-            {title}
-          </Text>
-          <Text style={styles.text}>{text}</Text>
-        </View>
+        <FicheButton
+          label={paused ? t.status.resumeAction : t.status.pauseAction}
+          variant={paused ? "primary" : "secondary"}
+          onPress={() => void togglePause()}
+          loading={pending}
+        />
+        <OutcomeNotice outcome={outcome} />
       </View>
-      <Button
-        label={paused ? t.status.resumeAction : t.status.pauseAction}
-        variant={paused ? "primary" : "secondary"}
-        onPress={togglePause}
-        loading={pending}
-      />
-      <OutcomeNotice outcome={outcome} />
-      <AvailableFrom availableFrom={availableFrom} today={today} onChanged={onChanged} />
-    </Card>
+      <FicheCard gap={3}>
+        <AvailableFrom availableFrom={availableFrom} today={today} onChanged={onChanged} />
+      </FicheCard>
+    </>
   );
 }
 
@@ -146,9 +161,7 @@ function AvailableFrom({
 
   return (
     <View style={styles.from}>
-      <Text role="heading" style={styles.fromTitle}>
-        {t.from.title}
-      </Text>
+      <CardHeading title={t.from.title} size={17} />
       <Text style={styles.text}>{t.from.text}</Text>
       <View style={styles.chips}>
         {choices.map(({ key, date }) => (
@@ -173,10 +186,10 @@ function AvailableFrom({
             onDate={setOtherDate}
             compact
           />
-          <Button
+          <FicheButton
             label={t.from.save}
             variant="secondary"
-            onPress={() => save(otherDate ?? "")}
+            onPress={() => void save(otherDate ?? "")}
             loading={pending}
           />
         </>
@@ -194,36 +207,20 @@ function AvailableFrom({
 }
 
 const styles = StyleSheet.create({
-  head: { flexDirection: "row", alignItems: "flex-start", gap: spacing(4) },
-  icon: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
+  status: { gap: spacing(4), borderRadius: radius.card, padding: spacing(5) },
+  head: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3.5) },
+  headText: { flex: 1, gap: 2 },
+  eyebrow: { fontFamily: font.bold, fontSize: 13, letterSpacing: 0.5 },
+  title: {
+    fontFamily: font.display,
+    fontSize: 22,
+    lineHeight: 27,
+    letterSpacing: -0.4,
+    color: colors.foreground,
   },
-  headText: { flex: 1, gap: spacing(1) },
-  eyebrow: {
-    fontFamily: font.medium,
-    fontSize: 12,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    color: colors["muted-foreground"],
-  },
-  title: { fontFamily: font.display, fontSize: 18, color: colors.foreground },
-  text: {
-    fontFamily: font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors["muted-foreground"],
-  },
-  from: {
-    gap: spacing(3),
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing(4),
-  },
-  fromTitle: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
+  dated: { fontFamily: font.semibold, fontSize: 14, lineHeight: 20, color: colors.foreground },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  from: { gap: spacing(3) },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  small: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
 });

@@ -9,20 +9,21 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ArtisanAssistant } from "@/components/pro/artisan-assistant";
-import { TopBar } from "@/components/top-bar";
+import { CardHeading, FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { haptic } from "@/lib/haptics";
 import { useSession } from "@/lib/session";
-import { Body, Button, Card, Screen, Tappable, Title, toast } from "@/ui";
+import { Tappable, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.help;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * « Aide et contact » de l'artisan (ADR 0129) : l'assistant de l'espace artisan (ADR 0236), les
- * questions fréquentes dépliables et le contact par e-mail, sans lien vers le site (CLAUDE.md
- * règle 10).
+ * « Aide et contact » de l'artisan (ADR 0129), refonte « Nette » (lot 8, maquette « AideApp ») :
+ * la carte de l'assistant de l'espace artisan (ADR 0236), la carte « Écrire à l'équipe MENAO »
+ * (réponse par e-mail), puis les questions fréquentes dépliables ; sans lien vers le site
+ * (CLAUDE.md règle 10).
  */
 export default function Aide() {
   const { role } = useSession();
@@ -34,26 +35,25 @@ export default function Aide() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{t.title}</Title>
+    <FicheScreen title={t.title}>
       {role === "artisan" ? <ArtisanAssistant onWrite={() => void write()} /> : null}
-      <Body muted>{t.lead}</Body>
+      <FicheCard padding={4.5} gap={2.5}>
+        <CardHeading title={t.contactTitle} size={16} />
+        <Text style={styles.lead}>{t.contactLead}</Text>
+        <Text selectable style={styles.email}>
+          {t.email}
+        </Text>
+        <FicheButton label={t.writeTeam} variant="secondary" icon={Mail} onPress={write} />
+      </FicheCard>
+      <Text role="heading" style={styles.faqTitle}>
+        {t.faqTitle}
+      </Text>
       <View style={styles.list}>
         {t.faq.map((item) => (
           <Question key={item.q} question={item.q} answer={item.a} />
         ))}
       </View>
-      <Card>
-        <Text role="heading" style={styles.heading}>
-          {t.contactTitle}
-        </Text>
-        <Body muted>{t.contactText}</Body>
-        <Text selectable style={styles.email}>
-          {t.email}
-        </Text>
-        <Button label={t.write} icon={Mail} onPress={write} />
-      </Card>
-    </Screen>
+    </FicheScreen>
   );
 }
 
@@ -115,6 +115,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors["muted-foreground"],
   },
-  heading: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  email: { fontFamily: font.medium, fontSize: 16, color: colors["primary-strong"] },
+  lead: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  email: { fontFamily: font.semibold, fontSize: 15, color: colors["primary-strong"] },
+  faqTitle: {
+    marginTop: spacing(2),
+    marginBottom: -spacing(1),
+    fontFamily: font.display,
+    fontSize: 18,
+    letterSpacing: -0.36,
+    color: colors.foreground,
+  },
 });

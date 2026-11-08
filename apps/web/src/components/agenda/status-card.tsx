@@ -46,6 +46,14 @@ function statusText(status: AvailabilityStatus): { title: string; text: string }
  * Statut de disponibilité (F-44) : recevoir ou non de nouvelles demandes (pause), et date à partir
  * de laquelle un nouveau chantier peut commencer.
  */
+/** Fond de la carte selon le statut (refonte « Nette »). */
+const PANEL: Record<AvailabilityStatus["kind"], string> = {
+  disponible: "bg-success-soft",
+  a_partir_du: "bg-primary-soft",
+  pause: "bg-warning-soft",
+  conges: "bg-warning-soft",
+};
+
 export function StatusCard({
   status,
   paused,
@@ -67,24 +75,25 @@ export function StatusCard({
   return (
     <section
       aria-labelledby="statut-titre"
-      className="overflow-hidden rounded-card border border-border bg-surface shadow-card"
+      // Refonte « Nette » (ADR 0253) : fond de la couleur du statut, statut en grand.
+      className={`overflow-hidden rounded-card ${PANEL[status.kind]}`}
     >
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex items-start gap-4">
           <span
             aria-hidden="true"
-            className={`flex size-12 shrink-0 items-center justify-center rounded-full ${tone}`}
+            className={`flex size-12 shrink-0 items-center justify-center rounded-xl bg-surface ${tone.split(" ").find((c) => c.startsWith("text-")) ?? ""}`}
           >
             <Icon className="size-6" />
           </span>
           <div className="flex min-w-0 flex-col gap-1">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="text-[0.8125rem] font-bold tracking-[0.04em] text-label uppercase">
               {t.status.title}
             </p>
-            <h2 id="statut-titre" className="text-lg font-medium">
+            <h2 id="statut-titre" className="text-[1.375rem] leading-tight">
               {title}
             </h2>
-            <p className="text-sm text-muted-foreground">{text}</p>
+            <p className="text-sm text-label">{text}</p>
           </div>
         </div>
         <form action={pauseAction} className="shrink-0">

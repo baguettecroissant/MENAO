@@ -163,48 +163,55 @@ function LevelCard({ xp, levels }: { xp: number; levels: readonly GradeLevel[] }
   const reward = nextReward(levels, level);
   const percent = Math.round(progress * 100);
   return (
-    <Card className="flex flex-col gap-4">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{t.xp(xp, next?.xpMin ?? null)}</span>
-        <span className="font-medium text-primary">{next ? `${percent} %` : t.maxLevel}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="rounded-pill bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">
+    // Refonte « Nette » (ADR 0253) : carte de niveau bleu nuit, barre blanche.
+    <section
+      aria-label={t.levelLong(level)}
+      className="flex flex-col gap-4 rounded-card bg-foreground p-5 text-surface sm:p-6"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[0.8125rem] font-bold tracking-[0.06em] uppercase opacity-75">
+          {t.yourLevel}
+        </span>
+        <span className="rounded-pill bg-surface/15 px-2.5 py-1 text-xs font-bold">
           {t.level(level)}
         </span>
-        <div
-          role="progressbar"
-          aria-label={t.levelLong(level)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
-          className="h-2 flex-1 overflow-hidden rounded-pill bg-primary-soft"
-        >
-          <div className="h-full rounded-pill bg-primary" style={{ width: `${percent}%` }} />
-        </div>
-        {next && (
-          <span className="rounded-pill border border-primary-soft px-2.5 py-1 text-xs font-medium text-primary-strong">
-            {t.level(next.level)}
-          </span>
-        )}
       </div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-display text-[2.5rem] leading-none font-extrabold tracking-[-0.03em]">
+          {t.levelLong(level)}
+        </span>
+        <span className="text-sm opacity-80">{t.xp(xp, next?.xpMin ?? null)}</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label={t.levelLong(level)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        className="h-2.5 overflow-hidden rounded-pill bg-surface/20"
+      >
+        <div className="h-full rounded-pill bg-surface" style={{ width: `${percent}%` }} />
+      </div>
+      <span className="text-sm opacity-85">
+        {next ? `${percent} % · ${t.level(next.level)}` : t.maxLevel}
+      </span>
       {reward && (
-        <div className="flex flex-col items-center gap-1 text-center">
+        <div className="flex flex-col items-center gap-1 rounded-xl bg-surface p-4 text-center text-foreground">
           <p className="text-xs text-muted-foreground">{t.nextReward}</p>
-          <p className="text-sm font-medium text-primary-strong">{reward.reward}</p>
-          <div className="mt-2 flex h-32 w-full items-center justify-center rounded-input bg-primary-softer">
-            <OutfitIllustration className="h-26" />
+          <p className="text-sm font-semibold text-primary-strong">{reward.reward}</p>
+          <div className="mt-2 flex h-28 w-full items-center justify-center rounded-input bg-primary-softer">
+            <OutfitIllustration className="h-24" />
           </div>
         </div>
       )}
-    </Card>
+    </section>
   );
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="flex flex-col gap-3">
-      <h2 className="text-base font-medium">{title}</h2>
+      <h2 className="text-lg">{title}</h2>
       {children}
     </section>
   );

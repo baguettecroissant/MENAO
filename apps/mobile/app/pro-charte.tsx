@@ -7,6 +7,7 @@ import {
   ENGAGEMENT_DRAFT,
   ENGAGEMENT_TEXT,
   ENGAGEMENT_VERSION,
+  charterProgress,
   isValidSiret,
   normalizeSiret,
 } from "@menao/core";
@@ -14,8 +15,10 @@ import { charterAcceptanceSchema } from "@menao/validation";
 import { router } from "expo-router";
 import { Check } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { CardHeading, FicheButton, FicheCard, FicheRow } from "@/components/pro/fiche-kit";
 import { SignaturePad } from "@/components/pro/signature-pad";
+import { CheckRow, ProgressBar, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import {
   loadCharterState,
@@ -24,17 +27,7 @@ import {
   type CharterState,
 } from "@/lib/charter";
 import { useFocusData } from "@/lib/use-focus-data";
-import {
-  Body,
-  Button,
-  Card,
-  Checkbox,
-  Notice,
-  Screen,
-  ScreenSkeleton,
-  TextField,
-  Title,
-} from "@/ui";
+import { Body, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proCharter;
@@ -46,7 +39,9 @@ const PARIS = "Europe/Paris";
  * Charte qualité pour un artisan déjà inscrit (ADR 0109), comme `/pro/charte` sur le site :
  * l'espace artisan (app/pro/_layout.tsx) y renvoie tant que la version en vigueur n'est pas
  * signée. Même texte (packages/core), même contrôle (charterAcceptanceSchema) et même
- * enregistrement (accept_artisan_charter) qu'à l'inscription sur le site (ADR 0104).
+ * enregistrement (accept_artisan_charter) qu'à l'inscription sur le site (ADR 0104). Refonte
+ * « Nette » (lot 8, maquette « CharteMobile ») : engagements groupés en cartes avec cases bleu
+ * nuit, signature, et barre du bas avec l'avancement et « Signer et rejoindre MENAO ».
  */
 export default function CharterScreen() {
   const [state, reload] = useFocusData(loadCharterState);
@@ -80,7 +75,8 @@ function CharterForm({
   const [invalid, setInvalid] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const done = CHARTER_RULES.filter((r) => checked[r.code]).length;
+  const progress = charterProgress(checked);
+  const done = progress.done;
   // Ce qui manque, en une phrase, comme sur le site ; affiché après un premier essai, et mis à
   // jour à chaque changement.
   const gaps = [
@@ -119,7 +115,20 @@ function CharterForm({
   }
 
   return (
-    <Screen>
+    <Screen
+      footer={
+        <>
+          {missing ? <Notice tone="error">{missing}</Notice> : null}
+          {failure ? <Notice tone="error">{failure}</Notice> : null}
+          <View style={styles.progressRow}>
+            <Text style={styles.progressText}>{t.engagements(done, progress.total)}</Text>
+            <Text style={styles.progressPercent}>{`${progress.percent}\u00a0%`}</Text>
+          </View>
+          <ProgressBar value={done} target={progress.total} label={t.progressLabel} />
+          <FicheButton label={t.submit} tall onPress={() => void submit()} loading={pending} />
+        </>
+      }
+    >
       <Notice tone="info">{t.intro}</Notice>
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{T.eyebrow}</Text>
@@ -127,91 +136,79 @@ function CharterForm({
           {T.title}
           <Text style={styles.accent}>{T.titleAccent}</Text>
         </Text>
-        <Body muted>{T.lead}</Body>
-        <Body muted>{T.howTo(CHARTER_RULE_COUNT)}</Body>
+        <Text style={styles.lead}>{T.lead}</Text>
+        <Text style={styles.lead}>{T.howTo(CHARTER_RULE_COUNT)}</Text>
       </View>
-      {CHARTER_SECTIONS.map((section, si) => (
-        <Card key={section.id}>
-          <View style={styles.section}>
-            <Text role="heading" style={styles.sectionTitle}>
-              {`${si + 1}. ${section.title}`}
-            </Text>
-            <Body muted>{section.why}</Body>
-            {section.rules.map((rule, ri) => {
-              const code = `R${si + 1}.${ri + 1}`;
-              const on = Boolean(checked[code]);
-              return (
-                <Pressable
-                  key={code}
-                  role="checkbox"
-                  aria-checked={on}
-                  aria-label={t.ruleLabel(code, rule.title)}
-                  onPress={() => setChecked((prev) => ({ ...prev, [code]: !prev[code] }))}
-                  style={[styles.rule, on && styles.ruleOn]}
-                >
-                  <View style={[styles.box, on && styles.boxOn]}>
-                    {on ? (
-                      <Check size={14} color={colors["primary-foreground"]} strokeWidth={3} />
-                    ) : null}
-                  </View>
-                  <View style={styles.ruleText}>
-                    <Text style={styles.ruleTitle}>
-                      <Text style={styles.code}>{code} </Text>
-                      {rule.title}
-                    </Text>
-                    <Text style={styles.ruleBody}>{rule.text}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Card>
-      ))}
-      <Card>
-        <View style={styles.section}>
-          <Text role="heading" style={styles.sectionTitle}>
-            {T.promisesTitle}
-          </Text>
-          <Body muted>{T.promisesWhy}</Body>
-          {T.promises.map((promise) => (
-            <Text key={promise.title} style={styles.ruleBody}>
-              <Text style={styles.ruleTitle}>{`${promise.emoji} ${promise.title} : `}</Text>
-              {promise.text}
-            </Text>
-          ))}
-        </View>
-      </Card>
-      <Card>
-        <View style={styles.section}>
-          <Text role="heading" style={styles.sectionTitle}>
-            {T.signatureTitle}
-          </Text>
-          <Body muted>{T.signatureWhy}</Body>
-          <Text style={styles.progress}>{t.progress(done, CHARTER_RULE_COUNT)}</Text>
-          <TextField label={t.name} value={name} onChangeText={setName} autoComplete="name" />
-          <TextField label={t.company} value={company} onChangeText={setCompany} />
-          <TextField
-            label={t.siret}
-            value={siret}
-            onChangeText={setSiret}
-            keyboardType="number-pad"
-          />
-          <EngagementBlock>
-            <Checkbox
-              label={ENGAGEMENT_TEXT.agreeTitle}
-              checked={engagement}
-              onChange={setEngagement}
+      {CHARTER_SECTIONS.map((section, si) => {
+        const count = progress.sections[si];
+        return (
+          <FicheCard key={section.id} padding={4.5} gap={2}>
+            <CardHeading
+              title={`${si + 1} · ${section.title}`}
+              size={17}
+              right={
+                count ? (
+                  <Text style={styles.count}>{t.sectionCount(count.done, count.total)}</Text>
+                ) : null
+              }
             />
-          </EngagementBlock>
-          <Text style={styles.label}>{t.signature}</Text>
-          <SignaturePad onChange={setSignature} />
-          <Checkbox label={T.agreeTitle} checked={agree} onChange={setAgree} />
-          <Body muted>{T.agreeText}</Body>
-          {missing ? <Notice tone="error">{missing}</Notice> : null}
-          {failure ? <Notice tone="error">{failure}</Notice> : null}
-          <Button label={t.submit} onPress={submit} loading={pending} />
-        </View>
-      </Card>
+            <Text style={styles.why}>{section.why}</Text>
+            <View>
+              {section.rules.map((rule, ri) => {
+                const code = `R${si + 1}.${ri + 1}`;
+                return (
+                  <View key={code} style={styles.rule}>
+                    <CheckRow
+                      label={t.ruleLabel(code, rule.title)}
+                      checked={Boolean(checked[code])}
+                      onChange={(on) => setChecked((prev) => ({ ...prev, [code]: on }))}
+                    >
+                      <Text style={styles.ruleTitle}>
+                        <Text style={styles.code}>{`${code} · `}</Text>
+                        {rule.title}
+                      </Text>
+                      <Text style={styles.ruleBody}>{rule.text}</Text>
+                    </CheckRow>
+                  </View>
+                );
+              })}
+            </View>
+          </FicheCard>
+        );
+      })}
+      <FicheCard padding={4.5} gap={3}>
+        <CardHeading title={T.promisesTitle} size={17} />
+        <Text style={styles.why}>{T.promisesWhy}</Text>
+        {T.promises.map((promise) => (
+          <Text key={promise.title} style={styles.ruleBody}>
+            <Text style={styles.ruleTitle}>{`${promise.emoji} ${promise.title} : `}</Text>
+            {promise.text}
+          </Text>
+        ))}
+      </FicheCard>
+      <FicheCard padding={4.5} gap={3.5}>
+        <CardHeading title={T.signatureTitle} size={17} />
+        <Text style={styles.why}>{T.signatureWhy}</Text>
+        <ToolField label={t.name} value={name} onChangeText={setName} autoComplete="name" />
+        <ToolField label={t.company} value={company} onChangeText={setCompany} />
+        <ToolField
+          label={t.siret}
+          value={siret}
+          onChangeText={setSiret}
+          keyboardType="number-pad"
+        />
+        <EngagementBlock>
+          <CheckRow
+            label={ENGAGEMENT_TEXT.agreeTitle}
+            checked={engagement}
+            onChange={setEngagement}
+          />
+        </EngagementBlock>
+        <Text style={styles.label}>{t.signature}</Text>
+        <SignaturePad onChange={setSignature} />
+        <CheckRow label={T.agreeTitle} checked={agree} onChange={setAgree} />
+        <Text style={styles.why}>{T.agreeText}</Text>
+      </FicheCard>
     </Screen>
   );
 }
@@ -279,15 +276,12 @@ function CharterDone({ acceptance }: { acceptance: CharterAcceptanceRow }) {
           {T.doneLead}
         </Body>
       </View>
-      <Card>
-        {recap.map(([label, value], i) => (
-          <View key={label} style={[styles.recapRow, i > 0 && styles.recapBorder]}>
-            <Text style={styles.recapLabel}>{label}</Text>
-            <Text style={styles.recapValue}>{value}</Text>
-          </View>
+      <FicheCard gap={0}>
+        {recap.map(([label, value]) => (
+          <FicheRow key={label} label={label} value={value} />
         ))}
-      </Card>
-      <Button label={t.continue} onPress={() => router.replace("/pro")} />
+      </FicheCard>
+      <FicheButton label={t.continue} tall onPress={() => router.replace("/pro")} />
     </Screen>
   );
 }
@@ -301,48 +295,40 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: colors["primary-strong"],
   },
-  heroTitle: { fontFamily: font.display, fontSize: 24, lineHeight: 30, color: colors.foreground },
+  heroTitle: {
+    fontFamily: font.display,
+    fontSize: 30,
+    lineHeight: 33,
+    letterSpacing: -0.9,
+    color: colors.foreground,
+  },
   accent: { color: colors.primary },
-  section: { gap: spacing(3) },
-  sectionTitle: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  rule: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing(3),
-    borderRadius: radius.input,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    padding: spacing(3),
-  },
-  ruleOn: { borderColor: colors.primary, backgroundColor: colors["primary-softer"] },
-  box: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors["border-strong"],
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
-  },
-  boxOn: { borderColor: colors.primary, backgroundColor: colors.primary },
-  ruleText: { flex: 1, gap: spacing(1) },
-  ruleTitle: { fontFamily: font.medium, fontSize: 15, lineHeight: 21, color: colors.foreground },
-  code: { fontFamily: font.bold, color: colors["primary-strong"] },
-  ruleBody: {
+  lead: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.label },
+  why: {
     fontFamily: font.regular,
     fontSize: 14,
     lineHeight: 20,
     color: colors["muted-foreground"],
   },
-  progress: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
+  count: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
+  rule: { borderTopWidth: 1, borderTopColor: colors.border },
+  ruleTitle: { fontFamily: font.semibold, fontSize: 15, lineHeight: 21, color: colors.foreground },
+  code: { fontFamily: font.bold, color: colors.foreground },
+  ruleBody: {
+    marginTop: 2,
+    fontFamily: font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
+  label: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  progressRow: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
+  progressText: { fontFamily: font.semibold, fontSize: 13, color: colors.foreground },
+  progressPercent: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
   engagement: {
     gap: spacing(2),
-    padding: spacing(3),
+    padding: spacing(3.5),
     borderRadius: radius.input,
-    borderWidth: 1.5,
-    borderColor: colors.border,
     backgroundColor: colors.background,
   },
   draft: {
@@ -366,20 +352,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-  },
-  recapRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: spacing(3),
-    paddingVertical: spacing(2),
-  },
-  recapBorder: { borderTopWidth: 1, borderTopColor: colors.border },
-  recapLabel: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  recapValue: {
-    flexShrink: 1,
-    textAlign: "right",
-    fontFamily: font.bold,
-    fontSize: 14,
-    color: colors.foreground,
   },
 });

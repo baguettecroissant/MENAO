@@ -117,12 +117,13 @@ export function Bubble({
   children: string;
 }) {
   return role === "user" ? (
-    <p className="max-w-[85%] self-end rounded-card rounded-br-md bg-primary px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line text-white">
+    // Espaces connectés (refonte « Nette ») : bulle bleu nuit comme les messages ; site public inchangé.
+    <p className="max-w-[85%] self-end rounded-card rounded-br-md bg-primary px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line text-white in-[.app-nette]:rounded-[1.125rem] in-[.app-nette]:rounded-br-md in-[.app-nette]:bg-foreground in-[.app-nette]:px-4">
       <span className="sr-only">{speaker} : </span>
       {children}
     </p>
   ) : (
-    <p className="max-w-[90%] self-start rounded-card rounded-bl-md bg-background px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line">
+    <p className="max-w-[90%] self-start rounded-card rounded-bl-md bg-background px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line in-[.app-nette]:rounded-[1.125rem] in-[.app-nette]:rounded-bl-md in-[.app-nette]:border in-[.app-nette]:border-border in-[.app-nette]:px-4">
       <span className="sr-only">{speaker} : </span>
       {children}
     </p>

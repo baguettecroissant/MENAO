@@ -1,103 +1,65 @@
 import { levelProgress, nextReward, type GradeLevel } from "@menao/core";
 import { StyleSheet, Text, View } from "react-native";
+import { ProgressBar } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { theme } from "@/ui/theme";
-import { OutfitIllustration } from "@/components/grade/outfit-illustration";
 
 const t = fr.grade;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
+/** Blanc estompé sur le bleu nuit (contraste AA conservé). */
+const SOFT_WHITE = "rgba(255, 255, 255, 0.8)";
 
 /**
- * Carte de niveau (maquette « Mon grade Menao ») : points sur le seuil du niveau suivant et
- * pourcentage, barre entre « Niv. N » et « Niv. N+1 », prochaine récompense de niveau.
+ * Carte de niveau, refonte « Nette » (lot 8, maquette « GradeNette ») : sur fond bleu nuit, le
+ * niveau en grand, les points sur le seuil du niveau suivant, une barre blanche et la prochaine
+ * récompense de niveau.
  */
 export function LevelCard({ xp, levels }: { xp: number; levels: readonly GradeLevel[] }) {
   const { current, next, progress } = levelProgress(levels, xp);
   const level = current?.level ?? 1;
   const reward = nextReward(levels, level);
   const percent = Math.round(progress * 100);
+  const rewardText = reward?.reward ? t.nextRewardText(reward.reward) : next ? null : t.maxLevel;
   return (
     <View style={styles.card}>
+      <Text style={styles.eyebrow}>{t.levelEyebrow}</Text>
       <View style={styles.row}>
-        <Text style={styles.small}>{t.xp(xp, next?.xpMin ?? null)}</Text>
-        <Text style={styles.percent}>{next ? `${percent} %` : t.maxLevel}</Text>
+        <Text role="heading" style={styles.level}>
+          {t.levelBig(level)}
+        </Text>
+        <Text style={styles.xp}>{t.xp(xp, next?.xpMin ?? null)}</Text>
       </View>
-      <View style={styles.bar}>
-        <LevelPill label={t.level(level)} filled />
-        <View
-          style={styles.track}
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
-        >
-          <View style={[styles.fill, { width: `${percent}%` }]} />
-        </View>
-        {next ? <LevelPill label={t.level(next.level)} filled={false} /> : null}
-      </View>
-      {reward ? (
-        <View style={styles.reward}>
-          <Text style={[styles.small, styles.center]}>{t.nextReward}</Text>
-          <Text style={styles.rewardName}>{reward.reward}</Text>
-          <View style={styles.rewardImage}>
-            <OutfitIllustration height={100} />
-          </View>
-        </View>
+      {next ? (
+        <ProgressBar
+          value={percent}
+          target={100}
+          label={t.levelProgress}
+          color={colors.surface}
+          track="rgba(255, 255, 255, 0.18)"
+          height={10}
+        />
       ) : null}
-    </View>
-  );
-}
-
-function LevelPill({ label, filled }: { label: string; filled: boolean }) {
-  return (
-    <View style={[styles.pill, filled && styles.pillFilled]}>
-      <Text style={[styles.pillText, filled && styles.pillTextFilled]}>{label}</Text>
+      {rewardText ? <Text style={styles.reward}>{rewardText}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
+    gap: spacing(3.5),
+    borderRadius: 18,
+    backgroundColor: colors.foreground,
+    padding: spacing(6),
   },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  percent: { fontFamily: font.medium, fontSize: 12, color: colors.primary },
-  bar: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
-  track: {
-    flex: 1,
-    height: 8,
-    overflow: "hidden",
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
+  eyebrow: { fontFamily: font.bold, fontSize: 13, letterSpacing: 0.8, color: SOFT_WHITE },
+  row: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: spacing(2.5) },
+  level: {
+    fontFamily: font.display,
+    fontSize: 40,
+    lineHeight: 44,
+    letterSpacing: -1,
+    color: colors["primary-foreground"],
   },
-  fill: { height: 8, borderRadius: radius.pill, backgroundColor: colors.primary },
-  pill: {
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors["primary-soft"],
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-  },
-  pillFilled: { backgroundColor: colors.primary, borderColor: colors.primary },
-  pillText: { fontFamily: font.medium, fontSize: 11, color: colors["primary-strong"] },
-  pillTextFilled: { color: colors["primary-foreground"] },
-  reward: { alignItems: "center", gap: spacing(1) },
-  center: { textAlign: "center" },
-  rewardName: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  rewardImage: {
-    alignSelf: "stretch",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: spacing(2),
-    minHeight: 110,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-softer"],
-  },
+  xp: { fontFamily: font.regular, fontSize: 15, color: SOFT_WHITE },
+  reward: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: SOFT_WHITE },
 });
