@@ -218,10 +218,9 @@ export default async function DocumentsStepPage({
       {cards}
       <aside className="flex flex-col gap-4">
         {focusedType && (
-          <section aria-labelledby="verifie" className={sheetCard}>
-            <h2 id="verifie" className="text-[1.0625rem]">
-              {t.checksTitle}
-            </h2>
+          // Pas de « region » ici : la page d'une pièce n'en compte qu'une (la pièce elle-même).
+          <div className={sheetCard}>
+            <h2 className="text-[1.0625rem]">{t.checksTitle}</h2>
             <ul className="flex flex-col gap-2.5 text-sm text-label">
               {t.checks[focusedType].map((line) => (
                 <li key={line} className="flex gap-2.5">
@@ -230,7 +229,7 @@ export default async function DocumentsStepPage({
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
         )}
         <p className="flex items-start gap-2 px-1 text-sm text-muted-foreground">
           <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
