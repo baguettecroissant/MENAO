@@ -58,7 +58,9 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {t.title}
+        </h1>
         {/* Inscriptions bloquées et relances automatiques (ADR 0219). */}
         <Link
           href={"/admin/artisans/inscriptions" as Route}

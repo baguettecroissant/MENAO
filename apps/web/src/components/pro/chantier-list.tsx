@@ -1,5 +1,5 @@
 import type { ChantierStatus } from "@menao/core";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, ChevronRight, HardHat, MapPin } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { StatusBadge, Tag } from "@/components/ui";
@@ -44,46 +44,53 @@ export function ChantierList({
   base?: string;
   example?: boolean;
 }) {
+  // Refonte « Nette » (ADR 0245) : une ligne par chantier dans un seul cadre, comme les listes de
+  // l'argent (ADR 0189) ; état en pastille à droite.
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
       {rows.map((r) => {
         const client = [r.client_first_name, r.client_last_name].filter(Boolean).join(" ");
+        const when =
+          r.status === "rdv_planifie" && r.appointment_at
+            ? t.appointmentOn(formatDayInline(r.appointment_at), formatTime(r.appointment_at))
+            : r.status === "planifie" && r.start_at
+              ? t.startOn(formatDayInline(r.start_at), formatTime(r.start_at))
+              : null;
         return (
           <li key={r.chantier_id}>
             <Link
               href={`${base}/chantiers/${r.chantier_id}` as Route}
-              className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-raised focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:p-5"
+              className="flex min-h-[4.5rem] items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none sm:px-5"
             >
-              <div className="flex flex-wrap items-center gap-2">
-                {example && <ExampleBadge />}
-                <StatusBadge tone={tone(r.status)}>{t.status[r.status]}</StatusBadge>
-              </div>
-              <p className="font-medium">{r.title}</p>
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <MapPin aria-hidden="true" className="size-3.5 text-primary" />
-                {[[r.code_postal, r.ville_nom].filter(Boolean).join(" "), client]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              {r.status === "rdv_planifie" && r.appointment_at && (
-                <div>
-                  <Tag>
-                    <CalendarDays aria-hidden="true" className="size-3.5" />
-                    {t.appointmentOn(
-                      formatDayInline(r.appointment_at),
-                      formatTime(r.appointment_at),
-                    )}
-                  </Tag>
-                </div>
-              )}
-              {r.status === "planifie" && r.start_at && (
-                <div>
-                  <Tag>
-                    <CalendarDays aria-hidden="true" className="size-3.5" />
-                    {t.startOn(formatDayInline(r.start_at), formatTime(r.start_at))}
-                  </Tag>
-                </div>
-              )}
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-strong">
+                <HardHat aria-hidden="true" className="size-5" />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="text-base font-semibold">{r.title}</span>
+                  {example && <ExampleBadge />}
+                </span>
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-primary" />
+                  <span className="truncate">
+                    {[[r.code_postal, r.ville_nom].filter(Boolean).join(" "), client]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </span>
+                {when && (
+                  <span>
+                    <Tag>
+                      <CalendarDays aria-hidden="true" className="size-3.5" />
+                      {when}
+                    </Tag>
+                  </span>
+                )}
+                <span>
+                  <StatusBadge tone={tone(r.status)}>{t.status[r.status]}</StatusBadge>
+                </span>
+              </span>
+              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
             </Link>
           </li>
         );

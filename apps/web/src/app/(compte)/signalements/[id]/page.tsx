@@ -76,7 +76,7 @@ export default async function TicketPage({ params }: PageProps<"/signalements/[i
         </Link>
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+            <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
               {t.ticketTitle}
             </h1>
             <StatusBadge tone={tone[ticket.status]}>{t.statuses[ticket.status]}</StatusBadge>

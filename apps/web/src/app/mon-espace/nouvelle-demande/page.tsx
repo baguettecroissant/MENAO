@@ -30,7 +30,9 @@ export default async function NewRequestPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-4 py-10 text-center sm:px-6 sm:py-14">
       <div className="flex flex-col items-center gap-2">
-        <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.start}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {t.start}
+        </h1>
         <p className="max-w-lg text-sm text-muted-foreground">{t.newRequest.intro}</p>
       </div>
       <Suspense fallback={<NeedForm trades={trades} />}>

@@ -72,7 +72,9 @@ export default async function WatchPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+      <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        {t.title}
+      </h1>
       <Card>
         <section aria-label={t.renewals} className="flex flex-col gap-3">
           <h2 className="text-lg font-medium">{t.renewals}</h2>

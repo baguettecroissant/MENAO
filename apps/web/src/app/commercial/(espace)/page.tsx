@@ -40,7 +40,7 @@ export default async function CommercialHomePage() {
     <main className="bg-background">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
             {t.greeting(space.account.firstName)}
           </h1>
           <p className="text-sm text-muted-foreground">{t.intro}</p>

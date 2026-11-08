@@ -272,7 +272,9 @@ export function OverviewScreen({
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {t.title}
+          </h1>
           <p className="text-sm text-muted-foreground">{t.intro}</p>
         </div>
         <LiveRefresh renderedAt={now.toISOString()} />

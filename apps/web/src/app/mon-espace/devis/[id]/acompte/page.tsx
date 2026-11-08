@@ -54,7 +54,9 @@ export default async function DepositPage({ params }: PageProps<"/mon-espace/dev
           <ArrowLeft aria-hidden="true" className="size-4" />
           {t.backToQuote}
         </Link>
-        <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.deposit.title}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {t.deposit.title}
+        </h1>
         <nav aria-label={t.signature.tabs.label} className="flex border-b border-border">
           <span className="inline-flex flex-1 items-center justify-center gap-1.5 pb-3 text-center text-sm text-success">
             <Check aria-hidden="true" className="size-4" />

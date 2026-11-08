@@ -33,7 +33,9 @@ export default async function SuspendedAccessPage() {
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-        <h1 className="text-2xl font-medium tracking-tight">{t.title}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {t.title}
+        </h1>
         <Alert tone="info">{t.text(team.company)}</Alert>
       </main>
     </div>

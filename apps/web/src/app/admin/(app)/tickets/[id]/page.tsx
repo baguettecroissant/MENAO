@@ -72,7 +72,9 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
       </Link>
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-medium tracking-tight">{ticket.subject ?? type}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {ticket.subject ?? type}
+          </h1>
           <StatusBadge tone={TONES[ticket.status as keyof typeof TONES] ?? "neutral"}>
             {t.status[ticket.status as keyof typeof t.status] ?? ticket.status}
           </StatusBadge>

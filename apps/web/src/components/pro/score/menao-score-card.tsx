@@ -51,7 +51,7 @@ export function MenaoScoreCard({ score }: { score: MyMenaoScore }) {
                   </span>
                   <ChevronRight
                     aria-hidden="true"
-                    className="size-4 shrink-0 text-subtle-foreground"
+                    className="size-4 shrink-0 text-muted-foreground"
                   />
                 </Link>
               </li>

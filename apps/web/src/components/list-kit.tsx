@@ -24,7 +24,9 @@ const TONES: Record<ListTone, string> = {
 export function ListHeader({ title, actions }: { title: string; actions?: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h1 className="text-xl font-medium tracking-tight sm:text-2xl">{title}</h1>
+      <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        {title}
+      </h1>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   );
@@ -54,11 +56,13 @@ export function ListFilters({
           key={item.href}
           href={item.href as Route}
           aria-current={item.active ? "page" : undefined}
-          className="-mb-px flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-2 text-sm whitespace-nowrap text-muted-foreground hover:text-foreground aria-[current=page]:border-foreground aria-[current=page]:font-medium aria-[current=page]:text-foreground"
+          className="-mb-px flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-2 text-[0.9375rem] font-medium whitespace-nowrap text-muted-foreground hover:text-foreground aria-[current=page]:border-foreground aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
         >
           {item.label}
           {item.detail && (
-            <span className={item.tone ? TONES[item.tone] : "text-subtle-foreground"}>
+            <span
+              className={`tabular-nums ${item.tone ? TONES[item.tone] : "text-muted-foreground"}`}
+            >
               · {item.detail}
             </span>
           )}
@@ -113,10 +117,10 @@ export function ListRow({
     <>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 items-center gap-2">
-          <span className="line-clamp-2 text-[0.9375rem] font-medium">{title}</span>
+          <span className="line-clamp-2 text-base font-semibold">{title}</span>
           {badge}
         </span>
-        {detail && <span className="truncate text-xs text-muted-foreground">{detail}</span>}
+        {detail && <span className="truncate text-sm text-muted-foreground">{detail}</span>}
       </span>
       {context !== undefined && (
         <span className="hidden w-44 shrink-0 truncate text-sm text-muted-foreground md:block">
@@ -126,17 +130,21 @@ export function ListRow({
       {(value !== undefined || status) && (
         <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
           {value !== undefined && (
-            <span className="text-[0.9375rem] font-medium tabular-nums">{value}</span>
+            <span className="font-display text-base font-bold tabular-nums">{value}</span>
           )}
-          {status && <span className={`text-xs ${TONES[status.tone]}`}>{status.text}</span>}
+          {status && (
+            <span className={`text-[0.8125rem] font-semibold ${TONES[status.tone]}`}>
+              {status.text}
+            </span>
+          )}
         </span>
       )}
       {href && (
-        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-subtle-foreground" />
+        <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
       )}
     </>
   );
-  const row = "flex min-h-16 items-center gap-4 px-4 py-3 sm:px-5";
+  const row = "flex min-h-[4.5rem] items-center gap-4 px-4 py-3.5 sm:px-5";
   const linkRow =
     "transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-none";
   return (

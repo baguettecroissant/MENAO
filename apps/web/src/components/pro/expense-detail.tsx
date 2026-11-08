@@ -63,7 +63,7 @@ export function ExpenseDetailView({
 
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+            <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
               {expense.title}
             </h1>
             <div className="flex flex-wrap items-center gap-2">

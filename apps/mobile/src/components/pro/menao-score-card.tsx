@@ -60,7 +60,7 @@ export function MenaoScoreCard() {
               >
                 <Text style={styles.tipText}>{t.tips[tip.key]}</Text>
                 <Text style={styles.tipPoints}>{t.tipPoints(tip.points)}</Text>
-                <ChevronRight size={16} color={colors["subtle-foreground"]} />
+                <ChevronRight size={18} color={colors["muted-foreground"]} />
               </Tappable>
             ))}
           </View>

@@ -31,7 +31,9 @@ export function ReportProblem({
           {t.back}
         </Link>
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.reportTitle}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {t.reportTitle}
+          </h1>
           <p className="text-sm text-muted-foreground">{t.chantierLink(title)}</p>
         </div>
         <p className="text-sm">{t.intro}</p>

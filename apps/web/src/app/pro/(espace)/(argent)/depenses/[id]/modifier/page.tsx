@@ -35,7 +35,9 @@ export default async function EditExpensePage({
           <ArrowLeft aria-hidden="true" className="size-4" />
           {expense.title}
         </Link>
-        <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{f.editTitle}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {f.editTitle}
+        </h1>
         <ExpenseForm
           expenseId={id}
           initial={{

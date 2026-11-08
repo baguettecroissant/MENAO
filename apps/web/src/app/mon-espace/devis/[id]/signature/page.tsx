@@ -47,7 +47,7 @@ export default async function QuoteSignaturePage({
           <ArrowLeft aria-hidden="true" className="size-4" />
           {t.backToQuote}
         </Link>
-        <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
           {t.signature.title}
         </h1>
         <nav aria-label={t.signature.tabs.label} className="flex border-b border-border">

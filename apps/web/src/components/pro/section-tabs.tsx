@@ -38,14 +38,14 @@ export function SectionTabs({
     <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6 sm:pt-8">
       <nav
         aria-label={label}
-        className="flex w-max max-w-full gap-1 overflow-x-auto rounded-pill bg-surface p-1 shadow-card"
+        className="flex w-max max-w-full gap-1 overflow-x-auto rounded-pill border border-border bg-surface p-1 shadow-card"
       >
         {entries.map(([slug, name]) => (
           <Link
             key={slug}
             href={`${base}/${slug}` as Route}
             aria-current={pathname === `${base}/${slug}` ? "page" : undefined}
-            className="flex min-h-10 items-center rounded-pill px-4 text-sm whitespace-nowrap text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary-soft aria-[current=page]:font-medium aria-[current=page]:text-primary-strong"
+            className="flex min-h-10 items-center rounded-pill px-4 text-[0.9375rem] font-medium whitespace-nowrap text-foreground hover:bg-background aria-[current=page]:bg-foreground aria-[current=page]:font-semibold aria-[current=page]:text-surface"
           >
             {name}
           </Link>

@@ -220,7 +220,9 @@ export default async function MySpacePage() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-12">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
+            <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+              {t.title}
+            </h1>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
             {(active.length > 0 || toSign.length > 0) && (
               <ul className="flex flex-wrap gap-2 pt-1">

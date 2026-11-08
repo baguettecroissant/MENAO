@@ -51,7 +51,9 @@ export default async function AccountantPage() {
           {fr.pro.invoices.title}
         </Link>
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{t.title}</h1>
+          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+            {t.title}
+          </h1>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
         <AccountantSettingsForm

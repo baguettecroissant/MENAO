@@ -30,7 +30,9 @@ export default async function NewExpensePage({
           <ArrowLeft aria-hidden="true" className="size-4" />
           {f.back}
         </Link>
-        <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{f.newTitle}</h1>
+        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          {f.newTitle}
+        </h1>
         <ExpenseForm
           expenseId={null}
           initial={{
