@@ -1,8 +1,10 @@
 import { isExampleId } from "@menao/core";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { ChevronLeft, Phone } from "lucide-react-native";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -25,12 +27,13 @@ import {
   markConversationRead,
   subscribeToConversation,
 } from "@/lib/messages";
+import { goBack } from "@/lib/navigation";
 import { setVisibleConversation } from "@/lib/push";
 import { useSession } from "@/lib/session";
 import { useUnread } from "@/lib/unread";
 import { useFocusData } from "@/lib/use-focus-data";
 import { readScreenPreview } from "@/lib/screen-cache";
-import { Notice, Screen } from "@/ui";
+import { Notice, Screen, Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
 
@@ -40,7 +43,9 @@ const { colors, font, radius, spacing } = theme;
 /**
  * Conversation d'un chantier entre le client et son artisan (F-40), comme sur le site : messages du
  * plus ancien au plus récent, mis à jour en temps réel tant que l'écran est affiché, marqués lus
- * à l'affichage. Lecture seule si le chantier est annulé ou le devis refusé.
+ * à l'affichage. Lecture seule si le chantier est annulé ou le devis refusé. Refonte « Nette »
+ * (lot 4) : en-tête blanc (retour, avatar, nom, « Chantier › », « Appeler » si le numéro est
+ * connu), fil sur fond crème, barre d'écriture en bas.
  */
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -89,26 +94,48 @@ export default function ConversationScreen() {
     );
   }
 
+  const phone = conversation.phone;
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <View style={styles.header}>
-        <TopBar />
         <View style={styles.person}>
-          <Avatar url={conversation.avatarUrl} name={conversation.otherName} size={40} />
+          <Pressable
+            role="button"
+            aria-label={fr.nav.back}
+            onPress={goBack}
+            hitSlop={8}
+            style={({ pressed }) => [styles.back, pressed && styles.backPressed]}
+          >
+            <ChevronLeft size={26} strokeWidth={2.2} color={colors.foreground} />
+          </Pressable>
+          <Avatar url={conversation.avatarUrl} name={conversation.otherName} size={42} initials />
           <View style={styles.personText}>
             <Text role="heading" style={styles.name} numberOfLines={1}>
               {conversation.otherName}
             </Text>
             <Pressable
               role="link"
+              aria-label={`${conversation.title}, ${t.seeChantier}`}
               hitSlop={8}
               onPress={() => router.push(conversation.chantierPath)}
             >
               <Text style={styles.chantier} numberOfLines={1}>
-                {conversation.title} · <Text style={styles.link}>{t.seeChantier}</Text>
+                {`${conversation.title} ›`}
               </Text>
             </Pressable>
           </View>
+          {phone ? (
+            <ExampleLock locked={isExampleId(id)}>
+              <Tappable
+                role="button"
+                aria-label={t.call(conversation.otherName)}
+                onPress={() => Linking.openURL(`tel:${phone}`)}
+                style={styles.call}
+              >
+                <Phone size={20} color={colors.foreground} />
+              </Tappable>
+            </ExampleLock>
+          ) : null}
         </View>
         <PushDeniedNotice />
       </View>
@@ -162,6 +189,7 @@ export default function ConversationScreen() {
           <ExampleLock locked={isExampleId(id)} note>
             <Composer
               chantierId={id}
+              placeholder={t.writeTo(conversation.shortName || conversation.otherName)}
               onSent={reload}
               onPending={(body) => {
                 const key = `envoi-${Date.now()}`;
@@ -177,23 +205,44 @@ export default function ConversationScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  flex: { flex: 1 },
+  // Haut blanc (en-tête), fil sur fond crème.
+  safe: { flex: 1, backgroundColor: colors.surface },
+  flex: { flex: 1, backgroundColor: colors.background },
   sending: { opacity: 0.6 },
   header: {
     gap: spacing(2),
-    paddingHorizontal: spacing(5),
-    paddingTop: spacing(2),
+    paddingLeft: spacing(1),
+    paddingRight: spacing(3),
+    paddingTop: spacing(1),
     paddingBottom: spacing(3),
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   person: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
-  personText: { flex: 1, gap: 2 },
-  name: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  chantier: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  link: { fontFamily: font.medium, color: colors["primary-strong"] },
-  messages: { flexGrow: 1, gap: spacing(3), padding: spacing(4) },
+  back: {
+    width: 40,
+    height: theme.touchTarget,
+    marginRight: -spacing(1),
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backPressed: { backgroundColor: colors["primary-soft"] },
+  personText: { flex: 1, minWidth: 0 },
+  name: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
+  chantier: { fontFamily: font.semibold, fontSize: 13, color: colors["primary-strong"] },
+  call: {
+    width: theme.touchTarget,
+    height: theme.touchTarget,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  messages: { flexGrow: 1, gap: spacing(3), paddingHorizontal: spacing(4), paddingVertical: 18 },
   empty: {
     fontFamily: font.regular,
     fontSize: 14,
@@ -205,17 +254,20 @@ const styles = StyleSheet.create({
   day: {
     alignSelf: "center",
     overflow: "hidden",
-    borderRadius: radius.pill,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing(3),
-    paddingVertical: spacing(1),
-    fontFamily: font.regular,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    fontFamily: font.semibold,
     fontSize: 12,
     color: colors["muted-foreground"],
   },
   closed: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    backgroundColor: colors.surface,
     padding: spacing(4),
     fontFamily: font.regular,
     fontSize: 14,

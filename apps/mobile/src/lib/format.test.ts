@@ -11,8 +11,10 @@ import {
   formatDayMonthNumeric,
   formatDayMonthShort,
   formatDuration,
+  formatHour,
   formatMonthName,
   formatTime,
+  formatWeekShort,
   parisDateTime,
 } from "./format";
 
@@ -84,5 +86,12 @@ describe("dates de l'agenda", () => {
   it("affiche une heure HH:MM", () => {
     expect(formatClock("09:00")).toBe("09h00");
     expect(formatClock("18:30:00")).toBe("18h30");
+  });
+
+  it("affiche les heures et la semaine de l'agenda « Nette »", () => {
+    expect(formatHour("08:00")).toBe("8\u00a0h");
+    expect(formatHour("10:30")).toBe("10\u00a0h\u00a030");
+    expect(formatWeekShort("2026-11-09", "2026-11-15")).toBe("9 – 15 nov.");
+    expect(formatWeekShort("2026-10-26", "2026-11-01")).toBe("26 oct. – 1 nov.");
   });
 });

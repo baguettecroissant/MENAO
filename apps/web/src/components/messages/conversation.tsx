@@ -108,7 +108,7 @@ export function Conversation({
           {messages.map((m, i) => (
             <Fragment key={m.id}>
               {(i === 0 || messages[i - 1]?.day !== m.day) && (
-                <li className="self-center rounded-pill bg-background px-3 py-1 text-xs text-muted-foreground">
+                <li className="self-center rounded-pill border border-border bg-surface px-3 py-1 text-xs font-semibold text-muted-foreground">
                   {m.day}
                 </li>
               )}
@@ -151,9 +151,10 @@ export function Conversation({
 }
 
 function Bubble({ message: m }: { message: ConversationMessage }) {
+  // Refonte « Nette » (ADR 0249) : mes bulles en bleu nuit, celles reçues blanches et bordées.
   const tone = m.mine
-    ? "bg-primary text-primary-foreground"
-    : "border border-border bg-surface text-foreground";
+    ? "rounded-br-md bg-foreground text-surface"
+    : "rounded-bl-md border border-border bg-surface text-foreground";
   if (m.hidden) {
     return (
       <p className="rounded-card border border-dashed border-border-strong px-4 py-2.5 text-sm text-muted-foreground italic">
@@ -167,7 +168,7 @@ function Bubble({ message: m }: { message: ConversationMessage }) {
         href={m.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block overflow-hidden rounded-card border border-border focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+        className="block overflow-hidden rounded-xl border border-border focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire, sans optimisation Vercel (spec §4.4) */}
         <img src={m.url} alt={t.openPhoto} className="max-h-64 w-auto object-cover" />
@@ -181,7 +182,7 @@ function Bubble({ message: m }: { message: ConversationMessage }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={t.openFile}
-        className={`inline-flex min-h-touch items-center gap-2 rounded-card px-4 py-2.5 text-sm font-medium underline-offset-2 hover:underline ${tone}`}
+        className={`inline-flex min-h-touch items-center gap-2 rounded-[1.125rem] px-4 py-2.5 text-sm font-medium underline-offset-2 hover:underline ${tone}`}
       >
         <FileText aria-hidden="true" className="size-4 shrink-0" />
         {t.file}
@@ -189,7 +190,9 @@ function Bubble({ message: m }: { message: ConversationMessage }) {
     );
   }
   return (
-    <p className={`rounded-card px-4 py-2.5 text-sm break-words whitespace-pre-line ${tone}`}>
+    <p
+      className={`rounded-[1.125rem] px-4 py-2.5 text-[0.9375rem] leading-snug break-words whitespace-pre-line ${tone}`}
+    >
       {m.body}
     </p>
   );
@@ -240,13 +243,13 @@ function Composer({ chantierId }: { chantierId: string }) {
               placeholder={t.composerPlaceholder}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "message-error" : undefined}
-              className={`${inputClasses} max-h-40 min-h-12 flex-1 resize-y py-3`}
+              className={`${inputClasses} max-h-40 min-h-12 flex-1 resize-none rounded-[1.5rem] bg-background py-3`}
             />
             <Button
               type="submit"
               block={false}
               disabled={pending || !body.trim()}
-              className="size-12 shrink-0 !px-0"
+              className="size-12 shrink-0 !rounded-full !px-0"
             >
               <Send aria-hidden="true" className="size-5" />
               <span className="sr-only">{t.send}</span>

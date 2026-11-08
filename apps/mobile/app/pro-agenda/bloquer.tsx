@@ -1,4 +1,4 @@
-import { AGENDA_LABEL_MAX_LENGTH, mondayOf, parisToday } from "@menao/core";
+import { AGENDA_LABEL_MAX_LENGTH, parisToday } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { DateTimeFields, TimeField } from "@/components/date-time-fields";
@@ -10,17 +10,28 @@ import { syncPhoneCalendar } from "@/lib/phone-calendar";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAgenda.block;
+const TIME = /^\d{2}:\d{2}$/;
 
 /**
  * « Bloquer un créneau » (F-44), comme sur le site : rendez-vous personnel, chantier hors MENAO…
- * Date, heures de début et de fin, motif facultatif ; l'agenda s'ouvre ensuite sur cette semaine.
+ * Date, heures de début et de fin, motif facultatif ; l'agenda s'ouvre ensuite sur ce jour.
+ * `debut` et `fin` : plage libre touchée dans l'agenda (« Libre de 14 h à 18 h · Bloquer »).
  */
 function BlockSlotScreen() {
-  const params = useLocalSearchParams<{ date?: string; depuis?: string }>();
+  const params = useLocalSearchParams<{
+    date?: string;
+    debut?: string;
+    fin?: string;
+    depuis?: string;
+  }>();
   const today = parisToday();
   const [date, setDate] = useState(params.date && params.date >= today ? params.date : today);
-  const [start, setStart] = useState("14:00");
-  const [end, setEnd] = useState("16:00");
+  const range =
+    params.debut && params.fin && TIME.test(params.debut) && TIME.test(params.fin)
+      ? { start: params.debut, end: params.fin }
+      : { start: "14:00", end: "16:00" };
+  const [start, setStart] = useState(range.start);
+  const [end, setEnd] = useState(range.end);
   const [label, setLabel] = useState("");
   const [errors, setErrors] = useState<BlockedSlotErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
@@ -36,7 +47,7 @@ function BlockSlotScreen() {
       // Retour à l'agenda d'où l'on vient, sinon l'agenda remplace cet écran (bouton (+)).
       const agenda = {
         pathname: "/pro-agenda",
-        params: { semaine: mondayOf(date), bloque: "1" },
+        params: { semaine: date, bloque: "1" },
       } as const;
       if (params.depuis === "agenda") router.navigate(agenda);
       else router.replace(agenda);

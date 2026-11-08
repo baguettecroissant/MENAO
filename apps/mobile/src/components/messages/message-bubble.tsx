@@ -17,7 +17,8 @@ const { colors, font, radius, spacing } = theme;
 /**
  * Un message de la conversation (F-40) : les siens à droite, ceux de l'artisan à gauche, heure et
  * « Lu » sous son dernier message lu. Les photos s'ouvrent en grand, les PDF dans le navigateur
- * (URL signées).
+ * (URL signées). Refonte « Nette » (lot 4) : ses bulles en bleu nuit (coin bas droit moins
+ * arrondi), les bulles reçues blanches bordées (coin bas gauche), photos en vignettes arrondies.
  */
 export function MessageBubble({
   message: m,
@@ -148,16 +149,21 @@ function ReportMessage({ messageId }: { messageId: string }) {
 
 const styles = StyleSheet.create({
   author: { fontFamily: font.medium, fontSize: 12, color: colors["muted-foreground"] },
-  item: { maxWidth: "85%", gap: spacing(1) },
+  item: { maxWidth: "82%", gap: spacing(1) },
   mine: { alignSelf: "flex-end", alignItems: "flex-end" },
   theirs: { alignSelf: "flex-start", alignItems: "flex-start" },
   bubble: {
-    borderRadius: radius.card,
-    paddingHorizontal: spacing(4),
+    borderRadius: 18,
+    paddingHorizontal: 14,
     paddingVertical: spacing(2.5),
   },
-  bubbleMine: { backgroundColor: colors.primary },
-  bubbleTheirs: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  bubbleMine: { borderBottomRightRadius: 6, backgroundColor: colors.foreground },
+  bubbleTheirs: {
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   bubbleText: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.foreground },
   bubbleTextMine: { color: colors["primary-foreground"] },
   file: {
@@ -167,13 +173,8 @@ const styles = StyleSheet.create({
     minHeight: theme.touchTarget,
   },
   fileText: { fontFamily: font.medium, textDecorationLine: "underline" },
-  photoFrame: {
-    overflow: "hidden",
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  photo: { width: 220, height: 165 },
+  photoFrame: { overflow: "hidden", borderRadius: 14, backgroundColor: colors.border },
+  photo: { width: 200, height: 150 },
   hidden: {
     borderRadius: radius.card,
     borderWidth: 1,
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     color: colors["muted-foreground"],
   },
-  time: { fontFamily: font.regular, fontSize: 11, color: colors["muted-foreground"] },
+  time: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   reportLink: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
   report: {
     width: 288,

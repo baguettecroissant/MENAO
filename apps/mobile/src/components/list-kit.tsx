@@ -242,8 +242,8 @@ export function FigureStrip({
   );
 }
 
-/** Titre d'un groupe de lignes, avec son nombre en gris (« À traiter  2 »). */
-export function GroupTitle({ title, count }: { title: string; count: number }) {
+/** Titre d'un groupe de lignes, avec son nombre en gris (« À traiter  2 », « … 2 rendez-vous »). */
+export function GroupTitle({ title, count }: { title: string; count: number | string }) {
   return (
     <Text role="heading" aria-label={`${title}, ${count}`} style={styles.groupTitle}>
       {title}

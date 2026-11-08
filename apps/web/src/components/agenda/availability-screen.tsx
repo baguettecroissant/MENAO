@@ -64,7 +64,9 @@ export function AvailabilityScreen({
           <div className="flex flex-col gap-5">
             <AbsencesManager absences={absences} today={today} />
             {scoreCard}
-            <CalendarSync url={feedUrl} lastReadAt={feedLastReadAt} />
+            <div id="calendrier" className="scroll-mt-24">
+              <CalendarSync url={feedUrl} lastReadAt={feedLastReadAt} />
+            </div>
           </div>
         </div>
       </div>

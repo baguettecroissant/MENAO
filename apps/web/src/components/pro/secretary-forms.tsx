@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, RotateCcw } from "lucide-react";
 import { useActionState } from "react";
 import { VoiceCall } from "@/components/assistant/voice-call";
 import { Alert, Button, CheckboxField, Field, Hint, inputClasses } from "@/components/ui";
@@ -98,9 +99,18 @@ export function SecretaryMessageToggle({ id, done }: { id: string; done: boolean
     <form action={action}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="done" value={done ? "non" : "oui"} />
-      <Button type="submit" variant="ghost" size="sm" block={false} disabled={pending}>
+      <button
+        type="submit"
+        disabled={pending}
+        className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none disabled:opacity-60"
+      >
+        {done ? (
+          <RotateCcw aria-hidden="true" className="size-4" />
+        ) : (
+          <Check aria-hidden="true" className="size-4" />
+        )}
         {done ? t.markTodo : t.markDone}
-      </Button>
+      </button>
     </form>
   );
 }

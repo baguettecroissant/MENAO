@@ -22,6 +22,16 @@ import { examplesActive } from "./examples";
 
 export type AgendaAbsence = Absence & { id: string; label: string | null };
 
+/**
+ * Élément de l'agenda avec ce que la journée affiche en plus (refonte « Nette », lot 4) : nom du
+ * client du chantier, et rendez-vous pris par la secrétaire (créneau bloqué par Camille, ADR 0232)
+ * avec le motif de l'appel, le nom et la commune de l'appelant.
+ */
+export type AgendaEntry = AgendaItem & {
+  client: string | null;
+  secretary: { reason: string; caller: string; city: string | null } | null;
+};
+
 export type AgendaWeek = {
   /** Lundi de la semaine affichée (AAAA-MM-JJ). */
   monday: string;
@@ -29,7 +39,7 @@ export type AgendaWeek = {
   /** Statut de disponibilité (pause, congés, à partir du…), comme le menu du site. */
   availability: AvailabilityStatus;
   hours: HoursRange[];
-  items: AgendaItem[];
+  items: AgendaEntry[];
   /** Absences qui touchent la semaine. */
   absences: AgendaAbsence[];
 };
@@ -96,7 +106,7 @@ async function fetchItems(
   from: Date,
   to: Date,
   excludeChantierId?: string,
-): Promise<AgendaItem[] | null> {
+): Promise<(AgendaItem & { client: string | null })[] | null> {
   const [chantiers, blocked, external] = await Promise.all([
     supabase.rpc("artisan_chantiers"),
     supabase
@@ -116,7 +126,7 @@ async function fetchItems(
       .order("starts_at"),
   ]);
   if (chantiers.error) return null;
-  return agendaItemsFrom({
+  const items = agendaItemsFrom({
     chantiers: (chantiers.data ?? []).map((c) => ({
       chantierId: c.chantier_id,
       status: c.status,
@@ -141,6 +151,35 @@ async function fetchItems(
     to,
     excludeChantierId,
   });
+  const clients = new Map(
+    (chantiers.data ?? []).map((c) => [
+      c.chantier_id,
+      [c.client_first_name, c.client_last_name].filter(Boolean).join(" ") || null,
+    ]),
+  );
+  return items.map((i) => ({
+    ...i,
+    client: i.chantierId ? (clients.get(i.chantierId) ?? null) : null,
+  }));
+}
+
+/**
+ * Rendez-vous pris par la secrétaire parmi des créneaux bloqués (ADR 0232) : motif de l'appel, nom
+ * et commune de l'appelant, déjà lisibles par l'artisan (RLS : le patron seulement). Vide sinon.
+ */
+async function fetchSecretaryBookings(slotIds: string[]) {
+  const out = new Map<string, NonNullable<AgendaEntry["secretary"]>>();
+  if (slotIds.length === 0) return out;
+  const { data } = await supabase
+    .from("secretary_messages")
+    .select("blocked_slot_id, reason, caller_name, city")
+    .in("blocked_slot_id", slotIds);
+  for (const m of data ?? []) {
+    if (m.blocked_slot_id) {
+      out.set(m.blocked_slot_id, { reason: m.reason, caller: m.caller_name, city: m.city });
+    }
+  }
+  return out;
 }
 
 /**
@@ -163,6 +202,9 @@ export async function loadAgendaWeek(monday: string): Promise<AgendaWeek | null>
     fetchAbsences(artisan.id, today),
   ]);
   if (!items) return null;
+  const secretary = await fetchSecretaryBookings(
+    items.flatMap((i) => (i.kind === "creneau" ? [i.id] : [])),
+  );
   return {
     monday,
     today,
@@ -173,7 +215,7 @@ export async function loadAgendaWeek(monday: string): Promise<AgendaWeek | null>
       today,
     }),
     hours,
-    items,
+    items: items.map((i) => ({ ...i, secretary: secretary.get(i.id) ?? null })),
     absences,
   };
 }

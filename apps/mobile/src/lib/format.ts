@@ -129,6 +129,28 @@ export function formatClock(hhmm: string): string {
   return hhmm.slice(0, 5).replace(":", "h");
 }
 
+/** Heure HH:MM → « 8 h », « 10 h 30 » (espaces insécables), dans l'agenda « Nette ». */
+export function formatHour(hhmm: string): string {
+  const h = Number(hhmm.slice(0, 2));
+  const m = hhmm.slice(3, 5);
+  return m === "00" ? `${h}\u00a0h` : `${h}\u00a0h\u00a0${m}`;
+}
+
+const dayShortMonth = new Intl.DateTimeFormat("fr-FR", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** Semaine (lundi, dimanche AAAA-MM-JJ) → « 9 – 15 nov. », « 26 oct. – 1 nov. ». */
+export function formatWeekShort(monday: string, sunday: string): string {
+  const to = dayShortMonth.format(new Date(`${sunday}T12:00:00Z`));
+  if (monday.slice(0, 7) === sunday.slice(0, 7)) {
+    return fr.proAgenda.weekShort(String(Number(monday.slice(8, 10))), to);
+  }
+  return fr.proAgenda.weekShort(dayShortMonth.format(new Date(`${monday}T12:00:00Z`)), to);
+}
+
 /** Mois AAAA-MM → « septembre », comme sur le site. */
 export function formatMonthName(month: string): string {
   return monthName.format(new Date(`${month}-15T12:00:00Z`));

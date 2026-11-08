@@ -15,14 +15,24 @@ export function ConversationList({
   basePath,
   avatarUrls,
   now,
+  activeId,
+  framed = true,
 }: {
-  rows: ConversationRow[];
+  rows: readonly ConversationRow[];
   basePath: "/mon-espace/messages" | "/pro/messages" | "/pro/decouvrir/messages";
   avatarUrls: ReadonlyMap<string, string>;
   now: Date;
+  /** Conversation ouverte à côté (vue en deux colonnes de l'espace pro, ADR 0249). */
+  activeId?: string;
+  /** Cadre de carte autour de la liste ; sans cadre dans la colonne de gauche. */
+  framed?: boolean;
 }) {
   return (
-    <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
+    <ul
+      className={`flex flex-col divide-y divide-border overflow-hidden bg-surface ${
+        framed ? "rounded-card border border-border shadow-card" : ""
+      }`}
+    >
       {rows.map((row) => {
         const preview = row.last_hidden
           ? t.hiddenPreview
@@ -36,7 +46,8 @@ export function ConversationList({
           <li key={row.chantier_id}>
             <Link
               href={`${basePath}/${row.chantier_id}` as Route}
-              className="flex items-center gap-3 px-4 py-4 hover:bg-background focus-visible:bg-background focus-visible:outline-none sm:px-5"
+              aria-current={row.chantier_id === activeId ? "page" : undefined}
+              className="flex items-center gap-3 px-4 py-4 hover:bg-background focus-visible:bg-background focus-visible:outline-none aria-[current=page]:bg-background sm:px-5"
             >
               <ArtisanPhoto
                 url={row.other_avatar_path ? (avatarUrls.get(row.other_avatar_path) ?? null) : null}
