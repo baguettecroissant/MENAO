@@ -2,9 +2,11 @@ import {
   cancelReport,
   isExampleId,
   journalSummary,
+  journalTimeline,
   paymentProgress,
   type ArtisanCancelReason,
   type ChantierStatus,
+  type JournalDay,
   type JournalSummary,
 } from "@menao/core";
 import type { Database } from "@menao/db";
@@ -177,6 +179,10 @@ export type ArtisanFollowUp = {
   coverUrl: string | null;
   depositPaid: boolean;
   journal: JournalSummary;
+  /** Fil chronologique du suivi, par jour, du plus récent au plus ancien (F-92). */
+  timeline: JournalDay[];
+  /** Lien signé (1 h) de chaque photo du journal, par chemin. */
+  photoUrlByPath: Record<string, string>;
   /** Auteur des entrées d'un collègue ou d'un membre de l'équipe (ADR 0243). */
   journalAuthors: Record<string, string>;
   photoUrls: string[];
@@ -283,15 +289,14 @@ export async function loadArtisanFollowUp(
       .maybeSingle(),
     supabase.rpc("client_ratings_visible"),
   ]);
-  const journal = journalSummary(
-    (updates ?? []).map((u) => ({
-      id: u.id,
-      kind: u.kind,
-      message: u.message,
-      storagePath: u.storage_path,
-      createdAt: u.created_at,
-    })),
-  );
+  const entries = (updates ?? []).map((u) => ({
+    id: u.id,
+    kind: u.kind,
+    message: u.message,
+    storagePath: u.storage_path,
+    createdAt: u.created_at,
+  }));
+  const journal = journalSummary(entries);
   const [journalPhotos, cover] = await Promise.all([
     signedUrls("chantier-photos", journal.photos),
     signedUrls("project-photos", projectPhotos.slice(0, 1)),
@@ -310,6 +315,8 @@ export async function loadArtisanFollowUp(
     coverUrl: projectPhotos[0] ? (cover.get(projectPhotos[0]) ?? null) : null,
     depositPaid: (payments ?? []).some((p) => p.kind === "acompte" && p.status === "paye"),
     journal,
+    timeline: journalTimeline(entries),
+    photoUrlByPath: Object.fromEntries(journalPhotos),
     journalAuthors: updateAuthorMap((await authorsRead).data),
     photoUrls: journal.photos.flatMap((p) => {
       const url = journalPhotos.get(p);

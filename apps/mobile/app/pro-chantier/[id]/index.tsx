@@ -1,41 +1,56 @@
 import {
   ARTISAN_CANCELLABLE_STATUSES,
   chantierRights,
+  chantierStepIndex,
   type ChantierStatus,
   isExampleId,
 } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
-import { NotebookPen } from "lucide-react-native";
+import {
+  CalendarDays,
+  CircleCheck,
+  CircleHelp,
+  CircleX,
+  FilePen,
+  Flag,
+  Hourglass,
+} from "lucide-react-native";
 import { useCallback } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { StatusPill } from "@/components/chantier/parts";
-import { HeaderBand, whenMeta } from "@/components/header-band";
+import { StyleSheet, View } from "react-native";
+import { ExampleLock } from "@/components/examples";
+import { ChantierFrame, NotesCard } from "@/components/pro/chantier-fiche";
 import { ChantierTeamCard } from "@/components/pro/chantier-team-card";
-import { DetailBlock, RequestBlocks } from "@/components/pro/request-blocks";
+import {
+  FicheButton,
+  FicheLink,
+  FicheScreen,
+  FicheSkeleton,
+  FicheTag,
+  NextStepCard,
+} from "@/components/pro/fiche-kit";
 import { FollowUpView } from "@/components/pro/follow-up-view";
+import { RequestBlocks } from "@/components/pro/request-blocks";
 import { SentQuoteBlock } from "@/components/pro/sent-quote-block";
-import { DetailSkeleton } from "@/components/skeletons";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
-import { formatDay } from "@/lib/format";
+import { formatDay, formatDayAndTime } from "@/lib/format";
 import { chantierScreenKey, loadArtisanChantierScreen } from "@/lib/pro-chantiers";
+import { readScreenPreview } from "@/lib/screen-cache";
 import { useTeamPosition } from "@/lib/team";
 import { useFocusData } from "@/lib/use-focus-data";
-import { readScreenPreview } from "@/lib/screen-cache";
-import { Button, Notice, Screen } from "@/ui";
+import { LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
-import { ExampleLock } from "@/components/examples";
 
 const t = fr.proAppointment;
-const { colors, font, spacing } = theme;
+const tf = fr.proChantierFiche;
+const { spacing } = theme;
 const CANCELLABLE: readonly ChantierStatus[] = ARTISAN_CANCELLABLE_STATUSES;
 
 /**
- * Vue d'un rendez-vous côté artisan (F-18), comme sur le site (maquette « Vue d'un rendez-vous ») :
- * date et heure (modifiables tant que le rendez-vous est planifié), écrire au client, « Ce chantier
- * a besoin d'une expertise », dernier devis envoyé, client et lieu, rappel du chantier, notes
- * privées, annulation. Après l'acompte : suivi du
- * chantier (F-22). Aucun lien vers le site (règle 10).
+ * Fiche d'un chantier côté artisan (F-18), refonte « Nette » (F-92). Avant l'acompte : frise des
+ * étapes, « Prochaine étape » (rendez-vous et devis à préparer ou à modifier, devis envoyé ou
+ * signé), date du rendez-vous modifiable, équipe, dernier devis envoyé, client et demande
+ * d'origine, notes privées, « Ce chantier a besoin d'une expertise », annulation et signalement.
+ * Après l'acompte : suivi du chantier (F-22, `FollowUpView`). Aucun lien vers le site (règle 10).
  */
 export default function ArtisanChantierScreen() {
   const { id, envoye, demarrage } = useLocalSearchParams<{
@@ -49,13 +64,13 @@ export default function ArtisanChantierScreen() {
   const rights = chantierRights(useTeamPosition() ?? "patron");
 
   if (loaded === undefined) {
-    return <DetailSkeleton preview={readScreenPreview(chantierScreenKey(id))} band />;
+    return <FicheSkeleton title={tf.title} preview={readScreenPreview(chantierScreenKey(id))} />;
   }
   if (loaded === null) {
     return (
-      <Screen onRefresh={reload} header={<TopBar />}>
+      <FicheScreen title={tf.title} onRefresh={reload}>
         <Notice tone="error">{fr.proChantiers.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   if (loaded.followUp) {
@@ -74,6 +89,7 @@ export default function ArtisanChantierScreen() {
   const data = loaded.chantier;
   const c = data.detail;
   const status = c.chantier.status;
+  const client = c.client.first_name ?? fr.proFollowUp.yourClientFallback;
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const planned = status === "rdv_planifie" && appointment !== null;
   const awaitingQuote =
@@ -91,65 +107,87 @@ export default function ArtisanChantierScreen() {
   // Exemple (ADR 0184) : on navigue (devis, conversation), les actions sont inactives.
   const example = isExampleId(id);
 
+  const quoteButton = awaitingQuote ? (
+    <FicheButton
+      label={quoteLabel}
+      icon={FilePen}
+      tall
+      onPress={() => router.push(`/pro-chantier/${id}/devis`)}
+    />
+  ) : null;
+  const reschedule =
+    rights.decisions && planned && !example ? (
+      <LinkText
+        label={t.rescheduleTitle}
+        onPress={() =>
+          router.push({
+            pathname: "/pro-chantier/[id]/rendez-vous",
+            params: { id, starts: appointment.starts_at },
+          })
+        }
+      />
+    ) : null;
+
+  const nextStep = (() => {
+    switch (status) {
+      case "rdv_planifie": {
+        const when = appointment ? formatDayAndTime(appointment.starts_at) : null;
+        return (
+          <NextStepCard
+            icon={when ? CalendarDays : FilePen}
+            title={when ? fr.chantier.next.appointmentOn(when.day, when.time) : tf.next.quoteTitle}
+            text={tf.next.appointmentText}
+          >
+            {quoteButton}
+            {reschedule}
+          </NextStepCard>
+        );
+      }
+      case "devis_en_revision":
+        return (
+          <NextStepCard
+            icon={FilePen}
+            title={fr.chantier.clientStatus.devis_en_revision}
+            text={tf.next.revisionText}
+          >
+            {quoteButton}
+          </NextStepCard>
+        );
+      case "devis_envoye":
+        return (
+          <NextStepCard
+            icon={Hourglass}
+            title={tf.next.sentTitle}
+            text={tf.next.sentText(client)}
+          />
+        );
+      case "devis_signe":
+        return (
+          <NextStepCard
+            icon={CircleCheck}
+            title={tf.next.signedTitle}
+            text={tf.next.signedText(client)}
+          />
+        );
+      default:
+        return null;
+    }
+  })();
+
   return (
-    <Screen
-      band={
-        <HeaderBand
-          title={planned ? t.bandTitle : c.chantier.title}
-          meta={whenMeta(appointment?.starts_at)}
-        >
-          {rights.decisions && active ? (
-            <ExampleLock locked={example}>
-              <View style={styles.expertise}>
-                <Button
-                  label={fr.proExpertise.open}
-                  variant="secondary"
-                  onPress={() => router.push(`/opportunite/${c.id}/expertise`)}
-                />
-              </View>
-            </ExampleLock>
-          ) : null}
-        </HeaderBand>
-      }
-      footer={
-        awaitingQuote || cancellable ? (
-          <>
-            {awaitingQuote ? (
-              <Button label={quoteLabel} onPress={() => router.push(`/pro-chantier/${id}/devis`)} />
-            ) : null}
-            {cancellable ? (
-              <ExampleLock locked={example} note>
-                <Button
-                  label={t.cancel}
-                  variant="danger"
-                  onPress={() => router.push(`/pro-chantier/${id}/annuler`)}
-                />
-              </ExampleLock>
-            ) : null}
-          </>
-        ) : undefined
-      }
-    >
-      <View style={styles.head}>
-        <StatusPill
+    <ChantierFrame
+      detail={c}
+      tags={
+        <FicheTag
           text={fr.proChantiers.status[status]}
           tone={status === "annule" || status === "devis_refuse" ? "neutral" : "primary"}
+          dot={status !== "annule" && status !== "devis_refuse"}
         />
-        {rights.decisions && planned && !example ? (
-          <Pressable
-            role="button"
-            hitSlop={8}
-            onPress={() =>
-              router.push({
-                pathname: "/pro-chantier/[id]/rendez-vous",
-                params: { id, starts: appointment.starts_at },
-              })
-            }
-          >
-            <Text style={styles.link}>{t.rescheduleTitle}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      }
+      step={chantierStepIndex(status)}
+      nextStep={nextStep}
+      onRefresh={reload}
+    >
       {envoye === "1" && status === "devis_envoye" ? (
         <Notice tone="success">{fr.proQuote.send.sent}</Notice>
       ) : null}
@@ -173,53 +211,44 @@ export default function ArtisanChantierScreen() {
         detail={c}
         photoUrls={data.photoUrls}
         variant="rendez-vous"
-        onMessage={() => router.push(`/conversation/${id}`)}
+        contactActions={false}
       />
-
       {c.appointment ? (
-        <DetailBlock icon={<NotebookPen size={18} color={colors.primary} />} title={t.notes}>
-          {c.appointment.notes ? <Text style={styles.text}>{c.appointment.notes}</Text> : null}
-          {example ? null : (
-            <Pressable
-              role="button"
-              onPress={() =>
-                router.push({
-                  pathname: "/pro-chantier/[id]/notes",
-                  params: { id, notes: c.appointment?.notes ?? "" },
-                })
-              }
-              style={styles.notesButton}
-            >
-              <Text style={styles.link}>{c.appointment.notes ? t.editNotes : t.addNotes}</Text>
-            </Pressable>
-          )}
-        </DetailBlock>
+        <NotesCard chantierId={id} notes={c.appointment.notes} example={example} />
       ) : null}
-      {status !== "annule" && !example ? (
-        <Pressable
-          role="link"
-          hitSlop={8}
-          onPress={() => router.push(`/chantier/${id}/signaler`)}
-          style={styles.report}
-        >
-          <Text style={styles.danger}>{fr.chantier.report}</Text>
-        </Pressable>
-      ) : null}
-    </Screen>
+
+      <View style={styles.links}>
+        {rights.decisions && active ? (
+          <ExampleLock locked={example}>
+            <FicheLink
+              icon={CircleHelp}
+              label={fr.proExpertise.open}
+              onPress={() => router.push(`/opportunite/${c.id}/expertise`)}
+            />
+          </ExampleLock>
+        ) : null}
+        {status !== "annule" && !example ? (
+          <FicheLink
+            icon={Flag}
+            label={fr.chantier.report}
+            onPress={() => router.push(`/chantier/${id}/signaler`)}
+          />
+        ) : null}
+        {cancellable ? (
+          <ExampleLock locked={example} note>
+            <FicheLink
+              icon={CircleX}
+              label={t.cancel}
+              tone="danger"
+              onPress={() => router.push(`/pro-chantier/${id}/annuler`)}
+            />
+          </ExampleLock>
+        ) : null}
+      </View>
+    </ChantierFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  head: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing(3),
-  },
-  expertise: { paddingBottom: spacing(3) },
-  text: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
-  link: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
-  notesButton: { paddingVertical: spacing(1) },
-  report: { alignSelf: "center", paddingVertical: spacing(2) },
-  danger: { fontFamily: font.medium, fontSize: 14, color: colors.danger },
+  links: { gap: spacing(2) },
 });

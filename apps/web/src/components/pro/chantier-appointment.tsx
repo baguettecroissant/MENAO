@@ -1,11 +1,11 @@
 import {
   ARTISAN_CANCELLABLE_STATUSES,
+  chantierStepIndex,
   type ChantierRights,
   type ChantierStatus,
 } from "@menao/core";
-import { CalendarDays, CalendarPlus, Clock, MessageCircle } from "lucide-react";
+import { CalendarDays, CalendarPlus, Clock } from "lucide-react";
 import type { Route } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   CancelChantierButton,
@@ -13,15 +13,28 @@ import {
   RescheduleButton,
 } from "@/app/pro/(espace)/chantiers/[id]/chantier-actions";
 import { ReportProblemLink } from "@/components/chantier/chantier-parts";
-import { Alert, ButtonLink, StatusBadge } from "@/components/ui";
+import { Alert, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import type { ChantierDetail } from "@/lib/artisan/chantiers";
 import { formatDay, formatDayLong, formatTime, parisInputValues } from "@/lib/format";
-import { DetailHeader, StickyActions } from "./detail";
+import { ChantierHeaderActions, StepperCard } from "./chantier-sheet";
 import { ExampleLock } from "./examples";
 import { ExpertiseButton } from "./expertise-button";
-import { RequestBlocks } from "./request-blocks";
+import {
+  RequestBrief,
+  RequestClientCard,
+  RequestClientWords,
+  RequestDetails,
+} from "./request-blocks";
+import {
+  NextStepCard,
+  SheetChip,
+  SheetColumns,
+  SheetHeader,
+  SheetPage,
+  SheetSection,
+} from "./sheet";
 import { SentQuoteBlock, type DepositPayment, type SentQuote } from "./sent-quote";
 
 const t = fr.pro.appointment;
@@ -32,8 +45,6 @@ const FULL_RIGHTS: ChantierRights = {
   replyReviews: true,
   assign: true,
 };
-const pill =
-  "inline-flex min-h-9 items-center gap-1.5 self-start rounded-pill border border-white/60 px-3.5 text-sm font-medium text-white hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/40 focus-visible:outline-none";
 
 /**
  * Vue d'un rendez-vous (F-18), maquette « Vue d'un rendez-vous », jusqu'à l'acompte : rendez-vous,
@@ -79,101 +90,154 @@ export function ChantierAppointmentView({
   const planned = status === "rdv_planifie" && appointment !== null;
   const active = status !== "annule" && status !== "cloture" && status !== "devis_refuse";
 
+  const st = fr.pro.sheet;
+  const clientFirstName = c.client.first_name ?? fr.pro.followUp.yourClientFallback;
+  const step = status === "annule" ? null : chantierStepIndex(status);
+  const quoteLink = awaitingQuote && (
+    <ButtonLink href={`${base}/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
+      {status === "devis_en_revision"
+        ? fr.pro.quote.sent.edit
+        : hasDraft
+          ? fr.pro.quote.resume
+          : fr.pro.quote.create}
+    </ButtonLink>
+  );
+  // Carte « Prochaine étape » (ADR 0246) selon l'état du chantier avant l'acompte.
+  const nextStep = awaitingQuote ? (
+    <NextStepCard
+      title={
+        status === "devis_en_revision" ? st.next.quoteRevision(clientFirstName) : st.next.quote
+      }
+      text={
+        status === "devis_en_revision"
+          ? st.next.quoteRevisionText
+          : st.next.quoteText(clientFirstName)
+      }
+      action={quoteLink}
+    />
+  ) : rights.money && status === "devis_envoye" ? (
+    <NextStepCard title={st.next.quoteWaiting(clientFirstName)} text={st.next.quoteWaitingText} />
+  ) : rights.money && status === "devis_signe" ? (
+    <NextStepCard
+      title={st.next.depositWaiting(clientFirstName)}
+      text={st.next.depositWaitingText}
+    />
+  ) : null;
+
   return (
-    <main className="flex flex-1 flex-col">
-      <DetailHeader backHref={`${base}/chantiers`} backLabel={t.back} title={t.title}>
-        {appointment ? (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays aria-hidden="true" className="size-4" />
-              {formatDayLong(appointment.starts_at)}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Clock aria-hidden="true" className="size-4" />
-              {formatTime(appointment.starts_at)}
-            </span>
-            {rights.decisions && planned && (
-              <ExampleLock locked={example}>
-                <RescheduleButton
-                  chantierId={c.chantier.id}
-                  minDate={minDate}
-                  {...parisInputValues(appointment.starts_at)}
-                  agenda={agenda}
-                />
-              </ExampleLock>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm text-white/85">{fr.pro.chantiers.status[status]}</p>
-        )}
-        {planned && (
-          <ExampleLock locked={example}>
-            <a href={`/agenda/${c.chantier.id}`} className={pill}>
-              <CalendarPlus aria-hidden="true" className="size-4" />
-              {t.addToCalendar}
-            </a>
-          </ExampleLock>
-        )}
-        {/* F-40 : conversation du chantier avec le client. */}
-        <Link href={`${base}/messages/${c.chantier.id}` as Route} className={pill}>
-          <MessageCircle aria-hidden="true" className="size-4" />
-          {fr.messages.writeClient}
-        </Link>
-      </DetailHeader>
-      {rights.decisions && active && (
-        <ExampleLock locked={example}>
-          <ExpertiseButton requestId={c.id} trades={trades} />
-        </ExampleLock>
+    <SheetPage>
+      <SheetHeader
+        backHref={`${base}/chantiers`}
+        backLabel={t.back}
+        chips={
+          <SheetChip tone={status === "annule" ? "neutral" : "primary"} dot>
+            {fr.pro.chantiers.status[status]}
+          </SheetChip>
+        }
+        title={c.chantier.title}
+        meta={[c.client.first_name, [c.code_postal, c.ville_nom].filter(Boolean).join(" ")]
+          .filter(Boolean)
+          .join(" · ")}
+        aside={
+          <ChantierHeaderActions
+            messageHref={`${base}/messages/${c.chantier.id}`}
+            phone={c.client.phone}
+          />
+        }
+      />
+      {status === "annule" && (
+        <Alert tone="info">
+          {t.cancelled(formatDay(c.chantier.cancelled_at ?? c.chantier.created_at))}
+        </Alert>
       )}
-
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-3 px-4 py-5 sm:px-6 sm:py-6">
-        {status === "annule" && (
-          <Alert tone="info">
-            {t.cancelled(formatDay(c.chantier.cancelled_at ?? c.chantier.created_at))}
-          </Alert>
-        )}
-        {status !== "rdv_planifie" && status !== "annule" && (
-          <div>
-            <StatusBadge tone="primary">{fr.pro.chantiers.status[status]}</StatusBadge>
-          </div>
-        )}
-        {teamCard}
-        {rights.money && sentQuote && (
-          <ExampleLock locked={example}>
-            <SentQuoteBlock quote={sentQuote} deposit={deposit} invoice={invoice} />
-          </ExampleLock>
-        )}
-        <RequestBlocks detail={c} photoUrls={photoUrls} variant="rendez-vous" />
-        {c.appointment && (
-          <ExampleLock locked={example}>
-            <NotesBlock chantierId={c.chantier.id} notes={c.appointment.notes} />
-          </ExampleLock>
-        )}
-        {status !== "annule" && (
-          <ExampleLock locked={example}>
-            <ReportProblemLink href={`/pro/chantiers/${c.chantier.id}/signaler`} />
-          </ExampleLock>
-        )}
+      {step !== null && <StepperCard current={step} />}
+      {nextStep}
+      <div className="pb-6 lg:pb-0">
+        <SheetColumns
+          main={
+            <>
+              {rights.money && sentQuote && (
+                <ExampleLock locked={example}>
+                  <SentQuoteBlock quote={sentQuote} deposit={deposit} invoice={invoice} />
+                </ExampleLock>
+              )}
+              <RequestBrief detail={c} />
+              <RequestClientWords detail={c} photoUrls={photoUrls} title={t.reminder} />
+              <RequestDetails detail={c} />
+            </>
+          }
+          aside={
+            <>
+              {appointment && (
+                <SheetSection
+                  id="rendez-vous"
+                  title={t.title}
+                  action={
+                    rights.decisions &&
+                    planned && (
+                      <ExampleLock locked={example}>
+                        <RescheduleButton
+                          chantierId={c.chantier.id}
+                          minDate={minDate}
+                          {...parisInputValues(appointment.starts_at)}
+                          agenda={agenda}
+                          tone="dark"
+                        />
+                      </ExampleLock>
+                    )
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-strong">
+                      <CalendarDays aria-hidden="true" className="size-5" />
+                    </span>
+                    <span className="flex flex-col">
+                      <span className="font-semibold">{formatDayLong(appointment.starts_at)}</span>
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Clock aria-hidden="true" className="size-3.5" />
+                        <span>{formatTime(appointment.starts_at)}</span>
+                      </span>
+                    </span>
+                  </div>
+                  {planned && (
+                    <ExampleLock locked={example}>
+                      <a
+                        href={`/agenda/${c.chantier.id}`}
+                        className="inline-flex items-center gap-2 self-start text-sm font-semibold text-primary-strong hover:underline"
+                      >
+                        <CalendarPlus aria-hidden="true" className="size-4" />
+                        {t.addToCalendar}
+                      </a>
+                    </ExampleLock>
+                  )}
+                </SheetSection>
+              )}
+              <RequestClientCard detail={c} />
+              {teamCard}
+              {c.appointment && (
+                <ExampleLock locked={example}>
+                  <NotesBlock chantierId={c.chantier.id} notes={c.appointment.notes} />
+                </ExampleLock>
+              )}
+              {rights.decisions && active && (
+                <ExampleLock locked={example}>
+                  <ExpertiseButton requestId={c.id} trades={trades} variant="card" />
+                </ExampleLock>
+              )}
+              {status !== "annule" && (
+                <ExampleLock locked={example}>
+                  <ReportProblemLink href={`/pro/chantiers/${c.chantier.id}/signaler`} />
+                </ExampleLock>
+              )}
+              {canCancel && (
+                <ExampleLock locked={example} note>
+                  <CancelChantierButton chantierId={c.chantier.id} />
+                </ExampleLock>
+              )}
+            </>
+          }
+        />
       </div>
-
-      {(awaitingQuote || canCancel) && (
-        <StickyActions>
-          {awaitingQuote && (
-            <ButtonLink href={`${base}/chantiers/${c.chantier.id}/devis` as Route} size="lg" block>
-              {status === "devis_en_revision"
-                ? fr.pro.quote.sent.edit
-                : hasDraft
-                  ? fr.pro.quote.resume
-                  : fr.pro.quote.create}
-            </ButtonLink>
-          )}
-          {canCancel && (
-            <ExampleLock locked={example} note>
-              <CancelChantierButton chantierId={c.chantier.id} />
-            </ExampleLock>
-          )}
-        </StickyActions>
-      )}
-    </main>
+    </SheetPage>
   );
 }

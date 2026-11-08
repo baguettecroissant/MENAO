@@ -9,6 +9,7 @@ import {
   chantierStartInputError,
   isJournalOpen,
   journalSummary,
+  journalTimeline,
   type ChantierUpdate,
 } from "../src/chantier-follow-up";
 import { CHANTIER_TRANSITIONS } from "../src/chantier-state";
@@ -81,5 +82,51 @@ describe("suivi du chantier (F-22)", () => {
       lastUpdateAt: "2026-10-12T10:00:00Z",
     });
     expect(journalSummary([])).toEqual({ photos: [], messages: [], lastUpdateAt: null });
+  });
+});
+
+describe("journalTimeline", () => {
+  const entry = (
+    id: string,
+    kind: "photo" | "message",
+    createdAt: string,
+    value: string | null,
+  ): ChantierUpdate => ({
+    id,
+    kind,
+    message: kind === "message" ? value : null,
+    storagePath: kind === "photo" ? value : null,
+    createdAt,
+  });
+
+  it("regroupe par jour de Paris, le plus récent d'abord", () => {
+    expect(
+      journalTimeline([
+        entry("m1", "message", "2026-11-05T08:00:00Z", "Cloison déposée."),
+        entry("p1", "photo", "2026-11-05T09:00:00Z", "c/p1.jpg"),
+        // 23 h 30 à Paris le 6 novembre : encore le 6.
+        entry("m2", "message", "2026-11-06T22:30:00Z", "Évacuations posées."),
+        entry("p2", "photo", "2026-11-06T10:00:00Z", "c/p2.jpg"),
+        entry("p3", "photo", "2026-11-06T10:05:00Z", null),
+        entry("m3", "message", "2026-11-06T11:00:00Z", ""),
+      ]),
+    ).toEqual([
+      {
+        day: "2026-11-06",
+        lastAt: "2026-11-06T22:30:00Z",
+        messages: [{ id: "m2", message: "Évacuations posées.", createdAt: "2026-11-06T22:30:00Z" }],
+        photos: ["c/p2.jpg"],
+      },
+      {
+        day: "2026-11-05",
+        lastAt: "2026-11-05T09:00:00Z",
+        messages: [{ id: "m1", message: "Cloison déposée.", createdAt: "2026-11-05T08:00:00Z" }],
+        photos: ["c/p1.jpg"],
+      },
+    ]);
+  });
+
+  it("vide sans entrée", () => {
+    expect(journalTimeline([])).toEqual([]);
   });
 });

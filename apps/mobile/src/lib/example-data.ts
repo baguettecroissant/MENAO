@@ -26,6 +26,7 @@ import {
   exampleSentQuote,
   addDays,
   journalSummary,
+  journalTimeline,
   laterAppointments,
   monthToDateRevenue,
   parisLocalToDate,
@@ -104,20 +105,26 @@ export function exampleArtisanChantier(id: string, now = new Date()): ArtisanCha
 
 export function exampleArtisanFollowUp(now = new Date()): ArtisanFollowUp {
   const f = exampleFollowUp(now);
-  const journal = journalSummary(
-    f.updates.map((u) => ({
-      id: u.id,
-      kind: u.kind,
-      message: u.message,
-      storagePath: u.storage_path,
-      createdAt: u.created_at,
-    })),
-  );
+  const entries = f.updates.map((u) => ({
+    id: u.id,
+    kind: u.kind,
+    message: u.message,
+    storagePath: u.storage_path,
+    createdAt: u.created_at,
+  }));
+  const journal = journalSummary(entries);
   const invoice = f.invoices[0];
   return {
     coverUrl: null,
     depositPaid: true,
     journal,
+    timeline: journalTimeline(entries),
+    photoUrlByPath: Object.fromEntries(
+      journal.photos.flatMap((p) => {
+        const url = photoUrl(p);
+        return url ? [[p, url] as const] : [];
+      }),
+    ),
     journalAuthors: {},
     photoUrls: photoUrls(journal.photos),
     documents: [

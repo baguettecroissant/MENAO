@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight, Users } from "lucide-react";
 import { useActionState, useCallback, useState } from "react";
 import { Drawer } from "@/components/drawer";
 import { Alert, Button, SelectField, buttonClasses, inputClasses } from "@/components/ui";
@@ -10,13 +11,18 @@ import { useActionSuccess } from "@/lib/use-action-success";
 
 const t = fr.pro.expertise;
 
-/** « Ce chantier a besoin d'une expertise » (maquettes F-17, F-18) : signalement à l'équipe MENAO. */
+/**
+ * « Ce chantier a besoin d'une expertise » (maquettes F-17, F-18) : signalement à l'équipe MENAO.
+ * `card` : carte de la colonne de droite des fiches (refonte « Nette », ADR 0246).
+ */
 export function ExpertiseButton({
   requestId,
   trades,
+  variant = "banner",
 }: {
   requestId: string;
   trades: readonly { code: string; label: string }[];
+  variant?: "banner" | "card";
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -26,21 +32,40 @@ export function ExpertiseButton({
   const close = useCallback(() => setOpen(false), []);
   useActionSuccess(state, close);
 
+  const trigger = state.success ? (
+    <Alert tone="success">{state.success}</Alert>
+  ) : variant === "card" ? (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="flex w-full items-start gap-3 rounded-card border border-border bg-surface p-4 text-left shadow-card transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:p-5"
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning">
+        <Users aria-hidden="true" className="size-5" />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="font-semibold">{fr.pro.sheet.expertiseTitle}</span>
+        <span className="text-sm text-muted-foreground">{fr.pro.sheet.expertiseText}</span>
+      </span>
+      <ChevronRight aria-hidden="true" className="mt-2.5 size-5 shrink-0 text-muted-foreground" />
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className={`${buttonClasses({ variant: "outline", size: "sm" })} min-h-10`}
+    >
+      {t.open}
+    </button>
+  );
+
   return (
-    <div className="border-b border-border bg-surface">
-      <div className="mx-auto max-w-3xl px-4 py-3 sm:px-6">
-        {state.success ? (
-          <Alert tone="success">{state.success}</Alert>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className={`${buttonClasses({ variant: "outline", size: "sm" })} min-h-10`}
-          >
-            {t.open}
-          </button>
-        )}
-      </div>
+    <div className={variant === "card" ? "" : "border-b border-border bg-surface"}>
+      {variant === "card" ? (
+        trigger
+      ) : (
+        <div className="mx-auto max-w-3xl px-4 py-3 sm:px-6">{trigger}</div>
+      )}
       <Drawer open={open} onClose={close} title={t.title} backLabel={fr.pro.appointment.backToForm}>
         <form action={formAction} className="flex flex-col gap-4" noValidate>
           <p className="text-sm text-muted-foreground">{t.intro}</p>

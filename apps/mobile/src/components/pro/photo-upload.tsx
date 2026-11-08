@@ -13,18 +13,16 @@ const { colors, font, spacing } = theme;
 /**
  * « Ajouter une photo » au journal du chantier (F-22), comme sur le site : prise de vue ou jusqu'à
  * 10 photos de la photothèque, réduites sur le téléphone puis envoyées une à une ; le journal est
- * ensuite rechargé.
+ * ensuite rechargé. Le hook sert aux boutons posés ailleurs (« Photo » du suivi, F-92), le
+ * composant au bouton seul ou au lien.
  */
-export function PhotoUpload({
+export function usePhotoUpload({
   chantierId,
   label = t.addPhoto,
-  variant = "button",
   onAdded,
 }: {
   chantierId: string;
   label?: string;
-  /** Bouton (journal) ou lien (« Ce chantier est-il terminé ? »). */
-  variant?: "button" | "link";
   onAdded: () => void;
 }) {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -55,6 +53,39 @@ export function PhotoUpload({
     if (result.added) onAdded();
   }
 
+  return { add, progress, notice };
+}
+
+/** Avancement de l'envoi et résultat (photos ajoutées, erreurs). */
+export function PhotoUploadStatus({
+  progress,
+  notice,
+}: Pick<ReturnType<typeof usePhotoUpload>, "progress" | "notice">) {
+  return (
+    <>
+      {progress ? (
+        <Text role="status" style={styles.hint}>
+          {t.uploading(progress.done, progress.total)}
+        </Text>
+      ) : null}
+      {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
+    </>
+  );
+}
+
+export function PhotoUpload({
+  chantierId,
+  label = t.addPhoto,
+  variant = "button",
+  onAdded,
+}: {
+  chantierId: string;
+  label?: string;
+  /** Bouton (journal) ou lien (« Ce chantier est-il terminé ? »). */
+  variant?: "button" | "link";
+  onAdded: () => void;
+}) {
+  const { add, progress, notice } = usePhotoUpload({ chantierId, label, onAdded });
   return (
     <View style={[styles.group, variant === "link" && styles.centered]}>
       {variant === "link" ? (
@@ -63,12 +94,7 @@ export function PhotoUpload({
         <Button label={label} variant="secondary" onPress={add} loading={progress !== null} />
       )}
       {variant === "button" ? <Text style={styles.hint}>{t.photosHint}</Text> : null}
-      {progress ? (
-        <Text role="status" style={styles.hint}>
-          {t.uploading(progress.done, progress.total)}
-        </Text>
-      ) : null}
-      {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
+      <PhotoUploadStatus progress={progress} notice={notice} />
     </View>
   );
 }

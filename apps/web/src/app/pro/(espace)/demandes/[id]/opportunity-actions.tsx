@@ -5,7 +5,14 @@ import { useActionState, useCallback, useState } from "react";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
 import { ProposeSlotsForm } from "@/components/pro/propose-slots-form";
-import { Alert, Button, FieldError, RadioGroup, inputClasses } from "@/components/ui";
+import {
+  Alert,
+  Button,
+  FieldError,
+  RadioGroup,
+  buttonClasses,
+  inputClasses,
+} from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import { fixAppointment, proposeSlots } from "@/lib/artisan/chantier-actions";
@@ -29,6 +36,7 @@ export function OpportunityActions({
   partnersAfterRefusal = false,
   agenda,
   proposedSlots = null,
+  layout = "stack",
 }: {
   requestId: string;
   clientFirstName: string | null;
@@ -40,6 +48,11 @@ export function OpportunityActions({
   agenda?: AppointmentAgenda;
   /** Créneaux déjà proposés, en attente du choix du client (ADR 0222). */
   proposedSlots?: readonly string[] | null;
+  /**
+   * `bar` (refonte « Nette », ADR 0246) : boutons côte à côte, sur fond bleu nuit en grand écran
+   * (bandeau de décision) et sur fond blanc en bas de l'écran sur téléphone.
+   */
+  layout?: "stack" | "bar";
 }) {
   const [panel, setPanel] = useState<"creneaux" | "rendez-vous" | "refus" | null>(null);
   const suggestions = agenda?.suggestions ?? [];
@@ -65,28 +78,62 @@ export function OpportunityActions({
           <p className="text-xs text-muted-foreground">{a.proposedWaiting(clientFirstName)}</p>
         </div>
       )}
-      {canPropose && (
-        <Button
-          type="button"
-          size="lg"
-          variant={proposedSlots ? "secondary" : "primary"}
-          onClick={() => setPanel("creneaux")}
-        >
-          {proposedSlots ? a.proposeOther : a.propose(Math.min(3, suggestions.length))}
-        </Button>
-      )}
-      <Button
-        type="button"
-        size={canPropose ? "md" : "lg"}
-        variant={canPropose ? "secondary" : "primary"}
-        onClick={() => setPanel("rendez-vous")}
-      >
-        {t.fixAppointment}
-      </Button>
-      {canRefuse && (
-        <Button type="button" variant="danger-text" size="sm" onClick={() => setPanel("refus")}>
-          {t.refuse}
-        </Button>
+      {layout === "bar" ? (
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center lg:justify-end">
+          {canRefuse && (
+            <button
+              type="button"
+              onClick={() => setPanel("refus")}
+              className={`${buttonClasses({ variant: "secondary" })} px-3 whitespace-nowrap lg:w-auto lg:px-5 lg:border-white/30 lg:bg-transparent lg:text-surface lg:hover:bg-white/10`}
+            >
+              {t.refuseShort}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setPanel("rendez-vous")}
+            className={`${buttonClasses({ variant: canPropose ? "secondary" : "primary" })} px-3 whitespace-nowrap lg:w-auto lg:px-5 ${
+              canRefuse ? "" : "col-span-2"
+            } ${canPropose ? "lg:border-white/30 lg:bg-transparent lg:text-surface lg:hover:bg-white/10" : ""}`}
+          >
+            {t.fixAppointment}
+          </button>
+          {canPropose && (
+            <button
+              type="button"
+              onClick={() => setPanel("creneaux")}
+              className={`${buttonClasses({ variant: "primary" })} col-span-2 -order-1 lg:order-none px-3 whitespace-nowrap lg:w-auto lg:px-5`}
+            >
+              {proposedSlots ? a.proposeOther : a.propose(Math.min(3, suggestions.length))}
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {canPropose && (
+            <Button
+              type="button"
+              size="lg"
+              variant={proposedSlots ? "secondary" : "primary"}
+              onClick={() => setPanel("creneaux")}
+            >
+              {proposedSlots ? a.proposeOther : a.propose(Math.min(3, suggestions.length))}
+            </Button>
+          )}
+          <Button
+            type="button"
+            size={canPropose ? "md" : "lg"}
+            variant={canPropose ? "secondary" : "primary"}
+            onClick={() => setPanel("rendez-vous")}
+          >
+            {t.fixAppointment}
+          </Button>
+          {canRefuse && (
+            <Button type="button" variant="danger-text" size="sm" onClick={() => setPanel("refus")}>
+              {t.refuse}
+            </Button>
+          )}
+        </>
       )}
 
       {canPropose && (
