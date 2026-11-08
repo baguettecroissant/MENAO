@@ -86,3 +86,4 @@ export * from "./money-overview";
 export * from "./client-reminders";
 export * from "./team";
 export * from "./money-figures";
+export * from "./list-figures";

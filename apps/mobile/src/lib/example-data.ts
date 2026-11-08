@@ -82,6 +82,9 @@ export function exampleInboxItems(now = new Date()): InboxItem[] {
   return exampleInbox(now).map((r) => ({ ...r, photoUrl: null })) as unknown as InboxItem[];
 }
 
+/** Temps de réponse d'exemple, sur l'accueil et l'onglet Demandes. */
+export const EXAMPLE_RESPONSE_STATS = { minutes: 38, responses: 6 } as const;
+
 export function exampleChantierList(now = new Date()): ArtisanChantierRow[] {
   return exampleChantierRows(now) as unknown as ArtisanChantierRow[];
 }
@@ -390,7 +393,7 @@ export function exampleDashboard(firstName: string | null, now = new Date()): Da
       trend: revenueTrend(revenue.currentCents, revenue.previousCents),
       previousMonth: revenue.previousMonth,
     },
-    responseTime: { minutes: 38, responses: 6 },
+    responseTime: { ...EXAMPLE_RESPONSE_STATS },
     appointments: appointments.slice(0, 4),
     requests: awaiting.slice(0, 3),
     reviewsToAnswer: 1,

@@ -154,7 +154,8 @@ export function FicheHead({
 
 export type FicheTone = "primary" | "success" | "warning" | "danger" | "neutral";
 
-const TAG_TONES: Record<FicheTone, { fg: string; bg: string }> = {
+/** Couleurs des puces (texte, fond), reprises par les icônes des listes « Nette ». */
+export const TAG_TONES: Record<FicheTone, { fg: string; bg: string }> = {
   primary: { fg: colors["primary-strong"], bg: colors["primary-soft"] },
   success: { fg: colors.success, bg: colors["success-soft"] },
   warning: { fg: colors.warning, bg: colors["warning-soft"] },

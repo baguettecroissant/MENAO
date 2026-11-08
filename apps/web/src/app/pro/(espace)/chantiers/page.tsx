@@ -4,7 +4,7 @@ import { fr } from "@/i18n/fr";
 import { EXAMPLES_BASE } from "@/lib/artisan/examples";
 import { artisanActivity, requireProSpace, spaceExamples } from "@/lib/artisan/space";
 import { EmptyState } from "@/components/empty-state";
-import { ChantierList } from "@/components/pro/chantier-list";
+import { ChantiersView } from "@/components/pro/chantiers-view";
 import { SpaceExamplesNotice } from "@/components/pro/examples";
 
 const t = fr.pro.chantiers;
@@ -12,8 +12,8 @@ const t = fr.pro.chantiers;
 export const metadata: Metadata = { title: `${t.title} — MENAO` };
 
 /**
- * Chantiers de l'artisan (barre de navigation des maquettes : « Chantiers »). Tant que l'artisan
- * n'a rien reçu : chantiers d'exemple (ADR 0184).
+ * Chantiers de l'artisan (F-18), refonte « Nette » (ADR 0248) : chiffres clés, filtres par phase,
+ * liste. Tant que l'artisan n'a rien reçu : chantiers d'exemple (ADR 0184).
  */
 export default async function ChantiersPage() {
   const [{ chantiers: rows }, examples, { teamPosition }] = await Promise.all([
@@ -23,28 +23,20 @@ export default async function ChantiersPage() {
   ]);
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
-        </div>
-        {examples ? (
-          <>
-            <SpaceExamplesNotice />
-            <ChantierList rows={exampleChantierRows()} base={EXAMPLES_BASE} example />
-          </>
-        ) : rows.length === 0 ? (
+    <ChantiersView
+      rows={examples ? exampleChantierRows() : rows}
+      now={new Date()}
+      base={examples ? EXAMPLES_BASE : undefined}
+      example={examples}
+      notice={examples ? <SpaceExamplesNotice /> : undefined}
+      empty={
+        !examples && rows.length === 0 ? (
           <EmptyState illustration="chantiers">
             {/* Ouvrier (ADR 0241) : seulement les chantiers qui lui sont attribués. */}
             {teamPosition === "ouvrier" ? fr.pro.dashboard.worker.empty : t.empty}
           </EmptyState>
-        ) : (
-          <ChantierList rows={rows} />
-        )}
-      </div>
-    </main>
+        ) : undefined
+      }
+    />
   );
 }

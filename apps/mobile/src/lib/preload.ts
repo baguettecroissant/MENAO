@@ -2,12 +2,14 @@ import { loadConversations } from "./messages";
 import { loadArtisanChantiers } from "./pro-chantiers";
 import { loadArtisanInvoices, loadArtisanQuotes } from "./pro-documents";
 import { loadExpenses } from "./pro-expenses";
-import { loadInbox } from "./pro-requests";
+import { loadInbox, loadResponseStats } from "./pro-requests";
 import { prefetchScreen } from "./screen-cache";
 
 /** Onglets chargés d'avance, avec la clé de leur écran (`useFocusData`). */
 const TABS: [key: string, load: () => Promise<unknown>][] = [
   ["tab:demandes", loadInbox],
+  // Temps de réponse en tête de l'onglet Demandes (« Nette », lot 3).
+  ["tab:reponse", loadResponseStats],
   ["tab:chantiers", loadArtisanChantiers],
   ["tab:devis", loadArtisanQuotes],
   ["tab:factures", loadArtisanInvoices],

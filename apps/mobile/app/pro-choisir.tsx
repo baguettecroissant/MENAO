@@ -1,7 +1,8 @@
 import { isAwaitingQuote, isJournalOpen, type ChantierStatus } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
-import { ArtisanChantierCard } from "@/components/pro/chantier-row";
+import { ListGroup } from "@/components/list-kit";
+import { ChantierListRow } from "@/components/pro/chantier-row";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadArtisanChantiers } from "@/lib/pro-chantiers";
@@ -35,17 +36,21 @@ export default function ChooseChantierScreen() {
           <Text style={styles.emptyText}>{photo ? t.emptyPhoto : t.emptyQuote}</Text>
         </View>
       ) : null}
-      {list.map((r) => (
-        <ArtisanChantierCard
-          key={r.chantier_id}
-          row={r}
-          onPress={() =>
-            router.replace(
-              photo ? `/pro-chantier/${r.chantier_id}` : `/pro-chantier/${r.chantier_id}/devis`,
-            )
-          }
-        />
-      ))}
+      {list.length > 0 ? (
+        <ListGroup>
+          {list.map((r) => (
+            <ChantierListRow
+              key={r.chantier_id}
+              row={r}
+              onPress={() =>
+                router.replace(
+                  photo ? `/pro-chantier/${r.chantier_id}` : `/pro-chantier/${r.chantier_id}/devis`,
+                )
+              }
+            />
+          ))}
+        </ListGroup>
+      ) : null}
     </Screen>
   );
 }

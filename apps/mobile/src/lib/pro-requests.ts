@@ -7,7 +7,7 @@ import { formatLongDate } from "./dates";
 import { syncPhoneCalendar } from "./phone-calendar";
 import { supabase } from "./supabase";
 import { isExampleId } from "@menao/core";
-import { exampleInboxItems, exampleOpportunity } from "./example-data";
+import { EXAMPLE_RESPONSE_STATS, exampleInboxItems, exampleOpportunity } from "./example-data";
 import { examplesActive } from "./examples";
 
 type InboxRow = Database["public"]["Functions"]["artisan_inbox"]["Returns"][number];
@@ -43,6 +43,17 @@ export async function loadInbox(): Promise<InboxItem[] | null> {
     ...r,
     photoUrl: r.photo_path ? (photos.get(r.photo_path) ?? null) : null,
   }));
+}
+
+/** Temps de réponse moyen de l'artisan (minutes, null sans réponse) et nombre de réponses. */
+export type ResponseStats = { minutes: number | null; responses: number };
+
+/** Temps de réponse (`my_response_stats`), sur l'accueil et en tête de l'onglet Demandes. */
+export async function loadResponseStats(): Promise<ResponseStats | null> {
+  if (examplesActive()) return EXAMPLE_RESPONSE_STATS;
+  const { data, error } = await supabase.rpc("my_response_stats");
+  if (error) return null;
+  return { minutes: data?.[0]?.minutes ?? null, responses: data?.[0]?.responses ?? 0 };
 }
 
 /** Partenaire du réseau de parrainage à recommander au client (ADR 0174). */

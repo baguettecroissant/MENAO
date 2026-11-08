@@ -111,7 +111,9 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     .getByRole("navigation", { name: "Navigation de l'espace pro" })
     .getByRole("link", { name: /^Demandes/ })
     .click();
-  await expect(proPage.getByRole("heading", { name: "Mes demandes" })).toBeVisible();
+  await expect(
+    proPage.getByRole("heading", { level: 1, name: "Demandes", exact: true }),
+  ).toBeVisible();
   await proPage
     .getByRole("link", { name: /Dominique/ })
     .first()

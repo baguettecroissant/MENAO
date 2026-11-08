@@ -129,17 +129,22 @@ export function MoreButton({ items }: { items: readonly MoreItem[] }) {
   );
 }
 
-/** Filtres soulignés, avec leur nombre ou leur montant (« À payer · 1 528 € »). */
+/**
+ * Filtres soulignés, avec leur nombre ou leur montant (« À payer · 1 528 € »). `chips` : pastilles
+ * qui défilent jusqu'au bord de l'écran, l'active en bleu nuit (listes « Nette », lot 3).
+ */
 export function ListFilters<V extends string>({
   label,
   items,
   value,
   onChange,
+  chips = false,
 }: {
   label: string;
   items: readonly { value: V; label: string; detail?: string; tone?: ListTone }[];
   value: V;
   onChange: (value: V) => void;
+  chips?: boolean;
 }) {
   return (
     <ScrollView
@@ -147,8 +152,8 @@ export function ListFilters<V extends string>({
       showsHorizontalScrollIndicator={false}
       role="tablist"
       aria-label={label}
-      style={styles.filters}
-      contentContainerStyle={styles.filtersContent}
+      style={chips ? styles.chips : styles.filters}
+      contentContainerStyle={chips ? styles.chipsContent : styles.filtersContent}
     >
       {items.map((item) => {
         const active = item.value === value;
@@ -157,25 +162,93 @@ export function ListFilters<V extends string>({
             key={item.value}
             role="tab"
             aria-selected={active}
+            aria-label={item.detail ? `${item.label}, ${item.detail}` : item.label}
+            hitSlop={chips ? { top: 4, bottom: 4 } : undefined}
             onPress={() => {
               if (active) return;
               haptic.select();
               onChange(item.value);
             }}
-            style={[styles.filter, active && styles.filterActive]}
+            style={
+              chips
+                ? [styles.chip, active && styles.chipActive]
+                : [styles.filter, active && styles.filterActive]
+            }
           >
-            <Text style={[styles.filterLabel, active && styles.filterLabelActive]}>
-              {item.label}
-              {item.detail ? (
-                <Text style={{ color: item.tone ? TONES[item.tone] : colors["muted-foreground"] }}>
-                  {` · ${item.detail}`}
-                </Text>
-              ) : null}
-            </Text>
+            {chips ? (
+              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                {item.label}
+                {item.detail ? <Text style={styles.chipCount}>{` ${item.detail}`}</Text> : null}
+              </Text>
+            ) : (
+              <Text style={[styles.filterLabel, active && styles.filterLabelActive]}>
+                {item.label}
+                {item.detail ? (
+                  <Text
+                    style={{ color: item.tone ? TONES[item.tone] : colors["muted-foreground"] }}
+                  >
+                    {` · ${item.detail}`}
+                  </Text>
+                ) : null}
+              </Text>
+            )}
           </Pressable>
         );
       })}
     </ScrollView>
+  );
+}
+
+export type StripFigure = {
+  label: string;
+  value: string;
+  /** Chiffre en rouge (demande sur le point d'expirer). */
+  danger?: boolean;
+  /** Valeur lue par les lecteurs d'écran à la place de `value` (« aucune » pour « — »). */
+  spoken?: string;
+};
+
+/**
+ * Trois chiffres serrés sur une ligne, en tête des listes Demandes et Chantiers (refonte
+ * « Nette », lot 3) : le chiffre en grand, son libellé court dessous.
+ */
+export function FigureStrip({
+  label,
+  figures,
+}: {
+  label: string;
+  figures: readonly StripFigure[];
+}) {
+  return (
+    <View role="group" aria-label={label} style={styles.strip}>
+      {figures.map((figure, i) => (
+        <View
+          key={figure.label}
+          accessible
+          aria-label={`${figure.label} : ${figure.spoken ?? figure.value}`}
+          style={[styles.stripCell, i > 0 && styles.stripLeft]}
+        >
+          <Text
+            style={[styles.stripValue, figure.danger && styles.stripDanger]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {figure.value}
+          </Text>
+          <Text style={styles.stripLabel}>{figure.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Titre d'un groupe de lignes, avec son nombre en gris (« À traiter  2 »). */
+export function GroupTitle({ title, count }: { title: string; count: number }) {
+  return (
+    <Text role="heading" aria-label={`${title}, ${count}`} style={styles.groupTitle}>
+      {title}
+      <Text style={styles.groupCount}>{`  ${count}`}</Text>
+    </Text>
   );
 }
 
@@ -477,6 +550,61 @@ const styles = StyleSheet.create({
   filterActive: { borderBottomColor: colors.foreground },
   filterLabel: { fontFamily: font.medium, fontSize: 15, color: colors["muted-foreground"] },
   filterLabelActive: { fontFamily: font.semibold, color: colors.foreground },
+  // Pastilles jusqu'au bord de l'écran (marge des listes : 20 px).
+  chips: { flexGrow: 0, marginHorizontal: -spacing(5) },
+  chipsContent: { gap: spacing(2), paddingHorizontal: spacing(5) },
+  chip: {
+    height: 36,
+    justifyContent: "center",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+  },
+  chipActive: { borderColor: colors.foreground, backgroundColor: colors.foreground },
+  chipLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  chipLabelActive: { color: colors["primary-foreground"] },
+  chipCount: { fontFamily: font.medium, opacity: 0.7 },
+  strip: {
+    flexDirection: "row",
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  stripCell: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing(1),
+    paddingHorizontal: spacing(3),
+    paddingVertical: 14,
+  },
+  stripLeft: { borderLeftWidth: 1, borderLeftColor: colors.border },
+  stripValue: {
+    fontFamily: font.display,
+    fontSize: 26,
+    lineHeight: 30,
+    letterSpacing: -0.8,
+    fontVariant: ["tabular-nums"],
+    color: colors.foreground,
+  },
+  stripDanger: { color: colors.danger },
+  stripLabel: { fontFamily: font.semibold, fontSize: 12, lineHeight: 16, color: colors.label },
+  groupTitle: {
+    marginTop: spacing(2),
+    marginBottom: -spacing(1),
+    fontFamily: font.display,
+    fontSize: 18,
+    letterSpacing: -0.4,
+    color: colors.foreground,
+  },
+  groupCount: {
+    fontFamily: font.semibold,
+    fontSize: 14,
+    letterSpacing: 0,
+    color: colors["muted-foreground"],
+  },
   search: {
     flexDirection: "row",
     alignItems: "center",
