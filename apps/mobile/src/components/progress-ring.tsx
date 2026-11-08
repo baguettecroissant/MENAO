@@ -23,10 +23,13 @@ export function ProgressRing({
   percent,
   size = 56,
   stroke = 6,
+  track = colors.border,
 }: {
   percent: number;
   size?: number;
   stroke?: number;
+  /** Couleur du fond de l'anneau (blanc sur la carte bleu clair « Prochaine étape »). */
+  track?: string;
 }) {
   const reduced = useReducedMotion();
   const radius = (size - stroke) / 2;
@@ -52,7 +55,7 @@ export function ProgressRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.border}
+          stroke={track}
           strokeWidth={stroke}
           fill="none"
         />

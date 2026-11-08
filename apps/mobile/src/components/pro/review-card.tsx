@@ -109,7 +109,7 @@ export function ReviewCard({
 }
 
 /** F-28 : réponse publique de l'artisan à l'avis de son client, une seule fois. */
-function ReplyForm({ reviewId, onReplied }: { reviewId: string; onReplied: () => void }) {
+export function ReplyForm({ reviewId, onReplied }: { reviewId: string; onReplied: () => void }) {
   const [reply, setReply] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
   const [failure, setFailure] = useState<string | null>(null);
@@ -154,7 +154,7 @@ function ReplyForm({ reviewId, onReplied }: { reviewId: string; onReplied: () =>
 }
 
 /** F-28 : signalement de l'avis à l'équipe MENAO, avec un motif. */
-function ReportForm({ reviewId }: { reviewId: string }) {
+export function ReportForm({ reviewId }: { reviewId: string }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);

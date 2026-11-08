@@ -3438,6 +3438,7 @@ export const fr = {
       moneyTabs: { devis: "Devis", factures: "Factures", depenses: "Dépenses", suivi: "Suivi" },
       moneyIntro: "Vos devis, factures et dépenses, au même endroit.",
       storefrontTabs: { profil: "Ma fiche", avis: "Avis", grade: "Mon grade" },
+      storefrontIntro: "Ce que voient les particuliers quand ils vous cherchent.",
     },
     /** Exemples de l'espace (ADR 0184) : données fictives, en lecture seule. */
     examples: {
@@ -3556,6 +3557,9 @@ export const fr = {
       strength: (percent: number) => `Fiche complète à ${percent} %`,
       complete: "Votre fiche est complète",
       completeHint: "Elle donne aux particuliers toutes les raisons de vous choisir.",
+      // Refonte « Nette », lot 5 (ADR 0250).
+      nextStep: "Prochaine étape",
+      businessCard: "Carte de visite",
       tips: {
         assure_verifie: "Faites valider votre décennale et votre RC Pro",
         photo_profil: "Ajoutez une photo de profil",
@@ -4113,6 +4117,40 @@ export const fr = {
       tipsDone:
         "Votre fiche est complète : photo, réalisations, présentation, spécialités et certifications.",
       unavailable: "Votre fiche n'est pas disponible pour le moment.",
+      // Refonte « Nette », lot 5 (ADR 0250) : chiffres clés, liste à cocher, cadre d'aperçu.
+      figuresLabel: "Chiffres de votre fiche",
+      completion: "Fiche complétée",
+      completionShort: "complétée",
+      completionHint: (n: number) =>
+        n === 0
+          ? "rien à ajouter"
+          : n === 1
+            ? "1 étape pour la compléter"
+            : `${n} étapes pour la compléter`,
+      rating: "Note de vos clients",
+      ratingShort: "note",
+      ratingHint: (n: number) => (n <= 1 ? `${n} avis vérifié` : `${n} avis vérifiés`),
+      noRating: "avec votre premier avis",
+      responseTime: "Temps de réponse",
+      responseShort: "temps de réponse",
+      responseHint: "sur les 6 derniers mois",
+      noResponse: "pas encore assez de réponses",
+      tipsLead: (n: number) =>
+        n === 0
+          ? "Tout y est : votre fiche est prête à convaincre."
+          : n === 1
+            ? "Encore 1 étape pour une fiche plus convaincante."
+            : `Encore ${n} étapes pour une fiche plus convaincante.`,
+      tipLabels: {
+        assure_verifie: "Assuré et vérifié",
+        photo_profil: "Photo de profil",
+        realisations: "Photos de chantiers",
+        presentation: "Présentation",
+        specialites: "Métiers et spécialités",
+        certifications: "Certifications",
+      },
+      tipDone: "Fait",
+      previewStrip: "Aperçu : votre fiche telle que la voient les particuliers",
     },
     reviews: {
       title: "Mes avis",
@@ -4141,6 +4179,25 @@ export const fr = {
       noReply: "Sans réponse",
       hidden: "Masqué",
       seePublic: "Voir ma fiche publique",
+      // Refonte « Nette », lot 5 (ADR 0250).
+      figuresLabel: "Chiffres de vos avis",
+      global: "Note globale",
+      globalShort: "note globale",
+      globalHint: "moyenne des avis publiés",
+      globalEmpty: "dès votre premier avis",
+      count: "Avis vérifiés",
+      countShort: "avis vérifiés",
+      countHint: "sur de vrais chantiers MENAO",
+      unanswered: "Sans réponse",
+      unansweredShort: "sans réponse",
+      unansweredHint: (n: number) =>
+        n === 0 ? "vous avez répondu à tout" : "répondre montre votre sérieux",
+      filtersLabel: "Filtrer les avis",
+      filterAll: "Tous",
+      filterUnanswered: "Sans réponse",
+      noneUnanswered: "Aucun avis n'attend votre réponse.",
+      filterLow: "4 étoiles ou moins",
+      noneLow: "Aucun avis à 4 étoiles ou moins.",
     },
     appointment: {
       // Accepter en un toucher (ADR 0222) : créneaux proposés au client, qui en choisit un.

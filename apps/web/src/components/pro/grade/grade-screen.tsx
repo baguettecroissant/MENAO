@@ -51,11 +51,10 @@ export function GradeScreen({
 
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.title}
-          </h1>
+      {/* Sous l'en-tête « Ma vitrine » (ADR 0250) : titre de niveau 2. */}
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-6 pb-10 sm:px-6">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xl">{t.title}</h2>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">

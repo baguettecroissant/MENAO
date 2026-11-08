@@ -3419,6 +3419,24 @@ export const fr = {
     reportSubmit: "Envoyer le signalement",
     reportCancel: "Annuler",
     reportSent: "Signalement envoyé à l'équipe MENAO. Merci.",
+    // Refonte « Nette », lot 5 : chiffres, filtres en pastilles et une carte par avis.
+    screenTitle: "Avis",
+    figuresLabel: "Chiffres de vos avis",
+    rating: "note globale",
+    noRating: "aucune",
+    published: "avis vérifiés",
+    toAnswerShort: "sans réponse",
+    filtersLabel: "Filtrer les avis",
+    filters: {
+      tous: "Tous",
+      sans_reponse: "Sans réponse",
+      note_basse: "4 étoiles ou moins",
+    },
+    filterEmpty: "Aucun avis dans ce filtre.",
+    reply: "Répondre",
+    replyCancel: "Annuler",
+    yourReply: "VOTRE RÉPONSE",
+    openChantier: (title: string, date: string) => `Ouvrir le chantier « ${title} », ${date}`,
   },
   /** Chantiers de l'artisan (F-18) : mêmes textes que l'espace pro du site. */
   /** « Mes documents » du client (onglet Documents) : mêmes textes que le site. */
@@ -3835,6 +3853,25 @@ export const fr = {
     photoTitle: "Photo de profil",
     photoDone: "Photo de profil mise à jour.",
     strength: (percent: number) => `Fiche complète à ${percent} %`,
+    // Carte « Prochaine étape » (refonte « Nette », lot 5), textes repris des conseils du site.
+    nextStep: "Prochaine étape",
+    tipHints: {
+      assure_verifie:
+        "Décennale (si vos métiers y sont soumis), RC Pro et attestation URSSAF validées et à jour.",
+      photo_profil: "Les particuliers choisissent plus volontiers un visage.",
+      realisations: "Montrez au moins 3\u00a0photos de chantiers réalisés.",
+      presentation: "300\u00a0caractères ou plus : spécialités, expérience, secteur.",
+      specialites: "Elles s'affichent sur votre fiche et dans les résultats.",
+      certifications: "RGE, Qualibat… : elles rassurent les particuliers.",
+    },
+    tipActions: {
+      assure_verifie: "Voir mes documents",
+      photo_profil: "Ajouter ma photo",
+      realisations: "Ajouter des photos",
+      presentation: "Compléter ma présentation",
+      specialites: "Choisir mes spécialités",
+      certifications: "Ajouter une certification",
+    },
     complete: "Votre fiche est complète",
     completeHint: "Elle donne aux particuliers toutes les raisons de vous choisir.",
     tips: {

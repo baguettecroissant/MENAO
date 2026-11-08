@@ -41,6 +41,7 @@ export default async function ExamplePublicProfilePage() {
           reply: r.reply,
         }))}
       tips={[]}
+      strength={100}
       structurallyVisible
       availability={availabilityStatus({
         paused: false,

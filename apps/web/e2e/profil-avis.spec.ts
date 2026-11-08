@@ -26,7 +26,7 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   // particuliers, avec les conseils pour la compléter.
   await nav.getByRole("link", { name: /^Ma vitrine/ }).click();
   await expect(page).toHaveURL(/\/pro\/profil$/);
-  await expect(page.getByRole("heading", { name: "Ma fiche publique", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ma fiche publique", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Lou - Électricien", level: 2 })).toBeVisible();
   const tips = page.getByRole("region", { name: "Pour une fiche plus convaincante" });
   await expect(tips.getByRole("link", { name: "Ajouter ma photo" })).toBeVisible();
@@ -48,7 +48,7 @@ test("aperçu de la fiche publique et page « Mes avis »", async ({ page }) => 
   );
   await tabs.getByRole("link", { name: "Avis", exact: true }).click();
   await expect(page).toHaveURL(/\/pro\/avis$/);
-  await expect(page.getByRole("heading", { name: "Mes avis", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mes avis", level: 2 })).toBeVisible();
   await expect(page.getByText("Aucun avis pour le moment.")).toBeVisible();
   await expect(
     page.getByText("Votre note apparaîtra avec votre premier avis publié."),

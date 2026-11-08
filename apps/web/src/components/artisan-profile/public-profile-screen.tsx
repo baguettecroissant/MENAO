@@ -1,12 +1,15 @@
 import type { AvailabilityStatus, ProfileTip } from "@menao/core";
-import { ArrowRight, ExternalLink, Eye, EyeOff, Lightbulb, PartyPopper } from "lucide-react";
+import { ArrowRight, Check, ExternalLink, Eye, EyeOff } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PublicReview } from "@/components/review/review-list";
 import { ExampleLock } from "@/components/pro/examples";
+import { MoneyFigures } from "@/components/pro/money-figures";
+import { sheetCard } from "@/components/pro/sheet";
 import { ButtonLink, TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { formatDuration } from "@/lib/format";
 import type { ArtisanProfile } from "@/lib/project/artisans";
 import { ProfileBody, ProfileHeader, profileTrade } from "./profile-view";
 
@@ -28,8 +31,10 @@ const EDIT_LINKS = [
 ] as const;
 
 /**
- * Écran « Ma fiche publique » (F-10) : bandeau d'aperçu (visible ou non, et pourquoi), liens de
- * modification, fiche identique à celle des particuliers, conseils pour la rendre convaincante.
+ * Écran « Ma fiche publique » (F-10), refonte « Nette » (ADR 0250) : chiffres clés, aperçu encadré
+ * (visible ou non, et pourquoi, liens de modification, en-tête identique à celui des
+ * particuliers), liste à cocher pour une fiche convaincante, adresse web, puis la suite de la
+ * fiche telle que la voient les particuliers.
  */
 export function PublicProfileScreen({
   profile,
@@ -42,7 +47,10 @@ export function PublicProfileScreen({
   webPresence,
   publicHref = null,
   example = false,
+  strength,
 }: {
+  /** Fiche complétée, en % (`profileStrength`). */
+  strength: number;
   profile: ArtisanProfile;
   avatar: string | null;
   photos: string[];
@@ -68,128 +76,185 @@ export function PublicProfileScreen({
         ? t.previewConges
         : t.previewVisible;
 
+  const allTips = Object.keys(TIP_HREF) as ProfileTip[];
+  const response = profile.response_minutes;
   return (
-    <main className="flex-1 bg-background">
-      <div className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-          <div
-            className={`flex flex-col gap-3 rounded-card border px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5 ${
-              visible ? "border-primary/20 bg-primary-softer" : "border-warning/25 bg-warning-soft"
-            }`}
+    <main className="flex-1">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pt-6 sm:px-6">
+        <MoneyFigures
+          label={t.figuresLabel}
+          dense
+          cells={[
+            {
+              label: t.completion,
+              short: t.completionShort,
+              value: `${strength} %`,
+              hint: t.completionHint(tips.length),
+            },
+            {
+              label: t.rating,
+              short: t.ratingShort,
+              value: profile.score ? `${Math.round(profile.score.global)} %` : "—",
+              hint: profile.score ? t.ratingHint(profile.score.review_count) : t.noRating,
+            },
+            {
+              label: t.responseTime,
+              short: t.responseShort,
+              value: response === null ? "—" : formatDuration(response),
+              hint: response === null ? t.noResponse : t.responseHint,
+            },
+          ]}
+        />
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <section
+            aria-labelledby="fiche-publique"
+            className="flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card"
           >
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden="true"
-                className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full ${
-                  visible ? "bg-primary-soft text-primary-strong" : "bg-surface text-warning"
-                }`}
-              >
-                {visible ? <Eye className="size-5" /> : <EyeOff className="size-5" />}
-              </span>
-              <div className="flex flex-col gap-1">
-                <h1 className="text-lg font-medium">{t.title}</h1>
-                <p className="text-sm text-foreground/80">{intro}</p>
-                {visible && publicHref && (
-                  <ButtonLink
-                    href={publicHref as Route}
-                    target="_blank"
-                    variant="outline"
-                    size="sm"
-                    className="mt-1 self-start"
-                  >
-                    {t.web.open}
-                    <ExternalLink aria-hidden="true" className="size-4" />
-                  </ButtonLink>
-                )}
-                {!structurallyVisible ? (
-                  <TextLink href="/pro/onboarding" className="self-start text-sm">
-                    {t.completeFile}
-                  </TextLink>
+            <div
+              className={`flex flex-col gap-3 border-b px-4 py-3.5 sm:flex-row sm:items-start sm:justify-between sm:px-6 ${
+                visible ? "border-border bg-background" : "border-warning/25 bg-warning-soft"
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                {visible ? (
+                  <Eye aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-label" />
                 ) : (
-                  (status === "pause" || status === "conges") && (
-                    <TextLink href="/pro/agenda/disponibilites" className="self-start text-sm">
-                      {t.manageAvailability}
-                    </TextLink>
-                  )
+                  <EyeOff aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
                 )}
+                <div className="flex flex-col gap-1">
+                  <h2 id="fiche-publique" className="font-sans text-sm font-semibold">
+                    {t.title}
+                  </h2>
+                  <p className="text-[0.8125rem] text-label">{intro}</p>
+                  {visible && publicHref && (
+                    <ButtonLink
+                      href={publicHref as Route}
+                      target="_blank"
+                      variant="outline"
+                      size="sm"
+                      className="mt-1 self-start"
+                    >
+                      {t.web.open}
+                      <ExternalLink aria-hidden="true" className="size-4" />
+                    </ButtonLink>
+                  )}
+                  {!structurallyVisible ? (
+                    <TextLink href="/pro/onboarding" className="self-start text-sm">
+                      {t.completeFile}
+                    </TextLink>
+                  ) : (
+                    (status === "pause" || status === "conges") && (
+                      <TextLink href="/pro/agenda/disponibilites" className="self-start text-sm">
+                        {t.manageAvailability}
+                      </TextLink>
+                    )
+                  )}
+                </div>
               </div>
+              <ExampleLock locked={example}>
+                <nav aria-label={t.editLabel} className="flex flex-col gap-1 sm:items-end">
+                  <p className="text-xs font-semibold text-muted-foreground">{t.editLabel}</p>
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1 sm:justify-end">
+                    {EDIT_LINKS.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href as Route}
+                          className="text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </ExampleLock>
             </div>
-            <ExampleLock locked={example}>
-              <nav aria-label={t.editLabel} className="flex flex-col gap-1 sm:items-end">
-                <p className="text-xs font-medium text-muted-foreground">{t.editLabel}</p>
-                <ul className="flex flex-wrap gap-x-4 gap-y-1 sm:justify-end">
-                  {EDIT_LINKS.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href as Route}
-                        className="text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </ExampleLock>
-          </div>
-
-          <ProfileHeader
-            profile={profile}
-            avatar={avatar}
-            title={fr.search.profile.title(profile.display_name, profileTrade(profile))}
-            titleAs="h2"
-            actions={
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                {/* Bouton des particuliers, montré à l'identique mais inactif dans l'aperçu. */}
-                <span
-                  aria-hidden="true"
-                  className={`${buttonClasses({ size: "lg", block: false })} pointer-events-none`}
-                >
-                  {fr.search.profile.request}
-                </span>
-                <p className="text-xs text-muted-foreground">{t.ctaHint}</p>
+            <div className="px-4 py-5 sm:px-6 sm:py-6">
+              <ProfileHeader
+                profile={profile}
+                avatar={avatar}
+                title={fr.search.profile.title(profile.display_name, profileTrade(profile))}
+                titleAs="h2"
+                actions={
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    {/* Bouton des particuliers, montré à l'identique mais inactif dans l'aperçu. */}
+                    <span
+                      aria-hidden="true"
+                      className={`${buttonClasses({ size: "lg", block: false })} pointer-events-none`}
+                    >
+                      {fr.search.profile.request}
+                    </span>
+                    <p className="text-xs text-muted-foreground">{t.ctaHint}</p>
+                  </div>
+                }
+              />
+            </div>
+          </section>
+          {/* Téléphone : la liste à cocher avant l'aperçu, comme la maquette. */}
+          <div className="flex min-w-0 flex-col gap-4 max-lg:order-first">
+            <section aria-labelledby="conseils" className={sheetCard}>
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="conseils" className="text-lg">
+                  {t.tipsTitle}
+                </h2>
+                <span className="font-display text-xl font-bold tabular-nums">{strength} %</span>
               </div>
-            }
-          />
+              <span
+                role="meter"
+                aria-label={t.completion}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={strength}
+                className="h-2 overflow-hidden rounded-pill bg-background"
+              >
+                <span
+                  className="block h-full rounded-pill bg-primary"
+                  style={{ width: `${strength}%` }}
+                />
+              </span>
+              <p className="text-sm text-label">{t.tipsLead(tips.length)}</p>
+              <ul className="flex flex-col divide-y divide-border">
+                {allTips.map((tip) => {
+                  const todo = tips.includes(tip);
+                  return (
+                    <li key={tip} className="flex items-start gap-3 py-3 first:pt-1 last:pb-0">
+                      <span
+                        className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ${
+                          todo
+                            ? "border-2 border-dashed border-border-strong"
+                            : "bg-success-soft text-success"
+                        }`}
+                      >
+                        {!todo && <Check aria-hidden="true" className="size-3.5" />}
+                        <span className="sr-only">{todo ? "" : t.tipDone}</span>
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className={`font-semibold ${todo ? "" : "text-muted-foreground"}`}>
+                          {t.tipLabels[tip]}
+                        </span>
+                        {todo && (
+                          <span className="text-[0.8125rem] text-muted-foreground">
+                            {t.tips[tip].text}
+                          </span>
+                        )}
+                        {todo && (
+                          <Link
+                            href={TIP_HREF[tip] as Route}
+                            className="inline-flex items-center gap-1 self-start text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
+                          >
+                            {t.tips[tip].action}
+                            <ArrowRight aria-hidden="true" className="size-3.5" />
+                          </Link>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+            {webPresence}
+          </div>
         </div>
-      </div>
-
-      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
-        <section
-          aria-labelledby="conseils"
-          className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card"
-        >
-          <h2 id="conseils" className="flex items-center gap-2 text-[1.0625rem] font-medium">
-            {tips.length > 0 ? (
-              <Lightbulb aria-hidden="true" className="size-[1.125rem] text-warning" />
-            ) : (
-              <PartyPopper aria-hidden="true" className="size-[1.125rem] text-success" />
-            )}
-            {t.tipsTitle}
-          </h2>
-          {tips.length > 0 ? (
-            <ul className="flex flex-col divide-y divide-border">
-              {tips.map((tip) => (
-                <li
-                  key={tip}
-                  className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <p className="text-sm text-foreground/85">{t.tips[tip].text}</p>
-                  <Link
-                    href={TIP_HREF[tip] as Route}
-                    className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
-                  >
-                    {t.tips[tip].action}
-                    <ArrowRight aria-hidden="true" className="size-3.5" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-success">{t.tipsDone}</p>
-          )}
-        </section>
-        {webPresence && <div className="mt-6">{webPresence}</div>}
       </div>
 
       <ProfileBody profile={profile} photos={photos} reviews={reviews} canReport={false} />
