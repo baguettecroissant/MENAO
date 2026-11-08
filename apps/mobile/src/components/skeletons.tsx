@@ -24,44 +24,75 @@ function Loading({ children, gap = spacing(3) }: { children: ReactNode; gap?: nu
   );
 }
 
-/** Cartes des demandes : pastilles, titre, lieu et délais, photo à droite. */
-export function RequestCardsSkeleton({ count = 3 }: { count?: number }) {
+/** Bande des trois chiffres en tête des listes Demandes et Chantiers (« Nette », lot 3). */
+function StripSkeleton() {
   return (
-    <Loading>
-      {Array.from({ length: count }, (_, i) => (
-        <View key={i} style={[styles.card, styles.row]}>
-          <View style={styles.column}>
-            <View style={styles.inline}>
-              <Skeleton width={72} height={22} round />
-              <Skeleton width={56} height={22} round />
-            </View>
-            <Skeleton width="85%" height={16} />
-            <Skeleton width="55%" height={12} />
-            <Skeleton width="40%" height={12} />
-            <Skeleton width="60%" height={12} />
-          </View>
-          <Skeleton width={64} height={64} style={styles.thumb} />
+    <View style={[styles.group, styles.strip]}>
+      {Array.from({ length: 3 }, (_, i) => (
+        <View key={i} style={[styles.stripCell, i > 0 && styles.stripLeft]}>
+          <Skeleton width={40} height={24} />
+          <Skeleton width="70%" height={10} />
         </View>
       ))}
+    </View>
+  );
+}
+
+/** Demandes : chiffres, puis lignes avec vignette, pastilles, titre, lieu et compte à rebours. */
+export function RequestCardsSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <Loading gap={spacing(4)}>
+      <StripSkeleton />
+      <Skeleton width={120} height={18} />
+      <View style={styles.group}>
+        {Array.from({ length: count }, (_, i) => (
+          <View key={i} style={[styles.row, styles.groupRow, i > 0 && styles.separator]}>
+            <Skeleton width={56} height={56} style={styles.thumb} />
+            <View style={styles.column}>
+              <View style={styles.inline}>
+                <Skeleton width={72} height={22} />
+                <Skeleton width={56} height={22} />
+              </View>
+              <Skeleton width="85%" height={16} />
+              <Skeleton width="55%" height={12} />
+              <Skeleton width="40%" height={12} />
+              <Skeleton height={8} />
+            </View>
+          </View>
+        ))}
+      </View>
     </Loading>
   );
 }
 
-/** Cartes des chantiers : étape, titre, client et lieu, montant. */
+/** Chantiers : chiffres, pastilles des filtres, puis lignes avec icône, titre et avancement. */
 export function ChantierCardsSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <Loading>
-      {Array.from({ length: count }, (_, i) => (
-        <View key={i} style={[styles.card, styles.column]}>
-          <Skeleton width={96} height={22} round />
-          <Skeleton width="75%" height={16} />
-          <Skeleton width="50%" height={12} />
-          <View style={styles.between}>
-            <Skeleton width="35%" height={12} />
-            <Skeleton width={64} height={14} />
+    <Loading gap={spacing(4)}>
+      <StripSkeleton />
+      <View style={styles.inline}>
+        <Skeleton width={72} height={36} round />
+        <Skeleton width={110} height={36} round />
+        <Skeleton width={140} height={36} round />
+      </View>
+      <View style={styles.group}>
+        {Array.from({ length: count }, (_, i) => (
+          <View key={i} style={[styles.groupRow, styles.column, i > 0 && styles.separator]}>
+            <View style={styles.row}>
+              <Skeleton width={44} height={44} style={styles.thumb} />
+              <View style={styles.column}>
+                <Skeleton width="75%" height={16} />
+                <Skeleton width="50%" height={12} />
+              </View>
+            </View>
+            <Skeleton width="55%" height={12} />
+            <View style={styles.between}>
+              <Skeleton width={102} height={20} />
+              <Skeleton width={110} height={22} />
+            </View>
           </View>
-        </View>
-      ))}
+        ))}
+      </View>
     </Loading>
   );
 }
@@ -189,6 +220,10 @@ const styles = StyleSheet.create({
   inline: { flexDirection: "row", gap: spacing(2) },
   between: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   thumb: { borderRadius: radius.input },
+  strip: { flexDirection: "row" },
+  stripCell: { flex: 1, gap: spacing(2), paddingHorizontal: spacing(3), paddingVertical: 14 },
+  stripLeft: { borderLeftWidth: 1, borderLeftColor: colors.border },
+  groupRow: { padding: spacing(4) },
   filters: {
     flexDirection: "row",
     gap: spacing(4),

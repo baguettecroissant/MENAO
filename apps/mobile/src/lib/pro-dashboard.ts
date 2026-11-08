@@ -21,7 +21,7 @@ import {
 } from "@menao/core";
 import { exampleDashboard } from "./example-data";
 import { examplesActive } from "./examples";
-import { loadInbox, type InboxItem } from "./pro-requests";
+import { loadInbox, loadResponseStats, type InboxItem } from "./pro-requests";
 import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
@@ -89,7 +89,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     inbox,
     { data: chantiers },
     { data: payments },
-    { data: response },
+    response,
     profile,
     artisan,
     reviewsToAnswer,
@@ -100,7 +100,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
     loadInbox(),
     supabase.rpc("artisan_chantiers"),
     supabase.from("payments").select("chantier_id, quote_id, kind, status, amount_cents, paid_at"),
-    supabase.rpc("my_response_stats"),
+    loadResponseStats(),
     supabase.from("profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     supabase
       .from("artisans")
@@ -206,10 +206,7 @@ export async function loadDashboard(): Promise<Dashboard | null> {
       trend: revenueTrend(revenue.currentCents, revenue.previousCents),
       previousMonth: revenue.previousMonth,
     },
-    responseTime: {
-      minutes: response?.[0]?.minutes ?? null,
-      responses: response?.[0]?.responses ?? 0,
-    },
+    responseTime: response ?? { minutes: null, responses: 0 },
     appointments: appointments.slice(0, 4),
     requests: awaiting.slice(0, 3),
     reviewsToAnswer,

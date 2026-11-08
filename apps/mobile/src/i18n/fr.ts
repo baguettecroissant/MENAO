@@ -2107,9 +2107,20 @@ export const fr = {
   proRequests: {
     // Titre court : il tient sur une ligne à côté des bulles de l'en-tête.
     title: "Demandes",
-    // Onglet « Demandes » (ADR 0130).
-    openTitle: (n: number) => `À traiter (${n})`,
+    // Onglet « Demandes » (ADR 0130), refonte « Nette » (lot 3) : chiffres puis deux groupes.
+    openTitle: "À traiter",
     doneTitle: "Déjà traitées",
+    figures: {
+      label: "Vos demandes en chiffres",
+      open: "à traiter",
+      urgent: "plus urgente",
+      response: "temps de réponse",
+      none: "—",
+      noneSpoken: "aucune",
+    },
+    toAnswer: "pour répondre",
+    swipeHint: "Glissez une demande vers la gauche pour proposer un rendez-vous.",
+    from: (name: string, date: string) => `${name} · reçue le ${date}`,
     empty:
       "Vous n'avez pas encore reçu de demande. Elles apparaîtront ici dès qu'un particulier vous contactera.",
     error: "Vos demandes n'ont pas pu être chargées. Tirez vers le bas pour réessayer.",
@@ -3380,6 +3391,45 @@ export const fr = {
     error: "Vos chantiers n'ont pas pu être chargés. Tirez vers le bas pour réessayer.",
     appointmentOn: (day: string, time: string) => `Rendez-vous le ${day} à ${time}`,
     startOn: (day: string, time: string) => `Démarrage le ${day} à ${time}`,
+    // Refonte « Nette » (lot 3) : chiffres, filtres par phase, avancement en 5 étapes.
+    figures: {
+      label: "Vos chantiers en chiffres",
+      appointments: "rendez-vous",
+      waiting: "attente client",
+      works: "en travaux",
+    },
+    filtersLabel: "Filtrer les chantiers",
+    filters: {
+      tous: "Tous",
+      avant_devis: "Avant devis",
+      devis_paiement: "Devis et paiement",
+      travaux: "Travaux",
+      termines: "Terminés",
+    },
+    finishedTitle: "Terminés",
+    step: (label: string, n: number, total: number) => `${label} · ${n}/${total}`,
+    stepSpoken: (label: string, n: number, total: number) =>
+      `Avancement : ${label}, étape ${n} sur ${total}`,
+    stepsDone: "Terminé",
+    stepsDoneSpoken: "Avancement : toutes les étapes franchies",
+    // Prochaine étape quand il n'y a pas de date de rendez-vous ou de démarrage.
+    next: {
+      demande_envoyee: "Rendez-vous à fixer",
+      rdv_planifie: "Rendez-vous à fixer",
+      devis_envoye: "Signature du client attendue",
+      devis_en_revision: "Devis à modifier",
+      devis_signe: "Acompte attendu",
+      acompte_paye: "Date de démarrage à fixer",
+      planifie: "Date de démarrage à fixer",
+      en_cours: "Fin des travaux à déclarer",
+      travaux_termines: "Réception par le client",
+      reserves_a_lever: "Réserves à lever",
+      receptionne: "Solde attendu",
+      cloture: "Chantier terminé",
+      en_litige: "Litige en cours",
+      annule: "Chantier annulé",
+      devis_refuse: "Devis refusé",
+    },
     status: {
       demande_envoyee: "Demande reçue",
       rdv_planifie: "Rendez-vous planifié",
