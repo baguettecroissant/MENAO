@@ -1,14 +1,20 @@
 import { expertiseSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import {
+  ActionScreen,
+  ActionSubmit,
+  ChoicePills,
+  SectionLabel,
+  SentCard,
+} from "@/components/pro/action-kit";
+import { FicheCard } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { reportExpertise } from "@/lib/pro-requests";
 import { useTrades } from "@/lib/trades";
-import { Body, Button, Chip, Notice, Screen, TextField, Title } from "@/ui";
-import { theme } from "@/ui/theme";
+import { Notice } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proExpertise;
@@ -16,7 +22,7 @@ const t = fr.proExpertise;
 /**
  * « Ce chantier a besoin d'une expertise » (F-17, F-18), comme sur le site : l'artisan indique le
  * corps de métier nécessaire ; l'équipe MENAO proposera un artisan adapté au client. `id` : la
- * demande (depuis l'opportunité ou la vue du rendez-vous).
+ * demande (depuis l'opportunité ou la vue du rendez-vous). Écran d'action « Nette » (lot 10).
  */
 function ExpertiseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,41 +52,37 @@ function ExpertiseScreen() {
 
   if (sent) {
     return (
-      <Screen
-        header={<TopBar />}
-        footer={<Button label={t.back} variant="secondary" onPress={() => router.back()} />}
+      <ActionScreen
+        bar={t.bar}
+        title={t.title}
+        footer={<ActionSubmit label={t.back} variant="secondary" onPress={() => router.back()} />}
       >
-        <Title>{t.title}</Title>
-        <Notice tone="success">{t.sent}</Notice>
-      </Screen>
+        <SentCard text={t.sent} />
+      </ActionScreen>
     );
   }
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    <ActionScreen
+      bar={t.bar}
+      title={t.title}
+      lead={t.intro}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
     >
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <View style={styles.group}>
-        <Text style={styles.label}>{t.trade}</Text>
-        <View style={styles.chips}>
-          {trades.map((item) => (
-            <Chip
-              key={item.code}
-              label={item.label}
-              selected={trade === item.code}
-              onPress={() => {
-                setTrade(item.code);
-                setErrors({});
-              }}
-            />
-          ))}
-        </View>
-        {errors.trade ? <Text style={styles.error}>{errors.trade}</Text> : null}
-      </View>
-      <TextField
+      <FicheCard padding={4}>
+        <SectionLabel text={t.trade} />
+        <ChoicePills
+          label={t.trade}
+          options={trades.map((item) => ({ value: item.code, label: item.label }))}
+          value={trade || null}
+          onChange={(code) => {
+            setTrade(code);
+            setErrors({});
+          }}
+          error={errors.trade}
+        />
+      </FicheCard>
+      <ToolField
         label={t.message}
         value={message}
         onChangeText={setMessage}
@@ -88,16 +90,9 @@ function ExpertiseScreen() {
         multiline
         error={errors.message}
       />
-    </Screen>
+    </ActionScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  group: { gap: theme.spacing(2) },
-  label: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
-  error: { fontFamily: theme.font.regular, fontSize: 13, color: theme.colors.danger },
-});
 
 // Réservé selon la place dans l'entreprise (ADR 0241).
 export default withTeamPermission("requests", ExpertiseScreen);

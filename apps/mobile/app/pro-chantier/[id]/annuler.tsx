@@ -3,11 +3,12 @@ import { cancelChantierSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { z } from "zod";
-import { RadioGroup } from "@/components/radio-group";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, DangerBanner, RadioCards } from "@/components/pro/action-kit";
+import { PrivacyNote } from "@/components/pro/dossier-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { cancelArtisanChantier } from "@/lib/pro-chantiers";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAppointment;
@@ -15,7 +16,8 @@ const CAUSES = ARTISAN_CANCEL_REASONS.map((value) => ({ value, label: t.cancelCa
 
 /**
  * F-18 « Annuler le chantier », comme sur le site : motif pour l'équipe (signalement, ADR 0145),
- * message facultatif pour le client. Définitif.
+ * message facultatif pour le client. Définitif. Écran d'action « Nette » (lot 10) : bandeau rouge
+ * clair, motifs en cartes, bouton rouge collé en bas.
  */
 function CancelArtisanChantierScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,10 +47,13 @@ function CancelArtisanChantierScreen() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{t.cancelTitle}</Title>
-      <Body muted>{t.cancelIntro}</Body>
-      <RadioGroup
+    <ActionScreen
+      bar={t.cancelBar}
+      title={t.cancelTitle}
+      footer={<ActionSubmit label={t.cancelConfirm} onPress={submit} loading={pending} danger />}
+    >
+      <DangerBanner text={t.cancelIntro} />
+      <RadioCards
         legend={t.cancelCauseLegend}
         options={CAUSES}
         value={cause}
@@ -58,8 +63,8 @@ function CancelArtisanChantierScreen() {
         }}
         error={causeError}
       />
-      <Body muted>{t.cancelCauseHint}</Body>
-      <TextField
+      <PrivacyNote text={t.cancelCauseHint} />
+      <ToolField
         label={t.cancelReason}
         value={reason}
         onChangeText={(value) => {
@@ -71,8 +76,7 @@ function CancelArtisanChantierScreen() {
         error={error}
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={t.cancelConfirm} onPress={submit} loading={pending} />
-    </Screen>
+    </ActionScreen>
   );
 }
 

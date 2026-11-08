@@ -1,13 +1,13 @@
 "use client";
 
 import { ARTISAN_CANCEL_REASONS } from "@menao/core";
-import { Calendar, Clock, NotebookPen, Plus } from "lucide-react";
+import { Calendar, Camera, Clock, Lock, NotebookPen, Plus } from "lucide-react";
 import { useActionState, useCallback, useState, type MouseEvent } from "react";
 import { SlotWarnings } from "@/components/agenda/slot-warnings";
 import { Drawer } from "@/components/drawer";
 import { AppointmentForm } from "@/components/pro/appointment-form";
 import { PhotoUpload } from "@/components/pro/chantier-journal-forms";
-import { Alert, Button, FieldError, Hint, RadioGroup, inputClasses } from "@/components/ui";
+import { Alert, Button, FieldError, RadioGroup, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { AppointmentAgenda } from "@/lib/artisan/agenda";
 import {
@@ -169,7 +169,9 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
       </Button>
       <Drawer open={open} onClose={close} title={t.cancelTitle} backLabel={t.backToForm}>
         <form action={formAction} className="flex flex-col gap-4" noValidate>
-          <p className="text-sm text-muted-foreground">{t.cancelIntro}</p>
+          <p className="rounded-input bg-danger-soft px-4 py-3 text-sm leading-relaxed font-semibold text-danger">
+            {t.cancelIntro}
+          </p>
           {state.error && <Alert tone="error">{state.error}</Alert>}
           {/* Motif (ADR 0145) : lu par l'équipe MENAO seulement, jamais par le client. */}
           <RadioGroup
@@ -180,7 +182,10 @@ export function CancelChantierButton({ chantierId }: { chantierId: string }) {
             errors={state.fieldErrors?.cause}
             options={ARTISAN_CANCEL_REASONS.map((r) => ({ value: r, label: t.cancelCauses[r] }))}
           />
-          <Hint>{t.cancelCauseHint}</Hint>
+          <p className="-mt-1 flex items-start gap-2 text-sm text-muted-foreground">
+            <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {t.cancelCauseHint}
+          </p>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="cancel-reason" className="text-sm font-medium">
               {t.cancelReason}{" "}
@@ -237,7 +242,7 @@ export function ChantierStartPanel({
   return (
     <div className="sticky bottom-0 z-20 border-t border-border bg-surface px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-raised sm:px-6">
       <form action={formAction} className="mx-auto flex max-w-3xl flex-col gap-3" noValidate>
-        <h2 className="text-sm font-medium">{tf.confirmTitle}</h2>
+        <h2 className="text-lg">{tf.confirmTitle}</h2>
         {state.error && <Alert tone="error">{state.error}</Alert>}
         <div className="grid grid-cols-2 gap-2">
           <div className="relative">
@@ -288,7 +293,9 @@ export function ChantierStartPanel({
         {dateError && <FieldError id="start-date-error">{dateError}</FieldError>}
         {timeError && <FieldError id="start-time-error">{timeError}</FieldError>}
         {agenda && <SlotWarnings date={startDate} time={startTime} agenda={agenda} />}
-        {hint && <Hint>{hint}</Hint>}
+        {hint && (
+          <p className="rounded-input bg-background px-3.5 py-2.5 text-sm text-label">{hint}</p>
+        )}
         <Button type="submit" size="lg" disabled={pending}>
           {tf.confirm}
         </Button>
@@ -364,11 +371,27 @@ export function DeclareFinishedButton({
       </Button>
       <Drawer open={open} onClose={close} title={tf.finishTitle} backLabel={tf.finishClose}>
         <form action={formAction} className="flex flex-col gap-4" noValidate>
-          <p className="text-sm text-muted-foreground">{tf.finishIntro(clientName)}</p>
-          <p className="rounded-input bg-primary-softer px-4 py-3 text-sm text-primary-strong">
-            <span className="font-medium">{tf.finishImportant}</span> {tf.finishReminder}
+          <p className="text-[0.9375rem] leading-relaxed text-label">
+            {tf.finishIntro(clientName)}
           </p>
+          <div className="flex gap-3 rounded-input bg-warning-soft px-4 py-3 text-sm">
+            <Camera aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-warning" />
+            <p>
+              <span className="font-bold text-warning">{tf.finishImportant}</span>{" "}
+              <span className="text-label">{tf.finishReminder}</span>
+            </p>
+          </div>
           <PhotoUpload chantierId={chantierId} label={tf.addPhotos} variant="link" />
+          <ol className="flex flex-col divide-y divide-border border-y border-border">
+            {tf.finishNext(clientName).map((step, index) => (
+              <li key={step} className="flex gap-3 py-2.5 text-sm text-label">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
+                  {index + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
           {state.error && <Alert tone="error">{state.error}</Alert>}
           <Button type="submit" size="lg" disabled={pending}>
             {tf.finish}
@@ -406,7 +429,7 @@ export function SignalLiftButton({
       </Button>
       <Drawer open={open} onClose={close} title={tf.liftTitle} backLabel={tf.finishClose}>
         <form action={formAction} className="flex flex-col gap-4" noValidate>
-          <p className="text-sm text-muted-foreground">{tf.liftText(clientName)}</p>
+          <p className="text-[0.9375rem] leading-relaxed text-label">{tf.liftText(clientName)}</p>
           {state.error && <Alert tone="error">{state.error}</Alert>}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="lift-message" className="text-sm font-medium">

@@ -27,8 +27,10 @@ export function ProblemReportForm({ chantierId }: { chantierId: string }) {
         className="flex flex-col gap-2"
         aria-describedby={categoryError ? "category-error" : undefined}
       >
-        <legend className="pb-2 text-sm font-medium">{t.categoryLegend}</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <legend className="pb-2 text-sm font-medium in-[.app-nette]:text-[1.0625rem] in-[.app-nette]:font-bold">
+          {t.categoryLegend}
+        </legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 in-[.app-nette]:flex in-[.app-nette]:flex-wrap">
           {DISPUTE_CATEGORIES.map((category) => (
             <label key={category} className="relative">
               <input
@@ -39,7 +41,7 @@ export function ProblemReportForm({ chantierId }: { chantierId: string }) {
                 onChange={() => markEdited("category")}
                 className="peer sr-only"
               />
-              <span className="flex min-h-12 cursor-pointer items-center justify-center rounded-input border border-border bg-surface px-3 text-center text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:bg-background">
+              <span className="flex min-h-12 cursor-pointer items-center justify-center rounded-input border border-border bg-surface px-3 text-center text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary-strong peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:bg-background in-[.app-nette]:min-h-11 in-[.app-nette]:rounded-pill in-[.app-nette]:border-border-strong in-[.app-nette]:px-4 in-[.app-nette]:text-[0.9375rem] in-[.app-nette]:font-semibold in-[.app-nette]:peer-checked:border-foreground in-[.app-nette]:peer-checked:bg-foreground in-[.app-nette]:peer-checked:text-white">
                 {t.categories[category]}
               </span>
             </label>

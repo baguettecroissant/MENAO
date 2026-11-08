@@ -4,13 +4,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
+import { ActionScreen, ActionSubmit } from "@/components/pro/action-kit";
+import { FicheCard } from "@/components/pro/fiche-kit";
 import { SlotSuggestions, SlotWarnings } from "@/components/pro/slot-helpers";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAppointmentAgenda } from "@/lib/pro-agenda";
 import { fixAppointment } from "@/lib/pro-requests";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, Title, celebrate } from "@/ui";
+import { Notice, celebrate } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proAppointment;
@@ -18,7 +19,7 @@ const t = fr.proAppointment;
 /**
  * F-17 « Fixer un rendez-vous », comme sur le site : date et heure d'arrivée (heure de Paris),
  * contrôlées à l'avance (à venir, dans les 6 mois) ; le chantier est créé et le client prévenu.
- * Agenda (F-44) : créneaux libres proposés et avertissements.
+ * Agenda (F-44) : créneaux libres proposés et avertissements. Écran d'action « Nette » (lot 10).
  */
 function FixAppointmentScreen() {
   const { id, client = "" } = useLocalSearchParams<{ id: string; client?: string }>();
@@ -54,39 +55,45 @@ function FixAppointmentScreen() {
   }
 
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    <ActionScreen
+      bar={t.bar}
+      title={t.title(client || null)}
+      lead={t.hint}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
     >
-      <Title>{t.title(client || null)}</Title>
-      <SlotSuggestions
-        suggestions={agenda?.suggestions ?? []}
-        date={date}
-        time={time}
-        onPick={(day, hour) => {
-          setDate(day);
-          setTime(hour);
-          setError(undefined);
-        }}
-      />
-      <DateTimeFields
-        date={date}
-        time={time}
-        minDate={today}
-        onDate={(value) => {
-          setDate(value);
-          setError(undefined);
-        }}
-        onTime={(value) => {
-          setTime(value);
-          setError(undefined);
-        }}
-        error={error}
-      />
-      {agenda ? <SlotWarnings date={date} time={time} agenda={agenda} /> : null}
+      {agenda && agenda.suggestions.length > 0 ? (
+        <FicheCard padding={4}>
+          <SlotSuggestions
+            suggestions={agenda.suggestions}
+            date={date}
+            time={time}
+            onPick={(day, hour) => {
+              setDate(day);
+              setTime(hour);
+              setError(undefined);
+            }}
+          />
+        </FicheCard>
+      ) : null}
+      <FicheCard padding={4}>
+        <DateTimeFields
+          date={date}
+          time={time}
+          minDate={today}
+          onDate={(value) => {
+            setDate(value);
+            setError(undefined);
+          }}
+          onTime={(value) => {
+            setTime(value);
+            setError(undefined);
+          }}
+          error={error}
+        />
+        {agenda ? <SlotWarnings date={date} time={time} agenda={agenda} /> : null}
+      </FicheCard>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Body muted>{t.hint}</Body>
-    </Screen>
+    </ActionScreen>
   );
 }
 

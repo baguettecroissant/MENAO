@@ -1683,6 +1683,8 @@ export const fr = {
   /** Signalement d'un problème (F-42) et son suivi : mêmes textes que le site. */
   dispute: {
     reportTitle: "Signaler un problème",
+    bar: "Signalement",
+    chantierLabel: "Chantier",
     intro:
       "Décrivez le problème rencontré sur ce chantier. L'équipe MENAO l'examine et vous répond dans votre espace.",
     suspends:
@@ -2215,6 +2217,8 @@ export const fr = {
     fixAppointment: "Fixer un rendez-vous",
     refuse: "Refuser le chantier",
     refusalLegend: "Pour quelle raison souhaitez-vous refuser ce chantier ?",
+    // Écran « Nette » du refus (lot 10) : la question en grand titre.
+    refuseQuestion: "Pourquoi refusez-vous ce chantier ?",
     refusalDetail: "Précisez la raison",
     confirmRefuse: "Refuser le chantier",
     reasons: {
@@ -2268,6 +2272,11 @@ export const fr = {
     },
     proposedTitle: "Créneaux déjà proposés",
     proposedWaiting: "En attente du choix de votre client. Vous pouvez en proposer d'autres.",
+    // Écrans d'action « Nette » (lot 10) : titres courts de la barre du haut.
+    bar: "Rendez-vous",
+    cancelBar: "Annulation",
+    notesBar: "Notes",
+    notesField: "Vos notes",
     title: (name: string | null) =>
       name ? `Fixer un rendez-vous avec ${name}` : "Fixer un rendez-vous",
     date: "Date du rendez-vous",
@@ -2518,6 +2527,7 @@ export const fr = {
     startDate: "Date de démarrage",
     startTime: "Heure de démarrage",
     quoteStart: (day: string) => `Date de début prévue au devis : ${day}.`,
+    startBar: "Démarrage",
     dashboard: "Retourner à mon tableau de bord",
     confirmedTitle: "Date de démarrage des travaux confirmée",
     confirmed: (day: string, time: string, client: string) =>
@@ -3162,6 +3172,7 @@ export const fr = {
   },
   proExpertise: {
     open: "Ce chantier a besoin d'une expertise",
+    bar: "Expertise",
     title: "Ce chantier a besoin d'une expertise",
     intro:
       "Indiquez le corps de métier nécessaire : l'équipe MENAO proposera un artisan adapté au client.",
@@ -3197,6 +3208,7 @@ export const fr = {
   },
   proFakeClient: {
     open: "Je pense que ce n'est pas un vrai particulier",
+    bar: "Signalement",
     title: "Signaler un faux particulier",
     intro:
       "Un professionnel qui se fait passer pour un particulier pour connaître vos prix ? Dites-le-nous : l'équipe MENAO vérifie la demande, en toute discrétion.",

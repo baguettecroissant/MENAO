@@ -2903,6 +2903,9 @@ export const fr = {
   dispute: {
     reportTitle: "Signaler un problème",
     back: "Retour au chantier",
+    // Refonte « Nette » (ADR 0255) : à droite du formulaire.
+    chantierLabel: "Chantier",
+    nextTitle: "Ce qui se passe ensuite",
     intro:
       "Décrivez le problème rencontré sur ce chantier. L'équipe MENAO l'examine et vous répond dans votre espace.",
     suspends:
@@ -4330,6 +4333,12 @@ export const fr = {
       finishImportant: "Information importante :",
       finishReminder:
         "Avant de déclarer le chantier comme terminé, assurez-vous d'avoir ajouté des photos du chantier une fois terminé.",
+      // Refonte « Nette » (ADR 0255) : ce qui suit la fin du chantier.
+      finishNext: (client: string) => [
+        `${client} réceptionne les travaux et signe le procès-verbal.`,
+        "Des réserves peuvent être émises : vous les levez ensuite.",
+        "Le solde est réglé, puis la facture de solde est émise.",
+      ],
       finished: "Chantier déclaré terminé.",
       awaitingReception: (client: string) =>
         `En attente de la réception des travaux par ${client} (signature du procès-verbal).`,

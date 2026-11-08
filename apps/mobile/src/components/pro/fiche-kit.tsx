@@ -249,7 +249,8 @@ export function FicheButton({
 }: {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary";
+  /** « danger » : fond rouge (refuser, annuler le chantier : refonte « Nette », lot 10). */
+  variant?: "primary" | "secondary" | "danger";
   icon?: LucideIcon;
   /** 50 px (barre d'actions, prochaine étape) au lieu de 44. */
   tall?: boolean;
@@ -258,7 +259,8 @@ export function FicheButton({
   loading?: boolean;
   disabled?: boolean;
 }) {
-  const primary = variant === "primary";
+  // Texte blanc sur fond bleu ou rouge.
+  const primary = variant !== "secondary";
   const fg = primary ? colors["primary-foreground"] : colors.foreground;
   const inactive = disabled || loading;
   return (
@@ -274,6 +276,7 @@ export function FicheButton({
         styles.button,
         { height: tall ? 50 : 44 },
         primary ? styles.buttonPrimary : styles.buttonSecondary,
+        variant === "danger" && styles.buttonDanger,
         grow && styles.grow,
         grow && styles.buttonTight,
         inactive && styles.disabled,
@@ -558,6 +561,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.button,
   },
   buttonPrimary: { backgroundColor: colors.primary },
+  buttonDanger: { backgroundColor: colors.danger },
   buttonSecondary: {
     backgroundColor: colors.surface,
     borderWidth: 1,

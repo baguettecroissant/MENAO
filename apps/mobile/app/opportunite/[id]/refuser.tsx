@@ -1,19 +1,24 @@
 import { REFUSAL_REASONS, type RefusalReason } from "@menao/core";
 import { refusalSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
+import { Users } from "lucide-react-native";
 import { useState } from "react";
 import { z } from "zod";
-import { RadioGroup } from "@/components/radio-group";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit, RadioCards } from "@/components/pro/action-kit";
+import { SoftBanner } from "@/components/pro/dossier-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { refuseRequest } from "@/lib/pro-requests";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proRequests;
 const REASONS = REFUSAL_REASONS.map((value) => ({ value, label: t.reasons[value] }));
 
-/** F-17 « Refuser le chantier », comme sur le site : motif de la liste, précisé si « Autre ». */
+/**
+ * F-17 « Refuser le chantier », comme sur le site : motif de la liste, précisé si « Autre ».
+ * Écran d'action « Nette » (lot 10) : raisons en cartes, bouton rouge collé en bas.
+ */
 function RefuseRequestScreen() {
   const { id, partenaires } = useLocalSearchParams<{ id: string; partenaires?: string }>();
   const [reason, setReason] = useState<RefusalReason | null>(null);
@@ -39,11 +44,14 @@ function RefuseRequestScreen() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{t.refuse}</Title>
-      {partenaires === "1" ? <Body muted>{fr.proPartners.afterRefusal}</Body> : null}
-      <RadioGroup
+    <ActionScreen
+      bar={t.refuse}
+      title={t.refuseQuestion}
+      footer={<ActionSubmit label={t.confirmRefuse} onPress={submit} loading={pending} danger />}
+    >
+      <RadioCards
         legend={t.refusalLegend}
+        hideLegend
         options={REASONS}
         value={reason}
         onChange={(value) => {
@@ -53,7 +61,7 @@ function RefuseRequestScreen() {
         error={errors.reason}
       />
       {reason === "autre" ? (
-        <TextField
+        <ToolField
           label={t.refusalDetail}
           value={detail}
           onChangeText={(value) => {
@@ -65,9 +73,9 @@ function RefuseRequestScreen() {
           error={errors.detail}
         />
       ) : null}
+      {partenaires === "1" ? <SoftBanner icon={Users} text={fr.proPartners.afterRefusal} /> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <Button label={t.confirmRefuse} onPress={submit} loading={pending} />
-    </Screen>
+    </ActionScreen>
   );
 }
 
