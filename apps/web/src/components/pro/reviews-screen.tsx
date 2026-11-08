@@ -84,7 +84,7 @@ export function ReviewsScreen({
               label: t.global,
               short: t.globalShort,
               value: score ? fr.review.percent(score.global_score) : "—",
-              hint: score ? t.globalHint : t.scoreEmpty,
+              hint: score ? t.globalHint : t.globalEmpty,
             },
             { label: t.count, short: t.countShort, value: String(published), hint: t.countHint },
             {

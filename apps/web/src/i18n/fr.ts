@@ -4155,6 +4155,7 @@ export const fr = {
       global: "Note globale",
       globalShort: "note globale",
       globalHint: "moyenne des avis publiés",
+      globalEmpty: "dès votre premier avis",
       count: "Avis vérifiés",
       countShort: "avis vérifiés",
       countHint: "sur de vrais chantiers MENAO",
