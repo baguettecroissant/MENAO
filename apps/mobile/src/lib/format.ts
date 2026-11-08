@@ -124,6 +124,18 @@ export function formatDayMonthShort(iso: string): string {
   return dayMonthShort.format(new Date(iso));
 }
 
+const weekdayDay = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  timeZone: "Europe/Paris",
+});
+
+/** « Mar. 10 » (heure de Paris) : prochain rendez-vous dans les chiffres de l'accueil client. */
+export function formatWeekdayDay(iso: string): string {
+  const text = weekdayDay.format(new Date(iso));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Heure HH:MM → « 09h00 », comme sur le site. */
 export function formatClock(hhmm: string): string {
   return hhmm.slice(0, 5).replace(":", "h");

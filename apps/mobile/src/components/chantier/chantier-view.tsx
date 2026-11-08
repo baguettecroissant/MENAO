@@ -8,26 +8,33 @@ import {
   type ChantierStatus,
 } from "@menao/core";
 import { router } from "expo-router";
-import { CircleCheck } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { CircleCheck, CircleX, ShieldAlert } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { actionOf, addressOf, rehire, tagOf } from "./chantier-card";
-import { ChantierLayout } from "./chantier-layout";
-import { DocumentsCard, JournalCard, ScheduleCard } from "./dossier";
-import { ActionCard, NextInterventionCard, PersonRow, StatusPill } from "./parts";
+import { ArtisanCard, ClientMoneyCard, ClientNextStep, ClientStepper } from "./client-fiche";
+import { DocumentsCard } from "./dossier";
 import { ReceptionBlocks } from "./reception-blocks";
 import { WarrantyCard } from "./warranty-card";
-import { Segmented } from "@/components/segmented";
+import { JournalTimeline } from "@/components/journal-timeline";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheHead,
+  FicheLink,
+  FicheScreen,
+  FicheTag,
+} from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail } from "@/lib/chantiers";
-import { formatDateNumeric } from "@/lib/format";
-import { Body, Button, LinkText, Notice } from "@/ui";
+import { formatDateNumeric, formatDayMonthShort } from "@/lib/format";
+import { Body, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.chantier;
 /** Annulation possible par le client : avant tout devis signé (F-12). */
 const CANCELLABLE: readonly ChantierStatus[] = CLIENT_CANCELLABLE_STATUSES;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 const STARTED: readonly ChantierStatus[] = [
   "en_cours",
   "travaux_termines",
@@ -35,27 +42,27 @@ const STARTED: readonly ChantierStatus[] = [
   "receptionne",
   "cloture",
 ];
+/** Réception validée : le reste à payer n'est plus « après la réception ». */
+const RECEIVED: readonly ChantierStatus[] = ["receptionne", "cloture"];
 
 /**
- * Vue d'un chantier côté client (F-12, maquette « Vue d'un chantier ») : grande photo, titre,
- * adresse, état et description, artisan (« Message », « Appeler »), avancement, action attendue,
- * fin de chantier (réception, réserves), puis « Suivi du chantier » (journal de l'artisan,
- * prochaine intervention à ajouter au calendrier) et « Dossier du chantier » (documents,
- * échéancier toujours calculé). `retour` : fin de la signature du PV ou du paiement du solde ;
- * `onChanged` recharge le chantier après une action.
+ * Fiche d'un chantier côté client (F-12), refonte « Nette » (lot 6, maquette
+ * « ClientChantierApp ») : barre « Chantier », pastilles métier et état, titre, adresse, frise des
+ * 5 étapes, « Prochaine étape » (action attendue avec son bouton, prochaine intervention, ou
+ * réception), carte de l'artisan (« Appeler », « Message »), fil du suivi, « Argent du chantier »
+ * (toujours calculé), documents et garanties, puis avis, signalement et annulation.
+ * `retour` : fin de la signature du PV ou du paiement du solde ; `onChanged` recharge le chantier
+ * après une action (et au geste « tirer pour actualiser »).
  */
 export function ChantierView({
   detail,
   retour,
   onChanged,
-  initialTab = "suivi",
 }: {
   detail: ChantierDetail;
   retour?: string;
-  onChanged: () => void;
-  initialTab?: "suivi" | "dossier";
+  onChanged: () => void | Promise<void>;
 }) {
-  const [tab, setTab] = useState(initialTab);
   const { c } = detail;
   const status = c.status as ChantierStatus;
   const step = chantierStepIndex(status);
@@ -65,57 +72,46 @@ export function ChantierView({
     c.quote_total_ttc_cents !== null && c.quote_status === "signe"
       ? paymentProgress(c.quote_total_ttc_cents, detail.payments)
       : null;
-
   const address = addressOf(c);
-  const journal = (
-    <JournalCard
-      journal={detail.journal}
-      authors={detail.journalAuthors}
-      photoUrls={detail.photoUrls}
-      emptyText={
-        STARTED.includes(status)
-          ? t.journal.clientEmpty(c.artisan_name)
-          : t.journal.clientWaiting(c.artisan_name)
-      }
-    />
-  );
+  const meta = [
+    address,
+    status === "en_cours" && c.start_at ? t.fiche.started(formatDayMonthShort(c.start_at)) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const tag = tagOf(c);
 
   return (
-    <ChantierLayout
-      coverUrl={detail.coverUrl}
-      trade={c.trade_label}
-      title={c.title}
-      address={address}
-      pills={<StatusPill {...tagOf(c)} />}
-      description={c.description}
-      personLabel={t.yourArtisan}
-      person={
-        <PersonRow
-          label={null}
-          name={c.artisan_name}
-          detail={c.trade_label}
-          photoUrl={detail.avatarUrl}
-        />
-      }
-      onMessage={() => router.push(`/conversation/${c.chantier_id}`)}
-      phone={c.artisan_phone}
-      step={step}
-      identityExtra={
-        status === "cloture" && c.closed_at ? (
-          <View style={styles.row}>
-            <CircleCheck size={16} color={colors.success} />
-            <Text style={styles.meta}>{t.reception.closed(formatDateNumeric(c.closed_at))}</Text>
-          </View>
-        ) : null
-      }
-    >
-      {action ? (
-        <ActionCard
-          action={action}
-          totalTtcCents={c.quote_total_ttc_cents}
-          chantierId={c.chantier_id}
-        />
+    <FicheScreen title={t.fiche.title} onRefresh={async () => onChanged()}>
+      <FicheHead
+        tags={
+          <>
+            {c.trade_label ? <FicheTag text={c.trade_label} tone="primary" /> : null}
+            <FicheTag text={tag.text} tone={tag.tone} dot />
+          </>
+        }
+        title={c.title}
+        meta={meta || null}
+      />
+      {c.description ? <Text style={styles.description}>{c.description}</Text> : null}
+      {status === "cloture" && c.closed_at ? (
+        <View style={styles.row}>
+          <CircleCheck size={16} color={colors.success} />
+          <Text style={styles.meta}>{t.reception.closed(formatDateNumeric(c.closed_at))}</Text>
+        </View>
       ) : null}
+
+      {step !== null ? <ClientStepper current={step} /> : null}
+
+      <ClientNextStep
+        status={status}
+        action={action}
+        next={next}
+        totalTtcCents={c.quote_total_ttc_cents}
+        chantierId={c.chantier_id}
+        artisan={c.artisan_name}
+        calendar={{ title: c.title, location: address }}
+      />
       <ReceptionBlocks
         detail={detail}
         retour={retour}
@@ -123,16 +119,15 @@ export function ChantierView({
         onChanged={onChanged}
       />
       {reviewInvited(status, detail.reviewed) ? (
-        <View style={styles.invite}>
-          <Text role="heading" style={styles.inviteTitle}>
-            {t.reviewInvite.title(c.artisan_name)}
-          </Text>
+        <FicheCard gap={3}>
+          <CardHeading title={t.reviewInvite.title(c.artisan_name)} size={17} />
           <Body muted>{t.reviewInvite.text(c.artisan_name)}</Body>
-          <Button
+          <FicheButton
+            tall
             label={t.reviewInvite.cta(c.artisan_name)}
             onPress={() => router.push(`/chantier/${c.chantier_id}/avis`)}
           />
-        </View>
+        </FicheCard>
       ) : null}
       {status === "en_litige" || detail.openTicketId ? (
         <View style={styles.dispute}>
@@ -148,70 +143,76 @@ export function ChantierView({
         </View>
       ) : null}
 
-      <Segmented
-        label={t.tabs.label}
-        options={[
-          { value: "suivi", label: t.tabs.suivi },
-          { value: "dossier", label: t.tabs.dossier },
-        ]}
-        value={tab}
-        onChange={setTab}
+      <ArtisanCard
+        name={c.artisan_name}
+        trade={c.trade_label}
+        photoUrl={detail.avatarUrl}
+        phone={c.artisan_phone}
+        insured={detail.insurer !== null}
+        onMessage={() => router.push(`/conversation/${c.chantier_id}`)}
       />
 
-      {tab === "suivi" ? (
-        <>
-          {journal}
-          {!action && next ? (
-            <NextInterventionCard
-              next={next}
-              calendar={{
-                chantierId: c.chantier_id,
-                title: c.title,
-                location: address,
-                artisan: c.artisan_name,
-              }}
-            />
-          ) : null}
-        </>
-      ) : (
-        <>
-          <DocumentsCard documents={detail.documents} />
-          <ScheduleCard progress={progress} totalTtcCents={c.quote_total_ttc_cents} />
-          {c.received_at ? (
-            <WarrantyCard
-              receivedOn={parisToday(new Date(c.received_at))}
-              insurer={detail.insurer}
-            />
-          ) : null}
-        </>
-      )}
+      <FicheCard padding={5} gap={3}>
+        <CardHeading title={t.journal.title} />
+        {detail.timeline.length === 0 ? (
+          <Body muted>
+            {STARTED.includes(status)
+              ? t.journal.clientEmpty(c.artisan_name)
+              : t.journal.clientWaiting(c.artisan_name)}
+          </Body>
+        ) : (
+          <JournalTimeline
+            days={detail.timeline}
+            photoUrlByPath={detail.photoUrlByPath}
+            // Entrée d'un membre de l'équipe de l'artisan (ADR 0243) : son nom ; sinon l'artisan.
+            authorOf={(day) =>
+              day.messages.map((m) => detail.journalAuthors[m.id]).find(Boolean) ?? null
+            }
+          />
+        )}
+      </FicheCard>
+
+      <ClientMoneyCard
+        totalTtcCents={c.quote_total_ttc_cents}
+        progress={progress}
+        depositPaid={c.deposit_status === "paye"}
+        balancePaid={c.balance_status === "paye"}
+        beforeReception={!RECEIVED.includes(status)}
+      />
+      <DocumentsCard documents={detail.documents} />
+      {c.received_at ? (
+        <WarrantyCard receivedOn={parisToday(new Date(c.received_at))} insurer={detail.insurer} />
+      ) : null}
+
       {status === "cloture" ? (
-        <Button label={t.rehire(c.artisan_name)} variant="secondary" onPress={() => rehire(c)} />
+        <FicheButton
+          label={t.rehire(c.artisan_name)}
+          variant="secondary"
+          onPress={() => rehire(c)}
+        />
       ) : null}
       <View style={styles.footerLinks}>
-        <Pressable
-          role="link"
-          hitSlop={8}
+        <FicheLink
+          icon={ShieldAlert}
+          tone="danger"
+          label={t.report}
           onPress={() => router.push(`/chantier/${c.chantier_id}/signaler`)}
-        >
-          <Text style={styles.dangerLink}>{t.report}</Text>
-        </Pressable>
+        />
         {CANCELLABLE.includes(status) ? (
-          <Pressable
-            role="link"
-            hitSlop={8}
+          <FicheLink
+            icon={CircleX}
+            tone="danger"
+            label={fr.clientCancel.chantier.open}
             onPress={() =>
               router.push({
                 pathname: "/chantier/[id]/annuler",
                 params: { id: c.chantier_id, artisan: c.artisan_name },
               })
             }
-          >
-            <Text style={styles.dangerLink}>{fr.clientCancel.chantier.open}</Text>
-          </Pressable>
+          />
         ) : null}
       </View>
-    </ChantierLayout>
+    </FicheScreen>
   );
 }
 
@@ -224,16 +225,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors["muted-foreground"],
   },
+  description: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.label },
   dispute: { gap: spacing(2) },
-  invite: {
-    gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-  },
-  inviteTitle: { fontFamily: font.medium, fontSize: 16, color: colors.foreground },
-  footerLinks: { alignItems: "center", gap: spacing(4), paddingVertical: spacing(2) },
-  dangerLink: { fontFamily: font.medium, fontSize: 14, color: colors.danger },
+  footerLinks: { gap: spacing(1), paddingTop: spacing(1) },
 });

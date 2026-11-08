@@ -1,8 +1,8 @@
 import type { ChantierStatus } from "@menao/core";
 import { router } from "expo-router";
-import { ClipboardCheck } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { FicheButton, NextStepCard } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import type { ChantierDetail } from "@/lib/chantiers";
 import { formatCents, formatDateNumeric } from "@/lib/format";
@@ -37,19 +37,17 @@ export function ReceptionBlocks({
     return (
       <>
         {retour === "reception" ? <Notice tone="info">{t.processing}</Notice> : null}
-        <View style={styles.card}>
-          <View style={styles.titleRow}>
-            <ClipboardCheck size={16} color={colors["primary-strong"]} />
-            <Text style={styles.title}>{t.title}</Text>
-          </View>
-          <Text style={styles.meta}>{t.text(c.artisan_name)}</Text>
-          <Button
+        {/* Prochaine étape de la fiche « Nette » (lot 6) : la réception, avec ou sans réserves. */}
+        <NextStepCard title={t.title} text={t.text(c.artisan_name)}>
+          <FicheButton
+            tall
             label={t.validate}
             onPress={() => router.push(`/chantier/${c.chantier_id}/reception`)}
           />
-          <Button
+          <FicheButton
+            tall
+            variant="secondary"
             label={t.addReserves}
-            variant="ghost"
             onPress={() =>
               router.push({
                 pathname: "/chantier/[id]/reception",
@@ -57,7 +55,7 @@ export function ReceptionBlocks({
               })
             }
           />
-        </View>
+        </NextStepCard>
       </>
     );
   }
@@ -139,7 +137,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing(4),
   },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
   title: { fontFamily: font.medium, fontSize: 15, color: colors["primary-strong"] },
   meta: {
     fontFamily: font.regular,

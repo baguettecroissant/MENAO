@@ -15,6 +15,7 @@ import {
   formatMonthName,
   formatTime,
   formatWeekShort,
+  formatWeekdayDay,
   parisDateTime,
 } from "./format";
 
@@ -77,6 +78,11 @@ describe("dates de l'agenda", () => {
 
   it("abrège le jour et le mois au fil d'une phrase", () => {
     expect(formatDayMonthShort("2026-10-13")).toBe("mar. 13 oct.");
+  });
+
+  it("abrège le jour du prochain rendez-vous, heure de Paris", () => {
+    expect(formatWeekdayDay("2026-11-10T08:00:00Z")).toBe("Mar. 10");
+    expect(formatWeekdayDay("2026-11-09T23:30:00Z")).toBe("Mar. 10");
   });
 
   it("affiche le jour et le mois en chiffres, heure de Paris", () => {

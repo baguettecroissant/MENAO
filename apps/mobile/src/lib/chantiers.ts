@@ -1,4 +1,10 @@
-import { decennaleInsurer, journalSummary, type JournalSummary } from "@menao/core";
+import {
+  decennaleInsurer,
+  journalSummary,
+  journalTimeline,
+  type JournalDay,
+  type JournalSummary,
+} from "@menao/core";
 import type { Database } from "@menao/db";
 import { fr } from "@/i18n/fr";
 import { publicUrl } from "./project";
@@ -240,6 +246,10 @@ export type ChantierDetail = {
   coverUrl: string | null;
   avatarUrl: string | null;
   journal: JournalSummary;
+  /** Fil du suivi par jour (refonte « Nette », lot 6), le plus récent en tête. */
+  timeline: JournalDay[];
+  /** Lien signé de chaque photo du journal, par chemin. */
+  photoUrlByPath: Record<string, string>;
   /** Auteur des entrées d'un collègue ou d'un membre de l'équipe (ADR 0243). */
   journalAuthors: Record<string, string>;
   photoUrls: string[];
@@ -301,15 +311,14 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
       .maybeSingle(),
     supabase.from("reviews").select("id").eq("chantier_id", id).maybeSingle(),
   ]);
-  const journal = journalSummary(
-    (updates ?? []).map((u) => ({
-      id: u.id,
-      kind: u.kind,
-      message: u.message,
-      storagePath: u.storage_path,
-      createdAt: u.created_at,
-    })),
-  );
+  const entries = (updates ?? []).map((u) => ({
+    id: u.id,
+    kind: u.kind,
+    message: u.message,
+    storagePath: u.storage_path,
+    createdAt: u.created_at,
+  }));
+  const journal = journalSummary(entries);
   const [journalPhotos, cover] = await Promise.all([
     signedUrls("chantier-photos", journal.photos),
     signedUrls("project-photos", [c.photo_path]),
@@ -326,6 +335,8 @@ export async function loadChantier(id: string): Promise<ChantierDetail | null> {
     coverUrl: c.photo_path ? (cover.get(c.photo_path) ?? null) : null,
     avatarUrl: avatarOf(c.artisan_avatar_path),
     journal,
+    timeline: journalTimeline(entries),
+    photoUrlByPath: Object.fromEntries(journalPhotos),
     journalAuthors: updateAuthorMap((await authorsRead).data),
     photoUrls: journal.photos.flatMap((p) => {
       const url = journalPhotos.get(p);

@@ -2398,6 +2398,26 @@ export const fr = {
       hint: "Touchez le créneau qui vous convient : le rendez-vous est fixé aussitôt, et ses coordonnées vous sont communiquées.",
     },
     countToSign: (n: number) => `${n} devis à signer`,
+    // Refonte « Nette » (ADR 0251) : chiffres de l'accueil et colonne de droite.
+    toDoCount: (n: number) =>
+      n === 1
+        ? "1 chose à faire pour que vos chantiers avancent."
+        : `${n} choses à faire pour que vos chantiers avancent.`,
+    figuresLabel: "Vos chantiers en chiffres",
+    figActive: "Chantiers en cours",
+    figActiveShort: "en cours",
+    figActiveHint: "suivis ici, étape par étape",
+    figToDo: "À faire",
+    figToDoShort: "à faire",
+    figNext: "Prochain rendez-vous",
+    figNextShort: "prochain RDV",
+    figNextHint: (artisan: string, time: string) => `${artisan} · ${time}`,
+    figNextNone: "aucun pour le moment",
+    figPaid: "Payé via MENAO",
+    figPaidHint: "directement à vos artisans",
+    protectedTitle: "Comment vous payez",
+    protectedText:
+      "Par carte, en ligne, directement sur le compte de votre artisan : MENAO ne prend rien sur vos chantiers. Le solde se paie après la réception des travaux.",
     // « À faire maintenant » (ADR 0132), comme l'accueil de l'application (ADR 0082).
     todoTitle: "À faire maintenant",
     todo: {
@@ -2514,6 +2534,8 @@ export const fr = {
   },
   chantier: {
     back: "Retour",
+    // Fiche du chantier côté particulier (refonte « Nette », ADR 0251).
+    yourProject: "Votre projet",
     steps: {
       signature: "Signature",
       paiement: "Paiement",
@@ -2987,6 +3009,13 @@ export const fr = {
       remplace: "Remplacé",
     },
     validUntil: (date: string) => `Valable jusqu'au ${date}`,
+    // Refonte « Nette » (ADR 0251) : total et échéancier à droite.
+    totalTtc: "Total TTC",
+    totalHt: "Total HT",
+    totalTva: "TVA",
+    toPay: "À payer",
+    trancheSignature: (percent: number) => `Acompte à la signature · ${percent} %`,
+    trancheReception: "Solde à la réception",
     document: "Contenu du devis",
     viewPdf: "Voir le PDF",
     newTab: "(nouvel onglet)",

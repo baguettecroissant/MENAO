@@ -22,14 +22,14 @@ import {
   Wrench,
 } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { DocumentsCard } from "@/components/chantier/dossier";
 import { chantierTag } from "@/components/chantier/parts";
 import { ExampleLock } from "@/components/examples";
+import { JournalTimeline } from "@/components/journal-timeline";
 import { ConversationCard } from "@/components/messages/conversation-card";
-import { PhotoViewer } from "@/components/photo-viewer";
 import { ChantierTeamCard } from "@/components/pro/chantier-team-card";
 import { ChantierFrame, MoneyCard, NotesCard, PlanningCard } from "@/components/pro/chantier-fiche";
 import { ClientRatingForm } from "@/components/pro/client-rating-form";
@@ -48,13 +48,7 @@ import { RequestBlocks } from "@/components/pro/request-blocks";
 import { ReviewCard } from "@/components/pro/review-card";
 import { StartDateForm } from "@/components/pro/start-date-form";
 import { fr } from "@/i18n/fr";
-import {
-  formatAgo,
-  formatCents,
-  formatDateNumeric,
-  formatDayAndTime,
-  formatDayLabel,
-} from "@/lib/format";
+import { formatCents, formatDateNumeric, formatDayAndTime } from "@/lib/format";
 import { loadConversationPreview } from "@/lib/messages";
 import {
   addChantierMessage,
@@ -418,12 +412,6 @@ export function FollowUpView({
   );
 }
 
-/** « Aujourd'hui » : il y a 4 h ; sinon « Hier » ou la date. */
-function whenLabel(iso: string): string {
-  const day = formatDayLabel(iso);
-  return capitalize(day === fr.ago.today ? formatAgo(iso) : day);
-}
-
 /**
  * « Suivi du chantier » : « Photo » et « Message » (pendant les travaux, F-22), puis le fil
  * chronologique par jour, le plus récent en tête (point bleu), avec auteur, textes et photos.
@@ -450,8 +438,6 @@ function JournalTimelineCard({
   const upload = usePhotoUpload({ chantierId, onAdded: onChanged });
   const [composing, setComposing] = useState(false);
   const [sent, setSent] = useState(false);
-  const [viewing, setViewing] = useState<{ photos: string[]; index: number } | null>(null);
-
   return (
     <FicheCard padding={4.5}>
       <CardHeading
@@ -501,64 +487,15 @@ function JournalTimelineCard({
           {open ? fr.chantier.journal.artisanIntro(client) : fr.chantier.journal.artisanLocked}
         </Body>
       ) : (
-        <View style={styles.timeline}>
-          {days.map((day, i) => {
-            const author =
-              day.messages.map((m) => authors[m.id]).find(Boolean) ??
-              (day.messages.length > 0 ? tf.you : null);
-            const last = i === days.length - 1;
-            // Photos du jour, par leur lien signé (celles sans lien ignorées).
-            const photoUrls = day.photos.flatMap((p) => {
-              const url = photoUrlByPath[p];
-              return url ? [url] : [];
-            });
-            return (
-              <View key={day.day} style={styles.entry}>
-                <View style={styles.rail}>
-                  <View style={[styles.dot, i === 0 && styles.dotRecent]} />
-                  {last ? null : <View style={styles.railLine} />}
-                </View>
-                <View style={[styles.entryBody, !last && styles.entrySpace]}>
-                  <Text style={styles.entryWhen}>{tf.entry(whenLabel(day.lastAt), author)}</Text>
-                  {day.messages.map((m) => (
-                    <Text key={m.id} style={styles.entryText}>
-                      {m.message}
-                    </Text>
-                  ))}
-                  {photoUrls.length > 0 ? (
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.photos}
-                    >
-                      {photoUrls.map((uri, index) => (
-                        <Pressable
-                          key={uri}
-                          role="button"
-                          aria-label={fr.photoViewer.open(index + 1, photoUrls.length)}
-                          onPress={() => setViewing({ photos: photoUrls, index })}
-                          style={({ pressed }) => pressed && styles.pressed}
-                        >
-                          <Image
-                            source={{ uri }}
-                            style={styles.photo}
-                            alt={`${fr.chantier.journal.photosTitle} ${index + 1}`}
-                          />
-                        </Pressable>
-                      ))}
-                    </ScrollView>
-                  ) : null}
-                </View>
-              </View>
-            );
-          })}
-        </View>
+        <JournalTimeline
+          days={days}
+          photoUrlByPath={photoUrlByPath}
+          authorOf={(day) =>
+            day.messages.map((m) => authors[m.id]).find(Boolean) ??
+            (day.messages.length > 0 ? tf.you : null)
+          }
+        />
       )}
-      <PhotoViewer
-        photos={viewing?.photos ?? []}
-        index={viewing?.index ?? null}
-        onClose={() => setViewing(null)}
-      />
     </FicheCard>
   );
 }
@@ -720,30 +657,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.foreground,
   },
-  timeline: { paddingTop: spacing(1.5) },
-  entry: { flexDirection: "row", gap: spacing(3.5) },
-  rail: { alignItems: "center" },
-  dot: {
-    width: 12,
-    height: 12,
-    marginTop: 5,
-    borderRadius: 6,
-    backgroundColor: colors["border-strong"],
-  },
-  dotRecent: { backgroundColor: colors.primary },
-  railLine: { flex: 1, width: 2, backgroundColor: colors.border },
-  entryBody: { flex: 1, minWidth: 0, gap: spacing(2) },
-  entrySpace: { paddingBottom: spacing(4.5) },
-  entryWhen: { fontFamily: font.semibold, fontSize: 13, color: colors["muted-foreground"] },
-  entryText: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
-  photos: { gap: spacing(2) },
-  photo: {
-    width: 92,
-    height: 92,
-    borderRadius: 10,
-    backgroundColor: colors["primary-soft"],
-  },
-  pressed: { opacity: 0.85 },
   panel: {
     gap: spacing(3),
     borderRadius: radius.input,

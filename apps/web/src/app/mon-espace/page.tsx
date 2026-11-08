@@ -1,4 +1,5 @@
 import {
+  clientHomeFigures,
   clientTodos,
   homePathForRole,
   isChantierFinished,
@@ -6,7 +7,7 @@ import {
   type ChantierStatus,
   type PaymentStatus,
 } from "@menao/core";
-import { FileText, HardHat, HeartHandshake, Search } from "lucide-react";
+import { HeartHandshake, Search, ShieldCheck } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { AppDownloadModal } from "@/components/app-shell/app-download-modal";
@@ -14,16 +15,20 @@ import { ChantierCard, FinishedChantierCard } from "@/components/chantier/chanti
 import { ClientTodoList } from "@/components/chantier/client-todo-list";
 import { DraftSearches } from "@/components/project/draft-searches";
 import { PendingRequests } from "@/components/project/my-requests";
-import { ButtonLink, Tag } from "@/components/ui";
+import { MoneyFigures } from "@/components/pro/money-figures";
+import { sheetCard } from "@/components/pro/sheet";
+import { ButtonLink } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { avatarUrl, signedUrlMap } from "@/lib/chantier/storage";
+import { formatDayShort, formatTime, formatToday } from "@/lib/format";
 import { qrSvg } from "@/lib/qr";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/empty-state";
 import { SlotProposals } from "@/components/project/slot-proposals";
 
 const t = fr.myChantiers;
+const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
 export const metadata: Metadata = { title: `${t.title} — MENAO` };
 
@@ -80,7 +85,6 @@ export default async function MySpacePage() {
   const active = chantiers.filter((c) => !isChantierFinished(c.status as ChantierStatus));
   const finished = chantiers.filter((c) => isChantierFinished(c.status as ChantierStatus));
   const pending = requests.filter((r) => !r.chantier_id);
-  const toSign = active.filter((c) => c.status === "devis_envoye" && c.quote_status === "envoye");
   // Mêmes règles que l'accueil de l'application (`clientTodos`, @menao/core).
   const reviewed = new Set((reviews ?? []).map((r) => r.chantier_id));
   const liftSignaled = new Set((lifts ?? []).map((r) => r.chantier_id));
@@ -146,6 +150,11 @@ export default async function MySpacePage() {
   );
   const photoOf = (path: string | null) => (path ? (signed.get(path) ?? null) : null);
   const now = new Date();
+  // Chiffres de l'accueil (ADR 0251), mêmes règles que l'application (`clientHomeFigures`).
+  const figures = clientHomeFigures(
+    chantiers.map((c) => ({ ...c, status: c.status as ChantierStatus })),
+    now,
+  );
 
   const inProgress = (
     <>
@@ -217,82 +226,114 @@ export default async function MySpacePage() {
           playStoreUrl={playStore}
         />
       )}
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-12">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-              {t.title}
-            </h1>
-            <p className="text-sm text-muted-foreground">{t.subtitle}</p>
-            {(active.length > 0 || toSign.length > 0) && (
-              <ul className="flex flex-wrap gap-2 pt-1">
-                <li>
-                  <Tag>
-                    <HardHat aria-hidden="true" className="size-3.5" />
-                    {t.countActive(active.length)}
-                  </Tag>
-                </li>
-                {toSign.length > 0 && (
-                  <li>
-                    <Tag>
-                      <FileText aria-hidden="true" className="size-3.5" />
-                      {t.countToSign(toSign.length)}
-                    </Tag>
-                  </li>
-                )}
-              </ul>
-            )}
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-muted-foreground">{formatToday(now)}</span>
+            <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
+            <p className="text-[0.9375rem] text-label sm:text-base">
+              {todos.length > 0 ? t.toDoCount(todos.length) : t.subtitle}
+            </p>
           </div>
-          <ButtonLink href="/mon-espace/nouvelle-demande" size="md">
+          <ButtonLink href="/mon-espace/nouvelle-demande" size="md" block={false}>
             {t.start}
             <Search aria-hidden="true" className="size-4" />
           </ButtonLink>
         </div>
-        <SlotProposals
-          proposals={(proposalRows ?? [])
-            .filter((p) => p.slots.length > 0)
-            .map((p) => ({ id: p.proposal_id, artisan: p.artisan_name, slots: p.slots }))}
-        />
-        {chantiers.length === 0 && requests.length === 0 ? (
-          <>
-            <EmptyState illustration="demandes" title={fr.myRequests.empty} className="py-14">
-              {fr.myRequests.emptyHint}
-            </EmptyState>
-            {drafts.length > 0 && <DraftSearches drafts={drafts} />}
-          </>
-        ) : (
-          // Une seule page, sur ordinateur comme sur téléphone et dans l'application (maquette
-          // « Mes chantiers - Mobile ») : en cours, demandes, recherches, puis terminés s'il y en a.
-          <>
-            {inProgress}
-            {finished.length > 0 && done}
-          </>
+        {chantiers.length > 0 && (
+          <MoneyFigures
+            label={t.figuresLabel}
+            dense
+            cells={[
+              {
+                label: t.figActive,
+                short: t.figActiveShort,
+                value: String(figures.active),
+                hint: figures.toSign > 0 ? t.countToSign(figures.toSign) : t.figActiveHint,
+              },
+              {
+                label: t.figToDo,
+                short: t.figToDoShort,
+                value: String(todos.length),
+                tone: todos.length > 0 ? "danger" : undefined,
+                phoneOnly: true,
+              },
+              {
+                label: t.figNext,
+                short: t.figNextShort,
+                value: figures.next ? formatDayShort(figures.next.at) : "—",
+                hint: figures.next
+                  ? t.figNextHint(figures.next.artisan, formatTime(figures.next.at))
+                  : t.figNextNone,
+              },
+              {
+                label: t.figPaid,
+                value: euros.format(figures.paidCents / 100),
+                hint: t.figPaidHint,
+                desktopOnly: true,
+              },
+            ]}
+          />
         )}
-        {/* « Invitez votre artisan de confiance » (ADR 0162). */}
-        <section
-          aria-labelledby="inviter"
-          className="flex flex-col gap-3 rounded-card border border-primary-soft bg-primary-softer p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
-        >
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-primary shadow-card">
-              <HeartHandshake aria-hidden="true" className="size-5" />
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <h2 id="inviter" className="font-medium">
-                {fr.inviteArtisan.title}
-              </h2>
-              <p className="text-sm text-muted-foreground">{fr.inviteArtisan.cardText}</p>
-            </div>
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            <SlotProposals
+              proposals={(proposalRows ?? [])
+                .filter((p) => p.slots.length > 0)
+                .map((p) => ({ id: p.proposal_id, artisan: p.artisan_name, slots: p.slots }))}
+            />
+            {chantiers.length === 0 && requests.length === 0 ? (
+              <>
+                <EmptyState illustration="demandes" title={fr.myRequests.empty} className="py-14">
+                  {fr.myRequests.emptyHint}
+                </EmptyState>
+                {drafts.length > 0 && <DraftSearches drafts={drafts} />}
+              </>
+            ) : (
+              // Une seule page, sur ordinateur comme sur téléphone et dans l'application (maquette
+              // « Mes chantiers - Mobile ») : en cours, demandes, recherches, puis terminés s'il y en a.
+              <>
+                {inProgress}
+                {finished.length > 0 && done}
+              </>
+            )}
           </div>
-          <ButtonLink
-            href="/mon-espace/inviter-un-artisan"
-            variant="secondary"
-            size="md"
-            className="shrink-0 self-start sm:self-center"
-          >
-            {fr.inviteArtisan.cardAction}
-          </ButtonLink>
-        </section>
+          <aside className="flex flex-col gap-4">
+            <section aria-labelledby="paiements-proteges" className={sheetCard}>
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-success-soft text-success">
+                  <ShieldCheck aria-hidden="true" className="size-[1.125rem]" />
+                </span>
+                <h2 id="paiements-proteges" className="font-sans text-base font-semibold">
+                  {t.protectedTitle}
+                </h2>
+              </div>
+              <p className="text-sm leading-relaxed text-label">{t.protectedText}</p>
+            </section>
+            {/* « Invitez votre artisan de confiance » (ADR 0162). */}
+            <section aria-labelledby="inviter" className={sheetCard}>
+              <div className="flex items-start gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-primary-soft text-primary-strong">
+                  <HeartHandshake aria-hidden="true" className="size-5" />
+                </span>
+                <div className="flex flex-col gap-0.5">
+                  <h2 id="inviter" className="font-medium">
+                    {fr.inviteArtisan.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">{fr.inviteArtisan.cardText}</p>
+                </div>
+              </div>
+              <ButtonLink
+                href="/mon-espace/inviter-un-artisan"
+                variant="secondary"
+                size="md"
+                className="self-start"
+              >
+                {fr.inviteArtisan.cardAction}
+              </ButtonLink>
+            </section>
+          </aside>
+        </div>
       </div>
     </main>
   );

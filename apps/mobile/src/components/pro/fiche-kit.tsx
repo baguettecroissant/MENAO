@@ -315,12 +315,20 @@ export function FicheLink({
   );
 }
 
-/** Ligne « intitulé : valeur » des cartes Planning et Argent. */
-export function FicheRow({ label, value }: { label: string; value: string }) {
+/** Ligne « intitulé : valeur » des cartes Planning et Argent ; `success` : montant payé, en vert. */
+export function FicheRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "success";
+}) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+      <Text style={[styles.rowValue, tone === "success" && styles.rowSuccess]}>{value}</Text>
     </View>
   );
 }
@@ -383,8 +391,8 @@ export function FicheStepper({ current }: { current: number }) {
 }
 
 /**
- * Carte « Prochaine étape » sur fond bleu clair : icône, intitulé, titre, texte, puis l'action
- * principal du moment (`children`), en pleine largeur.
+ * Carte « Prochaine étape » sur fond bleu clair : icône (facultative, absente côté particulier),
+ * intitulé, titre, texte, puis l'action principale du moment (`children`), en pleine largeur.
  */
 export function NextStepCard({
   icon: Icon,
@@ -392,7 +400,7 @@ export function NextStepCard({
   text,
   children,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: string;
   text?: string | null;
   children?: ReactNode;
@@ -400,9 +408,11 @@ export function NextStepCard({
   return (
     <View style={styles.next}>
       <View style={styles.nextHead}>
-        <View style={styles.nextIcon}>
-          <Icon size={20} color={colors["primary-strong"]} />
-        </View>
+        {Icon ? (
+          <View style={styles.nextIcon}>
+            <Icon size={20} color={colors["primary-strong"]} />
+          </View>
+        ) : null}
         <View style={styles.nextText}>
           <Text style={styles.nextEyebrow}>{fr.proChantierFiche.nextStep.toUpperCase()}</Text>
           <Text role="heading" style={styles.nextTitle}>
@@ -577,6 +587,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.foreground,
   },
+  rowSuccess: { color: colors.success },
   stepper: { flexDirection: "row", alignItems: "flex-start" },
   step: { flex: 1, minWidth: 0, alignItems: "center", gap: spacing(2) },
   stepTrack: { alignSelf: "stretch", flexDirection: "row", alignItems: "center" },

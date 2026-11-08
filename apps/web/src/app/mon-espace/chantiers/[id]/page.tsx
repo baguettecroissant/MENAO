@@ -19,14 +19,10 @@ import {
   PaymentSchedule,
   type ChantierDocument,
 } from "@/components/chantier/chantier-dossier";
-import {
-  ChantierHero,
-  ChantierTabs,
-  PersonCard,
-  ReportProblemLink,
-} from "@/components/chantier/chantier-parts";
+import { ChantierTabs, PersonCard, ReportProblemLink } from "@/components/chantier/chantier-parts";
 import { ChantierStatusTag } from "@/components/chantier/chantier-status-tag";
 import { ChantierStepper } from "@/components/chantier/chantier-stepper";
+import { SheetChip, SheetColumns, SheetHeader, SheetPage, sheetCard } from "@/components/pro/sheet";
 import { JournalCard } from "@/components/chantier/journal-card";
 import { NextIntervention } from "@/components/chantier/next-intervention";
 import { ConfirmLiftActions, ReceptionActions } from "@/components/chantier/reception-actions";
@@ -137,10 +133,7 @@ export default async function ClientChantierPage({
       createdAt: u.created_at,
     })),
   );
-  const [photos, cover] = await Promise.all([
-    signedUrlMap(supabase, "chantier-photos", journal.photos),
-    signedUrlMap(supabase, "project-photos", [c.photo_path]),
-  ]);
+  const photos = await signedUrlMap(supabase, "chantier-photos", journal.photos);
 
   const quote = quotes?.[0] ?? null;
   const documents: ChantierDocument[] = [
@@ -194,161 +187,180 @@ export default async function ClientChantierPage({
   const started = STARTED.includes(status);
   const empty = journal.photos.length === 0 && journal.messages.length === 0;
 
+  const tag = (
+    <ChantierStatusTag
+      tag={chantierTag({
+        status,
+        startAt: c.start_at,
+        finishedAt: c.finished_at,
+        closedAt: c.closed_at,
+        receivedAt: c.received_at,
+      })}
+    />
+  );
+  // Refonte « Nette » (ADR 0251) : en-tête à grand titre, frise, action attendue, puis deux
+  // colonnes (suivi ou dossier ; artisan et aide à droite), comme les fiches de l'artisan.
   return (
-    <main className="flex-1 bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col sm:gap-5 sm:px-6 sm:py-8">
-        <ChantierHero
-          photoUrl={c.photo_path ? (cover.get(c.photo_path) ?? null) : null}
-          trade={c.trade_label}
-          backHref="/mon-espace"
-          title={c.title}
-          address={addressOf(c)}
-          tags={
-            <ChantierStatusTag
-              tag={chantierTag({
-                status,
-                startAt: c.start_at,
-                finishedAt: c.finished_at,
-                closedAt: c.closed_at,
-                receivedAt: c.received_at,
-              })}
-            />
-          }
-          description={c.description}
-        >
-          <PersonCard
-            label={t.yourArtisan}
-            name={c.artisan_name}
-            detail={c.trade_label}
-            verified
-            photoUrl={avatarUrl(supabase, c.artisan_avatar_path)}
-            phone={c.artisan_phone}
-            messageHref={`/mon-espace/messages/${id}`}
-          />
-          {reviewInvited(status, review !== null) && (
-            <ReviewInvite chantierId={id} artisanName={c.artisan_name} />
+    <SheetPage>
+      <SheetHeader
+        backHref="/mon-espace"
+        backLabel={fr.myChantiers.title}
+        chips={
+          <>
+            {c.trade_label && <SheetChip>{c.trade_label}</SheetChip>}
+            {tag}
+          </>
+        }
+        title={c.title}
+        meta={addressOf(c) ?? undefined}
+      />
+      {step !== null && (
+        <section className={`${sheetCard} gap-3`}>
+          <ChantierStepper current={step} />
+          {status === "cloture" && c.closed_at && (
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <CircleCheck aria-hidden="true" className="size-4 shrink-0 text-success" />
+              {t.reception.closed(formatDateNumeric(c.closed_at))}
+            </p>
           )}
-          {step !== null && (
-            <div className="flex flex-col gap-3">
-              <ChantierStepper current={step} />
-              {status === "cloture" && c.closed_at && (
-                <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <CircleCheck aria-hidden="true" className="size-4 shrink-0 text-success" />
-                  {t.reception.closed(formatDateNumeric(c.closed_at))}
+        </section>
+      )}
+      {action && (
+        <ChantierActionBlock
+          action={action}
+          totalTtcCents={c.quote_total_ttc_cents}
+          chantierId={id}
+        />
+      )}
+      {(status === "en_litige" || openTicket) && (
+        <Alert tone="info">
+          {status === "en_litige" ? fr.dispute.ongoing : fr.dispute.pending}
+          {openTicket && (
+            <>
+              {" "}
+              <TextLink href={`/signalements/${openTicket.id}` as Route}>
+                {fr.dispute.follow}
+              </TextLink>
+            </>
+          )}
+        </Alert>
+      )}
+      {status === "travaux_termines" && signed === "signee" && (
+        <Alert tone="info">{t.reception.processing}</Alert>
+      )}
+      {status === "reserves_a_lever" && reception?.reserves && (
+        <section aria-labelledby="reserves-title" className={`${sheetCard} border-warning/40`}>
+          <h2 id="reserves-title" className="text-lg">
+            {t.reception.yourReserves}
+          </h2>
+          <p className="text-sm whitespace-pre-line">{reception.reserves}</p>
+          <p className="text-xs text-muted-foreground">{t.reception.reservesNext}</p>
+        </section>
+      )}
+      {status === "reserves_a_lever" && reception?.lift_signaled_at && (
+        <Alert tone="info">
+          {t.reception.liftSignaled(c.artisan_name, formatDateNumeric(reception.lift_signaled_at))}
+          {reception.lift_message && (
+            <span className="mt-1 block whitespace-pre-line italic">
+              « {reception.lift_message} »
+            </span>
+          )}
+        </Alert>
+      )}
+      {status === "receptionne" && paiement === "termine" && (
+        <Alert tone="info">{t.reception.balanceProcessing}</Alert>
+      )}
+      {status === "receptionne" && paiement !== "termine" && c.received_at && (
+        <Alert tone="success">{t.reception.received(formatDateNumeric(c.received_at))}</Alert>
+      )}
+      <SheetColumns
+        main={
+          <>
+            <ChantierTabs base={`/mon-espace/chantiers/${id}`} active={tab} />
+            {tab === "suivi" ? (
+              <>
+                <JournalCard
+                  summary={journal}
+                  photoUrls={photos}
+                  author={c.artisan_name}
+                  authors={updateAuthorMap(updateAuthors)}
+                  intro={empty && !started ? t.journal.clientIntro(c.artisan_name) : undefined}
+                  emptyText={
+                    started
+                      ? t.journal.clientEmpty(c.artisan_name)
+                      : t.journal.clientWaiting(c.artisan_name)
+                  }
+                  now={new Date()}
+                />
+                {next && (
+                  <NextIntervention
+                    chantierId={id}
+                    next={next}
+                    title={c.title}
+                    location={addressOf(c)}
+                    artisanName={c.artisan_name}
+                    clientName={null}
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                <ChantierDocuments documents={documents} />
+                <PaymentSchedule progress={progress} />
+                {c.received_at && (
+                  <WarrantyCard
+                    receivedOn={parisToday(new Date(c.received_at))}
+                    insurer={decennaleInsurer(quote?.decennale)}
+                  />
+                )}
+              </>
+            )}
+            {c.description && (
+              <section aria-labelledby="projet" className={sheetCard}>
+                <h2 id="projet" className="text-lg">
+                  {t.yourProject}
+                </h2>
+                <p className="text-sm leading-relaxed whitespace-pre-line text-label">
+                  {c.description}
                 </p>
-              )}
-            </div>
-          )}
-        </ChantierHero>
-        <div className="flex flex-col gap-4 px-4 py-5 sm:px-0 sm:py-0">
-          {action && (
-            <ChantierActionBlock
-              action={action}
-              totalTtcCents={c.quote_total_ttc_cents}
-              chantierId={id}
-            />
-          )}
-          {(status === "en_litige" || openTicket) && (
-            <Alert tone="info">
-              {status === "en_litige" ? fr.dispute.ongoing : fr.dispute.pending}
-              {openTicket && (
-                <>
-                  {" "}
-                  <TextLink href={`/signalements/${openTicket.id}` as Route}>
-                    {fr.dispute.follow}
-                  </TextLink>
-                </>
-              )}
-            </Alert>
-          )}
-          {status === "travaux_termines" && signed === "signee" && (
-            <Alert tone="info">{t.reception.processing}</Alert>
-          )}
-          {status === "reserves_a_lever" && reception?.reserves && (
-            <section
-              aria-labelledby="reserves-title"
-              className="flex flex-col gap-2 rounded-card border border-warning/40 bg-surface p-5 shadow-card"
-            >
-              <h2 id="reserves-title" className="text-[1.0625rem] font-medium">
-                {t.reception.yourReserves}
-              </h2>
-              <p className="text-sm whitespace-pre-line">{reception.reserves}</p>
-              <p className="text-xs text-muted-foreground">{t.reception.reservesNext}</p>
-            </section>
-          )}
-          {status === "reserves_a_lever" && reception?.lift_signaled_at && (
-            <Alert tone="info">
-              {t.reception.liftSignaled(
-                c.artisan_name,
-                formatDateNumeric(reception.lift_signaled_at),
-              )}
-              {reception.lift_message && (
-                <span className="mt-1 block whitespace-pre-line italic">
-                  « {reception.lift_message} »
-                </span>
-              )}
-            </Alert>
-          )}
-          {status === "receptionne" && paiement === "termine" && (
-            <Alert tone="info">{t.reception.balanceProcessing}</Alert>
-          )}
-          {status === "receptionne" && paiement !== "termine" && c.received_at && (
-            <Alert tone="success">{t.reception.received(formatDateNumeric(c.received_at))}</Alert>
-          )}
-          <ChantierTabs base={`/mon-espace/chantiers/${id}`} active={tab} />
-          {tab === "suivi" ? (
-            <>
-              <JournalCard
-                summary={journal}
-                photoUrls={photos}
-                author={c.artisan_name}
-                authors={updateAuthorMap(updateAuthors)}
-                intro={empty && !started ? t.journal.clientIntro(c.artisan_name) : undefined}
-                emptyText={
-                  started
-                    ? t.journal.clientEmpty(c.artisan_name)
-                    : t.journal.clientWaiting(c.artisan_name)
-                }
-                now={new Date()}
+              </section>
+            )}
+          </>
+        }
+        aside={
+          <>
+            <section className={sheetCard}>
+              <PersonCard
+                label={t.yourArtisan}
+                name={c.artisan_name}
+                detail={c.trade_label}
+                verified
+                photoUrl={avatarUrl(supabase, c.artisan_avatar_path)}
+                phone={c.artisan_phone}
+                messageHref={`/mon-espace/messages/${id}`}
               />
-              {next && (
-                <NextIntervention
-                  chantierId={id}
-                  next={next}
-                  title={c.title}
-                  location={addressOf(c)}
-                  artisanName={c.artisan_name}
-                  clientName={null}
-                />
+            </section>
+            {reviewInvited(status, review !== null) && (
+              <ReviewInvite chantierId={id} artisanName={c.artisan_name} />
+            )}
+            {status === "cloture" && (
+              <ButtonLink
+                href={rehirePath(c.artisan_id, id, c.artisan_name) as Route}
+                variant="outline"
+                className="self-start"
+              >
+                {fr.myChantiers.rehire(c.artisan_name)}
+              </ButtonLink>
+            )}
+            <section className={sheetCard}>
+              <ReportProblemLink href={`/mon-espace/chantiers/${id}/signaler`} />
+              {cancellable.includes(status) && (
+                <CancelChantierButton chantierId={id} artisanName={c.artisan_name} />
               )}
-            </>
-          ) : (
-            <>
-              <ChantierDocuments documents={documents} />
-              <PaymentSchedule progress={progress} />
-              {c.received_at && (
-                <WarrantyCard
-                  receivedOn={parisToday(new Date(c.received_at))}
-                  insurer={decennaleInsurer(quote?.decennale)}
-                />
-              )}
-            </>
-          )}
-          {status === "cloture" && (
-            <ButtonLink
-              href={rehirePath(c.artisan_id, id, c.artisan_name) as Route}
-              variant="outline"
-              className="self-start"
-            >
-              {fr.myChantiers.rehire(c.artisan_name)}
-            </ButtonLink>
-          )}
-          <ReportProblemLink href={`/mon-espace/chantiers/${id}/signaler`} />
-          {cancellable.includes(status) && (
-            <CancelChantierButton chantierId={id} artisanName={c.artisan_name} />
-          )}
-        </div>
-      </div>
+            </section>
+          </>
+        }
+      />
       {status === "reserves_a_lever" && (
         <ConfirmLiftActions
           chantierId={id}
@@ -362,6 +374,6 @@ export default async function ClientChantierPage({
           balance={euros.format((progress?.remainingCents ?? 0) / 100)}
         />
       )}
-    </main>
+    </SheetPage>
   );
 }

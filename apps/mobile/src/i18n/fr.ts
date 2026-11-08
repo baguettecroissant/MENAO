@@ -836,7 +836,27 @@ export const fr = {
       counts: {
         requests: (n: number) => (n <= 1 ? `${n} demande en attente` : `${n} demandes en attente`),
       },
-      todoTitle: "\u00c0 faire",
+      // Refonte « Nette », lot 6 : trois chiffres serrés, cartes « À faire » et chantiers.
+      figures: {
+        label: "Vos chantiers en bref",
+        active: "en cours",
+        todo: "à faire",
+        next: "prochain RDV",
+        none: "aucun",
+        nextSpoken: (what: string, day: string, time: string, artisan: string) =>
+          `${what} le ${day} à ${time} avec ${artisan}`,
+      },
+      todoTitle: "À faire maintenant",
+      todoCount: (n: number) => (n <= 1 ? "1 action" : `${n} actions`),
+      todoEmpty: "Tout est à jour",
+      progress: (step: string, n: number, total: number) => `${step} · ${n}/${total}`,
+      progressLabel: (step: string, n: number, total: number) =>
+        `Avancement : ${step}, étape ${n} sur ${total}`,
+      cardDate: {
+        rendez_vous: (day: string) => `RDV ${day}`,
+        demarrage: (day: string) => `Démarrage ${day}`,
+        started: (day: string) => `Démarré ${day}`,
+      },
       todo: {
         signer_devis: "Signer le devis",
         payer_acompte: "Payer l'acompte",
@@ -1448,11 +1468,6 @@ export const fr = {
     depositReceived: "Acompte reçu",
     verified: "Artisan vérifié par MENAO",
     call: "Appeler",
-    tabs: {
-      label: "Partie du chantier",
-      suivi: "Suivi du chantier",
-      dossier: "Dossier du chantier",
-    },
     startPlanned: (date: string) => `Démarrage prévu le ${date}`,
     inProgress: "Chantier en cours",
     clientStatus: {
@@ -1479,7 +1494,6 @@ export const fr = {
     quoteRefused: "Devis refusé",
     journal: {
       title: "Suivi du chantier",
-      lastUpdate: (ago: string) => `Dernière mise à jour : ${ago}`,
       clientWaiting: (artisan: string) =>
         `Le suivi de chantier débutera dès que ${artisan} commencera les travaux.`,
       clientEmpty: (artisan: string) =>
@@ -1489,7 +1503,6 @@ export const fr = {
       artisanLocked:
         "Vous pourrez ajouter des photos et des messages sur ce chantier une fois celui-ci en cours.",
       photosTitle: "Photos du chantier",
-      messageLeft: (ago: string) => `Message laissé ${ago}`,
     },
     next: {
       title: "Prochaine intervention",
@@ -1515,11 +1528,7 @@ export const fr = {
       invoice: { acompte: "Facture d'acompte", solde: "Facture de solde" },
       meta: (numero: string, date: string) => `${numero} · ${date}`,
       noDocuments: "Les documents du chantier (devis, factures) apparaîtront ici.",
-      schedule: "Échéancier de paiement",
       total: "Total du chantier",
-      totalLine: (amount: string) => `Total du chantier : ${amount}`,
-      paid: "Déjà payé",
-      remaining: "Restant à payer",
       noSchedule: "L'échéancier de paiement apparaîtra avec le devis signé.",
     },
     action: {
@@ -1565,6 +1574,29 @@ export const fr = {
     },
     rehire: (name: string) => `Redemander un devis à ${name}`,
     notFound: "Ce chantier est introuvable.",
+    // Fiche du chantier côté particulier, refonte « Nette » (lot 6).
+    fiche: {
+      title: "Chantier",
+      started: (date: string) => `Démarré le ${date}`,
+      insuredVerified: "Assuré et vérifié",
+      verified: "Vérifié par MENAO",
+      artisanLabel: (name: string, trade: string | null) =>
+        trade ? `Votre artisan : ${name}, ${trade}` : `Votre artisan : ${name}`,
+      callArtisan: (name: string) => `Appeler ${name}`,
+      messageArtisan: (name: string) => `Écrire à ${name}`,
+      works: {
+        title: (artisan: string) => `${artisan} vous préviendra à la fin des travaux`,
+        text: "Vous réceptionnerez alors le chantier, puis paierez le solde.",
+      },
+      money: {
+        title: "Argent du chantier",
+        signedQuote: "Devis signé",
+        depositPaid: "Acompte payé",
+        alreadyPaid: "Déjà payé",
+        balanceAfter: "Solde, après la réception",
+        remaining: "Reste à payer",
+      },
+    },
   },
   /** Avis du client (F-28) : mêmes textes que le site. */
   clientReview: {
