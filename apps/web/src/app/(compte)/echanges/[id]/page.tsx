@@ -50,41 +50,47 @@ export default async function ExchangePage({ params }: PageProps<"/echanges/[id]
   }));
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
       <Link
         href="/echanges"
-        className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+        className="inline-flex items-center gap-1.5 self-start rounded-sm text-sm font-semibold text-muted-foreground hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
         {t.back}
       </Link>
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {ticket.subject ?? t.types[type] ?? t.untitled}
-          </h1>
+      {/* Refonte « Nette » (ADR 0258) : pastilles du type et de l'état, grand titre. */}
+      <div className="flex flex-col gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-chip bg-background px-2 py-0.5 text-xs font-semibold text-label">
+            {t.types[type]}
+          </span>
           <StatusBadge tone={tone[ticket.status]}>{t.statuses[ticket.status]}</StatusBadge>
         </div>
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
+          {ticket.subject ?? t.types[type] ?? t.untitled}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          {t.types[type]} · {t.sentOn(formatDateNumeric(ticket.created_at))}
+          {t.sentOn(formatDateNumeric(ticket.created_at))}
         </p>
       </div>
       {ticket.message && (
         <section
           aria-labelledby="echange-message"
-          className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card"
+          className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
         >
-          <h2 id="echange-message" className="font-medium">
+          <h2 id="echange-message" className="text-[1.0625rem]">
             {t.yourMessage}
           </h2>
-          <p className="text-sm whitespace-pre-line">{ticket.message}</p>
+          <p className="text-[0.9375rem] leading-relaxed whitespace-pre-line text-label">
+            {ticket.message}
+          </p>
         </section>
       )}
       <section
         aria-labelledby="echange-fil"
-        className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card"
+        className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
       >
-        <h2 id="echange-fil" className="font-medium">
+        <h2 id="echange-fil" className="text-[1.0625rem]">
           {t.thread}
         </h2>
         <TicketThread

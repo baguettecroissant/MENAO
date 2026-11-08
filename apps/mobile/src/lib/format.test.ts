@@ -16,6 +16,7 @@ import {
   formatTime,
   formatWeekShort,
   formatWeekdayDay,
+  isParisToday,
   parisDateTime,
 } from "./format";
 
@@ -51,6 +52,14 @@ describe("mise en forme", () => {
     // 23h30 à Paris le 12 octobre.
     expect(formatDayLabel("2026-10-12T21:30:00Z", now)).toBe("Hier");
     expect(formatDayLabel("2026-10-05T10:00:00Z", now)).toBe("lundi 5 octobre 2026");
+  });
+
+  it("jour même à l'heure de Paris (groupe « Aujourd'hui » des notifications)", () => {
+    const now = new Date("2026-10-13T10:00:00Z");
+    // 0h30 à Paris le 13 octobre : déjà aujourd'hui.
+    expect(isParisToday("2026-10-12T22:30:00Z", now)).toBe(true);
+    // 23h30 à Paris le 12 octobre : la veille.
+    expect(isParisToday("2026-10-12T21:30:00Z", now)).toBe(false);
   });
 
   it("durées et mois du tableau de bord, comme sur le site", () => {

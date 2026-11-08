@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Mail, MessageSquareText } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -45,15 +45,17 @@ export default async function ExchangesPage() {
   const tickets = data ?? [];
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+    // Refonte « Nette » (ADR 0258) : une liste en carte, le type et l'état en pastilles.
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="flex max-w-3xl flex-col gap-1.5">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+          <p className="text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
-        <ButtonLink href="/contact" variant="outline" size="md" className="shrink-0 self-start">
+        <ButtonLink href="/contact" size="md" className="shrink-0 self-start sm:self-auto">
+          <Mail aria-hidden="true" className="size-4" />
           {t.write}
         </ButtonLink>
       </div>
@@ -62,7 +64,7 @@ export default async function ExchangesPage() {
           {t.emptyHint}
         </EmptyState>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
           {tickets.map((ticket) => {
             const replies = ticket.ticket_messages
               .filter((m) => m.from_staff)
@@ -76,16 +78,21 @@ export default async function ExchangesPage() {
               <li key={ticket.id}>
                 <Link
                   href={href as Route}
-                  className="flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card hover:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+                  className="flex items-center gap-4 px-4 py-4 hover:bg-background focus-visible:bg-background focus-visible:outline-none sm:px-5"
                 >
+                  <span className="hidden size-10 shrink-0 items-center justify-center rounded-input bg-background text-label sm:flex">
+                    <MessageSquareText aria-hidden="true" className="size-[1.125rem]" />
+                  </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-chip bg-background px-2 py-0.5 text-xs font-semibold text-label">
+                        {t.types[type]}
+                      </span>
                       <StatusBadge tone={tone[ticket.status]}>
                         {t.statuses[ticket.status]}
                       </StatusBadge>
-                      <span className="text-xs text-muted-foreground">{t.types[type]}</span>
                     </div>
-                    <p className="truncate font-medium">{ticket.subject ?? t.untitled}</p>
+                    <p className="truncate font-semibold">{ticket.subject ?? t.untitled}</p>
                     {ticket.message && (
                       <p className="line-clamp-2 text-sm text-muted-foreground">{ticket.message}</p>
                     )}

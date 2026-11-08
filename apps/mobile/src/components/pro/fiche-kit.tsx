@@ -3,6 +3,8 @@ import { Check, ChevronLeft, type LucideIcon } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -36,6 +38,7 @@ export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.
  * haute, marge du bas du téléphone). Sans `title`, la barre ne garde que le retour (le grand titre
  * est alors dans le contenu, écrans du dossier). `band` remplace la barre (résumé du besoin du
  * parcours de demande, qui couvre la barre d'état) ; `back={false}` la retire (fin d'un parcours).
+ * `keyboard` : le bas d'écran remonte avec le clavier (barre d'écriture d'un échange, lot 13).
  */
 export function FicheScreen({
   title,
@@ -43,6 +46,7 @@ export function FicheScreen({
   band,
   back = true,
   footer,
+  keyboard = false,
   onRefresh,
   children,
 }: {
@@ -51,6 +55,7 @@ export function FicheScreen({
   band?: ReactNode;
   back?: boolean;
   footer?: ReactNode;
+  keyboard?: boolean;
   onRefresh?: () => Promise<unknown>;
   children: ReactNode;
 }) {
@@ -66,30 +71,8 @@ export function FicheScreen({
       setRefreshing(false);
     }
   }
-  return (
-    <SafeAreaView style={styles.safe} edges={band ? ["left", "right"] : ["top", "left", "right"]}>
-      {band}
-      {band || !back ? null : (
-        <View style={styles.bar}>
-          <Pressable
-            role="button"
-            aria-label={fr.nav.back}
-            onPress={goBack}
-            hitSlop={8}
-            style={({ pressed }) => [styles.barButton, pressed && styles.barPressed]}
-          >
-            <ChevronLeft size={26} color={colors.foreground} strokeWidth={2.2} />
-          </Pressable>
-          {title ? (
-            <Text role="heading" style={styles.barTitle} numberOfLines={1}>
-              {title}
-            </Text>
-          ) : (
-            <View style={styles.barSpacer} />
-          )}
-          <View style={[styles.barButton, right ? styles.barRight : null]}>{right}</View>
-        </View>
-      )}
+  const content = (
+    <>
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -114,6 +97,42 @@ export function FicheScreen({
       {footer ? (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing(3) }]}>{footer}</View>
       ) : null}
+    </>
+  );
+  return (
+    <SafeAreaView style={styles.safe} edges={band ? ["left", "right"] : ["top", "left", "right"]}>
+      {band}
+      {band || !back ? null : (
+        <View style={styles.bar}>
+          <Pressable
+            role="button"
+            aria-label={fr.nav.back}
+            onPress={goBack}
+            hitSlop={8}
+            style={({ pressed }) => [styles.barButton, pressed && styles.barPressed]}
+          >
+            <ChevronLeft size={26} color={colors.foreground} strokeWidth={2.2} />
+          </Pressable>
+          {title ? (
+            <Text role="heading" style={styles.barTitle} numberOfLines={1}>
+              {title}
+            </Text>
+          ) : (
+            <View style={styles.barSpacer} />
+          )}
+          <View style={[styles.barButton, right ? styles.barRight : null]}>{right}</View>
+        </View>
+      )}
+      {keyboard ? (
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          {content}
+        </KeyboardAvoidingView>
+      ) : (
+        content
+      )}
     </SafeAreaView>
   );
 }
@@ -492,6 +511,7 @@ export function PillTabs<V extends string>({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
   bar: {
     flexDirection: "row",
     alignItems: "center",

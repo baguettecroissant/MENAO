@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { TopBar } from "@/components/top-bar";
+import { ActionScreen, ActionSubmit } from "@/components/pro/action-kit";
+import { FicheCard, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { changeEmail, loadAccount } from "@/lib/account";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, ScreenSkeleton, TextField, Title } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.account.email;
+const { colors, font, spacing } = theme;
 
 /**
  * Adresse e-mail (F-08), comme sur le site : la nouvelle adresse est confirmée par les liens
- * envoyés aux deux adresses, ouverts sur le site.
+ * envoyés aux deux adresses, ouverts sur le site. Refonte « Nette » (lot 13) : grand titre,
+ * adresse actuelle et nouveau champ en carte, bouton collé en bas.
  */
 export default function AccountEmailScreen() {
   const [account, reload] = useFocusData(loadAccount);
@@ -19,13 +23,12 @@ export default function AccountEmailScreen() {
   const [state, setState] = useState<Awaited<ReturnType<typeof changeEmail>>>({});
   const [pending, setPending] = useState(false);
 
-  if (account === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (account === undefined) return <FicheSkeleton />;
   if (account === null) {
     return (
-      <Screen onRefresh={reload} header={<TopBar />}>
-        <Title>{t.title}</Title>
+      <ActionScreen title={t.title} onRefresh={reload}>
         <Notice tone="error">{fr.account.errors.unavailable}</Notice>
-      </Screen>
+      </ActionScreen>
     );
   }
 
@@ -42,35 +45,43 @@ export default function AccountEmailScreen() {
   }
 
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    <ActionScreen
+      title={t.title}
+      footer={<ActionSubmit label={t.submit} onPress={submit} loading={pending} />}
     >
-      <Title>{t.title}</Title>
-      <View>
-        <Body muted>{t.current}</Body>
-        <Text style={styles.email}>{account.email}</Text>
-      </View>
       {state.success ? <Notice tone="success">{state.success}</Notice> : null}
       {account.pendingEmail && !state.success ? (
         <Notice tone="info">{t.pending(account.pendingEmail)}</Notice>
       ) : null}
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
-      <TextField
-        label={t.label}
-        value={email}
-        onChangeText={setEmail}
-        error={state.fieldErrors?.email}
-        hint={t.hint}
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        textContentType="emailAddress"
-      />
-    </Screen>
+      <FicheCard padding={4} gap={3.5}>
+        <View style={styles.current}>
+          <Text style={styles.currentLabel}>{t.current}</Text>
+          <Text style={styles.currentEmail}>{account.email}</Text>
+        </View>
+        <ToolField
+          label={t.label}
+          value={email}
+          onChangeText={setEmail}
+          error={state.fieldErrors?.email}
+          hint={t.hint}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+        />
+      </FicheCard>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  email: { fontFamily: theme.font.medium, fontSize: 16, color: theme.colors.foreground },
+  current: {
+    gap: 2,
+    paddingBottom: spacing(3.5),
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  currentLabel: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  currentEmail: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
 });

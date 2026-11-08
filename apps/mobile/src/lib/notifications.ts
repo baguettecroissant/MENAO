@@ -5,6 +5,8 @@ import { supabase } from "./supabase";
 
 export type NotificationItem = {
   id: string;
+  /** Type de la notification : choisit l'icône de la ligne (refonte « Nette », lot 13). */
+  type: string;
   title: string;
   preview: string;
   /** Page concernée sur le site (chemin relatif), comme le bouton de l'e-mail. */
@@ -31,6 +33,7 @@ export async function loadNotifications(): Promise<NotificationItem[] | null> {
       );
       return {
         id: n.notification_id,
+        type: n.type,
         title: content.subject,
         preview: content.preview,
         link: content.cta.url || "/",
