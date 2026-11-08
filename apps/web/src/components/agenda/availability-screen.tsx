@@ -40,13 +40,11 @@ export function AvailabilityScreen({
 }) {
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="flex max-w-2xl flex-col gap-1.5">
-            <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-              {t.title}
-            </h1>
-            <p className="text-sm text-muted-foreground">{t.intro}</p>
+            <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
+            <p className="text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
           </div>
           <AgendaTabs current="disponibilites" />
         </div>
@@ -59,7 +57,7 @@ export function AvailabilityScreen({
           visible={visible}
         />
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-start">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start">
           <HoursEditor initial={hours} />
           <div className="flex flex-col gap-5">
             <AbsencesManager absences={absences} today={today} />

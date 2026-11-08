@@ -119,8 +119,10 @@ export function HoursEditor({
       className="scroll-mt-24 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
     >
       <div className="flex flex-col gap-1">
-        <h2 id="horaires-titre" className="flex items-center gap-2 text-[1.0625rem] font-medium">
-          <Clock aria-hidden="true" className="size-[1.125rem] text-primary" />
+        <h2 id="horaires-titre" className="flex items-center gap-2.5 text-lg">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-primary-soft text-primary-strong">
+            <Clock aria-hidden="true" className="size-[1.125rem]" />
+          </span>
           {t.title}
         </h2>
         <p className="text-sm text-muted-foreground">{t.text}</p>

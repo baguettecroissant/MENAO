@@ -8,30 +8,45 @@ import {
   type TeamRole,
 } from "@menao/core";
 import { teamInviteSchema } from "@menao/validation";
+import { Ellipsis, Mail } from "lucide-react-native";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { Avatar } from "@/components/avatar";
+import { BottomSheet } from "@/components/bottom-sheet";
+import { GroupTitle, ListGroup } from "@/components/list-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheScreen,
+  FicheSkeleton,
+  FicheTag,
+  type FicheTone,
+} from "@/components/pro/fiche-kit";
+import { ChoiceCards, FieldPair, ProgressBar, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { inviteTeamMember, loadTeam, removeTeamMember, updateTeamMember } from "@/lib/team";
 import { useFocusData } from "@/lib/use-focus-data";
-import {
-  Body,
-  Button,
-  Card,
-  Chip,
-  Notice,
-  Screen,
-  ScreenSkeleton,
-  TextField,
-  Title,
-  toast,
-} from "@/ui";
+import { Notice, Tappable, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.proTeam;
-const { colors, font, spacing } = theme;
+const { colors, font, radius, spacing } = theme;
+
+const STATE_TONE: Record<TeamMember["state"], FicheTone> = {
+  actif: "success",
+  en_attente: "warning",
+  suspendu_places: "danger",
+  suspendu_patron: "neutral",
+};
+
+const roleOptions = TEAM_ROLES.map((value) => ({
+  value,
+  label: t.roles[value],
+  detail: t.roleDetails[value],
+}));
 
 /** Texte d'un statut de l'Edge Function team-members (« indisponible » par défaut). */
 const errorText = (status: string) => t.errors[status] ?? t.errors.unavailable ?? "";
@@ -39,16 +54,15 @@ const errorText = (status: string) => t.errors[status] ?? t.errors.unavailable ?
 /**
  * « Mon équipe » du patron (F-89, ADR 0240), comme sur le site : places, membres et leur état,
  * invitation par e-mail. Formule sans comptes d'équipe : une simple phrase, sans lien (règle 10).
+ * Refonte « Nette » (lot 8, maquette « EquipeNette » en une colonne) : carte des comptes utilisés
+ * avec sa barre, membres en lignes (actions dans une feuille), invitation avec le rôle en cartes.
  */
 export default function TeamScreen() {
   const [team, reload] = useFocusData(loadTeam);
-  if (team === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (team === undefined) return <FicheSkeleton title={t.title} />;
   return (
-    <Screen header={<TopBar />} onRefresh={reload}>
-      <View style={styles.head}>
-        <Title>{t.title}</Title>
-        <Body muted>{t.lead}</Body>
-      </View>
+    <FicheScreen title={t.title} onRefresh={reload}>
+      <Text style={styles.lead}>{t.lead}</Text>
       {team === null ? (
         <Notice tone="error">{t.loadError}</Notice>
       ) : !teamIncluded(team) ? (
@@ -56,35 +70,51 @@ export default function TeamScreen() {
       ) : (
         <TeamContent team={team} onChange={reload} />
       )}
-    </Screen>
+    </FicheScreen>
   );
 }
 
 function TeamContent({ team, onChange }: { team: Team; onChange: () => Promise<void> }) {
   return (
     <>
-      <Card>
-        <Text style={styles.cardTitle}>{t.seats(team.used, team.seats)}</Text>
+      <FicheCard gap={3}>
+        <Text style={styles.seatsLabel}>{t.seatsTitle}</Text>
+        <Text style={styles.seatsValue}>{t.seatsValue(team.used, team.seats)}</Text>
+        <ProgressBar value={team.used} target={team.seats} label={t.seatsTitle} height={10} />
+        <Text style={styles.muted}>{t.seats(team.used, team.seats)}</Text>
+      </FicheCard>
+
+      <GroupTitle title={t.membersTitle} count={team.members.length + 1} />
+      <ListGroup>
         <View style={styles.row}>
+          <Avatar url={null} name={t.you} size={44} />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>{t.you}</Text>
-            <Text style={styles.rowMeta}>{t.patron}</Text>
+            <Text style={styles.rowMeta}>{t.youPatron}</Text>
+            <FicheTag text={t.states.actif} tone="success" dot />
           </View>
         </View>
         {team.members.map((member) => (
           <MemberRow key={member.userId} member={member} onChange={onChange} />
         ))}
-      </Card>
-      <Card>
-        <Text style={styles.cardTitle}>{t.invite.title}</Text>
-        {teamSeatsLeft(team) > 0 ? <InviteForm onChange={onChange} /> : <Body muted>{t.full}</Body>}
-      </Card>
+      </ListGroup>
+      <Text style={styles.muted}>{t.workerNote}</Text>
+
+      <FicheCard gap={3.5}>
+        <CardHeading title={t.invite.title} />
+        {teamSeatsLeft(team) > 0 ? (
+          <InviteForm onChange={onChange} />
+        ) : (
+          <Text style={styles.muted}>{t.full}</Text>
+        )}
+      </FicheCard>
     </>
   );
 }
 
 function MemberRow({ member, onChange }: { member: TeamMember; onChange: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
   const name = teamMemberName(member);
   const suspended = member.state === "suspendu_places" || member.state === "suspendu_patron";
 
@@ -109,14 +139,20 @@ function MemberRow({ member, onChange }: { member: TeamMember; onChange: () => P
           setBusy(false);
           if (status !== "ok") return toast.error(errorText(status));
           toast.success(t.actions.removed(name));
+          setOpen(false);
           await onChange();
         },
       },
     ]);
   }
 
+  const meta = [t.roles[member.role], member.since ? t.since(formatDay(member.since)) : null]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <View style={[styles.row, styles.member]}>
+    <View style={styles.row}>
+      <Avatar url={null} name={name} size={44} initials />
       <View style={styles.rowText}>
         <Text style={styles.rowTitle} numberOfLines={1}>
           {name}
@@ -126,33 +162,50 @@ function MemberRow({ member, onChange }: { member: TeamMember; onChange: () => P
             {member.email}
           </Text>
         ) : null}
-        <Text style={[styles.rowMeta, suspended ? styles.warning : null]}>
-          {[t.states[member.state], member.since ? t.since(formatDay(member.since)) : null]
-            .filter(Boolean)
-            .join(" · ")}
-        </Text>
+        <Text style={styles.rowMeta}>{meta}</Text>
+        <FicheTag text={t.states[member.state]} tone={STATE_TONE[member.state]} dot />
       </View>
-      <View style={styles.chips}>
-        {TEAM_ROLES.map((role) => (
-          <Chip
-            key={role}
-            label={t.roles[role]}
-            selected={member.role === role}
-            onPress={() => {
+      <Tappable
+        role="button"
+        aria-label={t.memberActions(name)}
+        aria-haspopup="dialog"
+        onPress={() => setOpen(true)}
+        style={styles.more}
+      >
+        <Ellipsis size={20} color={colors.foreground} />
+      </Tappable>
+      <BottomSheet
+        visible={open}
+        onClose={() => setOpen(false)}
+        title={name}
+        closeLabel={t.actions.cancel}
+      >
+        <View style={styles.sheet}>
+          <ChoiceCards
+            label={t.changeRole}
+            value={member.role}
+            onChange={(role) => {
               if (!busy && member.role !== role) void change({ role });
             }}
+            options={roleOptions}
           />
-        ))}
-      </View>
-      <View style={styles.actions}>
-        <Button
-          label={suspended ? t.actions.reactivate : t.actions.suspend}
-          variant="secondary"
-          disabled={busy}
-          onPress={() => void change({ active: suspended })}
-        />
-        <Button label={t.actions.remove} variant="danger" disabled={busy} onPress={confirmRemove} />
-      </View>
+          <FicheButton
+            label={suspended ? t.actions.reactivate : t.actions.suspend}
+            variant="secondary"
+            disabled={busy}
+            onPress={() => void change({ active: suspended })}
+          />
+          <Pressable
+            role="button"
+            aria-disabled={busy}
+            disabled={busy}
+            onPress={confirmRemove}
+            style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
+          >
+            <Text style={styles.removeText}>{t.actions.remove}</Text>
+          </Pressable>
+        </View>
+      </BottomSheet>
     </View>
   );
 }
@@ -190,22 +243,26 @@ function InviteForm({ onChange }: { onChange: () => Promise<void> }) {
 
   return (
     <>
-      <Body muted>{t.invite.hint}</Body>
-      <TextField
-        label={t.invite.firstName}
-        value={firstName}
-        onChangeText={setFirstName}
-        autoComplete="off"
-        error={errors.firstName}
-      />
-      <TextField
-        label={t.invite.lastName}
-        value={lastName}
-        onChangeText={setLastName}
-        autoComplete="off"
-        error={errors.lastName}
-      />
-      <TextField
+      <Text style={styles.lead}>{t.invite.hint}</Text>
+      <FieldPair>
+        <ToolField
+          label={t.invite.firstName}
+          value={firstName}
+          onChangeText={setFirstName}
+          autoComplete="off"
+          error={errors.firstName}
+          style={styles.half}
+        />
+        <ToolField
+          label={t.invite.lastName}
+          value={lastName}
+          onChangeText={setLastName}
+          autoComplete="off"
+          error={errors.lastName}
+          style={styles.half}
+        />
+      </FieldPair>
+      <ToolField
         label={t.invite.email}
         value={email}
         onChangeText={setEmail}
@@ -215,39 +272,57 @@ function InviteForm({ onChange }: { onChange: () => Promise<void> }) {
         autoCorrect={false}
         error={errors.email}
       />
-      <Text style={styles.label}>{t.invite.role}</Text>
-      <View style={styles.chips}>
-        {TEAM_ROLES.map((value) => (
-          <Chip
-            key={value}
-            label={t.roles[value]}
-            selected={role === value}
-            onPress={() => setRole(value)}
-          />
-        ))}
-      </View>
-      <Button label={t.invite.submit} loading={sending} onPress={() => void send()} />
+      <ChoiceCards label={t.invite.role} value={role} onChange={setRole} options={roleOptions} />
+      <FicheButton
+        label={t.invite.submit}
+        icon={Mail}
+        tall
+        loading={sending}
+        onPress={() => void send()}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  head: { gap: spacing(1.5) },
-  cardTitle: { fontFamily: font.medium, fontSize: 17, color: colors.foreground },
-  label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  actions: { gap: spacing(2) },
+  lead: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.label },
+  muted: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
+  seatsLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
+  seatsValue: {
+    fontFamily: font.display,
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: -0.9,
+    color: colors.foreground,
+  },
   row: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing(3),
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    paddingTop: spacing(2),
+    alignItems: "center",
+    gap: spacing(3.5),
+    paddingHorizontal: spacing(4),
+    paddingVertical: spacing(3.5),
   },
-  member: { flexDirection: "column", alignItems: "stretch" },
-  rowText: { flex: 1, gap: 2 },
-  rowTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
-  rowMeta: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
-  warning: { color: colors.warning },
+  rowText: { flex: 1, gap: 3, alignItems: "flex-start" },
+  rowTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
+  rowMeta: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  more: {
+    width: theme.touchTarget,
+    height: theme.touchTarget,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  sheet: { gap: spacing(4) },
+  remove: { alignSelf: "center", minHeight: theme.touchTarget, justifyContent: "center" },
+  removeText: { fontFamily: font.semibold, fontSize: 15, color: colors.danger },
+  pressed: { opacity: 0.7 },
+  half: { flex: 1, minWidth: 0 },
 });

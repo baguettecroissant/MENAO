@@ -252,7 +252,7 @@ export function RuleContent({
       <span
         aria-hidden="true"
         className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-[7px] border-2 ${
-          checked ? "border-primary bg-primary" : "border-[#a9b0c6] bg-surface"
+          checked ? "border-foreground bg-foreground" : "border-[#a9b0c6] bg-surface"
         }`}
       >
         {checked && <Check className="size-4 text-white" strokeWidth={3.2} />}
@@ -261,7 +261,7 @@ export function RuleContent({
         <span className="flex flex-wrap items-center gap-2">
           <span
             className={`flex h-6 min-w-11 items-center justify-center rounded-lg px-2 text-xs font-extrabold tabular-nums ${
-              checked ? "bg-primary text-white" : "bg-primary-soft text-primary-strong"
+              checked ? "bg-foreground text-white" : "bg-primary-soft text-primary-strong"
             }`}
           >
             {code}

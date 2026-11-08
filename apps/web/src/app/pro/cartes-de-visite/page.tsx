@@ -6,6 +6,7 @@ import { BusinessCardSheet } from "@/components/pro/business-card-sheet";
 import { Alert } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
+import { sheetCard } from "@/components/pro/sheet";
 import { requireTeamPermission } from "@/lib/artisan/space";
 import { formatPhone } from "@/lib/format";
 import { qrSvg } from "@/lib/qr";
@@ -59,43 +60,55 @@ export default async function BusinessCardsPage() {
   const host = new URL(env.NEXT_PUBLIC_SITE_URL).host;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6 print:max-w-none print:p-0">
+    // Refonte « Nette » (ADR 0253) : la planche à gauche, l'impression à droite ; à l'impression,
+    // la planche seule.
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10 print:max-w-none print:p-0">
       <style>{"@page { size: A4; margin: 10mm; }"}</style>
       <div className="flex flex-col gap-4 print:hidden">
         <Link
           href="/pro/mon-profil"
-          className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 self-start rounded-md text-sm font-semibold text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           {t.back}
         </Link>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
-        {qr ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">{t.printHint}</p>
-            <PrintButton label={t.print} />
-          </div>
-        ) : (
-          <Alert tone="info">{t.unavailable}</Alert>
-        )}
+        {!qr && <Alert tone="info">{t.unavailable}</Alert>}
       </div>
 
       {qr && (
-        <BusinessCardSheet
-          card={{
-            name: company ?? person,
-            person: company ? person || null : null,
-            trade,
-            phone: profile?.phone ? formatPhone(profile.phone) : null,
-            host,
-          }}
-          qr={qr}
-        />
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] print:block">
+          <div className="overflow-x-auto rounded-card border border-dashed border-border-strong bg-background p-4 sm:p-6 print:overflow-visible print:border-0 print:bg-transparent print:p-0">
+            <BusinessCardSheet
+              card={{
+                name: company ?? person,
+                person: company ? person || null : null,
+                trade,
+                phone: profile?.phone ? formatPhone(profile.phone) : null,
+                host,
+              }}
+              qr={qr}
+            />
+          </div>
+          <div className="flex flex-col gap-4 print:hidden">
+            <section aria-labelledby="imprimer" className={sheetCard}>
+              <h2 id="imprimer" className="text-lg">
+                {t.printTitle}
+              </h2>
+              <p className="text-sm text-label">{t.printHint}</p>
+              <PrintButton label={t.print} />
+            </section>
+            <section aria-labelledby="ecran" className={sheetCard}>
+              <h2 id="ecran" className="font-sans text-base font-semibold">
+                {t.screenTitle}
+              </h2>
+              <p className="text-sm text-label">{t.screenText}</p>
+            </section>
+          </div>
+        </div>
       )}
     </main>
   );
