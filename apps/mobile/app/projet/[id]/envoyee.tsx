@@ -1,19 +1,22 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { CircleCheck } from "lucide-react-native";
+import { Check } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { ActionScreen, ActionSubmit } from "@/components/pro/action-kit";
+import { CardHeading, FicheButton, FicheCard } from "@/components/pro/fiche-kit";
+import { StepList } from "@/components/request-kit";
 import { fr } from "@/i18n/fr";
 import { openTab } from "@/lib/navigation";
 import { loadChantierProjects } from "@/lib/project";
 import { supabase } from "@/lib/supabase";
-import { Body, Button, Card, IconTile, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.sent;
 
 /**
  * Confirmation de l'envoi (F-11), comme la maquette « Votre demande est envoyée » : coche,
- * rappel de la préférence de rappel et suite du parcours.
+ * rappel de la préférence de rappel et suite du parcours. Écran « Nette » (lot 12, maquette
+ * « EnvoyeeApp ») : rond vert coché, grand titre, étapes en carte, bouton collé en bas.
  */
 export default function Envoyee() {
   const {
@@ -53,26 +56,42 @@ export default function Envoyee() {
       active = false;
     };
   }, [id]);
+  const many = Number(count) > 1;
   return (
-    <Screen centered>
-      <View style={styles.icon}>
-        <IconTile icon={CircleCheck} size="lg" />
-      </View>
-      <Title center>{t.title(names)}</Title>
-      <Body muted center>
-        {t.text(names, Number(count) > 1)}
-      </Body>
-      <Card tone="soft">
+    <ActionScreen
+      back={false}
+      steps={
+        <View style={styles.check} aria-hidden>
+          <Check size={32} color={theme.colors["primary-foreground"]} strokeWidth={2.6} />
+        </View>
+      }
+      title={t.title(names)}
+      lead={t.text(names, many)}
+      footer={
+        <>
+          <ActionSubmit label={t.follow} onPress={() => openTab("/chantiers")} />
+          <FicheButton label={t.home} variant="secondary" onPress={() => openTab("/accueil")} />
+        </>
+      }
+    >
+      <StepList
+        label={t.steps.label}
+        steps={[
+          { title: t.steps.sent, state: "done" },
+          { title: t.steps.replies, text: t.next, state: "now" },
+          { title: t.steps.visit, text: t.steps.visitText, state: "next" },
+        ]}
+      />
+      <FicheCard padding={4} gap={1.5}>
         <Text style={styles.heading}>{t.reminder}</Text>
-        <Body>{from && to ? t.callbackRange(from, to) : t.callbackAsap}</Body>
-        <Body muted>{t.next}</Body>
-      </Card>
+        <Text style={styles.text}>{from && to ? t.callbackRange(from, to) : t.callbackAsap}</Text>
+      </FicheCard>
       {others.length > 0 ? (
-        <Card>
-          <Text style={styles.heading}>{t.otherLots.title}</Text>
-          <Body muted>{t.otherLots.lead}</Body>
+        <FicheCard padding={4.5} gap={3}>
+          <CardHeading title={t.otherLots.title} />
+          <Text style={styles.text}>{t.otherLots.lead}</Text>
           {others.map((p) => (
-            <Button
+            <FicheButton
               key={p.id}
               label={t.otherLots.choose(p.trade)}
               variant="secondary"
@@ -81,16 +100,36 @@ export default function Envoyee() {
               }
             />
           ))}
-          {workOrder.length > 1 ? <Body muted>{t.workOrder(workOrder.join(", "))}</Body> : null}
-        </Card>
+          {workOrder.length > 1 ? (
+            <Text style={styles.muted}>{t.workOrder(workOrder.join(", "))}</Text>
+          ) : null}
+        </FicheCard>
       ) : null}
-      <Button label={t.follow} onPress={() => openTab("/chantiers")} />
-      <Button label={t.home} variant="secondary" onPress={() => openTab("/accueil")} />
-    </Screen>
+    </ActionScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  icon: { alignItems: "center" },
-  heading: { fontFamily: theme.font.medium, fontSize: 16, color: theme.colors.foreground },
+  // Rond vert de la maquette, au-dessus du grand titre.
+  check: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.success,
+  },
+  heading: { fontFamily: theme.font.bold, fontSize: 14, color: theme.colors.foreground },
+  text: {
+    fontFamily: theme.font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.label,
+  },
+  muted: {
+    fontFamily: theme.font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: theme.colors["muted-foreground"],
+  },
 });

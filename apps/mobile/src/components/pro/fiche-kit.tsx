@@ -34,17 +34,22 @@ export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.
  * Écran d'une fiche : barre du haut (retour, titre centré, action facultative à droite), contenu
  * défilant sur le fond crème et barre d'actions facultative fixée en bas (fond blanc, bordure
  * haute, marge du bas du téléphone). Sans `title`, la barre ne garde que le retour (le grand titre
- * est alors dans le contenu, écrans du dossier).
+ * est alors dans le contenu, écrans du dossier). `band` remplace la barre (résumé du besoin du
+ * parcours de demande, qui couvre la barre d'état) ; `back={false}` la retire (fin d'un parcours).
  */
 export function FicheScreen({
   title,
   right,
+  band,
+  back = true,
   footer,
   onRefresh,
   children,
 }: {
   title?: string;
   right?: ReactNode;
+  band?: ReactNode;
+  back?: boolean;
   footer?: ReactNode;
   onRefresh?: () => Promise<unknown>;
   children: ReactNode;
@@ -62,29 +67,33 @@ export function FicheScreen({
     }
   }
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <View style={styles.bar}>
-        <Pressable
-          role="button"
-          aria-label={fr.nav.back}
-          onPress={goBack}
-          hitSlop={8}
-          style={({ pressed }) => [styles.barButton, pressed && styles.barPressed]}
-        >
-          <ChevronLeft size={26} color={colors.foreground} strokeWidth={2.2} />
-        </Pressable>
-        {title ? (
-          <Text role="heading" style={styles.barTitle} numberOfLines={1}>
-            {title}
-          </Text>
-        ) : (
-          <View style={styles.barSpacer} />
-        )}
-        <View style={[styles.barButton, right ? styles.barRight : null]}>{right}</View>
-      </View>
+    <SafeAreaView style={styles.safe} edges={band ? ["left", "right"] : ["top", "left", "right"]}>
+      {band}
+      {band || !back ? null : (
+        <View style={styles.bar}>
+          <Pressable
+            role="button"
+            aria-label={fr.nav.back}
+            onPress={goBack}
+            hitSlop={8}
+            style={({ pressed }) => [styles.barButton, pressed && styles.barPressed]}
+          >
+            <ChevronLeft size={26} color={colors.foreground} strokeWidth={2.2} />
+          </Pressable>
+          {title ? (
+            <Text role="heading" style={styles.barTitle} numberOfLines={1}>
+              {title}
+            </Text>
+          ) : (
+            <View style={styles.barSpacer} />
+          )}
+          <View style={[styles.barButton, right ? styles.barRight : null]}>{right}</View>
+        </View>
+      )}
       <ScrollView
         contentContainerStyle={[
           styles.content,
+          band ? styles.contentBand : !back ? styles.contentBare : null,
           { paddingBottom: (footer ? 0 : insets.bottom) + spacing(10) },
         ]}
         keyboardShouldPersistTaps="handled"
@@ -249,8 +258,11 @@ export function FicheButton({
 }: {
   label: string;
   onPress: () => void;
-  /** « danger » : fond rouge (refuser, annuler le chantier : refonte « Nette », lot 10). */
-  variant?: "primary" | "secondary" | "danger";
+  /**
+   * « danger » : fond rouge (refuser, annuler le chantier : refonte « Nette », lot 10) ; « dark » :
+   * fond bleu nuit (choix d'un artisan dans le parcours de demande, lot 12).
+   */
+  variant?: "primary" | "secondary" | "danger" | "dark";
   icon?: LucideIcon;
   /** 50 px (barre d'actions, prochaine étape) au lieu de 44. */
   tall?: boolean;
@@ -277,6 +289,7 @@ export function FicheButton({
         { height: tall ? 50 : 44 },
         primary ? styles.buttonPrimary : styles.buttonSecondary,
         variant === "danger" && styles.buttonDanger,
+        variant === "dark" && styles.buttonDark,
         grow && styles.grow,
         grow && styles.buttonTight,
         inactive && styles.disabled,
@@ -506,6 +519,8 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
   content: { paddingHorizontal: spacing(4), paddingTop: spacing(1.5), gap: spacing(4) },
+  contentBand: { paddingTop: spacing(5) },
+  contentBare: { paddingTop: spacing(10) },
   footer: {
     flexDirection: "column",
     gap: spacing(2.5),
@@ -529,6 +544,8 @@ const styles = StyleSheet.create({
   headMeta: { fontFamily: font.regular, fontSize: 15, lineHeight: 21, color: colors.label },
   tag: {
     alignSelf: "flex-start",
+    // Une pastille trop longue passe à la ligne au lieu de déborder de sa carte.
+    maxWidth: "100%",
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(1.5),
@@ -537,7 +554,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing(1),
   },
   tagDot: { width: 6, height: 6, borderRadius: 3 },
-  tagText: { fontFamily: font.bold, fontSize: 12 },
+  tagText: { flexShrink: 1, fontFamily: font.bold, fontSize: 12 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
@@ -562,6 +579,7 @@ const styles = StyleSheet.create({
   },
   buttonPrimary: { backgroundColor: colors.primary },
   buttonDanger: { backgroundColor: colors.danger },
+  buttonDark: { backgroundColor: colors.foreground },
   buttonSecondary: {
     backgroundColor: colors.surface,
     borderWidth: 1,

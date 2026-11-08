@@ -1,73 +1,59 @@
-import { router, useFocusEffect } from "expo-router";
-import { setStatusBarStyle } from "expo-status-bar";
+import { router } from "expo-router";
 import { Pencil } from "lucide-react-native";
-import { useCallback } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet, Text } from "react-native";
 import { ArtisanProfileView } from "@/components/artisan-profile";
-import { TopBar } from "@/components/top-bar";
+import { FicheButton, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { loadMyPage } from "@/lib/profile-hub";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { ExampleLock } from "@/components/examples";
 import { useExamplesActive } from "@/lib/examples";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proMyPage;
-const { colors, font, spacing } = theme;
+const { colors, font } = theme;
 
 /**
  * « Voir ma fiche » (ADR 0129) : exactement la fiche que voient les particuliers (même vue que
- * dans leur recherche), avec un accès direct à sa modification.
+ * dans leur recherche, refonte « Nette » lot 12), avec un accès direct à sa modification.
  */
 function MaFiche() {
-  const insets = useSafeAreaInsets();
   const [page] = useFocusData(loadMyPage);
   // Exemples (ADR 0184) : la fiche d'exemple se lit, elle ne se modifie pas.
   const examples = useExamplesActive();
-  // Photo en haut de l'écran : barre d'état claire tant que la fiche est affichée.
-  useFocusEffect(
-    useCallback(() => {
-      setStatusBarStyle("light");
-      return () => setStatusBarStyle("dark");
-    }, []),
-  );
 
-  if (page === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (page === undefined) return <FicheSkeleton />;
   if (page === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen>
         <Notice tone="error">{t.unavailable}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   return (
-    <SafeAreaView style={styles.safe} edges={["left", "right"]}>
-      <ScrollView>
-        <ArtisanProfileView page={page} />
-      </ScrollView>
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing(3) }]}>
-        <Text style={styles.preview}>{t.preview}</Text>
-        <ExampleLock locked={examples} note>
-          <Button label={t.edit} icon={Pencil} onPress={() => router.push("/pro-profil-public")} />
-        </ExampleLock>
-      </View>
-    </SafeAreaView>
+    <FicheScreen
+      footer={
+        <>
+          <Text style={styles.preview}>{t.preview}</Text>
+          <ExampleLock locked={examples} note>
+            <FicheButton
+              label={t.edit}
+              icon={Pencil}
+              tall
+              onPress={() => router.push("/pro-profil-public")}
+            />
+          </ExampleLock>
+        </>
+      }
+    >
+      <ArtisanProfileView page={page} />
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  footer: {
-    gap: spacing(2),
-    paddingHorizontal: spacing(5),
-    paddingTop: spacing(3),
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
   preview: {
     fontFamily: font.regular,
     fontSize: 13,

@@ -14,24 +14,23 @@ import { router, useLocalSearchParams } from "expo-router";
 import {
   ArrowRight,
   BadgeCheck,
+  Camera,
   Clock,
   Info,
-  Paperclip,
   Plus,
   Search,
   ShieldCheck,
   Sparkles,
-  House,
-  MapPin,
-  Ruler,
-  Wrench,
 } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputInstance } from "react-native";
 import { AnalysisScreen } from "@/components/analysis-screen";
 import { DictationButton } from "@/components/dictation-button";
 import { PhotoThumbnails } from "@/components/photo-thumbnails";
-import { TopBar } from "@/components/top-bar";
+import { ActionSubmit } from "@/components/pro/action-kit";
+import { FicheScreen, FicheTag, type FicheTone } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
+import { PillRow } from "@/components/request-kit";
 import { TradeShortcuts } from "@/components/trade-shortcuts";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
@@ -41,7 +40,7 @@ import { describeProjectPhoto } from "@/lib/photo-description";
 import { analyzeNeed } from "@/lib/project";
 import { useTrades } from "@/lib/trades";
 import { uploadBatch } from "@/lib/uploads";
-import { Button, Notice, Screen } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
@@ -58,12 +57,17 @@ const p = fr.search.proposals;
 // Icônes des cartes d'avantages, dans l'ordre des textes (comme sur le site).
 const FEATURE_ICONS = [Sparkles, Clock, ShieldCheck, BadgeCheck];
 
+/** Délai compris qui annonce une urgence : pastille orange, comme la maquette. */
+const URGENT = /urgen/i;
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
  * Saisie du projet (F-05) d'après la maquette « Recherche », comme sur le site : zone de saisie
- * avec trombone (photos, 10 au plus) et micro (dictée), aide progressive, raccourcis métiers et
- * avantages. L'analyse par l'IA crée le projet et pré-remplit ses critères (ADR 0012) ; l'écran
+ * avec photos (10 au plus) et micro (dictée), aide progressive, raccourcis métiers et avantages.
+ * Écran « Nette » (lot 12, maquette « SaisieApp ») : grand titre, grande carte de saisie en
+ * 18 points, « Compris : » en pastilles dans la carte, boutons ronds photo et dictée en bas de la
+ * carte, « Précisez : » en pastilles contour et « Trouver mon artisan » collé en bas. L'analyse par l'IA crée le projet et pré-remplit ses critères (ADR 0012) ; l'écran
  * animé reste affiché pendant l'analyse puis l'envoi des photos, avant la vérification des critères.
  * « Redemander un devis » (`artisan`, `depuis`, `nom`) : la demande ne part qu'à l'artisan d'un
  * chantier précédent (ADR 0198) ; le nom ne sert qu'au bandeau, le serveur vérifie le chantier commun.
@@ -133,19 +137,25 @@ export default function Recherche() {
   const [answered, setAnswered] = useState<string[]>([]);
   const understood =
     suggestion && description.trim().length >= SUGGESTION_MIN_LENGTH ? suggestion.understood : null;
+  // Pastilles de la maquette : métier en bleu clair, délai urgent en orange, le reste en gris.
   const understoodItems = understood
     ? [
         {
-          Icon: Wrench,
+          tone: "primary" as FicheTone,
           label: understood.trade
             ? (trades.find((t) => t.code === understood.trade)?.label ?? null)
             : null,
         },
-        { Icon: House, label: understood.room },
-        { Icon: MapPin, label: understood.city },
-        { Icon: Ruler, label: understood.surface },
-        { Icon: Clock, label: understood.timing },
-      ].filter((item): item is { Icon: typeof Wrench; label: string } => Boolean(item.label))
+        { tone: "neutral" as FicheTone, label: understood.room },
+        { tone: "neutral" as FicheTone, label: understood.city },
+        { tone: "neutral" as FicheTone, label: understood.surface },
+        {
+          tone: (understood.timing && URGENT.test(understood.timing)
+            ? "warning"
+            : "neutral") as FicheTone,
+          label: understood.timing,
+        },
+      ].filter((item): item is { tone: FicheTone; label: string } => Boolean(item.label))
     : [];
   const question =
     understood && suggestion?.question && !answered.includes(`${suggestion.base}|q`)
@@ -220,10 +230,13 @@ export default function Recherche() {
   const help = needHelpLevel(description);
   return (
     <View style={styles.page}>
-      <Screen header={<TopBar />}>
-        {/* Maquette « Recherche » : titre, accroche, zone de saisie avec trombone et micro. */}
+      <FicheScreen
+        footer={
+          <ActionSubmit label={fr.search.submit} icon={Search} disabled={!ready} onPress={submit} />
+        }
+      >
         <View style={styles.hero}>
-          <Text role="heading" style={styles.title}>
+          <Text role="heading" aria-level={1} style={styles.title}>
             {fr.search.titleStart} <Text style={styles.accent}>{fr.search.titleAccent}</Text>
           </Text>
           <View style={styles.tagline}>
@@ -235,7 +248,7 @@ export default function Recherche() {
         {failure && <Notice tone="error">{failure}</Notice>}
         <View style={[styles.box, focused && styles.boxFocused]}>
           {photos.length > 0 ? (
-            <View style={styles.boxPhotos} aria-label={fr.search.photos.count(photos.length)}>
+            <View aria-label={fr.search.photos.count(photos.length)}>
               <PhotoThumbnails
                 // La même photo peut être choisie deux fois : repérée par sa place dans la liste.
                 photos={photos.map((photo, i) => ({ key: String(i), uri: photo.uri }))}
@@ -261,6 +274,14 @@ export default function Recherche() {
             onBlur={() => setFocused(false)}
             style={styles.input}
           />
+          {understoodItems.length > 0 ? (
+            <View aria-live="polite" style={styles.understood}>
+              <Text style={styles.understoodLabel}>{u.title}</Text>
+              {understoodItems.map(({ tone, label }) => (
+                <FicheTag key={label} text={label} tone={tone} />
+              ))}
+            </View>
+          ) : null}
           <View style={styles.boxActions}>
             <Pressable
               role="button"
@@ -269,12 +290,12 @@ export default function Recherche() {
               disabled={photos.length >= MAX_PROJECT_PHOTOS}
               onPress={addPhotos}
               style={({ pressed }) => [
-                styles.attach,
+                styles.round,
                 photos.length >= MAX_PROJECT_PHOTOS && styles.disabled,
-                pressed && styles.pressed,
+                pressed && styles.roundPressed,
               ]}
             >
-              <Paperclip size={17} color={colors["muted-foreground"]} />
+              <Camera size={20} color={colors.foreground} />
             </Pressable>
             <DictationButton
               onText={(spoken) =>
@@ -302,7 +323,7 @@ export default function Recherche() {
                   pressed && styles.proposalPressed,
                 ]}
               >
-                <Search size={15} color={colors["subtle-foreground"]} />
+                <Search size={15} color={colors["muted-foreground"]} />
                 <Text style={styles.proposalText}>{proposal.text}</Text>
               </Pressable>
             ))}
@@ -326,12 +347,12 @@ export default function Recherche() {
           </Pressable>
         ) : null}
         {photoDraft?.step === "ready" ? (
-          <View aria-live="polite" style={styles.question}>
-            <View style={styles.understoodTitle}>
-              <Sparkles size={14} color={colors.primary} />
-              <Text style={styles.understoodTitleText}>{ph.fromPhoto}</Text>
+          <View aria-live="polite" style={styles.card}>
+            <View style={styles.cardTitle}>
+              <Sparkles size={14} color={colors["primary-strong"]} />
+              <Text style={styles.cardTitleText}>{ph.fromPhoto}</Text>
             </View>
-            <Text style={styles.questionText}>{photoDraft.description}</Text>
+            <Text style={styles.cardText}>{photoDraft.description}</Text>
             <Pressable
               role="button"
               onPress={() => {
@@ -340,7 +361,7 @@ export default function Recherche() {
               }}
               style={({ pressed }) => [styles.idea, styles.photoAdd, pressed && styles.pressed]}
             >
-              <Plus size={13} color={colors["primary-strong"]} />
+              <Plus size={15} color={colors.foreground} />
               <Text style={styles.ideaText}>{ph.add}</Text>
             </Pressable>
           </View>
@@ -359,52 +380,39 @@ export default function Recherche() {
             </Text>
           </View>
         ) : null}
-        {understoodItems.length > 0 ? (
-          <View aria-live="polite" style={styles.understood}>
-            <View style={styles.understoodTitle}>
-              <Sparkles size={13} color={colors["primary-strong"]} />
-              <Text style={styles.understoodTitleText}>{u.title}</Text>
-            </View>
-            {understoodItems.map(({ Icon, label }) => (
-              <View key={label} style={styles.badge}>
-                <Icon size={13} color={colors["primary-strong"]} />
-                <Text style={styles.badgeText}>{label}</Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
         {question ? (
-          <View role="group" aria-label={question.label} style={styles.question}>
-            <Text style={styles.questionText}>{question.label}</Text>
-            <View style={styles.answers}>
+          <View role="group" aria-label={question.label} style={styles.card}>
+            <Text style={styles.cardText}>{question.label}</Text>
+            <PillRow>
               {question.answers.map((answer) => (
                 <Pressable
                   key={answer.label}
                   role="button"
                   onPress={() => answerQuestion(answer)}
-                  style={({ pressed }) => [styles.answer, pressed && styles.proposalPressed]}
+                  style={({ pressed }) => [styles.idea, pressed && styles.ideaPressed]}
                 >
-                  <Text style={styles.answerText}>{answer.label}</Text>
+                  <Text style={styles.ideaText}>{answer.label}</Text>
                 </Pressable>
               ))}
-            </View>
+            </PillRow>
           </View>
         ) : null}
         {ideas.length > 0 ? (
           <View role="group" aria-label={s.ideasAria} style={styles.ideas}>
             <Text style={styles.ideasLabel}>{s.ideas}</Text>
-            {ideas.map((idea) => (
-              <Pressable
-                key={idea.label}
-                role="button"
-                aria-label={s.addIdea(idea.label)}
-                onPress={() => addIdea(idea)}
-                style={({ pressed }) => [styles.idea, pressed && styles.pressed]}
-              >
-                <Plus size={13} color={colors["primary-strong"]} />
-                <Text style={styles.ideaText}>{idea.label}</Text>
-              </Pressable>
-            ))}
+            <PillRow>
+              {ideas.map((idea) => (
+                <Pressable
+                  key={idea.label}
+                  role="button"
+                  aria-label={s.addIdea(idea.label)}
+                  onPress={() => addIdea(idea)}
+                  style={({ pressed }) => [styles.idea, pressed && styles.ideaPressed]}
+                >
+                  <Text style={styles.ideaText}>{idea.label}</Text>
+                </Pressable>
+              ))}
+            </PillRow>
           </View>
         ) : null}
         <View aria-live="polite" style={styles.help}>
@@ -429,23 +437,22 @@ export default function Recherche() {
             onToggle={(code) => setTrade((current) => (current === code ? null : code))}
           />
         )}
-        <Button label={fr.search.submit} icon={Search} disabled={!ready} onPress={submit} />
         <Text style={styles.privacy}>{fr.search.privacy}</Text>
         <View style={styles.features}>
           {fr.search.features.map((feature, i) => {
             const Icon = FEATURE_ICONS[i] ?? Sparkles;
             return (
               <View key={feature.title} style={styles.feature}>
-                <View style={styles.featureHead}>
-                  <Icon size={16} color={colors.primary} />
+                <IconSquare icon={Icon} tone="primary" size={40} />
+                <View style={styles.featureText}>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureBody}>{feature.body}</Text>
                 </View>
-                <Text style={styles.featureBody}>{feature.body}</Text>
               </View>
             );
           })}
         </View>
-      </Screen>
+      </FicheScreen>
       {phase !== "idle" && <AnalysisScreen photos={phase === "photos"} />}
     </View>
   );
@@ -453,58 +460,63 @@ export default function Recherche() {
 
 const styles = StyleSheet.create({
   page: { flex: 1 },
-  hero: { alignItems: "center", gap: spacing(2), paddingTop: spacing(2) },
+  hero: { gap: spacing(2) },
   title: {
-    fontFamily: font.medium,
-    fontSize: 26,
-    lineHeight: 32,
-    textAlign: "center",
+    fontFamily: font.display,
+    fontSize: 32,
+    lineHeight: 34,
+    letterSpacing: -0.96,
     color: colors.foreground,
   },
   accent: { color: colors.primary },
   tagline: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
-  taglineText: { fontFamily: font.regular, fontSize: 14, color: colors["primary-strong"] },
+  taglineText: { fontFamily: font.medium, fontSize: 14, color: colors["primary-strong"] },
   box: {
+    gap: spacing(3),
+    padding: spacing(4),
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    boxShadow: "0 2px 10px rgba(17, 23, 40, 0.06)",
   },
   boxFocused: { borderColor: colors.primary },
-  boxPhotos: { paddingHorizontal: spacing(4), paddingTop: spacing(4) },
+  // Texte en 18 points (pas de zoom sur iPhone, au-delà de 16).
   input: {
     minHeight: 110,
-    paddingHorizontal: spacing(4),
-    paddingTop: spacing(4),
-    paddingBottom: spacing(2),
+    padding: 0,
+    // La carte porte déjà le contour bleu de saisie (version web : pas de second contour).
+    outlineWidth: 0,
     fontFamily: font.regular,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 18,
+    lineHeight: 26,
     color: colors.foreground,
     textAlignVertical: "top",
   },
+  understood: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 },
+  understoodLabel: { fontFamily: font.bold, fontSize: 12, color: colors["muted-foreground"] },
   boxActions: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing(3),
-    paddingHorizontal: spacing(3),
-    paddingBottom: spacing(3),
+    gap: spacing(2),
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  attach: {
-    width: 36,
-    height: 36,
+  round: {
+    width: 44,
+    height: 44,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
+  roundPressed: { backgroundColor: colors["primary-soft"] },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.8 },
   proposals: {
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -530,8 +542,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing(3),
-    borderRadius: radius.card,
-    backgroundColor: colors["primary-softer"],
+    borderRadius: 16,
+    backgroundColor: colors["primary-soft"],
     paddingHorizontal: spacing(4),
     paddingVertical: spacing(3),
   },
@@ -540,65 +552,56 @@ const styles = StyleSheet.create({
     fontFamily: font.regular,
     fontSize: 14,
     lineHeight: 20,
-    color: colors["muted-foreground"],
+    color: colors.label,
   },
-  completionEllipsis: { color: colors["subtle-foreground"] },
+  completionEllipsis: { color: colors["muted-foreground"] },
   completionAction: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
-  completionActionText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
-  understood: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(1.5) },
-  understoodTitle: { flexDirection: "row", alignItems: "center", gap: spacing(1) },
-  understoodTitleText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(1),
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-    backgroundColor: colors["primary-soft"],
+  completionActionText: {
+    fontFamily: font.semibold,
+    fontSize: 13,
+    color: colors["primary-strong"],
   },
-  badgeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
-  question: {
-    gap: spacing(2.5),
-    padding: spacing(3.5),
-    borderRadius: 20,
+  card: {
+    gap: spacing(3),
+    padding: spacing(4),
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  questionText: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  answers: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
-  answer: {
-    minHeight: 36,
-    justifyContent: "center",
-    paddingHorizontal: spacing(3.5),
-    borderRadius: radius.pill,
+  cardTitle: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
+  cardTitleText: { fontFamily: font.bold, fontSize: 13, color: colors["primary-strong"] },
+  cardText: {
+    fontFamily: font.semibold,
+    fontSize: 15,
+    lineHeight: 21,
+    color: colors.foreground,
+  },
+  photoAdd: { alignSelf: "flex-start" },
+  ideas: { gap: spacing(2) },
+  ideasLabel: { fontFamily: font.bold, fontSize: 13, color: colors["muted-foreground"] },
+  // Pastilles contour de la maquette (« Précisez : »).
+  idea: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(1.5),
+    minHeight: 40,
+    maxWidth: "100%",
+    paddingHorizontal: 14,
+    paddingVertical: spacing(1.5),
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
   },
-  answerText: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  photoAdd: { alignSelf: "flex-start" },
-  ideas: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
-  ideasLabel: { fontFamily: font.medium, fontSize: 12, color: colors["muted-foreground"] },
-  idea: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing(1),
-    minHeight: 34,
-    paddingHorizontal: spacing(3),
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  ideaText: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
+  ideaPressed: { backgroundColor: colors["primary-softer"] },
+  ideaText: { flexShrink: 1, fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
   help: { flexDirection: "row", alignItems: "flex-start", gap: spacing(1.5) },
   helpText: {
     flex: 1,
     fontFamily: font.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     color: colors["muted-foreground"],
   },
   helpEnough: { color: colors["primary-strong"] },
@@ -606,20 +609,21 @@ const styles = StyleSheet.create({
     fontFamily: font.regular,
     fontSize: 12,
     lineHeight: 17,
-    textAlign: "center",
     color: colors["muted-foreground"],
   },
-  features: { gap: spacing(3), paddingTop: spacing(2) },
+  features: { gap: spacing(2.5) },
   feature: {
-    gap: spacing(1.5),
-    borderRadius: radius.card,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(3),
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     padding: spacing(4),
   },
-  featureHead: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
-  featureTitle: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  featureText: { flex: 1, gap: 2 },
+  featureTitle: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
   featureBody: {
     fontFamily: font.regular,
     fontSize: 13,

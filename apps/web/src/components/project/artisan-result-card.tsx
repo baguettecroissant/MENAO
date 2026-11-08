@@ -70,12 +70,12 @@ export function ArtisanResultCard({
   const Heading = headingLevel === 4 ? "h4" : headingLevel === 3 ? "h3" : "h2";
   return (
     <li
-      className={`group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/30 ${className}`}
+      className={`group relative flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-raised has-[:checked]:border-primary has-[:checked]:ring-2 has-[:checked]:ring-primary/30 in-[.app-nette]:has-[:checked]:border-foreground in-[.app-nette]:has-[:checked]:ring-1 in-[.app-nette]:has-[:checked]:ring-foreground ${className}`}
     >
       <ArtisanPhoto url={photoUrl} name={name} className="aspect-[16/10] w-full" />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex flex-col gap-1">
-          <Heading className="text-lg font-medium">
+          <Heading className="text-lg font-medium in-[.app-nette]:font-display in-[.app-nette]:font-bold">
             {href ? (
               <Link
                 href={href as Route}
@@ -137,7 +137,7 @@ export function ArtisanResultCard({
             </p>
           )}
           {selection === "selectable" && (
-            <label className="relative inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-button border border-primary text-sm font-medium text-primary-strong transition-colors hover:bg-primary-softer has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/25">
+            <label className="relative inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-button border border-primary text-sm font-medium text-primary-strong transition-colors hover:bg-primary-softer has-[:checked]:bg-primary has-[:checked]:text-primary-foreground in-[.app-nette]:border-border-strong in-[.app-nette]:font-semibold in-[.app-nette]:text-foreground in-[.app-nette]:hover:bg-background in-[.app-nette]:has-[:checked]:border-foreground in-[.app-nette]:has-[:checked]:bg-foreground in-[.app-nette]:has-[:checked]:text-white has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/25">
               <input
                 type="checkbox"
                 name={lotId ? "lot" : "artisan"}

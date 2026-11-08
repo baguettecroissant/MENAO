@@ -277,7 +277,7 @@ export function NeedForm({
           }}
         >
           <div
-            className={`rounded-[1.25rem] border bg-surface text-left shadow-card transition-[border-color,box-shadow] ${
+            className={`rounded-[1.375rem] border bg-surface text-left shadow-[0_12px_32px_rgb(17_23_40/0.06)] transition-[border-color,box-shadow] ${
               active ? "border-primary shadow-focus" : "border-border"
             }`}
           >
@@ -378,12 +378,12 @@ export function NeedForm({
                 aria-activedescendant={
                   showProposals && highlight >= 0 ? `need-proposal-${highlight}` : undefined
                 }
-                className="relative block min-h-24 w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed text-foreground placeholder:text-subtle-foreground focus:outline-none sm:min-h-20"
+                className="relative block min-h-36 w-full resize-none bg-transparent px-5 pt-5 pb-2 text-[1.0625rem] leading-relaxed text-foreground placeholder:text-subtle-foreground focus:outline-none sm:min-h-28 sm:text-lg"
               />
             </div>
-            <div className="flex items-center justify-between gap-3 px-3 pb-3">
+            <div className="flex items-center justify-between gap-3 border-t border-border px-3.5 py-3">
               <label
-                className={`inline-flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/20 ${
+                className={`inline-flex size-11 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/20 ${
                   canAddPhotos ? "cursor-pointer" : "cursor-not-allowed opacity-50"
                 }`}
                 title={t.photos.hint}

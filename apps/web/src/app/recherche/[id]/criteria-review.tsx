@@ -215,264 +215,292 @@ export function CriteriaReview({
     saved.budget ? fr.search.budgets[saved.budget] : null,
   ].filter((v): v is string => Boolean(v));
 
+  // Refonte « Nette » (ADR 0257) : les blocs à gauche ; le résumé et la recherche à droite.
   return (
-    <div className="flex flex-col gap-4">
-      {status && <Alert tone={status.tone}>{status.text}</Alert>}
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="flex min-w-0 flex-col gap-4">
+        {status && <Alert tone={status.tone}>{status.text}</Alert>}
 
-      <EditableCard
-        icon={<FileText />}
-        title={t.yourText}
-        description={t.text.description}
-        summary={<DescriptionText text={description} />}
-        {...cardProps("description")}
-        onSave={saveDescription}
-        savingLabel={t.text.analyzing}
-      >
-        <div className="flex flex-col gap-2">
-          <label htmlFor="projectText" className="sr-only">
-            {t.text.label}
-          </label>
-          <textarea
-            id="projectText"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={6}
-            maxLength={PROJECT_TEXT_MAX_LENGTH}
-            className={`${inputClasses} min-h-36 resize-y bg-surface py-3 leading-relaxed`}
-          />
-          <Hint>{t.text.help}</Hint>
-        </div>
-      </EditableCard>
-
-      <section
-        aria-label={t.trade.title}
-        className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
-      >
-        <SectionHeading icon={<User />} title={t.trade.title} description={t.trade.description} />
-        <div className="mt-4 flex flex-col gap-2">
-          <label htmlFor="tradeCode" className="sr-only">
-            {t.trade.label}
-          </label>
-          <Select
-            id="tradeCode"
-            value={saved.tradeCode ?? ""}
-            disabled={pending}
-            onChange={(e) => changeTrade(e.target.value || null)}
-          >
-            <option value="">{t.trade.placeholder}</option>
-            {trades.map((trade) => (
-              <option key={trade.code} value={trade.code}>
-                {trade.label}
-              </option>
-            ))}
-          </Select>
-          <Hint>{t.trade.help}</Hint>
-        </div>
-        {editing === null && error && (
-          <div className="mt-3">
-            <Alert tone="error">{error}</Alert>
-          </div>
-        )}
-      </section>
-
-      {saved.tradeCode && (
-        <LotsCard
-          projectId={projectId}
-          mainTrade={saved.tradeCode}
-          trades={trades}
-          suggested={suggestedLots}
-          initial={lotTrades}
-        />
-      )}
-
-      <EditableCard
-        icon={<Wrench />}
-        title={t.site.title}
-        description={t.site.description}
-        summary={siteTags.length ? siteTags.map((tag) => <Tag key={tag}>{tag}</Tag>) : null}
-        {...cardProps("site")}
-      >
-        <Subsection title={t.site.lieu} description={t.site.lieuHelp}>
-          <label htmlFor="lieuType" className="sr-only">
-            {t.site.lieu}
-          </label>
-          <Select
-            id="lieuType"
-            value={draft.lieuType ?? ""}
-            onChange={(e) =>
-              setDraft((d) => ({
-                ...d,
-                lieuType: (e.target.value || null) as Criteria["lieuType"],
-              }))
-            }
-          >
-            <option value="">{t.site.lieuPlaceholder}</option>
-            {LIEU_TYPES.map((lieu) => (
-              <option key={lieu} value={lieu}>
-                {fr.search.lieux[lieu]}
-              </option>
-            ))}
-          </Select>
-        </Subsection>
-        <Subsection>
-          <TokenPicker
-            label={t.site.rooms}
-            description={t.site.roomsHelp}
-            placeholder={t.site.roomsFilter}
-            options={rooms}
-            selected={draft.roomCodes}
-            onChange={(roomCodes) => setDraft((d) => ({ ...d, roomCodes }))}
-          />
-        </Subsection>
-        <Subsection>
-          {draft.tradeCode ? (
-            <TokenPicker
-              label={t.site.works}
-              description={t.site.worksHelp}
-              placeholder={t.site.worksFilter}
-              options={workTypes.filter((w) => w.trade === draft.tradeCode)}
-              selected={draft.workTypeCodes}
-              onChange={(workTypeCodes) => setDraft((d) => ({ ...d, workTypeCodes }))}
+        <EditableCard
+          icon={<FileText />}
+          title={t.yourText}
+          description={t.text.description}
+          summary={<DescriptionText text={description} />}
+          {...cardProps("description")}
+          onSave={saveDescription}
+          savingLabel={t.text.analyzing}
+        >
+          <div className="flex flex-col gap-2">
+            <label htmlFor="projectText" className="sr-only">
+              {t.text.label}
+            </label>
+            <textarea
+              id="projectText"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={6}
+              maxLength={PROJECT_TEXT_MAX_LENGTH}
+              className={`${inputClasses} min-h-36 resize-y bg-surface py-3 leading-relaxed`}
             />
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-medium">{t.site.works}</p>
-              <Hint>{t.site.worksNeedTrade}</Hint>
+            <Hint>{t.text.help}</Hint>
+          </div>
+        </EditableCard>
+
+        <section
+          aria-label={t.trade.title}
+          className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
+        >
+          <SectionHeading icon={<User />} title={t.trade.title} description={t.trade.description} />
+          <div className="mt-4 flex flex-col gap-2">
+            <label htmlFor="tradeCode" className="sr-only">
+              {t.trade.label}
+            </label>
+            <Select
+              id="tradeCode"
+              value={saved.tradeCode ?? ""}
+              disabled={pending}
+              onChange={(e) => changeTrade(e.target.value || null)}
+            >
+              <option value="">{t.trade.placeholder}</option>
+              {trades.map((trade) => (
+                <option key={trade.code} value={trade.code}>
+                  {trade.label}
+                </option>
+              ))}
+            </Select>
+            <Hint>{t.trade.help}</Hint>
+          </div>
+          {editing === null && error && (
+            <div className="mt-3">
+              <Alert tone="error">{error}</Alert>
             </div>
           )}
-        </Subsection>
-        <Subsection title={t.site.surface} description={t.site.surfaceHelp}>
-          <label htmlFor="surface" className="sr-only">
-            {t.site.surface}
-          </label>
-          <Select
-            id="surface"
-            value={draft.surface ?? ""}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, surface: (e.target.value || null) as Criteria["surface"] }))
-            }
-          >
-            <option value="">{t.site.surfacePlaceholder}</option>
-            {SURFACE_TRANCHES.map((s) => (
-              <option key={s} value={s}>
-                {fr.search.surfaces[s]}
-              </option>
-            ))}
-          </Select>
-        </Subsection>
-        <Subsection title={t.site.budget} description={t.site.budgetHelp}>
-          <label htmlFor="budget" className="sr-only">
-            {t.site.budget}
-          </label>
-          <Select
-            id="budget"
-            value={draft.budget ?? ""}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, budget: (e.target.value || null) as Criteria["budget"] }))
-            }
-          >
-            <option value="">{t.site.budgetPlaceholder}</option>
-            {BUDGET_TRANCHES.map((b) => (
-              <option key={b} value={b}>
-                {fr.search.budgets[b]}
-              </option>
-            ))}
-          </Select>
-        </Subsection>
-      </EditableCard>
+        </section>
 
-      <EditableCard
-        icon={<MapPin />}
-        title={t.address.title}
-        description={t.address.description}
-        summary={
-          saved.ville
-            ? [
-                <Tag key="ville">
-                  {saved.ville.nom}
-                  {saved.ville.codePostal ? ` (${saved.ville.codePostal})` : ""}
-                </Tag>,
-                saved.adresse ? <Tag key="adresse">{saved.adresse.label}</Tag> : null,
-              ]
-            : null
-        }
-        {...cardProps("address")}
-      >
-        <AddressEditor draft={draft} setDraft={setDraft} />
-      </EditableCard>
-
-      <EditableCard
-        icon={<Calendar />}
-        title={t.date.title}
-        description={t.date.description}
-        summary={
-          <Tag>
-            {saved.dateMode === "date" && saved.dateSouhaitee
-              ? t.date.startsOn(dayFormat.format(new Date(`${saved.dateSouhaitee}T00:00:00Z`)))
-              : saved.dateMode === "des_que_possible"
-                ? t.date.asap
-                : t.date.unknown}
-          </Tag>
-        }
-        {...cardProps("date")}
-      >
-        <Subsection>
-          <RadioGroup
-            legend={t.date.legend}
-            hideLegend
-            name="dateMode"
-            value={draft.dateMode}
-            onChange={(v) => setDraft((d) => ({ ...d, dateMode: v as Criteria["dateMode"] }))}
-            options={[
-              { value: "des_que_possible", label: t.date.asap },
-              { value: "date", label: t.date.precise },
-              { value: "inconnue", label: t.date.unknown },
-            ]}
-            renderSelected={(value) =>
-              value === "date" ? (
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="dateSouhaitee" className="text-sm font-medium">
-                    {t.date.pick}
-                  </label>
-                  <input
-                    id="dateSouhaitee"
-                    type="date"
-                    min={today}
-                    value={draft.dateSouhaitee ?? ""}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, dateSouhaitee: e.target.value || null }))
-                    }
-                    className={`${inputClasses} bg-surface`}
-                  />
-                </div>
-              ) : null
-            }
+        {saved.tradeCode && (
+          <LotsCard
+            projectId={projectId}
+            mainTrade={saved.tradeCode}
+            trades={trades}
+            suggested={suggestedLots}
+            initial={lotTrades}
           />
-        </Subsection>
-      </EditableCard>
+        )}
 
-      <PhotosCard
-        projectId={projectId}
-        photos={photos}
-        advise={advisePhotos}
-        onChange={() => router.refresh()}
-        {...cardProps("photos")}
-      />
+        <EditableCard
+          icon={<Wrench />}
+          title={t.site.title}
+          description={t.site.description}
+          summary={siteTags.length ? siteTags.map((tag) => <Tag key={tag}>{tag}</Tag>) : null}
+          {...cardProps("site")}
+        >
+          <Subsection title={t.site.lieu} description={t.site.lieuHelp}>
+            <label htmlFor="lieuType" className="sr-only">
+              {t.site.lieu}
+            </label>
+            <Select
+              id="lieuType"
+              value={draft.lieuType ?? ""}
+              onChange={(e) =>
+                setDraft((d) => ({
+                  ...d,
+                  lieuType: (e.target.value || null) as Criteria["lieuType"],
+                }))
+              }
+            >
+              <option value="">{t.site.lieuPlaceholder}</option>
+              {LIEU_TYPES.map((lieu) => (
+                <option key={lieu} value={lieu}>
+                  {fr.search.lieux[lieu]}
+                </option>
+              ))}
+            </Select>
+          </Subsection>
+          <Subsection>
+            <TokenPicker
+              label={t.site.rooms}
+              description={t.site.roomsHelp}
+              placeholder={t.site.roomsFilter}
+              options={rooms}
+              selected={draft.roomCodes}
+              onChange={(roomCodes) => setDraft((d) => ({ ...d, roomCodes }))}
+            />
+          </Subsection>
+          <Subsection>
+            {draft.tradeCode ? (
+              <TokenPicker
+                label={t.site.works}
+                description={t.site.worksHelp}
+                placeholder={t.site.worksFilter}
+                options={workTypes.filter((w) => w.trade === draft.tradeCode)}
+                selected={draft.workTypeCodes}
+                onChange={(workTypeCodes) => setDraft((d) => ({ ...d, workTypeCodes }))}
+              />
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm font-medium">{t.site.works}</p>
+                <Hint>{t.site.worksNeedTrade}</Hint>
+              </div>
+            )}
+          </Subsection>
+          <Subsection title={t.site.surface} description={t.site.surfaceHelp}>
+            <label htmlFor="surface" className="sr-only">
+              {t.site.surface}
+            </label>
+            <Select
+              id="surface"
+              value={draft.surface ?? ""}
+              onChange={(e) =>
+                setDraft((d) => ({
+                  ...d,
+                  surface: (e.target.value || null) as Criteria["surface"],
+                }))
+              }
+            >
+              <option value="">{t.site.surfacePlaceholder}</option>
+              {SURFACE_TRANCHES.map((s) => (
+                <option key={s} value={s}>
+                  {fr.search.surfaces[s]}
+                </option>
+              ))}
+            </Select>
+          </Subsection>
+          <Subsection title={t.site.budget} description={t.site.budgetHelp}>
+            <label htmlFor="budget" className="sr-only">
+              {t.site.budget}
+            </label>
+            <Select
+              id="budget"
+              value={draft.budget ?? ""}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, budget: (e.target.value || null) as Criteria["budget"] }))
+              }
+            >
+              <option value="">{t.site.budgetPlaceholder}</option>
+              {BUDGET_TRANCHES.map((b) => (
+                <option key={b} value={b}>
+                  {fr.search.budgets[b]}
+                </option>
+              ))}
+            </Select>
+          </Subsection>
+        </EditableCard>
 
-      <div className="mt-2 flex flex-col items-end gap-2">
+        <EditableCard
+          icon={<MapPin />}
+          title={t.address.title}
+          description={t.address.description}
+          summary={
+            saved.ville
+              ? [
+                  <Tag key="ville">
+                    {saved.ville.nom}
+                    {saved.ville.codePostal ? ` (${saved.ville.codePostal})` : ""}
+                  </Tag>,
+                  saved.adresse ? <Tag key="adresse">{saved.adresse.label}</Tag> : null,
+                ]
+              : null
+          }
+          {...cardProps("address")}
+        >
+          <AddressEditor draft={draft} setDraft={setDraft} />
+        </EditableCard>
+
+        <EditableCard
+          icon={<Calendar />}
+          title={t.date.title}
+          description={t.date.description}
+          summary={
+            <Tag>
+              {saved.dateMode === "date" && saved.dateSouhaitee
+                ? t.date.startsOn(dayFormat.format(new Date(`${saved.dateSouhaitee}T00:00:00Z`)))
+                : saved.dateMode === "des_que_possible"
+                  ? t.date.asap
+                  : t.date.unknown}
+            </Tag>
+          }
+          {...cardProps("date")}
+        >
+          <Subsection>
+            <RadioGroup
+              legend={t.date.legend}
+              hideLegend
+              name="dateMode"
+              value={draft.dateMode}
+              onChange={(v) => setDraft((d) => ({ ...d, dateMode: v as Criteria["dateMode"] }))}
+              options={[
+                { value: "des_que_possible", label: t.date.asap },
+                { value: "date", label: t.date.precise },
+                { value: "inconnue", label: t.date.unknown },
+              ]}
+              renderSelected={(value) =>
+                value === "date" ? (
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="dateSouhaitee" className="text-sm font-medium">
+                      {t.date.pick}
+                    </label>
+                    <input
+                      id="dateSouhaitee"
+                      type="date"
+                      min={today}
+                      value={draft.dateSouhaitee ?? ""}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, dateSouhaitee: e.target.value || null }))
+                      }
+                      className={`${inputClasses} bg-surface`}
+                    />
+                  </div>
+                ) : null
+              }
+            />
+          </Subsection>
+        </EditableCard>
+
+        <PhotosCard
+          projectId={projectId}
+          photos={photos}
+          advise={advisePhotos}
+          onChange={() => router.refresh()}
+          {...cardProps("photos")}
+        />
+      </div>
+      <aside className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6 lg:sticky lg:top-24">
+        <h2 className="text-[1.0625rem]">{t.summaryTitle}</h2>
+        <dl className="flex flex-col divide-y divide-border border-y border-border text-sm">
+          <div className="flex justify-between gap-3 py-2.5">
+            <dt className="text-muted-foreground">{t.trade.title}</dt>
+            <dd className="text-right font-semibold">
+              {saved.tradeCode ? label(trades, saved.tradeCode) : "—"}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3 py-2.5">
+            <dt className="text-muted-foreground">{t.summaryPlace}</dt>
+            <dd className="text-right font-semibold">{saved.ville?.nom ?? "—"}</dd>
+          </div>
+        </dl>
+        {siteTags.length > 0 && (
+          <ul className="flex flex-wrap gap-1.5">
+            {siteTags.map((tag) => (
+              <li
+                key={tag}
+                className="rounded-chip bg-background px-2.5 py-1 text-xs font-semibold text-label"
+              >
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )}
         <Button
           type="button"
           size="lg"
-          block={false}
           onClick={search}
           disabled={!ready || editing !== null || pending}
-          className="w-full sm:w-auto"
         >
           {t.submit}
           <Search aria-hidden="true" className="size-4" />
         </Button>
         {!ready && <p className="text-sm text-muted-foreground">{t.submitHint}</p>}
-      </div>
+      </aside>
     </div>
   );
 }

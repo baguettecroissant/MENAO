@@ -187,8 +187,9 @@ export default async function SendRequestPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[17.5rem_1fr]">
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
+      {/* Refonte « Nette » (ADR 0257) : le contenu à gauche, le résumé à droite. */}
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:order-last lg:self-start">
           <SelectedArtisansCard
             editHref={`/recherche/${id}/artisans`}
             artisans={[
@@ -211,16 +212,18 @@ export default async function SendRequestPage({
         <div className="flex min-w-0 flex-col gap-6">
           <Link
             href={`/recherche/${id}/artisans` as Route}
-            className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft aria-hidden="true" className="size-4" />
             {t.back}
           </Link>
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+            <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
               {anonymous ? t.accountTitle : t.title(names)}
             </h1>
-            <p className="text-sm text-muted-foreground">{anonymous ? t.accountIntro : t.intro}</p>
+            <p className="text-[0.9375rem] text-label sm:text-base">
+              {anonymous ? t.accountIntro : t.intro}
+            </p>
           </div>
           {form}
         </div>

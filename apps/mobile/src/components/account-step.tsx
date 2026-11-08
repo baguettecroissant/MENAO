@@ -3,12 +3,14 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OAuthButtons } from "@/components/oauth-buttons";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { CardHeading, FicheCard } from "@/components/pro/fiche-kit";
 import { SignInForm } from "@/components/sign-in-form";
 import { SignUpForm } from "@/components/sign-up-form";
 import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { prepareProviderSignIn, signInForRequest, signUpForRequest } from "@/lib/requests";
-import { Body, Button, Card, Notice, Title } from "@/ui";
+import { Body, Button, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const r = fr.request;
@@ -19,7 +21,8 @@ const r = fr.request;
  * déjà un espace MENAO ? ». Le projet de la session anonyme est rattaché au compte. Après
  * l'inscription, le lien de confirmation arrive par e-mail ; on se connecte ensuite ici pour
  * envoyer la demande. Au-dessus, « Continuer avec Google / Apple » (ADR 0108) : la demande reprend
- * après la connexion, ou après « Finaliser mon compte » pour un nouveau compte.
+ * après la connexion, ou après « Finaliser mon compte » pour un nouveau compte. Grand titre et
+ * cartes « Nette » (lot 12).
  */
 export function AccountStep({
   projectId,
@@ -36,8 +39,7 @@ export function AccountStep({
 
   return (
     <>
-      <Title>{r.accountTitle}</Title>
-      <Body muted>{r.accountIntro}</Body>
+      <PageHead title={r.accountTitle} lead={r.accountIntro} />
       {emailSent && <Notice tone="success">{r.checkEmail}</Notice>}
       <OAuthButtons
         prepare={() => prepareProviderSignIn(projectId, artisanIds, lots)}
@@ -62,15 +64,13 @@ export function AccountStep({
           }}
         />
       ) : (
-        <Card>
-          <Text role="heading" style={styles.heading}>
-            {r.signInTitle}
-          </Text>
+        <FicheCard padding={4.5} gap={3}>
+          <CardHeading title={r.signInTitle} />
           <SignInForm
             submitLabel={r.signInSubmit}
             onSubmit={(input) => signInForRequest(projectId, input)}
           />
-        </Card>
+        </FicheCard>
       )}
       <View style={styles.switch}>
         <Text style={styles.switchTitle}>
@@ -88,14 +88,11 @@ export function AccountStep({
 }
 
 const styles = StyleSheet.create({
-  heading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
   switch: {
     gap: theme.spacing(2.5),
     borderRadius: theme.radius.card,
-    borderWidth: 1,
-    borderColor: theme.colors["primary-soft"],
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing(4),
+    backgroundColor: theme.colors["primary-soft"],
+    padding: theme.spacing(4.5),
   },
-  switchTitle: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors.foreground },
+  switchTitle: { fontFamily: theme.font.semibold, fontSize: 15, color: theme.colors.foreground },
 });

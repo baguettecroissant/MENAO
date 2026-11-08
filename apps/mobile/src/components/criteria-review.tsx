@@ -1,23 +1,20 @@
 import { MAX_PROJECT_LOTS, parisToday } from "@menao/core";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import {
-  CalendarDays,
-  type LucideIcon,
-  MapPin,
-  Pencil,
-  Search,
-  Sparkles,
-  UserRound,
-  Users,
-  Wrench,
-} from "lucide-react-native";
+import { Minus, Pencil, Plus, Search } from "lucide-react-native";
 import { type ReactNode, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
+import { ActionScreen, ActionSubmit, RadioCards } from "@/components/pro/action-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheLink,
+  FicheTag,
+} from "@/components/pro/fiche-kit";
 import { ProjectPhotosCard } from "@/components/project-photos-card";
-import { RadioGroup } from "@/components/radio-group";
-import { TopBar } from "@/components/top-bar";
+import { PillRow, SelectPill } from "@/components/request-kit";
 import { fr } from "@/i18n/fr";
 import { formatLongDate, fromIsoDate, toIsoDate } from "@/lib/dates";
 import { searchAddresses, searchCommunes } from "@/lib/geo";
@@ -29,8 +26,10 @@ import {
   type ProjectPhoto,
 } from "@/lib/project";
 import { useReferentials } from "@/lib/referentials";
-import { Body, Button, Card, Chip, LinkText, Notice, Screen } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+
+const { colors, font, spacing } = theme;
 
 const r = fr.review;
 const LIEUX = ["appartement", "maison", "jardin", "entreprise"] as const;
@@ -51,6 +50,8 @@ type Section = "trade" | "site" | "address" | "date";
  * se fait dans la carte (Annuler / Enregistrer). Métier et travaux, chantier, adresse (ville puis
  * adresse exacte de cette ville), date de début, photos. « Trouver l'artisan idéal » enregistre le
  * tout, vérifié par la base (métier et ville obligatoires).
+ * Écran « Nette » (lot 12, maquette « CriteresNette » transposée) : grand titre, rubriques en
+ * cartes, choix en pastilles (bleu nuit avec coche une fois choisis) et bouton collé en bas.
  */
 export function CriteriaReview({
   project,
@@ -162,154 +163,162 @@ export function CriteriaReview({
       : r.dateModes[criteria.dateMode ?? "des_que_possible"];
 
   return (
-    <Screen header={<TopBar title={r.title} />}>
-      <Body muted>{project.analyzed ? r.intro : r.noAnalysis}</Body>
+    <ActionScreen
+      title={r.title}
+      lead={project.analyzed ? r.intro : r.noAnalysis}
+      footer={
+        <>
+          {failure && <Notice tone="error">{failure}</Notice>}
+          <ActionSubmit
+            label={r.submit}
+            icon={Search}
+            onPress={submit}
+            loading={saving}
+            disabled={!ready}
+            note={editing !== null ? r.editing : !ready ? r.submitHint : undefined}
+          />
+        </>
+      }
+    >
       {project.lowConfidence && <Notice tone="info">{r.lowConfidence}</Notice>}
       {photosFailed && <Notice tone="error">{fr.search.errors.photos}</Notice>}
 
-      <Card tone="soft">
-        <View style={styles.cardTitle}>
-          <Sparkles size={16} color={theme.colors.primary} />
-          <Text style={styles.heading}>{r.yourText}</Text>
-        </View>
+      <FicheCard padding={4.5} gap={2.5}>
+        <CardHeading title={r.yourText} />
         <Text style={styles.description} numberOfLines={expanded ? undefined : 4}>
           {project.description}
         </Text>
         {project.description.length > 180 && (
-          <LinkText label={expanded ? r.less : r.more} onPress={() => setExpanded(!expanded)} />
+          <Pressable role="button" hitSlop={8} onPress={() => setExpanded(!expanded)}>
+            <Text style={styles.link}>{expanded ? r.less : r.more}</Text>
+          </Pressable>
         )}
-      </Card>
+      </FicheCard>
 
       <EditableCard
-        icon={UserRound}
         title={r.trade}
         help={r.tradeHelp}
         summary={criteria.tradeCode ? [labelOf(trades, criteria.tradeCode)] : []}
         {...card("trade")}
       >
-        <View style={styles.chips}>
+        <PillRow>
           {trades.map((t) => (
-            <Chip
+            <SelectPill
               key={t.code}
+              single
               label={t.label}
               selected={draft.tradeCode === t.code}
               onPress={() => changeTrade(t.code)}
             />
           ))}
-        </View>
+        </PillRow>
         <Text style={styles.label}>{r.works}</Text>
         {draft.tradeCode ? (
-          <View style={styles.chips}>
+          <PillRow>
             {tradeWorks.map((w) => (
-              <Chip
+              <SelectPill
                 key={w.code}
                 label={w.label}
                 selected={(draft.workTypeCodes ?? []).includes(w.code)}
                 onPress={() => set({ workTypeCodes: toggle(draft.workTypeCodes ?? [], w.code) })}
               />
             ))}
-          </View>
+          </PillRow>
         ) : (
-          <Body muted>{r.worksNeedTrade}</Body>
+          <Text style={styles.muted}>{r.worksNeedTrade}</Text>
         )}
       </EditableCard>
 
       {criteria.tradeCode ? (
-        <Card>
-          <View style={styles.cardTitle}>
-            <Users size={16} color={theme.colors.primary} />
-            <Text style={styles.heading}>{r.lots.title}</Text>
-          </View>
-          <Body muted>{proposedLots.length ? r.lots.suggested : r.lots.none}</Body>
+        <FicheCard padding={4.5} gap={3}>
+          <CardHeading title={r.lots.title} />
+          <Text style={styles.muted}>{proposedLots.length ? r.lots.suggested : r.lots.none}</Text>
           {listedLots.length > 0 ? (
-            <View style={styles.chips}>
+            <PillRow>
               {listedLots.map((code) => (
-                <Chip
+                <SelectPill
                   key={code}
                   label={labelOf(trades, code)}
                   selected={lots.includes(code)}
                   onPress={() => toggleLot(code)}
                 />
               ))}
-            </View>
+            </PillRow>
           ) : null}
-          <LinkText
+          <FicheLink
+            icon={allTrades ? Minus : Plus}
             label={allTrades ? r.lots.hide : r.lots.add}
             onPress={() => setAllTrades(!allTrades)}
           />
           {allTrades ? (
-            <View style={styles.chips}>
+            <PillRow>
               {trades
                 .filter((t) => t.code !== criteria.tradeCode && !listedLots.includes(t.code))
                 .map((t) => (
-                  <Chip
+                  <SelectPill
                     key={t.code}
                     label={t.label}
                     selected={lots.includes(t.code)}
                     onPress={() => toggleLot(t.code)}
                   />
                 ))}
-            </View>
+            </PillRow>
           ) : null}
           <Text style={styles.hint}>{lotsFull ? r.lots.limit : r.lots.independent}</Text>
-        </Card>
+        </FicheCard>
       ) : null}
 
-      <EditableCard
-        icon={Wrench}
-        title={r.site}
-        help={r.siteHelp}
-        summary={siteTags}
-        {...card("site")}
-      >
+      <EditableCard title={r.site} help={r.siteHelp} summary={siteTags} {...card("site")}>
         <Text style={styles.label}>{r.lieu}</Text>
-        <View style={styles.chips}>
+        <PillRow>
           {LIEUX.map((lieu) => (
-            <Chip
+            <SelectPill
               key={lieu}
+              single
               label={fr.lieux[lieu]}
               selected={draft.lieuType === lieu}
               onPress={() => set({ lieuType: draft.lieuType === lieu ? null : lieu })}
             />
           ))}
-        </View>
+        </PillRow>
         <Text style={styles.label}>{r.rooms}</Text>
-        <View style={styles.chips}>
+        <PillRow>
           {rooms.map((room) => (
-            <Chip
+            <SelectPill
               key={room.code}
               label={room.label}
               selected={(draft.roomCodes ?? []).includes(room.code)}
               onPress={() => set({ roomCodes: toggle(draft.roomCodes ?? [], room.code) })}
             />
           ))}
-        </View>
+        </PillRow>
         <Text style={styles.label}>{r.surface}</Text>
-        <View style={styles.chips}>
+        <PillRow>
           {SURFACES.map((surface) => (
-            <Chip
+            <SelectPill
               key={surface}
+              single
               label={fr.surfaces[surface]}
               selected={draft.surface === surface}
               onPress={() => set({ surface: draft.surface === surface ? null : surface })}
             />
           ))}
-        </View>
+        </PillRow>
         <Text style={styles.label}>{r.budget}</Text>
-        <View style={styles.chips}>
+        <PillRow>
           {BUDGETS.map((budget) => (
-            <Chip
+            <SelectPill
               key={budget}
+              single
               label={fr.budgets[budget]}
               selected={draft.budget === budget}
               onPress={() => set({ budget: draft.budget === budget ? null : budget })}
             />
           ))}
-        </View>
+        </PillRow>
       </EditableCard>
 
       <EditableCard
-        icon={MapPin}
         title={r.address}
         help={r.addressHelp}
         summary={[
@@ -366,15 +375,10 @@ export function CriteriaReview({
           ))}
       </EditableCard>
 
-      <EditableCard
-        icon={CalendarDays}
-        title={r.date}
-        help={r.dateHelp}
-        summary={[dateTag]}
-        {...card("date")}
-      >
-        <RadioGroup
+      <EditableCard title={r.date} help={r.dateHelp} summary={[dateTag]} {...card("date")}>
+        <RadioCards
           legend={r.date}
+          hideLegend
           options={DATE_MODES.map((mode) => ({ value: mode, label: r.dateModes[mode] }))}
           value={draft.dateMode ?? null}
           onChange={(mode) => {
@@ -397,24 +401,16 @@ export function CriteriaReview({
       </EditableCard>
 
       <ProjectPhotosCard projectId={project.id} initial={photos} advise={project.advisePhotos} />
-
-      {failure && <Notice tone="error">{failure}</Notice>}
-      <Button label={r.submit} icon={Search} onPress={submit} loading={saving} disabled={!ready} />
-      {editing !== null ? (
-        <Text style={styles.hint}>{r.editing}</Text>
-      ) : !ready ? (
-        <Text style={styles.hint}>{r.submitHint}</Text>
-      ) : null}
-    </Screen>
+    </ActionScreen>
   );
 }
 
 /**
- * Carte à résumé de la maquette : titre avec icône, crayon, puces du résumé ; en modification, le
- * contenu et « Annuler » / « Enregistrer ». Les autres cartes sont verrouillées pendant ce temps.
+ * Carte à résumé de la maquette : titre (Inter Tight), crayon, pastilles du résumé ; en
+ * modification, le contenu et « Annuler » / « Enregistrer ». Les autres cartes sont verrouillées
+ * pendant ce temps.
  */
 function EditableCard({
-  icon: Icon,
   title,
   help,
   summary,
@@ -426,7 +422,6 @@ function EditableCard({
   onSave,
   children,
 }: {
-  icon: LucideIcon;
   title: string;
   help: string;
   summary: string[];
@@ -439,51 +434,48 @@ function EditableCard({
   children: ReactNode;
 }) {
   return (
-    <Card>
-      <View style={styles.cardHead}>
-        <Icon size={18} color={theme.colors.primary} />
-        <Text role="heading" style={[styles.heading, styles.cardHeading]}>
-          {title}
-        </Text>
-        {!editing ? (
-          <Pressable
-            role="button"
-            aria-label={r.editLabel(title)}
-            aria-disabled={locked}
-            disabled={locked}
-            hitSlop={8}
-            onPress={onEdit}
-            style={({ pressed }) => [locked && styles.locked, pressed && styles.pressed]}
-          >
-            <Pencil size={18} color={theme.colors["primary-strong"]} />
-          </Pressable>
-        ) : null}
-      </View>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading
+        title={title}
+        right={
+          !editing ? (
+            <Pressable
+              role="button"
+              aria-label={r.editLabel(title)}
+              aria-disabled={locked}
+              disabled={locked}
+              hitSlop={10}
+              onPress={onEdit}
+              style={({ pressed }) => [
+                styles.edit,
+                locked && styles.locked,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Pencil size={18} color={colors["primary-strong"]} />
+            </Pressable>
+          ) : null
+        }
+      />
       {editing ? (
         <>
-          <Body muted>{help}</Body>
+          <Text style={styles.muted}>{help}</Text>
           {children}
           <View style={styles.editActions}>
-            <View style={styles.editAction}>
-              <Button label={r.cancel} variant="secondary" onPress={onCancel} />
-            </View>
-            <View style={styles.editAction}>
-              <Button label={r.save} onPress={onSave} disabled={!canSave} />
-            </View>
+            <FicheButton label={r.cancel} variant="secondary" grow onPress={onCancel} />
+            <FicheButton label={r.save} grow onPress={onSave} disabled={!canSave} />
           </View>
         </>
       ) : summary.length > 0 ? (
-        <View style={styles.chips}>
+        <View style={styles.tags}>
           {summary.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
+            <FicheTag key={tag} text={tag} tone="primary" />
           ))}
         </View>
       ) : (
-        <Body muted>{r.notSet}</Body>
+        <Text style={styles.muted}>{r.notSet}</Text>
       )}
-    </Card>
+    </FicheCard>
   );
 }
 
@@ -532,7 +524,7 @@ function DatePicker({
     return (
       <View style={styles.selected}>
         <Text style={styles.label}>{r.pickDate}</Text>
-        <Body muted>{value ? r.startsOn(formatLongDate(value)) : today}</Body>
+        <Text style={styles.muted}>{value ? r.startsOn(formatLongDate(value)) : today}</Text>
       </View>
     );
   }
@@ -540,7 +532,7 @@ function DatePicker({
     <View style={styles.selected}>
       {value && <Text style={styles.selectedValue}>{r.startsOn(formatLongDate(value))}</Text>}
       {Platform.OS === "android" && (
-        <Button label={r.pickDate} variant="secondary" onPress={onOpenAndroid} />
+        <FicheButton label={r.pickDate} variant="secondary" onPress={onOpenAndroid} />
       )}
       {(Platform.OS === "ios" || showAndroid) && (
         <DateTimePicker
@@ -560,42 +552,23 @@ function DatePicker({
 }
 
 const styles = StyleSheet.create({
-  cardTitle: { flexDirection: "row", alignItems: "center", gap: theme.spacing(2) },
-  cardHead: { flexDirection: "row", alignItems: "center", gap: theme.spacing(2) },
-  cardHeading: { flex: 1 },
+  edit: { marginVertical: -spacing(1) },
   locked: { opacity: 0.4 },
   pressed: { opacity: 0.7 },
-  editActions: { flexDirection: "row", gap: theme.spacing(3) },
-  editAction: { flex: 1 },
-  tag: {
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors["primary-soft"],
-    paddingHorizontal: theme.spacing(3),
-    paddingVertical: theme.spacing(1.5),
-  },
-  tagText: { fontFamily: theme.font.medium, fontSize: 13, color: theme.colors["primary-strong"] },
-  heading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
-  label: { fontFamily: theme.font.medium, fontSize: 14, color: theme.colors.foreground },
-  description: {
-    fontFamily: theme.font.regular,
-    fontSize: 15,
-    lineHeight: 22,
-    color: theme.colors.foreground,
-  },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
-  selected: { gap: theme.spacing(1.5) },
-  selectedRow: { flexDirection: "row", alignItems: "center", gap: theme.spacing(3) },
-  selectedValue: {
-    flex: 1,
-    fontFamily: theme.font.regular,
-    fontSize: 15,
-    color: theme.colors.foreground,
-  },
-  change: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors["primary-strong"] },
+  editActions: { flexDirection: "row", gap: spacing(3) },
+  tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  label: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  muted: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  description: { fontFamily: font.regular, fontSize: 15, lineHeight: 22, color: colors.foreground },
+  link: { fontFamily: font.semibold, fontSize: 14, color: colors["primary-strong"] },
+  selected: { gap: spacing(1.5) },
+  selectedRow: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
+  selectedValue: { flex: 1, fontFamily: font.regular, fontSize: 16, color: colors.foreground },
+  change: { fontFamily: font.semibold, fontSize: 15, color: colors["primary-strong"] },
   hint: {
-    fontFamily: theme.font.regular,
+    fontFamily: font.regular,
     fontSize: 13,
-    textAlign: "center",
-    color: theme.colors["muted-foreground"],
+    lineHeight: 18,
+    color: colors["muted-foreground"],
   },
 });

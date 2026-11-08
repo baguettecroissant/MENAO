@@ -217,8 +217,9 @@ export default async function ProjectResultsPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[17.5rem_1fr]">
-        <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+      {/* Refonte « Nette » (ADR 0257) : le contenu à gauche, le résumé à droite. */}
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <aside className="hidden lg:sticky lg:top-24 lg:order-last lg:block lg:self-start">
           {summary && <ProjectSummaryCard summary={summary} />}
         </aside>
 
@@ -235,7 +236,7 @@ export default async function ProjectResultsPage({
             </p>
           )}
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+            <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
               {direct
                 ? t.direct.title(directName)
                 : results.length

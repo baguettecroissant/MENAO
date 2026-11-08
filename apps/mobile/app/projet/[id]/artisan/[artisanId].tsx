@@ -1,20 +1,16 @@
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { setStatusBarStyle } from "expo-status-bar";
-import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { ArtisanProfileView } from "@/components/artisan-profile";
-import { TopBar } from "@/components/top-bar";
+import { ActionSubmit } from "@/components/pro/action-kit";
+import { FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { loadArtisanPage, type ArtisanPage } from "@/lib/requests";
-import { Button, Notice, Screen, ScreenSkeleton } from "@/ui";
-import { theme } from "@/ui/theme";
-
-const { colors, spacing } = theme;
+import { Notice } from "@/ui";
 
 /**
- * Fiche d'un artisan proposé pour le projet (F-10), d'après la maquette « Fiche artisan » : grande
- * photo bord à bord (barre d'état claire), puis la fiche, avec l'envoi direct de la demande.
+ * Fiche d'un artisan proposé pour le projet (F-10), avec l'envoi direct de la demande. Écran
+ * « Nette » (lot 12, maquette « FicheParcoursNette » transposée) : barre de retour, grand en-tête
+ * et rubriques en cartes, bouton bleu nuit collé en bas.
  */
 export default function ArtisanFiche() {
   const { id, artisanId, canRequest } = useLocalSearchParams<{
@@ -22,7 +18,6 @@ export default function ArtisanFiche() {
     artisanId: string;
     canRequest?: string;
   }>();
-  const insets = useSafeAreaInsets();
   const [page, setPage] = useState<ArtisanPage | null | undefined>(undefined);
 
   useEffect(() => {
@@ -34,49 +29,31 @@ export default function ArtisanFiche() {
       active = false;
     };
   }, [artisanId]);
-  // Photo en haut de l'écran : barre d'état claire tant que la fiche est affichée.
-  useFocusEffect(
-    useCallback(() => {
-      setStatusBarStyle("light");
-      return () => setStatusBarStyle("dark");
-    }, []),
-  );
 
-  if (page === undefined) return <ScreenSkeleton header={<TopBar />} />;
+  if (page === undefined) return <FicheSkeleton />;
   if (page === null) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen>
         <Notice tone="error">{fr.profile.notFound}</Notice>
-      </Screen>
+      </FicheScreen>
     );
   }
   const request = canRequest === "1";
   return (
-    <SafeAreaView style={styles.safe} edges={["left", "right"]}>
-      <ScrollView contentContainerStyle={!request && { paddingBottom: insets.bottom }}>
-        <ArtisanProfileView page={page} />
-      </ScrollView>
-      {request ? (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing(3) }]}>
-          <Button
+    <FicheScreen
+      footer={
+        request ? (
+          <ActionSubmit
             label={fr.profile.request}
+            variant="dark"
             onPress={() =>
               router.push({ pathname: "/projet/[id]/envoyer", params: { id, artisans: artisanId } })
             }
           />
-        </View>
-      ) : null}
-    </SafeAreaView>
+        ) : undefined
+      }
+    >
+      <ArtisanProfileView page={page} />
+    </FicheScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  footer: {
-    paddingHorizontal: spacing(5),
-    paddingTop: spacing(3),
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-});

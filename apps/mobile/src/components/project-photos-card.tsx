@@ -1,18 +1,20 @@
 import { MAX_PROJECT_PHOTOS } from "@menao/core";
+import { Camera } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import { PhotoThumbnails } from "@/components/photo-thumbnails";
+import { CardHeading, FicheButton, FicheCard } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { choosePhotoSource, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { deleteProjectPhoto, loadProjectPhotos, type ProjectPhoto } from "@/lib/project";
-import { Body, Button, Card, Notice } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.review.photos;
 
 /**
  * « Photos supplémentaires » du projet (F-05, F-07), comme sur le site : ajout (10 photos au plus)
- * et suppression, la liste étant relue après chaque changement.
+ * et suppression, la liste étant relue après chaque changement. Carte « Nette » (lot 12).
  */
 export function ProjectPhotosCard({
   projectId,
@@ -55,11 +57,9 @@ export function ProjectPhotosCard({
   }
 
   return (
-    <Card>
-      <Text role="heading" style={styles.heading}>
-        {t.title}
-      </Text>
-      <Body muted>{t.description}</Body>
+    <FicheCard padding={4.5} gap={3}>
+      <CardHeading title={t.title} />
+      <Text style={styles.text}>{t.description}</Text>
       {advise && photos.length === 0 ? <Notice tone="info">{t.advice}</Notice> : null}
       {errors.map((message) => (
         <Notice key={message} tone="error">
@@ -75,21 +75,27 @@ export function ProjectPhotosCard({
           disabled={busy}
         />
       ) : (
-        <Body muted>{t.none}</Body>
+        <Text style={styles.text}>{t.none}</Text>
       )}
       {photos.length < MAX_PROJECT_PHOTOS ? (
         <>
-          <Button label={t.add} variant="secondary" onPress={add} loading={busy} />
+          <FicheButton
+            label={t.add}
+            icon={Camera}
+            variant="secondary"
+            onPress={add}
+            loading={busy}
+          />
           <Text style={styles.hint}>{t.addHelp}</Text>
         </>
       ) : (
         <Text style={styles.hint}>{t.limit}</Text>
       )}
-    </Card>
+    </FicheCard>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
+  text: { fontFamily: theme.font.regular, fontSize: 14, lineHeight: 20, color: theme.colors.label },
   hint: { fontFamily: theme.font.regular, fontSize: 13, color: theme.colors["muted-foreground"] },
 });

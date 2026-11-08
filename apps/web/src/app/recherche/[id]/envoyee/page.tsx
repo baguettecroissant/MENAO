@@ -62,8 +62,9 @@ export default async function RequestSentPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[17.5rem_1fr]">
-        <aside className="flex flex-col gap-4">
+      {/* Refonte « Nette » (ADR 0257) : le contenu à gauche, le résumé à droite. */}
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <aside className="order-last flex flex-col gap-4">
           <SelectedArtisansCard
             artisans={requests.map((r) => ({
               id: r.request_id,
@@ -82,10 +83,12 @@ export default async function RequestSentPage({
         </aside>
         <div className="flex flex-col items-center gap-6">
           <section className="flex w-full flex-col items-center gap-4 rounded-card border border-border bg-surface px-6 py-10 text-center shadow-card">
-            <span className="inline-flex size-16 items-center justify-center rounded-full bg-primary-soft text-primary ring-8 ring-primary-softer">
+            <span className="inline-flex size-16 items-center justify-center rounded-full bg-success text-white ring-8 ring-success-soft">
               <CircleCheck aria-hidden="true" className="size-8" />
             </span>
-            <h1 className="text-2xl font-medium tracking-tight">{t.sentTitle(names)}</h1>
+            <h1 className="max-w-xl text-[1.75rem] leading-[1.08] font-medium tracking-tight sm:text-[2.25rem]">
+              {t.sentTitle(names)}
+            </h1>
             <p className="max-w-lg text-sm text-muted-foreground">
               {t.sentText(names, requests.length > 1)}
             </p>
