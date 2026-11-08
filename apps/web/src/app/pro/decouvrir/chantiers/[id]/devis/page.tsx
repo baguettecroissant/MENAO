@@ -31,6 +31,11 @@ export default async function ExampleQuotePage({
         title={t.title}
         chantierTitle={c.chantier.title}
         appointmentAt={c.appointment?.starts_at ?? null}
+        step="lignes"
+        chantierId={id}
+        client={[c.client.first_name, c.client.last_name].filter(Boolean).join(" ") || null}
+        place={[c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null}
+        wide
       />
       <div className="py-3">
         <ExampleLock locked note>

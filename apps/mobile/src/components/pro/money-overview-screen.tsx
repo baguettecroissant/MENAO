@@ -7,9 +7,11 @@ import {
   type MoneyOverview,
 } from "@menao/core";
 import { router, type Href } from "expo-router";
+import { AlertTriangle, Clock } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { Alert, StyleSheet, Switch, Text, View } from "react-native";
 import { ListGroup, ListHeader, ListRow } from "@/components/list-kit";
+import { MoneyFigures } from "@/components/pro/money-kit";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDay, formatDayMonthNumeric } from "@/lib/format";
@@ -21,8 +23,9 @@ const t = fr.moneyOverview;
 const { colors, font, spacing } = theme;
 
 /**
- * « Suivi » de l'onglet Argent (F-87, ADR 0237), agent comptable avancé : le mois en bref, ce qui
- * reste à encaisser avec son ancienneté, et ce qui cloche. Comme sur le site.
+ * « Suivi » de l'onglet Argent (F-87, ADR 0237), agent comptable avancé : le mois en bref (carte des
+ * chiffres clés « Nette », lot 2), ce qui reste à encaisser avec son ancienneté, et ce qui cloche.
+ * Comme sur le site.
  */
 export function MoneyOverviewScreen({
   overview,
@@ -85,14 +88,15 @@ export function MoneyOverviewScreen({
   const previousMonth = moneyMonthLabel(overview.previous.month);
   const prev = (cents: number) =>
     previousMonth ? t.previous(previousMonth, formatCents(cents)) : null;
+  const inMonth = (label: string) => (month ? t.inMonth(label, month) : label);
   const tiles = [
     {
-      label: t.collected,
+      label: inMonth(t.collected),
       value: formatCents(overview.current.collectedCents),
       detail: prev(overview.previous.collectedCents),
     },
     {
-      label: t.signed,
+      label: inMonth(t.signed),
       value: formatCents(overview.current.signedCents),
       detail: t.signedCount(overview.current.signedQuotes),
     },
@@ -102,7 +106,7 @@ export function MoneyOverviewScreen({
       detail: t.openCount(overview.open.length),
     },
     {
-      label: t.expenses,
+      label: inMonth(t.expenses),
       value: formatCents(overview.current.expensesCents),
       detail: prev(overview.previous.expensesCents),
     },
@@ -111,18 +115,9 @@ export function MoneyOverviewScreen({
   return (
     <Screen onRefresh={onRefresh}>
       {header}
-      <ListHeader title={month ? t.monthTitle(month) : t.title} />
-      <View style={styles.grid}>
-        {tiles.map((tile) => (
-          <View key={tile.label} style={styles.tile}>
-            <Card>
-              <Text style={styles.label}>{tile.label}</Text>
-              <Text style={styles.value}>{tile.value}</Text>
-              {tile.detail ? <Text style={styles.detail}>{tile.detail}</Text> : null}
-            </Card>
-          </View>
-        ))}
-      </View>
+      <MoneyFigures
+        figures={tiles.map((tile) => ({ label: tile.label, value: tile.value, hint: tile.detail }))}
+      />
       <Text style={styles.detail}>{t.ttc}</Text>
 
       <ListHeader title={t.openTitle} />
@@ -147,7 +142,17 @@ export function MoneyOverviewScreen({
                 ]
                   .filter(Boolean)
                   .join(" · ")}
+                icon={{
+                  icon: Clock,
+                  tone:
+                    level === "en_retard"
+                      ? "danger"
+                      : level === "a_relancer"
+                        ? "warning"
+                        : "primary",
+                }}
                 value={formatCents(item.amountCents)}
+                statusBelow
                 status={
                   days === null
                     ? undefined
@@ -199,8 +204,10 @@ export function MoneyOverviewScreen({
                 ]
                   .filter(Boolean)
                   .join(" · ")}
+                icon={{ icon: AlertTriangle, tone: "danger" }}
                 value={formatCents(item.amountCents)}
                 status={{ text: t.checkTitle, tone: "danger" }}
+                statusBelow
               />
             ))}
           </ListGroup>
@@ -212,15 +219,6 @@ export function MoneyOverviewScreen({
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -spacing(1.5) },
-  tile: { width: "50%", padding: spacing(1.5) },
-  label: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  value: {
-    fontFamily: font.medium,
-    fontSize: 19,
-    color: colors.foreground,
-    fontVariant: ["tabular-nums"],
-  },
   detail: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   empty: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
   heading: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },

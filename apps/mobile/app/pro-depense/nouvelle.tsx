@@ -8,9 +8,12 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Screen, ScreenSkeleton, Title } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
-/** Nouvelle dépense (F-62), comme sur le site ; `?chantier=` pré-choisit le chantier. */
+/**
+ * Nouvelle dépense (F-62), comme sur le site ; `?chantier=` pré-choisit le chantier, `?photo=1`
+ * (« Photo du ticket ») ouvre l'appareil photo dès l'arrivée.
+ */
 function NewExpenseScreen() {
-  const { chantier } = useLocalSearchParams<{ chantier?: string }>();
+  const { chantier, photo } = useLocalSearchParams<{ chantier?: string; photo?: string }>();
   const [chantiers] = useFocusData(loadExpenseChantiers);
   if (chantiers === undefined) return <ScreenSkeleton header={<TopBar />} />;
   const list = chantiers ?? [];
@@ -37,6 +40,7 @@ function NewExpenseScreen() {
         initialLines={[]}
         hasDocument={false}
         chantiers={list}
+        takePhoto={photo === "1"}
       />
     </Screen>
   );

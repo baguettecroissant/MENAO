@@ -1,12 +1,20 @@
+import { quoteFigures } from "@menao/core";
+import { FileText } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ListFilters, ListHeader, ListPanel, ListRow, type ListTone } from "@/components/list-kit";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { formatTime } from "@/lib/format";
 import { ExampleBadge } from "./examples";
+import { MoneyFigures } from "./money-figures";
 
 const t = fr.pro.quote;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const roundEuros = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
 const dayShort = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "2-digit",
@@ -60,10 +68,30 @@ export function QuoteList({
   const drafts = quotes.filter((q) => q.status === "brouillon");
   const sent = quotes.filter((q) => q.status !== "brouillon");
   const rows = tab === "a-envoyer" ? drafts : sent;
+  const fig = fr.pro.sheet.figures;
+  const figures = quoteFigures(
+    quotes.map((q) => ({ status: q.status, totalTtcCents: q.total_ttc_cents, sentAt: q.sent_at })),
+  );
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
-        <ListHeader title={t.list.title} />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+        <MoneyFigures
+          label={fig.quotesLabel}
+          cells={[
+            {
+              label: fig.pending,
+              value: roundEuros.format(Math.round(figures.pendingCents / 100)),
+              hint: fig.pendingHint(figures.pendingCount),
+            },
+            { label: fig.toSend, value: String(figures.toSendCount), hint: fig.toSendHint },
+            {
+              label: fig.signRate,
+              value: figures.signRate === null ? "—" : fr.review.percent(figures.signRate),
+              hint: fig.signRateHint,
+            },
+          ]}
+        />
+        <ListHeader title={t.list.title} level={2} />
         {justSentTo !== null && <Alert tone="success">{t.list.sentNotice(justSentTo)}</Alert>}
         <ListFilters
           label={t.list.filtersLabel}
@@ -97,6 +125,7 @@ export function QuoteList({
                     : `${base}/chantiers/${q.chantier_id}`
                 }
                 label={t.list.open(q.title)}
+                icon={{ icon: FileText, tone: q.status === "signe" ? "success" : "primary" }}
                 title={q.title}
                 badge={example ? <ExampleBadge /> : undefined}
                 detail={[

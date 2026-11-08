@@ -1,11 +1,19 @@
+import { invoiceFigures, parisToday } from "@menao/core";
+import { Receipt } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ListHeader, ListPanel, ListRow } from "@/components/list-kit";
 import { MoreMenu } from "@/components/more-menu";
 import { fr } from "@/i18n/fr";
+import { MoneyFigures } from "./money-figures";
 import { ExampleBadge, ExampleLock } from "./examples";
 
 const t = fr.pro.invoices;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const roundEuros = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
 const shortDate = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "2-digit",
@@ -43,10 +51,31 @@ export function InvoiceList({
   /** Export et envoi au comptable : le patron seulement (ADR 0241). */
   accounting?: boolean;
 }) {
+  const fig = fr.pro.sheet.figures;
+  const figures = invoiceFigures(
+    invoices.map((i) => ({ issuedOn: i.issued_on, totalTtcCents: i.total_ttc_cents })),
+    parisToday(),
+  );
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
+        <MoneyFigures
+          label={fig.invoicesLabel}
+          cells={[
+            {
+              label: fig.invoicedMonth,
+              value: roundEuros.format(Math.round(figures.monthCents / 100)),
+              hint: fig.invoicedMonthHint(figures.monthCount),
+            },
+            {
+              label: fig.invoicedYear,
+              value: roundEuros.format(Math.round(figures.yearCents / 100)),
+              hint: fig.invoicedHint,
+            },
+          ]}
+        />
         <ListHeader
+          level={2}
           title={t.title}
           actions={
             accounting && (
@@ -89,6 +118,7 @@ export function InvoiceList({
                   href={example ? undefined : `/factures/${invoice.id}/pdf`}
                   external
                   label={t.view(invoice.numero)}
+                  icon={{ icon: Receipt, tone: "success" }}
                   title={client || invoice.numero}
                   badge={example ? <ExampleBadge /> : undefined}
                   detail={[invoice.numero, shortDate.format(new Date(invoice.issued_on))].join(
@@ -96,7 +126,7 @@ export function InvoiceList({
                   )}
                   context={doc.chantier?.title ?? ""}
                   value={euros.format(invoice.total_ttc_cents / 100)}
-                  status={{ text: t.kinds[invoice.kind], tone: "neutral" }}
+                  status={{ text: t.kinds[invoice.kind], tone: "success" }}
                 />
               );
             })}

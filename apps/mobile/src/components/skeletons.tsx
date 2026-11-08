@@ -66,6 +66,19 @@ export function ChantierCardsSkeleton({ count = 3 }: { count?: number }) {
   );
 }
 
+/** Carte des chiffres clés de la rubrique Argent (refonte « Nette », lot 2). */
+export function FiguresSkeleton() {
+  return (
+    <Loading>
+      <View style={[styles.card, styles.column]}>
+        <Skeleton width="45%" height={14} />
+        <Skeleton width="55%" height={32} />
+        <Skeleton width="60%" height={12} />
+      </View>
+    </Loading>
+  );
+}
+
 /** Filtres soulignés d'une liste (ADR 0189). */
 export function FiltersSkeleton() {
   return (

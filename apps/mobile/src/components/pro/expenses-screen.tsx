@@ -1,6 +1,8 @@
 import {
+  expenseMonthFigures,
   expenseStatus,
   expensesSummary,
+  moneyMonthLabel,
   matchesExpenseFilter,
   matchesExpenseQuery,
   parisToday,
@@ -8,13 +10,13 @@ import {
   type ExpenseStatus,
 } from "@menao/core";
 import { router } from "expo-router";
-import { Check, RotateCcw, Trash2 } from "lucide-react-native";
+import { Camera, Check, PenLine, Receipt, RotateCcw, Trash2 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
 import { EmptyState } from "@/components/empty-state";
-import { FiltersSkeleton, ListRowsSkeleton } from "@/components/skeletons";
-import { ExampleBadge } from "@/components/examples";
+import { FiguresSkeleton, FiltersSkeleton, ListRowsSkeleton } from "@/components/skeletons";
+import { ExampleBadge, ExampleLock } from "@/components/examples";
 import {
   ListFilters,
   ListGroup,
@@ -22,8 +24,11 @@ import {
   ListRow,
   ListSearch,
   type ListTone,
+  MoreButton,
   Swipe,
 } from "@/components/list-kit";
+import { FicheButton } from "@/components/pro/fiche-kit";
+import { MoneyActions, MoneyFigures } from "@/components/pro/money-kit";
 import { TabHeader } from "@/components/tab-header";
 import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
@@ -53,10 +58,18 @@ const STATUS_TONE: Record<ExpenseStatus, ListTone> = {
   a_payer: "neutral",
 };
 
+/** Icône de la ligne, de la couleur de l'état (refonte « Nette », lot 2). */
+const ICON_TONE: Record<ExpenseStatus, ListTone> = {
+  paye: "success",
+  en_retard: "danger",
+  a_payer: "primary",
+};
+
 /**
- * Dépenses de l'artisan (F-62), en lignes comme sur le site (ADR 0189) : filtres avec le reste à
- * payer et la part en retard, recherche, puis une ligne par dépense (chantier ou « À classer »,
- * montant, état). « Ajouter » seul en bouton ; exporter, envoi au comptable et factures
+ * Dépenses de l'artisan (F-62), en lignes comme sur le site (ADR 0189) : chiffres clés (dépenses
+ * du mois et leur TVA, reste à payer, calculs de @menao/core), « Photo du ticket » et « Saisir »,
+ * filtres avec le reste à payer et la part en retard, recherche, puis une ligne par dépense
+ * (chantier ou « À classer », montant, état en pastille). Exporter, envoi au comptable et factures
  * électroniques dans « … ». Exemples (ADR 0184) : les dépenses fictives s'ouvrent, les actions
  * restent inactives. Dans l'onglet Argent (ADR 0188), sous les puces Devis · Factures · Dépenses
  * (`switcher`) ; sinon écran ouvert par-dessus les onglets, avec la barre de retour.
@@ -76,7 +89,8 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
     return (
       <Screen header={switcher ? undefined : <TopBar />}>
         {switcher ? <TabHeader title={fr.tabs.money}>{switcher}</TabHeader> : null}
-        <ListHeader title={t.title} />
+        {switcher ? null : <ListHeader title={t.title} />}
+        <FiguresSkeleton />
         <FiltersSkeleton />
         <ListRowsSkeleton />
       </Screen>
@@ -133,6 +147,14 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
       matchesExpenseFilter(expense, filter, today) && matchesExpenseQuery(expense, query),
   );
   const summary = expensesSummary(list, today);
+  const month = expenseMonthFigures(
+    list.map((expense) => ({
+      issuedOn: expense.issued_on,
+      totalTtcCents: expense.total_ttc_cents,
+      totalTvaCents: expense.total_tva_cents,
+    })),
+    today,
+  );
 
   async function exportCsv() {
     setFailure(null);
@@ -143,19 +165,52 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
   return (
     <Screen header={switcher ? undefined : <TopBar />} onRefresh={reload}>
       {switcher ? <TabHeader title={fr.tabs.money}>{switcher}</TabHeader> : null}
-      <ListHeader
-        title={t.title}
-        locked={examples}
-        more={[
-          ...(list.length > 0 ? [{ label: t.export, onPress: exportCsv }] : []),
-          { label: fr.proAccountant.title, onPress: () => router.push("/pro-comptable") },
-          { label: t.einvoice.button, soon: t.einvoice.soon, note: t.einvoice.text },
-        ]}
-        primary={{ label: fr.proLists.add, onPress: () => router.push("/pro-depense/nouvelle") }}
-      />
+      {switcher ? null : <ListHeader title={t.title} />}
       <Animated.View entering={reveal} style={styles.revealed}>
         {failure ? <Notice tone="error">{failure}</Notice> : null}
         {expenses === null ? <Notice tone="error">{t.error}</Notice> : null}
+        {expenses ? (
+          <MoneyFigures
+            figures={[
+              {
+                label: t.figures.month(moneyMonthLabel(today.slice(0, 7))),
+                value: formatCents(month.monthCents),
+                hint: t.figures.monthHint(month.monthCount, formatCents(month.monthTvaCents)),
+              },
+              {
+                label: t.figures.toPay,
+                value: formatCents(summary.toPayCents),
+                hint:
+                  summary.overdueCount > 0
+                    ? t.figures.overdue(formatCents(summary.overdueCents))
+                    : t.figures.toPayHint(summary.toPayCount),
+              },
+            ]}
+          />
+        ) : null}
+        <ExampleLock locked={examples}>
+          <MoneyActions>
+            <FicheButton
+              label={t.photo}
+              icon={Camera}
+              grow
+              onPress={() => router.push("/pro-depense/nouvelle?photo=1")}
+            />
+            <FicheButton
+              label={t.manual}
+              variant="secondary"
+              icon={PenLine}
+              onPress={() => router.push("/pro-depense/nouvelle")}
+            />
+            <MoreButton
+              items={[
+                ...(list.length > 0 ? [{ label: t.export, onPress: exportCsv }] : []),
+                { label: fr.proAccountant.title, onPress: () => router.push("/pro-comptable") },
+                { label: t.einvoice.button, soon: t.einvoice.soon, note: t.einvoice.text },
+              ]}
+            />
+          </MoneyActions>
+        </ExampleLock>
 
         {list.length > 0 ? (
           <>
@@ -238,8 +293,10 @@ export function ArtisanExpensesScreen({ switcher }: { switcher?: ReactNode } = {
                       </>
                     }
                     badge={examples ? <ExampleBadge /> : undefined}
+                    icon={{ icon: Receipt, tone: ICON_TONE[status] }}
                     value={formatCents(expense.total_ttc_cents)}
                     status={{ text: t.statuses[status], tone: STATUS_TONE[status] }}
+                    statusBelow
                   />
                 </Swipe>
               );

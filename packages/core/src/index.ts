@@ -85,3 +85,4 @@ export * from "./artisan-assistant";
 export * from "./money-overview";
 export * from "./client-reminders";
 export * from "./team";
+export * from "./money-figures";

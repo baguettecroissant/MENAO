@@ -9,8 +9,9 @@ const t = fr.pro.space;
 
 /** Rubriques regroupées du menu (ADR 0188) et leurs onglets (adresse sous l'espace pro). */
 const SECTIONS = {
-  argent: { label: t.money, tabs: t.moneyTabs },
-  vitrine: { label: t.storefront, tabs: t.storefrontTabs },
+  // « Argent » : grand titre et phrase d'introduction au-dessus des onglets (ADR 0247).
+  argent: { label: t.money, tabs: t.moneyTabs, intro: t.moneyIntro, wide: true },
+  vitrine: { label: t.storefront, tabs: t.storefrontTabs, intro: null, wide: false },
 } as const;
 
 /**
@@ -29,13 +30,23 @@ export function SectionTabs({
   hidden?: readonly string[];
 }) {
   const pathname = usePathname();
-  const { label, tabs } = SECTIONS[section];
+  const { label, tabs, intro, wide } = SECTIONS[section];
   const entries = (Object.entries(tabs) as [string, string][]).filter(
     ([slug]) => !hidden.includes(slug),
   );
   if (!entries.some(([slug]) => pathname === `${base}/${slug}`)) return null;
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6 sm:pt-8">
+    <div
+      className={`mx-auto flex w-full flex-col gap-5 px-4 pt-6 sm:px-6 sm:pt-8 ${
+        wide ? "max-w-5xl" : "max-w-3xl"
+      }`}
+    >
+      {intro && (
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{label}</h1>
+          <p className="text-base text-label">{intro}</p>
+        </div>
+      )}
       <nav
         aria-label={label}
         className="flex w-max max-w-full gap-1 overflow-x-auto rounded-pill border border-border bg-surface p-1 shadow-card"

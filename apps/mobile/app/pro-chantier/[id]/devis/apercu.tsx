@@ -1,43 +1,43 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { QuotePaper } from "@/components/documents/quote-paper";
-import { HeaderBand, whenMeta } from "@/components/header-band";
-import { StepTabs } from "@/components/step-tabs";
+import { FicheButton, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { QuoteSteps } from "@/components/pro/quote-kit";
 import { fr } from "@/i18n/fr";
 import { sharePdf } from "@/lib/pdf";
 import { loadQuoteSendContext } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, LinkText, Notice, Screen, ScreenSkeleton, Title } from "@/ui";
+import { Body, LinkText, Notice, Title } from "@/ui";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proQuote;
-const STEPS = [
-  { key: "preview", label: t.steps.preview },
-  { key: "send", label: t.steps.send },
-] as const;
 
-/** Aperçu du devis (F-20), comme sur le site : le devis tel qu'il sera envoyé, puis l'envoi. */
+/**
+ * Aperçu du devis (F-20), comme sur le site : le devis tel qu'il sera envoyé, puis l'envoi. Barre
+ * du haut et étapes « Nette » (lot 2), comme l'éditeur.
+ */
 function QuotePreviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuoteSendContext(id), [id]);
   const [context] = useFocusData(load);
   const [pdfFailed, setPdfFailed] = useState(false);
 
-  if (context === undefined) return <ScreenSkeleton />;
+  if (context === undefined) return <FicheSkeleton title={t.barTitle} />;
   // Pas encore de ligne enregistrée : retour à l'éditeur.
   if (context === null) return <Redirect href={`/pro-chantier/${id}/devis`} />;
 
   return (
-    <Screen
-      band={
-        <HeaderBand title={t.title} meta={whenMeta(context.appointmentAt)}>
-          <StepTabs steps={STEPS} current="preview" />
-        </HeaderBand>
-      }
+    <FicheScreen
+      title={t.barTitle}
       footer={
-        <Button label={t.next} onPress={() => router.push(`/pro-chantier/${id}/devis/envoi`)} />
+        <FicheButton
+          label={t.next}
+          tall
+          onPress={() => router.push(`/pro-chantier/${id}/devis/envoi`)}
+        />
       }
     >
+      <QuoteSteps current="preview" />
       <Title>{t.preview.ready}</Title>
       <Body muted>{t.preview.check(context.client.firstName)}</Body>
       <QuotePaper model={context.model} />
@@ -49,7 +49,7 @@ function QuotePreviewScreen() {
         }}
       />
       {pdfFailed ? <Notice tone="error">{fr.pdf.failed}</Notice> : null}
-    </Screen>
+    </FicheScreen>
   );
 }
 

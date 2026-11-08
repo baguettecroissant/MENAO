@@ -25,6 +25,7 @@ import {
   exampleScore,
   exampleSentQuote,
   addDays,
+  DEFAULT_DEPOSIT_PERCENT,
   journalSummary,
   journalTimeline,
   laterAppointments,
@@ -166,13 +167,24 @@ export function exampleArtisanFollowUp(now = new Date()): ArtisanFollowUp {
 
 export function exampleQuoteDraft(id: string, now = new Date()): QuoteDraft | null {
   if (id !== EXAMPLE_IDS.chantierChauffeEau) return null;
+  const chantier = exampleChantier(id, now);
   return {
     lines: exampleQuoteDraftLines(),
-    appointmentAt: exampleChantier(id, now)?.appointment?.starts_at ?? null,
+    appointmentAt: chantier?.appointment?.starts_at ?? null,
     saved: true,
     assujettiTva: true,
     conversation: false,
     voiceDraft: null,
+    chantierTitle: chantier?.chantier.title ?? null,
+    clientLine: chantier
+      ? [
+          [chantier.client.first_name, chantier.client.last_name].filter(Boolean).join(" "),
+          [chantier.code_postal, chantier.ville_nom].filter(Boolean).join(" "),
+        ]
+          .filter(Boolean)
+          .join(" · ") || null
+      : null,
+    defaultDeposit: DEFAULT_DEPOSIT_PERCENT,
   };
 }
 

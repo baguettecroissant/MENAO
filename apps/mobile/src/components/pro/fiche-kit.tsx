@@ -75,7 +75,7 @@ export function FicheScreen({
         <Text role="heading" style={styles.barTitle} numberOfLines={1}>
           {title}
         </Text>
-        <View style={styles.barButton}>{right}</View>
+        <View style={[styles.barButton, right ? styles.barRight : null]}>{right}</View>
       </View>
       <ScrollView
         contentContainerStyle={[
@@ -473,6 +473,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // Action de droite plus large qu'une icône (« Enregistré » de l'éditeur de devis).
+  barRight: { width: "auto", minWidth: theme.touchTarget, paddingHorizontal: spacing(2) },
   barPressed: { backgroundColor: colors["primary-soft"] },
   barTitle: {
     flex: 1,

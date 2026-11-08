@@ -12,23 +12,19 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { DetailBlock } from "@/components/pro/request-blocks";
-import { HeaderBand, whenMeta } from "@/components/header-band";
-import { StepTabs } from "@/components/step-tabs";
+import { FicheButton, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
+import { QuoteSteps } from "@/components/pro/quote-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
 import { loadQuoteSendContext, sendQuote } from "@/lib/pro-quotes";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Checkbox, Notice, Screen, ScreenSkeleton, TextField, celebrate } from "@/ui";
+import { Body, Checkbox, Notice, TextField, celebrate } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proQuote;
 const s = t.send;
 const { colors, font, radius, spacing } = theme;
-const STEPS = [
-  { key: "preview", label: t.steps.preview },
-  { key: "send", label: t.steps.send },
-] as const;
 type Schedule = "defaut" | "personnalise";
 type Field = "depositPercent" | "startDate" | "durationDays";
 
@@ -54,7 +50,7 @@ function QuoteSendScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (context === undefined) return <ScreenSkeleton />;
+  if (context === undefined) return <FicheSkeleton title={t.barTitle} />;
   if (context === null) return <Redirect href={`/pro-chantier/${id}/devis`} />;
 
   const ctx = context;
@@ -115,16 +111,19 @@ function QuoteSendScreen() {
   );
 
   return (
-    <Screen
-      band={
-        <HeaderBand title={t.title} meta={whenMeta(ctx.appointmentAt)}>
-          <StepTabs steps={STEPS} current="send" />
-        </HeaderBand>
-      }
+    <FicheScreen
+      title={t.barTitle}
       footer={
-        <Button label={s.submit} onPress={submit} loading={pending} disabled={schedule === null} />
+        <FicheButton
+          label={s.submit}
+          tall
+          onPress={submit}
+          loading={pending}
+          disabled={schedule === null}
+        />
       }
     >
+      <QuoteSteps current="send" />
       {!ctx.insured ? <Notice tone="error">{s.insuranceMissing}</Notice> : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
 
@@ -217,13 +216,18 @@ function QuoteSendScreen() {
           {ctx.chantier.summary ? <Text style={styles.small}>{ctx.chantier.summary}</Text> : null}
         </DetailBlock>
       </View>
-    </Screen>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
   section: { gap: spacing(3) },
-  heading: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  heading: {
+    fontFamily: font.display,
+    fontSize: 18,
+    letterSpacing: -0.36,
+    color: colors.foreground,
+  },
   options: { gap: spacing(3) },
   option: {
     flexDirection: "row",

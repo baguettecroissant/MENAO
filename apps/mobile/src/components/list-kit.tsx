@@ -57,12 +57,6 @@ export function ListHeader({
   primary?: { label: string; onPress: () => void };
   locked?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
-  const close = () => {
-    setOpen(false);
-    setNote(null);
-  };
   return (
     <View style={styles.header}>
       <Text role="heading" style={styles.title}>
@@ -73,17 +67,7 @@ export function ListHeader({
         aria-disabled={locked}
         style={[styles.actions, locked && styles.locked]}
       >
-        {more && more.length > 0 ? (
-          <Tappable
-            role="button"
-            aria-label={t.more}
-            aria-haspopup="menu"
-            onPress={() => setOpen(true)}
-            style={styles.more}
-          >
-            <Ellipsis size={20} color={colors.foreground} />
-          </Tappable>
-        ) : null}
+        {more && more.length > 0 ? <MoreButton items={more} /> : null}
         {primary ? (
           <Tappable role="button" onPress={primary.onPress} scaleTo={0.98} style={styles.primary}>
             <Plus size={18} color={colors["primary-foreground"]} />
@@ -91,36 +75,57 @@ export function ListHeader({
           </Tappable>
         ) : null}
       </View>
-      {more ? (
-        <BottomSheet visible={open} onClose={close} title={t.more} closeLabel={t.close}>
-          <View role="menu" style={styles.menu}>
-            {more.map((item) => (
-              <Pressable
-                key={item.label}
-                role="menuitem"
-                onPress={() => {
-                  if ("note" in item) {
-                    setNote(item.note);
-                    return;
-                  }
-                  close();
-                  item.onPress();
-                }}
-                style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
-              >
-                <Text style={[styles.menuLabel, "note" in item && styles.muted]}>{item.label}</Text>
-                {"soon" in item ? <Text style={styles.soon}>{item.soon}</Text> : null}
-              </Pressable>
-            ))}
-          </View>
-          {note ? (
-            <Text role="status" style={styles.note}>
-              {note}
-            </Text>
-          ) : null}
-        </BottomSheet>
-      ) : null}
     </View>
+  );
+}
+
+/** Bouton rond « … » : ouvre la feuille des actions secondaires (exporter, comptable…). */
+export function MoreButton({ items }: { items: readonly MoreItem[] }) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const close = () => {
+    setOpen(false);
+    setNote(null);
+  };
+  return (
+    <>
+      <Tappable
+        role="button"
+        aria-label={t.more}
+        aria-haspopup="menu"
+        onPress={() => setOpen(true)}
+        style={styles.more}
+      >
+        <Ellipsis size={20} color={colors.foreground} />
+      </Tappable>
+      <BottomSheet visible={open} onClose={close} title={t.more} closeLabel={t.close}>
+        <View role="menu" style={styles.menu}>
+          {items.map((item) => (
+            <Pressable
+              key={item.label}
+              role="menuitem"
+              onPress={() => {
+                if ("note" in item) {
+                  setNote(item.note);
+                  return;
+                }
+                close();
+                item.onPress();
+              }}
+              style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+            >
+              <Text style={[styles.menuLabel, "note" in item && styles.muted]}>{item.label}</Text>
+              {"soon" in item ? <Text style={styles.soon}>{item.soon}</Text> : null}
+            </Pressable>
+          ))}
+        </View>
+        {note ? (
+          <Text role="status" style={styles.note}>
+            {note}
+          </Text>
+        ) : null}
+      </BottomSheet>
+    </>
   );
 }
 
@@ -215,9 +220,20 @@ export function ListGroup({ children }: { children: ReactNode }) {
   );
 }
 
+/** Fond clair des icônes et des pastilles d'état (refonte « Nette », lot 2). */
+const SOFT_TONES: Record<ListTone, string> = {
+  success: colors["success-soft"],
+  danger: colors["danger-soft"],
+  warning: colors["warning-soft"],
+  neutral: "#f1f2f5",
+  primary: colors["primary-soft"],
+};
+
 /**
  * Une ligne : titre (deux lignes au plus) et détail à gauche ; montant et état à droite, état en
  * un mot et une couleur. `onPress` : ouvre la fiche (chevron) ; `busy` : roue à la place du chevron (PDF en préparation).
+ * Rubrique Argent (lot 2) : `icon`, icône de 44 px sur fond coloré à gauche, et `statusBelow`,
+ * état en pastille sous le détail plutôt que sous le montant.
  */
 export function ListRow({
   onPress,
@@ -228,6 +244,8 @@ export function ListRow({
   value,
   status,
   badge,
+  icon,
+  statusBelow = false,
   busy = false,
   disabled = false,
 }: {
@@ -242,9 +260,13 @@ export function ListRow({
   status?: { text: string; tone: ListTone };
   /** Pastille sous le titre (« Exemple »). */
   badge?: ReactNode;
+  icon?: { icon: LucideIcon; tone: ListTone };
+  statusBelow?: boolean;
   busy?: boolean;
   disabled?: boolean;
 }) {
+  const Icon = icon?.icon;
+  const pill = statusBelow && status;
   return (
     <Pressable
       role={onPress ? "button" : undefined}
@@ -255,7 +277,12 @@ export function ListRow({
       onPressIn={onPressIn}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <View style={styles.texts}>
+      {icon && Icon ? (
+        <View style={[styles.rowIcon, { backgroundColor: SOFT_TONES[icon.tone] }]}>
+          <Icon size={20} color={TONES[icon.tone]} />
+        </View>
+      ) : null}
+      <View style={[styles.texts, pill && styles.textsPill]}>
         <Text style={styles.rowTitle} numberOfLines={2}>
           {title}
         </Text>
@@ -264,12 +291,26 @@ export function ListRow({
             {detail}
           </Text>
         ) : null}
-        {badge}
+        {pill ? (
+          <View style={styles.pills}>
+            <Text
+              style={[
+                styles.pill,
+                { color: TONES[status.tone], backgroundColor: SOFT_TONES[status.tone] },
+              ]}
+            >
+              {status.text}
+            </Text>
+            {badge}
+          </View>
+        ) : (
+          badge
+        )}
       </View>
-      {value !== undefined || status ? (
+      {value !== undefined || (status && !pill) ? (
         <View style={styles.side}>
           {value !== undefined ? <Text style={styles.value}>{value}</Text> : null}
-          {status ? (
+          {status && !pill ? (
             <Text style={[styles.status, { color: TONES[status.tone] }]}>{status.text}</Text>
           ) : null}
         </View>
@@ -494,4 +535,21 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
   status: { fontFamily: font.semibold, fontSize: 13 },
+  rowIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textsPill: { gap: spacing(1) },
+  pills: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(1.5) },
+  pill: {
+    overflow: "hidden",
+    borderRadius: radius.chip,
+    paddingHorizontal: 9,
+    paddingVertical: spacing(1),
+    fontFamily: font.bold,
+    fontSize: 12,
+  },
 });
