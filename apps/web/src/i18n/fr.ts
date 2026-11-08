@@ -7143,6 +7143,22 @@ export const fr = {
       title: "Vue d'ensemble",
       intro:
         "Tout MENAO en un coup d'œil : ce qui demande votre attention, l'activité du moment et les chiffres clés.",
+      // Bandeau de chiffres (refonte « Nette », ADR 0252).
+      band: {
+        label: "MENAO en chiffres",
+        visible: "Artisans visibles",
+        visibleShort: "visibles",
+        visibleHint: (n: number) => `${n} inscrit${n > 1 ? "s" : ""} sur 30 jours`,
+        requests: "Demandes sur 7 jours",
+        requestsShort: "demandes 7 j",
+        requestsHint: (n: number) => `dont ${n} aujourd'hui`,
+        urgent: "Urgent",
+        urgentShort: "urgent",
+        signed: "Devis signés sur 30 jours",
+        signedHint: (amount: string) => `${amount} signés`,
+        paying: "Abonnés payants",
+        payingHint: (n: number) => `${n} en essai`,
+      },
       live: "En direct",
       auto: "Actualisation automatique",
       updatedAt: (time: string) => `mis à jour à ${time}`,
@@ -9024,6 +9040,16 @@ export const fr = {
       searchLabel: "Rechercher un ticket",
       searchPlaceholder: "Objet, message, e-mail, déclarant ou chantier",
       filtersLabel: "Filtrer les tickets",
+      // Chiffres de la boîte de réception (refonte « Nette », ADR 0252).
+      figuresLabel: "Boîte de réception en chiffres",
+      figuresTodoHint: (disputes: number) =>
+        disputes === 0
+          ? "aucun litige"
+          : disputes === 1
+            ? "dont 1 litige"
+            : `dont ${disputes} litiges`,
+      figuresLateHint: "réponse promise sous 7 jours",
+      figuresMineHint: "dont vous êtes responsable",
       filters: {
         a_traiter: "À traiter",
         en_retard: "En retard",
@@ -9119,6 +9145,28 @@ export const fr = {
       apeWarning: "APE hors bâtiment",
       open: (name: string) => `Ouvrir le dossier de ${name}`,
       stalledLink: "Inscriptions bloquées",
+      // Refonte « Nette » (ADR 0252) : chiffres par statut et état de chaque document.
+      intro:
+        "Vérifiez les documents, l'entreprise et la charte avant de rendre un artisan visible.",
+      figuresLabel: "Dossiers par statut",
+      pendingHint: "les plus anciens en premier",
+      validHint: "visibles ou bientôt visibles",
+      refusedHint: "SIRET fermé, document absent…",
+      suspendedHint: "documents expirés ou impayés",
+      documents: "Documents",
+      docShort: {
+        kbis: "Kbis",
+        decennale: "Décennale",
+        rc_pro: "RC Pro",
+        identite: "Identité",
+        urssaf: "URSSAF",
+      } as Record<string, string>,
+      docState: {
+        valide: "vérifié",
+        en_attente: "à vérifier",
+        refuse: "refusé",
+        manquant: "manquant",
+      } as Record<string, string>,
     },
     /** Inscriptions bloquées et relances automatiques (ADR 0219). */
     stalled: {

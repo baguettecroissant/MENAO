@@ -30,6 +30,8 @@ import type { ReactNode } from "react";
 import { fr } from "@/i18n/fr";
 import type { ActivityItem, NewArtisans, Overview, Todo } from "@/lib/admin/overview";
 import { formatDay, formatTimeAgo } from "@/lib/format";
+import { MoneyFigures } from "@/components/pro/money-figures";
+import { SheetChip, sheetCard } from "@/components/pro/sheet";
 import { LiveRefresh } from "./live-refresh";
 import { ActivityFeed, KeyFigures } from "./overview";
 
@@ -43,6 +45,12 @@ type Entry = {
   action: { href: string; label: string };
   children?: ReactNode;
 };
+
+const euros = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
 
 const SEVERITY_TONE: Record<AdminQueueSeverity, string> = {
   urgent: "bg-danger-soft text-danger",
@@ -255,131 +263,167 @@ export function OverviewScreen({
           aria-current={active ? "page" : undefined}
           className={`inline-flex min-h-9 items-center gap-1.5 rounded-pill border px-3 text-sm font-medium transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${
             active
-              ? "border-primary bg-primary text-primary-foreground"
+              ? "border-foreground bg-foreground text-surface"
               : "border-border bg-surface hover:bg-background"
           }`}
         >
           {label}
-          <span className={active ? "text-primary-foreground/80" : "text-muted-foreground"}>
-            {count}
-          </span>
+          <span className={active ? "text-surface/75" : "text-muted-foreground"}>{count}</span>
         </Link>
       </li>
     );
   };
 
+  const severityChip: Record<AdminQueueSeverity, "danger" | "warning" | "neutral"> = {
+    urgent: "danger",
+    important: "warning",
+    a_faire: "neutral",
+  };
+  const urgent = queue.filter((item) => item.severity === "urgent").length;
+  // Refonte « Nette » (ADR 0252) : grand titre, bandeau de chiffres, une seule file triée par
+  // urgence avec ses pastilles, l'activité et les chiffres détaillés à droite.
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
-            {t.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
         <LiveRefresh renderedAt={now.toISOString()} />
       </header>
 
-      <section aria-labelledby="a-traiter" className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 id="a-traiter" className="shrink-0 text-lg font-medium">
+      <MoneyFigures
+        label={t.band.label}
+        dense
+        cells={[
+          {
+            label: t.band.visible,
+            short: t.band.visibleShort,
+            value: String(o.artisans.visibles),
+            hint: t.band.visibleHint(o.artisans.inscrits_30j),
+          },
+          {
+            label: t.band.requests,
+            short: t.band.requestsShort,
+            value: String(o.demandes.j7),
+            hint: t.band.requestsHint(o.demandes.aujourdhui),
+          },
+          {
+            label: t.band.urgent,
+            short: t.band.urgentShort,
+            value: String(urgent),
+            tone: urgent > 0 ? "danger" : undefined,
+            phoneOnly: true,
+          },
+          {
+            label: t.band.signed,
+            value: String(o.devis.signes_30j),
+            hint: t.band.signedHint(euros.format(o.devis.signes_30j_cents / 100)),
+            desktopOnly: true,
+          },
+          {
+            label: t.band.paying,
+            value: String(o.abonnements.payants),
+            hint: t.band.payingHint(o.abonnements.essais),
+            desktopOnly: true,
+          },
+        ]}
+      />
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <section aria-labelledby="a-traiter" className="flex min-w-0 flex-col gap-3">
+          <h2 id="a-traiter" className="text-xl">
             {todoT.title}
           </h2>
           {poles.length > 1 && (
             <nav aria-label={todoT.filters}>
-              <ul className="flex flex-wrap gap-2 sm:justify-end">
+              <ul className="flex flex-wrap gap-2">
                 {chip(null, todoT.poles.all, queue.length)}
                 {poles.map((p) => chip(p.pole, todoT.poles[p.pole], p.count))}
               </ul>
             </nav>
           )}
-        </div>
-        {shown.length === 0 ? (
-          <p className="rounded-card border border-border bg-surface p-5 text-sm text-muted-foreground shadow-card">
-            {queue.length === 0 ? todoT.empty : todoT.emptyPole}
-          </p>
-        ) : (
-          ADMIN_QUEUE_SEVERITIES.map((severity) => {
-            const items = shown.filter((item) => item.severity === severity);
-            if (items.length === 0) return null;
-            return (
-              <div key={severity} className="flex flex-col gap-2">
-                <h3 className="ml-1 text-sm font-medium text-muted-foreground">
-                  {todoT.severities[severity]} · {items.length}
-                </h3>
-                <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-                  {items.map((item) => {
+          {shown.length === 0 ? (
+            <p className="rounded-card border border-border bg-surface p-5 text-sm text-muted-foreground shadow-card">
+              {queue.length === 0 ? todoT.empty : todoT.emptyPole}
+            </p>
+          ) : (
+            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
+              {ADMIN_QUEUE_SEVERITIES.flatMap((severity) =>
+                shown
+                  .filter((item) => item.severity === severity)
+                  .map((item) => {
                     const e = entry(item.kind, o, todo, now, newArtisans);
                     const deadline = deadlineText(item, now);
                     return (
-                      <li key={item.kind} className="border-t border-border first:border-t-0">
+                      <li key={item.kind}>
                         <article
                           aria-label={e.title}
-                          className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-4"
+                          className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-4 sm:px-5"
                         >
                           <span
                             aria-hidden="true"
-                            className={`inline-flex size-10 shrink-0 items-center justify-center rounded-xl ${SEVERITY_TONE[severity]}`}
+                            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-xl ${SEVERITY_TONE[severity]}`}
                           >
                             <e.icon className="size-5" />
                           </span>
                           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                              <h4 className="font-medium">{e.title}</h4>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <SheetChip tone={severityChip[severity]} dot>
+                                {todoT.severities[severity]}
+                              </SheetChip>
+                              <SheetChip tone="neutral">{todoT.poles[item.pole]}</SheetChip>
                               {deadline && (
                                 <span
-                                  className={`text-xs font-medium ${severity === "urgent" ? "text-danger" : "text-warning"}`}
+                                  className={`text-xs font-semibold ${severity === "urgent" ? "text-danger" : "text-warning"}`}
                                 >
                                   {deadline}
                                 </span>
                               )}
                             </div>
+                            <h3 className="font-sans text-base font-bold">{e.title}</h3>
                             {e.hint && <p className="text-sm text-muted-foreground">{e.hint}</p>}
                             {e.children}
                           </div>
                           <Link
                             href={e.action.href as Route}
-                            className="shrink-0 self-start text-sm font-medium text-primary underline-offset-2 hover:underline sm:self-center"
+                            className="inline-flex min-h-10 shrink-0 items-center self-start rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none sm:self-center"
                           >
-                            {e.action.label} →
+                            {e.action.label}
                           </Link>
                         </article>
                       </li>
                     );
-                  })}
-                </ul>
-              </div>
-            );
-          })
-        )}
-      </section>
+                  }),
+              )}
+            </ul>
+          )}
+        </section>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
-        <section
-          aria-labelledby="activite"
-          className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
-        >
-          <h2 id="activite" className="text-lg font-medium">
-            {t.activity.title}
-          </h2>
-          <ActivityFeed items={activity} now={now} />
-          {/* Les 10 derniers événements ; l'historique complet est paginé (ADR 0146). */}
-          <Link
-            href={"/admin/activite" as Route}
-            className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
-          >
-            {t.activity.seeAll} →
-          </Link>
-        </section>
-        <section aria-labelledby="chiffres" className="flex flex-col gap-3">
-          <div className="flex flex-col gap-0.5">
-            <h2 id="chiffres" className="text-lg font-medium">
-              {t.figures.title}
+        <div className="flex min-w-0 flex-col gap-6">
+          <section aria-labelledby="activite" className={sheetCard}>
+            <h2 id="activite" className="text-lg">
+              {t.activity.title}
             </h2>
-            <p className="text-xs text-muted-foreground">{t.figures.intro}</p>
-          </div>
-          <KeyFigures overview={o} newArtisans={newArtisans} />
-        </section>
+            <ActivityFeed items={activity} now={now} />
+            {/* Les 10 derniers événements ; l'historique complet est paginé (ADR 0146). */}
+            <Link
+              href={"/admin/activite" as Route}
+              className="self-start text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
+            >
+              {t.activity.seeAll} →
+            </Link>
+          </section>
+          <section aria-labelledby="chiffres" className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <h2 id="chiffres" className="text-lg">
+                {t.figures.title}
+              </h2>
+              <p className="text-xs text-muted-foreground">{t.figures.intro}</p>
+            </div>
+            <KeyFigures overview={o} newArtisans={newArtisans} />
+          </section>
+        </div>
       </div>
     </div>
   );
