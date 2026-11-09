@@ -182,7 +182,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
           <div className="flex flex-col gap-2">
             <h2
               id="city-artisans"
-              className="text-[1.75rem] leading-tight font-medium tracking-tight"
+              className="text-[1.75rem] leading-tight font-bold tracking-tight"
             >
               {t.artisansTitle(trade.label, commune.nom)}
             </h2>

@@ -46,7 +46,7 @@ export function QuoteSignVisual() {
         </ul>
         <p className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
           <span className="text-sm text-muted-foreground">{t.quoteTotalLabel}</span>
-          <span className="text-xl font-medium tracking-tight tabular-nums">{t.quoteTotal}</span>
+          <span className="text-xl font-bold tracking-tight tabular-nums">{t.quoteTotal}</span>
         </p>
         <span className="relative mt-4 flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-button bg-primary text-sm font-medium text-primary-foreground">
           {/* Reflet qui passe sur le bouton, pour inviter à signer. */}
@@ -77,7 +77,7 @@ export function PaymentVisual() {
       <div aria-hidden="true" className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm text-muted-foreground">{t.payment}</span>
-          <span className="text-xl font-medium tracking-tight tabular-nums">{t.paymentAmount}</span>
+          <span className="text-xl font-bold tracking-tight tabular-nums">{t.paymentAmount}</span>
         </div>
         <div className="flex items-center gap-3 rounded-input border border-border bg-input px-3 py-2.5 text-sm">
           <CreditCard className="size-4 text-muted-foreground" />

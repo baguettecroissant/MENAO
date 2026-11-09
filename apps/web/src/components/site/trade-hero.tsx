@@ -64,7 +64,7 @@ export function TradeHero({
           </span>
           <h1
             id={id}
-            className="text-[2.125rem] leading-[1.08] font-medium tracking-tight text-balance sm:text-[3rem]"
+            className="text-[2.125rem] leading-[1.08] font-bold tracking-tight text-balance sm:text-[3rem]"
           >
             {frenchSpacing(title)}
           </h1>

@@ -26,13 +26,13 @@ type CustomFont = {
 const FONT_STYLES = new Set(["normal", "italic", "oblique"]);
 
 /** Police de MENAO, avec le même repli que le site (jetons de design). */
-const FONT_FAMILY = fontFamily.sans.replace("var(--font-google-sans)", '"Google Sans"');
+const FONT_FAMILY = fontFamily.sans.replace("var(--font-inter)", '"Inter"');
 
 /** Sous-ensembles latins (U+0-FF, latin étendu) : ceux du français. */
 const LATIN = /^U\+(0-FF|100-)/i;
 
 /**
- * Polices de la page (Google Sans, servie par next/font sous un nom de fichier haché), transmises
+ * Polices de la page (Inter, servie par next/font sous un nom de fichier haché), transmises
  * au formulaire Stripe, qui s'affiche dans un cadre et ne peut pas les lire lui-même. Stripe
  * n'accepte que des fichiers en HTTPS : en local, le formulaire garde la police de repli.
  */
@@ -50,7 +50,10 @@ function pageFonts(family: string): CustomFont[] {
       const name = rule.style.getPropertyValue("font-family").replace(/["']/g, "").trim();
       const url = /url\(["']?([^"')]+)["']?\)/.exec(rule.style.getPropertyValue("src"))?.[1];
       const unicodeRange = rule.style.getPropertyValue("unicode-range");
-      if (name !== family || !url || !LATIN.test(unicodeRange)) continue;
+      // next/font peut préfixer le nom (« __Inter_… ») : on accepte les deux, sans le repli.
+      const matches =
+        name === family || (name.startsWith(`__${family}_`) && !name.includes("Fallback"));
+      if (!matches || !url || !LATIN.test(unicodeRange)) continue;
       // Adresse relative à la feuille de style, pas à la page.
       const href = new URL(url, sheet.href ?? window.location.href).href;
       if (!href.startsWith("https:")) continue;
@@ -110,7 +113,7 @@ export function ConnectEmbedded({
             return next.clientSecret;
           },
           locale: "fr-FR",
-          fonts: pageFonts("Google Sans"),
+          fonts: pageFonts("Inter"),
           appearance: {
             overlays: stripeConnectAppearance.overlays,
             variables: { ...stripeConnectAppearance.variables, fontFamily: FONT_FAMILY },

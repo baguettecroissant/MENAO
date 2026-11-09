@@ -155,7 +155,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
                 <Tag>{t.audienceTag[guide.audience]}</Tag>
                 {guide.draft && <StatusBadge tone="warning">{t.draft}</StatusBadge>}
               </div>
-              <h1 className="max-w-4xl text-[2rem] leading-[1.1] font-medium tracking-tight text-balance sm:text-[2.75rem]">
+              <h1 className="max-w-4xl text-[2rem] leading-[1.1] font-bold tracking-tight text-balance sm:text-[2.75rem]">
                 {frenchSpacing(guide.title)}
               </h1>
               <p className="max-w-3xl text-lg text-pretty text-muted-foreground">
@@ -224,7 +224,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
           <section aria-labelledby="guide-faq" className="flex flex-col gap-6">
             <h2
               id="guide-faq"
-              className="text-[1.5rem] leading-tight font-medium tracking-tight sm:text-[1.75rem]"
+              className="text-[1.5rem] leading-tight font-bold tracking-tight sm:text-[1.75rem]"
             >
               {t.faqTitle}
             </h2>
@@ -280,7 +280,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
           <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 sm:px-6">
             <h2
               id="guide-related"
-              className="text-[1.5rem] leading-tight font-medium tracking-tight sm:text-[1.75rem]"
+              className="text-[1.5rem] leading-tight font-bold tracking-tight sm:text-[1.75rem]"
             >
               {t.relatedTitle}
             </h2>

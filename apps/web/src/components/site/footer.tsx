@@ -59,18 +59,19 @@ export async function SiteFooter() {
     },
   ];
   return (
-    <footer className="border-t border-border bg-surface">
+    // Refonte « Nette » (ADR 0261) : pied de page bleu nuit.
+    <footer className="bg-foreground text-white">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.2fr]">
         <div className="col-span-2 flex flex-col gap-4 md:col-span-3 lg:col-span-1">
-          <Logo />
-          <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{t.tagline}</p>
-          <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
+          <Logo tone="white" />
+          <p className="max-w-xs text-sm leading-relaxed text-white/70">{t.tagline}</p>
+          <ul className="flex flex-col gap-2 text-xs text-white/70">
             <li className="flex items-center gap-2">
-              <MapPin aria-hidden="true" className="size-3.5 text-primary" />
+              <MapPin aria-hidden="true" className="size-3.5 text-[#9fb1ef]" />
               {t.zone}
             </li>
             <li className="flex items-center gap-2">
-              <LockKeyhole aria-hidden="true" className="size-3.5 text-primary" />
+              <LockKeyhole aria-hidden="true" className="size-3.5 text-[#9fb1ef]" />
               {t.stripe}
             </li>
           </ul>
@@ -79,13 +80,13 @@ export async function SiteFooter() {
         </div>
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title} className="flex flex-col gap-3">
-            <p className="text-sm font-medium">{col.title}</p>
+            <p className="text-sm font-bold text-white">{col.title}</p>
             <ul className="flex flex-col gap-2 text-sm">
               {col.links.map((l) => (
                 <li key={l.href}>
                   <Link
                     href={l.href as Route}
-                    className="rounded-sm text-muted-foreground hover:text-primary-strong"
+                    className="rounded-sm text-white/70 hover:text-white focus-visible:ring-4 focus-visible:ring-white/30 focus-visible:outline-none"
                   >
                     {l.label}
                   </Link>
@@ -95,8 +96,8 @@ export async function SiteFooter() {
           </nav>
         ))}
       </div>
-      <div className="border-t border-border">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-muted-foreground sm:px-6">
+      <div className="border-t border-white/10">
+        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-white/60 sm:px-6">
           © {new Date().getFullYear()} MENAO
         </p>
       </div>

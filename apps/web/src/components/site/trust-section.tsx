@@ -18,7 +18,7 @@ export function TrustSection() {
     <section aria-labelledby="confiance" className="bg-surface py-16 sm:py-20">
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-10 px-4 text-center sm:px-6">
         <div className="reveal flex flex-col gap-3">
-          <h2 id="confiance" className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">
+          <h2 id="confiance" className="text-2xl font-bold tracking-tight sm:text-[1.75rem]">
             {t.title}
           </h2>
           <p className="text-muted-foreground">{t.subtitle}</p>

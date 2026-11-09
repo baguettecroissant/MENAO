@@ -24,7 +24,7 @@ export function AppSection({ id }: { id: string }) {
         <div className="flex flex-col gap-6 lg:pb-20">
           <h2
             id={id}
-            className="text-[2rem] leading-[1.1] font-medium tracking-tight text-balance sm:text-[2.5rem]"
+            className="text-[2rem] leading-[1.1] font-bold tracking-tight text-balance sm:text-[2.5rem]"
           >
             {t.title}
           </h2>

@@ -18,7 +18,7 @@ export function GuideBody({ blocks }: { blocks: readonly GuideBlock[] }) {
               <h2
                 key={block.id}
                 id={block.id}
-                className="scroll-mt-24 pt-6 text-[1.5rem] leading-tight font-medium tracking-tight text-balance text-foreground sm:text-[1.75rem]"
+                className="scroll-mt-24 pt-6 text-[1.5rem] leading-tight font-bold tracking-tight text-balance text-foreground sm:text-[1.75rem]"
               >
                 {frenchSpacing(block.text)}
               </h2>

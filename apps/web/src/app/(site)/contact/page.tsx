@@ -36,7 +36,7 @@ export default function ContactPage() {
           aria-labelledby="contact-form-title"
           className="flex flex-col gap-6 rounded-hero border border-border bg-surface p-6 shadow-card sm:p-10"
         >
-          <h2 id="contact-form-title" className="text-xl font-medium tracking-tight">
+          <h2 id="contact-form-title" className="text-xl font-bold tracking-tight">
             {t.formTitle}
           </h2>
           <ContactForm />

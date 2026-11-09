@@ -57,7 +57,7 @@ export default function AboutPage() {
 
       <section aria-labelledby="about-mission" className="py-16 sm:py-20">
         <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 sm:px-6">
-          <h2 id="about-mission" className="text-2xl font-medium tracking-tight sm:text-3xl">
+          <h2 id="about-mission" className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t.missionTitle}
           </h2>
           {t.mission.map((paragraph) => (
@@ -101,7 +101,7 @@ export default function AboutPage() {
           <div className="flex flex-col gap-4">
             <h2
               id="about-area"
-              className="flex items-center gap-2 text-2xl font-medium tracking-tight"
+              className="flex items-center gap-2 text-2xl font-bold tracking-tight"
             >
               <MapPin aria-hidden="true" className="size-6 text-primary" />
               {t.areaTitle}
@@ -116,7 +116,7 @@ export default function AboutPage() {
             </Link>
           </div>
           <nav aria-labelledby="about-more" className="flex flex-col gap-4">
-            <h2 id="about-more" className="text-2xl font-medium tracking-tight">
+            <h2 id="about-more" className="text-2xl font-bold tracking-tight">
               {t.moreTitle}
             </h2>
             <ul className="flex flex-col divide-y divide-border rounded-card border border-border bg-surface">

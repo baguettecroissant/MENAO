@@ -1,6 +1,6 @@
 /**
  * Design tokens MENAO (spec §5), relevés sur les maquettes Figma (captures du 8 octobre 2026) :
- * bleu MENAO #4869F6, fond crème #F9F7F0, cartes blanches, police Google Sans.
+ * bleu MENAO #4869F6, fond crème #F9F7F0, cartes blanches, police Inter.
  * Quelques teintes sont légèrement assombries pour respecter le contraste AA (vérifié par les
  * tests) : `primary-strong` sert aux petits textes bleus sur fond clair (puces, liens).
  * Toute modification doit être reportée dans `theme.css` (les tests vérifient l'égalité).
@@ -53,12 +53,12 @@ const systemFonts =
   'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 export const fontFamily = {
-  // Google Sans est chargée par next/font (variable --font-google-sans) ; repli système.
-  sans: `var(--font-google-sans), ${systemFonts}`,
-  // Refonte « Nette » (ADR 0245), espaces connectés : Inter pour les textes, Inter Tight pour les
-  // titres et les grands chiffres (variables posées par apps/web/src/lib/fonts.ts).
-  app: `var(--font-inter), var(--font-google-sans), ${systemFonts}`,
-  display: `var(--font-inter-tight), var(--font-inter), var(--font-google-sans), ${systemFonts}`,
+  // Refonte « Nette » (ADR 0245, 0261) : Inter partout, site public compris, chargée par next/font
+  // (variables posées par apps/web/src/lib/fonts.ts) ; Inter Tight pour les titres et les grands
+  // chiffres ; repli système.
+  sans: `var(--font-inter), ${systemFonts}`,
+  app: `var(--font-inter), ${systemFonts}`,
+  display: `var(--font-inter-tight), var(--font-inter), ${systemFonts}`,
 } as const;
 
 /**

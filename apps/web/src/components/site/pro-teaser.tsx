@@ -9,14 +9,14 @@ const t = fr.site.proTeaser;
 export function ProTeaser({ id }: { id: string }) {
   return (
     <section aria-labelledby={id} className="px-4 py-16 sm:px-6 sm:py-24">
-      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 overflow-hidden rounded-hero bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_55%,#4869f6_100%)] px-6 py-12 text-white sm:px-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:py-14">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 overflow-hidden rounded-hero bg-foreground px-6 py-12 text-white sm:px-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:py-14">
         <div className="reveal flex flex-col gap-5">
-          <p className="text-xs font-semibold tracking-[0.14em] text-white/70 uppercase">
+          <p className="text-[0.8125rem] font-bold tracking-[0.08em] text-[#9fb1ef] uppercase">
             {t.eyebrow}
           </p>
           <h2
             id={id}
-            className="text-[1.75rem] leading-[1.15] font-medium tracking-tight text-balance sm:text-[2.25rem]"
+            className="text-[2rem] leading-[1.06] font-bold tracking-tight text-balance sm:text-[2.75rem]"
           >
             {t.title}
           </h2>

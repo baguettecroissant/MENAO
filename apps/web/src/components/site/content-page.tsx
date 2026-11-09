@@ -79,7 +79,7 @@ export function LegalPage({
 export function ContentSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-xl font-medium tracking-tight">{title}</h2>
+      <h2 className="text-xl font-bold tracking-tight">{title}</h2>
       <div className="flex flex-col gap-3 text-foreground/90">{children}</div>
     </section>
   );

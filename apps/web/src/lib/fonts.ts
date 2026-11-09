@@ -1,8 +1,8 @@
 import { Inter, Inter_Tight } from "next/font/google";
 
 // Refonte « Nette » (F-91, ADR 0245) : Inter pour les textes, Inter Tight pour les titres et les
-// grands chiffres, dans les espaces connectés seulement (le site public garde Google Sans).
-// Polices variables auto-hébergées par next/font, préchargées sur les pages qui les utilisent.
+// grands chiffres. Depuis le lot 16 (ADR 0261), sur tout le site : la racine porte `appTheme`.
+// Polices variables auto-hébergées par next/font.
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const interTight = Inter_Tight({
   subsets: ["latin"],
@@ -10,5 +10,5 @@ const interTight = Inter_Tight({
   display: "swap",
 });
 
-/** Classes à poser sur la racine d'un espace connecté : variables des polices et thème « Nette ». */
+/** Classes de la racine du site (et des anciens espaces) : variables des polices et thème « Nette ». */
 export const appTheme = `${inter.variable} ${interTight.variable} app-nette`;

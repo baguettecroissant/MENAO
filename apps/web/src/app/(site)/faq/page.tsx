@@ -79,7 +79,7 @@ export default function FaqPage() {
               >
                 <h2
                   id={`faq-${category.id}`}
-                  className="flex items-center gap-3 text-2xl font-medium tracking-tight"
+                  className="flex items-center gap-3 text-2xl font-bold tracking-tight"
                 >
                   <span className="flex size-10 items-center justify-center rounded-xl bg-surface text-primary shadow-card">
                     <Icon aria-hidden="true" className="size-5" />

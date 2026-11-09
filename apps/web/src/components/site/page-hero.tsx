@@ -65,7 +65,7 @@ export function PageHero({
             </span>
             <h1
               id={id}
-              className={`max-w-3xl leading-[1.08] font-medium tracking-tight text-balance ${
+              className={`max-w-3xl leading-[1.08] font-bold tracking-tight text-balance ${
                 brand ? "text-[2.125rem] sm:text-[3rem]" : "text-[2rem] sm:text-[2.5rem]"
               }`}
             >
