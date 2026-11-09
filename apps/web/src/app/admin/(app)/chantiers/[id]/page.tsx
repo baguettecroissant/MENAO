@@ -53,7 +53,7 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
       </Link>
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {ch.title}
           </h1>
           <StatusBadge tone={STAGE_TONES[chantierStage(ch.status)]}>

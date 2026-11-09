@@ -3,6 +3,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
 import { Card, StatusBadge } from "@/components/ui";
+import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 import { listProjects, parsePage, projectCounts } from "@/lib/admin/follow-up";
@@ -46,11 +47,21 @@ export default async function AdminRequestsPage({ searchParams }: PageProps<"/ad
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {r.title}
         </h1>
-        <p className="text-sm text-muted-foreground">{r.intro}</p>
+        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{r.intro}</p>
       </div>
+      {/* Refonte « Nette » (ADR 0259) : les nombres des filtres en chiffres clés. */}
+      <MoneyFigures
+        label={r.filtersLabel}
+        dense
+        cells={(["en_attente", "expirent", "chantier", "sans_suite"] as const).map((key) => ({
+          label: r.filters[key],
+          value: String(counts[key] ?? 0),
+          tone: key === "expirent" && (counts[key] ?? 0) > 0 ? ("danger" as const) : undefined,
+        }))}
+      />
       <SearchForm
         action={PATH}
         label={r.searchLabel}
@@ -76,7 +87,7 @@ export default async function AdminRequestsPage({ searchParams }: PageProps<"/ad
           <p className="text-muted-foreground">{t.empty}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[44rem] text-left text-sm">
+            <table className="admin-table w-full min-w-[44rem] text-left text-sm">
               <thead className="text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-normal">

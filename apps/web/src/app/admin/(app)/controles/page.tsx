@@ -91,10 +91,12 @@ export default async function SpotChecksPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {t.title}
         </h1>
-        <p className="text-muted-foreground">{t.intro(SPOT_CHECK_RATE * 100)}</p>
+        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">
+          {t.intro(SPOT_CHECK_RATE * 100)}
+        </p>
       </div>
 
       <Card>

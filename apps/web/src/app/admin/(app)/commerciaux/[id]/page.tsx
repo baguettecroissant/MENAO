@@ -198,7 +198,7 @@ export default async function AdminCommercialPage({
         {m.bonuses.length === 0 ? (
           <p className="text-sm text-muted-foreground">{d.bonusesEmpty}</p>
         ) : (
-          <table className="w-full min-w-[46rem] text-left text-sm">
+          <table className="admin-table w-full min-w-[46rem] text-left text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr className="border-b border-border">
                 {payable && (

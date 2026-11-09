@@ -54,7 +54,7 @@ export function SearchForm({
           name="q"
           defaultValue={query ?? ""}
           placeholder={placeholder}
-          className={`${inputClasses} bg-surface pl-10`}
+          className={`${inputClasses} rounded-[0.875rem] bg-surface pl-10`}
         />
       </div>
       <div className="flex items-center gap-2">
@@ -83,24 +83,23 @@ export function FilterChips({
   items: { key: string; href: Route; label: string; count?: number; active: boolean }[];
 }) {
   return (
-    <nav aria-label={label}>
-      <ul className="flex flex-wrap gap-2">
+    // Refonte « Nette » (ADR 0259) : filtres soulignés, comme les listes de l'espace pro.
+    <nav aria-label={label} className="border-b border-border">
+      <ul className="-mb-px flex gap-1 overflow-x-auto [scrollbar-width:none]">
         {items.map((item) => (
-          <li key={item.key}>
+          <li key={item.key} className="shrink-0">
             <Link
               href={item.href}
               aria-current={item.active ? "page" : undefined}
-              className={`inline-flex min-h-touch items-center gap-2 rounded-chip border px-4 text-sm ${
+              className={`inline-flex min-h-touch items-center gap-1.5 border-b-2 px-2.5 text-[0.9375rem] whitespace-nowrap ${
                 item.active
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-surface hover:border-primary/40"
+                  ? "border-foreground font-semibold text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {item.label}
               {item.count !== undefined && (
-                <span
-                  className={`tabular-nums ${item.active ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-                >
+                <span className="text-muted-foreground tabular-nums">
                   {item.count.toLocaleString("fr-FR")}
                 </span>
               )}
@@ -196,7 +195,7 @@ export function DetailSection({
       aria-label={title}
       className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
     >
-      <h2 className="text-lg font-medium">{title}</h2>
+      <h2 className="text-lg">{title}</h2>
       {children}
       {note && <p className="text-xs text-muted-foreground">{note}</p>}
     </section>

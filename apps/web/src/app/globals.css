@@ -374,3 +374,22 @@
 .app-nette :where(h2, h3) {
   font-weight: 650;
 }
+
+/* Refonte « Nette », back-office (ADR 0259) : tableaux des listes et des fiches. En-têtes en
+   petites capitales grises, lignes séparées par un filet, survol beige. */
+.app-nette .admin-table thead {
+  background: var(--color-background);
+}
+.app-nette .admin-table thead th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+.app-nette .admin-table tbody tr {
+  border-top: 1px solid var(--color-border);
+}
+.app-nette .admin-table tbody tr:hover {
+  background: var(--color-background);
+}

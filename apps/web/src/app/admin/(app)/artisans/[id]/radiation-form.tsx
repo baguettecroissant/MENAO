@@ -29,7 +29,7 @@ export function RadiationForm({
   const reasonError = state.fieldErrors?.reason?.[0];
   return (
     <form action={action} noValidate className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground">{t.intro}</p>
+      <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <input type="hidden" name="artisanId" value={artisanId} />
       <label htmlFor="radiation-reason" className="text-sm font-medium">

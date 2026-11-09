@@ -18,10 +18,14 @@ export function SummaryTile({
 }) {
   const valueTone = { default: "", warning: "text-warning", danger: "text-danger" }[tone];
   return (
-    <div className="flex flex-col gap-1 rounded-card border border-border bg-surface p-5 shadow-card">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className={`text-2xl font-medium tracking-tight tabular-nums ${valueTone}`}>{value}</dd>
-      {hint && <dd className="text-xs text-muted-foreground">{hint}</dd>}
+    <div className="flex flex-col gap-1.5 bg-surface px-5 py-4 sm:px-6 sm:py-5">
+      <dt className="text-sm font-semibold text-label">{label}</dt>
+      <dd
+        className={`font-display text-[1.75rem] leading-none font-bold tracking-tight tabular-nums sm:text-[2rem] ${valueTone}`}
+      >
+        {value}
+      </dd>
+      {hint && <dd className="text-[0.8125rem] text-muted-foreground">{hint}</dd>}
     </div>
   );
 }
@@ -29,7 +33,11 @@ export function SummaryTile({
 /** Grille de chiffres clés (liste de définitions, lue d'un seul tenant par un lecteur d'écran). */
 export function SummaryTiles({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <dl aria-label={label} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    // Refonte « Nette » (ADR 0259) : les chiffres dans un seul cadre, séparés par un filet.
+    <dl
+      aria-label={label}
+      className="grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-2 xl:grid-cols-4"
+    >
       {children}
     </dl>
   );

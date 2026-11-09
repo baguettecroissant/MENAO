@@ -58,10 +58,10 @@ export default async function AdminReferralsPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {t.title}
         </h1>
-        <p className="text-sm text-muted-foreground">{t.intro}</p>
+        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         <p className="text-sm text-muted-foreground">{t.how}</p>
       </div>
       {summary && (
@@ -103,7 +103,7 @@ export default async function AdminReferralsPage({
           <p className="text-muted-foreground">{t.empty}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[52rem] text-left text-sm">
+            <table className="admin-table w-full min-w-[52rem] text-left text-sm">
               <thead className="text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-normal">

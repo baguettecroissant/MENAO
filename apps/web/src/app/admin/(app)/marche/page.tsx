@@ -45,10 +45,10 @@ export default async function AdminMarketPage({ searchParams }: PageProps<"/admi
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {t.title}
         </h1>
-        <p className="text-sm text-muted-foreground">{t.intro}</p>
+        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
       </div>
 
       <FilterChips
@@ -102,7 +102,7 @@ export default async function AdminMarketPage({ searchParams }: PageProps<"/admi
           <p className="text-sm text-muted-foreground">{t.funnel.empty}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[40rem] text-sm">
+            <table className="admin-table w-full min-w-[40rem] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr className="border-b border-border">
                   <th className="py-2 pr-3 font-medium">{t.funnel.commune}</th>
