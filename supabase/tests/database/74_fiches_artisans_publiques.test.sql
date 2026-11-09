@@ -85,6 +85,12 @@ select ok(public.artisan_public_page('sans-abonnement') is null, 'artisan invisi
 select ok(public.artisan_public_page('inconnue') is null, 'adresse inconnue : rien');
 select ok(public.artisan_public_page('electricite-cote-d-azur-antibes') -> 'siret' is null,
   'jamais de SIRET');
+-- Date du dernier contrôle du dossier (ADR 0269) : toujours présente dans la fiche (null sans
+-- document validé), jamais le détail des documents.
+select ok(public.artisan_public_page('electricite-cote-d-azur-antibes') ? 'verified_on',
+  'fiche : date du dernier contrôle');
+select ok(public.artisan_public_page('electricite-cote-d-azur-antibes') -> 'documents' is null,
+  'fiche : pas de liste de documents');
 select results_eq(
   $$ select slug from public.public_artisan_pages() where slug like any (array['electricite-cote%', 'plomberie-nice-fiche', 'sans-abonnement']) $$,
   $$ values ('electricite-cote-d-azur-antibes'), ('electricite-cote-d-azur-antibes-2'), ('plomberie-nice-fiche') $$,

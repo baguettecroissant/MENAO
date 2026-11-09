@@ -1,5 +1,5 @@
 import { seoDescription } from "@menao/core";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, Check, ChevronRight } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -202,29 +202,55 @@ export default async function ArtisanPublicPage({ params }: PageProps<"/artisans
               </li>
             </ol>
           </nav>
-          <ProfileHeader
-            profile={profile}
-            avatar={avatar}
-            title={title}
-            actions={
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <ButtonLink
-                  href={searchHref as Route}
-                  size="lg"
-                  className="shrink-0 whitespace-nowrap sm:w-auto"
-                >
-                  {fr.seo.cta}
-                </ButtonLink>
-                <p className="rounded-input bg-primary-softer px-3 py-2 text-xs text-primary-strong">
-                  {t.requestHint(profile.display_name)}
-                </p>
-              </div>
-            }
-          />
+          <ProfileHeader profile={profile} avatar={avatar} title={title} actions={null} />
         </div>
       </div>
-      <ProfileBody profile={profile} photos={photos} reviews={reviews} canReport={false} />
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 pb-16 sm:px-6">
+      <ProfileBody
+        profile={profile}
+        photos={photos}
+        reviews={reviews}
+        canReport={false}
+        layout="public"
+        verifiedOn={page.verifiedOn}
+        aside={
+          // Carte fixe de demande (ADR 0269) : la demande ne part qu'à cet artisan.
+          <div className="hidden flex-col gap-4 rounded-[1.5rem] border border-border bg-surface p-6 shadow-raised lg:flex">
+            <h2 className="font-display text-xl font-bold tracking-tight">
+              {t.cardTitle(profile.display_name)}
+            </h2>
+            <p className="text-sm leading-relaxed text-label">
+              {t.requestHint(profile.display_name)}
+            </p>
+            <ButtonLink href={searchHref as Route} size="lg">
+              {fr.seo.requestQuote}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </ButtonLink>
+            <ul className="flex flex-col gap-2 border-t border-border pt-4">
+              {t.cardPoints.map((point) => (
+                <li key={point} className="flex items-center gap-2 text-sm font-semibold">
+                  <Check
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-success"
+                    strokeWidth={2.8}
+                  />
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+        }
+      />
+      {/* Téléphone : la demande toujours à portée de pouce (ADR 0269). */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-1 border-t border-border bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        <ButtonLink href={searchHref as Route} size="lg" block>
+          {fr.seo.requestQuote}
+          <ArrowRight aria-hidden="true" className="size-4" />
+        </ButtonLink>
+        <p className="text-center text-xs text-muted-foreground">
+          {t.mobileHint(profile.display_name)}
+        </p>
+      </div>
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 pb-32 sm:px-6 lg:pb-16">
         <p className="text-sm text-muted-foreground">{fr.seo.noContact}</p>
         {trade && (
           <nav aria-label={t.nearbyTitle(trade.label)} className="flex flex-col gap-3">

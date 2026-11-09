@@ -1199,6 +1199,11 @@ export const fr = {
       requestHint: (name: string) =>
         `Décrivez vos travaux en quelques minutes : votre demande sera envoyée à ${name} uniquement. S'il ne peut pas intervenir, nous vous proposerons d'autres artisans.`,
       nearbyTitle: (trade: string) => `Trouver un ${trade.toLowerCase()} près de chez vous`,
+      // Carte fixe de demande (lot 23, ADR 0269).
+      cardTitle: (name: string) => `Demandez un devis à ${name}`,
+      cardPoints: ["Gratuit pour vous", "Réponse sous 72\u00a0h", "Coordonnées protégées"],
+      mobileHint: (name: string) => `Envoyée à ${name} uniquement · gratuit`,
+      controlsLink: "Comment MENAO vérifie les artisans",
       nearbyCity: (trade: string, city: string) => `${trade} à ${city}`,
       allTrade: (trade: string) => `Tous les artisans ${trade.toLowerCase()}s vérifiés`,
     },
@@ -2264,6 +2269,11 @@ export const fr = {
       expertise: "Expertises",
       guarantees: "Garanties & Assurances",
       verifiedTitle: "Assuré et vérifié par MENAO",
+      // Fiche publique (lot 23, ADR 0269).
+      verifiedOn: (date: string, detail: string) => `Dernier contrôle le ${date}. ${detail}`,
+      reviewsRule:
+        "Seuls les clients ayant réalisé un chantier via MENAO peuvent noter un artisan, une fois les travaux réceptionnés.",
+      reviewsHow: "Comment nous contrôlons les avis",
       verifiedDetail: (exempt: boolean) =>
         exempt
           ? "Responsabilité civile professionnelle, entreprise en activité (INSEE) et attestation URSSAF à jour, vérifiées par l'équipe MENAO."

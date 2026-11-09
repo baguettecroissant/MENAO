@@ -10,6 +10,8 @@ const pageSchema = z.object({
   slug: z.string(),
   indexable: z.boolean(),
   public_company: z.string().nullable(),
+  // Date du dernier contrôle du dossier (ADR 0269).
+  verified_on: z.string().nullable().optional(),
 });
 
 /**
@@ -29,6 +31,7 @@ export const getArtisanPage = cache(async (slug: string) => {
     slug: page.data.slug,
     indexable: page.data.indexable,
     name: company ?? profile.display_name,
+    verifiedOn: page.data.verified_on ?? null,
   };
 });
 
