@@ -914,6 +914,31 @@ export const fr = {
     faqEyebrow: "Questions fréquentes",
     faqTitle: "Vos questions, nos réponses.",
     faqMore: "Toutes les questions",
+    // Accueil, nouvelle structure (ADR 0264). TODO(legal) : faire relire privacyNote, controlsTitle
+    // et le prix de l'encart pro avant l'ouverture.
+    privacyNote:
+      "Vos coordonnées ne vont qu'aux artisans qui acceptent votre demande, 3 au plus. Jamais revendues.",
+    proofsMore: (label: string) => `${label} : en savoir plus`,
+    allTrades: "Voir tous les métiers",
+    moreTradesLabel: "Autres métiers",
+    controlsTitle: "Contrôlés avant d'apparaître :",
+    // Pages carrefour (ADR 0264).
+    tradesPage: {
+      title: "Tous les métiers du bâtiment",
+      breadcrumb: "Métiers",
+    },
+    citiesPage: {
+      title: "Communes couvertes par MENAO",
+      breadcrumb: "Villes",
+      tradesIn: (city: string) => `Métiers à ${city}`,
+    },
+    zone: {
+      eyebrow: "Alpes-Maritimes",
+      all: "Voir toutes les villes",
+      mapLabel: "Carte des communes couvertes dans les Alpes-Maritimes",
+      sea: "Mer Méditerranée",
+      communesLabel: "Communes couvertes",
+    },
   },
   trust: {
     title: "Des artisans du bâtiment vérifiés",
@@ -1025,6 +1050,9 @@ export const fr = {
       text: "Demandes qualifiées, devis dictés, signature et paiements dans une seule app. Abonnement fixe, 2 mois offerts.",
       action: "Découvrir l'Espace Pro",
       points: ["Demandes qualifiées", "Paiements sur votre compte", "Zéro commission"],
+      // Prix lu dans la table des formules (ADR 0264).
+      price: (amount: string) => amount,
+      priceUnit: (plan: string) => `HT / mois · formule ${plan}`,
     },
     // Illustrations du parcours client (valeurs d'exemple).
     journey: {

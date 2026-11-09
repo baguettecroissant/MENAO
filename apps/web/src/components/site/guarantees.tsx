@@ -1,4 +1,4 @@
-import { LifeBuoy, ShieldCheck, Star, Wallet } from "lucide-react";
+import { Check, LifeBuoy, ShieldCheck, Star, Wallet } from "lucide-react";
 import { TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { SectionHeading } from "./section-heading";
@@ -14,10 +14,13 @@ export function GuaranteeSection({
   id,
   tone = "dark",
   more = true,
+  controls,
 }: {
   id: string;
   tone?: "dark" | "light";
   more?: boolean;
+  /** Contrôles nommés sous les garanties (accueil, ADR 0264). */
+  controls?: readonly string[];
 }) {
   const dark = tone === "dark";
   const content = (
@@ -58,6 +61,22 @@ export function GuaranteeSection({
           );
         })}
       </ul>
+      {controls && (
+        <div className="flex flex-col gap-2.5 rounded-[1.125rem] border border-border bg-surface p-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-5">
+          <p className="text-[0.9375rem] font-bold">{fr.home.controlsTitle}</p>
+          <ul className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {controls.map((control) => (
+              <li
+                key={control}
+                className="flex items-center gap-1.5 text-sm font-semibold text-success sm:rounded-pill sm:bg-success-soft sm:px-3 sm:py-1.5"
+              >
+                <Check aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={3} />
+                {control}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {more && (
         <TextLink
           href="/garanties"

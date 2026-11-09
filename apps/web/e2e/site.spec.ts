@@ -183,7 +183,11 @@ test("badges App Store et Google Play : pied de page, accueil et page Pro (ADR 0
     expect((await request.get(badge)).status(), badge).toBe(200);
   }
   await page.goto("/");
-  const app = page.getByRole("region", { name: "Suivez tous vos chantiers, depuis votre poche." });
+  // Badges sous les étapes de « Comment ça marche » (ADR 0264).
+  const app = page.getByRole("region", { name: "Votre projet entre de bonnes mains." });
+  await expect(
+    app.getByRole("heading", { name: "Suivez tous vos chantiers, depuis votre poche." }),
+  ).toBeVisible();
   await expect(app.getByRole("link", { name: "Télécharger dans l'App Store" })).toHaveAttribute(
     "href",
     /^https:\/\/apps\.apple\.com\//,

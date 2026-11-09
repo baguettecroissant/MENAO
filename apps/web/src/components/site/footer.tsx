@@ -43,7 +43,7 @@ export async function SiteFooter() {
       title: t.trades,
       links: [
         ...trades.slice(0, 7).map((tr) => ({ href: `/${tr.code}`, label: tr.label })),
-        { href: "/#metiers", label: t.allTrades },
+        { href: "/metiers", label: t.allTrades },
       ],
     },
     {
