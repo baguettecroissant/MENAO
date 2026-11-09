@@ -73,6 +73,11 @@ export const STATIC_PAGES = [
   "/partenaires",
   "/pro",
   "/pro/formules",
+  // Pages par fonction (ADR 0267).
+  "/pro/logiciel-devis",
+  "/pro/secretaire-telephonique",
+  "/pro/acompte-en-ligne",
+  "/pro/facturation",
   "/pro/faq",
   "/faq",
   "/contact",

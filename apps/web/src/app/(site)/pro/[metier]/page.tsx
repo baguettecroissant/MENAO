@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CircleCheck, MapPin } from "lucide-react";
 import { CtaBand } from "@/components/site/cta-band";
+import { FeatureLinks } from "@/components/pro-landing/feature-page";
+import { PriceGuarantee } from "@/components/pro-landing/price-guarantee";
 import { ProAssistant } from "@/components/pro-landing/pro-assistant";
+import { ProofStrip } from "@/components/pro-landing/proof-strip";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { JsonLd } from "@/components/site/json-ld";
 import { SectionHeading } from "@/components/site/section-heading";
@@ -13,6 +16,7 @@ import { ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { seoCatalog } from "@/lib/site/catalog";
 import { shareImage } from "@/lib/site/images";
+import { loadPricing } from "@/lib/site/pro-plans";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
 
@@ -68,6 +72,9 @@ export default async function ProTradePage({ params }: PageProps<"/pro/[metier]"
   const data = await load((await params).metier);
   if (!data) notFound();
   const { trade, communes, works } = data;
+  // Prix d'entrée lu en base (ADR 0267).
+  const { pricingPlans } = await loadPricing();
+  const entry = pricingPlans.find((plan) => plan.ouverte) ?? pricingPlans[0];
   const path = `/pro/${trade.code}`;
   const faq = t.faq(trade.label);
 
@@ -112,6 +119,9 @@ export default async function ProTradePage({ params }: PageProps<"/pro/[metier]"
         hint={landing.hero.proofs.join(" · ")}
       />
 
+      {/* Bande de preuves (ADR 0267) */}
+      <ProofStrip />
+
       {works.length > 0 && (
         <section aria-labelledby="pro-trade-works" className="py-16 sm:py-24">
           <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 sm:px-6">
@@ -136,6 +146,13 @@ export default async function ProTradePage({ params }: PageProps<"/pro/[metier]"
         </section>
       )}
 
+      {/* Les outils, vers les pages par fonction (ADR 0267) */}
+      <FeatureLinks
+        id="pro-trade-tools"
+        eyebrow={landing.featurePages.toolsEyebrow}
+        title={landing.featurePages.toolsTitle}
+      />
+
       <section aria-labelledby="pro-trade-steps" className="bg-surface py-16 sm:py-24">
         <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
           <SectionHeading
@@ -156,6 +173,8 @@ export default async function ProTradePage({ params }: PageProps<"/pro/[metier]"
           </div>
         </div>
       </section>
+
+      {entry && <PriceGuarantee plan={entry} />}
 
       <section aria-labelledby="pro-trade-cities" className="py-16 sm:py-24">
         <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 sm:px-6">

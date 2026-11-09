@@ -5477,6 +5477,204 @@ export const fr = {
         draftTime: "il y a 1 h",
       },
       plansCompare: "Comparer les formules en détail",
+      // Pages par fonction (lot 21, ADR 0267) : faits repris de la FAQ des artisans et des
+      // réglages de l'espace pro. TODO(legal) : faire relire les promesses avant l'ouverture.
+      featurePages: {
+        breadcrumb: "Espace Pro",
+        stepsEyebrow: "Comment ça marche",
+        gainsEyebrow: "Ce que vous y gagnez",
+        gainsTitle: "Moins de soirées sur les papiers.",
+        includedEyebrow: "Formules",
+        includedHead: "Dans chaque formule",
+        faqEyebrow: "Questions fréquentes",
+        othersEyebrow: "Tout-en-un",
+        othersTitle: "Les autres outils de MENAO",
+        discover: "Découvrir",
+        trial: "2 mois d'essai offerts",
+        noCommission: "Sans commission",
+        toolsEyebrow: "Tout-en-un",
+        toolsTitle: "Les outils MENAO pour votre métier",
+        guideTitle: "Facture électronique : ce qui change pour les artisans du bâtiment",
+        guideEyebrow: "À lire",
+        pages: {
+          "logiciel-devis": {
+            eyebrow: "Logiciel de devis artisan",
+            metaTitle: "Logiciel de devis pour artisan du bâtiment : dictez, MENAO rédige",
+            metaDescription:
+              "Dictez vos devis sur le chantier : MENAO les met en forme avec la TVA, les totaux et les mentions obligatoires, et votre client les signe en ligne. Sans commission, 2 mois d'essai.",
+            title: "Vos devis dictés, prêts en quelques minutes.",
+            lead: "Vous dictez les fournitures, les quantités et les prix : MENAO met en forme le devis avec la TVA, les totaux et les mentions obligatoires. Votre client le signe en ligne.",
+            availability: "Inclus dès la formule Base",
+            stepsTitle: "Du chantier au devis signé.",
+            steps: [
+              {
+                title: "Dictez ou ajoutez vos lignes",
+                text: "Matériel, main-d'œuvre ou autre, avec quantité, unité et prix HT : à la main ou à voix haute, jusqu'à 2 minutes par dictée. La recherche retrouve les articles déjà utilisés.",
+              },
+              {
+                title: "MENAO met en forme",
+                text: "TVA, totaux, mentions obligatoires, votre logo et votre assurance décennale. Vous vérifiez l'aperçu PDF avant l'envoi. MENAO n'invente aucun prix.",
+              },
+              {
+                title: "Votre client signe en ligne",
+                text: "Avec un code à usage unique. Il peut demander une modification ou refuser en disant pourquoi. Le devis est valable 30 jours.",
+              },
+            ],
+            gains: [
+              {
+                title: "Aucun prix inventé",
+                text: "Seuls les prix que vous dictez sont repris : vous gardez la main sur chaque ligne.",
+              },
+              {
+                title: "Vos articles retrouvés",
+                text: "La recherche reprend les prestations de vos devis précédents et de votre catalogue.",
+              },
+              {
+                title: "L'acompte à la signature",
+                text: "Vous choisissez le pourcentage payé à la signature, 30 % par défaut, le reste à la réception.",
+              },
+              {
+                title: "Les relances automatiques",
+                text: "MENAO relance votre client quand un devis attend sa signature ou quand l'acompte n'est pas réglé.",
+              },
+            ],
+            includedTitle: "Inclus dès la formule Base.",
+            faqTitle: "Vos questions sur les devis.",
+          },
+          "secretaire-telephonique": {
+            eyebrow: "Secrétaire téléphonique",
+            metaTitle: "Secrétaire téléphonique pour artisan : Camille répond à vos clients",
+            metaDescription:
+              "Quand vous êtes sur le chantier, Camille répond à vos clients avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
+            title: "Camille répond à vos clients quand vous êtes sur le chantier.",
+            lead: "Votre secrétaire dédiée, avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
+            availability: "Avec Premium et Entreprise",
+            stepsTitle: "Votre secrétaire, réglée en quelques minutes.",
+            steps: [
+              {
+                title: "Réglez votre secrétaire",
+                text: "Votre nom, vos horaires renseignés dans l'agenda, vos consignes, et si elle peut prendre des rendez-vous de visite.",
+              },
+              {
+                title: "Elle répond quand vous ne décrochez pas",
+                text: "Elle note la demande du client, puis fixe le rendez-vous dans vos créneaux libres ou vous transmet le message.",
+              },
+              {
+                title: "Vous retrouvez tout",
+                text: "Messages et rendez-vous arrivent dans « Secrétaire » et dans votre agenda, à traiter quand vous le voulez.",
+              },
+            ],
+            gains: [
+              {
+                title: "Plus d'appel perdu",
+                text: "Le client qui appelle pendant que vous êtes sur un toit ou sous un évier obtient une réponse.",
+              },
+              {
+                title: "Des rendez-vous dans vos créneaux",
+                text: "Camille ne réserve que vos créneaux libres, selon les horaires de votre agenda.",
+              },
+              {
+                title: "Des minutes incluses",
+                text: "300 minutes par mois avec Premium, 1 000 avec Entreprise, et des recharges si vous en voulez plus.",
+              },
+              {
+                title: "Vos clients rappelés",
+                text: "Rappels de rendez-vous par SMS avec Premium, par appel et SMS avec Entreprise.",
+              },
+            ],
+            includedTitle: "Avec Premium et Entreprise.",
+            faqTitle: "Vos questions sur la secrétaire.",
+          },
+          "acompte-en-ligne": {
+            eyebrow: "Acompte en ligne",
+            metaTitle: "Acompte en ligne pour artisan : payé directement sur votre compte",
+            metaDescription:
+              "Votre client paie l'acompte en ligne après avoir signé le devis, puis le solde après la réception. Chaque paiement arrive sur votre compte Stripe, sans commission.",
+            title: "Acompte et solde payés en ligne, directement sur votre compte.",
+            lead: "Votre client règle l'acompte après avoir signé, puis le solde après la réception. Chaque paiement arrive sur votre compte Stripe : MENAO ne touche jamais à votre argent.",
+            availability: "Inclus dès la formule Base",
+            stepsTitle: "Du devis signé au solde encaissé.",
+            steps: [
+              {
+                title: "Choisissez l'acompte",
+                text: "À l'envoi du devis, vous fixez le pourcentage payé à la signature, 30 % par défaut, ou votre propre échéancier.",
+              },
+              {
+                title: "Votre client paie en ligne",
+                text: "Il règle l'acompte par carte après avoir signé, puis le solde après la réception, une fois les réserves levées.",
+              },
+              {
+                title: "L'argent arrive sur votre compte",
+                text: "Chaque paiement arrive sur votre compte Stripe, puis il est viré sur votre compte bancaire selon le calendrier de vos virements.",
+              },
+            ],
+            gains: [
+              {
+                title: "Directement chez vous",
+                text: "MENAO ne prélève ni commission ni marge, et ne détient jamais votre argent.",
+              },
+              {
+                title: "Moins de relances",
+                text: "MENAO relance votre client quand l'acompte n'est pas réglé.",
+              },
+              {
+                title: "Les gros chantiers en tranches",
+                text: "Avec Premium et Entreprise, un échéancier en plusieurs tranches pour les situations de travaux.",
+              },
+              {
+                title: "Les factures suivent",
+                text: "Une facture d'acompte puis une facture de solde sont émises à votre nom à chaque paiement.",
+              },
+            ],
+            includedTitle: "Inclus dès la formule Base.",
+            faqTitle: "Vos questions sur les paiements.",
+          },
+          facturation: {
+            eyebrow: "Facturation et dépenses",
+            metaTitle: "Facturation pour artisan : factures automatiques et dépenses lues",
+            metaDescription:
+              "Factures d'acompte et de solde émises à chaque paiement, tickets de dépenses lus automatiquement, envoi à votre comptable chaque mois ou chaque trimestre.",
+            title: "Vos factures se font toutes seules.",
+            lead: "Une facture d'acompte puis une facture de solde à chaque paiement, numérotées sans interruption. Vos tickets sont lus, et votre comptable reçoit tout chaque mois.",
+            availability: "Inclus dès la formule Base",
+            stepsTitle: "Votre comptabilité, sans y penser.",
+            steps: [
+              {
+                title: "Les factures se font à chaque paiement",
+                text: "Facture d'acompte puis facture de solde, à votre nom, numérotées sans interruption, dans « Argent ».",
+              },
+              {
+                title: "Vos tickets sont lus",
+                text: "Photographiez une facture ou un ticket : MENAO lit les montants, vous vérifiez avant d'enregistrer.",
+              },
+              {
+                title: "Votre comptable reçoit tout",
+                text: "Chaque mois ou chaque trimestre, factures et dépenses de la période, tableaux et pièces, par un lien de téléchargement.",
+              },
+            ],
+            gains: [
+              {
+                title: "Plus de facture oubliée",
+                text: "Chaque paiement reçu donne sa facture, sans rien saisir.",
+              },
+              {
+                title: "Un export prêt",
+                text: "Vos factures s'exportent en CSV pour votre comptable.",
+              },
+              {
+                title: "Vos dépenses par chantier",
+                text: "Chaque dépense peut être rattachée à un chantier, et vous suivez ce qu'il reste à payer.",
+              },
+              {
+                title: "Votre marge réelle",
+                text: "Avec Premium et Entreprise, les dépenses comparées au montant facturé, chantier par chantier.",
+              },
+            ],
+            includedTitle: "Inclus dès la formule Base.",
+            faqTitle: "Vos questions sur les factures.",
+          },
+        },
+      },
       // Page d'atterrissage des campagnes, sans menu (lot 20, ADR 0266).
       campaign: {
         metaTitle: "Rejoindre MENAO : des chantiers près de chez vous, zéro commission",
