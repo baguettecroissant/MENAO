@@ -35,7 +35,7 @@ export function GuaranteeSection({
           return (
             <li
               key={item.title}
-              className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-card p-4 sm:flex sm:flex-col sm:gap-3 sm:p-6 ${
+              className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-[1.25rem] p-4 sm:flex sm:flex-col sm:gap-3 sm:p-6 ${
                 dark
                   ? "border border-white/10 bg-white/[0.06] backdrop-blur"
                   : "border border-border bg-surface shadow-card"
@@ -43,12 +43,12 @@ export function GuaranteeSection({
             >
               <span
                 className={`row-span-2 flex size-11 items-center justify-center rounded-xl ${
-                  dark ? "bg-white/15 text-white" : "bg-primary-soft text-primary"
+                  dark ? "bg-white/15 text-white" : "bg-foreground text-white"
                 }`}
               >
                 <Icon aria-hidden="true" className="size-5" />
               </span>
-              <h3 className="font-medium">{item.title}</h3>
+              <h3 className="font-display text-[1.0625rem] font-bold">{item.title}</h3>
               <p
                 className={`text-sm leading-relaxed text-pretty ${dark ? "text-white/75" : "text-muted-foreground"}`}
               >

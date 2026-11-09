@@ -106,7 +106,7 @@ export default async function ProLandingPage() {
               </span>
               <h1
                 id="pro-title"
-                className="text-[2.25rem] leading-[1.05] font-medium tracking-tight text-balance sm:text-[3.25rem] lg:text-[3.5rem]"
+                className="text-[2.25rem] leading-[1.05] font-bold tracking-tight text-balance sm:text-[3.25rem] lg:text-[3.5rem]"
               >
                 {t.hero.titleLead}{" "}
                 <span className="bg-[linear-gradient(90deg,#b9c7fc_0%,#e4eafd_100%)] bg-clip-text text-transparent sm:block">
@@ -270,7 +270,7 @@ export default async function ProLandingPage() {
                   </Tag>
                   <h3
                     id="pro-feature-voice"
-                    className="text-2xl leading-tight font-medium tracking-tight text-balance"
+                    className="text-2xl leading-tight font-bold tracking-tight text-balance"
                   >
                     {t.features.voice.title}
                   </h3>
@@ -294,7 +294,7 @@ export default async function ProLandingPage() {
                 </span>
                 <h3
                   id="pro-feature-request"
-                  className="text-2xl leading-tight font-medium tracking-tight text-balance"
+                  className="text-2xl leading-tight font-bold tracking-tight text-balance"
                 >
                   {t.features.request.title}
                 </h3>

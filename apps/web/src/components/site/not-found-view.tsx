@@ -13,7 +13,7 @@ export function NotFoundView() {
       <p className="text-sm font-medium tracking-[0.12em] text-primary-strong uppercase">
         {t.code}
       </p>
-      <h1 className="max-w-xl text-2xl font-medium tracking-tight sm:text-[2rem]">{t.title}</h1>
+      <h1 className="max-w-xl text-2xl font-bold tracking-tight sm:text-[2rem]">{t.title}</h1>
       <p className="max-w-lg text-muted-foreground">{t.text}</p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <ButtonLink href="/" size="lg">

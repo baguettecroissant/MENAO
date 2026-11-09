@@ -90,7 +90,7 @@ export default async function HomePage() {
                   <Signature aria-hidden="true" className="size-3.5" />
                   {fr.chantier.steps.signature}
                 </Tag>
-                <h3 className="text-2xl leading-tight font-medium tracking-tight text-balance">
+                <h3 className="text-2xl leading-tight font-bold tracking-tight text-balance">
                   {t.space.quote.title}
                 </h3>
                 <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
@@ -105,7 +105,7 @@ export default async function HomePage() {
                   <Wallet aria-hidden="true" className="size-3.5" />
                   {fr.chantier.steps.paiement}
                 </span>
-                <h3 className="text-2xl leading-tight font-medium tracking-tight text-balance">
+                <h3 className="text-2xl leading-tight font-bold tracking-tight text-balance">
                   {t.space.payment.title}
                 </h3>
                 <p className="text-sm leading-relaxed text-pretty text-foreground/80">

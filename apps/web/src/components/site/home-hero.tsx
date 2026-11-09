@@ -69,7 +69,7 @@ export function HomeHero() {
           )}
 
           <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[34rem]">
-            <h1 className="animate-menao-rise text-[2.375rem] leading-[1.05] font-medium tracking-tight text-white sm:text-[3.25rem] lg:text-[3.75rem]">
+            <h1 className="animate-menao-rise text-[2.5rem] leading-[1.02] font-bold tracking-tight text-white sm:text-[3.5rem] lg:text-[4.125rem]">
               {t.heroTitleStart} <span className="text-[#aebcff]">{t.heroTitleAccent}</span>
             </h1>
             <div className="animate-menao-rise text-[0.9375rem] text-white/90 [animation-delay:120ms] sm:text-base">

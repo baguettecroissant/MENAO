@@ -197,7 +197,7 @@ export default function GuaranteesPage() {
               <p className="text-xs font-semibold tracking-[0.14em] text-primary-strong uppercase">
                 {t.rankingEyebrow}
               </p>
-              <h2 id="guarantees-ranking" className="text-2xl font-medium tracking-tight">
+              <h2 id="guarantees-ranking" className="text-2xl font-bold tracking-tight">
                 {t.rankingTitle}
               </h2>
               <p className="text-sm leading-relaxed text-pretty text-muted-foreground">

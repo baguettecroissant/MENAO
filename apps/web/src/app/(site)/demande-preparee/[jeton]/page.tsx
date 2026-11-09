@@ -110,7 +110,7 @@ export default async function PreparedRequestPage({
       <div className="mx-auto grid w-full max-w-5xl items-start gap-8 px-4 py-8 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.75rem]">
+            <h1 className="text-[2rem] leading-[1.05] font-bold tracking-tight sm:text-[2.75rem]">
               {t.title(preview.first_name)}
             </h1>
             <p className="text-[0.9375rem] leading-relaxed text-label sm:text-base">{t.intro}</p>

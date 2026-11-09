@@ -80,7 +80,7 @@ export default function PartnersPage() {
       <section aria-labelledby="partenaires-regles" className="py-14 sm:py-20">
         <div className="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 lg:grid-cols-2">
           <div className="flex flex-col gap-4">
-            <h2 id="partenaires-regles" className="text-2xl font-medium tracking-tight">
+            <h2 id="partenaires-regles" className="text-2xl font-bold tracking-tight">
               {t.rulesTitle}
             </h2>
             {t.rules.map((rule) => (
@@ -92,7 +92,7 @@ export default function PartnersPage() {
             <p className="text-sm text-muted-foreground">{t.amounts}</p>
           </div>
           <div className="flex flex-col gap-4">
-            <h2 className="text-2xl font-medium tracking-tight">{t.trustTitle}</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t.trustTitle}</h2>
             <ul className="flex flex-col gap-3">
               {t.trust.map((item) => (
                 <li key={item} className="flex gap-3 text-sm">

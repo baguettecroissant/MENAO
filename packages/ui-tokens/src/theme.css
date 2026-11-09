@@ -33,13 +33,13 @@
   --shadow-raised: 0 8px 24px rgb(17 23 40 / 0.08);
   --shadow-focus: 0 0 0 4px rgb(72 105 246 / 0.18);
   --font-sans:
-    var(--font-google-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   --font-app:
-    var(--font-inter), var(--font-google-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   --font-display:
-    var(--font-inter-tight), var(--font-inter), var(--font-google-sans), ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --spacing-touch: 2.75rem;
 }

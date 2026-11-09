@@ -27,7 +27,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint?: str
   return (
     <div className="flex flex-col gap-1 rounded-card border border-border bg-surface p-4 shadow-card">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-2xl font-medium tracking-tight tabular-nums">{value}</dd>
+      <dd className="text-2xl font-bold tracking-tight tabular-nums">{value}</dd>
       {hint && <dd className="text-xs text-subtle-foreground">{hint}</dd>}
     </div>
   );
