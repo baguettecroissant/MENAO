@@ -54,7 +54,13 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   const visitor = await browser.newContext();
   const page = await visitor.newPage();
   await page.goto("/p/agence-e2e/pro");
-  await expect(page).toHaveURL(/\/pro\/inscription\?p=agence-e2e$/);
+  // Page d'atterrissage des campagnes (ADR 0266) : le code est rappelé, puis suit le métier choisi.
+  await expect(page).toHaveURL(/\/pro\/rejoindre\?p=agence-e2e$/);
+  await expect(page.getByText("Code appliqué : agence-e2e")).toBeVisible();
+  await page.getByRole("button", { name: "Plombier" }).click();
+  await page.getByRole("button", { name: "Continuer · 1 métier" }).click();
+  await expect(page).toHaveURL(/\/pro\/inscription\?reprendre=1&p=agence-e2e$/);
+  await expect(page.getByRole("heading", { name: "Trouvons votre entreprise" })).toBeVisible();
   await mockGeocoding(page);
   await page.goto("/p/agence-e2e");
   await expect(page).toHaveURL(/\/recherche\?p=agence-e2e$/);

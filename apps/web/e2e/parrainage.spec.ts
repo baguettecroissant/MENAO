@@ -39,6 +39,10 @@ test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, s
   const visitor = await browser.newContext();
   const guest = await visitor.newPage();
   await guest.goto(new URL(link).pathname);
+  // Page d'atterrissage des campagnes (ADR 0266), puis l'inscription, le code toujours suivi.
+  await expect(guest).toHaveURL(new RegExp(`/pro/rejoindre\\?p=${code}$`));
+  await expect(guest.getByText(`Code appliqué : ${code}`)).toBeVisible();
+  await guest.getByRole("link", { name: "Créer mon compte pro" }).first().click();
   await expect(guest).toHaveURL(new RegExp(`/pro/inscription\\?p=${code}$`));
   const cookies = await visitor.cookies();
   expect(cookies.filter((c) => `${c.name}${c.value}`.includes(code))).toEqual([]);
