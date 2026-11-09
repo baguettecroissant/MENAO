@@ -53,11 +53,18 @@ export function LogoMark({
  * Logo complet (dessin puis « menao »), comme l'en-tête du site : haut des écrans de connexion et
  * d'inscription (refonte « Nette », lot 13). Lu « MENAO » par les lecteurs d'écran.
  */
-export function Logo({ size = 30 }: { size?: number }) {
+export function Logo({ size = 30, tone = "brand" }: { size?: number; tone?: "brand" | "white" }) {
   return (
     <View role="img" aria-label={fr.brand} style={styles.logo}>
-      <LogoMark size={size} />
-      <Text aria-hidden style={[styles.wordmark, { fontSize: Math.round(size * 0.87) }]}>
+      <LogoMark size={size} tone={tone} />
+      <Text
+        aria-hidden
+        style={[
+          styles.wordmark,
+          { fontSize: Math.round(size * 0.87) },
+          tone === "white" && styles.wordmarkWhite,
+        ]}
+      >
         {fr.logoWordmark}
       </Text>
     </View>
@@ -72,4 +79,5 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   wordmark: { fontFamily: theme.font.display, letterSpacing: -0.8, color: theme.colors.foreground },
+  wordmarkWhite: { color: "#ffffff" },
 });

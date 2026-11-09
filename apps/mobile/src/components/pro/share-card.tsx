@@ -1,21 +1,14 @@
 import { partnerLinks } from "@menao/core";
 import type { ReferralRow } from "@menao/validation";
-import { Maximize2, Share2, ShieldCheck, Star, X } from "lucide-react-native";
+import { Maximize2, Share2, X } from "lucide-react-native";
 import { useState } from "react";
-import {
-  Image,
-  Modal,
-  Pressable,
-  Share,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Modal, Pressable, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BusinessCardViewer } from "@/components/pro/business-card";
 import { QrCode } from "@/components/qr-code";
 import { Segmented } from "@/components/segmented";
 import { fr } from "@/i18n/fr";
+import { businessCardInfo, siteDomain } from "@/lib/business-card";
 import { env } from "@/lib/env";
 import type { ProfileHub } from "@/lib/profile-hub";
 import { Button } from "@/ui";
@@ -30,11 +23,12 @@ type Tab = "card" | "referral";
 
 /**
  * Carte de visite et parrainage (ADR 0191), à montrer sur un chantier : deux onglets.
- * - « Ma carte de visite » : QR code de la fiche publique, que le client scanne avec l'appareil
- *   photo de son téléphone, et « Partager ma fiche ».
+ * - « Ma carte de visite » : carte de visite aux couleurs de MENAO (lot 17, `BusinessCardViewer`),
+ *   verso d'abord avec le QR code de la fiche publique, que le client scanne avec l'appareil photo
+ *   de son téléphone ; recto au balayage ; trois modèles ; et « Partager ma fiche ».
  * - « Parrainer un confrère » : QR code de l'inscription artisan avec le code déjà rempli, et le
  *   code à saisir, au choix du confrère ; « Partager mon code » reste du texte seul (ADR 0137).
- * Un toucher sur le QR code (ou « Agrandir ») l'affiche en plein écran. Aucune mention de
+ * Un toucher sur la carte ou le QR code (ou « Agrandir ») affiche le QR code en plein écran. Aucune mention de
  * l'abonnement (CLAUDE.md règle 10).
  */
 export function ShareCard({ hub }: { hub: ProfileHub }) {
@@ -63,50 +57,13 @@ export function ShareCard({ hub }: { hub: ProfileHub }) {
 
       {current === "card" && pageUrl ? (
         <>
-          <View style={styles.ticket}>
-            <View style={styles.person}>
-              <View style={styles.avatar}>
-                {hub.avatarUrl ? (
-                  <Image source={{ uri: hub.avatarUrl }} style={styles.avatarImage} alt="" />
-                ) : (
-                  <Text style={styles.initials}>{hub.initials}</Text>
-                )}
-              </View>
-              <View style={styles.personText}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {hub.name}
-                </Text>
-                {hub.company || hub.city ? (
-                  <Text style={styles.company} numberOfLines={1}>
-                    {[hub.company, hub.city].filter(Boolean).join(" · ")}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-            {hub.verified || hub.score ? (
-              <View style={styles.badges}>
-                {hub.verified ? (
-                  <View style={[styles.badge, styles.badgeSuccess]}>
-                    <ShieldCheck size={13} color={colors.success} />
-                    <Text style={[styles.badgeText, { color: colors.success }]}>{t.verified}</Text>
-                  </View>
-                ) : null}
-                {hub.score ? (
-                  <View style={[styles.badge, styles.badgePrimary]}>
-                    <Star size={13} color={colors["primary-strong"]} />
-                    <Text style={[styles.badgeText, { color: colors["primary-strong"] }]}>
-                      {t.score(hub.score.percent, hub.score.count)}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-            <QrTile value={pageUrl} label={s.card.qrLabel} onPress={() => setFull("card")} />
-            <Text style={styles.url} numberOfLines={1}>
-              {pageUrl.replace(/^https?:\/\//, "")}
-            </Text>
-          </View>
-          <Text style={styles.hint}>{s.card.hint}</Text>
+          <BusinessCardViewer
+            info={businessCardInfo(hub)}
+            pageUrl={pageUrl}
+            domain={siteDomain(env.siteUrl)}
+            verified={hub.verified}
+            onExpand={() => setFull("card")}
+          />
           <View style={styles.actions}>
             <View style={styles.action}>
               <Button
@@ -301,33 +258,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.hero,
     backgroundColor: colors["primary-softer"],
   },
-  person: { flexDirection: "row", alignItems: "center", gap: spacing(3), alignSelf: "stretch" },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarImage: { width: 48, height: 48 },
-  initials: { fontFamily: font.bold, fontSize: 17, color: colors["primary-foreground"] },
-  personText: { flex: 1, gap: 2 },
-  name: { fontFamily: font.bold, fontSize: 17, color: colors.foreground },
-  company: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
-  badges: { flexDirection: "row", flexWrap: "wrap", gap: spacing(1.5), alignSelf: "stretch" },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: spacing(2.5),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-  },
-  badgeSuccess: { backgroundColor: colors["success-soft"] },
-  badgePrimary: { backgroundColor: colors["primary-soft"] },
-  badgeText: { fontFamily: font.medium, fontSize: 12 },
   ticketTitle: { fontFamily: font.bold, fontSize: 16, color: colors.foreground },
   qrTile: {
     padding: spacing(2),
@@ -335,7 +265,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   pressed: { opacity: 0.85 },
-  url: { fontFamily: font.medium, fontSize: 13, color: colors["primary-strong"] },
   codeBox: { alignItems: "center", gap: 2 },
   codeLabel: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
   code: {

@@ -2,7 +2,15 @@ import { artisanPageUrl } from "@menao/core";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BusinessCardSheet } from "@/components/pro/business-card-sheet";
+import { Check } from "lucide-react";
+import {
+  BusinessCard,
+  BusinessCardSheet,
+  CARD_MODELS,
+  isCardModel,
+  type BusinessCardData,
+} from "@/components/pro/business-card-sheet";
+import { documentLogoUrl } from "@/lib/documents/logo";
 import { Alert } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
@@ -22,13 +30,19 @@ export const metadata: Metadata = { title: `${t.title} — MENAO`, robots: { ind
  * voir les avis vérifiés. Planche A4 à imprimer depuis le navigateur, hors de la coque de l'espace
  * pro.
  */
-export default async function BusinessCardsPage() {
+export default async function BusinessCardsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ modele?: string }>;
+}) {
+  const { modele } = await searchParams;
+  const model = isCardModel(modele) ? modele : "nuit";
   const space = await requireTeamPermission("storefront");
   const { data: auth } = await space.supabase.auth.getClaims();
   const [{ data: artisan }, { data: profile }, { data: trades }] = await Promise.all([
     space.supabase
       .from("artisans")
-      .select("slug, status, nom_commercial, raison_sociale, sirene_partial")
+      .select("slug, status, nom_commercial, raison_sociale, sirene_partial, logo_path")
       .eq("id", space.artisanId)
       .single(),
     space.supabase
@@ -58,6 +72,16 @@ export default async function BusinessCardsPage() {
       : null;
   const qr = url ? qrSvg(url) : null;
   const host = new URL(env.NEXT_PUBLIC_SITE_URL).host;
+  const logoUrl = qr ? await documentLogoUrl(space.supabase, artisan?.logo_path) : null;
+  const card: BusinessCardData = {
+    name: company ?? person,
+    person: company ? person || null : null,
+    trade,
+    phone: profile?.phone ? formatPhone(profile.phone) : null,
+    host,
+    logoUrl,
+    verified: true,
+  };
 
   return (
     // Refonte « Nette » (ADR 0253) : la planche à gauche, l'impression à droite ; à l'impression,
@@ -82,18 +106,59 @@ export default async function BusinessCardsPage() {
       {qr && (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] print:block">
           <div className="overflow-x-auto rounded-card border border-dashed border-border-strong bg-background p-4 sm:p-6 print:overflow-visible print:border-0 print:bg-transparent print:p-0">
-            <BusinessCardSheet
-              card={{
-                name: company ?? person,
-                person: company ? person || null : null,
-                trade,
-                phone: profile?.phone ? formatPhone(profile.phone) : null,
-                host,
-              }}
-              qr={qr}
-            />
+            <BusinessCardSheet card={card} qr={qr} model={model} />
           </div>
           <div className="flex flex-col gap-4 print:hidden">
+            <section aria-labelledby="modele" className={sheetCard}>
+              <h2 id="modele" className="text-lg">
+                {t.modelTitle}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {CARD_MODELS.map((key) => {
+                  const active = key === model;
+                  return (
+                    <li key={key}>
+                      <Link
+                        href={
+                          key === "nuit"
+                            ? "/pro/cartes-de-visite"
+                            : `/pro/cartes-de-visite?modele=${key}`
+                        }
+                        replace
+                        scroll={false}
+                        aria-current={active ? "true" : undefined}
+                        className={`flex items-center gap-3 rounded-2xl bg-surface p-2.5 transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${
+                          active
+                            ? "border-2 border-foreground"
+                            : "border border-border hover:border-border-strong"
+                        }`}
+                      >
+                        {/* Vignette : la carte réelle, réduite (85 mm ≈ 321 px). */}
+                        <span
+                          aria-hidden="true"
+                          className="relative h-[4.125rem] w-[6.375rem] shrink-0 overflow-hidden rounded-md shadow-card"
+                        >
+                          <span className="absolute top-0 left-0 origin-top-left scale-[0.318]">
+                            <BusinessCard model={key} card={card} qr={qr} />
+                          </span>
+                        </span>
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="text-[0.9375rem] font-bold">{t.models[key].label}</span>
+                          <span className="text-[0.8125rem] leading-snug text-muted-foreground">
+                            {t.models[key].text}
+                          </span>
+                        </span>
+                        {active && (
+                          <span className="flex size-5.5 shrink-0 items-center justify-center rounded-full bg-foreground text-surface">
+                            <Check aria-hidden="true" className="size-3.5" strokeWidth={3} />
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
             <section aria-labelledby="imprimer" className={sheetCard}>
               <h2 id="imprimer" className="text-lg">
                 {t.printTitle}

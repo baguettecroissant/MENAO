@@ -378,6 +378,7 @@ export function exampleProfileHub(
       profile.display_name.charAt(0).toUpperCase(),
     company: profile.company_name,
     trade: profile.trades[0]?.label ?? null,
+    phone: null,
     city: profile.zone.city,
     gradeLevel: facts.level,
     avatarUrl: account.avatarUrl,
