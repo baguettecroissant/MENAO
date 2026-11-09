@@ -2,120 +2,149 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import {
-  CircleQuestionMark,
+  CircleHelp,
   ClipboardList,
   FileText,
   HardHat,
   MessageCircle,
+  MessageSquare,
+  ShieldCheck,
 } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
-import { TopBar } from "@/components/top-bar";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
+import { IconSquare } from "@/components/pro/tools-kit";
+import { SettingsRow, SettingsSection } from "@/components/settings-list";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
-import { Body, Button, Card, IconTile, LinkText, Screen, Title } from "@/ui";
 import { theme } from "@/ui/theme";
 
+const { colors, font, radius, spacing } = theme;
 const BENEFIT_ICONS = [ClipboardList, MessageCircle, FileText];
 
-/** Compte d'un visiteur : ce que l'espace MENAO apporte, création de compte, connexion. */
+/**
+ * Compte d'un visiteur : ce que l'espace MENAO apporte, création de compte, connexion. Refonte
+ * « Nette » (lot 13) : grand titre, carte bleu clair des avantages, aide et informations légales
+ * en listes façon iPhone.
+ */
 export function GuestAccount() {
   return (
-    <Screen header={<TopBar />}>
-      <Title>{fr.account.title}</Title>
-      <Card tone="soft">
-        <Text style={styles.heading}>{fr.guest.spaceTitle}</Text>
-        <Body muted>{fr.guest.spaceText}</Body>
+    <FicheScreen>
+      <PageHead title={fr.account.title} />
+      <View style={styles.space}>
+        <Text role="heading" style={styles.heading}>
+          {fr.guest.spaceTitle}
+        </Text>
+        <Text style={styles.text}>{fr.guest.spaceText}</Text>
         <View style={styles.benefits}>
-          {fr.guest.benefits.map((benefit, i) => {
-            const Icon = BENEFIT_ICONS[i] ?? ClipboardList;
-            return (
-              <View key={benefit} style={styles.benefit}>
-                <View style={styles.benefitIcon}>
-                  <Icon size={18} color={theme.colors.primary} />
-                </View>
-                <Text style={styles.benefitText}>{benefit}</Text>
-              </View>
-            );
-          })}
+          {fr.guest.benefits.map((benefit, i) => (
+            <View key={benefit} style={styles.benefit}>
+              <IconSquare icon={BENEFIT_ICONS[i] ?? ClipboardList} size={34} white />
+              <Text style={styles.benefitText}>{benefit}</Text>
+            </View>
+          ))}
         </View>
-        <Button label={fr.guest.createAccount} onPress={() => router.push("/inscription")} />
-      </Card>
+        <FicheButton
+          label={fr.guest.createAccount}
+          tall
+          onPress={() => router.push("/inscription")}
+        />
+      </View>
       <View style={styles.signIn}>
-        <Body muted center>
-          {fr.guest.haveAccount}
-        </Body>
-        <Button
+        <Text style={styles.signInText}>{fr.guest.haveAccount}</Text>
+        <FicheButton
           label={fr.guest.signIn}
           variant="secondary"
+          tall
           onPress={() => router.push("/connexion")}
         />
       </View>
-      <Card>
+      <FicheCard padding={4} gap={3}>
         <View style={styles.row}>
-          <IconTile icon={HardHat} />
+          <IconSquare icon={HardHat} tone="dark" size={40} />
           <View style={styles.rowText}>
-            <Text style={styles.heading}>{fr.guest.artisanTitle}</Text>
+            <Text role="heading" style={styles.heading}>
+              {fr.guest.artisanTitle}
+            </Text>
             {/* Règle 10 : l'inscription pro, jamais l'abonnement (ADR 0113). */}
-            <Body muted>{fr.guest.artisanText}</Body>
+            <Text style={styles.text}>{fr.guest.artisanText}</Text>
           </View>
         </View>
-        <Button
+        <FicheButton
           label={fr.guest.artisanCta}
           variant="secondary"
           onPress={() => router.push("/pro-inscription")}
         />
-      </Card>
-      <Card>
-        <View style={styles.row}>
-          <IconTile icon={CircleQuestionMark} />
-          <View style={styles.rowText}>
-            <Text style={styles.heading}>{fr.guest.helpTitle}</Text>
-            <LinkText
-              label={fr.guest.faq}
-              onPress={() => WebBrowser.openBrowserAsync(siteLinks.faq)}
-            />
-            <LinkText
-              label={fr.guest.contact}
-              onPress={() => WebBrowser.openBrowserAsync(siteLinks.contact)}
-            />
-          </View>
-        </View>
-      </Card>
-      <Card>
-        <Text style={styles.heading}>{fr.account.legal}</Text>
-        <LinkText
+      </FicheCard>
+      <SettingsSection title={fr.guest.helpTitle}>
+        <SettingsRow
+          icon={CircleHelp}
+          iconTone="success"
+          label={fr.guest.faq}
+          onPress={() => WebBrowser.openBrowserAsync(siteLinks.faq)}
+        />
+        <SettingsRow
+          icon={MessageSquare}
+          iconTone="success"
+          label={fr.guest.contact}
+          onPress={() => WebBrowser.openBrowserAsync(siteLinks.contact)}
+        />
+      </SettingsSection>
+      <SettingsSection title={fr.account.legal}>
+        <SettingsRow
+          icon={FileText}
+          iconTone="neutral"
           label={fr.account.terms}
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.terms)}
         />
-        <LinkText
+        <SettingsRow
+          icon={ShieldCheck}
+          iconTone="neutral"
           label={fr.account.privacy}
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.privacy)}
         />
-      </Card>
-      <Body muted>{fr.account.version(Constants.expoConfig?.version ?? "")}</Body>
-    </Screen>
+      </SettingsSection>
+      <Text style={styles.version}>{fr.account.version(Constants.expoConfig?.version ?? "")}</Text>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: { fontFamily: theme.font.medium, fontSize: 17, color: theme.colors.foreground },
-  benefits: { gap: theme.spacing(3), marginVertical: theme.spacing(1) },
-  benefit: { flexDirection: "row", alignItems: "center", gap: theme.spacing(3) },
-  benefitIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
+  space: {
+    gap: spacing(3),
+    padding: spacing(4.5),
+    borderRadius: radius.card,
+    backgroundColor: colors["primary-soft"],
   },
+  heading: {
+    fontFamily: font.display,
+    fontSize: 18,
+    letterSpacing: -0.36,
+    color: colors.foreground,
+  },
+  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  benefits: { gap: spacing(2.5), marginVertical: spacing(1) },
+  benefit: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
   benefitText: {
     flex: 1,
-    fontFamily: theme.font.regular,
+    fontFamily: font.semibold,
     fontSize: 15,
-    color: theme.colors.foreground,
+    lineHeight: 21,
+    color: colors.foreground,
   },
-  signIn: { gap: theme.spacing(3) },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: theme.spacing(4) },
-  rowText: { flex: 1, gap: theme.spacing(2) },
+  signIn: { gap: spacing(2.5) },
+  signInText: {
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 14,
+    color: colors["muted-foreground"],
+  },
+  row: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3) },
+  rowText: { flex: 1, gap: spacing(1) },
+  version: {
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 13,
+    color: colors["muted-foreground"],
+  },
 });

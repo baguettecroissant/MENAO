@@ -1,6 +1,8 @@
 /** Textes de l'application native, en français et centralisés (comme ceux du site). */
 export const fr = {
   brand: "MENAO",
+  /** Logo écrit en minuscules à côté du dessin, comme sur le site (refonte « Nette », lot 13). */
+  logoWordmark: "menao",
   /** Moments de réussite (ADR 0197) : rares, donc marquants. */
   moments: {
     quoteSent: { title: "Devis envoyé", text: "Votre client est prévenu." },
@@ -1994,6 +1996,9 @@ export const fr = {
     bell: (n: number) =>
       n === 0 ? "Notifications" : `Notifications : ${n} non lue${n > 1 ? "s" : ""}`,
     unread: "Non lue",
+    /** Groupes de la liste (refonte « Nette », lot 13). */
+    today: "Aujourd'hui",
+    earlier: "Plus tôt",
     prefsTitle: "Préférences d'e-mails",
     prefsIntro:
       "Les e-mails importants (devis, paiements, réception, litiges, avis reçus) sont toujours envoyés. Les autres peuvent être désactivés ; ils restent visibles ici.",

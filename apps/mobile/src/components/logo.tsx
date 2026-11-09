@@ -1,5 +1,7 @@
-import { View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
+import { fr } from "@/i18n/fr";
+import { theme } from "@/ui/theme";
 
 /** Logo MENAO (toit et sourire), mêmes tracés que sur le site. */
 export function LogoMark({
@@ -46,3 +48,28 @@ export function LogoMark({
     </View>
   );
 }
+
+/**
+ * Logo complet (dessin puis « menao »), comme l'en-tête du site : haut des écrans de connexion et
+ * d'inscription (refonte « Nette », lot 13). Lu « MENAO » par les lecteurs d'écran.
+ */
+export function Logo({ size = 30 }: { size?: number }) {
+  return (
+    <View role="img" aria-label={fr.brand} style={styles.logo}>
+      <LogoMark size={size} />
+      <Text aria-hidden style={[styles.wordmark, { fontSize: Math.round(size * 0.87) }]}>
+        {fr.logoWordmark}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  logo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing(2),
+    alignSelf: "flex-start",
+  },
+  wordmark: { fontFamily: theme.font.display, letterSpacing: -0.8, color: theme.colors.foreground },
+});

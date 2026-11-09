@@ -33,7 +33,7 @@ export function EmailPreferencesForm({ initial }: { initial: EmailPreferences })
             type="checkbox"
             name={key}
             defaultChecked={initial[key]}
-            className="mt-0.5 size-4 shrink-0 accent-primary"
+            className="mt-0.5 size-4 shrink-0 accent-primary in-[.app-nette]:size-[1.125rem] in-[.app-nette]:accent-foreground"
           />
           <span>{t[key]}</span>
         </label>

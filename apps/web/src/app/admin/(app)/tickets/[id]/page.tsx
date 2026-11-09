@@ -154,6 +154,7 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
                 </p>
               )}
               <TicketThread
+                mine="staff"
                 entries={thread}
                 labels={{ staff: t.dispute.support, reporter: t.dispute.reporter }}
                 emptyText={t.noMessage}

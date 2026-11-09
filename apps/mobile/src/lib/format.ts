@@ -71,6 +71,11 @@ export function formatTime(iso: string): string {
   return hourMinute.format(new Date(iso)).replace(":", "h");
 }
 
+/** Instant du jour même, à l'heure de Paris : groupe « Aujourd'hui » des notifications. */
+export function isParisToday(iso: string, now: Date = new Date()): boolean {
+  return parisDay.format(new Date(iso)) === parisDay.format(now);
+}
+
 /** Séparateur de jour d'une conversation : « Aujourd'hui », « Hier » ou « lundi 12 octobre 2026 ». */
 export function formatDayLabel(iso: string, now: Date = new Date()): string {
   const day = parisDay.format(new Date(iso));

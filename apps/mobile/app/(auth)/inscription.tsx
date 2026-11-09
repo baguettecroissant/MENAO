@@ -1,30 +1,31 @@
 import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { AuthScreen, AuthSwitch } from "@/components/auth-kit";
 import { OAuthButtons } from "@/components/oauth-buttons";
 import { SignUpForm } from "@/components/sign-up-form";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signUpParticulier } from "@/lib/auth";
 import { siteLinks } from "@/lib/env";
-import { Body, LinkText, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
 
 /**
  * Inscription d'un particulier, comme sur le site : avec Google ou Apple (ADR 0108), ou par
- * e-mail. Les artisans ont leur propre parcours (ADR 0113).
+ * e-mail. Les artisans ont leur propre parcours (ADR 0113). Refonte « Nette » (lot 13) : logo,
+ * grand titre, lien artisan sous le titre, « Déjà un compte ? » en bas.
  */
 export default function SignUp() {
   return (
-    <Screen header={<TopBar />}>
-      <Title>{fr.auth.signUpTitle}</Title>
-      <View style={styles.pro}>
-        <Body muted>{fr.auth.signUpText}</Body>
-        <LinkText
+    <AuthScreen
+      title={fr.auth.signUpTitle}
+      lead={
+        <AuthSwitch
+          question={fr.auth.signUpText}
           label={fr.auth.proSignUpLink}
           onPress={() => router.replace("/pro-inscription")}
+          border={false}
+          start
         />
-      </View>
+      }
+    >
       <OAuthButtons
         onSignedIn={(pending) =>
           pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
@@ -39,15 +40,11 @@ export default function SignUp() {
           return error;
         }}
       />
-      <View style={styles.footer}>
-        <Body muted>{fr.auth.haveAccount}</Body>
-        <LinkText label={fr.auth.signIn} onPress={() => router.replace("/connexion")} />
-      </View>
-    </Screen>
+      <AuthSwitch
+        question={fr.auth.haveAccount}
+        label={fr.auth.signIn}
+        onPress={() => router.replace("/connexion")}
+      />
+    </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  pro: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing(2) },
-  footer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing(2) },
-});

@@ -4,23 +4,16 @@ import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { z } from "zod";
+import { AuthScreen, AuthSwitch } from "@/components/auth-kit";
+import { FicheButton } from "@/components/pro/fiche-kit";
+import { CheckRow, FieldPair, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signOut } from "@/lib/auth";
 import { siteLinks } from "@/lib/env";
 import { completeOAuthSignup, loadSignupProfile, type SignupProfile } from "@/lib/oauth";
 import { useFocusData } from "@/lib/use-focus-data";
-import {
-  Body,
-  Button,
-  Checkbox,
-  LinkText,
-  Notice,
-  Screen,
-  ScreenSkeleton,
-  TextField,
-  Title,
-} from "@/ui";
+import { LinkText, Notice, ScreenSkeleton } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.completeSignup;
@@ -31,23 +24,26 @@ type Field = "firstName" | "lastName" | "phone" | "acceptTerms";
  * « Finaliser mon compte » (ADR 0108), comme sur le site : après une première connexion avec
  * Google ou Apple, le client vérifie son nom, ajoute son téléphone s'il le souhaite et accepte les
  * CGU. Le garde de l'application (app/_layout.tsx) y ramène tant que ce n'est pas fait.
+ * Refonte « Nette » (lot 13) : logo, grand titre, champs arrondis, cases bleu nuit.
  */
 export default function CompleteSignupScreen() {
   const [profile] = useFocusData(loadSignupProfile);
   if (profile === undefined) return <ScreenSkeleton />;
   return (
-    <Screen>
-      <Title>{t.title}</Title>
-      {profile ? <Body muted>{t.intro(profile.provider, profile.email)}</Body> : null}
+    <AuthScreen
+      back={false}
+      title={t.title}
+      lead={profile ? t.intro(profile.provider, profile.email) : undefined}
+    >
       <CompleteSignupForm profile={profile} />
-      <LinkText
+      <AuthSwitch
         label={t.notYou}
         onPress={async () => {
           await signOut();
           router.replace("/");
         }}
       />
-    </Screen>
+    </AuthScreen>
   );
 }
 
@@ -93,23 +89,27 @@ function CompleteSignupForm({ profile }: { profile: SignupProfile | null }) {
   return (
     <View style={styles.form}>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <TextField
-        label={a.firstName}
-        value={values.firstName}
-        onChangeText={set("firstName")}
-        error={errors.firstName}
-        autoComplete="given-name"
-        textContentType="givenName"
-      />
-      <TextField
-        label={a.lastName}
-        value={values.lastName}
-        onChangeText={set("lastName")}
-        error={errors.lastName}
-        autoComplete="family-name"
-        textContentType="familyName"
-      />
-      <TextField
+      <FieldPair>
+        <ToolField
+          label={a.firstName}
+          value={values.firstName}
+          onChangeText={set("firstName")}
+          error={errors.firstName}
+          autoComplete="given-name"
+          textContentType="givenName"
+          style={styles.half}
+        />
+        <ToolField
+          label={a.lastName}
+          value={values.lastName}
+          onChangeText={set("lastName")}
+          error={errors.lastName}
+          autoComplete="family-name"
+          textContentType="familyName"
+          style={styles.half}
+        />
+      </FieldPair>
+      <ToolField
         label={a.phone}
         value={values.phone}
         onChangeText={set("phone")}
@@ -118,7 +118,7 @@ function CompleteSignupForm({ profile }: { profile: SignupProfile | null }) {
         autoComplete="tel"
         textContentType="telephoneNumber"
       />
-      <Checkbox
+      <CheckRow
         label={a.acceptTerms}
         checked={acceptTerms}
         onChange={(checked) => {
@@ -137,13 +137,15 @@ function CompleteSignupForm({ profile }: { profile: SignupProfile | null }) {
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.privacy)}
         />
       </View>
-      <Checkbox label={a.marketing} checked={marketingOptIn} onChange={setMarketingOptIn} />
-      <Button label={t.submit} onPress={submit} loading={pending} />
+      <CheckRow label={a.marketing} checked={marketingOptIn} onChange={setMarketingOptIn} />
+      <FicheButton label={t.submit} onPress={submit} tall loading={pending} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  form: { gap: theme.spacing(4) },
-  links: { gap: theme.spacing(2) },
+  form: { gap: theme.spacing(3.5) },
+  half: { flex: 1 },
+  // Liens sous la case des conditions, alignés sur son libellé (case de 24 px + 12 px).
+  links: { gap: theme.spacing(2), paddingLeft: theme.spacing(9), marginTop: -theme.spacing(1.5) },
 });

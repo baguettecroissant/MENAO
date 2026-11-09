@@ -1,24 +1,31 @@
 import { signInSchema, type SignIn } from "@menao/validation";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
+import { FicheButton } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { isConfigured } from "@/lib/env";
-import { Button, Notice, TextField } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
+const { colors, font, spacing } = theme;
 type Errors = Partial<Record<"email" | "password", string>>;
 
 /**
  * Formulaire de connexion (mêmes règles que le site). `onSubmit` reçoit les valeurs validées et
- * renvoie le message d'erreur à afficher, ou null.
+ * renvoie le message d'erreur à afficher, ou null. Refonte « Nette » (lot 13) : champs arrondis en
+ * 16 points, « Mot de passe oublié ? » à droite du libellé (`forgot`), bouton pleine largeur.
  */
 export function SignInForm({
   submitLabel,
   onSubmit,
+  forgot,
 }: {
   submitLabel: string;
   onSubmit: (input: SignIn) => Promise<string | null>;
+  /** Lien « Mot de passe oublié ? », à droite du libellé du mot de passe. */
+  forgot?: { label: string; onPress: () => void };
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +51,7 @@ export function SignInForm({
   return (
     <View style={styles.form}>
       {failure && <Notice tone="error">{failure}</Notice>}
-      <TextField
+      <ToolField
         label={fr.auth.email}
         value={email}
         onChangeText={setEmail}
@@ -55,8 +62,15 @@ export function SignInForm({
         textContentType="emailAddress"
         returnKeyType="next"
       />
-      <TextField
+      <ToolField
         label={fr.auth.password}
+        labelRight={
+          forgot ? (
+            <Pressable role="link" hitSlop={8} onPress={forgot.onPress}>
+              <Text style={styles.forgot}>{forgot.label}</Text>
+            </Pressable>
+          ) : undefined
+        }
         value={password}
         onChangeText={setPassword}
         error={errors.password}
@@ -66,11 +80,18 @@ export function SignInForm({
         returnKeyType="go"
         onSubmitEditing={submit}
       />
-      <Button label={submitLabel} onPress={submit} loading={pending} disabled={!isConfigured} />
+      <FicheButton
+        label={submitLabel}
+        onPress={submit}
+        tall
+        loading={pending}
+        disabled={!isConfigured}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  form: { gap: theme.spacing(4) },
+  form: { gap: spacing(3.5) },
+  forgot: { fontFamily: font.semibold, fontSize: 13, color: colors["primary-strong"] },
 });

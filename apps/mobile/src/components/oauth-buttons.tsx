@@ -15,6 +15,8 @@ const { colors, font, radius, spacing } = theme;
  * « Continuer avec Google / Apple » pour les clients (ADR 0108), au-dessus du formulaire par
  * e-mail, comme sur le site. Boutons aux couleurs imposées par Google (fond blanc, « G » en
  * couleurs) et Apple (fond noir). Rien n'est affiché tant qu'aucun fournisseur n'est activé.
+ * Refonte « Nette » (lot 13) : pilules de 48 px, Google bordé, séparateur « ou avec votre adresse
+ * e-mail » ; Apple reste noir (seules couleurs admises par Apple pour ce bouton).
  * `prepare` : étape préalable (jeton de transfert d'une demande), renvoie un message d'erreur.
  */
 export function OAuthButtons({
@@ -121,22 +123,27 @@ function AppleLogo() {
 const styles = StyleSheet.create({
   wrap: { gap: spacing(3) },
   button: {
-    minHeight: theme.touchTarget,
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing(3),
-    borderRadius: radius.button,
+    gap: spacing(2.5),
+    borderRadius: radius.pill,
     borderWidth: 1,
     paddingHorizontal: spacing(5),
   },
-  google: { backgroundColor: "#ffffff", borderColor: "#747775" },
+  google: { backgroundColor: colors.surface, borderColor: colors["border-strong"] },
   apple: { backgroundColor: "#000000", borderColor: "#000000" },
   pressed: { opacity: 0.7 },
-  label: { fontFamily: font.medium, fontSize: 15 },
-  googleLabel: { color: "#1f1f1f" },
+  label: { fontFamily: font.semibold, fontSize: 15 },
+  googleLabel: { color: colors.foreground },
   appleLabel: { color: "#ffffff" },
-  separator: { flexDirection: "row", alignItems: "center", gap: spacing(3) },
+  separator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    marginVertical: spacing(1),
+  },
   line: { flex: 1, height: 1, backgroundColor: colors.border },
-  separatorText: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
+  separatorText: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
 });

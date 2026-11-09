@@ -35,12 +35,14 @@ const { colors, font, radius, spacing } = theme;
 /** Libellé, champ arrondi et aide ou erreur dessous. */
 function FieldFrame({
   label,
+  labelRight,
   hint,
   error,
   style,
   children,
 }: {
   label: string;
+  labelRight?: ReactNode;
   hint?: string;
   error?: string;
   style?: StyleProp<ViewStyle>;
@@ -48,7 +50,14 @@ function FieldFrame({
 }) {
   return (
     <View style={[styles.field, style]}>
-      <Text style={styles.label}>{label}</Text>
+      {labelRight ? (
+        <View style={styles.labelRow}>
+          <Text style={[styles.label, styles.labelGrow]}>{label}</Text>
+          {labelRight}
+        </View>
+      ) : (
+        <Text style={styles.label}>{label}</Text>
+      )}
       {children}
       {error ? (
         <Text style={styles.error}>{error}</Text>
@@ -62,6 +71,7 @@ function FieldFrame({
 /** Champ de saisie des maquettes : 48 px, coins de 12 px, texte en 16 points. */
 export function ToolField({
   label,
+  labelRight,
   hint,
   error,
   style,
@@ -70,6 +80,8 @@ export function ToolField({
   ...input
 }: TextInputProps & {
   label: string;
+  /** Lien aligné à droite du libellé (« Mot de passe oublié ? » : refonte « Nette », lot 13). */
+  labelRight?: ReactNode;
   hint?: string;
   error?: string;
   /** Bloc du champ (largeur partagée dans une rangée). */
@@ -77,7 +89,7 @@ export function ToolField({
 }) {
   const [focused, setFocused] = useState(false);
   return (
-    <FieldFrame label={label} hint={hint} error={error} style={style}>
+    <FieldFrame label={label} labelRight={labelRight} hint={hint} error={error} style={style}>
       <TextInput
         aria-label={label}
         accessibilityHint={error ?? hint}
@@ -444,14 +456,17 @@ export function CheckRow({
   label,
   checked,
   onChange,
+  error,
   children,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** Erreur sous la case (conditions à accepter : refonte « Nette », lot 13). */
+  error?: string;
   children?: ReactNode;
 }) {
-  return (
+  const row = (
     <Pressable
       role="checkbox"
       aria-checked={checked}
@@ -470,11 +485,20 @@ export function CheckRow({
       </View>
     </Pressable>
   );
+  if (!error) return row;
+  return (
+    <View>
+      {row}
+      <Text style={styles.error}>{error}</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   field: { gap: spacing(1.5) },
   label: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  labelRow: { flexDirection: "row", alignItems: "baseline", gap: spacing(3) },
+  labelGrow: { flex: 1 },
   hint: {
     fontFamily: font.regular,
     fontSize: 13,

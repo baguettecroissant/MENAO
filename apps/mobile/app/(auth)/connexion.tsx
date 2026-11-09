@@ -1,30 +1,22 @@
-import { Link, router } from "expo-router";
-import { StyleSheet, View } from "react-native";
-import { LogoMark } from "@/components/logo";
+import { router } from "expo-router";
+import { AuthScreen, AuthSwitch } from "@/components/auth-kit";
 import { OAuthButtons } from "@/components/oauth-buttons";
 import { SignInForm } from "@/components/sign-in-form";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { continueAfterSignIn } from "@/lib/after-sign-in";
 import { signIn } from "@/lib/auth";
 import { closeAuth } from "@/lib/navigation";
 import { resumePendingRequest, sendScreenParams } from "@/lib/requests";
-import { Body, LinkText, Screen, Title } from "@/ui";
-import { theme } from "@/ui/theme";
 
 /**
  * Connexion avec Google ou Apple (ADR 0108), ou par e-mail et mot de passe (mêmes règles que le
  * site), ouverte par-dessus l'écran d'où l'on vient : on y revient une fois connecté. Une demande
  * commencée sans compte (lien de confirmation reçu par e-mail) reprend à l'écran d'envoi.
+ * Refonte « Nette » (lot 13) : logo, grand titre, « Mot de passe oublié ? » à droite du libellé.
  */
 export default function SignInScreen() {
   return (
-    <Screen centered header={<TopBar />}>
-      <View style={styles.brand}>
-        <LogoMark size={48} />
-        <Title>{fr.auth.signInTitle}</Title>
-        <Body muted>{fr.auth.signInText}</Body>
-      </View>
+    <AuthScreen title={fr.auth.signInTitle} lead={fr.auth.signInText}>
       <OAuthButtons
         onSignedIn={(pending) =>
           pending ? router.replace("/finaliser-compte") : continueAfterSignIn()
@@ -32,6 +24,10 @@ export default function SignInScreen() {
       />
       <SignInForm
         submitLabel={fr.auth.signIn}
+        forgot={{
+          label: fr.auth.forgotPassword,
+          onPress: () => router.push("/mot-de-passe-oublie"),
+        }}
         onSubmit={async (input) => {
           const { error } = await signIn(input);
           if (error) return error;
@@ -47,19 +43,11 @@ export default function SignInScreen() {
           return null;
         }}
       />
-      <Link href="/mot-de-passe-oublie" style={styles.link}>
-        {fr.auth.forgotPassword}
-      </Link>
-      <View style={styles.footer}>
-        <Body muted>{fr.auth.noAccount}</Body>
-        <LinkText label={fr.auth.createAccount} onPress={() => router.replace("/inscription")} />
-      </View>
-    </Screen>
+      <AuthSwitch
+        question={fr.auth.noAccount}
+        label={fr.auth.createAccount}
+        onPress={() => router.replace("/inscription")}
+      />
+    </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  brand: { gap: theme.spacing(3), marginBottom: theme.spacing(2) },
-  link: { fontFamily: theme.font.medium, fontSize: 15, color: theme.colors["primary-strong"] },
-  footer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: theme.spacing(2) },
-});

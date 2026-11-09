@@ -1,14 +1,20 @@
 import { passwordResetRequestSchema } from "@menao/validation";
 import { useState } from "react";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { AuthScreen, AuthSwitch } from "@/components/auth-kit";
+import { SentCard } from "@/components/pro/action-kit";
+import { FicheButton } from "@/components/pro/fiche-kit";
+import { ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
 import { goBack } from "@/lib/navigation";
 import { supabase } from "@/lib/supabase";
-import { Body, Button, LinkText, Notice, Screen, TextField, Title } from "@/ui";
 
-/** Mot de passe oublié : le lien reçu s'ouvre sur le site, pour choisir un nouveau mot de passe. */
+/**
+ * Mot de passe oublié : le lien reçu s'ouvre sur le site, pour choisir un nouveau mot de passe.
+ * Refonte « Nette » (lot 13) : logo, grand titre, champ arrondi, bouton pleine largeur, carte de
+ * confirmation une fois l'e-mail envoyé.
+ */
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | undefined>();
@@ -29,11 +35,9 @@ export default function ForgotPassword() {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{fr.auth.resetTitle}</Title>
-      <Body muted>{fr.auth.resetText}</Body>
-      {sent && <Notice tone="success">{fr.auth.resetSent}</Notice>}
-      <TextField
+    <AuthScreen title={fr.auth.resetTitle} lead={fr.auth.resetText}>
+      {sent && <SentCard text={fr.auth.resetSent} />}
+      <ToolField
         label={fr.auth.email}
         value={email}
         onChangeText={setEmail}
@@ -43,8 +47,8 @@ export default function ForgotPassword() {
         keyboardType="email-address"
         textContentType="emailAddress"
       />
-      <Button label={fr.auth.resetSubmit} onPress={submit} loading={pending} />
-      <LinkText label={fr.auth.backToSignIn} onPress={goBack} />
-    </Screen>
+      <FicheButton label={fr.auth.resetSubmit} onPress={submit} tall loading={pending} />
+      <AuthSwitch label={fr.auth.backToSignIn} onPress={goBack} border={false} />
+    </AuthScreen>
   );
 }

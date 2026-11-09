@@ -15,9 +15,10 @@ import {
   UserRound,
 } from "lucide-react-native";
 import { useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { PageHead } from "@/components/pro/dossier-kit";
+import { FicheScreen, FicheTag } from "@/components/pro/fiche-kit";
 import { SettingsRow, SettingsSection, SettingsSwitch } from "@/components/settings-list";
-import { TopBar } from "@/components/top-bar";
 import { fr } from "@/i18n/fr";
 import { loadAccount, saveMarketingOptIn, shareAccountData } from "@/lib/account";
 import { signOut, signOutEverywhere } from "@/lib/auth";
@@ -26,7 +27,7 @@ import { formatDay } from "@/lib/format";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, Notice, Screen, Title, toast } from "@/ui";
+import { Notice, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.account;
@@ -38,7 +39,9 @@ const { colors, font, radius, spacing } = theme;
  * notifications, actualités), aide (particuliers seulement : aucun lien vers le site pour les
  * artisans, règle 10), données et sécurité (export, déconnexion de tous les appareils,
  * suppression du compte, Apple 5.1.1 v), informations légales et déconnexion. Pour l'artisan,
- * c'est « Identité et connexion », ouvert depuis « Mon profil » (ADR 0129).
+ * c'est « Identité et connexion », ouvert depuis « Mon profil » (ADR 0129). Refonte « Nette »
+ * (lot 13, maquette « CompteApp ») : grand titre, carte d'identité, rubriques en listes façon
+ * iPhone (carrés d'icône colorés), « Me déconnecter » en rouge centré.
  */
 export function AccountScreen({ title = t.title }: { title?: string }) {
   const { session, role } = useSession();
@@ -87,19 +90,19 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
   }
 
   return (
-    <Screen header={<TopBar />}>
-      <Title>{title}</Title>
-      <View style={styles.header}>
+    <FicheScreen>
+      <PageHead title={title} />
+      <View style={styles.identity}>
         <View style={styles.avatar}>
           {summary?.avatarUrl ? (
             <Image source={{ uri: summary.avatarUrl }} style={styles.avatarImage} alt="" />
           ) : summary?.initials || name ? (
             <Text style={styles.initials}>{summary?.initials || name.charAt(0)}</Text>
           ) : (
-            <UserRound size={28} color={colors["primary-foreground"]} />
+            <UserRound size={26} color={colors["primary-foreground"]} />
           )}
         </View>
-        <View style={styles.identity}>
+        <View style={styles.identityText}>
           {name ? (
             <Text style={styles.name} numberOfLines={1}>
               {name}
@@ -109,12 +112,12 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
             {email}
           </Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{roleLabel}</Text>
+            <FicheTag text={roleLabel} tone="primary" />
           </View>
         </View>
       </View>
 
-      <SettingsSection title={t.sections.account} hint={t.communications.marketingHint}>
+      <SettingsSection>
         <SettingsRow
           icon={UserRound}
           label={t.rows.profile}
@@ -129,9 +132,18 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
           href="/compte-email"
         />
         <SettingsRow icon={KeyRound} label={t.rows.password} href="/compte-mot-de-passe" />
-        <SettingsRow icon={Bell} label={t.rows.notifications} href="/notifications" />
+      </SettingsSection>
+
+      <SettingsSection hint={t.communications.marketingHint}>
+        <SettingsRow
+          icon={Bell}
+          iconTone="warning"
+          label={t.rows.notifications}
+          href="/notifications"
+        />
         <SettingsSwitch
           icon={Megaphone}
+          iconTone="warning"
           label={t.rows.marketing}
           value={marketing}
           onChange={toggleMarketing}
@@ -143,29 +155,33 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
         // CLAUDE.md règle 10 : aucun bouton ni lien d'achat de l'abonnement artisan.
         <Notice tone="info">{t.subscriptionText}</Notice>
       ) : (
-        <SettingsSection title={t.sections.help}>
+        <SettingsSection>
           <SettingsRow
             icon={CircleHelp}
+            iconTone="success"
             label={fr.guest.faq}
             onPress={() => WebBrowser.openBrowserAsync(siteLinks.faq)}
           />
           <SettingsRow
             icon={MessageSquare}
+            iconTone="success"
             label={fr.guest.contact}
             onPress={() => WebBrowser.openBrowserAsync(siteLinks.contact)}
           />
         </SettingsSection>
       )}
 
-      <SettingsSection title={t.sections.data} hint={t.security.signOutAllHint}>
+      <SettingsSection hint={t.security.signOutAllHint}>
         <SettingsRow
           icon={Download}
+          iconTone="neutral"
           label={t.rows.export}
           onPress={exportData}
           loading={exporting}
         />
         <SettingsRow
           icon={LogOut}
+          iconTone="neutral"
           label={t.rows.signOutAll}
           onPress={() => leave("everywhere")}
           loading={leaving === "everywhere"}
@@ -184,54 +200,82 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
       </SettingsSection>
       {exportFailed ? <Notice tone="error">{t.data.error}</Notice> : null}
 
-      <SettingsSection title={t.legal}>
+      <SettingsSection>
         <SettingsRow
           icon={FileText}
+          iconTone="neutral"
           label={t.terms}
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.terms)}
         />
         <SettingsRow
           icon={ShieldCheck}
+          iconTone="neutral"
           label={t.privacy}
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.privacy)}
         />
       </SettingsSection>
 
-      <Button
-        label={t.signOut}
-        variant="danger"
-        loading={leaving === "here"}
+      <Pressable
+        role="button"
+        aria-label={t.signOut}
+        aria-busy={leaving === "here"}
+        aria-disabled={leaving !== null}
         disabled={leaving !== null}
+        hitSlop={6}
         onPress={() => leave("here")}
-      />
-      <Body muted>{t.version(Constants.expoConfig?.version ?? "")}</Body>
-    </Screen>
+        style={({ pressed }) => [styles.signOut, pressed && styles.pressed]}
+      >
+        {leaving === "here" ? (
+          <ActivityIndicator color={colors.danger} />
+        ) : (
+          <Text style={[styles.signOutText, leaving !== null && styles.disabled]}>{t.signOut}</Text>
+        )}
+      </Pressable>
+      <Text style={styles.version}>{t.version(Constants.expoConfig?.version ?? "")}</Text>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
+  // Carte d'identité (maquette « CompteApp ») : avatar bleu nuit, nom, e-mail.
+  identity: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: spacing(4),
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     overflow: "hidden",
-    backgroundColor: colors.primary,
+    backgroundColor: colors.foreground,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarImage: { width: 64, height: 64 },
-  initials: { fontFamily: font.bold, fontSize: 22, color: colors["primary-foreground"] },
-  identity: { flex: 1, gap: 2 },
-  name: { fontFamily: font.display, fontSize: 19, color: colors.foreground },
+  avatarImage: { width: 56, height: 56 },
+  initials: { fontFamily: font.bold, fontSize: 19, color: colors["primary-foreground"] },
+  identityText: { flex: 1, minWidth: 0, gap: 2 },
+  name: { fontFamily: font.display, fontSize: 19, letterSpacing: -0.4, color: colors.foreground },
   email: { fontFamily: font.regular, fontSize: 14, color: colors["muted-foreground"] },
-  badge: {
-    alignSelf: "flex-start",
-    marginTop: spacing(1),
-    backgroundColor: colors["primary-soft"],
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+  badge: { marginTop: spacing(1) },
+  signOut: {
+    alignSelf: "center",
+    minHeight: theme.touchTarget,
+    justifyContent: "center",
+    paddingHorizontal: spacing(4),
   },
-  badgeText: { fontFamily: font.medium, fontSize: 12, color: colors["primary-strong"] },
+  signOutText: { fontFamily: font.semibold, fontSize: 15, color: colors.danger },
+  pressed: { opacity: 0.7 },
+  disabled: { opacity: 0.5 },
+  version: {
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 13,
+    color: colors["muted-foreground"],
+  },
 });

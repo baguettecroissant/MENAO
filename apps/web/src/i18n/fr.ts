@@ -2900,6 +2900,9 @@ export const fr = {
     title: "Notifications",
     subtitle: "Les dernières nouvelles de vos demandes et de vos chantiers.",
     empty: "Aucune notification pour le moment.",
+    // Refonte « Nette » (ADR 0258).
+    today: "Aujourd'hui",
+    earlier: "Plus tôt",
     bell: (n: number) =>
       n === 0 ? "Notifications" : `Notifications : ${n} non lue${n > 1 ? "s" : ""}`,
     unread: "Non lue",
@@ -3206,6 +3209,8 @@ export const fr = {
     title: "Mon compte",
     intro:
       "Vos informations, votre adresse e-mail, votre mot de passe et vos données personnelles.",
+    // Refonte « Nette » (ADR 0258) : rubriques à gauche.
+    rubricsLabel: "Rubriques du compte",
     proNav: "Paramètres du compte",
     profile: {
       title: "Mes informations",

@@ -92,3 +92,4 @@ export * from "./agenda-day";
 export * from "./client-home-figures";
 export * from "./review-figures";
 export * from "./artisan-tools";
+export * from "./notification-groups";

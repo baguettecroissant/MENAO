@@ -212,12 +212,23 @@ export function PageShell({
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-10 sm:py-14">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{title}</h1>
-        {intro && <p className="text-muted-foreground">{intro}</p>}
+    <main className="mx-auto flex w-full max-w-lg flex-col px-4 py-10 sm:py-14 in-[.app-nette]:max-w-[30rem] in-[.app-nette]:sm:py-16">
+      {/* Refonte « Nette » (ADR 0258) : le titre et le formulaire dans une seule grande carte. */}
+      <div className="flex flex-col gap-6 in-[.app-nette]:gap-5 in-[.app-nette]:rounded-[1.375rem] in-[.app-nette]:border in-[.app-nette]:border-border in-[.app-nette]:bg-surface in-[.app-nette]:px-6 in-[.app-nette]:py-7 in-[.app-nette]:shadow-[0_12px_32px_rgb(17_23_40/0.06)] in-[.app-nette]:sm:p-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-medium tracking-tight sm:text-[1.75rem] in-[.app-nette]:text-[2rem] in-[.app-nette]:leading-[1.05] in-[.app-nette]:sm:text-[2.125rem]">
+            {title}
+          </h1>
+          {intro && (
+            <p className="text-muted-foreground in-[.app-nette]:text-[0.9375rem] in-[.app-nette]:leading-relaxed in-[.app-nette]:text-label">
+              {intro}
+            </p>
+          )}
+        </div>
+        <Card className="in-[.app-nette]:rounded-none in-[.app-nette]:border-0 in-[.app-nette]:bg-transparent in-[.app-nette]:p-0 in-[.app-nette]:shadow-none in-[.app-nette]:sm:p-0">
+          {children}
+        </Card>
       </div>
-      <Card>{children}</Card>
     </main>
   );
 }

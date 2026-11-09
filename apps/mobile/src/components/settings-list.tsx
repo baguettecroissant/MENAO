@@ -2,6 +2,7 @@ import { router, type Href } from "expo-router";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 import { Children, isValidElement, cloneElement, type ReactElement, type ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Switch, Text, View } from "react-native";
+import { TAG_TONES, type FicheTone } from "@/components/pro/fiche-kit";
 import { haptic } from "@/lib/haptics";
 import { Tappable } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -18,8 +19,10 @@ const TONE: Record<SettingsTone, string> = {
 };
 
 /**
- * Listes groupées des réglages (« Mon profil », « Mon compte », ADR 0129) : un titre discret,
- * puis des lignes dans une même carte, séparées par un filet. `hint` : précision sous la carte.
+ * Listes groupées des réglages (« Mon compte », ADR 0129), façon iPhone : des lignes dans une même
+ * carte, séparées par un filet, avec un titre discret facultatif. `hint` : précision sous la carte.
+ * Refonte « Nette » (lot 13, maquette « CompteApp ») : carré d'icône coloré de 34 px, libellé en
+ * 16 points, chevron.
  */
 export function SettingsSection({
   title,
@@ -49,9 +52,23 @@ export function SettingsSection({
   );
 }
 
-/** Ligne qui ouvre un écran (`href`) ou lance une action (`onPress`), avec sa valeur à droite. */
+/** Carré d'icône coloré de 34 px des lignes de réglages. */
+function RowIcon({ icon: Icon, tone }: { icon: LucideIcon; tone: FicheTone }) {
+  const c = TAG_TONES[tone];
+  return (
+    <View style={[styles.icon, { backgroundColor: c.bg }]}>
+      <Icon size={17} color={c.fg} />
+    </View>
+  );
+}
+
+/**
+ * Ligne qui ouvre un écran (`href`) ou lance une action (`onPress`), avec sa valeur à droite.
+ * `danger` : action à risque (suppression), carré et libellé rouges, sans chevron.
+ */
 export function SettingsRow({
-  icon: Icon,
+  icon,
+  iconTone = "primary",
   label,
   value,
   tone = "neutral",
@@ -62,13 +79,15 @@ export function SettingsRow({
   first,
 }: {
   icon: LucideIcon;
+  /** Couleur du carré d'icône (bleu par défaut). */
+  iconTone?: FicheTone;
   label: string;
   value?: string;
+  /** Couleur de la valeur à droite. */
   tone?: SettingsTone;
   href?: Href;
   onPress?: () => void;
   loading?: boolean;
-  /** Action à risque (suppression) : libellé rouge. */
   danger?: boolean;
   first?: boolean;
 }) {
@@ -82,9 +101,7 @@ export function SettingsRow({
       scaleTo={0.985}
       style={[styles.row, !first && styles.border]}
     >
-      <View style={[styles.icon, danger && styles.iconDanger]}>
-        <Icon size={18} color={danger ? colors.danger : colors["primary-strong"]} />
-      </View>
+      <RowIcon icon={icon} tone={danger ? "danger" : iconTone} />
       <Text style={[styles.label, danger && styles.labelDanger]} numberOfLines={2}>
         {label}
       </Text>
@@ -95,8 +112,8 @@ export function SettingsRow({
       ) : null}
       {loading ? (
         <ActivityIndicator color={colors.primary} />
-      ) : (
-        <ChevronRight size={18} color={colors["muted-foreground"]} />
+      ) : danger ? null : (
+        <ChevronRight size={17} color={colors["muted-foreground"]} />
       )}
     </Tappable>
   );
@@ -104,13 +121,15 @@ export function SettingsRow({
 
 /** Ligne avec un interrupteur (préférence enregistrée aussitôt). */
 export function SettingsSwitch({
-  icon: Icon,
+  icon,
+  iconTone = "primary",
   label,
   value,
   onChange,
   first,
 }: {
   icon: LucideIcon;
+  iconTone?: FicheTone;
   label: string;
   value: boolean;
   onChange: (value: boolean) => void;
@@ -118,9 +137,7 @@ export function SettingsSwitch({
 }) {
   return (
     <View style={[styles.row, !first && styles.border]}>
-      <View style={styles.icon}>
-        <Icon size={18} color={colors["primary-strong"]} />
-      </View>
+      <RowIcon icon={icon} tone={iconTone} />
       <Text style={styles.label} numberOfLines={3}>
         {label}
       </Text>
@@ -141,7 +158,7 @@ export function SettingsSwitch({
 const styles = StyleSheet.create({
   section: { gap: spacing(2) },
   title: {
-    fontFamily: font.medium,
+    fontFamily: font.semibold,
     fontSize: 13,
     color: colors["muted-foreground"],
     marginLeft: spacing(1),
@@ -163,23 +180,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing(3),
-    minHeight: 52,
-    paddingHorizontal: spacing(3.5),
-    paddingVertical: spacing(2.5),
+    gap: 14,
+    minHeight: 60,
+    paddingHorizontal: 14,
+    paddingVertical: spacing(3),
     backgroundColor: colors.surface,
   },
   border: { borderTopWidth: 1, borderTopColor: colors.border },
   icon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: colors["primary-soft"],
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  iconDanger: { backgroundColor: colors["danger-soft"] },
-  label: { flex: 1, fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  label: { flex: 1, fontFamily: font.medium, fontSize: 16, color: colors.foreground },
   labelDanger: { color: colors.danger },
   value: { maxWidth: "45%", fontFamily: font.medium, fontSize: 13 },
 });

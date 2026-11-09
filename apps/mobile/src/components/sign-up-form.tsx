@@ -4,9 +4,11 @@ import { CircleCheck, ShieldCheck } from "lucide-react-native";
 import { type ReactNode, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
+import { FicheButton, FicheCard } from "@/components/pro/fiche-kit";
+import { CheckRow, FieldPair, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { siteLinks } from "@/lib/env";
-import { Body, Button, Card, Checkbox, LinkText, Notice, TextField } from "@/ui";
+import { Body, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 type Field = "firstName" | "lastName" | "phone" | "email" | "password" | "acceptTerms";
@@ -22,7 +24,8 @@ export type SignUpSections = {
  * (`signUpSchema`), acceptation des documents légaux. `onSubmit` reçoit les valeurs validées et
  * renvoie le message d'erreur à afficher, ou null. Avec `sections`, les champs se rangent en deux
  * cartes, « Informations personnelles » puis « Créer mon espace client », dont le titre passe au
- * vert une fois remplie (maquette « Dernière étape »).
+ * vert une fois remplie (maquette « Dernière étape »). Refonte « Nette » (lot 13) : champs arrondis
+ * en 16 points, prénom et nom côte à côte, cases bleu nuit, bouton pleine largeur.
  */
 export function SignUpForm({
   submitLabel,
@@ -71,31 +74,29 @@ export function SignUpForm({
   }
 
   const names = (
-    <View style={styles.row}>
-      <View style={styles.half}>
-        <TextField
-          label={fr.auth.firstName}
-          value={values.firstName}
-          onChangeText={set("firstName")}
-          error={errors.firstName}
-          autoComplete="given-name"
-          textContentType="givenName"
-        />
-      </View>
-      <View style={styles.half}>
-        <TextField
-          label={fr.auth.lastName}
-          value={values.lastName}
-          onChangeText={set("lastName")}
-          error={errors.lastName}
-          autoComplete="family-name"
-          textContentType="familyName"
-        />
-      </View>
-    </View>
+    <FieldPair>
+      <ToolField
+        label={fr.auth.firstName}
+        value={values.firstName}
+        onChangeText={set("firstName")}
+        error={errors.firstName}
+        autoComplete="given-name"
+        textContentType="givenName"
+        style={styles.half}
+      />
+      <ToolField
+        label={fr.auth.lastName}
+        value={values.lastName}
+        onChangeText={set("lastName")}
+        error={errors.lastName}
+        autoComplete="family-name"
+        textContentType="familyName"
+        style={styles.half}
+      />
+    </FieldPair>
   );
   const email = (
-    <TextField
+    <ToolField
       label={fr.auth.email}
       value={values.email}
       onChangeText={set("email")}
@@ -107,7 +108,7 @@ export function SignUpForm({
     />
   );
   const phone = (
-    <TextField
+    <ToolField
       label={fr.auth.phone}
       value={values.phone}
       onChangeText={set("phone")}
@@ -119,7 +120,7 @@ export function SignUpForm({
     />
   );
   const password = (
-    <TextField
+    <ToolField
       label={fr.auth.password}
       value={values.password}
       onChangeText={set("password")}
@@ -132,7 +133,7 @@ export function SignUpForm({
   );
   const consents = (
     <>
-      <Checkbox
+      <CheckRow
         label={fr.auth.acceptTerms}
         checked={acceptTerms}
         onChange={setAcceptTerms}
@@ -148,10 +149,10 @@ export function SignUpForm({
           onPress={() => WebBrowser.openBrowserAsync(siteLinks.privacy)}
         />
       </View>
-      <Checkbox label={fr.auth.marketing} checked={marketingOptIn} onChange={setMarketingOptIn} />
+      <CheckRow label={fr.auth.marketing} checked={marketingOptIn} onChange={setMarketingOptIn} />
     </>
   );
-  const submitButton = <Button label={submitLabel} onPress={submit} loading={pending} />;
+  const submitButton = <FicheButton label={submitLabel} onPress={submit} tall loading={pending} />;
 
   if (sections) {
     const personalDone = Boolean(values.firstName.trim() && values.lastName.trim());
@@ -161,13 +162,13 @@ export function SignUpForm({
     return (
       <View style={styles.form}>
         {failure && <Notice tone="error">{failure}</Notice>}
-        <Card>
+        <FicheCard padding={4.5} gap={3.5}>
           <SectionTitle done={personalDone}>{sections.personal.title}</SectionTitle>
           <Body muted>{sections.personal.intro}</Body>
           {names}
           {phone}
-        </Card>
-        <Card>
+        </FicheCard>
+        <FicheCard padding={4.5} gap={3.5}>
           <SectionTitle done={spaceDone}>{sections.space.title}</SectionTitle>
           <Body muted>{sections.space.intro}</Body>
           {email}
@@ -177,7 +178,7 @@ export function SignUpForm({
             <Text style={styles.freeText}>{sections.space.free}</Text>
           </View>
           {consents}
-        </Card>
+        </FicheCard>
         {submitButton}
       </View>
     );
@@ -208,15 +209,16 @@ function SectionTitle({ done, children }: { done: boolean; children: ReactNode }
 }
 
 const styles = StyleSheet.create({
-  form: { gap: theme.spacing(4) },
-  row: { flexDirection: "row", gap: theme.spacing(3) },
+  form: { gap: theme.spacing(3.5) },
   half: { flex: 1 },
-  links: { gap: theme.spacing(2), paddingLeft: theme.spacing(8.5) },
+  // Liens sous la case des conditions, alignés sur son libellé (case de 24 px + 12 px).
+  links: { gap: theme.spacing(2), paddingLeft: theme.spacing(9), marginTop: -theme.spacing(1.5) },
   sectionTitle: { flexDirection: "row", alignItems: "center", gap: theme.spacing(2) },
   sectionText: {
     flexShrink: 1,
-    fontFamily: theme.font.medium,
-    fontSize: 17,
+    fontFamily: theme.font.display,
+    fontSize: 18,
+    letterSpacing: -0.36,
     color: theme.colors.foreground,
   },
   sectionDone: { color: theme.colors.success },
