@@ -1,12 +1,22 @@
 "use client";
 
 import type { AvailabilityStatus, TeamPosition, VisibilityCondition } from "@menao/core";
-import { CalendarClock, Eye, EyeOff, LifeBuoy, Palmtree, CirclePause } from "lucide-react";
+import {
+  CalendarClock,
+  Eye,
+  EyeOff,
+  LifeBuoy,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Palmtree,
+  CirclePause,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { availabilityLabel } from "@/components/agenda/availability-label";
 import { Logo, LogoMark } from "@/components/brand/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { fr } from "@/i18n/fr";
 import type { ShellAccount } from "@/lib/client/shell";
 import { AccountMenu } from "./account-menu";
@@ -50,6 +60,7 @@ export function SidebarContent({
   collapsed = false,
   role = account?.role,
   teamPosition = account?.teamPosition,
+  onToggle,
 }: {
   space: Space;
   badges: Badges;
@@ -60,12 +71,21 @@ export function SidebarContent({
   role?: string | null;
   /** Place dans l'entreprise, pour les rubriques de l'espace pro (ADR 0241). */
   teamPosition?: TeamPosition;
+  /**
+   * Espaces sans barre du haut sur ordinateur (ADR 0262) : le bouton qui replie le menu passe
+   * dans son en-tête, et la cloche des notifications dans son pied.
+   */
+  onToggle?: () => void;
 }) {
   const pathname = usePathname();
   return (
     <div className="flex h-full flex-col">
       <div
-        className={`flex h-16 shrink-0 items-center gap-2.5 border-b border-border ${collapsed ? "justify-center" : "px-5"}`}
+        className={`flex shrink-0 border-b border-border ${
+          collapsed
+            ? `flex-col items-center justify-center gap-2 ${onToggle ? "py-3" : "h-16"}`
+            : `h-16 items-center ${onToggle ? "gap-2 pr-3 pl-5" : "gap-2.5 px-5"}`
+        }`}
       >
         <Link
           href={SPACE_HOME[space] as Route}
@@ -82,8 +102,24 @@ export function SidebarContent({
                 : "bg-primary-soft text-primary-strong"
             }`}
           >
-            {t.spaces[space]}
+            {onToggle ? t.spacesShort[space] : t.spaces[space]}
           </span>
+        )}
+        {onToggle && (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? t.expand : t.collapse}
+            aria-pressed={collapsed}
+            title={collapsed ? t.expand : t.collapse}
+            className={`inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${collapsed ? "" : "ml-auto"}`}
+          >
+            {collapsed ? (
+              <PanelLeftOpen aria-hidden="true" className="size-5" />
+            ) : (
+              <PanelLeftClose aria-hidden="true" className="size-5" />
+            )}
+          </button>
         )}
       </div>
 
@@ -117,6 +153,7 @@ export function SidebarContent({
       {visibility && !collapsed && <VisibilityCard visibility={visibility} />}
 
       <div className="flex shrink-0 flex-col gap-0.5 border-t border-border p-2.5">
+        {onToggle && <NotificationBell variant="sidebar" collapsed={collapsed} />}
         {space !== "admin" && (
           <Link
             href={(space === "pro" ? "/pro/aide" : "/contact") as Route}

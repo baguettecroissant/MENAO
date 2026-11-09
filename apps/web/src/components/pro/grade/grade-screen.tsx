@@ -58,7 +58,7 @@ export function GradeScreen({
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
-          <div className="flex flex-col gap-4 lg:sticky lg:top-24">
+          <div className="flex flex-col gap-4 lg:sticky lg:top-6">
             <LevelCard xp={grade.xp} levels={levels} />
             {scoreCard}
             {claimable ? (

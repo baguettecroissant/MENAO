@@ -2846,6 +2846,14 @@ export const fr = {
       exemples: "Exemples",
       commercial: "Espace commercial",
     },
+    /** Étiquette du menu quand le bouton de repli la côtoie (ADR 0262). */
+    spacesShort: {
+      client: "Espace client",
+      pro: "Espace pro",
+      admin: "Back-office",
+      exemples: "Exemples",
+      commercial: "Commercial",
+    },
     nav: {
       client: "Navigation de mon espace",
       pro: "Navigation de l'espace pro",

@@ -27,7 +27,8 @@ const t = fr.appShell;
 
 /**
  * Coque des espaces client, pro et admin (ADR 0035). Ordinateur : menu latéral fixe, repliable
- * en barre d'icônes (choix mémorisé), et barre du haut (rubrique, recherche, cloche). Mobile :
+ * en barre d'icônes (choix mémorisé), et barre du haut (rubrique, recherche, cloche), sauf dans les
+ * espaces pro, exemples et commercial (ADR 0262) où repli et cloche sont dans le menu. Mobile :
  * barre du haut (messages, cloche, compte) et le même menu latéral, en tiroir ; pas d'onglets en
  * bas d'écran, réservés aux applications iOS et Android (ADR 0043). Le contenu n'est pas enveloppé
  * dans <main> : chaque page porte le sien.
@@ -59,6 +60,10 @@ export function AppFrame({
   const current = activeItem(space, pathname);
   const CurrentIcon = current?.icon;
   const messagesHref = SPACE_MESSAGES[space];
+  // Espace pro, exemples et commercial (ADR 0262) : pas de barre du haut sur ordinateur, elle ne
+  // faisait que répéter le titre de la page ; repli du menu et cloche passent dans le menu latéral.
+  // Client et back-office la gardent pour leur recherche.
+  const sidebarTools = space === "pro" || space === "exemples" || space === "commercial";
   // Pastille des messages à jour sans recharger la page (F-40).
   const unreadMessages = useLiveUnreadMessages(badges.messages, Boolean(messagesHref && account));
   const liveBadges = useMemo(
@@ -99,12 +104,15 @@ export function AppFrame({
           account={account}
           visibility={visibility}
           collapsed={collapsed}
+          onToggle={sidebarTools ? toggle : undefined}
         />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         {topBanner}
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur sm:gap-3 sm:px-5">
+        <header
+          className={`sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur sm:gap-3 sm:px-5 ${sidebarTools ? "lg:hidden" : ""}`}
+        >
           <button
             type="button"
             onClick={() => setDrawerFor(pathname)}
@@ -126,24 +134,29 @@ export function AppFrame({
             </span>
           </Link>
 
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={collapsed ? t.expand : t.collapse}
-            aria-pressed={collapsed}
-            className="hidden size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:inline-flex"
-          >
-            {collapsed ? (
-              <PanelLeftOpen aria-hidden="true" className="size-5" />
-            ) : (
-              <PanelLeftClose aria-hidden="true" className="size-5" />
-            )}
-          </button>
-          <span aria-hidden="true" className="hidden h-6 w-px bg-border lg:block" />
-          <p className="hidden min-w-0 items-center gap-2 text-sm font-medium lg:flex">
-            {CurrentIcon && <CurrentIcon aria-hidden="true" className="size-4 text-primary" />}
-            <span className="truncate">{current?.label ?? t.spaces[space]}</span>
-          </p>
+          {/* Repli du menu et rubrique : dans le menu latéral pour ces espaces (ADR 0262). */}
+          {!sidebarTools && (
+            <>
+              <button
+                type="button"
+                onClick={toggle}
+                aria-label={collapsed ? t.expand : t.collapse}
+                aria-pressed={collapsed}
+                className="hidden size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:inline-flex"
+              >
+                {collapsed ? (
+                  <PanelLeftOpen aria-hidden="true" className="size-5" />
+                ) : (
+                  <PanelLeftClose aria-hidden="true" className="size-5" />
+                )}
+              </button>
+              <span aria-hidden="true" className="hidden h-6 w-px bg-border lg:block" />
+              <p className="hidden min-w-0 items-center gap-2 text-sm font-medium lg:flex">
+                {CurrentIcon && <CurrentIcon aria-hidden="true" className="size-4 text-primary" />}
+                <span className="truncate">{current?.label ?? t.spaces[space]}</span>
+              </p>
+            </>
+          )}
 
           {space === "client" && (
             <Link

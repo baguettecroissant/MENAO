@@ -224,7 +224,7 @@ export default async function CommercialProspectPage({
               </Card>
             )}
           </div>
-          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+          <div className="flex flex-col gap-6 lg:sticky lg:top-6">
             <Card className="flex flex-col gap-3">
               <CardTitle title={d.company} />
               <dl className="flex flex-col">
