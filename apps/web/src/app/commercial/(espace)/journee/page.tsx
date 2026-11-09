@@ -84,12 +84,14 @@ export default async function CommercialDayPage() {
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.day.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.day.intro(formatDayFull(now))}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">
+            {t.day.intro(formatDayFull(now))}
+          </p>
         </div>
 
         {!space.commercial ? (
@@ -99,104 +101,110 @@ export default async function CommercialDayPage() {
         ) : error ? (
           <Alert tone="error">{t.errors.unavailable}</Alert>
         ) : (
-          <>
-            {camille && camille.length > 0 && (
-              <section aria-labelledby="camille" className="flex flex-col gap-3">
-                <div className="flex flex-col gap-1">
-                  <h2 id="camille" className="text-lg font-medium">
-                    {t.day.camille.title}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">{t.day.camille.intro}</p>
-                </div>
-                <ListPanel label={t.day.camille.title}>
-                  {camille.map((rdv) => (
-                    <li key={rdv.id} className="flex flex-col gap-2 px-4 py-3 sm:px-5">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          <span className="text-[0.9375rem] font-medium">
-                            {[rdv.first_name, rdv.trade, rdv.city].filter(Boolean).join(" · ")}
+          // Refonte « Nette » (ADR 0260) : rendez-vous à gauche, relances et créneaux à droite.
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
+            <div className="flex min-w-0 flex-col gap-6">
+              {camille && camille.length > 0 && (
+                <section aria-labelledby="camille" className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1">
+                    <h2 id="camille" className="text-lg">
+                      {t.day.camille.title}
+                    </h2>
+                    <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">
+                      {t.day.camille.intro}
+                    </p>
+                  </div>
+                  <ListPanel label={t.day.camille.title}>
+                    {camille.map((rdv) => (
+                      <li key={rdv.id} className="flex flex-col gap-2 px-4 py-3 sm:px-5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="text-[0.9375rem] font-medium">
+                              {[rdv.first_name, rdv.trade, rdv.city].filter(Boolean).join(" · ")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDayTime(rdv.starts_at)} ·{" "}
+                              {t.day.camille.kinds[rdv.kind] ?? rdv.kind}
+                            </span>
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDayTime(rdv.starts_at)} ·{" "}
-                            {t.day.camille.kinds[rdv.kind] ?? rdv.kind}
-                          </span>
-                        </span>
-                        <CallLink phone={rdv.phone} label={t.day.call} />
-                      </div>
-                      <p className="text-sm break-words">{rdv.reason}</p>
-                      {rdv.address && (
-                        <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                          <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                          {rdv.address}, {rdv.city}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-4">
-                        <a
-                          href={`mailto:${rdv.email}`}
-                          className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
-                        >
-                          <Mail aria-hidden="true" className="size-4" />
-                          {t.day.camille.email}
-                        </a>
-                        <CancelAppointmentForm id={rdv.id} />
-                      </div>
-                    </li>
-                  ))}
-                </ListPanel>
+                          <CallLink phone={rdv.phone} label={t.day.call} />
+                        </div>
+                        <p className="text-sm break-words">{rdv.reason}</p>
+                        {rdv.address && (
+                          <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                            <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                            {rdv.address}, {rdv.city}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-4">
+                          <a
+                            href={`mailto:${rdv.email}`}
+                            className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
+                          >
+                            <Mail aria-hidden="true" className="size-4" />
+                            {t.day.camille.email}
+                          </a>
+                          <CancelAppointmentForm id={rdv.id} />
+                        </div>
+                      </li>
+                    ))}
+                  </ListPanel>
+                </section>
+              )}
+
+              <section aria-labelledby="rendez-vous" className="flex flex-col gap-3">
+                <h2 id="rendez-vous" className="text-lg">
+                  {t.day.appointments}
+                </h2>
+                {appointments.length ? (
+                  <ListPanel label={t.day.appointments}>
+                    {appointments.map((item) => (
+                      <DayRow
+                        key={item.id}
+                        item={item}
+                        when={t.day.at(formatTime(item.next_action_at))}
+                      />
+                    ))}
+                  </ListPanel>
+                ) : (
+                  <EmptyState illustration="documents" className="py-6">
+                    {t.day.appointmentsEmpty}
+                  </EmptyState>
+                )}
               </section>
-            )}
+            </div>
+            <div className="flex flex-col gap-6">
+              <section aria-labelledby="relances" className="flex flex-col gap-3">
+                <h2 id="relances" className="text-lg">
+                  {t.day.followUps}
+                </h2>
+                {followUps.length ? (
+                  <ListPanel label={t.day.followUps}>
+                    {followUps.map((item) => (
+                      <DayRow key={item.id} item={item} when={when(item.next_action_at)} />
+                    ))}
+                  </ListPanel>
+                ) : (
+                  <EmptyState illustration="documents" className="py-6">
+                    {t.day.followUpsEmpty}
+                  </EmptyState>
+                )}
+              </section>
 
-            <section aria-labelledby="rendez-vous" className="flex flex-col gap-3">
-              <h2 id="rendez-vous" className="text-lg font-medium">
-                {t.day.appointments}
-              </h2>
-              {appointments.length ? (
-                <ListPanel label={t.day.appointments}>
-                  {appointments.map((item) => (
-                    <DayRow
-                      key={item.id}
-                      item={item}
-                      when={t.day.at(formatTime(item.next_action_at))}
-                    />
-                  ))}
-                </ListPanel>
-              ) : (
-                <EmptyState illustration="documents" className="py-6">
-                  {t.day.appointmentsEmpty}
-                </EmptyState>
-              )}
-            </section>
+              <Card className="flex flex-col gap-2 border-0 bg-primary-softer shadow-none">
+                <CardTitle icon={<Clock aria-hidden="true" />} title={t.day.phoneTitle} />
+                <p className="text-sm text-label">{t.day.phoneText}</p>
+              </Card>
 
-            <section aria-labelledby="relances" className="flex flex-col gap-3">
-              <h2 id="relances" className="text-lg font-medium">
-                {t.day.followUps}
-              </h2>
-              {followUps.length ? (
-                <ListPanel label={t.day.followUps}>
-                  {followUps.map((item) => (
-                    <DayRow key={item.id} item={item} when={when(item.next_action_at)} />
-                  ))}
-                </ListPanel>
-              ) : (
-                <EmptyState illustration="documents" className="py-6">
-                  {t.day.followUpsEmpty}
-                </EmptyState>
-              )}
-            </section>
-
-            <Card className="flex flex-col gap-2">
-              <CardTitle icon={<Clock aria-hidden="true" />} title={t.day.phoneTitle} />
-              <p className="text-sm text-muted-foreground">{t.day.phoneText}</p>
-            </Card>
-
-            <ButtonLink
-              href={"/commercial/prospects?filtre=miens" as Route}
-              variant="outline"
-              className="self-start"
-            >
-              {t.day.allProspects}
-            </ButtonLink>
-          </>
+              <ButtonLink
+                href={"/commercial/prospects?filtre=miens" as Route}
+                variant="outline"
+                className="self-start"
+              >
+                {t.day.allProspects}
+              </ButtonLink>
+            </div>
+          </div>
         )}
       </div>
     </main>
