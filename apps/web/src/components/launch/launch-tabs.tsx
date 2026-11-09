@@ -29,7 +29,7 @@ export function LaunchTabs({ current }: { current: LaunchTab }) {
           key={tab.key}
           href={tab.href as Route}
           aria-current={tab.key === current ? "page" : undefined}
-          className="flex min-h-10 items-center rounded-pill px-4 text-sm whitespace-nowrap text-muted-foreground outline-none hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 aria-[current=page]:bg-primary-soft aria-[current=page]:font-medium aria-[current=page]:text-primary-strong"
+          className="flex min-h-10 items-center rounded-pill px-4 text-sm whitespace-nowrap text-muted-foreground outline-none hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 aria-[current=page]:bg-foreground aria-[current=page]:font-semibold aria-[current=page]:text-white"
         >
           {tab.label}
         </Link>
@@ -55,10 +55,10 @@ export function LaunchHeader({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {fr.admin.launch.title}
           </h1>
-          <p className="max-w-3xl text-sm text-muted-foreground">{intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{intro}</p>
         </div>
         {aside}
       </div>

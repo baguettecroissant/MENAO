@@ -85,10 +85,10 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {t.title}
         </h1>
-        <p className="max-w-3xl text-sm text-muted-foreground">{t.intro}</p>
+        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
       </div>
       <FilterChips
         label={t.periodsLabel}
@@ -133,7 +133,7 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
               <p className="text-sm text-muted-foreground">{t.empty}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[52rem] text-left text-sm">
+                <table className="admin-table w-full min-w-[52rem] text-left text-sm">
                   <thead className="text-muted-foreground">
                     <tr>
                       <th scope="col" className="py-2 pr-4 font-normal">
@@ -198,7 +198,7 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
                 <p className="text-sm text-muted-foreground">{t.empty}</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[26rem] text-left text-sm">
+                  <table className="admin-table w-full min-w-[26rem] text-left text-sm">
                     <thead className="text-muted-foreground">
                       <tr>
                         <th scope="col" className="py-2 pr-4 font-normal">
@@ -363,7 +363,7 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
       <Card className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-medium">{v.title}</h2>
-          <p className="text-sm text-muted-foreground">{v.intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{v.intro}</p>
         </div>
         {voiceError ? (
           <Alert tone="error">{v.error}</Alert>
@@ -371,7 +371,7 @@ export default async function AiMonitoringPage({ searchParams }: PageProps<"/adm
           <p className="text-sm text-muted-foreground">{v.empty}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-left text-sm">
+            <table className="admin-table w-full min-w-[36rem] text-left text-sm">
               <thead className="text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-normal">

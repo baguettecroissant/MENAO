@@ -52,7 +52,7 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
         {t.back}
       </Link>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {person.name ?? account.email ?? t.unnamed}
         </h1>
         <StatusBadge tone="primary">{fr.roles[profile.role]}</StatusBadge>

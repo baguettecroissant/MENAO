@@ -267,7 +267,7 @@ export default async function AdminPartnerPage({
         {commissionCount === 0 ? (
           <p className="text-sm text-muted-foreground">{k.empty}</p>
         ) : (
-          <table className="w-full min-w-[40rem] text-left text-sm">
+          <table className="admin-table w-full min-w-[40rem] text-left text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr className="border-b border-border">
                 <th scope="col" className="py-2 pr-3 font-medium">

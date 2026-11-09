@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
 import { StaffInviteForm } from "@/components/admin/staff-invite-form";
 import { ButtonLink, Card, CardTitle } from "@/components/ui";
+import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
 import { parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -41,10 +42,10 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
         {filter !== "equipe" && (
           <ButtonLink
@@ -63,6 +64,15 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
           <StaffInviteForm />
         </Card>
       )}
+      {/* Refonte « Nette » (ADR 0259) : les nombres par rôle en chiffres clés. */}
+      <MoneyFigures
+        label={t.filtersLabel}
+        dense
+        cells={(["particuliers", "artisans", "equipe"] as const).map((key) => ({
+          label: t.filters[key],
+          value: String(counts[key] ?? 0),
+        }))}
+      />
       <SearchForm
         action={PATH}
         label={t.searchLabel}
@@ -88,7 +98,7 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
           <p className="text-muted-foreground">{f.empty}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[44rem] text-left text-sm">
+            <table className="admin-table w-full min-w-[44rem] text-left text-sm">
               <thead className="text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-normal">

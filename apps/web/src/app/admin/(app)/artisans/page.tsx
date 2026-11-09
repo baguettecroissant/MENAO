@@ -176,7 +176,7 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
         </div>
       ) : (
         <div className="overflow-x-auto rounded-card border border-border bg-surface shadow-card">
-          <table className="w-full min-w-[46rem] text-left text-sm">
+          <table className="admin-table w-full min-w-[46rem] text-left text-sm">
             <thead className="border-b border-border bg-background text-[0.8125rem] text-muted-foreground">
               <tr>
                 <th scope="col" className="px-5 py-3 font-semibold">

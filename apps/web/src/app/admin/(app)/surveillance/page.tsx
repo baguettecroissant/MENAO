@@ -72,7 +72,7 @@ export default async function WatchPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+      <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
         {t.title}
       </h1>
       <Card>

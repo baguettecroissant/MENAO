@@ -47,7 +47,7 @@ export default async function AdminLaunchTaskPage({
         <ArrowLeft aria-hidden="true" className="size-4" />
         {owner ? t.task.backTo(owner.nom) : t.task.backTeam}
       </TextLink>
-      <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+      <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
         {task ? t.task.editTitle : t.task.newTitle}
       </h1>
       <Card className="flex flex-col gap-4 lg:max-w-3xl">

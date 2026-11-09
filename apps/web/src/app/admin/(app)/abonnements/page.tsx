@@ -83,10 +83,10 @@ export default async function AdminSubscriptionsPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
           {t.title}
         </h1>
-        <p className="text-sm text-muted-foreground">{t.intro}</p>
+        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
       </div>
       <WebhookAlert failures={webhooks.echecs ?? 0} />
       {summary && (
@@ -123,7 +123,7 @@ export default async function AdminSubscriptionsPage({
             <Card className="flex min-w-0 flex-col gap-3">
               <h2 className="text-lg font-medium">{t.plans.title}</h2>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[30rem] text-left text-sm">
+                <table className="admin-table w-full min-w-[30rem] text-left text-sm">
                   <thead className="text-muted-foreground">
                     <tr>
                       <th scope="col" className="py-2 pr-4 font-normal">
@@ -199,7 +199,7 @@ export default async function AdminSubscriptionsPage({
           <p className="text-muted-foreground">{f.empty}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[44rem] text-left text-sm">
+            <table className="admin-table w-full min-w-[44rem] text-left text-sm">
               <thead className="text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-normal">
