@@ -160,7 +160,7 @@ export function ExpenseDetailView({
             </section>
           )}
         </div>
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
           <section aria-labelledby="total-depense" className={sheetCard}>
             <div className="flex flex-col gap-1">
               <h2 id="total-depense" className="font-sans text-sm font-semibold text-label">

@@ -131,7 +131,7 @@ export default async function ProfileStepPage() {
           </section>
         </Card>
       </div>
-      <aside className="overflow-hidden rounded-card border border-border bg-surface shadow-card lg:sticky lg:top-24">
+      <aside className="overflow-hidden rounded-card border border-border bg-surface shadow-card lg:sticky lg:top-6">
         <p className="flex items-center gap-1.5 border-b border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground">
           <Eye aria-hidden="true" className="size-4" />
           {t.previewTitle}
