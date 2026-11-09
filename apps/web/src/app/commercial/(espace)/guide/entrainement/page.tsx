@@ -28,26 +28,27 @@ export default async function CommercialTrainingPage() {
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Link
           href="/commercial/guide"
-          className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           {t.back}
         </Link>
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
         {!space.commercial ? (
           <Alert tone="info">{fr.commercialSpace.missing}</Alert>
         ) : !space.active ? (
           <Alert tone="error">{fr.commercialSpace.suspended}</Alert>
         ) : (
-          <>
+          // Refonte « Nette » (ADR 0260) : l'échange à gauche, les séances passées à droite.
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <TrainingSimulator />
             {sessions && sessions.length > 0 && (
               <ListPanel label={t.history.title}>
@@ -60,7 +61,7 @@ export default async function CommercialTrainingPage() {
                 ))}
               </ListPanel>
             )}
-          </>
+          </div>
         )}
       </div>
     </main>

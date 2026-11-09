@@ -48,17 +48,17 @@ export function CodeCard({
           onClick={() => dialog.current?.showModal()}
           className="relative shrink-0 rounded-card border border-border bg-white p-2 transition-opacity hover:opacity-90 focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
         >
-          <QrSvg qr={qr} label={t.qrAlt} className="size-40" />
+          <QrSvg qr={qr} label={t.qrAlt} className="size-44" />
           <Maximize2
             aria-hidden="true"
             className="absolute right-2 bottom-2 size-5 rounded-full bg-white p-0.5 text-muted-foreground"
           />
         </button>
         <div className="flex min-w-0 flex-col gap-3">
-          <h2 id="code-commercial" className="text-sm font-medium text-muted-foreground">
+          <h2 id="code-commercial" className="text-sm font-semibold text-label">
             {t.title}
           </h2>
-          <p className="text-3xl font-medium tracking-[0.12em] break-all text-primary-strong">
+          <p className="font-display text-[2.25rem] leading-none font-extrabold tracking-[0.06em] break-all text-foreground sm:text-[2.75rem]">
             {code}
           </p>
           <ul className="flex flex-col gap-2 text-left text-sm text-muted-foreground">
@@ -66,7 +66,7 @@ export function CodeCard({
               <li key={line} className="flex gap-2">
                 <span
                   aria-hidden="true"
-                  className="mt-2 size-1.5 shrink-0 rounded-full bg-primary"
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-foreground"
                 />
                 {line}
               </li>
@@ -129,7 +129,7 @@ export function CodeCard({
             {t.fullscreenTitle}
           </h3>
           <QrSvg qr={qr} label={t.qrAlt} className="aspect-square w-full max-w-[22rem]" />
-          <p className="text-3xl font-medium tracking-[0.12em] break-all text-primary-strong">
+          <p className="font-display text-[2.25rem] leading-none font-extrabold tracking-[0.06em] break-all text-foreground sm:text-[2.75rem]">
             {code}
           </p>
           <p className="text-muted-foreground">{t.fullscreenHint}</p>

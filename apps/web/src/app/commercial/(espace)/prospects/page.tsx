@@ -109,12 +109,12 @@ export default async function CommercialProspectsPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.list.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.list.intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.list.intro}</p>
         </div>
 
         {!space.commercial ? (
@@ -143,7 +143,7 @@ export default async function CommercialProspectsPage({
                   defaultValue={query ?? ""}
                   maxLength={100}
                   placeholder={t.list.searchPlaceholder}
-                  className={`${inputClasses} min-h-11 bg-surface pl-11`}
+                  className={`${inputClasses} min-h-11 rounded-[0.875rem] bg-surface pl-11`}
                 />
               </div>
               <button
@@ -169,7 +169,7 @@ export default async function CommercialProspectsPage({
               </p>
               <nav
                 aria-label={t.list.viewsLabel}
-                className="inline-flex shrink-0 rounded-button border border-border bg-surface p-0.5"
+                className="inline-flex shrink-0 gap-0.5 rounded-pill border border-border bg-surface p-1"
               >
                 {(["liste", "carte"] as const).map((key) => {
                   const Icon = key === "carte" ? MapIcon : List;
@@ -178,7 +178,7 @@ export default async function CommercialProspectsPage({
                       key={key}
                       href={href({ vue: key, page: 1 })}
                       aria-current={view === key ? "page" : undefined}
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-button px-3 text-sm text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary-soft aria-[current=page]:font-medium aria-[current=page]:text-primary-strong"
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-pill px-3.5 text-sm text-muted-foreground hover:text-foreground aria-[current=page]:bg-foreground aria-[current=page]:font-semibold aria-[current=page]:text-white"
                     >
                       <Icon aria-hidden="true" className="size-4" />
                       {t.list.views[key]}

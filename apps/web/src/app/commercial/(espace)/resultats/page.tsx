@@ -54,10 +54,12 @@ const BONUS_TONES: Record<string, ListTone> = {
 
 function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-card border border-border bg-surface p-4 shadow-card">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-xl font-medium tracking-tight tabular-nums">{value}</dd>
-      {hint && <dd className="text-xs text-subtle-foreground">{hint}</dd>}
+    <div className="flex flex-col gap-1.5 bg-surface px-5 py-4">
+      <dt className="text-sm font-semibold text-label">{label}</dt>
+      <dd className="font-display text-xl leading-tight font-bold tracking-tight tabular-nums sm:text-2xl">
+        {value}
+      </dd>
+      {hint && <dd className="text-[0.8125rem] text-muted-foreground">{hint}</dd>}
     </div>
   );
 }
@@ -87,12 +89,12 @@ export default async function CommercialResultsPage() {
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.title}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
 
         {!space.commercial ? (
@@ -103,7 +105,7 @@ export default async function CommercialResultsPage() {
           <Alert tone="error">{fr.commercialProspects.errors.unavailable}</Alert>
         ) : (
           <>
-            <dl className="grid gap-3 sm:grid-cols-3">
+            <dl className="grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-3">
               <Tile
                 label={t.figures.signups}
                 value={t.figures.thisMonth(data.signups_month)}
@@ -121,139 +123,152 @@ export default async function CommercialResultsPage() {
               />
             </dl>
 
-            {target !== null && (
-              <Card className="flex flex-col gap-3">
-                <p className="text-[0.9375rem] font-medium">
-                  {t.objective(data.validated_month, target)}
-                </p>
-                <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-background">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{
-                      width: `${Math.min(100, Math.round((data.validated_month / target) * 100))}%`,
-                    }}
-                  />
-                </div>
-              </Card>
-            )}
-
-            <section aria-labelledby="pipeline" className="flex flex-col gap-3">
-              <div className="flex flex-col gap-0.5">
-                <h2 id="pipeline" className="text-lg font-medium">
-                  {t.pipeline.title}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t.pipeline.followed(data.pipeline.followed)}
-                </p>
-              </div>
-              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {PIPELINE.map((key) => (
-                  <Tile
-                    key={key}
-                    label={fr.commercialProspects.status[key] ?? key}
-                    value={count(data.pipeline[key])}
-                  />
-                ))}
-              </dl>
-            </section>
-
-            <section aria-labelledby="mois" className="flex flex-col gap-3">
-              <h2 id="mois" className="text-lg font-medium">
-                {t.months.title}
-              </h2>
-              <div className="overflow-x-auto rounded-card border border-border bg-surface shadow-card">
-                <table className="w-full text-left text-sm">
-                  <caption className="px-4 pt-4 text-left text-sm text-muted-foreground sm:px-5">
-                    {t.months.caption}
-                  </caption>
-                  <thead className="text-xs text-muted-foreground">
-                    <tr className="border-b border-border">
-                      <th scope="col" className="px-4 py-2 font-medium sm:px-5">
-                        {t.months.month}
-                      </th>
-                      <th scope="col" className="px-2 py-2 text-right font-medium">
-                        {t.figures.signups}
-                      </th>
-                      <th scope="col" className="px-2 py-2 text-right font-medium">
-                        {t.figures.validated}
-                      </th>
-                      <th scope="col" className="py-2 pr-4 pl-2 text-right font-medium sm:pr-5">
-                        {t.figures.subscribed}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {data.by_month.map((m) => (
-                      <tr key={m.month}>
-                        <th scope="row" className="px-4 py-3 font-normal sm:px-5">
-                          {monthLabel.format(new Date(`${m.month}-15T12:00:00Z`))}
-                        </th>
-                        <td className="px-2 py-3 text-right tabular-nums">{count(m.signups)}</td>
-                        <td className="px-2 py-3 text-right tabular-nums">{count(m.validated)}</td>
-                        <td className="py-3 pr-4 pl-2 text-right tabular-nums sm:pr-5">
-                          {count(m.subscribed)}
-                        </td>
-                      </tr>
+            {/* Refonte « Nette » (ADR 0260) : prospects et mois à gauche, objectif et primes à droite. */}
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+              <div className="flex min-w-0 flex-col gap-6">
+                <section aria-labelledby="pipeline" className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <h2 id="pipeline" className="text-lg">
+                      {t.pipeline.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {t.pipeline.followed(data.pipeline.followed)}
+                    </p>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-4">
+                    {PIPELINE.map((key) => (
+                      <Tile
+                        key={key}
+                        label={fr.commercialProspects.status[key] ?? key}
+                        value={count(data.pipeline[key])}
+                      />
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                  </dl>
+                </section>
 
-            <section aria-labelledby="primes" className="flex flex-col gap-3">
-              <div className="flex flex-col gap-0.5">
-                <h2 id="primes" className="text-lg font-medium">
-                  {t.bonuses.title}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {validationAmount || subscriptionAmount
-                    ? t.bonuses.amounts(validationAmount, subscriptionAmount)
-                    : t.bonuses.notSet}
-                </p>
+                <section aria-labelledby="mois" className="flex flex-col gap-3">
+                  <h2 id="mois" className="text-lg">
+                    {t.months.title}
+                  </h2>
+                  <div className="overflow-x-auto rounded-card border border-border bg-surface shadow-card">
+                    <table className="w-full text-left text-sm">
+                      <caption className="px-4 pt-4 text-left text-sm text-muted-foreground sm:px-5">
+                        {t.months.caption}
+                      </caption>
+                      <thead className="text-xs text-muted-foreground">
+                        <tr className="border-b border-border">
+                          <th scope="col" className="px-4 py-2 font-medium sm:px-5">
+                            {t.months.month}
+                          </th>
+                          <th scope="col" className="px-2 py-2 text-right font-medium">
+                            {t.figures.signups}
+                          </th>
+                          <th scope="col" className="px-2 py-2 text-right font-medium">
+                            {t.figures.validated}
+                          </th>
+                          <th scope="col" className="py-2 pr-4 pl-2 text-right font-medium sm:pr-5">
+                            {t.figures.subscribed}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {data.by_month.map((m) => (
+                          <tr key={m.month}>
+                            <th scope="row" className="px-4 py-3 font-normal sm:px-5">
+                              {monthLabel.format(new Date(`${m.month}-15T12:00:00Z`))}
+                            </th>
+                            <td className="px-2 py-3 text-right tabular-nums">
+                              {count(m.signups)}
+                            </td>
+                            <td className="px-2 py-3 text-right tabular-nums">
+                              {count(m.validated)}
+                            </td>
+                            <td className="py-3 pr-4 pl-2 text-right tabular-nums sm:pr-5">
+                              {count(m.subscribed)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
-              <dl className="grid grid-cols-2 gap-3">
-                <Tile label={t.bonuses.validated} value={money(data.bonuses.validated_cents)} />
-                <Tile label={t.bonuses.paid} value={money(data.bonuses.paid_cents)} />
-              </dl>
-              <p className="text-sm text-muted-foreground">
-                {t.bonuses.pending(data.bonuses.pending)}
-              </p>
-              {bonusList?.error ? (
-                <Alert tone="error">{fr.commercialProspects.errors.unavailable}</Alert>
-              ) : bonuses.length === 0 ? (
-                <EmptyState illustration="documents">{t.bonuses.empty}</EmptyState>
-              ) : (
-                <ListPanel label={t.bonuses.listLabel}>
-                  {bonuses.map((b) => {
-                    // En attente : date prévue de la vérification ; ensuite, sa date réelle.
-                    const checked =
-                      b.status === "en_attente" ? b.validate_after : (b.validated_at ?? null);
-                    return (
-                      <ListRow
-                        key={b.id}
-                        title={b.artisan || fr.commercialSpace.signups.unnamed}
-                        detail={[
-                          t.bonuses.kind[b.kind] ?? b.kind,
-                          checked
-                            ? b.status === "en_attente"
-                              ? t.bonuses.checkOn(formatDay(checked))
-                              : t.bonuses.delay(formatDay(checked))
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                        value={b.amount_cents != null ? money(b.amount_cents) : undefined}
-                        status={{
-                          text: t.bonuses.status[b.status] ?? b.status,
-                          tone: BONUS_TONES[b.status] ?? "neutral",
+              <div className="flex flex-col gap-6">
+                {target !== null && (
+                  <Card className="flex flex-col gap-3">
+                    <p className="text-[0.9375rem] font-medium">
+                      {t.objective(data.validated_month, target)}
+                    </p>
+                    <div
+                      aria-hidden="true"
+                      className="h-2 overflow-hidden rounded-full bg-background"
+                    >
+                      <div
+                        className="h-full rounded-full bg-success"
+                        style={{
+                          width: `${Math.min(100, Math.round((data.validated_month / target) * 100))}%`,
                         }}
                       />
-                    );
-                  })}
-                </ListPanel>
-              )}
-              <p className="text-xs text-muted-foreground">{t.bonuses.rules}</p>
-            </section>
+                    </div>
+                  </Card>
+                )}
+
+                <section aria-labelledby="primes" className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <h2 id="primes" className="text-lg">
+                      {t.bonuses.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {validationAmount || subscriptionAmount
+                        ? t.bonuses.amounts(validationAmount, subscriptionAmount)
+                        : t.bonuses.notSet}
+                    </p>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border shadow-card">
+                    <Tile label={t.bonuses.validated} value={money(data.bonuses.validated_cents)} />
+                    <Tile label={t.bonuses.paid} value={money(data.bonuses.paid_cents)} />
+                  </dl>
+                  <p className="text-sm text-muted-foreground">
+                    {t.bonuses.pending(data.bonuses.pending)}
+                  </p>
+                  {bonusList?.error ? (
+                    <Alert tone="error">{fr.commercialProspects.errors.unavailable}</Alert>
+                  ) : bonuses.length === 0 ? (
+                    <EmptyState illustration="documents">{t.bonuses.empty}</EmptyState>
+                  ) : (
+                    <ListPanel label={t.bonuses.listLabel}>
+                      {bonuses.map((b) => {
+                        // En attente : date prévue de la vérification ; ensuite, sa date réelle.
+                        const checked =
+                          b.status === "en_attente" ? b.validate_after : (b.validated_at ?? null);
+                        return (
+                          <ListRow
+                            key={b.id}
+                            title={b.artisan || fr.commercialSpace.signups.unnamed}
+                            detail={[
+                              t.bonuses.kind[b.kind] ?? b.kind,
+                              checked
+                                ? b.status === "en_attente"
+                                  ? t.bonuses.checkOn(formatDay(checked))
+                                  : t.bonuses.delay(formatDay(checked))
+                                : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                            value={b.amount_cents != null ? money(b.amount_cents) : undefined}
+                            status={{
+                              text: t.bonuses.status[b.status] ?? b.status,
+                              tone: BONUS_TONES[b.status] ?? "neutral",
+                            }}
+                          />
+                        );
+                      })}
+                    </ListPanel>
+                  )}
+                  <p className="text-xs text-muted-foreground">{t.bonuses.rules}</p>
+                </section>
+              </div>
+            </div>
           </>
         )}
       </div>

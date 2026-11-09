@@ -29,7 +29,7 @@ export default async function CommercialGuideSectionPage({
 
   return (
     <main className="bg-background">
-      <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Link
           href="/commercial/guide"
           className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
@@ -38,7 +38,7 @@ export default async function CommercialGuideSectionPage({
           {t.back}
         </Link>
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {current.title}
           </h1>
           <p className="text-muted-foreground">{current.summary}</p>

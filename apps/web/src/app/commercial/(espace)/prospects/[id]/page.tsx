@@ -67,7 +67,7 @@ export default async function CommercialProspectPage({
   if (!space.commercial || !space.active || !p) {
     return (
       <main className="bg-background">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
           {back}
           {!space.commercial ? (
             <Alert tone="info">{fr.commercialSpace.missing}</Alert>
@@ -148,10 +148,10 @@ export default async function CommercialProspectPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         {back}
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium tracking-tight break-words sm:text-[1.75rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight break-words sm:text-[2.5rem]">
             {p.nom}
           </h1>
           {p.denomination && p.denomination !== p.nom && (
@@ -168,99 +168,107 @@ export default async function CommercialProspectPage({
           </div>
         </div>
 
-        <Card className="flex flex-col gap-3">
-          <CardTitle title={d.company} />
-          <dl className="flex flex-col">
-            {facts
-              .filter((f) => f.value)
-              .map((f) => (
-                <div
-                  key={f.label}
-                  className="flex flex-col gap-0.5 border-t border-border py-2.5 text-sm first:border-t-0 first:pt-0 sm:flex-row sm:gap-4"
-                >
-                  <dt className="shrink-0 text-muted-foreground sm:w-36">{f.label}</dt>
-                  <dd className="min-w-0 break-words">{f.value}</dd>
-                </div>
-              ))}
-          </dl>
-        </Card>
+        {/* Refonte « Nette » (ADR 0260) : le copilote et l'historique à gauche ; l'entreprise et le suivi à droite. */}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            <Alert tone="info">{d.firstContact}</Alert>
 
-        <Alert tone="info">{d.firstContact}</Alert>
+            {p.mine && (
+              <ProspectCopilot
+                prospectId={p.id}
+                phone={p.phone}
+                link={link}
+                brief={brief}
+                briefAt={brief ? (briefRow?.created_at ?? null) : null}
+                tradeLabels={tradeLabels}
+              />
+            )}
 
-        {p.mine && (
-          <ProspectCopilot
-            prospectId={p.id}
-            phone={p.phone}
-            link={link}
-            brief={brief}
-            briefAt={brief ? (briefRow?.created_at ?? null) : null}
-            tradeLabels={tradeLabels}
-          />
-        )}
-
-        {p.mine ? (
-          <Card className="flex flex-col gap-5">
-            <CardTitle
-              title={d.followTitle}
-              action={p.phone ? <CallLink phone={p.phone} label={t.day.call} /> : undefined}
-            />
-            <ProspectFollowForm
-              id={p.id}
-              status={p.status}
-              nextActionAt={localInput(p.next_action_at)}
-              phone={p.phone ?? ""}
-              notes={p.notes ?? ""}
-            />
-            <div className="border-t border-border pt-4">
-              <ReleaseProspectForm id={p.id} />
-            </div>
-          </Card>
-        ) : p.followed_by_other ? (
-          <Alert tone="info">{d.followedByOther}</Alert>
-        ) : (
-          <FollowProspectForm id={p.id} />
-        )}
-
-        {reports && reports.length > 0 && (
-          <Card className="flex flex-col gap-3">
-            <CardTitle title={c.history.title} />
-            <ol className="flex flex-col">
-              {reports.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex flex-col gap-1.5 border-t border-border py-3 text-sm first:border-t-0 first:pt-0"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {formatDayTime(r.created_at)}
-                    </span>
-                    <StatusBadge
-                      tone={
-                        r.interest === "chaud"
-                          ? "success"
-                          : r.interest === "tiede"
-                            ? "warning"
-                            : "neutral"
-                      }
+            {reports && reports.length > 0 && (
+              <Card className="flex flex-col gap-3">
+                <CardTitle title={c.history.title} />
+                <ol className="flex flex-col">
+                  {reports.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex flex-col gap-1.5 border-t border-border py-3 text-sm first:border-t-0 first:pt-0"
                     >
-                      {c.report.interests[r.interest] ?? r.interest}
-                    </StatusBadge>
-                  </div>
-                  <p className="leading-relaxed break-words">{r.summary}</p>
-                  {r.objections.length > 0 && (
-                    <p className="text-muted-foreground">{r.objections.join(" · ")}</p>
-                  )}
-                  {r.next_action_label && (
-                    <p className="text-muted-foreground">{c.history.next(r.next_action_label)}</p>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </Card>
-        )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDayTime(r.created_at)}
+                        </span>
+                        <StatusBadge
+                          tone={
+                            r.interest === "chaud"
+                              ? "success"
+                              : r.interest === "tiede"
+                                ? "warning"
+                                : "neutral"
+                          }
+                        >
+                          {c.report.interests[r.interest] ?? r.interest}
+                        </StatusBadge>
+                      </div>
+                      <p className="leading-relaxed break-words">{r.summary}</p>
+                      {r.objections.length > 0 && (
+                        <p className="text-muted-foreground">{r.objections.join(" · ")}</p>
+                      )}
+                      {r.next_action_label && (
+                        <p className="text-muted-foreground">
+                          {c.history.next(r.next_action_label)}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </Card>
+            )}
+          </div>
+          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+            <Card className="flex flex-col gap-3">
+              <CardTitle title={d.company} />
+              <dl className="flex flex-col">
+                {facts
+                  .filter((f) => f.value)
+                  .map((f) => (
+                    <div
+                      key={f.label}
+                      className="flex flex-col gap-0.5 border-t border-border py-2.5 text-sm first:border-t-0 first:pt-0 sm:flex-row sm:gap-4"
+                    >
+                      <dt className="shrink-0 text-muted-foreground sm:w-36">{f.label}</dt>
+                      <dd className="min-w-0 break-words">{f.value}</dd>
+                    </div>
+                  ))}
+              </dl>
+            </Card>
 
-        <div className="border-t border-border pt-5">
-          <DoNotContactForm id={p.id} />
+            {p.mine ? (
+              <Card className="flex flex-col gap-5">
+                <CardTitle
+                  title={d.followTitle}
+                  action={p.phone ? <CallLink phone={p.phone} label={t.day.call} /> : undefined}
+                />
+                <ProspectFollowForm
+                  id={p.id}
+                  status={p.status}
+                  nextActionAt={localInput(p.next_action_at)}
+                  phone={p.phone ?? ""}
+                  notes={p.notes ?? ""}
+                />
+                <div className="border-t border-border pt-4">
+                  <ReleaseProspectForm id={p.id} />
+                </div>
+              </Card>
+            ) : p.followed_by_other ? (
+              <Alert tone="info">{d.followedByOther}</Alert>
+            ) : (
+              <FollowProspectForm id={p.id} />
+            )}
+
+            <div className="px-1">
+              <DoNotContactForm id={p.id} />
+            </div>
+          </div>
         </div>
       </div>
     </main>

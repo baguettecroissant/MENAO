@@ -38,60 +38,68 @@ export default async function CommercialHomePage() {
 
   return (
     <main className="bg-background">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-[1.75rem] leading-tight font-medium tracking-tight sm:text-[2rem]">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
             {t.greeting(space.account.firstName)}
           </h1>
-          <p className="text-sm text-muted-foreground">{t.intro}</p>
+          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
 
-        {!commercial ? (
-          <Alert tone="info">{t.missing}</Alert>
-        ) : !active ? (
-          <Alert tone="error">{t.suspended}</Alert>
-        ) : (
-          link && <CodeCard code={commercial.code} link={link} qr={qrSvg(link)} />
-        )}
-
-        {active && (
-          <section aria-labelledby="inscriptions" className="flex flex-col gap-3">
-            <h2 id="inscriptions" className="text-lg font-medium">
-              {t.signups.title}
-            </h2>
-            {signups?.length ? (
-              <ListPanel label={t.signups.listLabel}>
-                {signups.map((s, i) => (
-                  <ListRow
-                    key={`${s.signed_up_at}-${i}`}
-                    title={s.raison_sociale || t.signups.unnamed}
-                    detail={[
-                      t.signups.since(formatDay(s.signed_up_at)),
-                      s.manque.length > 0
-                        ? t.signups.missing(
-                            s.manque.map((step) => fr.admin.stalled.steps[step] ?? step).join(", "),
-                          )
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                    status={{
-                      text: t.signups.status[s.status] ?? s.status,
-                      tone: TONES[s.status] ?? "neutral",
-                    }}
-                  />
-                ))}
-              </ListPanel>
+        {/* Refonte « Nette » (ADR 0260) : le code à gauche, les inscriptions à droite. */}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            {!commercial ? (
+              <Alert tone="info">{t.missing}</Alert>
+            ) : !active ? (
+              <Alert tone="error">{t.suspended}</Alert>
             ) : (
-              <EmptyState illustration="documents">{t.signups.empty}</EmptyState>
+              link && <CodeCard code={commercial.code} link={link} qr={qrSvg(link)} />
             )}
-          </section>
-        )}
+          </div>
+          <div className="flex flex-col gap-4">
+            {active && (
+              <section aria-labelledby="inscriptions" className="flex flex-col gap-3">
+                <h2 id="inscriptions" className="text-lg">
+                  {t.signups.title}
+                </h2>
+                {signups?.length ? (
+                  <ListPanel label={t.signups.listLabel}>
+                    {signups.map((s, i) => (
+                      <ListRow
+                        key={`${s.signed_up_at}-${i}`}
+                        title={s.raison_sociale || t.signups.unnamed}
+                        detail={[
+                          t.signups.since(formatDay(s.signed_up_at)),
+                          s.manque.length > 0
+                            ? t.signups.missing(
+                                s.manque
+                                  .map((step) => fr.admin.stalled.steps[step] ?? step)
+                                  .join(", "),
+                              )
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                        status={{
+                          text: t.signups.status[s.status] ?? s.status,
+                          tone: TONES[s.status] ?? "neutral",
+                        }}
+                      />
+                    ))}
+                  </ListPanel>
+                ) : (
+                  <EmptyState illustration="documents">{t.signups.empty}</EmptyState>
+                )}
+              </section>
+            )}
 
-        <ButtonLink href="/commercial/guide" variant="outline" className="self-start">
-          <BookOpen aria-hidden="true" className="size-4" />
-          {t.guide.open}
-        </ButtonLink>
+            <ButtonLink href="/commercial/guide" variant="outline" className="self-start">
+              <BookOpen aria-hidden="true" className="size-4" />
+              {t.guide.open}
+            </ButtonLink>
+          </div>
+        </div>
       </div>
     </main>
   );
