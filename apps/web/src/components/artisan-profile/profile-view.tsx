@@ -135,12 +135,35 @@ export function ProfileBody({
   photos,
   reviews,
   canReport,
+  layout = "app",
+  aside = null,
+  verifiedOn = null,
 }: {
   profile: ArtisanProfile;
   photos: string[];
   reviews: PublicReview[];
   canReport: boolean;
+  /**
+   * « public » (fiche publique, lot 23, ADR 0269) : qui c'est, ce qu'il a fait, ce qu'on en dit,
+   * ce qui est vérifié ; avis en un seul bloc ; colonne de droite fixe (`aside`).
+   */
+  layout?: "app" | "public";
+  aside?: ReactNode;
+  /** Date du dernier contrôle du dossier (fiche publique). */
+  verifiedOn?: string | null;
 }) {
+  if (layout === "public") {
+    return (
+      <PublicProfileBody
+        profile={profile}
+        photos={photos}
+        reviews={reviews}
+        canReport={canReport}
+        aside={aside}
+        verifiedOn={verifiedOn}
+      />
+    );
+  }
   return (
     <div className="mx-auto grid max-w-6xl gap-5 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_20rem]">
       <div className="flex min-w-0 flex-col gap-5">
@@ -222,70 +245,7 @@ export function ProfileBody({
             </ul>
           </Section>
         )}
-        <Section title={t.guarantees}>
-          <ul className="flex flex-col gap-4">
-            {profile.verified && (
-              <Guarantee icon={<BadgeCheck />} title={t.verifiedTitle}>
-                {t.verifiedDetail(profile.decennale_exempt)}
-              </Guarantee>
-            )}
-            {profile.decennale_exempt ? (
-              <Guarantee icon={<ShieldCheck />} title={t.decennaleExemptTitle}>
-                {t.decennaleExemptDetail}
-              </Guarantee>
-            ) : (
-              <Guarantee icon={<ShieldCheck />} title={t.decennaleTitle}>
-                {profile.decennale?.valid_until
-                  ? t.decennaleUntil(
-                      formatProfileDay(profile.decennale.valid_until),
-                      profile.decennale.insurer,
-                    )
-                  : null}
-              </Guarantee>
-            )}
-            {profile.rc_pro?.valid_until && (
-              <Guarantee icon={<ShieldCheck />} title={t.rcProTitle}>
-                {t.decennaleUntil(
-                  formatProfileDay(profile.rc_pro.valid_until),
-                  profile.rc_pro.insurer,
-                )}
-              </Guarantee>
-            )}
-            {profile.diplome && (
-              <Guarantee
-                icon={<GraduationCap />}
-                title={t.diplomaTitle(fr.diplomesMetier[profile.diplome])}
-              >
-                {t.diplomaDetail}
-              </Guarantee>
-            )}
-            {profile.certifications.map((c) => (
-              <Guarantee
-                key={`${c.type}-${c.numero}`}
-                icon={<CircleCheck />}
-                title={t.certificationTitle(
-                  fr.certificationTypes[c.type as keyof typeof fr.certificationTypes] ?? c.type,
-                )}
-              >
-                {t.certificationDetail(c.numero, formatProfileDay(c.valid_until))}
-              </Guarantee>
-            ))}
-            {profile.rge.length > 0 && (
-              <Guarantee icon={<Leaf />} title={t.rgeTitle}>
-                <span className="flex flex-col gap-2">
-                  <span>{t.rgeDetail}</span>
-                  <span className="flex flex-wrap gap-1.5">
-                    {profile.rge.map((q) => (
-                      <Tag key={q.domain} tone="neutral">
-                        {q.domain}
-                      </Tag>
-                    ))}
-                  </span>
-                </span>
-              </Guarantee>
-            )}
-          </ul>
-        </Section>
+        <ProfileGuarantees profile={profile} />
         <Section title={t.clientReviews}>
           {profile.score ? (
             <ScoreBreakdown score={profile.score} />
@@ -317,6 +277,220 @@ export function ProfileBody({
         </Section>
       </div>
     </div>
+  );
+}
+
+/** Fiche publique (lot 23, ADR 0269) : ordre de décision du particulier, colonne de droite fixe. */
+function PublicProfileBody({
+  profile,
+  photos,
+  reviews,
+  canReport,
+  aside,
+  verifiedOn,
+}: {
+  profile: ArtisanProfile;
+  photos: string[];
+  reviews: PublicReview[];
+  canReport: boolean;
+  aside: ReactNode;
+  verifiedOn: string | null;
+}) {
+  return (
+    <div className="mx-auto grid max-w-6xl items-start gap-5 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      <div className="flex min-w-0 flex-col gap-5">
+        {profile.presentation && (
+          <Section title={t.about(profile.display_name)}>
+            <p className="text-[0.9375rem] leading-relaxed whitespace-pre-line text-foreground/90">
+              {profile.presentation}
+            </p>
+            {profile.company_name && (
+              <p className="text-xs text-muted-foreground">
+                {t.company} : {profile.company_name}
+              </p>
+            )}
+          </Section>
+        )}
+        <Section title={t.recent}>
+          {photos.length ? (
+            <PhotoGallery urls={photos} name={profile.display_name} />
+          ) : (
+            <p className="text-sm text-muted-foreground">{t.recentEmpty}</p>
+          )}
+        </Section>
+        {/* Avis en un seul bloc : Score MENAO, note des clients, avis, note Google. */}
+        <Section title={t.clientReviews}>
+          {profile.menao_score && (
+            <div className="flex flex-col gap-3 rounded-2xl bg-background p-4">
+              <MenaoScore score={profile.menao_score} />
+              <TextLink href={"/criteres-de-classement" as Route} className="self-start text-sm">
+                {t.scoreHow}
+              </TextLink>
+            </div>
+          )}
+          {profile.score ? (
+            <ScoreBreakdown score={profile.score} />
+          ) : (
+            <p className="flex items-start gap-2 text-sm text-muted-foreground">
+              <BadgeCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              {t.scoreEmpty}
+            </p>
+          )}
+          {reviews.length > 0 && (
+            <ReviewList
+              reviews={reviews}
+              artisanName={profile.display_name}
+              canReport={canReport}
+            />
+          )}
+          {profile.google && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3 text-sm">
+              <span className="font-medium">
+                {t.google(
+                  profile.google.rating.toLocaleString("fr-FR", { minimumFractionDigits: 1 }),
+                  profile.google.count,
+                )}
+              </span>
+              <a
+                href={profile.google.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline"
+              >
+                {t.googleLink}
+                <ExternalLink aria-hidden="true" className="size-3.5" />
+              </a>
+            </p>
+          )}
+          <p className="text-[0.8125rem] text-muted-foreground">
+            {t.reviewsRule}{" "}
+            <TextLink href={"/garanties#guarantees-reviews" as Route}>{t.reviewsHow}</TextLink>
+          </p>
+        </Section>
+        <ProfileGuarantees profile={profile} verifiedOn={verifiedOn} howLink />
+        {profile.work_types.length > 0 && (
+          <Section title={t.expertise}>
+            <ul className="flex flex-wrap gap-1.5">
+              {profile.work_types.map((w) => (
+                <li key={w.code}>
+                  <Tag tone="neutral">{w.label}</Tag>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+        {profile.partners.length > 0 && (
+          <Section title={t.partners}>
+            <p className="text-sm text-muted-foreground">{t.partnersHint(profile.display_name)}</p>
+            <ul className="grid gap-2 xl:grid-cols-2">
+              {profile.partners.map((partner) => (
+                <li
+                  key={partner.id}
+                  className="flex items-center gap-3 rounded-input border border-border p-3"
+                >
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
+                    <HeartHandshake aria-hidden="true" className="size-4" />
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <ArtisanName artisan={partner} className="text-sm break-words" />
+                    {partner.trade && (
+                      <span className="text-xs text-muted-foreground">{partner.trade}</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+      </div>
+      {aside && <div className="lg:sticky lg:top-24">{aside}</div>}
+    </div>
+  );
+}
+
+/** Garanties et assurances (F-10) ; sur la fiche publique, date du dernier contrôle (ADR 0269). */
+function ProfileGuarantees({
+  profile,
+  verifiedOn = null,
+  howLink = false,
+}: {
+  profile: ArtisanProfile;
+  verifiedOn?: string | null;
+  /** Lien vers « Comment MENAO vérifie les artisans » (fiche publique). */
+  howLink?: boolean;
+}) {
+  return (
+    <Section title={t.guarantees}>
+      <ul className="flex flex-col gap-4">
+        {profile.verified && (
+          <Guarantee icon={<BadgeCheck />} title={t.verifiedTitle}>
+            {verifiedOn
+              ? t.verifiedOn(
+                  formatProfileDay(verifiedOn),
+                  t.verifiedDetail(profile.decennale_exempt),
+                )
+              : t.verifiedDetail(profile.decennale_exempt)}
+          </Guarantee>
+        )}
+        {profile.decennale_exempt ? (
+          <Guarantee icon={<ShieldCheck />} title={t.decennaleExemptTitle}>
+            {t.decennaleExemptDetail}
+          </Guarantee>
+        ) : (
+          <Guarantee icon={<ShieldCheck />} title={t.decennaleTitle}>
+            {profile.decennale?.valid_until
+              ? t.decennaleUntil(
+                  formatProfileDay(profile.decennale.valid_until),
+                  profile.decennale.insurer,
+                )
+              : null}
+          </Guarantee>
+        )}
+        {profile.rc_pro?.valid_until && (
+          <Guarantee icon={<ShieldCheck />} title={t.rcProTitle}>
+            {t.decennaleUntil(formatProfileDay(profile.rc_pro.valid_until), profile.rc_pro.insurer)}
+          </Guarantee>
+        )}
+        {profile.diplome && (
+          <Guarantee
+            icon={<GraduationCap />}
+            title={t.diplomaTitle(fr.diplomesMetier[profile.diplome])}
+          >
+            {t.diplomaDetail}
+          </Guarantee>
+        )}
+        {profile.certifications.map((c) => (
+          <Guarantee
+            key={`${c.type}-${c.numero}`}
+            icon={<CircleCheck />}
+            title={t.certificationTitle(
+              fr.certificationTypes[c.type as keyof typeof fr.certificationTypes] ?? c.type,
+            )}
+          >
+            {t.certificationDetail(c.numero, formatProfileDay(c.valid_until))}
+          </Guarantee>
+        ))}
+        {profile.rge.length > 0 && (
+          <Guarantee icon={<Leaf />} title={t.rgeTitle}>
+            <span className="flex flex-col gap-2">
+              <span>{t.rgeDetail}</span>
+              <span className="flex flex-wrap gap-1.5">
+                {profile.rge.map((q) => (
+                  <Tag key={q.domain} tone="neutral">
+                    {q.domain}
+                  </Tag>
+                ))}
+              </span>
+            </span>
+          </Guarantee>
+        )}
+      </ul>
+      {howLink && (
+        <TextLink href={"/garanties#guarantees-checks" as Route} className="self-start text-sm">
+          {fr.seo.artisan.controlsLink}
+        </TextLink>
+      )}
+    </Section>
   );
 }
 

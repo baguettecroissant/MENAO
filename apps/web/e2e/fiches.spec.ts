@@ -27,8 +27,10 @@ test("fiche publique : lien depuis la page ville, données structurées, badge, 
   const main = await page.getByRole("main").innerText();
   expect(main).not.toMatch(/@|\+33|Rue de l'Exemple|SIRET/i);
   // Recherche lancée depuis la fiche (ADR 0173, 0198) : la demande ne partira qu'à Noé.
+  // Carte fixe de demande (ADR 0269) et date du dernier contrôle du dossier.
+  await expect(page.getByText(/^Dernier contrôle le /)).toBeVisible();
   await expect(
-    page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }),
+    page.getByRole("main").getByRole("link", { name: "Lui demander un devis" }).first(),
   ).toHaveAttribute(
     "href",
     "/recherche?metier=plombier&fiche=b0000000-0000-4000-8000-000000000011&nom=No%C3%A9",
