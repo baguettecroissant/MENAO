@@ -8,7 +8,7 @@ import {
   type OAuthProvider,
 } from "@menao/core";
 import { ArrowLeft, ArrowRight, Check, ShieldCheck } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { useSignupDraft } from "@/lib/artisan/signup-draft";
@@ -21,6 +21,8 @@ import { ZoneStep } from "./zone-step";
 const t = fr.pro.signUp;
 
 type Screen = "intro" | ArtisanSignupStep | "code";
+
+const noSubscribe = () => () => {};
 
 /**
  * Inscription artisan en un seul parcours (ADR 0110) : une question par écran, bouton principal
@@ -40,7 +42,18 @@ export function ArtisanSignupFlow({
   const [chosen, setChosen] = useState<Screen | null>(null);
   const [codeEmail, setCodeEmail] = useState<string | null>(null);
   const focusTarget = useRef<HTMLDivElement>(null);
-  const screen: Screen = chosen ?? (oauth ? firstOpenSignupStep(draft) : "intro");
+  // Arrivée depuis la page d'atterrissage des campagnes, métier déjà choisi (`?reprendre=1`,
+  // ADR 0266) : le parcours reprend à la première étape non terminée, sans l'écran d'accueil.
+  const resume = useSyncExternalStore(
+    noSubscribe,
+    () => new URLSearchParams(window.location.search).has("reprendre"),
+    () => false,
+  );
+  const screen: Screen =
+    chosen ??
+    (oauth || (resume && ready && signupStepDone("metiers", draft))
+      ? firstOpenSignupStep(draft)
+      : "intro");
   const steps: Screen[] = oauth
     ? ["metiers", "entreprise", "zone", "compte"]
     : ["metiers", "entreprise", "zone", "compte", "code"];

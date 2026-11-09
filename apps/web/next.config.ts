@@ -103,8 +103,9 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        // Page d'atterrissage des campagnes (ADR 0266), qui garde le code jusqu'à l'inscription.
         source: "/p/:code([a-z0-9-]{3,32})/pro",
-        destination: "/pro/inscription?p=:code",
+        destination: "/pro/rejoindre?p=:code",
         permanent: false,
       },
       // Premiers e-mails de demande préparée au téléphone (ADR 0227), envoyés avec un mauvais

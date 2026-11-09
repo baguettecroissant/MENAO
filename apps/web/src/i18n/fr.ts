@@ -5477,6 +5477,46 @@ export const fr = {
         draftTime: "il y a 1 h",
       },
       plansCompare: "Comparer les formules en détail",
+      // Page d'atterrissage des campagnes, sans menu (lot 20, ADR 0266).
+      campaign: {
+        metaTitle: "Rejoindre MENAO : des chantiers près de chez vous, zéro commission",
+        metaDescription:
+          "Artisan du bâtiment dans les Alpes-Maritimes : recevez les demandes qualifiées de votre zone, sans commission. 2 mois d'essai gratuits.",
+        badge: "Pro",
+        step: "Étape 1 sur 4 · 2 minutes",
+        question: "Quel est votre métier ?",
+        tradesLabel: "Vos métiers",
+        continue: (n: number) =>
+          n === 0 ? "Choisissez un métier" : `Continuer · ${n} métier${n > 1 ? "s" : ""}`,
+        more: (n: number) => `+ ${n} métiers`,
+        noPay: "Rien à payer avant la vérification",
+        already: "Déjà inscrit ?",
+        signIn: "Connexion",
+        subtitle:
+          "Les demandes des particuliers de votre zone, déjà qualifiées. Devis, signature, paiements et factures dans une seule app. Aucune commission, jamais.",
+        benefits: [
+          {
+            title: "Des demandes qualifiées",
+            text: "Besoin, photos, commune et délais : vous choisissez vos chantiers en connaissance de cause. Trois artisans au plus par demande.",
+          },
+          {
+            title: "Vous dictez, MENAO rédige le devis",
+            text: "Chaque prestation devient une ligne chiffrée, avec TVA et mentions obligatoires. Votre client signe en ligne.",
+          },
+          {
+            title: "Payé directement sur votre compte",
+            text: "Acompte et solde par carte, versés sur votre compte Stripe. MENAO ne touche jamais à votre argent.",
+          },
+          {
+            title: "Camille répond au téléphone",
+            text: "Votre secrétaire prend les appels quand vous êtes sur le chantier et fixe le rendez-vous dans votre agenda.",
+          },
+        ],
+        priceFrom: "Dès",
+        priceUnit: (plan: string) => `HT / mois · formule ${plan}`,
+        priceOthers: (premium: string, entreprise: string) =>
+          `Premium ${premium} et Entreprise ${entreprise} HT / mois, avec Camille au téléphone. Au mois sans engagement, ou à l'année avec 2 mois offerts.`,
+      },
       // Fragments d'interface des cartes de l'outil (valeurs d'exemple, ADR 0265).
       featureVisuals: {
         signedBy: "Signé par Camille R.",
