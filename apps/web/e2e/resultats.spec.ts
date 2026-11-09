@@ -66,7 +66,7 @@ test("depuis la fiche d'Inès : demande directe, sans confrère", async ({ page 
   test.setTimeout(60_000);
   await page.goto("/artisans/plomberie-dispo-exemple");
   await expect(page.getByText(/votre demande sera envoyée à Inès uniquement/)).toBeVisible();
-  await page.getByRole("main").getByRole("link", { name: "Décrire mon projet" }).first().click();
+  await page.getByRole("main").getByRole("link", { name: "Lui demander un devis" }).first().click();
   await expect(page).toHaveURL(/\/recherche\?.*fiche=/);
   await expect(page.getByText(/^Nouvelle demande pour Inès/)).toBeVisible();
   await page
