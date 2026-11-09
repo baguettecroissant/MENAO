@@ -2,18 +2,20 @@ import { availability, parisToday, specialtiesPreview } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, MapPinned } from "lucide-react";
+import { ArrowRight, Check, MapPin, MapPinned } from "lucide-react";
 import { ArtisanResultCard } from "@/components/project/artisan-result-card";
 import { CtaBand } from "@/components/site/cta-band";
-import { GuaranteeSection } from "@/components/site/guarantees";
+import { FaqList } from "@/components/site/faq-list";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { TradeHero } from "@/components/site/trade-hero";
-import { ButtonLink } from "@/components/ui";
+import { ZoneMap } from "@/components/site/zone-section";
+import { ButtonLink, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { artisanPages } from "@/lib/site/artisans";
 import { cityArtisans, seoCatalog } from "@/lib/site/catalog";
-import { absoluteUrl } from "@/lib/site/seo";
+import { nearestCommunes } from "@/lib/site/commune-coords";
+import { absoluteUrl, CITY_INDEX_MIN_ARTISANS } from "@/lib/site/seo";
 import { ORGANIZATION_ID } from "@/lib/site/structured-data";
 import { createPublicClient } from "@/lib/supabase/public";
 import { shareImage } from "@/lib/site/images";
@@ -39,6 +41,11 @@ async function load(metier: string, ville: string) {
   return trade && commune ? { trade, commune, trades, communes } : null;
 }
 
+/** Nombre d'artisans visibles par commune ou par métier (requêtes en cache, ADR 0268). */
+async function counts(pairs: readonly { trade: string; codeInsee: string }[]) {
+  return Promise.all(pairs.map(async (p) => (await cityArtisans(p.trade, p.codeInsee)).length));
+}
+
 export async function generateMetadata({
   params,
 }: PageProps<"/[metier]/[ville]">): Promise<Metadata> {
@@ -55,7 +62,9 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: path },
-    ...(artisans.length === 0 ? { robots: { index: false, follow: true } } : {}),
+    ...(artisans.length < CITY_INDEX_MIN_ARTISANS
+      ? { robots: { index: false, follow: true } }
+      : {}),
     openGraph: {
       title,
       description,
@@ -76,6 +85,16 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
   const data = await load(metier, ville);
   if (!data) notFound();
   const { trade, commune, trades, communes } = data;
+  const { workTypes } = await seoCatalog();
+  const works = workTypes.filter((w) => w.trade_code === trade.code);
+  // Communes voisines et autres métiers, avec le vrai nombre d'artisans (ADR 0268).
+  const neighbours = nearestCommunes(commune.code_insee, communes, 6);
+  const otherTrades = trades.filter((tr) => tr.code !== trade.code);
+  const [neighbourCounts, tradeCounts] = await Promise.all([
+    counts(neighbours.map((c) => ({ trade: trade.code, codeInsee: c.code_insee }))),
+    counts(otherTrades.map((tr) => ({ trade: tr.code, codeInsee: commune.code_insee }))),
+  ]);
+  const tradesWithArtisans = otherTrades.filter((_, i) => (tradeCounts[i] ?? 0) > 0);
 
   const supabase = createPublicClient();
   const [rows, pages] = await Promise.all([
@@ -175,6 +194,7 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         ]}
         cta={{ href: searchHref, label: t.cta }}
         hint={t.ctaHint}
+        chips={t.cityChips(artisans.length)}
       />
 
       <section aria-labelledby="city-artisans" className="py-16 sm:py-20">
@@ -224,6 +244,11 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
                       moreSpecialties={specs.more}
                       selection="none"
                       headingLevel={3}
+                      requestHref={`/recherche?${new URLSearchParams({
+                        metier: trade.code,
+                        fiche: a.artisan_id,
+                        nom: a.display_name,
+                      }).toString()}`}
                     />
                   );
                 })}
@@ -248,8 +273,69 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         </div>
       </section>
 
-      <section aria-labelledby="city-steps" className="bg-surface py-16 sm:py-24">
-        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+      {/* Travaux du métier et contrôles (ADR 0268) */}
+      <section aria-labelledby="city-works" className="pb-16 sm:pb-20">
+        <div className="mx-auto grid max-w-6xl items-start gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-10">
+          <div className="flex flex-col gap-4">
+            <SectionHeading
+              id="city-works"
+              eyebrow={fr.pro.tradeLanding.worksEyebrow}
+              title={t.worksCityTitle(
+                fr.tradeDomains[trade.code]?.label ?? trade.label,
+                commune.nom,
+              )}
+              subtitle={t.workSubtitle}
+              align="left"
+            />
+            {works.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {works.map((work) => (
+                  <li
+                    key={work.code}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-pill border border-border bg-surface px-4 text-[0.9375rem] font-semibold"
+                  >
+                    <Check
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-success"
+                      strokeWidth={2.6}
+                    />
+                    {work.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="flex flex-col gap-3 rounded-[1.375rem] border border-border bg-surface p-6">
+            <p className="text-[0.8125rem] font-bold tracking-[0.08em] text-success uppercase">
+              {fr.home.controlsTitle.replace(/ :$/, "")}
+            </p>
+            <ul className="flex flex-col gap-2">
+              {fr.pages.guarantees.checks.map((check) => (
+                <li
+                  key={check.title}
+                  className="flex items-center gap-2.5 text-[0.9375rem] font-semibold"
+                >
+                  <Check
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-success"
+                    strokeWidth={2.8}
+                  />
+                  {check.title}
+                </li>
+              ))}
+            </ul>
+            <TextLink href="/garanties#guarantees-checks" className="self-start text-sm">
+              {t.controlsLink}
+            </TextLink>
+          </div>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="city-steps"
+        className="border-y border-border bg-surface py-14 sm:py-16"
+      >
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6">
           <SectionHeading
             id="city-steps"
             eyebrow={steps.eyebrow}
@@ -260,56 +346,88 @@ export default async function TradeCityPage({ params }: PageProps<"/[metier]/[vi
         </div>
       </section>
 
-      <GuaranteeSection id="city-guarantees" tone="light" />
+      {/* Autour de la ville : carte et vrais compteurs des communes voisines (ADR 0268) */}
+      <section aria-labelledby="city-nearby" className="py-16 sm:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_32rem] lg:gap-10">
+          <div className="flex flex-col gap-5">
+            <SectionHeading
+              id="city-nearby"
+              eyebrow={t.nearbyEyebrow(commune.nom)}
+              title={t.nearbyTitle(trade.label, commune.nom)}
+              subtitle={t.nearbySubtitle}
+              align="left"
+            />
+            <nav aria-label={t.otherCities(trade.label)}>
+              <ul className="overflow-hidden rounded-[1.25rem] border border-border bg-surface">
+                {neighbours.map((c, i) => {
+                  const n = neighbourCounts[i] ?? 0;
+                  return (
+                    <li key={c.slug} className="border-t border-border first:border-t-0">
+                      <Link
+                        href={`/${trade.code}/${c.slug}` as Route}
+                        className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none focus-visible:ring-inset sm:px-5"
+                      >
+                        <span className="flex items-center gap-2.5 font-semibold">
+                          <MapPin
+                            aria-hidden="true"
+                            className="size-4 shrink-0 text-muted-foreground"
+                          />
+                          {t.cityTitle(trade.label, c.nom)}
+                        </span>
+                        <span
+                          className={`text-sm font-semibold ${n > 0 ? "text-success" : "text-muted-foreground"}`}
+                        >
+                          {n > 0 ? t.nearbyCount(n) : t.nearbySoon}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </div>
+          <div className="overflow-hidden rounded-[1.375rem] border border-border">
+            <ZoneMap communes={communes} highlight={commune.slug} />
+          </div>
+        </div>
+      </section>
 
-      <div className="pb-16 sm:pb-24">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 sm:px-6 md:grid-cols-2">
-          <nav
-            aria-labelledby="city-other-cities"
-            className="flex flex-col gap-4 rounded-hero border border-border bg-surface p-6 sm:p-8"
-          >
-            <h2 id="city-other-cities" className="text-lg font-medium">
-              {t.otherCities(trade.label)}
-            </h2>
-            <ul className="flex flex-wrap gap-2">
-              {communes
-                .filter((c) => c.slug !== commune.slug)
-                .map((c) => (
-                  <li key={c.slug}>
-                    <Link
-                      href={`/${trade.code}/${c.slug}` as Route}
-                      className="inline-flex min-h-9 items-center rounded-pill border border-border bg-background px-3.5 text-sm hover:border-primary hover:text-primary-strong"
-                    >
-                      {c.nom}
-                    </Link>
-                  </li>
-                ))}
-            </ul>
-          </nav>
-          <nav
-            aria-labelledby="city-other-trades"
-            className="flex flex-col gap-4 rounded-hero border border-border bg-surface p-6 sm:p-8"
-          >
-            <h2 id="city-other-trades" className="text-lg font-medium">
+      <section
+        aria-labelledby="city-faq"
+        className="border-t border-border bg-surface py-16 sm:py-20"
+      >
+        <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 sm:px-6">
+          <SectionHeading id="city-faq" eyebrow={fr.home.faqEyebrow} title={t.faqTitle} />
+          <FaqList
+            items={[
+              t.localFaq(trade.label, commune.nom, artisans.length),
+              ...t.tradeFaq(trade.label),
+            ]}
+          />
+        </div>
+      </section>
+
+      {tradesWithArtisans.length > 0 && (
+        <nav aria-labelledby="city-other-trades" className="px-4 py-14 sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-col gap-4">
+            <h2 id="city-other-trades" className="text-2xl font-bold tracking-tight">
               {t.otherTrades(commune.nom)}
             </h2>
             <ul className="flex flex-wrap gap-2">
-              {trades
-                .filter((tr) => tr.code !== trade.code)
-                .map((tr) => (
-                  <li key={tr.code}>
-                    <Link
-                      href={`/${tr.code}/${commune.slug}` as Route}
-                      className="inline-flex min-h-9 items-center rounded-pill border border-border bg-background px-3.5 text-sm hover:border-primary hover:text-primary-strong"
-                    >
-                      {tr.label}
-                    </Link>
-                  </li>
-                ))}
+              {tradesWithArtisans.map((tr) => (
+                <li key={tr.code}>
+                  <Link
+                    href={`/${tr.code}/${commune.slug}` as Route}
+                    className="inline-flex min-h-10 items-center rounded-pill border border-border bg-surface px-4 text-sm font-semibold hover:border-border-strong"
+                  >
+                    {t.cityTitle(tr.label, commune.nom)}
+                  </Link>
+                </li>
+              ))}
             </ul>
-          </nav>
-        </div>
-      </div>
+          </div>
+        </nav>
+      )}
 
       <CtaBand
         id="city-cta"

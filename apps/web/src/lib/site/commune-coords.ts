@@ -38,3 +38,24 @@ export const COAST: readonly (readonly [number, number])[] = [
   [7.5, 43.775],
   [7.62, 43.8],
 ];
+
+/** Communes les plus proches (à vol d'oiseau) parmi celles qui ont des coordonnées (ADR 0268). */
+export function nearestCommunes<T extends { code_insee: string }>(
+  codeInsee: string,
+  communes: readonly T[],
+  count: number,
+): T[] {
+  const origin = COMMUNE_COORDS[codeInsee];
+  if (!origin) return communes.filter((c) => c.code_insee !== codeInsee).slice(0, count);
+  const [lon0, lat0] = origin;
+  const kx = Math.cos((lat0 * Math.PI) / 180);
+  return communes
+    .filter((c) => c.code_insee !== codeInsee && COMMUNE_COORDS[c.code_insee])
+    .map((c) => {
+      const [lon, lat] = COMMUNE_COORDS[c.code_insee]!;
+      return { c, d: ((lon - lon0) * kx) ** 2 + (lat - lat0) ** 2 };
+    })
+    .sort((a, b) => a.d - b.d)
+    .slice(0, count)
+    .map(({ c }) => c);
+}

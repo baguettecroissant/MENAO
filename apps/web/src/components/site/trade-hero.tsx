@@ -1,5 +1,5 @@
 import type { Route } from "next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
 import { TRADE_IMAGES, tradeSrcSet } from "@/lib/site/images";
 import { frenchSpacing } from "@/lib/site/typography";
@@ -19,6 +19,7 @@ export function TradeHero({
   breadcrumbs,
   cta,
   hint,
+  chips,
 }: {
   id: string;
   code: string;
@@ -28,6 +29,8 @@ export function TradeHero({
   breadcrumbs: readonly Crumb[];
   cta: { href: string; label: string };
   hint?: string;
+  /** Pastilles sous le chapeau (pages métier × ville, ADR 0268). */
+  chips?: readonly string[];
 }) {
   const image = TRADE_IMAGES[code];
   const Icon = (TRADE_VISUALS[code] ?? DEFAULT_TRADE_VISUAL).icon;
@@ -69,6 +72,19 @@ export function TradeHero({
             {frenchSpacing(title)}
           </h1>
           <p className="max-w-xl text-pretty text-white/85">{intro}</p>
+          {chips && chips.length > 0 && (
+            <ul className="flex flex-wrap gap-2">
+              {chips.map((item) => (
+                <li
+                  key={item}
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-pill border border-white/30 bg-white/15 px-3 text-[0.8125rem] font-semibold"
+                >
+                  <Check aria-hidden="true" className="size-3.5 text-[#7ee2b0]" strokeWidth={2.8} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="flex flex-col items-start gap-2 pt-1">
             <ButtonLink
               href={cta.href as Route}

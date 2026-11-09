@@ -30,14 +30,26 @@ test("pages métier × ville : artisans de la commune, données structurées, sa
   const main = await page.getByRole("main").innerText();
   expect(main).not.toMatch(/@|\+33|Rue de l'Exemple|SIRET/i);
 
-  // Grasse est hors du rayon de Noé, et hors des communes d'Inès.
-  await page
-    .getByRole("navigation", { name: "Plombier dans d'autres villes" })
-    .getByRole("link", { name: "Grasse" })
-    .click();
+  // Contenu propre à la ville (ADR 0268) : question locale, communes voisines avec leur compteur.
   await expect(
-    page.getByText(/Aucun artisan plombier vérifié n'intervient encore à Grasse/),
+    page.getByText("Combien de plombiers vérifiés interviennent à Nice ?"),
   ).toBeVisible();
+  const nearby = page.getByRole("navigation", { name: "Plombier dans d'autres villes" });
+  await expect(
+    nearby.getByRole("link", { name: /^Plombier à Saint-Laurent-du-Var/ }),
+  ).toBeVisible();
+  // Demande envoyée à cet artisan seul, depuis sa carte.
+  await expect(page.getByRole("link", { name: "Lui demander un devis : Noé" })).toHaveAttribute(
+    "href",
+    /\/recherche\?metier=plombier&fiche=/,
+  );
+
+  // Grasse est hors du rayon de Noé, et hors des communes d'Inès : page utile, hors index.
+  await page.goto("/plombier/grasse");
+  await expect(
+    page.getByText(/Aucun artisan plombier vérifié n'intervient encore à Grasse/).first(),
+  ).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 
   const missing = await page.goto("/astronaute/nice");
   expect(missing?.status()).toBe(404);

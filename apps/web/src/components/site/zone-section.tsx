@@ -30,8 +30,17 @@ const LABELS: Record<string, "start" | "end" | "below"> = {
   "06079": "below",
 };
 
-/** Carte statique du 06 (SVG, sans bibliothèque ni requête) : côte, mer et communes couvertes. */
-function ZoneMap({ communes }: { communes: readonly Commune[] }) {
+/**
+ * Carte statique du 06 (SVG, sans bibliothèque ni requête) : côte, mer et communes couvertes. La
+ * commune mise en avant (Nice sur l'accueil, la ville de la page ailleurs) est nommée et grossie.
+ */
+export function ZoneMap({
+  communes,
+  highlight = "nice",
+}: {
+  communes: readonly Commune[];
+  highlight?: string;
+}) {
   const sea = `M${COAST.map(([lon, lat]) => `${x(lon)},${y(lat)}`).join(" L")} L${W},${H} L0,${H} Z`;
   return (
     <svg
@@ -54,8 +63,8 @@ function ZoneMap({ communes }: { communes: readonly Commune[] }) {
         if (!coords) return null;
         const cx = x(coords[0]);
         const cy = y(coords[1]);
-        const main = commune.slug === "nice";
-        const label = LABELS[commune.code_insee];
+        const main = commune.slug === highlight;
+        const label = LABELS[commune.code_insee] ?? (main ? "start" : undefined);
         return (
           <g key={commune.code_insee}>
             <circle
