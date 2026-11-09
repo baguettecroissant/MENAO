@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { artisanPages } from "@/lib/site/artisans";
 import { cityArtisans, seoCatalog } from "@/lib/site/catalog";
 import { publishedGuides } from "@/lib/site/guides";
-import { STATIC_PAGES, absoluteUrl } from "@/lib/site/seo";
+import { CITY_INDEX_MIN_ARTISANS, STATIC_PAGES, absoluteUrl } from "@/lib/site/seo";
 
 export const revalidate = 86400;
 
@@ -17,7 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pairs = trades.flatMap((t) => communes.map((c) => ({ t, c })));
   const covered = await Promise.all(
     pairs.map(async ({ t, c }) =>
-      (await cityArtisans(t.code, c.code_insee)).length > 0 ? { t, c } : null,
+      (await cityArtisans(t.code, c.code_insee)).length >= CITY_INDEX_MIN_ARTISANS
+        ? { t, c }
+        : null,
     ),
   );
   return [

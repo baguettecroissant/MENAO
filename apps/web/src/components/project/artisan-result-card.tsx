@@ -34,6 +34,7 @@ export function ArtisanResultCard({
   recommendedBy,
   headingLevel = 2,
   className = "",
+  requestHref = null,
 }: {
   /** Fiche de l'artisan ; sans lien sur les pages publiques. */
   href?: string | null;
@@ -66,6 +67,8 @@ export function ArtisanResultCard({
   headingLevel?: 2 | 3 | 4;
   /** Largeur dans le carrousel des résultats sur téléphone. */
   className?: string;
+  /** Demande envoyée à cet artisan seul (pages métier × ville, ADR 0268). */
+  requestHref?: string | null;
 }) {
   const Heading = headingLevel === 4 ? "h4" : headingLevel === 3 ? "h3" : "h2";
   return (
@@ -130,6 +133,15 @@ export function ArtisanResultCard({
           </ul>
         )}
         <div className="relative z-10 mt-auto pt-1">
+          {selection === "none" && requestHref && (
+            <Link
+              href={requestHref as Route}
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-button bg-foreground px-4 text-sm font-semibold text-surface transition-colors hover:bg-foreground/90 focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none"
+            >
+              {fr.seo.requestQuote}
+              <span className="sr-only"> : {name}</span>
+            </Link>
+          )}
           {selection === "sent" && (
             <p className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
               <Check aria-hidden="true" className="size-4" />

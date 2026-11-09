@@ -1155,6 +1155,36 @@ export const fr = {
     cta: "Décrire mon projet",
     ctaHint: "Gratuit et sans engagement pour les particuliers.",
     otherCities: (trade: string) => `${trade} dans d'autres villes`,
+    // Pages métier × ville, contenu propre à chaque ville (lot 22, ADR 0268).
+    cityChips: (n: number) => [
+      ...(n > 0
+        ? [n === 1 ? "1 artisan vérifié disponible" : `${n} artisans vérifiés disponibles`]
+        : []),
+      "Réponse sous 72\u00a0h",
+      "Gratuit pour vous",
+    ],
+    requestQuote: "Lui demander un devis",
+    controlsLink: "Comment MENAO vérifie les artisans",
+    worksCityTitle: (domain: string, city: string) => {
+      const d = domain.toLowerCase();
+      return `Vos travaux ${/^[aeiouéèêh]/.test(d) ? `d'${d}` : `de ${d}`} à ${city}`;
+    },
+    nearbyEyebrow: (city: string) => `Autour de ${city}`,
+    nearbyTitle: (trade: string, city: string) => `${trade} près de ${city}`,
+    nearbySubtitle: "Les communes voisines et le nombre d'artisans vérifiés qui y interviennent.",
+    nearbyCount: (n: number) => (n === 1 ? "1 artisan vérifié" : `${n} artisans vérifiés`),
+    nearbySoon: "Bientôt",
+    localFaq: (trade: string, city: string, n: number) =>
+      n > 0
+        ? {
+            q: `Combien de ${trade.toLowerCase()}s vérifiés interviennent à ${city} ?`,
+            a: `${n === 1 ? "1 artisan vérifié intervient" : `${n} artisans vérifiés interviennent`} à ${city} sur MENAO. Décrivez votre projet : jusqu'à 3 artisans vous répondent sous 72\u00a0h.`,
+          }
+        : {
+            q: `Comment trouver un ${trade.toLowerCase()} à ${city} ?`,
+            a: `Aucun artisan ${trade.toLowerCase()} vérifié n'intervient encore à ${city} sur MENAO. Décrivez votre projet : nous vous mettrons en relation dès qu'un artisan sera disponible, ou nous chercherons pour vous.`,
+          },
+    faqTitle: "Vos questions, nos réponses.",
     otherTrades: (city: string) => `Autres artisans à ${city}`,
     breadcrumbHome: "Accueil",
     noContact: "Les coordonnées des artisans sont communiquées quand ils acceptent votre demande.",

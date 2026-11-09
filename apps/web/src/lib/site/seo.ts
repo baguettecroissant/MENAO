@@ -62,6 +62,13 @@ export const absoluteUrl = (path: string) =>
   `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
 /** Pages publiques statiques référencées dans le sitemap. */
+/**
+ * Seuil d'indexation des pages métier × ville (ADR 0134, 0268) : en dessous, la page reste utile
+ * mais n'est ni indexée ni dans le plan du site. Validé à 1 le 9 novembre 2026 ; à relever avec
+ * le nombre d'artisans.
+ */
+export const CITY_INDEX_MIN_ARTISANS = 1;
+
 export const STATIC_PAGES = [
   "/",
   "/comment-ca-marche",
