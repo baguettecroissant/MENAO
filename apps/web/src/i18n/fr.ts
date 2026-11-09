@@ -823,6 +823,8 @@ export const fr = {
     signUp: "Créer un compte",
     mySpace: "Mon espace",
     pro: "Espace Pro",
+    // Page carrefour des métiers dans l'en-tête (plan du site du 9 novembre, ADR 0264).
+    trades: "Métiers",
     howItWorks: "Comment ça marche ?",
     guarantees: "Garanties & Confiance",
     myClientSpace: "Mon espace client",
