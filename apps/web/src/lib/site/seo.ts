@@ -67,6 +67,9 @@ export const STATIC_PAGES = [
   "/comment-ca-marche",
   "/garanties",
   "/a-propos",
+  // Pages carrefour (ADR 0264).
+  "/metiers",
+  "/villes",
   "/partenaires",
   "/pro",
   "/pro/faq",

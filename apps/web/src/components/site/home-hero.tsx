@@ -1,11 +1,10 @@
-import { BadgeCheck, Clock, Search, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Clock, LockKeyhole, Search, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { fr } from "@/i18n/fr";
 import { HERO_IMAGE, HERO_SRCSET } from "@/lib/site/images";
 import { HeroSearchInput } from "./hero-search-input";
-import { StoreBadges } from "./store-badges";
 
 const t = fr.home;
 const SHORTCUTS = ["electricien", "plombier", "macon", "peintre", "terrassier"];
@@ -13,8 +12,7 @@ const TAG_ICONS = [BadgeCheck, ShieldCheck, Clock];
 
 /**
  * Bandeau de l'accueil (maquette « Homepage ») : photo plein cadre arrondie, titre, recherche,
- * raccourcis métiers et badges des stores (ADR 0150, à la place du téléphone de l'ADR 0147, jugé
- * trop chargé). Il passe sous l'en-tête du site, la pilule en verre dépoli (ADR 0199) : marge
+ * raccourcis métiers ; les badges des stores sont passés dans « Comment ça marche » (ADR 0264). Il passe sous l'en-tête du site, la pilule en verre dépoli (ADR 0199) : marge
  * négative de la hauteur de l'en-tête. Aucun chiffre ni témoignage inventé (spec F-01).
  */
 export function HomeHero() {
@@ -69,7 +67,7 @@ export function HomeHero() {
           )}
 
           <div className="relative mt-auto flex flex-col gap-6 px-2 pt-16 pb-4 sm:px-4 lg:max-w-[34rem]">
-            <h1 className="animate-menao-rise text-[2.5rem] leading-[1.02] font-bold tracking-tight text-white sm:text-[3.5rem] lg:text-[4.125rem]">
+            <h1 className="text-[2.5rem] leading-[1.02] font-bold tracking-tight text-white sm:text-[3.5rem] lg:text-[4.125rem]">
               {t.heroTitleStart} <span className="text-[#aebcff]">{t.heroTitleAccent}</span>
             </h1>
             <div className="animate-menao-rise text-[0.9375rem] text-white/90 [animation-delay:120ms] sm:text-base">
@@ -80,7 +78,7 @@ export function HomeHero() {
               action="/recherche"
               method="get"
               role="search"
-              className="flex w-full max-w-xl animate-menao-rise items-center gap-2 rounded-pill bg-white p-1.5 pl-5 shadow-raised [animation-delay:240ms] focus-within:ring-4 focus-within:ring-white/40"
+              className="flex w-full max-w-xl items-center gap-2 rounded-pill bg-white p-1.5 pl-5 shadow-raised focus-within:ring-4 focus-within:ring-white/40"
             >
               <label htmlFor="hero-q" className="sr-only">
                 {t.searchLabel}
@@ -99,6 +97,11 @@ export function HomeHero() {
                 <Search aria-hidden="true" className="size-5" />
               </button>
             </form>
+            {/* Objection du démarchage levée dès le haut de page (ADR 0264). TODO(legal) : formulation. */}
+            <p className="-mt-2 flex items-start gap-2 text-sm text-white/85">
+              <LockKeyhole aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              {t.privacyNote}
+            </p>
             <ul
               aria-label={t.shortcuts}
               className="flex animate-menao-rise flex-wrap gap-2 [animation-delay:360ms]"
@@ -127,15 +130,6 @@ export function HomeHero() {
                 </Link>
               </li>
             </ul>
-            {/* Badges des stores sous les raccourcis, jusqu'au grand écran (ADR 0150). */}
-            <div className="animate-menao-rise pt-2 [animation-delay:480ms] lg:hidden">
-              <StoreBadges />
-            </div>
-          </div>
-
-          {/* Badges des stores, discrets : en bas à droite sur grand écran (ADR 0150). */}
-          <div className="absolute right-6 bottom-6 hidden animate-menao-rise [animation-delay:480ms] lg:block">
-            <StoreBadges />
           </div>
         </div>
       </div>

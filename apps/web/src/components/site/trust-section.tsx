@@ -55,7 +55,7 @@ export function TrustSection() {
             </li>
           ))}
         </ul>
-        <TextLink href="/#metiers">{t.allTrades}</TextLink>
+        <TextLink href="/metiers">{t.allTrades}</TextLink>
       </div>
     </section>
   );
