@@ -25,6 +25,16 @@ select is(
   0,
   'les paiements en ligne restent dans Base');
 
+-- Catégorie « Assistants IA » (ADR 0265) : alignée sur les droits des formules (ADR 0231).
+select is(
+  (select count(*)::int from public.plan_features where categorie = 'Assistants IA'), 7,
+  'comparatif : 7 lignes « Assistants IA »');
+select is(
+  (select valeurs ->> 'base' from public.plan_features
+   where categorie = 'Assistants IA' and libelle = 'Camille, secrétaire au téléphone'),
+  'false',
+  'Camille au téléphone : pas dans Base, comme plans.limites.agents.secretaire');
+
 -- ---------- Visiteur ----------
 set local role anon;
 select ok((select count(*) from public.plan_features) > 30, 'visiteur : comparatif lisible');

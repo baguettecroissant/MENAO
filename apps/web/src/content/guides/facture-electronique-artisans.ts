@@ -161,6 +161,6 @@ export const factureElectroniqueArtisans: Guide = {
   ],
   related: [
     { href: "/pro", label: "L'Espace Pro MENAO" },
-    { href: "/pro#formules", label: "Les formules" },
+    { href: "/pro/formules", label: "Les formules" },
   ],
 };

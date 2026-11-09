@@ -1,8 +1,9 @@
 "use client";
 
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { AssistantBubble } from "@/components/assistant/assistant-ui";
 import { fr } from "@/i18n/fr";
+import { CALLBACK_HASH } from "./callback-hash";
 
 const t = fr.pro.assistant;
 
@@ -17,15 +18,31 @@ const ProAssistantPanel = lazy(() =>
  * passent par l'IA (Edge Function pro-assistant).
  */
 export function ProAssistant() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<false | "chat" | "callback">(false);
+
+  // Boutons « Être rappelé » de la page (lien #etre-rappele, ADR 0265) : ouvre le formulaire de
+  // rappel. Sans JavaScript, le lien ne fait rien de gênant.
+  useEffect(() => {
+    const openCallback = () => {
+      if (window.location.hash !== `#${CALLBACK_HASH}`) return;
+      setOpen("callback");
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    };
+    openCallback();
+    window.addEventListener("hashchange", openCallback);
+    return () => window.removeEventListener("hashchange", openCallback);
+  }, []);
+
   return (
     <>
       {open && (
         <Suspense fallback={null}>
-          <ProAssistantPanel onClose={() => setOpen(false)} />
+          <ProAssistantPanel initialView={open} onClose={() => setOpen(false)} />
         </Suspense>
       )}
-      {!open && <AssistantBubble label={t.openLabel} title={t.open} onOpen={() => setOpen(true)} />}
+      {!open && (
+        <AssistantBubble label={t.openLabel} title={t.open} onOpen={() => setOpen("chat")} />
+      )}
     </>
   );
 }

@@ -436,7 +436,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         type: "list",
         items: [
           "**Il est content** : « Votre formule {formule} continue le 1er juin, vous n'avez rien à faire. »",
-          "**Il reçoit plus de demandes que sa formule n'en prévoit, ou veut plus de métiers** : montrez-lui le [comparatif des formules](/pro#formules) (Premium : jusqu'à 25 demandes par mois, métiers illimités), sans insister.",
+          "**Il reçoit plus de demandes que sa formule n'en prévoit, ou veut plus de métiers** : montrez-lui le [comparatif des formules](/pro/formules) (Premium : jusqu'à 25 demandes par mois, métiers illimités), sans insister.",
           "**Il hésite** : demandez ce qui lui manque ; proposez un rendez-vous d'aide au devis, ou revoyez avec lui sa zone, ses métiers et ses disponibilités.",
           "**Il veut arrêter** : « C'est votre choix : si vous arrêtez avant la fin de l'essai, il n'y a rien à payer. Qu'est-ce qui vous a manqué ? » Notez la raison.",
         ],
@@ -501,7 +501,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
           [
             "« Je ne veux pas m'engager »",
             "Au mois, c'est sans engagement : vous arrêtez quand vous voulez, depuis votre espace pro.",
-            "Les [formules](/pro#formules) de la page Espace Pro",
+            "Les [formules](/pro/formules) de la page Espace Pro",
           ],
           [
             "« Et si je ne reçois rien ? »",
@@ -840,7 +840,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
       },
       {
         type: "p",
-        text: "Le reste du détail est dans le [comparatif des formules](/pro#formules) : montrez-le plutôt que de le réciter. Certaines fonctions propres à Premium et Entreprise (comptes d'équipe, par exemple) sont encore en construction : ne les promettez pas. Dans l'application, rien ne s'achète : la formule se choisit et se paie sur le site, depuis l'espace pro.",
+        text: "Le reste du détail est dans le [comparatif des formules](/pro/formules) : montrez-le plutôt que de le réciter. Certaines fonctions propres à Premium et Entreprise (comptes d'équipe, par exemple) sont encore en construction : ne les promettez pas. Dans l'application, rien ne s'achète : la formule se choisit et se paie sur le site, depuis l'espace pro.",
       },
       // TODO(legal): CGV artisans (engagement à l'année, garantie des 4 demandes, résiliation) chez
       // l'avocat ; la garantie figure déjà sur la page Espace Pro.

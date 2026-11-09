@@ -10,6 +10,7 @@ import {
   monthlyEquivalentCents,
   planComparison,
   planFeatureCell,
+  subscriptionPayback,
 } from "../src/plans";
 
 describe("formules et engagement (F-15, ADR 0200)", () => {
@@ -122,5 +123,37 @@ describe("formules et engagement (F-15, ADR 0200)", () => {
         ],
       },
     ]);
+  });
+});
+
+describe("subscriptionPayback (calculateur des formules, ADR 0265)", () => {
+  it("marge supérieure au prix : un chantier tous les N mois (arrondi vers le bas)", () => {
+    // 4 500 € à 25 % = 1 125 € de marge ; Premium 500 € / mois → 2 mois couverts.
+    expect(subscriptionPayback(50000, 450000, 25)).toEqual({
+      marginCents: 112500,
+      kind: "every",
+      months: 2,
+    });
+  });
+  it("marge inférieure au prix : N chantiers par mois (arrondi vers le haut)", () => {
+    // 2 000 € à 20 % = 400 € ; Entreprise 1 500 € / mois → 4 chantiers par mois.
+    expect(subscriptionPayback(150000, 200000, 20)).toEqual({
+      marginCents: 40000,
+      kind: "perMonth",
+      jobs: 4,
+    });
+  });
+  it("marge égale au prix : un chantier par mois", () => {
+    expect(subscriptionPayback(15000, 60000, 25)).toEqual({
+      marginCents: 15000,
+      kind: "every",
+      months: 1,
+    });
+  });
+  it("marge nulle ou entrées invalides : pas de calcul", () => {
+    expect(subscriptionPayback(15000, 0, 25)).toBeNull();
+    expect(subscriptionPayback(15000, 100000, 0)).toBeNull();
+    expect(subscriptionPayback(0, 100000, 25)).toBeNull();
+    expect(subscriptionPayback(15000, 100000, 120)).toBeNull();
   });
 });
