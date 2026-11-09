@@ -38,6 +38,8 @@ export type ProfileHub = {
   company: string | null;
   /** Premier métier de la fiche (« entreprise · métier · ville » de l'en-tête). */
   trade: string | null;
+  /** Téléphone du compte (E.164), pour la carte de visite (lot 17). */
+  phone: string | null;
   city: string | null;
   /** Niveau du grade MENAO (F-24), s'il a pu être lu. */
   gradeLevel: number | null;
@@ -117,7 +119,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     supabase.from("certifications").select("id", { count: "exact", head: true }),
     supabase
       .from("profiles")
-      .select("first_name, last_name")
+      .select("first_name, last_name, phone")
       .eq("user_id", auth.user.id)
       .maybeSingle(),
     supabase.rpc("my_referral"),
@@ -153,6 +155,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     initials,
     company: profile.company_name,
     trade: profile.trades[0]?.label ?? null,
+    phone: account.data?.phone ?? null,
     city: profile.zone.city,
     gradeLevel: level,
     avatarUrl: profile.avatar_path ? publicUrl("avatars", profile.avatar_path) : null,

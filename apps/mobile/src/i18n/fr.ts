@@ -3924,9 +3924,20 @@ export const fr = {
       share: "Partager",
       card: {
         qrLabel: "QR code de votre fiche MENAO",
-        hint: "Votre client scanne ce code avec l'appareil photo de son téléphone : il voit votre fiche et vos avis vérifiés.",
         shareMessage: (name: string, url: string) =>
           `${name} sur MENAO : ma fiche et mes avis vérifiés. ${url}`,
+        // Carte de visite aux couleurs de MENAO (lot 17) : verso (QR code) d'abord, recto au
+        // balayage. Rien sur l'impression ni l'achat (règle 10).
+        swipe: { recto: "Glissez pour voir le recto", verso: "Glissez pour voir le verso" },
+        modelLabel: "Modèle de la carte",
+        models: { nuit: "Nuit", clair: "Clair", sobre: "Sobre" },
+        faces: { recto: "recto", verso: "verso" },
+        cardLabel: (model: string, face: string) => `Carte de visite, modèle ${model}, ${face}`,
+        expandHint: "Touchez pour agrandir le QR code.",
+        facesLabel: "Face de la carte",
+        showFace: (face: string) => `Voir le ${face}`,
+        verified: "Artisan vérifié",
+        tagline: "Mes réalisations et mes avis vérifiés",
       },
       referral: {
         qrLabel: "QR code de parrainage",

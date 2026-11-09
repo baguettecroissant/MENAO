@@ -4075,6 +4075,14 @@ export const fr = {
       unavailable: "Vos cartes seront disponibles quand votre fiche sera visible des particuliers.",
       qrAlt: "QR code de votre fiche MENAO",
       scan: "Mes réalisations et mes avis vérifiés",
+      // Modèles aux couleurs de MENAO (ADR 0263).
+      verified: "Artisan vérifié",
+      modelTitle: "Modèle",
+      models: {
+        nuit: { label: "Nuit", text: "Le bleu nuit de MENAO : le plus reconnaissable." },
+        clair: { label: "Clair", text: "Bleu clair et blanc, badge « Artisan vérifié » en avant." },
+        sobre: { label: "Sobre", text: "Blanc, votre nom d'abord, MENAO discret." },
+      },
     },
     publicProfile: {
       // Adresse publique de la fiche, choix pour Google et badge pour son site (F-61, ADR 0144).
