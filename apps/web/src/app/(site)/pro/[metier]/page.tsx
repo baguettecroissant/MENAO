@@ -191,7 +191,7 @@ export default async function ProTradePage({ params }: PageProps<"/pro/[metier]"
           />
           <FaqList items={faq} />
           <p className="text-center text-sm text-muted-foreground">
-            <Link href="/pro#formules" className="text-primary underline-offset-2 hover:underline">
+            <Link href="/pro/formules" className="text-primary underline-offset-2 hover:underline">
               {landing.hero.plans}
             </Link>
           </p>

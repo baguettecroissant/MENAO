@@ -63,6 +63,30 @@ export function engagementExitAllowed(input: {
   return false;
 }
 
+/** Rentabilité d'une formule pour l'artisan (calculateur de /pro/formules, ADR 0265). */
+export type SubscriptionPayback =
+  | { marginCents: number; kind: "every"; months: number }
+  | { marginCents: number; kind: "perMonth"; jobs: number };
+
+/**
+ * Combien de chantiers rentabilisent l'abonnement : marge d'un chantier moyen comparée au prix
+ * mensuel. Marge ≥ prix : « 1 chantier tous les N mois » (N arrondi vers le bas) ; sinon
+ * « N chantiers par mois » (arrondi vers le haut). Aucune promesse de volume de demandes.
+ */
+export function subscriptionPayback(
+  monthlyCents: number,
+  jobCents: number,
+  marginPercent: number,
+): SubscriptionPayback | null {
+  if (monthlyCents <= 0 || jobCents <= 0 || marginPercent <= 0 || marginPercent > 100) return null;
+  const marginCents = Math.round((jobCents * marginPercent) / 100);
+  if (marginCents <= 0) return null;
+  if (marginCents >= monthlyCents) {
+    return { marginCents, kind: "every", months: Math.floor(marginCents / monthlyCents) };
+  }
+  return { marginCents, kind: "perMonth", jobs: Math.ceil(monthlyCents / marginCents) };
+}
+
 export type PlanFeatureCell =
   { kind: "inclus" } | { kind: "absent" } | { kind: "texte"; text: string };
 

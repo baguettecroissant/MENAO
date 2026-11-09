@@ -75,6 +75,14 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   for (const file of ["/videos/menao-demo.webp", "/videos/menao-demo.vtt"]) {
     expect((await page.request.get(file)).status()).toBe(200);
   }
+  // Simulation de commission (F-03) : 15 % de 8 000 € comparés à l'abonnement Base.
+  await expect(page.getByText(/Vous gardez 1\s050\s€ de plus chaque mois/)).toBeVisible();
+  // Aperçu des formules sur /pro, détail sur /pro/formules (ADR 0265).
+  await expect(page.getByRole("link", { name: "Comparer les formules en détail" })).toBeVisible();
+  await page.goto("/pro/formules");
+  await expect(
+    page.getByRole("heading", { name: "Un abonnement fixe, aucune commission.", level: 1 }),
+  ).toBeVisible();
   const plans = page.getByRole("region", { name: "Un abonnement fixe, aucune commission." });
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(plans.getByText(/^150\s€$/)).toBeVisible();
@@ -87,22 +95,27 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(plans.getByText(/^125\s€$/)).toBeVisible();
   await expect(plans.getByText(/^Soit 1\s500\s€ HT facturés par an/)).toBeVisible();
   await expect(plans.getByText("Engagement 12 mois, payé d'avance").first()).toBeVisible();
-  const comparison = plans.getByRole("table", {
+  // Comparatif (ADR 0265) : sa propre section, avec la catégorie « Assistants IA ».
+  const compare = page.getByRole("region", { name: "Comparez les fonctionnalités" });
+  const comparison = compare.getByRole("table", {
     name: "Fonctionnalités incluses dans chaque formule",
   });
   // Comparatif replié au départ, déplié d'un appui.
-  const more = plans.getByRole("button", { name: /^Voir les \d+ fonctionnalités$/ });
+  const more = compare.getByRole("button", { name: /^Voir les \d+ fonctionnalités$/ });
   await expect(more).toHaveAttribute("aria-expanded", "false");
   await more.click();
-  await expect(plans.getByRole("button", { name: "Réduire le comparatif" })).toHaveAttribute(
+  await expect(compare.getByRole("button", { name: "Réduire le comparatif" })).toHaveAttribute(
     "aria-expanded",
     "true",
   );
   await expect(
     comparison.getByRole("rowheader", { name: /^Demandes reçues par mois/ }),
   ).toBeVisible();
-  // Simulation de commission (F-03) : 15 % de 8 000 € comparés à l'abonnement Base.
-  await expect(page.getByText(/Vous gardez 1\s050\s€ de plus chaque mois/)).toBeVisible();
+  await expect(
+    comparison.getByRole("rowheader", { name: /^Camille, secrétaire au téléphone/ }),
+  ).toBeVisible();
+  // Calculateur de rentabilité (ADR 0265) : Premium à 500 €, chantier de 4 500 € à 25 %.
+  await expect(page.getByText("1 chantier tous les 2 mois")).toBeVisible();
 
   await page.goto("/contact");
   await page.getByLabel("Votre adresse e-mail").fill(`contact-${Date.now()}@example.test`);

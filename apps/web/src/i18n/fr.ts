@@ -5426,11 +5426,109 @@ export const fr = {
         signUp: "Créer mon compte pro",
         plans: "Voir les formules",
         signIn: "J'ai déjà un compte",
+        // Lot 19 (ADR 0265) : ouvre le formulaire de rappel de l'assistant (ADR 0218).
+        callback: "Être rappelé",
         proofs: [
           "0\u00a0% de commission",
           "Paiements versés sur votre compte",
           "2 mois offerts, sans engagement",
         ],
+      },
+      // Lot 19 (ADR 0265). TODO(legal) : faire relire la bande de preuves et les assistants.
+      proofStrip: {
+        label: "Les engagements de MENAO envers les artisans",
+        items: [
+          { value: "0\u00a0%", label: "de commission sur vos chantiers" },
+          { value: "3", label: "artisans au plus par demande" },
+          { value: "100\u00a0%", label: "des paiements versés sur votre compte" },
+          { value: "2 mois", label: "d'essai offerts" },
+        ],
+      },
+      agents: {
+        eyebrow: "Assistants IA",
+        title: "Pendant que vous êtes sur le chantier, MENAO travaille pour vous.",
+        items: [
+          {
+            title: "Camille répond au téléphone",
+            text: "Votre secrétaire prend les appels quand vous êtes sur le chantier, note la demande et fixe le rendez-vous dans votre agenda.",
+          },
+          {
+            title: "Le devis se prépare tout seul",
+            text: "Brouillon prêt dès la demande, à partir des photos et de votre catalogue. Vous relisez, vous envoyez.",
+          },
+          {
+            title: "Vos tickets sont lus",
+            text: "Photographiez un ticket : la dépense est classée et envoyée à votre comptable.",
+          },
+          {
+            title: "Vos clients sont relancés",
+            text: "Devis à signer, paiement en attente, rendez-vous du lendemain : rappels automatiques.",
+          },
+        ],
+        more: "Voir ce qui est inclus dans chaque formule",
+        callLabel: "Exemple de compte rendu d'appel de Camille",
+        callTitle: "Camille · appel entrant",
+        callMeta: "06 •• •• •• 41 · il y a 12 min",
+        callStatus: "RDV pris",
+        callText:
+          "Mme Bernard, Antibes : fuite sous l'évier depuis hier. Rendez-vous fixé jeudi à 9h dans votre agenda. Photos demandées par SMS.",
+        draftTitle: "Brouillon de devis prêt",
+        draftText: "Salle de bain · Antibes : 6 lignes à relire depuis votre catalogue.",
+        draftTime: "il y a 1 h",
+      },
+      plansCompare: "Comparer les formules en détail",
+      // Fragments d'interface des cartes de l'outil (valeurs d'exemple, ADR 0265).
+      featureVisuals: {
+        signedBy: "Signé par Camille R.",
+        signature: "Camille R.",
+        codeOk: "Code de vérification validé",
+        deposit: "+ 1 456,29 €",
+        depositNote: "Acompte versé sur votre compte · Stripe",
+        agenda: [
+          { time: "9h00", label: "Visite · Antibes" },
+          { time: "14h30", label: "Chantier · Nice" },
+        ],
+        pv: "PV signé · sans réserve",
+        invoices: [
+          { title: "Facture d'acompte", ref: "FA-2026-031" },
+          { title: "Facture de solde", ref: "FA-2026-032" },
+        ],
+        review: "« Travail propre, délais tenus. »",
+      },
+      // Questions sur les objections, reprises de la FAQ des artisans (ADR 0265).
+      objections: [
+        "MENAO prend-il une commission sur mes chantiers ?",
+        "Combien d'artisans reçoivent la même demande ?",
+        "Dois-je payer avant d'être vérifié, et quand commence l'essai de 2 mois ?",
+        "Puis-je arrêter mon abonnement ?",
+        "Une formule plus chère améliore-t-elle mon classement ?",
+        "Combien de temps faut-il pour s'inscrire ?",
+      ],
+      plansPage: {
+        metaTitle: "Formules et prix pour les artisans",
+        metaDescription:
+          "Base, Premium ou Entreprise : un abonnement fixe, aucune commission, 2 mois d'essai gratuits. Comparez les formules, les assistants IA et calculez votre rentabilité.",
+        breadcrumb: "Formules",
+        faqTitle: "Vos questions avant de vous lancer.",
+        agentsWritten: "Assistants écrits : devis dicté, tickets lus, aide",
+        agentsVoice: (minutes: string) =>
+          `Camille, secrétaire au téléphone · ${minutes} min / mois`,
+        agentsLines: (lines: number, minutes: string) =>
+          `Camille sur ${lines} lignes · ${minutes} min / mois`,
+      },
+      calculator: {
+        eyebrow: "Rentabilité",
+        title: "Combien de chantiers pour rentabiliser votre formule ?",
+        text: "Indiquez le montant moyen de vos chantiers et votre marge : le calcul est fait sous vos yeux, sans promesse de volume.",
+        plan: "Formule",
+        job: "Montant moyen d'un chantier",
+        margin: "Votre marge sur un chantier",
+        marginPerJob: "Marge par chantier",
+        paidBy: (plan: string) => `${plan} remboursé par`,
+        every: (months: number) =>
+          months === 1 ? "1 chantier par mois" : `1 chantier tous les ${months} mois`,
+        perMonth: (jobs: number) => `${jobs} chantiers par mois`,
+        note: "Calcul indicatif : prix mensuel de la formule comparé à la marge d'un chantier moyen. MENAO ne garantit aucun nombre de demandes.",
       },
       video: {
         eyebrow: "En vidéo",

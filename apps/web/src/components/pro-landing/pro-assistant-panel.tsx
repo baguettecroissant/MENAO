@@ -44,8 +44,15 @@ const quickLabels: readonly string[] = t.quick.map((item) => item.label);
  * téléphone, fenêtre en bas à droite sur grand écran ; questions de relance sous la dernière
  * réponse.
  */
-export function ProAssistantPanel({ onClose }: { onClose: () => void }) {
-  const [view, setView] = useState<"chat" | "callback">("chat");
+export function ProAssistantPanel({
+  onClose,
+  initialView = "chat",
+}: {
+  onClose: () => void;
+  /** « callback » : le formulaire « Être rappelé » s'ouvre directement (ADR 0265). */
+  initialView?: "chat" | "callback";
+}) {
+  const [view, setView] = useState<"chat" | "callback">(initialView);
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
   const [pending, setPending] = useState(false);

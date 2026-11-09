@@ -34,7 +34,7 @@ export async function SiteFooter() {
       links: [
         { href: "/pro", label: fr.nav.pro },
         { href: "/pro/inscription", label: t.proSignUp },
-        { href: "/pro#formules", label: t.plans },
+        { href: "/pro/formules", label: t.plans },
         { href: "/partenaires", label: t.partners },
         { href: "/connexion", label: t.signIn },
       ],

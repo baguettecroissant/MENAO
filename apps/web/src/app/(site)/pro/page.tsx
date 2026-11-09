@@ -16,16 +16,17 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { planComparison } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
+import { AgentsSection } from "@/components/pro-landing/agents-section";
+import { CallbackLink } from "@/components/pro-landing/callback-link";
 import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
 import { DemoVideo } from "@/components/pro-landing/demo-video";
-import { PlanComparisonTable } from "@/components/pro-landing/plan-comparison";
 import { PricingPlans } from "@/components/pro-landing/pricing-plans";
 import { ProAssistant } from "@/components/pro-landing/pro-assistant";
-import { CtaBand } from "@/components/site/cta-band";
+import { ProFinalCta } from "@/components/pro-landing/pro-final-cta";
+import { ProofStrip } from "@/components/pro-landing/proof-strip";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
 import { AppNotification, LaptopMockup, PhoneMockup } from "@/components/site/device-mockups";
@@ -36,7 +37,7 @@ import { ButtonLink, Tag, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { APP_SCREENS, WEB_SCREENS } from "@/lib/site/app-screens";
 import { seoCatalog } from "@/lib/site/catalog";
-import { createPublicClient } from "@/lib/supabase/public";
+import { loadPricing, proObjections } from "@/lib/site/pro-plans";
 
 const t = fr.pro.landing;
 const m = fr.site.mockups;
@@ -56,45 +57,94 @@ const FAIRNESS_ICONS = [Users, Scale, ShieldCheck];
 // Montant de l'abonnement Base si la table des formules n'est pas lisible (150 € HT, ADR 0010).
 const BASE_FALLBACK_CENTS = 15000;
 
-const avantagesOf = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
-
 /**
  * Espace Pro (F-03) : présentation aux artisans. Promesses du business plan (abonnement fixe, zéro
  * commission, paiements directs, trois artisans au plus par demande), fonctionnalités livrées,
  * simulation de commission, carte artisan, formules (table plans) et questions fréquentes. Aucun
  * chiffre ni témoignage inventé (F-01) ; les illustrations portent des valeurs d'exemple.
  */
+const fv = t.featureVisuals;
+
+/** Fragment d'interface décoratif de chaque carte de l'outil (valeurs d'exemple). */
+function FeatureFragment({ index }: { index: number }) {
+  switch (index) {
+    case 0:
+      return (
+        <div className="flex flex-col gap-1 rounded-2xl border border-border p-3.5">
+          <span className="text-xs text-muted-foreground">{fv.signedBy}</span>
+          <span className="font-[cursive] text-2xl text-primary-strong">{fv.signature}</span>
+          <span className="text-xs font-bold text-success">✓ {fv.codeOk}</span>
+        </div>
+      );
+    case 1:
+      return (
+        <div className="flex flex-col gap-1">
+          <span className="font-display text-[2rem] leading-none font-bold tracking-tight">
+            {fv.deposit}
+          </span>
+          <span className="text-xs text-white/70">{fv.depositNote}</span>
+        </div>
+      );
+    case 2:
+      return (
+        <div className="flex flex-col gap-1.5">
+          {fv.agenda.map((slot) => (
+            <span key={slot.time} className="flex items-center gap-2.5 text-[0.8125rem]">
+              <b className="w-11">{slot.time}</b>
+              <span className="flex-1 rounded-[0.625rem] bg-primary-soft px-2.5 py-1.5 font-semibold text-primary-strong">
+                {slot.label}
+              </span>
+            </span>
+          ))}
+        </div>
+      );
+    case 3:
+      return (
+        <span className="inline-flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-[0.8125rem] font-bold text-success">
+          <CircleCheck className="size-4" />
+          {fv.pv}
+        </span>
+      );
+    case 4:
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          {fv.invoices.map((invoice) => (
+            <span
+              key={invoice.ref}
+              className="flex flex-col gap-0.5 rounded-xl border border-border p-2.5 text-xs"
+            >
+              <b>{invoice.title}</b>
+              <span className="text-muted-foreground">{invoice.ref}</span>
+            </span>
+          ))}
+        </div>
+      );
+    default:
+      return (
+        <div className="flex flex-col gap-1.5">
+          <span className="flex gap-0.5 text-[#f5b301]">
+            {[0, 1, 2, 3, 4].map((n) => (
+              <Star key={n} className="size-4 fill-current" />
+            ))}
+          </span>
+          <span className="text-[0.8125rem] text-label">{fv.review}</span>
+        </div>
+      );
+  }
+}
+
 export default async function ProLandingPage() {
-  const [{ data: plans }, { data: features }, { trades }] = await Promise.all([
-    createPublicClient()
-      .from("plans")
-      .select("code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
-      .order("ordre"),
-    // Comparatif détaillé des formules (ADR 0200).
-    createPublicClient().from("plan_features").select("categorie, libelle, detail, valeurs, ordre"),
+  const [{ pricingPlans, baseCents }, { trades }] = await Promise.all([
+    loadPricing(),
     seoCatalog(),
   ]);
-  const base = plans?.find((p) => p.ouverte) ?? plans?.[0];
-  const pricingPlans = (plans ?? []).map((plan) => ({
-    code: plan.code,
-    nom: plan.nom,
-    accroche: plan.accroche,
-    monthlyCents: plan.prix_mensuel_ht_centimes,
-    avantages: avantagesOf(plan.avantages),
-    ouverte: plan.ouverte,
-    recommandee: plan.recommandee,
-  }));
-  const comparison = planComparison(
-    features ?? [],
-    pricingPlans.map((plan) => plan.code),
-  );
+  const objections = proObjections();
 
   return (
     <main className="bg-background">
       {/* Bandeau */}
       <section aria-labelledby="pro-title" className="px-2 pt-2 sm:px-4 sm:pt-4">
-        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_45%,#4869f6_80%,#8ea4fb_100%)] px-6 py-14 text-white sm:px-12 sm:py-20 lg:py-24">
+        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[linear-gradient(150deg,#0b1438_0%,#16236e_58%,#2a3fb8_100%)] px-6 pt-14 pb-16 text-white sm:px-12 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-28">
           <LogoMark
             tone="white"
             className="absolute -right-16 -bottom-24 hidden size-[30rem] opacity-[0.07] lg:block"
@@ -115,23 +165,12 @@ export default async function ProLandingPage() {
               </h1>
               <p className="max-w-xl text-lg text-pretty text-white/85">{t.hero.subtitle}</p>
               <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
-                <ButtonLink
-                  href="/pro/inscription"
-                  variant="secondary"
-                  size="lg"
-                  className="border-white"
-                >
+                <ButtonLink href="/pro/inscription" size="lg" className="whitespace-nowrap">
                   {t.hero.signUp}
                   <ArrowRight aria-hidden="true" className="size-4" />
                 </ButtonLink>
-                <ButtonLink
-                  href="/pro#formules"
-                  variant="ghost"
-                  size="lg"
-                  className="border border-white/50 text-white hover:bg-white/10 hover:text-white"
-                >
-                  {t.hero.plans}
-                </ButtonLink>
+                {/* « Être rappelé » : formulaire de rappel de l'assistant (ADR 0265). */}
+                <CallbackLink tone="dark" />
               </div>
               <ul className="flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap sm:gap-x-5">
                 {t.hero.proofs.map((proof) => (
@@ -173,18 +212,8 @@ export default async function ProLandingPage() {
         </div>
       </section>
 
-      {/* En vidéo */}
-      <section aria-labelledby="pro-video" className="pt-16 sm:pt-24">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6">
-          <SectionHeading
-            id="pro-video"
-            eyebrow={t.video.eyebrow}
-            title={t.video.title}
-            subtitle={t.video.subtitle}
-          />
-          <DemoVideo />
-        </div>
-      </section>
+      {/* Bande de preuves (ADR 0265) */}
+      <ProofStrip />
 
       {/* Le constat */}
       <section aria-labelledby="pro-pains" className="py-16 sm:py-24">
@@ -201,22 +230,23 @@ export default async function ProLandingPage() {
               return (
                 <li
                   key={item.title}
-                  className="flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card"
+                  className="flex flex-col overflow-hidden rounded-[1.375rem] border border-border bg-surface"
                 >
                   <div className="flex flex-col gap-3 p-6">
                     <span className="flex size-11 items-center justify-center rounded-full bg-danger-soft text-danger">
                       <Icon aria-hidden="true" className="size-5" />
                     </span>
-                    <h3 className="text-lg font-medium">{item.title}</h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                    <h3 className="font-display text-xl font-bold">{item.title}</h3>
+                    <p className="text-[0.9375rem] leading-relaxed text-label">{item.text}</p>
                   </div>
-                  <div className="mt-auto flex gap-3 border-t border-primary-soft bg-primary-softer px-6 py-4">
+                  {/* Refonte du lot 19 (ADR 0265) : la réponse de MENAO sur fond vert. */}
+                  <div className="mt-auto flex gap-3 bg-success-soft px-6 py-4">
                     <CircleCheck
                       aria-hidden="true"
-                      className="mt-0.5 size-5 shrink-0 text-primary"
+                      className="mt-0.5 size-5 shrink-0 text-success"
                     />
-                    <p className="flex flex-col gap-0.5 text-sm">
-                      <span className="text-xs font-semibold tracking-[0.12em] text-primary-strong uppercase">
+                    <p className="flex flex-col gap-0.5 text-[0.9375rem] font-semibold">
+                      <span className="text-xs font-bold tracking-[0.08em] text-success uppercase">
                         {t.pains.solutionLabel}
                       </span>
                       {item.solution}
@@ -229,27 +259,24 @@ export default async function ProLandingPage() {
         </div>
       </section>
 
-      {/* Comment ça marche */}
-      <section aria-labelledby="pro-steps" className="bg-surface py-16 sm:py-24">
-        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+      {/* En vidéo */}
+      <section aria-labelledby="pro-video" className="pt-16 sm:pt-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6">
           <SectionHeading
-            id="pro-steps"
-            eyebrow={t.steps.eyebrow}
-            title={t.steps.title}
-            subtitle={t.steps.subtitle}
+            id="pro-video"
+            eyebrow={t.video.eyebrow}
+            title={t.video.title}
+            subtitle={t.video.subtitle}
           />
-          <Steps items={t.steps.items} />
-          <div className="flex justify-center">
-            <ButtonLink href="/pro/inscription" size="lg">
-              {t.hero.signUp}
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </ButtonLink>
-          </div>
+          <DemoVideo />
         </div>
       </section>
 
       {/* Tout-en-un */}
-      <section aria-labelledby="pro-features" className="py-16 sm:py-24">
+      <section
+        aria-labelledby="pro-features"
+        className="border-y border-border bg-surface py-16 sm:py-24"
+      >
         <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
           <SectionHeading
             id="pro-features"
@@ -306,22 +333,37 @@ export default async function ProLandingPage() {
                 </div>
               </article>
             </div>
+            {/* Grille de l'outil (ADR 0265) : chaque carte montre un fragment d'interface. */}
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {t.features.items.map((feature, i) => {
                 const Icon = FEATURE_ICONS[i] ?? Signature;
+                const dark = i === 1;
                 return (
                   <li
                     key={feature.title}
-                    className="group flex gap-4 rounded-card border border-border bg-surface p-5 shadow-card transition-shadow hover:shadow-raised"
+                    className={`flex flex-col gap-4 rounded-[1.5rem] p-6 ${
+                      dark ? "bg-foreground text-white" : "border border-border bg-surface"
+                    }`}
                   >
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                      <Icon aria-hidden="true" className="size-5" />
-                    </span>
-                    <div className="flex flex-col gap-1">
-                      <h3 className="font-medium">{feature.title}</h3>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {feature.text}
-                      </p>
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                          dark ? "bg-white/10 text-white" : "bg-primary-soft text-primary"
+                        }`}
+                      >
+                        <Icon aria-hidden="true" className="size-5" />
+                      </span>
+                      <div className="flex flex-col gap-1">
+                        <h3 className="font-display text-lg font-bold">{feature.title}</h3>
+                        <p
+                          className={`text-sm leading-relaxed ${dark ? "text-white/75" : "text-label"}`}
+                        >
+                          {feature.text}
+                        </p>
+                      </div>
+                    </div>
+                    <div aria-hidden="true" className="mt-auto">
+                      <FeatureFragment index={i} />
                     </div>
                   </li>
                 );
@@ -330,6 +372,9 @@ export default async function ProLandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Assistants IA (ADR 0265) */}
+      <AgentsSection id="pro-agents" />
 
       {/* Zéro commission */}
       <section aria-labelledby="pro-commission" className="px-2 sm:px-4">
@@ -355,9 +400,26 @@ export default async function ProLandingPage() {
                 ))}
               </ul>
             </div>
-            <CommissionCalculator
-              subscriptionCents={base?.prix_mensuel_ht_centimes ?? BASE_FALLBACK_CENTS}
-            />
+            <CommissionCalculator subscriptionCents={baseCents ?? BASE_FALLBACK_CENTS} />
+          </div>
+        </div>
+      </section>
+
+      {/* Comment ça marche */}
+      <section aria-labelledby="pro-steps" className="bg-surface py-16 sm:py-24">
+        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
+          <SectionHeading
+            id="pro-steps"
+            eyebrow={t.steps.eyebrow}
+            title={t.steps.title}
+            subtitle={t.steps.subtitle}
+          />
+          <Steps items={t.steps.items} />
+          <div className="flex justify-center">
+            <ButtonLink href="/pro/inscription" size="lg">
+              {t.hero.signUp}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </ButtonLink>
           </div>
         </div>
       </section>
@@ -409,12 +471,12 @@ export default async function ProLandingPage() {
         </div>
       </section>
 
-      {/* Formules */}
-      {plans && plans.length > 0 && (
+      {/* Formules : aperçu, le détail sur /pro/formules (ADR 0265) */}
+      {pricingPlans.length > 0 && (
         <section
           id="formules"
           aria-labelledby="pro-plans"
-          className="scroll-mt-20 bg-surface py-16 sm:py-24"
+          className="scroll-mt-20 bg-primary-soft py-16 sm:py-24"
         >
           <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6">
             <SectionHeading
@@ -423,13 +485,11 @@ export default async function ProLandingPage() {
               title={t.plansTitle}
               subtitle={t.plansSubtitle}
             />
-            <PricingPlans plans={pricingPlans} />
-            {comparison.length > 0 && (
-              <PlanComparisonTable plans={pricingPlans} comparison={comparison} />
-            )}
-            <p className="mx-auto max-w-3xl text-center text-xs text-muted-foreground">
-              {t.plansNote}
-            </p>
+            <PricingPlans plans={pricingPlans} compact />
+            <ButtonLink href="/pro/formules" variant="secondary" size="lg" className="self-center">
+              {t.plansCompare}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </ButtonLink>
           </div>
         </section>
       )}
@@ -464,21 +524,15 @@ export default async function ProLandingPage() {
       <section aria-labelledby="pro-faq" className="py-16 sm:py-24">
         <div className="mx-auto flex max-w-3xl flex-col gap-10 px-4 sm:px-6">
           <SectionHeading id="pro-faq" eyebrow={t.faqEyebrow} title={t.faqTitle} />
-          <FaqList items={t.faq} />
+          <FaqList items={objections} />
           <TextLink href="/pro/faq" className="self-center">
             {fr.pro.faqPage.seeAll}
           </TextLink>
         </div>
-        <FaqJsonLd items={t.faq} />
+        <FaqJsonLd items={objections} />
       </section>
 
-      <CtaBand
-        id="pro-final"
-        title={t.finalTitle}
-        text={t.finalText}
-        action={{ href: "/pro/inscription", label: t.hero.signUp }}
-        reassurance={t.finalReassurance}
-      />
+      <ProFinalCta id="pro-final" />
       <ProAssistant />
     </main>
   );

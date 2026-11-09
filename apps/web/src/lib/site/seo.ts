@@ -72,6 +72,7 @@ export const STATIC_PAGES = [
   "/villes",
   "/partenaires",
   "/pro",
+  "/pro/formules",
   "/pro/faq",
   "/faq",
   "/contact",

@@ -34,6 +34,8 @@ const buttonVariants = {
   secondary:
     "border border-border-strong bg-surface text-foreground hover:bg-background disabled:text-subtle-foreground",
   ghost: "text-muted-foreground hover:bg-background hover:text-foreground",
+  // Bouton bleu nuit (cartes des formules, ADR 0265).
+  dark: "bg-foreground text-surface hover:bg-foreground/90 disabled:opacity-60",
   danger: "bg-danger text-primary-foreground hover:opacity-90 disabled:opacity-60",
   "danger-text": "text-danger hover:bg-danger-soft",
 } as const;
