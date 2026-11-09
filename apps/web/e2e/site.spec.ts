@@ -117,6 +117,18 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   // Calculateur de rentabilité (ADR 0265) : Premium à 500 €, chantier de 4 500 € à 25 %.
   await expect(page.getByText("1 chantier tous les 2 mois")).toBeVisible();
 
+  // Pages par fonction (ADR 0267) : titre, extrait du comparatif lu en base, liens entre elles.
+  await page.goto("/pro/logiciel-devis");
+  await expect(
+    page.getByRole("heading", { name: "Vos devis dictés, prêts en quelques minutes.", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByRole("rowheader", { name: "Dictée intelligente du devis" })).toBeVisible();
+  await page.getByRole("link", { name: /^Secrétaire téléphonique/ }).click();
+  await expect(page).toHaveURL(/\/pro\/secretaire-telephonique$/);
+  await expect(
+    page.getByRole("rowheader", { name: "Camille, secrétaire au téléphone" }),
+  ).toBeVisible();
+
   await page.goto("/contact");
   await page.getByLabel("Votre adresse e-mail").fill(`contact-${Date.now()}@example.test`);
   await page.getByLabel("Votre message").fill("Bonjour, une question sur MENAO.");
