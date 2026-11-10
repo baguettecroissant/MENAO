@@ -690,3 +690,136 @@ Visual direction: exceptionally realistic candid documentary photography in the 
 
 Subject: a male craftsperson aged about 55 in plain navy work clothes sitting at a simple desk in a modest tidy workshop office, handling routine administration on an unbranded laptop. Three-quarter side view shows his natural face, relaxed hands on a physically plausible keyboard, and the screen angled sufficiently toward the camera to be visible. The screen is completely black and blank, no interface, no text, no icons, no reflections that resemble symbols. Keyboard keys have no readable letters or numbers. A plain closed folder sits nearby; no paperwork with marks. Everyday understated office atmosphere, wood shelving and neutral workshop items softly blurred, natural diffuse window light. Horizontal editorial photography, no triumph pose, no handshake, no luxury executive office.
 ```
+
+## Série du 10 novembre 2026 : Julien et Camille
+
+**images générées par IA, personnes fictives**
+
+Neuf scènes avec deux personnages récurrents : Julien, artisan plombier, et Camille, cliente. Ils ne sont pas présentés comme un artisan inscrit sur MENAO ni comme une cliente témoignant de son expérience. Aucune image ne comporte de nom, de marque ni de texte généré.
+
+- Outil : API d'images d'OpenRouter, modèle `openai/gpt-image-2.6-sunburst`, qualité `high`, génération native en 2 400 × 1 600 px, le 10 novembre 2026.
+- Constance des visages : chaque scène a été générée avec la fiche de son personnage en image de référence (quatre vues sur fond neutre). Les deux fiches ont été produites le même jour par le propriétaire du projet avec son propre outil de génération, à partir de photos des séries d'octobre ; le nom de cet outil n'est pas connu, il n'est donc pas attribué.
+- Écrans : les téléphones étaient générés avec un écran noir. Les écrans visibles sont de vraies captures de l'application (personnes et données fictives), incrustées ensuite ; rien de l'interface n'est généré.
+- Deux essais par scène, un seul retenu. Prompts exacts, coûts et essais écartés : journal de génération conservé hors du dépôt.
+
+| Fichier | Prompt exact | Écran incrusté | Dimensions | Poids (Ko) |
+|---|---|---|---|---:|
+| [apps/web/public/images/scenes/julien-portrait.webp](../../apps/web/public/images/scenes/julien-portrait.webp) | [Prompt exact](#prompt-julien-portrait) | aucun | 1600 × 1067 | 205,752 |
+| [apps/web/public/images/scenes/julien-camionnette.webp](../../apps/web/public/images/scenes/julien-camionnette.webp) | [Prompt exact](#prompt-julien-camionnette) | accueil de l'artisan | 1600 × 1067 | 162,478 |
+| [apps/web/public/images/scenes/rendez-vous.webp](../../apps/web/public/images/scenes/rendez-vous.webp) | [Prompt exact](#prompt-rendez-vous) | aucun | 1600 × 1067 | 154,624 |
+| [apps/web/public/images/scenes/reception-chantier.webp](../../apps/web/public/images/scenes/reception-chantier.webp) | [Prompt exact](#prompt-reception-chantier) | procès-verbal de réception | 1600 × 1067 | 129,888 |
+| [apps/web/public/images/scenes/camille-projet.webp](../../apps/web/public/images/scenes/camille-projet.webp) | [Prompt exact](#prompt-camille-projet) | description du projet | 1600 × 1067 | 99,260 |
+| [apps/web/public/images/scenes/camille-artisans.webp](../../apps/web/public/images/scenes/camille-artisans.webp) | [Prompt exact](#prompt-camille-artisans) | sélection des artisans | 1600 × 1067 | 149,086 |
+| [apps/web/public/images/scenes/camille-devis.webp](../../apps/web/public/images/scenes/camille-devis.webp) | [Prompt exact](#prompt-camille-devis) | devis à signer | 1600 × 1067 | 154,454 |
+| [apps/web/public/images/scenes/camille-suivi.webp](../../apps/web/public/images/scenes/camille-suivi.webp) | [Prompt exact](#prompt-camille-suivi) | suivi du chantier | 1600 × 1067 | 160,106 |
+| [apps/web/public/images/scenes/camille-portrait.webp](../../apps/web/public/images/scenes/camille-portrait.webp) | [Prompt exact](#prompt-camille-portrait) | aucun | 1600 × 1067 | 85,916 |
+
+Chaque image existe aussi en 960 et 640 px de large (`-960.webp`, `-640.webp`), même cadrage. Conversion : WebP qualité 80, method 6, sans métadonnées.
+
+### Prompts de la série
+
+### Prompt julien-portrait
+
+<a id="prompt-julien-portrait"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Environmental portrait of Julien standing beside the open side door of a plain white unbranded work van, parked in a quiet street of pale-stone houses near Nice, olive tree and a sliver of sea in the far background. He leans one shoulder against the van, arms loosely crossed, looking straight at the camera with a relaxed, confident half-smile. Tool cases neatly visible inside the van. JULIEN: fictional French plumber, 36 years old, medium height, lean athletic build, lightly tanned skin, thick wavy dark-brown hair slightly tousled, short full dark beard, dark-brown eyes, calm friendly face. He is the SAME MAN as in the attached Julien reference images: keep his face, hair, beard and build identical. Outfit: plain navy cotton work shirt with sleeves rolled to the forearm, charcoal-grey canvas work apron, navy work trousers, no logo anywhere. Composition: Julien on the right third, framed from mid-thigh up, calm empty wall and street on the left half for future text.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt julien-camionnette
+
+<a id="prompt-julien-camionnette"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Late afternoon golden light. Julien sits sideways on the driver's seat of his parked plain white work van, door open, engine off, one foot on the step. He looks at his smartphone with a quiet satisfied smile, a paper cup of coffee on the dashboard. A pale-stone residential street near Nice outside. JULIEN: fictional French plumber, 36 years old, medium height, lean athletic build, lightly tanned skin, thick wavy dark-brown hair slightly tousled, short full dark beard, dark-brown eyes, calm friendly face. He is the SAME MAN as in the attached Julien reference images: keep his face, hair, beard and build identical. Outfit: plain navy cotton work shirt with sleeves rolled to the forearm, navy work trousers, no apron, no logo anywhere. Composition: seen through the open door at eye level, Julien centred-right, from the knees up; neither hand on the steering wheel.
+Phone (critical): a modern unbranded smartphone held VERTICALLY, its FRONT GLASS facing the camera in a gentle three-quarter view, all four screen corners visible, thin black bezel. The display is completely BLANK MATTE BLACK: no interface, no icons, no reflections with shapes; a real app screenshot will be composited later. Fingers hold only the edges and never cross the display. Never show the back of the phone or camera lenses. The screen must be at least 9 percent of the image width, sharp, with straight plausible geometry.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt rendez-vous
+
+<a id="prompt-rendez-vous"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+At the front door of a Nice apartment, stone landing and wrought-iron railing. Camille opens the door and welcomes Julien, who has just arrived with a dark canvas tool bag in one hand. They exchange a natural friendly look, slight smiles, no handshake yet, nobody looks at the camera. JULIEN: fictional French plumber, 36 years old, medium height, lean athletic build, lightly tanned skin, thick wavy dark-brown hair slightly tousled, short full dark beard, dark-brown eyes, calm friendly face. He is the SAME MAN as in the attached Julien reference images: keep his face, hair, beard and build identical. Outfit: plain navy cotton work shirt with sleeves rolled to the forearm, navy work trousers, no apron, no logo anywhere. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: eye-level medium-wide shot, Camille in the doorway on the left, Julien on the right, both from the knees up.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt reception-chantier
+
+<a id="prompt-reception-chantier"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Julien and Camille stand in the same small bathroom after renovation: walk-in shower with an extra-flat white shower tray and a fixed clear-glass panel, thermostatic shower column, large-format pale stone wall tiles, oak vanity unit with a white basin and a round mirror, frosted window, everything new and spotless. Julien holds his smartphone out toward Camille at chest height so that she can sign on it; she touches the lower edge of the phone with one finger, about to sign, both smiling naturally and looking at the phone. JULIEN: fictional French plumber, 36 years old, medium height, lean athletic build, lightly tanned skin, thick wavy dark-brown hair slightly tousled, short full dark beard, dark-brown eyes, calm friendly face. He is the SAME MAN as in the attached Julien reference images: keep his face, hair, beard and build identical. Outfit: plain navy cotton work shirt with sleeves rolled to the forearm, navy work trousers, no apron, no logo anywhere. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: medium shot from the hips up, the two people on the left two-thirds, the glass panel and vanity unit clearly visible on the right; the phone between them, its front screen turned toward the camera.
+Phone (critical): a modern unbranded smartphone held VERTICALLY, its FRONT GLASS facing the camera in a gentle three-quarter view, all four screen corners visible, thin black bezel. The display is completely BLANK MATTE BLACK: no interface, no icons, no reflections with shapes; a real app screenshot will be composited later. Fingers hold only the edges and never cross the display. Never show the back of the phone or camera lenses. The screen must be at least 9 percent of the image width, sharp, with straight plausible geometry.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt camille-projet
+
+<a id="prompt-camille-projet"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Camille stands in the doorway of a small dated bathroom in a Nice apartment before renovation: built-in white bathtub with an old shower curtain, 1970s yellow-beige patterned wall tiles, white pedestal washbasin, round mirror, terracotta floor tiles, one frosted window, clean but clearly old. She holds her smartphone near her mouth and describes the room aloud, her free hand pointing loosely toward the bathtub, thoughtful expression, not looking at the camera. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: medium shot from the hips up, Camille on the right third, the old bathtub and patterned tiles clearly readable on the left.
+Phone (critical): a modern unbranded smartphone held VERTICALLY, its FRONT GLASS facing the camera in a gentle three-quarter view, all four screen corners visible, thin black bezel. The display is completely BLANK MATTE BLACK: no interface, no icons, no reflections with shapes; a real app screenshot will be composited later. Fingers hold only the edges and never cross the display. Never show the back of the phone or camera lenses. The screen must be at least 9 percent of the image width, sharp, with straight plausible geometry.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt camille-artisans
+
+<a id="prompt-camille-artisans"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Camille sits on a light linen sofa in a bright Nice living room, tall window with pale shutters, olive plant, low wooden table. She holds her smartphone in front of her and scrolls with her thumb resting on the frame edge, calm concentrated half-smile. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: camera over her right shoulder at a gentle angle, her three-quarter profile on the right, the phone's front screen clearly visible in the centre, living room softly blurred on the left.
+Phone (critical): a modern unbranded smartphone held VERTICALLY, its FRONT GLASS facing the camera in a gentle three-quarter view, all four screen corners visible, thin black bezel. The display is completely BLANK MATTE BLACK: no interface, no icons, no reflections with shapes; a real app screenshot will be composited later. Fingers hold only the edges and never cross the display. Never show the back of the phone or camera lenses. The screen must be at least 9 percent of the image width, sharp, with straight plausible geometry.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt camille-devis
+
+<a id="prompt-camille-devis"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Camille sits at a wooden kitchen table by a window, a cup of coffee and a folded tile sample beside her. She holds her smartphone upright in her left hand and is about to tap its lower edge with her right index finger, relieved confident expression. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: three-quarter front view from across the table, Camille on the left third from the chest up, phone in the centre with its front screen toward the camera, calm kitchen background on the right.
+Phone (critical): a modern unbranded smartphone held VERTICALLY, its FRONT GLASS facing the camera in a gentle three-quarter view, all four screen corners visible, thin black bezel. The display is completely BLANK MATTE BLACK: no interface, no icons, no reflections with shapes; a real app screenshot will be composited later. Fingers hold only the edges and never cross the display. Never show the back of the phone or camera lenses. The screen must be at least 9 percent of the image width, sharp, with straight plausible geometry.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt camille-suivi
+
+<a id="prompt-camille-suivi"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Camille sits at a small table on a shaded café terrace in the old town of Nice, pale ochre façades softly blurred behind her, an espresso on the table. She looks at her smartphone with a happy surprised smile, as if she had just received good news from home. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. (here with a light navy blazer over the cream shirt). Composition: medium shot from the waist up, Camille on the left third, phone held at chest height with its front screen angled toward the camera, terrace and street on the right.
+Phone (critical): a modern unbranded smartphone held VERTICALLY, its FRONT GLASS facing the camera in a gentle three-quarter view, all four screen corners visible, thin black bezel. The display is completely BLANK MATTE BLACK: no interface, no icons, no reflections with shapes; a real app screenshot will be composited later. Fingers hold only the edges and never cross the display. Never show the back of the phone or camera lenses. The screen must be at least 9 percent of the image width, sharp, with straight plausible geometry.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+
+### Prompt camille-portrait
+
+<a id="prompt-camille-portrait"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Portrait of Camille leaning lightly against the oak vanity unit in the same small bathroom after renovation: walk-in shower with an extra-flat white shower tray and a fixed clear-glass panel, thermostatic shower column, large-format pale stone wall tiles, oak vanity unit with a white basin and a round mirror, frosted window, everything new and spotless. Arms relaxed, one hand on the edge of the basin, she looks straight at the camera with a genuine satisfied smile. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: Camille on the left third, framed from mid-thigh up, the walk-in shower and glass panel softly visible on the right half for future text.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
+```
+

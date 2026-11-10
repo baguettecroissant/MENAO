@@ -31,6 +31,7 @@ import { ProofStrip } from "@/components/pro-landing/proof-strip";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
 import { BrowserMockup, PhoneMockup } from "@/components/site/device-mockups";
+import { ScenePhoto } from "@/components/site/scene-photo";
 import { StoreBadges } from "@/components/site/store-badges";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
@@ -447,17 +448,22 @@ export default async function ProLandingPage() {
               {t.fairness.criteria}
             </TextLink>
           </div>
-          {/* Fiche d'exemple, telle que la voient les particuliers dans l'application (ADR 0147). */}
-          <div className="flex flex-col gap-3 lg:order-first">
-            <div className="relative h-[28rem] overflow-hidden rounded-hero bg-[linear-gradient(180deg,var(--color-primary-soft)_0%,var(--color-primary-softer)_100%)] px-8 pt-10">
-              <span className="absolute top-5 left-5 z-10 rounded-pill bg-surface px-3 py-1 text-xs font-medium text-primary-strong shadow-card">
+          {/* La réception du chantier (ADR 0271), et la fiche d'exemple telle que la voient les
+              particuliers dans l'application (ADR 0147). */}
+          <div className="relative h-[24rem] sm:h-[28rem] lg:order-first">
+            <div className="absolute inset-0 right-10 bottom-8 overflow-hidden rounded-hero sm:right-14 sm:bottom-10">
+              <ScenePhoto
+                scene="handover"
+                sizes="(min-width: 1024px) 480px, 85vw"
+                position="38% 45%"
+                className="size-full"
+              />
+            </div>
+            <div className="absolute right-0 bottom-0 w-[8.5rem] sm:w-[10.5rem]">
+              <span className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 rounded-pill bg-surface px-3 py-1 text-xs font-medium whitespace-nowrap text-primary-strong shadow-card">
                 {m.example}
               </span>
-              <PhoneMockup
-                screen={APP_SCREENS.clientFiche}
-                alt={m.screens.clientFiche}
-                className="mx-auto w-full max-w-[16rem]"
-              />
+              <PhoneMockup screen={APP_SCREENS.clientFiche} alt={m.screens.clientFiche} />
             </div>
           </div>
         </div>
@@ -524,7 +530,7 @@ export default async function ProLandingPage() {
         <FaqJsonLd items={objections} />
       </section>
 
-      <ProFinalCta id="pro-final" />
+      <ProFinalCta id="pro-final" portrait />
       <ProAssistant />
     </main>
   );

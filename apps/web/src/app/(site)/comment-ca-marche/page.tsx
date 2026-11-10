@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import { ArrowRight, Check, CircleCheck, CircleX, X } from "lucide-react";
 import { CtaBand } from "@/components/site/cta-band";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
-import { PhoneMockup } from "@/components/site/device-mockups";
 import { ProgressVisual } from "@/components/site/journey-visuals";
 import { PageHero } from "@/components/site/page-hero";
+import { ScenePhoto, type SceneKey } from "@/components/site/scene-photo";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
 import { ButtonLink, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { APP_SCREENS, type AppScreenKey } from "@/lib/site/app-screens";
 import { SiteAssistantBubble } from "@/components/site/site-assistant-bubble";
 
 const t = fr.pages.howItWorks;
@@ -21,13 +20,14 @@ const FAQ = [
   faq.trust.items[2]!,
 ];
 // Une étape, un écran réel de l'application (ADR 0147).
-const STEP_SCREENS: readonly AppScreenKey[] = [
-  "clientRecherche",
-  "clientArtisans",
-  "clientRdv",
-  "clientDevis",
-  "clientAcompte",
-  "clientAvis",
+// Une photo par étape (ADR 0271) : cadrage de chaque image dans son encart.
+const STEP_SCENES: readonly { scene: SceneKey; position: string }[] = [
+  { scene: "camilleProject", position: "62% 40%" },
+  { scene: "camilleArtisans", position: "55% 45%" },
+  { scene: "meeting", position: "50% 35%" },
+  { scene: "camilleQuote", position: "50% 40%" },
+  { scene: "camilleFollow", position: "45% 45%" },
+  { scene: "handover", position: "40% 50%" },
 ];
 
 export const metadata: Metadata = {
@@ -125,15 +125,16 @@ export default function HowItWorksPage() {
                   </h3>
                   <p className="leading-relaxed text-pretty text-muted-foreground">{step.text}</p>
                 </div>
-                {/* Le téléphone sort du bas de l'encart : seul le haut de l'écran compte. */}
+                {/* La scène de l'étape, avec le vrai écran dans le téléphone (ADR 0271). */}
                 <div
-                  className={`relative h-80 overflow-hidden rounded-card bg-[linear-gradient(180deg,var(--color-primary-soft)_0%,var(--color-primary-softer)_100%)] px-6 pt-8 sm:h-96 ${i % 2 ? "lg:order-1" : ""}`}
+                  className={`aspect-[3/2] overflow-hidden rounded-card bg-primary-soft ${i % 2 ? "lg:order-1" : ""}`}
                 >
-                  {STEP_SCREENS[i] && (
-                    <PhoneMockup
-                      screen={APP_SCREENS[STEP_SCREENS[i]]}
-                      alt={fr.site.mockups.screens[STEP_SCREENS[i]]}
-                      className="mx-auto w-full max-w-[15rem]"
+                  {STEP_SCENES[i] && (
+                    <ScenePhoto
+                      scene={STEP_SCENES[i].scene}
+                      sizes="(min-width: 1024px) 520px, 90vw"
+                      position={STEP_SCENES[i].position}
+                      className="size-full"
                     />
                   )}
                 </div>
