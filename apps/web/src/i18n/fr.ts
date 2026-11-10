@@ -1019,8 +1019,7 @@ export const fr = {
       handover:
         "Un artisan et sa cliente dans une salle de bain rénovée : elle signe la réception du chantier sur un téléphone",
       camilleProject: "Une particulière photographie sa salle de bain ancienne avec son téléphone",
-      camilleArtisans:
-        "Une particulière sur son canapé choisit des artisans vérifiés dans l'application MENAO",
+      camilleArtisans: "Une particulière sur son canapé choisit ses artisans sur son téléphone",
       camilleQuote: "Une particulière à sa table de cuisine signe un devis sur son téléphone",
       camilleFollow:
         "Une particulière en terrasse de café suit l'avancement de son chantier sur son téléphone",

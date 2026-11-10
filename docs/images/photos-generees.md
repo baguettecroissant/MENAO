@@ -701,7 +701,7 @@ Neuf scènes avec deux personnages récurrents : Julien, artisan plombier, et Ca
 - Constance des visages : chaque scène a été générée avec la fiche de son personnage en image de référence (quatre vues sur fond neutre). Les deux fiches ont été produites le même jour par le propriétaire du projet avec son propre outil de génération, à partir de photos des séries d'octobre ; le nom de cet outil n'est pas connu, il n'est donc pas attribué.
 - Écrans : les téléphones étaient générés avec un écran noir. Les écrans visibles sont de vraies captures de l'application (personnes et données fictives), incrustées ensuite ; rien de l'interface n'est généré.
 - Deux essais par scène, un seul retenu. Prompts exacts, coûts et essais écartés : journal de génération conservé hors du dépôt.
-- Mise à jour du même soir (ADR 0273) : `julien-camionnette`, `reception-chantier`, `camille-projet`, `camille-devis` et `camille-suivi` ont été refaites sans écran incrusté ; leurs lignes ci-dessous décrivent l'ancienne version, la nouvelle est dans la série suivante.
+- Mise à jour du même soir (ADR 0273) : `julien-camionnette`, `reception-chantier`, `camille-projet`, `camille-artisans`, `camille-devis` et `camille-suivi` ont été refaites sans écran incrusté ; leurs lignes ci-dessous décrivent l'ancienne version, la nouvelle est dans la série suivante.
 
 | Fichier | Prompt exact | Écran incrusté | Dimensions | Poids (Ko) |
 |---|---|---|---|---:|
@@ -826,7 +826,7 @@ Avoid: any text, letters, numbers, logos, brand names, watermarks, readable sign
 
 ## Série du 10 novembre 2026 (soir) : téléphone tenu naturellement et côte des Alpes-Maritimes (ADR 0273)
 
-Cinq scènes de la série précédente sont refaites : le téléphone y était tourné vers l'objectif (pour y incruster un écran), ce qui donnait des poses fausses. Ici, la personne regarde son écran, on voit le dos du téléphone, et aucun écran n'est incrusté. Les fichiers gardent leur nom ; les prompts de la série précédente, plus haut, ne décrivent donc plus ces cinq images. S'y ajoute la photo de la section « Où intervient MENAO ? » de l'accueil.
+Six scènes de la série précédente sont refaites : le téléphone y était tourné vers l'objectif (pour y incruster un écran), ce qui donnait des poses fausses. Ici, la personne regarde son écran, on voit le dos du téléphone, et aucun écran n'est incrusté. Les fichiers gardent leur nom ; les prompts de la série précédente, plus haut, ne décrivent donc plus ces six images. S'y ajoute la photo de la section « Où intervient MENAO ? » de l'accueil.
 
 - Outil : OpenRouter, API d'images. Modèle : `openai/gpt-image-2.6-sunburst`, 2 400 × 1 600, qualité `high`.
 - Références jointes : les fiches de personnage P1 (Julien) et P2 (Camille) ; aucune pour la côte.
@@ -840,6 +840,7 @@ Cinq scènes de la série précédente sont refaites : le téléphone y était t
 | [apps/web/public/images/scenes/camille-devis.webp](../../apps/web/public/images/scenes/camille-devis.webp) | [Prompt exact](#prompt-v2-camille-devis) | essai 1 | 1600 × 1067 | 141,632 |
 | [apps/web/public/images/scenes/camille-suivi.webp](../../apps/web/public/images/scenes/camille-suivi.webp) | [Prompt exact](#prompt-v2-camille-suivi) | essai 1 | 1600 × 1067 | 140,068 |
 | [apps/web/public/images/scenes/cote-alpes-maritimes.webp](../../apps/web/public/images/scenes/cote-alpes-maritimes.webp) | [Prompt exact](#prompt-v2-cote-alpes-maritimes) | essai 2 | 1600 × 1067 | 377,118 |
+| [apps/web/public/images/scenes/camille-artisans.webp](../../apps/web/public/images/scenes/camille-artisans.webp) | [Prompt exact](#prompt-v2-camille-artisans) | essai 1 | 1600 × 1067 | 123,028 |
 
 ### Prompt julien-camionnette (version du soir)
 
@@ -910,4 +911,16 @@ Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resol
 High aerial photograph along the French Riviera coastline in the Alpes-Maritimes, late afternoon: a succession of seaside towns with terracotta roofs and pale façades, small harbours and beaches, strung between green wooded hills on the left and the Mediterranean on the right, the water going from clear turquoise near the shore to deep navy blue; capes and bays recede one after another toward the hazy horizon, first foothills of the Alps in the far distance. Composition: the coastline runs diagonally from the bottom-left corner to the upper-right, land on the left half, sea on the right half.
 Style: authentic landscape photograph, exceptional photorealism, full-frame 35 mm lens at f/8, everything sharp, light photographic grain. Warm late-afternoon Côte d'Azur light, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, terracotta, cream and deep navy-blue sea, restrained contrast, soft atmospheric haze in the distance.
 Avoid: any text, letters, numbers, logos, watermarks, readable signage, recognisable people, famous monuments reproduced exactly, cruise ships, cars in the foreground, HDR, oversaturated postcard colours, teal-orange cinematic grading, CGI, 3D render, illustration, tilt-shift, fisheye distortion. Illustrative image. Return one single photograph: no collage, no border.
+```
+
+### Prompt camille-artisans (version du soir)
+
+<a id="prompt-v2-camille-artisans"></a>
+
+```text
+Output: one landscape 3:2 photograph, 2400 x 1600 px or the highest native resolution available.
+Camille sits comfortably on a light linen sofa in a bright Nice living room, tall window with pale shutters, olive plant, low wooden table. She holds her smartphone in one hand at chest height and scrolls with her thumb, looking down at it with a calm, concentrated half-smile. CAMILLE: fictional French woman, 38 years old, slim, light olive skin, shoulder-length wavy dark-brown hair, dark-brown eyes, natural minimal make-up, warm intelligent face. She is the SAME WOMAN as in the attached Camille reference images: keep her face, hair and build identical. Outfit: cream linen shirt with sleeves rolled, dark straight jeans, no jewellery except a thin watch. Composition: three-quarter front view at seated eye level, Camille right of centre from the knees up, the bright living room and the window softly blurred on the left.
+Phone (critical): a modern unbranded smartphone used NATURALLY, exactly the way people really use a phone. Its screen faces the person who is looking at it, never the camera. The camera sees only the plain dark matte BACK of the phone or its thin edge; the display is not visible, or at most a thin foreshortened sliver. No logo on the back. The eyes of the person are clearly directed at the screen. Relaxed natural grip with correct hand anatomy: thumb on the near side, the other fingers wrapped behind the phone, wrist straight, nothing twisted. The phone is small in the frame, it is never presented, raised or shown to the camera like in an advertisement.
+Style: authentic candid documentary photograph, exceptional photorealism, full-frame 35-40 mm lens at f/4, realistic skin pores and small imperfections, natural hair and fabric texture, light photographic grain. Soft natural Côte d'Azur daylight, gentle neutral-warm grading with subtle cool blue shadows, palette of pale limestone, cream and navy blue, restrained contrast. Correct human anatomy, five fingers per hand, natural grip. Homogeneous MENAO series aesthetic, same look as the reference images.
+Avoid: any text, letters, numbers, logos, brand names, watermarks, readable signage, license plates, UI or generated screen content, glossy stock-photo posing, wide toothy smiles, plastic or retouched skin, excessive bokeh, HDR, teal-orange cinematic grading, CGI, 3D render, illustration, extra or fused fingers, distorted phone, phone screen turned toward the camera, phone held up beside the face, hand twisted backwards, duplicated objects, children, celebrities. Fictional illustrative scene, not a real customer or a real tradesperson. Return one single photograph: no collage, no border.
 ```
