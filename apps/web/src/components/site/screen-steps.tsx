@@ -4,8 +4,8 @@ import { PhoneMockup } from "./device-mockups";
 
 /**
  * Étapes illustrées par les vrais écrans de l'application (ADR 0147) : quatre colonnes sur grand
- * écran, carrousel horizontal sur mobile pour garder la page courte. Le téléphone sort du bas de
- * son encart.
+ * écran, avec l'écran entier et un décalage une colonne sur deux (ADR 0270) ; carrousel horizontal
+ * sur mobile pour garder la page courte, où le téléphone sort du bas de son encart.
  */
 export function ScreenSteps({
   items,
@@ -23,12 +23,14 @@ export function ScreenSteps({
             key={step.title}
             className="flex w-[78%] shrink-0 snap-center flex-col gap-5 sm:w-[46%] md:w-auto"
           >
-            <div className="relative h-72 overflow-hidden rounded-card bg-[linear-gradient(180deg,var(--color-primary-soft)_0%,var(--color-primary-softer)_100%)] px-8 pt-7">
+            <div
+              className={`relative h-72 overflow-hidden rounded-card bg-[linear-gradient(180deg,var(--color-primary-soft)_0%,var(--color-primary-softer)_100%)] px-8 pt-7 md:h-auto md:px-4 lg:px-6 ${i % 2 === 0 ? "md:pt-7 md:pb-14" : "md:pt-14 md:pb-7"}`}
+            >
               {key && (
                 <PhoneMockup
                   screen={APP_SCREENS[key]}
                   alt={fr.site.mockups.screens[key]}
-                  className="mx-auto w-full max-w-[13rem]"
+                  className="mx-auto w-full max-w-[13rem] md:max-w-[15.75rem]"
                 />
               )}
             </div>

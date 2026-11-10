@@ -977,9 +977,30 @@ export const fr = {
         clientAvis:
           "Application MENAO : l'avis du client noté sur la qualité, les délais et la communication",
         proAccueil:
-          "Application MENAO pour les artisans : l'accueil avec les clients en attente de devis, l'encaissé du mois et les choses à faire",
+          "Application MENAO pour les artisans : l'accueil avec l'encaissé du mois, l'argent à venir et les choses à faire",
+        proDemandes:
+          "Application MENAO pour les artisans : les demandes à traiter, avec le délai pour répondre",
         webPro:
-          "Espace pro MENAO sur ordinateur : le tableau de bord avec les nouvelles demandes, la visite du jour et les devis à envoyer",
+          "Espace pro MENAO sur ordinateur : le tableau de bord avec l'encaissé du mois, les demandes à traiter, le chiffre d'affaires et les chantiers en cours",
+      },
+      // Parcours du bandeau de l'Espace Pro (ADR 0270) : valeurs d'exemple, celles des écrans.
+      flow: {
+        request: {
+          eyebrow: "Nouvelle demande",
+          title: "Douche à l'italienne à la place de la baignoire",
+          sub: "06000 Nice · photos jointes",
+          pill: "46 h pour répondre",
+        },
+        signed: {
+          eyebrow: "Devis signé en ligne",
+          title: "4 854,30 € TTC",
+          sub: "Devis D-2026-0017 · Camille Martin",
+        },
+        deposit: {
+          eyebrow: "Acompte reçu",
+          title: "+ 1 456,29 €",
+          sub: "Versés sur votre compte",
+        },
       },
       deposit: {
         title: "Acompte reçu",
