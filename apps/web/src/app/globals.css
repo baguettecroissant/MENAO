@@ -60,6 +60,22 @@
   .animate-menao-float {
     animation: menao-float 6s ease-in-out infinite;
   }
+  /* Clignement des yeux de l'avatar de l'assistant (ADR 0272) : bref, toutes les six secondes. */
+  @keyframes menao-blink {
+    0%,
+    94%,
+    100% {
+      transform: scaleY(1);
+    }
+    97% {
+      transform: scaleY(0.1);
+    }
+  }
+  .animate-menao-blink {
+    animation: menao-blink 6s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
   /* Onde sonore de l'illustration de la dictée. */
   @keyframes menao-wave {
     0%,
@@ -327,6 +343,7 @@
     .animate-ping,
     .animate-menao-pulse,
     .animate-menao-float,
+    .animate-menao-blink,
     .animate-menao-wave,
     .animate-menao-ripple,
     .animate-menao-orbit,
