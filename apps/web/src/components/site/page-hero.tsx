@@ -2,11 +2,14 @@ import type { ReactNode } from "react";
 import { LogoMark } from "@/components/brand/logo";
 import { frenchSpacing } from "@/lib/site/typography";
 import { Breadcrumbs, type Crumb } from "./breadcrumbs";
+import { ScenePhoto, type SceneKey } from "./scene-photo";
 
 /**
  * Bandeau d'en-tête des pages du site (même forme que l'accueil et l'Espace Pro) : fil d'Ariane,
  * surtitre, titre avec sa partie accentuée, chapeau, actions et illustration facultative.
  * « brand » : dégradé MENAO (pages de présentation) ; « soft » : bleu très clair (pages légales).
+ * `photo` (ADR 0276) : une photo occupe la droite du bandeau, fondue dans le dégradé ; sur mobile
+ * elle passe au-dessus du titre. `overlay` : élément posé sur la photo, placé par la page.
  */
 export function PageHero({
   id,
@@ -17,6 +20,8 @@ export function PageHero({
   breadcrumbs,
   actions,
   aside,
+  photo,
+  overlay,
   children,
   tone = "brand",
 }: {
@@ -28,6 +33,8 @@ export function PageHero({
   breadcrumbs?: readonly Crumb[];
   actions?: ReactNode;
   aside?: ReactNode;
+  photo?: { scene: SceneKey; position?: string };
+  overlay?: ReactNode;
   children?: ReactNode;
   tone?: "brand" | "soft";
 }) {
@@ -39,18 +46,32 @@ export function PageHero({
           brand
             ? "bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_45%,#4869f6_80%,#8ea4fb_100%)] py-12 text-white sm:py-16 lg:py-20"
             : "bg-[linear-gradient(120deg,#e4eafd_0%,#f1f4fe_55%,#f9f7f0_100%)] py-10 text-foreground sm:py-14"
-        }`}
+        } ${photo ? `lg:flex lg:flex-col lg:justify-center ${overlay ? "lg:min-h-[36rem]" : "lg:min-h-[29rem]"}` : ""}`}
       >
-        <LogoMark
-          tone={brand ? "white" : "brand"}
-          className={`absolute -right-16 -bottom-24 hidden size-[26rem] animate-menao-float [animation-duration:9s] lg:block ${brand ? "opacity-[0.07]" : "opacity-[0.06]"}`}
-        />
+        {photo ? (
+          <div className="-mx-6 -mt-12 mb-8 h-56 [mask-image:linear-gradient(180deg,#000_55%,transparent)] sm:-mx-12 sm:-mt-16 sm:h-72 lg:absolute lg:inset-y-0 lg:right-0 lg:m-0 lg:h-auto lg:w-[48%] lg:[mask-image:linear-gradient(90deg,transparent,#000_38%)]">
+            <ScenePhoto
+              scene={photo.scene}
+              sizes="(min-width: 1024px) 690px, 100vw"
+              position={photo.position}
+              className="size-full"
+              priority
+            />
+          </div>
+        ) : (
+          <LogoMark
+            tone={brand ? "white" : "brand"}
+            className={`absolute -right-16 -bottom-24 hidden size-[26rem] animate-menao-float [animation-duration:9s] lg:block ${brand ? "opacity-[0.07]" : "opacity-[0.06]"}`}
+          />
+        )}
         <div
-          className={`relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 ${
+          className={`relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-10 ${
             aside ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12" : ""
           }`}
         >
-          <div className="flex animate-menao-rise flex-col gap-5">
+          <div
+            className={`flex animate-menao-rise flex-col gap-5 ${photo ? "lg:max-w-[52%] lg:pr-6" : ""}`}
+          >
             {breadcrumbs && (
               <Breadcrumbs items={breadcrumbs} tone={brand ? "inverse" : "default"} />
             )}
@@ -99,6 +120,7 @@ export function PageHero({
             </div>
           )}
         </div>
+        {overlay}
       </div>
     </section>
   );

@@ -1,9 +1,10 @@
-import { ArrowRight, BadgeCheck, MapPin, MessageCircle, Star, Wallet } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { CtaBand } from "@/components/site/cta-band";
 import { JsonLd } from "@/components/site/json-ld";
 import { PageHero } from "@/components/site/page-hero";
+import { ScenePhoto } from "@/components/site/scene-photo";
 import { SectionHeading } from "@/components/site/section-heading";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -11,7 +12,8 @@ import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, WEBSITE_ID, organizationJsonLd } from "@/lib/site/structured-data";
 
 const t = fr.pages.about;
-const ICONS = [BadgeCheck, Wallet, MessageCircle, Star];
+// Les trois chiffres de l'accueil, au-dessus des engagements correspondants (le quatrième : avis).
+const FIGURES: readonly ({ value: string } | undefined)[] = fr.trust.stats;
 
 export const metadata: Metadata = {
   title: `${t.title} — MENAO`,
@@ -20,9 +22,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * « À propos » (ADR 0134) : mission, engagements et zone de MENAO, avec son identité en données
- * structurées, pour les visiteurs, Google et les assistants IA. Uniquement des faits déjà affichés
- * sur le site.
+ * « À propos » (ADR 0134, refonte ADR 0276) : mission, engagements et zone de MENAO, avec son
+ * identité en données structurées, pour les visiteurs, Google et les assistants IA. Uniquement
+ * des faits déjà affichés sur le site.
  */
 export default function AboutPage() {
   return (
@@ -53,90 +55,158 @@ export default function AboutPage() {
             <ArrowRight aria-hidden="true" className="size-4" />
           </ButtonLink>
         }
+        photo={{ scene: "meeting", position: "50% 30%" }}
       />
 
-      <section aria-labelledby="about-mission" className="py-16 sm:py-20">
-        <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 sm:px-6">
-          <h2 id="about-mission" className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {t.missionTitle}
-          </h2>
-          {t.mission.map((paragraph) => (
-            <p
-              key={paragraph}
-              className="text-lg leading-relaxed text-pretty text-muted-foreground"
+      {/* Mission : le premier paragraphe en grand, la particulière et l'artisan côte à côte. */}
+      <section aria-labelledby="about-mission" className="py-16 sm:py-24">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:gap-16">
+          <div className="flex flex-col gap-5">
+            <h2
+              id="about-mission"
+              className="text-[2rem] leading-[1.06] font-bold tracking-tight sm:text-[2.75rem]"
             >
-              {paragraph}
-            </p>
-          ))}
+              {t.missionTitle}
+            </h2>
+            {t.mission.map((paragraph, i) => (
+              <p
+                key={paragraph}
+                className={
+                  i === 0
+                    ? "text-lg leading-relaxed font-medium text-pretty sm:text-xl"
+                    : "leading-relaxed text-pretty text-label sm:text-lg"
+                }
+              >
+                {paragraph}
+              </p>
+            ))}
+          </div>
+          <div className="relative mx-auto grid h-[22rem] w-full max-w-[32rem] grid-cols-2 gap-4 sm:h-[30rem] sm:gap-5">
+            <div className="mb-10 overflow-hidden rounded-hero sm:mb-20">
+              <ScenePhoto
+                scene="camillePortrait"
+                sizes="(min-width: 640px) 250px, 46vw"
+                position="20% 30%"
+                className="size-full"
+              />
+            </div>
+            <div className="mt-10 overflow-hidden rounded-hero sm:mt-20">
+              <ScenePhoto
+                scene="julienPortrait"
+                sizes="(min-width: 640px) 250px, 46vw"
+                position="80% 25%"
+                className="size-full"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section aria-labelledby="about-commitments" className="bg-surface py-16 sm:py-20">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6">
-          <SectionHeading id="about-commitments" eyebrow={t.eyebrow} title={t.commitmentsTitle} />
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {t.commitments.map((item, i) => {
-              const Icon = ICONS[i] ?? BadgeCheck;
-              return (
+      {/* Engagements : les trois chiffres de l'accueil, puis les avis. */}
+      <section aria-labelledby="about-commitments" className="px-2 sm:px-4">
+        <div className="mx-auto max-w-[1440px] rounded-hero bg-foreground px-6 py-14 text-white sm:px-12 sm:py-20">
+          <div className="mx-auto flex max-w-6xl flex-col gap-10">
+            <SectionHeading
+              id="about-commitments"
+              eyebrow={t.eyebrow}
+              title={t.commitmentsTitle}
+              align="left"
+              tone="inverse"
+            />
+            <ul className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-0">
+              {t.commitments.map((item, i) => (
                 <li
                   key={item.title}
-                  className="flex flex-col gap-3 rounded-card border border-border bg-background p-5"
+                  className="reveal flex flex-col gap-3 lg:border-l lg:border-white/15 lg:px-7 lg:first:border-l-0 lg:first:pl-0"
                 >
-                  <span className="flex size-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
-                  <h3 className="font-medium">{item.title}</h3>
-                  <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+                  {FIGURES[i] ? (
+                    <span
+                      aria-hidden="true"
+                      className="font-display text-[3.25rem] leading-none font-bold tracking-tight"
+                    >
+                      {FIGURES[i].value}
+                    </span>
+                  ) : (
+                    <span aria-hidden="true" className="flex h-[3.25rem] items-center gap-1">
+                      {Array.from({ length: 5 }, (_, n) => (
+                        <Star key={n} className="size-7 fill-[#f5b301] text-[#f5b301]" />
+                      ))}
+                    </span>
+                  )}
+                  <h3 className="font-display text-xl leading-snug font-bold tracking-tight">
+                    {item.title}
+                  </h3>
+                  <p className="text-[0.9375rem] leading-relaxed text-pretty text-white/75">
                     {item.text}
                   </p>
                 </li>
-              );
-            })}
-          </ul>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
-      <section aria-labelledby="about-area" className="py-16 sm:py-20">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-2">
-          <div className="flex flex-col gap-4">
+      {/* Zone : le texte, et la photo de la côte de l'accueil. */}
+      <section aria-labelledby="about-area" className="py-16 sm:py-24">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,36rem)] lg:gap-16">
+          <div className="flex flex-col gap-5">
             <h2
               id="about-area"
-              className="flex items-center gap-2 text-2xl font-bold tracking-tight"
+              className="text-[2rem] leading-[1.06] font-bold tracking-tight text-balance sm:text-[2.75rem]"
             >
-              <MapPin aria-hidden="true" className="size-6 text-primary" />
               {t.areaTitle}
             </h2>
-            <p className="text-lg leading-relaxed text-pretty text-muted-foreground">{t.area}</p>
-            <Link
+            <p className="text-pretty text-label sm:text-lg">{t.area}</p>
+            <ButtonLink
               href={"/#metiers" as Route}
-              className="inline-flex items-center gap-1 self-start font-medium text-primary-strong underline-offset-2 hover:underline"
+              variant="secondary"
+              block={false}
+              className="self-start"
             >
               {t.tradesLink}
               <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
+            </ButtonLink>
           </div>
-          <nav aria-labelledby="about-more" className="flex flex-col gap-4">
-            <h2 id="about-more" className="text-2xl font-bold tracking-tight">
-              {t.moreTitle}
-            </h2>
-            <ul className="flex flex-col divide-y divide-border rounded-card border border-border bg-surface">
-              {t.more.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href as Route}
-                    className="flex min-h-12 items-center justify-between px-4 font-medium hover:bg-background"
-                  >
-                    {link.label}
-                    <ArrowRight aria-hidden="true" className="size-4 text-muted-foreground" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div className="aspect-[3/2] overflow-hidden rounded-hero">
+            <ScenePhoto
+              scene="coast"
+              sizes="(min-width: 1024px) 576px, 92vw"
+              className="size-full"
+            />
+          </div>
         </div>
       </section>
 
-      <div className="pb-2">
+      <nav aria-labelledby="about-more" className="bg-surface py-14 sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6">
+          <h2
+            id="about-more"
+            className="text-[1.75rem] leading-[1.08] font-bold tracking-tight sm:text-[2.25rem]"
+          >
+            {t.moreTitle}
+          </h2>
+          <ul className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+            {t.more.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href as Route}
+                  className="group flex min-h-[4.75rem] items-center justify-between gap-3 rounded-[1.25rem] border border-border bg-background px-6 py-3 font-display text-lg leading-snug font-bold tracking-tight transition hover:border-primary/40 focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none"
+                >
+                  {link.label}
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
+      <div className="bg-surface pb-2">
         <CtaBand
           id="about-cta"
           title={fr.site.cta.title}
@@ -144,6 +214,7 @@ export default function AboutPage() {
           action={{ href: "/recherche", label: fr.site.cta.action }}
           secondary={{ href: "/pro", label: fr.nav.pro }}
           reassurance={fr.site.cta.reassurance}
+          photo={{ scene: "camillePortrait", position: "22% 30%" }}
         />
       </div>
     </main>

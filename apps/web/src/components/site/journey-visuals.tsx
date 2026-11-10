@@ -6,7 +6,6 @@ import {
   LockKeyhole,
   MailCheck,
   Signature,
-  Star,
 } from "lucide-react";
 import { fr } from "@/i18n/fr";
 
@@ -186,49 +185,6 @@ export function ReceptionVisual() {
         <span className="flex min-h-9 items-center justify-center rounded-button bg-primary text-xs font-medium text-primary-foreground">
           {t.receptionSign}
         </span>
-      </div>
-    </div>
-  );
-}
-
-const REVIEW_CRITERIA = ["quality", "delays", "communication"] as const;
-const REVIEW_LEVELS = [92, 84, 88];
-
-/** Formulaire d'avis (critères de l'avis MENAO), ouvert après la réception. */
-export function ReviewVisual() {
-  return (
-    <div
-      role="img"
-      aria-label={t.reviewLabel}
-      className="w-full rounded-card bg-surface text-foreground p-4 shadow-raised"
-    >
-      <div aria-hidden="true" className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex gap-0.5">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Star key={i} className="size-4 fill-primary text-primary" />
-            ))}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-chip bg-success-soft px-2 py-0.5 text-[0.6875rem] font-medium text-success">
-            <CircleCheck className="size-3" />
-            {t.reviewBadge}
-          </span>
-        </div>
-        <ul className="flex flex-col gap-2">
-          {REVIEW_CRITERIA.map((criterion, i) => (
-            <li key={criterion} className="flex flex-col gap-1">
-              <span className="text-[0.6875rem] text-muted-foreground">
-                {fr.review.criteria[criterion]}
-              </span>
-              <span className="h-1.5 rounded-full bg-background">
-                <span
-                  className="fill-x-on-scroll block h-full origin-left rounded-full bg-primary"
-                  style={{ width: `${REVIEW_LEVELS[i]}%` }}
-                />
-              </span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

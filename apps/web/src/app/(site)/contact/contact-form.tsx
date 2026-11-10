@@ -26,23 +26,25 @@ export function ContactForm() {
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       {state.error && <Alert tone="error">{state.error}</Alert>}
-      <Field
-        label={t.email}
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        hint={t.privacy}
-        defaultValue={state.values?.email}
-        errors={errors.email}
-      />
-      <Field
-        label={t.subject}
-        name="subject"
-        maxLength={150}
-        defaultValue={state.values?.subject}
-        errors={errors.subject}
-      />
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        <Field
+          label={t.email}
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          hint={t.privacy}
+          defaultValue={state.values?.email}
+          errors={errors.email}
+        />
+        <Field
+          label={t.subject}
+          name="subject"
+          maxLength={150}
+          defaultValue={state.values?.subject}
+          errors={errors.subject}
+        />
+      </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="contact-message" className="text-sm font-medium text-foreground">
           {t.message}
@@ -60,7 +62,7 @@ export function ContactForm() {
         />
         {errors.message && <FieldError id="contact-message-error">{errors.message[0]}</FieldError>}
       </div>
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" block={false} disabled={pending} className="self-start">
         {t.submit}
       </Button>
     </form>
