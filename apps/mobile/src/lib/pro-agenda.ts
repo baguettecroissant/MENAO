@@ -24,7 +24,7 @@ export type AgendaAbsence = Absence & { id: string; label: string | null };
 
 /**
  * Élément de l'agenda avec ce que la journée affiche en plus (refonte « Nette », lot 4) : nom du
- * client du chantier, et rendez-vous pris par la secrétaire (créneau bloqué par Camille, ADR 0232)
+ * client du chantier, et rendez-vous pris par la secrétaire (créneau bloqué par Manon, ADR 0232)
  * avec le motif de l'appel, le nom et la commune de l'appelant.
  */
 export type AgendaEntry = AgendaItem & {

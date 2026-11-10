@@ -77,7 +77,7 @@ describe("e-mails de la secrétaire vocale (ADR 0225)", () => {
   it("rendus HTML et texte, avec le pied de page de la secrétaire", () => {
     const link = renderVoiceSignupLink("Jean", SITE);
     expect(link.html).toContain("https://menao.example/pro/inscription");
-    expect(link.text).toContain("Camille, l'assistante téléphonique de MENAO");
+    expect(link.text).toContain("Manon, l'assistante téléphonique de MENAO");
     const dossier = renderVoiceDossier(
       { firstName: "Jean", status: "en_verification", signupMissing: [], activationMissing: [] },
       SITE,
@@ -129,7 +129,7 @@ describe("rendez-vous avec le conseiller (ADR 0226)", () => {
         },
         SITE,
       ).text,
-    ).toContain("Camille");
+    ).toContain("Manon");
   });
 
   it("e-mail au commercial : jamais de coordonnées, lien vers Ma journée", () => {

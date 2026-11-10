@@ -13,7 +13,7 @@ import {
   voiceToolDefinitions,
 } from "../src/voice-assistant";
 
-describe("devis dicté en conversation avec Camille (ADR 0234)", () => {
+describe("devis dicté en conversation avec Manon (ADR 0234)", () => {
   const artisan = "11111111-1111-4111-8111-111111111111";
   const chantier = "33333333-3333-4333-8333-333333333333";
   const now = new Date("2026-11-06T09:00:00Z");
@@ -61,7 +61,7 @@ describe("devis dicté en conversation avec Camille (ADR 0234)", () => {
     expect(eurosSpoken(100_000_000)).toBe("un million d'euros");
   });
 
-  it("prix habituels et TVA dits à Camille", () => {
+  it("prix habituels et TVA dits à Manon", () => {
     expect(
       usualPricesText([
         { designation: "Pose de carrelage au sol", unite: "m2", prix_ht_centimes: 4500 },

@@ -2507,19 +2507,19 @@ export const fr = {
         "Aucune ligne n'a pu être tirée de la dictée. Citez les fournitures, les quantités et les prix.",
       unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
     },
-    // Devis avec Camille (ADR 0235) : conversation dans une page intégrée, comme sur le site.
+    // Devis avec Manon (ADR 0235) : conversation dans une page intégrée, comme sur le site.
     conversation: {
-      open: "Dicter avec Camille",
-      close: "Fermer l'appel avec Camille",
+      open: "Dicter avec Manon",
+      close: "Fermer l'appel avec Manon",
       loading: "Préparation de l'appel…",
       updated: (n: number) =>
         n <= 1
-          ? "Camille a proposé 1 ligne : vérifiez-la."
-          : `Camille a proposé ${n} lignes : vérifiez-les.`,
+          ? "Manon a proposé 1 ligne : vérifiez-la."
+          : `Manon a proposé ${n} lignes : vérifiez-les.`,
       draft: (n: number) =>
         n <= 1
-          ? "Lors de votre dernier appel, Camille a préparé 1 ligne."
-          : `Lors de votre dernier appel, Camille a préparé ${n} lignes.`,
+          ? "Lors de votre dernier appel, Manon a préparé 1 ligne."
+          : `Lors de votre dernier appel, Manon a préparé ${n} lignes.`,
       draftAdd: "Ajouter au devis",
       draftDiscard: "Écarter",
     },
@@ -3283,7 +3283,7 @@ export const fr = {
     freeBlock: "Bloquer",
     freeBlockLabel: (day: string, from: string, to: string) =>
       `Bloquer un créneau le ${day} de ${from} à ${to}`,
-    secretary: "Prise par Camille",
+    secretary: "Prise par Manon",
     previousWeek: "Semaine précédente",
     nextWeek: "Semaine suivante",
     thisWeek: "Aujourd'hui",

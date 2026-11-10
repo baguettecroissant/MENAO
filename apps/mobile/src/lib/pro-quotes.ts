@@ -50,9 +50,9 @@ export type QuoteDraft = {
   /** Un brouillon existe déjà en base. */
   saved: boolean;
   assujettiTva: boolean;
-  /** « Dicter avec Camille » inclus dans la formule (ADR 0234, 0235). */
+  /** « Dicter avec Manon » inclus dans la formule (ADR 0234, 0235). */
   conversation: boolean;
-  /** Lignes d'un appel précédent avec Camille, pas encore reprises ni écartées. */
+  /** Lignes d'un appel précédent avec Manon, pas encore reprises ni écartées. */
   voiceDraft: QuoteLineInput[] | null;
   /** En-tête de l'éditeur : titre du chantier et « Client · CP Ville » (null si inconnus). */
   chantierTitle: string | null;
@@ -136,7 +136,7 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
 }
 
 // ---------------------------------------------------------------------------
-// Devis avec Camille (ADR 0235)
+// Devis avec Manon (ADR 0235)
 // ---------------------------------------------------------------------------
 
 /** Session de l'artisan, passée à la page intégrée de l'appel (jamais dans l'adresse). */
@@ -145,7 +145,7 @@ export async function voiceSessionToken(): Promise<string | null> {
   return data.session?.access_token ?? null;
 }
 
-/** Lignes enregistrées par Camille pendant cet appel : elles font foi à la fin de l'appel. */
+/** Lignes enregistrées par Manon pendant cet appel : elles font foi à la fin de l'appel. */
 export async function voiceQuoteDraftForCall(
   chantierId: string,
   callId: string,
@@ -160,7 +160,7 @@ export async function voiceQuoteDraftForCall(
   return voiceDraftLines(data?.lines);
 }
 
-/** Brouillons de Camille repris dans le devis enregistré, ou écartés par l'artisan. */
+/** Brouillons de Manon repris dans le devis enregistré, ou écartés par l'artisan. */
 export async function settleVoiceQuoteDrafts(chantierId: string): Promise<void> {
   await supabase.rpc("settle_voice_quote_drafts", { p_chantier_id: chantierId });
 }

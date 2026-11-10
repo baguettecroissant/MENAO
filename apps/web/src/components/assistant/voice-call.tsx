@@ -10,7 +10,7 @@ import { fr } from "@/i18n/fr";
 
 const t = fr.pro.assistant.voice;
 const PUBLIC_KEY = env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
-/** Camille côté artisans (pages Pro, ADR 0225) ou côté particuliers (demande de travaux, ADR 0227). */
+/** Manon côté artisans (pages Pro, ADR 0225) ou côté particuliers (demande de travaux, ADR 0227). */
 const ASSISTANTS: Record<VoiceSide, string | undefined> = {
   pro: env.NEXT_PUBLIC_VAPI_ASSISTANT_ID,
   client: env.NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID,
@@ -30,9 +30,9 @@ export type VoiceSession =
 type CallState = "idle" | "connecting" | "live" | "ended" | "failed";
 
 /**
- * Appel web avec la secrétaire vocale « Camille » (F-75, ADR 0225) : la bibliothèque de Vapi
+ * Appel web avec la secrétaire vocale « Manon » (F-75, ADR 0225) : la bibliothèque de Vapi
  * (et son transport audio) n'est téléchargée qu'au premier appel. Le micro est demandé par le
- * navigateur au démarrage ; Camille annonce qu'elle est une IA dans sa première phrase.
+ * navigateur au démarrage ; Manon annonce qu'elle est une IA dans sa première phrase.
  */
 export function VoiceCall({
   assistant = "pro",
@@ -117,7 +117,7 @@ export function VoiceCall({
         });
         vapi.current = client;
       }
-      // Une seule Camille (ADR 0228) : les deux assistantes en groupe, celle de la page d'abord,
+      // Une seule Manon (ADR 0228) : les deux assistantes en groupe, celle de la page d'abord,
       // pour passer la main si l'appelant est de l'autre côté. Une seule configurée : elle seule.
       if (session) {
         setRefusal(null);

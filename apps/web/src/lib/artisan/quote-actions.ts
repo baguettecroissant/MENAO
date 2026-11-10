@@ -37,10 +37,10 @@ export async function saveQuoteDraft(chantierId: string, lines: unknown): Promis
 }
 
 // ---------------------------------------------------------------------------
-// Devis en conversation avec Camille (F-85, ADR 0234)
+// Devis en conversation avec Manon (F-85, ADR 0234)
 // ---------------------------------------------------------------------------
 
-/** Appel avec Camille pour ce devis : jeton, contexte du chantier et assistante (voice-session). */
+/** Appel avec Manon pour ce devis : jeton, contexte du chantier et assistante (voice-session). */
 export async function prepareQuoteCall(chantierId: string): Promise<VoiceSession> {
   const t = fr.pro.quote.conversation;
   if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
@@ -72,7 +72,7 @@ export async function prepareQuoteCall(chantierId: string): Promise<VoiceSession
   return { error: t.errors[status ?? ""] ?? t.errors.generic ?? fr.errors.generic };
 }
 
-/** Lignes enregistrées par Camille pendant cet appel : elles font foi à la fin de l'appel. */
+/** Lignes enregistrées par Manon pendant cet appel : elles font foi à la fin de l'appel. */
 export async function voiceQuoteDraftForCall(
   chantierId: string,
   callId: string,
@@ -88,7 +88,7 @@ export async function voiceQuoteDraftForCall(
   return voiceDraftLines(data?.lines);
 }
 
-/** Brouillons de Camille repris dans le devis enregistré, ou écartés par l'artisan. */
+/** Brouillons de Manon repris dans le devis enregistré, ou écartés par l'artisan. */
 export async function settleVoiceQuoteDrafts(chantierId: string): Promise<void> {
   if (!z.uuid().safeParse(chantierId).success) return;
   const { supabase } = await requireArtisan();

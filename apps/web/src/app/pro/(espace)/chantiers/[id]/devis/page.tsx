@@ -41,7 +41,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
       .maybeSingle(),
     supabase.from("artisans").select("assujetti_tva").eq("id", artisanId).single(),
     supabase.from("quote_dictations").select("transcript").eq("chantier_id", id).maybeSingle(),
-    // Devis avec Camille (ADR 0234) : inclus dans la formule ? Lignes d'un appel non reprises ?
+    // Devis avec Manon (ADR 0234) : inclus dans la formule ? Lignes d'un appel non reprises ?
     supabase.rpc("my_ai_agents"),
     supabase
       .from("voice_quote_drafts")

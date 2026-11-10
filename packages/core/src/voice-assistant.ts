@@ -1,5 +1,5 @@
 /**
- * Secrétaire vocale « Camille » (F-75, ADR 0225) : assistante IA qui répond aux artisans par la
+ * Secrétaire vocale « Manon » (F-75, ADR 0225) : assistante IA qui répond aux artisans par la
  * voix (appel web depuis le site pendant les essais, numéro de téléphone ensuite), sur la
  * plateforme Vapi. Pendant la conversation, Vapi appelle nos outils (Edge Function
  * voice-assistant) : envoyer le lien d'inscription par e-mail, envoyer l'état du dossier à
@@ -608,7 +608,7 @@ export function parisSlotSpoken(at: Date): string {
 }
 
 /**
- * Une seule Camille (F-78, ADR 0228) : les deux assistantes Vapi (artisans et particuliers) forment
+ * Une seule Manon (F-78, ADR 0228) : les deux assistantes Vapi (artisans et particuliers) forment
  * un groupe dans chaque appel. Celle de la page répond ; si l'appelant est de l'autre côté, elle
  * passe la main sans rien dire (même voix, même prénom) et la conversation continue : la consigne
  * est remplacée, l'historique est gardé.
@@ -617,14 +617,14 @@ export function parisSlotSpoken(at: Date): string {
 export type VoiceSide = "pro" | "client";
 
 export const VOICE_ASSISTANT_NAMES: Record<VoiceSide, string> = {
-  pro: "Camille MENAO",
-  client: "Camille particuliers",
+  pro: "Manon MENAO",
+  client: "Manon particuliers",
 };
 
 const VOICE_HANDOFF_DESCRIPTIONS: Record<VoiceSide, string> = {
-  pro: "Camille côté artisans : pour un artisan ou une entreprise du bâtiment (inscription, dossier, formules, rendez-vous avec un conseiller).",
+  pro: "Manon côté artisans : pour un artisan ou une entreprise du bâtiment (inscription, dossier, formules, rendez-vous avec un conseiller).",
   client:
-    "Camille côté particuliers : pour un particulier qui a des travaux chez lui (préparer une demande de travaux).",
+    "Manon côté particuliers : pour un particulier qui a des travaux chez lui (préparer une demande de travaux).",
 };
 
 const otherSide = (side: VoiceSide): VoiceSide => (side === "pro" ? "client" : "pro");
@@ -667,7 +667,7 @@ const parisDay = (at: Date) => at.toLocaleDateString("en-CA", { timeZone: PARIS 
 /** « dix-sept heures », « neuf heures trente ». */
 const spokenHour = (at: Date) => parisSlotSpoken(at).split(" à ")[1] ?? "";
 
-/** Phrase lue par Camille après une demande de rappel : quand l'équipe pourra rappeler. */
+/** Phrase lue par Manon après une demande de rappel : quand l'équipe pourra rappeler. */
 export function receptionCallbackSpoken(status: ReceptionStatus, now: Date): string {
   const close = status.ferme_a ? new Date(status.ferme_a) : null;
   if (status.ouvert && close && !Number.isNaN(close.getTime())) {
@@ -822,7 +822,7 @@ export function nextArtisanSlots({
 }
 
 // ---------------------------------------------------------------------------
-// Devis dicté en conversation avec Camille (F-85, ADR 0234)
+// Devis dicté en conversation avec Manon (F-85, ADR 0234)
 // ---------------------------------------------------------------------------
 
 const TENS_TO_60: Record<number, string> = { ...TENS, 60: "soixante" };
@@ -895,7 +895,7 @@ export function usualPriceSpoken(designation: string, unit: string, priceHtCents
   return `${designation} : ${eurosSpoken(priceHtCents)} hors taxes ${UNIT_SPOKEN[unit] ?? "l'unité"}`;
 }
 
-/** Prix habituels du contexte du devis (voice_quote_context), en une liste lisible par Camille. */
+/** Prix habituels du contexte du devis (voice_quote_context), en une liste lisible par Manon. */
 export function usualPricesText(raw: unknown): string {
   if (!Array.isArray(raw)) return "";
   return raw
@@ -908,7 +908,7 @@ export function usualPricesText(raw: unknown): string {
     .join(" ; ");
 }
 
-/** Régime de TVA dit à Camille (franchise en base : aucune TVA sur le devis). */
+/** Régime de TVA dit à Manon (franchise en base : aucune TVA sur le devis). */
 export function quoteVatText(assujettiTva: boolean): string {
   return assujettiTva
     ? "taux de TVA possibles : cinq virgule cinq, dix ou vingt pour cent. Ne demande le taux que si l'artisan veut en changer."

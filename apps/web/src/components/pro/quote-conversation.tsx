@@ -16,8 +16,8 @@ import { prepareQuoteCall, voiceQuoteDraftForCall } from "@/lib/artisan/quote-ac
 const t = fr.pro.quote.conversation;
 
 /**
- * « Dicter avec Camille » (F-85, ADR 0234) : appel web avec Camille depuis l'éditeur de devis.
- * Chaque liste proposée par Camille (outil devis_proposer) remplace celle d'avant dans l'éditeur,
+ * « Dicter avec Manon » (F-85, ADR 0234) : appel web avec Manon depuis l'éditeur de devis.
+ * Chaque liste proposée par Manon (outil devis_proposer) remplace celle d'avant dans l'éditeur,
  * lue avec les mêmes règles que le serveur ; à la fin de l'appel, les lignes enregistrées par le
  * serveur font foi. Rien n'est enregistré dans le devis sans l'artisan.
  */

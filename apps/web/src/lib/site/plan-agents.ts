@@ -5,7 +5,7 @@ const number = new Intl.NumberFormat("fr-FR");
 
 /**
  * Assistants IA d'une formule en une ligne (cartes des formules, ADR 0265), d'après ses droits
- * `plans.limites.agents` (ADR 0231) : écrits seulement, ou Camille avec ses minutes et ses lignes.
+ * `plans.limites.agents` (ADR 0231) : écrits seulement, ou Manon avec ses minutes et ses lignes.
  */
 export function planAgentsLine(limites: unknown): string {
   const agents =

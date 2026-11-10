@@ -21,10 +21,10 @@ const ORIGIN = new URL(env.siteUrl).origin;
 const PAGE = `${ORIGIN}/appli/devis-camille`;
 
 /**
- * « Dicter avec Camille » dans l'application (ADR 0235). Le kit vocal de Vapi ne tourne pas dans
+ * « Dicter avec Manon » dans l'application (ADR 0235). Le kit vocal de Vapi ne tourne pas dans
  * l'application : la conversation passe par une page intégrée du site, qui reçoit la session
  * avant son chargement (jamais par l'adresse) et renvoie le début de l'appel, chaque liste de
- * lignes proposée par Camille et la fin de l'appel. Les lignes sont relues ici avec les mêmes
+ * lignes proposée par Manon et la fin de l'appel. Les lignes sont relues ici avec les mêmes
  * fonctions de @menao/core que le serveur ; à la fin de l'appel, celles du serveur font foi.
  */
 export function QuoteConversation({

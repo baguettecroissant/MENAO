@@ -69,7 +69,7 @@ function Expired() {
 }
 
 /**
- * Demande de travaux préparée au téléphone par Camille (F-77, ADR 0227), ouverte depuis l'e-mail.
+ * Demande de travaux préparée au téléphone par Manon (F-77, ADR 0227), ouverte depuis l'e-mail.
  * Compte particulier connecté : le projet lui est rattaché (jeton de transfert), puis la page
  * d'envoi. Sinon : la demande et la création du compte (ou la connexion), pré-remplies avec les
  * coordonnées dictées ; le lien de confirmation ramène ici.

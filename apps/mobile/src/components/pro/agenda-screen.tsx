@@ -61,7 +61,7 @@ const LOOKS: Record<AgendaItemKind, Look> = {
     label: t.kinds.occupe,
   },
 };
-// Rendez-vous pris par Camille (ADR 0232) : un créneau bloqué, montré comme une visite.
+// Rendez-vous pris par Manon (ADR 0232) : un créneau bloqué, montré comme une visite.
 const look = (item: Placed): Look => (item.secretary ? LOOKS.visite : LOOKS[item.kind]);
 
 const STATUS_TONES: Record<AvailabilityStatus["kind"], FicheTone> = {
@@ -99,13 +99,13 @@ function weekTitle(monday: string, sunday: string): string {
 const dayName = (day: string) =>
   t.dayTitle(t.weekdays[weekdayOf(day) - 1] ?? "", formatDayMonth(day));
 
-/** Titre affiché : chantier, motif de l'appel pris par Camille, motif du créneau, ou son genre. */
+/** Titre affiché : chantier, motif de l'appel pris par Manon, motif du créneau, ou son genre. */
 const titleOf = (item: Placed) =>
   item.secretary?.reason ||
   item.title ||
   (item.kind === "occupe" ? t.legend.occupe : item.kind === "creneau" ? t.legend.creneau : "");
 
-/** « Client · lieu », ou « Appelant · commune » d'un rendez-vous de Camille. */
+/** « Client · lieu », ou « Appelant · commune » d'un rendez-vous de Manon. */
 const detailOf = (item: Placed) =>
   (item.secretary ? [item.secretary.caller, item.secretary.city] : [item.client, item.place])
     .filter(Boolean)
@@ -408,7 +408,7 @@ export function AgendaScreen({ week, blocked }: { week: string | null; blocked: 
   );
 }
 
-/** Pastilles d'un rendez-vous : son genre, et « Prise par Camille ». */
+/** Pastilles d'un rendez-vous : son genre, et « Prise par Manon ». */
 function Tags({ item }: { item: Placed }) {
   const l = look(item);
   return (

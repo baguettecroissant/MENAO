@@ -31,9 +31,9 @@ select is(
   'comparatif : 7 lignes « Assistants IA »');
 select is(
   (select valeurs ->> 'base' from public.plan_features
-   where categorie = 'Assistants IA' and libelle = 'Camille, secrétaire au téléphone'),
+   where categorie = 'Assistants IA' and libelle = 'Manon, secrétaire au téléphone'),
   'false',
-  'Camille au téléphone : pas dans Base, comme plans.limites.agents.secretaire');
+  'Manon au téléphone : pas dans Base, comme plans.limites.agents.secretaire');
 
 -- ---------- Visiteur ----------
 set local role anon;

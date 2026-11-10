@@ -8,7 +8,7 @@ const t = fr.pro.landing.agents;
 const ICONS = [Headset, PenLine, ReceiptText, BellRing];
 
 /**
- * « Assistants IA » de l'Espace Pro (ADR 0265) : ce que font Camille et les assistants écrits,
+ * « Assistants IA » de l'Espace Pro (ADR 0265) : ce que font Manon et les assistants écrits,
  * avec un exemple de compte rendu d'appel et de brouillon de devis (valeurs d'exemple), posés sur
  * la photo de l'artisan dans sa camionnette (ADR 0271).
  */
@@ -70,7 +70,7 @@ export function AgentsSection({ id }: { id: string }) {
             <div className="flex flex-col gap-3 rounded-[1.375rem] border border-white/15 bg-foreground/90 p-5 shadow-[0_20px_40px_rgb(0_0_0/0.35)] backdrop-blur-md">
               <div className="flex items-center gap-3">
                 <span className="flex size-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#86a0fb,#4869f6)] font-bold">
-                  C
+                  M
                 </span>
                 <div className="flex min-w-0 flex-col">
                   <span className="font-bold">{t.callTitle}</span>

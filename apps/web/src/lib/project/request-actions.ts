@@ -178,7 +178,7 @@ export async function signInForRequest(
 }
 
 /**
- * Demande préparée au téléphone par Camille (F-77, ADR 0227) : le jeton de transfert vient de
+ * Demande préparée au téléphone par Manon (F-77, ADR 0227) : le jeton de transfert vient de
  * l'e-mail. Après inscription ou connexion, la page du lien rattache le projet au compte.
  */
 const PREPARED_TOKEN = /^[0-9a-f]{64}$/;

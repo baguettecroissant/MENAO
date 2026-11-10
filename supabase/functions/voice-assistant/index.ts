@@ -1,5 +1,5 @@
 // Edge Function voice-assistant (F-75, ADR 0225) : serveur des outils de la secrétaire vocale
-// « Camille », appelé par Vapi pendant et après les appels (jamais par le navigateur).
+// « Manon », appelé par Vapi pendant et après les appels (jamais par le navigateur).
 // - Authentification : secret partagé dans l'en-tête X-Vapi-Secret (identifiant « Bearer Token »
 //   de Vapi, sans préfixe), comparé en temps constant à VAPI_SERVER_SECRET.
 // - « tool-calls » : envoyer le lien d'inscription par e-mail, envoyer l'état du dossier à
@@ -8,7 +8,7 @@
 //   du secteur (ADR 0226), préparer la demande de travaux d'un particulier (ADR 0227 : session
 //   anonyme, analyse par analyze-need, lien à usage unique envoyé par e-mail ; rien ne part chez
 //   les artisans avant que le particulier envoie lui-même), envoyer l'état des demandes d'un
-//   particulier à l'adresse de son compte (ADR 0229). Après une demande de rappel, Camille dit
+//   particulier à l'adresse de son compte (ADR 0229). Après une demande de rappel, Manon dit
 //   quand l'équipe rappelle, d'après ses horaires d'accueil (ADR 0230). Secrétaire dédiée d'un
 //   artisan (ADR 0232) : créneaux libres de son agenda, rendez-vous, message ; l'artisan vient du
 //   jeton signé passé dans les variables de l'appel, jamais des arguments. Devis en conversation
