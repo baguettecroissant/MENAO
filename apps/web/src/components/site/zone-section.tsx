@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { COAST, COMMUNE_COORDS } from "@/lib/site/commune-coords";
+import { ScenePhoto } from "./scene-photo";
 
 const t = fr.home.zone;
 const about = fr.pages.about;
@@ -92,8 +93,9 @@ export function ZoneMap({
 }
 
 /**
- * « Où intervient MENAO ? » (ADR 0264) : texte de « À propos », carte du 06 et communes couvertes,
- * avec le lien vers la page carrefour /villes.
+ * « Où intervient MENAO ? » (ADR 0264) : texte de « À propos », photo de la côte (ADR 0273) et
+ * communes couvertes, avec le lien vers la page carrefour /villes. La carte reste sur les pages
+ * métier-ville, où elle situe la commune.
  */
 export function ZoneSection({ id, communes }: { id: string; communes: readonly Commune[] }) {
   return (
@@ -118,8 +120,12 @@ export function ZoneSection({ id, communes }: { id: string; communes: readonly C
           </div>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="overflow-hidden rounded-[1.25rem] border border-border">
-            <ZoneMap communes={communes} />
+          <div className="aspect-[3/2] overflow-hidden rounded-[1.25rem]">
+            <ScenePhoto
+              scene="coast"
+              sizes="(min-width: 1024px) 620px, 92vw"
+              className="size-full"
+            />
           </div>
           <ul aria-label={t.communesLabel} className="flex flex-wrap gap-2">
             {communes.map((commune) => (

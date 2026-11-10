@@ -455,7 +455,7 @@ export default async function ProLandingPage() {
               <ScenePhoto
                 scene="handover"
                 sizes="(min-width: 1024px) 480px, 85vw"
-                position="38% 45%"
+                position="28% 45%"
                 className="size-full"
               />
             </div>

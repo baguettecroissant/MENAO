@@ -125,7 +125,7 @@ export default function HowItWorksPage() {
                   </h3>
                   <p className="leading-relaxed text-pretty text-muted-foreground">{step.text}</p>
                 </div>
-                {/* La scène de l'étape, avec le vrai écran dans le téléphone (ADR 0271). */}
+                {/* La scène de l'étape (ADR 0271, ADR 0273). */}
                 <div
                   className={`aspect-[3/2] overflow-hidden rounded-card bg-primary-soft ${i % 2 ? "lg:order-1" : ""}`}
                 >
