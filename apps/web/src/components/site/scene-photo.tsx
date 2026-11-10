@@ -2,8 +2,8 @@ import { fr } from "@/i18n/fr";
 
 /**
  * Photos de scènes du site (ADR 0271) : Julien, artisan, et Camille, cliente, deux personnages
- * fictifs générés par IA, avec les vrais écrans de l'application dans leurs téléphones. WebP
- * précompressés dans public/images/scenes (1 600, 960 et 640 px), sans optimisation Vercel.
+ * fictifs générés par IA, téléphone tenu naturellement (ADR 0273), et la côte des Alpes-Maritimes.
+ * WebP précompressés dans public/images/scenes (1 600, 960 et 640 px), sans optimisation Vercel.
  */
 const FILES = {
   julienPortrait: "julien-portrait",
@@ -15,6 +15,7 @@ const FILES = {
   camilleQuote: "camille-devis",
   camilleFollow: "camille-suivi",
   camillePortrait: "camille-portrait",
+  coast: "cote-alpes-maritimes",
 } as const;
 
 export type SceneKey = keyof typeof FILES;

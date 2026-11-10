@@ -1014,20 +1014,20 @@ export const fr = {
       julienPortrait:
         "Un artisan plombier souriant, bras croisés, adossé à sa camionnette dans une rue de village",
       julienVan:
-        "Un artisan assis dans sa camionnette en fin de journée, souriant devant l'accueil de l'application MENAO sur son téléphone",
+        "Un artisan assis dans sa camionnette en fin de journée regarde son téléphone en souriant",
       meeting: "Une particulière accueille un artisan à la porte de son appartement",
       handover:
         "Un artisan et sa cliente dans une salle de bain rénovée : elle signe la réception du chantier sur un téléphone",
-      camilleProject:
-        "Une particulière décrit à voix haute les travaux de sa salle de bain ancienne, son téléphone à la main",
+      camilleProject: "Une particulière photographie sa salle de bain ancienne avec son téléphone",
       camilleArtisans:
         "Une particulière sur son canapé choisit des artisans vérifiés dans l'application MENAO",
-      camilleQuote:
-        "Une particulière à sa table de cuisine s'apprête à signer un devis sur son téléphone",
+      camilleQuote: "Une particulière à sa table de cuisine signe un devis sur son téléphone",
       camilleFollow:
         "Une particulière en terrasse de café suit l'avancement de son chantier sur son téléphone",
       camillePortrait:
         "Une particulière souriante dans sa salle de bain rénovée, avec une douche à l'italienne",
+      coast:
+        "Vue aérienne d'un littoral méditerranéen : villages aux toits de tuiles, petit port et collines boisées",
     },
     home: "Accueil",
     clientSteps: {
