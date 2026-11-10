@@ -3,8 +3,9 @@ import { fr } from "@/i18n/fr";
 const t = fr.pro.landing.video;
 
 /**
- * Vidéo de démonstration de l'Espace Pro (F-03) : fichier statique du site, chargé seulement à la
- * lecture (`preload="none"`), avec une image d'aperçu et des sous-titres français (ADR 0058).
+ * Film de vente de l'Espace Pro (F-123, ADR 0275, après les ADR 0058 et 0099) : fichier statique du
+ * site, chargé seulement à la lecture (`preload="none"`), avec une image d'aperçu et des sous-titres
+ * français.
  */
 export function DemoVideo() {
   return (
@@ -14,11 +15,11 @@ export function DemoVideo() {
         controls
         playsInline
         preload="none"
-        poster="/videos/menao-demo.webp"
+        poster="/videos/menao-film-pro.webp"
         aria-label={t.label}
       >
-        <source src="/videos/menao-demo.mp4" type="video/mp4" />
-        <track kind="captions" src="/videos/menao-demo.vtt" srcLang="fr" label={t.captions} />
+        <source src="/videos/menao-film-pro.mp4" type="video/mp4" />
+        <track kind="captions" src="/videos/menao-film-pro.vtt" srcLang="fr" label={t.captions} />
         {t.fallback}
       </video>
     </div>
