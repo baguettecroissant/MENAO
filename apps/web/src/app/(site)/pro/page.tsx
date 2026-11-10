@@ -23,13 +23,14 @@ import { AgentsSection } from "@/components/pro-landing/agents-section";
 import { CallbackLink } from "@/components/pro-landing/callback-link";
 import { CommissionCalculator } from "@/components/pro-landing/commission-calculator";
 import { DemoVideo } from "@/components/pro-landing/demo-video";
+import { HeroFlow } from "@/components/pro-landing/hero-flow";
 import { PricingPlans } from "@/components/pro-landing/pricing-plans";
 import { ProAssistant } from "@/components/pro-landing/pro-assistant";
 import { ProFinalCta } from "@/components/pro-landing/pro-final-cta";
 import { ProofStrip } from "@/components/pro-landing/proof-strip";
 import { FaqJsonLd, FaqList } from "@/components/site/faq-list";
 import { RequestChecklist, VoiceQuoteVisual } from "@/components/pro-landing/feature-visuals";
-import { AppNotification, LaptopMockup, PhoneMockup } from "@/components/site/device-mockups";
+import { BrowserMockup, PhoneMockup } from "@/components/site/device-mockups";
 import { StoreBadges } from "@/components/site/store-badges";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Steps } from "@/components/site/steps";
@@ -149,7 +150,7 @@ export default async function ProLandingPage() {
             tone="white"
             className="absolute -right-16 -bottom-24 hidden size-[30rem] opacity-[0.07] lg:block"
           />
-          <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+          <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
             <div className="flex flex-col gap-6">
               <span className="inline-flex self-start rounded-pill border border-white/30 bg-white/15 px-3 py-1 text-sm backdrop-blur">
                 {t.hero.eyebrow}
@@ -189,25 +190,8 @@ export default async function ProLandingPage() {
                 {t.hero.signIn}
               </TextLink>
             </div>
-            {/* L'espace pro sur ordinateur et l'application (ADR 0147) : vrais écrans, données
-                fictives. */}
-            <div className="relative mx-auto w-full max-w-xl pt-6 pb-10 lg:pb-14">
-              <LaptopMockup
-                src={WEB_SCREENS.pro}
-                alt={m.screens.webPro}
-                className="w-[92%]"
-                priority
-              />
-              <div className="absolute right-0 bottom-0 w-[30%]">
-                <PhoneMockup screen={APP_SCREENS.proAccueil} alt={m.screens.proAccueil} priority />
-              </div>
-              <AppNotification
-                title={m.deposit.title}
-                text={m.deposit.text}
-                time={m.deposit.time}
-                className="absolute -top-2 left-[4%] hidden animate-menao-float sm:flex"
-              />
-            </div>
+            {/* Le vrai accueil de l'application et le parcours en cartes (ADR 0270). */}
+            <HeroFlow />
           </div>
         </div>
       </section>
@@ -284,6 +268,14 @@ export default async function ProLandingPage() {
             title={t.features.title}
             subtitle={t.features.subtitle}
           />
+          {/* Le produit en grand (ADR 0270) : le tableau de bord sur ordinateur et les demandes
+              dans l'application, vrais écrans et données fictives. */}
+          <div className="relative mx-auto w-full pr-[7%] pb-5 sm:pb-8">
+            <BrowserMockup src={WEB_SCREENS.pro} alt={m.screens.webPro} />
+            <div className="absolute right-0 bottom-0 w-[23%] sm:w-[21%]">
+              <PhoneMockup screen={APP_SCREENS.proDemandes} alt={m.screens.proDemandes} />
+            </div>
+          </div>
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <article

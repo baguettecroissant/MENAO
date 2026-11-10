@@ -1,11 +1,9 @@
-import type { ReactNode } from "react";
-import { LogoMark } from "@/components/brand/logo";
 import type { AppScreen } from "@/lib/site/app-screens";
 
 /**
- * Mockups du site (ADR 0147) : vrais écrans de l'application dans un téléphone ou un ordinateur
- * dessinés en code (aucune image de cadre), et notification de l'application. Les écrans sont des
- * images ; le cadre suit la largeur donnée par `className`.
+ * Mockups du site (ADR 0147, ADR 0270) : vrais écrans de l'application dans un téléphone ou une
+ * fenêtre de navigateur dessinés en code (aucune image de cadre). Les écrans sont des images ; le
+ * cadre suit la largeur donnée par `className`.
  */
 
 // Téléphone de 390 × 844 points : cadre de 3 % de la largeur, écran exactement au format capturé.
@@ -93,8 +91,8 @@ export function PhoneMockup({
   );
 }
 
-/** Ordinateur portable : écran web de 1 600 × 1 000 et socle. */
-export function LaptopMockup({
+/** Fenêtre de navigateur : écran web de 1 600 × 1 000 sous une barre d'onglet dessinée en code. */
+export function BrowserMockup({
   src,
   alt,
   className = "",
@@ -106,63 +104,34 @@ export function LaptopMockup({
   priority?: boolean;
 }) {
   return (
-    <div className={`relative ${className}`}>
-      <div className="relative mx-[6%] rounded-t-[2.6%_4.2%] bg-[#0c0f1c] p-[1.6%] pb-[2.2%] shadow-[0_40px_80px_-35px_rgb(11_20_56/0.6),inset_0_0_0_1px_rgb(255_255_255/0.1)]">
-        <span
-          aria-hidden="true"
-          className="absolute top-[0.55%] left-1/2 size-[0.7%] -translate-x-1/2 rounded-full bg-white/25"
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
-        <img
-          src={src}
-          alt={alt}
-          width={1600}
-          height={1000}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : undefined}
-          decoding="async"
-          className="block aspect-[16/10] w-full rounded-[0.4%] object-cover object-top"
-        />
-      </div>
+    <div
+      className={`overflow-hidden rounded-xl border border-border-strong bg-surface shadow-[0_40px_90px_-30px_rgb(17_23_40/0.3)] sm:rounded-[1.125rem] ${className}`}
+    >
       <div
         aria-hidden="true"
-        className="relative aspect-[100/3.4] w-full rounded-b-[50%_100%] bg-gradient-to-b from-[#e8eaf0] to-[#a9aebb] shadow-[0_18px_30px_-18px_rgb(11_20_56/0.6)]"
+        className="flex h-6 items-center gap-1 border-b border-border bg-[#f1f2f5] px-2.5 sm:h-10 sm:gap-[0.4375rem] sm:px-4"
       >
-        <span className="absolute top-0 left-1/2 h-[38%] w-[15%] -translate-x-1/2 rounded-b-lg bg-[#9ca2b0]/60" />
+        {["#ff5f57", "#febc2e", "#28c840"].map((color) => (
+          <span
+            key={color}
+            className="size-1.5 rounded-full sm:size-[0.6875rem]"
+            style={{ backgroundColor: color }}
+          />
+        ))}
+        <span className="mx-auto h-3 w-[32%] rounded-full border border-border bg-surface sm:h-6" />
+        <span className="w-6 sm:w-12" />
       </div>
-    </div>
-  );
-}
-
-/** Notification de l'application, comme sur l'écran verrouillé (valeurs d'exemple). */
-export function AppNotification({
-  title,
-  text,
-  time,
-  icon,
-  className = "",
-}: {
-  title: string;
-  text: string;
-  time: string;
-  icon?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      className={`flex w-[17.5rem] items-start gap-3 rounded-[1.25rem] bg-white/85 p-3 text-[#121735] shadow-raised ring-1 ring-black/5 backdrop-blur-xl ${className}`}
-    >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-[0.6rem] bg-primary text-white">
-        {icon ?? <LogoMark tone="white" className="size-5" />}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-[0.8125rem] font-semibold">{title}</span>
-          <span className="shrink-0 text-[0.6875rem] text-[#121735]/55">{time}</span>
-        </span>
-        <span className="text-[0.8125rem] leading-snug text-[#121735]/80">{text}</span>
-      </span>
+      {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
+      <img
+        src={src}
+        alt={alt}
+        width={1600}
+        height={1000}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
+        decoding="async"
+        className="block aspect-[16/10] w-full object-cover object-top"
+      />
     </div>
   );
 }

@@ -24,6 +24,7 @@ export const APP_SCREENS = {
   clientSuivi: { src: "/images/app/client-suivi.webp", top: BEIGE, bottom: BEIGE },
   clientAvis: { src: "/images/app/client-avis.webp", top: BEIGE, bottom: "#ffffff" },
   proAccueil: { src: "/images/app/pro-accueil.webp", top: BEIGE, bottom: "#ffffff" },
+  proDemandes: { src: "/images/app/pro-demandes.webp", top: BEIGE, bottom: "#ffffff" },
 } satisfies Record<string, AppScreen>;
 
 export type AppScreenKey = keyof typeof APP_SCREENS;

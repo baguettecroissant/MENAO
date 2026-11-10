@@ -73,7 +73,7 @@ export default async function HomePage() {
           {/* Chaque étape illustrée par l'écran correspondant de l'application (ADR 0147). */}
           <ScreenSteps
             items={steps.items}
-            screens={["clientRecherche", "clientFiche", "clientDevis", "clientSuivi"]}
+            screens={["clientRecherche", "clientArtisans", "clientDevis", "clientSuivi"]}
           />
           <AppBand id="home-app" />
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
