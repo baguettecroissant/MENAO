@@ -117,6 +117,7 @@ export default async function HomePage() {
         text={fr.site.cta.text}
         action={{ href: "/recherche", label: fr.site.cta.action }}
         reassurance={fr.site.cta.reassurance}
+        photo={{ scene: "camillePortrait", position: "22% 30%" }}
       />
       <SiteAssistantBubble />
     </main>
