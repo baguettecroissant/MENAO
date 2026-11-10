@@ -144,7 +144,7 @@ export function ArtisanAssistant() {
           <div aria-live="polite" className="flex flex-col gap-3">
             {messages.map((m, i) => (
               <div key={i} className="flex flex-col gap-2">
-                <Bubble role={m.role} speaker={m.role === "user" ? t.you : t.speaker}>
+                <Bubble role={m.role} speaker={m.role === "user" ? t.you : t.speaker} avatar>
                   {m.text}
                 </Bubble>
                 {m.role === "assistant" && (m.screens?.length ?? 0) > 0 && (

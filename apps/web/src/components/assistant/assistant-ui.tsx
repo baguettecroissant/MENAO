@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowUp, MessageCircle, X } from "lucide-react";
+import { ArrowUp, X } from "lucide-react";
 import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
-import { LogoMark } from "@/components/brand/logo";
 import { focusRing, inputClasses } from "@/components/ui";
+import { AssistantAvatar } from "./assistant-avatar";
 
 /**
  * Éléments communs des assistants MENAO (pages Pro, ADR 0218 ; particuliers, ADR 0220) : fenêtre
@@ -11,7 +11,7 @@ import { focusRing, inputClasses } from "@/components/ui";
  * questions à poser d'un toucher, points « en train d'écrire », champ de saisie, bulle d'ouverture.
  */
 
-/** Bulle ronde en bas à droite : apparition douce, halo discret (trois pulsations). */
+/** Bulle ronde en bas à droite : l'avatar de l'assistant (ADR 0272), apparition douce, halo discret. */
 export function AssistantBubble({
   label,
   title,
@@ -27,16 +27,16 @@ export function AssistantBubble({
       onClick={onOpen}
       aria-label={label}
       title={title}
-      className={`animate-menao-bubble-in group fixed right-4 bottom-4 z-40 inline-flex size-14 items-center justify-center rounded-pill bg-[linear-gradient(135deg,#1a2b85_0%,#4869f6_100%)] text-white shadow-raised ring-2 ring-white transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:bottom-6 ${focusRing}`}
+      className={`animate-menao-bubble-in group fixed right-4 bottom-4 z-40 inline-flex size-14 items-center justify-center rounded-pill bg-primary-soft shadow-[0_10px_28px_rgb(72_105_246/0.45)] ring-2 ring-white transition-transform duration-200 hover:scale-105 active:scale-95 sm:right-6 sm:bottom-6 ${focusRing}`}
     >
       {/* Halo discret : trois pulsations après l'arrivée, puis plus rien. */}
       <span
         aria-hidden="true"
         className="animate-menao-halo pointer-events-none absolute inset-0 rounded-pill bg-primary"
       />
-      <MessageCircle
-        aria-hidden="true"
-        className="relative size-6 fill-white transition-transform duration-200 group-hover:-rotate-6"
+      <AssistantAvatar
+        blink
+        className="relative size-14 transition-transform duration-200 group-hover:-rotate-6"
       />
     </button>
   );
@@ -82,9 +82,7 @@ export function AssistantDialog({
       className="animate-menao-assistant fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-surface text-left sm:inset-auto sm:right-6 sm:bottom-6 sm:h-auto sm:max-h-[min(42rem,85dvh)] sm:w-[25rem] sm:rounded-card sm:border sm:border-border sm:shadow-raised"
     >
       <header className="flex items-center gap-3 bg-[linear-gradient(120deg,#0b1438_0%,#1a2b85_50%,#4869f6_100%)] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-white/15">
-          <LogoMark tone="white" className="size-6" />
-        </span>
+        <AssistantAvatar blink className="size-10 shrink-0 ring-2 ring-white/25" />
         <div className="flex min-w-0 flex-1 flex-col">
           <h2 id={`${id}-title`} className="font-medium">
             {title}
@@ -110,12 +108,26 @@ export function AssistantDialog({
 export function Bubble({
   role,
   speaker,
+  avatar = false,
   children,
 }: {
   role: "user" | "assistant";
   speaker: string;
+  /** Avatar de l'assistant à gauche de ses messages (ADR 0272). */
+  avatar?: boolean;
   children: string;
 }) {
+  if (role === "assistant" && avatar) {
+    return (
+      <div className="flex max-w-[94%] items-end gap-2 self-start">
+        <AssistantAvatar className="size-7 shrink-0" />
+        <p className="min-w-0 rounded-card rounded-bl-md bg-background px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line in-[.app-nette]:rounded-[1.125rem] in-[.app-nette]:rounded-bl-md in-[.app-nette]:border in-[.app-nette]:border-border in-[.app-nette]:px-4">
+          <span className="sr-only">{speaker} : </span>
+          {children}
+        </p>
+      </div>
+    );
+  }
   return role === "user" ? (
     // Espaces connectés (refonte « Nette ») : bulle bleu nuit comme les messages ; site public inchangé.
     <p className="max-w-[85%] self-end rounded-card rounded-br-md bg-primary px-3.5 py-2.5 text-[0.9375rem] whitespace-pre-line text-white in-[.app-nette]:rounded-[1.125rem] in-[.app-nette]:rounded-br-md in-[.app-nette]:bg-foreground in-[.app-nette]:px-4">

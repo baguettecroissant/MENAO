@@ -108,13 +108,13 @@ export function ClientAssistantPanel({
         ref={listRef}
         className="flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4"
       >
-        <Bubble role="assistant" speaker={t.title}>
+        <Bubble role="assistant" speaker={t.title} avatar>
           {t.greeting}
         </Bubble>
         {messages.length === 0 && <Chips items={t.quick} onPick={(item) => void send(item)} />}
         {messages.map((message, index) => (
           <div key={index} className="animate-menao-fade-up flex flex-col gap-2">
-            <Bubble role={message.role} speaker={message.role === "user" ? t.you : t.title}>
+            <Bubble role={message.role} speaker={message.role === "user" ? t.you : t.title} avatar>
               {message.text}
             </Bubble>
             {message.draft && (
