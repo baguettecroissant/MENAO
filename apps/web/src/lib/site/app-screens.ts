@@ -6,7 +6,7 @@
  */
 export type AppScreen = { src: string; top: string; bottom: string; darkTop?: boolean };
 
-const BEIGE = "#f8f7f1";
+const BEIGE = "#f9f7f0";
 
 export const APP_SCREENS = {
   clientAccueil: {
@@ -15,14 +15,14 @@ export const APP_SCREENS = {
     bottom: "#ffffff",
     darkTop: true,
   },
-  clientRecherche: { src: "/images/app/client-recherche.webp", top: BEIGE, bottom: BEIGE },
+  clientRecherche: { src: "/images/app/client-recherche.webp", top: BEIGE, bottom: "#ffffff" },
   clientArtisans: { src: "/images/app/client-artisans.webp", top: "#ffffff", bottom: "#ffffff" },
   clientFiche: { src: "/images/app/client-fiche.webp", top: BEIGE, bottom: BEIGE },
   clientRdv: { src: "/images/app/client-rdv.webp", top: BEIGE, bottom: BEIGE },
   clientDevis: { src: "/images/app/client-devis.webp", top: BEIGE, bottom: "#ffffff" },
-  clientAcompte: { src: "/images/app/client-acompte.webp", top: "#ffffff", bottom: BEIGE },
+  clientAcompte: { src: "/images/app/client-acompte.webp", top: BEIGE, bottom: BEIGE },
   clientSuivi: { src: "/images/app/client-suivi.webp", top: BEIGE, bottom: BEIGE },
-  clientAvis: { src: "/images/app/client-avis.webp", top: "#486af7", bottom: BEIGE, darkTop: true },
+  clientAvis: { src: "/images/app/client-avis.webp", top: BEIGE, bottom: "#ffffff" },
   proAccueil: { src: "/images/app/pro-accueil.webp", top: BEIGE, bottom: "#ffffff" },
 } satisfies Record<string, AppScreen>;
 
