@@ -52,7 +52,7 @@ function DayRow({ item, when }: { item: DayItem; when: string }) {
 }
 
 /**
- * « Ma journée » des commerciaux (F-65, lot 2, ADR 0206) : les rendez-vous pris par Camille
+ * « Ma journée » des commerciaux (F-65, lot 2, ADR 0206) : les rendez-vous pris par Manon
  * (ADR 0226), les rendez-vous du jour, puis les relances du jour et celles en retard, avec le
  * bouton Appeler ; rappel des créneaux téléphone.
  */
@@ -64,7 +64,7 @@ export default async function CommercialDayPage() {
   const items = data ?? [];
   const now = new Date().toISOString();
   const today = parisInputValues(now).date;
-  // Rendez-vous de Camille, à partir d'aujourd'hui (heure de Paris).
+  // Rendez-vous de Manon, à partir d'aujourd'hui (heure de Paris).
   const { data: camille } = space.active
     ? await space.supabase
         .from("commercial_appointments")

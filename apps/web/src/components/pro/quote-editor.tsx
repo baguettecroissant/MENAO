@@ -83,9 +83,9 @@ export function QuoteEditor({
   /** Dictée sauvegardée pour ce chantier (F-19). */
   savedDictation: string | null;
   assujettiTva: boolean;
-  /** « Dicter avec Camille » inclus dans la formule (ADR 0234). */
+  /** « Dicter avec Manon » inclus dans la formule (ADR 0234). */
   conversation?: boolean;
-  /** Lignes d'un appel précédent avec Camille, pas encore reprises ni écartées. */
+  /** Lignes d'un appel précédent avec Manon, pas encore reprises ni écartées. */
   voiceDraft?: QuoteLineInput[] | null;
 }) {
   const counter = useRef(initialLines.length);
@@ -103,7 +103,7 @@ export function QuoteEditor({
   const router = useRouter();
   // Ligne à remettre sous les yeux après validation (le formulaire se referme).
   const [reveal, setReveal] = useState<{ key: string } | null>(null);
-  // Devis avec Camille (ADR 0234) : lignes de l'appel en cours, remplacées à chaque proposition ;
+  // Devis avec Manon (ADR 0234) : lignes de l'appel en cours, remplacées à chaque proposition ;
   // brouillon à clore dès que le devis est enregistré.
   const camille = useRef<Set<string>>(new Set());
   const voiceUsed = useRef(false);
@@ -174,7 +174,7 @@ export function QuoteEditor({
     if (added[0]) setReveal({ key: added[0].key });
   }
 
-  /** Lignes proposées par Camille : la liste de l'appel en cours remplace la précédente. */
+  /** Lignes proposées par Manon : la liste de l'appel en cours remplace la précédente. */
   function setCamilleLines(next: QuoteLineInput[]) {
     const previous = camille.current;
     const added = next.map((line) => ({

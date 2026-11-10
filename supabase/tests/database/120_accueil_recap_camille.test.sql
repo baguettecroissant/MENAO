@@ -1,4 +1,4 @@
--- Horaires d'accueil (F-81) et récapitulatif du matin de Camille (F-80), ADR 0230 : jours fériés,
+-- Horaires d'accueil (F-81) et récapitulatif du matin de Manon (F-80), ADR 0230 : jours fériés,
 -- accueil ouvert ou fermé, prochaine ouverture, réglage par un admin seulement, état réservé à
 -- l'équipe, récapitulatif à 8 h (heure de Paris), une fois par jour, rien sans activité, sans
 -- coordonnées. Données fictives (identifiants c120…).
@@ -89,7 +89,7 @@ insert into public.ai_runs (function_name, model, outcome, latency_ms, audio_sec
   ('voice-assistant', 'vapi', 'ok', 0, 120, '2026-11-13 10:00+01'),
   ('voice-assistant', 'vapi', 'ok', 0, 60, '2026-11-13 22:00+01');
 insert into public.tickets (type, contact_email, contact_phone, subject, message, created_at) values
-  ('rappel_pro', 'rappel120@example.test', '+33600001200', 'Demande de rappel (secrétaire vocale Camille)',
+  ('rappel_pro', 'rappel120@example.test', '+33600001200', 'Demande de rappel (secrétaire vocale Manon)',
    E'Prénom : Jean\nMotif : question sur les formules\nMeilleur moment : demain matin', '2026-11-13 21:00+01');
 
 select is(app.send_camille_recap('2026-11-14 09:00+01'), 0, '9 h : pas d''envoi');

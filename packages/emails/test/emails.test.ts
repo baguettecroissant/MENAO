@@ -1117,7 +1117,7 @@ describe("push d'un message (F-41, ADR 0201)", () => {
   });
 });
 
-describe("récapitulatif du matin de Camille (ADR 0230)", () => {
+describe("récapitulatif du matin de Manon (ADR 0230)", () => {
   const ctx = { siteUrl: "https://menao.example", firstName: "Tim" };
 
   it("chiffres de la veille, motifs des rappels, lien vers les tickets", () => {
@@ -1135,7 +1135,7 @@ describe("récapitulatif du matin de Camille (ADR 0230)", () => {
       },
       ctx,
     );
-    expect(c.subject).toBe("Camille : 5 appels depuis hier");
+    expect(c.subject).toBe("Manon : 5 appels depuis hier");
     expect(c.paragraphs).toEqual([
       "Bonjour Tim,",
       "5 appels (18 minutes), dont 3 hors des horaires d'accueil.",
@@ -1153,7 +1153,7 @@ describe("récapitulatif du matin de Camille (ADR 0230)", () => {
       "Bonjour Tim,",
       "1 demande de rappel à traiter dans les tickets.",
     ]);
-    expect(c.subject).toBe("Le récapitulatif de Camille");
+    expect(c.subject).toBe("Le récapitulatif de Manon");
     expect(c.quote).toBeNull();
   });
 });

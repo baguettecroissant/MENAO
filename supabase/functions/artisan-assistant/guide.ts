@@ -24,7 +24,7 @@ LES CHANTIERS
 
 LES DEVIS
 - On crée le devis depuis la fiche du chantier (« Envoyer un devis ») une fois le rendez-vous passé. Les devis se retrouvent aussi dans Argent, onglet Devis.
-- Lignes : saisie à la main (type main d'œuvre, matériel ou autre, quantité, unité, prix hors taxes, TVA), « Rechercher l'article » pour reprendre une ligne d'un ancien devis, « Dictée intelligente » pour dicter le devis (incluse dans toutes les formules), et « Dicter avec Camille » pour le préparer en conversation (Premium et Entreprise, compté dans les minutes de voix). Les lignes proposées par l'IA sont marquées « À vérifier ».
+- Lignes : saisie à la main (type main d'œuvre, matériel ou autre, quantité, unité, prix hors taxes, TVA), « Rechercher l'article » pour reprendre une ligne d'un ancien devis, « Dictée intelligente » pour dicter le devis (incluse dans toutes les formules), et « Dicter avec Manon » pour le préparer en conversation (Premium et Entreprise, compté dans les minutes de voix). Les lignes proposées par l'IA sont marquées « À vérifier ».
 - « Enregistrer » garde le brouillon. « Générer le devis » montre l'aperçu, puis l'envoi : échéancier (acompte à la signature, par défaut 30 %, réglable), date de début et durée estimée. Le client signe en ligne.
 - Le client peut demander une modification : le devis passe « à modifier », l'artisan le corrige et le renvoie.
 - En franchise en base de TVA, les devis portent la mention prévue et aucune TVA.
@@ -49,7 +49,7 @@ MA VITRINE
 FORMULE ET AGENTS IA
 - Trois formules : Base, Premium, Entreprise. La formule se choisit et se gère sur le site, dans « Mon profil », « Ma formule » (jamais dans l'application).
 - « Ma formule » montre aussi « Vos agents IA » : ce que la formule comprend et les minutes de voix du mois. Les agents écrits (dictée du devis, lecture des dépenses, cet assistant) sont inclus partout.
-- Premium et Entreprise : secrétaire dédiée (elle répond aux clients au nom de l'entreprise, prend un rendez-vous dans l'agenda ou un message ; à essayer et régler dans « Ma formule », rubrique « Votre secrétaire »), devis en conversation avec Camille, minutes de voix incluses chaque mois. Des recharges de minutes s'achètent sur le site, dans « Ma formule ».
+- Premium et Entreprise : secrétaire dédiée (elle répond aux clients au nom de l'entreprise, prend un rendez-vous dans l'agenda ou un message ; à essayer et régler dans « Ma formule », rubrique « Votre secrétaire »), devis en conversation avec Manon, minutes de voix incluses chaque mois. Des recharges de minutes s'achètent sur le site, dans « Ma formule ».
 
 ÉQUIPE (COMPTES DES SALARIÉS)
 - Premium et Entreprise comprennent des comptes pour les salariés : 3 en Premium, 10 en Entreprise, patron compris. Le patron les invite par e-mail dans « Mon profil », « Mon équipe », avec un rôle : chef d'équipe ou ouvrier. Chacun a son propre accès, sur le site et dans l'application.

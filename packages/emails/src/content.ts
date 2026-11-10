@@ -74,7 +74,7 @@ export const NOTIFICATION_TYPES = [
   "creneau_choisi",
   // Rendez-vous avec le commercial du secteur pris par la secrétaire vocale (ADR 0226).
   "rdv_commercial",
-  // Récapitulatif du matin de Camille, pour l'équipe (ADR 0230).
+  // Récapitulatif du matin de Manon, pour l'équipe (ADR 0230).
   "equipe_recap_camille",
   // Minutes de voix des agents IA de l'artisan (ADR 0231).
   "agents_minutes_80",
@@ -927,7 +927,7 @@ export function notificationContent(
       };
     }
     case "rdv_commercial": {
-      // Rendez-vous pris par Camille, la secrétaire vocale (ADR 0226), pour le commercial du secteur.
+      // Rendez-vous pris par Manon, la secrétaire vocale (ADR 0226), pour le commercial du secteur.
       // Les coordonnées de l'artisan sont dans « Ma journée », jamais dans l'e-mail.
       const rdv = moment(text(data, "rendez_vous"));
       const visit = text(data, "type") === "visite";
@@ -938,13 +938,13 @@ export function notificationContent(
       return {
         subject: rdv
           ? `Nouveau rendez-vous le ${rdv.day} à ${rdv.time}`
-          : "Nouveau rendez-vous pris par Camille",
+          : "Nouveau rendez-vous pris par Manon",
         preview:
-          "Camille, la secrétaire vocale de MENAO, vous a réservé un rendez-vous avec un artisan.",
+          "Manon, la secrétaire vocale de MENAO, vous a réservé un rendez-vous avec un artisan.",
         title: visit ? "Une visite à faire" : "Un appel à passer",
         paragraphs: [
           hello(ctx.firstName),
-          `Camille vous a réservé ${visit ? "une visite" : "un rendez-vous téléphonique"}${rdv ? ` le ${rdv.day} à ${rdv.time}` : ""}${who ? ` avec ${who}` : ""}.`,
+          `Manon vous a réservé ${visit ? "une visite" : "un rendez-vous téléphonique"}${rdv ? ` le ${rdv.day} à ${rdv.time}` : ""}${who ? ` avec ${who}` : ""}.`,
           visit
             ? "L'adresse et le numéro de l'artisan sont dans « Ma journée »."
             : "Appelez l'artisan à l'heure prévue : son numéro est dans « Ma journée ».",
@@ -1042,7 +1042,7 @@ export function notificationContent(
       };
     }
     case "equipe_recap_camille": {
-      // Récapitulatif du matin (ADR 0230) : ce que Camille a fait depuis le précédent, sans
+      // Récapitulatif du matin (ADR 0230) : ce que Manon a fait depuis le précédent, sans
       // coordonnées (elles sont dans chaque ticket ou rendez-vous).
       const n = (key: string) => count(data, key);
       const many = (value: number, one: string, several: string) =>
@@ -1070,10 +1070,10 @@ export function notificationContent(
       ].filter((line): line is string => line !== null);
       return {
         subject: n("appels")
-          ? `Camille : ${many(n("appels"), "appel", "appels")} depuis hier`
-          : "Le récapitulatif de Camille",
-        preview: "Ce que Camille, l'assistante vocale de MENAO, a fait depuis hier matin.",
-        title: "Ce que Camille a fait",
+          ? `Manon : ${many(n("appels"), "appel", "appels")} depuis hier`
+          : "Le récapitulatif de Manon",
+        preview: "Ce que Manon, l'assistante vocale de MENAO, a fait depuis hier matin.",
+        title: "Ce que Manon a fait",
         paragraphs: [
           hello(ctx.firstName),
           ...(lines.length ? lines : ["Aucune activité depuis le dernier récapitulatif."]),

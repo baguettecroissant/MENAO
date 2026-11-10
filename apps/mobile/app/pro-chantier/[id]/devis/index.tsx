@@ -76,7 +76,7 @@ function QuoteEditorScreen() {
 
 /**
  * Éditeur de devis (F-19), refonte « Nette » (maquette « DevisApp ») : en-tête du chantier, étapes
- * Lignes · Aperçu · Envoi, cartes « créer vite » (dictée intelligente, Camille, articles déjà
+ * Lignes · Aperçu · Envoi, cartes « créer vite » (dictée intelligente, Manon, articles déjà
  * chiffrés), lignes typées modifiées dans l'écran, totaux en direct (calculs de @menao/core) et
  * barre du bas avec le total TTC. La base recalcule les totaux à l'enregistrement.
  */
@@ -95,7 +95,7 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
-  // Devis avec Camille (ADR 0235) : lignes de l'appel en cours, remplacées à chaque proposition ;
+  // Devis avec Manon (ADR 0235) : lignes de l'appel en cours, remplacées à chaque proposition ;
   // brouillon à clore dès que le devis est enregistré. Pas sur la version web de l'application.
   const [calling, setCalling] = useState(false);
   const camille = useRef<Set<string>>(new Set());
@@ -180,7 +180,7 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
     setEditing("new");
   }
 
-  /** Lignes proposées par Camille : la liste de l'appel en cours remplace la précédente. */
+  /** Lignes proposées par Manon : la liste de l'appel en cours remplace la précédente. */
   function setCamilleLines(next: (VoiceLine | QuoteLineInput)[]) {
     const previous = camille.current;
     const added = next.map((line) => ({ ...line, key: newKey(), generated: true }));

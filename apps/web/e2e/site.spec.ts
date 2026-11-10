@@ -124,7 +124,7 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
     comparison.getByRole("rowheader", { name: /^Demandes reçues par mois/ }),
   ).toBeVisible();
   await expect(
-    comparison.getByRole("rowheader", { name: /^Camille, secrétaire au téléphone/ }),
+    comparison.getByRole("rowheader", { name: /^Manon, secrétaire au téléphone/ }),
   ).toBeVisible();
   // Calculateur de rentabilité (ADR 0265) : Premium à 500 €, chantier de 4 500 € à 25 %.
   await expect(page.getByText("1 chantier tous les 2 mois")).toBeVisible();
@@ -138,7 +138,7 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await page.getByRole("link", { name: /^Secrétaire téléphonique/ }).click();
   await expect(page).toHaveURL(/\/pro\/secretaire-telephonique$/);
   await expect(
-    page.getByRole("rowheader", { name: "Camille, secrétaire au téléphone" }),
+    page.getByRole("rowheader", { name: "Manon, secrétaire au téléphone" }),
   ).toBeVisible();
 
   await page.goto("/contact");

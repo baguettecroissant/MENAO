@@ -224,29 +224,29 @@ describe("demande de travaux par téléphone (ADR 0227)", () => {
   });
 });
 
-describe("une seule Camille : passage de relais (ADR 0228)", () => {
+describe("une seule Manon : passage de relais (ADR 0228)", () => {
   const ids = { pro: "assistant-pro", client: "assistant-client" };
 
-  it("le groupe commence par la Camille de la page, l'autre en relais", () => {
+  it("le groupe commence par la Manon de la page, l'autre en relais", () => {
     const squad = voiceSquad("client", ids);
     expect(squad.members.map((m) => m.assistantId)).toEqual(["assistant-client", "assistant-pro"]);
     expect(voiceSquad("pro", ids).members[0]?.assistantId).toBe("assistant-pro");
   });
 
-  it("chaque Camille peut passer la main à l'autre, sans rien dire, en gardant la conversation", () => {
+  it("chaque Manon peut passer la main à l'autre, sans rien dire, en gardant la conversation", () => {
     const [first, second] = voiceSquad("pro", ids).members;
     expect(first?.assistantDestinations).toEqual([
       expect.objectContaining({
         type: "assistant",
-        assistantName: "Camille particuliers",
+        assistantName: "Manon particuliers",
         message: "",
         transferMode: "swap-system-message-in-history",
       }),
     ]);
-    expect(second?.assistantDestinations[0]?.assistantName).toBe("Camille MENAO");
+    expect(second?.assistantDestinations[0]?.assistantName).toBe("Manon MENAO");
   });
 
-  it("la Camille qui reprend la main enchaîne au lieu de se présenter à nouveau", () => {
+  it("la Manon qui reprend la main enchaîne au lieu de se présenter à nouveau", () => {
     const [first, second] = voiceSquad("client", ids).members;
     expect(first?.assistantOverrides).toBeUndefined();
     expect(second?.assistantOverrides).toEqual({

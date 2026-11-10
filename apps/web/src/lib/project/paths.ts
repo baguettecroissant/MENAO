@@ -28,7 +28,7 @@ export function rehirePath(artisanId: string, chantierId: string, artisanName: s
   return `/mon-espace/nouvelle-demande?${params}`;
 }
 
-/** Demande préparée au téléphone par Camille (F-77, ADR 0227) : lien de l'e-mail. */
+/** Demande préparée au téléphone par Manon (F-77, ADR 0227) : lien de l'e-mail. */
 export function preparedRequestPath(token: string): string {
   return voicePreparedRequestPath(token);
 }

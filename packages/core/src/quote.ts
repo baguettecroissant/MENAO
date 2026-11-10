@@ -303,7 +303,7 @@ export function normalizeVoiceLines(
 }
 
 // ---------------------------------------------------------------------------
-// Devis en conversation avec Camille (F-85, ADR 0234) : lignes envoyées par l'outil
+// Devis en conversation avec Manon (F-85, ADR 0234) : lignes envoyées par l'outil
 // devis_proposer, lues avec indulgence (nombres en texte, unités en toutes lettres) puis
 // contrôlées par normalizeVoiceLines comme celles de la dictée.
 // ---------------------------------------------------------------------------

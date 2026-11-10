@@ -8,7 +8,7 @@ import { cancelAppointment } from "@/lib/commercial/prospect-actions";
 
 const t = fr.commercialProspects.day.camille;
 
-/** Annuler un rendez-vous pris par Camille (ADR 0226), avec une confirmation en deux temps. */
+/** Annuler un rendez-vous pris par Manon (ADR 0226), avec une confirmation en deux temps. */
 export function CancelAppointmentForm({ id }: { id: string }) {
   const [state, action, pending] = useActionState(cancelAppointment, initialFormState);
   const [confirming, setConfirming] = useState(false);

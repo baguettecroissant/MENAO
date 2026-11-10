@@ -1,5 +1,5 @@
 /**
- * E-mails de la secrétaire vocale « Camille » (F-75, ADR 0225), envoyés pendant un appel à la
+ * E-mails de la secrétaire vocale « Manon » (F-75, ADR 0225), envoyés pendant un appel à la
  * demande de l'appelant : le lien d'inscription d'un artisan, l'état du dossier d'un artisan
  * inscrit (envoyé à l'adresse de son compte : rien n'est dit au téléphone), et la demande de
  * travaux préparée pour un particulier (F-77, ADR 0227), l'état des demandes d'un particulier
@@ -9,7 +9,7 @@ import { SIGNUP_STEP_LABELS, type EmailContent } from "./content.ts";
 
 /** Pied de page : l'appelant a demandé l'e-mail ; aucune inscription à une liste. */
 export const VOICE_EMAIL_FOOTER =
-  "Vous recevez cet e-mail car vous l'avez demandé à Camille, l'assistante téléphonique de MENAO. Message envoyé automatiquement : merci de ne pas y répondre.";
+  "Vous recevez cet e-mail car vous l'avez demandé à Manon, l'assistante téléphonique de MENAO. Message envoyé automatiquement : merci de ne pas y répondre.";
 
 const hello = (firstName: string | null) => (firstName ? `Bonjour ${firstName},` : "Bonjour,");
 
@@ -31,7 +31,7 @@ export function voiceSignupLinkContent(input: {
       hello(input.firstName),
       "Comme convenu au téléphone, voici le lien pour créer votre compte artisan MENAO. L'inscription prend une dizaine de minutes, sur le site ou dans l'application.",
       "Préparez une photo de votre Kbis ou extrait INSEE de moins de 3 mois, de vos attestations décennale et RC Pro, de votre attestation URSSAF de moins de 6 mois et de votre pièce d'identité.",
-      "Une question ? Rappelez Camille, ou demandez à être rappelé par un conseiller.",
+      "Une question ? Rappelez Manon, ou demandez à être rappelé par un conseiller.",
     ],
     quote: null,
     cta: { label: "Créer mon compte artisan", url: `${site}/pro/inscription` },
@@ -140,7 +140,7 @@ export function voiceAppointmentContent(rdv: VoiceAppointment, siteUrl: string):
         ? `${rdv.advisor}, conseiller MENAO de votre secteur, passe vous voir le ${rdv.when}${rdv.address ? `, ${rdv.address}` : ""}.`
         : `${rdv.advisor}, conseiller MENAO de votre secteur, vous appelle le ${rdv.when}${rdv.phone ? ` au ${rdv.phone}` : ""}.`,
       "Pour l'inscription, préparez une photo de votre Kbis ou extrait INSEE de moins de 3 mois, de vos attestations décennale et RC Pro, de votre attestation URSSAF de moins de 6 mois et de votre pièce d'identité.",
-      "Un empêchement ? Rappelez Camille, l'assistante de MENAO, pour prévenir votre conseiller.",
+      "Un empêchement ? Rappelez Manon, l'assistante de MENAO, pour prévenir votre conseiller.",
     ],
     quote: null,
     cta: { label: "Découvrir l'espace pro", url: `${site}/pro` },
@@ -170,7 +170,7 @@ export function voiceWorkRequestContent(request: VoiceWorkRequest): EmailContent
     title: "Votre demande est prête",
     paragraphs: [
       hello(request.firstName),
-      "Comme convenu au téléphone avec Camille, voici votre demande de travaux. Elle n'est pas encore partie : rien n'est envoyé aux artisans tant que vous ne l'avez pas vérifiée.",
+      "Comme convenu au téléphone avec Manon, voici votre demande de travaux. Elle n'est pas encore partie : rien n'est envoyé aux artisans tant que vous ne l'avez pas vérifiée.",
       request.available > 0
         ? `${request.available === 1 ? "Un artisan vérifié disponible" : `${request.available} artisans vérifiés disponibles`}${near} ${request.available === 1 ? "vous est proposé" : "vous sont proposés"} ; vous pourrez changer ce choix.`
         : `Aucun artisan n'est encore disponible pour ces travaux${near} : depuis le lien, vous pourrez demander à l'équipe MENAO de chercher pour vous.`,

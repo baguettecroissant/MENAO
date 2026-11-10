@@ -26,11 +26,11 @@ const schema = z.object({
   // Connexion avec Google ou Apple (« google,apple ») : vide tant que les fournisseurs ne sont pas
   // configurés dans Supabase, aucun bouton (ADR 0108).
   NEXT_PUBLIC_OAUTH_PROVIDERS: z.string().optional(),
-  // Secrétaire vocale « Camille » (ADR 0225) : clé publique Vapi (faite pour le navigateur, limitée
+  // Secrétaire vocale « Manon » (ADR 0225) : clé publique Vapi (faite pour le navigateur, limitée
   // aux origines du site dans Vapi) et identifiant de l'assistant. Vides : aucun bouton d'appel.
   NEXT_PUBLIC_VAPI_PUBLIC_KEY: z.string().optional(),
   NEXT_PUBLIC_VAPI_ASSISTANT_ID: z.string().optional(),
-  // Camille côté particuliers (ADR 0227) : demande de travaux par téléphone. Vide : aucun bouton.
+  // Manon côté particuliers (ADR 0227) : demande de travaux par téléphone. Vide : aucun bouton.
   NEXT_PUBLIC_VAPI_CLIENT_ASSISTANT_ID: z.string().optional(),
   // Secrétaire dédiée de l'artisan (ADR 0232) : modèle d'assistante. Vide : pas d'essai possible.
   NEXT_PUBLIC_VAPI_SECRETARY_ASSISTANT_ID: z.string().optional(),

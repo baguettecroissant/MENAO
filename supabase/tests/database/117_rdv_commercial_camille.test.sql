@@ -1,4 +1,4 @@
--- Rendez-vous avec le commercial du secteur pris par Camille (F-76, ADR 0226) : commercial du
+-- Rendez-vous avec le commercial du secteur pris par Manon (F-76, ADR 0226) : commercial du
 -- secteur (début de code postal le plus long, commerciaux actifs seulement), rendez-vous déjà
 -- pris, réservation et ses contrôles, notification du commercial (sans coordonnées), lecture par
 -- le seul commercial concerné, annulation, fonctions réservées au rôle service. Données fictives
@@ -26,7 +26,7 @@ create function pg_temp.connecter(uid uuid, app_role text) returns void language
   )::text, true);
 $$;
 
--- Rôles ordinaires : aucune fonction de Camille.
+-- Rôles ordinaires : aucune fonction de Manon.
 set local role authenticated;
 select throws_ok($$ select * from public.voice_commercial_for_postcode('99600') $$, '42501', null,
   'compte connecté : commercial du secteur refusé');

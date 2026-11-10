@@ -286,17 +286,17 @@ export const fr = {
         "12 h à 13 h : prise de rendez-vous. 17 h à 18 h : relances et suivi. Les appels restent en semaine, de 10 h à 13 h et de 14 h à 20 h.",
       call: "Appeler",
       allProspects: "Voir tous mes prospects",
-      // Rendez-vous pris par la secrétaire vocale Camille (ADR 0226).
+      // Rendez-vous pris par la secrétaire vocale Manon (ADR 0226).
       camille: {
-        title: "Rendez-vous pris par Camille",
+        title: "Rendez-vous pris par Manon",
         intro:
-          "Camille, la secrétaire vocale de MENAO, réserve ces rendez-vous dans vos créneaux libres pour les artisans de votre zone qui veulent être accompagnés.",
+          "Manon, la secrétaire vocale de MENAO, réserve ces rendez-vous dans vos créneaux libres pour les artisans de votre zone qui veulent être accompagnés.",
         kinds: { appel: "Appel", visite: "Visite" } as Record<string, string>,
         email: "Écrire",
         cancel: "Annuler",
         cancelConfirm: "Confirmer l'annulation",
         cancelled: "Rendez-vous annulé : le créneau est de nouveau libre.",
-        cancelHint: "Prévenez l'artisan : Camille ne le fait pas.",
+        cancelHint: "Prévenez l'artisan : Manon ne le fait pas.",
       },
     },
     errors: {
@@ -1761,12 +1761,12 @@ export const fr = {
     },
   },
   search: {
-    // Demande préparée au téléphone par Camille (F-77, ADR 0227) : page du lien de l'e-mail.
+    // Demande préparée au téléphone par Manon (F-77, ADR 0227) : page du lien de l'e-mail.
     prepared: {
       metaTitle: "Votre demande de travaux",
       title: (firstName: string) => `${firstName}, votre demande est prête`,
       intro:
-        "Camille a préparé votre demande au téléphone. Rien n'est encore envoyé aux artisans : créez votre espace MENAO gratuit ou connectez-vous, puis vérifiez votre demande et envoyez-la.",
+        "Manon a préparé votre demande au téléphone. Rien n'est encore envoyé aux artisans : créez votre espace MENAO gratuit ou connectez-vous, puis vérifiez votre demande et envoyez-la.",
       project: "Votre demande",
       expiredTitle: "Ce lien n'est plus valable",
       expired:
@@ -4692,28 +4692,28 @@ export const fr = {
           "Aucune ligne n'a pu être tirée de la dictée. Citez les fournitures, les quantités et les prix.",
         unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
       },
-      // Devis en conversation avec Camille (F-85, ADR 0234).
+      // Devis en conversation avec Manon (F-85, ADR 0234).
       conversation: {
-        start: "Dicter avec Camille",
+        start: "Dicter avec Manon",
         hint: "elle vous pose les questions",
-        live: "Camille vous écoute : les lignes s'ajoutent pendant l'appel",
-        speaking: "Camille parle…",
+        live: "Manon vous écoute : les lignes s'ajoutent pendant l'appel",
+        speaking: "Manon parle…",
         updated: (n: number) =>
           n <= 1
-            ? "Camille a proposé 1 ligne : vérifiez-la."
-            : `Camille a proposé ${n} lignes : vérifiez-les.`,
+            ? "Manon a proposé 1 ligne : vérifiez-la."
+            : `Manon a proposé ${n} lignes : vérifiez-les.`,
         draft: (n: number) =>
           n <= 1
-            ? "Lors de votre dernier appel, Camille a préparé 1 ligne."
-            : `Lors de votre dernier appel, Camille a préparé ${n} lignes.`,
+            ? "Lors de votre dernier appel, Manon a préparé 1 ligne."
+            : `Lors de votre dernier appel, Manon a préparé ${n} lignes.`,
         draftAdd: "Ajouter au devis",
         draftDiscard: "Écarter",
         errors: {
-          non_inclus: "Le devis avec Camille est inclus dans les formules Premium et Entreprise.",
+          non_inclus: "Le devis avec Manon est inclus dans les formules Premium et Entreprise.",
           minutes_epuisees:
             "Vos minutes de voix du mois sont épuisées : vous pouvez en recharger dans « Ma formule ».",
           invalid: "Ce chantier n'attend plus de devis.",
-          unavailable: "Camille n'est pas disponible pour le moment. Réessayez dans un instant.",
+          unavailable: "Manon n'est pas disponible pour le moment. Réessayez dans un instant.",
           generic: "L'appel n'a pas pu démarrer. Réessayez dans un instant.",
         } as Record<string, string>,
         // Page intégrée à l'application (ADR 0235) : aucun achat évoqué (CLAUDE.md règle 10).
@@ -5531,7 +5531,7 @@ export const fr = {
         title: "Pendant que vous êtes sur le chantier, MENAO travaille pour vous.",
         items: [
           {
-            title: "Camille répond au téléphone",
+            title: "Manon répond au téléphone",
             text: "Votre secrétaire prend les appels quand vous êtes sur le chantier, note la demande et fixe le rendez-vous dans votre agenda.",
           },
           {
@@ -5548,8 +5548,8 @@ export const fr = {
           },
         ],
         more: "Voir ce qui est inclus dans chaque formule",
-        callLabel: "Exemple de compte rendu d'appel de Camille",
-        callTitle: "Camille · appel entrant",
+        callLabel: "Exemple de compte rendu d'appel de Manon",
+        callTitle: "Manon · appel entrant",
         callMeta: "06 •• •• •• 41 · il y a 12 min",
         callStatus: "RDV pris",
         callText:
@@ -5625,10 +5625,10 @@ export const fr = {
           },
           "secretaire-telephonique": {
             eyebrow: "Secrétaire téléphonique",
-            metaTitle: "Secrétaire téléphonique pour artisan : Camille répond à vos clients",
+            metaTitle: "Secrétaire téléphonique pour artisan : Manon répond à vos clients",
             metaDescription:
-              "Quand vous êtes sur le chantier, Camille répond à vos clients avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
-            title: "Camille répond à vos clients quand vous êtes sur le chantier.",
+              "Quand vous êtes sur le chantier, Manon répond à vos clients avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
+            title: "Manon répond à vos clients quand vous êtes sur le chantier.",
             lead: "Votre secrétaire dédiée, avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
             availability: "Avec Premium et Entreprise",
             stepsTitle: "Votre secrétaire, réglée en quelques minutes.",
@@ -5653,7 +5653,7 @@ export const fr = {
               },
               {
                 title: "Des rendez-vous dans vos créneaux",
-                text: "Camille ne réserve que vos créneaux libres, selon les horaires de votre agenda.",
+                text: "Manon ne réserve que vos créneaux libres, selon les horaires de votre agenda.",
               },
               {
                 title: "Des minutes incluses",
@@ -5788,14 +5788,14 @@ export const fr = {
             text: "Acompte et solde par carte, versés sur votre compte Stripe. MENAO ne touche jamais à votre argent.",
           },
           {
-            title: "Camille répond au téléphone",
+            title: "Manon répond au téléphone",
             text: "Votre secrétaire prend les appels quand vous êtes sur le chantier et fixe le rendez-vous dans votre agenda.",
           },
         ],
         priceFrom: "Dès",
         priceUnit: (plan: string) => `HT / mois · formule ${plan}`,
         priceOthers: (premium: string, entreprise: string) =>
-          `Premium ${premium} et Entreprise ${entreprise} HT / mois, avec Camille au téléphone. Au mois sans engagement, ou à l'année avec 2 mois offerts.`,
+          `Premium ${premium} et Entreprise ${entreprise} HT / mois, avec Manon au téléphone. Au mois sans engagement, ou à l'année avec 2 mois offerts.`,
       },
       // Fragments d'interface des cartes de l'outil (valeurs d'exemple, ADR 0265).
       featureVisuals: {
@@ -5831,10 +5831,9 @@ export const fr = {
         breadcrumb: "Formules",
         faqTitle: "Vos questions avant de vous lancer.",
         agentsWritten: "Assistants écrits : devis dicté, tickets lus, aide",
-        agentsVoice: (minutes: string) =>
-          `Camille, secrétaire au téléphone · ${minutes} min / mois`,
+        agentsVoice: (minutes: string) => `Manon, secrétaire au téléphone · ${minutes} min / mois`,
         agentsLines: (lines: number, minutes: string) =>
-          `Camille sur ${lines} lignes · ${minutes} min / mois`,
+          `Manon sur ${lines} lignes · ${minutes} min / mois`,
       },
       calculator: {
         eyebrow: "Rentabilité",
@@ -6113,13 +6112,13 @@ export const fr = {
     },
     /** Assistant des pages Pro (F-69, ADR 0218). */
     assistant: {
-      // Secrétaire vocale « Camille » (ADR 0225) : appel web, visible quand elle est configurée.
+      // Secrétaire vocale « Manon » (ADR 0225) : appel web, visible quand elle est configurée.
       voice: {
-        start: "Parler à Camille",
+        start: "Parler à Manon",
         hint: "Assistante vocale · IA",
         connecting: "Connexion…",
-        live: "En ligne avec Camille",
-        speaking: "Camille parle…",
+        live: "En ligne avec Manon",
+        speaking: "Manon parle…",
         mute: "Couper mon micro",
         unmute: "Rétablir mon micro",
         hangUp: "Raccrocher",
@@ -7213,7 +7212,7 @@ export const fr = {
             dictation: "Devis dicté dans l'application",
             expenses: "Lecture des tickets de dépenses",
             secretary: "Secrétaire dédiée, avec votre nom, vos horaires et votre agenda",
-            conversationalQuote: "Devis dicté en conversation avec Camille",
+            conversationalQuote: "Devis dicté en conversation avec Manon",
             accounting: "Agent comptable : rapprochement, relance des impayés, synthèse du mois",
             reminders: "Rappels automatiques de vos clients",
           },
@@ -9449,7 +9448,7 @@ export const fr = {
       reception: {
         title: "Horaires d'accueil",
         intro:
-          "Camille s'en sert pour dire quand l'équipe rappelle. Plus tard, ils aiguilleront la ligne téléphonique : l'équipe aux heures d'accueil, Camille le reste du temps.",
+          "Manon s'en sert pour dire quand l'équipe rappelle. Plus tard, ils aiguilleront la ligne téléphonique : l'équipe aux heures d'accueil, Manon le reste du temps.",
         openNow: (time: string) => `Ouvert maintenant, jusqu'à ${time}`,
         closedNow: (when: string) => `Fermé, réouverture ${when}`,
         closedUnknown: "Fermé, aucune plage d'ouverture dans les deux semaines",

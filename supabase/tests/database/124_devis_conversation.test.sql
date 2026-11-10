@@ -1,4 +1,4 @@
--- Devis dicté en conversation avec Camille (F-85, ADR 0234) : contexte du chantier (refusé si le
+-- Devis dicté en conversation avec Manon (F-85, ADR 0234) : contexte du chantier (refusé si le
 -- chantier n'est pas à l'artisan ou si le devis est déjà parti), prix habituels, brouillon d'un
 -- appel remplacé à chaque proposition, lecture par l'artisan seul, clôture, fonctions réservées
 -- au rôle service. Données fictives (identifiants c124…).

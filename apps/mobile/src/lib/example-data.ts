@@ -238,7 +238,7 @@ export function exampleAgendaWeek(monday: string, now = new Date()): AgendaWeek 
       [c.client_first_name, c.client_last_name].filter(Boolean).join(" ") || null,
     ]),
   );
-  // Visite prise par Camille le prochain jour ouvré, à 8 h, pour montrer la pastille.
+  // Visite prise par Manon le prochain jour ouvré, à 8 h, pour montrer la pastille.
   let next = addDays(today, 1);
   while (weekdayOf(next) > 5) next = addDays(next, 1);
   const camille = parisLocalToDate(next, "08:00");

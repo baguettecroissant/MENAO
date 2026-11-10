@@ -3,7 +3,7 @@
 // secrétaire, prépare le contexte de l'appel (nom annoncé, métiers, zone, horaires, consignes) et
 // signe un jeton de 30 minutes qui dit pour quel artisan les outils agissent. Minutes épuisées :
 // mode « message » (prise de message seulement).
-// Usage « devis » (F-85, ADR 0234) : appel avec Camille depuis l'éditeur de devis d'un chantier
+// Usage « devis » (F-85, ADR 0234) : appel avec Manon depuis l'éditeur de devis d'un chantier
 // de l'artisan. Droit devis_conversation et minutes restantes exigés ; contexte du chantier,
 // prix habituels, jeton lié au chantier et assistante Vapi « Devis artisan ».
 // Aucune donnée personnelle dans les journaux.

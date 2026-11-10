@@ -12,7 +12,7 @@ export const PRO_FEATURES = [
       "Dictée intelligente du devis",
       "Signature électronique du client",
       "Brouillon de devis prêt dès la demande",
-      "Devis préparé en conversation avec Camille",
+      "Devis préparé en conversation avec Manon",
       "Devis pré-générés selon vos paramètres",
     ],
     faq: [
@@ -25,10 +25,10 @@ export const PRO_FEATURES = [
   {
     slug: "secretaire-telephonique",
     included: [
-      "Camille, secrétaire au téléphone",
+      "Manon, secrétaire au téléphone",
       "Minutes de voix incluses par mois",
       "Lignes de secrétaire",
-      "Devis préparé en conversation avec Camille",
+      "Devis préparé en conversation avec Manon",
       "Rappels de rendez-vous à vos clients",
       "Recharges de minutes",
     ],

@@ -60,10 +60,10 @@ async function prepare(bridge: Bridge): Promise<VoiceSession> {
 }
 
 /**
- * « Dicter avec Camille » dans l'application (ADR 0235) : le kit vocal de Vapi ne tourne pas dans
+ * « Dicter avec Manon » dans l'application (ADR 0235) : le kit vocal de Vapi ne tourne pas dans
  * l'application, la conversation passe par cette page intégrée. Elle lance l'appel dès
  * l'affichage et renvoie à l'application le début de l'appel, chaque liste de lignes proposée par
- * Camille (outil devis_proposer, relue par l'application avec @menao/core) et la fin de l'appel.
+ * Manon (outil devis_proposer, relue par l'application avec @menao/core) et la fin de l'appel.
  */
 export function AppQuoteCall() {
   const [bridge, setBridge] = useState<Bridge | null | undefined>(undefined);
