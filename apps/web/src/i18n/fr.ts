@@ -5851,7 +5851,7 @@ export const fr = {
       },
       video: {
         eyebrow: "En vidéo",
-        title: "MENAO en 80 secondes",
+        title: "MENAO en 60 secondes",
         subtitle:
           "De la demande de votre client à la réception du chantier : voyez comment MENAO vous accompagne à chaque étape.",
         label: "Vidéo de démonstration de MENAO, avec voix off et sous-titres",

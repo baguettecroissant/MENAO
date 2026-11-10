@@ -81,10 +81,10 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(page.getByRole("heading", { name: "Questions fréquentes" })).toBeVisible();
 
   await page.goto("/pro");
-  // Vidéo de démonstration (ADR 0058) : chargée seulement à la lecture, aperçu et sous-titres servis.
-  const video = page.getByRole("region", { name: "MENAO en 80 secondes" }).locator("video");
+  // Film de vente (ADR 0275) : chargé seulement à la lecture, aperçu et sous-titres servis.
+  const video = page.getByRole("region", { name: "MENAO en 60 secondes" }).locator("video");
   await expect(video).toHaveAttribute("preload", "none");
-  for (const file of ["/videos/menao-demo.webp", "/videos/menao-demo.vtt"]) {
+  for (const file of ["/videos/menao-film-pro.webp", "/videos/menao-film-pro.vtt"]) {
     expect((await page.request.get(file)).status()).toBe(200);
   }
   // Simulation de commission (F-03) : 15 % de 8 000 € comparés à l'abonnement Base.
