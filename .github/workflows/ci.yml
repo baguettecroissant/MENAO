@@ -126,8 +126,10 @@ jobs:
             # Boutons Google et Apple affichés ; la redirection vers le fournisseur est interceptée.
             echo "NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple"
           } >> "$GITHUB_ENV"
+      # Sans les paquets d'Ubuntu (--with-deps) : l'image GitHub a déjà Chrome et ses
+      # bibliothèques, et une panne des miroirs Ubuntu (11/11/2026) bloquait tous les tests.
       - name: Installer Chromium
-        run: pnpm --filter web exec playwright install --with-deps chromium
+        run: pnpm --filter web exec playwright install chromium
       - name: Build
         run: pnpm --filter web build
       - name: Tests Playwright
