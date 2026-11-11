@@ -11,12 +11,14 @@ import { theme } from "@/ui/theme";
 const t = fr.needSummary;
 const { colors, font, radius, spacing } = theme;
 
-/** Date souhaitée du projet, en clair. */
+/** Date souhaitée du projet, en clair ; « Urgent » d'abord pour une demande urgente (ADR 0279). */
 export function summaryDate(summary: NeedSummary): string {
-  if (summary.dateMode === "date" && summary.dateSouhaitee) {
-    return formatLongDate(summary.dateSouhaitee);
-  }
-  return summary.dateMode === "des_que_possible" ? t.asap : t.unknownDate;
+  const start =
+    summary.dateMode === "date" && summary.dateSouhaitee
+      ? formatLongDate(summary.dateSouhaitee)
+      : null;
+  if (summary.urgent) return start ? `${t.urgent} · ${start}` : t.urgent;
+  return start ?? (summary.dateMode === "des_que_possible" ? t.asap : t.unknownDate);
 }
 
 /**

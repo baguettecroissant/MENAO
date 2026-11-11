@@ -1,7 +1,7 @@
-import { MAX_PROJECT_LOTS, parisToday } from "@menao/core";
+import { detectUrgency, MAX_PROJECT_LOTS, parisToday } from "@menao/core";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import { Minus, Pencil, Plus, Search } from "lucide-react-native";
+import { Minus, Pencil, Plus, Search, Siren, TriangleAlert } from "lucide-react-native";
 import { type ReactNode, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
@@ -12,6 +12,7 @@ import {
   FicheCard,
   FicheLink,
   FicheTag,
+  type FicheTone,
 } from "@/components/pro/fiche-kit";
 import { ProjectPhotosCard } from "@/components/project-photos-card";
 import { PillRow, SelectPill } from "@/components/request-kit";
@@ -21,6 +22,7 @@ import { searchAddresses, searchCommunes } from "@/lib/geo";
 import {
   saveAndValidateCriteria,
   saveProjectLots,
+  setProjectUrgency,
   type Criteria,
   type ProjectForReview,
   type ProjectPhoto,
@@ -35,7 +37,9 @@ const r = fr.review;
 const LIEUX = ["appartement", "maison", "jardin", "entreprise"] as const;
 const SURFACES = ["moins_10", "10_20", "20_50", "plus_50"] as const;
 const BUDGETS = ["moins_1000", "1000_5000", "5000_15000", "15000_50000", "plus_50000"] as const;
-const DATE_MODES = ["des_que_possible", "date", "inconnue"] as const;
+/** Délai : l'urgence d'abord, puis le début souhaité (ADR 0279). */
+const DELAYS = ["urgent", "des_que_possible", "date", "inconnue"] as const;
+type Delay = (typeof DELAYS)[number];
 
 /** Bascule d'un code dans une liste (puces à choix multiple). */
 function toggle(list: string[], code: string): string[] {
@@ -47,11 +51,12 @@ type Section = "trade" | "site" | "address" | "date";
 /**
  * Vérification des critères pré-remplis par l'IA (F-07), d'après la maquette « Vérifiez vos
  * critères » et comme sur le site : chaque carte montre un résumé et un crayon ; la modification
- * se fait dans la carte (Annuler / Enregistrer). Métier et travaux, chantier, adresse (ville puis
- * adresse exacte de cette ville), date de début, photos. « Trouver l'artisan idéal » enregistre le
- * tout, vérifié par la base (métier et ville obligatoires).
- * Écran « Nette » (lot 12, maquette « CriteresNette » transposée) : grand titre, rubriques en
- * cartes, choix en pastilles (bleu nuit avec coche une fois choisis) et bouton collé en bas.
+ * se fait dans la carte (Annuler / Enregistrer). « Trouver l'artisan idéal » enregistre le tout,
+ * vérifié par la base (métier et ville obligatoires).
+ * Écran « Nette » (lot 12) : grand titre, rubriques en cartes, choix en pastilles et bouton collé
+ * en bas. Refonte F-130 (maquette « UrgenceMobile », ADR 0279) : bandeau « Demande urgente » en
+ * tête, groupe « L'essentiel » (métier, adresse, délai en quatre choix dont « Urgent »), groupe
+ * « Votre chantier » (description, chantier, photos), autres métiers en bas.
  */
 export function CriteriaReview({
   project,
@@ -78,6 +83,12 @@ export function CriteriaReview({
   // Chantier à plusieurs métiers (ADR 0167) : enregistrés au lancement de la recherche.
   const [lots, setLots] = useState<string[]>(project.lotTrades);
   const [allTrades, setAllTrades] = useState(false);
+  // Urgence (ADR 0279) : réglée ici, enregistrée au lancement de la recherche si elle a changé.
+  const [urgent, setUrgent] = useState(project.urgency.active);
+  const [urgencyTouched, setUrgencyTouched] = useState(false);
+  const [draftDelay, setDraftDelay] = useState<Delay>(
+    project.urgency.active ? "urgent" : (project.criteria.dateMode ?? "inconnue"),
+  );
   const set = (patch: Partial<Criteria>) => setDraft((current) => ({ ...current, ...patch }));
   const today = parisToday();
   const tradeWorks = workTypes.filter((w) => w.trade === draft.tradeCode);
@@ -85,8 +96,10 @@ export function CriteriaReview({
   const labelOf = (list: readonly { code: string; label: string }[], code: string) =>
     list.find((item) => item.code === code)?.label ?? code;
 
+  const delay: Delay = urgent ? "urgent" : (criteria.dateMode ?? "inconnue");
   function edit(section: Section) {
     setDraft(criteria);
+    setDraftDelay(delay);
     setEditing(section);
   }
   function cancel() {
@@ -95,9 +108,27 @@ export function CriteriaReview({
     setShowPicker(false);
   }
   function save() {
-    setCriteria(draft);
+    if (editing === "date") {
+      const isUrgent = draftDelay === "urgent";
+      setCriteria({
+        ...draft,
+        dateMode: isUrgent ? "des_que_possible" : draftDelay,
+        dateSouhaitee: draftDelay === "date" ? draft.dateSouhaitee : null,
+      });
+      if (isUrgent !== urgent) {
+        setUrgent(isUrgent);
+        setUrgencyTouched(true);
+      }
+    } else {
+      setCriteria(draft);
+    }
     setEditing(null);
     setShowPicker(false);
+  }
+
+  function notUrgent() {
+    setUrgent(false);
+    setUrgencyTouched(true);
   }
 
   function changeTrade(code: string) {
@@ -110,6 +141,14 @@ export function CriteriaReview({
   async function submit() {
     setFailure(null);
     setSaving(true);
+    // Urgence changée ici : enregistrée d'abord (urgent : début « dès que possible » en base).
+    if (urgencyTouched) {
+      const urgencyError = await setProjectUrgency(project.id, urgent);
+      if (urgencyError) {
+        setSaving(false);
+        return setFailure(urgencyError);
+      }
+    }
     const lotError = await saveProjectLots(
       project.id,
       lots.filter((code) => code !== criteria.tradeCode),
@@ -136,7 +175,9 @@ export function CriteriaReview({
         ? Boolean(draft.tradeCode)
         : section === "address"
           ? Boolean(draft.ville)
-          : true,
+          : section === "date"
+            ? draftDelay !== "date" || Boolean(draft.dateSouhaitee)
+            : true,
   });
   // Autres métiers : ceux proposés d'après la description, puis ceux ajoutés.
   const proposedLots = project.suggestedLots.filter((code) => code !== criteria.tradeCode);
@@ -158,9 +199,12 @@ export function CriteriaReview({
     criteria.budget ? fr.budgets[criteria.budget] : null,
   ].filter((tag): tag is string => Boolean(tag));
   const dateTag =
-    criteria.dateMode === "date" && criteria.dateSouhaitee
+    delay === "date" && criteria.dateSouhaitee
       ? r.startsOn(formatLongDate(criteria.dateSouhaitee))
-      : r.dateModes[criteria.dateMode ?? "des_que_possible"];
+      : r.dateModes[delay];
+  // D'où vient l'urgence : le particulier l'a réglée, ou sa description la dit.
+  const manual = urgencyTouched || project.urgency.manual === true;
+  const excerpt = manual ? null : (detectUrgency(project.description)?.excerpt ?? null);
 
   return (
     <ActionScreen
@@ -183,18 +227,45 @@ export function CriteriaReview({
       {project.lowConfidence && <Notice tone="info">{r.lowConfidence}</Notice>}
       {photosFailed && <Notice tone="error">{fr.search.errors.photos}</Notice>}
 
-      <FicheCard padding={4.5} gap={2.5}>
-        <CardHeading title={r.yourText} />
-        <Text style={styles.description} numberOfLines={expanded ? undefined : 4}>
-          {project.description}
+      {urgent ? (
+        <View style={styles.urgency}>
+          <View style={styles.urgencyIcon}>
+            <Siren size={19} color={colors.danger} />
+          </View>
+          <View style={styles.urgencyText}>
+            <Text role="heading" aria-level={2} style={styles.urgencyTitle}>
+              {r.urgency.title}
+            </Text>
+            <Text style={styles.urgencyBody}>
+              {manual
+                ? r.urgency.manual
+                : excerpt
+                  ? r.urgency.fromText(excerpt)
+                  : r.urgency.fromAnalysis}{" "}
+              {r.urgency.body}
+            </Text>
+            <Pressable
+              role="button"
+              hitSlop={10}
+              disabled={editing !== null}
+              onPress={notUrgent}
+              style={({ pressed }) => [
+                styles.notUrgent,
+                editing !== null && styles.locked,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.notUrgentText}>{r.urgency.notUrgent}</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+      <View style={styles.group}>
+        <Text role="heading" aria-level={2} style={styles.groupTitle}>
+          {r.groups.essential.title}
         </Text>
-        {project.description.length > 180 && (
-          <Pressable role="button" hitSlop={8} onPress={() => setExpanded(!expanded)}>
-            <Text style={styles.link}>{expanded ? r.less : r.more}</Text>
-          </Pressable>
-        )}
-      </FicheCard>
-
+        <Text style={styles.groupDescription}>{r.groups.essential.description}</Text>
+      </View>
       <EditableCard
         title={r.trade}
         help={r.tradeHelp}
@@ -227,95 +298,6 @@ export function CriteriaReview({
         ) : (
           <Text style={styles.muted}>{r.worksNeedTrade}</Text>
         )}
-      </EditableCard>
-
-      {criteria.tradeCode ? (
-        <FicheCard padding={4.5} gap={3}>
-          <CardHeading title={r.lots.title} />
-          <Text style={styles.muted}>{proposedLots.length ? r.lots.suggested : r.lots.none}</Text>
-          {listedLots.length > 0 ? (
-            <PillRow>
-              {listedLots.map((code) => (
-                <SelectPill
-                  key={code}
-                  label={labelOf(trades, code)}
-                  selected={lots.includes(code)}
-                  onPress={() => toggleLot(code)}
-                />
-              ))}
-            </PillRow>
-          ) : null}
-          <FicheLink
-            icon={allTrades ? Minus : Plus}
-            label={allTrades ? r.lots.hide : r.lots.add}
-            onPress={() => setAllTrades(!allTrades)}
-          />
-          {allTrades ? (
-            <PillRow>
-              {trades
-                .filter((t) => t.code !== criteria.tradeCode && !listedLots.includes(t.code))
-                .map((t) => (
-                  <SelectPill
-                    key={t.code}
-                    label={t.label}
-                    selected={lots.includes(t.code)}
-                    onPress={() => toggleLot(t.code)}
-                  />
-                ))}
-            </PillRow>
-          ) : null}
-          <Text style={styles.hint}>{lotsFull ? r.lots.limit : r.lots.independent}</Text>
-        </FicheCard>
-      ) : null}
-
-      <EditableCard title={r.site} help={r.siteHelp} summary={siteTags} {...card("site")}>
-        <Text style={styles.label}>{r.lieu}</Text>
-        <PillRow>
-          {LIEUX.map((lieu) => (
-            <SelectPill
-              key={lieu}
-              single
-              label={fr.lieux[lieu]}
-              selected={draft.lieuType === lieu}
-              onPress={() => set({ lieuType: draft.lieuType === lieu ? null : lieu })}
-            />
-          ))}
-        </PillRow>
-        <Text style={styles.label}>{r.rooms}</Text>
-        <PillRow>
-          {rooms.map((room) => (
-            <SelectPill
-              key={room.code}
-              label={room.label}
-              selected={(draft.roomCodes ?? []).includes(room.code)}
-              onPress={() => set({ roomCodes: toggle(draft.roomCodes ?? [], room.code) })}
-            />
-          ))}
-        </PillRow>
-        <Text style={styles.label}>{r.surface}</Text>
-        <PillRow>
-          {SURFACES.map((surface) => (
-            <SelectPill
-              key={surface}
-              single
-              label={fr.surfaces[surface]}
-              selected={draft.surface === surface}
-              onPress={() => set({ surface: draft.surface === surface ? null : surface })}
-            />
-          ))}
-        </PillRow>
-        <Text style={styles.label}>{r.budget}</Text>
-        <PillRow>
-          {BUDGETS.map((budget) => (
-            <SelectPill
-              key={budget}
-              single
-              label={fr.budgets[budget]}
-              selected={draft.budget === budget}
-              onPress={() => set({ budget: draft.budget === budget ? null : budget })}
-            />
-          ))}
-        </PillRow>
       </EditableCard>
 
       <EditableCard
@@ -375,18 +357,29 @@ export function CriteriaReview({
           ))}
       </EditableCard>
 
-      <EditableCard title={r.date} help={r.dateHelp} summary={[dateTag]} {...card("date")}>
+      <EditableCard
+        title={r.date}
+        help={r.dateHelp}
+        summary={[dateTag]}
+        summaryTone={urgent ? "danger" : "primary"}
+        {...card("date")}
+      >
         <RadioCards
           legend={r.date}
           hideLegend
-          options={DATE_MODES.map((mode) => ({ value: mode, label: r.dateModes[mode] }))}
-          value={draft.dateMode ?? null}
+          options={DELAYS.map((mode) => ({
+            value: mode,
+            label: r.dateModes[mode],
+            detail: r.dateDetails[mode],
+          }))}
+          value={draftDelay}
           onChange={(mode) => {
-            set({ dateMode: mode });
+            setDraftDelay(mode);
+            set({ dateMode: mode === "urgent" ? "des_que_possible" : mode });
             setShowPicker(mode === "date" && Platform.OS === "android");
           }}
         />
-        {draft.dateMode === "date" && (
+        {draftDelay === "date" && (
           <DatePicker
             value={draft.dateSouhaitee ?? null}
             today={today}
@@ -400,7 +393,121 @@ export function CriteriaReview({
         )}
       </EditableCard>
 
+      <View style={styles.group}>
+        <Text role="heading" aria-level={2} style={styles.groupTitle}>
+          {r.groups.site.title}
+        </Text>
+        <Text style={styles.groupDescription}>{r.groups.site.description}</Text>
+      </View>
+      <FicheCard padding={4.5} gap={2.5}>
+        <CardHeading title={r.yourText} />
+        <Text style={styles.description} numberOfLines={expanded ? undefined : 4}>
+          {project.description}
+        </Text>
+        {project.description.length > 180 && (
+          <Pressable role="button" hitSlop={8} onPress={() => setExpanded(!expanded)}>
+            <Text style={styles.link}>{expanded ? r.less : r.more}</Text>
+          </Pressable>
+        )}
+      </FicheCard>
+
+      <EditableCard title={r.site} help={r.siteHelp} summary={siteTags} {...card("site")}>
+        <Text style={styles.label}>{r.lieu}</Text>
+        <PillRow>
+          {LIEUX.map((lieu) => (
+            <SelectPill
+              key={lieu}
+              single
+              label={fr.lieux[lieu]}
+              selected={draft.lieuType === lieu}
+              onPress={() => set({ lieuType: draft.lieuType === lieu ? null : lieu })}
+            />
+          ))}
+        </PillRow>
+        <Text style={styles.label}>{r.rooms}</Text>
+        <PillRow>
+          {rooms.map((room) => (
+            <SelectPill
+              key={room.code}
+              label={room.label}
+              selected={(draft.roomCodes ?? []).includes(room.code)}
+              onPress={() => set({ roomCodes: toggle(draft.roomCodes ?? [], room.code) })}
+            />
+          ))}
+        </PillRow>
+        <Text style={styles.label}>{r.surface}</Text>
+        <PillRow>
+          {SURFACES.map((surface) => (
+            <SelectPill
+              key={surface}
+              single
+              label={fr.surfaces[surface]}
+              selected={draft.surface === surface}
+              onPress={() => set({ surface: draft.surface === surface ? null : surface })}
+            />
+          ))}
+        </PillRow>
+        <Text style={styles.label}>{r.budget}</Text>
+        <PillRow>
+          {BUDGETS.map((budget) => (
+            <SelectPill
+              key={budget}
+              single
+              label={fr.budgets[budget]}
+              selected={draft.budget === budget}
+              onPress={() => set({ budget: draft.budget === budget ? null : budget })}
+            />
+          ))}
+        </PillRow>
+      </EditableCard>
+
       <ProjectPhotosCard projectId={project.id} initial={photos} advise={project.advisePhotos} />
+
+      {criteria.tradeCode ? (
+        <FicheCard padding={4.5} gap={3}>
+          <CardHeading title={r.lots.title} />
+          <Text style={styles.muted}>{proposedLots.length ? r.lots.suggested : r.lots.none}</Text>
+          {listedLots.length > 0 ? (
+            <PillRow>
+              {listedLots.map((code) => (
+                <SelectPill
+                  key={code}
+                  label={labelOf(trades, code)}
+                  selected={lots.includes(code)}
+                  onPress={() => toggleLot(code)}
+                />
+              ))}
+            </PillRow>
+          ) : null}
+          <FicheLink
+            icon={allTrades ? Minus : Plus}
+            label={allTrades ? r.lots.hide : r.lots.add}
+            onPress={() => setAllTrades(!allTrades)}
+          />
+          {allTrades ? (
+            <PillRow>
+              {trades
+                .filter((t) => t.code !== criteria.tradeCode && !listedLots.includes(t.code))
+                .map((t) => (
+                  <SelectPill
+                    key={t.code}
+                    label={t.label}
+                    selected={lots.includes(t.code)}
+                    onPress={() => toggleLot(t.code)}
+                  />
+                ))}
+            </PillRow>
+          ) : null}
+          <Text style={styles.hint}>{lotsFull ? r.lots.limit : r.lots.independent}</Text>
+        </FicheCard>
+      ) : null}
+
+      {urgent ? (
+        <View style={styles.danger}>
+          <TriangleAlert size={15} color={colors["muted-foreground"]} />
+          <Text style={styles.dangerText}>{fr.search.urgency.danger}</Text>
+        </View>
+      ) : null}
     </ActionScreen>
   );
 }
@@ -414,6 +521,7 @@ function EditableCard({
   title,
   help,
   summary,
+  summaryTone = "primary",
   editing,
   locked,
   canSave,
@@ -425,6 +533,7 @@ function EditableCard({
   title: string;
   help: string;
   summary: string[];
+  summaryTone?: FicheTone;
   editing: boolean;
   locked: boolean;
   canSave: boolean;
@@ -469,7 +578,7 @@ function EditableCard({
       ) : summary.length > 0 ? (
         <View style={styles.tags}>
           {summary.map((tag) => (
-            <FicheTag key={tag} text={tag} tone="primary" />
+            <FicheTag key={tag} text={tag} tone={summaryTone} />
           ))}
         </View>
       ) : (
@@ -566,6 +675,48 @@ const styles = StyleSheet.create({
   selectedValue: { flex: 1, fontFamily: font.regular, fontSize: 16, color: colors.foreground },
   change: { fontFamily: font.semibold, fontSize: 15, color: colors["primary-strong"] },
   hint: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
+  group: { gap: 2, marginTop: spacing(2) },
+  groupTitle: {
+    fontFamily: font.display,
+    fontSize: 21,
+    letterSpacing: -0.42,
+    color: colors.foreground,
+  },
+  groupDescription: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  urgency: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(3),
+    padding: spacing(3.5),
+    borderRadius: 16,
+    backgroundColor: colors["danger-soft"],
+  },
+  urgencyIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  urgencyText: { flex: 1, gap: 3 },
+  urgencyTitle: { fontFamily: font.display, fontSize: 17, color: colors.danger },
+  urgencyBody: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  notUrgent: { alignSelf: "flex-start", paddingVertical: spacing(1.5) },
+  notUrgentText: {
+    fontFamily: font.semibold,
+    fontSize: 14,
+    color: colors.foreground,
+    textDecorationLine: "underline",
+  },
+  danger: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2) },
+  dangerText: {
+    flex: 1,
     fontFamily: font.regular,
     fontSize: 13,
     lineHeight: 18,

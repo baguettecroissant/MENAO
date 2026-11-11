@@ -1,16 +1,19 @@
 import {
   BrickWall,
   Check,
+  Clock,
   Flame,
   Hammer,
   type LucideIcon,
+  MapPin,
   PaintRoller,
+  Siren,
   Sparkles,
   Wrench,
   Zap,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Animated, Easing, Platform, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { LogoMark } from "@/components/logo";
@@ -24,8 +27,8 @@ const a = fr.search.analysis;
 /** Rythme des étapes et des « Le saviez-vous ? » (millisecondes), comme sur le site. */
 const STEP_MS = 1500;
 const FACT_MS = 4500;
-/** Taille de l'illustration et rayon de l'orbite des métiers. */
-const SIZE = 256;
+/** Taille de l'illustration et rayon de l'orbite des métiers (maquette « UrgenceMobile »). */
+const SIZE = 220;
 const ORBIT = SIZE * 0.39;
 const ICON = 44;
 /** Métiers en orbite : plomberie, électricité, peinture, menuiserie, chauffage, maçonnerie. */
@@ -222,13 +225,52 @@ function AnalysisVisual({ animate }: { animate: boolean }) {
   );
 }
 
+/** Ce qui a déjà été compris pendant la saisie (ADR 0179), affiché sans attendre l'analyse. */
+export type AnalysisUnderstanding = {
+  trade: string | null;
+  city: string | null;
+  timing: string | null;
+};
+
+/** Une information comprise : pastille ronde, libellé, valeur (rouge pour l'urgence). */
+function UnderstoodChip({
+  icon: Icon,
+  label,
+  value,
+  urgent = false,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  urgent?: boolean;
+}) {
+  return (
+    <View style={[styles.chip, urgent && styles.chipUrgent]}>
+      <View style={[styles.chipIcon, urgent && styles.chipIconUrgent]}>
+        <Icon size={14} color={urgent ? colors.danger : colors["primary-strong"]} />
+      </View>
+      <Text style={styles.chipLabel}>{label}</Text>
+      <Text style={[styles.chipValue, urgent && styles.chipValueUrgent]}>{value}</Text>
+    </View>
+  );
+}
+
 /**
- * Écran « Analyse de votre projet en cours » (F-05), comme sur le site : le logo se dessine au
- * milieu des métiers, les étapes se cochent une à une et des faits sur MENAO défilent. Sans
- * animation quand le téléphone demande moins de mouvement. `photos` : l'analyse est terminée et
- * les photos du projet sont en cours d'envoi (dernière étape).
+ * Écran « Analyse de votre projet en cours » (F-05, refonte F-130), comme sur le site : le logo se
+ * dessine au milieu des métiers, ce qui est déjà compris s'affiche en pastilles, les étapes se
+ * cochent une à une et des faits sur MENAO défilent ; un bandeau dit si la demande est urgente.
+ * Sans animation quand le téléphone demande moins de mouvement. `photos` : l'analyse est terminée
+ * et les photos du projet sont en cours d'envoi (dernière étape).
  */
-export function AnalysisScreen({ photos = false }: { photos?: boolean }) {
+export function AnalysisScreen({
+  photos = false,
+  understood = null,
+  urgent = false,
+}: {
+  photos?: boolean;
+  understood?: AnalysisUnderstanding | null;
+  urgent?: boolean;
+}) {
   const insets = useSafeAreaInsets();
   const animate = !useReduceMotion();
   const [step, setStep] = useState(0);
@@ -245,53 +287,89 @@ export function AnalysisScreen({ photos = false }: { photos?: boolean }) {
 
   const labels = photos ? [...a.steps, a.photosStep] : a.steps;
   const current = photos ? labels.length - 1 : step;
+  const timing = urgent ? fr.search.urgency.button : (understood?.timing ?? null);
+  const hasUnderstood = Boolean(understood?.trade || understood?.city || timing);
 
   return (
-    <View
-      style={[
-        styles.screen,
-        { paddingTop: insets.top + spacing(6), paddingBottom: insets.bottom + spacing(6) },
-      ]}
-    >
-      <AnalysisVisual animate={animate} />
-      <Text aria-live="polite" style={styles.status}>
-        {photos ? fr.search.uploadingPhotos : fr.search.analyzing}
-      </Text>
-      <View style={styles.steps}>
-        {labels.map((label, i) => {
-          const state = i < current ? "done" : i === current ? "active" : "todo";
-          return (
-            <View key={label} style={styles.step}>
-              <View
-                style={[
-                  styles.stepDot,
-                  state === "done" && styles.stepDone,
-                  state === "active" && styles.stepActive,
-                ]}
-              >
-                {state === "done" && <Check size={14} color={colors["primary-foreground"]} />}
-                {state === "active" && <View style={styles.stepPulse} />}
-              </View>
-              <Text
-                style={[
-                  styles.stepLabel,
-                  state === "active" && styles.stepLabelActive,
-                  state === "todo" && styles.stepLabelTodo,
-                ]}
-              >
-                {label}
-              </Text>
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + spacing(6), paddingBottom: insets.bottom + spacing(6) },
+        ]}
+      >
+        <AnalysisVisual animate={animate} />
+        <Text aria-live="polite" style={styles.status}>
+          {photos ? fr.search.uploadingPhotos : fr.search.analyzing}
+        </Text>
+        {hasUnderstood ? (
+          <View style={styles.understood}>
+            <Text style={styles.understoodTitle}>{a.understoodTitle}</Text>
+            <View style={styles.chips}>
+              {understood?.trade ? (
+                <UnderstoodChip icon={Wrench} label={a.understood.trade} value={understood.trade} />
+              ) : null}
+              {understood?.city ? (
+                <UnderstoodChip icon={MapPin} label={a.understood.place} value={understood.city} />
+              ) : null}
+              {timing ? (
+                <UnderstoodChip
+                  icon={urgent ? Siren : Clock}
+                  label={a.understood.timing}
+                  value={timing}
+                  urgent={urgent}
+                />
+              ) : null}
+              {!photos ? (
+                <View style={styles.pending} aria-hidden>
+                  <Text style={styles.pendingText}>{a.pending}</Text>
+                </View>
+              ) : null}
             </View>
-          );
-        })}
-      </View>
-      <View style={styles.facts}>
-        <View style={styles.factsTitle}>
-          <Sparkles size={14} color={colors["primary-strong"]} />
-          <Text style={styles.factsTitleText}>{a.factsTitle}</Text>
+          </View>
+        ) : null}
+        <View style={styles.steps}>
+          {labels.map((label, i) => {
+            const state = i < current ? "done" : i === current ? "active" : "todo";
+            return (
+              <View key={label} style={styles.step}>
+                <View
+                  style={[
+                    styles.stepDot,
+                    state === "done" && styles.stepDone,
+                    state === "active" && styles.stepActive,
+                  ]}
+                >
+                  {state === "done" && <Check size={14} color={colors["primary-foreground"]} />}
+                  {state === "active" && <View style={styles.stepPulse} />}
+                </View>
+                <Text
+                  style={[
+                    styles.stepLabel,
+                    state === "active" && styles.stepLabelActive,
+                    state === "todo" && styles.stepLabelTodo,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </View>
+            );
+          })}
         </View>
-        <Fact key={fact} text={a.facts[fact] ?? ""} animate={animate} />
-      </View>
+        {urgent ? (
+          <View style={styles.urgent}>
+            <Siren size={17} color={colors.danger} />
+            <Text style={styles.urgentText}>{fr.search.urgency.searching}</Text>
+          </View>
+        ) : null}
+        <View style={styles.facts}>
+          <View style={styles.factsTitle}>
+            <Sparkles size={14} color={colors["primary-strong"]} />
+            <Text style={styles.factsTitleText}>{a.factsTitle}</Text>
+          </View>
+          <Fact key={fact} text={a.facts[fact] ?? ""} animate={animate} />
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -325,10 +403,73 @@ const styles = StyleSheet.create({
     left: 0,
     zIndex: 10,
     backgroundColor: colors.background,
+  },
+  content: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing(6),
-    gap: spacing(6),
+    paddingHorizontal: spacing(5),
+    gap: spacing(5),
+  },
+  understood: { alignSelf: "stretch", gap: spacing(2) },
+  understoodTitle: {
+    fontFamily: font.bold,
+    fontSize: 11.5,
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    color: colors["muted-foreground"],
+  },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2),
+    minHeight: 44,
+    paddingLeft: spacing(2),
+    paddingRight: spacing(3.5),
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  chipUrgent: { borderColor: colors.danger },
+  chipIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors["primary-soft"],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chipIconUrgent: { backgroundColor: colors["danger-soft"] },
+  chipLabel: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },
+  chipValue: { fontFamily: font.bold, fontSize: 14.5, color: colors.foreground },
+  chipValueUrgent: { color: colors.danger },
+  pending: {
+    minHeight: 44,
+    paddingHorizontal: spacing(4),
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: colors["border-strong"],
+    justifyContent: "center",
+  },
+  pendingText: { fontFamily: font.regular, fontSize: 13.5, color: colors["muted-foreground"] },
+  urgent: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2.5),
+    padding: spacing(3),
+    borderRadius: 14,
+    backgroundColor: colors["danger-soft"],
+  },
+  urgentText: {
+    flex: 1,
+    fontFamily: font.semibold,
+    fontSize: 13.5,
+    lineHeight: 19,
+    color: colors.danger,
   },
   visual: { width: SIZE, height: SIZE },
   halo: {
@@ -378,9 +519,10 @@ const styles = StyleSheet.create({
     boxShadow: "0 8px 24px rgba(17, 23, 40, 0.12)",
   },
   status: {
-    fontFamily: font.medium,
-    fontSize: 22,
-    lineHeight: 28,
+    fontFamily: font.display,
+    fontSize: 26,
+    lineHeight: 29,
+    letterSpacing: -0.78,
     textAlign: "center",
     color: colors.foreground,
   },
