@@ -43,6 +43,7 @@ export function systemPrompt(ref: Referentials): string {
 
 Règles :
 - metier : le corps de métier principal parmi la liste ci-dessous (celui qui porte l'essentiel du chantier). null si le texte ne permet pas de le déterminer.
+- maçon ou terrassier : couler une dalle ou une chape, faire une terrasse ou une allée en béton, des fondations ou un muret : c'est le maçon (macon), même si le sol est à décaisser ou à terrasser avant, car ce petit terrassement fait partie de son travail. Le terrassier (terrassier) ne porte le chantier que pour un terrassement important (plateforme d'une maison, piscine, gros déblais, tranchées de réseaux). Le mot « terrasse » ne désigne jamais le terrassier : terrasse carrelée → carreleur, terrasse en bois → menuisier, terrasse en béton → maçon. Ne propose le terrassier en métier complémentaire que pour un terrassement important.
 - metiers_complementaires : les autres corps de métier dont le chantier aura besoin, chacun avec ses travaux (codes de son métier). Une rénovation de salle de bains demande par exemple un plombier, un carreleur, un électricien, un plaquiste et un peintre ; une réparation ponctuelle (fuite, panne, prise) n'en demande aucun. Seulement si le texte le justifie, 4 au plus, jamais le métier principal ; sinon une liste vide.
 - travaux : codes des travaux attendus du métier principal, uniquement parmi les siens.
 - pieces : codes des pièces ou zones concernées.

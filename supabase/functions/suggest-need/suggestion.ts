@@ -49,6 +49,7 @@ export function systemPrompt(trades: readonly Trade[]): string {
 
 3. compris : ce que son texte dit déjà, rien d'autre (null pour ce qu'il ne dit pas).
 - metier : dès que les travaux sont décrits, le code du métier le plus proche, à écrire exactement parmi ${trades.map((t) => `${t.code} (${t.label})`).join(", ")}. null seulement si les travaux ne sont pas décrits.
+- maçon ou terrassier : couler une dalle ou une chape, faire une terrasse ou une allée en béton, des fondations ou un muret : c'est le maçon (macon), même si le sol est à décaisser ou à terrasser avant, car ce petit terrassement fait partie de son travail. Le terrassier (terrassier) ne porte le chantier que pour un terrassement important (plateforme d'une maison, piscine, gros déblais, tranchées de réseaux). Le mot « terrasse » ne désigne jamais le terrassier : terrasse carrelée → carreleur, terrasse en bois → menuisier, terrasse en béton → maçon.
 - piece : la pièce ou la partie du logement concernée, en 1 à 3 mots (« salle de bain », « toiture », « jardin »).
 - ville : la ville écrite, telle quelle.
 - surface : la surface ou la quantité écrite (« 8 m² », « 5 fenêtres »).

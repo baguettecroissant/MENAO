@@ -7,7 +7,9 @@
 // l'accord du responsable. Depuis supabase/functions/analyze-need :
 //   deno run --allow-net --allow-env --allow-write eval/run.ts --estimation
 //   deno run --allow-net --allow-env --allow-write eval/run.ts --passes=2 [--sonnet]
-//     [--plafond=1.5] [--sortie=rapport.json]
+//     [--plafond=1.5] [--sortie=rapport.json] [--travaux=travaux.json]
+// `--travaux` : travaux ajoutés par une migration pas encore déployée ([{ code, label, trade_code }]),
+// pour évaluer la consigne avec le référentiel qu'elle aura une fois en ligne.
 // Variables : OPENROUTER_API_KEY, SUPABASE_URL et SUPABASE_PUBLISHABLE_KEY (référentiels, lecture
 // publique). `--sonnet` : Sonnet seul, pour comparer au modèle de production.
 import {
@@ -17,6 +19,7 @@ import {
   scrubPersonalData,
   suggestedLots,
 } from "../../../../packages/core/src/project.ts";
+import { detectUrgency } from "../../../../packages/core/src/urgency.ts";
 import { llmConfig, openRouterBaseUrl, type AiRun } from "../../_shared/ai.ts";
 import {
   analyzeNeed,
@@ -36,6 +39,8 @@ type Case = {
   attendus: string[];
   /** Métiers tolérés en plus ; tout autre métier proposé est compté en trop. */
   acceptes: string[];
+  /** Urgence attendue (ADR 0279) ; absente : non notée. */
+  urgence?: boolean;
 };
 
 type Outcome = {
@@ -51,6 +56,10 @@ type Outcome = {
   couverture: number | null;
   enTropIa: string[];
   enTrop: string[];
+  urgence: boolean | null;
+  urgenceJuste: boolean | null;
+  /** Avec le repérage par mots, comme dans l'Edge Function (ADR 0279). */
+  urgenceMotsJuste: boolean | null;
 };
 
 const args = new Map(
@@ -64,6 +73,7 @@ const passes = Math.max(1, Number(args.get("passes") ?? 1));
 const sonnetOnly = args.has("sonnet");
 const ceilingUsd = Number(args.get("plafond") ?? 1.5);
 const outputPath = args.get("sortie");
+const extraWorksPath = args.get("travaux");
 
 function required(name: string): string {
   const value = Deno.env.get(name);
@@ -87,7 +97,11 @@ async function loadReferentials(): Promise<Referentials> {
     ),
     get<Labeled>("rooms?select=code,label&active=eq.true&order=sort_order"),
   ]);
-  const workTypeLabels = works.map((w) => ({ code: w.code, label: w.label, trade: w.trade_code }));
+  const extra: (Labeled & { trade_code: string })[] = extraWorksPath
+    ? JSON.parse(await Deno.readTextFile(extraWorksPath))
+    : [];
+  const all = [...works, ...extra.filter((e) => !works.some((w) => w.code === e.code))];
+  const workTypeLabels = all.map((w) => ({ code: w.code, label: w.label, trade: w.trade_code }));
   return {
     trades: trades.map((t) => t.code),
     workTypes: workTypeLabels.map((w) => ({ code: w.code, trade: w.trade })),
@@ -201,6 +215,7 @@ run: for (let pass = 1; pass <= passes; pass++) {
       runs,
     );
     const metier = best?.criteria.tradeCode ?? null;
+    const urgence = best ? best.criteria.urgence : null;
     const extraTrades = best?.criteria.extraTrades ?? [];
     const lots = suggestedLots(metier, extraTrades, compositeTrades(clean, ref.trades));
     outcomes.push({
@@ -212,6 +227,12 @@ run: for (let pass = 1; pass <= passes; pass++) {
         lots.map((l) => l.tradeCode),
       ),
       confiance: best?.criteria.confiance ?? null,
+      urgence,
+      urgenceJuste: c.urgence === undefined || urgence === null ? null : urgence === c.urgence,
+      urgenceMotsJuste:
+        c.urgence === undefined
+          ? null
+          : (Boolean(urgence) || detectUrgency(clean) !== null) === c.urgence,
       modeles: runs.map((r) => `${r.model.replace(/^anthropic\//, "")} (${r.outcome})`),
     });
     for (const r of runs) {
@@ -250,6 +271,11 @@ for (let pass = 1; pass <= passes; pass++) {
   log(
     `- Cas avec un métier proposé en trop : IA seule ${rows.filter((o) => o.enTropIa.length).length}, avec les chantiers composés ${rows.filter((o) => o.enTrop.length).length}`,
   );
+  const graded = rows.filter((o) => o.urgenceJuste !== null);
+  const withWords = rows.filter((o) => o.urgenceMotsJuste !== null);
+  log(
+    `- Urgence juste : IA seule ${graded.filter((o) => o.urgenceJuste).length}/${graded.length} (${percent(graded.filter((o) => o.urgenceJuste).length, graded.length)}), avec le repérage par mots ${withWords.filter((o) => o.urgenceMotsJuste).length}/${withWords.length} (${percent(withWords.filter((o) => o.urgenceMotsJuste).length, withWords.length)})`,
+  );
   log(`- Modèle de secours appelé : ${rows.filter((o) => o.modeles.length > 1).length} cas`);
   log(`- Confiance moyenne : ${mean(rows.map((o) => o.confiance ?? 0)).toFixed(2)}`);
 }
@@ -269,9 +295,10 @@ log("Écarts (passe 1) :");
 for (const o of outcomes.filter((o) => o.pass === 1)) {
   const c = list.find((x) => x.id === o.id)!;
   const missing = c.attendus.filter((t) => t !== o.metier && !o.lots.includes(t));
-  if (o.metierJuste && o.enTrop.length === 0 && missing.length === 0) continue;
+  const urgencyMiss = o.urgenceJuste === false;
+  if (o.metierJuste && o.enTrop.length === 0 && missing.length === 0 && !urgencyMiss) continue;
   log(
-    `- ${o.id} : métier ${o.metier ?? "aucun"}${o.metierJuste ? "" : ` (attendu : ${c.metier.join(" ou ")})`} ; proposés ${o.lots.join(", ") || "aucun"} (IA : ${o.lotsIa.join(", ") || "aucun"})${o.enTrop.length ? ` ; en trop : ${o.enTrop.join(", ")}` : ""}${missing.length ? ` ; manquants : ${missing.join(", ")}` : ""}`,
+    `- ${o.id} : métier ${o.metier ?? "aucun"}${o.metierJuste ? "" : ` (attendu : ${c.metier.join(" ou ")})`} ; proposés ${o.lots.join(", ") || "aucun"} (IA : ${o.lotsIa.join(", ") || "aucun"})${o.enTrop.length ? ` ; en trop : ${o.enTrop.join(", ")}` : ""}${missing.length ? ` ; manquants : ${missing.join(", ")}` : ""}${urgencyMiss ? ` ; urgence ${o.urgence ? "vue à tort" : "manquée"}` : ""}`,
   );
 }
 log();

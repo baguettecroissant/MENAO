@@ -4,21 +4,24 @@
     "description": "Fuite sous l'évier de la cuisine, ça goutte en continu depuis hier.",
     "metier": ["plombier"],
     "attendus": ["plombier"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": true
   },
   {
     "id": "chauffe-eau-panne",
     "description": "Mon chauffe-eau électrique ne chauffe plus, je n'ai plus d'eau chaude depuis ce matin.",
     "metier": ["plombier", "chauffagiste"],
     "attendus": [],
-    "acceptes": ["electricien"]
+    "acceptes": ["electricien"],
+    "urgence": true
   },
   {
     "id": "chaudiere-entretien",
     "description": "Entretien annuel de ma chaudière gaz à faire avant l'hiver.",
     "metier": ["chauffagiste", "plombier"],
     "attendus": [],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "prises-hs",
@@ -39,42 +42,48 @@
     "description": "Ma clé s'est cassée dans la serrure de la porte d'entrée, impossible d'ouvrir.",
     "metier": ["serrurier"],
     "attendus": ["serrurier"],
-    "acceptes": ["menuisier"]
+    "acceptes": ["menuisier"],
+    "urgence": true
   },
   {
     "id": "tuiles-orage",
     "description": "Après l'orage, des tuiles ont bougé et il y a une fuite au plafond de la chambre à l'étage.",
     "metier": ["couvreur"],
     "attendus": ["couvreur"],
-    "acceptes": ["plaquiste", "peintre", "charpentier"]
+    "acceptes": ["plaquiste", "peintre", "charpentier"],
+    "urgence": true
   },
   {
     "id": "peinture-salon",
     "description": "Repeindre le salon et le couloir, murs et plafonds, environ 35 m² au sol.",
     "metier": ["peintre"],
     "attendus": ["peintre"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "peinture-appartement",
     "description": "Je voudrais refaire la peinture de tout mon appartement de 60 m².",
     "metier": ["peintre"],
     "attendus": ["peintre"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "carrelage-cuisine",
     "description": "Changer le carrelage du sol de la cuisine, environ 12 m².",
     "metier": ["carreleur"],
     "attendus": ["carreleur"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "fenetres-pvc",
     "description": "Remplacer 5 fenêtres en bois par des fenêtres PVC double vitrage.",
     "metier": ["menuisier"],
     "attendus": ["menuisier"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "parquet-chambres",
@@ -88,7 +97,8 @@
     "description": "Tailler une haie de laurier de 20 mètres et évacuer les déchets verts.",
     "metier": ["paysagiste"],
     "attendus": ["paysagiste"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "climatisation",
@@ -109,14 +119,16 @@
     "description": "Construire un muret de 10 mètres en parpaings au fond du jardin.",
     "metier": ["macon"],
     "attendus": ["macon"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": false
   },
   {
     "id": "wc-bouche",
     "description": "Mes WC sont bouchés, l'eau ne s'évacue plus du tout.",
     "metier": ["plombier"],
     "attendus": ["plombier"],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": true
   },
   {
     "id": "cloison-placo",
@@ -144,7 +156,8 @@
     "description": "Je veux refaire entièrement ma salle de bains de 6 m² : douche à l'italienne, nouveau carrelage, meuble vasque et éclairage.",
     "metier": ["plombier"],
     "attendus": ["plombier", "carreleur", "electricien"],
-    "acceptes": ["plaquiste", "peintre", "menuisier"]
+    "acceptes": ["plaquiste", "peintre", "menuisier"],
+    "urgence": false
   },
   {
     "id": "douche-italienne",
@@ -158,7 +171,8 @@
     "description": "Rénovation complète de la cuisine : nouveaux meubles, plan de travail, évier, plaques à induction, crédence carrelée et peinture.",
     "metier": ["menuisier", "plombier"],
     "attendus": ["menuisier", "plombier", "electricien", "carreleur", "peintre"],
-    "acceptes": ["plaquiste"]
+    "acceptes": ["plaquiste"],
+    "urgence": false
   },
   {
     "id": "appartement-complet",
@@ -189,7 +203,8 @@
       "terrassier",
       "peintre",
       "facadier"
-    ]
+    ],
+    "urgence": false
   },
   {
     "id": "garage-chambre",
@@ -217,7 +232,8 @@
     "description": "Créer une terrasse en bois de 20 m² avec une pergola et un éclairage extérieur.",
     "metier": ["menuisier", "paysagiste", "charpentier"],
     "attendus": ["electricien"],
-    "acceptes": ["menuisier", "paysagiste", "charpentier", "macon", "terrassier"]
+    "acceptes": ["menuisier", "paysagiste", "charpentier", "macon", "terrassier"],
+    "urgence": false
   },
   {
     "id": "salle-eau",
@@ -231,7 +247,8 @@
     "description": "Faire poser une véranda en aluminium de 15 m² sur une dalle existante.",
     "metier": ["menuisier"],
     "attendus": ["menuisier"],
-    "acceptes": ["macon", "electricien", "couvreur"]
+    "acceptes": ["macon", "electricien", "couvreur"],
+    "urgence": false
   },
   {
     "id": "renovation-energetique",
@@ -259,7 +276,8 @@
     "description": "bonjour j'ai une fuite au niveau du ballon d'eau chaude dans le cellier ça coule par terre",
     "metier": ["plombier", "chauffagiste"],
     "attendus": [],
-    "acceptes": []
+    "acceptes": [],
+    "urgence": true
   },
   {
     "id": "vague",
@@ -288,5 +306,69 @@
     "metier": ["plombier", "carreleur"],
     "attendus": [],
     "acceptes": ["carreleur", "plombier"]
+  },
+  {
+    "id": "dalle-terrasser",
+    "description": "Je cherche quelqu'un pour couler une dalle béton de 20 m² pour un abri de jardin, il faut d'abord terrasser le sol.",
+    "metier": ["macon"],
+    "attendus": ["macon"],
+    "acceptes": ["terrassier"],
+    "urgence": false
+  },
+  {
+    "id": "terrasse-beton",
+    "description": "Bonjour, j'aimerais un devis pour faire une terrasse en béton de 18 m² devant ma maison.",
+    "metier": ["macon"],
+    "attendus": ["macon"],
+    "acceptes": [],
+    "urgence": false
+  },
+  {
+    "id": "chape-garage",
+    "description": "Refaire la chape du sol de mon garage de 25 m², elle est fissurée de partout.",
+    "metier": ["macon"],
+    "attendus": ["macon"],
+    "acceptes": ["carreleur"],
+    "urgence": false
+  },
+  {
+    "id": "terrasse-carrelee",
+    "description": "Rénover la terrasse de mon appartement à Cannes, le carrelage se décolle.",
+    "metier": ["carreleur"],
+    "attendus": ["carreleur"],
+    "acceptes": ["macon"],
+    "urgence": false
+  },
+  {
+    "id": "terrassement-maison",
+    "description": "Terrassement pour ma future maison : plateforme, fosse septique et tranchées pour les réseaux.",
+    "metier": ["terrassier"],
+    "attendus": ["terrassier"],
+    "acceptes": ["macon", "plombier"],
+    "urgence": false
+  },
+  {
+    "id": "toiture-prevention",
+    "description": "Je voudrais faire vérifier ma toiture avant l'hiver pour éviter une fuite.",
+    "metier": ["couvreur"],
+    "attendus": ["couvreur"],
+    "acceptes": [],
+    "urgence": false
+  },
+  {
+    "id": "porte-claquee",
+    "description": "Ma porte a claqué avec les clés à l'intérieur, je suis bloqué dehors.",
+    "metier": ["serrurier"],
+    "attendus": ["serrurier"],
+    "acceptes": [],
+    "urgence": true
+  },
+  {
+    "id": "plus-de-courant",
+    "description": "Plus de courant dans toute la maison depuis ce matin, le disjoncteur ne veut pas se réarmer.",
+    "metier": ["electricien"],
+    "attendus": ["electricien"],
+    "acceptes": [],
+    "urgence": true
   }
 ]
