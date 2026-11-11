@@ -1,12 +1,9 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { z } from "zod";
-import {
-  CommercialBonusSettingsForm,
-  CommercialInviteForm,
-  CommercialStatusForm,
-} from "@/components/admin/commercial-forms";
+import { CommercialInviteForm, CommercialStatusForm } from "@/components/admin/commercial-forms";
 import { AdminSectionHeader } from "@/components/admin/admin-tabs";
+import { SettingsLink, settingEuros } from "@/components/admin/settings";
 import { ProspectImport } from "@/components/admin/prospect-import";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -158,11 +155,17 @@ export default async function AdminCommercialsPage() {
           <CardTitle title={t.newTitle} description={t.newLead} />
           <CommercialInviteForm />
         </Card>
+        {/* Réglage rangé dans les Réglages (ADR 0284) : résumé et lien. */}
         {settings && (
-          <Card className="flex flex-col gap-4">
-            <CardTitle title={tr.settings.title} description={tr.settings.lead} />
-            <CommercialBonusSettingsForm settings={settings} />
-          </Card>
+          <SettingsLink
+            section="commerciaux"
+            title={tr.settings.title}
+            summary={fr.admin.settingsPage.summaries.commercials(
+              settingEuros(settings.prime_validation_centimes),
+              settingEuros(settings.prime_abonnement_centimes),
+              settings.delai_validation_jours,
+            )}
+          />
         )}
       </div>
 

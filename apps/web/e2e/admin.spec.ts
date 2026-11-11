@@ -172,26 +172,37 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await drawn.getByRole("button", { name: "Conforme", exact: true }).click();
   await expect(page.getByRole("listitem", { name: drawnName ?? "" })).toContainText("Contrôlé le");
 
-  // Inviter un membre de l'équipe (F-67, ADR 0210) : le lien de « Comptes » ouvre le formulaire
-  // sous « Équipe MENAO ». L'envoi passe par l'Edge Function staff-invite, non servie ici.
+  // Inviter un membre de l'équipe (F-67, ADR 0210) : le lien de « Comptes » ouvre Réglages ›
+  // Équipe MENAO (ADR 0284), avec la liste des membres. L'envoi passe par l'Edge Function
+  // staff-invite, non servie ici.
   await page.goto("/admin/personnes");
   await page.getByRole("link", { name: "Inviter un membre de l'équipe" }).click();
-  await expect(page).toHaveURL(/\/admin\/personnes\?role=equipe#inviter$/);
+  await expect(page).toHaveURL(/\/admin\/reglages\/equipe#inviter$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Réglages" })).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "Membres de l'équipe" }).getByText("Vous"),
+  ).toBeVisible();
   await expect(page.getByLabel("Accès")).toHaveValue("admin");
   await expect(page.getByRole("button", { name: "Envoyer l'invitation" })).toBeVisible();
 
-  // Objectif de demandes (ADR 0282) : suivi du mois et objectif par défaut réglable.
+  // Objectif de demandes (ADR 0282) : suivi du mois ; l'objectif par défaut se règle dans les
+  // Réglages (ADR 0284), la page des objectifs en garde le résumé et le lien.
   await page.goto("/admin/objectifs");
   await expect(
     page.getByRole("heading", { level: 1, name: "Objectifs de demandes" }),
   ).toBeVisible();
   await expect(page.getByText("Objectif par défaut : 4 demandes par mois")).toBeVisible();
-  await page.getByLabel("Demandes par mois").fill("5");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByText("Objectif enregistré.")).toBeVisible();
-  await expect(page.getByText("Objectif par défaut : 5 demandes par mois")).toBeVisible();
-  await page.getByLabel("Demandes par mois").fill("4");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("link", { name: /Modifier dans Réglages/ }).click();
+  await expect(page).toHaveURL(/\/admin\/reglages#demandes$/);
+  const leads = page.locator("#demandes");
+  await leads.getByLabel("Demandes par mois").fill("5");
+  await leads.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/reglages\?fait=objectif#demandes$/);
+  await expect(leads.getByText("Objectif enregistré.")).toBeVisible();
+  await expect(leads.getByText(/^Modifié le /)).toBeVisible();
+  await leads.getByLabel("Demandes par mois").fill("4");
+  await leads.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await page.goto("/admin/objectifs");
   await expect(page.getByText("Objectif par défaut : 4 demandes par mois")).toBeVisible();
 
   // Côté artisan : dossier validé. Déconnexion depuis le menu du compte (ADR 0035).

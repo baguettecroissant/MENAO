@@ -1,8 +1,9 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { AdminSectionHeader } from "@/components/admin/admin-tabs";
+import { SettingsLink, settingEuros } from "@/components/admin/settings";
 import { Pagination } from "@/components/admin/list-controls";
-import { PartnerForm, PartnerSettingsForm } from "@/components/admin/partner-forms";
+import { PartnerForm } from "@/components/admin/partner-forms";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { parsePage } from "@/lib/admin/follow-up";
@@ -136,11 +137,17 @@ export default async function AdminPartnersPage({ searchParams }: PageProps<"/ad
           <CardTitle title={t.newTitle} description={t.newLead} />
           <PartnerForm />
         </Card>
+        {/* Réglage rangé dans les Réglages (ADR 0284) : résumé et lien. */}
         {settings && (
-          <Card className="flex flex-col gap-4">
-            <CardTitle title={t.settings.title} description={t.settings.lead} />
-            <PartnerSettingsForm settings={settings} />
-          </Card>
+          <SettingsLink
+            section="partenaires"
+            title={t.settings.title}
+            summary={fr.admin.settingsPage.summaries.partners(
+              settingEuros(settings.montant_demande_centimes),
+              settingEuros(settings.montant_abonne_centimes),
+              settings.delai_validation_jours,
+            )}
+          />
         )}
       </div>
     </div>

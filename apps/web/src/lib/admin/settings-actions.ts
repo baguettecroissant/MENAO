@@ -15,5 +15,6 @@ export async function setPlatformSetting(formData: FormData): Promise<void> {
     p_key: key,
     p_value: text(formData, "value") === "true",
   });
+  revalidatePath("/admin/reglages");
   revalidatePath("/admin/referentiels");
 }

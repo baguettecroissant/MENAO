@@ -40,6 +40,13 @@ export const ADMIN_TAB_SETS = {
       { key: "topUps", href: "/admin/abonnements/recharges", label: t.subscriptions.topUps },
     ],
   },
+  settings: {
+    label: fr.admin.settingsPage.title,
+    tabs: [
+      { key: "settings", href: "/admin/reglages", label: fr.admin.settingsPage.tabs.settings },
+      { key: "team", href: "/admin/reglages/equipe", label: fr.admin.settingsPage.tabs.team },
+    ],
+  },
   technical: {
     label: t.technical.title,
     tabs: [

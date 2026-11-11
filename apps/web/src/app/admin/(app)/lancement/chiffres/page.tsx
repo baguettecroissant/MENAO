@@ -22,12 +22,9 @@ export const metadata: Metadata = { title: `${t.title} · ${tl.title} — ${fr.a
  * Onglet « Chiffres » du lancement (F-66, lot 2, ADR 0209) : chiffres en direct calculés en base
  * sur les vraies données de MENAO (admin_launch_figures, admin_launch_coverage), face aux cibles
  * importées avec le plan ; actualisés à chaque inscription, validation ou demande (sinon chaque
- * minute). Retour d'un enregistrement des réglages : ?fait=reglages. Réservé aux admins.
+ * minute). Réglages des chiffres : page Réglages (ADR 0284). Réservé aux admins.
  */
-export default async function AdminLaunchFiguresPage({
-  searchParams,
-}: PageProps<"/admin/lancement/chiffres">) {
-  const query = await searchParams;
+export default async function AdminLaunchFiguresPage() {
   const { supabase } = await requireAdmin();
   const [figures, coverage] = await Promise.all([
     getLaunchFigures(supabase),
@@ -49,11 +46,7 @@ export default async function AdminLaunchFiguresPage({
         }
       />
       {figures ? (
-        <LaunchFiguresScreen
-          figures={figures}
-          coverage={coverage}
-          saved={query.fait === "reglages"}
-        />
+        <LaunchFiguresScreen figures={figures} coverage={coverage} />
       ) : (
         <Alert tone="error">{t.error}</Alert>
       )}

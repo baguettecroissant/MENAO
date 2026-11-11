@@ -41,7 +41,8 @@ export async function saveDefaultLeadTarget(
   if (error) return { error: dbError(error), values: { objectif: raw } };
   revalidatePath("/admin/objectifs");
   revalidatePath("/admin");
-  redirect("/admin/objectifs?fait=objectif#objectif-defaut" as Route);
+  // Réglage rangé dans les Réglages (ADR 0284).
+  redirect("/admin/reglages?fait=objectif#demandes" as Route);
 }
 
 /** Objectif propre à un artisan ; vide : il reprend l'objectif par défaut. */

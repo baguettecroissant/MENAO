@@ -1,8 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
-import { StaffInviteForm } from "@/components/admin/staff-invite-form";
-import { ButtonLink, Card, CardTitle } from "@/components/ui";
+import { ButtonLink, Card } from "@/components/ui";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
 import { parsePage } from "@/lib/admin/follow-up";
@@ -47,23 +46,16 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
           </h1>
           <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
-        {filter !== "equipe" && (
-          <ButtonLink
-            href={`${PATH}?role=equipe#inviter` as Route}
-            variant="outline"
-            size="sm"
-            className="shrink-0 self-start"
-          >
-            {t.invite.link}
-          </ButtonLink>
-        )}
+        {/* L'équipe se gère dans Réglages › Équipe MENAO (ADR 0284). */}
+        <ButtonLink
+          href={"/admin/reglages/equipe#inviter" as Route}
+          variant="outline"
+          size="sm"
+          className="shrink-0 self-start"
+        >
+          {t.invite.link}
+        </ButtonLink>
       </div>
-      {filter === "equipe" && (
-        <Card id="inviter" className="flex scroll-mt-24 flex-col gap-4">
-          <CardTitle title={t.invite.title} description={t.invite.lead} />
-          <StaffInviteForm />
-        </Card>
-      )}
       {/* Refonte « Nette » (ADR 0259) : les nombres par rôle en chiffres clés. */}
       <MoneyFigures
         label={t.filtersLabel}

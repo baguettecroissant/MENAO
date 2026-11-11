@@ -279,5 +279,6 @@ export async function saveLaunchSettings(_prev: FormState, formData: FormData): 
   });
   if (error) return { error: dbError(error), values };
   revalidateLaunch();
-  redirect(`${PATH}/chiffres?fait=reglages#reglages` as Route);
+  // Réglage rangé dans les Réglages (ADR 0284).
+  redirect("/admin/reglages?fait=lancement#lancement" as Route);
 }

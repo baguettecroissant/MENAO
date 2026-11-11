@@ -167,7 +167,9 @@ export default async function TicketsPage({ searchParams }: PageProps<"/admin/ti
         <ReceptionCard
           settings={reception.settings}
           state={reception.state}
-          canEdit={role === "admin"}
+          canEdit={false}
+          // Horaires modifiables dans les Réglages (ADR 0284), par un admin.
+          editHref={role === "admin" ? "/admin/reglages#accueil" : undefined}
         />
       )}
     </div>

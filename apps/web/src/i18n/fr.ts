@@ -7632,6 +7632,7 @@ export const fr = {
       tickets: "Boîte de réception",
       payments: "Paiements des chantiers",
       subscriptions: "Abonnements",
+      settings: "Réglages",
       references: "Métiers et travaux",
       journal: "Journal d'audit",
       signOut: "Me déconnecter",
@@ -7670,6 +7671,91 @@ export const fr = {
         title: "Suivi technique",
         ai: "IA",
         webhooks: "Notifications Stripe et DocuSeal",
+      },
+    },
+    // Réglages et équipe MENAO (F-133, ADR 0284).
+    settingsPage: {
+      title: "Réglages",
+      intro:
+        "Les réglages de toute la plateforme et l'équipe MENAO. Chaque modification est inscrite au journal d'audit.",
+      tabs: { settings: "Réglages", team: "Équipe MENAO" },
+      onThisPage: "Sur cette page",
+      sections: {
+        plateforme: "Plateforme",
+        demandes: "Demandes",
+        accueil: "Accueil du support",
+        partenaires: "Programme Partenaires",
+        commerciaux: "Primes des commerciaux",
+        lancement: "Lancement : réglages des chiffres",
+      },
+      menu: {
+        plateforme: "Plateforme",
+        demandes: "Demandes",
+        accueil: "Accueil du support",
+        partenaires: "Partenaires",
+        commerciaux: "Commerciaux",
+        lancement: "Lancement",
+      },
+      platformLead: "Décisions [À VALIDER] réglables par un admin.",
+      changed: (date: string, who: string) => `Modifié le ${date} par ${who}`,
+      changedNoName: (date: string) => `Modifié le ${date}`,
+      never: "Jamais modifié",
+      someone: "un membre de l'équipe",
+      edit: "Modifier dans Réglages",
+      saved: "Réglages enregistrés.",
+      summaries: {
+        leads: (n: number) => `${n} demande${n > 1 ? "s" : ""} par mois`,
+        commercials: (validation: string, subscription: string, days: number) =>
+          `${validation} à la validation · ${subscription} à l'abonnement · après ${days} jours`,
+        partners: (request: string, subscriber: string, days: number) =>
+          `${request} par demande qualifiée · ${subscriber} par abonné · après ${days} jours`,
+        notSet: "montants non fixés",
+        launch: (from: string, to: string) => `Recrutement du ${from} au ${to}`,
+        launchDefault: "Les 12 dernières semaines (aucune période réglée)",
+        ratings: (on: boolean) =>
+          on ? "Notes des clients visibles : activé" : "Notes des clients visibles : désactivé",
+        holidaysClosed: "fermé les jours fériés",
+      },
+      team: {
+        figuresLabel: "Équipe MENAO",
+        members: "Membres",
+        membersHint: (admins: number, support: number) =>
+          `${admins} admin${admins > 1 ? "s" : ""}, ${support} support`,
+        mfa: "Double authentification",
+        mfaValue: (on: number, total: number) => `${on} sur ${total}`,
+        mfaHint: (missing: number) =>
+          missing === 0
+            ? "activée par tous"
+            : `${missing} membre${missing > 1 ? "s ne l'ont" : " ne l'a"} pas encore activée`,
+        pending: "Invitations en attente",
+        pendingHint: (n: number) => (n === 0 ? "aucune" : "pas encore de première connexion"),
+        listLabel: "Membres de l'équipe",
+        columns: {
+          member: "Membre",
+          access: "Accès",
+          mfa: "Double auth.",
+          lastSeen: "Dernière connexion",
+        },
+        mfaOn: "Activée",
+        mfaOff: "À activer",
+        you: "Vous",
+        neverSeen: (date: string) => `invité le ${date}`,
+        actions: (name: string) => `Actions pour ${name}`,
+        makeSupport: "Passer en Support",
+        makeAdmin: "Passer en Admin",
+        remove: "Retirer l'accès",
+        removeConfirm: (name: string) =>
+          `Retirer l'accès de ${name} ? Sa connexion sera bloquée et ses sessions fermées. Son nom reste dans le journal et sur les tickets traités.`,
+        removeYes: "Oui, retirer l'accès",
+        roleChanged: "Accès modifié. Le changement s'applique à sa prochaine connexion.",
+        removed: "Accès retiré.",
+        rolesTitle: "Ce que voit chaque accès",
+        roles: {
+          admin:
+            "Tout le back-office, dont la validation des dossiers, l'argent, le lancement et les réglages.",
+          support: "La boîte de réception : tickets, modération et litiges.",
+        },
+        empty: "Aucun membre.",
       },
     },
     // Objectif de demandes par artisan (F-131, ADR 0282).
