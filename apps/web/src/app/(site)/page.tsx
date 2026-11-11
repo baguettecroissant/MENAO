@@ -6,6 +6,7 @@ import { GuaranteeSection } from "@/components/site/guarantees";
 import { HomeHero } from "@/components/site/home-hero";
 import { HomeProofs } from "@/components/site/home-proofs";
 import { HomeTrades } from "@/components/site/home-trades";
+import { HomeVideo } from "@/components/site/home-video";
 import { JsonLd } from "@/components/site/json-ld";
 import { ProTeaser } from "@/components/site/pro-teaser";
 import { SectionHeading } from "@/components/site/section-heading";
@@ -36,9 +37,9 @@ const CONTROLS = fr.pages.guarantees.checks.map((check) => check.title);
 export const revalidate = 3600;
 
 /**
- * Accueil (F-01), nouvelle structure du 9 novembre 2026 (ADR 0264) : bandeau et recherche, preuves,
- * métiers, comment ça marche avec l'application, garanties et contrôles, zone couverte, questions
- * fréquentes, encart artisans et appel final. Aucun chiffre ni témoignage inventé.
+ * Accueil (F-01), nouvelle structure du 9 novembre 2026 (ADR 0264) : bandeau et recherche, vidéo de
+ * présentation (ADR 0278), preuves, métiers, comment ça marche avec l'application, garanties et
+ * contrôles, zone couverte, questions fréquentes, encart artisans et appel final. Aucun chiffre ni témoignage inventé.
  */
 export default async function HomePage() {
   const [{ trades, communes }, { data: plans }] = await Promise.all([
@@ -55,6 +56,7 @@ export default async function HomePage() {
       {/* Identité de MENAO pour Google et les assistants IA (ADR 0134). */}
       <JsonLd data={organizationJsonLd()} />
       <HomeHero />
+      <HomeVideo />
       <HomeProofs />
       <HomeTrades trades={trades} />
 

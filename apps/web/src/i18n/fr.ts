@@ -866,6 +866,11 @@ export const fr = {
     ranking: "Critères de classement",
   },
   home: {
+    // Vidéo de présentation sous le bandeau (ADR 0278) : aucun texte visible, libellés d'accessibilité.
+    video: {
+      label: "Vidéo de présentation de MENAO, avec voix off",
+      fallback: "Votre navigateur ne peut pas lire cette vidéo.",
+    },
     title: "Trouvez l'artisan pro du BTP dont vous avez besoin",
     heroTitleStart: "Trouvez l'artisan pro du BTP dont",
     heroTitleAccent: "vous avez besoin",
