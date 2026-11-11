@@ -3049,11 +3049,15 @@ export const fr = {
       // Rubrique « Mon profil » de l'espace pro, sous les autres (ADR 0188).
       proAccount: "Compte",
       tools: "Pilotage",
-      // Back-office par pôle (ADR 0133).
+      // Back-office par pôle (ADR 0133), rangé en six sections (ADR 0283).
       verification: "Vérification",
       support: "Support",
       money: "Argent",
       settings: "Réglages",
+      artisans: "Artisans",
+      clients: "Clients et chantiers",
+      growth: "Croissance",
+      system: "Système",
     },
     help: "Aide et support",
     toDo: (n: number) => (n === 1 ? "1 élément à traiter" : `${n} éléments à traiter`),
@@ -7615,25 +7619,58 @@ export const fr = {
     nav: {
       overview: "Vue d'ensemble",
       launch: "Lancement",
-      activity: "Activité",
       market: "Marché",
       leads: "Objectifs de demandes",
       requests: "Demandes",
       chantiers: "Chantiers",
-      people: "Personnes",
+      people: "Comptes",
       artisans: "Dossiers artisans",
-      watch: "À surveiller",
-      spotChecks: "Contrôles aléatoires",
-      tickets: "Dossiers et messages",
-      payments: "Paiements",
+      // Rangement du back-office (ADR 0283).
+      compliance: "Conformité",
+      contributors: "Apporteurs",
+      technical: "Suivi technique",
+      tickets: "Boîte de réception",
+      payments: "Paiements des chantiers",
       subscriptions: "Abonnements",
-      partners: "Partenaires",
-      referrals: "Parrainages",
-      commercials: "Commerciaux",
       references: "Métiers et travaux",
       journal: "Journal d'audit",
-      ai: "Suivi de l'IA",
       signOut: "Me déconnecter",
+    },
+    // Rubriques à onglets (ADR 0283) : en-tête commun, onglets en pilule.
+    tabs: {
+      overview: { summary: "À traiter et chiffres", activity: "Toute l'activité" },
+      compliance: {
+        title: "Conformité",
+        intro:
+          "Les artisans déjà validés doivent le rester : documents renouvelés, échéances à venir et contrôle aléatoire du mois.",
+        renewals: "Renouvellements",
+        expiring: "Échéances",
+        spotChecks: "Contrôles du mois",
+        figuresLabel: "Conformité des artisans validés",
+        renewalsLabel: "Renouvellements à vérifier",
+        renewalsHint: "documents déposés par les artisans",
+        expiringHint: (expired: number) =>
+          expired === 0
+            ? "dans les 30 jours"
+            : `dans les 30 jours, dont ${expired} expiré${expired > 1 ? "s" : ""}`,
+        spotChecksLabel: "Contrôles restants",
+        spotChecksHint: (total: number) =>
+          total === 0 ? "tirage du mois pas encore lancé" : `sur ${total} tirés au sort ce mois-ci`,
+      },
+      contributors: {
+        title: "Apporteurs",
+        intro:
+          "Ceux qui font venir des artisans et des clients à MENAO : commerciaux de terrain, partenaires et artisans qui parrainent un confrère.",
+        commercials: "Commerciaux",
+        partners: "Partenaires",
+        referrals: "Parrainages",
+      },
+      subscriptions: { subscriptions: "Abonnements", topUps: "Recharges de minutes" },
+      technical: {
+        title: "Suivi technique",
+        ai: "IA",
+        webhooks: "Notifications Stripe et DocuSeal",
+      },
     },
     // Objectif de demandes par artisan (F-131, ADR 0282).
     leads: {
@@ -7832,7 +7869,7 @@ export const fr = {
     },
     // Toute l'activité, page par page et par catégorie (ADR 0146).
     activityLog: {
-      title: "Activité",
+      title: "Toute l'activité",
       intro:
         "Tout ce qui se passe sur MENAO, du plus récent au plus ancien : recherches, demandes, chantiers, dossiers, support, avis et abonnements.",
       filtersLabel: "Filtrer l'activité",
@@ -7841,7 +7878,7 @@ export const fr = {
         recherches: "Recherches",
         demandes: "Demandes",
         chantiers: "Chantiers",
-        dossiers: "Dossiers artisans",
+        dossiers: "Artisans",
         support: "Support",
         avis: "Avis",
         abonnements: "Abonnements",
@@ -7930,11 +7967,11 @@ export const fr = {
         severities: { urgent: "Urgent", important: "Important", a_faire: "À faire" },
         poles: {
           all: "Tout",
-          verification: "Vérification",
+          verification: "Artisans",
           support: "Support",
-          activite: "Activité",
+          activite: "Clients et chantiers",
           argent: "Argent",
-          technique: "Technique",
+          technique: "Système",
         },
         filters: "Filtrer par pôle",
         emptyPole: "Rien à traiter dans ce pôle.",
@@ -7961,6 +7998,7 @@ export const fr = {
         insurancesHint:
           "Artisans déjà relancés ; sans renouvellement, leur profil sera suspendu à l'échéance.",
         watchAction: "Voir les échéances",
+        renewalsAction: "Vérifier les renouvellements",
         expiring: (n: number) =>
           n > 1
             ? `${n} demandes sans réponse expirent sous 12 h`
@@ -8115,7 +8153,7 @@ export const fr = {
       },
     },
     people: {
-      title: "Personnes",
+      title: "Comptes",
       intro: "Tous les comptes : particuliers, artisans et équipe MENAO.",
       searchLabel: "Rechercher une personne",
       searchPlaceholder: "Nom, e-mail ou téléphone",
@@ -8211,7 +8249,7 @@ export const fr = {
         "Exporter ses données si la personne les demande.",
         "Suspendre l'accès au compte.",
         "Effacer ou anonymiser les données qui ne doivent pas être conservées.",
-        "Répondre à la personne et clore la demande dans « Dossiers et messages ».",
+        "Répondre à la personne et clore la demande dans la « Boîte de réception ».",
       ],
       legal:
         "Durées de conservation à faire valider par l'avocat (devis, factures et PV restent chez l'artisan au titre de ses obligations ; avis publiés) : l'effacement reste manuel pour l'instant.",
@@ -8314,9 +8352,9 @@ export const fr = {
       email: "E-mail",
       phone: "Téléphone",
       visitor: "Visiteur sans compte",
-      tickets: "Dossiers et messages",
-      noTickets: "Aucun dossier ni message.",
-      openTickets: "Ouvrir les dossiers et messages",
+      tickets: "Tickets",
+      noTickets: "Aucun ticket.",
+      openTickets: "Ouvrir la boîte de réception",
       requests: {
         title: "Demandes",
         intro: "Toutes les demandes des particuliers, de la recherche jusqu'au rendez-vous.",
@@ -9375,7 +9413,6 @@ export const fr = {
     },
     webhooks: {
       title: "Notifications Stripe et DocuSeal",
-      back: "Paiements des chantiers",
       intro:
         "Stripe et DocuSeal préviennent MENAO à chaque paiement, abonnement, compte d'artisan ou signature. Si le traitement échoue, le service renvoie la notification (pendant 3 jours pour Stripe, 48 heures pour DocuSeal) : en attendant, les données concernées peuvent être en retard.",
       help: "Une notification reste en échec ? Vérifiez l'état de Supabase et du service concerné. Une fois le problème réglé, renvoyez-la depuis le tableau de bord du service (Stripe : Développeurs, puis Événements) ou attendez la tentative suivante.",
@@ -9438,7 +9475,7 @@ export const fr = {
         `Accueil ${welcome}\u00a0% · Clarté ${clarity}\u00a0% · Paiements ${payment}\u00a0%`,
     },
     references: {
-      title: "Métiers, travaux et pièces",
+      title: "Métiers et travaux",
       intro:
         "Ces listes servent à l'inscription des artisans, aux demandes des particuliers et à leur analyse par l'IA. Une entrée désactivée n'est plus proposée ; les dossiers et demandes qui la citent ne changent pas. Chaque modification est inscrite au journal d'audit.",
       sections: { metier: "Métiers", travail: "Travaux", piece: "Pièces" } as Record<
@@ -9659,7 +9696,7 @@ export const fr = {
         readOnly: "Seuls les administrateurs modifient les horaires.",
         summaryDays: ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"],
       },
-      title: "Dossiers et messages",
+      title: "Boîte de réception",
       types: {
         dossier_recherche: "Dossier de recherche",
         contact: "Message de la page Contact",
@@ -9809,7 +9846,7 @@ export const fr = {
         republish: "Republier l'avis",
         rule: "Un avis n'est jamais masqué pour la seule raison qu'il est négatif.",
       },
-      empty: "Aucun dossier.",
+      empty: "Aucun ticket.",
       open: "À traiter",
       closed: "Résolus",
       due: (date: string) => `Réponse attendue le ${date}`,
@@ -9823,7 +9860,7 @@ export const fr = {
       markResolved: "Marquer résolu",
       reopen: "Rouvrir",
       // Boîte de réception (ADR 0049).
-      intro: "Messages, dossiers, signalements et litiges à traiter, les plus urgents d'abord.",
+      intro: "Messages, signalements et litiges à traiter, les plus urgents d'abord.",
       searchLabel: "Rechercher un ticket",
       searchPlaceholder: "Objet, message, e-mail, déclarant ou chantier",
       filtersLabel: "Filtrer les tickets",
@@ -9843,7 +9880,7 @@ export const fr = {
         mes_tickets: "Mes tickets",
         litiges: "Litiges",
         signalements: "Signalements",
-        messages: "Messages et dossiers",
+        messages: "Messages",
         suppressions: "Suppressions de compte",
         clos: "Clos",
         tous: "Tous",
@@ -9931,11 +9968,11 @@ export const fr = {
       },
       apeWarning: "APE hors bâtiment",
       open: (name: string) => `Ouvrir le dossier de ${name}`,
-      stalledLink: "Inscriptions bloquées",
       // Refonte « Nette » (ADR 0252) : chiffres par statut et état de chaque document.
       intro:
         "Vérifiez les documents, l'entreprise et la charte avant de rendre un artisan visible.",
       figuresLabel: "Dossiers par statut",
+      stalledHint: "pas encore terminées",
       pendingHint: "les plus anciens en premier",
       validHint: "visibles ou bientôt visibles",
       refusedHint: "SIRET fermé, document absent…",
@@ -9957,12 +9994,11 @@ export const fr = {
     },
     /** Inscriptions bloquées et relances automatiques (ADR 0219). */
     stalled: {
-      title: "Inscriptions bloquées",
+      title: "Inscriptions en cours",
       intro:
         "Artisans qui n'ont pas terminé : dossier pas encore envoyé, compléments attendus, ou dossier validé mais profil pas encore visible. MENAO les relance automatiquement trois fois ; au-delà, un appel aide souvent.",
-      back: "Dossiers artisans",
       empty: "Aucune inscription bloquée.",
-      count: (n: number) => (n === 1 ? "1 inscription bloquée" : `${n} inscriptions bloquées`),
+      count: (n: number) => (n === 1 ? "1 inscription en cours" : `${n} inscriptions en cours`),
       columns: {
         company: "Entreprise",
         state: "Où il en est",

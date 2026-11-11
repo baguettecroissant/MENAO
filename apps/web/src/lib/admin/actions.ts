@@ -79,7 +79,7 @@ export async function drawSpotChecks(): Promise<void> {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase.rpc("admin_draw_spot_checks");
   revalidatePath("/admin", "layout");
-  redirect(`/admin/controles?tirage=${error ? "erreur" : (data ?? 0)}` as Route);
+  redirect(`/admin/conformite/controles?tirage=${error ? "erreur" : (data ?? 0)}` as Route);
 }
 
 /** Résultat d'un contrôle aléatoire : conforme, ou non conforme avec une note (ADR 0121). */

@@ -24,9 +24,15 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
 
   await admin
     .getByRole("navigation", { name: "Navigation du back-office" })
+    .getByRole("link", { name: "Apporteurs" })
+    .click();
+  // Rubrique « Apporteurs » (ADR 0283) : onglet « Partenaires ».
+  await admin
+    .getByRole("navigation", { name: "Apporteurs" })
     .getByRole("link", { name: "Partenaires" })
     .click();
-  await expect(admin.getByRole("heading", { name: "Partenaires", level: 1 })).toBeVisible();
+  await expect(admin).toHaveURL(/\/admin\/partenaires$/);
+  await expect(admin.getByRole("heading", { name: "Apporteurs", level: 1 })).toBeVisible();
 
   // Réglages du programme : montants par défaut décidés par les fondateurs (règle 15).
   await admin.getByLabel("Prime par défaut par demande qualifiée (€)").fill("10");

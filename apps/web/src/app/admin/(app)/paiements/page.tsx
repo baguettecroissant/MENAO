@@ -190,7 +190,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps<"/ad
         <Pagination page={page} total={total} hrefFor={(p) => href({ page: p })} />
       </Card>
       <Link
-        href={"/admin/paiements/notifications" as Route}
+        href={"/admin/technique/notifications" as Route}
         className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
       >
         {t.webhooksLink} →

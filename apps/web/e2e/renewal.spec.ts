@@ -37,7 +37,7 @@ test("renouvellement d'une assurance qui expire, validé par un admin", async ({
   await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("button", { name: "Me déconnecter" }).click();
 
-  // Admin : « À surveiller », puis validation du renouvellement
+  // Admin : « Conformité », puis validation du renouvellement
   await page.context().clearCookies();
   await signIn(page, "admin2@example.test");
   await expect(page).toHaveURL(/\/admin\/mfa\/activer$/);
@@ -49,15 +49,21 @@ test("renouvellement d'une assurance qui expire, validé par un admin", async ({
   // Vue d'ensemble (ADR 0045) : le renouvellement déposé est à traiter.
   await page
     .getByRole("article", { name: /renouvelés? à vérifier$/ })
-    .getByRole("link", { name: /Voir les échéances/ })
+    .getByRole("link", { name: /Vérifier les renouvellements/ })
     .click();
-  await expect(page).toHaveURL(/\/admin\/surveillance$/);
+  // Rubrique « Conformité » (ADR 0283) : renouvellements, puis l'onglet des échéances.
+  await expect(page).toHaveURL(/\/admin\/conformite$/);
   const renewals = page.getByRole("region", { name: "Renouvellements à vérifier" });
   await expect(renewals.getByRole("row", { name: /VALIDE EXEMPLE.*décennale/ })).toBeVisible();
+  const tabs = page.getByRole("navigation", { name: "Conformité" });
+  await tabs.getByRole("link", { name: /^Échéances/ }).click();
+  await expect(page).toHaveURL(/\/admin\/conformite\/echeances$/);
   const expiring = page.getByRole("region", { name: /arrivant à échéance/ });
   await expect(
     expiring.getByRole("row", { name: /VALIDE EXEMPLE.*décennale.*Expire dans 10 jours/ }),
   ).toBeVisible();
+  await tabs.getByRole("link", { name: /^Renouvellements/ }).click();
+  await expect(page).toHaveURL(/\/admin\/conformite$/);
 
   await renewals.getByRole("link", { name: "VALIDE EXEMPLE" }).click();
   const item = page.getByRole("listitem", { name: "Attestation d'assurance décennale" });

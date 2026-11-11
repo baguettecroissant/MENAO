@@ -34,6 +34,7 @@ import { formatDay, formatTimeAgo } from "@/lib/format";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { SheetChip, sheetCard } from "@/components/pro/sheet";
 import { LiveRefresh } from "./live-refresh";
+import { AdminTabs } from "./admin-tabs";
 import { ActivityFeed, KeyFigures } from "./overview";
 
 const t = fr.admin.overview;
@@ -98,7 +99,7 @@ function entry(
         icon: ClipboardCheck,
         title: todoT.spotChecks(todo.spotChecks),
         hint: todoT.spotChecksHint,
-        action: { href: "/admin/controles", label: todoT.spotChecksAction },
+        action: { href: "/admin/conformite/controles", label: todoT.spotChecksAction },
       };
     case "litiges":
       return {
@@ -157,14 +158,14 @@ function entry(
         icon: FileClock,
         title: todoT.renewals(o.documents.renouvellements),
         hint: todoT.renewalsHint,
-        action: { href: "/admin/surveillance", label: todoT.watchAction },
+        action: { href: "/admin/conformite", label: todoT.renewalsAction },
       };
     case "assurances":
       return {
         icon: ShieldAlert,
         title: todoT.insurances(o.documents.assurances_7j),
         hint: todoT.insurancesHint,
-        action: { href: "/admin/surveillance", label: todoT.watchAction },
+        action: { href: "/admin/conformite/echeances", label: todoT.watchAction },
       };
     case "paiements_echoues":
       return {
@@ -200,7 +201,7 @@ function entry(
         icon: TriangleAlert,
         title: todoT.webhooks(o.notifications.echecs),
         hint: todoT.webhooksHint,
-        action: { href: "/admin/paiements/notifications", label: todoT.webhooksAction },
+        action: { href: "/admin/technique/notifications", label: todoT.webhooksAction },
       };
   }
 }
@@ -304,6 +305,8 @@ export function OverviewScreen({
         </div>
         <LiveRefresh renderedAt={now.toISOString()} />
       </header>
+      {/* Onglets de la rubrique (ADR 0283) : « Toute l'activité » est l'ancienne page Activité. */}
+      <AdminTabs set="overview" current="summary" />
 
       <MoneyFigures
         label={t.band.label}

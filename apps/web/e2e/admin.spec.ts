@@ -42,10 +42,16 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   // que les 10 derniers événements.
   await activity.getByRole("link", { name: "Voir toute l'activité" }).click();
   await expect(page).toHaveURL(/\/admin\/activite$/);
-  await expect(page.getByRole("heading", { name: "Activité", level: 1 })).toBeVisible();
+  // Onglet « Toute l'activité » de la Vue d'ensemble (ADR 0283).
+  await expect(page.getByRole("heading", { name: "Vue d'ensemble", level: 1 })).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Vue d'ensemble" })
+      .getByRole("link", { name: "Toute l'activité" }),
+  ).toHaveAttribute("aria-current", "page");
   await page
     .getByRole("navigation", { name: "Filtrer l'activité" })
-    .getByRole("link", { name: "Dossiers artisans" })
+    .getByRole("link", { name: "Artisans", exact: true })
     .click();
   await expect(page).toHaveURL(/\/admin\/activite\?categorie=dossiers$/);
   await expect(page.getByText("Dossier envoyé par PEINTURE DOSSIER EXEMPLE")).toBeVisible();
@@ -68,24 +74,27 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await expect(page.getByText("Revenu mensuel récurrent", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "PLOMBERIE DISPO EXEMPLE" })).toBeVisible();
   await capture(page, "admin-abonnements");
-  await menu.getByRole("link", { name: "Paiements" }).click();
+  await menu.getByRole("link", { name: "Paiements des chantiers" }).click();
   await expect(
     page.getByRole("heading", { name: "Paiements des chantiers", level: 1 }),
   ).toBeVisible();
   await expect(page.getByText("Versé aux artisans (30 jours)")).toBeVisible();
   await capture(page, "admin-paiements");
+  // Ancienne adresse redirigée vers le Suivi technique (ADR 0283).
   await page.goto("/admin/paiements/notifications");
+  await expect(page).toHaveURL(/\/admin\/technique\/notifications$/);
+  await expect(page.getByRole("heading", { name: "Suivi technique", level: 1 })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Notifications Stripe et DocuSeal", level: 1 }),
-  ).toBeVisible();
+    page
+      .getByRole("navigation", { name: "Suivi technique" })
+      .getByRole("link", { name: /^Notifications Stripe et DocuSeal/ }),
+  ).toHaveAttribute("aria-current", "page");
   await capture(page, "admin-notifications-stripe");
 
   // Contrôle (ADR 0052) : une pièce ajoutée puis désactivée, inscrite au journal ; suivi de l'IA.
   const room = `Véranda ${Date.now().toString(36)}`;
   await menu.getByRole("link", { name: "Métiers et travaux" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Métiers, travaux et pièces", level: 1 }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Métiers et travaux", level: 1 })).toBeVisible();
   const rooms = page.getByRole("region", { name: "Pièces" });
   await rooms.getByLabel("Nouvelle pièce").fill(room);
   await rooms.getByRole("button", { name: "Ajouter" }).click();
@@ -100,8 +109,9 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
     page.getByRole("row").filter({ hasText: "Entrée désactivée" }).filter({ hasText: room }),
   ).toBeVisible();
   await capture(page, "admin-journal");
-  await menu.getByRole("link", { name: "Suivi de l'IA" }).click();
-  await expect(page.getByRole("heading", { name: "Suivi de l'IA", level: 1 })).toBeVisible();
+  await menu.getByRole("link", { name: "Suivi technique" }).click();
+  await expect(page).toHaveURL(/\/admin\/technique$/);
+  await expect(page.getByRole("heading", { name: "Suivi technique", level: 1 })).toBeVisible();
   await capture(page, "admin-ia");
   await page.goto("/admin");
 
@@ -145,8 +155,10 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   );
 
   // Contrôle aléatoire (ADR 0121) : tirage du mois, puis résultat d'un dossier tiré au sort.
+  // Ancienne adresse redirigée vers l'onglet de la rubrique « Conformité » (ADR 0283).
   await page.goto("/admin/controles");
-  await expect(page.getByRole("heading", { level: 1, name: "Contrôles aléatoires" })).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/conformite\/controles$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Conformité" })).toBeVisible();
   await page.getByRole("button", { name: "Lancer le tirage du mois" }).click();
   await expect(
     page.getByText(/dossiers? tirés? au sort\.|objectif du mois est déjà atteint/),
@@ -160,7 +172,7 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await drawn.getByRole("button", { name: "Conforme", exact: true }).click();
   await expect(page.getByRole("listitem", { name: drawnName ?? "" })).toContainText("Contrôlé le");
 
-  // Inviter un membre de l'équipe (F-67, ADR 0210) : le lien de « Personnes » ouvre le formulaire
+  // Inviter un membre de l'équipe (F-67, ADR 0210) : le lien de « Comptes » ouvre le formulaire
   // sous « Équipe MENAO ». L'envoi passe par l'Edge Function staff-invite, non servie ici.
   await page.goto("/admin/personnes");
   await page.getByRole("link", { name: "Inviter un membre de l'équipe" }).click();
@@ -206,7 +218,7 @@ test("le support : sa boîte de réception, pas le reste du back-office (ADR 004
   await page.getByLabel("Code à 6 chiffres").fill(totp(secret));
   await page.getByRole("button", { name: "Vérifier" }).click();
   await expect(page).toHaveURL(/\/admin\/tickets$/);
-  await expect(page.getByRole("heading", { name: "Dossiers et messages", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Boîte de réception", level: 1 })).toBeVisible();
   // Une seule rubrique, pas de recherche globale (réservée aux admins).
   await expect(
     page.getByRole("navigation", { name: "Navigation du back-office" }).getByRole("link"),

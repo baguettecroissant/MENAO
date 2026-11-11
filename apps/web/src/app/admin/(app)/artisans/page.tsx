@@ -2,24 +2,18 @@ import type { Database } from "@menao/db";
 import { Check, Clock, Minus, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ArtisanFilesHeader } from "@/components/admin/artisan-files";
 import { Pagination, listHref } from "@/components/admin/list-controls";
-import { MoneyFigures } from "@/components/pro/money-figures";
 import { SheetChip } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 import { PAGE_SIZE, parsePage } from "@/lib/admin/follow-up";
+import { ARTISAN_FILE_STATUSES, getArtisanFileCounts } from "@/lib/admin/artisan-files";
 import { requireAdmin } from "@/lib/admin/guard";
 
-type Status = Database["public"]["Enums"]["artisan_status"];
 type DocType = Database["public"]["Enums"]["document_type"];
 const DOC_TYPES: DocType[] = ["kbis", "decennale", "rc_pro", "identite", "urssaf"];
-const STATUSES: Status[] = [
-  "en_verification",
-  "brouillon",
-  "valide",
-  "refuse",
-  "suspendu",
-  "radie",
-];
+const STATUSES = ARTISAN_FILE_STATUSES;
 const t = fr.admin.list;
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
@@ -28,6 +22,8 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", {
 
 export default async function AdminArtisansPage({ searchParams }: PageProps<"/admin/artisans">) {
   const params = await searchParams;
+  // Les brouillons sont dans l'onglet « Inscriptions en cours » (ADR 0283).
+  if (params.statut === "brouillon") redirect("/admin/artisans/inscriptions" as Route);
   const status = STATUSES.find((s) => s === params.statut) ?? "en_verification";
   const page = parsePage(params.page);
   const { supabase } = await requireAdmin();
@@ -63,17 +59,7 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
   }
   const tradeLabel = new Map((trades ?? []).map((tr) => [tr.code, tr.label]));
   // Nombre de dossiers par statut, sur chaque onglet : rien ne passe inaperçu derrière un onglet.
-  const counts = new Map(
-    await Promise.all(
-      STATUSES.map(async (s) => {
-        const { count: n } = await supabase
-          .from("artisans")
-          .select("id", { count: "exact", head: true })
-          .eq("status", s);
-        return [s, n ?? 0] as const;
-      }),
-    ),
-  );
+  const { byStatus: counts, stalled } = await getArtisanFileCounts(supabase);
   const elsewhere = STATUSES.filter((s) => s !== status && (counts.get(s) ?? 0) > 0);
 
   const docChip = (state: string | undefined) =>
@@ -86,70 +72,7 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
           : { tone: "neutral" as const, Icon: Minus };
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
-          <p className="text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-        </div>
-        {/* Inscriptions bloquées et relances automatiques (ADR 0219). */}
-        <Link
-          href={"/admin/artisans/inscriptions" as Route}
-          className="text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
-        >
-          {t.stalledLink}
-        </Link>
-      </div>
-      <MoneyFigures
-        label={t.figuresLabel}
-        dense
-        cells={[
-          {
-            label: fr.admin.statuses.en_verification,
-            short: fr.admin.statuses.en_verification.toLowerCase(),
-            value: String(counts.get("en_verification") ?? 0),
-            hint: t.pendingHint,
-          },
-          {
-            label: fr.admin.statuses.valide,
-            short: fr.admin.statuses.valide.toLowerCase(),
-            value: String(counts.get("valide") ?? 0),
-            hint: t.validHint,
-          },
-          {
-            label: fr.admin.statuses.refuse,
-            short: fr.admin.statuses.refuse.toLowerCase(),
-            value: String(counts.get("refuse") ?? 0),
-            hint: t.refusedHint,
-          },
-          {
-            label: fr.admin.statuses.suspendu,
-            value: String(counts.get("suspendu") ?? 0),
-            hint: t.suspendedHint,
-            desktopOnly: true,
-          },
-        ]}
-      />
-      <nav
-        aria-label={t.filters}
-        className="-mx-1 flex gap-1 overflow-x-auto border-b border-border [scrollbar-width:none]"
-      >
-        {STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={`/admin/artisans?statut=${s}` as Route}
-            aria-current={s === status ? "page" : undefined}
-            aria-label={t.tab(fr.admin.statuses[s], counts.get(s) ?? 0)}
-            className="-mb-px flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-2 text-[0.9375rem] font-medium whitespace-nowrap text-muted-foreground hover:text-foreground aria-[current=page]:border-foreground aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
-          >
-            {fr.admin.statuses[s]}
-            {(counts.get(s) ?? 0) > 0 && (
-              <span aria-hidden="true" className="tabular-nums">
-                · {counts.get(s)}
-              </span>
-            )}
-          </Link>
-        ))}
-      </nav>
+      <ArtisanFilesHeader current={status} byStatus={counts} stalled={stalled} />
       <p className="-mt-2 text-sm text-muted-foreground" role="status">
         {fr.admin.followUp.results(count ?? 0)}
       </p>

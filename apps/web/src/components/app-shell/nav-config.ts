@@ -1,16 +1,13 @@
 import {
-  Activity,
   BookOpen,
-  BriefcaseBusiness,
   Building2,
   CalendarCheck,
   CalendarClock,
-  ClipboardCheck,
+  Cpu,
   CalendarDays,
   ClipboardList,
   Eye,
   FileText,
-  Gift,
   Handshake,
   HardHat,
   Headset,
@@ -20,14 +17,12 @@ import {
   ListTree,
   Map as MapIcon,
   MessageCircle,
-  MessagesSquare,
   QrCode,
   Repeat,
   Rocket,
   ScrollText,
   Send,
   ShieldCheck,
-  Sparkles,
   Store,
   Target,
   TrendingUp,
@@ -49,7 +44,7 @@ export type BadgeKey =
   | "quotes"
   | "reviews"
   | "dossiers"
-  | "controles"
+  | "conformite"
   | "tickets"
   | "secretary";
 export type Badges = Partial<Record<BadgeKey, number>>;
@@ -191,60 +186,72 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       also: item.also?.map((href) => href.replace(/^\/pro\//, "/pro/decouvrir/")),
     })),
   })),
-  // Back-office par pôle (ADR 0133) : pilotage, vérification des artisans, support, activité de la
-  // plateforme, argent (lecture seule), réglages.
+  // Back-office rangé en six sections (ADR 0283, après l'ADR 0133) : un nom par chose, le nom du
+  // menu est le titre de la page ; les rubriques à plusieurs pages ont des onglets
+  // (components/admin/admin-tabs.tsx). La boîte de réception est la seule rubrique du support.
   admin: [
     {
-      label: fr.appShell.sections.tools,
       items: [
-        { href: "/admin", label: fr.admin.nav.overview, icon: LayoutDashboard, exact: true },
-        // Équipe de lancement et planning de chacun (F-66, ADR 0208).
-        { href: "/admin/lancement", label: fr.admin.nav.launch, icon: Rocket },
-        // Toute l'activité, page par page (ADR 0146).
-        { href: "/admin/activite", label: fr.admin.nav.activity, icon: Activity },
-        // Carte des artisans et de la demande, entonnoir des recherches (ADR 0181).
-        { href: "/admin/marche", label: fr.admin.nav.market, icon: MapIcon },
-        // Objectif de demandes par artisan (ADR 0282).
-        { href: "/admin/objectifs", label: fr.admin.nav.leads, icon: Target },
+        {
+          href: "/admin",
+          label: fr.admin.nav.overview,
+          icon: LayoutDashboard,
+          exact: true,
+          // Onglet « Toute l'activité » (ADR 0146).
+          also: ["/admin/activite"],
+        },
+        {
+          href: "/admin/tickets",
+          label: fr.admin.nav.tickets,
+          icon: Inbox,
+          badge: "tickets",
+          support: true,
+        },
       ],
     },
     {
-      label: fr.appShell.sections.verification,
+      label: fr.appShell.sections.artisans,
       items: [
+        // Onglets par statut, dont « Inscriptions en cours » (ADR 0219).
         {
           href: "/admin/artisans",
           label: fr.admin.nav.artisans,
           icon: ShieldCheck,
           badge: "dossiers",
         },
-        { href: "/admin/surveillance", label: fr.admin.nav.watch, icon: CalendarClock },
-        // Contrôle aléatoire de 5 % des dossiers chaque mois (ADR 0121).
+        // Renouvellements, échéances et contrôles aléatoires du mois (ADR 0121).
         {
-          href: "/admin/controles",
-          label: fr.admin.nav.spotChecks,
-          icon: ClipboardCheck,
-          badge: "controles",
+          href: "/admin/conformite",
+          label: fr.admin.nav.compliance,
+          icon: CalendarClock,
+          badge: "conformite",
         },
+        // Objectif de demandes par artisan (ADR 0282).
+        { href: "/admin/objectifs", label: fr.admin.nav.leads, icon: Target },
       ],
     },
     {
-      label: fr.appShell.sections.support,
+      label: fr.appShell.sections.clients,
       items: [
-        {
-          href: "/admin/tickets",
-          label: fr.admin.nav.tickets,
-          icon: MessagesSquare,
-          badge: "tickets",
-          support: true,
-        },
+        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
+        { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
         { href: "/admin/personnes", label: fr.admin.nav.people, icon: Users },
       ],
     },
     {
-      label: fr.appShell.sections.activity,
+      label: fr.appShell.sections.growth,
       items: [
-        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
-        { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
+        // Équipe de lancement et planning de chacun (F-66, ADR 0208).
+        { href: "/admin/lancement", label: fr.admin.nav.launch, icon: Rocket },
+        // Carte des artisans et de la demande, entonnoir des recherches (ADR 0181).
+        { href: "/admin/marche", label: fr.admin.nav.market, icon: MapIcon },
+        // Commerciaux (ADR 0205), Partenaires (ADR 0136) et Parrainages (ADR 0143), en onglets.
+        {
+          href: "/admin/commerciaux",
+          label: fr.admin.nav.contributors,
+          icon: Handshake,
+          also: ["/admin/partenaires", "/admin/parrainages"],
+        },
       ],
     },
     {
@@ -253,25 +260,16 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       items: [
         { href: "/admin/paiements", label: fr.admin.nav.payments, icon: Wallet },
         { href: "/admin/abonnements", label: fr.admin.nav.subscriptions, icon: Repeat },
-        // Programme Partenaires (F-59, ADR 0136).
-        { href: "/admin/partenaires", label: fr.admin.nav.partners, icon: Handshake },
-        // Parrainages entre artisans (F-60, ADR 0143).
-        { href: "/admin/parrainages", label: fr.admin.nav.referrals, icon: Gift },
-        // Commerciaux de terrain (F-65, ADR 0205).
-        {
-          href: "/admin/commerciaux",
-          label: fr.admin.nav.commercials,
-          icon: BriefcaseBusiness,
-        },
       ],
     },
     {
-      // Listes de référence, journal d'audit et suivi de l'IA (ADR 0052).
-      label: fr.appShell.sections.settings,
+      // Listes de référence, journal d'audit et suivi technique (ADR 0052).
+      label: fr.appShell.sections.system,
       items: [
         { href: "/admin/referentiels", label: fr.admin.nav.references, icon: ListTree },
         { href: "/admin/journal", label: fr.admin.nav.journal, icon: ScrollText },
-        { href: "/admin/ia", label: fr.admin.nav.ai, icon: Sparkles },
+        // IA et notifications Stripe et DocuSeal, en onglets.
+        { href: "/admin/technique", label: fr.admin.nav.technical, icon: Cpu },
       ],
     },
   ],

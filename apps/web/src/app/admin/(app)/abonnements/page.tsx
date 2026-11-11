@@ -1,6 +1,7 @@
 import { churnRate } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admin/list-controls";
 import { SummaryTile, SummaryTiles, WebhookAlert } from "@/components/admin/money";
 import { Card, StatusBadge } from "@/components/ui";
@@ -82,12 +83,13 @@ export default async function AdminSubscriptionsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-      </div>
+      {/* Onglets de la rubrique (ADR 0283) : abonnements, recharges de minutes. */}
+      <AdminSectionHeader
+        set="subscriptions"
+        current="subscriptions"
+        title={t.title}
+        intro={t.intro}
+      />
       <WebhookAlert failures={webhooks.echecs ?? 0} />
       {summary && (
         <>

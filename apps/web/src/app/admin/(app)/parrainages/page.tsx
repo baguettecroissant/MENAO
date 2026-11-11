@@ -1,5 +1,6 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { FilterChips, Pagination, listHref } from "@/components/admin/list-controls";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { CancelReferralForm } from "@/components/admin/referral-forms";
@@ -57,13 +58,18 @@ export default async function AdminReferralsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-        <p className="text-sm text-muted-foreground">{t.how}</p>
-      </div>
+      {/* Apporteurs (ADR 0283) : commerciaux, partenaires et parrainages en onglets. */}
+      <AdminSectionHeader
+        set="contributors"
+        current="referrals"
+        intro={fr.admin.tabs.contributors.intro}
+        lead={
+          <>
+            <p>{t.intro}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t.how}</p>
+          </>
+        }
+      />
       {summary && (
         <SummaryTiles label={t.title}>
           <SummaryTile
