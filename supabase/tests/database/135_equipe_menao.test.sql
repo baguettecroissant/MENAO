@@ -40,9 +40,9 @@ select pg_temp.connecter('e1350000-0000-4000-8000-000000000001', 'admin');
 select results_eq(
   $$ select email, role::text, derniere_connexion is null
      from public.admin_staff_members()
-     where email like 'equipe135.%' order by email $$,
-  $$ values ('equipe135.admin2@example.test'::text, 'admin'::text, false),
-            ('equipe135.admin@example.test'::text, 'admin'::text, false),
+     where email like 'equipe135.%' order by user_id $$,
+  $$ values ('equipe135.admin@example.test'::text, 'admin'::text, false),
+            ('equipe135.admin2@example.test'::text, 'admin'::text, false),
             ('equipe135.support@example.test'::text, 'support'::text, true) $$,
   'membres de l''équipe seulement, avec leur accès et leur dernière connexion');
 
