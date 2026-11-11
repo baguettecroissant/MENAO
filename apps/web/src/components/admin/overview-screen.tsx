@@ -20,6 +20,7 @@ import {
   Scale,
   ShieldAlert,
   ShieldCheck,
+  Target,
   TriangleAlert,
   UserX,
   type LucideIcon,
@@ -65,6 +66,7 @@ function entry(
   todo: Todo,
   now: Date,
   newArtisans: NewArtisans | null,
+  leadAlerts = 0,
 ): Entry {
   switch (kind) {
     case "dossiers":
@@ -186,6 +188,13 @@ function entry(
         // Objet des tickets créés par l'alerte : « Accompagnement : <artisan> ».
         action: { href: "/admin/tickets?q=Accompagnement", label: todoT.supportAction },
       };
+    case "objectifs":
+      return {
+        icon: Target,
+        title: todoT.leads(leadAlerts),
+        hint: todoT.leadsHint,
+        action: { href: "/admin/objectifs?statut=alertes", label: todoT.leadsAction },
+      };
     case "notifications":
       return {
         icon: TriangleAlert,
@@ -216,6 +225,7 @@ export function OverviewScreen({
   activity,
   todo,
   newArtisans = null,
+  leadAlerts = 0,
   now,
   pole = null,
   basePath = "/admin",
@@ -225,6 +235,8 @@ export function OverviewScreen({
   todo: Todo;
   /** Nouveaux artisans (ADR 0160), absents si la fonction n'est pas encore déployée. */
   newArtisans?: NewArtisans | null;
+  /** Artisans en manque de demandes (ADR 0282). */
+  leadAlerts?: number;
   now: Date;
   /** Pôle choisi dans les filtres (`?pole=`), ou tous. */
   pole?: AdminPole | null;
@@ -242,6 +254,7 @@ export function OverviewScreen({
       paiements_echoues: o.paiements.echoues_7j,
       impayes: o.abonnements.impayes,
       accompagnements: newArtisans?.a_accompagner ?? 0,
+      objectifs: leadAlerts,
       dossiers: o.artisans.en_verification,
       controles: todo.spotChecks,
       renouvellements: o.documents.renouvellements,
@@ -353,7 +366,7 @@ export function OverviewScreen({
                 shown
                   .filter((item) => item.severity === severity)
                   .map((item) => {
-                    const e = entry(item.kind, o, todo, now, newArtisans);
+                    const e = entry(item.kind, o, todo, now, newArtisans, leadAlerts);
                     const deadline = deadlineText(item, now);
                     return (
                       <li key={item.kind}>

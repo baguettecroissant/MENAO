@@ -7617,6 +7617,7 @@ export const fr = {
       launch: "Lancement",
       activity: "Activité",
       market: "Marché",
+      leads: "Objectifs de demandes",
       requests: "Demandes",
       chantiers: "Chantiers",
       people: "Personnes",
@@ -7633,6 +7634,122 @@ export const fr = {
       journal: "Journal d'audit",
       ai: "Suivi de l'IA",
       signOut: "Me déconnecter",
+    },
+    // Objectif de demandes par artisan (F-131, ADR 0282).
+    leads: {
+      title: "Objectifs de demandes",
+      intro:
+        "Chaque artisan validé doit recevoir un minimum de demandes de devis par mois. Demandes des particuliers via MENAO, hors demandes directes (fiche, carte de visite, nouvelle demande d'un client).",
+      monthsLabel: "Mois",
+      month: (date: string) => {
+        const label = new Intl.DateTimeFormat("fr-FR", {
+          month: "long",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(`${date}T00:00:00Z`));
+        return label.charAt(0).toUpperCase() + label.slice(1);
+      },
+      monthShort: (date: string) =>
+        new Intl.DateTimeFormat("fr-FR", { month: "short", timeZone: "UTC" })
+          .format(new Date(`${date}T00:00:00Z`))
+          .replace(".", ""),
+      current: "Ce mois-ci",
+      summary: {
+        followed: "Artisans suivis",
+        followedHint: (target: number) =>
+          `Objectif par défaut : ${target} demande${target > 1 ? "s" : ""} par mois`,
+        reached: "Objectif atteint",
+        onTrack: "Dans les temps",
+        late: "En retard",
+        lateHint: "Sous le rythme attendu à date",
+        missed: "Objectif manqué",
+        zero: "Aucune demande",
+        twoMonths: "2 mois de suite sous l'objectif",
+        twoMonthsHint: "Seuil de sortie sans frais de la garantie",
+        rate: "Taux d'atteinte",
+        noSearch: "Sans recherche dans leur zone",
+        noSearchHint: "Personne n'a cherché leur métier dans leur zone : il manque des clients",
+        requests: "Demandes reçues",
+        requestsHint: (direct: number) =>
+          `${direct.toLocaleString("fr-FR")} demande${direct > 1 ? "s" : ""} directe${direct > 1 ? "s" : ""} en plus`,
+      },
+      filtersLabel: "Afficher",
+      filters: {
+        tous: "Tous",
+        alertes: "En alerte",
+        en_retard: "En retard",
+        manque: "Manqué",
+        dans_les_temps: "Dans les temps",
+        atteint: "Atteint",
+        hors_suivi: "Hors suivi",
+      },
+      searchLabel: "Rechercher un artisan",
+      searchPlaceholder: "Nom de l'entreprise",
+      columns: {
+        artisan: "Artisan",
+        progress: "Demandes / objectif",
+        status: "Situation",
+        cause: "Cause probable",
+        history: "6 derniers mois",
+      },
+      statuses: {
+        manque: "Manqué",
+        en_retard: "En retard",
+        dans_les_temps: "Dans les temps",
+        atteint: "Atteint",
+        hors_suivi: "Hors suivi",
+      },
+      alerts: {
+        deux_mois: "2 mois sous l'objectif",
+        en_retard: "En retard",
+      },
+      causes: {
+        en_pause: "Profil en pause : il ne reçoit aucune demande.",
+        absent: "Absent aujourd'hui (agenda) : il ne reçoit aucune demande.",
+        invisible:
+          "Profil invisible des particuliers (abonnement, documents ou paiements à régulariser).",
+        aucune_recherche:
+          "Aucune recherche de son métier dans sa zone ce mois-ci : il manque des clients, pas de la visibilité.",
+        peu_choisi: (n: number) =>
+          `${n.toLocaleString("fr-FR")} recherche${n > 1 ? "s" : ""} de son métier dans sa zone, mais peu de demandes : voir sa fiche, ses prix et son classement.`,
+      },
+      progress: (received: number, target: number) =>
+        `${received.toLocaleString("fr-FR")} sur ${target.toLocaleString("fr-FR")}`,
+      expected: (n: number) => `${n.toLocaleString("fr-FR")} attendue${n > 1 ? "s" : ""} à date`,
+      missing: (n: number) => `encore ${n.toLocaleString("fr-FR")} demande${n > 1 ? "s" : ""}`,
+      direct: (n: number) => `+ ${n.toLocaleString("fr-FR")} directe${n > 1 ? "s" : ""}`,
+      searches: (n: number) =>
+        `${n.toLocaleString("fr-FR")} recherche${n > 1 ? "s" : ""} dans sa zone`,
+      ownTarget: "objectif propre",
+      validatedOn: (date: string) => `validé le ${date}`,
+      historyBar: (month: string, received: number, target: number | null) =>
+        target === null
+          ? `${month} : ${received} demande${received > 1 ? "s" : ""}, hors suivi`
+          : `${month} : ${received} demande${received > 1 ? "s" : ""} sur ${target}`,
+      empty: "Aucun artisan dans cette sélection.",
+      results: (n: number) => `${n.toLocaleString("fr-FR")} artisan${n > 1 ? "s" : ""}`,
+      unavailable: "Le suivi des objectifs est momentanément indisponible.",
+      settings: {
+        title: "Objectif par défaut",
+        lead: "Nombre de demandes que chaque artisan validé doit recevoir par mois. Un artisan validé en cours de mois a un objectif au prorata des jours restants. Un objectif propre se règle sur la fiche de l'artisan.",
+        label: "Demandes par mois",
+        save: "Enregistrer",
+        saved: "Objectif enregistré.",
+      },
+      // Fiche d'un artisan.
+      detail: {
+        title: "Objectif de demandes",
+        thisMonth: "Ce mois-ci",
+        ownLabel: "Objectif propre à cet artisan (demandes par mois)",
+        ownHint: (target: number) =>
+          `Vide : objectif par défaut (${target}). 0 : artisan hors suivi.`,
+        save: "Enregistrer",
+        seeAll: "Voir tous les artisans",
+      },
+      errors: {
+        invalid: "Indiquez un nombre de demandes entre 0 et 100.",
+        generic: "L'objectif n'a pas pu être enregistré. Réessayez.",
+      },
     },
     // Carte du marché (ADR 0181).
     market: {
@@ -7866,6 +7983,12 @@ export const fr = {
         supportHint: (requests: number, days: number) =>
           `Au moins ${requests} demandes en ${days} jours sans être choisi : l'appeler pour l'aider (profil, photos, prix, délai d'envoi des devis).`,
         supportAction: "Voir les tickets",
+        // Objectif de demandes (ADR 0282).
+        leads: (n: number) =>
+          n > 1 ? `${n} artisans en manque de demandes` : "1 artisan en manque de demandes",
+        leadsHint:
+          "En retard sur l'objectif du mois, ou deux mois de suite sous l'objectif : voir la cause probable et agir (zone, fiche, recrutement de clients).",
+        leadsAction: "Voir les objectifs",
         webhooks: (n: number) =>
           n > 1
             ? `${n} notifications Stripe ou DocuSeal en échec`

@@ -29,6 +29,7 @@ import {
   ShieldCheck,
   Sparkles,
   Store,
+  Target,
   TrendingUp,
   UserRound,
   Users,
@@ -203,6 +204,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         { href: "/admin/activite", label: fr.admin.nav.activity, icon: Activity },
         // Carte des artisans et de la demande, entonnoir des recherches (ADR 0181).
         { href: "/admin/marche", label: fr.admin.nav.market, icon: MapIcon },
+        // Objectif de demandes par artisan (ADR 0282).
+        { href: "/admin/objectifs", label: fr.admin.nav.leads, icon: Target },
       ],
     },
     {
