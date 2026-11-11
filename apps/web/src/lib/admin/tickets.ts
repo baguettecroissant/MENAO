@@ -101,3 +101,34 @@ export async function getTicketDetail(supabase: Client, id: string) {
       })),
   };
 }
+
+/**
+ * Conversation du chantier lié à un litige ou à un message signalé (ADR 0277), lue par la base
+ * (admin_ticket_conversation : rôle, type de ticket et journal d'audit vérifiés côté base), avec
+ * les pièces jointes servies par URL signées (1 h). `null` : consultation refusée.
+ */
+export async function getTicketConversation(supabase: Client, ticketId: string) {
+  const { data, error } = await supabase.rpc("admin_ticket_conversation", {
+    p_ticket_id: ticketId,
+  });
+  if (error) return null;
+  const rows = data ?? [];
+  const urls = await signedUrlMap(
+    supabase,
+    "message-attachments",
+    rows.map((r) => r.storage_path),
+  );
+  return rows.map((r) => ({
+    id: r.message_id,
+    side: r.author_side as "client" | "artisan" | null,
+    author: r.author_name,
+    kind: r.kind,
+    body: r.body,
+    url: r.storage_path ? (urls.get(r.storage_path) ?? null) : null,
+    createdAt: r.created_at,
+    read: r.read_at !== null,
+    hidden: r.hidden,
+    moderationReason: r.moderation_reason,
+    reported: r.reported,
+  }));
+}
