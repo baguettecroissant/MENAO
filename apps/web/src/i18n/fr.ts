@@ -9578,6 +9578,26 @@ export const fr = {
           n > 1 ? `${n} demandes transmises aux artisans.` : "Demande transmise à l'artisan.",
         blocked: "Demande bloquée.",
       },
+      // Conversation du chantier, consultée depuis un litige ou un message signalé (ADR 0277).
+      conversation: {
+        title: "Conversation du chantier",
+        intro:
+          "Les messages entre le client et l'artisan sont privés. Ouvrez-les seulement si le dossier l'exige : chaque consultation est inscrite au journal du back-office.",
+        open: "Voir la conversation",
+        back: "Retour au ticket",
+        notice:
+          "Lecture seule. Cette consultation est inscrite au journal du back-office (qui, quand, quel chantier).",
+        empty: "Aucun message dans cette conversation.",
+        client: "Client",
+        artisan: "Artisan",
+        deleted: "Compte supprimé",
+        reported: "Message signalé",
+        hidden: (reason: string) => `Masqué : ${reason}`,
+        photo: "Ouvrir la photo",
+        file: "Ouvrir le document",
+        read: "Lu",
+        count: (n: number) => (n === 1 ? "1 message" : `${n} messages`),
+      },
       reportedMessage: {
         title: "Message concerné",
         hidden: (reason: string) => `Masqué : ${reason}`,

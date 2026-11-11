@@ -1052,6 +1052,19 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   ).toBeVisible();
   await capture(admin, "admin-ticket");
 
+  // Conversation du chantier depuis le litige (ADR 0277) : page à part, en lecture seule.
+  await admin.goto("/admin/tickets");
+  await ticketList.getByRole("searchbox", { name: "Rechercher un ticket" }).fill(email);
+  await ticketList.getByRole("button", { name: "Rechercher" }).click();
+  await admin.getByRole("link", { name: /^Ouvrir le ticket : Litige/ }).click();
+  await admin
+    .getByRole("region", { name: "Conversation du chantier" })
+    .getByRole("link", { name: "Voir la conversation" })
+    .click();
+  await expect(admin).toHaveURL(new RegExp(`/admin/tickets/${UUID}/conversation$`));
+  await expect(admin.getByText("Bonjour Dominique, je vous la dépose demain.")).toBeVisible();
+  await expect(admin.getByText(/^Lecture seule\./)).toBeVisible();
+
   // Suspension manuelle d'un artisan (ADR 0047) : motif obligatoire, puis levée de la suspension.
   await globalSearch.fill("VALIDE EXEMPLE");
   await globalSearch.press("Enter");

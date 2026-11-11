@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessagesSquare } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,7 +42,8 @@ const TONES = { ouvert: "warning", en_cours: "primary", resolu: "neutral" } as c
 
 /**
  * Page d'un ticket (F-56, ADR 0049) : déclarant et objet lié, message d'origine, fil d'échange,
- * modération ou décision, prise en charge et notes internes. Ouverte au rôle support ; les liens
+ * modération ou décision, prise en charge et notes internes ; accès à la conversation du chantier
+ * pour un litige ou un message signalé (ADR 0277). Ouverte au rôle support ; les liens
  * vers les fiches réservées aux admins ne s'affichent que pour eux.
  */
 export default async function TicketPage({ params }: PageProps<"/admin/tickets/[id]">) {
@@ -138,6 +139,22 @@ export default async function TicketPage({ params }: PageProps<"/admin/tickets/[
                 </p>
               )}
               <ModerateMessage messageId={reported.id} hidden={reported.hidden_at !== null} />
+            </DetailSection>
+          )}
+
+          {/* Conversation du chantier (ADR 0277) : page à part, ouverte volontairement et
+              journalisée par la base ; pas de préchargement, qui l'ouvrirait sans clic. */}
+          {(ticket.type === "litige" || ticket.type === "message") && (
+            <DetailSection title={t.conversation.title}>
+              <p className="text-sm text-muted-foreground">{t.conversation.intro}</p>
+              <Link
+                href={`/admin/tickets/${ticket.id}/conversation` as Route}
+                prefetch={false}
+                className={`${button} inline-flex items-center gap-2 self-start`}
+              >
+                <MessagesSquare aria-hidden="true" className="size-4" />
+                {t.conversation.open}
+              </Link>
             </DetailSection>
           )}
 

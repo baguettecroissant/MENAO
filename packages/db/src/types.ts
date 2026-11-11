@@ -6208,6 +6208,22 @@ export type Database = {
         Args: { p_artisan_id: string; p_reason: string };
         Returns: undefined;
       };
+      admin_ticket_conversation: {
+        Args: { p_ticket_id: string };
+        Returns: {
+          author_name: string;
+          author_side: string;
+          body: string;
+          created_at: string;
+          hidden: boolean;
+          kind: Database["public"]["Enums"]["message_kind"];
+          message_id: string;
+          moderation_reason: string;
+          read_at: string;
+          reported: boolean;
+          storage_path: string;
+        }[];
+      };
       admin_transfer_prospects: { Args: { p_from: string; p_to?: string }; Returns: number };
       admin_user_account: { Args: { p_user_id: string }; Returns: Json };
       admin_user_emails: {
