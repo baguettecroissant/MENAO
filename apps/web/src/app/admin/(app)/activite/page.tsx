@@ -1,5 +1,6 @@
 import { ACTIVITY_CATEGORIES, activityKinds, parseActivityCategory } from "@menao/core";
 import type { Metadata } from "next";
+import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { FilterChips, PagerLinks, listHref } from "@/components/admin/list-controls";
 import { ActivityFeed } from "@/components/admin/overview";
 import { Card } from "@/components/ui";
@@ -33,12 +34,8 @@ export default async function AdminActivityPage({ searchParams }: PageProps<"/ad
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-      </div>
+      {/* Onglet « Toute l'activité » de la Vue d'ensemble (ADR 0283). */}
+      <AdminSectionHeader set="overview" current="activity" intro={t.intro} />
       <FilterChips
         label={t.filtersLabel}
         items={ACTIVITY_CATEGORIES.map((key) => ({

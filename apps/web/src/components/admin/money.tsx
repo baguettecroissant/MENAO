@@ -31,12 +31,21 @@ export function SummaryTile({
 }
 
 /** Grille de chiffres clés (liste de définitions, lue d'un seul tenant par un lecteur d'écran). */
-export function SummaryTiles({ label, children }: { label: string; children: ReactNode }) {
+export function SummaryTiles({
+  label,
+  children,
+  columns = 4,
+}: {
+  label: string;
+  children: ReactNode;
+  /** Trois chiffres : une ligne de trois, sans case vide (ADR 0283). */
+  columns?: 3 | 4;
+}) {
   return (
     // Refonte « Nette » (ADR 0259) : les chiffres dans un seul cadre, séparés par un filet.
     <dl
       aria-label={label}
-      className="grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-2 xl:grid-cols-4"
+      className={`grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 xl:grid-cols-4"}`}
     >
       {children}
     </dl>
@@ -60,7 +69,7 @@ export function WebhookAlert({ failures }: { failures: number }) {
         <span>{t.webhooksAlert(failures)}</span>
       </span>
       <Link
-        href={"/admin/paiements/notifications" as Route}
+        href={"/admin/technique/notifications" as Route}
         className="shrink-0 font-medium underline underline-offset-2 sm:ml-auto"
       >
         {t.webhooksLink} →

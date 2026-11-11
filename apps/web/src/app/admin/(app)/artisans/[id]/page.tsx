@@ -943,7 +943,7 @@ export default async function AdminArtisanPage({
                     {c.note && <span className="text-sm text-muted-foreground">{c.note}</span>}
                     {c.result === null && (
                       <Link
-                        href={`/admin/controles#controle-${c.id}` as Route}
+                        href={`/admin/conformite/controles#controle-${c.id}` as Route}
                         className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
                       >
                         {sc.artisanAction} →

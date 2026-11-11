@@ -6,6 +6,7 @@ import {
   CommercialInviteForm,
   CommercialStatusForm,
 } from "@/components/admin/commercial-forms";
+import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { ProspectImport } from "@/components/admin/prospect-import";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -60,12 +61,13 @@ export default async function AdminCommercialsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-      </div>
+      {/* Apporteurs (ADR 0283) : commerciaux, partenaires et parrainages en onglets. */}
+      <AdminSectionHeader
+        set="contributors"
+        current="commercials"
+        intro={fr.admin.tabs.contributors.intro}
+        lead={t.intro}
+      />
       {amountsNotSet && <Alert tone="info">{tr.settings.notSet}</Alert>}
 
       <Card className="flex flex-col gap-4 overflow-x-auto">

@@ -1028,7 +1028,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await expect(actions.getByText("Accès rétabli.")).toBeVisible();
 
   // Boîte de réception (ADR 0049) : le message du client, pris en charge, note interne et réponse.
-  await admin.getByRole("link", { name: /^Dossiers et messages/ }).click();
+  await admin.getByRole("link", { name: /^Boîte de réception/ }).click();
   await expect(admin).toHaveURL(/\/admin\/tickets$/);
   const ticketList = admin.getByRole("main");
   await ticketList.getByRole("searchbox", { name: "Rechercher un ticket" }).fill(email);

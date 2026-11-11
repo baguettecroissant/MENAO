@@ -1820,7 +1820,7 @@ export function notificationContent(
           "L'artisan a été relancé par e-mail. Sans nouveau document validé à l'échéance, son profil sera suspendu automatiquement.",
         ],
         quote: null,
-        cta: { label: "Voir les échéances", url: link("/admin/surveillance") },
+        cta: { label: "Voir les échéances", url: link("/admin/conformite/echeances") },
       };
     }
     case "compte_radie": {

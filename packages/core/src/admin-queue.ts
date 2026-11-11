@@ -31,7 +31,9 @@ export type AdminQueueKind = (typeof ADMIN_QUEUE_KINDS)[number];
 export const ADMIN_QUEUE_SEVERITIES = ["urgent", "important", "a_faire"] as const;
 export type AdminQueueSeverity = (typeof ADMIN_QUEUE_SEVERITIES)[number];
 
-export const ADMIN_POLES = ["verification", "support", "activite", "argent", "technique"] as const;
+// Dans l'ordre du menu (ADR 0283) : boîte de réception, artisans, clients et chantiers, argent,
+// système. Les clés restent celles de l'ADR 0133 (adresses ?pole=).
+export const ADMIN_POLES = ["support", "verification", "activite", "argent", "technique"] as const;
 export type AdminPole = (typeof ADMIN_POLES)[number];
 
 const RULES: Record<AdminQueueKind, { severity: AdminQueueSeverity; pole: AdminPole }> = {
@@ -43,8 +45,9 @@ const RULES: Record<AdminQueueKind, { severity: AdminQueueSeverity; pole: AdminP
   assurances: { severity: "important", pole: "verification" },
   paiements_echoues: { severity: "important", pole: "argent" },
   impayes: { severity: "important", pole: "argent" },
-  accompagnements: { severity: "important", pole: "activite" },
-  objectifs: { severity: "important", pole: "activite" },
+  // Nouveaux artisans et objectifs de demandes : pôle « Artisans » (ADR 0283).
+  accompagnements: { severity: "important", pole: "verification" },
+  objectifs: { severity: "important", pole: "verification" },
   dossiers: { severity: "a_faire", pole: "verification" },
   controles: { severity: "a_faire", pole: "verification" },
   renouvellements: { severity: "a_faire", pole: "verification" },

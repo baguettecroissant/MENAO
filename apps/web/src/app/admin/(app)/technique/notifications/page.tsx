@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { FilterChips, Pagination, listHref } from "@/components/admin/list-controls";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -15,7 +15,7 @@ import { formatDayTime } from "@/lib/format";
 
 const t = fr.admin.webhooks;
 const f = fr.admin.followUp;
-const PATH = "/admin/paiements/notifications";
+const PATH = "/admin/technique/notifications";
 
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
 
@@ -28,12 +28,12 @@ const TONES = {
 } as const;
 
 /**
- * Notifications Stripe et DocuSeal (ADR 0051) : celles dont le traitement a échoué ou s'est
+ * Suivi technique, onglet « Notifications Stripe et DocuSeal » (ADR 0283, ADR 0051) : celles dont le traitement a échoué ou s'est
  * interrompu, et celles rétablies depuis. Le code d'erreur est technique, sans donnée personnelle.
  */
 export default async function AdminWebhooksPage({
   searchParams,
-}: PageProps<"/admin/paiements/notifications">) {
+}: PageProps<"/admin/technique/notifications">) {
   const params = await searchParams;
   const filter = parseWebhookFilter(params.file);
   const page = parsePage(params.page);
@@ -50,18 +50,12 @@ export default async function AdminWebhooksPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link
-        href="/admin/paiements"
-        className="self-start font-medium text-primary underline-offset-2 hover:underline"
-      >
-        ← {t.back}
-      </Link>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-      </div>
+      <AdminSectionHeader
+        set="technical"
+        current="webhooks"
+        counts={{ webhooks: counts.echecs ?? 0 }}
+        lead={t.intro}
+      />
       <FilterChips
         label={t.filtersLabel}
         items={WEBHOOK_FILTERS.map((key) => ({

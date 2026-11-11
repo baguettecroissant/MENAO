@@ -928,7 +928,7 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     );
     expect(team.cta).toEqual({
       label: "Voir les échéances",
-      url: "https://menao.example/admin/surveillance",
+      url: "https://menao.example/admin/conformite/echeances",
     });
   });
 

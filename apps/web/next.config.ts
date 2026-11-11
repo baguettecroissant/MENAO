@@ -115,6 +115,16 @@ const nextConfig: NextConfig = {
         destination: "/demande-preparee/:jeton",
         permanent: false,
       },
+      // Back-office rangé (ADR 0283) : anciennes adresses (favoris, liens des e-mails) vers les
+      // nouvelles rubriques à onglets.
+      { source: "/admin/surveillance", destination: "/admin/conformite", permanent: false },
+      { source: "/admin/controles", destination: "/admin/conformite/controles", permanent: false },
+      { source: "/admin/ia", destination: "/admin/technique", permanent: false },
+      {
+        source: "/admin/paiements/notifications",
+        destination: "/admin/technique/notifications",
+        permanent: false,
+      },
     ];
     if (!siteUrl || new URL(siteUrl).host === VERCEL_HOST) return partnerLinks;
     return [

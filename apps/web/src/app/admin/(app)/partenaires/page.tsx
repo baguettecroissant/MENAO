@@ -1,5 +1,6 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { Pagination } from "@/components/admin/list-controls";
 import { PartnerForm, PartnerSettingsForm } from "@/components/admin/partner-forms";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
@@ -33,12 +34,13 @@ export default async function AdminPartnersPage({ searchParams }: PageProps<"/ad
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-      </div>
+      {/* Apporteurs (ADR 0283) : commerciaux, partenaires et parrainages en onglets. */}
+      <AdminSectionHeader
+        set="contributors"
+        current="partners"
+        intro={fr.admin.tabs.contributors.intro}
+        lead={t.intro}
+      />
       {amountsNotSet && <Alert tone="info">{t.settings.notSet}</Alert>}
       {toReview > 0 && <Alert tone="info">{t.quality.listToReview(toReview)}</Alert>}
 

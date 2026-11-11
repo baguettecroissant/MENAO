@@ -57,17 +57,17 @@ describe("file « À traiter » du back-office (ADR 0133)", () => {
     expect(items[0]?.deadline).toBe("2026-10-18T15:00:00Z");
   });
 
-  it("nouveaux artisans à accompagner : importants, pôle activité (ADR 0160)", () => {
+  it("nouveaux artisans à accompagner : importants, pôle artisans (ADR 0160, ADR 0283)", () => {
     const items = adminQueue({ accompagnements: 2, impayes: 1, dossiers: 1 });
     expect(items.map((i) => i.kind)).toEqual(["impayes", "accompagnements", "dossiers"]);
-    expect(items[1]).toMatchObject({ severity: "important", pole: "activite" });
+    expect(items[1]).toMatchObject({ severity: "important", pole: "verification" });
   });
 
-  it("pôles des filtres, dans l'ordre, sans les pôles vides", () => {
+  it("pôles des filtres, dans l'ordre du menu, sans les pôles vides", () => {
     const items = adminQueue({ dossiers: 3, controles: 2, litiges: 1, impayes: 1 });
     expect(adminQueuePoles(items)).toEqual([
-      { pole: "verification", count: 2 },
       { pole: "support", count: 1 },
+      { pole: "verification", count: 2 },
       { pole: "argent", count: 1 },
     ]);
   });

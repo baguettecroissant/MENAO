@@ -1,10 +1,12 @@
 import { SPOT_CHECK_RATE, parisToday, spotCheckPeriod, spotCheckTarget } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { ComplianceHeader } from "@/components/admin/compliance";
 import { Pagination } from "@/components/admin/list-controls";
 import { Alert, Button, Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { drawSpotChecks } from "@/lib/admin/actions";
+import { getComplianceCounts } from "@/lib/admin/compliance";
 import { PAGE_SIZE, parsePage } from "@/lib/admin/follow-up";
 import { requireAdmin } from "@/lib/admin/guard";
 import { SpotCheckForm } from "./spot-check-form";
@@ -36,8 +38,9 @@ type Row = {
 };
 
 /**
- * Contrôles aléatoires (ADR 0121) : chaque mois, 5 % des artisans validés sont tirés au sort et
- * leur dossier est revérifié ; résultat noté ici, inscrit au journal.
+ * Conformité, onglet « Contrôles du mois » (ADR 0283) — contrôles aléatoires (ADR 0121) : chaque
+ * mois, 5 % des artisans validés sont tirés au sort et leur dossier est revérifié ; résultat noté
+ * ici, inscrit au journal.
  */
 export default async function SpotChecksPage({
   searchParams,
@@ -51,7 +54,8 @@ export default async function SpotChecksPage({
   const select =
     "id, period, drawn_at, result, note, insurer_called, checked_at, checked_by, artisans(id, raison_sociale, nom_commercial)";
 
-  const [current, previous, { count: validated }] = await Promise.all([
+  const [counts, current, previous, { count: validated }] = await Promise.all([
+    getComplianceCounts(supabase),
     supabase.from("artisan_spot_checks").select(select).eq("period", period).order("drawn_at"),
     // Contrôles des mois précédents : 50 par page (ADR 0146).
     supabase
@@ -90,14 +94,11 @@ export default async function SpotChecksPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-          {t.title}
-        </h1>
-        <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">
-          {t.intro(SPOT_CHECK_RATE * 100)}
-        </p>
-      </div>
+      <ComplianceHeader
+        current="spotChecks"
+        counts={counts}
+        lead={t.intro(SPOT_CHECK_RATE * 100)}
+      />
 
       <Card>
         <section aria-labelledby="mois" className="flex flex-col gap-4">
@@ -208,7 +209,9 @@ export default async function SpotChecksPage({
           <Pagination
             page={page}
             total={previous.count ?? 0}
-            hrefFor={(p) => `/admin/controles${p > 1 ? `?page=${p}` : ""}#precedents` as Route}
+            hrefFor={(p) =>
+              `/admin/conformite/controles${p > 1 ? `?page=${p}` : ""}#precedents` as Route
+            }
           />
         </section>
       </Card>

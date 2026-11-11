@@ -63,9 +63,15 @@ test("parrainage : lien d'un artisan validé, code appliqué à l'inscription, s
 
   await admin
     .getByRole("navigation", { name: "Navigation du back-office" })
+    .getByRole("link", { name: "Apporteurs" })
+    .click();
+  // Rubrique « Apporteurs » (ADR 0283) : onglet « Parrainages ».
+  await admin
+    .getByRole("navigation", { name: "Apporteurs" })
     .getByRole("link", { name: "Parrainages" })
     .click();
-  await expect(admin.getByRole("heading", { name: "Parrainages", level: 1 })).toBeVisible();
+  await expect(admin).toHaveURL(/\/admin\/parrainages$/);
+  await expect(admin.getByRole("heading", { name: "Apporteurs", level: 1 })).toBeVisible();
   await expect(admin.getByText("Mois offerts posés")).toBeVisible();
   await expect(admin.getByText("Cadeaux à envoyer")).toBeVisible();
   await admin.getByRole("link", { name: /^Annulés/ }).click();
