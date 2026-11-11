@@ -99,6 +99,15 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
     "Fuite sous l'évier de la cuisine de mon appartement à Nice, à réparer rapidement. Rappelez-moi au 06 00 00 00 00.",
   );
   await expect(page.getByText("nous avons de quoi trouver votre artisan idéal")).toBeVisible();
+  // Urgence repérée dans le texte (ADR 0279) : le bouton s'allume, un geste l'éteint ou le rallume.
+  const urgentButton = page.getByRole("button", { name: "Urgent", exact: true });
+  await expect(urgentButton).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Urgence détectée : fuite en cours")).toBeVisible();
+  await page.getByRole("button", { name: "Ce n'est pas urgent" }).click();
+  await expect(urgentButton).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByText("Urgence détectée : fuite en cours")).toHaveCount(0);
+  await urgentButton.click();
+  await expect(urgentButton).toHaveAttribute("aria-pressed", "true");
   await page.getByLabel("Joindre des photos").setInputFiles(files.png);
   await expect(page.getByRole("button", { name: "Retirer la photo 1" })).toBeVisible();
 
@@ -110,17 +119,25 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
 
   const trade = page.getByRole("region", { name: "Artisan recherché" });
   await expect(trade.getByLabel("Métier")).toHaveValue("plombier");
-  const site = page.getByRole("region", { name: "Informations sur le chantier" });
-  for (const tag of ["En appartement", "Recherche et réparation de fuite", "Cuisine", "< 10 m²"]) {
-    await expect(site.getByText(tag, { exact: true })).toBeVisible();
+  const works = page.getByRole("region", { name: "Travaux attendus" });
+  await expect(works.getByText("Recherche et réparation de fuite", { exact: true })).toBeVisible();
+  const place = page.getByRole("region", { name: "Lieu et pièces" });
+  for (const tag of ["En appartement", "Cuisine"]) {
+    await expect(place.getByText(tag, { exact: true })).toBeVisible();
   }
+  await expect(
+    page.getByRole("region", { name: "Surface et budget" }).getByText("< 10 m²", { exact: true }),
+  ).toBeVisible();
+  // Urgence activée à la saisie : en tête des critères, et premier choix du délai.
+  const urgency = page.getByRole("region", { name: "Demande urgente" });
+  await expect(urgency.getByText("Vous l'avez signalée comme urgente.")).toBeVisible();
   const address = page.getByRole("region", { name: "Adresse" });
   await expect(address.getByText("Nice (06000)")).toBeVisible();
   const photos = page.getByRole("region", { name: "Photos supplémentaires" });
   await expect(photos.getByRole("img", { name: "Photo 1 du chantier" })).toBeVisible();
 
   // Adresse exacte, proposée parmi les adresses de la ville choisie.
-  await address.getByRole("button", { name: "Modifier : Adresse" }).click();
+  await address.getByRole("button", { name: "Préciser l'adresse" }).click();
   await address.getByRole("combobox", { name: "Adresse exacte" }).fill("1 rue de l'Exemple");
   await address.getByRole("option", { name: "1 Rue de l'Exemple 06000 Nice" }).click();
   await address.getByRole("button", { name: "Enregistrer" }).click();
@@ -128,20 +145,27 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
 
   // Date : passée refusée, future acceptée.
   const date = page.getByRole("region", { name: "Date de début souhaitée" });
-  await expect(date.getByText("Dès que possible")).toBeVisible(); // urgence détectée
-  await date.getByRole("button", { name: "Modifier : Date de début souhaitée" }).click();
-  await date.getByLabel("Préciser une date").check();
+  await expect(date.getByRole("radio", { name: /^Urgent/ })).toBeChecked();
+  await date.getByText("À partir d'une date").click();
   await date.getByLabel("Date de début", { exact: true }).fill(dates.yesterday);
   await date.getByRole("button", { name: "Enregistrer" }).click();
   await expect(date.getByText("La date de début ne peut pas être passée.")).toBeVisible();
   await date.getByLabel("Date de début", { exact: true }).fill(dates.inTwoWeeks);
   await date.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Critères enregistrés.")).toBeVisible();
+  // Une date choisie retire l'urgence ; le particulier la remet, puis la retire depuis le bandeau.
+  await expect(urgency).toHaveCount(0);
+  await expect(date.getByRole("radio", { name: /^À partir d'une date/ })).toBeChecked();
+  await date.getByText("Urgent", { exact: true }).click();
+  await expect(urgency.getByText("Vous l'avez signalée comme urgente.")).toBeVisible();
+  await urgency.getByRole("button", { name: "Ce n'est pas urgent" }).click();
+  await expect(urgency).toHaveCount(0);
+  await expect(date.getByRole("radio", { name: /^Dès que possible/ })).toBeChecked();
 
   // Le métier est enregistré dès qu'il change ; les travaux d'un autre métier sont retirés.
   await trade.getByLabel("Métier").selectOption("carreleur");
-  await expect(site.getByText("Recherche et réparation de fuite")).toHaveCount(0);
-  await expect(site.getByText("Cuisine", { exact: true })).toBeVisible();
+  await expect(works.getByText("Recherche et réparation de fuite")).toHaveCount(0);
+  await expect(place.getByText("Cuisine", { exact: true })).toBeVisible();
 
   // Un autre visiteur ne voit pas ce projet.
   const projectUrl = page.url();
@@ -155,7 +179,7 @@ test("saisie, analyse, vérification des critères et lancement de la recherche"
   await photos.getByRole("button", { name: /Supprimer/ }).click();
   await expect(photos.getByRole("img")).toHaveCount(0);
   await photos.getByRole("button", { name: "Terminer" }).click();
-  await expect(photos.getByText("Aucune photo.")).toBeVisible();
+  await expect(photos.getByText("Aucune photo")).toBeVisible();
 
   // Carreleur : aucun artisan dans le jeu de données → état vide et dossier envoyé à MENAO.
   await page.getByRole("button", { name: "Trouver l'artisan idéal" }).click();
@@ -196,6 +220,10 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
   // Le métier choisi avec les puces est conservé.
   const trade = page.getByRole("region", { name: "Artisan recherché" }).getByLabel("Métier");
   await expect(trade).toHaveValue("plombier");
+  // Sans analyse, l'urgence est tout de même repérée dans les mots de la description (ADR 0279).
+  await expect(
+    page.getByRole("region", { name: "Demande urgente" }).getByText("« Panne de chaudière »"),
+  ).toBeVisible();
 
   // Description modifiée (ADR 0044) : la nouvelle analyse complète les critères encore vides,
   // sans remplacer le métier déjà choisi.
@@ -207,15 +235,13 @@ test("repli : modèle de secours si l'analyse est peu sûre, formulaire vide si 
     .fill("Fuite sous l'évier de la cuisine de mon appartement à Nice.");
   await text.getByRole("button", { name: "Enregistrer" }).click();
   await expect(
-    page.getByText(
-      "Description enregistrée. Critères complétés : Informations sur le chantier, Adresse, Date de début souhaitée.",
-    ),
+    page.getByText("Description enregistrée. Critères complétés : Votre chantier, Adresse."),
   ).toBeVisible({ timeout: 30_000 });
   await expect(text.getByText("Fuite sous l'évier de la cuisine")).toBeVisible();
   await expect(trade).toHaveValue("plombier");
   await expect(
     page
-      .getByRole("region", { name: "Informations sur le chantier" })
+      .getByRole("region", { name: "Travaux attendus" })
       .getByText("Recherche et réparation de fuite", { exact: true }),
   ).toBeVisible();
   await expect(

@@ -61,6 +61,27 @@ export async function saveProjectCriteria(
   return { ok: true };
 }
 
+/**
+ * Urgence réglée par le particulier (F-128, ADR 0279) : signalée aux artisans, et début « dès que
+ * possible » ; retirée, le délai choisi reste tel quel.
+ */
+export async function setProjectUrgency(
+  projectId: string,
+  urgent: boolean,
+): Promise<CriteriaResult> {
+  if (!UUID.test(projectId) || typeof urgent !== "boolean") {
+    return { ok: false, error: fr.errors.generic };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_project_urgency", {
+    p_project_id: projectId,
+    p_urgent: urgent,
+  });
+  if (error) return { ok: false, error: sqlError(error) };
+  revalidatePath(`/recherche/${projectId}`);
+  return { ok: true };
+}
+
 /** Autres métiers du chantier choisis par le particulier (ADR 0167), créés au lancement. */
 export async function saveProjectLots(
   projectId: string,

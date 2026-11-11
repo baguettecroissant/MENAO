@@ -3837,6 +3837,7 @@ export type Database = {
           trade_code: string | null;
           updated_at: string;
           urgence: boolean;
+          urgence_manuelle: boolean | null;
           user_id: string;
           ville_code_insee: string | null;
           ville_location: unknown;
@@ -3873,6 +3874,7 @@ export type Database = {
           trade_code?: string | null;
           updated_at?: string;
           urgence?: boolean;
+          urgence_manuelle?: boolean | null;
           user_id: string;
           ville_code_insee?: string | null;
           ville_location?: unknown;
@@ -3908,6 +3910,7 @@ export type Database = {
           trade_code?: string | null;
           updated_at?: string;
           urgence?: boolean;
+          urgence_manuelle?: boolean | null;
           user_id?: string;
           ville_code_insee?: string | null;
           ville_location?: unknown;
@@ -7256,6 +7259,10 @@ export type Database = {
       set_payment_reminders_auto: { Args: { p_enabled: boolean }; Returns: undefined };
       set_project_lot_trades: {
         Args: { p_project_id: string; p_trade_codes: string[] };
+        Returns: undefined;
+      };
+      set_project_urgency: {
+        Args: { p_project_id: string; p_urgent: boolean };
         Returns: undefined;
       };
       set_team_member_active: {

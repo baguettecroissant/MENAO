@@ -50,7 +50,7 @@ Règles :
 - surface_tranche : moins_10, 10_20, 20_50 ou plus_50 (m²), seulement si la surface est indiquée ou se déduit clairement.
 - ville, code_postal, adresse : uniquement s'ils figurent dans le texte. N'invente jamais un lieu.
 - date_souhaitee : AAAA-MM-JJ si une date ou une échéance précise est donnée (calcule les dates relatives à partir de la date du jour) ; jamais dans le passé ; sinon null.
-- urgence : vrai si le particulier exprime une urgence (fuite active, panne, mise en sécurité).
+- urgence : vrai si la situation ne peut pas attendre, même si le particulier n'écrit pas le mot « urgent » : fuite ou dégât des eaux en cours, panne de chauffage, d'eau chaude ou d'électricité, canalisation ou toilettes bouchées, porte ou serrure bloquée, effraction, vitre brisée, toiture qui fuit, mise en sécurité ; vrai aussi s'il demande une intervention immédiate (« urgent », « au plus vite », « dès aujourd'hui »). Faux pour un projet planifié, même proche, et pour une fuite ou une panne seulement redoutée.
 - resume : une phrase neutre de 200 caractères au plus décrivant les travaux, sans nom, téléphone, e-mail ni adresse précise.
 - budget_tranche : moins_1000, 1000_5000, 5000_15000, 15000_50000 ou plus_50000 (euros TTC), seulement si le particulier indique lui-même un budget ou un montant maximal. N'estime jamais un budget : sinon null.
 - brief_artisan : la demande reformulée pour l'artisan qui la reçoit, en 2 à 4 phrases neutres et précises (600 caractères au plus) : nature des travaux, lieu et pièces, dimensions ou quantités données, contraintes et souhaits exprimés, puis ce qui reste à préciser lors de la visite. N'invente aucun détail absent du texte ; sans nom, téléphone, e-mail ni adresse précise.
