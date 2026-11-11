@@ -37,9 +37,10 @@ const CONTROLS = fr.pages.guarantees.checks.map((check) => check.title);
 export const revalidate = 3600;
 
 /**
- * Accueil (F-01), nouvelle structure du 9 novembre 2026 (ADR 0264) : bandeau et recherche, vidéo de
- * présentation (ADR 0278), preuves, métiers, comment ça marche avec l'application, garanties et
- * contrôles, zone couverte, questions fréquentes, encart artisans et appel final. Aucun chiffre ni témoignage inventé.
+ * Accueil (F-01), nouvelle structure du 9 novembre 2026 (ADR 0264) : bandeau et recherche, preuves,
+ * métiers, comment ça marche avec la vidéo (ADR 0278) et l'application, garanties et contrôles,
+ * zone couverte, questions fréquentes, encart artisans et appel final. Aucun chiffre ni témoignage
+ * inventé.
  */
 export default async function HomePage() {
   const [{ trades, communes }, { data: plans }] = await Promise.all([
@@ -56,7 +57,6 @@ export default async function HomePage() {
       {/* Identité de MENAO pour Google et les assistants IA (ADR 0134). */}
       <JsonLd data={organizationJsonLd()} />
       <HomeHero />
-      <HomeVideo />
       <HomeProofs />
       <HomeTrades trades={trades} />
 
@@ -77,6 +77,8 @@ export default async function HomePage() {
             items={steps.items}
             screens={["clientRecherche", "clientArtisans", "clientDevis", "clientSuivi"]}
           />
+          {/* Le même parcours en vidéo, pour ceux qui hésitent encore (ADR 0278). */}
+          <HomeVideo />
           <AppBand id="home-app" />
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
             <ButtonLink href="/recherche" size="lg">
