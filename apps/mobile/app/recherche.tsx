@@ -4,23 +4,29 @@ import {
   SUGGESTION_MIN_LENGTH,
   appendDescription,
   appendIdea,
+  detectUrgency,
   matchNeedPhrases,
   needHelpLevel,
   remainingCompletion,
+  resolveUrgency,
   type NeedIdea,
   type NeedPhrase,
+  type UrgencyChoice,
 } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ArrowRight,
   BadgeCheck,
   Camera,
+  Check,
   Clock,
   Info,
   Plus,
   Search,
   ShieldCheck,
+  Siren,
   Sparkles,
+  TriangleAlert,
 } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputInstance } from "react-native";
@@ -36,6 +42,7 @@ import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
 import { choosePhotoSource, pickPhotos, uploadPhoto, type PickedPhoto } from "@/lib/photos";
 import { useNeedSuggestions } from "@/lib/need-suggestions";
+import { haptic } from "@/lib/haptics";
 import { describeProjectPhoto } from "@/lib/photo-description";
 import { analyzeNeed } from "@/lib/project";
 import { useTrades } from "@/lib/trades";
@@ -47,6 +54,7 @@ const { colors, font, radius, spacing } = theme;
 const s = fr.search.suggestions;
 const u = fr.search.understanding;
 const ph = fr.search.photoDescription;
+const ur = fr.search.urgency;
 
 type PhotoDraft =
   | { step: "reading" }
@@ -208,7 +216,12 @@ export default function Recherche() {
     if (!ready || phase !== "idle") return;
     setFailure(null);
     setPhase("analyzing");
-    const result = await analyzeNeed(description.trim(), trade, rehire);
+    const result = await analyzeNeed(
+      description.trim(),
+      trade,
+      rehire,
+      urgencyChoice === "auto" ? null : urgencyChoice,
+    );
     if (result.status !== "ok") {
       setPhase("idle");
       return setFailure(fr.search.errors[result.status]);
@@ -225,6 +238,26 @@ export default function Recherche() {
       pathname: "/projet/[id]",
       params: failed ? { id: result.projectId, photos: "erreur" } : { id: result.projectId },
     });
+  }
+
+  // Urgence (ADR 0279), comme sur le site : repérée dans le texte dès la saisie, ou réglée avec le
+  // bouton « Urgent » ; le choix du particulier passe avant ce qui est repéré.
+  const [urgencyChoice, setUrgencyChoice] = useState<UrgencyChoice>("auto");
+  const detectedUrgency = useMemo(() => detectUrgency(description), [description]);
+  const urgent = resolveUrgency(urgencyChoice, detectedUrgency !== null);
+  const urgencyDetected = urgent && urgencyChoice === "auto" ? detectedUrgency : null;
+  // Le bouton s'allume tout seul : un léger retour au toucher, une fois par motif repéré.
+  const lastReason = useRef<string | null>(null);
+  useEffect(() => {
+    const reason = urgencyDetected?.reason ?? null;
+    if (reason && reason !== lastReason.current) haptic.select();
+    lastReason.current = reason;
+  }, [urgencyDetected?.reason]);
+
+  function toggleUrgency() {
+    haptic.select();
+    // Retirée : « non » seulement s'il y a quelque chose à contredire dans le texte.
+    setUrgencyChoice(urgent ? (detectedUrgency ? "non" : "auto") : "oui");
   }
 
   const help = needHelpLevel(description);
@@ -246,7 +279,7 @@ export default function Recherche() {
         </View>
         {rehire && params.nom ? <Notice tone="info">{fr.search.rehire(params.nom)}</Notice> : null}
         {failure && <Notice tone="error">{failure}</Notice>}
-        <View style={[styles.box, focused && styles.boxFocused]}>
+        <View style={[styles.box, focused && styles.boxFocused, urgent && styles.boxUrgent]}>
           {photos.length > 0 ? (
             <View aria-label={fr.search.photos.count(photos.length)}>
               <PhotoThumbnails
@@ -297,6 +330,22 @@ export default function Recherche() {
             >
               <Camera size={20} color={colors.foreground} />
             </Pressable>
+            <Pressable
+              role="button"
+              aria-pressed={urgent}
+              accessibilityHint={ur.buttonHint}
+              onPress={toggleUrgency}
+              style={({ pressed }) => [
+                styles.urgent,
+                urgent && styles.urgentOn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Siren size={18} color={urgent ? colors.danger : colors.foreground} />
+              <Text style={[styles.urgentText, urgent && styles.urgentTextOn]}>{ur.button}</Text>
+              {urgent ? <Check size={15} strokeWidth={3} color={colors.danger} /> : null}
+            </Pressable>
+            <View style={styles.spacer} />
             <DictationButton
               onText={(spoken) =>
                 setDescription((current) =>
@@ -310,6 +359,36 @@ export default function Recherche() {
             />
           </View>
         </View>
+        {urgencyDetected ? (
+          <View aria-live="polite" style={styles.urgencyCard}>
+            <View style={styles.urgencyIcon}>
+              <Siren size={18} color={colors.danger} />
+            </View>
+            <View style={styles.urgencyText}>
+              <Text style={styles.urgencyTitle}>
+                {ur.detectedTitle(ur.reasons[urgencyDetected.reason])}
+              </Text>
+              <Text style={styles.urgencyBody}>{ur.detectedBody}</Text>
+              <Pressable
+                role="button"
+                hitSlop={10}
+                onPress={() => {
+                  haptic.select();
+                  setUrgencyChoice("non");
+                }}
+                style={({ pressed }) => [styles.notUrgent, pressed && styles.pressed]}
+              >
+                <Text style={styles.notUrgentText}>{ur.notUrgent}</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+        {urgent ? (
+          <View style={styles.danger}>
+            <TriangleAlert size={15} color={colors["muted-foreground"]} />
+            <Text style={styles.dangerText}>{ur.danger}</Text>
+          </View>
+        ) : null}
         {showProposals ? (
           <View role="list" aria-label={p.label} style={styles.proposals}>
             {proposals.map((proposal, index) => (
@@ -453,7 +532,17 @@ export default function Recherche() {
           })}
         </View>
       </FicheScreen>
-      {phase !== "idle" && <AnalysisScreen photos={phase === "photos"} />}
+      {phase !== "idle" && (
+        <AnalysisScreen
+          photos={phase === "photos"}
+          understood={{
+            trade: trades.find((t) => t.code === (trade ?? understood?.trade))?.label ?? null,
+            city: understood?.city ?? null,
+            timing: understood?.timing ?? null,
+          }}
+          urgent={urgent}
+        />
+      )}
     </View>
   );
 }
@@ -480,6 +569,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   boxFocused: { borderColor: colors.primary },
+  boxUrgent: { borderColor: colors.danger },
   // Texte en 18 points (pas de zoom sur iPhone, au-delà de 16).
   input: {
     minHeight: 110,
@@ -513,6 +603,56 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   roundPressed: { backgroundColor: colors["primary-soft"] },
+  // Bouton « Urgent » de la maquette : contour gris au repos, rouge clair une fois allumé.
+  urgent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(2),
+    height: 44,
+    paddingHorizontal: spacing(4),
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
+  },
+  urgentOn: { borderColor: colors.danger, backgroundColor: colors["danger-soft"] },
+  urgentText: { fontFamily: font.semibold, fontSize: 15, color: colors.foreground },
+  urgentTextOn: { fontFamily: font.bold, color: colors.danger },
+  spacer: { flex: 1 },
+  urgencyCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing(3),
+    padding: spacing(3.5),
+    borderRadius: 16,
+    backgroundColor: colors["danger-soft"],
+  },
+  urgencyIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  urgencyText: { flex: 1, gap: 3 },
+  urgencyTitle: { fontFamily: font.bold, fontSize: 15, lineHeight: 20, color: colors.danger },
+  urgencyBody: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  notUrgent: { alignSelf: "flex-start", paddingVertical: spacing(1.5) },
+  notUrgentText: {
+    fontFamily: font.semibold,
+    fontSize: 14,
+    color: colors.foreground,
+    textDecorationLine: "underline",
+  },
+  danger: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2) },
+  dangerText: {
+    flex: 1,
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.8 },
   proposals: {

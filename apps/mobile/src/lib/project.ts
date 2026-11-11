@@ -52,6 +52,8 @@ export async function analyzeNeed(
   description: string,
   tradeHint: string | null,
   rehire: Rehire | null = null,
+  /** Choix du particulier sur le bouton « Urgent » (ADR 0279) ; absent : l'analyse décide. */
+  urgency: "oui" | "non" | null = null,
 ): Promise<AnalyzeOutcome> {
   if (!(await ensureSession())) return { status: "session" };
   const { data, error } = await supabase.functions.invoke<{ status: string; projectId?: string }>(
@@ -64,6 +66,7 @@ export async function analyzeNeed(
         ...(rehire
           ? { preferredArtisanId: rehire.artisanId, fromChantierId: rehire.chantierId }
           : {}),
+        ...(urgency ? { urgency } : {}),
       },
     },
   );
@@ -94,6 +97,8 @@ export type ProjectForReview = {
   /** Autres métiers proposés d'après la description, et ceux choisis par le particulier. */
   suggestedLots: string[];
   lotTrades: string[];
+  /** Urgence (ADR 0279) ; `manual` : choix du particulier, null s'il n'a rien réglé. */
+  urgency: { active: boolean; manual: boolean | null };
   criteria: Criteria;
 };
 
@@ -102,7 +107,7 @@ export async function loadProject(id: string, confidenceThreshold: number) {
   const { data: p } = await supabase
     .from("projects")
     .select(
-      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, parent_project_id, suggested_lots, lot_trades, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee, project_photos(count)",
+      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, parent_project_id, suggested_lots, lot_trades, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee, urgence, urgence_manuelle, project_photos(count)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -121,6 +126,7 @@ export async function loadProject(id: string, confidenceThreshold: number) {
     parentId: p.parent_project_id,
     suggestedLots: storedLotTrades(p.suggested_lots),
     lotTrades: p.lot_trades,
+    urgency: { active: p.urgence, manual: p.urgence_manuelle },
     criteria: {
       tradeCode: p.trade_code,
       lieuType: p.lieu_type,
@@ -267,6 +273,21 @@ function sqlError(error: { code?: string; message: string }): string {
 }
 
 /**
+ * Urgence réglée par le particulier (ADR 0279), comme sur le site : urgent, le début devient « dès
+ * que possible » ; retirée, le délai reste tel quel. Renvoie le message d'erreur à afficher, ou null.
+ */
+export async function setProjectUrgency(
+  projectId: string,
+  urgent: boolean,
+): Promise<string | null> {
+  const { error } = await supabase.rpc("set_project_urgency", {
+    p_project_id: projectId,
+    p_urgent: urgent,
+  });
+  return error ? sqlError(error) : null;
+}
+
+/**
  * Enregistre les critères (validés ici, puis en base par `save_project_criteria`) et vérifie
  * qu'ils suffisent à la recherche (`validate_project_criteria` : métier et ville).
  * Renvoie le message d'erreur à afficher, ou null.
@@ -383,6 +404,8 @@ export type NeedSummary = {
   dateMode: Database["public"]["Enums"]["project_date_mode"];
   /** AAAA-MM-JJ, quand une date est choisie. */
   dateSouhaitee: string | null;
+  /** Demande urgente (ADR 0279) : dite avant le début souhaité. */
+  urgent: boolean;
   photoCount: number;
 };
 
@@ -391,7 +414,7 @@ export async function loadNeedSummary(projectId: string): Promise<NeedSummary | 
   const [{ data: project }, { count }] = await Promise.all([
     supabase
       .from("projects")
-      .select("trade_code, ville_nom, date_mode, date_souhaitee")
+      .select("trade_code, ville_nom, date_mode, date_souhaitee, urgence")
       .eq("id", projectId)
       .maybeSingle(),
     supabase
@@ -410,6 +433,7 @@ export async function loadNeedSummary(projectId: string): Promise<NeedSummary | 
     city: project.ville_nom,
     dateMode: project.date_mode,
     dateSouhaitee: project.date_souhaitee,
+    urgent: project.urgence,
     photoCount: count ?? 0,
   };
 }

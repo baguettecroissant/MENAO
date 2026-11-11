@@ -973,6 +973,29 @@ export const fr = {
     submit: "Trouver mon artisan du BTP idéal",
     analyzing: "Analyse de votre projet en cours",
     uploadingPhotos: "Envoi de vos photos…",
+    // Urgence (F-128, F-130, ADR 0279) : bouton de la saisie, repérage dans la description.
+    urgency: {
+      button: "Urgent",
+      buttonHint: "Signale la demande comme urgente aux artisans",
+      detectedTitle: (reason: string) => `Urgence détectée : ${reason}`,
+      detectedBody:
+        "Votre demande sera signalée comme urgente aux artisans, et ceux qui sont disponibles tout de suite vous seront présentés d'abord.",
+      notUrgent: "Ce n'est pas urgent",
+      reasons: {
+        fuite: "fuite en cours",
+        chauffage: "panne de chauffage ou d'eau chaude",
+        electricite: "panne ou danger électrique",
+        serrure: "porte ou serrure bloquée",
+        vitre: "vitre brisée",
+        canalisation: "canalisation bouchée",
+        toiture: "toiture endommagée",
+        exprimee: "intervention demandée au plus vite",
+      },
+      // TODO(legal) : numéros d'urgence et formulation à faire relire avant l'ouverture au public.
+      danger:
+        "Danger immédiat ? Appelez le 18 ou le 112. Odeur de gaz : 0\u00a0800\u00a047\u00a033\u00a033 (appel gratuit).",
+      searching: "Demande urgente : nous cherchons d'abord les artisans disponibles tout de suite.",
+    },
     analysis: {
       steps: [
         "Lecture de votre description",
@@ -981,6 +1004,10 @@ export const fr = {
         "Préparation de vos critères",
       ],
       photosStep: "Envoi de vos photos",
+      // Refonte de l'écran (F-128, F-130) : ce qui est déjà compris de la demande.
+      understoodTitle: "Ce que nous avons compris",
+      understood: { trade: "Métier", place: "Lieu", timing: "Délai" },
+      pending: "Travaux…",
       factsTitle: "Le saviez-vous ?",
       facts: [
         "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
@@ -1042,6 +1069,25 @@ export const fr = {
       "Nous n'avons pas pu analyser votre description automatiquement. Complétez les rubriques ci-dessous.",
     lowConfidence:
       "Vérifiez bien ces critères : votre description laissait plusieurs interprétations possibles.",
+    // Refonte de l'écran (F-130, ADR 0279) : l'urgence en tête, puis deux groupes.
+    groups: {
+      essential: {
+        title: "L'essentiel",
+        description: "Ces trois informations suffisent pour lancer la recherche.",
+      },
+      site: {
+        title: "Votre chantier",
+        description: "Plus vous en dites, plus les réponses des artisans seront précises.",
+      },
+    },
+    urgency: {
+      title: "Demande urgente",
+      fromText: (excerpt: string) => `D'après votre description (« ${excerpt} »).`,
+      fromAnalysis: "D'après votre description.",
+      manual: "Vous l'avez signalée comme urgente.",
+      body: "Les artisans la verront comme urgente, et ceux qui sont disponibles tout de suite vous seront présentés d'abord.",
+      notUrgent: "Ce n'est pas urgent",
+    },
     yourText: "Votre description",
     more: "Lire la suite",
     less: "Réduire",
@@ -1083,12 +1129,21 @@ export const fr = {
       "Elle affine la recherche et ne sera communiquée qu'aux artisans qui acceptent votre demande.",
     streetPlaceholder: "Ex : 1 rue de France",
     change: "Modifier",
-    date: "Date de début souhaitée",
-    dateHelp: "Quand souhaitez-vous que le chantier démarre ?",
+    date: "Quand ?",
+    dateHelp:
+      "Quand souhaitez-vous commencer ? Une demande urgente est montrée comme telle aux artisans.",
+    // Les quatre choix du délai (F-130), « Urgent » d'abord, comme sur le site.
     dateModes: {
+      urgent: "Urgent",
       des_que_possible: "Dès que possible",
-      date: "Préciser une date de début",
-      inconnue: "Date de début inconnue",
+      date: "À partir d'une date",
+      inconnue: "Je ne sais pas encore",
+    },
+    dateDetails: {
+      urgent: "Fuite, panne, mise en sécurité",
+      des_que_possible: "Sans urgence",
+      date: "Vous choisissez le jour",
+      inconnue: "À voir avec l'artisan",
     },
     pickDate: "Choisir la date",
     startsOn: (date: string) => `Début le ${date}`,
@@ -1210,6 +1265,7 @@ export const fr = {
     title: "Résumé de mon besoin",
     edit: "Modifier mon besoin",
     asap: "Dès que possible",
+    urgent: "Urgent",
     unknownDate: "Date à définir",
     photos: (n: number) => (n <= 1 ? `${n} photo` : `${n} photos`),
   },
