@@ -4,6 +4,7 @@ import { OverviewScreen } from "@/components/admin/overview-screen";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
+import { getLeadTargets } from "@/lib/admin/lead-targets";
 import { getActivity, getNewArtisans, getOverview, getTodo } from "@/lib/admin/overview";
 
 export const metadata: Metadata = { title: `${fr.admin.overview.title} — ${fr.admin.title}` };
@@ -16,11 +17,13 @@ export default async function AdminOverviewPage({ searchParams }: PageProps<"/ad
   const { supabase } = await requireAdmin();
   const { pole: raw } = await searchParams;
   const pole = (ADMIN_POLES as readonly string[]).includes(String(raw)) ? (raw as AdminPole) : null;
-  const [overview, activity, todo, newArtisans] = await Promise.all([
+  const [overview, activity, todo, newArtisans, leads] = await Promise.all([
     getOverview(supabase),
     getActivity(supabase),
     getTodo(supabase),
     getNewArtisans(supabase),
+    // Artisans en manque de demandes (ADR 0282).
+    getLeadTargets(supabase),
   ]);
   if (!overview) return <Alert tone="error">{fr.errors.generic}</Alert>;
   return (
@@ -29,6 +32,7 @@ export default async function AdminOverviewPage({ searchParams }: PageProps<"/ad
       activity={activity}
       todo={todo}
       newArtisans={newArtisans}
+      leadAlerts={leads?.artisans.filter((a) => a.alerts.length > 0).length ?? 0}
       now={new Date()}
       pole={pole}
     />

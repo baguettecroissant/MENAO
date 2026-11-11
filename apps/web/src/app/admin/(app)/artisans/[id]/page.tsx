@@ -26,11 +26,19 @@ import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { adminRefreshRge, verifyCertification } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
+import { getLeadTargets } from "@/lib/admin/lead-targets";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { getArtisanReferral, type ArtisanReferral } from "@/lib/admin/referrals";
 import { documentLogoUrl } from "@/lib/documents/logo";
 import { formatDay } from "@/lib/format";
 import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
+import { ArtisanLeadTargetForm } from "@/components/admin/lead-target-forms";
+import {
+  LeadAlertBadges,
+  LeadBar,
+  LeadHistory,
+  LeadStatusBadge,
+} from "@/components/admin/lead-targets";
 import { DocumentsSection } from "./documents-section";
 import { DecisionForm } from "./review-forms";
 import { sheetCard } from "@/components/pro/sheet";
@@ -144,21 +152,36 @@ export default async function AdminArtisanPage({
       .order("period", { ascending: false }),
   ]);
   // Logo des documents (ADR 0038) : visible de l'équipe, sans validation préalable.
-  const [logoUrl, activity, referral, { data: scoreData }, { data: starterMonth }] =
-    await Promise.all([
-      documentLogoUrl(supabase, artisan.logo_path),
-      getArtisanActivity(supabase, artisan.id),
-      getArtisanReferral(supabase, artisan.id),
-      // Score MENAO (ADR 0155).
-      supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id }),
-      // Mois offert de démarrage (ADR 0160).
-      supabase
-        .from("artisan_free_months")
-        .select("created_at, applied_at")
-        .eq("artisan_id", artisan.id)
-        .eq("reason", "demarrage")
-        .maybeSingle(),
-    ]);
+  const [
+    logoUrl,
+    activity,
+    referral,
+    { data: scoreData },
+    { data: starterMonth },
+    leads,
+    { data: ownLeadTarget },
+  ] = await Promise.all([
+    documentLogoUrl(supabase, artisan.logo_path),
+    getArtisanActivity(supabase, artisan.id),
+    getArtisanReferral(supabase, artisan.id),
+    // Score MENAO (ADR 0155).
+    supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id }),
+    // Mois offert de démarrage (ADR 0160).
+    supabase
+      .from("artisan_free_months")
+      .select("created_at, applied_at")
+      .eq("artisan_id", artisan.id)
+      .eq("reason", "demarrage")
+      .maybeSingle(),
+    // Objectif de demandes (ADR 0282).
+    getLeadTargets(supabase, { artisanId: artisan.id }),
+    supabase
+      .from("artisan_lead_targets")
+      .select("objectif")
+      .eq("artisan_id", artisan.id)
+      .maybeSingle(),
+  ]);
+  const lead = leads?.artisans[0] ?? null;
   const menaoScore = menaoScorePartsSchema.safeParse(scoreData).data ?? null;
 
   const docs = documents.data ?? [];
@@ -247,6 +270,7 @@ export default async function AdminArtisanPage({
     { id: "score", label: t.navItems.score },
     { id: "abonnement", label: t.navItems.abonnement },
     { id: "activite", label: t.navItems.activite },
+    { id: "objectif", label: fr.admin.leads.detail.title },
     { id: "parrainage", label: t.navItems.parrainage },
     ...(pending ? [] : [{ id: "decision", label: t.navItems.decision }]),
     { id: "historique", label: t.navItems.historique },
@@ -763,6 +787,46 @@ export default async function AdminArtisanPage({
                 {fr.admin.activity.seeChantiers} →
               </Link>
             </div>
+          </Section>
+
+          <Section id="objectif" title={fr.admin.leads.detail.title}>
+            {lead && (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {fr.admin.leads.detail.thisMonth}
+                    </p>
+                    <LeadBar progress={lead.progress} direct={lead.direct} />
+                    <div className="flex flex-wrap gap-1.5">
+                      <LeadStatusBadge status={lead.progress.status} />
+                      <LeadAlertBadges alerts={lead.alerts} />
+                    </div>
+                  </div>
+                  <LeadHistory history={lead.history} />
+                </div>
+                <p className="text-sm text-label">
+                  {lead.cause === "peu_choisi"
+                    ? fr.admin.leads.causes.peu_choisi(lead.searches)
+                    : lead.cause
+                      ? fr.admin.leads.causes[lead.cause]
+                      : fr.admin.leads.searches(lead.searches)}
+                </p>
+              </div>
+            )}
+            {leads && (
+              <ArtisanLeadTargetForm
+                artisanId={artisan.id}
+                target={ownLeadTarget?.objectif ?? null}
+                defaultTarget={leads.defaultTarget}
+              />
+            )}
+            <Link
+              href={"/admin/objectifs" as Route}
+              className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+            >
+              {fr.admin.leads.detail.seeAll} →
+            </Link>
           </Section>
 
           <Section id="parrainage" title={t.referral.title}>

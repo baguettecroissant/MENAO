@@ -168,6 +168,20 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await expect(page.getByLabel("Accès")).toHaveValue("admin");
   await expect(page.getByRole("button", { name: "Envoyer l'invitation" })).toBeVisible();
 
+  // Objectif de demandes (ADR 0282) : suivi du mois et objectif par défaut réglable.
+  await page.goto("/admin/objectifs");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Objectifs de demandes" }),
+  ).toBeVisible();
+  await expect(page.getByText("Objectif par défaut : 4 demandes par mois")).toBeVisible();
+  await page.getByLabel("Demandes par mois").fill("5");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("Objectif enregistré.")).toBeVisible();
+  await expect(page.getByText("Objectif par défaut : 5 demandes par mois")).toBeVisible();
+  await page.getByLabel("Demandes par mois").fill("4");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("Objectif par défaut : 4 demandes par mois")).toBeVisible();
+
   // Côté artisan : dossier validé. Déconnexion depuis le menu du compte (ADR 0035).
   await page.getByRole("button", { name: "Mon compte" }).click();
   await page.getByRole("button", { name: "Me déconnecter" }).click();

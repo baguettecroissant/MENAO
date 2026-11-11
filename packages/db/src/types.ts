@@ -849,6 +849,36 @@ export type Database = {
           },
         ];
       };
+      artisan_lead_targets: {
+        Row: {
+          artisan_id: string;
+          objectif: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          objectif: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          artisan_id?: string;
+          objectif?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_lead_targets_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_members: {
         Row: {
           artisan_id: string;
@@ -5909,6 +5939,7 @@ export type Database = {
       };
       admin_launch_coverage: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_launch_figures: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_lead_targets: { Args: { p_artisan_id?: string; p_month?: string }; Returns: Json };
       admin_log_account_action: {
         Args: { p_action: string; p_user_id: string };
         Returns: undefined;
@@ -6167,6 +6198,10 @@ export type Database = {
       admin_set_commercial_zone: { Args: { p_codes: string[]; p_id: string }; Returns: undefined };
       admin_set_google_reviews: {
         Args: { p_artisan_id: string; p_count: number; p_rating: number; p_url: string };
+        Returns: undefined;
+      };
+      admin_set_lead_target: {
+        Args: { p_artisan_id: string; p_objectif: number };
         Returns: undefined;
       };
       admin_set_platform_setting: { Args: { p_key: string; p_value: Json }; Returns: undefined };
