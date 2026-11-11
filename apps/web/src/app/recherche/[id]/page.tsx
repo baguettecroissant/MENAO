@@ -26,7 +26,7 @@ export default async function ProjectReviewPage({
   const { data: project } = await supabase
     .from("projects")
     .select(
-      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, parent_project_id, suggested_lots, lot_trades, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
+      "id, description, analyzed_at, ai_confidence, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, parent_project_id, suggested_lots, lot_trades, ville_code_insee, ville_nom, code_postal, adresse, date_mode, date_souhaitee, urgence, urgence_manuelle",
     )
     .eq("id", id)
     .maybeSingle();
@@ -114,6 +114,7 @@ export default async function ProjectReviewPage({
           description={project.description}
           analyzedAt={project.analyzed_at}
           initial={initial}
+          urgency={{ active: project.urgence, manual: project.urgence_manuelle }}
           trades={trades.data ?? []}
           workTypes={(workTypes.data ?? []).map((w) => ({
             code: w.code,

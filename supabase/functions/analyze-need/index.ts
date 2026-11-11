@@ -16,6 +16,7 @@ import {
   type NeedCriteria,
 } from "../../../packages/core/src/project.ts";
 import { normalizePartnerCode } from "../../../packages/core/src/partners.ts";
+import { detectUrgency } from "../../../packages/core/src/urgency.ts";
 import { llmConfig, logAiRuns, withinHourlyLimits, type AiRun } from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { geocodeAddress, geocodeCommune } from "../_shared/geocoding.ts";
@@ -86,6 +87,7 @@ type EditedProject = {
   adresse: string | null;
   date_mode: NeedCriteria["dateMode"];
   date_souhaitee: string | null;
+  urgence_manuelle: boolean | null;
 };
 const EDITABLE_STATUSES = ["brouillon", "criteres_valides"];
 
@@ -147,7 +149,7 @@ const point = (lon: number, lat: number) => `SRID=4326;POINT(${lon} ${lat})`;
 
 /**
  * Enregistre la nouvelle description (ADR 0044). Analyse réussie : résumé et indices d'urgence
- * renouvelés, critères encore vides complétés ; une ville ou une adresse n'est reprise que si
+ * renouvelés (sauf si le particulier a lui-même réglé l'urgence), critères encore vides complétés ; une ville ou une adresse n'est reprise que si
  * elle est trouvée par le géocodage. Renvoie les cartes complétées, ou null si le projet a été
  * envoyé entre-temps.
  */
@@ -157,6 +159,7 @@ async function updateProject(
   description: string,
   best: Attempt,
   lots: StoredLot[],
+  urgent: boolean,
 ): Promise<CompletedSection[] | null> {
   // Sans nouvelle analyse, l'ancienne reformulation ne correspond plus au texte : retirée. Les
   // lots proposés suivent la nouvelle description ; le choix du particulier reste.
@@ -202,13 +205,14 @@ async function updateProject(
       // repris du texte seulement s'il n'a pas encore été choisi.
       artisan_brief: c.artisanBrief,
       budget: edited.budget ?? c.budget,
-      urgence: c.urgence,
+      urgence: urgent,
       trade_code: done.tradeCode,
       lieu_type: done.lieuType,
       room_codes: done.roomCodes,
       work_type_codes: done.workTypeCodes,
       surface: done.surface,
-      date_mode: done.dateMode,
+      // Urgence repérée sans délai déjà choisi : dès que possible.
+      date_mode: urgent && done.dateMode === "inconnue" ? "des_que_possible" : done.dateMode,
       date_souhaitee: done.dateSouhaitee,
     });
     if (done.takeVille && commune) {
@@ -256,6 +260,7 @@ Deno.serve(
       fromPublicPage?: unknown;
       projectId?: unknown;
       partnerCode?: unknown;
+      urgency?: unknown;
     } | null;
     const description = typeof body?.description === "string" ? body.description.trim() : "";
     if (description.length === 0 || description.length > PROJECT_TEXT_MAX_LENGTH) {
@@ -271,7 +276,7 @@ Deno.serve(
       const { data } = await admin
         .from("projects")
         .select(
-          "id, status, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, adresse, date_mode, date_souhaitee",
+          "id, status, trade_code, lieu_type, room_codes, work_type_codes, surface, budget, ville_code_insee, adresse, date_mode, date_souhaitee, urgence_manuelle",
         )
         .eq("id", body.projectId)
         .eq("user_id", user.id)
@@ -323,6 +328,12 @@ Deno.serve(
       }
 
       const c = best?.criteria;
+      // Urgence (ADR 0279) : le choix du particulier d'abord (bouton « Urgent », ou urgence
+      // repérée qu'il a retirée), gardé pour les analyses suivantes ; sinon celle de l'analyse,
+      // ou des mots de la description quand le modèle ne l'a pas relevée ou n'a pas répondu.
+      const chosen = body?.urgency === "oui" ? true : body?.urgency === "non" ? false : null;
+      const manualUrgency = edited ? (chosen ?? edited.urgence_manuelle) : chosen;
+      const urgent = manualUrgency ?? ((c?.urgence ?? false) || detectUrgency(clean) !== null);
       // Chantier à plusieurs métiers (ADR 0167) : métiers complémentaires de l'IA, puis ceux des
       // chantiers composés relevés dans la description.
       const lots: StoredLot[] = suggestedLots(
@@ -331,7 +342,7 @@ Deno.serve(
         compositeTrades(clean, ref.trades),
       ).map((l) => ({ trade_code: l.tradeCode, work_type_codes: l.workTypeCodes }));
       if (edited) {
-        const completed = await updateProject(admin, edited, description, best, lots);
+        const completed = await updateProject(admin, edited, description, best, lots, urgent);
         await logAiRuns(
           admin,
           runs.map((r) => ({ ...r, project_id: edited.id })),
@@ -384,9 +395,14 @@ Deno.serve(
           surface: c?.surface ?? null,
           ...place,
           preferred_artisan_id: previous ? body?.preferredArtisanId : pageArtisan,
-          date_mode: c?.dateMode ?? "inconnue",
+          // Urgence sans date donnée : dès que possible.
+          date_mode:
+            urgent && (c?.dateMode ?? "inconnue") === "inconnue"
+              ? "des_que_possible"
+              : (c?.dateMode ?? "inconnue"),
           date_souhaitee: c?.dateSouhaitee ?? null,
-          urgence: c?.urgence ?? false,
+          urgence: urgent,
+          urgence_manuelle: chosen,
         })
         .select("id")
         .single();

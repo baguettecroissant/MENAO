@@ -1851,6 +1851,28 @@ export const fr = {
       ideasAria: "Idées pour préciser votre demande",
       addIdea: (label: string) => `Ajouter : ${label}`,
     },
+    // Urgence (F-128, ADR 0279) : bouton de la saisie, repérage dans la description.
+    urgency: {
+      button: "Urgent",
+      detectedTitle: (reason: string) => `Urgence détectée : ${reason}`,
+      detectedBody:
+        "Votre demande sera signalée comme urgente aux artisans, et ceux qui sont disponibles tout de suite vous seront présentés d'abord.",
+      notUrgent: "Ce n'est pas urgent",
+      reasons: {
+        fuite: "fuite en cours",
+        chauffage: "panne de chauffage ou d'eau chaude",
+        electricite: "panne ou danger électrique",
+        serrure: "porte ou serrure bloquée",
+        vitre: "vitre brisée",
+        canalisation: "canalisation bouchée",
+        toiture: "toiture endommagée",
+        exprimee: "intervention demandée au plus vite",
+      },
+      // TODO(legal) : numéros d'urgence et formulation à faire relire avant l'ouverture au public.
+      danger:
+        "Danger immédiat ? Appelez le 18 ou le 112. Odeur de gaz : 0 800 47 33 33 (appel gratuit).",
+      searching: "Demande urgente : nous cherchons d'abord les artisans disponibles tout de suite.",
+    },
     dropHere: "Déposez vos fichiers ici",
     attach: "Joindre des photos",
     moreTrades: "Afficher plus de métiers",
@@ -1889,6 +1911,11 @@ export const fr = {
         criteria: "Préparation de vos critères",
         photos: "Envoi de vos photos",
       },
+      // Refonte de l'écran (F-128) : la description et ce qui en est déjà compris.
+      yourText: "Votre description",
+      understoodTitle: "Ce que nous avons compris",
+      understood: { trade: "Métier", place: "Lieu", timing: "Délai" },
+      pending: "Travaux…",
       factsTitle: "Le saviez-vous ?",
       facts: [
         "Chaque artisan MENAO est vérifié : SIRET, assurance décennale, responsabilité civile professionnelle et pièce d'identité.",
@@ -1947,6 +1974,31 @@ export const fr = {
         "Nous n'avons pas pu analyser votre description automatiquement. Complétez les rubriques ci-dessous.",
       lowConfidence:
         "Vérifiez bien ces critères : votre description laissait plusieurs interprétations possibles.",
+      // Refonte de l'écran (F-128, ADR 0279) : deux groupes, une ligne par information.
+      groups: {
+        essential: {
+          title: "L'essentiel",
+          description: "Ces trois informations suffisent pour lancer la recherche.",
+        },
+        site: {
+          title: "Votre chantier",
+          description: "Plus vous en dites, plus les réponses des artisans seront précises.",
+        },
+      },
+      ok: "OK",
+      add: "Ajouter",
+      complete: "Compléter",
+      optional: "Non renseigné · facultatif",
+      free: "Gratuit pour vous · Sans engagement",
+      summaryDelay: "Délai",
+      urgency: {
+        title: "Demande urgente",
+        fromText: (excerpt: string) => `D'après votre description (« ${excerpt} »).`,
+        fromAnalysis: "D'après votre description.",
+        manual: "Vous l'avez signalée comme urgente.",
+        body: "Les artisans la verront comme urgente, et ceux qui sont disponibles tout de suite vous seront présentés d'abord.",
+        notUrgent: "Ce n'est pas urgent",
+      },
       yourText: "Votre description",
       text: {
         description: "Ce que vous avez écrit ou dicté : l'artisan le lira avec votre demande.",
@@ -2006,6 +2058,9 @@ export const fr = {
         worksHelp: "Quels travaux seront réalisés ?",
         worksFilter: "Saisissez des mots-clés (ex : « Peinture murale, Carrelage… »)",
         worksNeedTrade: "Choisissez d'abord le métier recherché.",
+        place: "Lieu et pièces",
+        placeMissing: "Appartement ou maison ?",
+        size: "Surface et budget",
         surface: "Surface estimée des travaux",
         surfaceHelp:
           "Indiquez la surface estimée des travaux : cela aidera l'artisan à préparer son devis.",
@@ -2026,6 +2081,8 @@ export const fr = {
           "Une adresse exacte permet d'affiner la recherche d'artisans. Elle ne sera communiquée qu'aux artisans qui acceptent votre demande.",
         streetPlaceholder: "Commencez à saisir une adresse (ex : « 1 rue de France, Nice »)",
         streetNeedCity: "Choisissez d'abord la ville.",
+        noStreet: "adresse exacte non renseignée",
+        specify: "Préciser l'adresse",
         clear: "Retirer l'adresse exacte",
       },
       date: {
@@ -2033,8 +2090,15 @@ export const fr = {
         description: "Quand souhaitez-vous que le chantier démarre ?",
         legend: "Quand souhaitez-vous commencer ?",
         asap: "Dès que possible",
-        precise: "Préciser une date de début",
         unknown: "Date de début inconnue",
+        // Les quatre choix du délai (F-128) : « Urgent » d'abord.
+        urgent: "Urgent",
+        urgentHelp: "Fuite, panne, mise en sécurité",
+        asapHelp: "Sans urgence",
+        from: "À partir d'une date",
+        fromHelp: "Vous choisissez le jour",
+        later: "Je ne sais pas encore",
+        laterHelp: "À voir avec l'artisan",
         pick: "Date de début",
         startsOn: (date: string) => `Début le ${date}`,
       },
@@ -2043,7 +2107,7 @@ export const fr = {
         description: "Ajouter des photos permet une analyse plus précise de votre besoin.",
         add: "Ajouter une photo",
         addHelp: "Vous pouvez ajouter jusqu'à 10 photos.",
-        none: "Aucune photo.",
+        none: "Aucune photo · jusqu'à 10",
         alt: (index: number) => `Photo ${index} du chantier`,
         delete: "Supprimer",
         limit: "Vous avez atteint la limite de 10 photos.",

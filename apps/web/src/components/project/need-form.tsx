@@ -6,14 +6,18 @@ import {
   SUGGESTION_MIN_LENGTH,
   appendDescription,
   appendIdea,
+  detectUrgency,
   matchNeedPhrases,
   needHelpLevel,
   remainingCompletion,
+  resolveUrgency,
   type NeedIdea,
   type NeedPhrase,
+  type UrgencyChoice,
 } from "@menao/core";
 import {
   ArrowRight,
+  Check,
   Clock,
   House,
   MapPin,
@@ -21,7 +25,9 @@ import {
   Plus,
   Ruler,
   Search,
+  Siren,
   Sparkles,
+  TriangleAlert,
   Wrench,
   X,
 } from "lucide-react";
@@ -44,6 +50,7 @@ const s = fr.search.suggestions;
 const p = fr.search.proposals;
 const u = fr.search.understanding;
 const ph = fr.search.photoDescription;
+const ur = fr.search.urgency;
 
 type PhotoDraft =
   | { step: "reading" }
@@ -176,6 +183,18 @@ export function NeedForm({
   const previews = useMemo(() => photos.map((p) => URL.createObjectURL(p)), [photos]);
   useEffect(() => () => previews.forEach((url) => URL.revokeObjectURL(url)), [previews]);
 
+  // Urgence (F-128, ADR 0279) : repérée dans le texte dès la saisie, ou réglée par le particulier
+  // avec le bouton « Urgent » ; son choix passe avant ce qui est repéré.
+  const [urgencyChoice, setUrgencyChoice] = useState<UrgencyChoice>("auto");
+  const detectedUrgency = useMemo(() => detectUrgency(text), [text]);
+  const urgent = resolveUrgency(urgencyChoice, detectedUrgency !== null);
+  const urgencyDetected = urgent && urgencyChoice === "auto" ? detectedUrgency : null;
+
+  function toggleUrgency() {
+    // Retirée : « non » seulement s'il y a quelque chose à contredire dans le texte.
+    setUrgencyChoice(urgent ? (detectedUrgency ? "non" : "auto") : "oui");
+  }
+
   const help = needHelpLevel(text);
   const canAddPhotos = photos.length < MAX_PROJECT_PHOTOS;
 
@@ -225,6 +244,7 @@ export function NeedForm({
           ? { preferredArtisanId: fromPage.artisanId, fromPublicPage: true }
           : {}),
       ...(partnerCode ? { partnerCode } : {}),
+      ...(urgencyChoice === "auto" ? {} : { urgency: urgencyChoice }),
     });
     if (result.status !== "ok" || !("projectId" in result)) {
       setPhase("idle");
@@ -278,7 +298,7 @@ export function NeedForm({
         >
           <div
             className={`rounded-[1.375rem] border bg-surface text-left shadow-[0_12px_32px_rgb(17_23_40/0.06)] transition-[border-color,box-shadow] ${
-              active ? "border-primary shadow-focus" : "border-border"
+              urgent ? "border-danger" : active ? "border-primary shadow-focus" : "border-border"
             }`}
           >
             {photos.length > 0 && (
@@ -310,7 +330,7 @@ export function NeedForm({
               <div
                 ref={mirror}
                 aria-hidden="true"
-                className="champ-tactile pointer-events-none absolute inset-0 overflow-hidden px-4 pt-4 pb-2 text-[0.9375rem] leading-relaxed break-words whitespace-pre-wrap"
+                className="champ-tactile pointer-events-none absolute inset-0 overflow-hidden px-5 pt-5 pb-2 text-[1.0625rem] leading-relaxed break-words whitespace-pre-wrap sm:text-lg"
               >
                 <span className="text-transparent">{text}</span>
                 {completion && <span className="text-subtle-foreground">{completion}</span>}
@@ -381,7 +401,7 @@ export function NeedForm({
                 className="relative block min-h-36 w-full resize-none bg-transparent px-5 pt-5 pb-2 text-[1.0625rem] leading-relaxed text-foreground placeholder:text-subtle-foreground focus:outline-none sm:min-h-28 sm:text-lg"
               />
             </div>
-            <div className="flex items-center justify-between gap-3 border-t border-border px-3.5 py-3">
+            <div className="flex items-center gap-2.5 border-t border-border px-3.5 py-3">
               <label
                 className={`inline-flex size-11 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary/20 ${
                   canAddPhotos ? "cursor-pointer" : "cursor-not-allowed opacity-50"
@@ -403,6 +423,21 @@ export function NeedForm({
                   }}
                 />
               </label>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={toggleUrgency}
+                aria-pressed={urgent}
+                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-colors focus-visible:ring-4 focus-visible:outline-none ${
+                  urgent
+                    ? "border-danger bg-danger-soft font-bold text-danger focus-visible:ring-danger/20"
+                    : "border-border-strong bg-surface font-semibold text-foreground hover:bg-background focus-visible:ring-primary/20"
+                }`}
+              >
+                <Siren aria-hidden="true" className="size-[1.0625rem]" />
+                {ur.button}
+                {urgent && <Check aria-hidden="true" strokeWidth={3} className="size-3.5" />}
+              </button>
               {completion && (
                 <button
                   type="button"
@@ -410,22 +445,24 @@ export function NeedForm({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={acceptCompletion}
                   aria-label={s.acceptAria(completion.trim())}
-                  className="mr-auto inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-soft px-3 text-xs font-medium text-primary-strong transition-colors hover:bg-primary hover:text-primary-foreground"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-soft px-3 text-xs font-medium text-primary-strong transition-colors hover:bg-primary hover:text-primary-foreground"
                 >
                   <ArrowRight aria-hidden="true" className="size-3.5" />
-                  {s.accept}
+                  <span className="hidden sm:inline">{s.accept}</span>
                   <kbd className="hidden rounded border border-current/30 px-1 font-sans text-[0.6875rem] sm:inline">
                     Tab
                   </kbd>
                 </button>
               )}
-              <DictationButton
-                onText={(spoken) =>
-                  setText((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
-                }
-                onError={(message) => setErrors(message ? [message] : [])}
-                onStateChange={setDictation}
-              />
+              <div className="ml-auto">
+                <DictationButton
+                  onText={(spoken) =>
+                    setText((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
+                  }
+                  onError={(message) => setErrors(message ? [message] : [])}
+                  onStateChange={setDictation}
+                />
+              </div>
             </div>
           </div>
 
@@ -463,6 +500,41 @@ export function NeedForm({
             </div>
           )}
         </div>
+
+        {urgent && (
+          <div className="flex w-full animate-menao-fade-up flex-col gap-3 text-left">
+            {urgencyDetected && (
+              <div
+                role="status"
+                className="flex items-start gap-3 rounded-2xl bg-danger-soft px-4 py-3.5"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-[0.6875rem] bg-surface text-danger"
+                >
+                  <Siren className="size-[1.125rem]" />
+                </span>
+                <div className="flex min-w-0 flex-col items-start gap-0.5 text-sm leading-snug sm:text-[0.9375rem]">
+                  <p className="font-bold text-danger">
+                    {ur.detectedTitle(ur.reasons[urgencyDetected.reason])}
+                  </p>
+                  <p className="text-label">{ur.detectedBody}</p>
+                  <button
+                    type="button"
+                    onClick={() => setUrgencyChoice("non")}
+                    className="-mx-1 inline-flex min-h-9 items-center px-1 font-semibold text-foreground underline underline-offset-2 hover:text-primary-strong"
+                  >
+                    {ur.notUrgent}
+                  </button>
+                </div>
+              </div>
+            )}
+            <p className="flex items-start gap-2 text-[0.8125rem] leading-snug text-muted-foreground">
+              <TriangleAlert aria-hidden="true" className="mt-px size-4 shrink-0" />
+              {ur.danger}
+            </p>
+          </div>
+        )}
 
         {photoDraft && (
           <div aria-live="polite" className="w-full text-left">
@@ -609,7 +681,21 @@ export function NeedForm({
         />
       )}
 
-      {phase !== "idle" && <AnalysisScreen photos={phase === "photos"} />}
+      {phase !== "idle" && (
+        <AnalysisScreen
+          photos={phase === "photos"}
+          text={text}
+          understood={{
+            trade:
+              trades.find((trade) => trade.code === (tradeHint ?? understood?.trade))?.label ??
+              null,
+            city: understood?.city ?? null,
+            timing: understood?.timing ?? null,
+          }}
+          urgent={urgent}
+          urgencyExcerpt={detectedUrgency?.excerpt ?? null}
+        />
+      )}
     </>
   );
 }

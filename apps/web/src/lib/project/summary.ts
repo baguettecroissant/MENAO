@@ -23,7 +23,7 @@ export async function getProjectSummary(
   const { data: p } = await supabase
     .from("projects")
     .select(
-      "id, trade_code, lieu_type, room_codes, work_type_codes, surface, ville_nom, code_postal, adresse, date_mode, date_souhaitee",
+      "id, trade_code, lieu_type, room_codes, work_type_codes, surface, ville_nom, code_postal, adresse, date_mode, date_souhaitee, urgence",
     )
     .eq("id", projectId)
     .maybeSingle();
@@ -56,18 +56,22 @@ export async function getProjectSummary(
     .join(", ");
   const city = p.ville_nom ? `${p.ville_nom}${p.code_postal ? ` (${p.code_postal})` : ""}` : null;
   const r = fr.search.review.date;
+  const start =
+    p.date_mode === "date" && p.date_souhaitee
+      ? r.startsOn(dayFormat.format(new Date(`${p.date_souhaitee}T00:00:00Z`)))
+      : null;
 
   return {
     id: p.id,
     trade: trade.data?.label ?? null,
     site: site ? site.charAt(0).toUpperCase() + site.slice(1) : null,
     address: p.adresse ?? city,
-    date:
-      p.date_mode === "date" && p.date_souhaitee
-        ? r.startsOn(dayFormat.format(new Date(`${p.date_souhaitee}T00:00:00Z`)))
-        : p.date_mode === "des_que_possible"
-          ? r.asap
-          : r.unknown,
+    // Demande urgente (ADR 0279) : dite en premier, avant le début souhaité.
+    date: p.urgence
+      ? start
+        ? `${r.urgent} · ${start}`
+        : r.urgent
+      : (start ?? (p.date_mode === "des_que_possible" ? r.asap : r.unknown)),
     photos: (signed ?? []).map((s) => s.signedUrl).filter((u): u is string => Boolean(u)),
   };
 }
