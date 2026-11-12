@@ -44,7 +44,7 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   await programme.getByRole("button", { name: "Enregistrer les réglages" }).click();
   await expect(programme.getByText("Réglages enregistrés.")).toBeVisible();
   await admin.goto("/admin/partenaires");
-  await expect(admin.getByText(/10 € par demande qualifiée · 40 € par abonné/)).toBeVisible();
+  await expect(admin.getByText(/10\s€ par demande qualifiée · 40\s€ par abonné/)).toBeVisible();
 
   // Création : SIRET obligatoire (professionnels seulement), puis fiche du partenaire.
   await admin.getByLabel("Code du lien").fill("agence-e2e");
