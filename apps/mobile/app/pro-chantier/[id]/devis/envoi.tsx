@@ -1,5 +1,6 @@
 import {
   QUOTE_VALIDITY_DAYS,
+  formatRateBp,
   isValidDepositPercent,
   parisToday,
   paymentSchedule,
@@ -114,6 +115,14 @@ function QuoteSendScreen() {
       <QuoteSteps current="send" />
       <PageHead title={s.title} />
       {!ctx.insured ? <Notice tone="error">{s.insuranceMissing}</Notice> : null}
+      {ctx.lowMargin ? (
+        <Notice tone="info">
+          {fr.proQuote.library.below(
+            formatRateBp(ctx.lowMargin.markupBp),
+            formatRateBp(ctx.lowMargin.alertBp),
+          )}
+        </Notice>
+      ) : null}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
 
       <FicheCard padding={4}>

@@ -1,6 +1,9 @@
 import {
+  belowMarginAlert,
+  lineCostCents,
   parseAiAgents,
   parseMoneyOverview,
+  quoteMargin,
   parisToday,
   quoteStartDateError,
   type MoneyOverview,
@@ -26,6 +29,7 @@ import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
 import { isExampleId } from "@menao/core";
 import { exampleQuoteDraft } from "./example-data";
+import { loadQuoteCosts, type LineCost } from "./library";
 
 /** Erreur SQL : message des règles métier (code 22023), sinon message générique. */
 const sqlError = (error: { code?: string; message: string }) =>
@@ -59,6 +63,10 @@ export type QuoteDraft = {
   clientLine: string | null;
   /** Acompte de l'échéancier par défaut (%), pour l'acompte prévu dans les totaux. */
   defaultDeposit: number;
+  /** Coût privé de chaque ligne, dans l'ordre (bibliothèque d'ouvrages, ADR 0294). */
+  costs?: (LineCost | null)[];
+  /** Seuil d'alerte de marge réglé par l'entreprise (null : pas d'alerte). */
+  marginAlertBp?: number | null;
 };
 
 /** « Marc Fabre · 06800 Cagnes-sur-Mer » à partir du détail du chantier. */
@@ -112,19 +120,24 @@ export async function loadQuoteDraft(chantierId: string): Promise<QuoteDraft | n
   if (error || !artisan) return null;
   const pending = voiceDraftLines(voiceDraft?.lines);
   const chantier = parseArtisanChantierDetail(detail);
+  const sorted = [...(draft?.quote_lines ?? [])].sort((a, b) => a.position - b.position);
+  const { costs, alertBp } = await loadQuoteCosts(
+    draft?.id ?? null,
+    sorted.map((l) => l.position),
+  );
   return {
     appointmentAt: appointment?.starts_at ?? null,
-    lines: [...(draft?.quote_lines ?? [])]
-      .sort((a, b) => a.position - b.position)
-      .map((l) => ({
-        type: l.type,
-        designation: l.designation,
-        description: l.description ?? "",
-        quantityMilli: l.quantity_milli,
-        unit: l.unit,
-        unitPriceHtCents: l.unit_price_ht_cents,
-        vatRateBp: l.vat_rate_bp,
-      })),
+    costs,
+    marginAlertBp: alertBp,
+    lines: sorted.map((l) => ({
+      type: l.type,
+      designation: l.designation,
+      description: l.description ?? "",
+      quantityMilli: l.quantity_milli,
+      unit: l.unit,
+      unitPriceHtCents: l.unit_price_ht_cents,
+      vatRateBp: l.vat_rate_bp,
+    })),
     saved: Boolean(draft),
     assujettiTva: artisan.assujetti_tva ?? true,
     conversation: parseAiAgents(agents).agents.conversationalQuote,
@@ -165,18 +178,29 @@ export async function settleVoiceQuoteDrafts(chantierId: string): Promise<void> 
   await supabase.rpc("settle_voice_quote_drafts", { p_chantier_id: chantierId });
 }
 
-/** F-19 « Enregistrer » : remplace les lignes du brouillon ; les totaux sont calculés en base. */
+/**
+ * F-19 « Enregistrer » : remplace les lignes du brouillon ; les totaux sont calculés en base.
+ * `costs` : coût privé de chaque ligne (ADR 0294), enregistré à part, jamais lu par le client.
+ */
 export async function saveQuoteDraft(
   chantierId: string,
   lines: QuoteLineInput[],
+  costs?: LineCost[],
 ): Promise<string | null> {
   const parsed = quoteLinesSchema.safeParse(lines);
   if (!parsed.success) return parsed.error.issues[0]?.message ?? fr.errors.generic;
-  const { error } = await supabase.rpc("artisan_save_quote_draft", {
+  const { data: quoteId, error } = await supabase.rpc("artisan_save_quote_draft", {
     p_chantier_id: chantierId,
     p_lines: parsed.data,
   });
-  return error ? sqlError(error) : null;
+  if (error) return sqlError(error);
+  if (quoteId && costs) {
+    await supabase.rpc("artisan_save_quote_costs", {
+      p_quote_id: quoteId,
+      p_costs: costs.map((c, i) => ({ position: i + 1, ...c })),
+    });
+  }
+  return null;
 }
 
 /** « Rechercher l'article » : lignes déjà saisies par l'artisan (catalogue personnel, D10). */
@@ -255,6 +279,8 @@ export type QuoteSendContext = {
   chantier: { title: string; summary: string | null };
   /** Rendez-vous planifié (bandeau « Envoyer un devis »). */
   appointmentAt: string | null;
+  /** Marge sous le seuil fixé par l'artisan (ADR 0294) : taux et seuil, sinon null. */
+  lowMargin: { markupBp: number; alertBp: number } | null;
 };
 
 /** Brouillon à prévisualiser puis envoyer (F-20, F-21) ; null s'il n'y a pas encore de ligne. */
@@ -277,8 +303,29 @@ export async function loadQuoteSendContext(chantierId: string): Promise<QuoteSen
   const data = quotePdfData(document as unknown as QuoteDocument);
   if (data.lines.length === 0) return null;
   const insurance = data.issuer.insurance;
+  // Alerte avant l'envoi (ADR 0294) : seulement si l'artisan a fixé un seuil.
+  const { data: lines } = await supabase
+    .from("quote_lines")
+    .select("position, quantity_milli, total_ht_cents")
+    .eq("quote_id", draft.id)
+    .order("position");
+  const { costs, alertBp } = await loadQuoteCosts(
+    draft.id,
+    (lines ?? []).map((l) => l.position),
+  );
+  const margin = quoteMargin(
+    (lines ?? []).map((l, i) => ({
+      totalHtCents: l.total_ht_cents,
+      costCents: lineCostCents(costs[i]?.unitCostCents ?? null, l.quantity_milli),
+    })),
+  );
+  const lowMargin =
+    alertBp !== null && margin.markupBp !== null && belowMarginAlert(margin.markupBp, alertBp)
+      ? { markupBp: margin.markupBp, alertBp }
+      : null;
   return {
     quoteId: draft.id,
+    lowMargin,
     totalTtcCents: draft.total_ttc_cents,
     defaultDeposit: artisan.default_deposit_percent,
     data,
