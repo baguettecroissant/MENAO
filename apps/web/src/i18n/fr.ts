@@ -5312,6 +5312,125 @@ export const fr = {
       },
     },
     // « Recommander un partenaire » (ADR 0174) : réseau de parrainage, le client décide.
+    // Appels d'offres et DPGF (F-136, ADR 0287) : formule Entreprise.
+    tenders: {
+      tabsLabel: "Sections des demandes",
+      tabRequests: "Demandes",
+      tabTenders: "Appels d'offres",
+      title: "Appels d'offres",
+      subtitle:
+        "Chiffrez le DPGF d'un architecte avec vos prix, et rendez-le dans son propre fichier.",
+      locked: {
+        title: "Inclus dans la formule Entreprise",
+        body: "Déposez le DPGF de l'architecte : MENAO le lit, propose vos prix habituels pour chaque poste, et le remplit au format de l'architecte, avec un PDF prêt à joindre à votre offre.",
+        cta: "Voir les formules",
+      },
+      newTitle: "Nouvel appel d'offres",
+      newLead: "Déposez le DPGF vierge de l'architecte, au format Excel (.xlsx).",
+      fields: {
+        name: "Nom du projet",
+        namePlaceholder: "Maison individuelle — Mougins",
+        client: "Architecte ou maître d'œuvre",
+        clientNote: "(facultatif)",
+        due: "Date de remise des offres",
+        dueNote: "(facultative)",
+        file: "DPGF de l'architecte",
+        fileHint: "Fichier Excel (.xlsx), 15 Mo au plus. Le PDF arrive bientôt.",
+      },
+      submit: "Lire le DPGF",
+      reading: "Lecture du DPGF…",
+      errors: {
+        name: "Indiquez le nom du projet.",
+        file: "Choisissez le fichier Excel (.xlsx) de l'architecte.",
+        tooLarge: "Le fichier dépasse 15 Mo.",
+        upload: "Le fichier n'a pas pu être envoyé. Réessayez.",
+        forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
+        generic: "Une erreur est survenue. Réessayez.",
+      } as Record<string, string>,
+      importOk: (posts: number, priced: number) =>
+        `DPGF lu : ${posts} poste${posts > 1 ? "s" : ""}, dont ${priced} avec un prix repris de vos devis.`,
+      importStatus: {
+        no_header:
+          "MENAO n'a pas trouvé le tableau du DPGF (colonnes « Désignation », « Unité », « Quantité », « Prix »). Vérifiez le fichier.",
+        unreadable:
+          "Ce fichier Excel n'a pas pu être lu. Enregistrez-le au format .xlsx et réessayez.",
+        no_sheet: "Ce fichier n'est pas un classeur Excel.",
+        rate_limited: "Trop de lectures en peu de temps. Réessayez dans une heure.",
+        forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
+        error: "Le DPGF n'a pas pu être lu. Réessayez.",
+      } as Record<string, string>,
+      warnings: {
+        sans_colonne_prix:
+          "Le DPGF n'a pas de colonne de prix : le fichier rendu reprendra vos quantités, et vos prix seront dans le PDF.",
+        sans_quantites:
+          "Le DPGF ne donne pas de quantités : indiquez les vôtres pour chaque poste.",
+        tronque: "Le DPGF dépasse 1 000 lignes : seules les 1 000 premières sont reprises.",
+      } as Record<string, string>,
+      listLabel: "Vos appels d'offres",
+      empty: "Aucun appel d'offres pour l'instant.",
+      columns: { project: "Projet", status: "Suivi", due: "Remise", total: "Total HT" },
+      dueOn: (date: string) => `remise le ${date}`,
+      status: {
+        en_cours: "En cours",
+        envoye: "Envoyé",
+        retenu: "Retenu",
+        perdu: "Non retenu",
+      } as Record<string, string>,
+      back: "Appels d'offres",
+      figuresLabel: "Le DPGF en chiffres",
+      figures: {
+        posts: "Postes",
+        priced: (n: number) => `${n} chiffré${n > 1 ? "s" : ""}`,
+        toPrice: "À chiffrer",
+        toPriceHint: (n: number) => (n === 0 ? "tout est chiffré" : "prix ou quantité manquant"),
+        totalHt: "Total HT",
+        totalTtc: (value: string) => `${value} TTC`,
+        gaps: "Écarts avec le DPGF",
+        gapsHint: (amount: string | null) =>
+          amount ? `${amount} HT de travaux en plus` : "aucune quantité changée",
+      },
+      table: {
+        label: "Postes du DPGF",
+        code: "N°",
+        designation: "Désignation",
+        unit: "U.",
+        architectQuantity: "Qté DPGF",
+        quantity: "Votre qté",
+        unitPrice: "Prix unitaire HT",
+        total: "Total HT",
+        quantityOf: (designation: string) => `Votre quantité : ${designation}`,
+        priceOf: (designation: string) => `Prix unitaire HT : ${designation}`,
+      },
+      source: {
+        devis: "Vos devis",
+        manuel: "Saisi",
+        none: "À chiffrer",
+        reference: (designation: string) => `Repris de votre ligne « ${designation} »`,
+      },
+      vat: "TVA de l'offre",
+      vatOptions: { 2000: "20 %", 1000: "10 %", 550: "5,5 %", 0: "Non applicable" } as Record<
+        number,
+        string
+      >,
+      save: "Enregistrer",
+      saved: "Enregistré.",
+      unsaved: "Modifications non enregistrées",
+      exportTitle: "Rendre le DPGF",
+      exportExcel: "Excel au format de l'architecte",
+      exportExcelHint:
+        "Son fichier, avec vos quantités et vos prix ; ses formules et sa mise en page sont gardées. Une feuille « Écarts MENAO » liste les quantités changées.",
+      exportPdf: "PDF à joindre à l'offre",
+      exportPdfHint: "Avec votre logo, vos mentions et le rappel des quantités du DPGF.",
+      download: "Télécharger",
+      saveFirst: "Enregistrez vos modifications avant de télécharger.",
+      followTitle: "Suivi",
+      followSave: "Mettre à jour",
+      deleteTitle: "Supprimer l'appel d'offres",
+      deleteConfirm: "Le DPGF et vos prix seront supprimés. Vos devis ne changent pas.",
+      deleteYes: "Oui, supprimer",
+      responsibility:
+        "C'est un forfait : vous restez responsable de vos quantités. MENAO propose vos prix habituels, vérifiez-les avant d'envoyer.",
+    },
     partners: {
       title: "Recommander un partenaire",
       lead: "Vos partenaires MENAO (votre parrain et vos filleuls) qui interviennent chez ce client. Il choisit de les contacter : ils ne voient rien de sa demande avant, et chacun établit son propre devis.",

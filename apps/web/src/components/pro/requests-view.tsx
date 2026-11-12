@@ -22,6 +22,7 @@ export function RequestsView({
   example = false,
   notice,
   empty,
+  tabs,
 }: {
   rows: readonly InboxItem[];
   now: Date;
@@ -33,6 +34,8 @@ export function RequestsView({
   notice?: ReactNode;
   /** État vide, à la place des listes. */
   empty?: ReactNode;
+  /** Onglets « Demandes » et « Appels d'offres » (ADR 0287). */
+  tabs?: ReactNode;
 }) {
   const figures = requestFigures(rows, now);
   const { open, done } = inboxGroups(rows, now);
@@ -45,6 +48,7 @@ export function RequestsView({
           <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.title}</h1>
           <p className="text-[0.9375rem] text-label sm:text-base">{t.subtitle}</p>
         </div>
+        {tabs}
         {notice}
         <MoneyFigures
           label={l.requestsLabel}

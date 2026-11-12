@@ -96,3 +96,5 @@ export * from "./client-home-figures";
 export * from "./review-figures";
 export * from "./artisan-tools";
 export * from "./notification-groups";
+export * from "./dpgf";
+export * from "./dpgf-totals";

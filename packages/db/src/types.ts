@@ -5156,6 +5156,129 @@ export type Database = {
           },
         ];
       };
+      tender_lines: {
+        Row: {
+          architect_quantity_milli: number | null;
+          code: string | null;
+          designation: string;
+          id: string;
+          kind: string;
+          lot: string | null;
+          position: number;
+          price_reference: string | null;
+          price_source: string | null;
+          quantity_milli: number | null;
+          sheet_row: number | null;
+          tender_id: string;
+          unit: Database["public"]["Enums"]["quote_unit"] | null;
+          unit_label: string | null;
+          unit_price_ht_cents: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          architect_quantity_milli?: number | null;
+          code?: string | null;
+          designation: string;
+          id?: string;
+          kind: string;
+          lot?: string | null;
+          position: number;
+          price_reference?: string | null;
+          price_source?: string | null;
+          quantity_milli?: number | null;
+          sheet_row?: number | null;
+          tender_id: string;
+          unit?: Database["public"]["Enums"]["quote_unit"] | null;
+          unit_label?: string | null;
+          unit_price_ht_cents?: number | null;
+        };
+        Update: {
+          architect_quantity_milli?: number | null;
+          code?: string | null;
+          designation?: string;
+          id?: string;
+          kind?: string;
+          lot?: string | null;
+          position?: number;
+          price_reference?: string | null;
+          price_source?: string | null;
+          quantity_milli?: number | null;
+          sheet_row?: number | null;
+          tender_id?: string;
+          unit?: Database["public"]["Enums"]["quote_unit"] | null;
+          unit_label?: string | null;
+          unit_price_ht_cents?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tender_lines_tender_id_fkey";
+            columns: ["tender_id"];
+            isOneToOne: false;
+            referencedRelation: "tenders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tenders: {
+        Row: {
+          artisan_id: string;
+          client_name: string | null;
+          created_at: string;
+          due_on: string | null;
+          id: string;
+          imported_at: string | null;
+          name: string;
+          sheet: NonNullable<Json>;
+          source_kind: string | null;
+          source_name: string | null;
+          source_path: string | null;
+          status: Database["public"]["Enums"]["tender_status"];
+          updated_at: string;
+          vat_rate_bp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          client_name?: string | null;
+          created_at?: string;
+          due_on?: string | null;
+          id?: string;
+          imported_at?: string | null;
+          name: string;
+          sheet?: NonNullable<Json>;
+          source_kind?: string | null;
+          source_name?: string | null;
+          source_path?: string | null;
+          status?: Database["public"]["Enums"]["tender_status"];
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Update: {
+          artisan_id?: string;
+          client_name?: string | null;
+          created_at?: string;
+          due_on?: string | null;
+          id?: string;
+          imported_at?: string | null;
+          name?: string;
+          sheet?: NonNullable<Json>;
+          source_kind?: string | null;
+          source_name?: string | null;
+          source_path?: string | null;
+          status?: Database["public"]["Enums"]["tender_status"];
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenders_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ticket_messages: {
         Row: {
           author_id: string | null;
@@ -6381,14 +6504,29 @@ export type Database = {
         Args: { p_chantier_id: string; p_date: string; p_time: string };
         Returns: undefined;
       };
+      artisan_create_tender: {
+        Args: {
+          p_client_name?: string;
+          p_due_on?: string;
+          p_name: string;
+          p_source_name?: string;
+          p_source_path?: string;
+        };
+        Returns: string;
+      };
       artisan_declare_finished: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_dictation: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_expense: { Args: { p_expense_id: string }; Returns: string };
+      artisan_delete_tender: { Args: { p_tender_id: string }; Returns: string };
       artisan_fix_appointment: {
         Args: { p_date: string; p_request_id: string; p_time: string };
         Returns: string;
       };
       artisan_grade: { Args: Record<PropertyKey, never>; Returns: Json };
+      artisan_import_tender_lines: {
+        Args: { p_lines: Json; p_sheet: Json; p_tender_id: string };
+        Returns: number;
+      };
       artisan_inbox: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -6417,6 +6555,15 @@ export type Database = {
           unit: Database["public"]["Enums"]["quote_unit"];
           unit_price_ht_cents: number;
           vat_rate_bp: number;
+        }[];
+      };
+      artisan_price_history: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          designation: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          unit_price_ht_cents: number;
+          used_on: string;
         }[];
       };
       artisan_propose_slots: { Args: { p_request_id: string; p_slots: string[] }; Returns: string };
@@ -6513,6 +6660,10 @@ export type Database = {
         Returns: string;
       };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
+      artisan_save_tender: {
+        Args: { p_lines: Json; p_tender_id: string; p_vat_rate_bp: number };
+        Returns: undefined;
+      };
       artisan_send_payment_reminder: {
         Args: { p_chantier_id: string; p_kind: Database["public"]["Enums"]["payment_kind"] };
         Returns: string;
@@ -6533,6 +6684,16 @@ export type Database = {
       };
       artisan_signal_reserves_lifted: {
         Args: { p_chantier_id: string; p_message: string };
+        Returns: undefined;
+      };
+      artisan_update_tender: {
+        Args: {
+          p_client_name?: string;
+          p_due_on?: string;
+          p_name: string;
+          p_status: Database["public"]["Enums"]["tender_status"];
+          p_tender_id: string;
+        };
         Returns: undefined;
       };
       attribute_project_partner: {
@@ -7357,6 +7518,7 @@ export type Database = {
         }[];
       };
       submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
+      tender_document: { Args: { p_tender_id: string }; Returns: Json };
       transition_chantier: {
         Args: {
           p_chantier_id: string;
@@ -7655,6 +7817,7 @@ export type Database = {
       review_status: "publie" | "masque";
       signature_request_status: "en_attente" | "signee" | "abandonnee";
       team_role: "chef" | "ouvrier";
+      tender_status: "en_cours" | "envoye" | "retenu" | "perdu";
       ticket_status: "ouvert" | "en_cours" | "resolu";
       ticket_type:
         | "dossier_recherche"
@@ -7998,6 +8161,7 @@ export const Constants = {
       review_status: ["publie", "masque"],
       signature_request_status: ["en_attente", "signee", "abandonnee"],
       team_role: ["chef", "ouvrier"],
+      tender_status: ["en_cours", "envoye", "retenu", "perdu"],
       ticket_status: ["ouvert", "en_cours", "resolu"],
       ticket_type: [
         "dossier_recherche",

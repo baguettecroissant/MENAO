@@ -1,10 +1,11 @@
-import { exampleInbox } from "@menao/core";
+import { exampleInbox, teamCan } from "@menao/core";
 import type { Metadata } from "next";
 import { fr } from "@/i18n/fr";
 import { artisanActivity, requireTeamPermission, spaceExamples } from "@/lib/artisan/space";
 import { EXAMPLES_BASE } from "@/lib/artisan/examples";
 import { EmptyState } from "@/components/empty-state";
 import { SpaceExamplesNotice } from "@/components/pro/examples";
+import { RequestsTabs } from "@/components/pro/requests-tabs";
 import { RequestsView } from "@/components/pro/requests-view";
 
 const t = fr.pro.onboarding.requests;
@@ -16,7 +17,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  * puis déjà traitées. Tant que l'artisan n'a rien reçu : demandes d'exemple (ADR 0184).
  */
 export default async function ArtisanRequestsPage() {
-  const { supabase } = await requireTeamPermission("requests");
+  const { supabase, teamPosition } = await requireTeamPermission("requests");
   const [{ inbox: rows }, examples, { data: response }] = await Promise.all([
     artisanActivity(),
     spaceExamples(),
@@ -42,6 +43,8 @@ export default async function ArtisanRequestsPage() {
       base={examples ? EXAMPLES_BASE : undefined}
       example={examples}
       notice={examples ? <SpaceExamplesNotice /> : undefined}
+      // Appels d'offres (ADR 0287) : pour qui gère l'argent (patron, chef d'équipe).
+      tabs={teamCan(teamPosition, "money") ? <RequestsTabs current="demandes" /> : undefined}
       empty={
         !examples && rows.length === 0 ? (
           <EmptyState illustration="demandes">{t.empty}</EmptyState>
