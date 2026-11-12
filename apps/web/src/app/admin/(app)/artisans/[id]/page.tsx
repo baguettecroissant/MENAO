@@ -265,10 +265,12 @@ export default async function AdminArtisanPage({
     checklist.siret === "inactive" && t.checklist.siretInactive,
     !checklist.charterSigned && t.checklist.charterMissing,
   ].filter((item): item is string => Boolean(item));
-  // Quatre onglets (ADR 0285) : la vérification tant que le dossier est en attente, sinon l'activité.
+  // Quatre onglets (ADR 0285) : la vérification tant que le dossier est en attente ou qu'un
+  // document (renouvellement) ou une certification attend l'équipe, sinon l'activité.
+  const awaitingReview = checklist.pendingDocuments > 0 || checklist.pendingCertifications > 0;
   const tab: ArtisanTab =
     ARTISAN_TABS.find((key) => key === onglet) ??
-    (pending || rgeStatus ? "verification" : "activite");
+    (pending || rgeStatus || awaitingReview ? "verification" : "activite");
   const base = `/admin/artisans/${artisan.id}`;
   // Compte de connexion (connexion bloquée ou non), lu seulement pour l'onglet Compte.
   const account =

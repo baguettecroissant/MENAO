@@ -17,7 +17,7 @@ Depuis une demande ou un chantier, rien ne menait au compte du client. Maquettes
   - **Entreprise et profil** : entreprise, dirigeant, métiers, zone, profil public, visibilité.
   - **Activité** : objectif de demandes, activité, abonnement, score MENAO, parrainage.
   - **Compte** : « Retirer des recherches » et « Bloquer la connexion » côte à côte, puis la radiation.
-- **Onglet par défaut** : Vérification tant que le dossier est en attente (ou au retour d'un contrôle RGE), sinon Activité. Après une décision, la fiche revient sur l'onglet Vérification.
+- **Onglet par défaut** : Vérification tant que le dossier est en attente, qu'un document (renouvellement) ou une certification attend l'équipe, ou au retour d'un contrôle RGE ; sinon Activité. Après une décision, la fiche revient sur l'onglet Vérification.
   - Le compteur de l'onglet Vérification est le nombre de points qui restent à vérifier.
 - **En-tête** : nom, statut, SIRET, puis quatre repères (score MENAO, demandes du mois face à l'objectif, abonnement, date d'inscription) et les onglets.
 - **Noms des deux actions**, chacune expliquée par « Ce que ça fait » et « Ce qui ne change pas » :
