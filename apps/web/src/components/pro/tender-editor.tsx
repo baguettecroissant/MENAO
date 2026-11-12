@@ -218,7 +218,8 @@ export function TenderEditor({
                   line.architect_quantity_milli !== null &&
                   quantityMilli !== line.architect_quantity_milli;
                 const fromQuote =
-                  line.price_source === "devis" && unitPriceHtCents === line.unit_price_ht_cents;
+                  (line.price_source === "devis" || line.price_source === "bibliotheque") &&
+                  unitPriceHtCents === line.unit_price_ht_cents;
                 const total =
                   quantityMilli !== null && unitPriceHtCents !== null
                     ? lineTotalHtCents(quantityMilli, unitPriceHtCents)
@@ -250,7 +251,11 @@ export function TenderEditor({
                                 : undefined
                             }
                           >
-                            <StatusBadge tone="success">{t.source.devis}</StatusBadge>
+                            {line.price_source === "bibliotheque" ? (
+                              <StatusBadge tone="primary">{t.source.bibliotheque}</StatusBadge>
+                            ) : (
+                              <StatusBadge tone="success">{t.source.devis}</StatusBadge>
+                            )}
                           </span>
                         ) : (
                           <StatusBadge tone="primary">{t.source.manuel}</StatusBadge>

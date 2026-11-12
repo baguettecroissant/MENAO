@@ -190,3 +190,86 @@ export function parseRatePercent(input: string): number | null {
   const bp = Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
   return bp <= 9_000 ? bp : null;
 }
+
+export type WorkForQuote = {
+  id: string;
+  designation: string;
+  description: string | null;
+  unit: string;
+  lineType: "materiel" | "main_oeuvre" | "autre";
+  vatRateBp: number;
+  detailed: boolean;
+};
+
+export type LibraryQuoteLine = {
+  type: "materiel" | "main_oeuvre" | "autre";
+  designation: string;
+  description: string;
+  unit: string;
+  unitPriceHtCents: number;
+  vatRateBp: number;
+  /** Coût unitaire privé ; null quand il est inconnu. */
+  unitCostCents: number | null;
+  workId: string;
+};
+
+/**
+ * Lignes de devis d'un ouvrage (ADR 0294), pour une quantité de 1 de son unité : une ligne au prix
+ * retenu, ou, s'il est « détaillé » et composé, une ligne de fournitures (fournitures et autres
+ * frais) et une ligne de main d'œuvre. Un prix fixé à la main garde les fournitures au prix calculé
+ * et reporte la différence sur la main d'œuvre. Sans prix, aucune ligne.
+ */
+export function workQuoteLines(
+  work: WorkForQuote,
+  pricing: WorkPricing,
+  labels: { supplies: string; labor: string },
+): LibraryQuoteLine[] {
+  if (pricing.priceCents === null) return [];
+  const base = {
+    description: work.description ?? "",
+    unit: work.unit,
+    vatRateBp: work.vatRateBp,
+    workId: work.id,
+  };
+  const suppliesSale =
+    pricing.supplies.saleCents === null || pricing.other.saleCents === null
+      ? null
+      : pricing.supplies.saleCents + pricing.other.saleCents;
+  const suppliesCost =
+    pricing.supplies.costCents === null || pricing.other.costCents === null
+      ? null
+      : pricing.supplies.costCents + pricing.other.costCents;
+  if (!work.detailed || suppliesSale === null || pricing.labor.hoursMilli === 0) {
+    return [
+      {
+        ...base,
+        type: work.lineType,
+        designation: work.designation,
+        unitPriceHtCents: pricing.priceCents,
+        unitCostCents: pricing.costCents,
+      },
+    ];
+  }
+  return [
+    {
+      ...base,
+      type: "materiel",
+      designation: `${work.designation} ${labels.supplies}`.slice(0, 200),
+      unitPriceHtCents: Math.min(suppliesSale, pricing.priceCents),
+      unitCostCents: suppliesCost,
+    },
+    {
+      ...base,
+      type: "main_oeuvre",
+      designation: `${work.designation} ${labels.labor}`.slice(0, 200),
+      description: "",
+      unitPriceHtCents: Math.max(0, pricing.priceCents - suppliesSale),
+      unitCostCents: pricing.labor.costCents,
+    },
+  ];
+}
+
+/** Coût d'une ligne de devis : coût unitaire × quantité (millièmes). */
+export function lineCostCents(unitCostCents: number | null, quantityMilli: number): number | null {
+  return unitCostCents === null ? null : Math.round((unitCostCents * quantityMilli) / 1000);
+}

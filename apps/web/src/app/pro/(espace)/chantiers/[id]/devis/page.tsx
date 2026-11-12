@@ -6,6 +6,7 @@ import { QuoteEditor } from "@/components/pro/quote-editor";
 import { QuoteHeader } from "@/components/pro/quote-header";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
+import { marginAlertBp, quoteLineCosts } from "@/lib/artisan/library";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.quote;
@@ -60,17 +61,21 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
       .order("created_at", { ascending: false })
       .limit(30),
   ]);
-  const lines: QuoteLineInput[] = [...(draft?.quote_lines ?? [])]
-    .sort((a, b) => a.position - b.position)
-    .map((l) => ({
-      type: l.type,
-      designation: l.designation,
-      description: l.description ?? "",
-      quantityMilli: l.quantity_milli,
-      unit: l.unit,
-      unitPriceHtCents: l.unit_price_ht_cents,
-      vatRateBp: l.vat_rate_bp,
-    }));
+  // Bibliothèque et marge (ADR 0294) : coût privé des lignes, seuil d'alerte de l'entreprise.
+  const [costs, alertBp] = await Promise.all([
+    draft ? quoteLineCosts(supabase, draft.id) : Promise.resolve(new Map()),
+    marginAlertBp(supabase),
+  ]);
+  const sorted = [...(draft?.quote_lines ?? [])].sort((a, b) => a.position - b.position);
+  const lines: QuoteLineInput[] = sorted.map((l) => ({
+    type: l.type,
+    designation: l.designation,
+    description: l.description ?? "",
+    quantityMilli: l.quantity_milli,
+    unit: l.unit,
+    unitPriceHtCents: l.unit_price_ht_cents,
+    vatRateBp: l.vat_rate_bp,
+  }));
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
 
   return (
@@ -96,6 +101,8 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
         conversation={parseAiAgents(agents).agents.conversationalQuote}
         voiceDraft={voiceDraftLines(voiceDraft?.lines)}
         tenders={tenders ?? []}
+        initialCosts={sorted.map((l) => costs.get(l.position) ?? null)}
+        margin={{ alertBp }}
       />
     </main>
   );

@@ -1,8 +1,9 @@
 // Edge Function tender-sheet (F-136, F-137, ADR 0287, 0288) : le DPGF d'un appel d'offres.
 // - « import » : lit le fichier de l'architecte (bucket privé tender-files) : Excel (feuille et
 //   colonnes repérées) ou PDF (lu par un modèle de langage, pdf.ts). Propose pour chaque poste le
-//   prix d'un ancien devis de l'artisan, et enregistre les lignes (artisan_import_tender_lines,
-//   jeton de l'utilisateur : formule et entreprise vérifiées par la base).
+//   prix de la bibliothèque d'ouvrages de l'artisan ou d'un ancien devis (ADR 0294), et enregistre
+//   les lignes (artisan_import_tender_lines, jeton de l'utilisateur : formule et entreprise
+//   vérifiées par la base).
 // - « export » : réécrit le fichier Excel de l'architecte avec les quantités et prix de l'artisan,
 //   sans toucher à sa mise en page ni à ses formules (recalculées à l'ouverture), et ajoute une
 //   feuille « Écarts MENAO » quand des quantités ont changé. DPGF venu d'un PDF : un classeur
@@ -151,12 +152,14 @@ Deno.serve(async (req) => {
         unit: DpgfUnit;
         unit_price_ht_cents: number;
         used_on: string;
+        source: string;
       }[]
     ).map((h) => ({
       designation: h.designation,
       unit: h.unit,
       unitPriceHtCents: h.unit_price_ht_cents,
       usedOn: h.used_on,
+      source: h.source === "bibliotheque" ? ("bibliotheque" as const) : ("devis" as const),
     }));
     const lines = rows.map((row) => {
       const suggestion = row.kind === "poste" ? suggestTenderPrice(row, prices) : null;
@@ -170,6 +173,7 @@ Deno.serve(async (req) => {
         quantityMilli: row.quantityMilli,
         unitPriceHtCents: suggestion?.unitPriceHtCents ?? null,
         priceReference: suggestion?.reference ?? null,
+        priceSource: suggestion?.source ?? null,
         sheetRow: row.sheetRow,
       };
     });

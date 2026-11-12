@@ -1,6 +1,11 @@
 "use server";
 
-import { parisToday, quoteStartDateError } from "@menao/core";
+import {
+  type LibraryQuoteLine,
+  parisToday,
+  quoteStartDateError,
+  workQuoteLines,
+} from "@menao/core";
 import {
   messages,
   quoteLinesSchema,
@@ -15,25 +20,112 @@ import { z } from "zod";
 import type { VoiceSession } from "@/components/assistant/voice-call";
 import { fr } from "@/i18n/fr";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
+import { loadLibrary } from "./library";
 import { requireArtisan } from "./requests";
+import { requireTeamPermission } from "./space";
 
 export type SaveQuoteResult = { ok: true } | { ok: false; error: string };
 
-/** F-19 « Enregistrer » : remplace les lignes du brouillon ; totaux calculés en base. */
-export async function saveQuoteDraft(chantierId: string, lines: unknown): Promise<SaveQuoteResult> {
+const lineCosts = z
+  .array(
+    z.object({
+      unitCostCents: z.number().int().min(0).max(100_000_000).nullable(),
+      workId: z.uuid().nullable(),
+    }),
+  )
+  .max(200);
+
+/**
+ * F-19 « Enregistrer » : remplace les lignes du brouillon ; totaux calculés en base. `costs` :
+ * coût unitaire privé de chaque ligne (bibliothèque d'ouvrages, ADR 0294), dans le même ordre ;
+ * enregistré à part, jamais lisible par le client.
+ */
+export async function saveQuoteDraft(
+  chantierId: string,
+  lines: unknown,
+  costs?: unknown,
+): Promise<SaveQuoteResult> {
   if (!z.uuid().safeParse(chantierId).success) return { ok: false, error: fr.errors.generic };
   const parsed = quoteLinesSchema.safeParse(lines);
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? fr.errors.generic };
+  const parsedCosts = costs === undefined ? null : lineCosts.safeParse(costs);
   const { supabase } = await requireArtisan();
-  const { error } = await supabase.rpc("artisan_save_quote_draft", {
+  const { data: quoteId, error } = await supabase.rpc("artisan_save_quote_draft", {
     p_chantier_id: chantierId,
     p_lines: parsed.data,
   });
   if (error)
     return { ok: false, error: error.code === "22023" ? error.message : fr.errors.generic };
+  if (quoteId && parsedCosts?.success) {
+    await supabase.rpc("artisan_save_quote_costs", {
+      p_quote_id: quoteId,
+      p_costs: parsedCosts.data.map((c, i) => ({ position: i + 1, ...c })),
+    });
+  }
   revalidatePath("/pro", "layout");
   return { ok: true };
+}
+
+export type LibrarySearchResult = {
+  workId: string;
+  designation: string;
+  unit: string;
+  priceCents: number;
+  markupBp: number | null;
+  detailed: boolean;
+  lines: LibraryQuoteLine[];
+};
+
+const plain = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+/**
+ * « Rechercher l'article » (ADR 0294) : d'abord les ouvrages de la bibliothèque, avec leur prix,
+ * leur marge et leurs lignes de devis (coût privé compris). Patron et chef d'équipe.
+ */
+export async function searchLibraryWorks(query: string): Promise<LibrarySearchResult[]> {
+  const { supabase } = await requireTeamPermission("money");
+  const library = await loadLibrary(supabase, { seed: false });
+  const words = plain(query.slice(0, 100)).split(/\s+/).filter(Boolean);
+  const labels = {
+    supplies: fr.pro.quote.library.suppliesSuffix,
+    labor: fr.pro.quote.library.laborSuffix,
+  };
+  return library.works
+    .filter((w) => words.every((word) => plain(w.designation).includes(word)))
+    .flatMap((w) => {
+      const lines = workQuoteLines(
+        {
+          id: w.id,
+          designation: w.designation,
+          description: w.description,
+          unit: w.unit,
+          lineType: w.line_type,
+          vatRateBp: w.vat_rate_bp,
+          detailed: w.detailed,
+        },
+        w.pricing,
+        labels,
+      );
+      return lines.length && w.pricing.priceCents !== null
+        ? [
+            {
+              workId: w.id,
+              designation: w.designation,
+              unit: w.unit,
+              priceCents: w.pricing.priceCents,
+              markupBp: w.pricing.markupBp,
+              detailed: lines.length > 1,
+              lines,
+            },
+          ]
+        : [];
+    })
+    .slice(0, 6);
 }
 
 // ---------------------------------------------------------------------------

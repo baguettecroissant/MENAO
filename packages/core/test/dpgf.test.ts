@@ -172,6 +172,28 @@ describe("prix repris des anciens devis", () => {
       unitPriceHtCents: 900,
     });
   });
+
+  it("à ressemblance égale, la bibliothèque passe devant les anciens devis (ADR 0294)", () => {
+    const withLibrary = [
+      ...history,
+      {
+        designation: "Plinthes carrelage",
+        unit: "ml" as const,
+        unitPriceHtCents: 1500,
+        usedOn: "2026-01-01",
+        source: "bibliotheque" as const,
+      },
+    ];
+    expect(suggestTenderPrice({ designation: "Plinthes", unit: "ml" }, withLibrary)).toEqual({
+      unitPriceHtCents: 1500,
+      reference: "Plinthes carrelage",
+      usedOn: "2026-01-01",
+      source: "bibliotheque",
+    });
+    expect(suggestTenderPrice({ designation: "Plinthes", unit: "ml" }, history)?.source).toBe(
+      "devis",
+    );
+  });
 });
 
 describe("totaux et écarts", () => {

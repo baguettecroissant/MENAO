@@ -325,13 +325,16 @@ export type PriceHistoryLine = {
   unitPriceHtCents: number;
   /** AAAA-MM-JJ : date du devis d'où vient le prix. */
   usedOn: string;
+  /** Bibliothèque d'ouvrages (ADR 0294) ou ancien devis ; devis si absent. */
+  source?: "bibliotheque" | "devis";
 };
 
 export type TenderPriceSuggestion = {
   unitPriceHtCents: number;
-  /** Désignation de la ligne de devis reprise. */
+  /** Désignation de l'ouvrage ou de la ligne de devis reprise. */
   reference: string;
   usedOn: string;
+  source: "bibliotheque" | "devis";
 };
 
 const STOPWORDS = new Set([
@@ -375,8 +378,9 @@ function keywords(text: string): Set<string> {
 const MIN_SIMILARITY = 0.5;
 
 /**
- * Prix proposé pour un poste : la ligne d'un ancien devis de même unité dont la désignation
- * ressemble le plus (mots communs), la plus récente à ressemblance égale. Une suggestion, que
+ * Prix proposé pour un poste : l'ouvrage de la bibliothèque ou la ligne d'un ancien devis de même
+ * unité dont la désignation ressemble le plus (mots communs) ; à ressemblance égale, la
+ * bibliothèque, puis le plus récent. Une suggestion, que
  * l'artisan vérifie : jamais un prix certain.
  */
 export function suggestTenderPrice(
@@ -396,11 +400,16 @@ export function suggestTenderPrice(
     if (common === 0) continue;
     const score = common / Math.min(wanted.size, have.size);
     if (score < MIN_SIMILARITY) continue;
+    // À ressemblance égale : la bibliothèque passe devant les anciens devis, puis le plus récent.
+    const library = (l: PriceHistoryLine) => (l.source === "bibliotheque" ? 1 : 0);
     const better =
       !best ||
       score > best.score ||
       (score === best.score && common > best.common) ||
-      (score === best.score && common === best.common && line.usedOn > best.line.usedOn);
+      (score === best.score &&
+        common === best.common &&
+        (library(line) > library(best.line) ||
+          (library(line) === library(best.line) && line.usedOn > best.line.usedOn)));
     if (better) best = { score, common, line };
   }
   return best
@@ -408,6 +417,7 @@ export function suggestTenderPrice(
         unitPriceHtCents: best.line.unitPriceHtCents,
         reference: best.line.designation,
         usedOn: best.line.usedOn,
+        source: best.line.source ?? "devis",
       }
     : null;
 }

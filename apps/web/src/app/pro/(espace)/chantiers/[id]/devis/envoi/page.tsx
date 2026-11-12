@@ -1,6 +1,6 @@
-import { DEFAULT_DEPOSIT_PERCENT, parisToday } from "@menao/core";
+import { belowMarginAlert, DEFAULT_DEPOSIT_PERCENT, formatRateBp, parisToday } from "@menao/core";
 import { quotePdfData, type QuoteDocument } from "@menao/documents";
-import { User, Wrench } from "lucide-react";
+import { TriangleAlert, User, Wrench } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { DetailBlock } from "@/components/pro/detail";
@@ -9,6 +9,7 @@ import { QuoteSendForm } from "@/components/pro/quote-send-form";
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getChantierDetail } from "@/lib/artisan/chantiers";
+import { marginAlertBp, savedQuoteMargin } from "@/lib/artisan/library";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.quote;
@@ -54,6 +55,12 @@ export default async function QuoteSendPage({
   // Mêmes exigences que l'envoi en base (F-20) : assureur, numéro, couverture, non échue.
   const insurance = quote.issuer.insurance;
   const insured = Boolean(insurance?.insurer && insurance.policy && insurance.coverage);
+  // Alerte avant l'envoi (ADR 0294) : seulement si l'artisan a fixé un seuil ; l'envoi reste libre.
+  const [margin, alertBp] = await Promise.all([
+    savedQuoteMargin(supabase, draft.id),
+    marginAlertBp(supabase),
+  ]);
+  const lowMargin = belowMarginAlert(margin.markupBp, alertBp);
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
   const clientName = [c.client.first_name, c.client.last_name].filter(Boolean).join(" ");
 
@@ -76,6 +83,17 @@ export default async function QuoteSendPage({
             {t.send.insuranceMissing}{" "}
             <TextLink href={"/pro/onboarding/documents" as Route}>{t.send.insuranceLink}</TextLink>
           </Alert>
+        </div>
+      )}
+      {lowMargin && margin.markupBp !== null && alertBp !== null && (
+        <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6">
+          <p
+            role="status"
+            className="flex items-start gap-2.5 rounded-input border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning"
+          >
+            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{t.library.below(formatRateBp(margin.markupBp), formatRateBp(alertBp))}</span>
+          </p>
         </div>
       )}
       <QuoteSendForm
