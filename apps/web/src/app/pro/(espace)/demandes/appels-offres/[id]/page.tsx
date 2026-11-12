@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { artisanPageUrl, planReadingFigures } from "@menao/core";
 import { CheckCircle2, FileText, Ruler, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
+import { PlanFinishes } from "@/components/pro/plan-finishes";
 import { PlanReleve, type PlanFileLink } from "@/components/pro/plan-releve";
+import { QuantitiesCheck } from "@/components/pro/quantities-check";
 import { TenderEditor } from "@/components/pro/tender-editor";
 import { Alert, Button, Card, CardTitle, Field, inputClasses } from "@/components/ui";
 import { env } from "@/env";
@@ -51,7 +53,72 @@ export default async function TenderPage({
   const isPlan = tender.source_kind === "plan";
   const warningTexts = isPlan ? t.plan.warnings : t.warnings;
   const warnings = (query.alertes ?? "").split(",").filter((w) => warningTexts[w]);
-  const plan = isPlan ? await planData(supabase, tender) : null;
+  const plan = isPlan ? { ...(await planData(supabase, tender)), ...linesToVerify(lines) } : null;
+
+  const planBlock = plan && (
+    <>
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Card className="flex flex-col gap-3">
+          <CardTitle title={t.plan.summaryTitle} />
+          <ul className="flex flex-col gap-2 text-sm">
+            {plan.summary.map(({ icon: Icon, tone, text }) => (
+              <li key={text} className="flex items-start gap-2.5">
+                <Icon aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${tone}`} />
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+          {plan.rooms.length === 0 && (
+            <form action={rereadPlans}>
+              <input type="hidden" name="tenderId" value={tender.id} />
+              <Button type="submit" variant="secondary" block={false}>
+                {t.plan.retry}
+              </Button>
+            </form>
+          )}
+        </Card>
+        <Card className="flex flex-col gap-3">
+          <CardTitle title={t.plan.filesTitle} />
+          <ul className="flex flex-col gap-2 text-sm">
+            {plan.files.map((file, i) => (
+              <li key={`${i}-${file.name}`} className="flex items-center gap-2.5">
+                <FileText aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
+                {file.url ? (
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="min-w-0 truncate font-semibold text-primary-strong underline-offset-2 hover:underline"
+                  >
+                    {file.name}
+                  </a>
+                ) : (
+                  <span className="min-w-0 truncate font-semibold">{file.name}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          {plan.trades.length > 0 && (
+            <p className="text-sm text-label">
+              <span className="font-semibold">{t.plan.tradesTitle} : </span>
+              {plan.trades.join(", ")}
+            </p>
+          )}
+        </Card>
+      </div>
+      {plan.rooms.length > 0 && (
+        <PlanReleve
+          tenderId={tender.id}
+          rooms={plan.rooms}
+          counts={plan.counts}
+          files={plan.files}
+        />
+      )}
+      {plan.rooms.length > 0 && (
+        <PlanFinishes tenderId={tender.id} rooms={plan.rooms} hasDpgf={lines.length > 0} />
+      )}
+    </>
+  );
 
   return (
     <main className="flex-1">
@@ -76,6 +143,16 @@ export default async function TenderPage({
           <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{tender.name}</h1>
         </div>
 
+        {query.dpgf === "ok" && (
+          <Alert tone="success">
+            {t.plan.created(
+              Number(query.lots ?? 0),
+              Number(query.postes ?? 0),
+              Number(query.manque ?? 0),
+            )}
+          </Alert>
+        )}
+        {query.export === "verifier" && <Alert tone="error">{t.plan.exportBlocked}</Alert>}
         {reading === "ok" ? (
           <Alert tone="success">
             {isPlan
@@ -98,70 +175,20 @@ export default async function TenderPage({
           </Alert>
         ))}
 
-        {plan && (
+        {plan && lines.length === 0 && (
           <>
             <Alert tone="info">{t.plan.responsibility}</Alert>
-            <div className="grid items-start gap-6 lg:grid-cols-2">
-              <Card className="flex flex-col gap-3">
-                <CardTitle title={t.plan.summaryTitle} />
-                <ul className="flex flex-col gap-2 text-sm">
-                  {plan.summary.map(({ icon: Icon, tone, text }) => (
-                    <li key={text} className="flex items-start gap-2.5">
-                      <Icon aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${tone}`} />
-                      <span>{text}</span>
-                    </li>
-                  ))}
-                </ul>
-                {plan.rooms.length === 0 && (
-                  <form action={rereadPlans}>
-                    <input type="hidden" name="tenderId" value={tender.id} />
-                    <Button type="submit" variant="secondary" block={false}>
-                      {t.plan.retry}
-                    </Button>
-                  </form>
-                )}
-              </Card>
-              <Card className="flex flex-col gap-3">
-                <CardTitle title={t.plan.filesTitle} />
-                <ul className="flex flex-col gap-2 text-sm">
-                  {plan.files.map((file, i) => (
-                    <li key={`${i}-${file.name}`} className="flex items-center gap-2.5">
-                      <FileText
-                        aria-hidden="true"
-                        className="size-4 shrink-0 text-primary-strong"
-                      />
-                      {file.url ? (
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="min-w-0 truncate font-semibold text-primary-strong underline-offset-2 hover:underline"
-                        >
-                          {file.name}
-                        </a>
-                      ) : (
-                        <span className="min-w-0 truncate font-semibold">{file.name}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {plan.trades.length > 0 && (
-                  <p className="text-sm text-label">
-                    <span className="font-semibold">{t.plan.tradesTitle} : </span>
-                    {plan.trades.join(", ")}
-                  </p>
-                )}
-              </Card>
-            </div>
-            {plan.rooms.length > 0 && (
-              <PlanReleve
-                tenderId={tender.id}
-                rooms={plan.rooms}
-                counts={plan.counts}
-                files={plan.files}
-              />
-            )}
+            {planBlock}
           </>
+        )}
+        {plan && lines.length > 0 && (
+          <p
+            role="status"
+            className="flex items-start gap-2.5 rounded-input border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning"
+          >
+            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{t.plan.toVerify(plan.missing, plan.photo)}</span>
+          </p>
         )}
 
         {lines.length > 0 && (
@@ -171,11 +198,26 @@ export default async function TenderPage({
             vatRateBp={tender.vat_rate_bp}
             vatOptions={vatOptions}
             sourceKind={
-              tender.source_kind === "xlsx" || tender.source_kind === "pdf"
+              tender.source_kind === "xlsx" ||
+              tender.source_kind === "pdf" ||
+              tender.source_kind === "plan"
                 ? tender.source_kind
                 : null
             }
+            exportLocked={isPlan && !tender.quantities_checked_at}
+            checkSlot={
+              isPlan ? (
+                <QuantitiesCheck tenderId={tender.id} checked={!!tender.quantities_checked_at} />
+              ) : undefined
+            }
           />
+        )}
+
+        {plan && lines.length > 0 && (
+          <details className="group flex flex-col gap-6 rounded-card border border-border bg-surface p-5 shadow-card">
+            <summary className="cursor-pointer text-lg font-semibold">{t.plan.releveTitle}</summary>
+            <div className="mt-6 flex flex-col gap-6">{planBlock}</div>
+          </details>
         )}
 
         {lines.length > 0 && (
@@ -337,5 +379,16 @@ async function planData(
     counts,
     summary,
     trades: tender.plan_trades.map((code) => labels.get(code) ?? code),
+  };
+}
+
+/** Postes à compléter et quantités tirées d'une photo (DPGF créé depuis les plans). */
+function linesToVerify(
+  lines: { kind: string; quantity_milli: number | null; quantity_source?: string | null }[],
+) {
+  const posts = lines.filter((l) => l.kind === "poste");
+  return {
+    missing: posts.filter((l) => l.quantity_milli === null).length,
+    photo: posts.filter((l) => l.quantity_source === "photo").length,
   };
 }

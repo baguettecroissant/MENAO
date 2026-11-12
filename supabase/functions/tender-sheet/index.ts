@@ -10,6 +10,8 @@
 // - « plan » : appel d'offres créé depuis les plans (F-140, ADR 0291) : les plans déposés (PDF et
 //   photos) sont lus par un modèle de langage (plan.ts), et le relevé (pièces, éléments comptés)
 //   est enregistré (artisan_import_plan_reading, jeton de l'utilisateur).
+//   Export d'un DPGF créé depuis les plans : classeur MENAO, après « J'ai vérifié les quantités »
+//   (ADR 0292).
 // Aucune donnée personnelle dans les journaux (CLAUDE.md règle 11).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -82,11 +84,22 @@ Deno.serve(async (req) => {
   });
   const { data: tender } = await supabase
     .from("tenders")
-    .select("id, name, source_path, source_kind, sheet, plan_files")
+    .select("id, name, source_path, source_kind, sheet, plan_files, quantities_checked_at")
     .eq("id", tenderId)
     .maybeSingle();
   if (!tender) return json({ status: "not_found" }, 404);
   if (action === "plan") return await readTenderPlans(admin, supabase, user.id, tender);
+  const filename = `DPGF-${slug(tender.name)}.xlsx`;
+  // DPGF créé depuis les plans (ADR 0292) : classeur MENAO, seulement après « J'ai vérifié les
+  // quantités » (l'artisan en reste responsable au forfait).
+  if (action === "export" && tender.source_kind === "plan") {
+    if (!tender.quantities_checked_at) return json({ status: "not_checked" }, 409);
+    const rows = await tenderRows(supabase, tender.id);
+    return xlsxResponse(
+      (await buildTenderWorkbook(tender.name, rows).xlsx.writeBuffer()) as ArrayBuffer,
+      filename,
+    );
+  }
   if (!tender.source_path || (tender.source_kind !== "xlsx" && tender.source_kind !== "pdf")) {
     return json({ status: "no_sheet" }, 422);
   }
@@ -96,7 +109,6 @@ Deno.serve(async (req) => {
   if (!blob) return json({ status: "not_found" }, 404);
   if (blob.size > MAX_BYTES) return json({ status: "too_large" }, 413);
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  const filename = `DPGF-${slug(tender.name)}.xlsx`;
 
   if (action === "import") {
     let rows: DpgfRow[];
@@ -183,16 +195,10 @@ Deno.serve(async (req) => {
   }
 
   // Export : quantités et prix de l'artisan.
-  const { data: rows } = await supabase
-    .from("tender_lines")
-    .select(
-      "kind, code, designation, unit_label, architect_quantity_milli, quantity_milli, unit_price_ht_cents, sheet_row",
-    )
-    .eq("tender_id", tender.id)
-    .order("position");
+  const rows = await tenderRows(supabase, tender.id);
   let output: ArrayBuffer;
   if (tender.source_kind === "pdf") {
-    output = (await buildTenderWorkbook(tender.name, rows ?? []).xlsx.writeBuffer()) as ArrayBuffer;
+    output = (await buildTenderWorkbook(tender.name, rows).xlsx.writeBuffer()) as ArrayBuffer;
   } else {
     const workbook = await readWorkbook(bytes.buffer as ArrayBuffer);
     if (!workbook) return json({ status: "unreadable" }, 422);
@@ -204,10 +210,35 @@ Deno.serve(async (req) => {
       workbook,
       sheet,
       columns,
-      (rows ?? []).filter((r) => r.kind === "poste"),
+      rows.filter((r) => r.kind === "poste"),
     );
     output = (await workbook.xlsx.writeBuffer()) as ArrayBuffer;
   }
+  return xlsxResponse(output, filename);
+});
+
+/** Lignes du DPGF, lues avec le jeton de l'utilisateur. */
+async function tenderRows(supabase: SupabaseClient, tenderId: string) {
+  const { data } = await supabase
+    .from("tender_lines")
+    .select(
+      "kind, code, designation, unit_label, architect_quantity_milli, quantity_milli, unit_price_ht_cents, sheet_row",
+    )
+    .eq("tender_id", tenderId)
+    .order("position");
+  return (data ?? []) as {
+    kind: string;
+    code: string | null;
+    designation: string;
+    unit_label: string | null;
+    architect_quantity_milli: number | null;
+    quantity_milli: number | null;
+    unit_price_ht_cents: number | null;
+    sheet_row: number | null;
+  }[];
+}
+
+function xlsxResponse(output: ArrayBuffer, filename: string): Response {
   return new Response(new Uint8Array(output), {
     headers: {
       // Type binaire générique : supabase-js ne rend un Blob que pour octet-stream et PDF (sinon du
@@ -217,7 +248,7 @@ Deno.serve(async (req) => {
       "Cache-Control": "private, no-store",
     },
   });
-});
+}
 
 const MAGIC: Record<PlanFile["kind"], number[]> = {
   pdf: [0x25, 0x50, 0x44, 0x46, 0x2d],

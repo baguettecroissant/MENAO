@@ -41,6 +41,9 @@ export type TenderLine = {
   unit_price_ht_cents: number | null;
   price_source: "devis" | "manuel" | null;
   price_reference: string | null;
+  /** DPGF créé depuis les plans (ADR 0292) : origine et calcul de la quantité. */
+  quantity_source?: "plan" | "calcul" | "photo" | "manque" | "saisi" | null;
+  quantity_detail?: string | null;
 };
 
 /** Pièce relevée sur les plans (F-140, ADR 0291) : surface en cm², périmètre et hauteur en mm. */
@@ -57,6 +60,10 @@ export type TenderRoom = {
   file_index: number | null;
   page: number | null;
   uncertain: boolean;
+  floor: "carrelage" | "parquet" | "sol_souple" | "aucun" | null;
+  walls: "peinture" | "faience" | "aucun" | null;
+  ceiling: "peinture" | "plaque" | "aucun" | null;
+  tile_height_mm: number | null;
 };
 
 export type PlanFileEntry = { path: string; name: string; kind: "pdf" | "jpg" | "png" };
@@ -85,7 +92,7 @@ export async function getTenderRooms(supabase: Client, id: string): Promise<Tend
   const { data } = await supabase
     .from("tender_rooms")
     .select(
-      "id, level, name, area_cm2, perimeter_mm, height_mm, wet, habitable, source, file_index, page, uncertain",
+      "id, level, name, area_cm2, perimeter_mm, height_mm, wet, habitable, source, file_index, page, uncertain, floor, walls, ceiling, tile_height_mm",
     )
     .eq("tender_id", id)
     .order("position");
@@ -97,14 +104,14 @@ export async function getTender(supabase: Client, id: string) {
     supabase
       .from("tenders")
       .select(
-        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale",
+        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale, quantities_checked_at",
       )
       .eq("id", id)
       .maybeSingle(),
     supabase
       .from("tender_lines")
       .select(
-        "id, kind, lot, code, designation, unit_label, architect_quantity_milli, quantity_milli, unit_price_ht_cents, price_source, price_reference",
+        "id, kind, lot, code, designation, unit_label, architect_quantity_milli, quantity_milli, unit_price_ht_cents, price_source, price_reference, quantity_source, quantity_detail",
       )
       .eq("tender_id", id)
       .order("position"),

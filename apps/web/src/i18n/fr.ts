@@ -5463,6 +5463,83 @@ export const fr = {
           "Vérifiez les mesures : un nom pour chaque pièce, des nombres positifs (hauteur entre 1,5 et 10 m).",
         responsibility:
           "MENAO ne devine aucune mesure : ce qui n'est pas écrit sur le plan reste à compléter. C'est un forfait : vous restez responsable de vos quantités.",
+        // Revêtements et création du DPGF (ADR 0292).
+        finishes: {
+          title: "Revêtements par pièce",
+          lead: "Proposés selon le type de pièce : corrigez-les, puis MENAO calcule les quantités de vos lots.",
+          label: "Revêtements par pièce",
+          floor: "Sol",
+          walls: "Murs",
+          ceiling: "Plafond",
+          tileHeight: "Faïence (m)",
+          floorOptions: {
+            carrelage: "Carrelage",
+            parquet: "Parquet",
+            sol_souple: "Sol souple",
+            aucun: "Aucun",
+          } as Record<string, string>,
+          wallOptions: {
+            peinture: "Peinture",
+            faience: "Faïence + peinture",
+            aucun: "Aucun",
+          } as Record<string, string>,
+          ceilingOptions: {
+            peinture: "Peinture",
+            plaque: "Plaque + peinture",
+            aucun: "Aucun",
+          } as Record<string, string>,
+          rulesTitle: "Ce que MENAO calcule",
+          rules: [
+            "Surfaces : somme des surfaces du relevé, pièce par pièce.",
+            "Plinthes : périmètre moins une porte de 0,83 m par pièce.",
+            "Faïence : périmètre × hauteur de faïence, moins la porte.",
+            "Murs peints : périmètre × hauteur, moins faïence, portes et fenêtres (1,5 m² chacune).",
+            "Appareils, portes et fenêtres : comptés sur le plan. Électricité : minimum de la norme NF C 15-100 par pièce, à vérifier.",
+            "Ce qui ne se mesure pas sur le relevé (toiture, cloisons, réseaux…) reste à compléter.",
+          ],
+          create: "Créer le DPGF",
+          recreate: "Recréer le DPGF",
+          recreateWarning:
+            "Le DPGF actuel est remplacé : vos quantités corrigées et vos prix saisis sont perdus.",
+          creating: "Calcul du DPGF…",
+          invalid: "Vérifiez les revêtements (hauteur de faïence entre 0,1 et 4 m).",
+        },
+        created: (lots: number, posts: number, missing: number) =>
+          `DPGF créé : ${lots} lot${lots > 1 ? "s" : ""}, ${posts} poste${posts > 1 ? "s" : ""}${missing ? `, dont ${missing} à compléter` : ""}. Vérifiez chaque quantité.`,
+        toVerify: (missing: number, photo: number) =>
+          [
+            "Quantités lues et calculées sur les plans : à vérifier.",
+            missing ? `${missing} poste${missing > 1 ? "s" : ""} à compléter.` : null,
+            photo
+              ? `${photo} quantité${photo > 1 ? "s" : ""} tirée${photo > 1 ? "s" : ""} d'une photo.`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        quantitySource: {
+          plan: "Plan",
+          calcul: "Calculé",
+          photo: "Photo : à vérifier",
+          manque: "À compléter",
+          saisi: "Saisi",
+        } as Record<string, string>,
+        detail: "Calcul",
+        origin: "Origine",
+        figureMissing: "À compléter",
+        figureMissingHint: "postes sans quantité",
+        check: {
+          title: "Avant d'exporter",
+          label:
+            "J'ai vérifié les quantités lues et calculées sur les plans. Je sais que j'en reste responsable au forfait.",
+          locked: "Cochez « J'ai vérifié les quantités » pour télécharger l'Excel et le PDF.",
+          stillOpen: "Le chiffrage et le passage en devis restent ouverts.",
+          error: "La case n'a pas pu être enregistrée. Réessayez.",
+        },
+        releveTitle: "Relevé et revêtements",
+        exportBlocked:
+          "Vérifiez les quantités avant de télécharger : cochez « J'ai vérifié les quantités ».",
+        excel: "Excel du DPGF",
+        excelHint: "Un classeur avec vos lots, vos quantités, vos prix et les totaux.",
       },
       fields: {
         name: "Nom du projet",

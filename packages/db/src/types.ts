@@ -5167,7 +5167,9 @@ export type Database = {
           position: number;
           price_reference: string | null;
           price_source: string | null;
+          quantity_detail: string | null;
           quantity_milli: number | null;
+          quantity_source: string | null;
           sheet_row: number | null;
           tender_id: string;
           unit: Database["public"]["Enums"]["quote_unit"] | null;
@@ -5185,7 +5187,9 @@ export type Database = {
           position: number;
           price_reference?: string | null;
           price_source?: string | null;
+          quantity_detail?: string | null;
           quantity_milli?: number | null;
+          quantity_source?: string | null;
           sheet_row?: number | null;
           tender_id: string;
           unit?: Database["public"]["Enums"]["quote_unit"] | null;
@@ -5202,7 +5206,9 @@ export type Database = {
           position?: number;
           price_reference?: string | null;
           price_source?: string | null;
+          quantity_detail?: string | null;
           quantity_milli?: number | null;
+          quantity_source?: string | null;
           sheet_row?: number | null;
           tender_id?: string;
           unit?: Database["public"]["Enums"]["quote_unit"] | null;
@@ -5222,7 +5228,9 @@ export type Database = {
       tender_rooms: {
         Row: {
           area_cm2: number | null;
+          ceiling: string | null;
           file_index: number | null;
+          floor: string | null;
           habitable: boolean;
           height_mm: number | null;
           id: string;
@@ -5233,13 +5241,17 @@ export type Database = {
           position: number;
           source: string;
           tender_id: string;
+          tile_height_mm: number | null;
           uncertain: boolean;
+          walls: string | null;
           wet: boolean;
         };
         ComputedFields: never;
         Insert: {
           area_cm2?: number | null;
+          ceiling?: string | null;
           file_index?: number | null;
+          floor?: string | null;
           habitable?: boolean;
           height_mm?: number | null;
           id?: string;
@@ -5250,12 +5262,16 @@ export type Database = {
           position: number;
           source: string;
           tender_id: string;
+          tile_height_mm?: number | null;
           uncertain?: boolean;
+          walls?: string | null;
           wet?: boolean;
         };
         Update: {
           area_cm2?: number | null;
+          ceiling?: string | null;
           file_index?: number | null;
+          floor?: string | null;
           habitable?: boolean;
           height_mm?: number | null;
           id?: string;
@@ -5266,7 +5282,9 @@ export type Database = {
           position?: number;
           source?: string;
           tender_id?: string;
+          tile_height_mm?: number | null;
           uncertain?: boolean;
+          walls?: string | null;
           wet?: boolean;
         };
         Relationships: [
@@ -5292,6 +5310,7 @@ export type Database = {
           plan_files: NonNullable<Json>;
           plan_scale: string | null;
           plan_trades: string[];
+          quantities_checked_at: string | null;
           sheet: NonNullable<Json>;
           source_kind: string | null;
           source_name: string | null;
@@ -5313,6 +5332,7 @@ export type Database = {
           plan_files?: NonNullable<Json>;
           plan_scale?: string | null;
           plan_trades?: string[];
+          quantities_checked_at?: string | null;
           sheet?: NonNullable<Json>;
           source_kind?: string | null;
           source_name?: string | null;
@@ -5333,6 +5353,7 @@ export type Database = {
           plan_files?: NonNullable<Json>;
           plan_scale?: string | null;
           plan_trades?: string[];
+          quantities_checked_at?: string | null;
           sheet?: NonNullable<Json>;
           source_kind?: string | null;
           source_name?: string | null;
@@ -6568,6 +6589,10 @@ export type Database = {
           ville_nom: string;
         }[];
       };
+      artisan_check_tender_quantities: {
+        Args: { p_checked: boolean; p_tender_id: string };
+        Returns: undefined;
+      };
       artisan_claim_reward: {
         Args: {
           p_address: string;
@@ -6614,6 +6639,7 @@ export type Database = {
         Returns: string;
       };
       artisan_grade: { Args: Record<PropertyKey, never>; Returns: Json };
+      artisan_import_plan_lines: { Args: { p_lines: Json; p_tender_id: string }; Returns: number };
       artisan_import_plan_reading: {
         Args: { p_counts: Json; p_rooms: Json; p_scale?: string; p_tender_id: string };
         Returns: number;
@@ -6753,6 +6779,10 @@ export type Database = {
       artisan_save_expense: {
         Args: { p_expense: Json; p_expense_id: string; p_lines: Json };
         Returns: string;
+      };
+      artisan_save_plan_finishes: {
+        Args: { p_finishes: Json; p_tender_id: string };
+        Returns: undefined;
       };
       artisan_save_plan_rooms: {
         Args: { p_counts: Json; p_rooms: Json; p_tender_id: string };
