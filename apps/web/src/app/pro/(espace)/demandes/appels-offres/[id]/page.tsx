@@ -1,8 +1,11 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { artisanPageUrl } from "@menao/core";
+import { CopySnippet } from "@/components/copy-snippet";
 import { TenderEditor } from "@/components/pro/tender-editor";
 import { Alert, Button, Card, CardTitle, Field, inputClasses } from "@/components/ui";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
 import { deleteTender, updateTender } from "@/lib/artisan/tender-actions";
@@ -29,11 +32,18 @@ export default async function TenderPage({
   const { supabase, artisanId } = await requireTeamPermission("money");
   const [found, { data: artisan }] = await Promise.all([
     getTender(supabase, id),
-    supabase.from("artisans").select("assujetti_tva").eq("id", artisanId).maybeSingle(),
+    supabase
+      .from("artisans")
+      .select("assujetti_tva, slug, nom_commercial, raison_sociale")
+      .eq("id", artisanId)
+      .maybeSingle(),
   ]);
   if (!found) notFound();
   const { tender, lines } = found;
   const vatOptions = artisan?.assujetti_tva === false ? [0] : [2000, 1000, 550];
+  // Passage en devis (ADR 0289) : le client arrive par la fiche publique, en demande directe.
+  const pageUrl = artisan?.slug ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug) : null;
+  const company = artisan?.nom_commercial ?? artisan?.raison_sociale ?? "";
   const reading = query.lecture;
   const warnings = (query.alertes ?? "").split(",").filter((w) => t.warnings[w]);
 
@@ -88,6 +98,36 @@ export default async function TenderPage({
                 : null
             }
           />
+        )}
+
+        {lines.length > 0 && (
+          <Card className="flex flex-col gap-4">
+            <CardTitle title={t.toQuote.title} />
+            <ol className="ml-5 flex list-decimal flex-col gap-1.5 text-sm text-label">
+              {t.toQuote.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            {pageUrl ? (
+              <div className="flex flex-col gap-3">
+                <CopySnippet
+                  id="lien-fiche"
+                  label={t.toQuote.link}
+                  value={pageUrl}
+                  copyLabel={t.toQuote.copy}
+                  copiedLabel={t.toQuote.copied}
+                />
+                <a
+                  href={`mailto:?subject=${encodeURIComponent(t.toQuote.subject(tender.name))}&body=${encodeURIComponent(t.toQuote.body(tender.name, pageUrl, company))}`}
+                  className="self-start text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
+                >
+                  {t.toQuote.email}
+                </a>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t.toQuote.noPage}</p>
+            )}
+          </Card>
         )}
 
         <div className="grid items-start gap-6 lg:grid-cols-2">

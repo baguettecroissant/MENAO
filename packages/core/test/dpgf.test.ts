@@ -11,7 +11,7 @@ import {
   parseQuantityMilli,
   suggestTenderPrice,
 } from "../src/dpgf";
-import { tenderGaps, tenderTotals } from "../src/dpgf-totals";
+import { tenderGaps, tenderQuoteLines, tenderTotals } from "../src/dpgf-totals";
 
 // DPGF fictif, tel qu'un architecte le remplit : titre, lots, postes, sous-totaux, totaux.
 const GRID: DpgfCell[][] = [
@@ -305,5 +305,88 @@ describe("DPGF lu dans un PDF", () => {
   it("décrit la réponse attendue du modèle", () => {
     const schema = dpgfReadingJsonSchema() as { required: string[] };
     expect(schema.required).toEqual(["lisible", "est_un_dpgf", "lignes"]);
+  });
+});
+
+describe("DPGF repris dans un devis", () => {
+  const tender = [
+    {
+      kind: "titre" as const,
+      lot: "LOT 05 CARRELAGE",
+      code: "LOT 05",
+      designation: "CARRELAGE",
+      unit: null,
+      quantityMilli: null,
+      unitPriceHtCents: null,
+    },
+    {
+      kind: "poste" as const,
+      lot: "LOT 05 CARRELAGE",
+      code: "5.2",
+      designation: "Carrelage sol 60 x 60",
+      unit: "m2" as const,
+      quantityMilli: 77_400,
+      unitPriceHtCents: 7400,
+    },
+    {
+      kind: "poste" as const,
+      lot: "LOT 05 CARRELAGE",
+      code: "5.6",
+      designation: "Seuils",
+      unit: "u" as const,
+      quantityMilli: 4000,
+      unitPriceHtCents: null,
+    },
+    {
+      kind: "poste" as const,
+      lot: "LOT 05 CARRELAGE",
+      code: null,
+      designation: "Installation de chantier",
+      unit: null,
+      quantityMilli: 1000,
+      unitPriceHtCents: 25_000,
+    },
+    {
+      kind: "poste" as const,
+      lot: null,
+      code: "6.1",
+      designation: "Peinture",
+      unit: "m2" as const,
+      quantityMilli: null,
+      unitPriceHtCents: 1200,
+    },
+  ];
+
+  it("reprend les postes chiffrés, avec le n° et le lot, à la TVA de l'offre", () => {
+    expect(tenderQuoteLines(tender, 1000, 0)).toEqual({
+      lines: [
+        {
+          type: "autre",
+          designation: "5.2 Carrelage sol 60 x 60",
+          description: "LOT 05 CARRELAGE",
+          quantityMilli: 77_400,
+          unit: "m2",
+          unitPriceHtCents: 7400,
+          vatRateBp: 1000,
+        },
+        {
+          type: "autre",
+          designation: "Installation de chantier",
+          description: "LOT 05 CARRELAGE",
+          quantityMilli: 1000,
+          unit: "forfait",
+          unitPriceHtCents: 25_000,
+          vatRateBp: 1000,
+        },
+      ],
+      skipped: 2,
+      truncated: 0,
+    });
+  });
+
+  it("s'arrête à la limite de lignes d'un devis", () => {
+    const result = tenderQuoteLines(tender, 2000, 199);
+    expect(result.lines).toHaveLength(1);
+    expect(result.truncated).toBe(1);
   });
 });

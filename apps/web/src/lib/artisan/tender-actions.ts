@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
+import { tenderQuoteLines, type TenderQuoteLine } from "@menao/core";
 import { requireTeamPermission } from "./space";
 
 const t = fr.pro.tenders;
@@ -125,4 +126,46 @@ export async function deleteTender(formData: FormData): Promise<void> {
   if (path) await supabase.storage.from("tender-files").remove([path]);
   revalidatePath(BASE);
   redirect(BASE as Route);
+}
+
+/**
+ * « Reprendre un DPGF » dans l'éditeur de devis (F-138, ADR 0289) : postes chiffrés de l'appel
+ * d'offres, en lignes de devis à la TVA de l'offre (0 % pour une entreprise non assujettie). Rien
+ * n'est enregistré : l'artisan relit puis enregistre son devis comme d'habitude.
+ */
+export async function tenderLinesForQuote(
+  tenderId: string,
+  existingLines: number,
+): Promise<
+  | { ok: true; lines: TenderQuoteLine[]; skipped: number; truncated: number }
+  | { ok: false; error: string }
+> {
+  const id = z.uuid().safeParse(tenderId);
+  if (!id.success) return { ok: false, error: t.errors.generic ?? "" };
+  const { supabase, artisanId } = await requireTeamPermission("money");
+  const [{ data: tender }, { data: rows }, { data: artisan }] = await Promise.all([
+    supabase.from("tenders").select("vat_rate_bp").eq("id", id.data).maybeSingle(),
+    supabase
+      .from("tender_lines")
+      .select("kind, lot, code, designation, unit, quantity_milli, unit_price_ht_cents")
+      .eq("tender_id", id.data)
+      .order("position"),
+    supabase.from("artisans").select("assujetti_tva").eq("id", artisanId).maybeSingle(),
+  ]);
+  if (!tender) return { ok: false, error: t.errors.generic ?? "" };
+  const vat = artisan?.assujetti_tva === false ? 0 : tender.vat_rate_bp;
+  const result = tenderQuoteLines(
+    (rows ?? []).map((r) => ({
+      kind: r.kind as "titre" | "poste",
+      lot: r.lot,
+      code: r.code,
+      designation: r.designation,
+      unit: r.unit,
+      quantityMilli: r.quantity_milli,
+      unitPriceHtCents: r.unit_price_ht_cents,
+    })),
+    vat,
+    Math.max(0, Math.floor(existingLines)),
+  );
+  return { ok: true, ...result };
 }
