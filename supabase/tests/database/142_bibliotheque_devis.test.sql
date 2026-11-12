@@ -85,7 +85,10 @@ select is((select price_cents from public.artisan_works where id = 'e1426000-000
   'le prix n''a pas été changé par l''autre artisan');
 
 -- Devis envoyé : coûts figés.
-update public.quotes set status = 'envoye' where id = 'e1425000-0000-4000-8000-000000000001';
+update public.quotes set status = 'envoye', numero = 'DEVIS-2026-0142', sent_at = now(),
+  valid_until = current_date + 30, start_date = current_date + 10, duration_days = 2,
+  payment_schedule = '[]', document = '{}'
+where id = 'e1425000-0000-4000-8000-000000000001';
 set local role authenticated;
 select pg_temp.connecter('e1420000-0000-4000-8000-000000000001');
 select throws_ok($$ select public.artisan_save_quote_costs('e1425000-0000-4000-8000-000000000001', '[]'::jsonb) $$,
