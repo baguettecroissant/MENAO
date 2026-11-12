@@ -1,8 +1,18 @@
 "use client";
 
-import { FileSpreadsheet, Map as MapIcon } from "lucide-react";
-import { startTransition, useActionState, useState } from "react";
-import { Alert, Button, Field, FieldError, RadioGroup } from "@/components/ui";
+import {
+  Check,
+  FileSpreadsheet,
+  FolderOpen,
+  HelpCircle,
+  Image as ImageIcon,
+  Map as MapIcon,
+  Plus,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { startTransition, useActionState, useId, useState, type ReactNode } from "react";
+import { Alert, Button, Field, FieldError } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createPlanTender, createTender } from "@/lib/artisan/tender-actions";
 import { type FormState, initialFormState } from "@/lib/auth/form";
@@ -20,12 +30,14 @@ const MAX_PLANS = 10;
 const PHOTO_SIDE = 2400;
 
 export type TradeOption = { code: string; label: string };
+type Mode = "dpgf" | "plans";
 
 /**
- * Nouvel appel d'offres (ADR 0287, 0288, 0291) : le DPGF de l'architecte (Excel ou PDF), ou
- * seulement ses plans (PDF ou photos). Les fichiers partent directement du navigateur dans le
- * dossier privé de l'entreprise (tender-files), puis la Server Action crée l'appel d'offres et
- * fait lire le DPGF ou les plans.
+ * Nouvel appel d'offres (ADR 0287, 0288, 0291), maquettes du lot 35 : le choix « J'ai le DPGF de
+ * l'architecte » ou « J'ai seulement les plans » en deux cartes, les champs du projet, les fichiers
+ * déposés (photo signalée), les lots à préparer en pastilles, et « Comment ça marche » à côté.
+ * Les fichiers partent directement du navigateur dans le dossier privé de l'entreprise
+ * (tender-files), puis la Server Action crée l'appel d'offres et fait lire le DPGF ou les plans.
  */
 export function TenderNewForm({
   artisanId,
@@ -38,32 +50,109 @@ export function TenderNewForm({
   /** Métiers de l'entreprise, cochés d'office. */
   myTrades?: readonly string[];
 }) {
-  const [mode, setMode] = useState<"dpgf" | "plans">("dpgf");
+  const [mode, setMode] = useState<Mode>("dpgf");
   return (
-    <div className="flex flex-col gap-5">
-      <RadioGroup
-        legend={t.modes.legend}
-        name="mode"
-        value={mode}
-        onChange={(value) => setMode(value === "plans" ? "plans" : "dpgf")}
-        options={[
-          { value: "dpgf", label: t.modes.dpgf, description: t.modes.dpgfHint },
-          { value: "plans", label: t.modes.plans, description: t.modes.plansHint },
-        ]}
-      />
-      {mode === "dpgf" ? (
-        <DpgfTenderForm artisanId={artisanId} />
-      ) : (
-        <PlanTenderForm artisanId={artisanId} trades={trades} myTrades={myTrades} />
-      )}
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      <section className="flex flex-col gap-5 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="text-xl font-semibold">{t.newTitle}</h2>
+        <div role="radiogroup" aria-label={t.modes.legend} className="grid gap-3 sm:grid-cols-2">
+          <ModeCard
+            selected={mode === "dpgf"}
+            title={t.modes.dpgf}
+            hint={t.modes.dpgfHint}
+            onSelect={() => setMode("dpgf")}
+          />
+          <ModeCard
+            selected={mode === "plans"}
+            title={t.modes.plans}
+            hint={t.modes.plansHint}
+            badge={t.modes.new}
+            onSelect={() => setMode("plans")}
+          />
+        </div>
+        {mode === "dpgf" ? (
+          <DpgfTenderForm artisanId={artisanId} />
+        ) : (
+          <PlanTenderForm artisanId={artisanId} trades={trades} myTrades={myTrades} />
+        )}
+      </section>
+      <HowItWorks mode={mode} />
     </div>
+  );
+}
+
+function ModeCard({
+  selected,
+  title,
+  hint,
+  badge,
+  onSelect,
+}: {
+  selected: boolean;
+  title: string;
+  hint: string;
+  badge?: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={`flex items-start gap-3 rounded-card p-4 text-left transition-colors focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none ${
+        selected
+          ? "border-2 border-primary bg-primary-soft"
+          : "border border-border bg-surface hover:bg-background"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`mt-0.5 size-5 shrink-0 rounded-full bg-surface ${
+          selected ? "border-[6px] border-primary" : "border-[1.5px] border-border-strong"
+        }`}
+      />
+      <span className="flex flex-col gap-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="text-[0.9375rem] font-semibold">{title}</span>
+          {badge && (
+            <span className="rounded-chip bg-surface px-2 py-0.5 text-xs font-bold text-primary-strong">
+              {badge}
+            </span>
+          )}
+        </span>
+        <span className="text-sm text-muted-foreground">{hint}</span>
+      </span>
+    </button>
+  );
+}
+
+/** « Comment ça marche » (maquette du lot 35), selon ce que l'architecte a envoyé. */
+function HowItWorks({ mode }: { mode: Mode }) {
+  const steps = mode === "plans" ? t.how.plans : t.how.dpgf;
+  return (
+    <aside className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card">
+      <h2 className="text-lg font-semibold">{t.how.title}</h2>
+      <ol className="flex flex-col gap-3 text-sm">
+        {steps.map((step, i) => (
+          <li key={step} className="flex gap-3">
+            <span className="w-4 shrink-0 font-bold text-primary-strong">{i + 1}</span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="flex items-start gap-2 text-sm text-muted-foreground">
+        <HelpCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+        <span>{mode === "plans" ? t.how.plansNote : t.responsibility}</span>
+      </p>
+    </aside>
   );
 }
 
 function ProjectFields({ state }: { state: FormState }) {
   const v = state.values;
   return (
-    <>
+    <div className="grid gap-3 sm:grid-cols-[2fr_1.6fr_1.1fr]">
       <Field
         label={t.fields.name}
         name="name"
@@ -73,39 +162,133 @@ function ProjectFields({ state }: { state: FormState }) {
         defaultValue={v?.name}
         errors={state.fieldErrors?.name}
       />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label={t.fields.client}
-          labelNote={t.fields.clientNote}
-          name="client"
-          maxLength={160}
-          defaultValue={v?.client}
-        />
-        <Field
-          label={t.fields.due}
-          labelNote={t.fields.dueNote}
-          name="due"
-          type="date"
-          defaultValue={v?.due}
-        />
-      </div>
-    </>
+      <Field label={t.fields.client} name="client" maxLength={160} defaultValue={v?.client} />
+      <Field label={t.fields.dueShort} name="due" type="date" defaultValue={v?.due} />
+    </div>
   );
 }
 
+/** Zone de dépôt en pointillés (maquette) : clic ou glisser-déposer. */
+function DropZone({
+  id,
+  label,
+  multiple,
+  accept,
+  title,
+  hint,
+  onFiles,
+}: {
+  id: string;
+  /** Nom du champ de fichier (lecteurs d'écran). */
+  label: string;
+  multiple: boolean;
+  accept: string;
+  title: string;
+  hint: string;
+  onFiles: (files: File[]) => void;
+}) {
+  const [over, setOver] = useState(false);
+  return (
+    <label
+      htmlFor={id}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        onFiles([...e.dataTransfer.files]);
+      }}
+      className={`flex cursor-pointer items-center justify-center gap-2 rounded-input border-[1.5px] border-dashed px-4 py-4 text-sm text-muted-foreground transition-colors hover:border-primary/60 ${
+        over ? "border-primary bg-primary-softer" : "border-border-strong"
+      }`}
+    >
+      <FolderOpen aria-hidden="true" className="size-5 shrink-0" />
+      <span>
+        <span className="font-semibold text-primary-strong">{title}</span> · {hint}
+      </span>
+      <input
+        id={id}
+        type="file"
+        aria-label={label}
+        multiple={multiple}
+        accept={accept}
+        className="sr-only"
+        onChange={(e) => {
+          onFiles([...(e.target.files ?? [])]);
+          e.target.value = "";
+        }}
+      />
+    </label>
+  );
+}
+
+function FileItem({
+  icon,
+  name,
+  info,
+  warn = false,
+  onRemove,
+  removeLabel,
+}: {
+  icon: ReactNode;
+  name: string;
+  info: string;
+  warn?: boolean;
+  onRemove: () => void;
+  removeLabel: string;
+}) {
+  return (
+    <li className="flex items-center gap-3 rounded-input border border-border bg-surface px-3.5 py-2.5">
+      <span
+        aria-hidden="true"
+        className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
+          warn ? "bg-warning-soft text-warning" : "bg-primary-soft text-primary-strong"
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-sm font-semibold">{name}</span>
+        <span
+          className={`text-xs ${warn ? "font-semibold text-warning" : "text-muted-foreground"}`}
+        >
+          {info}
+        </span>
+      </span>
+      <button
+        type="button"
+        aria-label={removeLabel}
+        onClick={onRemove}
+        className="rounded-full p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
+      >
+        <X aria-hidden="true" className="size-4" />
+      </button>
+    </li>
+  );
+}
+
+const sizeLabel = (bytes: number) =>
+  bytes >= 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")} Mo`
+    : `${Math.max(1, Math.round(bytes / 1024))} Ko`;
+
 function DpgfTenderForm({ artisanId }: { artisanId: string }) {
+  const id = useId();
   const [state, formAction, pending] = useActionState(createTender, initialFormState);
+  const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const busy = pending || uploading;
 
   async function submit(formData: FormData) {
     setFileError(null);
-    const file = formData.get("file");
-    const extension = file instanceof File ? file.name.toLowerCase().split(".").pop() : null;
+    const extension = file ? file.name.toLowerCase().split(".").pop() : null;
     // Excel, ou PDF lu par l'IA (ADR 0288).
     const kind = extension === "xlsx" || extension === "pdf" ? extension : null;
-    if (!(file instanceof File) || file.size === 0 || !kind) {
+    if (!file || file.size === 0 || !kind) {
       setFileError(t.errors.file ?? null);
       return;
     }
@@ -123,7 +306,6 @@ function DpgfTenderForm({ artisanId }: { artisanId: string }) {
       setFileError(t.errors.upload ?? null);
       return;
     }
-    formData.delete("file");
     formData.set("path", path);
     formData.set("fileName", file.name.slice(0, 200));
     // Après l'envoi du fichier (await) : on repasse dans une transition pour l'action.
@@ -131,38 +313,43 @@ function DpgfTenderForm({ artisanId }: { artisanId: string }) {
   }
 
   return (
-    <form action={submit} className="flex flex-col gap-4">
+    <form action={submit} className="flex flex-col gap-5">
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <ProjectFields state={state} />
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="tender-file" className="text-sm font-semibold">
-          {t.fields.file}
-        </label>
-        <label
-          htmlFor="tender-file"
-          className="flex cursor-pointer items-center gap-3 rounded-input border border-dashed border-border-strong bg-background px-4 py-4 text-sm text-label hover:border-primary/50"
-        >
-          <FileSpreadsheet aria-hidden="true" className="size-5 shrink-0 text-primary-strong" />
-          <input
-            id="tender-file"
-            name="file"
-            type="file"
-            required
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-semibold">{t.fields.file}</span>
+        {file ? (
+          <ul>
+            <FileItem
+              icon={<FileSpreadsheet className="size-4" />}
+              name={file.name}
+              info={`${file.name.toLowerCase().endsWith(".pdf") ? t.drop.pdfDpgf : t.drop.xlsx} · ${sizeLabel(file.size)}`}
+              onRemove={() => setFile(null)}
+              removeLabel={t.drop.remove(file.name)}
+            />
+          </ul>
+        ) : (
+          <DropZone
+            id={`${id}-dpgf`}
+            label={t.fields.file}
+            multiple={false}
             accept=".xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf"
-            aria-describedby="tender-file-hint"
-            className="min-w-0 flex-1 text-sm file:mr-3 file:rounded-button file:border-0 file:bg-primary-soft file:px-3 file:py-1.5 file:font-semibold file:text-primary-strong"
+            title={t.drop.choose}
+            hint={t.drop.dpgfHint}
+            onFiles={(files) => setFile(files[0] ?? null)}
           />
-        </label>
+        )}
         {(fileError ?? state.fieldErrors?.file?.[0]) && (
           <FieldError>{fileError ?? state.fieldErrors?.file?.[0]}</FieldError>
         )}
-        <p id="tender-file-hint" className="text-sm text-muted-foreground">
-          {t.fields.fileHint}
-        </p>
+        <p className="text-sm text-muted-foreground">{t.fields.fileHint}</p>
       </div>
-      <Button type="submit" disabled={busy} block={false} className="self-end">
-        {busy ? t.reading : t.submit}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={busy} block={false}>
+          <Sparkles aria-hidden="true" className="size-4" />
+          {busy ? t.reading : t.submit}
+        </Button>
+      </div>
     </form>
   );
 }
@@ -186,38 +373,43 @@ function PlanTenderForm({
   trades: readonly TradeOption[];
   myTrades: readonly string[];
 }) {
+  const id = useId();
   const [state, formAction, pending] = useActionState(createPlanTender, initialFormState);
+  const [files, setFiles] = useState<File[]>([]);
+  const [chosen, setChosen] = useState<string[]>(() => [...myTrades]);
+  const [showOthers, setShowOthers] = useState(myTrades.length === 0);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const busy = pending || uploading;
   const mine = trades.filter((tr) => myTrades.includes(tr.code));
   const others = trades.filter((tr) => !myTrades.includes(tr.code));
 
+  function addFiles(added: File[]) {
+    setFileError(null);
+    const valid = added.filter((f) => planKind(f));
+    if (valid.length < added.length) setFileError(t.plan.errors.files);
+    setFiles((current) => [...current, ...valid].slice(0, MAX_PLANS));
+    if (files.length + valid.length > MAX_PLANS) setFileError(t.plan.errors.tooMany);
+  }
+
   async function submit(formData: FormData) {
     setFileError(null);
-    const chosen = formData
-      .getAll("plans")
-      .filter((f): f is File => f instanceof File && f.size > 0);
-    if (chosen.length === 0 || chosen.some((f) => !planKind(f))) {
+    if (files.length === 0) {
       setFileError(t.plan.errors.files);
       return;
     }
-    if (chosen.length > MAX_PLANS) {
-      setFileError(t.plan.errors.tooMany);
-      return;
-    }
-    if (chosen.some((f) => f.size > MAX_BYTES)) {
+    if (files.some((f) => f.size > MAX_BYTES)) {
       setFileError(t.plan.errors.tooLarge);
       return;
     }
-    if (formData.getAll("trades").length === 0) {
+    if (chosen.length === 0) {
       setFileError(t.plan.errors.trades);
       return;
     }
     setUploading(true);
     const supabase = createClient();
     const uploaded: { path: string; name: string }[] = [];
-    for (const file of chosen) {
+    for (const file of files) {
       const kind = planKind(file);
       if (!kind) continue;
       const body = kind === "pdf" ? file : await resizeImage(file, PHOTO_SIDE, { quality: 0.9 });
@@ -238,75 +430,101 @@ function PlanTenderForm({
       uploaded.push({ path, name: file.name.slice(0, 200) });
     }
     setUploading(false);
-    formData.delete("plans");
     formData.set("files", JSON.stringify(uploaded));
+    formData.delete("trades");
+    for (const code of chosen) formData.append("trades", code);
     startTransition(() => formAction(formData));
   }
 
-  const tradeBox = (tr: TradeOption, checked: boolean) => (
-    <label
-      key={tr.code}
-      className="flex min-h-11 items-center gap-2.5 rounded-input border border-border bg-surface px-3 text-sm font-semibold has-[:checked]:border-primary has-[:checked]:bg-primary-softer"
-    >
-      <input
-        type="checkbox"
-        name="trades"
-        value={tr.code}
-        defaultChecked={checked}
-        className="size-[1.125rem] shrink-0 accent-primary"
-      />
-      {tr.label}
-    </label>
-  );
+  const toggle = (code: string) =>
+    setChosen((list) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]));
+  const tradeChip = (tr: TradeOption) => {
+    const on = chosen.includes(tr.code);
+    return (
+      <button
+        key={tr.code}
+        type="button"
+        role="checkbox"
+        aria-checked={on}
+        onClick={() => toggle(tr.code)}
+        className={`inline-flex min-h-10 items-center gap-2 rounded-input border px-3 text-sm font-semibold transition-colors ${
+          on ? "border-primary/30 bg-primary-soft" : "border-border bg-surface hover:bg-background"
+        }`}
+      >
+        <span
+          aria-hidden="true"
+          className={`flex size-5 items-center justify-center rounded-md ${
+            on ? "bg-primary text-white" : "border-[1.5px] border-border-strong bg-surface"
+          }`}
+        >
+          {on && <Check className="size-3.5" strokeWidth={3} />}
+        </span>
+        {tr.label}
+      </button>
+    );
+  };
   const message = fileError ?? state.fieldErrors?.files?.[0] ?? state.fieldErrors?.trades?.[0];
 
   return (
-    <form action={submit} className="flex flex-col gap-4">
+    <form action={submit} className="flex flex-col gap-5">
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <ProjectFields state={state} />
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="tender-plans" className="text-sm font-semibold">
-          {t.plan.files}
-        </label>
-        <label
-          htmlFor="tender-plans"
-          className="flex cursor-pointer items-center gap-3 rounded-input border border-dashed border-border-strong bg-background px-4 py-4 text-sm text-label hover:border-primary/50"
-        >
-          <MapIcon aria-hidden="true" className="size-5 shrink-0 text-primary-strong" />
-          <input
-            id="tender-plans"
-            name="plans"
-            type="file"
-            multiple
-            required
-            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            aria-describedby="tender-plans-hint"
-            className="min-w-0 flex-1 text-sm file:mr-3 file:rounded-button file:border-0 file:bg-primary-soft file:px-3 file:py-1.5 file:font-semibold file:text-primary-strong"
-          />
-        </label>
-        <p id="tender-plans-hint" className="text-sm text-muted-foreground">
-          {t.plan.filesHint}
-        </p>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-semibold">{t.plan.files}</span>
+        {files.length > 0 && (
+          <ul className="flex flex-col gap-2">
+            {files.map((file, i) => {
+              const pdf = planKind(file) === "pdf";
+              return (
+                <FileItem
+                  key={`${file.name}-${i}`}
+                  icon={pdf ? <MapIcon className="size-4" /> : <ImageIcon className="size-4" />}
+                  name={file.name}
+                  info={pdf ? `${t.drop.pdfPlan} · ${sizeLabel(file.size)}` : t.drop.photo}
+                  warn={!pdf}
+                  onRemove={() => setFiles((list) => list.filter((_, j) => j !== i))}
+                  removeLabel={t.drop.remove(file.name)}
+                />
+              );
+            })}
+          </ul>
+        )}
+        <DropZone
+          id={`${id}-plans`}
+          label={t.plan.files}
+          multiple
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+          title={files.length ? t.drop.addPlan : t.drop.choosePlans}
+          hint={t.drop.plansHint}
+          onFiles={addFiles}
+        />
       </div>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-semibold">{t.plan.trades}</legend>
         <p className="text-sm text-muted-foreground">{t.plan.tradesHint}</p>
-        <div className="grid gap-2 sm:grid-cols-3">{mine.map((tr) => tradeBox(tr, true))}</div>
-        {others.length > 0 && (
-          <details className="group">
-            <summary className="cursor-pointer text-sm font-semibold text-primary-strong">
+        <div className="flex flex-wrap gap-2">
+          {mine.map(tradeChip)}
+          {showOthers && others.map(tradeChip)}
+          {!showOthers && others.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowOthers(true)}
+              className="inline-flex min-h-10 items-center gap-1.5 px-2 text-sm font-semibold text-primary-strong"
+            >
+              <Plus aria-hidden="true" className="size-4" />
               {t.plan.otherTrades}
-            </summary>
-            <div className="mt-2 grid gap-2 sm:grid-cols-3">
-              {others.map((tr) => tradeBox(tr, false))}
-            </div>
-          </details>
-        )}
+            </button>
+          )}
+        </div>
       </fieldset>
       {message && <FieldError>{message}</FieldError>}
-      <Button type="submit" disabled={busy} block={false} className="self-end">
-        {busy ? t.plan.reading : t.plan.submit}
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm text-muted-foreground">{t.plan.duration}</span>
+        <Button type="submit" disabled={busy} block={false}>
+          <Sparkles aria-hidden="true" className="size-4" />
+          {busy ? t.plan.reading : t.plan.submit}
+        </Button>
+      </div>
     </form>
   );
 }

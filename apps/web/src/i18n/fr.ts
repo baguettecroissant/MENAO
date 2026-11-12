@@ -5503,8 +5503,7 @@ export const fr = {
       tabRequests: "Demandes",
       tabTenders: "Appels d'offres",
       title: "Appels d'offres",
-      subtitle:
-        "Chiffrez le DPGF d'un architecte avec vos prix, et rendez-le dans son propre fichier.",
+      subtitle: "Les demandes des particuliers, et les appels d'offres des architectes.",
       locked: {
         title: "Inclus dans la formule Entreprise",
         body: "Déposez le DPGF de l'architecte : MENAO le lit, propose vos prix habituels pour chaque poste, et le remplit au format de l'architecte, avec un PDF prêt à joindre à votre offre.",
@@ -5520,6 +5519,38 @@ export const fr = {
         plans: "J'ai seulement les plans",
         plansHint:
           "MENAO relève les pièces et les mesures sur les plans, puis prépare le DPGF de vos lots.",
+        new: "Nouveau",
+      },
+      // « Comment ça marche » à côté du dépôt (maquettes des lots 34 et 35).
+      how: {
+        title: "Comment ça marche",
+        dpgf: [
+          "MENAO lit le DPGF de l'architecte : lots, postes, unités et quantités.",
+          "Il propose pour chaque poste votre prix habituel, repris de votre bibliothèque ou de vos devis.",
+          "Vous vérifiez les quantités et ajustez vos prix.",
+          "Vous rendez le DPGF dans le fichier de l'architecte, avec un PDF, et vous passez en devis.",
+        ],
+        plans: [
+          "MENAO relève ce qui est écrit sur les plans : pièces, surfaces, hauteur sous plafond, portes, fenêtres, appareils.",
+          "Vous corrigez le relevé et choisissez les revêtements de chaque pièce.",
+          "MENAO calcule les quantités de vos lots et montre chaque calcul.",
+          "Vous vérifiez, puis vous chiffrez avec vos prix comme un DPGF reçu.",
+        ],
+        plansNote:
+          "MENAO ne devine jamais une mesure : ce qui n'est pas écrit sur le plan reste « à compléter ». C'est un forfait : vous restez responsable de vos quantités.",
+      },
+      // Zone de dépôt des fichiers (maquette du lot 35).
+      drop: {
+        choose: "Choisir le fichier",
+        choosePlans: "Choisir les plans",
+        addPlan: "Ajouter un plan",
+        dpgfHint: "Excel (.xlsx) ou PDF, 15 Mo au plus, ou glissez-le ici",
+        plansHint: "PDF, JPG ou PNG, 15 Mo par fichier, ou glissez-les ici",
+        xlsx: "Excel : MENAO le remplit tel quel",
+        pdfDpgf: "PDF : lu par l'IA, à vérifier ligne à ligne",
+        pdfPlan: "PDF : exporté du logiciel de l'architecte, les mesures y sont écrites",
+        photo: "Photo d'un plan papier : lecture moins sûre, chaque mesure sera à vérifier",
+        remove: (name: string) => `Retirer ${name}`,
       },
       plan: {
         files: "Plans de l'architecte",
@@ -5530,6 +5561,7 @@ export const fr = {
         otherTrades: "Un autre métier",
         submit: "Lire les plans",
         reading: "Lecture des plans…",
+        duration: "Environ une minute de lecture.",
         errors: {
           files: "Choisissez au moins un plan, en PDF, JPG ou PNG.",
           tooMany: "Déposez 10 plans au plus.",
@@ -5612,6 +5644,29 @@ export const fr = {
         } as Record<string, string>,
         save: "Enregistrer le relevé",
         saved: "Relevé enregistré.",
+        // Écran du relevé (maquette du lot 35, écran 2).
+        viewerLabel: "Plans déposés",
+        viewerTitle: (name: string) => `Plan : ${name}`,
+        viewerPage: (page: number) => `Page ${page}`,
+        viewerMissing: "Ce plan n'a pas pu être affiché.",
+        viewerHint: "Cliquez une pièce du tableau pour afficher la page où elle a été lue.",
+        roomsNote:
+          "Surfaces en m², périmètres en ml, hauteur sous plafond en m. Une valeur corrigée passe en « Saisi ».",
+        okTitle: "Le relevé vous convient ?",
+        okText:
+          "Corrigez une valeur d'un clic : elle passe en « Saisi ». Ensuite, choisissez les revêtements de chaque pièce.",
+        toFinishes: "Choisir les revêtements",
+        // Étapes de l'appel d'offres créé depuis les plans (maquette du lot 35).
+        steps: {
+          label: "Étapes de l'appel d'offres",
+          plans: "Plans",
+          releve: "Relevé",
+          revetements: "Revêtements",
+          dpgf: "DPGF",
+          chiffrage: "Chiffrage",
+        },
+        withoutDpgf: "sans DPGF",
+        planBadge: "Formule Entreprise",
         invalid:
           "Vérifiez les mesures : un nom pour chaque pièce, des nombres positifs (hauteur entre 1,5 et 10 m).",
         responsibility:
@@ -5650,6 +5705,24 @@ export const fr = {
             "Appareils, portes et fenêtres : comptés sur le plan. Électricité : minimum de la norme NF C 15-100 par pièce, à vérifier.",
             "Ce qui ne se mesure pas sur le relevé (toiture, cloisons, réseaux…) reste à compléter.",
           ],
+          rulesByTrade: [
+            [
+              "Carrelage",
+              "Sol des pièces carrelées, ragréage, plinthes (périmètre moins les portes), faïence (périmètre × hauteur moins les portes).",
+            ],
+            ["Peinture", "Plafonds, murs (périmètre × hauteur moins ouvertures et faïence)."],
+            ["Plâtrerie", "Plafonds en plaque ; cloisons et doublages à compléter."],
+            ["Plomberie", "Appareils comptés sur le plan, un poste par type."],
+            [
+              "Électricité",
+              "Points lumineux et prises au minimum de la norme NF C 15-100, par pièce, à vérifier.",
+            ],
+          ] as const,
+          rulesNote:
+            "Conventions : une porte de 0,83 m par pièce, 1,5 m² par fenêtre, faïence de 2,10 m (1,20 m aux WC).",
+          othersTitle: "Autres métiers",
+          othersText:
+            "Maçonnerie, menuiseries, couverture… : MENAO prépare les postes qu'il peut mesurer sur le plan. Les autres restent « à compléter ».",
           create: "Créer le DPGF",
           recreate: "Recréer le DPGF",
           recreateWarning:
@@ -5678,6 +5751,22 @@ export const fr = {
         } as Record<string, string>,
         detail: "Calcul",
         origin: "Origine",
+        // Écran du DPGF créé (maquette du lot 35, écran 4).
+        lotsLabel: "Lots du DPGF",
+        lotPosts: (n: number) => `${n} poste${n > 1 ? "s" : ""}`,
+        lotMissing: (n: number) => `${n} à compléter`,
+        lotComplete: "Complet",
+        tableHint: "Cliquez une ligne pour voir son calcul",
+        quantity: "Quantité",
+        lotTotal: (code: string) => `Total du ${code ? code.toLocaleLowerCase("fr-FR") : "lot"} HT`,
+        detailLabel: "Détail du calcul",
+        detailEyebrow: (code: string) => `Poste ${code} · détail du calcul`,
+        noDetail: "Quantité saisie : pas de calcul.",
+        checkMissing: (n: number, total: number) =>
+          `${n} poste${n > 1 ? "s" : ""} à compléter sur ${total}`,
+        checkPhoto: (n: number) =>
+          `${n} quantité${n > 1 ? "s" : ""} tirée${n > 1 ? "s" : ""} d'une photo`,
+        totalTtc: "Total TTC",
         figureMissing: "À compléter",
         figureMissingHint: "postes sans quantité",
         check: {
@@ -5701,6 +5790,7 @@ export const fr = {
         clientNote: "(facultatif)",
         due: "Date de remise des offres",
         dueNote: "(facultative)",
+        dueShort: "Date de remise",
         file: "DPGF de l'architecte",
         fileHint:
           "Excel (.xlsx) de préférence : MENAO le remplit tel quel. Un PDF est lu par l'IA, à vérifier ligne à ligne. 15 Mo au plus.",

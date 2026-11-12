@@ -134,7 +134,7 @@ test("appels d'offres : plans lus, relevé corrigé, DPGF créé puis exporté a
   await setPlan("entreprise");
   await page.goto("/pro/demandes/appels-offres");
 
-  await page.getByLabel("J'ai seulement les plans").check();
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
   await page.getByLabel("Nom du projet").fill(project);
   await page.getByLabel("Plans de l'architecte").setInputFiles({ ...files.pdf, name: "plans.pdf" });
   await expect(page.getByRole("checkbox", { name: "Carreleur" })).toBeChecked();
@@ -168,6 +168,8 @@ test("appels d'offres : plans lus, relevé corrigé, DPGF créé puis exporté a
   await expect(page.getByLabel("Portes intérieures")).toHaveValue("10");
 
   // Revêtements proposés (ADR 0292), puis DPGF créé : lot Carreleur, quantités avec leur origine.
+  await page.getByRole("link", { name: "Choisir les revêtements" }).click();
+  await expect(page).toHaveURL(/etape=revetements/);
   await expect(page.getByLabel("Sol : Palier")).toHaveValue("parquet");
   await expect(page.getByLabel("Murs : WC")).toHaveValue("faience");
   await page.getByRole("button", { name: "Créer le DPGF" }).click();

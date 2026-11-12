@@ -38,7 +38,7 @@ export default async function TendersPage() {
 
   return (
     <main className="flex-1">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">
             {fr.pro.onboarding.requests.title}
@@ -48,14 +48,11 @@ export default async function TendersPage() {
         <RequestsTabs current="appels" />
 
         {included ? (
-          <Card className="flex flex-col gap-4">
-            <CardTitle title={t.newTitle} description={t.newLead} />
-            <TenderNewForm
-              artisanId={artisanId}
-              trades={trades ?? []}
-              myTrades={(myTrades ?? []).map((m) => m.trade_code)}
-            />
-          </Card>
+          <TenderNewForm
+            artisanId={artisanId}
+            trades={trades ?? []}
+            myTrades={(myTrades ?? []).map((m) => m.trade_code)}
+          />
         ) : (
           <Card className="flex flex-col gap-3">
             <CardTitle title={t.locked.title} description={t.locked.body} />

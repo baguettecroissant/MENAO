@@ -2,13 +2,15 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { artisanPageUrl, planReadingFigures } from "@menao/core";
-import { CheckCircle2, FileText, Ruler, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Layers, Ruler, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
+import { PlanDpgfEditor } from "@/components/pro/plan-dpgf-editor";
 import { PlanFinishes } from "@/components/pro/plan-finishes";
 import { PlanReleve, type PlanFileLink } from "@/components/pro/plan-releve";
+import { PlanSteps, type PlanStep } from "@/components/pro/plan-steps";
 import { QuantitiesCheck } from "@/components/pro/quantities-check";
 import { TenderEditor } from "@/components/pro/tender-editor";
-import { Alert, Button, Card, CardTitle, Field, inputClasses } from "@/components/ui";
+import { Alert, Button, Card, CardTitle, Field, StatusBadge, inputClasses } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
@@ -55,69 +57,48 @@ export default async function TenderPage({
   const warnings = (query.alertes ?? "").split(",").filter((w) => warningTexts[w]);
   const plan = isPlan ? { ...(await planData(supabase, tender)), ...linesToVerify(lines) } : null;
 
-  const planBlock = plan && (
-    <>
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-3">
-          <CardTitle title={t.plan.summaryTitle} />
-          <ul className="flex flex-col gap-2 text-sm">
-            {plan.summary.map(({ icon: Icon, tone, text }) => (
-              <li key={text} className="flex items-start gap-2.5">
-                <Icon aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${tone}`} />
-                <span>{text}</span>
-              </li>
-            ))}
-          </ul>
-          {plan.rooms.length === 0 && (
-            <form action={rereadPlans}>
-              <input type="hidden" name="tenderId" value={tender.id} />
-              <Button type="submit" variant="secondary" block={false}>
-                {t.plan.retry}
-              </Button>
-            </form>
-          )}
-        </Card>
-        <Card className="flex flex-col gap-3">
-          <CardTitle title={t.plan.filesTitle} />
-          <ul className="flex flex-col gap-2 text-sm">
-            {plan.files.map((file, i) => (
-              <li key={`${i}-${file.name}`} className="flex items-center gap-2.5">
-                <FileText aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
-                {file.url ? (
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="min-w-0 truncate font-semibold text-primary-strong underline-offset-2 hover:underline"
-                  >
-                    {file.name}
-                  </a>
-                ) : (
-                  <span className="min-w-0 truncate font-semibold">{file.name}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-          {plan.trades.length > 0 && (
-            <p className="text-sm text-label">
-              <span className="font-semibold">{t.plan.tradesTitle} : </span>
-              {plan.trades.join(", ")}
-            </p>
-          )}
-        </Card>
-      </div>
-      {plan.rooms.length > 0 && (
-        <PlanReleve
-          tenderId={tender.id}
-          rooms={plan.rooms}
-          counts={plan.counts}
-          files={plan.files}
-        />
+  // Étapes (maquette du lot 35) : relevé, revêtements, DPGF ; par défaut, la plus avancée.
+  const asked = query.etape;
+  const step: PlanStep | null = !plan
+    ? null
+    : asked === "revetements" && plan.rooms.length > 0
+      ? "revetements"
+      : asked === "releve" || lines.length === 0
+        ? "releve"
+        : "dpgf";
+  const reachable: PlanStep[] = [
+    "releve",
+    ...(plan && plan.rooms.length > 0 ? (["revetements"] as const) : []),
+    ...(lines.length > 0 ? (["dpgf"] as const) : []),
+  ];
+  const summaryCard = plan && (
+    <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
+      <h2 className="text-lg font-semibold">{t.plan.summaryTitle}</h2>
+      <ul className="flex flex-col gap-2.5 text-sm">
+        {plan.summary.map(({ icon: Icon, tone, text }) => (
+          <li key={text} className="flex items-start gap-2.5">
+            <Icon aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${tone}`} />
+            <span>{text}</span>
+          </li>
+        ))}
+        {plan.trades.length > 0 && (
+          <li className="flex items-start gap-2.5">
+            <Layers aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary-strong" />
+            <span>
+              {t.plan.tradesTitle} : {plan.trades.join(", ")}
+            </span>
+          </li>
+        )}
+      </ul>
+      {plan.rooms.length === 0 && (
+        <form action={rereadPlans}>
+          <input type="hidden" name="tenderId" value={tender.id} />
+          <Button type="submit" variant="secondary" block={false}>
+            {t.plan.retry}
+          </Button>
+        </form>
       )}
-      {plan.rooms.length > 0 && (
-        <PlanFinishes tenderId={tender.id} rooms={plan.rooms} hasDpgf={lines.length > 0} />
-      )}
-    </>
+    </section>
   );
 
   return (
@@ -129,19 +110,31 @@ export default async function TenderPage({
         >
           ← {t.back}
         </Link>
-        <div className="flex flex-col gap-1.5">
-          {(tender.client_name || tender.due_on) && (
-            <p className="text-sm font-semibold text-muted-foreground">
-              {[
-                tender.client_name,
-                tender.due_on ? t.dueOn(formatDay(`${tender.due_on}T12:00:00Z`)) : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          )}
-          <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{tender.name}</h1>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            {(tender.client_name || tender.due_on || isPlan) && (
+              <p className="text-sm font-semibold text-muted-foreground">
+                {[
+                  tender.client_name,
+                  tender.due_on ? t.dueOn(formatDay(`${tender.due_on}T12:00:00Z`)) : null,
+                  isPlan ? t.plan.withoutDpgf : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+            <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{tender.name}</h1>
+          </div>
+          <StatusBadge tone="primary">{t.plan.planBadge}</StatusBadge>
         </div>
+        {plan && step && (
+          <PlanSteps
+            tenderId={tender.id}
+            current={step}
+            reachable={reachable}
+            checked={!!tender.quantities_checked_at}
+          />
+        )}
 
         {query.dpgf === "ok" && (
           <Alert tone="success">
@@ -175,13 +168,26 @@ export default async function TenderPage({
           </Alert>
         ))}
 
-        {plan && lines.length === 0 && (
+        {plan && step === "releve" && (
           <>
             <Alert tone="info">{t.plan.responsibility}</Alert>
-            {planBlock}
+            {plan.rooms.length > 0 ? (
+              <PlanReleve
+                tenderId={tender.id}
+                rooms={plan.rooms}
+                counts={plan.counts}
+                files={plan.files}
+                summary={summaryCard}
+              />
+            ) : (
+              <div className="max-w-xl">{summaryCard}</div>
+            )}
           </>
         )}
-        {plan && lines.length > 0 && (
+        {plan && step === "revetements" && (
+          <PlanFinishes tenderId={tender.id} rooms={plan.rooms} hasDpgf={lines.length > 0} />
+        )}
+        {plan && step === "dpgf" && (
           <p
             role="status"
             className="flex items-start gap-2.5 rounded-input border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning"
@@ -191,36 +197,33 @@ export default async function TenderPage({
           </p>
         )}
 
-        {lines.length > 0 && (
+        {plan && step === "dpgf" && (
+          <PlanDpgfEditor
+            tenderId={tender.id}
+            lines={lines}
+            vatRateBp={tender.vat_rate_bp}
+            vatOptions={vatOptions}
+            exportLocked={!tender.quantities_checked_at}
+            checkSlot={
+              <QuantitiesCheck tenderId={tender.id} checked={!!tender.quantities_checked_at} />
+            }
+          />
+        )}
+        {lines.length > 0 && !plan && (
           <TenderEditor
             tenderId={tender.id}
             lines={lines}
             vatRateBp={tender.vat_rate_bp}
             vatOptions={vatOptions}
             sourceKind={
-              tender.source_kind === "xlsx" ||
-              tender.source_kind === "pdf" ||
-              tender.source_kind === "plan"
+              tender.source_kind === "xlsx" || tender.source_kind === "pdf"
                 ? tender.source_kind
                 : null
-            }
-            exportLocked={isPlan && !tender.quantities_checked_at}
-            checkSlot={
-              isPlan ? (
-                <QuantitiesCheck tenderId={tender.id} checked={!!tender.quantities_checked_at} />
-              ) : undefined
             }
           />
         )}
 
-        {plan && lines.length > 0 && (
-          <details className="group flex flex-col gap-6 rounded-card border border-border bg-surface p-5 shadow-card">
-            <summary className="cursor-pointer text-lg font-semibold">{t.plan.releveTitle}</summary>
-            <div className="mt-6 flex flex-col gap-6">{planBlock}</div>
-          </details>
-        )}
-
-        {lines.length > 0 && (
+        {lines.length > 0 && (!plan || step === "dpgf") && (
           <Card className="flex flex-col gap-4">
             <CardTitle title={t.toQuote.title} />
             <ol className="ml-5 flex list-decimal flex-col gap-1.5 text-sm text-label">

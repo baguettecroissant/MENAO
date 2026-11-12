@@ -12,7 +12,8 @@ import {
   type WallFinish,
 } from "@menao/core";
 import { useActionState, useMemo, useState } from "react";
-import { Alert, Button, Card, CardTitle, inputClasses } from "@/components/ui";
+import { HelpCircle, Sparkles } from "lucide-react";
+import { Alert, Button, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createPlanDpgf } from "@/lib/artisan/tender-actions";
 import type { TenderRoom } from "@/lib/artisan/tenders";
@@ -81,124 +82,146 @@ export function PlanFinishes({
   const select = `${inputClasses} !min-h-10 !w-auto px-2.5`;
 
   return (
-    <Card className="flex flex-col gap-4">
-      <CardTitle title={t.title} description={t.lead} />
-      <form
-        action={(formData) => {
-          formData.set("tenderId", tenderId);
-          formData.set("finishes", JSON.stringify(payload));
-          formAction(formData);
-        }}
-        className="flex flex-col gap-4"
-      >
+    <form
+      action={(formData) => {
+        formData.set("tenderId", tenderId);
+        formData.set("finishes", JSON.stringify(payload));
+        formAction(formData);
+      }}
+      className="flex flex-col items-start gap-5 lg:flex-row"
+    >
+      <div className="flex w-full min-w-0 flex-1 flex-col gap-4">
         {state.error && <Alert tone="error">{state.error}</Alert>}
-        <div className="overflow-x-auto">
-          <table aria-label={t.label} className="w-full min-w-[44rem] border-collapse text-sm">
-            <thead className="bg-background text-left text-xs font-semibold text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2.5">{fr.pro.tenders.plan.columns.name}</th>
-                <th className="px-2 py-2.5">{t.floor}</th>
-                <th className="px-2 py-2.5">{t.walls}</th>
-                <th className="px-2 py-2.5">{t.tileHeight}</th>
-                <th className="px-2 py-2.5">{t.ceiling}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rooms.map((room) => {
-                const d = drafts[room.id] ?? initial(room);
-                const of = (label: string) => fr.pro.tenders.plan.fieldOf(label, room.name);
-                return (
-                  <tr key={room.id} className="border-t border-border">
-                    <td className="px-3 py-2">
-                      <span className="flex flex-col">
-                        <span className="font-semibold">{room.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {[
-                            room.level,
-                            room.area_cm2 === null
-                              ? null
-                              : `${formatQuantity(Math.round(room.area_cm2 / 10))} m²`,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
+        <section className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+          <div className="flex flex-col gap-1 px-5 py-4">
+            <h2 className="text-lg font-semibold">{t.title}</h2>
+            <p className="text-sm text-muted-foreground">{t.lead}</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table aria-label={t.label} className="w-full min-w-[44rem] border-collapse text-sm">
+              <thead className="bg-background text-left text-xs font-semibold text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2.5">{fr.pro.tenders.plan.columns.name}</th>
+                  <th className="px-2 py-2.5">{t.floor}</th>
+                  <th className="px-2 py-2.5">{t.walls}</th>
+                  <th className="px-2 py-2.5">{t.tileHeight}</th>
+                  <th className="px-2 py-2.5">{t.ceiling}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rooms.map((room) => {
+                  const d = drafts[room.id] ?? initial(room);
+                  const of = (label: string) => fr.pro.tenders.plan.fieldOf(label, room.name);
+                  return (
+                    <tr key={room.id} className="border-t border-border">
+                      <td className="px-3 py-2">
+                        <span className="flex flex-col">
+                          <span className="font-semibold">{room.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {[
+                              room.level,
+                              room.area_cm2 === null
+                                ? null
+                                : `${formatQuantity(Math.round(room.area_cm2 / 10))} m²`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
                         </span>
-                      </span>
-                    </td>
-                    <td className="px-2 py-2">
-                      <select
-                        aria-label={of(t.floor)}
-                        value={d.floor}
-                        onChange={(e) => set(room.id, { floor: e.target.value as FloorFinish })}
-                        className={select}
-                      >
-                        {FLOOR_FINISHES.map((f) => (
-                          <option key={f} value={f}>
-                            {t.floorOptions[f]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-2 py-2">
-                      <select
-                        aria-label={of(t.walls)}
-                        value={d.walls}
-                        onChange={(e) => set(room.id, { walls: e.target.value as WallFinish })}
-                        className={select}
-                      >
-                        {WALL_FINISHES.map((f) => (
-                          <option key={f} value={f}>
-                            {t.wallOptions[f]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-2 py-2">
-                      {d.walls === "faience" && (
-                        <input
-                          value={d.tile}
-                          inputMode="decimal"
-                          aria-label={of(t.tileHeight)}
-                          onChange={(e) => set(room.id, { tile: e.target.value })}
-                          className={`${inputClasses} !min-h-10 !w-20 px-2.5 text-right tabular-nums`}
-                        />
-                      )}
-                    </td>
-                    <td className="px-2 py-2">
-                      <select
-                        aria-label={of(t.ceiling)}
-                        value={d.ceiling}
-                        onChange={(e) => set(room.id, { ceiling: e.target.value as CeilingFinish })}
-                        className={select}
-                      >
-                        {CEILING_FINISHES.map((f) => (
-                          <option key={f} value={f}>
-                            {t.ceilingOptions[f]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <details className="rounded-input bg-background px-4 py-3 text-sm">
-          <summary className="cursor-pointer font-semibold">{t.rulesTitle}</summary>
-          <ul className="mt-2 ml-4 flex list-disc flex-col gap-1 text-label">
-            {t.rules.map((rule) => (
-              <li key={rule}>{rule}</li>
-            ))}
-          </ul>
-        </details>
+                      </td>
+                      <td className="px-2 py-2">
+                        <select
+                          aria-label={of(t.floor)}
+                          value={d.floor}
+                          onChange={(e) => set(room.id, { floor: e.target.value as FloorFinish })}
+                          className={select}
+                        >
+                          {FLOOR_FINISHES.map((f) => (
+                            <option key={f} value={f}>
+                              {t.floorOptions[f]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-2 py-2">
+                        <select
+                          aria-label={of(t.walls)}
+                          value={d.walls}
+                          onChange={(e) => set(room.id, { walls: e.target.value as WallFinish })}
+                          className={select}
+                        >
+                          {WALL_FINISHES.map((f) => (
+                            <option key={f} value={f}>
+                              {t.wallOptions[f]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-2 py-2">
+                        {d.walls === "faience" && (
+                          <input
+                            value={d.tile}
+                            inputMode="decimal"
+                            aria-label={of(t.tileHeight)}
+                            onChange={(e) => set(room.id, { tile: e.target.value })}
+                            className={`${inputClasses} !min-h-10 !w-20 px-2.5 text-right tabular-nums`}
+                          />
+                        )}
+                      </td>
+                      <td className="px-2 py-2">
+                        <select
+                          aria-label={of(t.ceiling)}
+                          value={d.ceiling}
+                          onChange={(e) =>
+                            set(room.id, { ceiling: e.target.value as CeilingFinish })
+                          }
+                          className={select}
+                        >
+                          {CEILING_FINISHES.map((f) => (
+                            <option key={f} value={f}>
+                              {t.ceilingOptions[f]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
         <div className="flex flex-col items-end gap-2">
           {invalid && <p className="text-sm text-danger">{t.invalid}</p>}
           {hasDpgf && <p className="text-sm text-warning">{t.recreateWarning}</p>}
           <Button type="submit" disabled={pending || invalid} block={false}>
+            <Sparkles aria-hidden="true" className="size-4" />
             {pending ? t.creating : hasDpgf ? t.recreate : t.create}
           </Button>
         </div>
-      </form>
-    </Card>
+      </div>
+      <aside className="flex w-full flex-col gap-4 lg:w-[20rem] lg:shrink-0">
+        <section className="flex flex-col gap-1 rounded-card border border-border bg-surface p-5 shadow-card">
+          <h2 className="mb-2 text-lg font-semibold">{t.rulesTitle}</h2>
+          {t.rulesByTrade.map(([trade, rule]) => (
+            <div
+              key={trade}
+              className="flex flex-col gap-0.5 border-t border-border py-2.5 text-sm"
+            >
+              <span className="font-semibold">{trade}</span>
+              <span className="text-muted-foreground">{rule}</span>
+            </div>
+          ))}
+          <p className="mt-1 flex items-start gap-2 text-sm text-muted-foreground">
+            <HelpCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {t.rulesNote}
+          </p>
+        </section>
+        <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
+          <h2 className="text-lg font-semibold">{t.othersTitle}</h2>
+          <p className="text-sm text-muted-foreground">{t.othersText}</p>
+        </section>
+      </aside>
+    </form>
   );
 }
