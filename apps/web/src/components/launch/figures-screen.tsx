@@ -14,7 +14,6 @@ import {
 } from "@menao/core";
 import type { Route } from "next";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { Alert, Card, CardTitle, StatusBadge, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import {
@@ -27,7 +26,8 @@ import {
   TargetStatePill,
   WeeklyCurve,
 } from "./charts";
-import { LaunchSettingsForm } from "./figures-forms";
+import { SettingsLink } from "@/components/admin/settings";
+import { formatDateNumeric } from "@/lib/format";
 import { MemberFigures } from "./member-figures";
 import { MemberAvatar } from "./visuals";
 
@@ -63,18 +63,16 @@ function indicatorTile(
 /**
  * Chiffres du lancement en direct (F-66, lot 2, ADR 0209), dans l'ordre : artisans validés et
  * objectif d'équipe, courbe hebdomadaire, entonnoir, résultats de chaque membre, canaux d'arrivée,
- * couverture métier × zone, qualité, activité, puis les réglages repliés (ouverts au retour d'un
- * enregistrement, `saved`). Les chiffres viennent de la base, les calculs de @menao/core : l'écran
+ * couverture métier × zone, qualité, activité, puis le résumé des réglages (rangés dans les
+ * Réglages, ADR 0284). Les chiffres viennent de la base, les calculs de @menao/core : l'écran
  * affiche. Couverture absente (réponse inattendue) : message d'erreur dans sa section.
  */
 export function LaunchFiguresScreen({
   figures,
   coverage,
-  saved = false,
 }: {
   figures: LaunchFigures;
   coverage: LaunchCoverage | null;
-  saved?: boolean;
 }) {
   const { today, settings, targets, totals, quality: q, activity: a } = figures;
   const monday = mondayOf(today);
@@ -310,27 +308,19 @@ export function LaunchFiguresScreen({
         </FigureTiles>
       </section>
 
-      {/* 9. Réglages, repliés (ouverts au retour d'un enregistrement). */}
-      <details
-        id="reglages"
-        open={saved}
-        className="group scroll-mt-24 rounded-card border border-border bg-surface shadow-card"
-      >
-        <summary className="flex min-h-touch cursor-pointer list-none items-center justify-between gap-3 rounded-card px-5 py-4 outline-none focus-visible:ring-4 focus-visible:ring-primary/20 sm:px-6 [&::-webkit-details-marker]:hidden">
-          <span className="flex flex-col gap-0.5">
-            <span className="text-[1.0625rem] font-medium">{t.settings.title}</span>
-            <span className="text-sm text-muted-foreground">{t.settings.lead}</span>
-          </span>
-          <ChevronDown
-            aria-hidden="true"
-            className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <div className="flex flex-col gap-4 border-t border-border px-5 py-5 sm:px-6">
-          {saved && <Alert tone="success">{t.settings.saved}</Alert>}
-          <LaunchSettingsForm settings={settings} />
-        </div>
-      </details>
+      {/* 9. Réglages, rangés dans les Réglages du back-office (ADR 0284) : résumé et lien. */}
+      <SettingsLink
+        section="lancement"
+        title={t.settings.title}
+        summary={
+          settings.debut_recrutement && settings.fin_recrutement
+            ? fr.admin.settingsPage.summaries.launch(
+                formatDateNumeric(`${settings.debut_recrutement}T12:00:00Z`),
+                formatDateNumeric(`${settings.fin_recrutement}T12:00:00Z`),
+              )
+            : fr.admin.settingsPage.summaries.launchDefault
+        }
+      />
     </>
   );
 }

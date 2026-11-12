@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LeadTable } from "@/components/admin/lead-targets";
-import { DefaultLeadTargetForm } from "@/components/admin/lead-target-forms";
+import { SettingsLink } from "@/components/admin/settings";
 import { FilterChips, SearchForm, listHref } from "@/components/admin/list-controls";
 import { SummaryTile, SummaryTiles } from "@/components/admin/money";
 import { Alert, Card } from "@/components/ui";
@@ -176,11 +176,12 @@ export default async function AdminLeadTargetsPage({
         )}
       </Card>
 
-      <Card className="flex flex-col gap-3" id="objectif-defaut">
-        <h2 className="text-lg font-medium">{t.settings.title}</h2>
-        <p className="max-w-3xl text-sm text-muted-foreground">{t.settings.lead}</p>
-        <DefaultLeadTargetForm target={data.defaultTarget} saved={params.fait === "objectif"} />
-      </Card>
+      {/* Objectif par défaut rangé dans les Réglages (ADR 0284) : résumé et lien. */}
+      <SettingsLink
+        section="demandes"
+        title={t.settings.title}
+        summary={fr.admin.settingsPage.summaries.leads(data.defaultTarget)}
+      />
     </div>
   );
 }

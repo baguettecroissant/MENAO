@@ -6076,6 +6076,7 @@ export type Database = {
         Args: { p_code: string; p_nom: string; p_user_id: string };
         Returns: string;
       };
+      admin_remove_staff: { Args: { p_user_id: string }; Returns: undefined };
       admin_rename_reference: {
         Args: { p_code: string; p_kind: string; p_label: string };
         Returns: undefined;
@@ -6208,6 +6209,23 @@ export type Database = {
       admin_set_reference_active: {
         Args: { p_active: boolean; p_code: string; p_kind: string };
         Returns: undefined;
+      };
+      admin_set_staff_role: {
+        Args: { p_role: Database["public"]["Enums"]["app_role"]; p_user_id: string };
+        Returns: undefined;
+      };
+      admin_staff_members: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          derniere_connexion: string;
+          double_auth: boolean;
+          email: string;
+          invite_le: string;
+          nom: string;
+          prenom: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        }[];
       };
       admin_stalled_signups: {
         Args: Record<PropertyKey, never>;

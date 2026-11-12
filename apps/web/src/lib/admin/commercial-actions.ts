@@ -148,6 +148,7 @@ export async function saveCommercialBonusSettings(
   });
   if (error) return { error: dbError(error), values };
   revalidatePath(PATH);
+  revalidatePath("/admin/reglages");
   return { success: tr.settings.saved };
 }
 

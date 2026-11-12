@@ -23,6 +23,7 @@ import {
   ScrollText,
   Send,
   ShieldCheck,
+  SlidersHorizontal,
   Store,
   Target,
   TrendingUp,
@@ -266,6 +267,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       // Listes de référence, journal d'audit et suivi technique (ADR 0052).
       label: fr.appShell.sections.system,
       items: [
+        // Réglages de la plateforme et équipe MENAO, en onglets (ADR 0284).
+        { href: "/admin/reglages", label: fr.admin.nav.settings, icon: SlidersHorizontal },
         { href: "/admin/referentiels", label: fr.admin.nav.references, icon: ListTree },
         { href: "/admin/journal", label: fr.admin.nav.journal, icon: ScrollText },
         // IA et notifications Stripe et DocuSeal, en onglets.

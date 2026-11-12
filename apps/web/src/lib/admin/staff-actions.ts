@@ -1,7 +1,9 @@
 "use server";
 
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import { requireAdmin } from "./guard";
@@ -48,5 +50,36 @@ export async function inviteStaff(_prev: FormState, formData: FormData): Promise
     return { error: message, values };
   }
   revalidatePath("/admin/personnes");
+  revalidatePath("/admin/reglages/equipe");
   return { success: t.invited(values.email ?? "") };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const TEAM_PATH = "/admin/reglages/equipe";
+
+/**
+ * Changement d'accès d'un membre de l'équipe, admin ou support (F-133, ADR 0284) : la base vérifie
+ * l'admin (aal2), refuse son propre compte, ferme les sessions du membre et journalise.
+ */
+export async function setStaffRole(formData: FormData): Promise<void> {
+  const id = text(formData, "userId") ?? "";
+  const role = text(formData, "role");
+  if (!UUID.test(id) || (role !== "admin" && role !== "support")) {
+    redirect(`${TEAM_PATH}?erreur=1` as Route);
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_set_staff_role", { p_user_id: id, p_role: role });
+  revalidatePath(TEAM_PATH);
+  redirect(`${TEAM_PATH}?${error ? "erreur=1" : "fait=acces"}` as Route);
+}
+
+/** Retrait de l'accès d'un membre qui quitte MENAO (connexion bloquée, sessions fermées). */
+export async function removeStaff(formData: FormData): Promise<void> {
+  const id = text(formData, "userId") ?? "";
+  if (!UUID.test(id)) redirect(`${TEAM_PATH}?erreur=1` as Route);
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_remove_staff", { p_user_id: id });
+  revalidatePath(TEAM_PATH);
+  revalidatePath("/admin/personnes");
+  redirect(`${TEAM_PATH}?${error ? "erreur=1" : "fait=retrait"}` as Route);
 }

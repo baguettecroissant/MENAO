@@ -34,11 +34,17 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   await expect(admin).toHaveURL(/\/admin\/partenaires$/);
   await expect(admin.getByRole("heading", { name: "Apporteurs", level: 1 })).toBeVisible();
 
-  // Réglages du programme : montants par défaut décidés par les fondateurs (règle 15).
-  await admin.getByLabel("Prime par défaut par demande qualifiée (€)").fill("10");
-  await admin.getByLabel("Prime par défaut par abonné payant (€)").fill("40");
-  await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
-  await expect(admin.getByText("Réglages enregistrés.")).toBeVisible();
+  // Réglages du programme : montants par défaut décidés par les fondateurs (règle 15), rangés
+  // dans les Réglages du back-office (ADR 0284) ; l'onglet Partenaires en garde le résumé.
+  await admin.getByRole("link", { name: /Modifier dans Réglages/ }).click();
+  await expect(admin).toHaveURL(/\/admin\/reglages#partenaires$/);
+  const programme = admin.locator("#partenaires");
+  await programme.getByLabel("Prime par défaut par demande qualifiée (€)").fill("10");
+  await programme.getByLabel("Prime par défaut par abonné payant (€)").fill("40");
+  await programme.getByRole("button", { name: "Enregistrer les réglages" }).click();
+  await expect(programme.getByText("Réglages enregistrés.")).toBeVisible();
+  await admin.goto("/admin/partenaires");
+  await expect(admin.getByText(/10\s€ par demande qualifiée · 40\s€ par abonné/)).toBeVisible();
 
   // Création : SIRET obligatoire (professionnels seulement), puis fiche du partenaire.
   await admin.getByLabel("Code du lien").fill("agence-e2e");

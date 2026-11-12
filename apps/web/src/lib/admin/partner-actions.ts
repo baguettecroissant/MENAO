@@ -107,6 +107,7 @@ export async function savePartnerSettings(
   });
   if (error) return { error: error.code === "22023" ? error.message : fr.errors.generic, values };
   revalidatePath(PATH);
+  revalidatePath("/admin/reglages");
   return { success: s.saved };
 }
 

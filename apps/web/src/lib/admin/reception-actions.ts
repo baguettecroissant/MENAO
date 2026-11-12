@@ -35,6 +35,7 @@ async function save(change: (current: Saved) => Saved): Promise<FormState> {
   });
   if (error) return dbError(error);
   revalidatePath("/admin/tickets");
+  revalidatePath("/admin/reglages");
   return { success: t.saved };
 }
 
