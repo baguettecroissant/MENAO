@@ -55,11 +55,14 @@ const toDraft = (c: ComponentRow, i: number): Draft => ({
  * (fournitures, heures, autres frais), puis coût, prix de vente et marge recalculés à la frappe.
  */
 export function WorkEditor({
+  title,
   work,
   components,
   supplies,
   settings,
 }: {
+  /** Titre de la page, avec « Enregistrer » à sa droite (maquette du lot 36). */
+  title: string;
   work: WorkRow | null;
   components: ComponentRow[];
   supplies: SupplyRow[];
@@ -176,6 +179,15 @@ export function WorkEditor({
       }}
       className="grid items-start gap-5 lg:grid-cols-[1fr_20rem]"
     >
+      <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-2">
+        <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{title}</h1>
+        <div className="flex flex-col items-end gap-1">
+          <Button type="submit" block={false} disabled={pending || invalid}>
+            {t.save}
+          </Button>
+          {invalid && designation.trim() && <p className="text-sm text-danger">{t.invalid}</p>}
+        </div>
+      </div>
       <div className="flex min-w-0 flex-col gap-5">
         {state.error && <Alert tone="error">{state.error}</Alert>}
         {state.success && <Alert tone="success">{state.success}</Alert>}
@@ -280,7 +292,7 @@ export function WorkEditor({
           </fieldset>
         </Card>
 
-        <Card className="flex flex-col gap-0 overflow-hidden p-0">
+        <Card className="flex flex-col gap-0 overflow-hidden p-0 sm:p-0">
           <div className="flex items-center justify-between gap-3 px-5 py-4">
             <h2 className="text-lg font-semibold">{t.compoTitle}</h2>
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
@@ -289,93 +301,146 @@ export function WorkEditor({
             </span>
           </div>
           {drafts.length > 0 && (
-            <ul className="flex flex-col">
-              {parsed.map(({ d, quantityMilli, costCents }) => {
-                const amounts =
-                  quantityMilli !== null && quantityMilli > 0
-                    ? componentAmounts(
-                        {
-                          kind: d.kind,
-                          supplyId: d.kind === "fourniture" ? d.supplyId || null : null,
-                          quantityMilli,
-                          costCents,
-                        },
-                        settings,
-                        bySupply,
-                      )
-                    : null;
-                return (
-                  <li
-                    key={d.key}
-                    className="flex flex-wrap items-center gap-2 border-t border-border px-5 py-3"
-                  >
-                    <span className="w-28 shrink-0 text-xs font-semibold text-muted-foreground">
-                      {t.kinds[d.kind]}
-                    </span>
-                    {d.kind === "fourniture" ? (
-                      <select
-                        value={d.supplyId}
-                        aria-label={t.fieldOf(t.element, name(d))}
-                        onChange={(e) => set(d.key, { supplyId: e.target.value })}
-                        className={`${select} min-w-48 flex-1`}
-                      >
-                        <option value="">{supplies.length ? t.chooseSupply : t.noSupplies}</option>
-                        {supplies.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.designation} · {money(s.purchase_price_cents)} /{" "}
-                            {units[s.unit] ?? s.unit}
-                          </option>
-                        ))}
-                      </select>
-                    ) : d.kind === "frais" ? (
-                      <input
-                        value={d.label}
-                        maxLength={200}
-                        placeholder={t.otherLabel}
-                        aria-label={t.fieldOf(t.element, name(d))}
-                        onChange={(e) => set(d.key, { label: e.target.value })}
-                        className={`${select} min-w-48 flex-1`}
-                      />
-                    ) : (
-                      <span className="min-w-48 flex-1 text-sm text-muted-foreground">
-                        {t.hourCost}
-                        {settings.hourCostCents !== null &&
-                          ` · ${money(settings.hourCostCents)} / h`}
-                      </span>
-                    )}
-                    <input
-                      value={d.quantity}
-                      inputMode="decimal"
-                      aria-label={t.fieldOf(t.quantity, name(d))}
-                      aria-invalid={quantityMilli === null || quantityMilli <= 0 || undefined}
-                      onChange={(e) => set(d.key, { quantity: e.target.value })}
-                      className={`${select} !w-20 text-right tabular-nums`}
-                    />
-                    {d.kind === "frais" && (
-                      <input
-                        value={d.cost}
-                        inputMode="decimal"
-                        placeholder={t.unitCost}
-                        aria-label={t.fieldOf(t.unitCost, name(d))}
-                        onChange={(e) => set(d.key, { cost: e.target.value })}
-                        className={`${select} !w-24 text-right tabular-nums`}
-                      />
-                    )}
-                    <span className="w-24 text-right text-sm font-semibold tabular-nums">
-                      {amounts?.costCents == null ? "—" : money(amounts.costCents)}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={t.removeComponent(name(d))}
-                      onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))}
-                      className="rounded-full p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-                    >
-                      <X aria-hidden="true" className="size-4" />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[38rem] text-left text-sm">
+                <caption className="sr-only">{t.compoTitle}</caption>
+                <thead className="border-y border-border bg-background text-[0.8125rem] text-muted-foreground">
+                  <tr>
+                    <th scope="col" className="px-5 py-2.5 font-semibold">
+                      {t.element}
+                    </th>
+                    <th scope="col" className="px-2 py-2.5 text-right font-semibold">
+                      {t.quantity}
+                    </th>
+                    <th scope="col" className="px-2 py-2.5 text-right font-semibold">
+                      {t.unitCost}
+                    </th>
+                    <th scope="col" className="px-2 py-2.5 text-right font-semibold">
+                      {t.costColumn}
+                    </th>
+                    <th scope="col" className="w-10 pr-3">
+                      <span className="sr-only">{t.removeColumn}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map(({ d, quantityMilli, costCents }) => {
+                    const amounts =
+                      quantityMilli !== null && quantityMilli > 0
+                        ? componentAmounts(
+                            {
+                              kind: d.kind,
+                              supplyId: d.kind === "fourniture" ? d.supplyId || null : null,
+                              quantityMilli,
+                              costCents,
+                            },
+                            settings,
+                            bySupply,
+                          )
+                        : null;
+                    const supply =
+                      d.kind === "fourniture"
+                        ? supplies.find((s) => s.id === d.supplyId)
+                        : undefined;
+                    const unitLabel =
+                      d.kind === "heures" ? "h" : supply ? (units[supply.unit] ?? supply.unit) : "";
+                    return (
+                      <tr key={d.key} className="border-t border-border align-middle">
+                        <td className="px-5 py-2.5">
+                          <div className="flex flex-col gap-1">
+                            {d.kind === "fourniture" ? (
+                              <select
+                                value={d.supplyId}
+                                aria-label={t.fieldOf(t.element, name(d))}
+                                onChange={(e) => set(d.key, { supplyId: e.target.value })}
+                                className={`${select} w-full font-semibold`}
+                              >
+                                <option value="">
+                                  {supplies.length ? t.chooseSupply : t.noSupplies}
+                                </option>
+                                {supplies.map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.designation}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : d.kind === "frais" ? (
+                              <input
+                                value={d.label}
+                                maxLength={200}
+                                placeholder={t.otherLabel}
+                                aria-label={t.fieldOf(t.element, name(d))}
+                                onChange={(e) => set(d.key, { label: e.target.value })}
+                                className={`${select} w-full font-semibold`}
+                              />
+                            ) : (
+                              <span className="font-semibold">{t.kinds.heures}</span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {d.kind === "heures"
+                                ? t.hourCost
+                                : [t.kinds[d.kind], supply?.supplier].filter(Boolean).join(" · ")}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <span className="flex items-center justify-end gap-1.5">
+                            <input
+                              value={d.quantity}
+                              inputMode="decimal"
+                              aria-label={t.fieldOf(t.quantity, name(d))}
+                              aria-invalid={
+                                quantityMilli === null || quantityMilli <= 0 || undefined
+                              }
+                              onChange={(e) => set(d.key, { quantity: e.target.value })}
+                              className={`${select} !w-16 text-right tabular-nums`}
+                            />
+                            {unitLabel && (
+                              <span className="w-6 text-muted-foreground">{unitLabel}</span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2.5 text-right text-muted-foreground tabular-nums">
+                          {d.kind === "frais" ? (
+                            <input
+                              value={d.cost}
+                              inputMode="decimal"
+                              placeholder={t.unitCost}
+                              aria-label={t.fieldOf(t.unitCost, name(d))}
+                              onChange={(e) => set(d.key, { cost: e.target.value })}
+                              className={`${select} !w-24 text-right tabular-nums`}
+                            />
+                          ) : d.kind === "heures" ? (
+                            settings.hourCostCents === null ? (
+                              "—"
+                            ) : (
+                              money(settings.hourCostCents)
+                            )
+                          ) : supply ? (
+                            money(supply.purchase_price_cents)
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-2 py-2.5 text-right font-bold tabular-nums">
+                          {amounts?.costCents == null ? "—" : money(amounts.costCents)}
+                        </td>
+                        <td className="pr-3">
+                          <button
+                            type="button"
+                            aria-label={t.removeComponent(name(d))}
+                            onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))}
+                            className="rounded-full p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
+                          >
+                            <X aria-hidden="true" className="size-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
           <div className="flex flex-wrap gap-4 border-t border-border px-5 py-3 text-sm font-semibold text-primary-strong">
             {(
@@ -502,10 +567,6 @@ export function WorkEditor({
             </p>
           ) : null}
         </Card>
-        {invalid && designation.trim() && <p className="text-sm text-danger">{t.invalid}</p>}
-        <Button type="submit" disabled={pending || invalid}>
-          {t.save}
-        </Button>
       </div>
     </form>
   );

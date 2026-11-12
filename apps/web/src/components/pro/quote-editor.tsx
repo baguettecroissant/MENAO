@@ -152,6 +152,17 @@ export function QuoteEditor({
     })),
   );
   const totals = quoteTotals(plain);
+  const showMargin = margin !== null && lines.length > 0;
+  /** « Ajouter leur coût » : ouvre la première ligne dont le coût manque. */
+  const addCost = () => {
+    const first = lines.find(
+      (l) => lineCostCents(l.unitCostCents ?? null, l.quantityMilli) === null,
+    );
+    if (first) {
+      setEditing(first.key);
+      document.getElementById(`ligne-${first.key}`)?.scrollIntoView({ block: "center" });
+    }
+  };
   const rates = allowedVatRates(assujettiTva);
   // Taux proposé : celui de la dernière ligne, sinon le taux normal (ou 0 % en franchise).
   const defaultVat = plain.at(-1)?.vatRateBp ?? rates.at(-1) ?? 0;
@@ -504,74 +515,84 @@ export function QuoteEditor({
             )}
           </div>
         </section>
+        {showMargin && (
+          <div className="lg:hidden">
+            <MarginPanel margin={marginOf} alertBp={margin.alertBp} onAddCost={addCost} />
+          </div>
+        )}
       </div>
 
-      <aside
-        aria-label={t.totalTtc}
-        className="sticky bottom-0 z-20 -mx-4 border-t border-border bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6 lg:top-24 lg:bottom-auto lg:mx-0 lg:flex lg:flex-col lg:gap-4 lg:rounded-card lg:border lg:bg-surface lg:p-6 lg:shadow-card lg:backdrop-blur-none"
-      >
-        <div className="flex items-center gap-4 lg:flex-col lg:items-stretch lg:gap-3">
-          <dl className="flex min-w-0 flex-1 flex-col lg:gap-3">
-            <div className="flex flex-col lg:gap-1">
-              <dt className="text-[0.8125rem] text-muted-foreground lg:text-sm lg:font-semibold lg:text-label">
-                {t.totalTtc}
-              </dt>
-              <dd className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] tabular-nums lg:text-[2.375rem] lg:leading-none lg:tracking-[-0.03em]">
-                {lines.length ? money(totals.totalTtcCents) : t.none}
-              </dd>
-            </div>
-            <div className="hidden flex-col lg:flex">
-              <div className="flex justify-between border-t border-border py-2 text-[0.9375rem]">
-                <dt className="text-muted-foreground">{t.totalHt}</dt>
-                <dd className="font-semibold tabular-nums">
-                  {lines.length ? money(totals.totalHtCents) : t.none}
+      {/* Colonne de droite (maquette du lot 36) : « Votre marge », puis le total et les boutons. */}
+      <div className="contents lg:sticky lg:top-24 lg:flex lg:flex-col lg:gap-4">
+        {showMargin && (
+          <div className="hidden lg:block">
+            <MarginPanel margin={marginOf} alertBp={margin.alertBp} onAddCost={addCost} />
+          </div>
+        )}
+        <aside
+          aria-label={t.totalTtc}
+          className="sticky bottom-0 z-20 -mx-4 border-t border-border bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:flex lg:flex-col lg:gap-4 lg:rounded-card lg:border lg:bg-surface lg:p-6 lg:shadow-card lg:backdrop-blur-none"
+        >
+          <div className="flex items-center gap-4 lg:flex-col lg:items-stretch lg:gap-3">
+            <dl className="flex min-w-0 flex-1 flex-col lg:gap-3">
+              <div className="flex flex-col lg:gap-1">
+                <dt className="text-[0.8125rem] text-muted-foreground lg:text-sm lg:font-semibold lg:text-label">
+                  {t.totalTtc}
+                </dt>
+                <dd className="font-display text-2xl leading-tight font-bold tracking-[-0.02em] tabular-nums lg:text-[2.375rem] lg:leading-none lg:tracking-[-0.03em]">
+                  {lines.length ? money(totals.totalTtcCents) : t.none}
                 </dd>
               </div>
-              {totals.vat.map((v) => (
-                <div
-                  key={v.rateBp}
-                  className="flex justify-between border-t border-border py-2 text-[0.9375rem]"
-                >
-                  <dt className="text-muted-foreground">
-                    {t.vat} {vatLabel(v.rateBp)}
-                  </dt>
-                  <dd className="font-semibold tabular-nums">{money(v.tvaCents)}</dd>
+              <div className="hidden flex-col lg:flex">
+                <div className="flex justify-between border-t border-border py-2 text-[0.9375rem]">
+                  <dt className="text-muted-foreground">{t.totalHt}</dt>
+                  <dd className="font-semibold tabular-nums">
+                    {lines.length ? money(totals.totalHtCents) : t.none}
+                  </dd>
                 </div>
-              ))}
+                {totals.vat.map((v) => (
+                  <div
+                    key={v.rateBp}
+                    className="flex justify-between border-t border-border py-2 text-[0.9375rem]"
+                  >
+                    <dt className="text-muted-foreground">
+                      {t.vat} {vatLabel(v.rateBp)}
+                    </dt>
+                    <dd className="font-semibold tabular-nums">{money(v.tvaCents)}</dd>
+                  </div>
+                ))}
+              </div>
+            </dl>
+            <div className="flex shrink-0 items-center gap-2 lg:flex-col lg:items-stretch">
+              <button
+                type="button"
+                onClick={save}
+                disabled={!dirty || pending || generating}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-pill border border-border-strong bg-surface px-3 text-sm font-semibold text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none disabled:text-subtle-foreground disabled:hover:bg-surface sm:px-4 lg:order-last"
+              >
+                <Save aria-hidden="true" className="size-4" />
+                <span className="sr-only sm:not-sr-only">{pending ? t.saving : t.save}</span>
+              </button>
+              <Button
+                type="button"
+                size="lg"
+                block={false}
+                className="lg:w-full"
+                onClick={generate}
+                disabled={lines.length === 0 || pending || generating}
+              >
+                {generating ? t.generating : t.generate}
+              </Button>
             </div>
-          </dl>
-          <div className="flex shrink-0 items-center gap-2 lg:flex-col lg:items-stretch">
-            <button
-              type="button"
-              onClick={save}
-              disabled={!dirty || pending || generating}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-pill border border-border-strong bg-surface px-3 text-sm font-semibold text-foreground hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none disabled:text-subtle-foreground disabled:hover:bg-surface sm:px-4 lg:order-last"
-            >
-              <Save aria-hidden="true" className="size-4" />
-              <span className="sr-only sm:not-sr-only">{pending ? t.saving : t.save}</span>
-            </button>
-            <Button
-              type="button"
-              size="lg"
-              block={false}
-              className="lg:w-full"
-              onClick={generate}
-              disabled={lines.length === 0 || pending || generating}
-            >
-              {generating ? t.generating : t.generate}
-            </Button>
           </div>
-        </div>
-        {margin !== null && lines.length > 0 && (
-          <MarginPanel margin={marginOf} alertBp={margin.alertBp} />
-        )}
-        {!assujettiTva && (
-          <p className="hidden text-xs text-muted-foreground lg:block">{t.vatExempt}</p>
-        )}
-        <p className="hidden text-[0.8125rem] text-muted-foreground lg:block">
-          {fr.pro.sheet.quick.nextSteps}
-        </p>
-      </aside>
+          {!assujettiTva && (
+            <p className="hidden text-xs text-muted-foreground lg:block">{t.vatExempt}</p>
+          )}
+          <p className="hidden text-[0.8125rem] text-muted-foreground lg:block">
+            {fr.pro.sheet.quick.nextSteps}
+          </p>
+        </aside>
+      </div>
 
       <Drawer
         open={dictating}
@@ -629,23 +650,6 @@ function LineCard({
               {t.toReview}
             </span>
           )}
-          {costCents !== undefined && (
-            <span
-              className={`rounded-chip px-2 py-0.5 text-xs font-bold ${
-                rate === null
-                  ? "bg-border/70 text-label"
-                  : rate < 0
-                    ? "bg-danger-soft text-danger"
-                    : "bg-success-soft text-success"
-              }`}
-            >
-              {rate === null
-                ? t.library.unknownCost
-                : rate < 0
-                  ? t.library.loss
-                  : t.library.lineMargin(formatRateBp(rate))}
-            </span>
-          )}
         </span>
         <p className="text-base font-semibold">{line.designation}</p>
         {line.description && <p className="text-sm text-muted-foreground">{line.description}</p>}
@@ -661,6 +665,24 @@ function LineCard({
           </span>
           <span className="text-xs text-muted-foreground">{assujettiTva ? t.ttc : "HT"}</span>
         </p>
+        {/* Marge de la ligne, pour l'artisan seul (maquette du lot 36 : à droite, sous le prix). */}
+        {costCents !== undefined && (
+          <span
+            className={`rounded-chip px-2 py-0.5 text-xs font-bold tabular-nums ${
+              rate === null
+                ? "bg-border/70 text-label"
+                : rate < 0
+                  ? "bg-danger-soft text-danger"
+                  : "bg-success-soft text-success"
+            }`}
+          >
+            {rate === null
+              ? t.library.unknownCost
+              : rate < 0
+                ? t.library.loss
+                : t.library.lineMargin(formatRateBp(rate))}
+          </span>
+        )}
         <div className="-mr-2 flex">
           <button
             type="button"
@@ -1052,20 +1074,33 @@ function ArticleSearch({
                   className="flex w-full items-center gap-3 rounded-input bg-surface px-3 py-2 text-left text-sm hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
                 >
                   <BookOpen aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
-                  <span className="min-w-0 flex-1 truncate">
-                    {work.designation}
-                    {work.detailed && (
-                      <span className="text-xs text-muted-foreground"> · {t.library.detailed}</span>
-                    )}
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {money(work.priceCents)} HT
-                  </span>
-                  {work.markupBp !== null && (
-                    <span className="shrink-0 rounded-chip bg-success-soft px-1.5 py-0.5 text-xs font-bold text-success">
-                      {formatRateBp(work.markupBp)}
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-semibold">{work.designation}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {[
+                        t.unitsShort[work.unit as keyof typeof t.unitsShort] ?? work.unit,
+                        work.components > 0
+                          ? t.library.elements(work.components)
+                          : t.library.fromQuotes,
+                        work.detailed ? t.library.detailed : null,
+                        t.library.vatShort(vatLabel(work.vatRateBp)),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
-                  )}
+                  </span>
+                  <span className="shrink-0 font-semibold tabular-nums">
+                    {money(work.priceCents)}
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-chip px-1.5 py-0.5 text-xs font-bold ${
+                      work.markupBp === null
+                        ? "bg-border/70 text-label"
+                        : "bg-success-soft text-success"
+                    }`}
+                  >
+                    {work.markupBp === null ? t.library.costToAdd : formatRateBp(work.markupBp)}
+                  </span>
                 </button>
               </li>
             ))}
@@ -1102,24 +1137,41 @@ function ArticleSearch({
   );
 }
 
-/** « Votre marge » (ADR 0294) : pour l'artisan seul, sur les lignes dont le coût est connu. */
+/** Haut de la jauge de marge : 40 %, ou plus si la marge ou le seuil dépassent. */
+const GAUGE_MAX_BP = 4000;
+
+/**
+ * « Votre marge » (ADR 0294, maquette du lot 36) : pour l'artisan seul, sur les lignes dont le
+ * coût est connu ; jauge de 0 à 40 % avec le seuil de l'artisan, lignes sans coût à compléter.
+ */
 function MarginPanel({
   margin,
   alertBp,
+  onAddCost,
 }: {
   margin: ReturnType<typeof quoteMargin>;
   alertBp: number | null;
+  onAddCost: () => void;
 }) {
   const below = belowMarginAlert(margin.markupBp, alertBp);
+  const top = Math.max(GAUGE_MAX_BP, alertBp ?? 0, margin.markupBp ?? 0);
+  const at = (bp: number) => `${Math.min(100, Math.max(0, (bp / top) * 100))}%`;
+  const missing = margin.lines - margin.counted;
+  const tone =
+    margin.markupBp !== null && margin.markupBp < 0
+      ? { text: "text-danger", bar: "bg-danger" }
+      : below
+        ? { text: "text-warning", bar: "bg-warning" }
+        : { text: "text-success", bar: "bg-success" };
   return (
     <section
       aria-label={t.library.marginTitle}
-      className="hidden flex-col gap-2 rounded-input border border-border p-3 lg:flex"
+      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card"
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{t.library.marginTitle}</h3>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-          <EyeOff aria-hidden="true" className="size-3.5" />
+        <h2 className="text-lg font-semibold">{t.library.marginTitle}</h2>
+        <span className="inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-muted-foreground">
+          <EyeOff aria-hidden="true" className="size-4" />
           {t.library.private}
         </span>
       </div>
@@ -1127,24 +1179,61 @@ function MarginPanel({
         <p className="text-sm text-muted-foreground">{t.library.none}</p>
       ) : (
         <>
-          <p className="flex items-baseline gap-2">
-            <span className="font-display text-xl font-bold tabular-nums">
+          <p className="flex items-baseline gap-2.5">
+            <span className="font-display text-[2rem] leading-none font-bold tracking-[-0.02em] tabular-nums">
               {money(margin.marginCents)}
             </span>
-            <span
-              className={`text-sm font-bold ${margin.markupBp < 0 || below ? "text-danger" : "text-success"}`}
-            >
+            <span className={`text-base font-bold ${tone.text}`}>
               {formatRateBp(margin.markupBp)}
             </span>
           </p>
-          <p className="text-xs text-muted-foreground">
+          <div className="flex flex-col gap-1.5">
+            <div
+              role="meter"
+              aria-label={t.library.gaugeLabel}
+              aria-valuemin={0}
+              aria-valuemax={top / 100}
+              aria-valuenow={Math.max(0, margin.markupBp) / 100}
+              className="relative h-2.5 rounded-full bg-border/70"
+            >
+              <span
+                className={`absolute inset-y-0 left-0 rounded-full ${tone.bar}`}
+                style={{ width: at(Math.max(0, margin.markupBp)) }}
+              />
+              {alertBp !== null && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -bottom-1 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
+                  style={{ left: at(alertBp) }}
+                />
+              )}
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+              <span>0 %</span>
+              {alertBp !== null && <span>{t.library.gaugeThreshold(formatRateBp(alertBp))}</span>}
+              <span>{formatRateBp(top)}</span>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
             {t.library.counted(margin.counted, margin.lines)}
-            {alertBp !== null && ` ${t.library.threshold(formatRateBp(alertBp))}.`}
+            {missing > 0 && (
+              <>
+                {" "}
+                {t.library.withoutCost(missing)}{" "}
+                <button
+                  type="button"
+                  onClick={onAddCost}
+                  className="font-semibold text-primary-strong hover:underline"
+                >
+                  {t.library.addCost}
+                </button>
+              </>
+            )}
           </p>
           {below && alertBp !== null && (
             <p
               role="status"
-              className="rounded-input bg-warning-soft px-3 py-2 text-xs text-warning"
+              className="rounded-input bg-warning-soft px-3 py-2 text-[0.8125rem] text-warning"
             >
               {t.library.below(formatRateBp(margin.markupBp), formatRateBp(alertBp))}
             </p>
