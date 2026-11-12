@@ -1,0 +1,226 @@
+import { describe, expect, expectTypeOf, it } from "vitest";
+import type { QuoteUnit } from "../src/quote";
+import {
+  type DpgfCell,
+  type DpgfUnit,
+  dpgfUnit,
+  findDpgfHeader,
+  parseDpgfGrid,
+  parseQuantityMilli,
+  suggestTenderPrice,
+} from "../src/dpgf";
+import { tenderGaps, tenderTotals } from "../src/dpgf-totals";
+
+// DPGF fictif, tel qu'un architecte le remplit : titre, lots, postes, sous-totaux, totaux.
+const GRID: DpgfCell[][] = [
+  ["Atelier Morel Architecture", null, null, null, null, null],
+  ["DPGF — Maison individuelle, Mougins", null, null, null, null, null],
+  [null, null, null, null, null, null],
+  ["N°", "Désignation des ouvrages", "U.", "Qté", "P.U. HT", "Montant HT"],
+  ["LOT 05", "CARRELAGE, FAÏENCE", null, null, null, null],
+  ["5.1", "Ragréage du sol, RDC", "m²", 86, null, null],
+  ["5.2", "Carrelage sol grès cérame 60 x 60, RDC", "m2", "62,0", null, null],
+  ["5.3", "Plinthes assorties", "ml", 58, null, null],
+  ["5.6", "Seuils et barres de transition", "U", 4, null, null],
+  [null, "Sous-total lot 05", null, null, null, null],
+  ["LOT 06", "PEINTURE", null, null, null, null],
+  ["6.1", "Peinture des plafonds, 2 couches", "m²", null, null, null],
+  ["6.2", "Installation de chantier", "Ens", 1, null, null],
+  [null, null, null, null, null, null],
+  [null, "TOTAL HT", null, null, null, null],
+  [null, "TVA 20 %", null, null, null, null],
+  [null, "TOTAL TTC", null, null, null, null],
+];
+
+describe("unités et quantités du DPGF", () => {
+  it("garde les mêmes unités que les devis", () => {
+    expectTypeOf<DpgfUnit>().toEqualTypeOf<QuoteUnit>();
+  });
+
+  it("reconnaît les unités usuelles des architectes", () => {
+    expect(dpgfUnit("m²")).toBe("m2");
+    expect(dpgfUnit("M2")).toBe("m2");
+    expect(dpgfUnit("m.l.")).toBe("ml");
+    expect(dpgfUnit("ML")).toBe("ml");
+    expect(dpgfUnit("U")).toBe("u");
+    expect(dpgfUnit("unité")).toBe("u");
+    expect(dpgfUnit("Ens")).toBe("forfait");
+    expect(dpgfUnit("Fft")).toBe("forfait");
+    expect(dpgfUnit("m³")).toBe("m3");
+    expect(dpgfUnit("j")).toBe("jour");
+    expect(dpgfUnit("palette")).toBeNull();
+    expect(dpgfUnit(null)).toBeNull();
+  });
+
+  it("lit les quantités en nombre ou en texte à la française", () => {
+    expect(parseQuantityMilli(62)).toBe(62_000);
+    expect(parseQuantityMilli("62,5")).toBe(62_500);
+    expect(parseQuantityMilli("1 250,25")).toBe(1_250_250);
+    expect(parseQuantityMilli("12.75")).toBe(12_750);
+    expect(parseQuantityMilli("")).toBeNull();
+    expect(parseQuantityMilli("pm")).toBeNull();
+    expect(parseQuantityMilli(-3)).toBeNull();
+  });
+});
+
+describe("lecture du DPGF", () => {
+  it("trouve la ligne d'en-tête et ses colonnes", () => {
+    expect(findDpgfHeader(GRID)).toEqual({
+      row: 3,
+      columns: { code: 0, designation: 1, unit: 2, quantity: 3, unitPrice: 4, total: 5 },
+    });
+  });
+
+  it("refuse un tableau sans colonne désignation", () => {
+    expect(
+      findDpgfHeader([
+        ["Nom", "Prénom"],
+        ["A", "B"],
+      ]),
+    ).toBeNull();
+    expect(parseDpgfGrid([["Nom", "Prénom"]])).toBeNull();
+  });
+
+  it("range les lignes en titres et postes, par lot, sans les totaux", () => {
+    const parsed = parseDpgfGrid(GRID);
+    expect(parsed).not.toBeNull();
+    const rows = parsed?.rows ?? [];
+    expect(rows.map((r) => [r.kind, r.code, r.lot])).toEqual([
+      ["titre", "LOT 05", "LOT 05 CARRELAGE, FAÏENCE"],
+      ["poste", "5.1", "LOT 05 CARRELAGE, FAÏENCE"],
+      ["poste", "5.2", "LOT 05 CARRELAGE, FAÏENCE"],
+      ["poste", "5.3", "LOT 05 CARRELAGE, FAÏENCE"],
+      ["poste", "5.6", "LOT 05 CARRELAGE, FAÏENCE"],
+      ["titre", "LOT 06", "LOT 06 PEINTURE"],
+      ["poste", "6.1", "LOT 06 PEINTURE"],
+      ["poste", "6.2", "LOT 06 PEINTURE"],
+    ]);
+    expect(rows[2]).toMatchObject({
+      sheetRow: 7,
+      designation: "Carrelage sol grès cérame 60 x 60, RDC",
+      unitLabel: "m2",
+      unit: "m2",
+      quantityMilli: 62_000,
+    });
+    // Quantité laissée à l'entreprise : poste sans quantité.
+    expect(rows[6]).toMatchObject({ kind: "poste", quantityMilli: null, unit: "m2" });
+    expect(parsed?.columns.unitPrice).toBe(4);
+  });
+
+  it("signale l'absence de colonne de prix", () => {
+    const grid: DpgfCell[][] = [
+      ["Désignation", "Unité", "Quantité"],
+      ["Carrelage", "m2", 10],
+    ];
+    const parsed = parseDpgfGrid(grid);
+    expect(parsed?.warnings).toContain("sans_colonne_prix");
+    expect(parsed?.rows).toHaveLength(1);
+  });
+});
+
+describe("prix repris des anciens devis", () => {
+  const history = [
+    {
+      designation: "Pose carrelage grès cérame 60x60",
+      unit: "m2" as const,
+      unitPriceHtCents: 7400,
+      usedOn: "2026-09-12",
+    },
+    {
+      designation: "Plinthes carrelage",
+      unit: "ml" as const,
+      unitPriceHtCents: 1450,
+      usedOn: "2026-08-01",
+    },
+    {
+      designation: "Plinthes bois",
+      unit: "ml" as const,
+      unitPriceHtCents: 900,
+      usedOn: "2026-10-01",
+    },
+    {
+      designation: "Ragréage autolissant",
+      unit: "m2" as const,
+      unitPriceHtCents: 1800,
+      usedOn: "2026-07-01",
+    },
+  ];
+
+  it("propose le prix d'une ligne proche, de même unité", () => {
+    expect(
+      suggestTenderPrice(
+        { designation: "Carrelage sol grès cérame 60 x 60, RDC", unit: "m2" },
+        history,
+      ),
+    ).toMatchObject({ unitPriceHtCents: 7400, reference: "Pose carrelage grès cérame 60x60" });
+    expect(
+      suggestTenderPrice({ designation: "Ragréage du sol, RDC", unit: "m2" }, history),
+    ).toMatchObject({ unitPriceHtCents: 1800 });
+  });
+
+  it("n'utilise pas une ligne d'une autre unité, ni une ressemblance trop faible", () => {
+    expect(suggestTenderPrice({ designation: "Ragréage du sol", unit: "ml" }, history)).toBeNull();
+    expect(
+      suggestTenderPrice({ designation: "Peinture des plafonds", unit: "m2" }, history),
+    ).toBeNull();
+  });
+
+  it("à ressemblance égale, prend le prix le plus récent", () => {
+    expect(suggestTenderPrice({ designation: "Plinthes", unit: "ml" }, history)).toMatchObject({
+      unitPriceHtCents: 900,
+    });
+  });
+});
+
+describe("totaux et écarts", () => {
+  const lines = [
+    {
+      kind: "titre" as const,
+      quantityMilli: null,
+      architectQuantityMilli: null,
+      unitPriceHtCents: null,
+    },
+    {
+      kind: "poste" as const,
+      quantityMilli: 77_400,
+      architectQuantityMilli: 62_000,
+      unitPriceHtCents: 7400,
+    },
+    {
+      kind: "poste" as const,
+      quantityMilli: 58_000,
+      architectQuantityMilli: 58_000,
+      unitPriceHtCents: 1450,
+    },
+    {
+      kind: "poste" as const,
+      quantityMilli: 4_000,
+      architectQuantityMilli: 4_000,
+      unitPriceHtCents: null,
+    },
+    {
+      kind: "poste" as const,
+      quantityMilli: null,
+      architectQuantityMilli: null,
+      unitPriceHtCents: 2000,
+    },
+  ];
+
+  it("additionne les postes chiffrés et compte ceux qui restent à chiffrer", () => {
+    expect(tenderTotals(lines, 2000)).toEqual({
+      totalHtCents: 572_760 + 84_100,
+      totalTvaCents: 131_372,
+      totalTtcCents: 656_860 + 131_372,
+      posts: 4,
+      priced: 2,
+      toPrice: 2,
+    });
+  });
+
+  it("liste les quantités modifiées et le montant des travaux absents du DPGF", () => {
+    expect(tenderGaps(lines)).toEqual({
+      changed: 1,
+      underestimatedHtCents: 113_960,
+    });
+  });
+});

@@ -32,7 +32,10 @@ describe("agents IA des formules (ADR 0231)", () => {
       reminders: "sms",
       lines: 1,
       topUps: true,
+      // Appels d'offres : formule Entreprise seulement (ADR 0287).
+      tenders: false,
     });
+    expect(parseAiAgents({ agents: { appels_offres: true } }).agents.tenders).toBe(true);
     expect(state.calls).toEqual([
       { agent: "secretaire", seconds: 125, at: "2026-11-06T10:00:00+00:00" },
     ]);

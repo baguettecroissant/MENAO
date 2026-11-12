@@ -24,6 +24,8 @@ export type AiAgentsRights = {
   reminders: AiReminderMode;
   lines: number;
   topUps: boolean;
+  /** Appels d'offres et DPGF (ADR 0287) : formule Entreprise. */
+  tenders: boolean;
 };
 
 export type AiAgentsCall = { agent: string; seconds: number; at: string };
@@ -69,6 +71,7 @@ export function parseAiAgents(raw: unknown): AiAgentsState {
       reminders,
       lines: int(a.lignes),
       topUps: bool(a.recharges),
+      tenders: bool(a.appels_offres),
     },
     month: typeof r.mois === "string" ? r.mois : null,
     includedSeconds: int(r.secondes_incluses),

@@ -11,3 +11,4 @@ export * from "./quote-model.ts";
 export * from "./reception-data.ts";
 export * from "./reception-model.ts";
 export * from "./registry-model.ts";
+export * from "./tender-data.ts";

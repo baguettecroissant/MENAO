@@ -1,9 +1,10 @@
-// Edge Function generate-pdf (F-20, F-35, F-25) : PDF des devis, des factures et des PV de
-// réception, à partir des fonctions SQL quote_document, invoice_document et reception_document
-// appelées avec le jeton de l'utilisateur (elles seules décident de l'accès). Devis : aperçu du
-// brouillon non conservé, devis envoyé conservé tel qu'envoyé (F-21), devis signé chez le
-// prestataire (F-13). Facture : produite une fois, conservée telle qu'émise. PV : signé chez le
-// prestataire, sinon aperçu. ADR 0020, 0021, 0022, 0024, 0027.
+// Edge Function generate-pdf (F-20, F-35, F-25, F-136) : PDF des devis, des factures, des PV de
+// réception et des DPGF chiffrés, à partir des fonctions SQL quote_document, invoice_document,
+// reception_document et tender_document appelées avec le jeton de l'utilisateur (elles seules
+// décident de l'accès). Devis : aperçu du brouillon non conservé, devis envoyé conservé tel
+// qu'envoyé (F-21), devis signé chez le prestataire (F-13). Facture : produite une fois, conservée
+// telle qu'émise. PV : signé chez le prestataire, sinon aperçu. DPGF : produit à la demande.
+// ADR 0020, 0021, 0022, 0024, 0027, 0287.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   invoicePdfData,
@@ -22,6 +23,8 @@ import {
   type ReceptionDocument,
 } from "../../../packages/documents/src/reception-data.ts";
 import { renderReceptionPdf } from "../../../packages/documents/src/reception-pdf.ts";
+import { tenderPdfData, type TenderDocument } from "../../../packages/documents/src/tender-data.ts";
+import { renderTenderPdf } from "../../../packages/documents/src/tender-pdf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { invoicePdfBytes } from "../_shared/invoice-pdf.ts";
@@ -116,6 +119,20 @@ async function receptionPdf(supabase: SupabaseClient, receptionId: string): Prom
   );
 }
 
+/** DPGF chiffré d'un appel d'offres (F-136, ADR 0287) : produit à la demande, jamais conservé. */
+async function tenderPdf(supabase: SupabaseClient, tenderId: string): Promise<Response> {
+  const { data, error } = await supabase.rpc("tender_document", { p_tender_id: tenderId });
+  if (error) {
+    console.error("generate-pdf : tender_document en échec", error.code);
+    return json({ status: "error" }, 500);
+  }
+  if (!data) return json({ status: "not_found" }, 404);
+  const doc = data as TenderDocument;
+  const document = tenderPdfData(doc);
+  const logo = await documentLogo(adminClient(), doc.issuer.logo_path);
+  return pdfResponse(new Uint8Array(await renderTenderPdf(document, { logo })), document.filename);
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
   const authorization = req.headers.get("Authorization") ?? "";
@@ -125,11 +142,13 @@ Deno.serve(async (req) => {
     quoteId?: unknown;
     invoiceId?: unknown;
     receptionId?: unknown;
+    tenderId?: unknown;
   } | null;
   const quoteId = typeof body?.quoteId === "string" ? body.quoteId : "";
   const invoiceId = typeof body?.invoiceId === "string" ? body.invoiceId : "";
   const receptionId = typeof body?.receptionId === "string" ? body.receptionId : "";
-  if (![quoteId, invoiceId, receptionId].some((id) => UUID.test(id))) {
+  const tenderId = typeof body?.tenderId === "string" ? body.tenderId : "";
+  if (![quoteId, invoiceId, receptionId, tenderId].some((id) => UUID.test(id))) {
     return json({ status: "invalid" }, 400);
   }
 
@@ -138,6 +157,7 @@ Deno.serve(async (req) => {
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  if (UUID.test(tenderId)) return tenderPdf(supabase, tenderId);
   if (UUID.test(receptionId)) return receptionPdf(supabase, receptionId);
   return UUID.test(invoiceId) ? invoicePdf(supabase, invoiceId) : quotePdf(supabase, quoteId);
 });
