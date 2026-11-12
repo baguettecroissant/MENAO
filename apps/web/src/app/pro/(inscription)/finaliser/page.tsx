@@ -8,6 +8,7 @@ import {
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { ArtisanSignupFlow } from "@/components/pro/signup/signup-flow";
+import { baseTradesLimit } from "@/lib/artisan/plan-limits";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth/actions";
@@ -46,15 +47,18 @@ export default async function ArtisanFinalizePage() {
     );
   }
 
-  const [{ data: profile }, { data: trades }] = await Promise.all([
+  const [{ data: profile }, { data: trades }, { data: base }] = await Promise.all([
     supabase.from("profiles").select("first_name, last_name").eq("user_id", user.id).maybeSingle(),
     supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+    // Limite de métiers de la formule de Base (ADR 0290).
+    supabase.from("plans").select("limites").eq("code", "base").maybeSingle(),
   ]);
 
   return (
     <ArtisanSignupFlow
       trades={trades ?? []}
       providers={[]}
+      maxTrades={baseTradesLimit(base?.limites)}
       oauth={{
         providerLabel: user.app_metadata.provider === "apple" ? "Apple" : "Google",
         email: user.email ?? null,

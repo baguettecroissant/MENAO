@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import { fr } from "@/i18n/fr";
 import { artisanActivity, requireTeamPermission, spaceExamples } from "@/lib/artisan/space";
 import { EXAMPLES_BASE } from "@/lib/artisan/examples";
+import { planUsage } from "@/lib/artisan/plan-limits";
 import { EmptyState } from "@/components/empty-state";
 import { SpaceExamplesNotice } from "@/components/pro/examples";
+import { PlanLimitBanner } from "@/components/pro/plan-limit-banner";
 import { RequestsTabs } from "@/components/pro/requests-tabs";
 import { RequestsView } from "@/components/pro/requests-view";
 
@@ -18,10 +20,12 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  */
 export default async function ArtisanRequestsPage() {
   const { supabase, teamPosition } = await requireTeamPermission("requests");
-  const [{ inbox: rows }, examples, { data: response }] = await Promise.all([
+  const [{ inbox: rows }, examples, { data: response }, usage] = await Promise.all([
     artisanActivity(),
     spaceExamples(),
     supabase.rpc("my_response_stats"),
+    // Demandes du mois face à la limite de la formule (ADR 0290).
+    planUsage(supabase),
   ]);
   const now = new Date();
   const paths = rows.map((r) => r.photo_path).filter((p): p is string => Boolean(p));
@@ -42,7 +46,13 @@ export default async function ArtisanRequestsPage() {
       responseMinutes={examples ? null : (response?.[0]?.minutes ?? null)}
       base={examples ? EXAMPLES_BASE : undefined}
       example={examples}
-      notice={examples ? <SpaceExamplesNotice /> : undefined}
+      notice={
+        examples ? (
+          <SpaceExamplesNotice />
+        ) : teamPosition === "patron" ? (
+          <PlanLimitBanner usage={usage} />
+        ) : undefined
+      }
       // Appels d'offres (ADR 0287) : pour qui gère l'argent (patron, chef d'équipe).
       tabs={teamCan(teamPosition, "money") ? <RequestsTabs current="demandes" /> : undefined}
       empty={

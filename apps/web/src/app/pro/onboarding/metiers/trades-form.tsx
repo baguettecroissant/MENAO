@@ -1,6 +1,7 @@
 "use client";
 
 import { BUDGET_MINIMUM_OPTIONS, DIPLOMES_METIER } from "@menao/core";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Alert, Button, CheckboxField, Field, SelectField } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -20,10 +21,15 @@ export function TradesForm(props: {
   diploma: string | null;
   /** Budget minimum des demandes (ADR 0164). */
   budgetMinimum: string | null;
+  /** Limite de métiers de la formule (ADR 0290) ; null : illimité. */
+  maxTrades: number | null;
 }) {
   const [state, action, pending] = useActionState(saveTrades, initialFormState);
   const [selected, setSelected] = useState(new Set(props.selectedTrades));
   const errors = state.fieldErrors ?? {};
+  // Au-delà de la limite, on ne peut que retirer ou recocher un métier déjà enregistré (ADR 0290).
+  const original = new Set(props.selectedTrades);
+  const full = props.maxTrades !== null && selected.size >= props.maxTrades;
 
   function toggle(code: string, checked: boolean) {
     setSelected((prev) => {
@@ -43,6 +49,17 @@ export function TradesForm(props: {
       >
         <legend className="text-lg font-medium">{t.legend}</legend>
         <p className="text-sm text-muted-foreground">{t.hint}</p>
+        {props.maxTrades !== null && (
+          <p className="text-sm text-label" role="note">
+            {t.limit(props.maxTrades)}{" "}
+            <Link
+              href="/pro/onboarding/formule"
+              className="font-semibold text-primary-strong underline-offset-2 hover:underline"
+            >
+              {t.limitLink}
+            </Link>
+          </p>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           {props.trades.map((trade) => (
             <div key={trade.code} className="rounded-input border border-border p-3">
@@ -51,6 +68,7 @@ export function TradesForm(props: {
                 id={`trade-${trade.code}`}
                 value={trade.code}
                 checked={selected.has(trade.code)}
+                disabled={full && !selected.has(trade.code) && !original.has(trade.code)}
                 onChange={(e) => toggle(trade.code, e.target.checked)}
               >
                 <span className="font-medium">{trade.label}</span>

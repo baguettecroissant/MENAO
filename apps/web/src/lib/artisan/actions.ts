@@ -162,7 +162,8 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
     p_work_type_codes: parsed.data.workTypeCodes.filter((c) => allowedCodes.has(c)),
     p_experience_years: parsed.data.experienceYears,
   });
-  if (error) return { error: fr.errors.generic };
+  // Limite de métiers de la formule (ADR 0290) : message de la base.
+  if (error) return { error: error.hint === "metiers_limite" ? error.message : fr.errors.generic };
   const { error: diplomaError } = await supabase.rpc("set_artisan_diploma", {
     p_diplome: diploma.data ?? "",
   });

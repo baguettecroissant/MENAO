@@ -19,8 +19,10 @@ import { parseGrade, parseWelcomeGift } from "@menao/validation";
 import type { Metadata } from "next";
 import { DashboardView, WorkerDashboardView } from "@/components/pro/dashboard-view";
 import { ExamplesCard } from "@/components/pro/examples";
+import { PlanLimitBanner } from "@/components/pro/plan-limit-banner";
 import { fr } from "@/i18n/fr";
 import { artisanActivity, getProShell, requireProSpace, spaceExamples } from "@/lib/artisan/space";
+import { planUsage } from "@/lib/artisan/plan-limits";
 import { formatMonthName } from "@/lib/format";
 
 export const metadata: Metadata = { title: `${fr.pro.dashboard.title} — MENAO` };
@@ -94,6 +96,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
     { data: giftData },
     examples,
     { data: quotes },
+    usage,
   ] = await Promise.all([
     artisanActivity(),
     // Paiements (RLS : ceux des chantiers de l'artisan) : encaissé du mois, chiffre d'affaires.
@@ -110,6 +113,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
     spaceExamples(),
     // Devis (ADR 0185) : en attente de réponse, taux de signature, montant des devis signés.
     supabase.rpc("artisan_quotes"),
+    // Demandes du mois face à la limite de la formule (ADR 0290).
+    planUsage(supabase),
   ]);
   const grade = parseGrade(gradeData);
   const gradeLevels =
@@ -210,7 +215,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
         now,
       ).slice(0, 4)}
       todo={todo}
-      banner={examples ? <ExamplesCard /> : null}
+      banner={examples ? <ExamplesCard /> : patron ? <PlanLimitBanner usage={usage} /> : null}
       activity={{
         data: dashboardActivity(activityInput, year, now),
         years,
