@@ -39,6 +39,7 @@ import {
   settleVoiceQuoteDrafts,
   type PreviousLine,
 } from "@/lib/artisan/quote-actions";
+import { tenderLinesForQuote } from "@/lib/artisan/tender-actions";
 import { QuoteConversation } from "./quote-conversation";
 import { QuoteDictation } from "./quote-dictation";
 
@@ -75,6 +76,7 @@ export function QuoteEditor({
   savedDictation,
   conversation = false,
   voiceDraft = null,
+  tenders = [],
 }: {
   chantierId: string;
   initialLines: QuoteLineInput[];
@@ -87,6 +89,8 @@ export function QuoteEditor({
   conversation?: boolean;
   /** Lignes d'un appel précédent avec Manon, pas encore reprises ni écartées. */
   voiceDraft?: QuoteLineInput[] | null;
+  /** Appels d'offres chiffrés de l'entreprise, à reprendre dans le devis (ADR 0289). */
+  tenders?: readonly { id: string; name: string }[];
 }) {
   const counter = useRef(initialLines.length);
   const [lines, setLines] = useState<Line[]>(() =>
@@ -108,6 +112,7 @@ export function QuoteEditor({
   const camille = useRef<Set<string>>(new Set());
   const voiceUsed = useRef(false);
   const [pendingDraft, setPendingDraft] = useState(voiceDraft?.length ? voiceDraft : null);
+  const [tenderId, setTenderId] = useState(tenders[0]?.id ?? "");
 
   const plain: QuoteLineInput[] = lines.map(withoutKey);
   const dirty = JSON.stringify(plain) !== snapshot;
@@ -172,6 +177,24 @@ export function QuoteEditor({
     setDictating(false);
     setNotice(t.dictation.generated(added.length));
     if (added[0]) setReveal({ key: added[0].key });
+  }
+
+  /** Postes chiffrés d'un DPGF (ADR 0289), ajoutés en lignes à relire. */
+  function addTender() {
+    if (!tenderId) return;
+    startGenerating(async () => {
+      const result = await tenderLinesForQuote(tenderId, lines.length);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      if (result.lines.length === 0) {
+        setNotice(t.fromTender.none);
+        return;
+      }
+      addGenerated(result.lines.map((line) => ({ ...line, description: line.description ?? "" })));
+      setNotice(t.fromTender.added(result.lines.length, result.skipped, result.truncated));
+    });
   }
 
   /** Lignes proposées par Manon : la liste de l'appel en cours remplace la précédente. */
@@ -293,6 +316,41 @@ export function QuoteEditor({
             </span>
           </button>
         </div>
+        {tenders.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-card border border-border bg-surface px-4 py-3 shadow-card">
+            <span className="flex min-w-0 flex-1 flex-col">
+              <label htmlFor="quote-tender" className="font-semibold">
+                {t.fromTender.label}
+              </label>
+              <span className="text-[0.8125rem] text-muted-foreground">{t.fromTender.hint}</span>
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select
+                id="quote-tender"
+                aria-label={t.fromTender.select}
+                value={tenderId}
+                onChange={(e) => setTenderId(e.target.value)}
+                className="min-w-0 flex-1"
+              >
+                {tenders.map((tender) => (
+                  <option key={tender.id} value={tender.id}>
+                    {tender.name}
+                  </option>
+                ))}
+              </Select>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                block={false}
+                disabled={generating || !tenderId}
+                onClick={addTender}
+              >
+                {t.fromTender.add}
+              </Button>
+            </div>
+          </div>
+        )}
         {error && <Alert tone="error">{error}</Alert>}
         {notice && <Alert tone="success">{notice}</Alert>}
         {pendingDraft && (

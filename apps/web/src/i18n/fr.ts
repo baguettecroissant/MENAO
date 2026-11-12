@@ -4769,6 +4769,24 @@ export const fr = {
         unavailable: "La génération des lignes a échoué. Réessayez dans un instant.",
       },
       // Devis en conversation avec Manon (F-85, ADR 0234).
+      // Reprise d'un DPGF chiffré (F-138, ADR 0289).
+      fromTender: {
+        label: "Reprendre un DPGF",
+        hint: "Les postes chiffrés d'un appel d'offres arrivent en lignes de devis, à relire.",
+        select: "Appel d'offres",
+        add: "Reprendre les postes",
+        added: (count: number, skipped: number, truncated: number) =>
+          [
+            `${count} poste${count > 1 ? "s" : ""} repris du DPGF : relisez-les puis enregistrez le devis.`,
+            skipped > 0
+              ? `${skipped} poste${skipped > 1 ? "s" : ""} sans quantité ou sans prix laissé${skipped > 1 ? "s" : ""} de côté.`
+              : "",
+            truncated > 0 ? `${truncated} au-delà de la limite de 200 lignes.` : "",
+          ]
+            .filter(Boolean)
+            .join(" "),
+        none: "Aucun poste chiffré dans ce DPGF.",
+      },
       conversation: {
         start: "Dicter avec Manon",
         hint: "elle vous pose les questions",
@@ -5441,6 +5459,24 @@ export const fr = {
       deleteYes: "Oui, supprimer",
       responsibility:
         "C'est un forfait : vous restez responsable de vos quantités. MENAO propose vos prix habituels, vérifiez-les avant d'envoyer.",
+      // Passage en devis MENAO (F-138, ADR 0289) : le client passe par la fiche de l'artisan.
+      toQuote: {
+        title: "Passer en devis MENAO",
+        steps: [
+          "Envoyez à votre client (maître d'ouvrage) le lien de votre fiche MENAO : il décrit ses travaux, la demande n'arrive qu'à vous.",
+          "Acceptez sa demande et fixez le rendez-vous, comme pour toute demande.",
+          "Dans l'éditeur du devis, « Reprendre un DPGF » ajoute ces postes chiffrés : signature en ligne, acompte et chantier suivent.",
+        ],
+        link: "Lien de votre fiche",
+        copy: "Copier",
+        copied: "Copié",
+        email: "Envoyer par e-mail",
+        subject: (project: string) => `Votre devis — ${project}`,
+        body: (project: string, url: string, company: string) =>
+          `Bonjour,\n\nPour recevoir mon devis « ${project} » et le signer en ligne, décrivez vos travaux depuis ma fiche MENAO (votre demande n'arrivera qu'à moi) :\n${url}\n\nBien cordialement,\n${company}`,
+        noPage:
+          "Votre fiche publique n'est pas encore en ligne : complétez votre profil (Ma vitrine) pour obtenir son lien.",
+      },
     },
     partners: {
       title: "Recommander un partenaire",

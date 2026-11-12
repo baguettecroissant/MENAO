@@ -30,6 +30,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
     { data: dictation },
     { data: agents },
     { data: voiceDraft },
+    { data: tenders },
   ] = await Promise.all([
     supabase
       .from("quotes")
@@ -51,6 +52,13 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Appels d'offres de l'entreprise (ADR 0289) : un DPGF chiffré se reprend dans le devis.
+    supabase
+      .from("tenders")
+      .select("id, name")
+      .not("imported_at", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
   const lines: QuoteLineInput[] = [...(draft?.quote_lines ?? [])]
     .sort((a, b) => a.position - b.position)
@@ -87,6 +95,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
         savedDictation={dictation?.transcript ?? null}
         conversation={parseAiAgents(agents).agents.conversationalQuote}
         voiceDraft={voiceDraftLines(voiceDraft?.lines)}
+        tenders={tenders ?? []}
       />
     </main>
   );

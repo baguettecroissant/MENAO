@@ -2,7 +2,8 @@
  * Appels d'offres (F-136, ADR 0287) : totaux du DPGF chiffré et écarts de quantités avec celui de
  * l'architecte, aux règles d'arrondi des devis.
  */
-import { lineTotalHtCents, quoteTotals } from "./quote";
+import type { DpgfUnit } from "./dpgf";
+import { QUOTE_LIMITS, lineTotalHtCents, quoteTotals } from "./quote";
 
 export type TenderLineAmounts = {
   kind: "titre" | "poste";
@@ -65,4 +66,74 @@ export function tenderGaps(lines: readonly TenderLineAmounts[]): {
     }
   }
   return { changed, underestimatedHtCents };
+}
+
+// ---------------------------------------------------------------------------------------------
+// DPGF repris dans un devis MENAO (F-138, ADR 0289)
+// ---------------------------------------------------------------------------------------------
+
+export type TenderPostForQuote = {
+  kind: "titre" | "poste";
+  lot: string | null;
+  code: string | null;
+  designation: string;
+  unit: DpgfUnit | null;
+  quantityMilli: number | null;
+  unitPriceHtCents: number | null;
+};
+
+export type TenderQuoteLine = {
+  type: "autre";
+  designation: string;
+  description: string | null;
+  quantityMilli: number;
+  unit: DpgfUnit;
+  unitPriceHtCents: number;
+  vatRateBp: number;
+};
+
+/**
+ * Lignes de devis tirées d'un DPGF chiffré : les postes avec une quantité et un prix, désignation
+ * précédée du n° du poste, lot en description, unité inconnue comptée au forfait, TVA de l'offre.
+ * Les postes incomplets sont comptés à part ; au-delà de la limite de lignes d'un devis (en tenant
+ * compte des lignes déjà présentes), le reste est compté comme coupé.
+ */
+export function tenderQuoteLines(
+  posts: readonly TenderPostForQuote[],
+  vatRateBp: number,
+  existingLines: number,
+): { lines: TenderQuoteLine[]; skipped: number; truncated: number } {
+  const room = Math.max(0, QUOTE_LIMITS.maxLines - existingLines);
+  const lines: TenderQuoteLine[] = [];
+  let skipped = 0;
+  let truncated = 0;
+  for (const p of posts) {
+    if (p.kind !== "poste") continue;
+    if (
+      p.quantityMilli === null ||
+      p.quantityMilli <= 0 ||
+      p.quantityMilli > QUOTE_LIMITS.maxQuantityMilli ||
+      p.unitPriceHtCents === null
+    ) {
+      skipped++;
+      continue;
+    }
+    if (lines.length >= room) {
+      truncated++;
+      continue;
+    }
+    lines.push({
+      type: "autre",
+      designation: [p.code, p.designation]
+        .filter(Boolean)
+        .join(" ")
+        .slice(0, QUOTE_LIMITS.designationMaxLength),
+      description: p.lot ? p.lot.slice(0, QUOTE_LIMITS.descriptionMaxLength) : null,
+      quantityMilli: p.quantityMilli,
+      unit: p.unit ?? "forfait",
+      unitPriceHtCents: p.unitPriceHtCents,
+      vatRateBp,
+    });
+  }
+  return { lines, skipped, truncated };
 }
