@@ -69,28 +69,31 @@ export async function readDpgfPdf(admin: SupabaseClient, bytes: Uint8Array): Pro
   try {
     const reasoning = reasoningFor(model);
     // 16 000 jetons au plus : sous le seuil où le SDK exige une réponse en flux.
-    const response = await llm.client.messages.create({
-      model,
-      max_tokens: 16000,
-      thinking: reasoning.thinking,
-      system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "document",
-              source: { type: "base64", media_type: "application/pdf", data: base64(bytes) },
-            },
-            { type: "text", text: "<dpgf>Document à relever : DPGF d'un appel d'offres.</dpgf>" },
-          ],
+    const response = await llm.client.messages.create(
+      {
+        model,
+        max_tokens: 16000,
+        thinking: reasoning.thinking,
+        system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: { type: "base64", media_type: "application/pdf", data: base64(bytes) },
+              },
+              { type: "text", text: "<dpgf>Document à relever : DPGF d'un appel d'offres.</dpgf>" },
+            ],
+          },
+        ],
+        output_config: {
+          ...(reasoning.effort ? { effort: reasoning.effort } : {}),
+          format: { type: "json_schema", schema: dpgfReadingJsonSchema() },
         },
-      ],
-      output_config: {
-        ...(reasoning.effort ? { effort: reasoning.effort } : {}),
-        format: { type: "json_schema", schema: dpgfReadingJsonSchema() },
       },
-    });
+      { timeout: 140_000, maxRetries: 0 },
+    );
     run.latency_ms = Date.now() - started;
     run.input_tokens = response.usage?.input_tokens ?? null;
     run.output_tokens = response.usage?.output_tokens ?? null;
@@ -123,9 +126,11 @@ export async function readDpgfPdf(admin: SupabaseClient, bytes: Uint8Array): Pro
   } catch (error) {
     run.latency_ms = Date.now() - started;
     run.outcome = error instanceof SyntaxError ? "invalide" : "erreur";
+    const status = (error as { status?: unknown })?.status;
     console.error(
       "tender-sheet : appel du modèle en échec",
-      error instanceof Error ? error.name : "",
+      typeof status === "number" ? status : "",
+      error instanceof Error ? error.message.slice(0, 300) : "",
     );
     return { status: "unavailable" };
   } finally {

@@ -15,18 +15,20 @@ import { llmConfig, logAiRuns, quoteModel, reasoningFor, type AiRun } from "../_
 import { env } from "../_shared/env.ts";
 
 const nullableNumber = z.number().nullable();
+/** Délai d'une lecture de plans : sous la durée maximale d'une Edge Function (150 s). */
+const READ_TIMEOUT_MS = 140_000;
 
 const rawSchema = z.object({
   lisible: z.boolean(),
   est_un_plan: z.boolean(),
-  echelle: z.string().nullable(),
-  hauteurs: z.array(z.object({ niveau: z.string().nullable(), hauteur_m: nullableNumber })).max(50),
+  echelle: z.string(),
+  hauteurs: z.array(z.object({ niveau: z.string(), hauteur_m: z.number() })).max(50),
   pieces: z
     .array(
       z.object({
-        fichier: nullableNumber,
-        page: nullableNumber,
-        niveau: z.string().nullable(),
+        fichier: z.number(),
+        page: z.number(),
+        niveau: z.string(),
         nom: z.string(),
         surface_m2: nullableNumber,
         longueur_m: nullableNumber,
@@ -39,7 +41,9 @@ const rawSchema = z.object({
       }),
     )
     .max(400),
-  comptes: z.object(Object.fromEntries(PLAN_COUNT_KEYS.map((k) => [k, nullableNumber]))),
+  comptes: z
+    .array(z.object({ element: z.enum(PLAN_COUNT_KEYS), nombre: z.number() }))
+    .max(PLAN_COUNT_KEYS.length * 2),
 });
 
 const SYSTEM = `Tu lis les plans d'un architecte (plans de niveaux, coupes, façades) pour un appel d'offres du bâtiment. Une entreprise artisanale prépare son offre sur MENAO, plateforme française qui relie particuliers et artisans ; elle vérifie ensuite chaque valeur.
@@ -47,8 +51,8 @@ const SYSTEM = `Tu lis les plans d'un architecte (plans de niveaux, coupes, faç
 Les fichiers sont numérotés dans l'ordre où ils te sont donnés (fichier 1, 2…). Une photo compte pour une seule page.
 
 Relève chaque pièce dessinée sur les plans de niveaux, une seule fois :
-- fichier, page : où tu l'as lue (page du fichier, à partir de 1).
-- niveau : tel qu'écrit sur le plan ou dans son cartouche (« RDC », « R+1 », « Sous-sol »), null s'il n'est pas indiqué.
+- fichier, page : où tu l'as lue (numéro du fichier et page de ce fichier, à partir de 1).
+- niveau : tel qu'écrit sur le plan ou dans son cartouche (« RDC », « R+1 », « Sous-sol »), chaîne vide s'il n'est pas indiqué.
 - nom : le nom de la pièce tel qu'écrit (« Séjour-cuisine », « SdB », « Chambre 2 »).
 - surface_m2 : la surface écrite sur le plan pour cette pièce (« 45,14 m² » vaut 45.14), null si elle n'est pas écrite. Ne la calcule jamais toi-même.
 - longueur_m, largeur_m : les deux cotes intérieures de la pièce si elles sont écrites et que la pièce est rectangulaire, sinon null.
@@ -57,9 +61,9 @@ Relève chaque pièce dessinée sur les plans de niveaux, une seule fois :
 - humide : vrai pour une salle de bains, salle d'eau, WC, buanderie, cuisine fermée.
 - habitable : faux pour un garage, local technique, combles non aménagés, terrasse ou balcon.
 - certitude : « incertaine » si le texte est flou, coupé ou ambigu, sinon « sure ».
-hauteurs : hauteurs sous plafond lues sur les coupes ou les cartouches, par niveau (niveau null si une seule hauteur vaut pour tout).
-echelle : l'échelle du plan telle qu'écrite (« 1/50 »), null si absente.
-comptes : nombres comptés sur les plans de niveaux, avec les symboles usuels : portes intérieures (portes), fenêtres et baies (fenetres), WC, lavabos et vasques (lavabos), douches, baignoires, éviers, escaliers. null si tu ne peux pas compter avec certitude.
+hauteurs : hauteurs sous plafond lues sur les coupes ou les cartouches, par niveau (niveau vide si une seule hauteur vaut pour tout) ; liste vide si aucune n'est écrite.
+echelle : l'échelle du plan telle qu'écrite (« 1/50 »), chaîne vide si absente.
+comptes : éléments comptés sur les plans de niveaux avec les symboles usuels, un par élément : portes intérieures (portes), fenêtres et baies (fenetres), WC (wc), lavabos et vasques (lavabos), douches, baignoires, éviers (eviers), escaliers. N'ajoute pas un élément que tu ne peux pas compter avec certitude.
 - lisible : false si les plans sont trop flous ou coupés pour être relevés.
 - est_un_plan : false si les fichiers ne sont pas des plans de bâtiment (DPGF, CCTP, devis, photo d'un chantier…).
 N'invente rien : une valeur qui n'est pas écrite reste null.
@@ -119,17 +123,21 @@ export async function readPlans(
     content.push({ type: "text", text: "<plan>Plans à relever pour un appel d'offres.</plan>" });
     const reasoning = reasoningFor(model);
     // 16 000 jetons au plus : sous le seuil où le SDK exige une réponse en flux.
-    const response = await llm.client.messages.create({
-      model,
-      max_tokens: 16000,
-      thinking: reasoning.thinking,
-      system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content }],
-      output_config: {
-        ...(reasoning.effort ? { effort: reasoning.effort } : {}),
-        format: { type: "json_schema", schema: planReadingJsonSchema() },
+    // Lecture longue (plans en images, raisonnement) : délai propre, sous la limite de la fonction.
+    const response = await llm.client.messages.create(
+      {
+        model,
+        max_tokens: 16000,
+        thinking: reasoning.thinking,
+        system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
+        messages: [{ role: "user", content }],
+        output_config: {
+          ...(reasoning.effort ? { effort: reasoning.effort } : {}),
+          format: { type: "json_schema", schema: planReadingJsonSchema() },
+        },
       },
-    });
+      { timeout: READ_TIMEOUT_MS, maxRetries: 0 },
+    );
     run.latency_ms = Date.now() - started;
     run.input_tokens = response.usage?.input_tokens ?? null;
     run.output_tokens = response.usage?.output_tokens ?? null;
@@ -166,9 +174,12 @@ export async function readPlans(
   } catch (error) {
     run.latency_ms = Date.now() - started;
     run.outcome = error instanceof SyntaxError ? "invalide" : "erreur";
+    // Motif de l'échec (statut et message du fournisseur, sans contenu du plan) pour le diagnostic.
+    const status = (error as { status?: unknown })?.status;
     console.error(
       "tender-sheet : appel du modèle en échec",
-      error instanceof Error ? error.name : "",
+      typeof status === "number" ? status : "",
+      error instanceof Error ? error.message.slice(0, 300) : "",
     );
     return { status: "unavailable" };
   } finally {
