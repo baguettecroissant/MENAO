@@ -8294,7 +8294,7 @@ export const fr = {
       marketing: "Communications MENAO",
       yes: "Oui",
       no: "Non",
-      suspended: (date: string) => `Compte suspendu jusqu'au ${date}`,
+      suspended: "Connexion bloquée",
       artisanFile: "Fiche artisan",
       openArtisanFile: "Ouvrir la fiche artisan",
       requests: "Demandes",
@@ -8316,16 +8316,19 @@ export const fr = {
       export: "Exporter ses données (RGPD)",
       exportHint:
         "Fichier JSON des données du compte, sans les messages privés entre client et artisan. L'export est journalisé.",
-      reasonLabel: "Motif de la suspension (transmis à la personne)",
+      // « Bloquer la connexion » (ADR 0285).
+      effect: "il ne peut plus se connecter ; ses sessions sont fermées. Il reçoit le motif.",
+      keeps: "sa fiche et ses données restent ; ses clients voient toujours leurs chantiers.",
+      reasonLabel: "Motif du blocage (transmis à la personne)",
       reasonHint:
         "La personne ne peut plus se connecter et ses sessions sont fermées (au plus une heure pour une page déjà ouverte). Ses données ne changent pas.",
       artisanHint:
-        "Pour un artisan, cela bloque aussi son espace pro et ses chantiers. Pour seulement le retirer des recherches, suspendez sa fiche artisan.",
-      reasonRequired: "Indiquez le motif de la suspension.",
-      suspend: "Suspendre l'accès au compte",
-      suspended: "Accès suspendu : la personne ne peut plus se connecter.",
-      reactivate: "Rétablir l'accès",
-      reactivated: "Accès rétabli.",
+        "Pour un artisan, cela bloque aussi son espace pro et ses chantiers. Pour seulement le retirer des recherches : « Retirer des recherches », onglet Compte de sa fiche artisan.",
+      reasonRequired: "Indiquez le motif du blocage.",
+      suspend: "Bloquer la connexion",
+      suspended: "Connexion bloquée : la personne ne peut plus se connecter.",
+      reactivate: "Débloquer la connexion",
+      reactivated: "Connexion débloquée.",
     },
     deletion: {
       title: "Demande de suppression du compte",
@@ -8333,7 +8336,7 @@ export const fr = {
       due: (date: string) => `Réponse attendue avant le ${date} (RGPD, un mois).`,
       steps: [
         "Exporter ses données si la personne les demande.",
-        "Suspendre l'accès au compte.",
+        "Bloquer la connexion.",
         "Effacer ou anonymiser les données qui ne doivent pas être conservées.",
         "Répondre à la personne et clore la demande dans la « Boîte de réception ».",
       ],
@@ -8382,17 +8385,22 @@ export const fr = {
       account: "Voir son compte",
     },
     suspension: {
-      title: "Statut du compte",
+      // « Retirer des recherches » (ADR 0285) : statut « Suspendu » de l'artisan.
+      title: "Retirer des recherches",
+      effect:
+        "il n'apparaît plus dans les recherches ni sur sa fiche publique, et ne reçoit plus de demandes. Il reçoit le motif par e-mail (statut « Suspendu »).",
+      keeps: "il se connecte, termine ses chantiers en cours et garde ses factures.",
       active: "Validé et actif.",
       notApplicable: "La suspension ne concerne que les artisans validés.",
-      reasonLabel: "Motif de la suspension (transmis à l'artisan)",
-      reasonRequired: "Indiquez le motif de la suspension.",
+      reasonLabel: "Motif (transmis à l'artisan)",
+      reasonRequired: "Indiquez le motif.",
       reasonHint:
         "L'artisan reçoit ce motif par e-mail et peut écrire à l'équipe pour en parler. Ses chantiers en cours ne changent pas.",
-      suspend: "Suspendre l'artisan",
-      suspended: "Artisan suspendu : il n'apparaît plus dans les recherches.",
-      reactivate: "Lever la suspension",
-      reactivated: "Suspension levée.",
+      suspend: "Retirer des recherches",
+      suspended:
+        "Artisan retiré des recherches : il n'apparaît plus et ne reçoit plus de demandes.",
+      reactivate: "Le remettre dans les recherches",
+      reactivated: "Artisan de nouveau dans les recherches.",
       automatic:
         "Suspension automatique pour assurance expirée : elle sera levée dès qu'un nouveau document sera validé.",
     },
@@ -8411,6 +8419,8 @@ export const fr = {
         `Radié le ${date}${reason ? ` : ${reason}` : ""}.`,
     },
     followUp: {
+      // Lien croisé vers le compte du client (ADR 0285).
+      seeAccount: "Voir son compte",
       search: "Rechercher",
       clear: "Effacer la recherche",
       results: (n: number) =>
@@ -10335,19 +10345,25 @@ export const fr = {
       decision: "Décision sur le dossier",
       decisionNotPending: "Ce dossier n'est pas en attente de vérification.",
       // Fiche réorganisée (ADR 0133) : en-tête fixe, navigation, ce qui reste à vérifier.
-      nav: "Sections de la fiche",
-      navItems: {
-        verifier: "À vérifier",
-        documents: "Documents",
-        decision: "Décision",
-        entreprise: "Entreprise",
-        profil: "Profil",
-        score: "Score MENAO",
-        abonnement: "Abonnement",
+      // Fiche en quatre onglets (ADR 0285).
+      tabs: {
+        label: "Onglets de la fiche",
+        verification: "Vérification",
+        entreprise: "Entreprise et profil",
         activite: "Activité",
-        parrainage: "Parrainage",
-        historique: "Historique",
+        compte: "Compte",
       },
+      summary: {
+        score: "Score MENAO",
+        leads: "Demandes ce mois",
+        leadsValue: (received: number, target: number) => `${received} sur ${target}`,
+        subscription: "Abonnement",
+        signedUp: "Inscrit le",
+      },
+      accountTitle: "Bloquer la connexion",
+      openAccount: "Voir son compte (connexion, mot de passe, données)",
+      effectLabel: "Ce que ça fait :",
+      keepsLabel: "Ce qui ne change pas :",
       decide: "Décider",
       checklist: {
         title: "Ce qui reste à vérifier",

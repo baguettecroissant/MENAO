@@ -71,7 +71,7 @@ export async function adminRefreshRge(formData: FormData): Promise<void> {
   const { supabase } = await requireAdmin();
   const status = await invokeRgeCheck(supabase, { artisanId: id.data });
   refresh(id.data);
-  redirect(`/admin/artisans/${id.data}?rge=${status}` as Route);
+  redirect(`/admin/artisans/${id.data}?onglet=verification&rge=${status}` as Route);
 }
 
 /** Tirage du mois des contrôles aléatoires (ADR 0121), lancé par un admin. */
@@ -118,7 +118,8 @@ export async function decideArtisan(_prev: FormState, formData: FormData): Promi
   });
   if (error) return { error: error.code === "22023" ? t.error : fr.errors.generic };
   refresh(id.data);
-  return { success: t.decisions[decision.data] };
+  // Fiche en onglets (ADR 0285) : on reste sur l'onglet Vérification, décision et historique.
+  redirect(`/admin/artisans/${id.data}?onglet=verification#decision` as Route);
 }
 
 /**

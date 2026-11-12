@@ -236,6 +236,10 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
                 { label: t.phone, value: client.phone },
               ]}
             />
+            {/* Lien croisé vers son compte (ADR 0285). */}
+            <Link href={`/admin/personnes/${ch.particulier_id}` as Route} className={link}>
+              {fr.admin.followUp.seeAccount} →
+            </Link>
           </DetailSection>
           <DetailSection title={c.origin}>
             <Link href={`/admin/demandes/${ch.project_id}` as Route} className={link}>

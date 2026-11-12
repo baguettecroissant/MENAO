@@ -113,7 +113,7 @@ export function ComplianceRowsTable({
         <tr key={row.key} className="border-t border-border">
           <td className="py-3 pr-4">
             <Link
-              href={`/admin/artisans/${row.artisanId}` as Route}
+              href={`/admin/artisans/${row.artisanId}?onglet=verification#documents` as Route}
               className="font-medium text-primary underline-offset-2 hover:underline"
             >
               {row.artisan}

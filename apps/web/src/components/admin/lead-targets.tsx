@@ -144,7 +144,7 @@ export function LeadTable({ rows }: { rows: readonly LeadArtisan[] }) {
             <tr key={a.id} className="border-t border-border align-top">
               <td className="py-3 pr-4">
                 <Link
-                  href={`/admin/artisans/${a.id}#objectif` as Route}
+                  href={`/admin/artisans/${a.id}?onglet=activite#objectif` as Route}
                   className="font-medium text-primary underline-offset-2 hover:underline"
                 >
                   {a.name}

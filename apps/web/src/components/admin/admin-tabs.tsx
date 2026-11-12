@@ -58,6 +58,43 @@ export const ADMIN_TAB_SETS = {
 export type AdminTabSet = keyof typeof ADMIN_TAB_SETS;
 
 /**
+ * Onglets en pilule (ADR 0283) : rubriques du menu et fiches (fiche artisan, ADR 0285). Onglet
+ * courant passé par la page ; `count` affiche un compteur à côté du libellé.
+ */
+export function PillTabs({
+  label,
+  tabs,
+  current,
+}: {
+  label: string;
+  tabs: readonly { key: string; href: string; label: string; count?: number }[];
+  current: string;
+}) {
+  return (
+    <nav
+      aria-label={label}
+      className="flex w-max max-w-full gap-1 overflow-x-auto rounded-pill border border-border bg-surface p-1 shadow-card [scrollbar-width:none]"
+    >
+      {tabs.map((tab) => (
+        <Link
+          key={tab.key}
+          href={tab.href as Route}
+          aria-current={tab.key === current ? "page" : undefined}
+          className="group flex min-h-10 items-center gap-2 rounded-pill px-4 text-sm whitespace-nowrap text-muted-foreground outline-none hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 aria-[current=page]:bg-foreground aria-[current=page]:font-semibold aria-[current=page]:text-white"
+        >
+          {tab.label}
+          {tab.count ? (
+            <span className="rounded-pill bg-background px-1.5 text-xs font-semibold text-label tabular-nums group-aria-[current=page]:bg-white/20 group-aria-[current=page]:text-white">
+              {tab.count}
+            </span>
+          ) : null}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+/**
  * Onglets en pilule d'une rubrique. Onglet courant passé par la page (rendu serveur, sans
  * script) ; `counts` affiche un compteur à côté du libellé (éléments à traiter).
  */
@@ -72,29 +109,11 @@ export function AdminTabs<S extends AdminTabSet>({
 }) {
   const { label, tabs } = ADMIN_TAB_SETS[set];
   return (
-    <nav
-      aria-label={label}
-      className="flex w-max max-w-full gap-1 overflow-x-auto rounded-pill border border-border bg-surface p-1 shadow-card [scrollbar-width:none]"
-    >
-      {tabs.map((tab) => {
-        const n = counts[tab.key];
-        return (
-          <Link
-            key={tab.key}
-            href={tab.href as Route}
-            aria-current={tab.key === current ? "page" : undefined}
-            className="group flex min-h-10 items-center gap-2 rounded-pill px-4 text-sm whitespace-nowrap text-muted-foreground outline-none hover:text-foreground focus-visible:ring-4 focus-visible:ring-primary/20 aria-[current=page]:bg-foreground aria-[current=page]:font-semibold aria-[current=page]:text-white"
-          >
-            {tab.label}
-            {n ? (
-              <span className="rounded-pill bg-background px-1.5 text-xs font-semibold text-label tabular-nums group-aria-[current=page]:bg-white/20 group-aria-[current=page]:text-white">
-                {n}
-              </span>
-            ) : null}
-          </Link>
-        );
-      })}
-    </nav>
+    <PillTabs
+      label={label}
+      current={current}
+      tabs={tabs.map((tab) => ({ ...tab, count: counts[tab.key] }))}
+    />
   );
 }
 

@@ -39,6 +39,8 @@ import {
   LeadHistory,
   LeadStatusBadge,
 } from "@/components/admin/lead-targets";
+import { PillTabs } from "@/components/admin/admin-tabs";
+import { AccountActions } from "../../personnes/[id]/account-actions";
 import { DocumentsSection } from "./documents-section";
 import { DecisionForm } from "./review-forms";
 import { sheetCard } from "@/components/pro/sheet";
@@ -46,6 +48,8 @@ import { RadiationForm } from "./radiation-form";
 import { SuspensionForm } from "./suspension-form";
 
 const t = fr.admin.detail;
+const ARTISAN_TABS = ["verification", "entreprise", "activite", "compte"] as const;
+type ArtisanTab = (typeof ARTISAN_TABS)[number];
 const sc = fr.admin.spotChecks;
 const month = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
 const docT = fr.pro.onboarding.documents;
@@ -61,7 +65,7 @@ export default async function AdminArtisanPage({
   searchParams,
 }: PageProps<"/admin/artisans/[id]">) {
   const { id } = await params;
-  const { rge } = (await searchParams) as { rge?: string };
+  const { rge, onglet } = (await searchParams) as { rge?: string; onglet?: string };
   const rgeStatus = (RGE_REFRESH_STATUSES as readonly string[]).includes(rge ?? "")
     ? (rge as RgeRefreshStatus)
     : null;
@@ -261,19 +265,41 @@ export default async function AdminArtisanPage({
     checklist.siret === "inactive" && t.checklist.siretInactive,
     !checklist.charterSigned && t.checklist.charterMissing,
   ].filter((item): item is string => Boolean(item));
-  const navItems: { id: string; label: string }[] = [
-    { id: "a-verifier", label: t.navItems.verifier },
-    { id: "documents", label: t.navItems.documents },
-    ...(pending ? [{ id: "decision", label: t.navItems.decision }] : []),
-    { id: "entreprise", label: t.navItems.entreprise },
-    { id: "profil", label: t.navItems.profil },
-    { id: "score", label: t.navItems.score },
-    { id: "abonnement", label: t.navItems.abonnement },
-    { id: "activite", label: t.navItems.activite },
-    { id: "objectif", label: fr.admin.leads.detail.title },
-    { id: "parrainage", label: t.navItems.parrainage },
-    ...(pending ? [] : [{ id: "decision", label: t.navItems.decision }]),
-    { id: "historique", label: t.navItems.historique },
+  // Quatre onglets (ADR 0285) : la vérification tant que le dossier est en attente ou qu'un
+  // document (renouvellement) ou une certification attend l'équipe, sinon l'activité.
+  const awaitingReview = checklist.pendingDocuments > 0 || checklist.pendingCertifications > 0;
+  const tab: ArtisanTab =
+    ARTISAN_TABS.find((key) => key === onglet) ??
+    (pending || rgeStatus || awaitingReview ? "verification" : "activite");
+  const base = `/admin/artisans/${artisan.id}`;
+  // Compte de connexion (connexion bloquée ou non), lu seulement pour l'onglet Compte.
+  const account =
+    tab === "compte"
+      ? await supabase
+          .rpc("admin_user_account", { p_user_id: artisan.user_id })
+          .then(({ data, error }) => {
+            if (error) return null;
+            const until = (data as { banned_until?: string | null } | null)?.banned_until ?? null;
+            return { banned: Boolean(until && new Date(until) > new Date()) };
+          })
+      : null;
+  const sub = subscription.data;
+  const summary = [
+    { label: t.summary.score, value: menaoScore ? `${menaoScore.score} / 100` : "—" },
+    {
+      label: t.summary.leads,
+      value:
+        lead && lead.progress.target !== null
+          ? t.summary.leadsValue(lead.progress.received, lead.progress.target)
+          : "—",
+    },
+    {
+      label: t.summary.subscription,
+      value: sub
+        ? `${sub.plans?.nom ?? sub.plan_code} · ${t.subscriptionStatus[sub.status as keyof typeof t.subscriptionStatus] ?? sub.status}`
+        : t.noSubscription,
+    },
+    { label: t.summary.signedUp, value: formatDay(artisan.created_at) },
   ];
 
   const documentsSection = (
@@ -317,7 +343,7 @@ export default async function AdminArtisanPage({
       >
         ← {t.back}
       </Link>
-      {/* En-tête fixe sous la barre du haut (ADR 0133) : statut, décision et sections à portée. */}
+      {/* En-tête (ADR 0284 → 0285) : l'essentiel de l'artisan, puis les quatre onglets de la fiche. */}
       <div className="sticky top-16 z-20 -mx-4 flex flex-col gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <span
@@ -340,55 +366,251 @@ export default async function AdminArtisanPage({
             <span className="font-mono text-sm text-muted-foreground">{artisan.siret}</span>
           )}
           {pending && (
-            <a
-              href="#decision"
+            <Link
+              href={`${base}?onglet=verification#decision` as Route}
               className="ml-auto inline-flex min-h-10 items-center rounded-pill bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
             >
               {t.decide}
-            </a>
+            </Link>
           )}
         </div>
-        <nav aria-label={t.nav}>
-          <ul className="flex gap-1 overflow-x-auto text-sm">
-            {navItems.map((item) => (
-              <li key={item.id}>
-                <a
-                  href={`#${item.id}`}
-                  className="inline-flex min-h-8 items-center rounded-pill px-3 whitespace-nowrap text-muted-foreground hover:bg-surface hover:text-foreground"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          {summary.map((item) => (
+            <div key={item.label} className="flex flex-col">
+              <dt className="text-[0.75rem] font-semibold text-muted-foreground">{item.label}</dt>
+              <dd className="font-semibold">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <PillTabs
+          label={t.tabs.label}
+          current={tab}
+          tabs={ARTISAN_TABS.map((key) => ({
+            key,
+            href: `${base}?onglet=${key}`,
+            label: t.tabs[key],
+            count: key === "verification" && pending ? checklistItems.length : undefined,
+          }))}
+        />
       </div>
 
-      {/* Refonte « Nette » (ADR 0252) : le dossier à gauche, la décision collée à droite. */}
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex min-w-0 flex-col gap-6">
-          <Section id="a-verifier" title={t.checklist.title} tone="highlight">
-            {checklistItems.length === 0 ? (
-              <p className="text-success">
-                {pending ? t.checklist.ready : t.checklist.readyValidated}
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-1.5">
-                {checklistItems.map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="mt-2 size-1.5 shrink-0 rounded-full bg-warning"
-                    />
-                    {item}
+      {tab === "verification" && (
+        // Le dossier à gauche, la décision collée à droite tant qu'il est en attente (ADR 0252).
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            <Section id="a-verifier" title={t.checklist.title} tone="highlight">
+              {checklistItems.length === 0 ? (
+                <p className="text-success">
+                  {pending ? t.checklist.ready : t.checklist.readyValidated}
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-1.5">
+                  {checklistItems.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 size-1.5 shrink-0 rounded-full bg-warning"
+                      />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+
+            {documentsSection}
+
+            <Section title={t.certifications}>
+              <ul className="flex flex-col gap-2">
+                {(certifications.data ?? []).map((c) => (
+                  <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      {fr.certificationTypes[c.type]} · {c.numero} ·{" "}
+                      {docT.validUntil(day.format(new Date(c.date_fin)))}
+                      {c.verified_at && (
+                        <span className="ml-2 text-success">✓ {t.certVerified}</span>
+                      )}
+                      <CertificationRgeHint type={c.type} rows={rgeList} today={today} />
+                    </span>
+                    <form action={verifyCertification}>
+                      <input type="hidden" name="certificationId" value={c.id} />
+                      <input type="hidden" name="artisanId" value={artisan.id} />
+                      <input
+                        type="hidden"
+                        name="verified"
+                        value={c.verified_at ? "false" : "true"}
+                      />
+                      <button
+                        type="submit"
+                        className="min-h-touch text-sm font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        {c.verified_at ? t.certUnverify : t.certVerify}
+                      </button>
+                    </form>
                   </li>
                 ))}
               </ul>
-            )}
-          </Section>
+            </Section>
 
-          {documentsSection}
+            <Section title={t.rge}>
+              <div className="flex flex-col gap-3">
+                {rgeStatus && (
+                  <Alert tone={rgeStatus === "ok" ? "success" : "error"}>
+                    {t.rgeStatus[rgeStatus]}
+                  </Alert>
+                )}
+                {rgeList.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    {artisan.rge_checked_at ? t.rgeNone : t.rgeNever}
+                  </p>
+                ) : (
+                  <ul className="flex flex-col gap-1 text-sm">
+                    {rgeList.map((r) => (
+                      <li key={r.id}>
+                        <span className="font-medium">{r.domaine}</span>
+                        {" · "}
+                        <span className="text-muted-foreground">
+                          {[r.nom_certificat ?? r.organisme, r.nom_qualification]
+                            .filter(Boolean)
+                            .join(" · ")}
+                          {" · "}
+                          {r.date_fin < today
+                            ? t.rgeExpired
+                            : docT.validUntil(day.format(new Date(r.date_fin)))}
+                        </span>
+                        {r.url_certificat && (
+                          <>
+                            {" · "}
+                            <a
+                              href={r.url_certificat}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-primary underline"
+                            >
+                              {t.rgeCertificate}
+                            </a>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                  {artisan.rge_checked_at && (
+                    <span className="text-muted-foreground">
+                      {t.rgeCheckedOn(dateTime.format(new Date(artisan.rge_checked_at)))}
+                    </span>
+                  )}
+                  <form action={adminRefreshRge}>
+                    <input type="hidden" name="artisanId" value={artisan.id} />
+                    <button
+                      type="submit"
+                      className="min-h-touch font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      {t.rgeRefresh}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </Section>
 
+            <Section title={t.charter}>
+              {charter.data ? (
+                <div className="flex flex-col gap-2">
+                  <p>
+                    {t.charterSigned(
+                      day.format(new Date(charter.data.accepted_at)),
+                      charter.data.version,
+                      charter.data.signer_name,
+                    )}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t.charterIdentity(charter.data.company, charter.data.siret)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t.engagementSigned(charter.data.engagement_version)}
+                  </p>
+                  <svg
+                    viewBox="0 0 600 150"
+                    role="img"
+                    aria-label={t.charterSignature}
+                    className="h-24 w-full max-w-md rounded-input border border-border bg-input"
+                  >
+                    <path
+                      d={charter.data.signature_path}
+                      fill="none"
+                      stroke="#111728"
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">{t.charterMissing}</p>
+              )}
+            </Section>
+
+            {!pending && decisionSection}
+
+            <Section title={sc.artisanSection}>
+              {(spotChecks.data ?? []).length === 0 ? (
+                <p className="text-muted-foreground">{sc.artisanNone}</p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {(spotChecks.data ?? []).map((c) => (
+                    <li key={c.id} className="flex flex-col gap-1">
+                      <span>
+                        <span className="font-medium">
+                          {month.format(new Date(`${c.period}T00:00:00Z`))}
+                        </span>
+                        {" · "}
+                        {c.result ? (sc.results[c.result] ?? c.result) : sc.pending}
+                        {c.insurer_called ? ` · ${sc.insurerCalled}` : ""}
+                      </span>
+                      {c.note && <span className="text-sm text-muted-foreground">{c.note}</span>}
+                      {c.result === null && (
+                        <Link
+                          href={`/admin/conformite/controles#controle-${c.id}` as Route}
+                          className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          {sc.artisanAction} →
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+
+            <Section id="historique" title={t.history}>
+              {(reviews.data ?? []).length === 0 ? (
+                <p className="text-muted-foreground">{t.noHistory}</p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {(reviews.data ?? []).map((r) => (
+                    <li key={r.id}>
+                      <span className="font-medium">{t.decisions[r.decision]}</span> ·{" "}
+                      {dateTime.format(new Date(r.created_at))}
+                      {reviewerName(r.admin_id) &&
+                        ` · ${t.decidedBy(reviewerName(r.admin_id) ?? "")}`}
+                      {r.message && (
+                        <span className="block text-sm text-muted-foreground">{r.message}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </div>
+          {pending && (
+            <aside className="flex flex-col gap-6 lg:sticky lg:top-56">{decisionSection}</aside>
+          )}
+        </div>
+      )}
+
+      {tab === "entreprise" && (
+        <div className="flex flex-col gap-6">
           <div className="grid gap-6 lg:grid-cols-2">
             <Section id="entreprise" title={t.company}>
               <dl className="grid gap-2">
@@ -474,446 +696,360 @@ export default async function AdminArtisanPage({
               </p>
             </Section>
           </div>
-
-          <Section title={t.certifications}>
-            <ul className="flex flex-col gap-2">
-              {(certifications.data ?? []).map((c) => (
-                <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
-                  <span>
-                    {fr.certificationTypes[c.type]} · {c.numero} ·{" "}
-                    {docT.validUntil(day.format(new Date(c.date_fin)))}
-                    {c.verified_at && <span className="ml-2 text-success">✓ {t.certVerified}</span>}
-                    <CertificationRgeHint type={c.type} rows={rgeList} today={today} />
-                  </span>
-                  <form action={verifyCertification}>
-                    <input type="hidden" name="certificationId" value={c.id} />
-                    <input type="hidden" name="artisanId" value={artisan.id} />
-                    <input type="hidden" name="verified" value={c.verified_at ? "false" : "true"} />
-                    <button
-                      type="submit"
-                      className="min-h-touch text-sm font-medium text-primary underline-offset-2 hover:underline"
-                    >
-                      {c.verified_at ? t.certUnverify : t.certVerify}
-                    </button>
-                  </form>
-                </li>
-              ))}
-            </ul>
-          </Section>
-
-          <Section title={t.rge}>
-            <div className="flex flex-col gap-3">
-              {rgeStatus && (
-                <Alert tone={rgeStatus === "ok" ? "success" : "error"}>
-                  {t.rgeStatus[rgeStatus]}
-                </Alert>
-              )}
-              {rgeList.length === 0 ? (
-                <p className="text-muted-foreground">
-                  {artisan.rge_checked_at ? t.rgeNone : t.rgeNever}
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-1 text-sm">
-                  {rgeList.map((r) => (
-                    <li key={r.id}>
-                      <span className="font-medium">{r.domaine}</span>
-                      {" · "}
-                      <span className="text-muted-foreground">
-                        {[r.nom_certificat ?? r.organisme, r.nom_qualification]
-                          .filter(Boolean)
-                          .join(" · ")}
-                        {" · "}
-                        {r.date_fin < today
-                          ? t.rgeExpired
-                          : docT.validUntil(day.format(new Date(r.date_fin)))}
-                      </span>
-                      {r.url_certificat && (
-                        <>
-                          {" · "}
-                          <a
-                            href={r.url_certificat}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="font-medium text-primary underline"
-                          >
-                            {t.rgeCertificate}
-                          </a>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                {artisan.rge_checked_at && (
-                  <span className="text-muted-foreground">
-                    {t.rgeCheckedOn(dateTime.format(new Date(artisan.rge_checked_at)))}
-                  </span>
-                )}
-                <form action={adminRefreshRge}>
-                  <input type="hidden" name="artisanId" value={artisan.id} />
-                  <button
-                    type="submit"
-                    className="min-h-touch font-medium text-primary underline-offset-2 hover:underline"
-                  >
-                    {t.rgeRefresh}
-                  </button>
-                </form>
-              </div>
-            </div>
-          </Section>
-
-          <Section title={t.charter}>
-            {charter.data ? (
-              <div className="flex flex-col gap-2">
-                <p>
-                  {t.charterSigned(
-                    day.format(new Date(charter.data.accepted_at)),
-                    charter.data.version,
-                    charter.data.signer_name,
-                  )}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t.charterIdentity(charter.data.company, charter.data.siret)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t.engagementSigned(charter.data.engagement_version)}
-                </p>
-                <svg
-                  viewBox="0 0 600 150"
-                  role="img"
-                  aria-label={t.charterSignature}
-                  className="h-24 w-full max-w-md rounded-input border border-border bg-input"
-                >
-                  <path
-                    d={charter.data.signature_path}
-                    fill="none"
-                    stroke="#111728"
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Section id="profil" title={t.profile}>
+              <div className="flex flex-col gap-4">
+                {p?.avatar_path && (
+                  <Image
+                    src={publicUrl("avatars", p.avatar_path)}
+                    alt={fr.pro.onboarding.profile.avatarAlt}
+                    width={96}
+                    height={96}
+                    className="size-24 rounded-full border border-border object-cover"
                   />
-                </svg>
-              </div>
-            ) : (
-              <p className="text-muted-foreground">{t.charterMissing}</p>
-            )}
-          </Section>
-
-          <Section id="profil" title={t.profile}>
-            <div className="flex flex-col gap-4">
-              {p?.avatar_path && (
-                <Image
-                  src={publicUrl("avatars", p.avatar_path)}
-                  alt={fr.pro.onboarding.profile.avatarAlt}
-                  width={96}
-                  height={96}
-                  className="size-24 rounded-full border border-border object-cover"
-                />
-              )}
-              {logoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire, sans optimisation Vercel (spec §4.4)
-                <img
-                  src={logoUrl}
-                  alt={fr.documentLogo.alt(artisan.nom_commercial ?? artisan.raison_sociale ?? "")}
-                  className="h-auto max-h-16 w-auto max-w-48 self-start rounded-input border border-border bg-surface object-contain p-2"
-                />
-              )}
-              <p className="whitespace-pre-line">{artisan.presentation ?? "—"}</p>
-              {(photos.data ?? []).length > 0 && (
-                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {(photos.data ?? []).map((ph, i) => (
-                    <li key={ph.id}>
-                      <Image
-                        src={publicUrl("portfolio", ph.storage_path)}
-                        alt={fr.pro.onboarding.profile.portfolioAlt(i + 1)}
-                        width={300}
-                        height={225}
-                        className="aspect-4/3 w-full rounded-input object-cover"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Section>
-
-          <Section title={t.visibility}>
-            {(() => {
-              const v = artisanVisibility({
-                status: artisan.status,
-                subscriptionActive: subscriptionGrantsAccess(
-                  (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
-                  subscription.data?.past_due_since ?? null,
-                ),
-                connectChargesEnabled: artisan.connect_charges_enabled,
-              });
-              return (
-                <>
-                  <p className={v.visible ? "font-medium text-success" : "font-medium"}>
-                    {v.visible ? t.visible : t.hiddenBecause(v.missing.join(", "))}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {t.connect(artisan.connect_charges_enabled, artisan.connect_payouts_enabled)}
-                  </p>
-                  {/* Fiche publique et choix de l'artisan pour Google (ADR 0144). */}
-                  <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                    <Info
-                      label={t.publicPage.link}
-                      value={
-                        artisan.slug
-                          ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug)
-                          : t.publicPage.none
-                      }
-                    />
-                    <Info
-                      label={t.publicPage.googleLabel}
-                      value={t.publicPage.google(artisan.indexable)}
-                    />
-                  </dl>
-                </>
-              );
-            })()}
-          </Section>
-
-          <Section id="abonnement" title={t.subscription}>
-            {subscription.data ? (
-              <p>
-                {[
-                  subscription.data.plans?.nom ?? subscription.data.plan_code ?? "—",
-                  t.subscriptionStatus[subscription.data.status] ?? subscription.data.status,
-                  subscription.data.status === "trialing" && subscription.data.trial_end
-                    ? t.trialUntil(day.format(new Date(subscription.data.trial_end)))
-                    : null,
-                  subscription.data.cancel_at_period_end && subscription.data.current_period_end
-                    ? t.cancelAt(day.format(new Date(subscription.data.current_period_end)))
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            ) : (
-              <p className="text-muted-foreground">{t.noSubscription}</p>
-            )}
-            {starterMonth && (
-              <p className="text-sm">
-                {t.starterMonth(
-                  starterMonth.applied_at ? day.format(new Date(starterMonth.applied_at)) : null,
-                  day.format(new Date(starterMonth.created_at)),
                 )}
-              </p>
-            )}
-          </Section>
+                {logoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire, sans optimisation Vercel (spec §4.4)
+                  <img
+                    src={logoUrl}
+                    alt={fr.documentLogo.alt(
+                      artisan.nom_commercial ?? artisan.raison_sociale ?? "",
+                    )}
+                    className="h-auto max-h-16 w-auto max-w-48 self-start rounded-input border border-border bg-surface object-contain p-2"
+                  />
+                )}
+                <p className="whitespace-pre-line">{artisan.presentation ?? "—"}</p>
+                {(photos.data ?? []).length > 0 && (
+                  <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {(photos.data ?? []).map((ph, i) => (
+                      <li key={ph.id}>
+                        <Image
+                          src={publicUrl("portfolio", ph.storage_path)}
+                          alt={fr.pro.onboarding.profile.portfolioAlt(i + 1)}
+                          width={300}
+                          height={225}
+                          className="aspect-4/3 w-full rounded-input object-cover"
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </Section>
 
-          <Section id="score" title={t.menaoScore.title}>
-            {menaoScore && <MenaoScore score={menaoScore} />}
-            <div className="flex flex-col gap-2 border-t border-border pt-4">
-              <h3 className="font-medium">{t.menaoScore.googleTitle}</h3>
-              <p className="text-sm text-muted-foreground">{t.menaoScore.googleIntro}</p>
-              <p className="text-sm">
-                {artisan.google_checked_at && artisan.google_rating !== null
-                  ? t.menaoScore.current(
-                      artisan.google_rating.toLocaleString("fr-FR"),
-                      artisan.google_review_count ?? 0,
-                      formatDay(artisan.google_checked_at),
-                    )
-                  : t.menaoScore.none}
-              </p>
-              <GoogleReviewsForm
-                artisanId={artisan.id}
-                current={
-                  artisan.google_url &&
-                  artisan.google_rating !== null &&
-                  artisan.google_review_count
-                    ? {
-                        url: artisan.google_url,
-                        rating: artisan.google_rating,
-                        count: artisan.google_review_count,
-                      }
-                    : null
-                }
-              />
-            </div>
-          </Section>
-
-          <Section id="activite" title={fr.admin.activity.title}>
-            {activity &&
-              (() => {
-                const a = fr.admin.activity;
-                const rates = requestRates({
-                  accepted: activity.demandes.acceptees,
-                  refused: activity.demandes.refusees,
-                  expired: activity.demandes.expirees,
+            <Section title={t.visibility}>
+              {(() => {
+                const v = artisanVisibility({
+                  status: artisan.status,
+                  subscriptionActive: subscriptionGrantsAccess(
+                    (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+                    subscription.data?.past_due_since ?? null,
+                  ),
+                  connectChargesEnabled: artisan.connect_charges_enabled,
                 });
-                const stages = chantiersByStage(activity.chantiers);
-                const ongoing =
-                  stages.demande + stages.devis + stages.travaux + stages.reception + stages.litige;
                 return (
-                  <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                    <Info label={a.requests} value={String(activity.demandes.total)} />
-                    <Info label={a.pending} value={String(activity.demandes.en_attente)} />
-                    <Info label={a.accepted} value={String(activity.demandes.acceptees)} />
-                    <Info label={a.refused} value={String(activity.demandes.refusees)} />
-                    <Info label={a.expired} value={String(activity.demandes.expirees)} />
-                    <Info
-                      label={a.responseRate}
-                      value={rates.response === null ? null : fr.review.percent(rates.response)}
-                    />
-                    <Info label={a.chantiers} value={String(ongoing)} />
-                    <Info label={a.finished} value={String(stages.termine)} />
-                    <Info label={a.reviews} value={String(activity.avis.publies)} />
-                    <Info
-                      label={a.average}
-                      value={
-                        activity.avis.note_moyenne === null
-                          ? null
-                          : fr.review.percent(activity.avis.note_moyenne)
-                      }
-                    />
-                  </dl>
+                  <>
+                    <p className={v.visible ? "font-medium text-success" : "font-medium"}>
+                      {v.visible ? t.visible : t.hiddenBecause(v.missing.join(", "))}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {t.connect(artisan.connect_charges_enabled, artisan.connect_payouts_enabled)}
+                    </p>
+                    {/* Fiche publique et choix de l'artisan pour Google (ADR 0144). */}
+                    <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                      <Info
+                        label={t.publicPage.link}
+                        value={
+                          artisan.slug
+                            ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug)
+                            : t.publicPage.none
+                        }
+                      />
+                      <Info
+                        label={t.publicPage.googleLabel}
+                        value={t.publicPage.google(artisan.indexable)}
+                      />
+                    </dl>
+                  </>
                 );
               })()}
-            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            </Section>
+          </div>
+        </div>
+      )}
+
+      {tab === "activite" && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-6">
+            <Section id="objectif" title={fr.admin.leads.detail.title}>
+              {lead && (
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+                    <div className="flex flex-col gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        {fr.admin.leads.detail.thisMonth}
+                      </p>
+                      <LeadBar progress={lead.progress} direct={lead.direct} />
+                      <div className="flex flex-wrap gap-1.5">
+                        <LeadStatusBadge status={lead.progress.status} />
+                        <LeadAlertBadges alerts={lead.alerts} />
+                      </div>
+                    </div>
+                    <LeadHistory history={lead.history} />
+                  </div>
+                  <p className="text-sm text-label">
+                    {lead.cause === "peu_choisi"
+                      ? fr.admin.leads.causes.peu_choisi(lead.searches)
+                      : lead.cause
+                        ? fr.admin.leads.causes[lead.cause]
+                        : fr.admin.leads.searches(lead.searches)}
+                  </p>
+                </div>
+              )}
+              {leads && (
+                <ArtisanLeadTargetForm
+                  artisanId={artisan.id}
+                  target={ownLeadTarget?.objectif ?? null}
+                  defaultTarget={leads.defaultTarget}
+                />
+              )}
+              <Link
+                href={"/admin/objectifs" as Route}
+                className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+              >
+                {fr.admin.leads.detail.seeAll} →
+              </Link>
+            </Section>
+
+            <Section id="activite" title={fr.admin.activity.title}>
+              {activity &&
+                (() => {
+                  const a = fr.admin.activity;
+                  const rates = requestRates({
+                    accepted: activity.demandes.acceptees,
+                    refused: activity.demandes.refusees,
+                    expired: activity.demandes.expirees,
+                  });
+                  const stages = chantiersByStage(activity.chantiers);
+                  const ongoing =
+                    stages.demande +
+                    stages.devis +
+                    stages.travaux +
+                    stages.reception +
+                    stages.litige;
+                  return (
+                    <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                      <Info label={a.requests} value={String(activity.demandes.total)} />
+                      <Info label={a.pending} value={String(activity.demandes.en_attente)} />
+                      <Info label={a.accepted} value={String(activity.demandes.acceptees)} />
+                      <Info label={a.refused} value={String(activity.demandes.refusees)} />
+                      <Info label={a.expired} value={String(activity.demandes.expirees)} />
+                      <Info
+                        label={a.responseRate}
+                        value={rates.response === null ? null : fr.review.percent(rates.response)}
+                      />
+                      <Info label={a.chantiers} value={String(ongoing)} />
+                      <Info label={a.finished} value={String(stages.termine)} />
+                      <Info label={a.reviews} value={String(activity.avis.publies)} />
+                      <Info
+                        label={a.average}
+                        value={
+                          activity.avis.note_moyenne === null
+                            ? null
+                            : fr.review.percent(activity.avis.note_moyenne)
+                        }
+                      />
+                    </dl>
+                  );
+                })()}
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <Link
+                  href={`/admin/personnes/${artisan.user_id}` as Route}
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  {fr.admin.activity.account} →
+                </Link>
+                <Link
+                  href={`/admin/chantiers?q=${encodeURIComponent(name)}` as Route}
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  {fr.admin.activity.seeChantiers} →
+                </Link>
+              </div>
+            </Section>
+          </div>
+          <div className="flex min-w-0 flex-col gap-6">
+            <Section id="abonnement" title={t.subscription}>
+              {subscription.data ? (
+                <p>
+                  {[
+                    subscription.data.plans?.nom ?? subscription.data.plan_code ?? "—",
+                    t.subscriptionStatus[subscription.data.status] ?? subscription.data.status,
+                    subscription.data.status === "trialing" && subscription.data.trial_end
+                      ? t.trialUntil(day.format(new Date(subscription.data.trial_end)))
+                      : null,
+                    subscription.data.cancel_at_period_end && subscription.data.current_period_end
+                      ? t.cancelAt(day.format(new Date(subscription.data.current_period_end)))
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              ) : (
+                <p className="text-muted-foreground">{t.noSubscription}</p>
+              )}
+              {starterMonth && (
+                <p className="text-sm">
+                  {t.starterMonth(
+                    starterMonth.applied_at ? day.format(new Date(starterMonth.applied_at)) : null,
+                    day.format(new Date(starterMonth.created_at)),
+                  )}
+                </p>
+              )}
+            </Section>
+
+            <Section id="score" title={t.menaoScore.title}>
+              {menaoScore && <MenaoScore score={menaoScore} />}
+              <div className="flex flex-col gap-2 border-t border-border pt-4">
+                <h3 className="font-medium">{t.menaoScore.googleTitle}</h3>
+                <p className="text-sm text-muted-foreground">{t.menaoScore.googleIntro}</p>
+                <p className="text-sm">
+                  {artisan.google_checked_at && artisan.google_rating !== null
+                    ? t.menaoScore.current(
+                        artisan.google_rating.toLocaleString("fr-FR"),
+                        artisan.google_review_count ?? 0,
+                        formatDay(artisan.google_checked_at),
+                      )
+                    : t.menaoScore.none}
+                </p>
+                <GoogleReviewsForm
+                  artisanId={artisan.id}
+                  current={
+                    artisan.google_url &&
+                    artisan.google_rating !== null &&
+                    artisan.google_review_count
+                      ? {
+                          url: artisan.google_url,
+                          rating: artisan.google_rating,
+                          count: artisan.google_review_count,
+                        }
+                      : null
+                  }
+                />
+              </div>
+            </Section>
+
+            <Section id="parrainage" title={t.referral.title}>
+              {referral && (
+                <>
+                  <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                    <Info label={t.referral.code} value={referral.code ?? t.referral.noCode} />
+                    {referral.code && (
+                      <Info
+                        label={t.referral.link}
+                        value={partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros}
+                      />
+                    )}
+                    <Info
+                      label={t.referral.months}
+                      value={t.referral.monthsValue(
+                        referral.mois_poses,
+                        referral.mois_en_attente,
+                        referral.mois_annee,
+                      )}
+                    />
+                    {referral.cadeau && (
+                      <div className="flex flex-wrap gap-x-2">
+                        <dt className="text-muted-foreground">{t.referral.gift} :</dt>
+                        <dd className="font-medium">
+                          {t.referral.giftValue(
+                            fr.admin.referrals.gift[referral.cadeau.status],
+                            referral.cadeau.item &&
+                              fr.pro.hub.welcomeGift.summary(
+                                fr.pro.hub.welcomeGift.items[referral.cadeau.item],
+                                referral.cadeau.size,
+                              ),
+                          )}
+                          {referral.cadeau.ticket_id && (
+                            <>
+                              {" · "}
+                              <Link
+                                href={`/admin/tickets/${referral.cadeau.ticket_id}` as Route}
+                                className="font-medium text-primary underline-offset-2 hover:underline"
+                              >
+                                {t.referral.giftTicket}
+                              </Link>
+                            </>
+                          )}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <h3 className="font-medium">{t.referral.referrer}</h3>
+                    {referral.parrain ? (
+                      <ReferralPerson person={referral.parrain} />
+                    ) : (
+                      <p className="text-muted-foreground">{t.referral.noReferrer}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <h3 className="font-medium">{t.referral.referred(referral.filleuls.length)}</h3>
+                    {referral.filleuls.length > 0 ? (
+                      <ul className="flex flex-col gap-1">
+                        {referral.filleuls.map((f) => (
+                          <li key={f.id}>
+                            <ReferralPerson person={f} />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted-foreground">{t.referral.noReferred}</p>
+                    )}
+                  </div>
+                </>
+              )}
+              <Link
+                href={"/admin/parrainages" as Route}
+                className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+              >
+                {t.referral.seeAll} →
+              </Link>
+            </Section>
+          </div>
+        </div>
+      )}
+
+      {tab === "compte" && (
+        <div className="flex flex-col gap-6">
+          {/* Deux actions aux noms clairs, côte à côte (ADR 0285). */}
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <Section title={fr.admin.suspension.title}>
+              <AccessEffect effect={fr.admin.suspension.effect} keeps={fr.admin.suspension.keeps} />
+              <SuspensionForm
+                artisanId={artisan.id}
+                status={artisan.status}
+                suspensionReason={artisan.suspension_reason}
+              />
+            </Section>
+            <Section title={t.accountTitle}>
+              <AccessEffect
+                effect={fr.admin.accountActions.effect}
+                keeps={fr.admin.accountActions.keeps}
+              />
+              {account ? (
+                <AccountActions userId={artisan.user_id} isArtisan suspended={account.banned} />
+              ) : (
+                <Alert tone="error">{fr.errors.generic}</Alert>
+              )}
               <Link
                 href={`/admin/personnes/${artisan.user_id}` as Route}
-                className="font-medium text-primary underline-offset-2 hover:underline"
+                className="self-start text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
               >
-                {fr.admin.activity.account} →
+                {t.openAccount} →
               </Link>
-              <Link
-                href={`/admin/chantiers?q=${encodeURIComponent(name)}` as Route}
-                className="font-medium text-primary underline-offset-2 hover:underline"
-              >
-                {fr.admin.activity.seeChantiers} →
-              </Link>
-            </div>
-          </Section>
-
-          <Section id="objectif" title={fr.admin.leads.detail.title}>
-            {lead && (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm text-muted-foreground">
-                      {fr.admin.leads.detail.thisMonth}
-                    </p>
-                    <LeadBar progress={lead.progress} direct={lead.direct} />
-                    <div className="flex flex-wrap gap-1.5">
-                      <LeadStatusBadge status={lead.progress.status} />
-                      <LeadAlertBadges alerts={lead.alerts} />
-                    </div>
-                  </div>
-                  <LeadHistory history={lead.history} />
-                </div>
-                <p className="text-sm text-label">
-                  {lead.cause === "peu_choisi"
-                    ? fr.admin.leads.causes.peu_choisi(lead.searches)
-                    : lead.cause
-                      ? fr.admin.leads.causes[lead.cause]
-                      : fr.admin.leads.searches(lead.searches)}
-                </p>
-              </div>
-            )}
-            {leads && (
-              <ArtisanLeadTargetForm
-                artisanId={artisan.id}
-                target={ownLeadTarget?.objectif ?? null}
-                defaultTarget={leads.defaultTarget}
-              />
-            )}
-            <Link
-              href={"/admin/objectifs" as Route}
-              className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
-            >
-              {fr.admin.leads.detail.seeAll} →
-            </Link>
-          </Section>
-
-          <Section id="parrainage" title={t.referral.title}>
-            {referral && (
-              <>
-                <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                  <Info label={t.referral.code} value={referral.code ?? t.referral.noCode} />
-                  {referral.code && (
-                    <Info
-                      label={t.referral.link}
-                      value={partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros}
-                    />
-                  )}
-                  <Info
-                    label={t.referral.months}
-                    value={t.referral.monthsValue(
-                      referral.mois_poses,
-                      referral.mois_en_attente,
-                      referral.mois_annee,
-                    )}
-                  />
-                  {referral.cadeau && (
-                    <div className="flex flex-wrap gap-x-2">
-                      <dt className="text-muted-foreground">{t.referral.gift} :</dt>
-                      <dd className="font-medium">
-                        {t.referral.giftValue(
-                          fr.admin.referrals.gift[referral.cadeau.status],
-                          referral.cadeau.item &&
-                            fr.pro.hub.welcomeGift.summary(
-                              fr.pro.hub.welcomeGift.items[referral.cadeau.item],
-                              referral.cadeau.size,
-                            ),
-                        )}
-                        {referral.cadeau.ticket_id && (
-                          <>
-                            {" · "}
-                            <Link
-                              href={`/admin/tickets/${referral.cadeau.ticket_id}` as Route}
-                              className="font-medium text-primary underline-offset-2 hover:underline"
-                            >
-                              {t.referral.giftTicket}
-                            </Link>
-                          </>
-                        )}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-                <div className="flex flex-col gap-1 text-sm">
-                  <h3 className="font-medium">{t.referral.referrer}</h3>
-                  {referral.parrain ? (
-                    <ReferralPerson person={referral.parrain} />
-                  ) : (
-                    <p className="text-muted-foreground">{t.referral.noReferrer}</p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1 text-sm">
-                  <h3 className="font-medium">{t.referral.referred(referral.filleuls.length)}</h3>
-                  {referral.filleuls.length > 0 ? (
-                    <ul className="flex flex-col gap-1">
-                      {referral.filleuls.map((f) => (
-                        <li key={f.id}>
-                          <ReferralPerson person={f} />
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground">{t.referral.noReferred}</p>
-                  )}
-                </div>
-              </>
-            )}
-            <Link
-              href={"/admin/parrainages" as Route}
-              className="text-sm font-medium text-primary underline-offset-2 hover:underline"
-            >
-              {t.referral.seeAll} →
-            </Link>
-          </Section>
-
-          <Section title={fr.admin.suspension.title}>
-            <SuspensionForm
-              artisanId={artisan.id}
-              status={artisan.status}
-              suspensionReason={artisan.suspension_reason}
-            />
-          </Section>
+            </Section>
+          </div>
 
           <Section title={fr.admin.radiation.title}>
             <RadiationForm
@@ -922,64 +1058,25 @@ export default async function AdminArtisanPage({
               reason={artisan.radiation_reason}
             />
           </Section>
-
-          {!pending && decisionSection}
-
-          <Section title={sc.artisanSection}>
-            {(spotChecks.data ?? []).length === 0 ? (
-              <p className="text-muted-foreground">{sc.artisanNone}</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {(spotChecks.data ?? []).map((c) => (
-                  <li key={c.id} className="flex flex-col gap-1">
-                    <span>
-                      <span className="font-medium">
-                        {month.format(new Date(`${c.period}T00:00:00Z`))}
-                      </span>
-                      {" · "}
-                      {c.result ? (sc.results[c.result] ?? c.result) : sc.pending}
-                      {c.insurer_called ? ` · ${sc.insurerCalled}` : ""}
-                    </span>
-                    {c.note && <span className="text-sm text-muted-foreground">{c.note}</span>}
-                    {c.result === null && (
-                      <Link
-                        href={`/admin/conformite/controles#controle-${c.id}` as Route}
-                        className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        {sc.artisanAction} →
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Section>
-
-          <Section id="historique" title={t.history}>
-            {(reviews.data ?? []).length === 0 ? (
-              <p className="text-muted-foreground">{t.noHistory}</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {(reviews.data ?? []).map((r) => (
-                  <li key={r.id}>
-                    <span className="font-medium">{t.decisions[r.decision]}</span> ·{" "}
-                    {dateTime.format(new Date(r.created_at))}
-                    {reviewerName(r.admin_id) &&
-                      ` · ${t.decidedBy(reviewerName(r.admin_id) ?? "")}`}
-                    {r.message && (
-                      <span className="block text-sm text-muted-foreground">{r.message}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Section>
         </div>
-        {pending && (
-          <aside className="flex flex-col gap-6 lg:sticky lg:top-44">{decisionSection}</aside>
-        )}
-      </div>
+      )}
     </div>
+  );
+}
+
+/** Ce que fait une action sur l'accès de l'artisan, et ce qui ne change pas (ADR 0285). */
+function AccessEffect({ effect, keeps }: { effect: string; keeps: string }) {
+  return (
+    <dl className="flex flex-col gap-1 text-sm">
+      <div>
+        <dt className="inline font-semibold">{fr.admin.detail.effectLabel} </dt>
+        <dd className="inline">{effect}</dd>
+      </div>
+      <div className="text-muted-foreground">
+        <dt className="inline font-semibold text-label">{fr.admin.detail.keepsLabel} </dt>
+        <dd className="inline">{keeps}</dd>
+      </div>
+    </dl>
   );
 }
 
@@ -1000,7 +1097,7 @@ function Section({
     <section
       id={id}
       aria-label={title}
-      className={`scroll-mt-44 ${
+      className={`scroll-mt-64 ${
         tone === "highlight"
           ? "flex flex-col gap-3 rounded-card bg-primary-soft p-5 sm:p-6"
           : sheetCard

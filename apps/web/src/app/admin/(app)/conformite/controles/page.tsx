@@ -140,7 +140,7 @@ export default async function SpotChecksPage({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {r.artisans ? (
                       <Link
-                        href={`/admin/artisans/${r.artisans.id}` as Route}
+                        href={`/admin/artisans/${r.artisans.id}?onglet=verification` as Route}
                         aria-label={t.open(nameOf(r))}
                         className="font-medium text-primary underline-offset-2 hover:underline"
                       >
@@ -186,7 +186,7 @@ export default async function SpotChecksPage({
                     </span>
                     {r.artisans ? (
                       <Link
-                        href={`/admin/artisans/${r.artisans.id}` as Route}
+                        href={`/admin/artisans/${r.artisans.id}?onglet=verification` as Route}
                         className="font-medium text-primary underline-offset-2 hover:underline"
                       >
                         {nameOf(r)}

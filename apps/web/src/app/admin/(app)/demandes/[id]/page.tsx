@@ -213,6 +213,15 @@ export default async function AdminRequestPage({ params }: PageProps<"/admin/dem
                 },
               ]}
             />
+            {/* Lien croisé vers son compte (ADR 0285), sauf visiteur sans compte. */}
+            {client.email && (
+              <Link
+                href={`/admin/personnes/${p.user_id}` as Route}
+                className="text-sm font-semibold text-primary-strong underline-offset-2 hover:underline"
+              >
+                {fr.admin.followUp.seeAccount} →
+              </Link>
+            )}
           </DetailSection>
           <DetailSection title={r.chantier}>
             {chantiers.length === 0 ? (

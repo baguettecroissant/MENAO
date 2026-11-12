@@ -12,6 +12,8 @@ const t = fr.admin.accountActions;
 function refresh(userId: string) {
   revalidatePath(`/admin/personnes/${userId}`);
   revalidatePath("/admin/personnes");
+  // Onglet Compte de la fiche artisan (ADR 0285).
+  revalidatePath("/admin/artisans", "layout");
 }
 
 /** Erreur de règle de la base affichable telle quelle, sinon message générique. */
