@@ -33,13 +33,14 @@ export function TenderEditor({
   lines,
   vatRateBp,
   vatOptions,
-  hasSheet,
+  sourceKind,
 }: {
   tenderId: string;
   lines: TenderLine[];
   vatRateBp: number;
   vatOptions: readonly number[];
-  hasSheet: boolean;
+  /** Fichier de l'architecte : Excel (réécrit tel quel) ou PDF (classeur MENAO, ADR 0288). */
+  sourceKind: "xlsx" | "pdf" | null;
 }) {
   const [state, formAction, pending] = useActionState(saveTender, initialFormState);
   const [vat, setVat] = useState(vatRateBp);
@@ -290,7 +291,7 @@ export function TenderEditor({
       <Card className="flex flex-col gap-4">
         <CardTitle title={t.exportTitle} description={dirty ? t.saveFirst : undefined} />
         <div className="grid gap-3 md:grid-cols-2">
-          {hasSheet && (
+          {sourceKind && (
             <a
               href={`${base}/excel`}
               aria-disabled={dirty || undefined}
@@ -301,8 +302,12 @@ export function TenderEditor({
                 className="mt-0.5 size-5 shrink-0 text-primary-strong"
               />
               <span className="flex flex-1 flex-col gap-1">
-                <span className="font-semibold">{t.exportExcel}</span>
-                <span className="text-sm text-muted-foreground">{t.exportExcelHint}</span>
+                <span className="font-semibold">
+                  {sourceKind === "pdf" ? t.exportExcelMenao : t.exportExcel}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {sourceKind === "pdf" ? t.exportExcelMenaoHint : t.exportExcelHint}
+                </span>
               </span>
               <Download aria-label={t.download} className="size-4 shrink-0" />
             </a>

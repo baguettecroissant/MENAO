@@ -67,6 +67,9 @@ export default async function TenderPage({
         ) : reading ? (
           <Alert tone="error">{t.importStatus[reading] ?? t.importStatus.error}</Alert>
         ) : null}
+        {tender.source_kind === "pdf" && lines.length > 0 && (
+          <Alert tone="info">{t.warnings.pdf}</Alert>
+        )}
         {warnings.map((w) => (
           <Alert key={w} tone="info">
             {t.warnings[w]}
@@ -79,7 +82,11 @@ export default async function TenderPage({
             lines={lines}
             vatRateBp={tender.vat_rate_bp}
             vatOptions={vatOptions}
-            hasSheet={tender.source_kind === "xlsx"}
+            sourceKind={
+              tender.source_kind === "xlsx" || tender.source_kind === "pdf"
+                ? tender.source_kind
+                : null
+            }
           />
         )}
 

@@ -3,8 +3,10 @@ import type { QuoteUnit } from "../src/quote";
 import {
   type DpgfCell,
   type DpgfUnit,
+  dpgfReadingJsonSchema,
   dpgfUnit,
   findDpgfHeader,
+  normalizeDpgfReading,
   parseDpgfGrid,
   parseQuantityMilli,
   suggestTenderPrice,
@@ -222,5 +224,86 @@ describe("totaux et écarts", () => {
       changed: 1,
       underestimatedHtCents: 113_960,
     });
+  });
+});
+
+describe("DPGF lu dans un PDF", () => {
+  it("garde titres et postes, unités et quantités, et repère les lots", () => {
+    const reading = normalizeDpgfReading({
+      lisible: true,
+      est_un_dpgf: true,
+      lignes: [
+        {
+          type: "titre",
+          numero: "LOT 05",
+          designation: "CARRELAGE, FAÏENCE",
+          unite: null,
+          quantite: null,
+        },
+        {
+          type: "poste",
+          numero: "5.2",
+          designation: " Carrelage sol 60 x 60 ",
+          unite: "m²",
+          quantite: 62,
+        },
+        { type: "poste", numero: null, designation: "Seuils", unite: "U", quantite: null },
+        { type: "poste", numero: "5.9", designation: "", unite: "u", quantite: 1 },
+        {
+          type: "titre",
+          numero: null,
+          designation: "TOTAL HT LOT 05",
+          unite: null,
+          quantite: null,
+        },
+      ],
+    });
+    expect(reading.rows).toEqual([
+      {
+        kind: "titre",
+        sheetRow: null,
+        code: "LOT 05",
+        designation: "CARRELAGE, FAÏENCE",
+        unitLabel: null,
+        unit: null,
+        quantityMilli: null,
+        lot: "LOT 05 CARRELAGE, FAÏENCE",
+      },
+      {
+        kind: "poste",
+        sheetRow: null,
+        code: "5.2",
+        designation: "Carrelage sol 60 x 60",
+        unitLabel: "m²",
+        unit: "m2",
+        quantityMilli: 62_000,
+        lot: "LOT 05 CARRELAGE, FAÏENCE",
+      },
+      {
+        kind: "poste",
+        sheetRow: null,
+        code: null,
+        designation: "Seuils",
+        unitLabel: "U",
+        unit: "u",
+        quantityMilli: null,
+        lot: "LOT 05 CARRELAGE, FAÏENCE",
+      },
+    ]);
+    expect(reading.warnings).toEqual([]);
+  });
+
+  it("signale un document illisible ou qui n'est pas un DPGF", () => {
+    expect(
+      normalizeDpgfReading({ lisible: false, est_un_dpgf: true, lignes: [] }).warnings,
+    ).toEqual(["illisible"]);
+    expect(
+      normalizeDpgfReading({ lisible: true, est_un_dpgf: false, lignes: [] }).warnings,
+    ).toEqual(["pas_un_dpgf"]);
+  });
+
+  it("décrit la réponse attendue du modèle", () => {
+    const schema = dpgfReadingJsonSchema() as { required: string[] };
+    expect(schema.required).toEqual(["lisible", "est_un_dpgf", "lignes"]);
   });
 });

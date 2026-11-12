@@ -28,8 +28,11 @@ export type DpgfColumns = {
 
 export type DpgfRow = {
   kind: "titre" | "poste";
-  /** Numéro de ligne dans la feuille (1 = première ligne), pour réécrire le fichier. */
-  sheetRow: number;
+  /**
+   * Numéro de ligne dans la feuille (1 = première ligne), pour réécrire le fichier ; null pour un
+   * DPGF lu dans un PDF.
+   */
+  sheetRow: number | null;
   code: string | null;
   designation: string;
   unitLabel: string | null;
@@ -218,6 +221,98 @@ export function parseDpgfGrid(grid: readonly (readonly DpgfCell[])[]): ParsedDpg
     warnings.push("sans_quantites");
   }
   return { headerRow: header.row, columns, rows, warnings };
+}
+
+// ---------------------------------------------------------------------------------------------
+// DPGF lu dans un PDF (Edge Function tender-sheet, modèle de langage, ADR 0288)
+// ---------------------------------------------------------------------------------------------
+
+/** Réponse brute du modèle, déjà validée par l'Edge Function. */
+export type DpgfReadingRaw = {
+  lisible: boolean;
+  est_un_dpgf: boolean;
+  lignes: {
+    type: "titre" | "poste";
+    numero: string | null;
+    designation: string;
+    unite: string | null;
+    quantite: number | null;
+  }[];
+};
+
+export type DpgfReadingWarning = "illisible" | "pas_un_dpgf" | "tronque" | "sans_quantites";
+
+/** Schéma JSON de la réponse attendue (sortie structurée du modèle). */
+export function dpgfReadingJsonSchema(): Record<string, unknown> {
+  const nullable = (type: string) => ({ type: [type, "null"] });
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["lisible", "est_un_dpgf", "lignes"],
+    properties: {
+      lisible: { type: "boolean" },
+      est_un_dpgf: { type: "boolean" },
+      lignes: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["type", "numero", "designation", "unite", "quantite"],
+          properties: {
+            type: { type: "string", enum: ["titre", "poste"] },
+            numero: nullable("string"),
+            designation: { type: "string" },
+            unite: nullable("string"),
+            quantite: nullable("number"),
+          },
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Lignes d'un DPGF lu par le modèle, mises dans la même forme que celles d'une feuille Excel :
+ * titres (lots), postes avec unité ramenée à celle des devis, lignes de totaux et désignations
+ * vides écartées.
+ */
+export function normalizeDpgfReading(raw: DpgfReadingRaw): {
+  rows: DpgfRow[];
+  warnings: DpgfReadingWarning[];
+} {
+  const warnings: DpgfReadingWarning[] = [];
+  if (!raw.lisible) warnings.push("illisible");
+  if (!raw.est_un_dpgf) warnings.push("pas_un_dpgf");
+  const rows: DpgfRow[] = [];
+  let lot: string | null = null;
+  for (const line of raw.lignes) {
+    const designation = cellText(line.designation).slice(0, 500);
+    const code = cellText(line.numero).slice(0, 40) || null;
+    if (!designation) continue;
+    const label = [code, designation].filter(Boolean).join(" ");
+    if (SUMMARY.test(words(designation))) continue;
+    if (rows.length >= MAX_TENDER_LINES) {
+      warnings.push("tronque");
+      break;
+    }
+    const unitLabel = cellText(line.unite).slice(0, 20) || null;
+    const isPost = line.type === "poste";
+    if (!isPost && /^lot\b/.test(words(label))) lot = label;
+    rows.push({
+      kind: isPost ? "poste" : "titre",
+      sheetRow: null,
+      code,
+      designation,
+      unitLabel: isPost ? unitLabel : null,
+      unit: isPost ? dpgfUnit(unitLabel) : null,
+      quantityMilli: isPost ? parseQuantityMilli(line.quantite) : null,
+      lot,
+    });
+  }
+  if (rows.some((r) => r.kind === "poste") && !rows.some((r) => r.quantityMilli !== null)) {
+    warnings.push("sans_quantites");
+  }
+  return { rows, warnings };
 }
 
 // ---------------------------------------------------------------------------------------------

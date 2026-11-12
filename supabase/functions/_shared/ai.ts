@@ -120,7 +120,8 @@ export type AiRun = {
     | "client-assistant"
     | "commercial-copilot"
     | "voice-assistant"
-    | "artisan-assistant";
+    | "artisan-assistant"
+    | "read-dpgf";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;

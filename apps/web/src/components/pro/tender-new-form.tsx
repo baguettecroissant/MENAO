@@ -9,11 +9,14 @@ import { initialFormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/client";
 
 const t = fr.pro.tenders;
-const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const TYPES = {
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pdf: "application/pdf",
+} as const;
 const MAX_BYTES = 15 * 1024 * 1024;
 
 /**
- * Nouvel appel d'offres (ADR 0287) : le fichier Excel part directement du navigateur dans le
+ * Nouvel appel d'offres (ADR 0287, 0288) : le fichier (Excel ou PDF) part directement du navigateur dans le
  * dossier privé de l'entreprise (tender-files), puis la Server Action crée l'appel d'offres et
  * fait lire le DPGF.
  */
@@ -27,7 +30,10 @@ export function TenderNewForm({ artisanId }: { artisanId: string }) {
   async function submit(formData: FormData) {
     setFileError(null);
     const file = formData.get("file");
-    if (!(file instanceof File) || file.size === 0 || !file.name.toLowerCase().endsWith(".xlsx")) {
+    const extension = file instanceof File ? file.name.toLowerCase().split(".").pop() : null;
+    // Excel, ou PDF lu par l'IA (ADR 0288).
+    const kind = extension === "xlsx" || extension === "pdf" ? extension : null;
+    if (!(file instanceof File) || file.size === 0 || !kind) {
       setFileError(t.errors.file ?? null);
       return;
     }
@@ -36,10 +42,10 @@ export function TenderNewForm({ artisanId }: { artisanId: string }) {
       return;
     }
     setUploading(true);
-    const path = `${artisanId}/${crypto.randomUUID()}.xlsx`;
+    const path = `${artisanId}/${crypto.randomUUID()}.${kind}`;
     const { error } = await createClient()
       .storage.from("tender-files")
-      .upload(path, file, { contentType: XLSX, upsert: false });
+      .upload(path, file, { contentType: TYPES[kind], upsert: false });
     setUploading(false);
     if (error) {
       setFileError(t.errors.upload ?? null);
@@ -94,7 +100,7 @@ export function TenderNewForm({ artisanId }: { artisanId: string }) {
             name="file"
             type="file"
             required
-            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            accept=".xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf"
             aria-describedby="tender-file-hint"
             className="min-w-0 flex-1 text-sm file:mr-3 file:rounded-button file:border-0 file:bg-primary-soft file:px-3 file:py-1.5 file:font-semibold file:text-primary-strong"
           />
