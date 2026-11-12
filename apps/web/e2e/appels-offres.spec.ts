@@ -56,13 +56,13 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   await expect(
     page.getByRole("heading", { name: "Inclus dans la formule Entreprise" }),
   ).toBeVisible();
-  await expect(page.getByLabel("DPGF de l'architecte")).toHaveCount(0);
+  await expect(page.getByLabel("DPGF de l'architecte", { exact: true })).toHaveCount(0);
 
   await setPlan("entreprise");
   await page.reload();
   await page.getByLabel("Nom du projet").fill(house);
   await page.getByLabel("Architecte ou maître d'œuvre").fill("Atelier fictif");
-  await page.getByLabel("DPGF de l'architecte").setInputFiles(DPGF);
+  await page.getByLabel("DPGF de l'architecte", { exact: true }).setInputFiles(DPGF);
   await page.getByRole("button", { name: "Lire le DPGF" }).click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
     timeout: 30_000,
@@ -107,7 +107,9 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
 
   // DPGF en PDF (ADR 0288) : lu par l'IA (faux serveur en CI), à vérifier, rendu en classeur MENAO.
   await page.getByLabel("Nom du projet").fill(offices);
-  await page.getByLabel("DPGF de l'architecte").setInputFiles({ ...files.pdf, name: "dpgf.pdf" });
+  await page
+    .getByLabel("DPGF de l'architecte", { exact: true })
+    .setInputFiles({ ...files.pdf, name: "dpgf.pdf" });
   await page.getByRole("button", { name: "Lire le DPGF" }).click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
     timeout: 30_000,
