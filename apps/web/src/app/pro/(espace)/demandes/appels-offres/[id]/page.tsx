@@ -1,15 +1,17 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { artisanPageUrl } from "@menao/core";
+import { artisanPageUrl, planReadingFigures } from "@menao/core";
+import { CheckCircle2, FileText, Ruler, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
+import { PlanReleve, type PlanFileLink } from "@/components/pro/plan-releve";
 import { TenderEditor } from "@/components/pro/tender-editor";
 import { Alert, Button, Card, CardTitle, Field, inputClasses } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
-import { deleteTender, updateTender } from "@/lib/artisan/tender-actions";
-import { getTender } from "@/lib/artisan/tenders";
+import { deleteTender, rereadPlans, updateTender } from "@/lib/artisan/tender-actions";
+import { getTender, getTenderRooms, planFiles } from "@/lib/artisan/tenders";
 import { formatDay } from "@/lib/format";
 
 const t = fr.pro.tenders;
@@ -45,7 +47,11 @@ export default async function TenderPage({
   const pageUrl = artisan?.slug ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug) : null;
   const company = artisan?.nom_commercial ?? artisan?.raison_sociale ?? "";
   const reading = query.lecture;
-  const warnings = (query.alertes ?? "").split(",").filter((w) => t.warnings[w]);
+  // Appel d'offres créé depuis les plans (F-140, ADR 0291) : relevé des pièces.
+  const isPlan = tender.source_kind === "plan";
+  const warningTexts = isPlan ? t.plan.warnings : t.warnings;
+  const warnings = (query.alertes ?? "").split(",").filter((w) => warningTexts[w]);
+  const plan = isPlan ? await planData(supabase, tender) : null;
 
   return (
     <main className="flex-1">
@@ -72,19 +78,91 @@ export default async function TenderPage({
 
         {reading === "ok" ? (
           <Alert tone="success">
-            {t.importOk(Number(query.postes ?? 0), Number(query.prix ?? 0))}
+            {isPlan
+              ? t.plan.readOk(Number(query.pieces ?? 0))
+              : t.importOk(Number(query.postes ?? 0), Number(query.prix ?? 0))}
           </Alert>
         ) : reading ? (
-          <Alert tone="error">{t.importStatus[reading] ?? t.importStatus.error}</Alert>
+          <Alert tone="error">
+            {isPlan
+              ? (t.plan.status[reading] ?? t.plan.status.error)
+              : (t.importStatus[reading] ?? t.importStatus.error)}
+          </Alert>
         ) : null}
         {tender.source_kind === "pdf" && lines.length > 0 && (
           <Alert tone="info">{t.warnings.pdf}</Alert>
         )}
         {warnings.map((w) => (
           <Alert key={w} tone="info">
-            {t.warnings[w]}
+            {warningTexts[w]}
           </Alert>
         ))}
+
+        {plan && (
+          <>
+            <Alert tone="info">{t.plan.responsibility}</Alert>
+            <div className="grid items-start gap-6 lg:grid-cols-2">
+              <Card className="flex flex-col gap-3">
+                <CardTitle title={t.plan.summaryTitle} />
+                <ul className="flex flex-col gap-2 text-sm">
+                  {plan.summary.map(({ icon: Icon, tone, text }) => (
+                    <li key={text} className="flex items-start gap-2.5">
+                      <Icon aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${tone}`} />
+                      <span>{text}</span>
+                    </li>
+                  ))}
+                </ul>
+                {plan.rooms.length === 0 && (
+                  <form action={rereadPlans}>
+                    <input type="hidden" name="tenderId" value={tender.id} />
+                    <Button type="submit" variant="secondary" block={false}>
+                      {t.plan.retry}
+                    </Button>
+                  </form>
+                )}
+              </Card>
+              <Card className="flex flex-col gap-3">
+                <CardTitle title={t.plan.filesTitle} />
+                <ul className="flex flex-col gap-2 text-sm">
+                  {plan.files.map((file, i) => (
+                    <li key={`${i}-${file.name}`} className="flex items-center gap-2.5">
+                      <FileText
+                        aria-hidden="true"
+                        className="size-4 shrink-0 text-primary-strong"
+                      />
+                      {file.url ? (
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="min-w-0 truncate font-semibold text-primary-strong underline-offset-2 hover:underline"
+                        >
+                          {file.name}
+                        </a>
+                      ) : (
+                        <span className="min-w-0 truncate font-semibold">{file.name}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {plan.trades.length > 0 && (
+                  <p className="text-sm text-label">
+                    <span className="font-semibold">{t.plan.tradesTitle} : </span>
+                    {plan.trades.join(", ")}
+                  </p>
+                )}
+              </Card>
+            </div>
+            {plan.rooms.length > 0 && (
+              <PlanReleve
+                tenderId={tender.id}
+                rooms={plan.rooms}
+                counts={plan.counts}
+                files={plan.files}
+              />
+            )}
+          </>
+        )}
 
         {lines.length > 0 && (
           <TenderEditor
@@ -195,4 +273,69 @@ export default async function TenderPage({
       </div>
     </main>
   );
+}
+
+/** Relevé, plans (liens signés d'une heure) et métiers d'un appel d'offres créé depuis les plans. */
+async function planData(
+  supabase: Awaited<ReturnType<typeof requireTeamPermission>>["supabase"],
+  tender: {
+    id: string;
+    plan_files: unknown;
+    plan_trades: string[];
+    plan_counts: unknown;
+    plan_scale: string | null;
+  },
+) {
+  const entries = planFiles(tender.plan_files);
+  const [rooms, { data: signed }, { data: trades }] = await Promise.all([
+    getTenderRooms(supabase, tender.id),
+    entries.length
+      ? supabase.storage.from("tender-files").createSignedUrls(
+          entries.map((f) => f.path),
+          3600,
+        )
+      : Promise.resolve({ data: [] as { signedUrl: string | null }[] }),
+    supabase.from("trades").select("code, label").in("code", tender.plan_trades),
+  ]);
+  const files: PlanFileLink[] = entries.map((f, i) => ({
+    name: f.name,
+    kind: f.kind,
+    url: signed?.[i]?.signedUrl ?? null,
+  }));
+  const figures = planReadingFigures(
+    rooms.map((r) => ({
+      areaCm2: r.area_cm2,
+      perimeterMm: r.perimeter_mm,
+      heightMm: r.height_mm,
+      source: r.source,
+      uncertain: r.uncertain,
+    })),
+  );
+  const ok = { icon: CheckCircle2, tone: "text-success" };
+  const warn = { icon: TriangleAlert, tone: "text-warning" };
+  const summary = [
+    tender.plan_scale ? { ...ok, text: t.plan.summary.scale(tender.plan_scale) } : null,
+    figures.read ? { ...ok, text: t.plan.summary.read(figures.read) } : null,
+    figures.computed
+      ? {
+          icon: Ruler,
+          tone: "text-primary-strong",
+          text: t.plan.summary.computed(figures.computed),
+        }
+      : null,
+    figures.toCheck ? { ...warn, text: t.plan.summary.toCheck(figures.toCheck) } : null,
+    figures.missing ? { ...warn, text: t.plan.summary.missing(figures.missing) } : null,
+  ].filter((x): x is { icon: typeof CheckCircle2; tone: string; text: string } => x !== null);
+  const counts =
+    tender.plan_counts && typeof tender.plan_counts === "object"
+      ? (tender.plan_counts as Record<string, number | null>)
+      : {};
+  const labels = new Map((trades ?? []).map((tr) => [tr.code, tr.label]));
+  return {
+    rooms,
+    files,
+    counts,
+    summary,
+    trades: tender.plan_trades.map((code) => labels.get(code) ?? code),
+  };
 }

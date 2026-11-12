@@ -5219,6 +5219,66 @@ export type Database = {
           },
         ];
       };
+      tender_rooms: {
+        Row: {
+          area_cm2: number | null;
+          file_index: number | null;
+          habitable: boolean;
+          height_mm: number | null;
+          id: string;
+          level: string | null;
+          name: string;
+          page: number | null;
+          perimeter_mm: number | null;
+          position: number;
+          source: string;
+          tender_id: string;
+          uncertain: boolean;
+          wet: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          area_cm2?: number | null;
+          file_index?: number | null;
+          habitable?: boolean;
+          height_mm?: number | null;
+          id?: string;
+          level?: string | null;
+          name: string;
+          page?: number | null;
+          perimeter_mm?: number | null;
+          position: number;
+          source: string;
+          tender_id: string;
+          uncertain?: boolean;
+          wet?: boolean;
+        };
+        Update: {
+          area_cm2?: number | null;
+          file_index?: number | null;
+          habitable?: boolean;
+          height_mm?: number | null;
+          id?: string;
+          level?: string | null;
+          name?: string;
+          page?: number | null;
+          perimeter_mm?: number | null;
+          position?: number;
+          source?: string;
+          tender_id?: string;
+          uncertain?: boolean;
+          wet?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tender_rooms_tender_id_fkey";
+            columns: ["tender_id"];
+            isOneToOne: false;
+            referencedRelation: "tenders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenders: {
         Row: {
           artisan_id: string;
@@ -5228,6 +5288,10 @@ export type Database = {
           id: string;
           imported_at: string | null;
           name: string;
+          plan_counts: NonNullable<Json>;
+          plan_files: NonNullable<Json>;
+          plan_scale: string | null;
+          plan_trades: string[];
           sheet: NonNullable<Json>;
           source_kind: string | null;
           source_name: string | null;
@@ -5245,6 +5309,10 @@ export type Database = {
           id?: string;
           imported_at?: string | null;
           name: string;
+          plan_counts?: NonNullable<Json>;
+          plan_files?: NonNullable<Json>;
+          plan_scale?: string | null;
+          plan_trades?: string[];
           sheet?: NonNullable<Json>;
           source_kind?: string | null;
           source_name?: string | null;
@@ -5261,6 +5329,10 @@ export type Database = {
           id?: string;
           imported_at?: string | null;
           name?: string;
+          plan_counts?: NonNullable<Json>;
+          plan_files?: NonNullable<Json>;
+          plan_scale?: string | null;
+          plan_trades?: string[];
           sheet?: NonNullable<Json>;
           source_kind?: string | null;
           source_name?: string | null;
@@ -6513,6 +6585,16 @@ export type Database = {
         Args: { p_chantier_id: string; p_date: string; p_time: string };
         Returns: undefined;
       };
+      artisan_create_plan_tender: {
+        Args: {
+          p_client_name?: string;
+          p_due_on?: string;
+          p_files: Json;
+          p_name: string;
+          p_trades: string[];
+        };
+        Returns: string;
+      };
       artisan_create_tender: {
         Args: {
           p_client_name?: string;
@@ -6526,12 +6608,16 @@ export type Database = {
       artisan_declare_finished: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_dictation: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_expense: { Args: { p_expense_id: string }; Returns: string };
-      artisan_delete_tender: { Args: { p_tender_id: string }; Returns: string };
+      artisan_delete_tender: { Args: { p_tender_id: string }; Returns: string[] };
       artisan_fix_appointment: {
         Args: { p_date: string; p_request_id: string; p_time: string };
         Returns: string;
       };
       artisan_grade: { Args: Record<PropertyKey, never>; Returns: Json };
+      artisan_import_plan_reading: {
+        Args: { p_counts: Json; p_rooms: Json; p_scale?: string; p_tender_id: string };
+        Returns: number;
+      };
       artisan_import_tender_lines: {
         Args: { p_lines: Json; p_sheet: Json; p_tender_id: string };
         Returns: number;
@@ -6667,6 +6753,10 @@ export type Database = {
       artisan_save_expense: {
         Args: { p_expense: Json; p_expense_id: string; p_lines: Json };
         Returns: string;
+      };
+      artisan_save_plan_rooms: {
+        Args: { p_counts: Json; p_rooms: Json; p_tender_id: string };
+        Returns: undefined;
       };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
       artisan_save_tender: {

@@ -7,8 +7,11 @@
 //   sans toucher à sa mise en page ni à ses formules (recalculées à l'ouverture), et ajoute une
 //   feuille « Écarts MENAO » quand des quantités ont changé. DPGF venu d'un PDF : un classeur
 //   MENAO au même contenu.
+// - « plan » : appel d'offres créé depuis les plans (F-140, ADR 0291) : les plans déposés (PDF et
+//   photos) sont lus par un modèle de langage (plan.ts), et le relevé (pièces, éléments comptés)
+//   est enregistré (artisan_import_plan_reading, jeton de l'utilisateur).
 // Aucune donnée personnelle dans les journaux (CLAUDE.md règle 11).
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   type DpgfRow,
   type DpgfUnit,
@@ -18,6 +21,7 @@ import {
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { readDpgfPdf } from "./pdf.ts";
+import { type PlanFile, readPlans } from "./plan.ts";
 import {
   applyTenderPrices,
   bestSheet,
@@ -30,6 +34,10 @@ const MAX_PER_HOUR = 60;
 /** Lectures de PDF par le modèle : plus coûteuses, limitées à part. */
 const MAX_PDF_PER_HOUR = 20;
 const MAX_BYTES = 15 * 1024 * 1024;
+/** Plans envoyés ensemble au modèle : sous la limite d'une requête une fois encodés. */
+const MAX_PLAN_BYTES = 20 * 1024 * 1024;
+/** Photo envoyée au modèle : 5 Mo au plus (le navigateur la réduit avant l'envoi). */
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 const slug = (text: string) =>
@@ -53,7 +61,10 @@ Deno.serve(async (req) => {
     action?: unknown;
     tenderId?: unknown;
   } | null;
-  const action = body?.action === "import" || body?.action === "export" ? body.action : null;
+  const action =
+    body?.action === "import" || body?.action === "export" || body?.action === "plan"
+      ? body.action
+      : null;
   const tenderId =
     typeof body?.tenderId === "string" && UUID.test(body.tenderId) ? body.tenderId : null;
   if (!action || !tenderId) return json({ status: "invalid" }, 400);
@@ -71,10 +82,11 @@ Deno.serve(async (req) => {
   });
   const { data: tender } = await supabase
     .from("tenders")
-    .select("id, name, source_path, source_kind, sheet")
+    .select("id, name, source_path, source_kind, sheet, plan_files")
     .eq("id", tenderId)
     .maybeSingle();
   if (!tender) return json({ status: "not_found" }, 404);
+  if (action === "plan") return await readTenderPlans(admin, supabase, user.id, tender);
   if (!tender.source_path || (tender.source_kind !== "xlsx" && tender.source_kind !== "pdf")) {
     return json({ status: "no_sheet" }, 422);
   }
@@ -206,3 +218,69 @@ Deno.serve(async (req) => {
     },
   });
 });
+
+const MAGIC: Record<PlanFile["kind"], number[]> = {
+  pdf: [0x25, 0x50, 0x44, 0x46, 0x2d],
+  jpg: [0xff, 0xd8, 0xff],
+  png: [0x89, 0x50, 0x4e, 0x47],
+};
+
+/** Lecture des plans d'un appel d'offres créé depuis les plans, et enregistrement du relevé. */
+async function readTenderPlans(
+  admin: SupabaseClient,
+  supabase: SupabaseClient,
+  userId: string,
+  tender: { id: string; source_kind: string | null; plan_files: unknown },
+): Promise<Response> {
+  const entries = Array.isArray(tender.plan_files)
+    ? (tender.plan_files as { path?: unknown; kind?: unknown }[])
+    : [];
+  if (tender.source_kind !== "plan" || entries.length === 0) {
+    return json({ status: "no_sheet" }, 422);
+  }
+  const { data: allowed } = await admin.rpc("consume_rate_limit", {
+    p_key: `tender-pdf:${userId}`,
+    p_max: MAX_PDF_PER_HOUR,
+    p_window_seconds: 3600,
+  });
+  if (allowed !== true) return json({ status: "rate_limited" }, 429);
+
+  const files: PlanFile[] = [];
+  let total = 0;
+  for (const entry of entries) {
+    const kind =
+      entry.kind === "pdf" || entry.kind === "jpg" || entry.kind === "png" ? entry.kind : null;
+    if (!kind || typeof entry.path !== "string") return json({ status: "unreadable" }, 422);
+    const { data: blob } = await admin.storage.from("tender-files").download(entry.path);
+    if (!blob) return json({ status: "not_found" }, 404);
+    total += blob.size;
+    if (total > MAX_PLAN_BYTES || (kind !== "pdf" && blob.size > MAX_PHOTO_BYTES)) {
+      return json({ status: "too_large" }, 413);
+    }
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    // Signature du fichier : le bucket n'a vérifié que le type annoncé par le navigateur.
+    if (!MAGIC[kind].every((byte, i) => bytes[i] === byte)) {
+      return json({ status: "unreadable" }, 422);
+    }
+    files.push({ kind, bytes });
+  }
+
+  const reading = await readPlans(admin, files);
+  if (reading.status !== "ok") {
+    return json({ status: reading.status }, reading.status === "unavailable" ? 503 : 422);
+  }
+  const { error } = await supabase.rpc("artisan_import_plan_reading", {
+    p_tender_id: tender.id,
+    p_rooms: reading.rooms,
+    p_counts: reading.counts,
+    p_scale: reading.scale,
+  });
+  if (error) {
+    console.error("tender-sheet : relevé refusé", error.code);
+    return json(
+      { status: error.code === "42501" ? "forbidden" : "error" },
+      error.code === "42501" ? 403 : 500,
+    );
+  }
+  return json({ status: "ok", rooms: reading.rooms.length, warnings: reading.warnings });
+}

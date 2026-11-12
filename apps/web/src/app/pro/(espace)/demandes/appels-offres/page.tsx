@@ -29,7 +29,12 @@ const TONES = {
 export default async function TendersPage() {
   const { supabase, artisanId, teamPosition } = await requireTeamPermission("money");
   if (!teamCan(teamPosition, "requests")) redirect("/pro/tableau-de-bord");
-  const [included, tenders] = await Promise.all([tendersIncluded(supabase), listTenders(supabase)]);
+  const [included, tenders, { data: trades }, { data: myTrades }] = await Promise.all([
+    tendersIncluded(supabase),
+    listTenders(supabase),
+    supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
+    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisanId),
+  ]);
 
   return (
     <main className="flex-1">
@@ -45,7 +50,11 @@ export default async function TendersPage() {
         {included ? (
           <Card className="flex flex-col gap-4">
             <CardTitle title={t.newTitle} description={t.newLead} />
-            <TenderNewForm artisanId={artisanId} />
+            <TenderNewForm
+              artisanId={artisanId}
+              trades={trades ?? []}
+              myTrades={(myTrades ?? []).map((m) => m.trade_code)}
+            />
           </Card>
         ) : (
           <Card className="flex flex-col gap-3">

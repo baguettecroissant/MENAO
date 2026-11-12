@@ -121,7 +121,7 @@ select throws_ok(
 -- ---------- Suppression par l'entreprise ----------
 select pg_temp.connecter('e1370000-0000-4000-8000-000000000001');
 select is(public.artisan_delete_tender((select id from public.tenders limit 1)),
-  'e1371000-0000-4000-8000-000000000001/0b6f3c4e-1d2a-4b5c-8d9e-0f1a2b3c4d5e.xlsx', 'suppression : chemin du fichier rendu');
+  array['e1371000-0000-4000-8000-000000000001/0b6f3c4e-1d2a-4b5c-8d9e-0f1a2b3c4d5e.xlsx'], 'suppression : chemin du fichier rendu');
 select is_empty($$ select 1 from public.tender_lines $$, 'lignes supprimées avec l''appel d''offres');
 
 select * from finish();

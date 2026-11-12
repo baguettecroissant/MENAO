@@ -43,12 +43,61 @@ export type TenderLine = {
   price_reference: string | null;
 };
 
+/** Pièce relevée sur les plans (F-140, ADR 0291) : surface en cm², périmètre et hauteur en mm. */
+export type TenderRoom = {
+  id: string;
+  level: string | null;
+  name: string;
+  area_cm2: number | null;
+  perimeter_mm: number | null;
+  height_mm: number | null;
+  wet: boolean;
+  habitable: boolean;
+  source: "plan" | "cotes" | "photo" | "saisi";
+  file_index: number | null;
+  page: number | null;
+  uncertain: boolean;
+};
+
+export type PlanFileEntry = { path: string; name: string; kind: "pdf" | "jpg" | "png" };
+
+/** Plans déposés, tels qu'enregistrés (tenders.plan_files). */
+export function planFiles(value: unknown): PlanFileEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((f: unknown) => {
+    const entry = f as Partial<PlanFileEntry> | null;
+    return entry &&
+      typeof entry.path === "string" &&
+      (entry.kind === "pdf" || entry.kind === "jpg" || entry.kind === "png")
+      ? [
+          {
+            path: entry.path,
+            name: typeof entry.name === "string" ? entry.name : "Plan",
+            kind: entry.kind,
+          },
+        ]
+      : [];
+  });
+}
+
+/** Pièces relevées d'un appel d'offres créé depuis les plans (lecture : RLS). */
+export async function getTenderRooms(supabase: Client, id: string): Promise<TenderRoom[]> {
+  const { data } = await supabase
+    .from("tender_rooms")
+    .select(
+      "id, level, name, area_cm2, perimeter_mm, height_mm, wet, habitable, source, file_index, page, uncertain",
+    )
+    .eq("tender_id", id)
+    .order("position");
+  return (data ?? []) as TenderRoom[];
+}
+
 export async function getTender(supabase: Client, id: string) {
   const [{ data: tender }, { data: lines }] = await Promise.all([
     supabase
       .from("tenders")
       .select(
-        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet",
+        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale",
       )
       .eq("id", id)
       .maybeSingle(),

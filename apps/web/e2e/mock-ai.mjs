@@ -159,6 +159,61 @@ function documentReading(content) {
   });
 }
 
+// Plans d'architecte (balise <plan>, ADR 0291) : une surface écrite, une calculée avec les cotes,
+// une lecture incertaine ; une hauteur pour tous les niveaux.
+function planReading() {
+  const piece = (over) => ({
+    fichier: 1,
+    page: 2,
+    niveau: "RDC",
+    nom: "Séjour-cuisine",
+    surface_m2: 45.14,
+    longueur_m: null,
+    largeur_m: null,
+    perimetre_m: 27,
+    hauteur_m: null,
+    humide: false,
+    habitable: true,
+    certitude: "sure",
+    ...over,
+  });
+  return JSON.stringify({
+    lisible: true,
+    est_un_plan: true,
+    echelle: "1/50",
+    hauteurs: [{ niveau: null, hauteur_m: 2.5 }],
+    pieces: [
+      piece({}),
+      piece({
+        nom: "Dégagement",
+        surface_m2: null,
+        perimetre_m: null,
+        longueur_m: 6.85,
+        largeur_m: 1.2,
+      }),
+      piece({
+        nom: "WC",
+        niveau: "R+1",
+        page: 3,
+        surface_m2: 1.65,
+        perimetre_m: 5.2,
+        humide: true,
+        certitude: "incertaine",
+      }),
+    ],
+    comptes: {
+      portes: 9,
+      fenetres: 11,
+      wc: 2,
+      lavabos: 3,
+      douches: 1,
+      baignoires: 1,
+      eviers: 1,
+      escaliers: 1,
+    },
+  });
+}
+
 function dpgfReading() {
   return JSON.stringify({
     lisible: true,
@@ -282,13 +337,15 @@ createServer(async (req, res) => {
             ? photoDescription()
             : text.includes("<dpgf>")
               ? dpgfReading()
-              : document
-                ? documentReading(content)
-                : text.includes("<saisie>")
-                  ? needSuggestion(text)
-                  : text.includes("<dictee>")
-                    ? quoteLines()
-                    : analysis(text, body?.model ?? ""),
+              : text.includes("<plan>")
+                ? planReading()
+                : document
+                  ? documentReading(content)
+                  : text.includes("<saisie>")
+                    ? needSuggestion(text)
+                    : text.includes("<dictee>")
+                      ? quoteLines()
+                      : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",

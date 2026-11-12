@@ -5358,7 +5358,112 @@ export const fr = {
         cta: "Voir les formules",
       },
       newTitle: "Nouvel appel d'offres",
-      newLead: "Déposez le DPGF vierge de l'architecte, en Excel (.xlsx) ou en PDF.",
+      newLead: "Déposez le DPGF vierge de l'architecte, ou seulement ses plans.",
+      // DPGF créé depuis les plans (F-140, ADR 0291).
+      modes: {
+        legend: "Ce que l'architecte vous a envoyé",
+        dpgf: "J'ai le DPGF de l'architecte",
+        dpgfHint: "Son tableau en Excel ou en PDF : MENAO le lit et reprend vos prix.",
+        plans: "J'ai seulement les plans",
+        plansHint:
+          "MENAO relève les pièces et les mesures sur les plans, puis prépare le DPGF de vos lots.",
+      },
+      plan: {
+        files: "Plans de l'architecte",
+        filesHint:
+          "PDF exporté du logiciel de l'architecte de préférence : les mesures y sont écrites. Une photo d'un plan papier est lue aussi, avec des mesures à vérifier. 10 fichiers au plus, 15 Mo chacun.",
+        trades: "Lots à préparer",
+        tradesHint: "Vos métiers sont cochés. Un lot par métier dans le DPGF.",
+        otherTrades: "Un autre métier",
+        submit: "Lire les plans",
+        reading: "Lecture des plans…",
+        errors: {
+          files: "Choisissez au moins un plan, en PDF, JPG ou PNG.",
+          tooMany: "Déposez 10 plans au plus.",
+          tooLarge: "Un plan dépasse 15 Mo.",
+          trades: "Choisissez au moins un métier.",
+        },
+        readOk: (rooms: number) =>
+          `Plans lus : ${rooms} pièce${rooms > 1 ? "s" : ""} relevée${rooms > 1 ? "s" : ""}. Vérifiez chaque mesure avant de continuer.`,
+        status: {
+          not_plan:
+            "Ces fichiers ne ressemblent pas à des plans de bâtiment. Déposez les plans de niveaux de l'architecte.",
+          unreadable:
+            "Ces plans n'ont pas pu être lus (fichier abîmé, ou photo trop floue). Déposez le PDF de l'architecte de préférence.",
+          too_large:
+            "Les plans dépassent 20 Mo ensemble. Déposez seulement les plans de niveaux et les coupes.",
+          too_long:
+            "Ces plans comptent trop de pièces pour être lus en une fois. Déposez-les niveau par niveau.",
+          no_sheet: "Aucun plan à lire.",
+          unavailable:
+            "La lecture des plans est momentanément indisponible. Réessayez dans quelques minutes.",
+          rate_limited: "Trop de lectures en peu de temps. Réessayez dans une heure.",
+          forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
+          error: "Les plans n'ont pas pu être lus. Réessayez.",
+        } as Record<string, string>,
+        warnings: {
+          sans_surfaces:
+            "Aucune surface n'est écrite sur ces plans : indiquez la surface et le périmètre de chaque pièce.",
+          tronque: "Plus de 200 pièces : seules les 200 premières sont reprises.",
+          photo: "Des mesures viennent d'une photo de plan : vérifiez-les en priorité.",
+        } as Record<string, string>,
+        retry: "Relire les plans",
+        summaryTitle: "MENAO a lu vos plans",
+        summary: {
+          scale: (scale: string) => `Échelle ${scale} lue dans le cartouche`,
+          read: (n: number) =>
+            `${n} surface${n > 1 ? "s" : ""} écrite${n > 1 ? "s" : ""} sur le plan, reprise${n > 1 ? "s" : ""} telle${n > 1 ? "s" : ""} quelle${n > 1 ? "s" : ""}`,
+          computed: (n: number) =>
+            `${n} surface${n > 1 ? "s" : ""} absente${n > 1 ? "s" : ""} du plan, calculée${n > 1 ? "s" : ""} avec les cotes`,
+          toCheck: (n: number) =>
+            `${n} pièce${n > 1 ? "s" : ""} à vérifier (photo ou lecture incertaine)`,
+          missing: (n: number) => `${n} pièce${n > 1 ? "s" : ""} avec une mesure à compléter`,
+        },
+        filesTitle: "Plans déposés",
+        tradesTitle: "Lots à préparer",
+        roomsTitle: (n: number) => `${n} pièce${n > 1 ? "s" : ""} relevée${n > 1 ? "s" : ""}`,
+        roomsLabel: "Pièces relevées",
+        columns: {
+          name: "Pièce",
+          level: "Niveau",
+          area: "Surface (m²)",
+          perimeter: "Périmètre (ml)",
+          height: "Hauteur (m)",
+          wet: "Pièce humide",
+          habitable: "Habitable",
+          source: "Origine",
+        },
+        fieldOf: (label: string, room: string) => `${label} : ${room}`,
+        source: {
+          plan: (page: number | null) => (page ? `Lu p. ${page}` : "Lu sur le plan"),
+          cotes: "Calculé (cotes)",
+          photo: "Photo : à vérifier",
+          saisi: "Saisi",
+          uncertain: "À vérifier",
+          missing: "À compléter",
+        },
+        openPage: (page: number) => `Ouvrir la page ${page}`,
+        addRoom: "Ajouter une pièce",
+        removeRoom: (name: string) => `Retirer ${name || "la pièce"}`,
+        countsTitle: "Aussi relevé sur les plans",
+        countsHint: "Comptés avec les symboles du plan. Corrigez si besoin.",
+        counts: {
+          portes: "Portes intérieures",
+          fenetres: "Fenêtres et baies",
+          wc: "WC",
+          lavabos: "Lavabos, vasques",
+          douches: "Douches",
+          baignoires: "Baignoires",
+          eviers: "Éviers",
+          escaliers: "Escaliers",
+        } as Record<string, string>,
+        save: "Enregistrer le relevé",
+        saved: "Relevé enregistré.",
+        invalid:
+          "Vérifiez les mesures : un nom pour chaque pièce, des nombres positifs (hauteur entre 1,5 et 10 m).",
+        responsibility:
+          "MENAO ne devine aucune mesure : ce qui n'est pas écrit sur le plan reste à compléter. C'est un forfait : vous restez responsable de vos quantités.",
+      },
       fields: {
         name: "Nom du projet",
         namePlaceholder: "Maison individuelle — Mougins",
