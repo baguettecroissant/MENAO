@@ -121,7 +121,8 @@ export type AiRun = {
     | "commercial-copilot"
     | "voice-assistant"
     | "artisan-assistant"
-    | "read-dpgf";
+    | "read-dpgf"
+    | "read-plan";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;

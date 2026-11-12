@@ -7,7 +7,12 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
-import { tenderQuoteLines, type TenderQuoteLine } from "@menao/core";
+import {
+  normalizePlanCounts,
+  PLAN_COUNT_KEYS,
+  tenderQuoteLines,
+  type TenderQuoteLine,
+} from "@menao/core";
 import { requireTeamPermission } from "./space";
 
 const t = fr.pro.tenders;
@@ -117,13 +122,13 @@ export async function updateTender(formData: FormData): Promise<void> {
   revalidatePath(`${BASE}/${id.data}`);
 }
 
-/** Suppression de l'appel d'offres, de ses lignes et du fichier de l'architecte. */
+/** Suppression de l'appel d'offres, de ses lignes et des fichiers de l'architecte (DPGF ou plans). */
 export async function deleteTender(formData: FormData): Promise<void> {
   const id = z.uuid().safeParse(text(formData, "tenderId"));
   if (!id.success) return;
   const { supabase } = await requireTeamPermission("money");
-  const { data: path } = await supabase.rpc("artisan_delete_tender", { p_tender_id: id.data });
-  if (path) await supabase.storage.from("tender-files").remove([path]);
+  const { data: paths } = await supabase.rpc("artisan_delete_tender", { p_tender_id: id.data });
+  if (paths?.length) await supabase.storage.from("tender-files").remove(paths);
   revalidatePath(BASE);
   redirect(BASE as Route);
 }
@@ -168,4 +173,130 @@ export async function tenderLinesForQuote(
     Math.max(0, Math.floor(existingLines)),
   );
   return { ok: true, ...result };
+}
+
+// ---------------------------------------------------------------------------------------------
+// DPGF depuis les plans (F-140, ADR 0291)
+// ---------------------------------------------------------------------------------------------
+
+const planFile = z.object({
+  path: z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(pdf|jpg|png)$/),
+  name: z.string().max(200),
+});
+
+/** Lecture des plans par l'Edge Function tender-sheet, puis retour sur l'appel d'offres. */
+async function readPlansAndRedirect(
+  supabase: Awaited<ReturnType<typeof requireTeamPermission>>["supabase"],
+  id: string,
+): Promise<never> {
+  const { data, error: readError } = await supabase.functions.invoke<{
+    status: string;
+    rooms?: number;
+    warnings?: string[];
+  }>("tender-sheet", { method: "POST", body: { action: "plan", tenderId: id } });
+  let status = data?.status ?? "error";
+  if (readError instanceof FunctionsHttpError) {
+    const parsed = (await readError.context.json().catch(() => null)) as { status?: string } | null;
+    status = parsed?.status ?? "error";
+  }
+  revalidatePath(BASE);
+  const query = new URLSearchParams({ lecture: status });
+  if (status === "ok") {
+    query.set("pieces", String(data?.rooms ?? 0));
+    if (data?.warnings?.length) query.set("alertes", data.warnings.join(","));
+  }
+  redirect(`${BASE}/${id}?${query}` as Route);
+}
+
+/**
+ * Nouvel appel d'offres depuis les plans : les plans sont déjà déposés par le navigateur dans
+ * « tender-files/<entreprise>/<uuid>.pdf|jpg|png » ; la base crée l'appel d'offres (formule,
+ * fichiers et métiers vérifiés), puis l'Edge Function lit les plans.
+ */
+export async function createPlanTender(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = {
+    name: text(formData, "name")?.trim() ?? "",
+    client: text(formData, "client")?.trim() ?? "",
+    due: text(formData, "due") ?? "",
+  };
+  if (!values.name) return { fieldErrors: { name: [t.errors.name ?? ""] }, values };
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(text(formData, "files") ?? "[]");
+  } catch {
+    raw = null;
+  }
+  const files = z.array(planFile).min(1).max(10).safeParse(raw);
+  if (!files.success) return { fieldErrors: { files: [t.plan.errors.files] }, values };
+  const trades = formData
+    .getAll("trades")
+    .filter((v): v is string => typeof v === "string" && /^[a-z0-9-]{1,60}$/.test(v));
+  if (trades.length === 0) return { fieldErrors: { trades: [t.plan.errors.trades] }, values };
+
+  const { supabase } = await requireTeamPermission("money");
+  const { data: id, error } = await supabase.rpc("artisan_create_plan_tender", {
+    p_name: values.name,
+    p_files: files.data,
+    p_trades: trades.slice(0, 20),
+    p_client_name: values.client || undefined,
+    p_due_on: DATE.test(values.due) ? values.due : undefined,
+  });
+  if (error || !id) {
+    return {
+      error:
+        error?.code === "42501"
+          ? t.errors.forbidden
+          : error?.code === "22023"
+            ? error.message
+            : t.errors.generic,
+      values,
+    };
+  }
+  return readPlansAndRedirect(supabase, id);
+}
+
+/** Relire les plans (lecture précédente en échec, ou relevé à refaire). */
+export async function rereadPlans(formData: FormData): Promise<void> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  if (!id.success) return;
+  const { supabase } = await requireTeamPermission("money");
+  await readPlansAndRedirect(supabase, id.data);
+}
+
+const savedRoom = z.object({
+  id: z.uuid().nullable(),
+  level: z.string().max(40).nullable(),
+  name: z.string().trim().min(1).max(80),
+  areaCm2: z.number().int().min(1).max(100_000_000).nullable(),
+  perimeterMm: z.number().int().min(1).max(2_000_000).nullable(),
+  heightMm: z.number().int().min(1500).max(10_000).nullable(),
+  wet: z.boolean(),
+  habitable: z.boolean(),
+});
+
+/** Relevé corrigé par l'artisan ; une pièce modifiée ou ajoutée passe en « saisi » (base). */
+export async function savePlanRooms(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  let raw: unknown = null;
+  let rawCounts: unknown = null;
+  try {
+    raw = JSON.parse(text(formData, "rooms") ?? "[]");
+    rawCounts = JSON.parse(text(formData, "counts") ?? "{}");
+  } catch {
+    raw = null;
+  }
+  const rooms = z.array(savedRoom).max(200).safeParse(raw);
+  if (!id.success || !rooms.success) return { error: t.plan.invalid };
+  const counts = normalizePlanCounts(rawCounts);
+  const { supabase } = await requireTeamPermission("money");
+  const { error } = await supabase.rpc("artisan_save_plan_rooms", {
+    p_tender_id: id.data,
+    p_rooms: rooms.data,
+    p_counts: Object.fromEntries(PLAN_COUNT_KEYS.map((k) => [k, counts[k]])),
+  });
+  if (error) {
+    return { error: error.code === "42501" ? t.errors.forbidden : t.errors.generic };
+  }
+  revalidatePath(`${BASE}/${id.data}`);
+  return { success: t.plan.saved };
 }

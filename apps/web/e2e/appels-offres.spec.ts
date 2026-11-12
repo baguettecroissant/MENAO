@@ -120,3 +120,46 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   ]);
   expect(menaoSheet.suggestedFilename()).toBe(`DPGF-Bureaux-fictifs-E2E-${run}.xlsx`);
 });
+
+// DPGF depuis les plans, lot 1 (F-140, ADR 0291) : plans lus par l'IA (faux serveur en CI),
+// relevé des pièces avec l'origine de chaque mesure, corrigé puis enregistré.
+test("appels d'offres : plans lus, relevé des pièces corrigé et enregistré", async ({ page }) => {
+  test.setTimeout(90_000);
+  const project = `Maison depuis plans E2E ${test.info().retry}`;
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+
+  await page.getByLabel("J'ai seulement les plans").check();
+  await page.getByLabel("Nom du projet").fill(project);
+  await page.getByLabel("Plans de l'architecte").setInputFiles({ ...files.pdf, name: "plans.pdf" });
+  await expect(page.getByRole("checkbox", { name: "Carreleur" })).toBeChecked();
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+  await expect(page.getByText(/^Plans lus : 3 pièces relevées/)).toBeVisible();
+  await expect(page.getByText("Échelle 1/50 lue dans le cartouche")).toBeVisible();
+
+  const table = page.getByRole("table", { name: "Pièces relevées" });
+  await expect(table.getByText("Lu p. 2")).toBeVisible();
+  await expect(table.getByText("Calculé (cotes)")).toBeVisible();
+  await expect(table.getByText("À vérifier")).toBeVisible();
+  await expect(page.getByLabel("Surface (m²) : Dégagement")).toHaveValue("8,22");
+  await expect(page.getByLabel("Hauteur (m) : WC")).toHaveValue("2,5");
+
+  // Correction d'une surface, nouvelle pièce, une porte de plus.
+  await page.getByLabel("Surface (m²) : WC").fill("1,8");
+  await page.getByRole("button", { name: "Ajouter une pièce" }).click();
+  await page.getByLabel("Pièce : Pièce").fill("Palier");
+  await page.getByLabel("Surface (m²) : Palier").fill("4,6");
+  await page.getByLabel("Portes intérieures").fill("10");
+  await page.getByRole("button", { name: "Enregistrer le relevé" }).click();
+  await expect(page.getByText("Relevé enregistré.")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByLabel("Surface (m²) : WC")).toHaveValue("1,8");
+  await expect(page.getByLabel("Surface (m²) : Palier")).toHaveValue("4,6");
+  await expect(table.getByText("Saisi")).toHaveCount(2);
+  await expect(page.getByLabel("Portes intérieures")).toHaveValue("10");
+});
