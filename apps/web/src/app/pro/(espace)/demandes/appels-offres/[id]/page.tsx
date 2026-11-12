@@ -9,12 +9,13 @@ import { PlanFinishes } from "@/components/pro/plan-finishes";
 import { PlanReleve, type PlanFileLink } from "@/components/pro/plan-releve";
 import { PlanSteps, type PlanStep } from "@/components/pro/plan-steps";
 import { QuantitiesCheck } from "@/components/pro/quantities-check";
+import { RereadPlansForm } from "@/components/pro/reread-plans-form";
 import { TenderEditor } from "@/components/pro/tender-editor";
 import { Alert, Button, Card, CardTitle, Field, StatusBadge, inputClasses } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
-import { deleteTender, rereadPlans, updateTender } from "@/lib/artisan/tender-actions";
+import { deleteTender, updateTender } from "@/lib/artisan/tender-actions";
 import { getTender, getTenderRooms, planFiles } from "@/lib/artisan/tenders";
 import { formatDay } from "@/lib/format";
 
@@ -90,14 +91,7 @@ export default async function TenderPage({
           </li>
         )}
       </ul>
-      {plan.rooms.length === 0 && (
-        <form action={rereadPlans}>
-          <input type="hidden" name="tenderId" value={tender.id} />
-          <Button type="submit" variant="secondary" block={false}>
-            {t.plan.retry}
-          </Button>
-        </form>
-      )}
+      {plan.rooms.length === 0 && <RereadPlansForm tenderId={tender.id} label={t.plan.retry} />}
     </section>
   );
 
