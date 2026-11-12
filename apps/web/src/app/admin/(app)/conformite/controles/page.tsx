@@ -8,7 +8,7 @@ import { fr } from "@/i18n/fr";
 import { drawSpotChecks } from "@/lib/admin/actions";
 import { getComplianceCounts } from "@/lib/admin/compliance";
 import { PAGE_SIZE, parsePage } from "@/lib/admin/follow-up";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireVerifier } from "@/lib/admin/guard";
 import { SpotCheckForm } from "./spot-check-form";
 
 const t = fr.admin.spotChecks;
@@ -47,7 +47,7 @@ export default async function SpotChecksPage({
 }: {
   searchParams: Promise<{ tirage?: string; page?: string }>;
 }) {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const { tirage, page: rawPage } = await searchParams;
   const page = parsePage(rawPage);
   const period = spotCheckPeriod(parisToday());

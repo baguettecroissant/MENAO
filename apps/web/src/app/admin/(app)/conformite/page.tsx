@@ -7,7 +7,7 @@ import {
 } from "@/components/admin/compliance";
 import { fr } from "@/i18n/fr";
 import { getComplianceCounts } from "@/lib/admin/compliance";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireVerifier } from "@/lib/admin/guard";
 
 const t = fr.admin.watch;
 const docT = fr.pro.onboarding.documents;
@@ -18,7 +18,7 @@ const docT = fr.pro.onboarding.documents;
  * d'abord.
  */
 export default async function ComplianceRenewalsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const [counts, { data: renewals }] = await Promise.all([
     getComplianceCounts(supabase),
     supabase

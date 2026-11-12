@@ -62,10 +62,10 @@ select lives_ok(
   'invitation d''un membre du support enregistrée');
 select throws_ok(
   $$ select public.admin_record_staff_invite('c1110000-0000-4000-8000-000000000005', 'commercial') $$,
-  '22023', 'Rôle invalide : admin ou support.', 'rôle commercial : refusé (invitation à part)');
+  '22023', 'Rôle invalide : admin, support ou vérification.', 'rôle commercial : refusé (invitation à part)');
 select throws_ok(
   $$ select public.admin_record_staff_invite('c1110000-0000-4000-8000-000000000004', 'particulier') $$,
-  '22023', 'Rôle invalide : admin ou support.', 'rôle particulier : refusé');
+  '22023', 'Rôle invalide : admin, support ou vérification.', 'rôle particulier : refusé');
 select throws_ok(
   $$ select public.admin_record_staff_invite('c1110000-0000-4000-8000-000000000004', 'admin') $$,
   '22023', 'Compte invité introuvable.', 'compte dont le rôle n''est pas encore admin : refusé');

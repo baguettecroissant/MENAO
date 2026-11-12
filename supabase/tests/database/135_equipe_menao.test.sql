@@ -54,7 +54,7 @@ select throws_ok(
   '22023', null, 'un client n''est pas un membre de l''équipe');
 select throws_ok(
   $$ select public.admin_set_staff_role('e1350000-0000-4000-8000-000000000003', 'particulier') $$,
-  '22023', null, 'accès limité à admin ou support');
+  '22023', null, 'accès limité à admin, support ou vérification');
 select throws_ok(
   $$ select public.admin_set_staff_role('e1350000-0000-4000-8000-000000000003', 'support') $$,
   '22023', null, 'accès inchangé : refusé');

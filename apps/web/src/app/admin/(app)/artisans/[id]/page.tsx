@@ -25,7 +25,8 @@ import { Alert, StatusBadge } from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { adminRefreshRge, verifyCertification } from "@/lib/admin/actions";
-import { requireAdmin } from "@/lib/admin/guard";
+import { ReadOnlyBanner } from "@/components/admin/read-only";
+import { requireTeam } from "@/lib/admin/guard";
 import { getLeadTargets } from "@/lib/admin/lead-targets";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { getArtisanReferral, type ArtisanReferral } from "@/lib/admin/referrals";
@@ -69,7 +70,11 @@ export default async function AdminArtisanPage({
   const rgeStatus = (RGE_REFRESH_STATUSES as readonly string[]).includes(rge ?? "")
     ? (rge as RgeRefreshStatus)
     : null;
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireTeam();
+  // Accès (ADR 0286) : l'admin voit tout ; le support consulte sans agir (ni documents, ni
+  // décision, ni argent) ; la vérification traite le dossier (onglets Vérification et Entreprise).
+  const isAdmin = role === "admin";
+  const readOnly = role === "support";
 
   const { data: artisan } = await supabase.from("artisans").select("*").eq("id", id).maybeSingle();
   if (!artisan) notFound();
@@ -166,24 +171,31 @@ export default async function AdminArtisanPage({
     { data: ownLeadTarget },
   ] = await Promise.all([
     documentLogoUrl(supabase, artisan.logo_path),
-    getArtisanActivity(supabase, artisan.id),
-    getArtisanReferral(supabase, artisan.id),
+    // Onglet Activité : admin et support ; parrainage, mois offert et objectif : admin seulement.
+    role !== "verification" ? getArtisanActivity(supabase, artisan.id) : null,
+    isAdmin ? getArtisanReferral(supabase, artisan.id) : null,
     // Score MENAO (ADR 0155).
-    supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id }),
+    role !== "verification"
+      ? supabase.rpc("admin_artisan_menao_score", { p_artisan_id: artisan.id })
+      : { data: null },
     // Mois offert de démarrage (ADR 0160).
-    supabase
-      .from("artisan_free_months")
-      .select("created_at, applied_at")
-      .eq("artisan_id", artisan.id)
-      .eq("reason", "demarrage")
-      .maybeSingle(),
+    isAdmin
+      ? supabase
+          .from("artisan_free_months")
+          .select("created_at, applied_at")
+          .eq("artisan_id", artisan.id)
+          .eq("reason", "demarrage")
+          .maybeSingle()
+      : { data: null },
     // Objectif de demandes (ADR 0282).
-    getLeadTargets(supabase, { artisanId: artisan.id }),
-    supabase
-      .from("artisan_lead_targets")
-      .select("objectif")
-      .eq("artisan_id", artisan.id)
-      .maybeSingle(),
+    isAdmin ? getLeadTargets(supabase, { artisanId: artisan.id }) : null,
+    isAdmin
+      ? supabase
+          .from("artisan_lead_targets")
+          .select("objectif")
+          .eq("artisan_id", artisan.id)
+          .maybeSingle()
+      : { data: null },
   ]);
   const lead = leads?.artisans[0] ?? null;
   const menaoScore = menaoScorePartsSchema.safeParse(scoreData).data ?? null;
@@ -268,9 +280,20 @@ export default async function AdminArtisanPage({
   // Quatre onglets (ADR 0285) : la vérification tant que le dossier est en attente ou qu'un
   // document (renouvellement) ou une certification attend l'équipe, sinon l'activité.
   const awaitingReview = checklist.pendingDocuments > 0 || checklist.pendingCertifications > 0;
+  // Onglets selon l'accès (ADR 0286) : la vérification n'a ni Activité ni Compte, le support pas
+  // le Compte (actions sur la connexion).
+  const tabs = ARTISAN_TABS.filter((key) =>
+    role === "verification"
+      ? key === "verification" || key === "entreprise"
+      : role === "support"
+        ? key !== "compte"
+        : true,
+  );
   const tab: ArtisanTab =
-    ARTISAN_TABS.find((key) => key === onglet) ??
-    (pending || rgeStatus || awaitingReview ? "verification" : "activite");
+    tabs.find((key) => key === onglet) ??
+    (role === "verification" || (!readOnly && (pending || rgeStatus || awaitingReview))
+      ? "verification"
+      : "activite");
   const base = `/admin/artisans/${artisan.id}`;
   // Compte de connexion (connexion bloquée ou non), lu seulement pour l'onglet Compte.
   const account =
@@ -284,23 +307,27 @@ export default async function AdminArtisanPage({
           })
       : null;
   const sub = subscription.data;
+  // Repères de l'en-tête : objectif et abonnement pour l'admin, score aussi pour le support.
   const summary = [
-    { label: t.summary.score, value: menaoScore ? `${menaoScore.score} / 100` : "—" },
-    {
+    role !== "verification" && {
+      label: t.summary.score,
+      value: menaoScore ? `${menaoScore.score} / 100` : "—",
+    },
+    isAdmin && {
       label: t.summary.leads,
       value:
         lead && lead.progress.target !== null
           ? t.summary.leadsValue(lead.progress.received, lead.progress.target)
           : "—",
     },
-    {
+    isAdmin && {
       label: t.summary.subscription,
       value: sub
         ? `${sub.plans?.nom ?? sub.plan_code} · ${t.subscriptionStatus[sub.status as keyof typeof t.subscriptionStatus] ?? sub.status}`
         : t.noSubscription,
     },
     { label: t.summary.signedUp, value: formatDay(artisan.created_at) },
-  ];
+  ].filter((item) => item !== false);
 
   const documentsSection = (
     <Section id="documents" title={t.documents}>
@@ -365,7 +392,7 @@ export default async function AdminArtisanPage({
           {artisan.siret && (
             <span className="font-mono text-sm text-muted-foreground">{artisan.siret}</span>
           )}
-          {pending && (
+          {pending && !readOnly && (
             <Link
               href={`${base}?onglet=verification#decision` as Route}
               className="ml-auto inline-flex min-h-10 items-center rounded-pill bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none lg:hidden"
@@ -385,40 +412,45 @@ export default async function AdminArtisanPage({
         <PillTabs
           label={t.tabs.label}
           current={tab}
-          tabs={ARTISAN_TABS.map((key) => ({
+          tabs={tabs.map((key) => ({
             key,
             href: `${base}?onglet=${key}`,
             label: t.tabs[key],
-            count: key === "verification" && pending ? checklistItems.length : undefined,
+            count:
+              key === "verification" && pending && !readOnly ? checklistItems.length : undefined,
           }))}
         />
       </div>
+      {readOnly && <ReadOnlyBanner />}
 
       {tab === "verification" && (
         // Le dossier à gauche, la décision collée à droite tant qu'il est en attente (ADR 0252).
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="flex min-w-0 flex-col gap-6">
-            <Section id="a-verifier" title={t.checklist.title} tone="highlight">
-              {checklistItems.length === 0 ? (
-                <p className="text-success">
-                  {pending ? t.checklist.ready : t.checklist.readyValidated}
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-1.5">
-                  {checklistItems.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <span
-                        aria-hidden="true"
-                        className="mt-2 size-1.5 shrink-0 rounded-full bg-warning"
-                      />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
+            {/* Le support ne lit pas les documents : ni liste des points, ni documents, ni décision. */}
+            {!readOnly && (
+              <Section id="a-verifier" title={t.checklist.title} tone="highlight">
+                {checklistItems.length === 0 ? (
+                  <p className="text-success">
+                    {pending ? t.checklist.ready : t.checklist.readyValidated}
+                  </p>
+                ) : (
+                  <ul className="flex flex-col gap-1.5">
+                    {checklistItems.map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <span
+                          aria-hidden="true"
+                          className="mt-2 size-1.5 shrink-0 rounded-full bg-warning"
+                        />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+            )}
 
-            {documentsSection}
+            {!readOnly && documentsSection}
 
             <Section title={t.certifications}>
               <ul className="flex flex-col gap-2">
@@ -432,21 +464,23 @@ export default async function AdminArtisanPage({
                       )}
                       <CertificationRgeHint type={c.type} rows={rgeList} today={today} />
                     </span>
-                    <form action={verifyCertification}>
-                      <input type="hidden" name="certificationId" value={c.id} />
-                      <input type="hidden" name="artisanId" value={artisan.id} />
-                      <input
-                        type="hidden"
-                        name="verified"
-                        value={c.verified_at ? "false" : "true"}
-                      />
-                      <button
-                        type="submit"
-                        className="min-h-touch text-sm font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        {c.verified_at ? t.certUnverify : t.certVerify}
-                      </button>
-                    </form>
+                    {!readOnly && (
+                      <form action={verifyCertification}>
+                        <input type="hidden" name="certificationId" value={c.id} />
+                        <input type="hidden" name="artisanId" value={artisan.id} />
+                        <input
+                          type="hidden"
+                          name="verified"
+                          value={c.verified_at ? "false" : "true"}
+                        />
+                        <button
+                          type="submit"
+                          className="min-h-touch text-sm font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          {c.verified_at ? t.certUnverify : t.certVerify}
+                        </button>
+                      </form>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -501,15 +535,17 @@ export default async function AdminArtisanPage({
                       {t.rgeCheckedOn(dateTime.format(new Date(artisan.rge_checked_at)))}
                     </span>
                   )}
-                  <form action={adminRefreshRge}>
-                    <input type="hidden" name="artisanId" value={artisan.id} />
-                    <button
-                      type="submit"
-                      className="min-h-touch font-medium text-primary underline-offset-2 hover:underline"
-                    >
-                      {t.rgeRefresh}
-                    </button>
-                  </form>
+                  {!readOnly && (
+                    <form action={adminRefreshRge}>
+                      <input type="hidden" name="artisanId" value={artisan.id} />
+                      <button
+                        type="submit"
+                        className="min-h-touch font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        {t.rgeRefresh}
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             </Section>
@@ -551,7 +587,7 @@ export default async function AdminArtisanPage({
               )}
             </Section>
 
-            {!pending && decisionSection}
+            {!pending && !readOnly && decisionSection}
 
             <Section title={sc.artisanSection}>
               {(spotChecks.data ?? []).length === 0 ? (
@@ -569,7 +605,7 @@ export default async function AdminArtisanPage({
                         {c.insurer_called ? ` · ${sc.insurerCalled}` : ""}
                       </span>
                       {c.note && <span className="text-sm text-muted-foreground">{c.note}</span>}
-                      {c.result === null && (
+                      {c.result === null && !readOnly && (
                         <Link
                           href={`/admin/conformite/controles#controle-${c.id}` as Route}
                           className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
@@ -583,27 +619,30 @@ export default async function AdminArtisanPage({
               )}
             </Section>
 
-            <Section id="historique" title={t.history}>
-              {(reviews.data ?? []).length === 0 ? (
-                <p className="text-muted-foreground">{t.noHistory}</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {(reviews.data ?? []).map((r) => (
-                    <li key={r.id}>
-                      <span className="font-medium">{t.decisions[r.decision]}</span> ·{" "}
-                      {dateTime.format(new Date(r.created_at))}
-                      {reviewerName(r.admin_id) &&
-                        ` · ${t.decidedBy(reviewerName(r.admin_id) ?? "")}`}
-                      {r.message && (
-                        <span className="block text-sm text-muted-foreground">{r.message}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
+            {/* Historique des décisions : journal réservé aux admins et à la vérification. */}
+            {!readOnly && (
+              <Section id="historique" title={t.history}>
+                {(reviews.data ?? []).length === 0 ? (
+                  <p className="text-muted-foreground">{t.noHistory}</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {(reviews.data ?? []).map((r) => (
+                      <li key={r.id}>
+                        <span className="font-medium">{t.decisions[r.decision]}</span> ·{" "}
+                        {dateTime.format(new Date(r.created_at))}
+                        {reviewerName(r.admin_id) &&
+                          ` · ${t.decidedBy(reviewerName(r.admin_id) ?? "")}`}
+                        {r.message && (
+                          <span className="block text-sm text-muted-foreground">{r.message}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+            )}
           </div>
-          {pending && (
+          {pending && !readOnly && (
             <aside className="flex flex-col gap-6 lg:sticky lg:top-56">{decisionSection}</aside>
           )}
         </div>
@@ -737,43 +776,49 @@ export default async function AdminArtisanPage({
               </div>
             </Section>
 
-            <Section title={t.visibility}>
-              {(() => {
-                const v = artisanVisibility({
-                  status: artisan.status,
-                  subscriptionActive: subscriptionGrantsAccess(
-                    (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
-                    subscription.data?.past_due_since ?? null,
-                  ),
-                  connectChargesEnabled: artisan.connect_charges_enabled,
-                });
-                return (
-                  <>
-                    <p className={v.visible ? "font-medium text-success" : "font-medium"}>
-                      {v.visible ? t.visible : t.hiddenBecause(v.missing.join(", "))}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {t.connect(artisan.connect_charges_enabled, artisan.connect_payouts_enabled)}
-                    </p>
-                    {/* Fiche publique et choix de l'artisan pour Google (ADR 0144). */}
-                    <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                      <Info
-                        label={t.publicPage.link}
-                        value={
-                          artisan.slug
-                            ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug)
-                            : t.publicPage.none
-                        }
-                      />
-                      <Info
-                        label={t.publicPage.googleLabel}
-                        value={t.publicPage.google(artisan.indexable)}
-                      />
-                    </dl>
-                  </>
-                );
-              })()}
-            </Section>
+            {/* Visibilité : dépend de l'abonnement, lu par les admins seulement (ADR 0286). */}
+            {isAdmin && (
+              <Section title={t.visibility}>
+                {(() => {
+                  const v = artisanVisibility({
+                    status: artisan.status,
+                    subscriptionActive: subscriptionGrantsAccess(
+                      (subscription.data?.status as SubscriptionStatus | undefined) ?? null,
+                      subscription.data?.past_due_since ?? null,
+                    ),
+                    connectChargesEnabled: artisan.connect_charges_enabled,
+                  });
+                  return (
+                    <>
+                      <p className={v.visible ? "font-medium text-success" : "font-medium"}>
+                        {v.visible ? t.visible : t.hiddenBecause(v.missing.join(", "))}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {t.connect(
+                          artisan.connect_charges_enabled,
+                          artisan.connect_payouts_enabled,
+                        )}
+                      </p>
+                      {/* Fiche publique et choix de l'artisan pour Google (ADR 0144). */}
+                      <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                        <Info
+                          label={t.publicPage.link}
+                          value={
+                            artisan.slug
+                              ? artisanPageUrl(env.NEXT_PUBLIC_SITE_URL, artisan.slug)
+                              : t.publicPage.none
+                          }
+                        />
+                        <Info
+                          label={t.publicPage.googleLabel}
+                          value={t.publicPage.google(artisan.indexable)}
+                        />
+                      </dl>
+                    </>
+                  );
+                })()}
+              </Section>
+            )}
           </div>
         </div>
       )}
@@ -781,45 +826,47 @@ export default async function AdminArtisanPage({
       {tab === "activite" && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-6">
-            <Section id="objectif" title={fr.admin.leads.detail.title}>
-              {lead && (
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
-                    <div className="flex flex-col gap-2">
-                      <p className="text-sm text-muted-foreground">
-                        {fr.admin.leads.detail.thisMonth}
-                      </p>
-                      <LeadBar progress={lead.progress} direct={lead.direct} />
-                      <div className="flex flex-wrap gap-1.5">
-                        <LeadStatusBadge status={lead.progress.status} />
-                        <LeadAlertBadges alerts={lead.alerts} />
+            {isAdmin && (
+              <Section id="objectif" title={fr.admin.leads.detail.title}>
+                {lead && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm text-muted-foreground">
+                          {fr.admin.leads.detail.thisMonth}
+                        </p>
+                        <LeadBar progress={lead.progress} direct={lead.direct} />
+                        <div className="flex flex-wrap gap-1.5">
+                          <LeadStatusBadge status={lead.progress.status} />
+                          <LeadAlertBadges alerts={lead.alerts} />
+                        </div>
                       </div>
+                      <LeadHistory history={lead.history} />
                     </div>
-                    <LeadHistory history={lead.history} />
+                    <p className="text-sm text-label">
+                      {lead.cause === "peu_choisi"
+                        ? fr.admin.leads.causes.peu_choisi(lead.searches)
+                        : lead.cause
+                          ? fr.admin.leads.causes[lead.cause]
+                          : fr.admin.leads.searches(lead.searches)}
+                    </p>
                   </div>
-                  <p className="text-sm text-label">
-                    {lead.cause === "peu_choisi"
-                      ? fr.admin.leads.causes.peu_choisi(lead.searches)
-                      : lead.cause
-                        ? fr.admin.leads.causes[lead.cause]
-                        : fr.admin.leads.searches(lead.searches)}
-                  </p>
-                </div>
-              )}
-              {leads && (
-                <ArtisanLeadTargetForm
-                  artisanId={artisan.id}
-                  target={ownLeadTarget?.objectif ?? null}
-                  defaultTarget={leads.defaultTarget}
-                />
-              )}
-              <Link
-                href={"/admin/objectifs" as Route}
-                className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
-              >
-                {fr.admin.leads.detail.seeAll} →
-              </Link>
-            </Section>
+                )}
+                {leads && (
+                  <ArtisanLeadTargetForm
+                    artisanId={artisan.id}
+                    target={ownLeadTarget?.objectif ?? null}
+                    defaultTarget={leads.defaultTarget}
+                  />
+                )}
+                <Link
+                  href={"/admin/objectifs" as Route}
+                  className="self-start text-sm font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  {fr.admin.leads.detail.seeAll} →
+                </Link>
+              </Section>
+            )}
 
             <Section id="activite" title={fr.admin.activity.title}>
               {activity &&
@@ -879,34 +926,38 @@ export default async function AdminArtisanPage({
             </Section>
           </div>
           <div className="flex min-w-0 flex-col gap-6">
-            <Section id="abonnement" title={t.subscription}>
-              {subscription.data ? (
-                <p>
-                  {[
-                    subscription.data.plans?.nom ?? subscription.data.plan_code ?? "—",
-                    t.subscriptionStatus[subscription.data.status] ?? subscription.data.status,
-                    subscription.data.status === "trialing" && subscription.data.trial_end
-                      ? t.trialUntil(day.format(new Date(subscription.data.trial_end)))
-                      : null,
-                    subscription.data.cancel_at_period_end && subscription.data.current_period_end
-                      ? t.cancelAt(day.format(new Date(subscription.data.current_period_end)))
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              ) : (
-                <p className="text-muted-foreground">{t.noSubscription}</p>
-              )}
-              {starterMonth && (
-                <p className="text-sm">
-                  {t.starterMonth(
-                    starterMonth.applied_at ? day.format(new Date(starterMonth.applied_at)) : null,
-                    day.format(new Date(starterMonth.created_at)),
-                  )}
-                </p>
-              )}
-            </Section>
+            {isAdmin && (
+              <Section id="abonnement" title={t.subscription}>
+                {subscription.data ? (
+                  <p>
+                    {[
+                      subscription.data.plans?.nom ?? subscription.data.plan_code ?? "—",
+                      t.subscriptionStatus[subscription.data.status] ?? subscription.data.status,
+                      subscription.data.status === "trialing" && subscription.data.trial_end
+                        ? t.trialUntil(day.format(new Date(subscription.data.trial_end)))
+                        : null,
+                      subscription.data.cancel_at_period_end && subscription.data.current_period_end
+                        ? t.cancelAt(day.format(new Date(subscription.data.current_period_end)))
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">{t.noSubscription}</p>
+                )}
+                {starterMonth && (
+                  <p className="text-sm">
+                    {t.starterMonth(
+                      starterMonth.applied_at
+                        ? day.format(new Date(starterMonth.applied_at))
+                        : null,
+                      day.format(new Date(starterMonth.created_at)),
+                    )}
+                  </p>
+                )}
+              </Section>
+            )}
 
             <Section id="score" title={t.menaoScore.title}>
               {menaoScore && <MenaoScore score={menaoScore} />}
@@ -922,100 +973,106 @@ export default async function AdminArtisanPage({
                       )
                     : t.menaoScore.none}
                 </p>
-                <GoogleReviewsForm
-                  artisanId={artisan.id}
-                  current={
-                    artisan.google_url &&
-                    artisan.google_rating !== null &&
-                    artisan.google_review_count
-                      ? {
-                          url: artisan.google_url,
-                          rating: artisan.google_rating,
-                          count: artisan.google_review_count,
-                        }
-                      : null
-                  }
-                />
+                {!readOnly && (
+                  <GoogleReviewsForm
+                    artisanId={artisan.id}
+                    current={
+                      artisan.google_url &&
+                      artisan.google_rating !== null &&
+                      artisan.google_review_count
+                        ? {
+                            url: artisan.google_url,
+                            rating: artisan.google_rating,
+                            count: artisan.google_review_count,
+                          }
+                        : null
+                    }
+                  />
+                )}
               </div>
             </Section>
 
-            <Section id="parrainage" title={t.referral.title}>
-              {referral && (
-                <>
-                  <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                    <Info label={t.referral.code} value={referral.code ?? t.referral.noCode} />
-                    {referral.code && (
-                      <Info
-                        label={t.referral.link}
-                        value={partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros}
-                      />
-                    )}
-                    <Info
-                      label={t.referral.months}
-                      value={t.referral.monthsValue(
-                        referral.mois_poses,
-                        referral.mois_en_attente,
-                        referral.mois_annee,
+            {isAdmin && (
+              <Section id="parrainage" title={t.referral.title}>
+                {referral && (
+                  <>
+                    <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                      <Info label={t.referral.code} value={referral.code ?? t.referral.noCode} />
+                      {referral.code && (
+                        <Info
+                          label={t.referral.link}
+                          value={partnerLinks(env.NEXT_PUBLIC_SITE_URL, referral.code).pros}
+                        />
                       )}
-                    />
-                    {referral.cadeau && (
-                      <div className="flex flex-wrap gap-x-2">
-                        <dt className="text-muted-foreground">{t.referral.gift} :</dt>
-                        <dd className="font-medium">
-                          {t.referral.giftValue(
-                            fr.admin.referrals.gift[referral.cadeau.status],
-                            referral.cadeau.item &&
-                              fr.pro.hub.welcomeGift.summary(
-                                fr.pro.hub.welcomeGift.items[referral.cadeau.item],
-                                referral.cadeau.size,
-                              ),
-                          )}
-                          {referral.cadeau.ticket_id && (
-                            <>
-                              {" · "}
-                              <Link
-                                href={`/admin/tickets/${referral.cadeau.ticket_id}` as Route}
-                                className="font-medium text-primary underline-offset-2 hover:underline"
-                              >
-                                {t.referral.giftTicket}
-                              </Link>
-                            </>
-                          )}
-                        </dd>
-                      </div>
-                    )}
-                  </dl>
-                  <div className="flex flex-col gap-1 text-sm">
-                    <h3 className="font-medium">{t.referral.referrer}</h3>
-                    {referral.parrain ? (
-                      <ReferralPerson person={referral.parrain} />
-                    ) : (
-                      <p className="text-muted-foreground">{t.referral.noReferrer}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1 text-sm">
-                    <h3 className="font-medium">{t.referral.referred(referral.filleuls.length)}</h3>
-                    {referral.filleuls.length > 0 ? (
-                      <ul className="flex flex-col gap-1">
-                        {referral.filleuls.map((f) => (
-                          <li key={f.id}>
-                            <ReferralPerson person={f} />
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-muted-foreground">{t.referral.noReferred}</p>
-                    )}
-                  </div>
-                </>
-              )}
-              <Link
-                href={"/admin/parrainages" as Route}
-                className="text-sm font-medium text-primary underline-offset-2 hover:underline"
-              >
-                {t.referral.seeAll} →
-              </Link>
-            </Section>
+                      <Info
+                        label={t.referral.months}
+                        value={t.referral.monthsValue(
+                          referral.mois_poses,
+                          referral.mois_en_attente,
+                          referral.mois_annee,
+                        )}
+                      />
+                      {referral.cadeau && (
+                        <div className="flex flex-wrap gap-x-2">
+                          <dt className="text-muted-foreground">{t.referral.gift} :</dt>
+                          <dd className="font-medium">
+                            {t.referral.giftValue(
+                              fr.admin.referrals.gift[referral.cadeau.status],
+                              referral.cadeau.item &&
+                                fr.pro.hub.welcomeGift.summary(
+                                  fr.pro.hub.welcomeGift.items[referral.cadeau.item],
+                                  referral.cadeau.size,
+                                ),
+                            )}
+                            {referral.cadeau.ticket_id && (
+                              <>
+                                {" · "}
+                                <Link
+                                  href={`/admin/tickets/${referral.cadeau.ticket_id}` as Route}
+                                  className="font-medium text-primary underline-offset-2 hover:underline"
+                                >
+                                  {t.referral.giftTicket}
+                                </Link>
+                              </>
+                            )}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                    <div className="flex flex-col gap-1 text-sm">
+                      <h3 className="font-medium">{t.referral.referrer}</h3>
+                      {referral.parrain ? (
+                        <ReferralPerson person={referral.parrain} />
+                      ) : (
+                        <p className="text-muted-foreground">{t.referral.noReferrer}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1 text-sm">
+                      <h3 className="font-medium">
+                        {t.referral.referred(referral.filleuls.length)}
+                      </h3>
+                      {referral.filleuls.length > 0 ? (
+                        <ul className="flex flex-col gap-1">
+                          {referral.filleuls.map((f) => (
+                            <li key={f.id}>
+                              <ReferralPerson person={f} />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-muted-foreground">{t.referral.noReferred}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+                <Link
+                  href={"/admin/parrainages" as Route}
+                  className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  {t.referral.seeAll} →
+                </Link>
+              </Section>
+            )}
           </div>
         </div>
       )}

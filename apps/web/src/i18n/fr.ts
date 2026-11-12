@@ -3491,6 +3491,7 @@ export const fr = {
     admin: "Administrateur MENAO",
     support: "Support MENAO",
     commercial: "Commercial MENAO",
+    verification: "Vérification MENAO",
     visiteur: "Visiteur",
   },
   legal: {
@@ -7616,6 +7617,9 @@ export const fr = {
   admin: {
     title: "Back-office MENAO",
     badge: "Back-office",
+    // Fiches consultées par le support (ADR 0286).
+    readOnly:
+      "Lecture seule : votre accès Support permet de consulter cette fiche, pas de la modifier.",
     nav: {
       overview: "Vue d'ensemble",
       launch: "Lancement",
@@ -7719,8 +7723,8 @@ export const fr = {
       team: {
         figuresLabel: "Équipe MENAO",
         members: "Membres",
-        membersHint: (admins: number, support: number) =>
-          `${admins} admin${admins > 1 ? "s" : ""}, ${support} support`,
+        membersHint: (admins: number, support: number, verification: number) =>
+          `${admins} admin${admins > 1 ? "s" : ""}, ${support} support, ${verification} vérification`,
         mfa: "Double authentification",
         mfaValue: (on: number, total: number) => `${on} sur ${total}`,
         mfaHint: (missing: number) =>
@@ -7741,8 +7745,12 @@ export const fr = {
         you: "Vous",
         neverSeen: (date: string) => `invité le ${date}`,
         actions: (name: string) => `Actions pour ${name}`,
-        makeSupport: "Passer en Support",
-        makeAdmin: "Passer en Admin",
+        changeAccess: "Changer l'accès",
+        makeRole: {
+          admin: "Passer en Admin",
+          support: "Passer en Support",
+          verification: "Passer en Vérification",
+        },
         remove: "Retirer l'accès",
         removeConfirm: (name: string) =>
           `Retirer l'accès de ${name} ? Sa connexion sera bloquée et ses sessions fermées. Son nom reste dans le journal et sur les tickets traités.`,
@@ -7753,7 +7761,10 @@ export const fr = {
         roles: {
           admin:
             "Tout le back-office, dont la validation des dossiers, l'argent, le lancement et les réglages.",
-          support: "La boîte de réception : tickets, modération et litiges.",
+          support:
+            "La boîte de réception (tickets, modération, litiges), et la consultation des demandes, chantiers, comptes et fiches artisans, sans les modifier.",
+          verification:
+            "Les dossiers artisans et la conformité : documents, décisions, renouvellements et contrôles.",
         },
         empty: "Aucun membre.",
       },
@@ -8250,7 +8261,7 @@ export const fr = {
         artisans: "Artisans",
         equipe: "Équipe MENAO",
       },
-      // Invitation d'un admin ou d'un membre du support (F-67, ADR 0210).
+      // Invitation d'un membre de l'équipe : trois accès (F-67, ADR 0210, 0286).
       invite: {
         link: "Inviter un membre de l'équipe",
         title: "Inviter un membre de l'équipe",
@@ -8261,9 +8272,12 @@ export const fr = {
           email: "Adresse e-mail",
           role: "Accès",
           roleHint:
-            "Admin : tout le back-office, dont la validation des dossiers et le lancement. Support : tickets, modération et litiges seulement.",
+            "Admin : tout le back-office. Support : la boîte de réception, et la consultation des demandes, chantiers, comptes et fiches artisans. Vérification : les dossiers artisans et la conformité.",
         },
-        roles: { admin: "Admin", support: "Support" } as Record<string, string>,
+        roles: { admin: "Admin", support: "Support", verification: "Vérification" } as Record<
+          string,
+          string
+        >,
         submit: "Envoyer l'invitation",
         invited: (email: string) => `Invitation envoyée à ${email}.`,
         errors: {

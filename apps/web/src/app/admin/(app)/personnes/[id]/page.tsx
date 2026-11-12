@@ -1,3 +1,4 @@
+import { isTeam } from "@menao/core";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
@@ -5,7 +6,8 @@ import { notFound } from "next/navigation";
 import { DetailSection, InfoList } from "@/components/admin/list-controls";
 import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { ReadOnlyBanner } from "@/components/admin/read-only";
+import { requireStaff } from "@/lib/admin/guard";
 import { getPersonDetail } from "@/lib/admin/people";
 import { formatDay, formatDayTimeInline } from "@/lib/format";
 import { AccountActions } from "./account-actions";
@@ -24,7 +26,9 @@ export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
 export default async function AdminPersonPage({ params }: PageProps<"/admin/personnes/[id]">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireStaff();
+  // Support : consultation sans action sur le compte (ADR 0286).
+  const readOnly = role === "support";
   const person = await getPersonDetail(supabase, id);
   if (!person) notFound();
   // F-23 : notes laissées par les artisans sur ce client (visibles de l'équipe seulement ici).
@@ -37,7 +41,7 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
     .order("created_at", { ascending: false });
   const { profile, account, projects, chantiers, tickets, reviews } = person;
   const banned = Boolean(account.banned_until && new Date(account.banned_until) > new Date());
-  const staff = profile.role === "admin" || profile.role === "support";
+  const staff = isTeam(profile.role);
   // Demande de suppression en cours (ADR 0039, 0048) : traitement guidé, effacement manuel.
   const deletion = tickets.find((x) => x.type === "suppression_compte" && x.status !== "resolu");
   const d = fr.admin.deletion;
@@ -58,6 +62,7 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
         <StatusBadge tone="primary">{fr.roles[profile.role]}</StatusBadge>
         {banned && <StatusBadge tone="danger">{t.suspended}</StatusBadge>}
       </div>
+      {readOnly && <ReadOnlyBanner />}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex flex-col gap-6">
@@ -187,17 +192,19 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
               ]}
             />
           </DetailSection>
-          <DetailSection title={fr.admin.accountActions.title}>
-            {staff ? (
-              <p className="text-sm text-muted-foreground">{fr.admin.accountActions.staff}</p>
-            ) : (
-              <AccountActions
-                userId={id}
-                isArtisan={Boolean(person.artisanId)}
-                suspended={banned}
-              />
-            )}
-          </DetailSection>
+          {!readOnly && (
+            <DetailSection title={fr.admin.accountActions.title}>
+              {staff ? (
+                <p className="text-sm text-muted-foreground">{fr.admin.accountActions.staff}</p>
+              ) : (
+                <AccountActions
+                  userId={id}
+                  isArtisan={Boolean(person.artisanId)}
+                  suspended={banned}
+                />
+              )}
+            </DetailSection>
+          )}
           {person.artisanId && (
             <DetailSection title={t.artisanFile}>
               <Link href={`/admin/artisans/${person.artisanId}` as Route} className={link}>

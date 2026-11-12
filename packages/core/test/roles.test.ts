@@ -6,11 +6,12 @@ import {
   isAdmin,
   isRole,
   isStaff,
+  isTeam,
   roleFromAppMetadata,
 } from "../src/roles";
 
 describe("rôles", () => {
-  it("liste les six rôles de la spécification (§3), plus les commerciaux (ADR 0205)", () => {
+  it("liste les six rôles de la spécification (§3), les commerciaux (ADR 0205) et la vérification (ADR 0286)", () => {
     expect(ROLES).toEqual([
       "particulier",
       "artisan",
@@ -18,6 +19,7 @@ describe("rôles", () => {
       "admin",
       "support",
       "commercial",
+      "verification",
       "visiteur",
     ]);
   });
@@ -34,6 +36,15 @@ describe("rôles", () => {
     expect(isStaff("support")).toBe(true);
     expect(isStaff("artisan")).toBe(false);
     expect(isStaff("particulier")).toBe(false);
+    expect(isStaff("verification")).toBe(false);
+  });
+
+  it("isTeam couvre les trois accès du back-office (ADR 0286)", () => {
+    expect(isTeam("admin")).toBe(true);
+    expect(isTeam("support")).toBe(true);
+    expect(isTeam("verification")).toBe(true);
+    expect(isTeam("commercial")).toBe(false);
+    expect(isTeam("artisan")).toBe(false);
   });
 
   it("isAdmin ne couvre que admin", () => {
@@ -61,6 +72,7 @@ describe("homePathForRole", () => {
     expect(homePathForRole("particulier")).toBe("/mon-espace");
     expect(homePathForRole("admin")).toBe("/admin");
     expect(homePathForRole("support")).toBe("/admin/tickets");
+    expect(homePathForRole("verification")).toBe("/admin/artisans");
     expect(homePathForRole("commercial")).toBe("/commercial");
     expect(homePathForRole("visiteur")).toBe("/connexion");
   });
@@ -74,6 +86,7 @@ describe("appSpaceForRole (application native)", () => {
     expect(appSpaceForRole("artisan_en_attente")).toBe("artisan");
     expect(appSpaceForRole("admin")).toBe("equipe");
     expect(appSpaceForRole("support")).toBe("equipe");
+    expect(appSpaceForRole("verification")).toBe("equipe");
     // Commercial (ADR 0205) : son espace est sur le site.
     expect(appSpaceForRole("commercial")).toBe("equipe");
   });

@@ -5,7 +5,7 @@ import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admi
 import { Card, StatusBadge } from "@/components/ui";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireStaff } from "@/lib/admin/guard";
 import { listProjects, parsePage, projectCounts } from "@/lib/admin/follow-up";
 import { formatDay, formatTimeAgo } from "@/lib/format";
 
@@ -31,7 +31,7 @@ export default async function AdminRequestsPage({ searchParams }: PageProps<"/ad
   const filter = parseProjectFilter(params.filtre);
   const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
   const page = parsePage(params.page);
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireStaff();
   const [{ rows, total }, counts] = await Promise.all([
     listProjects(supabase, { filter, query, page }),
     projectCounts(supabase, query),

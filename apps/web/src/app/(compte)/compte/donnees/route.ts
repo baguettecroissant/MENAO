@@ -1,4 +1,4 @@
-import { parisToday, roleFromAppMetadata } from "@menao/core";
+import { isTeam, parisToday, roleFromAppMetadata } from "@menao/core";
 import { NextResponse, type NextRequest } from "next/server";
 import { accountExport } from "@/lib/account/export";
 import { createClient } from "@/lib/supabase/server";
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/connexion?next=/compte", request.url));
   }
   const role = roleFromAppMetadata(user.app_metadata);
-  if (role === "admin" || role === "support" || role === "visiteur") {
+  if (isTeam(role) || role === "visiteur") {
     return new NextResponse(null, { status: 403 });
   }
   try {

@@ -9,7 +9,7 @@ import { SheetChip } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 import { PAGE_SIZE, parsePage } from "@/lib/admin/follow-up";
 import { ARTISAN_FILE_STATUSES, getArtisanFileCounts } from "@/lib/admin/artisan-files";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTeam } from "@/lib/admin/guard";
 
 type DocType = Database["public"]["Enums"]["document_type"];
 const DOC_TYPES: DocType[] = ["kbis", "decennale", "rc_pro", "identite", "urssaf"];
@@ -26,7 +26,7 @@ export default async function AdminArtisansPage({ searchParams }: PageProps<"/ad
   if (params.statut === "brouillon") redirect("/admin/artisans/inscriptions" as Route);
   const status = STATUSES.find((s) => s === params.statut) ?? "en_verification";
   const page = parsePage(params.page);
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireTeam();
 
   // 50 dossiers par page (ADR 0146), les plus anciens envois d'abord.
   const { data: artisans, count } = await supabase

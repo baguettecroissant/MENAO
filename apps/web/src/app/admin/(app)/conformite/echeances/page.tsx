@@ -8,7 +8,7 @@ import {
 } from "@/components/admin/compliance";
 import { fr } from "@/i18n/fr";
 import { getComplianceCounts } from "@/lib/admin/compliance";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireVerifier } from "@/lib/admin/guard";
 
 const t = fr.admin.watch;
 const docT = fr.pro.onboarding.documents;
@@ -18,7 +18,7 @@ const docT = fr.pro.onboarding.documents;
  * arrivent à échéance sous 30 jours ou déjà expirés, les plus proches d'abord.
  */
 export default async function ComplianceExpiringPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const limit = expiryWatchLimit();
   const [counts, expiringDocs, expiringCerts] = await Promise.all([
     getComplianceCounts(supabase),

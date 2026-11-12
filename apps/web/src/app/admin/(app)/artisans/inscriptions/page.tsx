@@ -4,7 +4,7 @@ import { ArtisanFilesHeader } from "@/components/admin/artisan-files";
 import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getArtisanFileCounts } from "@/lib/admin/artisan-files";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTeam } from "@/lib/admin/guard";
 
 const t = fr.admin.stalled;
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {
@@ -20,7 +20,7 @@ const DAY_MS = 86_400_000;
  * envoyées depuis le début de l'attente. Les plus anciennes d'abord.
  */
 export default async function AdminStalledSignupsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireTeam();
   const [{ data: rows }, { byStatus }] = await Promise.all([
     supabase.rpc("admin_stalled_signups"),
     getArtisanFileCounts(supabase),

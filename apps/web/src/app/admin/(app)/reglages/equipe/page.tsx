@@ -24,6 +24,7 @@ export default async function AdminTeamPage({ searchParams }: PageProps<"/admin/
   const { data, error } = await supabase.rpc("admin_staff_members");
   const members = (data ?? []) as StaffMember[];
   const admins = members.filter((m) => m.role === "admin").length;
+  const verifiers = members.filter((m) => m.role === "verification").length;
   const withMfa = members.filter((m) => m.double_auth).length;
   const pending = members.filter((m) => !m.derniere_connexion).length;
 
@@ -42,7 +43,7 @@ export default async function AdminTeamPage({ searchParams }: PageProps<"/admin/
         <SummaryTile
           label={tt.members}
           value={String(members.length)}
-          hint={tt.membersHint(admins, members.length - admins)}
+          hint={tt.membersHint(admins, members.length - admins - verifiers, verifiers)}
         />
         <SummaryTile
           label={tt.mfa}
@@ -58,9 +59,9 @@ export default async function AdminTeamPage({ searchParams }: PageProps<"/admin/
           <Card className="flex flex-col gap-3">
             <CardTitle title={tt.rolesTitle} />
             <dl className="flex flex-col gap-2.5 text-sm">
-              {(["admin", "support"] as const).map((role) => (
+              {(["admin", "support", "verification"] as const).map((role) => (
                 <div key={role} className="flex gap-3">
-                  <dt className="w-16 shrink-0 font-semibold">{invite.roles[role]}</dt>
+                  <dt className="w-24 shrink-0 font-semibold">{invite.roles[role]}</dt>
                   <dd className="text-label">{tt.roles[role]}</dd>
                 </div>
               ))}

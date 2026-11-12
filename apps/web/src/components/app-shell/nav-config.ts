@@ -60,8 +60,11 @@ export type NavItem = {
   exact?: boolean;
   /** Autres débuts d'adresse rattachés à la rubrique (fiches d'un chantier, d'un devis…). */
   also?: readonly string[];
-  /** Back-office : rubrique ouverte au rôle support (ADR 0049) ; les autres sont réservées aux admins. */
-  support?: boolean;
+  /**
+   * Back-office : accès, en plus des admins, qui voient la rubrique (ADR 0049, 0286). Le support
+   * consulte les fiches en lecture seule ; la vérification traite les dossiers et la conformité.
+   */
+  roles?: readonly ("support" | "verification")[];
   /** Espace pro : rubrique réservée aux places qui ont ce droit (ADR 0241). */
   team?: TeamPermission;
 };
@@ -189,7 +192,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
   })),
   // Back-office rangé en six sections (ADR 0283, après l'ADR 0133) : un nom par chose, le nom du
   // menu est le titre de la page ; les rubriques à plusieurs pages ont des onglets
-  // (components/admin/admin-tabs.tsx). La boîte de réception est la seule rubrique du support.
+  // (components/admin/admin-tabs.tsx). Rubriques des accès support et vérification : `roles`
+  // (ADR 0286).
   admin: [
     {
       items: [
@@ -206,7 +210,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           label: fr.admin.nav.tickets,
           icon: Inbox,
           badge: "tickets",
-          support: true,
+          roles: ["support"],
         },
       ],
     },
@@ -219,6 +223,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           label: fr.admin.nav.artisans,
           icon: ShieldCheck,
           badge: "dossiers",
+          roles: ["support", "verification"],
         },
         // Renouvellements, échéances et contrôles aléatoires du mois (ADR 0121).
         {
@@ -226,6 +231,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           label: fr.admin.nav.compliance,
           icon: CalendarClock,
           badge: "conformite",
+          roles: ["verification"],
         },
         // Objectif de demandes par artisan (ADR 0282).
         { href: "/admin/objectifs", label: fr.admin.nav.leads, icon: Target },
@@ -234,9 +240,14 @@ export const NAV: Record<Space, readonly NavSection[]> = {
     {
       label: fr.appShell.sections.clients,
       items: [
-        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send },
-        { href: "/admin/chantiers", label: fr.admin.nav.chantiers, icon: HardHat },
-        { href: "/admin/personnes", label: fr.admin.nav.people, icon: Users },
+        { href: "/admin/demandes", label: fr.admin.nav.requests, icon: Send, roles: ["support"] },
+        {
+          href: "/admin/chantiers",
+          label: fr.admin.nav.chantiers,
+          icon: HardHat,
+          roles: ["support"],
+        },
+        { href: "/admin/personnes", label: fr.admin.nav.people, icon: Users, roles: ["support"] },
       ],
     },
     {
@@ -346,8 +357,9 @@ export function isActive(item: NavItem, pathname: string): boolean {
 }
 
 /**
- * Rubriques d'un espace pour un rôle : le support ne voit que les siennes (ADR 0049) ; dans
- * l'espace pro, chaque place de l'équipe voit celles de ses droits (ADR 0241).
+ * Rubriques d'un espace pour un rôle : le support et la vérification ne voient que les leurs
+ * (ADR 0049, 0286) ; dans l'espace pro, chaque place de l'équipe voit celles de ses droits
+ * (ADR 0241).
  */
 export function navFor(
   space: Space,
@@ -355,8 +367,8 @@ export function navFor(
   teamPosition?: TeamPosition | null,
 ): readonly NavSection[] {
   const keep =
-    space === "admin" && role === "support"
-      ? (item: NavItem) => item.support === true
+    space === "admin" && (role === "support" || role === "verification")
+      ? (item: NavItem) => item.roles?.includes(role) === true
       : space === "pro" && teamPosition
         ? (item: NavItem) => !item.team || teamCan(teamPosition, item.team)
         : null;

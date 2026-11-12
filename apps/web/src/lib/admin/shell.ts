@@ -2,6 +2,7 @@ import "server-only";
 import { parisToday, spotCheckPeriod } from "@menao/core";
 import { avatarUrl } from "@/lib/chantier/storage";
 import type { ShellAccount } from "@/lib/client/shell";
+import type { TeamRole } from "@/lib/admin/guard";
 import type { createClient } from "@/lib/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -14,7 +15,7 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 export async function getAdminShell(
   supabase: Client,
   userId: string,
-  role: "admin" | "support" = "admin",
+  role: TeamRole = "admin",
 ): Promise<{
   account: ShellAccount;
   badges: { dossiers: number; conformite: number; tickets: number };

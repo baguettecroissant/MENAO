@@ -7479,7 +7479,13 @@ export type Database = {
       acquisition_channel:
         "terrain" | "meta" | "google" | "flyer" | "salon" | "presse" | "radio" | "autre";
       app_role:
-        "particulier" | "artisan" | "artisan_en_attente" | "admin" | "support" | "commercial";
+        | "particulier"
+        | "artisan"
+        | "artisan_en_attente"
+        | "admin"
+        | "support"
+        | "commercial"
+        | "verification";
       appointment_status: "planifie" | "annule";
       artisan_invitation_status: "envoyee" | "inscrit";
       artisan_report_kind: "client_injoignable" | "client_absent" | "fausse_demande";
@@ -7796,7 +7802,15 @@ export const Constants = {
         "radio",
         "autre",
       ],
-      app_role: ["particulier", "artisan", "artisan_en_attente", "admin", "support", "commercial"],
+      app_role: [
+        "particulier",
+        "artisan",
+        "artisan_en_attente",
+        "admin",
+        "support",
+        "commercial",
+        "verification",
+      ],
       appointment_status: ["planifie", "annule"],
       artisan_invitation_status: ["envoyee", "inscrit"],
       artisan_report_kind: ["client_injoignable", "client_absent", "fausse_demande"],

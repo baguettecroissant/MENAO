@@ -5,7 +5,7 @@ import { ButtonLink, Card } from "@/components/ui";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
 import { parsePage } from "@/lib/admin/follow-up";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireStaff } from "@/lib/admin/guard";
 import { PEOPLE_FILTERS, listPeople, parsePeopleFilter, peopleCounts } from "@/lib/admin/people";
 import { formatDay, formatTimeAgo } from "@/lib/format";
 
@@ -24,7 +24,7 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
   const filter = parsePeopleFilter(params.role);
   const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
   const page = parsePage(params.page);
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireStaff();
   const [{ rows, total }, counts] = await Promise.all([
     listPeople(supabase, { filter, query, page }),
     peopleCounts(supabase, query),
@@ -46,15 +46,17 @@ export default async function AdminPeoplePage({ searchParams }: PageProps<"/admi
           </h1>
           <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
         </div>
-        {/* L'équipe se gère dans Réglages › Équipe MENAO (ADR 0284). */}
-        <ButtonLink
-          href={"/admin/reglages/equipe#inviter" as Route}
-          variant="outline"
-          size="sm"
-          className="shrink-0 self-start"
-        >
-          {t.invite.link}
-        </ButtonLink>
+        {/* L'équipe se gère dans Réglages › Équipe MENAO (ADR 0284), par un admin. */}
+        {role === "admin" && (
+          <ButtonLink
+            href={"/admin/reglages/equipe#inviter" as Route}
+            variant="outline"
+            size="sm"
+            className="shrink-0 self-start"
+          >
+            {t.invite.link}
+          </ButtonLink>
+        )}
       </div>
       {/* Refonte « Nette » (ADR 0259) : les nombres par rôle en chiffres clés. */}
       <MoneyFigures

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
-import { requireStaff } from "./guard";
+import { requireTeam } from "./guard";
 
 const codeSchema = z.string().regex(/^\d{6}$/);
 
@@ -17,7 +17,7 @@ export async function verifyTotp(_prev: FormState, formData: FormData): Promise<
   if (!code.success || !factorId.success)
     return { fieldErrors: { code: [fr.admin.mfa.invalidCode] } };
 
-  const { supabase, role } = await requireStaff({ requireMfa: false });
+  const { supabase, role } = await requireTeam({ requireMfa: false });
   const { error } = await supabase.auth.mfa.challengeAndVerify({
     factorId: factorId.data,
     code: code.data,

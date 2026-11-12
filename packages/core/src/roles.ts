@@ -11,6 +11,8 @@ export const ROLES = [
   "support",
   // Commercial de terrain (F-65, ADR 0205) : compte créé par un admin, jamais à l'inscription.
   "commercial",
+  // Vérification des dossiers d'artisans et conformité (ADR 0286) : posé par un admin.
+  "verification",
   "visiteur",
 ] as const;
 
@@ -23,6 +25,11 @@ export function isRole(value: unknown): value is Role {
 
 export function isStaff(role: Role): boolean {
   return role === "admin" || role === "support";
+}
+
+/** Les trois accès du back-office : admin, support et vérification (ADR 0286). */
+export function isTeam(role: Role): boolean {
+  return isStaff(role) || role === "verification";
 }
 
 export function isAdmin(role: Role): boolean {
@@ -48,6 +55,9 @@ export function homePathForRole(role: Role): string {
     case "support":
       // Équipe restreinte (spec §4) : tickets, modération et litiges (ADR 0049).
       return "/admin/tickets";
+    case "verification":
+      // Dossiers artisans et conformité (ADR 0286).
+      return "/admin/artisans";
     case "commercial":
       return "/commercial";
     case "visiteur":
@@ -65,7 +75,7 @@ export function homePathForRole(role: Role): string {
 export type AppSpace = "client" | "artisan" | "equipe";
 
 export function appSpaceForRole(role: Role): AppSpace {
-  if (isStaff(role) || role === "commercial") return "equipe";
+  if (isTeam(role) || role === "commercial") return "equipe";
   if (role === "artisan" || role === "artisan_en_attente") return "artisan";
   return "client";
 }

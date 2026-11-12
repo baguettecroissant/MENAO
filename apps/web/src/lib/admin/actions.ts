@@ -8,7 +8,7 @@ import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import { invokeRgeCheck } from "@/lib/rge";
-import { requireAdmin, requireStaff } from "./guard";
+import { requireAdmin, requireStaff, requireVerifier } from "./guard";
 
 const t = fr.admin.detail;
 
@@ -42,7 +42,7 @@ export async function reviewDocument(_prev: FormState, formData: FormData): Prom
     refusal = { p_code: code, p_reason: [label, detail].filter(Boolean).join(" ") };
   }
 
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const { error } = await supabase.rpc("admin_review_document", {
     p_document_id: id.data,
     p_status: status.data,
@@ -56,7 +56,7 @@ export async function reviewDocument(_prev: FormState, formData: FormData): Prom
 export async function verifyCertification(formData: FormData): Promise<void> {
   const id = z.uuid().safeParse(text(formData, "certificationId"));
   if (!id.success) return;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   await supabase.rpc("admin_verify_certification", {
     p_certification_id: id.data,
     p_verified: text(formData, "verified") === "true",
@@ -68,7 +68,7 @@ export async function verifyCertification(formData: FormData): Promise<void> {
 export async function adminRefreshRge(formData: FormData): Promise<void> {
   const id = z.uuid().safeParse(text(formData, "artisanId"));
   if (!id.success) return;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const status = await invokeRgeCheck(supabase, { artisanId: id.data });
   refresh(id.data);
   redirect(`/admin/artisans/${id.data}?onglet=verification&rge=${status}` as Route);
@@ -76,7 +76,7 @@ export async function adminRefreshRge(formData: FormData): Promise<void> {
 
 /** Tirage du mois des contrôles aléatoires (ADR 0121), lancé par un admin. */
 export async function drawSpotChecks(): Promise<void> {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const { data, error } = await supabase.rpc("admin_draw_spot_checks");
   revalidatePath("/admin", "layout");
   redirect(`/admin/conformite/controles?tirage=${error ? "erreur" : (data ?? 0)}` as Route);
@@ -88,7 +88,7 @@ export async function completeSpotCheck(_prev: FormState, formData: FormData): P
   const id = z.uuid().safeParse(text(formData, "spotCheckId"));
   const result = z.enum(["conforme", "non_conforme"]).safeParse(text(formData, "result"));
   if (!id.success || !result.success) return { error: s.error };
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const { error } = await supabase.rpc("admin_complete_spot_check", {
     p_id: id.data,
     p_result: result.data,
@@ -110,7 +110,7 @@ export async function decideArtisan(_prev: FormState, formData: FormData): Promi
   if (decision.data !== "valide" && !message)
     return { fieldErrors: { message: [fr.admin.detail.messageHint] } };
 
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireVerifier();
   const { error } = await supabase.rpc("admin_decide_artisan", {
     p_artisan_id: id.data,
     p_decision: decision.data,

@@ -5,7 +5,7 @@ import { FilterChips, Pagination, SearchForm, listHref } from "@/components/admi
 import { Card, StatusBadge } from "@/components/ui";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireStaff } from "@/lib/admin/guard";
 import { chantierCounts, listChantiers, parsePage } from "@/lib/admin/follow-up";
 import { formatDay, formatTimeAgo } from "@/lib/format";
 
@@ -33,7 +33,9 @@ export default async function AdminChantiersPage({ searchParams }: PageProps<"/a
   const stage = parseChantierStage(params.etape);
   const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
   const page = parsePage(params.page);
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireStaff();
+  // Le support consulte sans voir l'argent (ADR 0286).
+  const showMoney = role === "admin";
   const [{ rows, total }, byStatus] = await Promise.all([
     listChantiers(supabase, { stage, query, page }),
     chantierCounts(supabase, query),
@@ -109,9 +111,11 @@ export default async function AdminChantiersPage({ searchParams }: PageProps<"/a
                   <th scope="col" className="py-2 pr-4 font-normal">
                     {c.columns.status}
                   </th>
-                  <th scope="col" className="py-2 pr-4 font-normal">
-                    {c.columns.amounts}
-                  </th>
+                  {showMoney && (
+                    <th scope="col" className="py-2 pr-4 font-normal">
+                      {c.columns.amounts}
+                    </th>
+                  )}
                   <th scope="col" className="py-2 font-normal">
                     {c.columns.activity}
                   </th>
@@ -146,12 +150,14 @@ export default async function AdminChantiersPage({ searchParams }: PageProps<"/a
                         {fr.pro.chantiers.status[row.status]}
                       </StatusBadge>
                     </td>
-                    <td className="py-3 pr-4 tabular-nums">
-                      {row.devis_ttc_cents ? euros.format(row.devis_ttc_cents / 100) : t.none}
-                      <span className="block text-xs text-muted-foreground">
-                        {euros.format((row.paye_cents ?? 0) / 100)}
-                      </span>
-                    </td>
+                    {showMoney && (
+                      <td className="py-3 pr-4 tabular-nums">
+                        {row.devis_ttc_cents ? euros.format(row.devis_ttc_cents / 100) : t.none}
+                        <span className="block text-xs text-muted-foreground">
+                          {euros.format((row.paye_cents ?? 0) / 100)}
+                        </span>
+                      </td>
+                    )}
                     <td
                       className="py-3"
                       title={row.derniere_activite ? formatDay(row.derniere_activite) : undefined}

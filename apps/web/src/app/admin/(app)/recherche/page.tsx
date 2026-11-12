@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SearchForm } from "@/components/admin/list-controls";
 import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTeam } from "@/lib/admin/guard";
 import { searchEverything } from "@/lib/admin/people";
 
 const t = fr.admin.search;
@@ -60,7 +60,7 @@ function describe(r: Result): { href: string; tag: string | null } {
 export default async function AdminSearchPage({ searchParams }: PageProps<"/admin/recherche">) {
   const params = await searchParams;
   const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireTeam();
   const results = query ? await searchEverything(supabase, query) : [];
 
   return (

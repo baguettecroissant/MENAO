@@ -1,6 +1,7 @@
 // Edge Function rge-check (ADR 0118) : relit l'annuaire RGE de l'ADEME pour le SIRET d'un artisan.
 // - L'artisan connecté, pour sa fiche (« Actualiser ») ;
-// - un admin avec double authentification, pour un artisan donné (« Revérifier le RGE ») ;
+// - un admin ou la vérification (ADR 0286) avec double authentification, pour un artisan donné
+//   (« Revérifier le RGE ») ;
 // - la base, chaque jour (pg_cron + pg_net, secret partagé de notify) : les fiches lues il y a
 //   plus d'une semaine, par lots.
 // Aucune donnée personnelle dans les journaux (CLAUDE.md règle 11).
@@ -92,7 +93,8 @@ Deno.serve(async (req) => {
   if (ARTISAN_ROLES.has(role)) {
     query = query.eq("user_id", user.id);
   } else if (
-    role === "admin" &&
+    // Admin ou rôle Vérification (ADR 0286), en double authentification.
+    (role === "admin" || role === "verification") &&
     tokenAal(token) === "aal2" &&
     typeof body.artisanId === "string" &&
     UUID.test(body.artisanId)
