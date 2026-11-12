@@ -56,9 +56,7 @@ export default async function AdminPersonPage({ params }: PageProps<"/admin/pers
           {person.name ?? account.email ?? t.unnamed}
         </h1>
         <StatusBadge tone="primary">{fr.roles[profile.role]}</StatusBadge>
-        {banned && account.banned_until && (
-          <StatusBadge tone="danger">{t.suspended(formatDay(account.banned_until))}</StatusBadge>
-        )}
+        {banned && <StatusBadge tone="danger">{t.suspended}</StatusBadge>}
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

@@ -1014,18 +1014,19 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   const exported = await admin.request.get(exportHref ?? "");
   expect(exported.ok()).toBe(true);
   expect(((await exported.json()) as { compte: { email: string } }).compte.email).toBe(email);
-  await actions.getByRole("button", { name: "Suspendre l'accès au compte" }).click();
-  await expect(actions.getByText("Indiquez le motif de la suspension.")).toBeVisible();
+  // « Bloquer la connexion » (ADR 0285, ancien « Suspendre l'accès au compte »).
+  await actions.getByRole("button", { name: "Bloquer la connexion" }).click();
+  await expect(actions.getByText("Indiquez le motif du blocage.")).toBeVisible();
   await actions
-    .getByLabel("Motif de la suspension (transmis à la personne)")
+    .getByLabel("Motif du blocage (transmis à la personne)")
     .fill("Test de suspension de l'accès.");
-  await actions.getByRole("button", { name: "Suspendre l'accès au compte" }).click();
+  await actions.getByRole("button", { name: "Bloquer la connexion" }).click();
   await expect(
-    actions.getByText("Accès suspendu : la personne ne peut plus se connecter."),
+    actions.getByText("Connexion bloquée : la personne ne peut plus se connecter."),
   ).toBeVisible();
-  await expect(admin.getByText(/^Compte suspendu jusqu'au/)).toBeVisible();
-  await actions.getByRole("button", { name: "Rétablir l'accès" }).click();
-  await expect(actions.getByText("Accès rétabli.")).toBeVisible();
+  await expect(admin.getByText("Connexion bloquée", { exact: true })).toBeVisible();
+  await actions.getByRole("button", { name: "Débloquer la connexion" }).click();
+  await expect(actions.getByText("Connexion débloquée.")).toBeVisible();
 
   // Boîte de réception (ADR 0049) : le message du client, pris en charge, note interne et réponse.
   await admin.getByRole("link", { name: /^Boîte de réception/ }).click();
@@ -1072,19 +1073,29 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
     .getByRole("region", { name: "Artisans" })
     .getByRole("link", { name: "VALIDE EXEMPLE" })
     .click();
-  const accountStatus = admin.getByRole("region", { name: "Statut du compte" });
+  // Fiche en onglets (ADR 0285) : un artisan validé s'ouvre sur « Activité » ; « Retirer des
+  // recherches » (ancien « Suspendre l'artisan ») est dans l'onglet Compte.
   await expect(admin.getByRole("region", { name: "Activité" })).toBeVisible();
-  await accountStatus.getByRole("button", { name: "Suspendre l'artisan" }).click();
-  await expect(accountStatus.getByText("Indiquez le motif de la suspension.")).toBeVisible();
+  await admin
+    .getByRole("navigation", { name: "Onglets de la fiche" })
+    .getByRole("link", { name: "Compte" })
+    .click();
+  await expect(admin).toHaveURL(/\?onglet=compte$/);
+  const accountStatus = admin.getByRole("region", { name: "Retirer des recherches" });
+  await expect(admin.getByRole("region", { name: "Bloquer la connexion" })).toBeVisible();
+  await accountStatus.getByRole("button", { name: "Retirer des recherches" }).click();
+  await expect(accountStatus.getByText("Indiquez le motif.")).toBeVisible();
   await accountStatus
-    .getByLabel("Motif de la suspension (transmis à l'artisan)")
+    .getByLabel("Motif (transmis à l'artisan)")
     .fill("Test de suspension par l'équipe.");
-  await accountStatus.getByRole("button", { name: "Suspendre l'artisan" }).click();
+  await accountStatus.getByRole("button", { name: "Retirer des recherches" }).click();
   await expect(
-    accountStatus.getByText("Artisan suspendu : il n'apparaît plus dans les recherches."),
+    accountStatus.getByText(
+      "Artisan retiré des recherches : il n'apparaît plus et ne reçoit plus de demandes.",
+    ),
   ).toBeVisible();
   await capture(admin, "admin-artisan-suspendu");
-  await accountStatus.getByRole("button", { name: "Lever la suspension" }).click();
-  await expect(accountStatus.getByText("Suspension levée.")).toBeVisible();
+  await accountStatus.getByRole("button", { name: "Le remettre dans les recherches" }).click();
+  await expect(accountStatus.getByText("Artisan de nouveau dans les recherches.")).toBeVisible();
   await staff.close();
 });
