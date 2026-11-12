@@ -145,3 +145,33 @@ export function canRemindNow(lastReminder: string | null, now: Date): boolean {
   const at = Date.parse(lastReminder);
   return Number.isNaN(at) || now.getTime() - at >= MONEY_REMINDER_GAP_DAYS * 86_400_000;
 }
+
+/** Écarts du mois en cours sur le précédent (maquette du lot 37), en centimes, signés. */
+export function moneyMonthDeltas(overview: Pick<MoneyOverview, "current" | "previous">): {
+  collectedCents: number;
+  signedCents: number;
+  expensesCents: number;
+} {
+  return {
+    collectedCents: overview.current.collectedCents - overview.previous.collectedCents,
+    signedCents: overview.current.signedCents - overview.previous.signedCents,
+    expensesCents: overview.current.expensesCents - overview.previous.expensesCents,
+  };
+}
+
+/** Paiements en retard (à partir de J+30). */
+export function lateOpenCount(items: readonly MoneyOpenItem[], now: Date): number {
+  return items.filter((item) => openItemLevel(daysSince(item.since, now)) === "en_retard").length;
+}
+
+/**
+ * Date du prochain rappel automatique (J+7, J+15 ou J+30 après l'échéance), au format
+ * AAAA-MM-JJ ; null sans échéance ou après le dernier palier.
+ */
+export function nextAutoReminder(since: string | null, now: Date): string | null {
+  const days = daysSince(since, now);
+  if (days === null || !since) return null;
+  const step = MONEY_REMINDER_DAYS.find((d) => d > days);
+  if (step === undefined) return null;
+  return new Date(Date.parse(since) + step * 86_400_000).toISOString().slice(0, 10);
+}

@@ -33,9 +33,9 @@ export function RemindButton({
           type="submit"
           disabled={pending || !allowed}
           title={allowed ? t.remindHint : t.remindTooSoon}
-          className={`inline-flex min-h-9 items-center gap-1.5 rounded-input border border-primary px-3 text-sm font-medium text-primary-strong hover:bg-primary-softer disabled:border-border disabled:text-subtle-foreground disabled:hover:bg-transparent ${focusRing}`}
+          className={`inline-flex min-h-10 items-center gap-2 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold text-foreground hover:bg-background disabled:border-border disabled:text-subtle-foreground disabled:hover:bg-surface ${focusRing}`}
         >
-          <Send aria-hidden="true" className="size-3.5" />
+          <Send aria-hidden="true" className="size-4" />
           {pending ? t.reminding : t.remind}
         </button>
       )}
@@ -48,21 +48,33 @@ export function RemindButton({
   );
 }
 
-/** Réglage « Relances automatiques » (ADR 0238) : enregistré dès que la case change. */
+/**
+ * Réglage « Relances automatiques » (ADR 0238) : interrupteur enregistré dès qu'il change
+ * (maquette du lot 37 : à droite du titre de la carte).
+ */
 export function AutoRemindersForm({ enabled }: { enabled: boolean }) {
   const [state, action, pending] = useActionState(setAutoReminders, initialFormState);
   return (
-    <form action={action} className="flex flex-col gap-2">
-      <label className="flex min-h-10 cursor-pointer items-center gap-3 text-sm font-medium">
+    <form action={action} className="flex flex-col items-end gap-1">
+      <label className="relative inline-flex cursor-pointer items-center">
         <input
           type="checkbox"
+          role="switch"
           name="auto"
           defaultChecked={enabled}
           disabled={pending}
+          aria-label={t.autoLabel}
           onChange={(event) => event.currentTarget.form?.requestSubmit()}
-          className="size-5 accent-primary"
+          className="peer sr-only"
         />
-        {t.autoLabel}
+        <span
+          aria-hidden="true"
+          className="h-[1.625rem] w-11 rounded-full bg-border-strong transition-colors peer-checked:bg-success peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 peer-disabled:opacity-60"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute top-[3px] left-[3px] size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-[18px] motion-reduce:transition-none"
+        />
       </label>
       {state.success && (
         <p role="status" className="text-xs text-success">

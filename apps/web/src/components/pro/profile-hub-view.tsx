@@ -283,11 +283,12 @@ export function ProfileHubView({
           )}
         </div>
 
+        {/* Maquette du lot 37 : le cadeau du filleul en haut de « Mon profil ». */}
+        {hub.welcomeGift && <WelcomeGiftCard gift={hub.welcomeGift} />}
+
         {patron && (
           <Strength percent={percent} next={next} href={next ? link(TIP_HREF[next]) : null} />
         )}
-
-        {hub.welcomeGift && <WelcomeGiftCard gift={hub.welcomeGift} />}
         {(hub.card || hub.referral) && (
           <ShareCard
             initialTab={shareTab}

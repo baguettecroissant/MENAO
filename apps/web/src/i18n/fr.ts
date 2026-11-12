@@ -3630,6 +3630,10 @@ export const fr = {
         submit: "Recevoir ma récompense",
         note: "Envoi organisé par l'équipe MENAO, qui vous recontacte si besoin.",
         done: "Demande envoyée : l'équipe MENAO prépare votre récompense.",
+        // Maquette du lot 37 : récompense en grand en haut de « Mon grade ».
+        levelReached: (level: number) => `Niveau ${level} atteint`,
+        companyAddress: "Adresse de votre entreprise",
+        editAddress: "Modifier l'adresse",
       },
     },
     space: {
@@ -3772,6 +3776,20 @@ export const fr = {
         summary: (item: string, size: string | null) => (size ? `${item}, taille ${size}` : item),
         pending: "En préparation par l'équipe MENAO.",
         sent: (date: string) => `Envoyé le ${date}.`,
+        // Maquette du lot 37 : grands choix illustrés, adresse en résumé, suivi de l'envoi.
+        companyAddress: "Adresse de votre entreprise",
+        editAddress: "Modifier l'adresse",
+        statusPending: "En préparation",
+        statusSent: "Envoyé",
+        stepsLabel: "Suivi de votre cadeau",
+        steps: {
+          chosen: "Choisi",
+          preparing: "En préparation",
+          preparingHint: "Par l'équipe MENAO",
+          sent: "Envoyé",
+          sentLater: "La date s'affichera ici",
+          sentOn: (date: string) => `Le ${date}`,
+        },
       },
       title: "Mon profil",
       lead: "Tout ce qui concerne votre fiche, votre entreprise et votre compte, avec ce qui reste à faire.",
@@ -4942,6 +4960,27 @@ export const fr = {
       autoLabel: "Activer les relances automatiques",
       autoOn: "Relances automatiques activées.",
       autoOff: "Relances automatiques désactivées.",
+      // Maquette du lot 37 : écarts sur le mois précédent, frise des relances, réglage à droite.
+      autoShort:
+        "MENAO envoie un rappel courtois à votre client, en votre nom, avec le lien pour payer.",
+      autoSteps: [
+        ["J+7", "7 jours après l'échéance"],
+        ["J+15", "15 jours après l'échéance"],
+        ["J+30", "30 jours après l'échéance"],
+      ] as const,
+      autoManual: "Vous pouvez aussi relancer à la main, au plus une fois tous les 3 jours.",
+      deltaVs: (month: string) => `par rapport à ${month}`,
+      openLate: (n: number, late: number) =>
+        late > 0
+          ? `${n <= 1 ? `${n} paiement` : `${n} paiements`}, dont ${late} en retard`
+          : n <= 1
+            ? `${n} paiement`
+            : `${n} paiements`,
+      openTotal: (total: string, n: number) =>
+        `${total} · ${n <= 1 ? `${n} paiement` : `${n} paiements`}`,
+      columns: { item: "Chantier et paiement", reminders: "Relances", amount: "Montant" },
+      remindersDone: (n: number) => `${n} relance${n > 1 ? "s" : ""} sur 3`,
+      nextAuto: (date: string) => `Prochain rappel automatique le ${date}`,
     },
     /**
      * Comptes d'équipe (F-89, ADR 0240) : « Mon équipe » du patron (places de la formule, membres,

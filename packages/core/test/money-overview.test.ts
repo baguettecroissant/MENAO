@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  lateOpenCount,
+  moneyMonthDeltas,
+  nextAutoReminder,
   canRemindNow,
   daysSince,
   moneyMonthLabel,
@@ -95,5 +98,50 @@ describe("suivi de l'argent (ADR 0237)", () => {
     expect(canRemindNow(null, now)).toBe(true);
     expect(canRemindNow("2026-11-04T12:00:00Z", now)).toBe(false);
     expect(canRemindNow("2026-11-03T12:00:00Z", now)).toBe(true);
+  });
+});
+
+describe("lot 37 : écarts, retards et prochain rappel", () => {
+  const month = (m: string, collected: number, signed: number, expenses: number) => ({
+    month: m,
+    signedQuotes: 1,
+    signedCents: signed,
+    collectedCents: collected,
+    expensesCents: expenses,
+    invoices: 0,
+  });
+  it("calcule les écarts sur le mois précédent, signés", () => {
+    expect(
+      moneyMonthDeltas({
+        current: month("2026-11", 482_000, 635_000, 128_800),
+        previous: month("2026-10", 358_000, 733_000, 107_800),
+      }),
+    ).toEqual({ collectedCents: 124_000, signedCents: -98_000, expensesCents: 21_000 });
+  });
+
+  const item = (since: string | null) => ({
+    chantierId: "c",
+    chantier: "Salle de bains",
+    kind: "solde" as const,
+    amountCents: 1000,
+    since,
+    failed: false,
+    lastReminder: null,
+    reminders: 0,
+  });
+  const now = new Date("2026-11-20T10:00:00Z");
+
+  it("compte les paiements en retard à partir de J+30", () => {
+    expect(
+      lateOpenCount([item("2026-10-19T10:00:00Z"), item("2026-11-06T10:00:00Z"), item(null)], now),
+    ).toBe(1);
+  });
+
+  it("donne la date du prochain rappel automatique", () => {
+    expect(nextAutoReminder("2026-11-17T09:00:00Z", now)).toBe("2026-11-24");
+    expect(nextAutoReminder("2026-11-06T09:00:00Z", now)).toBe("2026-11-21");
+    expect(nextAutoReminder("2026-10-30T09:00:00Z", now)).toBe("2026-11-29");
+    expect(nextAutoReminder("2026-10-01T09:00:00Z", now)).toBeNull();
+    expect(nextAutoReminder(null, now)).toBeNull();
   });
 });

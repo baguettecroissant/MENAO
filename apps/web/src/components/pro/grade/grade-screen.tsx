@@ -4,7 +4,7 @@ import { claimableReward, levelProgress, nextReward, type GradeLevel } from "@me
 import type { Grade } from "@menao/validation";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Button, Card } from "@/components/ui";
+import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { markBadgesSeen } from "@/lib/artisan/grade-actions";
 import { formatDateNumeric } from "@/lib/format";
@@ -57,32 +57,44 @@ export function GradeScreen({
           <h2 className="text-xl">{t.title}</h2>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
+        {claimable && (
+          // Maquette du lot 37 : la récompense en grand, en haut de « Mon grade ».
+          <section
+            aria-labelledby="recompense-titre"
+            className="grid gap-6 rounded-card border-2 border-primary bg-surface p-4 shadow-card sm:p-6 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-7"
+          >
+            <div className="flex flex-col items-center gap-3 rounded-input bg-primary-soft px-5 py-6 text-center">
+              <span className="rounded-chip bg-foreground px-2.5 py-1 text-xs font-bold text-white">
+                {t.reward.levelReached(claimable.level)}
+              </span>
+              <OutfitIllustration className="my-1 h-44" />
+              <p className="text-base font-semibold">{claimable.reward}</p>
+              {claimable.rewardDetail && (
+                <p className="text-sm text-muted-foreground">{claimable.rewardDetail}</p>
+              )}
+              <p className="text-xs text-muted-foreground">{t.illustrationNote}</p>
+            </div>
+            <div className="flex min-w-0 flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <p className="text-[0.8125rem] font-bold tracking-[0.04em] text-primary-strong uppercase">
+                  {t.reward.waiting}
+                </p>
+                <h2 id="recompense-titre" className="text-[1.625rem] leading-tight font-bold">
+                  {t.reward.title(delivery.firstName)}
+                </h2>
+                <p className="text-[0.9375rem] text-muted-foreground">
+                  {t.reward.intro(claimable.level)}
+                </p>
+              </div>
+              <RewardForm level={claimable.level} defaults={delivery} />
+            </div>
+          </section>
+        )}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
           <div className="flex flex-col gap-4 lg:sticky lg:top-6">
             <LevelCard xp={grade.xp} levels={levels} />
             {scoreCard}
-            {claimable ? (
-              <Card className="flex flex-col gap-4 border-primary">
-                <div className="flex flex-col gap-1 text-center">
-                  <h2 className="text-lg font-medium text-primary-strong">
-                    {t.reward.title(delivery.firstName)}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">{t.reward.intro(claimable.level)}</p>
-                </div>
-                <div className="flex flex-col items-center gap-1 rounded-input bg-primary-softer p-4 text-center">
-                  <p className="text-sm font-medium text-primary-strong">{t.reward.waiting}</p>
-                  <OutfitIllustration className="my-2 h-32" />
-                  <p className="text-sm font-medium">{claimable.reward}</p>
-                  {claimable.rewardDetail && (
-                    <p className="text-xs text-muted-foreground">{claimable.rewardDetail}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">{t.illustrationNote}</p>
-                </div>
-                <RewardForm level={claimable.level} defaults={delivery} />
-              </Card>
-            ) : claimed ? (
-              <Alert tone="success">{t.claimed}</Alert>
-            ) : null}
+            {!claimable && claimed ? <Alert tone="success">{t.claimed}</Alert> : null}
           </div>
 
           <div className="flex min-w-0 flex-col gap-5">

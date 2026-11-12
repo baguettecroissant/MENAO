@@ -46,6 +46,8 @@ export async function markBadgesSeen(): Promise<void> {
 /** Adresse de l'entreprise et téléphone du compte, pour pré-remplir la livraison (RLS). */
 export async function loadDeliveryDefaults(): Promise<{
   firstName: string | null;
+  /** Nom de l'entreprise, en tête du résumé de l'adresse (lot 37). */
+  company: string | null;
   address: string;
   city: string;
   phone: string;
@@ -55,13 +57,14 @@ export async function loadDeliveryDefaults(): Promise<{
   const [{ data: artisan }, { data: profile }] = await Promise.all([
     supabase
       .from("artisans")
-      .select("adresse_ligne, adresse_code_postal, adresse_commune")
+      .select("nom_commercial, raison_sociale, adresse_ligne, adresse_code_postal, adresse_commune")
       .eq("id", await myArtisanKey())
       .maybeSingle(),
     supabase.from("profiles").select("first_name, phone").eq("user_id", userId).maybeSingle(),
   ]);
   return {
     firstName: profile?.first_name ?? null,
+    company: artisan?.nom_commercial ?? artisan?.raison_sociale ?? null,
     address: artisan?.adresse_ligne ?? "",
     city: [artisan?.adresse_code_postal, artisan?.adresse_commune].filter(Boolean).join(" "),
     phone: profile?.phone ?? "",
