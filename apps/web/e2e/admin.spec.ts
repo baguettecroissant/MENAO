@@ -261,8 +261,8 @@ test("la vérification : dossiers artisans et conformité, rien d'autre (ADR 028
   const nav = page.getByRole("navigation", { name: "Navigation du back-office" });
   await expect(nav.getByRole("link")).toHaveCount(2);
   await expect(nav.getByRole("link", { name: /Conformité/ })).toBeVisible();
-  // La recherche du haut ne rend que des artisans (« Exemple » est aussi le nom de personnes).
-  await page.goto("/admin/recherche?q=Exemple");
+  // La recherche du haut ne rend que des artisans (« Dossier » est aussi le nom d'une personne).
+  await page.goto("/admin/recherche?q=Dossier");
   await expect(page.getByRole("region", { name: "Artisans" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Personnes" })).toHaveCount(0);
   // La fiche d'un dossier : deux onglets, pas d'activité ni de compte.
