@@ -1,0 +1,174 @@
+import { describe, expect, it } from "vitest";
+import {
+  type LibrarySettings,
+  type LibrarySupply,
+  type WorkComponent,
+  belowMarginAlert,
+  componentAmounts,
+  formatCoefficient,
+  formatRateBp,
+  markupRateBp,
+  parseCoefficient,
+  parseRatePercent,
+  quoteMargin,
+  supplyPriceIsOld,
+  workPricing,
+} from "../src/library";
+
+// Exemple du document (chiffres d'illustration) : coefficient 1,30, heure à 35 € de coût, 55 € de vente.
+const SETTINGS: LibrarySettings = {
+  hourCostCents: 3500,
+  hourPriceCents: 5500,
+  supplyCoefBp: 13_000,
+  marginAlertBp: null,
+  priceMaxAgeMonths: 6,
+};
+const supply = (id: string, price: number, wasteBp = 0): [string, LibrarySupply] => [
+  id,
+  { id, purchasePriceCents: price, wasteBp },
+];
+const SUPPLIES = new Map([
+  supply("bati", 18_000),
+  supply("cuvette", 15_000),
+  supply("abattant", 4000),
+  supply("petites", 1500),
+  supply("carrelage", 3000, 1000),
+]);
+const part = (
+  kind: WorkComponent["kind"],
+  quantityMilli: number,
+  supplyId: string | null = null,
+  costCents: number | null = null,
+): WorkComponent => ({
+  kind,
+  supplyId,
+  quantityMilli,
+  costCents,
+});
+const WC = [
+  part("fourniture", 1000, "bati"),
+  part("fourniture", 1000, "cuvette"),
+  part("fourniture", 1000, "abattant"),
+  part("fourniture", 1000, "petites"),
+  part("heures", 3000),
+];
+
+describe("workPricing", () => {
+  it("pose d'un WC suspendu : coût 490 €, prix 665,50 €, marge 175,50 € (26,4 %)", () => {
+    const p = workPricing(null, WC, SETTINGS, SUPPLIES);
+    expect(p).toMatchObject({
+      costCents: 49_000,
+      computedPriceCents: 66_550,
+      priceCents: 66_550,
+      marginCents: 17_550,
+      markupBp: 2637,
+    });
+    expect(p.supplies).toEqual({ costCents: 38_500, saleCents: 50_050 });
+    expect(p.labor).toEqual({ costCents: 10_500, saleCents: 16_500, hoursMilli: 3000 });
+    expect(p.other).toEqual({ costCents: 0, saleCents: 0 });
+  });
+
+  it("un prix fixé à la main l'emporte, la marge suit", () => {
+    const p = workPricing(60_000, WC, SETTINGS, SUPPLIES);
+    expect(p).toMatchObject({
+      priceCents: 60_000,
+      computedPriceCents: 66_550,
+      marginCents: 11_000,
+    });
+  });
+
+  it("sans composition : prix repris des devis, coût inconnu", () => {
+    const p = workPricing(16_500, [], SETTINGS, SUPPLIES);
+    expect(p).toMatchObject({
+      costCents: null,
+      priceCents: 16_500,
+      marginCents: null,
+      markupBp: null,
+    });
+  });
+
+  it("perte sur une fourniture et autres frais au coefficient", () => {
+    // 12,5 m² × 30 € × 1,10 = 412,50 € ; évacuation 1 × 80 €.
+    const p = workPricing(
+      null,
+      [part("fourniture", 12_500, "carrelage"), part("frais", 1000, null, 8000)],
+      SETTINGS,
+      SUPPLIES,
+    );
+    expect(p.supplies.costCents).toBe(41_250);
+    expect(p.other).toEqual({ costCents: 8000, saleCents: 10_400 });
+    expect(p.costCents).toBe(49_250);
+  });
+
+  it("sans coût horaire réglé : coût inconnu ; sans prix de l'heure : prix inconnu", () => {
+    const p = workPricing(
+      null,
+      WC,
+      { ...SETTINGS, hourCostCents: null, hourPriceCents: null },
+      SUPPLIES,
+    );
+    expect(p).toMatchObject({ costCents: null, computedPriceCents: null, priceCents: null });
+  });
+
+  it("une fourniture retirée de la bibliothèque rend le coût inconnu", () => {
+    expect(componentAmounts(part("fourniture", 1000, "disparue"), SETTINGS, SUPPLIES)).toEqual({
+      costCents: null,
+      saleCents: null,
+    });
+  });
+});
+
+describe("marge d'un devis", () => {
+  it("calculée sur les lignes dont le coût est connu", () => {
+    expect(
+      quoteMargin([
+        { totalHtCents: 66_550, costCents: 49_000 },
+        { totalHtCents: 122_400, costCents: 94_320 },
+        { totalHtCents: 16_500, costCents: null },
+      ]),
+    ).toEqual({ marginCents: 45_630, markupBp: 2415, counted: 2, lines: 3 });
+    expect(quoteMargin([{ totalHtCents: 3500, costCents: null }])).toEqual({
+      marginCents: null,
+      markupBp: null,
+      counted: 0,
+      lines: 1,
+    });
+  });
+
+  it("alerte seulement sous un seuil fixé par l'artisan", () => {
+    expect(belowMarginAlert(1530, null)).toBe(false);
+    expect(belowMarginAlert(1530, 2000)).toBe(true);
+    expect(belowMarginAlert(2415, 2000)).toBe(false);
+    expect(belowMarginAlert(null, 2000)).toBe(false);
+  });
+
+  it("taux de marque, vente à perte", () => {
+    expect(markupRateBp(10_000, 12_000)).toBe(-2000);
+    expect(markupRateBp(0, 100)).toBeNull();
+  });
+});
+
+describe("saisies et affichage", () => {
+  it("coefficient", () => {
+    expect(parseCoefficient("1,30")).toBe(13_000);
+    expect(parseCoefficient("× 1,3")).toBe(13_000);
+    expect(parseCoefficient("1.275")).toBe(12_750);
+    expect(parseCoefficient("0,2")).toBeNull();
+    expect(parseCoefficient("abc")).toBeNull();
+    expect(formatCoefficient(13_000)).toBe("1,30");
+    expect(formatCoefficient(12_750)).toBe("1,2750");
+  });
+
+  it("taux en pourcentage", () => {
+    expect(parseRatePercent("20")).toBe(2000);
+    expect(parseRatePercent("20,5 %")).toBe(2050);
+    expect(parseRatePercent("95")).toBeNull();
+    expect(formatRateBp(2637)).toBe("26,4 %");
+  });
+
+  it("prix d'achat ancien", () => {
+    expect(supplyPriceIsOld("2026-03-10", "2026-11-12", 6)).toBe(true);
+    expect(supplyPriceIsOld("2026-05-13", "2026-11-12", 6)).toBe(false);
+    expect(supplyPriceIsOld(null, "2026-11-12", 6)).toBe(false);
+  });
+});
