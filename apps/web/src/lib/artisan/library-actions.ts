@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
+import { refreshWorkPrices } from "./library";
 import { requireTeamPermission } from "./space";
 
 const t = fr.pro.library;
@@ -53,6 +54,7 @@ export async function saveLibrarySettings(
     margin_alert_bp: alert,
   });
   if (error) return { error: t.settings.invalid };
+  await refreshWorkPrices(supabase);
   revalidatePath(BASE);
   return { success: t.settings.saved };
 }
@@ -101,6 +103,7 @@ export async function saveSupply(_prev: FormState, formData: FormData): Promise<
     ? await supabase.from("artisan_supplies").update(row).eq("id", parsed.data.id)
     : await supabase.from("artisan_supplies").insert(row);
   if (error) return { error: t.supplies.invalid };
+  await refreshWorkPrices(supabase);
   revalidatePath(BASE);
   return { success: t.supplies.saved };
 }
@@ -167,6 +170,7 @@ export async function saveWork(_prev: FormState, formData: FormData): Promise<Fo
   if (error || !savedId) {
     return { error: error?.code === "22023" ? error.message : t.work.error };
   }
+  await refreshWorkPrices(supabase);
   revalidatePath(BASE);
   if (!id) redirect(`${BASE}/${savedId}?enregistre=1` as Route);
   revalidatePath(`${BASE}/${savedId}`);

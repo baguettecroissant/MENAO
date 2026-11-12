@@ -378,6 +378,7 @@ export async function createPlanDpgf(_prev: FormState, formData: FormData): Prom
     unit: h.unit,
     unitPriceHtCents: h.unit_price_ht_cents,
     usedOn: h.used_on,
+    source: h.source === "bibliotheque" ? ("bibliotheque" as const) : ("devis" as const),
   }));
   const { error } = await supabase.rpc("artisan_import_plan_lines", {
     p_tender_id: id.data,
@@ -387,6 +388,7 @@ export async function createPlanDpgf(_prev: FormState, formData: FormData): Prom
         ...line,
         unitPriceHtCents: suggestion?.unitPriceHtCents ?? null,
         priceReference: suggestion?.reference ?? null,
+        priceSource: suggestion?.source ?? null,
       };
     }),
   });

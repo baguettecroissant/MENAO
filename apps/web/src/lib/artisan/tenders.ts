@@ -39,7 +39,7 @@ export type TenderLine = {
   architect_quantity_milli: number | null;
   quantity_milli: number | null;
   unit_price_ht_cents: number | null;
-  price_source: "devis" | "manuel" | null;
+  price_source: "devis" | "manuel" | "bibliotheque" | null;
   price_reference: string | null;
   /** DPGF créé depuis les plans (ADR 0292) : origine et calcul de la quantité. */
   quantity_source?: "plan" | "calcul" | "photo" | "manque" | "saisi" | null;

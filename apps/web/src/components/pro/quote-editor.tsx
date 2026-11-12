@@ -5,7 +5,12 @@ import {
   QUOTE_LINE_TYPES,
   QUOTE_UNITS,
   allowedVatRates,
+  belowMarginAlert,
   formatQuantity,
+  formatRateBp,
+  lineCostCents,
+  markupRateBp,
+  quoteMargin,
   lineTotalHtCents,
   lineTtcCents,
   parseEuros,
@@ -16,7 +21,9 @@ import {
 } from "@menao/core";
 import { quoteLineFormSchema, type QuoteLineInput } from "@menao/validation";
 import {
+  BookOpen,
   Check,
+  EyeOff,
   Euro,
   Headset,
   Pencil,
@@ -34,7 +41,9 @@ import { Drawer } from "@/components/drawer";
 import { Alert, Button, FieldError, Hint, Select, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import {
+  type LibrarySearchResult,
   saveQuoteDraft,
+  searchLibraryWorks,
   searchPreviousLines,
   settleVoiceQuoteDrafts,
   type PreviousLine,
@@ -50,8 +59,16 @@ const vatLabel = (bp: number) => `${(bp / 100).toLocaleString("fr-FR")} %`;
 const priceInput = (cents: number) =>
   (cents / 100).toLocaleString("fr-FR", { minimumFractionDigits: 2, useGrouping: false });
 
+/** Coût privé d'une ligne (bibliothèque d'ouvrages, ADR 0294) : jamais montré au client. */
+type LineCost = { unitCostCents: number | null; workId: string | null };
+
 /** `generated` : ligne proposée par la dictée, à vérifier (non enregistré). */
-type Line = QuoteLineInput & { key: string; generated?: boolean };
+type Line = QuoteLineInput & { key: string; generated?: boolean } & Partial<LineCost>;
+
+const lineCost = (l: Line): LineCost => ({
+  unitCostCents: l.unitCostCents ?? null,
+  workId: l.workId ?? null,
+});
 
 const withoutKey = (l: Line): QuoteLineInput => ({
   type: l.type,
@@ -77,6 +94,8 @@ export function QuoteEditor({
   conversation = false,
   voiceDraft = null,
   tenders = [],
+  initialCosts = [],
+  margin = null,
 }: {
   chantierId: string;
   initialLines: QuoteLineInput[];
@@ -91,12 +110,21 @@ export function QuoteEditor({
   voiceDraft?: QuoteLineInput[] | null;
   /** Appels d'offres chiffrés de l'entreprise, à reprendre dans le devis (ADR 0289). */
   tenders?: readonly { id: string; name: string }[];
+  /** Coût privé de chaque ligne enregistrée, dans l'ordre (ADR 0294). */
+  initialCosts?: readonly (LineCost | null)[];
+  /** Marge affichée (patron et chef d'équipe) et seuil d'alerte facultatif ; null : masquée. */
+  margin?: { alertBp: number | null } | null;
 }) {
   const counter = useRef(initialLines.length);
   const [lines, setLines] = useState<Line[]>(() =>
-    initialLines.map((line, i) => ({ ...line, key: `l${i}` })),
+    initialLines.map((line, i) => ({ ...line, ...(initialCosts[i] ?? {}), key: `l${i}` })),
   );
-  const [snapshot, setSnapshot] = useState(() => JSON.stringify(initialLines));
+  const [snapshot, setSnapshot] = useState(() =>
+    JSON.stringify([
+      initialLines,
+      initialLines.map((_, i) => initialCosts[i] ?? { unitCostCents: null, workId: null }),
+    ]),
+  );
   const [hasSaved, setHasSaved] = useState(saved);
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +143,14 @@ export function QuoteEditor({
   const [tenderId, setTenderId] = useState(tenders[0]?.id ?? "");
 
   const plain: QuoteLineInput[] = lines.map(withoutKey);
-  const dirty = JSON.stringify(plain) !== snapshot;
+  const costs: LineCost[] = lines.map(lineCost);
+  const dirty = JSON.stringify([plain, costs]) !== snapshot;
+  const marginOf = quoteMargin(
+    lines.map((l) => ({
+      totalHtCents: lineTotalHtCents(l.quantityMilli, l.unitPriceHtCents),
+      costCents: lineCostCents(l.unitCostCents ?? null, l.quantityMilli),
+    })),
+  );
   const totals = quoteTotals(plain);
   const rates = allowedVatRates(assujettiTva);
   // Taux proposé : celui de la dernière ligne, sinon le taux normal (ou 0 % en franchise).
@@ -136,10 +171,11 @@ export function QuoteEditor({
   function save() {
     setError(null);
     const toSave = plain;
+    const toSaveCosts = costs;
     startTransition(async () => {
-      const result = await saveQuoteDraft(chantierId, toSave);
+      const result = await saveQuoteDraft(chantierId, toSave, toSaveCosts);
       if (result.ok) {
-        setSnapshot(JSON.stringify(toSave));
+        setSnapshot(JSON.stringify([toSave, toSaveCosts]));
         setHasSaved(true);
         settleVoiceDraft();
       } else {
@@ -152,14 +188,15 @@ export function QuoteEditor({
   function generate() {
     setError(null);
     const toSave = plain;
+    const toSaveCosts = costs;
     startGenerating(async () => {
       if (dirty) {
-        const result = await saveQuoteDraft(chantierId, toSave);
+        const result = await saveQuoteDraft(chantierId, toSave, toSaveCosts);
         if (!result.ok) {
           setError(result.error);
           return;
         }
-        setSnapshot(JSON.stringify(toSave));
+        setSnapshot(JSON.stringify([toSave, toSaveCosts]));
         setHasSaved(true);
         settleVoiceDraft();
       }
@@ -230,15 +267,34 @@ export function QuoteEditor({
     void settleVoiceQuoteDrafts(chantierId);
   }
 
-  function upsert(key: string | null, line: QuoteLineInput) {
+  function upsert(key: string | null, line: QuoteLineInput, cost?: LineCost) {
     const target = key ?? `l${counter.current++}`;
     setLines((current) =>
       key === null
-        ? [...current, { ...line, key: target }]
-        : current.map((l) => (l.key === key ? { ...line, key } : l)),
+        ? [...current, { ...line, ...cost, key: target }]
+        : current.map((l) => (l.key === key ? { ...line, ...(cost ?? lineCost(l)), key } : l)),
     );
     setEditing(null);
     setReveal({ key: target });
+  }
+
+  /** Ouvrage « détaillé » de la bibliothèque : ses lignes ajoutées d'un coup (ADR 0294). */
+  function addMany(added: LibrarySearchResult["lines"]) {
+    const next = added.map((l) => ({
+      type: l.type,
+      designation: l.designation,
+      description: l.description,
+      quantityMilli: 1000,
+      unit: l.unit as QuoteUnit,
+      unitPriceHtCents: l.unitPriceHtCents,
+      vatRateBp: rates.includes(l.vatRateBp) ? l.vatRateBp : defaultVat,
+      unitCostCents: l.unitCostCents,
+      workId: l.workId,
+      key: `l${counter.current++}`,
+    }));
+    setLines((current) => [...current, ...next]);
+    setEditing(null);
+    if (next[0]) setReveal({ key: next[0].key });
   }
 
   const statusChip = (
@@ -393,9 +449,12 @@ export function QuoteEditor({
                       <LineForm
                         title={t.editLine}
                         initial={line}
+                        initialCost={lineCost(line)}
                         rates={rates}
                         defaultVat={defaultVat}
-                        onSubmit={(next) => upsert(line.key, next)}
+                        library={margin !== null}
+                        onSubmit={(next, cost) => upsert(line.key, next, cost)}
+                        onSubmitMany={addMany}
                         onCancel={() => setEditing(null)}
                       />
                     </div>
@@ -404,6 +463,11 @@ export function QuoteEditor({
                       line={line}
                       generated={line.generated}
                       assujettiTva={assujettiTva}
+                      costCents={
+                        margin === null
+                          ? undefined
+                          : lineCostCents(line.unitCostCents ?? null, line.quantityMilli)
+                      }
                       onEdit={() => setEditing(line.key)}
                       onDelete={() =>
                         setLines((current) => current.filter((l) => l.key !== line.key))
@@ -419,10 +483,13 @@ export function QuoteEditor({
               <LineForm
                 title={t.addLine}
                 initial={null}
+                initialCost={null}
                 rates={rates}
                 defaultVat={defaultVat}
+                library={margin !== null}
                 startSearching={editing === "search"}
-                onSubmit={(next) => upsert(null, next)}
+                onSubmit={(next, cost) => upsert(null, next, cost)}
+                onSubmitMany={addMany}
                 onCancel={() => setEditing(null)}
               />
             ) : (
@@ -495,6 +562,9 @@ export function QuoteEditor({
             </Button>
           </div>
         </div>
+        {margin !== null && lines.length > 0 && (
+          <MarginPanel margin={marginOf} alertBp={margin.alertBp} />
+        )}
         {!assujettiTva && (
           <p className="hidden text-xs text-muted-foreground lg:block">{t.vatExempt}</p>
         )}
@@ -526,15 +596,20 @@ function LineCard({
   line,
   generated = false,
   assujettiTva,
+  costCents,
   onEdit,
   onDelete,
 }: {
   line: QuoteLineInput;
   generated?: boolean;
   assujettiTva: boolean;
+  /** Coût de la ligne (privé) ; undefined : marge masquée, null : coût inconnu. */
+  costCents?: number | null;
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const ht = lineTotalHtCents(line.quantityMilli, line.unitPriceHtCents);
+  const rate = costCents == null ? null : markupRateBp(ht, costCents);
   const typeTone =
     line.type === "materiel"
       ? "bg-primary-soft text-primary-strong"
@@ -552,6 +627,23 @@ function LineCard({
             <span className="inline-flex items-center gap-1.5 rounded-chip bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning">
               <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
               {t.toReview}
+            </span>
+          )}
+          {costCents !== undefined && (
+            <span
+              className={`rounded-chip px-2 py-0.5 text-xs font-bold ${
+                rate === null
+                  ? "bg-border/70 text-label"
+                  : rate < 0
+                    ? "bg-danger-soft text-danger"
+                    : "bg-success-soft text-success"
+              }`}
+            >
+              {rate === null
+                ? t.library.unknownCost
+                : rate < 0
+                  ? t.library.loss
+                  : t.library.lineMargin(formatRateBp(rate))}
             </span>
           )}
         </span>
@@ -623,21 +715,31 @@ function Segmented<T extends string | number>({
 function LineForm({
   title,
   initial,
+  initialCost,
   rates,
   defaultVat,
+  library = false,
   startSearching = false,
   onSubmit,
+  onSubmitMany,
   onCancel,
 }: {
   title: string;
   initial: QuoteLineInput | null;
+  /** Coût privé de la ligne modifiée (ADR 0294). */
+  initialCost: LineCost | null;
   rates: readonly number[];
   defaultVat: number;
+  /** Ouvrages de la bibliothèque proposés dans la recherche (patron et chef d'équipe). */
+  library?: boolean;
   /** « Mes articles » : la recherche des articles déjà chiffrés s'ouvre tout de suite. */
   startSearching?: boolean;
-  onSubmit: (line: QuoteLineInput) => void;
+  onSubmit: (line: QuoteLineInput, cost?: LineCost) => void;
+  /** Ouvrage détaillé : plusieurs lignes ajoutées d'un coup. */
+  onSubmitMany: (lines: LibrarySearchResult["lines"]) => void;
   onCancel: () => void;
 }) {
+  const [cost, setCost] = useState<LineCost | null>(initialCost);
   const id = useId();
   const [type, setType] = useState<QuoteLineType>(initial?.type ?? "materiel");
   const [designation, setDesignation] = useState(initial?.designation ?? "");
@@ -674,7 +776,26 @@ function LineForm({
     setType(next);
   }
 
+  /** Ouvrage de la bibliothèque : la ligne arrive avec son coût privé. */
+  function pickWork(work: LibrarySearchResult) {
+    if (work.lines.length > 1) {
+      onSubmitMany(work.lines);
+      return;
+    }
+    const line = work.lines[0];
+    if (!line) return;
+    setType(line.type);
+    setDesignation(line.designation);
+    setDescription(line.description);
+    if ((QUOTE_UNITS as readonly string[]).includes(line.unit)) setUnit(line.unit as QuoteUnit);
+    setPrice(priceInput(line.unitPriceHtCents));
+    if (rates.includes(line.vatRateBp)) setVat(line.vatRateBp);
+    setCost({ unitCostCents: line.unitCostCents, workId: line.workId });
+    setSearching(false);
+  }
+
   function pick(line: PreviousLine) {
+    setCost({ unitCostCents: null, workId: null });
     setType(line.type);
     setDesignation(line.designation);
     setDescription(line.description ?? "");
@@ -702,7 +823,7 @@ function LineForm({
       );
       return;
     }
-    onSubmit(parsed.data);
+    onSubmit(parsed.data, cost ?? undefined);
   }
 
   const field = (name: string) => ({
@@ -752,7 +873,14 @@ function LineForm({
             <Search aria-hidden="true" className="size-3.5" />
           )}
         </button>
-        {searching && <ArticleSearch initialQuery={designation} onPick={pick} />}
+        {searching && (
+          <ArticleSearch
+            initialQuery={designation}
+            library={library}
+            onPick={pick}
+            onPickWork={pickWork}
+          />
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -866,14 +994,19 @@ function LineForm({
 /** « Rechercher l'article » : lignes déjà utilisées dans les devis de l'artisan. */
 function ArticleSearch({
   initialQuery,
+  library,
   onPick,
+  onPickWork,
 }: {
   initialQuery: string;
+  library: boolean;
   onPick: (line: PreviousLine) => void;
+  onPickWork: (work: LibrarySearchResult) => void;
 }) {
   const id = useId();
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<PreviousLine[] | null>(null);
+  const [works, setWorks] = useState<LibrarySearchResult[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -881,12 +1014,17 @@ function ArticleSearch({
       searchPreviousLines(query).then((found) => {
         if (!cancelled) setResults(found);
       });
+      if (library) {
+        searchLibraryWorks(query).then((found) => {
+          if (!cancelled) setWorks(found);
+        });
+      }
     }, 250);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query]);
+  }, [query, library]);
 
   return (
     <div className="flex flex-col gap-2 rounded-input border border-border bg-background p-3">
@@ -900,7 +1038,48 @@ function ArticleSearch({
         onChange={(e) => setQuery(e.target.value)}
         className={`${inputClasses} min-h-10 bg-surface`}
       />
-      {results?.length === 0 && <p className="text-xs text-muted-foreground">{t.noResult}</p>}
+      {works.length > 0 && (
+        <>
+          <p className="text-xs font-semibold text-muted-foreground uppercase">
+            {t.library.heading}
+          </p>
+          <ul className="flex flex-col gap-1">
+            {works.map((work) => (
+              <li key={work.workId}>
+                <button
+                  type="button"
+                  onClick={() => onPickWork(work)}
+                  className="flex w-full items-center gap-3 rounded-input bg-surface px-3 py-2 text-left text-sm hover:bg-primary-softer focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+                >
+                  <BookOpen aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
+                  <span className="min-w-0 flex-1 truncate">
+                    {work.designation}
+                    {work.detailed && (
+                      <span className="text-xs text-muted-foreground"> · {t.library.detailed}</span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {money(work.priceCents)} HT
+                  </span>
+                  {work.markupBp !== null && (
+                    <span className="shrink-0 rounded-chip bg-success-soft px-1.5 py-0.5 text-xs font-bold text-success">
+                      {formatRateBp(work.markupBp)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {results && results.length > 0 && (
+            <p className="text-xs font-semibold text-muted-foreground uppercase">
+              {t.library.previous}
+            </p>
+          )}
+        </>
+      )}
+      {results?.length === 0 && works.length === 0 && (
+        <p className="text-xs text-muted-foreground">{t.noResult}</p>
+      )}
       {results && results.length > 0 && (
         <ul className="flex flex-col gap-1">
           {results.map((line) => (
@@ -920,5 +1099,58 @@ function ArticleSearch({
         </ul>
       )}
     </div>
+  );
+}
+
+/** « Votre marge » (ADR 0294) : pour l'artisan seul, sur les lignes dont le coût est connu. */
+function MarginPanel({
+  margin,
+  alertBp,
+}: {
+  margin: ReturnType<typeof quoteMargin>;
+  alertBp: number | null;
+}) {
+  const below = belowMarginAlert(margin.markupBp, alertBp);
+  return (
+    <section
+      aria-label={t.library.marginTitle}
+      className="hidden flex-col gap-2 rounded-input border border-border p-3 lg:flex"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">{t.library.marginTitle}</h3>
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+          <EyeOff aria-hidden="true" className="size-3.5" />
+          {t.library.private}
+        </span>
+      </div>
+      {margin.marginCents === null || margin.markupBp === null ? (
+        <p className="text-sm text-muted-foreground">{t.library.none}</p>
+      ) : (
+        <>
+          <p className="flex items-baseline gap-2">
+            <span className="font-display text-xl font-bold tabular-nums">
+              {money(margin.marginCents)}
+            </span>
+            <span
+              className={`text-sm font-bold ${margin.markupBp < 0 || below ? "text-danger" : "text-success"}`}
+            >
+              {formatRateBp(margin.markupBp)}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t.library.counted(margin.counted, margin.lines)}
+            {alertBp !== null && ` ${t.library.threshold(formatRateBp(alertBp))}.`}
+          </p>
+          {below && alertBp !== null && (
+            <p
+              role="status"
+              className="rounded-input bg-warning-soft px-3 py-2 text-xs text-warning"
+            >
+              {t.library.below(formatRateBp(margin.markupBp), formatRateBp(alertBp))}
+            </p>
+          )}
+        </>
+      )}
+    </section>
   );
 }

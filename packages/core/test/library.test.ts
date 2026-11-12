@@ -12,7 +12,9 @@ import {
   parseRatePercent,
   quoteMargin,
   supplyPriceIsOld,
+  lineCostCents,
   workPricing,
+  workQuoteLines,
 } from "../src/library";
 
 // Exemple du document (chiffres d'illustration) : coefficient 1,30, heure à 35 € de coût, 55 € de vente.
@@ -170,5 +172,51 @@ describe("saisies et affichage", () => {
     expect(supplyPriceIsOld("2026-03-10", "2026-11-12", 6)).toBe(true);
     expect(supplyPriceIsOld("2026-05-13", "2026-11-12", 6)).toBe(false);
     expect(supplyPriceIsOld(null, "2026-11-12", 6)).toBe(false);
+  });
+});
+
+describe("lignes de devis d'un ouvrage", () => {
+  const work = {
+    id: "w1",
+    designation: "Pose d'un WC suspendu",
+    description: "Fourniture et pose",
+    unit: "u",
+    lineType: "autre" as const,
+    vatRateBp: 1000,
+    detailed: false,
+  };
+  const labels = { supplies: "(fournitures)", labor: "(main d'œuvre)" };
+
+  it("une ligne au prix retenu, avec son coût privé", () => {
+    const pricing = workPricing(null, WC, SETTINGS, SUPPLIES);
+    expect(workQuoteLines(work, pricing, labels)).toEqual([
+      {
+        type: "autre",
+        designation: "Pose d'un WC suspendu",
+        description: "Fourniture et pose",
+        unit: "u",
+        vatRateBp: 1000,
+        unitPriceHtCents: 66_550,
+        unitCostCents: 49_000,
+        workId: "w1",
+      },
+    ]);
+  });
+
+  it("détaillé : fournitures et main d'œuvre séparées, prix à la main reporté sur la main d'œuvre", () => {
+    const detailed = { ...work, detailed: true };
+    const lines = workQuoteLines(detailed, workPricing(null, WC, SETTINGS, SUPPLIES), labels);
+    expect(lines.map((l) => [l.type, l.designation, l.unitPriceHtCents, l.unitCostCents])).toEqual([
+      ["materiel", "Pose d'un WC suspendu (fournitures)", 50_050, 38_500],
+      ["main_oeuvre", "Pose d'un WC suspendu (main d'œuvre)", 16_500, 10_500],
+    ]);
+    const manual = workQuoteLines(detailed, workPricing(60_000, WC, SETTINGS, SUPPLIES), labels);
+    expect(manual.map((l) => l.unitPriceHtCents)).toEqual([50_050, 9950]);
+  });
+
+  it("sans prix : aucune ligne ; coût d'une ligne selon la quantité", () => {
+    expect(workQuoteLines(work, workPricing(null, [], SETTINGS, SUPPLIES), labels)).toEqual([]);
+    expect(lineCostCents(4820, 12_500)).toBe(60_250);
+    expect(lineCostCents(null, 1000)).toBeNull();
   });
 });

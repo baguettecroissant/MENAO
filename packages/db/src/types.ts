@@ -1566,6 +1566,7 @@ export type Database = {
           id: string;
           line_type: Database["public"]["Enums"]["quote_line_type"];
           manual_price_cents: number | null;
+          price_cents: number | null;
           source: string;
           unit: Database["public"]["Enums"]["quote_unit"];
           updated_at: string;
@@ -1581,6 +1582,7 @@ export type Database = {
           id?: string;
           line_type?: Database["public"]["Enums"]["quote_line_type"];
           manual_price_cents?: number | null;
+          price_cents?: number | null;
           source?: string;
           unit?: Database["public"]["Enums"]["quote_unit"];
           updated_at?: string;
@@ -1595,6 +1597,7 @@ export type Database = {
           id?: string;
           line_type?: Database["public"]["Enums"]["quote_line_type"];
           manual_price_cents?: number | null;
+          price_cents?: number | null;
           source?: string;
           unit?: Database["public"]["Enums"]["quote_unit"];
           updated_at?: string;
@@ -4452,6 +4455,43 @@ export type Database = {
           },
         ];
       };
+      quote_line_costs: {
+        Row: {
+          position: number;
+          quote_id: string;
+          unit_cost_cents: number;
+          work_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          position: number;
+          quote_id: string;
+          unit_cost_cents: number;
+          work_id?: string | null;
+        };
+        Update: {
+          position?: number;
+          quote_id?: string;
+          unit_cost_cents?: number;
+          work_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_line_costs_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quote_line_costs_work_id_fkey";
+            columns: ["work_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_works";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       quote_lines: {
         Row: {
           created_at: string;
@@ -6878,6 +6918,7 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: {
           designation: string;
+          source: string;
           unit: Database["public"]["Enums"]["quote_unit"];
           unit_price_ht_cents: number;
           used_on: string;
@@ -6984,6 +7025,7 @@ export type Database = {
         Args: { p_counts: Json; p_rooms: Json; p_tender_id: string };
         Returns: undefined;
       };
+      artisan_save_quote_costs: { Args: { p_costs: Json; p_quote_id: string }; Returns: undefined };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
       artisan_save_tender: {
         Args: { p_lines: Json; p_tender_id: string; p_vat_rate_bp: number };
@@ -7012,6 +7054,7 @@ export type Database = {
         Args: { p_expense_id: string; p_paid_on: string };
         Returns: boolean;
       };
+      artisan_set_work_prices: { Args: { p_prices: Json }; Returns: undefined };
       artisan_signal_reserves_lifted: {
         Args: { p_chantier_id: string; p_message: string };
         Returns: undefined;

@@ -4599,6 +4599,25 @@ export const fr = {
     },
     quote: {
       title: "Envoyer un devis",
+      // Bibliothèque d'ouvrages et marge dans le devis (ADR 0294) : pour l'artisan seul.
+      library: {
+        heading: "Votre bibliothèque",
+        previous: "Vos anciens devis",
+        detailed: "détaillé",
+        suppliesSuffix: "(fournitures)",
+        laborSuffix: "(main d'œuvre)",
+        marginTitle: "Votre marge",
+        private: "Vous seul",
+        counted: (counted: number, total: number) =>
+          `Calculée sur ${counted} ligne${counted > 1 ? "s" : ""} sur ${total}.`,
+        none: "Ajoutez des ouvrages de votre bibliothèque pour voir votre marge.",
+        unknownCost: "Coût inconnu",
+        loss: "Vendu à perte",
+        lineMargin: (rate: string) => `Marge ${rate}`,
+        threshold: (rate: string) => `Votre seuil : ${rate}`,
+        below: (rate: string, threshold: string) =>
+          `Ce devis vous laisse ${rate} de marge, sous votre seuil de ${threshold}. L'envoi reste possible : vous décidez.`,
+      },
       back: "Rendez-vous",
       statusDraft: "Brouillon",
       statusDirty: "Modifications apportées",
@@ -5759,6 +5778,7 @@ export const fr = {
       },
       source: {
         devis: "Vos devis",
+        bibliotheque: "Bibliothèque",
         manuel: "Saisi",
         none: "À chiffrer",
         reference: (designation: string) => `Repris de votre ligne « ${designation} »`,
