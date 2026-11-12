@@ -1,0 +1,192 @@
+// Bibliothèque d'ouvrages et marge (F-141, ADR 0293). Un ouvrage est vendu au client sous une
+// désignation et un prix ; sa composition (fournitures, heures, autres frais) reste privée et donne
+// son coût (déboursé sec). Le prix de vente découle de deux réglages : un coefficient sur les
+// fournitures et un prix de vente de l'heure. La marge s'affiche en euros et en taux de marque
+// (part du prix de vente qui reste à l'artisan). Montants en centimes, quantités en millièmes.
+
+export const COMPONENT_KINDS = ["fourniture", "heures", "frais"] as const;
+export type ComponentKind = (typeof COMPONENT_KINDS)[number];
+
+export type LibrarySettings = {
+  /** Coût d'une heure de travail (salaire chargé, ou rémunération visée). */
+  hourCostCents: number | null;
+  /** Prix de vente de l'heure. */
+  hourPriceCents: number | null;
+  /** Coefficient sur les fournitures et frais, en points de base (1,30 = 13 000). */
+  supplyCoefBp: number;
+  /** Seuil d'alerte de marge (taux de marque, points de base) ; null = pas d'alerte. */
+  marginAlertBp: number | null;
+  /** Ancienneté (mois) au-delà de laquelle un prix d'achat est signalé. */
+  priceMaxAgeMonths: number;
+};
+
+export const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = {
+  hourCostCents: null,
+  hourPriceCents: null,
+  supplyCoefBp: 10_000,
+  marginAlertBp: null,
+  priceMaxAgeMonths: 6,
+};
+
+export type LibrarySupply = {
+  id: string;
+  purchasePriceCents: number;
+  /** Perte (chutes, casse), en points de base : 10 % = 1 000. */
+  wasteBp: number;
+};
+
+export type WorkComponent = {
+  kind: ComponentKind;
+  supplyId: string | null;
+  quantityMilli: number;
+  /** Coût unitaire d'un autre frais (location, évacuation, sous-traitance). */
+  costCents: number | null;
+};
+
+export type ComponentAmounts = { costCents: number | null; saleCents: number | null };
+
+/** Coût et prix de vente d'un élément de la composition ; null quand une donnée manque. */
+export function componentAmounts(
+  c: WorkComponent,
+  settings: LibrarySettings,
+  supplies: ReadonlyMap<string, LibrarySupply>,
+): ComponentAmounts {
+  const coef = (cost: number | null) =>
+    cost === null ? null : Math.round((cost * settings.supplyCoefBp) / 10_000);
+  if (c.kind === "heures") {
+    const per = (cents: number | null) =>
+      cents === null ? null : Math.round((cents * c.quantityMilli) / 1000);
+    return { costCents: per(settings.hourCostCents), saleCents: per(settings.hourPriceCents) };
+  }
+  let cost: number | null = null;
+  if (c.kind === "fourniture") {
+    const supply = c.supplyId ? supplies.get(c.supplyId) : undefined;
+    if (supply) {
+      cost = Math.round(
+        (supply.purchasePriceCents * (10_000 + supply.wasteBp) * c.quantityMilli) / 10_000_000,
+      );
+    }
+  } else if (c.costCents !== null) {
+    cost = Math.round((c.costCents * c.quantityMilli) / 1000);
+  }
+  return { costCents: cost, saleCents: coef(cost) };
+}
+
+/** Taux de marque en points de base : (prix − coût) / prix. */
+export function markupRateBp(priceCents: number, costCents: number): number | null {
+  if (priceCents <= 0) return null;
+  return Math.round(((priceCents - costCents) * 10_000) / priceCents);
+}
+
+export type WorkPricing = {
+  /** Déboursé sec ; null sans composition ou si un élément n'a pas de coût. */
+  costCents: number | null;
+  /** Prix calculé par la composition ; null si un élément n'a pas de prix de vente. */
+  computedPriceCents: number | null;
+  /** Prix retenu : fixé à la main, sinon calculé. */
+  priceCents: number | null;
+  marginCents: number | null;
+  markupBp: number | null;
+  supplies: ComponentAmounts;
+  labor: ComponentAmounts & { hoursMilli: number };
+  other: ComponentAmounts;
+};
+
+function sum(values: readonly (number | null)[]): number | null {
+  return values.some((v) => v === null) ? null : values.reduce<number>((s, v) => s + (v ?? 0), 0);
+}
+
+/** Coût, prix et marge d'un ouvrage. */
+export function workPricing(
+  manualPriceCents: number | null,
+  components: readonly WorkComponent[],
+  settings: LibrarySettings,
+  supplies: ReadonlyMap<string, LibrarySupply>,
+): WorkPricing {
+  const amounts = components.map((c) => ({ c, a: componentAmounts(c, settings, supplies) }));
+  const group = (kind: ComponentKind): ComponentAmounts => {
+    const of = amounts.filter((x) => x.c.kind === kind);
+    return {
+      costCents: of.length ? sum(of.map((x) => x.a.costCents)) : 0,
+      saleCents: of.length ? sum(of.map((x) => x.a.saleCents)) : 0,
+    };
+  };
+  const supplyGroup = group("fourniture");
+  const laborGroup = group("heures");
+  const otherGroup = group("frais");
+  const empty = components.length === 0;
+  const costCents = empty ? null : sum(amounts.map((x) => x.a.costCents));
+  const computedPriceCents = empty ? null : sum(amounts.map((x) => x.a.saleCents));
+  const priceCents = manualPriceCents ?? computedPriceCents;
+  const marginCents = priceCents !== null && costCents !== null ? priceCents - costCents : null;
+  return {
+    costCents,
+    computedPriceCents,
+    priceCents,
+    marginCents,
+    markupBp:
+      priceCents !== null && costCents !== null ? markupRateBp(priceCents, costCents) : null,
+    supplies: supplyGroup,
+    labor: {
+      ...laborGroup,
+      hoursMilli: components
+        .filter((c) => c.kind === "heures")
+        .reduce((s, c) => s + c.quantityMilli, 0),
+    },
+    other: otherGroup,
+  };
+}
+
+/** Marge d'un devis : sur les lignes dont le coût est connu seulement. */
+export function quoteMargin(lines: readonly { totalHtCents: number; costCents: number | null }[]) {
+  const known = lines.filter((l) => l.costCents !== null);
+  const sale = known.reduce((s, l) => s + l.totalHtCents, 0);
+  const cost = known.reduce((s, l) => s + (l.costCents ?? 0), 0);
+  return {
+    marginCents: known.length ? sale - cost : null,
+    markupBp: known.length ? markupRateBp(sale, cost) : null,
+    counted: known.length,
+    lines: lines.length,
+  };
+}
+
+/** Alerte avant l'envoi : seulement si l'artisan a fixé un seuil et que la marge est dessous. */
+export function belowMarginAlert(markupBp: number | null, alertBp: number | null): boolean {
+  return alertBp !== null && markupBp !== null && markupBp < alertBp;
+}
+
+/** Prix d'achat à revoir : plus vieux que l'ancienneté réglée (dates AAAA-MM-JJ). */
+export function supplyPriceIsOld(priceOn: string | null, today: string, maxAgeMonths: number) {
+  if (!priceOn) return false;
+  const [y, m, d] = priceOn.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  if (!y || !m || !d || !ty || !tm || !td) return false;
+  const months = (ty - y) * 12 + (tm - m) - (td < d ? 1 : 0);
+  return months >= maxAgeMonths;
+}
+
+/** « 1,30 » ou « × 1,3 » → 13 000 points de base ; null si invalide (0,5 à 10). */
+export function parseCoefficient(input: string): number | null {
+  const m = /^(\d{1,2})(?:[.,](\d{1,4}))?$/.exec(input.replace(/[×x\s]/gi, ""));
+  if (!m) return null;
+  const bp = Number(m[1]) * 10_000 + Number((m[2] ?? "").padEnd(4, "0"));
+  return bp >= 5_000 && bp <= 100_000 ? bp : null;
+}
+
+/** 13 000 → « 1,30 ». */
+export function formatCoefficient(bp: number): string {
+  return (bp / 10_000).toFixed(bp % 100 === 0 ? 2 : 4).replace(".", ",");
+}
+
+/** Points de base → « 26,4 % ». */
+export function formatRateBp(bp: number): string {
+  return `${(bp / 100).toFixed(1).replace(".", ",")} %`;
+}
+
+/** « 20 » ou « 20,5 % » → points de base (0 à 90 %) ; null si invalide. */
+export function parseRatePercent(input: string): number | null {
+  const m = /^(\d{1,2})(?:[.,](\d{1,2}))?$/.exec(input.replace(/[%\s]/g, ""));
+  if (!m) return null;
+  const bp = Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
+  return bp <= 9_000 ? bp : null;
+}

@@ -6,7 +6,7 @@ import { EXAMPLES_BASE } from "@/lib/artisan/examples";
 export default function ExampleMoneyLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <SectionTabs section="argent" base={EXAMPLES_BASE} />
+      <SectionTabs section="argent" base={EXAMPLES_BASE} hidden={["bibliotheque"]} />
       {children}
     </>
   );

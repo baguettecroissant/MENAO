@@ -960,6 +960,48 @@ export type Database = {
           },
         ];
       };
+      artisan_pricing_settings: {
+        Row: {
+          artisan_id: string;
+          hour_cost_cents: number | null;
+          hour_price_cents: number | null;
+          margin_alert_bp: number | null;
+          price_max_age_months: number;
+          seeded_at: string | null;
+          supply_coef_bp: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          hour_cost_cents?: number | null;
+          hour_price_cents?: number | null;
+          margin_alert_bp?: number | null;
+          price_max_age_months?: number;
+          seeded_at?: string | null;
+          supply_coef_bp?: number;
+          updated_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          hour_cost_cents?: number | null;
+          hour_price_cents?: number | null;
+          margin_alert_bp?: number | null;
+          price_max_age_months?: number;
+          seeded_at?: string | null;
+          supply_coef_bp?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_pricing_settings_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: true;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_referral_codes: {
         Row: {
           artisan_id: string;
@@ -1219,6 +1261,57 @@ export type Database = {
           },
         ];
       };
+      artisan_supplies: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          designation: string;
+          id: string;
+          price_on: string | null;
+          purchase_price_cents: number;
+          reference: string | null;
+          supplier: string | null;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          updated_at: string;
+          waste_bp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          designation: string;
+          id?: string;
+          price_on?: string | null;
+          purchase_price_cents: number;
+          reference?: string | null;
+          supplier?: string | null;
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+          waste_bp?: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          designation?: string;
+          id?: string;
+          price_on?: string | null;
+          purchase_price_cents?: number;
+          reference?: string | null;
+          supplier?: string | null;
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+          waste_bp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_supplies_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_territories: {
         Row: {
           artisan_id: string;
@@ -1374,6 +1467,55 @@ export type Database = {
           },
         ];
       };
+      artisan_work_components: {
+        Row: {
+          cost_cents: number | null;
+          id: string;
+          kind: string;
+          label: string | null;
+          position: number;
+          quantity_milli: number;
+          supply_id: string | null;
+          work_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          cost_cents?: number | null;
+          id?: string;
+          kind: string;
+          label?: string | null;
+          position: number;
+          quantity_milli: number;
+          supply_id?: string | null;
+          work_id: string;
+        };
+        Update: {
+          cost_cents?: number | null;
+          id?: string;
+          kind?: string;
+          label?: string | null;
+          position?: number;
+          quantity_milli?: number;
+          supply_id?: string | null;
+          work_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_work_components_supply_id_fkey";
+            columns: ["supply_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_supplies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_work_components_work_id_fkey";
+            columns: ["work_id"];
+            isOneToOne: false;
+            referencedRelation: "artisan_works";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       artisan_work_types: {
         Row: {
           artisan_id: string;
@@ -1411,6 +1553,60 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "work_types";
             referencedColumns: ["code"];
+          },
+        ];
+      };
+      artisan_works: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          description: string | null;
+          designation: string;
+          detailed: boolean;
+          id: string;
+          line_type: Database["public"]["Enums"]["quote_line_type"];
+          manual_price_cents: number | null;
+          source: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          updated_at: string;
+          vat_rate_bp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          description?: string | null;
+          designation: string;
+          detailed?: boolean;
+          id?: string;
+          line_type?: Database["public"]["Enums"]["quote_line_type"];
+          manual_price_cents?: number | null;
+          source?: string;
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          description?: string | null;
+          designation?: string;
+          detailed?: boolean;
+          id?: string;
+          line_type?: Database["public"]["Enums"]["quote_line_type"];
+          manual_price_cents?: number | null;
+          source?: string;
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "artisan_works_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -6793,6 +6989,11 @@ export type Database = {
         Args: { p_lines: Json; p_tender_id: string; p_vat_rate_bp: number };
         Returns: undefined;
       };
+      artisan_save_work: {
+        Args: { p_components: Json; p_work: Json; p_work_id?: string };
+        Returns: string;
+      };
+      artisan_seed_library: { Args: Record<PropertyKey, never>; Returns: number };
       artisan_send_payment_reminder: {
         Args: { p_chantier_id: string; p_kind: Database["public"]["Enums"]["payment_kind"] };
         Returns: string;
