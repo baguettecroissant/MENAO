@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 import { DetailSection, InfoList } from "@/components/admin/list-controls";
 import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { ReadOnlyBanner } from "@/components/admin/read-only";
+import { requireStaff } from "@/lib/admin/guard";
 import { getChantierDetail } from "@/lib/admin/follow-up";
 import { formatDay, formatDayTime, formatDayTimeInline } from "@/lib/format";
 
@@ -36,10 +37,14 @@ const STAGE_TONES = {
 export default async function AdminChantierPage({ params }: PageProps<"/admin/chantiers/[id]">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireStaff();
+  // Le support consulte sans agir ni voir l'argent (ADR 0286).
+  const readOnly = role === "support";
   const detail = await getChantierDetail(supabase, id);
   if (!detail) notFound();
-  const { chantier: ch, client, quotes, payments, invoices, receptions, tickets } = detail;
+  const { chantier: ch, client, quotes, payments, receptions, tickets } = detail;
+  // Factures et PDF des devis : des montants, donc pas pour le support.
+  const invoices = readOnly ? [] : detail.invoices;
   const artisan = ch.artisans?.nom_commercial ?? ch.artisans?.raison_sociale ?? "—";
 
   return (
@@ -69,6 +74,7 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
             .join(" · ")}
         </p>
       </div>
+      {readOnly && <ReadOnlyBanner />}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex flex-col gap-6">
@@ -116,9 +122,11 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
                     >
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="font-medium">{label}</span>
-                        <span className="tabular-nums">
-                          {euros.format(q.total_ttc_cents / 100)}
-                        </span>
+                        {!readOnly && (
+                          <span className="tabular-nums">
+                            {euros.format(q.total_ttc_cents / 100)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {[
@@ -129,7 +137,7 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
-                      {q.status !== "brouillon" && (
+                      {!readOnly && q.status !== "brouillon" && (
                         <a
                           href={`/devis/${q.id}/pdf`}
                           target="_blank"
@@ -147,33 +155,35 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
             )}
           </DetailSection>
 
-          <DetailSection title={c.payments} note={payments.length ? c.paymentsNote : undefined}>
-            {payments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{c.noPayments}</p>
-            ) : (
-              <ul className="flex flex-col">
-                {payments.map((pay) => (
-                  <li
-                    key={pay.id}
-                    className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border py-2 text-sm first:border-t-0 first:pt-0"
-                  >
-                    <span>
-                      <span className="font-medium">{c.paymentKinds[pay.kind] ?? pay.kind}</span>{" "}
-                      <span className="text-muted-foreground">
-                        {[
-                          c.paymentStatus[pay.status] ?? pay.status,
-                          pay.paid_at ? c.paidOn(formatDay(pay.paid_at)) : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
+          {!readOnly && (
+            <DetailSection title={c.payments} note={payments.length ? c.paymentsNote : undefined}>
+              {payments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{c.noPayments}</p>
+              ) : (
+                <ul className="flex flex-col">
+                  {payments.map((pay) => (
+                    <li
+                      key={pay.id}
+                      className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border py-2 text-sm first:border-t-0 first:pt-0"
+                    >
+                      <span>
+                        <span className="font-medium">{c.paymentKinds[pay.kind] ?? pay.kind}</span>{" "}
+                        <span className="text-muted-foreground">
+                          {[
+                            c.paymentStatus[pay.status] ?? pay.status,
+                            pay.paid_at ? c.paidOn(formatDay(pay.paid_at)) : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
                       </span>
-                    </span>
-                    <span className="tabular-nums">{euros.format(pay.amount_cents / 100)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </DetailSection>
+                      <span className="tabular-nums">{euros.format(pay.amount_cents / 100)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </DetailSection>
+          )}
 
           <DetailSection title={c.documents}>
             {invoices.length === 0 && receptions.length === 0 ? (
@@ -190,9 +200,11 @@ export default async function AdminChantierPage({ params }: PageProps<"/admin/ch
                     >
                       {c.invoice((c.paymentKinds[inv.kind] ?? inv.kind).toLowerCase(), inv.numero)}
                     </a>
-                    <span className="tabular-nums text-muted-foreground">
-                      {euros.format(inv.total_ttc_cents / 100)}
-                    </span>
+                    {!readOnly && (
+                      <span className="tabular-nums text-muted-foreground">
+                        {euros.format(inv.total_ttc_cents / 100)}
+                      </span>
+                    )}
                   </li>
                 ))}
                 {receptions.map((rec) => (

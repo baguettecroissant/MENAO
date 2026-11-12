@@ -40,7 +40,7 @@ select is(
   (select count(*)::int from public.profiles where role in ('admin', 'support')),
   'nouveau ticket : toute l''équipe');
 
--- ---------- Dossier envoyé en vérification : admins seulement ----------
+-- ---------- Dossier envoyé en vérification : admins (et rôle Vérification, test 136) ----------
 update public.artisans set status = 'en_verification', submitted_at = now()
 where id = 'c1400000-0000-4000-8000-000000000001';
 select is(

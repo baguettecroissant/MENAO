@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 import { DetailSection, InfoList } from "@/components/admin/list-controls";
 import { StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { requireAdmin } from "@/lib/admin/guard";
+import { ReadOnlyBanner } from "@/components/admin/read-only";
+import { requireStaff } from "@/lib/admin/guard";
 import { getProjectDetail } from "@/lib/admin/follow-up";
 import { formatDay, formatDayTimeInline } from "@/lib/format";
 
@@ -31,7 +32,7 @@ const REQUEST_TONES = {
 export default async function AdminRequestPage({ params }: PageProps<"/admin/demandes/[id]">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireStaff();
   const detail = await getProjectDetail(supabase, id);
   if (!detail) notFound();
   const { project: p, client, requests, chantiers, tickets, photos } = detail;
@@ -66,6 +67,8 @@ export default async function AdminRequestPage({ params }: PageProps<"/admin/dem
           ].join(" · ")}
         </p>
       </div>
+      {/* Support : consultation sans action (ADR 0286). */}
+      {role === "support" && <ReadOnlyBanner />}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex flex-col gap-6">

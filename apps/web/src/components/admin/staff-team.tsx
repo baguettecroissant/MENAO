@@ -2,6 +2,7 @@ import { MoreHorizontal } from "lucide-react";
 import { SheetChip } from "@/components/pro/sheet";
 import { Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import type { TeamRole } from "@/lib/admin/guard";
 import { removeStaff, setStaffRole } from "@/lib/admin/staff-actions";
 import { formatDay, formatTimeAgo } from "@/lib/format";
 
@@ -12,11 +13,13 @@ export type StaffMember = {
   prenom: string | null;
   nom: string | null;
   email: string | null;
-  role: "admin" | "support";
+  role: TeamRole;
   double_auth: boolean;
   derniere_connexion: string | null;
   invite_le: string | null;
 };
+
+const ROLE_TONES = { admin: "neutral", support: "primary", verification: "success" } as const;
 
 const fullName = (m: StaffMember) =>
   [m.prenom, m.nom].filter(Boolean).join(" ") || m.email || m.user_id.slice(0, 8);
@@ -74,7 +77,7 @@ export function StaffTeam({ members, me }: { members: StaffMember[]; me: string 
                   </div>
                 </td>
                 <td className="px-3 py-3.5">
-                  <SheetChip tone={m.role === "admin" ? "neutral" : "primary"}>
+                  <SheetChip tone={ROLE_TONES[m.role]}>
                     {fr.admin.people.invite.roles[m.role]}
                   </SheetChip>
                 </td>
@@ -107,7 +110,8 @@ export function StaffTeam({ members, me }: { members: StaffMember[]; me: string 
 }
 
 function MemberMenu({ member, name }: { member: StaffMember; name: string }) {
-  const other = member.role === "admin" ? "support" : "admin";
+  // Les deux autres accès (ADR 0286).
+  const others = (["admin", "verification", "support"] as const).filter((r) => r !== member.role);
   return (
     <details className="inline-flex flex-col items-end text-left">
       <summary
@@ -117,16 +121,21 @@ function MemberMenu({ member, name }: { member: StaffMember; name: string }) {
         <MoreHorizontal aria-hidden="true" className="size-4" />
       </summary>
       <div className="mt-2 flex w-72 flex-col gap-1 rounded-card border border-border bg-surface p-1.5 shadow-card">
-        <form action={setStaffRole}>
-          <input type="hidden" name="userId" value={member.user_id} />
-          <input type="hidden" name="role" value={other} />
-          <button
-            type="submit"
-            className="w-full rounded-input px-3 py-2.5 text-left text-sm font-medium hover:bg-background"
-          >
-            {other === "support" ? t.makeSupport : t.makeAdmin}
-          </button>
-        </form>
+        <span className="px-3 pt-2 pb-1 text-[0.6875rem] font-bold tracking-wider text-muted-foreground uppercase">
+          {t.changeAccess}
+        </span>
+        {others.map((role) => (
+          <form key={role} action={setStaffRole}>
+            <input type="hidden" name="userId" value={member.user_id} />
+            <input type="hidden" name="role" value={role} />
+            <button
+              type="submit"
+              className="w-full rounded-input px-3 py-2.5 text-left text-sm font-medium hover:bg-background"
+            >
+              {t.makeRole[role]}
+            </button>
+          </form>
+        ))}
         <details>
           <summary className="cursor-pointer list-none rounded-input px-3 py-2.5 text-sm font-medium text-danger hover:bg-background [&::-webkit-details-marker]:hidden">
             {t.remove}

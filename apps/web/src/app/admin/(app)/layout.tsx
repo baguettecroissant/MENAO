@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { fr } from "@/i18n/fr";
-import { requireStaff } from "@/lib/admin/guard";
+import { requireTeam } from "@/lib/admin/guard";
 import { getAdminShell } from "@/lib/admin/shell";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  * Ouvertes à l'équipe ; chaque page réservée aux admins le vérifie elle-même (ADR 0049).
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const { supabase, userId, role } = await requireStaff();
+  const { supabase, userId, role } = await requireTeam();
   const { account, badges } = await getAdminShell(supabase, userId, role);
   return (
     <AppShell space="admin" account={account} badges={badges}>

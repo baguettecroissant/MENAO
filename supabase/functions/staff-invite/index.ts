@@ -1,8 +1,9 @@
-// Edge Function staff-invite (F-67, ADR 0210) : un admin (session aal2) invite un autre admin ou
-// un membre du support. La clé serveur crée le compte et pose le rôle (jamais obtenu par
-// l'inscription) ; l'invitation est enregistrée au nom de l'admin (admin_record_staff_invite :
-// contrôle des rôles, journal d'audit). Supabase envoie l'e-mail d'invitation (modèle
-// supabase/templates/invite.html, version « équipe ») pour choisir le mot de passe ; la double
+// Edge Function staff-invite (F-67, ADR 0210, 0286) : un admin (session aal2) invite un autre
+// admin, un membre du support ou de la vérification. La clé serveur crée le compte et pose le rôle
+// (jamais obtenu par l'inscription) ; l'invitation est enregistrée au nom de l'admin
+// (admin_record_staff_invite : contrôle des rôles, journal d'audit). Supabase envoie l'e-mail
+// d'invitation (modèle supabase/templates/invite.html, version « équipe ») pour choisir le mot de
+// passe ; la double
 // authentification est imposée à la première visite du back-office (ADR 0008).
 // Même déroulé que commercial-invite (ADR 0205). Aucune donnée personnelle dans les journaux.
 import { createClient } from "@supabase/supabase-js";
@@ -10,7 +11,8 @@ import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const ROLES = ["admin", "support"] as const;
+// Trois accès (ADR 0286) : admin, support, vérification des dossiers d'artisans.
+const ROLES = ["admin", "support", "verification"] as const;
 const MAX_INVITES_PER_HOUR = 10;
 
 /** Niveau d'authentification du jeton (aal1 / aal2), lu sans vérification : le jeton l'a été. */

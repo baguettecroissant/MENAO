@@ -1,4 +1,4 @@
-import { roleFromAppMetadata } from "@menao/core";
+import { isTeam, roleFromAppMetadata } from "@menao/core";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -16,6 +16,6 @@ export async function requireAccount(next = "/compte") {
     redirect(`/connexion?next=${encodeURIComponent(next)}` as Route);
   }
   const role = roleFromAppMetadata(user.app_metadata);
-  if (role === "admin" || role === "support") redirect("/admin");
+  if (isTeam(role)) redirect("/admin");
   return { supabase, user, email: user.email, role };
 }

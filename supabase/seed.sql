@@ -1,5 +1,5 @@
 -- Données FICTIVES de développement local (jamais de données réelles, jamais appliqué en production).
--- Comptes : particulier, support, admin, artisan (en onboarding), artisan (dossier envoyé),
+-- Comptes : particulier, support, vérification, admin, artisan (en onboarding), artisan (dossier envoyé),
 -- particulier réservé au test de réinitialisation du mot de passe, artisans visibles (recherche).
 -- Mot de passe commun des comptes : « menao-local-dev-only » (local uniquement).
 
@@ -55,6 +55,8 @@ from (values
   ('a0000000-0000-4000-8000-000000000019'::uuid, 'admin6@example.test', 'admin', 'Gaby', 'Admin', null),
   -- Seconde commerciale (F-66, ADR 0208) : son planning n'apparaît jamais dans celui de Rémi.
   ('a0000000-0000-4000-8000-000000000020'::uuid, 'commercial2@example.test', 'commercial', 'Léa', 'Commerciale', null),
+  -- Membre « Vérification » de l'équipe (ADR 0286), réservé au test e2e de ses accès.
+  ('a0000000-0000-4000-8000-000000000021'::uuid, 'verification@example.test', 'verification', 'Vic', 'Verification', null),
   -- Compte réservé au test e2e « mot de passe oublié ».
   ('a0000000-0000-4000-8000-000000000006'::uuid, 'motdepasse@example.test', 'particulier', 'Morgan', 'Exemple', null)
 ) as u (id, email, role, first_name, last_name, siret);

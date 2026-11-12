@@ -168,7 +168,7 @@ export function AppFrame({
               <Search aria-hidden="true" className="size-4 text-foreground" />
             </Link>
           )}
-          {space === "admin" && account?.role !== "support" && (
+          {space === "admin" && (
             // Recherche globale du back-office (ADR 0047) : personnes, artisans, devis, factures.
             <form
               action="/admin/recherche"
@@ -196,7 +196,7 @@ export function AppFrame({
           )}
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
-            {space === "admin" && account?.role !== "support" && (
+            {space === "admin" && (
               <Link
                 href="/admin/recherche"
                 aria-label={fr.admin.search.label}

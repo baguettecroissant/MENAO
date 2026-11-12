@@ -1,4 +1,4 @@
-import { parisToday, roleFromAppMetadata } from "@menao/core";
+import { isTeam, parisToday, roleFromAppMetadata } from "@menao/core";
 import { accountExport, type ExportClient } from "@menao/documents";
 import {
   accountProfileSchema,
@@ -189,7 +189,7 @@ export async function shareAccountData(): Promise<boolean> {
     const user = data.user;
     if (!user || !(await Sharing.isAvailableAsync())) return false;
     const role = roleFromAppMetadata(user.app_metadata);
-    if (role === "admin" || role === "support" || role === "visiteur") return false;
+    if (isTeam(role) || role === "visiteur") return false;
     const payload = await accountExport(
       // Le client Supabase, vu par l'export comme une simple lecture de tables.
       supabase as unknown as ExportClient,

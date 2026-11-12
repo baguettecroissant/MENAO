@@ -10,11 +10,12 @@ import { requireAdmin } from "./guard";
 
 const t = fr.admin.people.invite;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const ROLES = ["admin", "support"];
+// Trois accès (ADR 0286).
+const ROLES = ["admin", "support", "verification"];
 const INVALID = t.errors.invalid ?? fr.errors.generic;
 
 /**
- * Invitation d'un admin ou d'un membre du support (F-67, ADR 0210) : l'Edge Function staff-invite
+ * Invitation d'un admin, d'un membre du support ou de la vérification (F-67, ADR 0210, 0286) : l'Edge Function staff-invite
  * crée le compte avec le rôle choisi (clé serveur), enregistre l'invitation au nom de l'admin
  * (session aal2, vérifiée par la base) et Supabase envoie l'e-mail pour choisir le mot de passe.
  */
@@ -58,13 +59,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TEAM_PATH = "/admin/reglages/equipe";
 
 /**
- * Changement d'accès d'un membre de l'équipe, admin ou support (F-133, ADR 0284) : la base vérifie
+ * Changement d'accès d'un membre de l'équipe (F-133, ADR 0284, 0286) : la base vérifie
  * l'admin (aal2), refuse son propre compte, ferme les sessions du membre et journalise.
  */
 export async function setStaffRole(formData: FormData): Promise<void> {
   const id = text(formData, "userId") ?? "";
   const role = text(formData, "role");
-  if (!UUID.test(id) || (role !== "admin" && role !== "support")) {
+  if (!UUID.test(id) || (role !== "admin" && role !== "support" && role !== "verification")) {
     redirect(`${TEAM_PATH}?erreur=1` as Route);
   }
   const { supabase } = await requireAdmin();
