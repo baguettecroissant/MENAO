@@ -12,7 +12,7 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, last_sign_i
   ('e1360000-0000-4000-8000-000000000003', 'acces136.verif@example.test', false, now(), now(), '{"role":"verification"}', '{}'),
   ('e1360000-0000-4000-8000-000000000004', 'acces136.client@example.test', false, now(), now(), '{"role":"particulier"}', '{}'),
   ('e1360000-0000-4000-8000-000000000005', 'acces136.artisan@example.test', false, now(), now(), '{"role":"artisan"}', '{}'),
-  ('e1360000-0000-4000-8000-000000000006', 'acces136.artisan2@example.test', false, now(), now(), '{"role":"artisan_en_attente"}', '{}');
+  ('e1360000-0000-4000-8000-000000000006', 'acces136.artisan2@example.test', false, now(), now(), '{"role":"artisan"}', '{}');
 
 insert into public.artisans (id, user_id, status, zone_mode, base_location, radius_km, nom_commercial) values
   ('e1361000-0000-4000-8000-000000000001', 'e1360000-0000-4000-8000-000000000005', 'valide', 'rayon',
