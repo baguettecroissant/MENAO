@@ -61,18 +61,6 @@ export function LineCard({
         <View style={styles.tags}>
           <FicheTag text={t.types[line.type]} tone={TYPE_TONE[line.type]} />
           {generated ? <FicheTag text={t.toReview} tone="warning" dot /> : null}
-          {costCents !== undefined ? (
-            <FicheTag
-              text={
-                rate === null
-                  ? t.library.unknownCost
-                  : rate < 0
-                    ? t.library.loss
-                    : t.library.lineMargin(formatRateBp(rate))
-              }
-              tone={rate === null ? "neutral" : rate < 0 ? "danger" : "success"}
-            />
-          ) : null}
         </View>
         <Text style={styles.designation}>{line.designation}</Text>
         {line.description ? <Text style={styles.description}>{line.description}</Text> : null}
@@ -83,6 +71,19 @@ export function LineCard({
       <View style={styles.side}>
         <Text style={styles.total}>{formatCents(lineTtcCents(line))}</Text>
         <Text style={styles.totalLabel}>{assujettiTva ? t.ttc : t.ht}</Text>
+        {/* Marge de la ligne, pour l'artisan seul (maquette du lot 36 : sous le prix). */}
+        {costCents !== undefined ? (
+          <FicheTag
+            text={
+              rate === null
+                ? t.library.unknownCost
+                : rate < 0
+                  ? t.library.loss
+                  : t.library.lineMargin(formatRateBp(rate))
+            }
+            tone={rate === null ? "neutral" : rate < 0 ? "danger" : "success"}
+          />
+        ) : null}
         <View style={styles.actions}>
           <Pressable
             role="button"

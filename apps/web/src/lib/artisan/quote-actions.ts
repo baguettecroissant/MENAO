@@ -74,6 +74,9 @@ export type LibrarySearchResult = {
   priceCents: number;
   markupBp: number | null;
   detailed: boolean;
+  /** Éléments de la composition (0 : ouvrage repris d'un ancien devis). */
+  components: number;
+  vatRateBp: number;
   lines: LibraryQuoteLine[];
 };
 
@@ -120,6 +123,8 @@ export async function searchLibraryWorks(query: string): Promise<LibrarySearchRe
               priceCents: w.pricing.priceCents,
               markupBp: w.pricing.markupBp,
               detailed: lines.length > 1,
+              components: w.components.length,
+              vatRateBp: w.vat_rate_bp,
               lines,
             },
           ]

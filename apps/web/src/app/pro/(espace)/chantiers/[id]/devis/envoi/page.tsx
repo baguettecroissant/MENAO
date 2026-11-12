@@ -1,6 +1,6 @@
 import { belowMarginAlert, DEFAULT_DEPOSIT_PERCENT, formatRateBp, parisToday } from "@menao/core";
 import { quotePdfData, type QuoteDocument } from "@menao/documents";
-import { TriangleAlert, User, Wrench } from "lucide-react";
+import { User, Wrench } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { DetailBlock } from "@/components/pro/detail";
@@ -85,22 +85,20 @@ export default async function QuoteSendPage({
           </Alert>
         </div>
       )}
-      {lowMargin && margin.markupBp !== null && alertBp !== null && (
-        <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6">
-          <p
-            role="status"
-            className="flex items-start gap-2.5 rounded-input border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning"
-          >
-            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <span>{t.library.below(formatRateBp(margin.markupBp), formatRateBp(alertBp))}</span>
-          </p>
-        </div>
-      )}
       <QuoteSendForm
         quoteId={draft.id}
         totalTtcCents={draft.total_ttc_cents}
         defaultDeposit={artisan?.default_deposit_percent ?? DEFAULT_DEPOSIT_PERCENT}
         minStartDate={nextDay(parisToday())}
+        margin={
+          lowMargin && margin.markupBp !== null && alertBp !== null
+            ? {
+                client: clientName || t.library.confirmClient,
+                title: t.library.belowTitle(formatRateBp(margin.markupBp), formatRateBp(alertBp)),
+                reviewHref: editorHref,
+              }
+            : null
+        }
       >
         <DetailBlock icon={<User />} title={t.send.client}>
           <div className="flex flex-col gap-0.5 text-sm">

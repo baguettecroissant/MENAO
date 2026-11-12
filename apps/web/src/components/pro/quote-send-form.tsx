@@ -1,13 +1,17 @@
 "use client";
 
 import { QUOTE_VALIDITY_DAYS, isValidDepositPercent, paymentSchedule } from "@menao/core";
-import { useActionState, useState, type ReactNode } from "react";
+import { Send, TriangleAlert } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+import { useActionState, useRef, useState, type ReactNode } from "react";
 import { Alert, Button, Field, FieldError, Hint, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { sendQuote } from "@/lib/artisan/quote-actions";
 import { initialFormState } from "@/lib/auth/form";
 
 const t = fr.pro.quote.send;
+const l = fr.pro.quote.library;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 type Schedule = "defaut" | "personnalise";
 
@@ -28,8 +32,14 @@ export function QuoteSendForm({
   totalTtcCents,
   defaultDeposit,
   minStartDate,
+  margin = null,
   children,
 }: {
+  /**
+   * Marge sous le seuil fixé par l'artisan (maquette du lot 36) : une fenêtre le dit avant
+   * l'envoi, qui reste possible.
+   */
+  margin?: { client: string; title: string; reviewHref: string } | null;
   quoteId: string;
   totalTtcCents: number;
   defaultDeposit: number;
@@ -49,9 +59,73 @@ export function QuoteSendForm({
       t.tranche(tranche.percent, tranche.trigger, euros.format(tranche.amountCents / 100)),
     );
   const custom = Number(deposit);
+  const formRef = useRef<HTMLFormElement>(null);
+  const confirmed = useRef(false);
+  const [asking, setAsking] = useState(false);
 
   return (
-    <form action={formAction} noValidate className="flex flex-1 flex-col">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={(e) => {
+        if (margin && !confirmed.current) {
+          e.preventDefault();
+          setAsking(true);
+        }
+      }}
+      noValidate
+      className="flex flex-1 flex-col"
+    >
+      {asking && margin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="envoi-marge-titre"
+            className="flex w-full max-w-xl animate-menao-fade-up flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-raised"
+          >
+            <h2 id="envoi-marge-titre" className="text-xl font-bold">
+              {l.confirmTitle(margin.client)}
+            </h2>
+            <p className="flex justify-between gap-3 text-[0.9375rem]">
+              <span className="text-muted-foreground">{l.confirmTotal}</span>
+              <span className="font-semibold tabular-nums">
+                {euros.format(totalTtcCents / 100)}
+              </span>
+            </p>
+            <div className="flex items-start gap-3 rounded-input border border-warning/30 bg-warning-soft p-4 text-warning">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-input bg-surface">
+                <TriangleAlert aria-hidden="true" className="size-4" />
+              </span>
+              <span className="flex flex-col gap-1 text-[0.9375rem]">
+                <span className="font-bold">{margin.title}</span>
+                <span>{l.belowText}</span>
+              </span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link
+                href={margin.reviewHref as Route}
+                className="flex min-h-12 items-center justify-center rounded-pill border border-border-strong bg-surface font-semibold hover:bg-background"
+              >
+                {l.review}
+              </Link>
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => {
+                  confirmed.current = true;
+                  setAsking(false);
+                  formRef.current?.requestSubmit();
+                }}
+              >
+                <Send aria-hidden="true" className="size-4" />
+                {l.sendAnyway}
+              </Button>
+            </div>
+            <p className="text-center text-[0.8125rem] text-muted-foreground">{l.privacy}</p>
+          </div>
+        </div>
+      )}
       {/* Refonte « Nette » (ADR 0255) : l'échéancier et les dates à gauche ; le total, le rappel
           et l'envoi à droite (l'envoi reste collé en bas sur téléphone). */}
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_1fr] lg:items-start lg:[grid-template-areas:'main_side'_'main_send']">

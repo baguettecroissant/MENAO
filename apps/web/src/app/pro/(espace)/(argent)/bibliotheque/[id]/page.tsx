@@ -36,11 +36,9 @@ export default async function WorkPage({
         >
           ← {t.back}
         </Link>
-        <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">
-          {work?.designation ?? t.newTitle}
-        </h1>
         {enregistre && <Alert tone="success">{t.saved}</Alert>}
         <WorkEditor
+          title={work?.designation ?? t.newTitle}
           key={work ? `${work.id}-${work.components.length}-${work.manual_price_cents}` : "nouveau"}
           work={work ?? null}
           components={work?.components ?? []}
