@@ -84,7 +84,7 @@ describe("lecture du DPGF", () => {
   it("range les lignes en titres et postes, par lot, sans les totaux", () => {
     const parsed = parseDpgfGrid(GRID);
     expect(parsed).not.toBeNull();
-    const rows = parsed!.rows;
+    const rows = parsed?.rows ?? [];
     expect(rows.map((r) => [r.kind, r.code, r.lot])).toEqual([
       ["titre", "LOT 05", "LOT 05 CARRELAGE, FAÏENCE"],
       ["poste", "5.1", "LOT 05 CARRELAGE, FAÏENCE"],
@@ -104,7 +104,7 @@ describe("lecture du DPGF", () => {
     });
     // Quantité laissée à l'entreprise : poste sans quantité.
     expect(rows[6]).toMatchObject({ kind: "poste", quantityMilli: null, unit: "m2" });
-    expect(parsed!.columns.unitPrice).toBe(4);
+    expect(parsed?.columns.unitPrice).toBe(4);
   });
 
   it("signale l'absence de colonne de prix", () => {
