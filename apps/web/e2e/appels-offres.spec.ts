@@ -123,10 +123,12 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   expect(menaoSheet.suggestedFilename()).toBe(`DPGF-Bureaux-fictifs-E2E-${run}.xlsx`);
 });
 
-// DPGF depuis les plans, lot 1 (F-140, ADR 0291) : plans lus par l'IA (faux serveur en CI),
-// relevé des pièces avec l'origine de chaque mesure, corrigé puis enregistré.
-test("appels d'offres : plans lus, relevé des pièces corrigé et enregistré", async ({ page }) => {
-  test.setTimeout(90_000);
+// DPGF depuis les plans (F-140, ADR 0291, 0292) : plans lus par l'IA (faux serveur en CI), relevé
+// corrigé, revêtements, DPGF créé avec l'origine de chaque quantité, export après vérification.
+test("appels d'offres : plans lus, relevé corrigé, DPGF créé puis exporté après vérification", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
   const project = `Maison depuis plans E2E ${test.info().retry}`;
   await signIn(page);
   await setPlan("entreprise");
@@ -164,4 +166,37 @@ test("appels d'offres : plans lus, relevé des pièces corrigé et enregistré",
   await expect(page.getByLabel("Surface (m²) : Palier")).toHaveValue("4,6");
   await expect(table.getByText("Saisi")).toHaveCount(2);
   await expect(page.getByLabel("Portes intérieures")).toHaveValue("10");
+
+  // Revêtements proposés (ADR 0292), puis DPGF créé : lot Carreleur, quantités avec leur origine.
+  await expect(page.getByLabel("Sol : Palier")).toHaveValue("parquet");
+  await expect(page.getByLabel("Murs : WC")).toHaveValue("faience");
+  await page.getByRole("button", { name: "Créer le DPGF" }).click();
+  await expect(page.getByText(/^DPGF créé : 1 lot, 5 postes, dont 1 à compléter/)).toBeVisible({
+    timeout: 20_000,
+  });
+  // Séjour 45,14 + Dégagement 8,22 + WC 1,8 = 55,16 m² ; plinthes 27 + 16,1 − 2 × 0,83 = 41,44 ml.
+  await expect(page.getByLabel("Votre quantité : Carrelage de sol")).toHaveValue("55,16");
+  await expect(page.getByLabel("Votre quantité : Plinthes carrelage assorties")).toHaveValue(
+    "41,44",
+  );
+  const posts = page.getByRole("table", { name: "Postes du DPGF" });
+  await expect(posts.getByText("À compléter", { exact: true })).toHaveCount(1);
+  await expect(posts.getByText("Calculé", { exact: true }).first()).toBeVisible();
+
+  // Export refusé tant que les quantités ne sont pas vérifiées.
+  const tenderPath = new URL(page.url()).pathname;
+  const refused = await page.request.get(`${tenderPath}/excel`, { maxRedirects: 0 });
+  expect(refused.status()).toBe(303);
+  await expect(page.getByText(/^Cochez « J'ai vérifié les quantités »/)).toBeVisible();
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST" && r.ok()),
+    page.getByLabel(/J'ai vérifié les quantités lues et calculées/).check(),
+  ]);
+  await page.reload();
+  await expect(page.getByLabel(/J'ai vérifié les quantités lues et calculées/)).toBeChecked();
+  const [sheet] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("link", { name: /Excel du DPGF/ }).click(),
+  ]);
+  expect(sheet.suggestedFilename()).toBe(`DPGF-Maison-depuis-plans-E2E-${test.info().retry}.xlsx`);
 });

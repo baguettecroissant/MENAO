@@ -8,11 +8,19 @@ import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import {
+  CEILING_FINISHES,
+  FLOOR_FINISHES,
   normalizePlanCounts,
   PLAN_COUNT_KEYS,
+  planTakeoff,
+  type PriceHistoryLine,
+  suggestTenderPrice,
+  takeoffFigures,
   tenderQuoteLines,
   type TenderQuoteLine,
+  WALL_FINISHES,
 } from "@menao/core";
+import { getTenderRooms } from "./tenders";
 import { requireTeamPermission } from "./space";
 
 const t = fr.pro.tenders;
@@ -299,4 +307,116 @@ export async function savePlanRooms(_prev: FormState, formData: FormData): Promi
   }
   revalidatePath(`${BASE}/${id.data}`);
   return { success: t.plan.saved };
+}
+
+const finish = z.object({
+  id: z.uuid(),
+  floor: z.enum(FLOOR_FINISHES),
+  walls: z.enum(WALL_FINISHES),
+  ceiling: z.enum(CEILING_FINISHES),
+  tileHeightMm: z.number().int().min(100).max(4000).nullable(),
+});
+
+/**
+ * Création du DPGF depuis le relevé (ADR 0292) : revêtements enregistrés, puis lots et postes
+ * calculés par métier (packages/core), prix repris des anciens devis, enregistrés par la base
+ * (formule et entreprise vérifiées). La vérification des quantités est à refaire.
+ */
+export async function createPlanDpgf(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(text(formData, "finishes") ?? "[]");
+  } catch {
+    raw = null;
+  }
+  const finishes = z.array(finish).max(200).safeParse(raw);
+  if (!id.success || !finishes.success) return { error: t.plan.finishes.invalid };
+  const { supabase } = await requireTeamPermission("money");
+  const { error: finishError } = await supabase.rpc("artisan_save_plan_finishes", {
+    p_tender_id: id.data,
+    p_finishes: finishes.data,
+  });
+  if (finishError) {
+    return { error: finishError.code === "42501" ? t.errors.forbidden : t.errors.generic };
+  }
+
+  const [{ data: tender }, rooms, { data: history }] = await Promise.all([
+    supabase.from("tenders").select("plan_trades, plan_counts").eq("id", id.data).maybeSingle(),
+    getTenderRooms(supabase, id.data),
+    supabase.rpc("artisan_price_history"),
+  ]);
+  if (!tender) return { error: t.errors.generic };
+  const { data: trades } = await supabase
+    .from("trades")
+    .select("code, label")
+    .in("code", tender.plan_trades)
+    .order("sort_order");
+  const lines = planTakeoff(
+    rooms.map((r) => ({
+      name: r.name,
+      level: r.level,
+      areaCm2: r.area_cm2,
+      perimeterMm: r.perimeter_mm,
+      heightMm: r.height_mm,
+      wet: r.wet,
+      habitable: r.habitable,
+      source: r.source,
+      uncertain: r.uncertain,
+      finishes: {
+        floor: r.floor ?? "aucun",
+        walls: r.walls ?? "aucun",
+        ceiling: r.ceiling ?? "aucun",
+        tileHeightMm: r.tile_height_mm,
+      },
+    })),
+    normalizePlanCounts(tender.plan_counts),
+    trades ?? [],
+  );
+  const prices: PriceHistoryLine[] = (history ?? []).map((h) => ({
+    designation: h.designation,
+    unit: h.unit,
+    unitPriceHtCents: h.unit_price_ht_cents,
+    usedOn: h.used_on,
+  }));
+  const { error } = await supabase.rpc("artisan_import_plan_lines", {
+    p_tender_id: id.data,
+    p_lines: lines.map((line) => {
+      const suggestion = line.kind === "poste" ? suggestTenderPrice(line, prices) : null;
+      return {
+        ...line,
+        unitPriceHtCents: suggestion?.unitPriceHtCents ?? null,
+        priceReference: suggestion?.reference ?? null,
+      };
+    }),
+  });
+  if (error) {
+    return { error: error.code === "42501" ? t.errors.forbidden : t.errors.generic };
+  }
+  const figures = takeoffFigures(lines);
+  revalidatePath(`${BASE}/${id.data}`);
+  const query = new URLSearchParams({
+    dpgf: "ok",
+    lots: String(figures.lots),
+    postes: String(figures.posts),
+    manque: String(figures.missing),
+  });
+  redirect(`${BASE}/${id.data}?${query}` as Route);
+}
+
+/** « J'ai vérifié les quantités » : condition de l'export d'un DPGF créé depuis les plans. */
+export async function checkTenderQuantities(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  if (!id.success) return { error: t.plan.check.error };
+  const { supabase } = await requireTeamPermission("money");
+  const { error } = await supabase.rpc("artisan_check_tender_quantities", {
+    p_tender_id: id.data,
+    p_checked: text(formData, "checked") === "true",
+  });
+  if (error) return { error: error.code === "22023" ? error.message : t.plan.check.error };
+  revalidatePath(`${BASE}/${id.data}`);
+  return {};
 }

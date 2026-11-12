@@ -10,7 +10,7 @@ import {
   tenderTotals,
 } from "@menao/core";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
-import { useActionState, useMemo, useState } from "react";
+import { type ReactNode, useActionState, useMemo, useState } from "react";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { Alert, Button, Card, CardTitle, StatusBadge, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -19,6 +19,13 @@ import type { TenderLine } from "@/lib/artisan/tenders";
 import { initialFormState } from "@/lib/auth/form";
 
 const t = fr.pro.tenders;
+const QUANTITY_TONES = {
+  plan: "success",
+  calcul: "primary",
+  photo: "warning",
+  manque: "warning",
+  saisi: "neutral",
+} as const;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const money = (cents: number) => euros.format(cents / 100);
 
@@ -34,14 +41,24 @@ export function TenderEditor({
   vatRateBp,
   vatOptions,
   sourceKind,
+  exportLocked = false,
+  checkSlot,
 }: {
   tenderId: string;
   lines: TenderLine[];
   vatRateBp: number;
   vatOptions: readonly number[];
-  /** Fichier de l'architecte : Excel (réécrit tel quel) ou PDF (classeur MENAO, ADR 0288). */
-  sourceKind: "xlsx" | "pdf" | null;
+  /**
+   * Fichier de l'architecte : Excel (réécrit tel quel) ou PDF (classeur MENAO, ADR 0288) ; ou DPGF
+   * créé depuis les plans (ADR 0292) : origine et calcul de chaque quantité.
+   */
+  sourceKind: "xlsx" | "pdf" | "plan" | null;
+  /** Export bloqué tant que l'artisan n'a pas vérifié les quantités (DPGF créé depuis les plans). */
+  exportLocked?: boolean;
+  /** Case « J'ai vérifié les quantités », affichée avec l'export. */
+  checkSlot?: ReactNode;
 }) {
+  const fromPlan = sourceKind === "plan";
   const [state, formAction, pending] = useActionState(saveTender, initialFormState);
   const [vat, setVat] = useState(vatRateBp);
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
@@ -77,6 +94,9 @@ export function TenderEditor({
   }));
   const totals = tenderTotals(amounts, vat);
   const gaps = tenderGaps(amounts);
+  const missingQuantities = parsed.filter(
+    (p) => p.line.kind === "poste" && p.quantityMilli === null,
+  ).length;
   const invalid = parsed.some(
     (p) =>
       p.line.kind === "poste" &&
@@ -120,13 +140,20 @@ export function TenderEditor({
             value: money(totals.totalHtCents),
             hint: t.figures.totalTtc(money(totals.totalTtcCents)),
           },
-          {
-            label: t.figures.gaps,
-            value: String(gaps.changed),
-            hint: t.figures.gapsHint(
-              gaps.underestimatedHtCents > 0 ? money(gaps.underestimatedHtCents) : null,
-            ),
-          },
+          fromPlan
+            ? {
+                label: t.plan.figureMissing,
+                value: String(missingQuantities),
+                hint: t.plan.figureMissingHint,
+                tone: missingQuantities > 0 ? "danger" : undefined,
+              }
+            : {
+                label: t.figures.gaps,
+                value: String(gaps.changed),
+                hint: t.figures.gapsHint(
+                  gaps.underestimatedHtCents > 0 ? money(gaps.underestimatedHtCents) : null,
+                ),
+              },
         ]}
       />
 
@@ -153,8 +180,11 @@ export function TenderEditor({
                 <th scope="col" className="px-2 py-3 font-semibold">
                   {t.table.unit}
                 </th>
-                <th scope="col" className="px-2 py-3 text-right font-semibold">
-                  {t.table.architectQuantity}
+                <th
+                  scope="col"
+                  className={`px-2 py-3 font-semibold ${fromPlan ? "text-left" : "text-right"}`}
+                >
+                  {fromPlan ? t.plan.origin : t.table.architectQuantity}
                 </th>
                 <th scope="col" className="px-2 py-3 text-right font-semibold">
                   {t.table.quantity}
@@ -201,6 +231,14 @@ export function TenderEditor({
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">{line.code}</td>
                     <td className="px-2 py-3">
                       <span className="font-medium">{line.designation}</span>
+                      {fromPlan && line.quantity_detail && (
+                        <details className="mt-1 text-xs text-muted-foreground">
+                          <summary className="cursor-pointer font-semibold text-primary-strong">
+                            {t.plan.detail}
+                          </summary>
+                          <p className="mt-1 max-w-md leading-relaxed">{line.quantity_detail}</p>
+                        </details>
+                      )}
                       <span className="mt-1 flex">
                         {unitPriceHtCents === null ? (
                           <StatusBadge tone="warning">{t.source.none}</StatusBadge>
@@ -220,11 +258,27 @@ export function TenderEditor({
                       </span>
                     </td>
                     <td className="px-2 py-3 text-muted-foreground">{line.unit_label}</td>
-                    <td className="px-2 py-3 text-right text-muted-foreground tabular-nums">
-                      {line.architect_quantity_milli === null
-                        ? "—"
-                        : formatQuantity(line.architect_quantity_milli)}
-                    </td>
+                    {fromPlan ? (
+                      <td className="px-2 py-3 whitespace-nowrap">
+                        {(() => {
+                          const source =
+                            quantityMilli !== line.quantity_milli
+                              ? "saisi"
+                              : (line.quantity_source ?? "manque");
+                          return (
+                            <StatusBadge tone={QUANTITY_TONES[source]}>
+                              {t.plan.quantitySource[source]}
+                            </StatusBadge>
+                          );
+                        })()}
+                      </td>
+                    ) : (
+                      <td className="px-2 py-3 text-right text-muted-foreground tabular-nums">
+                        {line.architect_quantity_milli === null
+                          ? "—"
+                          : formatQuantity(line.architect_quantity_milli)}
+                      </td>
+                    )}
                     <td className="px-2 py-2 text-right">
                       <input
                         inputMode="decimal"
@@ -289,12 +343,17 @@ export function TenderEditor({
       </form>
 
       <Card className="flex flex-col gap-4">
-        <CardTitle title={t.exportTitle} description={dirty ? t.saveFirst : undefined} />
+        <CardTitle
+          title={fromPlan ? t.plan.check.title : t.exportTitle}
+          description={dirty ? t.saveFirst : undefined}
+        />
+        {checkSlot}
+        {exportLocked && <p className="text-sm text-muted-foreground">{t.plan.check.locked}</p>}
         <div className="grid gap-3 md:grid-cols-2">
           {sourceKind && (
             <a
               href={`${base}/excel`}
-              aria-disabled={dirty || undefined}
+              aria-disabled={dirty || exportLocked || undefined}
               className="flex items-start gap-3 rounded-input border border-border p-4 hover:border-primary/40 aria-disabled:pointer-events-none aria-disabled:opacity-50"
             >
               <FileSpreadsheet
@@ -303,10 +362,18 @@ export function TenderEditor({
               />
               <span className="flex flex-1 flex-col gap-1">
                 <span className="font-semibold">
-                  {sourceKind === "pdf" ? t.exportExcelMenao : t.exportExcel}
+                  {fromPlan
+                    ? t.plan.excel
+                    : sourceKind === "pdf"
+                      ? t.exportExcelMenao
+                      : t.exportExcel}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  {sourceKind === "pdf" ? t.exportExcelMenaoHint : t.exportExcelHint}
+                  {fromPlan
+                    ? t.plan.excelHint
+                    : sourceKind === "pdf"
+                      ? t.exportExcelMenaoHint
+                      : t.exportExcelHint}
                 </span>
               </span>
               <Download aria-label={t.download} className="size-4 shrink-0" />
@@ -316,7 +383,7 @@ export function TenderEditor({
             href={`${base}/pdf`}
             target="_blank"
             rel="noreferrer"
-            aria-disabled={dirty || undefined}
+            aria-disabled={dirty || exportLocked || undefined}
             className="flex items-start gap-3 rounded-input border border-border p-4 hover:border-primary/40 aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >
             <FileText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary-strong" />
@@ -327,7 +394,9 @@ export function TenderEditor({
             <Download aria-label={t.download} className="size-4 shrink-0" />
           </a>
         </div>
-        <p className="text-sm text-muted-foreground">{t.responsibility}</p>
+        <p className="text-sm text-muted-foreground">
+          {fromPlan ? t.plan.check.stillOpen : t.responsibility}
+        </p>
       </Card>
     </div>
   );
