@@ -15,12 +15,7 @@ import {
 } from "../../../packages/core/src/dpgf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
-import {
-  applyTenderPrices,
-  bestSheet,
-  readWorkbook,
-  type Sheet,
-} from "./sheet.ts";
+import { applyTenderPrices, bestSheet, readWorkbook, type Sheet } from "./sheet.ts";
 
 const MAX_PER_HOUR = 60;
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -39,9 +34,7 @@ Deno.serve(async (req) => {
   const authorization = req.headers.get("Authorization") ?? "";
   const token = authorization.replace(/^Bearer\s+/i, "");
   const admin = adminClient();
-  const { data: userData } = token
-    ? await admin.auth.getUser(token)
-    : { data: null };
+  const { data: userData } = token ? await admin.auth.getUser(token) : { data: null };
   const user = userData?.user;
   if (!user) return json({ status: "forbidden" }, 401);
 
@@ -49,13 +42,9 @@ Deno.serve(async (req) => {
     action?: unknown;
     tenderId?: unknown;
   } | null;
-  const action = body?.action === "import" || body?.action === "export"
-    ? body.action
-    : null;
+  const action = body?.action === "import" || body?.action === "export" ? body.action : null;
   const tenderId =
-    typeof body?.tenderId === "string" && UUID.test(body.tenderId)
-      ? body.tenderId
-      : null;
+    typeof body?.tenderId === "string" && UUID.test(body.tenderId) ? body.tenderId : null;
   if (!action || !tenderId) return json({ status: "invalid" }, 400);
 
   const { data: allowed } = await admin.rpc("consume_rate_limit", {
@@ -80,9 +69,7 @@ Deno.serve(async (req) => {
   }
 
   // Fichier lu avec la clé serveur, une fois l'accès vérifié.
-  const { data: blob } = await admin.storage.from("tender-files").download(
-    tender.source_path,
-  );
+  const { data: blob } = await admin.storage.from("tender-files").download(tender.source_path);
   if (!blob) return json({ status: "not_found" }, 404);
   if (blob.size > MAX_BYTES) return json({ status: "too_large" }, 413);
   const workbook = await readWorkbook(await blob.arrayBuffer());
@@ -92,21 +79,21 @@ Deno.serve(async (req) => {
     const found = bestSheet(workbook);
     if (!found) return json({ status: "no_header" }, 422);
     const { data: history } = await supabase.rpc("artisan_price_history");
-    const prices: PriceHistoryLine[] = ((history ?? []) as {
-      designation: string;
-      unit: DpgfUnit;
-      unit_price_ht_cents: number;
-      used_on: string;
-    }[]).map((h) => ({
+    const prices: PriceHistoryLine[] = (
+      (history ?? []) as {
+        designation: string;
+        unit: DpgfUnit;
+        unit_price_ht_cents: number;
+        used_on: string;
+      }[]
+    ).map((h) => ({
       designation: h.designation,
       unit: h.unit,
       unitPriceHtCents: h.unit_price_ht_cents,
       usedOn: h.used_on,
     }));
     const lines = found.parsed.rows.map((row) => {
-      const suggestion = row.kind === "poste"
-        ? suggestTenderPrice(row, prices)
-        : null;
+      const suggestion = row.kind === "poste" ? suggestTenderPrice(row, prices) : null;
       return {
         kind: row.kind,
         code: row.code,
@@ -148,9 +135,7 @@ Deno.serve(async (req) => {
 
   // Export : quantités et prix de l'artisan dans le fichier de l'architecte.
   const sheetInfo = tender.sheet as Partial<Sheet> | null;
-  const sheet = sheetInfo?.name
-    ? workbook.getWorksheet(sheetInfo.name)
-    : undefined;
+  const sheet = sheetInfo?.name ? workbook.getWorksheet(sheetInfo.name) : undefined;
   const columns = sheetInfo?.columns;
   if (!sheet || !columns) return json({ status: "no_header" }, 422);
   const { data: rows } = await supabase
@@ -165,11 +150,8 @@ Deno.serve(async (req) => {
   const bytes = await workbook.xlsx.writeBuffer();
   return new Response(new Uint8Array(bytes as ArrayBuffer), {
     headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="DPGF-${
-        slug(tender.name)
-      }.xlsx"`,
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="DPGF-${slug(tender.name)}.xlsx"`,
       "Cache-Control": "private, no-store",
     },
   });

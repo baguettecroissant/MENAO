@@ -48,9 +48,7 @@ export function grid(sheet: ExcelJS.Worksheet): DpgfCell[][] {
 export function bestSheet(
   workbook: ExcelJS.Workbook,
 ): { sheet: ExcelJS.Worksheet; parsed: ParsedDpgf } | null {
-  let best:
-    | { sheet: ExcelJS.Worksheet; parsed: ParsedDpgf; posts: number }
-    | null = null;
+  let best: { sheet: ExcelJS.Worksheet; parsed: ParsedDpgf; posts: number } | null = null;
   for (const sheet of workbook.worksheets) {
     if (sheet.state !== "visible") continue;
     const parsed = parseDpgfGrid(grid(sheet));
@@ -61,9 +59,7 @@ export function bestSheet(
   return best;
 }
 
-export async function readWorkbook(
-  bytes: ArrayBuffer,
-): Promise<ExcelJS.Workbook | null> {
+export async function readWorkbook(bytes: ArrayBuffer): Promise<ExcelJS.Workbook | null> {
   try {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(bytes);
@@ -107,9 +103,7 @@ export function applyTenderPrices(
         line.code,
         line.designation,
         line.unit_label,
-        line.architect_quantity_milli === null
-          ? null
-          : line.architect_quantity_milli / 1000,
+        line.architect_quantity_milli === null ? null : line.architect_quantity_milli / 1000,
         quantity / 1000,
       ]);
     }
@@ -118,9 +112,7 @@ export function applyTenderPrices(
     if (columns.unitPrice !== null && columns.unitPrice !== undefined) {
       row.getCell(columns.unitPrice + 1).value = price / 100;
     }
-    if (
-      columns.total !== null && columns.total !== undefined && quantity !== null
-    ) {
+    if (columns.total !== null && columns.total !== undefined && quantity !== null) {
       const cell = row.getCell(columns.total + 1);
       // Une formule de l'architecte (quantité × prix) reste en place et se recalcule.
       if (!cell.formula) {
@@ -130,19 +122,11 @@ export function applyTenderPrices(
     row.commit();
   }
   if (gaps.length > 0) {
-    const name = workbook.getWorksheet("Écarts MENAO")
-      ? "Écarts MENAO (2)"
-      : "Écarts MENAO";
+    const name = workbook.getWorksheet("Écarts MENAO") ? "Écarts MENAO (2)" : "Écarts MENAO";
     const note = workbook.addWorksheet(name);
     note.addRow(["Quantités modifiées par l'entreprise par rapport au DPGF"]);
     note.addRow([]);
-    note.addRow([
-      "N°",
-      "Désignation",
-      "Unité",
-      "Quantité du DPGF",
-      "Quantité de l'entreprise",
-    ]);
+    note.addRow(["N°", "Désignation", "Unité", "Quantité du DPGF", "Quantité de l'entreprise"]);
     for (const gap of gaps) note.addRow(gap);
     note.getRow(1).font = { bold: true };
     note.getRow(3).font = { bold: true };

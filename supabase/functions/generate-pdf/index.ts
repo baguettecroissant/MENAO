@@ -23,10 +23,7 @@ import {
   type ReceptionDocument,
 } from "../../../packages/documents/src/reception-data.ts";
 import { renderReceptionPdf } from "../../../packages/documents/src/reception-pdf.ts";
-import {
-  tenderPdfData,
-  type TenderDocument,
-} from "../../../packages/documents/src/tender-data.ts";
+import { tenderPdfData, type TenderDocument } from "../../../packages/documents/src/tender-data.ts";
 import { renderTenderPdf } from "../../../packages/documents/src/tender-pdf.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
