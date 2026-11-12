@@ -29,7 +29,6 @@ import {
 const MAX_PER_HOUR = 60;
 /** Lectures de PDF par le modèle : plus coûteuses, limitées à part. */
 const MAX_PDF_PER_HOUR = 20;
-const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const MAX_BYTES = 15 * 1024 * 1024;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -199,7 +198,9 @@ Deno.serve(async (req) => {
   }
   return new Response(new Uint8Array(output), {
     headers: {
-      "Content-Type": XLSX_TYPE,
+      // Type binaire générique : supabase-js ne rend un Blob que pour octet-stream et PDF (sinon du
+      // texte, qui abîme le classeur) ; la route du site rétablit le type Excel.
+      "Content-Type": "application/octet-stream",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Cache-Control": "private, no-store",
     },
