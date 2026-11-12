@@ -1,4 +1,10 @@
-import { formatQuantity, lineTtcCents } from "@menao/core";
+import {
+  formatQuantity,
+  formatRateBp,
+  lineTotalHtCents,
+  lineTtcCents,
+  markupRateBp,
+} from "@menao/core";
 import type { QuoteLineInput } from "@menao/validation";
 import { Pencil, Trash2 } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -28,6 +34,7 @@ export function LineCard({
   line,
   generated = false,
   assujettiTva,
+  costCents,
   onEdit,
   onDelete,
 }: {
@@ -35,9 +42,15 @@ export function LineCard({
   /** Proposée par la dictée, à vérifier. */
   generated?: boolean;
   assujettiTva: boolean;
+  /** Coût de la ligne (privé, ADR 0294) ; undefined : marge masquée, null : coût inconnu. */
+  costCents?: number | null;
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const rate =
+    costCents == null
+      ? null
+      : markupRateBp(lineTotalHtCents(line.quantityMilli, line.unitPriceHtCents), costCents);
   const amount = t.lineAmount(
     `${formatQuantity(line.quantityMilli)} ${t.unitsShort[line.unit]}`,
     formatCents(line.unitPriceHtCents),
@@ -48,6 +61,18 @@ export function LineCard({
         <View style={styles.tags}>
           <FicheTag text={t.types[line.type]} tone={TYPE_TONE[line.type]} />
           {generated ? <FicheTag text={t.toReview} tone="warning" dot /> : null}
+          {costCents !== undefined ? (
+            <FicheTag
+              text={
+                rate === null
+                  ? t.library.unknownCost
+                  : rate < 0
+                    ? t.library.loss
+                    : t.library.lineMargin(formatRateBp(rate))
+              }
+              tone={rate === null ? "neutral" : rate < 0 ? "danger" : "success"}
+            />
+          ) : null}
         </View>
         <Text style={styles.designation}>{line.designation}</Text>
         {line.description ? <Text style={styles.description}>{line.description}</Text> : null}

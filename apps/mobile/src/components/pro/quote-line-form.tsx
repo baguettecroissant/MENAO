@@ -1,5 +1,7 @@
 import {
   DEFAULT_UNIT,
+  formatRateBp,
+  type LibraryQuoteLine,
   QUOTE_LINE_TYPES,
   QUOTE_UNITS,
   formatQuantity,
@@ -11,12 +13,13 @@ import {
   type QuoteUnit,
 } from "@menao/core";
 import { quoteLineFormSchema, type QuoteLineInput } from "@menao/validation";
-import { Search, X } from "lucide-react-native";
+import { BookOpen, Search, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Segmented } from "@/components/segmented";
 import { fr } from "@/i18n/fr";
 import { formatCents } from "@/lib/format";
+import { type AppWork, type LineCost, searchLibrary } from "@/lib/library";
 import { searchPreviousLines } from "@/lib/pro-quotes";
 import { Button, Chip, TextField } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -35,21 +38,31 @@ const priceInput = (cents: number) =>
 export function LineForm({
   title,
   initial,
+  initialCost = null,
   rates,
   defaultVat,
+  library = false,
   startSearching = false,
   onSubmit,
+  onSubmitMany,
   onCancel,
 }: {
   title: string;
   initial: QuoteLineInput | null;
+  /** Coût privé de la ligne modifiée (bibliothèque d'ouvrages, ADR 0294). */
+  initialCost?: LineCost | null;
   rates: readonly number[];
   defaultVat: number;
+  /** Ouvrages de la bibliothèque proposés d'abord dans la recherche. */
+  library?: boolean;
   /** « Mes articles » : la recherche des articles déjà utilisés est ouverte d'emblée. */
   startSearching?: boolean;
-  onSubmit: (line: QuoteLineInput) => void;
+  onSubmit: (line: QuoteLineInput, cost?: LineCost) => void;
+  /** Ouvrage détaillé : ses lignes (fournitures, main d'œuvre) ajoutées d'un coup. */
+  onSubmitMany?: (lines: LibraryQuoteLine[]) => void;
   onCancel: () => void;
 }) {
+  const [cost, setCost] = useState<LineCost | null>(initialCost);
   const [type, setType] = useState<QuoteLineType>(initial?.type ?? "materiel");
   const [designation, setDesignation] = useState(initial?.designation ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -85,7 +98,26 @@ export function LineForm({
     setType(next);
   }
 
+  /** Ouvrage de la bibliothèque : la ligne arrive avec son coût privé. */
+  function pickWork(work: AppWork) {
+    if (work.lines.length > 1 && onSubmitMany) {
+      onSubmitMany(work.lines);
+      return;
+    }
+    const line = work.lines[0];
+    if (!line) return;
+    setType(line.type);
+    setDesignation(line.designation);
+    setDescription(line.description);
+    if ((QUOTE_UNITS as readonly string[]).includes(line.unit)) setUnit(line.unit as QuoteUnit);
+    setPrice(priceInput(line.unitPriceHtCents));
+    if (rates.includes(line.vatRateBp)) setVat(line.vatRateBp);
+    setCost({ unitCostCents: line.unitCostCents, workId: line.workId });
+    setSearching(false);
+  }
+
   function pick(line: QuoteLineInput) {
+    setCost({ unitCostCents: null, workId: null });
     setType(line.type);
     setDesignation(line.designation);
     setDescription(line.description);
@@ -109,7 +141,7 @@ export function LineForm({
       setErrors(Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0]), i.message])));
       return;
     }
-    onSubmit(parsed.data);
+    onSubmit(parsed.data, cost ?? undefined);
   }
 
   return (
@@ -143,7 +175,14 @@ export function LineForm({
           <Search size={14} color={colors["muted-foreground"]} />
         )}
       </Pressable>
-      {searching ? <ArticleSearch initialQuery={designation} onPick={pick} /> : null}
+      {searching ? (
+        <ArticleSearch
+          initialQuery={designation}
+          library={library}
+          onPick={pick}
+          onPickWork={pickWork}
+        />
+      ) : null}
       <TextField
         label={t.description}
         value={description}
@@ -209,13 +248,18 @@ export function LineForm({
 /** « Rechercher l'article » : lignes déjà utilisées dans les devis de l'artisan. */
 function ArticleSearch({
   initialQuery,
+  library,
   onPick,
+  onPickWork,
 }: {
   initialQuery: string;
+  library: boolean;
   onPick: (line: QuoteLineInput) => void;
+  onPickWork: (work: AppWork) => void;
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<QuoteLineInput[] | null>(null);
+  const [works, setWorks] = useState<AppWork[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,17 +267,47 @@ function ArticleSearch({
       searchPreviousLines(query).then((found) => {
         if (!cancelled) setResults(found);
       });
+      if (library) {
+        searchLibrary(query).then((found) => {
+          if (!cancelled) setWorks(found);
+        });
+      }
     }, 250);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query]);
+  }, [query, library]);
 
   return (
     <View style={styles.search}>
       <TextField label={t.searchLabel} value={query} onChangeText={setQuery} />
-      {results?.length === 0 ? <Text style={styles.small}>{t.noResult}</Text> : null}
+      {works.length > 0 ? <Text style={styles.heading}>{t.library.heading}</Text> : null}
+      {works.map((work) => (
+        <Pressable
+          key={work.id}
+          role="button"
+          onPress={() => onPickWork(work)}
+          style={({ pressed }) => [styles.result, pressed && styles.resultPressed]}
+        >
+          <BookOpen size={16} color={colors["primary-strong"]} />
+          <Text style={styles.resultText} numberOfLines={1}>
+            {work.lines.length > 1
+              ? `${work.designation} · ${t.library.detailed}`
+              : work.designation}
+          </Text>
+          <Text style={styles.small}>
+            {work.pricing.priceCents === null ? "" : `${formatCents(work.pricing.priceCents)} HT`}
+            {work.pricing.markupBp === null ? "" : ` · ${formatRateBp(work.pricing.markupBp)}`}
+          </Text>
+        </Pressable>
+      ))}
+      {works.length > 0 && results && results.length > 0 ? (
+        <Text style={styles.heading}>{t.library.previous}</Text>
+      ) : null}
+      {results?.length === 0 && works.length === 0 ? (
+        <Text style={styles.small}>{t.noResult}</Text>
+      ) : null}
       {(results ?? []).map((line) => (
         <Pressable
           key={`${line.designation}-${line.unitPriceHtCents}`}
@@ -265,6 +339,13 @@ const styles = StyleSheet.create({
   text: { fontFamily: font.regular, fontSize: 14, color: colors.foreground },
   strong: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   small: { fontFamily: font.regular, fontSize: 12, color: colors["muted-foreground"] },
+  heading: {
+    fontFamily: font.medium,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: colors["muted-foreground"],
+  },
   searchToggle: {
     flexDirection: "row",
     alignItems: "center",

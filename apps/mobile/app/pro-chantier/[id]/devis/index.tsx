@@ -1,7 +1,14 @@
 import {
   allowedVatRates,
+  belowMarginAlert,
+  formatRateBp,
+  type LibraryQuoteLine,
+  lineCostCents,
+  lineTotalHtCents,
   paymentSchedule,
+  quoteMargin,
   quoteTotals,
+  type QuoteUnit,
   type VoiceLine,
   isExampleId,
 } from "@menao/core";
@@ -36,6 +43,7 @@ import { LineCard } from "@/components/pro/quote-line-card";
 import { LineForm } from "@/components/pro/quote-line-form";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDayAndTime } from "@/lib/format";
+import type { LineCost } from "@/lib/library";
 import {
   loadQuoteDraft,
   saveQuoteDraft,
@@ -52,11 +60,24 @@ const t = fr.proQuote;
 const { colors, font, radius, spacing } = theme;
 const vatLabel = (bp: number) => `${(bp / 100).toLocaleString("fr-FR")} %`;
 
-/** `generated` : ligne proposée par la dictée, à vérifier (non enregistrée). */
-type Line = QuoteLineInput & { key: string; generated?: boolean };
+/**
+ * `generated` : ligne proposée par la dictée, à vérifier (non enregistrée). `unitCostCents` et
+ * `workId` : coût privé de la ligne (bibliothèque d'ouvrages, ADR 0294), jamais montré au client.
+ */
+type Line = QuoteLineInput & { key: string; generated?: boolean } & Partial<LineCost>;
 
 const newKey = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-const withoutKey = ({ key: _key, generated: _generated, ...line }: Line): QuoteLineInput => line;
+const withoutKey = ({
+  key: _key,
+  generated: _generated,
+  unitCostCents: _cost,
+  workId: _work,
+  ...line
+}: Line): QuoteLineInput => line;
+const lineCost = (l: Line): LineCost => ({
+  unitCostCents: l.unitCostCents ?? null,
+  workId: l.workId ?? null,
+});
 
 /** Création ou modification du devis (F-19), une fois le brouillon chargé. */
 function QuoteEditorScreen() {
@@ -82,9 +103,14 @@ function QuoteEditorScreen() {
  */
 function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDraft }) {
   const [lines, setLines] = useState<Line[]>(() =>
-    draft.lines.map((line) => ({ ...line, key: newKey() })),
+    draft.lines.map((line, i) => ({ ...line, ...(draft.costs?.[i] ?? {}), key: newKey() })),
   );
-  const [snapshot, setSnapshot] = useState(() => JSON.stringify(draft.lines));
+  const [snapshot, setSnapshot] = useState(() =>
+    JSON.stringify([
+      draft.lines,
+      draft.lines.map((_, i) => draft.costs?.[i] ?? { unitCostCents: null, workId: null }),
+    ]),
+  );
   const [hasSaved, setHasSaved] = useState(draft.saved);
   // Ligne en cours de modification ; « new » : nouvelle ligne, ouverte depuis « Ajouter une
   // ligne » (sous les lignes) ou depuis « Mes articles » (sous les cartes, recherche ouverte).
@@ -103,7 +129,17 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   const [pendingDraft, setPendingDraft] = useState(draft.voiceDraft);
 
   const plain = lines.map(withoutKey);
-  const dirty = JSON.stringify(plain) !== snapshot;
+  const costs = lines.map(lineCost);
+  const dirty = JSON.stringify([plain, costs]) !== snapshot;
+  // Marge (ADR 0294) : sur les lignes dont le coût est connu ; écran réservé au droit « money ».
+  const margin = quoteMargin(
+    lines.map((l) => ({
+      totalHtCents: lineTotalHtCents(l.quantityMilli, l.unitPriceHtCents),
+      costCents: lineCostCents(l.unitCostCents ?? null, l.quantityMilli),
+    })),
+  );
+  const alertBp = draft.marginAlertBp ?? null;
+  const lowMargin = belowMarginAlert(margin.markupBp, alertBp);
   const totals = quoteTotals(plain);
   const rates = allowedVatRates(draft.assujettiTva);
   // Taux proposé : celui de la dernière ligne, sinon le taux normal (ou 0 % en franchise).
@@ -136,12 +172,13 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
 
   async function persist(): Promise<boolean> {
     const toSave = plain;
-    const failed = await saveQuoteDraft(chantierId, toSave);
+    const toSaveCosts = costs;
+    const failed = await saveQuoteDraft(chantierId, toSave, toSaveCosts);
     if (failed) {
       setError(failed);
       return false;
     }
-    setSnapshot(JSON.stringify(toSave));
+    setSnapshot(JSON.stringify([toSave, toSaveCosts]));
     setHasSaved(true);
     if (voiceUsed.current) {
       voiceUsed.current = false;
@@ -166,12 +203,32 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
     if (ok) router.push(`/pro-chantier/${chantierId}/devis/apercu`);
   }
 
-  function upsert(key: string | null, line: QuoteLineInput) {
+  function upsert(key: string | null, line: QuoteLineInput, cost?: LineCost) {
     setLines((current) =>
       key === null
-        ? [...current, { ...line, key: newKey() }]
-        : current.map((l) => (l.key === key ? { ...line, key } : l)),
+        ? [...current, { ...line, ...cost, key: newKey() }]
+        : current.map((l) => (l.key === key ? { ...line, ...(cost ?? lineCost(l)), key } : l)),
     );
+    setEditing(null);
+  }
+
+  /** Ouvrage « détaillé » de la bibliothèque : ses lignes ajoutées d'un coup (ADR 0294). */
+  function addMany(added: LibraryQuoteLine[]) {
+    setLines((current) => [
+      ...current,
+      ...added.map((l) => ({
+        type: l.type,
+        designation: l.designation,
+        description: l.description,
+        quantityMilli: 1000,
+        unit: l.unit as QuoteUnit,
+        unitPriceHtCents: l.unitPriceHtCents,
+        vatRateBp: rates.includes(l.vatRateBp) ? l.vatRateBp : defaultVat,
+        unitCostCents: l.unitCostCents,
+        workId: l.workId,
+        key: newKey(),
+      })),
+    ]);
     setEditing(null);
   }
 
@@ -216,8 +273,10 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
       initial={null}
       rates={rates}
       defaultVat={defaultVat}
+      library={!example}
       startSearching={fromArticles}
-      onSubmit={(next) => upsert(null, next)}
+      onSubmit={(next, cost) => upsert(null, next, cost)}
+      onSubmitMany={addMany}
       onCancel={() => setEditing(null)}
     />
   );
@@ -351,9 +410,12 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
                   <LineForm
                     title={t.editLine}
                     initial={line}
+                    initialCost={lineCost(line)}
                     rates={rates}
                     defaultVat={defaultVat}
-                    onSubmit={(next) => upsert(line.key, next)}
+                    library={!example}
+                    onSubmit={(next, cost) => upsert(line.key, next, cost)}
+                    onSubmitMany={addMany}
                     onCancel={() => setEditing(null)}
                   />
                 </View>
@@ -362,6 +424,11 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
                   line={line}
                   generated={line.generated}
                   assujettiTva={draft.assujettiTva}
+                  costCents={
+                    example
+                      ? undefined
+                      : lineCostCents(line.unitCostCents ?? null, line.quantityMilli)
+                  }
                   onEdit={() => setEditing(line.key)}
                   onDelete={() => setLines((current) => current.filter((l) => l.key !== line.key))}
                 />
@@ -408,6 +475,41 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
           ) : null}
         </FicheCard>
       ) : null}
+      {lines.length > 0 && !example ? (
+        // « Votre marge » (ADR 0294) : pour l'artisan seul, sur les lignes au coût connu.
+        <FicheCard padding={4.5} gap={1.5}>
+          <View style={styles.marginHead}>
+            <Text style={styles.eyebrow}>{t.library.marginTitle}</Text>
+            <Text style={styles.small}>{t.library.private}</Text>
+          </View>
+          {margin.marginCents === null || margin.markupBp === null ? (
+            <Text style={styles.small}>{t.library.none}</Text>
+          ) : (
+            <>
+              <View style={styles.marginValue}>
+                <Text style={styles.marginAmount}>{formatCents(margin.marginCents)}</Text>
+                <Text
+                  style={[
+                    styles.marginRate,
+                    (margin.markupBp < 0 || lowMargin) && styles.marginRateLow,
+                  ]}
+                >
+                  {formatRateBp(margin.markupBp)}
+                </Text>
+              </View>
+              <Text style={styles.small}>
+                {t.library.counted(margin.counted, margin.lines)}
+                {alertBp !== null ? ` ${t.library.threshold(formatRateBp(alertBp))}` : ""}
+              </Text>
+              {lowMargin && alertBp !== null ? (
+                <Notice tone="info">
+                  {t.library.below(formatRateBp(margin.markupBp), formatRateBp(alertBp))}
+                </Notice>
+              ) : null}
+            </>
+          )}
+        </FicheCard>
+      ) : null}
 
       {/* Maquette « Dictez votre devis » : feuille au-dessus de l'éditeur. */}
       <BottomSheet
@@ -423,6 +525,16 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
 }
 
 const styles = StyleSheet.create({
+  marginHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  marginValue: { flexDirection: "row", alignItems: "baseline", gap: spacing(2) },
+  marginAmount: {
+    fontFamily: font.display,
+    fontSize: 22,
+    color: colors.foreground,
+    fontVariant: ["tabular-nums"],
+  },
+  marginRate: { fontFamily: font.semibold, fontSize: 15, color: colors.success },
+  marginRateLow: { color: colors.danger },
   save: { flexDirection: "row", alignItems: "center", gap: spacing(1.5) },
   saveText: { fontFamily: font.semibold, fontSize: 13, color: colors["primary-strong"] },
   footer: { flexDirection: "row", alignItems: "center", gap: spacing(3.5) },

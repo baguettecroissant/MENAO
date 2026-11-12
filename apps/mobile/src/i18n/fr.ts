@@ -741,6 +741,8 @@ export const fr = {
     money: "Argent",
     invoices: "Factures",
     expenses: "Dépenses",
+    // Bibliothèque d'ouvrages et marge (F-141, ADR 0293).
+    library: "Bibliothèque",
     // Suivi de l'argent, agent comptable avancé (ADR 0237).
     overview: "Suivi",
   },
@@ -2423,6 +2425,25 @@ export const fr = {
   },
   /** Préparation et envoi du devis par l'artisan (F-19 à F-21) : mêmes textes que le site. */
   proQuote: {
+    // Bibliothèque d'ouvrages et marge dans le devis (ADR 0294) : pour l'artisan seul.
+    library: {
+      heading: "Votre bibliothèque",
+      previous: "Vos anciens devis",
+      detailed: "détaillé",
+      suppliesSuffix: "(fournitures)",
+      laborSuffix: "(main d'œuvre)",
+      marginTitle: "Votre marge",
+      private: "Vous seul",
+      counted: (counted: number, total: number) =>
+        `Calculée sur ${counted} ligne${counted > 1 ? "s" : ""} sur ${total}.`,
+      none: "Ajoutez des ouvrages de votre bibliothèque pour voir votre marge.",
+      unknownCost: "Coût inconnu",
+      loss: "Vendu à perte",
+      lineMargin: (rate: string) => `Marge ${rate}`,
+      threshold: (rate: string) => `Votre seuil : ${rate}.`,
+      below: (rate: string, threshold: string) =>
+        `Ce devis vous laisse ${rate} de marge, sous votre seuil de ${threshold}. L'envoi reste possible : vous décidez.`,
+    },
     title: "Envoyer un devis",
     create: "Créer un devis",
     resume: "Reprendre le devis",
@@ -3080,6 +3101,22 @@ export const fr = {
     settingsTitle: "Réglages",
   },
   // Dépenses de l'artisan (F-62, ADR 0186), comme sur le site.
+  // Bibliothèque d'ouvrages dans l'onglet Argent (F-141, ADR 0293, 0294).
+  proLibrary: {
+    seeded: (n: number) =>
+      `Votre bibliothèque est déjà remplie : ${n} ouvrage${n > 1 ? "s" : ""} repris de vos devis. Ajoutez vos coûts sur ordinateur pour voir votre marge.`,
+    search: "Rechercher un ouvrage",
+    empty: "Aucun ouvrage pour l'instant. Ils arrivent avec vos devis.",
+    noResult: "Aucun ouvrage ne correspond.",
+    costMissing: "Coût à ajouter",
+    noPrice: "Sans prix",
+    composed: "composé",
+    fromQuotes: "repris de vos devis",
+    manual: "saisi",
+    editOnComputer:
+      "Les ouvrages, fournitures et réglages de chiffrage se modifient sur ordinateur, dans Argent › Bibliothèque.",
+    failed: "La bibliothèque n'a pas pu être chargée. Réessayez.",
+  },
   proExpenses: {
     title: "Dépenses",
     export: "Exporter (CSV)",

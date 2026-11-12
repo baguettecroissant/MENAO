@@ -2,6 +2,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ArtisanExpensesScreen } from "@/components/pro/expenses-screen";
 import { ArtisanInvoicesScreen } from "@/components/pro/invoices-screen";
+import { LibraryScreen } from "@/components/pro/library-screen";
 import { MONEY_VIEWS, MoneySwitcher, type MoneyView } from "@/components/pro/money-switcher";
 import { MoneyOverviewScreen } from "@/components/pro/money-overview-screen";
 import { ArtisanQuotesScreen } from "@/components/pro/quotes-screen";
@@ -14,7 +15,7 @@ const asView = (value: string | undefined): MoneyView =>
 
 /**
  * Onglet « Argent » de l'artisan (ADR 0188), comme la rubrique du site : devis, factures et
- * dépenses, d'une puce, et « Suivi » si la formule comprend l'agent comptable avancé (ADR 0237).
+ * dépenses et bibliothèque d'ouvrages (ADR 0293), d'une puce, et « Suivi » si la formule comprend l'agent comptable avancé (ADR 0237).
  * `?vue=factures`, `?vue=depenses` ou `?vue=suivi` ouvre directement la liste voulue.
  */
 function MoneyTab() {
@@ -37,6 +38,7 @@ function MoneyTab() {
   }
   if (shown === "factures") return <ArtisanInvoicesScreen switcher={switcher} />;
   if (shown === "depenses") return <ArtisanExpensesScreen switcher={switcher} />;
+  if (shown === "bibliotheque") return <LibraryScreen switcher={switcher} />;
   return <ArtisanQuotesScreen switcher={switcher} />;
 }
 
