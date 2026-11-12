@@ -4,6 +4,7 @@ import { Alert, Card, Tag } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { deleteCertification, refreshRge } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { planUsage } from "@/lib/artisan/plan-limits";
 import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
 import { CertificationForm } from "./certification-form";
 import { TradesForm } from "./trades-form";
@@ -26,7 +27,7 @@ export default async function TradesStepPage({
     : null;
   const { supabase, artisan, tradeCodes, workTypeCodes, certifications } =
     await getOnboardingContext();
-  const [{ data: trades }, { data: workTypes }, { data: rgeRows }] = await Promise.all([
+  const [{ data: trades }, { data: workTypes }, { data: rgeRows }, usage] = await Promise.all([
     supabase.from("trades").select("code, label").eq("active", true).order("sort_order"),
     supabase
       .from("work_types")
@@ -38,6 +39,8 @@ export default async function TradesStepPage({
       .from("artisan_rge_qualifications")
       .select("domaine, date_fin")
       .eq("artisan_id", artisan.id),
+    // Limite de métiers de la formule (ADR 0290).
+    planUsage(supabase),
   ]);
   const rgeDomains = validRgeDomains(
     (rgeRows ?? []).map((r) => ({ domain: r.domaine, endsOn: r.date_fin })),
@@ -57,6 +60,7 @@ export default async function TradesStepPage({
           experienceYears={artisan.experience_years}
           diploma={artisan.diplome_metier}
           budgetMinimum={artisan.budget_minimum}
+          maxTrades={usage.trades.limit}
         />
       </Card>
 

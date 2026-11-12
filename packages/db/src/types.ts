@@ -6147,6 +6147,15 @@ export type Database = {
         }[];
       };
       admin_people_counts: { Args: { p_query?: string }; Returns: Json };
+      admin_plan_usage: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_id: string;
+          formule: string;
+          limite: number;
+          recues: number;
+        }[];
+      };
       admin_project_counts: { Args: { p_query?: string }; Returns: Json };
       admin_projects: {
         Args: { p_filter?: string; p_limit?: number; p_offset?: number; p_query?: string };
@@ -7065,6 +7074,7 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"];
         }[];
       };
+      my_plan_usage: { Args: Record<PropertyKey, never>; Returns: Json };
       my_public_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       my_referral: { Args: Record<PropertyKey, never>; Returns: Json };
       my_referrals: {

@@ -27,6 +27,11 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("button", { name: "Commencer" }).click();
 
   await page.getByRole("checkbox", { name: "Menuisier" }).check();
+  // Formule de Base (ADR 0290) : 2 métiers au plus, les autres se grisent.
+  await page.getByRole("checkbox", { name: "Plombier" }).check();
+  await expect(page.getByRole("checkbox", { name: "Peintre" })).toBeDisabled();
+  await expect(page.getByText(/^Jusqu'à 2 métiers avec la formule Base/)).toBeVisible();
+  await page.getByRole("checkbox", { name: "Plombier" }).uncheck();
   await page.getByRole("button", { name: "Continuer · 1 métier" }).click();
 
   await page.getByRole("searchbox", { name: "Nom de l'entreprise ou SIRET" }).fill("menuiserie");
@@ -95,6 +100,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("button", { name: "Ajouter la certification" }).click();
   await expect(page.getByText(/RGE · E-00000 · valable jusqu'au 30 juin/)).toBeVisible();
   await expect(page.getByLabel("Menuisier")).toBeChecked();
+  await expect(page.getByText(/^Votre formule permet 2 métiers/)).toBeVisible();
   await page.getByLabel("Fenêtres").check();
   await page.getByLabel("Années d'expérience").fill("8");
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();

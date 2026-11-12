@@ -36,7 +36,11 @@ export default async function AdminLeadTargetsPage({
   const month = parseLeadMonth(params.mois);
   const query = typeof params.q === "string" && params.q.trim() ? params.q.trim() : null;
   const { supabase } = await requireAdmin();
-  const data = await getLeadTargets(supabase, { month });
+  const [data, { data: usage }] = await Promise.all([
+    getLeadTargets(supabase, { month }),
+    // Demandes du mois face à la limite de la formule (ADR 0290), mois en cours seulement.
+    supabase.rpc("admin_plan_usage"),
+  ]);
 
   if (!data) {
     return (
@@ -50,6 +54,13 @@ export default async function AdminLeadTargetsPage({
   }
 
   const current = data.month === `${data.today.slice(0, 7)}-01`;
+  const planLimits = new Map(
+    current
+      ? (usage ?? [])
+          .filter((u) => u.limite !== null)
+          .map((u) => [u.artisan_id, { plan: u.formule, limit: u.limite, received: u.recues }])
+      : [],
+  );
   const followed = data.artisans.filter((a) => a.progress.status !== "hors_suivi");
   const byStatus = (status: string) => followed.filter((a) => a.progress.status === status).length;
   const twoMonths = data.artisans.filter((a) => a.alerts.includes("deux_mois")).length;
@@ -172,7 +183,7 @@ export default async function AdminLeadTargetsPage({
         {rows.length === 0 ? (
           <p className="text-muted-foreground">{t.empty}</p>
         ) : (
-          <LeadTable rows={rows} />
+          <LeadTable rows={rows} planLimits={planLimits} />
         )}
       </Card>
 

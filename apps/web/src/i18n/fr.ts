@@ -5330,6 +5330,20 @@ export const fr = {
       },
     },
     // « Recommander un partenaire » (ADR 0174) : réseau de parrainage, le client décide.
+    // Limites des formules (F-139, ADR 0290) : prévenir sans bloquer.
+    planLimits: {
+      plans: { base: "Base", premium: "Premium", entreprise: "Entreprise" } as Record<
+        string,
+        string
+      >,
+      proche: (received: number, limit: number, plan: string, next: string) =>
+        `${received} demandes reçues sur ${limit} ce mois-ci avec la formule ${plan}. Passez à ${next} pour en recevoir davantage.`,
+      atteinte: (limit: number, plan: string, next: string) =>
+        `Vous avez reçu les ${limit} demandes du mois prévues par la formule ${plan}. Passez à ${next} pour en recevoir davantage.`,
+      depassee: (received: number, limit: number, plan: string, next: string) =>
+        `${received} demandes reçues ce mois-ci, au-delà des ${limit} prévues par la formule ${plan}. Passez à ${next} pour en recevoir davantage.`,
+      cta: "Voir les formules",
+    },
     // Appels d'offres et DPGF (F-136, ADR 0287) : formule Entreprise.
     tenders: {
       tabsLabel: "Sections des demandes",
@@ -6794,6 +6808,9 @@ export const fr = {
         search: "Rechercher un métier",
         none: (query: string) => `Aucun métier ne correspond à « ${query} ».`,
         continue: (count: number) => `Continuer · ${count} métier${count > 1 ? "s" : ""}`,
+        // Limite de la formule de Base (ADR 0290).
+        limit: (max: number) =>
+          `Jusqu'à ${max} métiers avec la formule Base. D'autres avec Premium, une fois inscrit.`,
       },
       company: {
         title: "Trouvons votre entreprise",
@@ -7128,6 +7145,10 @@ export const fr = {
       trades: {
         legend: "Vos métiers",
         hint: "Cochez vos métiers puis, si vous le souhaitez, vos spécialités.",
+        // Limite de la formule (ADR 0290).
+        limit: (max: number) =>
+          `Votre formule permet ${max} métier${max > 1 ? "s" : ""}. D'autres avec la formule Premium.`,
+        limitLink: "Voir les formules",
         specialties: "Spécialités",
         experience: "Années d'expérience",
         diploma: "Votre diplôme du métier (le plus élevé)",
@@ -7936,6 +7957,9 @@ export const fr = {
       },
     },
     // Objectif de demandes par artisan (F-131, ADR 0282).
+    // Demandes du mois face à la limite de la formule (F-139, ADR 0290).
+    planLimit: (plan: string, received: number, limit: number) =>
+      `Formule ${plan} : ${received} / ${limit} demandes`,
     leads: {
       title: "Objectifs de demandes",
       intro:

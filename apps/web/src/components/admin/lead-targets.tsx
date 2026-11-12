@@ -1,4 +1,4 @@
-import type { LeadAlert, LeadProgress, LeadStatus } from "@menao/core";
+import { type LeadAlert, type LeadProgress, type LeadStatus, requestLimitLevel } from "@menao/core";
 import type { Route } from "next";
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui";
@@ -116,7 +116,32 @@ function causeText(a: LeadArtisan): string | null {
 }
 
 /** Tableau des artisans : avancement du mois, situation, cause probable, 6 derniers mois. */
-export function LeadTable({ rows }: { rows: readonly LeadArtisan[] }) {
+export type PlanLimitRow = { plan: string | null; limit: number; received: number };
+
+/** Artisans au-delà (ou près) de la limite de demandes de leur formule (ADR 0290), mois en cours. */
+export function PlanLimitBadge({ usage }: { usage: PlanLimitRow | undefined }) {
+  if (!usage) return null;
+  const level = requestLimitLevel({ received: usage.received, limit: usage.limit });
+  if (level === "ok") return null;
+  return (
+    <StatusBadge tone={level === "proche" ? "primary" : "warning"}>
+      {fr.admin.planLimit(
+        fr.pro.planLimits.plans[usage.plan ?? "base"] ?? "",
+        usage.received,
+        usage.limit,
+      )}
+    </StatusBadge>
+  );
+}
+
+export function LeadTable({
+  rows,
+  planLimits,
+}: {
+  rows: readonly LeadArtisan[];
+  /** Mois en cours seulement : demandes face à la limite de la formule (ADR 0290). */
+  planLimits?: ReadonlyMap<string, PlanLimitRow>;
+}) {
   return (
     <div className="overflow-x-auto">
       <table className="admin-table w-full min-w-[56rem] text-left text-sm">
@@ -164,6 +189,7 @@ export function LeadTable({ rows }: { rows: readonly LeadArtisan[] }) {
                 <div className="flex flex-col items-start gap-1.5">
                   <LeadStatusBadge status={a.progress.status} />
                   <LeadAlertBadges alerts={a.alerts} />
+                  <PlanLimitBadge usage={planLimits?.get(a.id)} />
                 </div>
               </td>
               <td className="max-w-[18rem] py-3 pr-4 text-xs leading-relaxed text-label">

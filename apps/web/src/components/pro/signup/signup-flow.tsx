@@ -33,8 +33,11 @@ export function ArtisanSignupFlow({
   trades,
   providers,
   oauth,
+  maxTrades = null,
 }: {
   trades: SignupTrade[];
+  /** Métiers au plus avec la formule de Base (ADR 0290), lu dans plans.limites. */
+  maxTrades?: number | null;
   providers: readonly OAuthProvider[];
   oauth?: OAuthIdentity;
 }) {
@@ -149,6 +152,7 @@ export function ArtisanSignupFlow({
                   selected={draft.tradeCodes}
                   onChange={(tradeCodes) => update({ tradeCodes })}
                   onNext={goNext}
+                  maxTrades={maxTrades}
                 />
               )}
               {screen === "entreprise" && (
