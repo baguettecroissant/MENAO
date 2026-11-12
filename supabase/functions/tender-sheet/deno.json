@@ -1,7 +1,9 @@
 {
   "nodeModulesDir": "none",
   "imports": {
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@0.128.0",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.117.3",
-    "exceljs": "npm:exceljs@4.4.0"
+    "exceljs": "npm:exceljs@4.4.0",
+    "zod": "npm:zod@4.6.5"
   }
 }

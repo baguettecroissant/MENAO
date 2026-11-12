@@ -5326,7 +5326,7 @@ export const fr = {
         cta: "Voir les formules",
       },
       newTitle: "Nouvel appel d'offres",
-      newLead: "Déposez le DPGF vierge de l'architecte, au format Excel (.xlsx).",
+      newLead: "Déposez le DPGF vierge de l'architecte, en Excel (.xlsx) ou en PDF.",
       fields: {
         name: "Nom du projet",
         namePlaceholder: "Maison individuelle — Mougins",
@@ -5335,13 +5335,14 @@ export const fr = {
         due: "Date de remise des offres",
         dueNote: "(facultative)",
         file: "DPGF de l'architecte",
-        fileHint: "Fichier Excel (.xlsx), 15 Mo au plus. Le PDF arrive bientôt.",
+        fileHint:
+          "Excel (.xlsx) de préférence : MENAO le remplit tel quel. Un PDF est lu par l'IA, à vérifier ligne à ligne. 15 Mo au plus.",
       },
       submit: "Lire le DPGF",
       reading: "Lecture du DPGF…",
       errors: {
         name: "Indiquez le nom du projet.",
-        file: "Choisissez le fichier Excel (.xlsx) de l'architecte.",
+        file: "Choisissez le DPGF de l'architecte, en Excel (.xlsx) ou en PDF.",
         tooLarge: "Le fichier dépasse 15 Mo.",
         upload: "Le fichier n'a pas pu être envoyé. Réessayez.",
         forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
@@ -5353,8 +5354,14 @@ export const fr = {
         no_header:
           "MENAO n'a pas trouvé le tableau du DPGF (colonnes « Désignation », « Unité », « Quantité », « Prix »). Vérifiez le fichier.",
         unreadable:
-          "Ce fichier Excel n'a pas pu être lu. Enregistrez-le au format .xlsx et réessayez.",
-        no_sheet: "Ce fichier n'est pas un classeur Excel.",
+          "Ce fichier n'a pas pu être lu (Excel abîmé, ou PDF trop flou). Déposez une version plus nette, au format .xlsx de préférence.",
+        no_sheet: "Ce fichier n'est ni un classeur Excel ni un PDF.",
+        not_dpgf:
+          "Ce PDF ne ressemble pas à un DPGF (tableau de lots et d'ouvrages à chiffrer). Vérifiez le document.",
+        too_long:
+          "Ce DPGF est trop long pour être lu en PDF. Demandez la version Excel à l'architecte et déposez-la.",
+        unavailable:
+          "La lecture du PDF est momentanément indisponible. Réessayez dans quelques minutes.",
         rate_limited: "Trop de lectures en peu de temps. Réessayez dans une heure.",
         forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
         error: "Le DPGF n'a pas pu être lu. Réessayez.",
@@ -5365,6 +5372,7 @@ export const fr = {
         sans_quantites:
           "Le DPGF ne donne pas de quantités : indiquez les vôtres pour chaque poste.",
         tronque: "Le DPGF dépasse 1 000 lignes : seules les 1 000 premières sont reprises.",
+        pdf: "DPGF lu dans un PDF par l'IA : vérifiez chaque poste, son unité et sa quantité, avant de chiffrer.",
       } as Record<string, string>,
       listLabel: "Vos appels d'offres",
       empty: "Aucun appel d'offres pour l'instant.",
@@ -5417,6 +5425,9 @@ export const fr = {
       unsaved: "Modifications non enregistrées",
       exportTitle: "Rendre le DPGF",
       exportExcel: "Excel au format de l'architecte",
+      exportExcelMenao: "Excel du DPGF chiffré",
+      exportExcelMenaoHint:
+        "Un classeur avec les postes du PDF, les quantités du DPGF et les vôtres, vos prix et les totaux.",
       exportExcelHint:
         "Son fichier, avec vos quantités et vos prix ; ses formules et sa mise en page sont gardées. Une feuille « Écarts MENAO » liste les quantités changées.",
       exportPdf: "PDF à joindre à l'offre",

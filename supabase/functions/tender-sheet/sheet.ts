@@ -135,3 +135,67 @@ export function applyTenderPrices(
   workbook.calcProperties.fullCalcOnLoad = true;
   return gaps.length;
 }
+
+/**
+ * DPGF venu d'un PDF (ADR 0288) : classeur MENAO au même contenu, avec la quantité du DPGF, celle
+ * de l'entreprise, le prix unitaire et un total calculé par formule.
+ */
+export function buildTenderWorkbook(
+  name: string,
+  rows: readonly (TenderSheetLine & { kind: string })[],
+): ExcelJS.Workbook {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "MENAO";
+  const sheet = workbook.addWorksheet("DPGF");
+  sheet.addRow([`DPGF — ${name}`]).font = { bold: true, size: 14 };
+  sheet.addRow([]);
+  const head = sheet.addRow([
+    "N°",
+    "Désignation",
+    "Unité",
+    "Quantité du DPGF",
+    "Quantité de l'entreprise",
+    "Prix unitaire HT",
+    "Total HT",
+  ]);
+  head.font = { bold: true };
+  const money = '#,##0.00 "€"';
+  const first = sheet.rowCount + 1;
+  for (const line of rows) {
+    if (line.kind === "titre") {
+      const row = sheet.addRow([line.code, line.designation]);
+      row.font = { bold: true };
+      continue;
+    }
+    const quantity = line.quantity_milli === null ? null : line.quantity_milli / 1000;
+    const row = sheet.addRow([
+      line.code,
+      line.designation,
+      line.unit_label,
+      line.architect_quantity_milli === null ? null : line.architect_quantity_milli / 1000,
+      quantity,
+      line.unit_price_ht_cents === null ? null : line.unit_price_ht_cents / 100,
+    ]);
+    const r = row.number;
+    row.getCell(7).value = { formula: `IF(AND(ISNUMBER(E${r}),ISNUMBER(F${r})),E${r}*F${r},"")` };
+    row.getCell(6).numFmt = money;
+    row.getCell(7).numFmt = money;
+  }
+  const last = sheet.rowCount;
+  const total = sheet.addRow([
+    null,
+    "Total HT",
+    null,
+    null,
+    null,
+    null,
+    { formula: `SUM(G${first}:G${last})` },
+  ]);
+  total.font = { bold: true };
+  total.getCell(7).numFmt = money;
+  sheet.getColumn(1).width = 10;
+  sheet.getColumn(2).width = 60;
+  for (const c of [3, 4, 5, 6, 7]) sheet.getColumn(c).width = 16;
+  workbook.calcProperties.fullCalcOnLoad = true;
+  return workbook;
+}

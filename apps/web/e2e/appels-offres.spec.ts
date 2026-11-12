@@ -1,9 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { files } from "./fixtures";
 
 // Appels d'offres (F-136, ADR 0287) : la carreleuse du seed passe le temps du test en formule
 // Entreprise (clé serveur de l'instance locale de la CI), dépose un DPGF Excel fictif, le chiffre,
-// puis télécharge le fichier au format de l'architecte et le PDF.
+// puis télécharge le fichier au format de l'architecte et le PDF ; puis un DPGF en PDF (ADR 0288).
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const ARTISAN = "b0000000-0000-4000-8000-000000000017";
@@ -96,4 +97,19 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   await page.getByRole("button", { name: "Mettre à jour" }).click();
   await page.goto("/pro/demandes/appels-offres");
   await expect(page.getByRole("link", { name: /Maison fictive E2E.*Envoyé/ })).toBeVisible();
+
+  // DPGF en PDF (ADR 0288) : lu par l'IA (faux serveur en CI), à vérifier, rendu en classeur MENAO.
+  await page.getByLabel("Nom du projet").fill("Bureaux fictifs E2E");
+  await page.getByLabel("DPGF de l'architecte").setInputFiles({ ...files.pdf, name: "dpgf.pdf" });
+  await page.getByRole("button", { name: "Lire le DPGF" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+  await expect(page.getByText(/^DPGF lu : 3 postes/)).toBeVisible();
+  await expect(page.getByText(/^DPGF lu dans un PDF par l'IA/)).toBeVisible();
+  const [menaoSheet] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("link", { name: /Excel du DPGF chiffré/ }).click(),
+  ]);
+  expect(menaoSheet.suggestedFilename()).toBe("DPGF-Bureaux-fictifs-E2E.xlsx");
 });

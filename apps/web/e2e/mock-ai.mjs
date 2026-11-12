@@ -12,6 +12,7 @@
 // Photo → description (ADR 0180) : une phrase fixe.
 // Lecture d'un document (photo ou PDF, ADR 0176) : le document attendu, lisible, valable encore
 // dix ans (Kbis et URSSAF émis il y a dix jours).
+// DPGF en PDF (balise <dpgf>, ADR 0288) : un lot de carrelage, trois postes dont un sans quantité.
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.MOCK_AI_PORT ?? 18398);
@@ -158,6 +159,44 @@ function documentReading(content) {
   });
 }
 
+function dpgfReading() {
+  return JSON.stringify({
+    lisible: true,
+    est_un_dpgf: true,
+    lignes: [
+      {
+        type: "titre",
+        numero: "LOT 05",
+        designation: "CARRELAGE, FAÏENCE",
+        unite: null,
+        quantite: null,
+      },
+      {
+        type: "poste",
+        numero: "5.1",
+        designation: "Ragréage du sol, RDC",
+        unite: "m²",
+        quantite: 86,
+      },
+      {
+        type: "poste",
+        numero: "5.2",
+        designation: "Carrelage sol grès cérame 60 x 60, RDC",
+        unite: "m²",
+        quantite: 62,
+      },
+      {
+        type: "poste",
+        numero: "5.6",
+        designation: "Seuils et barres de transition",
+        unite: "U",
+        quantite: null,
+      },
+      { type: "titre", numero: null, designation: "TOTAL HT LOT 05", unite: null, quantite: null },
+    ],
+  });
+}
+
 function geocoding(url) {
   const q = url.searchParams.get("q") ?? "";
   const municipality = url.searchParams.get("type") === "municipality";
@@ -241,13 +280,15 @@ createServer(async (req, res) => {
           type: "text",
           text: text.includes("Photo envoyée par le particulier")
             ? photoDescription()
-            : document
-              ? documentReading(content)
-              : text.includes("<saisie>")
-                ? needSuggestion(text)
-                : text.includes("<dictee>")
-                  ? quoteLines()
-                  : analysis(text, body?.model ?? ""),
+            : text.includes("<dpgf>")
+              ? dpgfReading()
+              : document
+                ? documentReading(content)
+                : text.includes("<saisie>")
+                  ? needSuggestion(text)
+                  : text.includes("<dictee>")
+                    ? quoteLines()
+                    : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",
