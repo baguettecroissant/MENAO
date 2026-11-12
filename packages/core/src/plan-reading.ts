@@ -40,6 +40,12 @@ export type PlanCounts = Record<PlanCountKey, number | null>;
 export const MAX_PLAN_ROOMS = 200;
 export const MAX_PLAN_FILES = 10;
 
+/**
+ * Réponse du modèle. La sortie structurée limite le nombre de champs facultatifs (16 au plus) :
+ * l'échelle, les niveaux et les comptes absents sont des chaînes vides ou des éléments omis, et
+ * seules les mesures d'une pièce peuvent être null. Les anciennes formes (null, objet de comptes)
+ * restent acceptées.
+ */
 export type PlanReadingRaw = {
   lisible: boolean;
   est_un_plan: boolean;
@@ -59,7 +65,8 @@ export type PlanReadingRaw = {
     habitable: boolean;
     certitude: "sure" | "incertaine";
   }[];
-  comptes: Record<PlanCountKey, number | null>;
+  comptes:
+    Partial<Record<PlanCountKey, number | null>> | { element: PlanCountKey; nombre: number }[];
 };
 
 export type PlanReadingWarning =
@@ -82,14 +89,14 @@ export function planReadingJsonSchema(): Record<string, unknown> {
     properties: {
       lisible: { type: "boolean" },
       est_un_plan: { type: "boolean" },
-      echelle: nullable("string"),
+      echelle: { type: "string" },
       hauteurs: {
         type: "array",
         items: {
           type: "object",
           additionalProperties: false,
           required: ["niveau", "hauteur_m"],
-          properties: { niveau: nullable("string"), hauteur_m: nullable("number") },
+          properties: { niveau: { type: "string" }, hauteur_m: { type: "number" } },
         },
       },
       pieces: {
@@ -112,9 +119,9 @@ export function planReadingJsonSchema(): Record<string, unknown> {
             "certitude",
           ],
           properties: {
-            fichier: nullable("integer"),
-            page: nullable("integer"),
-            niveau: nullable("string"),
+            fichier: { type: "integer" },
+            page: { type: "integer" },
+            niveau: { type: "string" },
             nom: { type: "string" },
             surface_m2: nullable("number"),
             longueur_m: nullable("number"),
@@ -127,11 +134,18 @@ export function planReadingJsonSchema(): Record<string, unknown> {
           },
         },
       },
+      // Seuls les éléments comptés avec certitude : un élément absent reste « à compléter ».
       comptes: {
-        type: "object",
-        additionalProperties: false,
-        required: [...PLAN_COUNT_KEYS],
-        properties: Object.fromEntries(PLAN_COUNT_KEYS.map((k) => [k, nullable("integer")])),
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["element", "nombre"],
+          properties: {
+            element: { type: "string", enum: [...PLAN_COUNT_KEYS] },
+            nombre: { type: "integer" },
+          },
+        },
       },
     },
   };
@@ -216,7 +230,9 @@ export function normalizePlanReading(
     const height = inRange(p.hauteur_m, 1.5, 10);
     const level = text(p.niveau, 40) || null;
     const heightMm =
-      height !== null ? Math.round(height * 1000) : (heights.get(levelKey(level)) ?? onlyHeight);
+      height !== null
+        ? Math.round(height * 1000)
+        : (heights.get(levelKey(level)) ?? heights.get("") ?? onlyHeight);
     const file = intIn(p.fichier, 1, Math.max(1, fileCount));
     const fromPhoto = file !== null && photoFiles.includes(file);
     rooms.push({
@@ -237,7 +253,11 @@ export function normalizePlanReading(
   if (rooms.some((r) => r.source === "photo")) warnings.push("photo");
   return {
     rooms,
-    counts: normalizePlanCounts(raw.comptes),
+    counts: normalizePlanCounts(
+      Array.isArray(raw.comptes)
+        ? Object.fromEntries(raw.comptes.map((c) => [c.element, c.nombre]))
+        : raw.comptes,
+    ),
     scale: text(raw.echelle, 40) || null,
     warnings,
   };

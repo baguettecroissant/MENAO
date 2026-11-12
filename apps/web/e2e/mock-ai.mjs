@@ -181,7 +181,7 @@ function planReading() {
     lisible: true,
     est_un_plan: true,
     echelle: "1/50",
-    hauteurs: [{ niveau: null, hauteur_m: 2.5 }],
+    hauteurs: [{ niveau: "", hauteur_m: 2.5 }],
     pieces: [
       piece({}),
       piece({
@@ -201,16 +201,16 @@ function planReading() {
         certitude: "incertaine",
       }),
     ],
-    comptes: {
-      portes: 9,
-      fenetres: 11,
-      wc: 2,
-      lavabos: 3,
-      douches: 1,
-      baignoires: 1,
-      eviers: 1,
-      escaliers: 1,
-    },
+    comptes: [
+      { element: "portes", nombre: 9 },
+      { element: "fenetres", nombre: 11 },
+      { element: "wc", nombre: 2 },
+      { element: "lavabos", nombre: 3 },
+      { element: "douches", nombre: 1 },
+      { element: "baignoires", nombre: 1 },
+      { element: "eviers", nombre: 1 },
+      { element: "escaliers", nombre: 1 },
+    ],
   });
 }
 

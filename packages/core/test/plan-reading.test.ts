@@ -32,16 +32,16 @@ const raw = (over: Partial<PlanReadingRaw> = {}): PlanReadingRaw => ({
   echelle: "1/50",
   hauteurs: [{ niveau: "RDC", hauteur_m: 2.5 }],
   pieces: [room()],
-  comptes: {
-    portes: 9,
-    fenetres: 11,
-    wc: 2,
-    lavabos: 3,
-    douches: 1,
-    baignoires: 1,
-    eviers: 1,
-    escaliers: 1,
-  },
+  comptes: [
+    { element: "portes", nombre: 9 },
+    { element: "fenetres", nombre: 11 },
+    { element: "wc", nombre: 2 },
+    { element: "lavabos", nombre: 3 },
+    { element: "douches", nombre: 1 },
+    { element: "baignoires", nombre: 1 },
+    { element: "eviers", nombre: 1 },
+    { element: "escaliers", nombre: 1 },
+  ],
   ...over,
 });
 
@@ -218,11 +218,19 @@ describe("planReadingFigures", () => {
   });
 });
 
+/** Champs facultatifs (type en liste ou anyOf) d'un schéma JSON, à toute profondeur. */
+function unionFields(schema: unknown): number {
+  if (!schema || typeof schema !== "object") return 0;
+  const node = schema as Record<string, unknown>;
+  const own = Array.isArray(node.type) || Array.isArray(node.anyOf) ? 1 : 0;
+  return own + Object.values(node).reduce<number>((n, v) => n + unionFields(v), 0);
+}
+
 describe("planReadingJsonSchema", () => {
-  it("demande chaque champ et chaque élément compté", () => {
+  it("demande chaque champ ; les éléments comptés sont ceux de la liste", () => {
     const schema = planReadingJsonSchema() as {
       required: string[];
-      properties: { comptes: { required: string[] } };
+      properties: { comptes: { items: { properties: { element: { enum: string[] } } } } };
     };
     expect(schema.required).toEqual([
       "lisible",
@@ -232,6 +240,16 @@ describe("planReadingJsonSchema", () => {
       "pieces",
       "comptes",
     ]);
-    expect(schema.properties.comptes.required).toEqual([...PLAN_COUNT_KEYS]);
+    expect(schema.properties.comptes.items.properties.element.enum).toEqual([...PLAN_COUNT_KEYS]);
+  });
+
+  it("reste sous la limite de 16 champs facultatifs de la sortie structurée", () => {
+    // Au-delà, le fournisseur refuse la requête (« too many parameters with union types »).
+    expect(unionFields(planReadingJsonSchema())).toBeLessThanOrEqual(16);
+  });
+
+  it("accepte encore les comptes en objet (ancienne forme)", () => {
+    const { counts } = normalizePlanReading(raw({ comptes: { portes: 4, wc: null } }), 1);
+    expect(counts).toMatchObject({ portes: 4, wc: null, fenetres: null });
   });
 });
