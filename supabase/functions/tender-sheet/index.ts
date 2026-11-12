@@ -150,7 +150,9 @@ Deno.serve(async (req) => {
   const bytes = await workbook.xlsx.writeBuffer();
   return new Response(new Uint8Array(bytes as ArrayBuffer), {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      // Type binaire générique : supabase-js ne rend un Blob que pour octet-stream et PDF (sinon du
+      // texte, qui abîme le classeur) ; la route du site rétablit le type Excel.
+      "Content-Type": "application/octet-stream",
       "Content-Disposition": `attachment; filename="DPGF-${slug(tender.name)}.xlsx"`,
       "Cache-Control": "private, no-store",
     },
