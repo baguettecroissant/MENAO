@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { startTransition, useActionState, useId, useState, type ReactNode } from "react";
+import { ReadingScreen } from "@/components/pro/reading-screen";
 import { Alert, Button, Field, FieldError } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createPlanTender, createTender } from "@/lib/artisan/tender-actions";
@@ -314,6 +315,14 @@ function DpgfTenderForm({ artisanId }: { artisanId: string }) {
 
   return (
     <form action={submit} className="flex flex-col gap-5">
+      {/* Un PDF est lu par l'IA (environ une minute) ; un Excel est repris en quelques secondes. */}
+      {busy && (
+        <ReadingScreen
+          kind="dpgf"
+          uploading={uploading}
+          quick={!file?.name.toLowerCase().endsWith(".pdf")}
+        />
+      )}
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <ProjectFields state={state} />
       <div className="flex flex-col gap-2">
@@ -467,6 +476,7 @@ function PlanTenderForm({
 
   return (
     <form action={submit} className="flex flex-col gap-5">
+      {busy && <ReadingScreen kind="plan" uploading={uploading} />}
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <ProjectFields state={state} />
       <div className="flex flex-col gap-2">

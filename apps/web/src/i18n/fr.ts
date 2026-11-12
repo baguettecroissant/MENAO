@@ -5504,6 +5504,53 @@ export const fr = {
       tabTenders: "Appels d'offres",
       title: "Appels d'offres",
       subtitle: "Les demandes des particuliers, et les appels d'offres des architectes.",
+      // Écran d'attente pendant la lecture par l'IA : étapes au fil du temps, dernière en cours.
+      waiting: {
+        duration: "Environ une minute",
+        quick: "Quelques secondes",
+        long: "Un peu plus long que d'habitude, la lecture continue",
+        done: "(terminé)",
+        factTitle: "Le saviez-vous ?",
+        rooms: [
+          { name: "Séjour", area: "28,4 m²" },
+          { name: "Chambre", area: "12,1 m²" },
+          { name: "Cuisine", area: "9,8 m²" },
+          { name: "SdB", area: "4,6 m²" },
+          { name: "Chambre 2", area: "11,3 m²" },
+        ],
+        table: { designation: "Désignation", quantity: "Qté", unit: "U" },
+        plan: {
+          title: "Lecture de vos plans",
+          steps: [
+            "Envoi des plans",
+            "Lecture de l'échelle et des cotes",
+            "Repérage des pièces",
+            "Calcul des surfaces",
+            "Comptage des portes et fenêtres",
+          ],
+          facts: [
+            "Chaque pièce et chaque surface restent modifiables : vous gardez la main sur le relevé.",
+            "Une cote illisible ? La pièce est marquée « à vérifier » plutôt qu'inventée.",
+            "Les quantités du DPGF suivent des règles affichées : vous voyez d'où vient chaque chiffre.",
+            "L'Excel et le PDF s'ouvrent quand vous cochez « J'ai vérifié les quantités ».",
+          ],
+        },
+        dpgf: {
+          title: "Lecture du DPGF",
+          steps: [
+            "Envoi du document",
+            "Lecture des pages",
+            "Repérage des lots",
+            "Relevé des postes et des quantités",
+            "Préparation du tableau",
+          ],
+          facts: [
+            "Chaque ligne lue reste modifiable avant le chiffrage.",
+            "Une ligne illisible est signalée plutôt qu'inventée.",
+            "Vous retrouvez les lots et les postes de l'architecte, prêts à chiffrer.",
+          ],
+        },
+      },
       locked: {
         title: "Inclus dans la formule Entreprise",
         body: "Déposez le DPGF de l'architecte : MENAO le lit, propose vos prix habituels pour chaque poste, et le remplit au format de l'architecte, avec un PDF prêt à joindre à votre offre.",
