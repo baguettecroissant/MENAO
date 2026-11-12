@@ -40,6 +40,10 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   page,
 }) => {
   test.setTimeout(120_000);
+  // Nom propre à chaque essai : un nouvel essai automatique retrouve la base déjà modifiée.
+  const run = `${test.info().retry}`;
+  const house = `Maison fictive E2E ${run}`;
+  const offices = `Bureaux fictifs E2E ${run}`;
   await signIn(page);
 
   // Formule Base : l'onglet présente la formule Entreprise, sans dépôt possible.
@@ -56,7 +60,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
 
   await setPlan("entreprise");
   await page.reload();
-  await page.getByLabel("Nom du projet").fill("Maison fictive E2E");
+  await page.getByLabel("Nom du projet").fill(house);
   await page.getByLabel("Architecte ou maître d'œuvre").fill("Atelier fictif");
   await page.getByLabel("DPGF de l'architecte").setInputFiles(DPGF);
   await page.getByRole("button", { name: "Lire le DPGF" }).click();
@@ -64,7 +68,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
     timeout: 30_000,
   });
   await expect(page.getByText(/^DPGF lu : 3 postes/)).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: "Maison fictive E2E" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: house })).toBeVisible();
 
   // Chiffrage : une quantité changée (écart avec le DPGF) et les prix des trois postes.
   const table = page.getByRole("table", { name: "Postes du DPGF" });
@@ -86,7 +90,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
     page.waitForEvent("download"),
     page.getByRole("link", { name: /Excel au format de l'architecte/ }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("DPGF-Maison-fictive-E2E.xlsx");
+  expect(download.suggestedFilename()).toBe(`DPGF-Maison-fictive-E2E-${run}.xlsx`);
   const tenderUrl = new URL(page.url());
   const pdf = await page.request.get(`${tenderUrl.pathname}/pdf`);
   expect(pdf.status()).toBe(200);
@@ -94,12 +98,15 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
 
   // Suivi : offre envoyée, visible dans la liste.
   await page.getByLabel("Suivi").selectOption("envoye");
-  await page.getByRole("button", { name: "Mettre à jour" }).click();
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST" && r.ok()),
+    page.getByRole("button", { name: "Mettre à jour" }).click(),
+  ]);
   await page.goto("/pro/demandes/appels-offres");
-  await expect(page.getByRole("link", { name: /Maison fictive E2E.*Envoyé/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: new RegExp(`${house}.*Envoyé`) })).toBeVisible();
 
   // DPGF en PDF (ADR 0288) : lu par l'IA (faux serveur en CI), à vérifier, rendu en classeur MENAO.
-  await page.getByLabel("Nom du projet").fill("Bureaux fictifs E2E");
+  await page.getByLabel("Nom du projet").fill(offices);
   await page.getByLabel("DPGF de l'architecte").setInputFiles({ ...files.pdf, name: "dpgf.pdf" });
   await page.getByRole("button", { name: "Lire le DPGF" }).click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
@@ -111,5 +118,5 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
     page.waitForEvent("download"),
     page.getByRole("link", { name: /Excel du DPGF chiffré/ }).click(),
   ]);
-  expect(menaoSheet.suggestedFilename()).toBe("DPGF-Bureaux-fictifs-E2E.xlsx");
+  expect(menaoSheet.suggestedFilename()).toBe(`DPGF-Bureaux-fictifs-E2E-${run}.xlsx`);
 });
