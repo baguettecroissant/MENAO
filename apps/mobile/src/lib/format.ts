@@ -39,6 +39,24 @@ export function formatCents(cents: number): string {
   return euros.format(cents / 100);
 }
 
+const eurosWhole = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+/** Montant en centimes arrondi à l'euro pour les chiffres « en bref » : « 4 820 € ». */
+export function formatCentsWhole(cents: number): string {
+  return eurosWhole.format(cents / 100);
+}
+
+/** Écart signé arrondi à l'euro : « +1 240 € », « −980 € » (vrai signe moins). */
+export function formatSignedCentsWhole(cents: number): string {
+  const text = formatCentsWhole(Math.abs(cents));
+  return cents > 0 ? `+${text}` : cents < 0 ? `−${text}` : text;
+}
+
 /** « 25/10/2026 » (heure de Paris). */
 export function formatDateNumeric(iso: string): string {
   return numeric.format(new Date(iso));

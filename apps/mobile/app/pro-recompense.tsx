@@ -1,27 +1,33 @@
-import { REWARD_SIZES, claimableReward, type RewardSize } from "@menao/core";
+import { claimableReward, type RewardSize } from "@menao/core";
 import { rewardClaimSchema } from "@menao/validation";
 import { router, useLocalSearchParams } from "expo-router";
-import { CircleCheck, MapPin } from "lucide-react-native";
+import { Gift } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { OutfitIllustration } from "@/components/grade/outfit-illustration";
+import { ActionSubmit, SentCard } from "@/components/pro/action-kit";
+import { FicheButton, FicheScreen, FicheSkeleton, FicheTag } from "@/components/pro/fiche-kit";
+import { DeliverySummary, GiftLabel, SizePills } from "@/components/pro/gift-kit";
+import { ToolField } from "@/components/pro/tools-kit";
+import { withTeamPermission } from "@/components/team-gate";
 import { fr } from "@/i18n/fr";
 import { claimReward, loadDeliveryDefaults, loadGrade } from "@/lib/grade";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Button, LinkText, Notice, Screen, TextField } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
-import { OutfitIllustration } from "@/components/grade/outfit-illustration";
-import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.grade.reward;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 type Field = "jacket_size" | "pants_size" | "address" | "city" | "country" | "phone";
+type Defaults = Awaited<ReturnType<typeof loadDeliveryDefaults>>;
 
 /**
- * « Réclamez votre récompense » (F-24, maquette) : tenue MENAO du niveau atteint, tailles de la
- * veste et du pantalon, adresse de livraison (pré-remplie avec celle de l'entreprise) et téléphone.
- * La demande part à l'équipe MENAO (ticket « recompense »), qui organise l'envoi.
+ * « Ma récompense » (F-24), refonte « Nette » (lot 37, maquette « RecompenseCadeauApp ») : bloc
+ * bleu clair avec le niveau atteint et la tenue MENAO, tailles de la veste et du pantalon en
+ * pastilles, adresse de l'entreprise en résumé (« Modifier » déplie les champs), téléphone et
+ * bouton collé en bas. La demande part à l'équipe MENAO (ticket « recompense »), qui organise
+ * l'envoi.
  */
 function RewardScreen() {
   const { niveau } = useLocalSearchParams<{ niveau?: string }>();
@@ -31,15 +37,15 @@ function RewardScreen() {
   }, []);
   const [data] = useFocusData(load);
 
-  if (data === undefined) return <Screen header={<TopBar />}>{null}</Screen>;
+  if (data === undefined) return <FicheSkeleton title={t.bar} />;
   const grade = data.grade;
   const reward = grade ? claimableReward(grade.levels, grade.level, grade.claimedLevels) : null;
   if (!grade || !reward || (niveau && Number(niveau) !== reward.level)) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.bar}>
         <Notice tone="info">{t.unavailable}</Notice>
-        <Button label={t.back} variant="secondary" onPress={() => router.back()} />
-      </Screen>
+        <FicheButton label={t.back} variant="secondary" onPress={() => router.back()} />
+      </FicheScreen>
     );
   }
   return <RewardForm level={reward.level} reward={reward} defaults={data.defaults} />;
@@ -52,7 +58,7 @@ function RewardForm({
 }: {
   level: number;
   reward: { reward: string | null; rewardDetail: string | null };
-  defaults: { firstName: string | null; address: string; city: string; phone: string };
+  defaults: Defaults;
 }) {
   const [jacket, setJacket] = useState<RewardSize | null>(null);
   const [pants, setPants] = useState<RewardSize | null>(null);
@@ -63,7 +69,7 @@ function RewardForm({
     phone: defaults.phone,
   });
   // Adresse pré-remplie : affichée en résumé, modifiable sur demande (maquette).
-  const [editing, setEditing] = useState(!defaults.address || !defaults.phone);
+  const [editing, setEditing] = useState(!defaults.address || !defaults.city);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -82,7 +88,7 @@ function RewardForm({
       setErrors(
         Object.fromEntries(Object.entries(fields).map(([key, messages]) => [key, messages?.[0]])),
       );
-      if (fields.address || fields.city || fields.country || fields.phone) setEditing(true);
+      if (fields.address || fields.city || fields.country) setEditing(true);
       return;
     }
     setErrors({});
@@ -96,196 +102,120 @@ function RewardForm({
 
   if (done) {
     return (
-      <Screen header={<TopBar />}>
-        <View style={styles.hero}>
-          <CircleCheck size={56} color={colors.primary} />
-          <Text role="heading" style={styles.title}>
-            {t.done}
-          </Text>
-        </View>
-        <Button label={t.back} onPress={() => router.back()} />
-      </Screen>
+      <FicheScreen title={t.bar}>
+        <SentCard text={t.done} />
+        <FicheButton label={t.back} variant="secondary" onPress={() => router.back()} />
+      </FicheScreen>
     );
   }
+  const what = reward.rewardDetail ?? reward.reward;
+  const place = [values.city, values.country === t.countryDefault ? "" : values.country]
+    .filter(Boolean)
+    .join(", ");
   return (
-    <Screen
-      header={<TopBar />}
+    <FicheScreen
+      title={t.bar}
       footer={
-        <View style={styles.footer}>
-          <Button label={t.submit} onPress={submit} loading={pending} />
-          <Text style={[styles.small, styles.center]}>{t.note}</Text>
-        </View>
+        <ActionSubmit
+          label={t.submit}
+          icon={Gift}
+          onPress={submit}
+          loading={pending}
+          footnote={t.note}
+        />
       }
     >
       <View style={styles.hero}>
-        <CircleCheck size={56} color={colors.primary} />
+        {/* La puce se cale à gauche de son bloc : le bloc, lui, est centré. */}
+        <View>
+          <FicheTag text={t.levelReached(level)} tone="dark" />
+        </View>
+        <OutfitIllustration height={135} />
         <Text role="heading" style={styles.title}>
           {t.title(defaults.firstName)}
         </Text>
-        <Body muted center>
-          {t.intro(level)}
-        </Body>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t.waiting}</Text>
-        <View style={styles.rewardImage}>
-          <OutfitIllustration height={132} />
-        </View>
-        <Text style={styles.rewardName}>{reward.reward}</Text>
-        {reward.rewardDetail ? <Text style={styles.small}>{reward.rewardDetail}</Text> : null}
+        {what ? <Text style={styles.lead}>{t.waitingFor(what)}</Text> : null}
         <Text style={styles.small}>{fr.grade.illustrationNote}</Text>
       </View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t.sizesTitle}</Text>
-        <SizePicker
-          label={t.jacket}
-          value={jacket}
-          onChange={setJacket}
-          error={errors.jacket_size}
+      <SizePills label={t.jacket} value={jacket} onChange={setJacket} error={errors.jacket_size} />
+      <SizePills label={t.pants} value={pants} onChange={setPants} error={errors.pants_size} />
+      {editing ? (
+        <View style={styles.group}>
+          <GiftLabel text={t.deliveryShort} />
+          <ToolField
+            label={t.address}
+            value={values.address}
+            onChangeText={set("address")}
+            error={errors.address}
+            autoComplete="street-address"
+          />
+          <ToolField
+            label={t.city}
+            value={values.city}
+            onChangeText={set("city")}
+            error={errors.city}
+          />
+          <ToolField
+            label={t.country}
+            value={values.country}
+            onChangeText={set("country")}
+            error={errors.country}
+          />
+        </View>
+      ) : (
+        <DeliverySummary
+          title={t.deliveryShort}
+          name={defaults.company}
+          address={[values.address, place].filter(Boolean).join(", ")}
+          caption={t.companyAddress}
+          editLabel={t.edit}
+          onEdit={() => setEditing(true)}
         />
-        <SizePicker label={t.pants} value={pants} onChange={setPants} error={errors.pants_size} />
-        {editing ? (
-          <>
-            <Text style={styles.cardTitle}>{t.delivery}</Text>
-            <TextField
-              label={t.address}
-              value={values.address}
-              onChangeText={set("address")}
-              error={errors.address}
-              autoComplete="street-address"
-            />
-            <TextField
-              label={t.city}
-              value={values.city}
-              onChangeText={set("city")}
-              error={errors.city}
-            />
-            <TextField
-              label={t.country}
-              value={values.country}
-              onChangeText={set("country")}
-              error={errors.country}
-            />
-            <TextField
-              label={t.phone}
-              value={values.phone}
-              onChangeText={set("phone")}
-              error={errors.phone}
-              keyboardType="phone-pad"
-              autoComplete="tel"
-            />
-          </>
-        ) : (
-          <View style={styles.address}>
-            <MapPin size={16} color={colors.primary} />
-            <View style={styles.addressText}>
-              <Text style={styles.text}>
-                {[values.address, values.city, values.country].join(", ")}
-              </Text>
-              <Text style={styles.small}>{values.phone}</Text>
-              <LinkText label={t.checkAddress} onPress={() => setEditing(true)} />
-            </View>
-          </View>
-        )}
-      </View>
+      )}
+      <ToolField
+        label={t.phone}
+        value={values.phone}
+        onChangeText={set("phone")}
+        error={errors.phone}
+        keyboardType="phone-pad"
+        autoComplete="tel"
+      />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-    </Screen>
-  );
-}
-
-function SizePicker({
-  label,
-  value,
-  onChange,
-  error,
-}: {
-  label: string;
-  value: RewardSize | null;
-  onChange: (size: RewardSize) => void;
-  error?: string;
-}) {
-  return (
-    <View style={styles.sizes}>
-      <Text style={styles.label}>{label}</Text>
-      <View role="radiogroup" aria-label={label} style={styles.sizeRow}>
-        {REWARD_SIZES.map((size) => {
-          const on = value === size;
-          return (
-            <Pressable
-              key={size}
-              role="radio"
-              aria-checked={on}
-              onPress={() => onChange(size)}
-              style={[styles.size, on && styles.sizeOn]}
-            >
-              <Text style={[styles.sizeText, on && styles.sizeTextOn]}>{size}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </View>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: "center", gap: spacing(2), paddingTop: spacing(2) },
-  title: {
-    fontFamily: font.medium,
-    fontSize: 20,
-    textAlign: "center",
-    color: colors["primary-strong"],
-  },
-  card: {
-    gap: spacing(3),
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    padding: spacing(4),
-  },
-  cardTitle: {
-    fontFamily: font.medium,
-    fontSize: 15,
-    textAlign: "center",
-    color: colors["primary-strong"],
-  },
-  rewardImage: {
+  hero: {
     alignItems: "center",
-    justifyContent: "center",
-    minHeight: 120,
-    borderRadius: radius.input,
-    backgroundColor: colors["primary-softer"],
+    gap: spacing(2),
+    padding: spacing(4),
+    borderRadius: 16,
+    backgroundColor: colors["primary-soft"],
   },
-  rewardName: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
+  title: {
+    textAlign: "center",
+    fontFamily: font.display,
+    fontSize: 20,
+    lineHeight: 25,
+    letterSpacing: -0.4,
+    color: colors.foreground,
+  },
+  lead: {
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 13.5,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
   small: {
+    textAlign: "center",
     fontFamily: font.regular,
     fontSize: 12,
     lineHeight: 17,
     color: colors["muted-foreground"],
   },
-  center: { textAlign: "center" },
-  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.foreground },
-  label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  sizes: { gap: spacing(2) },
-  sizeRow: { flexDirection: "row", gap: spacing(2) },
-  size: {
-    flex: 1,
-    minHeight: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.input,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  sizeOn: { borderColor: colors.primary, backgroundColor: colors["primary-soft"] },
-  sizeText: { fontFamily: font.medium, fontSize: 13, color: colors.foreground },
-  sizeTextOn: { color: colors["primary-strong"] },
-  error: { fontFamily: font.regular, fontSize: 13, color: colors.danger },
-  address: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2) },
-  addressText: { flex: 1, gap: spacing(1) },
-  footer: { gap: spacing(2) },
+  group: { gap: spacing(2.5) },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).

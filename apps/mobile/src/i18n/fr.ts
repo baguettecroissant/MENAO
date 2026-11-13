@@ -778,13 +778,25 @@ export const fr = {
     remindTooSoon: "Ce client a déjà été relancé il y a moins de 3 jours.",
     remindHint: "Le client reçoit un e-mail courtois, en votre nom, avec le lien pour payer.",
     lastReminder: (date: string, n: number) =>
-      `Relancé le ${date}${n > 1 ? ` · ${n} relances` : ""}`,
+      n > 1 ? `${n} relances · la dernière le ${date}` : `Relancé le ${date}`,
     autoTitle: "Relances automatiques",
     autoText:
-      "À J+7, J+15 et J+30 après l'échéance, MENAO envoie un rappel courtois à votre client, en votre nom, avec le lien pour payer.",
+      "MENAO envoie un rappel courtois à votre client, en votre nom, avec le lien pour payer.",
     autoLabel: "Activer les relances automatiques",
     autoOn: "Relances automatiques activées.",
     autoOff: "Relances automatiques désactivées.",
+    // Refonte « Nette », lot 37 (maquettes « SuiviMobile »).
+    openSummary: (n: number, late: number) =>
+      `${n <= 1 ? `${n} paiement` : `${n} paiements`}${late > 0 ? `, dont ${late} en retard` : ""}`,
+    signedHint: (n: number) => `${n} devis · `,
+    deltaLabel: (value: string, month: string) =>
+      month ? `${value} par rapport à ${month}` : value,
+    remindShort: "Relancer",
+    remindersLabel: (n: number) => `${n} ${n > 1 ? "relances" : "relance"} sur 3`,
+    nextAuto: (date: string) => `Premier rappel automatique le ${date}`,
+    stepLabel: (days: number) => `J+${days}`,
+    stepText: (days: number) => `${days} jours après l'échéance`,
+    manualNote: "Vous pouvez aussi relancer à la main, au plus une fois tous les 3 jours.",
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
   home: {
@@ -2926,8 +2938,16 @@ export const fr = {
       countryDefault: "France",
       phone: "Numéro de téléphone",
       submit: "Recevoir ma récompense",
-      note: "Envoi organisé par l'équipe MENAO, qui vous recontacte si besoin.",
+      note: "Envoi organisé par l'équipe MENAO.",
       done: "Demande envoyée : l'équipe MENAO prépare votre récompense.",
+      // Refonte « Nette », lot 37 (maquette « RecompenseCadeauApp »).
+      bar: "Ma récompense",
+      levelReached: (level: number) => `Niveau ${level} atteint`,
+      waitingFor: (what: string) =>
+        `Votre récompense vous attend : ${what.charAt(0).toLowerCase()}${what.slice(1)}.`,
+      deliveryShort: "Livraison",
+      companyAddress: "Adresse de votre entreprise",
+      edit: "Modifier",
       back: "Retour à mon grade",
       unavailable: "Aucune récompense à réclamer pour le moment.",
     },
@@ -4063,8 +4083,24 @@ export const fr = {
       postalCode: "Code postal",
       city: "Commune",
       submit: "Recevoir mon cadeau",
-      note: "Envoi organisé par l'équipe MENAO, qui vous recontacte si besoin.",
+      note: "Envoi organisé par l'équipe MENAO.",
       done: "C'est noté : l'équipe MENAO prépare votre cadeau.",
+      // Refonte « Nette », lot 37 (maquette « RecompenseCadeauApp »).
+      bar: "Mon cadeau",
+      deliveryShort: "Livraison",
+      companyAddress: "Adresse de votre entreprise",
+      edit: "Modifier",
+      inProgress: "En préparation",
+      sentTag: "Envoyé",
+      stepsLabel: "Suivi de votre cadeau",
+      steps: {
+        chosen: "Choisi",
+        preparing: "En préparation",
+        preparingDetail: "Par l'équipe MENAO",
+        sent: "Envoyé",
+        sentOn: (date: string) => `Le ${date}`,
+        sentLater: "La date s'affichera ici",
+      },
       summary: (item: string, size: string | null) => (size ? `${item}, taille ${size}` : item),
       pending: "En préparation par l'équipe MENAO.",
       sent: (date: string) => `Envoyé le ${date}.`,

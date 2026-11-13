@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatAgo,
   formatCents,
+  formatCentsWhole,
   formatClock,
   formatDateNumeric,
   formatDay,
@@ -17,6 +18,7 @@ import {
   formatWeekShort,
   formatWeekdayDay,
   isParisToday,
+  formatSignedCentsWhole,
   parisDateTime,
 } from "./format";
 
@@ -24,6 +26,13 @@ describe("mise en forme", () => {
   it("affiche les montants en euros à partir des centimes", () => {
     expect(formatCents(9185).replace(/\s/g, " ")).toBe("91,85 €");
     expect(formatCents(0).replace(/\s/g, " ")).toBe("0,00 €");
+  });
+
+  it("arrondit à l'euro les chiffres en bref et signe les écarts (lot 37)", () => {
+    expect(formatCentsWhole(482000).replace(/\s/g, " ")).toBe("4 820 €");
+    expect(formatSignedCentsWhole(124000).replace(/\s/g, " ")).toBe("+1 240 €");
+    expect(formatSignedCentsWhole(-98000).replace(/\s/g, " ")).toBe("\u2212980 €");
+    expect(formatSignedCentsWhole(0).replace(/\s/g, " ")).toBe("0 €");
   });
 
   it("affiche les dates à l'heure de Paris", () => {

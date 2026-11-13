@@ -1,59 +1,64 @@
-import {
-  REWARD_SIZES,
-  WELCOME_GIFT_ITEMS,
-  type RewardSize,
-  type WelcomeGiftItem,
-} from "@menao/core";
+import { WELCOME_GIFT_ITEMS, type RewardSize, type WelcomeGiftItem } from "@menao/core";
 import { welcomeGiftChoiceSchema, type WelcomeGift } from "@menao/validation";
 import { router } from "expo-router";
-import { CircleCheck, Gift, MapPin } from "lucide-react-native";
+import { Check, Gift, Truck } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
-import { TopBar } from "@/components/top-bar";
+import { ActionSubmit } from "@/components/pro/action-kit";
+import { FicheButton, FicheScreen, FicheSkeleton, FicheTag } from "@/components/pro/fiche-kit";
+import {
+  CapDrawing,
+  DeliverySummary,
+  GiftLabel,
+  GiftTile,
+  GiftTiles,
+  SizePills,
+  TShirtDrawing,
+} from "@/components/pro/gift-kit";
+import { FieldPair, ToolField } from "@/components/pro/tools-kit";
+import { withTeamPermission } from "@/components/team-gate";
 import { fr } from "@/i18n/fr";
 import { formatDay } from "@/lib/format";
 import { useFocusData } from "@/lib/use-focus-data";
 import { chooseWelcomeGift, loadWelcomeGift } from "@/lib/welcome-gift";
-import { Body, Button, LinkText, Notice, Screen, TextField } from "@/ui";
+import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
-import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proHub.welcomeGift;
-const { colors, font, radius, spacing } = theme;
+const { colors, font, spacing } = theme;
 type Field = "item" | "size" | "recipient" | "ligne" | "code_postal" | "commune";
 
+const drawing = (item: WelcomeGiftItem, size: number) =>
+  item === "tshirt" ? <TShirtDrawing size={size} /> : <CapDrawing size={size} />;
+
 /**
- * Cadeau de bienvenue du filleul (F-60, ADR 0154) : t-shirt (avec sa taille) ou casquette, adresse
- * de livraison pré-remplie avec celle de l'entreprise. La demande part à l'équipe MENAO (ticket
- * « recompense »), qui organise l'envoi. Ni abonnement ni achat : rien à voir avec la règle 10.
+ * « Mon cadeau » du filleul (F-60, ADR 0154), refonte « Nette » (lot 37, maquette
+ * « RecompenseCadeauApp ») : deux grandes tuiles illustrées (t-shirt avec sa taille, ou
+ * casquette), adresse de l'entreprise en résumé (« Modifier » déplie les champs) et bouton collé en
+ * bas ; après l'envoi, l'article choisi et la frise Choisi → En préparation → Envoyé. La demande
+ * part à l'équipe MENAO (ticket « recompense »). Ni abonnement ni achat : rien à voir avec la
+ * règle 10.
  */
 function WelcomeGiftScreen() {
   const [gift] = useFocusData(loadWelcomeGift);
-  if (gift === undefined) return <Screen header={<TopBar />}>{null}</Screen>;
+  if (gift === undefined) return <FicheSkeleton title={t.bar} />;
   if (!gift) {
     return (
-      <Screen header={<TopBar />}>
+      <FicheScreen title={t.bar}>
         <Notice tone="info">{t.unavailable}</Notice>
-        <Button label={t.back} variant="secondary" onPress={() => router.back()} />
-      </Screen>
+        <FicheButton label={t.back} variant="secondary" onPress={() => router.back()} />
+      </FicheScreen>
     );
   }
   if (gift.status !== "a_choisir") {
     return (
-      <Screen header={<TopBar />}>
-        <View style={styles.hero}>
-          <Gift size={48} color={colors.primary} />
-          <Text role="heading" style={styles.title}>
-            {t.title}
-          </Text>
-          <Body center>{gift.item ? t.summary(t.items[gift.item], gift.size) : ""}</Body>
-          <Body muted center>
-            {gift.status === "envoye" && gift.sent_at ? t.sent(formatDay(gift.sent_at)) : t.pending}
-          </Body>
-        </View>
-        <Button label={t.back} variant="secondary" onPress={() => router.back()} />
-      </Screen>
+      <GiftStatus
+        item={gift.item}
+        size={gift.size}
+        sent={gift.status === "envoye"}
+        sentAt={gift.sent_at}
+      />
     );
   }
   return <GiftForm gift={gift} />;
@@ -68,7 +73,7 @@ function GiftForm({ gift }: { gift: WelcomeGift }) {
     code_postal: gift.address.code_postal ?? "",
     commune: gift.address.commune ?? "",
   });
-  // Adresse de l'entreprise : affichée en résumé, modifiable sur demande (comme les récompenses).
+  // Adresse de l'entreprise : affichée en résumé, modifiable sur demande (maquette).
   const [editing, setEditing] = useState(
     !values.recipient || !values.ligne || !values.code_postal || !values.commune,
   );
@@ -101,71 +106,59 @@ function GiftForm({ gift }: { gift: WelcomeGift }) {
 
   if (done) {
     return (
-      <Screen header={<TopBar />}>
-        <View style={styles.hero}>
-          <CircleCheck size={56} color={colors.primary} />
-          <Text role="heading" style={styles.title}>
-            {t.done}
-          </Text>
-        </View>
-        <Button label={t.back} onPress={() => router.back()} />
-      </Screen>
+      <GiftStatus item={item} size={item === "tshirt" ? size : null} sent={false} sentAt={null} />
     );
   }
   return (
-    <Screen
-      header={<TopBar />}
+    <FicheScreen
+      title={t.bar}
       footer={
-        <View style={styles.footer}>
-          <Button label={t.submit} onPress={submit} loading={pending} />
-          <Text style={[styles.small, styles.center]}>{t.note}</Text>
-        </View>
+        <ActionSubmit
+          label={t.submit}
+          icon={Gift}
+          onPress={submit}
+          loading={pending}
+          footnote={t.note}
+        />
       }
     >
-      <View style={styles.hero}>
-        <Gift size={48} color={colors.primary} />
-        <Text role="heading" style={styles.title}>
-          {t.title}
-        </Text>
-        <Body muted center>
-          {t.lead(gift.referrer)}
-        </Body>
+      <Text style={styles.lead}>{t.lead(gift.referrer)}</Text>
+      <View style={styles.group}>
+        <GiftTiles label={t.itemLegend}>
+          {WELCOME_GIFT_ITEMS.map((value) => (
+            <GiftTile
+              key={value}
+              label={t.items[value]}
+              drawing={drawing(value, 72)}
+              selected={item === value}
+              onPress={() => setItem(value)}
+            />
+          ))}
+        </GiftTiles>
+        {errors.item ? <Text style={styles.error}>{errors.item}</Text> : null}
       </View>
-      <View style={styles.card}>
-        <Choices
-          label={t.itemLegend}
-          options={WELCOME_GIFT_ITEMS.map((value) => ({ value, label: t.items[value] }))}
-          value={item}
-          onChange={setItem}
-          error={errors.item}
-        />
-        {item === "tshirt" ? (
-          <Choices
-            label={t.sizeLegend}
-            options={REWARD_SIZES.map((value) => ({ value, label: value }))}
-            value={size}
-            onChange={setSize}
-            error={errors.size}
+      {item === "tshirt" ? (
+        <SizePills label={t.sizeLegend} value={size} onChange={setSize} error={errors.size} />
+      ) : null}
+      {editing ? (
+        <View style={styles.group}>
+          <GiftLabel text={t.deliveryShort} />
+          <ToolField
+            label={t.recipient}
+            value={values.recipient}
+            onChangeText={set("recipient")}
+            error={errors.recipient}
+            autoComplete="name"
           />
-        ) : null}
-        <Text style={styles.label}>{t.delivery}</Text>
-        {editing ? (
-          <>
-            <TextField
-              label={t.recipient}
-              value={values.recipient}
-              onChangeText={set("recipient")}
-              error={errors.recipient}
-              autoComplete="name"
-            />
-            <TextField
-              label={t.address}
-              value={values.ligne}
-              onChangeText={set("ligne")}
-              error={errors.ligne}
-              autoComplete="street-address"
-            />
-            <TextField
+          <ToolField
+            label={t.address}
+            value={values.ligne}
+            onChangeText={set("ligne")}
+            error={errors.ligne}
+            autoComplete="street-address"
+          />
+          <FieldPair>
+            <ToolField
               label={t.postalCode}
               value={values.code_postal}
               onChangeText={set("code_postal")}
@@ -173,115 +166,156 @@ function GiftForm({ gift }: { gift: WelcomeGift }) {
               keyboardType="number-pad"
               maxLength={5}
               autoComplete="postal-code"
+              style={styles.postalCode}
             />
-            <TextField
+            <ToolField
               label={t.city}
               value={values.commune}
               onChangeText={set("commune")}
               error={errors.commune}
+              style={styles.city}
             />
-          </>
-        ) : (
-          <View style={styles.address}>
-            <MapPin size={16} color={colors.primary} />
-            <View style={styles.addressText}>
-              <Text style={styles.text}>{values.recipient}</Text>
-              <Text style={styles.text}>
-                {`${values.ligne}, ${values.code_postal} ${values.commune}`}
-              </Text>
-              <LinkText label={t.checkAddress} onPress={() => setEditing(true)} />
-            </View>
-          </View>
-        )}
-      </View>
+          </FieldPair>
+        </View>
+      ) : (
+        <DeliverySummary
+          title={t.deliveryShort}
+          name={values.recipient}
+          address={`${values.ligne}, ${values.code_postal} ${values.commune}`}
+          caption={t.companyAddress}
+          editLabel={t.edit}
+          onEdit={() => setEditing(true)}
+        />
+      )}
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-    </Screen>
+    </FicheScreen>
   );
 }
 
-/** Choix exclusif (cadeau, taille), comme les tailles des récompenses des grades. */
-function Choices<T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-  error,
+/**
+ * Après l'envoi : l'article choisi dans une carte (dessin, « T-shirt MENAO, taille L », puce
+ * d'état), la frise Choisi → En préparation → Envoyé, puis le message de l'équipe.
+ */
+function GiftStatus({
+  item,
+  size,
+  sent,
+  sentAt,
 }: {
-  label: string;
-  options: readonly { value: T; label: string }[];
-  value: T | null;
-  onChange: (value: T) => void;
-  error?: string;
+  item: WelcomeGiftItem | null;
+  size: RewardSize | null;
+  sent: boolean;
+  sentAt: string | null;
 }) {
+  const summary = item ? t.summary(t.items[item], size) : "";
+  const steps = [
+    { title: t.steps.chosen, detail: summary, on: true, icon: Check, tone: colors.success },
+    {
+      title: t.steps.preparing,
+      detail: t.steps.preparingDetail,
+      on: true,
+      icon: Truck,
+      tone: colors.foreground,
+    },
+    {
+      title: t.steps.sent,
+      detail: sentAt ? t.steps.sentOn(formatDay(sentAt)) : t.steps.sentLater,
+      on: sent,
+      icon: Truck,
+      tone: colors.foreground,
+    },
+  ];
   return (
-    <View style={styles.choices}>
-      <Text style={styles.label}>{label}</Text>
-      <View role="radiogroup" aria-label={label} style={styles.choiceRow}>
-        {options.map((option) => {
-          const on = value === option.value;
-          return (
-            <Pressable
-              key={option.value}
-              role="radio"
-              aria-checked={on}
-              onPress={() => onChange(option.value)}
-              style={[styles.choice, on && styles.choiceOn]}
-            >
-              <Text style={[styles.choiceText, on && styles.choiceTextOn]}>{option.label}</Text>
-            </Pressable>
-          );
-        })}
+    <FicheScreen title={t.bar}>
+      <View style={[styles.card, styles.itemCard]}>
+        {item ? drawing(item, 110) : null}
+        {summary ? (
+          <Text role="heading" style={styles.itemTitle}>
+            {summary}
+          </Text>
+        ) : null}
+        <View>
+          <FicheTag
+            text={sent ? t.sentTag : t.inProgress}
+            tone={sent ? "success" : "primary"}
+            dot
+          />
+        </View>
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </View>
+      <View role="list" aria-label={t.stepsLabel} style={[styles.card, styles.steps]}>
+        {steps.map((step) => (
+          <View key={step.title} role="listitem" style={styles.step}>
+            {step.on ? (
+              <View style={[styles.dot, { backgroundColor: step.tone }]}>
+                <step.icon size={14} color={colors["primary-foreground"]} strokeWidth={2.4} />
+              </View>
+            ) : (
+              <View style={[styles.dot, styles.dotOff]} />
+            )}
+            <View style={styles.stepText}>
+              <Text style={[styles.stepTitle, !step.on && styles.stepTitleOff]}>{step.title}</Text>
+              {step.detail ? <Text style={styles.stepDetail}>{step.detail}</Text> : null}
+            </View>
+          </View>
+        ))}
+      </View>
+      <Text style={styles.done}>{sent && sentAt ? t.sent(formatDay(sentAt)) : t.done}</Text>
+    </FicheScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: "center", gap: spacing(2), paddingTop: spacing(2) },
-  title: {
-    fontFamily: font.medium,
-    fontSize: 20,
-    textAlign: "center",
-    color: colors["primary-strong"],
-  },
+  lead: { fontFamily: font.regular, fontSize: 14.5, lineHeight: 21, color: colors.label },
+  group: { gap: spacing(2) },
+  error: { fontFamily: font.regular, fontSize: 13, lineHeight: 18, color: colors.danger },
+  postalCode: { flex: 2 },
+  city: { flex: 3 },
   card: {
-    gap: spacing(3),
-    borderRadius: radius.card,
+    padding: 18,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    padding: spacing(4),
   },
-  small: {
-    fontFamily: font.regular,
-    fontSize: 12,
-    lineHeight: 17,
-    color: colors["muted-foreground"],
+  itemCard: { alignItems: "center", gap: spacing(2) },
+  itemTitle: {
+    textAlign: "center",
+    fontFamily: font.bold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.foreground,
   },
-  center: { textAlign: "center" },
-  text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.foreground },
-  label: { fontFamily: font.medium, fontSize: 14, color: colors.foreground },
-  choices: { gap: spacing(2) },
-  choiceRow: { flexDirection: "row", gap: spacing(2) },
-  choice: {
-    flex: 1,
-    minHeight: 44,
-    paddingHorizontal: spacing(1),
+  steps: { gap: spacing(3) },
+  step: { flexDirection: "row", alignItems: "flex-start", gap: spacing(3) },
+  dot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.input,
-    borderWidth: 1,
-    borderColor: colors.border,
+    flexShrink: 0,
+  },
+  dotOff: {
+    borderWidth: 2,
+    borderColor: colors["border-strong"],
     backgroundColor: colors.surface,
   },
-  choiceOn: { borderColor: colors.primary, backgroundColor: colors["primary-soft"] },
-  choiceText: { fontFamily: font.medium, fontSize: 13, color: colors.foreground },
-  choiceTextOn: { color: colors["primary-strong"] },
-  error: { fontFamily: font.regular, fontSize: 13, color: colors.danger },
-  address: { flexDirection: "row", alignItems: "flex-start", gap: spacing(2) },
-  addressText: { flex: 1, gap: spacing(1) },
-  footer: { gap: spacing(2) },
+  stepText: { flex: 1, gap: 2, paddingTop: 3 },
+  stepTitle: { fontFamily: font.bold, fontSize: 14, lineHeight: 19, color: colors.foreground },
+  stepTitleOff: { color: colors["muted-foreground"] },
+  stepDetail: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
+  done: {
+    textAlign: "center",
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
 });
 
 // Réservé selon la place dans l'entreprise (ADR 0241).
