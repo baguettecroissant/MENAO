@@ -4282,7 +4282,9 @@ export const fr = {
       intro:
         "Donnez une carte à chaque client, y compris ceux trouvés hors MENAO : le QR code mène à votre fiche, avec vos réalisations et vos avis vérifiés.",
       printHint:
-        "10 cartes de 85 × 55 mm par feuille A4 : imprimez à 100 %, sans mise à l'échelle.",
+        "Deux pages : les rectos puis les versos, 10 cartes de 85 × 55 mm par feuille A4. Imprimez en recto-verso (bord long), à 100 %, sans mise à l'échelle.",
+      printNoDuplex:
+        "Sans recto-verso : imprimez la page 1, remettez la feuille dans l'imprimante, puis imprimez la page 2.",
       print: "Imprimer la planche",
       // Refonte « Nette » (ADR 0253).
       printTitle: "Imprimer",
@@ -4296,11 +4298,20 @@ export const fr = {
       // Modèles aux couleurs de MENAO (ADR 0263).
       verified: "Artisan vérifié",
       modelTitle: "Modèle",
+      // Modèles du lot 39 (ADR 0299), recto et verso.
       models: {
-        nuit: { label: "Nuit", text: "Le bleu nuit de MENAO : le plus reconnaissable." },
-        clair: { label: "Clair", text: "Bleu clair et blanc, badge « Artisan vérifié » en avant." },
-        sobre: { label: "Sobre", text: "Blanc, votre nom d'abord, MENAO discret." },
+        signature: {
+          label: "Signature",
+          text: "Le dégradé bleu nuit de MENAO, le symbole en filigrane.",
+        },
+        sourire: { label: "Sourire", text: "Le sourire du logo traverse la carte en bleu." },
+        bleu: { label: "Bleu vif", text: "Tout en bleu MENAO, votre nom en grand." },
+        label: { label: "Label", text: "Crème et quadrillé, le sceau « Artisan vérifié »." },
       },
+      faces: { recto: "Recto", verso: "Verso" },
+      previewTitle: "Votre carte",
+      scanHint: "Scannez pour voir ma fiche MENAO et me demander un devis.",
+      seal: "ARTISAN VÉRIFIÉ · MENAO · ARTISAN VÉRIFIÉ · MENAO ·",
     },
     publicProfile: {
       // Adresse publique de la fiche, choix pour Google et badge pour son site (F-61, ADR 0144).

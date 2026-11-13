@@ -4039,11 +4039,11 @@ export const fr = {
         qrLabel: "QR code de votre fiche MENAO",
         shareMessage: (name: string, url: string) =>
           `${name} sur MENAO : ma fiche et mes avis vérifiés. ${url}`,
-        // Carte de visite aux couleurs de MENAO (lot 17) : verso (QR code) d'abord, recto au
-        // balayage. Rien sur l'impression ni l'achat (règle 10).
+        // Carte de visite aux couleurs de MENAO (lot 39, comme le site) : verso (QR code) d'abord,
+        // recto au balayage. Rien sur l'impression ni l'achat (règle 10).
         swipe: { recto: "Glissez pour voir le recto", verso: "Glissez pour voir le verso" },
         modelLabel: "Modèle de la carte",
-        models: { nuit: "Nuit", clair: "Clair", sobre: "Sobre" },
+        models: { signature: "Signature", sourire: "Sourire", bleu: "Bleu vif", label: "Label" },
         faces: { recto: "recto", verso: "verso" },
         cardLabel: (model: string, face: string) => `Carte de visite, modèle ${model}, ${face}`,
         expandHint: "Touchez pour agrandir le QR code.",
@@ -4051,6 +4051,11 @@ export const fr = {
         showFace: (face: string) => `Voir le ${face}`,
         verified: "Artisan vérifié",
         tagline: "Mes réalisations et mes avis vérifiés",
+        // Même phrase sur deux lignes, sous le QR code du verso Sourire (maquette du lot 39).
+        taglineTwoLines: "Mes réalisations\net mes avis vérifiés",
+        // Phrase sous le QR code (modèle Signature) et texte du sceau rond (modèle Label).
+        scanHint: "Scannez pour voir ma fiche MENAO et me demander un devis.",
+        seal: "ARTISAN VÉRIFIÉ · MENAO · ARTISAN VÉRIFIÉ · MENAO ·",
       },
       referral: {
         qrLabel: "QR code de parrainage",

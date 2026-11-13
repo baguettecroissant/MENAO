@@ -31,7 +31,12 @@ export function Segmented<V extends string | number>({
             }}
             style={[styles.option, selected && styles.optionOn]}
           >
-            <Text style={[styles.text, selected && styles.textOn]} numberOfLines={1}>
+            <Text
+              style={[styles.text, selected && styles.textOn]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+            >
               {option.label}
             </Text>
           </Pressable>
