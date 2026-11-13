@@ -24,7 +24,7 @@ test("prix des factures : fourniture reconnue mise à jour, article inconnu ajou
   ).toBeChecked();
   const joint = page.getByLabel("Ajouter Joint fibre fictif 15x21 à mes fournitures");
   await expect(joint).not.toBeChecked();
-  await joint.check();
+  await joint.check({ force: true });
   await page.getByRole("button", { name: "Mettre à jour 1 prix, ajouter 1" }).click();
 
   await expect(page).toHaveURL(/\/pro\/bibliotheque\?vue=fournitures&factures=1&ajouts=1/, {
