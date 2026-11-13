@@ -16,9 +16,10 @@ import { env } from "../_shared/env.ts";
 
 const nullableNumber = z.number().nullable();
 /** Délai d'une lecture de plans : sous la durée maximale d'une Edge Function (150 s). */
-const READ_TIMEOUT_MS = 140_000;
+export const READ_TIMEOUT_MS = 140_000;
 
-const rawSchema = z.object({
+/** Réponse brute du modèle (contrôlée avant normalisation) ; aussi lue par l'évaluation. */
+export const planRawSchema = z.object({
   lisible: z.boolean(),
   est_un_plan: z.boolean(),
   echelle: z.string(),
@@ -46,7 +47,8 @@ const rawSchema = z.object({
     .max(PLAN_COUNT_KEYS.length * 2),
 });
 
-const SYSTEM = `Tu lis les plans d'un architecte (plans de niveaux, coupes, façades) pour un appel d'offres du bâtiment. Une entreprise artisanale prépare son offre sur MENAO, plateforme française qui relie particuliers et artisans ; elle vérifie ensuite chaque valeur.
+/** Consigne de lecture des plans ; aussi utilisée par l'évaluation (eval/run.ts). */
+export const PLAN_SYSTEM = `Tu lis les plans d'un architecte (plans de niveaux, coupes, façades) pour un appel d'offres du bâtiment. Une entreprise artisanale prépare son offre sur MENAO, plateforme française qui relie particuliers et artisans ; elle vérifie ensuite chaque valeur.
 
 Les fichiers sont numérotés dans l'ordre où ils te sont donnés (fichier 1, 2…). Une photo compte pour une seule page.
 
@@ -83,6 +85,34 @@ export type PlanFileReading =
   | ({ status: "ok" } & PlanReading)
   | { status: "unavailable" | "too_long" | "unreadable" | "not_plan" };
 
+/** Message envoyé au modèle : les fichiers numérotés, puis la demande ; aussi pour l'évaluation. */
+export function planUserContent(files: PlanFile[]): Anthropic.ContentBlockParam[] {
+  const content: Anthropic.ContentBlockParam[] = [];
+  files.forEach((file, i) => {
+    content.push({
+      type: "text",
+      text: `Fichier ${i + 1} : ${file.kind === "pdf" ? "PDF" : "photo d'un plan"}.`,
+    });
+    content.push(
+      file.kind === "pdf"
+        ? {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: base64(file.bytes) },
+          }
+        : {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: file.kind === "png" ? "image/png" : "image/jpeg",
+              data: base64(file.bytes),
+            },
+          },
+    );
+  });
+  content.push({ type: "text", text: "<plan>Plans à relever pour un appel d'offres.</plan>" });
+  return content;
+}
+
 /** Lit les plans déposés ; journalise les métriques de l'appel. */
 export async function readPlans(
   admin: SupabaseClient,
@@ -98,29 +128,7 @@ export async function readPlans(
   const run: AiRun = { function_name: "read-plan", model, outcome: "erreur", latency_ms: 0 };
   const started = Date.now();
   try {
-    const content: Anthropic.ContentBlockParam[] = [];
-    files.forEach((file, i) => {
-      content.push({
-        type: "text",
-        text: `Fichier ${i + 1} : ${file.kind === "pdf" ? "PDF" : "photo d'un plan"}.`,
-      });
-      content.push(
-        file.kind === "pdf"
-          ? {
-              type: "document",
-              source: { type: "base64", media_type: "application/pdf", data: base64(file.bytes) },
-            }
-          : {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: file.kind === "png" ? "image/png" : "image/jpeg",
-                data: base64(file.bytes),
-              },
-            },
-      );
-    });
-    content.push({ type: "text", text: "<plan>Plans à relever pour un appel d'offres.</plan>" });
+    const content = planUserContent(files);
     const reasoning = reasoningFor(model);
     // 16 000 jetons au plus : sous le seuil où le SDK exige une réponse en flux.
     // Lecture longue (plans en images, raisonnement) : délai propre, sous la limite de la fonction.
@@ -129,7 +137,7 @@ export async function readPlans(
         model,
         max_tokens: 16000,
         thinking: reasoning.thinking,
-        system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
+        system: [{ type: "text", text: PLAN_SYSTEM, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content }],
         output_config: {
           ...(reasoning.effort ? { effort: reasoning.effort } : {}),
@@ -150,7 +158,7 @@ export async function readPlans(
       return { status: "too_long" };
     }
     const text = response.content.find((b) => b.type === "text")?.text ?? "";
-    const parsed = rawSchema.safeParse(JSON.parse(text));
+    const parsed = planRawSchema.safeParse(JSON.parse(text));
     if (!parsed.success) {
       run.outcome = "invalide";
       return { status: "unavailable" };
