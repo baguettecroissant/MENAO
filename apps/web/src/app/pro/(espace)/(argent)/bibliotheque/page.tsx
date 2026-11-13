@@ -1,5 +1,5 @@
 import { formatCoefficient, formatRateBp, parisToday } from "@menao/core";
-import { BookOpen, Plus, Search, Upload } from "lucide-react";
+import { BookOpen, Plus, ReceiptText, Search, Upload } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { LibrarySettingsForm } from "@/components/pro/library-settings-form";
@@ -9,6 +9,7 @@ import { MenaoLibraryStart } from "@/components/pro/menao-library-start";
 import { ButtonLink, Card, CardTitle, StatusBadge, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { type LibraryWork, loadLibrary, loadMenaoTrades, tradeLabels } from "@/lib/artisan/library";
+import { loadInvoicePrices } from "@/lib/artisan/library-invoices";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.library;
@@ -37,7 +38,7 @@ const plain = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").to
  * anciens devis à la première ouverture. Patron et chef d'équipe seulement.
  */
 export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibliotheque">) {
-  const { vue, q, metier, menao, metiers, importe, maj } = await searchParams;
+  const { vue, q, metier, menao, metiers, importe, maj, factures, ajouts } = await searchParams;
   const view = vue === "fournitures" ? "fournitures" : "ouvrages";
   const query = typeof q === "string" ? q.slice(0, 100) : "";
   const { supabase, artisanId } = await requireTeamPermission("money");
@@ -61,6 +62,15 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
   }
 
   const menaoWorks = library.works.filter((w) => w.source === "menao");
+  // Prix d'achat repérés dans les factures lues dans Dépenses (F-149).
+  const invoicePrices = await loadInvoicePrices(supabase, library);
+  const invoiceDone =
+    typeof factures === "string" && /^\d{1,3}$/.test(factures)
+      ? {
+          updated: Number(factures),
+          added: typeof ajouts === "string" && /^\d{1,3}$/.test(ajouts) ? Number(ajouts) : 0,
+        }
+      : null;
   const labels = menaoWorks.length ? await tradeLabels(supabase) : [];
   const tradeOf = new Map(labels.map((l) => [l.code, l.label]));
   const tradeFilters = labels.filter((l) => menaoWorks.some((w) => w.trade_code === l.code));
@@ -121,6 +131,29 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
           >
             <Upload aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             <span>{t.importer.done(imported.added, imported.updated, view)}</span>
+          </p>
+        )}
+        {invoiceDone && (
+          <p
+            role="status"
+            className="flex items-start gap-3 rounded-input bg-success-soft px-4 py-3 text-sm text-success"
+          >
+            <ReceiptText aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{t.invoices.done(invoiceDone.updated, invoiceDone.added)}</span>
+          </p>
+        )}
+        {!invoiceDone && (invoicePrices.changes.length > 0 || invoicePrices.fresh.length > 0) && (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-input bg-primary-soft px-4 py-3 text-sm text-primary-strong">
+            <ReceiptText aria-hidden="true" className="size-4 shrink-0" />
+            <span className="flex-1">
+              {t.invoices.banner(invoicePrices.changes.length, invoicePrices.fresh.length)}
+            </span>
+            <Link
+              href={"/pro/bibliotheque/prix-factures" as Route}
+              className="font-semibold underline-offset-2 hover:underline"
+            >
+              {t.invoices.bannerLink}
+            </Link>
           </p>
         )}
         {library.seededCount !== null && (

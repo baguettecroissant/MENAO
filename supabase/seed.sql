@@ -271,3 +271,17 @@ values
 -- associés (les réglages des chiffres sont créés par la migration ; aucune cible dans le seed).
 insert into public.acquisition_codes (id, code, libelle, canal, member_id) values
   ('b6540000-0000-4000-8000-000000000001', 'essai-flyer', 'Flyer d''essai', 'flyer', 'b6520000-0000-4000-8000-000000000003');
+
+-- Prix d'achat repérés dans les factures (F-149, ADR 0311) : une fourniture de la plombière
+-- disponible et une facture fournisseur déjà lue dans Dépenses (payée), dont une ligne reprend la
+-- fourniture (même référence, prix en hausse) et une autre est un article inconnu. Données fictives.
+insert into public.artisan_supplies (id, artisan_id, designation, reference, unit, purchase_price_cents, price_on) values
+  ('c1490000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000012', 'Flexible inox fictif 50 cm',
+   'FLX-50', 'u', 650, current_date - 60);
+insert into public.expenses (id, artisan_id, title, supplier_name, issued_on, paid_on, total_ht_cents, total_tva_cents) values
+  ('c1490000-0000-4000-8000-000000000002', 'b0000000-0000-4000-8000-000000000012', 'Facture négoce fictive',
+   'Négoce fictif', current_date - 3, current_date - 3, 2210, 442);
+insert into public.expense_lines (expense_id, position, designation, reference, quantity_milli, unit,
+  unit_price_ht_cents, total_ht_cents) values
+  ('c1490000-0000-4000-8000-000000000002', 1, 'Flexible inox 50cm', 'flx 50', 2000, 'u', 715, 1430),
+  ('c1490000-0000-4000-8000-000000000002', 2, 'Joint fibre fictif 15x21', null, 10000, 'u', 78, 780);

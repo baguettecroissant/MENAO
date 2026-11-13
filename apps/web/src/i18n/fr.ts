@@ -5556,6 +5556,68 @@ export const fr = {
           generic: "Le fichier n'a pas pu être lu. Réessayez dans un instant.",
         } as Record<string, string>,
       },
+      // Prix d'achat repérés dans les factures (F-149, ADR 0311, maquette lot 43).
+      invoices: {
+        title: "Mes prix d'achat à jour",
+        intro: [
+          "MENAO compare les lignes de vos factures fournisseurs, déjà lues dans ",
+          "Dépenses",
+          ", à vos fournitures : par la référence, sinon par la désignation et l'unité.",
+        ] as const,
+        changedTitle: (n: number) => `${n} prix d'achat ${n > 1 ? "ont" : "a"} changé`,
+        since: (date: string) => `Factures lues depuis le ${date}`,
+        columns: {
+          supply: "Fourniture",
+          invoice: "Facture",
+          current: "Prix actuel",
+          next: "Nouveau prix",
+          delta: "Écart",
+        },
+        matched: {
+          reference: (ref: string) => `Reconnue : Réf. ${ref}`,
+          designation: "Reconnue : même désignation",
+        },
+        source: (supplier: string | null, date: string) =>
+          `${supplier ? `${supplier} · ` : ""}facture du ${date}`,
+        noPrice: "à renseigner",
+        select: (name: string) => `Mettre à jour le prix de ${name}`,
+        jump: "Écart de plus de 30 % : décochée par défaut, à vérifier (conditionnement différent ?).",
+        freshTitle: (n: number) =>
+          `${n} article${n > 1 ? "s" : ""} pas encore dans vos fournitures`,
+        freshLead: "Cochez ceux à ajouter, avec le prix de la facture.",
+        add: (name: string) => `Ajouter ${name} à mes fournitures`,
+        summaryTitle: "Ce qui va changer",
+        summary: {
+          updated: "Prix d'achat mis à jour",
+          added: "Fournitures ajoutées",
+          works: "Ouvrages recalculés",
+        },
+        button: (updated: number, added: number) =>
+          updated > 0
+            ? `Mettre à jour ${updated} prix${added > 0 ? `, ajouter ${added}` : ""}`
+            : added > 0
+              ? `Ajouter ${added} fourniture${added > 1 ? "s" : ""}`
+              : "Laisser ces prix tels quels",
+        note: "Les prix sont datés de la facture. Vos devis déjà envoyés ne changent pas.",
+        empty:
+          "Aucun prix d'achat n'a changé dans vos factures des 90 derniers jours. Les nouvelles factures lues dans Dépenses apparaîtront ici.",
+        toExpenses: "Ouvrir Dépenses",
+        banner: (changed: number, fresh: number) =>
+          changed > 0
+            ? `${changed} prix d'achat ${changed > 1 ? "ont" : "a"} changé dans vos factures.`
+            : `${fresh} article${fresh > 1 ? "s" : ""} de vos factures ${fresh > 1 ? "ne sont" : "n'est"} pas encore dans vos fournitures.`,
+        bannerLink: "Vérifier",
+        done: (updated: number, added: number) =>
+          [
+            updated > 0 ? `${updated} prix d'achat mis à jour` : null,
+            added > 0
+              ? `${added} fourniture${added > 1 ? "s" : ""} ajoutée${added > 1 ? "s" : ""}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(", ") + (updated + added > 0 ? "." : "Factures passées en revue."),
+        invalid: "La mise à jour n'a pas pu être faite. Rechargez la page et réessayez.",
+      },
       // Bibliothèque MENAO par défaut (F-147, ADR 0306-0307) : premier passage, liste, ouvrage.
       menao: {
         chip: "MENAO",
