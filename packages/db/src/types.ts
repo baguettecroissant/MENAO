@@ -965,6 +965,7 @@ export type Database = {
           artisan_id: string;
           hour_cost_cents: number | null;
           hour_price_cents: number | null;
+          library_onboarded_at: string | null;
           margin_alert_bp: number | null;
           price_max_age_months: number;
           seeded_at: string | null;
@@ -976,6 +977,7 @@ export type Database = {
           artisan_id: string;
           hour_cost_cents?: number | null;
           hour_price_cents?: number | null;
+          library_onboarded_at?: string | null;
           margin_alert_bp?: number | null;
           price_max_age_months?: number;
           seeded_at?: string | null;
@@ -986,6 +988,7 @@ export type Database = {
           artisan_id?: string;
           hour_cost_cents?: number | null;
           hour_price_cents?: number | null;
+          library_onboarded_at?: string | null;
           margin_alert_bp?: number | null;
           price_max_age_months?: number;
           seeded_at?: string | null;
@@ -1267,8 +1270,9 @@ export type Database = {
           created_at: string;
           designation: string;
           id: string;
+          menao_supply_id: string | null;
           price_on: string | null;
-          purchase_price_cents: number;
+          purchase_price_cents: number | null;
           reference: string | null;
           supplier: string | null;
           unit: Database["public"]["Enums"]["quote_unit"];
@@ -1281,8 +1285,9 @@ export type Database = {
           created_at?: string;
           designation: string;
           id?: string;
+          menao_supply_id?: string | null;
           price_on?: string | null;
-          purchase_price_cents: number;
+          purchase_price_cents?: number | null;
           reference?: string | null;
           supplier?: string | null;
           unit?: Database["public"]["Enums"]["quote_unit"];
@@ -1294,8 +1299,9 @@ export type Database = {
           created_at?: string;
           designation?: string;
           id?: string;
+          menao_supply_id?: string | null;
           price_on?: string | null;
-          purchase_price_cents?: number;
+          purchase_price_cents?: number | null;
           reference?: string | null;
           supplier?: string | null;
           unit?: Database["public"]["Enums"]["quote_unit"];
@@ -1308,6 +1314,13 @@ export type Database = {
             columns: ["artisan_id"];
             isOneToOne: false;
             referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "artisan_supplies_menao_supply_id_fkey";
+            columns: ["menao_supply_id"];
+            isOneToOne: false;
+            referencedRelation: "menao_supplies";
             referencedColumns: ["id"];
           },
         ];
@@ -1566,6 +1579,7 @@ export type Database = {
           id: string;
           line_type: Database["public"]["Enums"]["quote_line_type"];
           manual_price_cents: number | null;
+          menao_work_id: string | null;
           price_cents: number | null;
           source: string;
           unit: Database["public"]["Enums"]["quote_unit"];
@@ -1582,6 +1596,7 @@ export type Database = {
           id?: string;
           line_type?: Database["public"]["Enums"]["quote_line_type"];
           manual_price_cents?: number | null;
+          menao_work_id?: string | null;
           price_cents?: number | null;
           source?: string;
           unit?: Database["public"]["Enums"]["quote_unit"];
@@ -1597,6 +1612,7 @@ export type Database = {
           id?: string;
           line_type?: Database["public"]["Enums"]["quote_line_type"];
           manual_price_cents?: number | null;
+          menao_work_id?: string | null;
           price_cents?: number | null;
           source?: string;
           unit?: Database["public"]["Enums"]["quote_unit"];
@@ -3218,6 +3234,148 @@ export type Database = {
           version?: string;
         };
         Relationships: [];
+      };
+      menao_supplies: {
+        Row: {
+          code: string;
+          created_at: string;
+          designation: string;
+          id: string;
+          price_max_cents: number | null;
+          price_min_cents: number | null;
+          price_on: string | null;
+          price_source: string | null;
+          trade_code: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          created_at?: string;
+          designation: string;
+          id?: string;
+          price_max_cents?: number | null;
+          price_min_cents?: number | null;
+          price_on?: string | null;
+          price_source?: string | null;
+          trade_code: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          designation?: string;
+          id?: string;
+          price_max_cents?: number | null;
+          price_min_cents?: number | null;
+          price_on?: string | null;
+          price_source?: string | null;
+          trade_code?: string;
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "menao_supplies_trade_code_fkey";
+            columns: ["trade_code"];
+            isOneToOne: false;
+            referencedRelation: "trades";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
+      menao_work_components: {
+        Row: {
+          position: number;
+          quantity_milli: number;
+          supply_id: string;
+          work_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          position: number;
+          quantity_milli: number;
+          supply_id: string;
+          work_id: string;
+        };
+        Update: {
+          position?: number;
+          quantity_milli?: number;
+          supply_id?: string;
+          work_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "menao_work_components_supply_id_fkey";
+            columns: ["supply_id"];
+            isOneToOne: false;
+            referencedRelation: "menao_supplies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "menao_work_components_work_id_fkey";
+            columns: ["work_id"];
+            isOneToOne: false;
+            referencedRelation: "menao_works";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      menao_works: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          description: string | null;
+          designation: string;
+          hours_milli: number;
+          id: string;
+          position: number;
+          trade_code: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          updated_at: string;
+          vat_rate_bp: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          description?: string | null;
+          designation: string;
+          hours_milli: number;
+          id?: string;
+          position: number;
+          trade_code: string;
+          unit: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          description?: string | null;
+          designation?: string;
+          hours_milli?: number;
+          id?: string;
+          position?: number;
+          trade_code?: string;
+          unit?: Database["public"]["Enums"]["quote_unit"];
+          updated_at?: string;
+          vat_rate_bp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "menao_works_trade_code_fkey";
+            columns: ["trade_code"];
+            isOneToOne: false;
+            referencedRelation: "trades";
+            referencedColumns: ["code"];
+          },
+        ];
       };
       message_pushes: {
         Row: {
@@ -6787,6 +6945,7 @@ export type Database = {
         Args: { p_chantier_id: string; p_message: string };
         Returns: string;
       };
+      artisan_adopt_menao_library: { Args: { p_trade_codes: string[] }; Returns: number };
       artisan_calendar_events: {
         Args: { p_token: string };
         Returns: {
@@ -6873,6 +7032,7 @@ export type Database = {
       artisan_delete_dictation: { Args: { p_chantier_id: string }; Returns: undefined };
       artisan_delete_expense: { Args: { p_expense_id: string }; Returns: string };
       artisan_delete_tender: { Args: { p_tender_id: string }; Returns: string[] };
+      artisan_dismiss_menao_library: { Args: Record<PropertyKey, never>; Returns: undefined };
       artisan_fix_appointment: {
         Args: { p_date: string; p_request_id: string; p_time: string };
         Returns: string;

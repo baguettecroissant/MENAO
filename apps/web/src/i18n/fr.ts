@@ -5463,6 +5463,8 @@ export const fr = {
         inUse:
           "Cette fourniture est utilisée dans un ouvrage : retirez-la d'abord de sa composition.",
         old: "Prix à vérifier",
+        // Fourniture copiée de la bibliothèque MENAO (F-147) : prix d'achat pas encore saisi.
+        missing: "À renseigner",
         empty: "Aucune fourniture pour l'instant.",
         invalid: "Indiquez la désignation et un prix d'achat valide.",
       },

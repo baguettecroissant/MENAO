@@ -30,7 +30,13 @@ export const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = {
 
 export type LibrarySupply = {
   id: string;
-  purchasePriceCents: number;
+  /** Prix d'achat de l'artisan ; null tant qu'il ne l'a pas saisi (fourniture copiée du catalogue MENAO). */
+  purchasePriceCents: number | null;
+  /**
+   * Fourchette de prix publics HT de la fourniture MENAO liée (F-147), quand une source est branchée :
+   * sert de repère tant que le prix d'achat manque.
+   */
+  publicRange?: { minCents: number; maxCents: number } | null;
   /** Perte (chutes, casse), en points de base : 10 % = 1 000. */
   wasteBp: number;
 };
@@ -61,15 +67,66 @@ export function componentAmounts(
   let cost: number | null = null;
   if (c.kind === "fourniture") {
     const supply = c.supplyId ? supplies.get(c.supplyId) : undefined;
-    if (supply) {
-      cost = Math.round(
-        (supply.purchasePriceCents * (10_000 + supply.wasteBp) * c.quantityMilli) / 10_000_000,
-      );
+    if (supply && supply.purchasePriceCents !== null) {
+      cost = supplyCost(supply.purchasePriceCents, supply.wasteBp, c.quantityMilli);
     }
   } else if (c.costCents !== null) {
     cost = Math.round((c.costCents * c.quantityMilli) / 1000);
   }
   return { costCents: cost, saleCents: coef(cost) };
+}
+
+/** Coût d'une quantité de fourniture (millièmes), perte comprise. */
+function supplyCost(unitCents: number, wasteBp: number, quantityMilli: number): number {
+  return Math.round((unitCents * (10_000 + wasteBp) * quantityMilli) / 10_000_000);
+}
+
+/** Fourchette d'un prix de vente HT (F-147) : bas, haut, et le milieu retenu par défaut. */
+export type PriceRange = { lowCents: number; highCents: number; midCents: number };
+
+/**
+ * Prix indicatif d'un ouvrage (F-147) : pose × prix de vente de l'heure, plus fournitures et frais ×
+ * coefficient. Chaque fourniture compte à son prix d'achat s'il est connu, sinon à la fourchette de
+ * prix publics de la fourniture MENAO liée. Null si une donnée manque (prix de l'heure, ou fourniture
+ * sans prix ni fourchette). Jamais un prix commun : tout passe par les réglages de l'artisan.
+ */
+export function workPriceRange(
+  components: readonly WorkComponent[],
+  settings: LibrarySettings,
+  supplies: ReadonlyMap<string, LibrarySupply>,
+): PriceRange | null {
+  if (components.length === 0) return null;
+  let low = 0;
+  let high = 0;
+  for (const c of components) {
+    if (c.kind === "heures") {
+      if (settings.hourPriceCents === null) return null;
+      const sale = Math.round((settings.hourPriceCents * c.quantityMilli) / 1000);
+      low += sale;
+      high += sale;
+      continue;
+    }
+    let costLow: number;
+    let costHigh: number;
+    if (c.kind === "fourniture") {
+      const supply = c.supplyId ? supplies.get(c.supplyId) : undefined;
+      if (!supply) return null;
+      if (supply.purchasePriceCents !== null) {
+        costLow = costHigh = supplyCost(supply.purchasePriceCents, supply.wasteBp, c.quantityMilli);
+      } else if (supply.publicRange) {
+        costLow = supplyCost(supply.publicRange.minCents, supply.wasteBp, c.quantityMilli);
+        costHigh = supplyCost(supply.publicRange.maxCents, supply.wasteBp, c.quantityMilli);
+      } else {
+        return null;
+      }
+    } else {
+      if (c.costCents === null) return null;
+      costLow = costHigh = Math.round((c.costCents * c.quantityMilli) / 1000);
+    }
+    low += Math.round((costLow * settings.supplyCoefBp) / 10_000);
+    high += Math.round((costHigh * settings.supplyCoefBp) / 10_000);
+  }
+  return { lowCents: low, highCents: high, midCents: Math.round((low + high) / 2) };
 }
 
 /** Taux de marque en points de base : (prix − coût) / prix. */
@@ -83,8 +140,13 @@ export type WorkPricing = {
   costCents: number | null;
   /** Prix calculé par la composition ; null si un élément n'a pas de prix de vente. */
   computedPriceCents: number | null;
-  /** Prix retenu : fixé à la main, sinon calculé. */
+  /**
+   * Prix retenu : fixé à la main, sinon calculé, sinon le milieu de la fourchette indicative
+   * (F-147 : fourniture MENAO sans prix d'achat, mais avec des prix publics).
+   */
   priceCents: number | null;
+  /** Fourchette indicative (prix d'achat ou prix publics) ; null si une donnée manque. */
+  range: PriceRange | null;
   marginCents: number | null;
   markupBp: number | null;
   supplies: ComponentAmounts;
@@ -117,12 +179,14 @@ export function workPricing(
   const empty = components.length === 0;
   const costCents = empty ? null : sum(amounts.map((x) => x.a.costCents));
   const computedPriceCents = empty ? null : sum(amounts.map((x) => x.a.saleCents));
-  const priceCents = manualPriceCents ?? computedPriceCents;
+  const range = empty ? null : workPriceRange(components, settings, supplies);
+  const priceCents = manualPriceCents ?? computedPriceCents ?? range?.midCents ?? null;
   const marginCents = priceCents !== null && costCents !== null ? priceCents - costCents : null;
   return {
     costCents,
     computedPriceCents,
     priceCents,
+    range,
     marginCents,
     markupBp:
       priceCents !== null && costCents !== null ? markupRateBp(priceCents, costCents) : null,

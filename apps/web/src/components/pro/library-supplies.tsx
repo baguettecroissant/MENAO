@@ -90,7 +90,12 @@ function SupplyForm({
             name="price"
             required
             inputMode="decimal"
-            defaultValue={supply ? formatEurosInput(supply.purchase_price_cents) : ""}
+            defaultValue={
+              supply && supply.purchase_price_cents !== null
+                ? formatEurosInput(supply.purchase_price_cents)
+                : ""
+            }
+            placeholder={supply ? t.missing : undefined}
             aria-label={of(t.price)}
             className={`${cell} text-right tabular-nums`}
           />
