@@ -35,9 +35,13 @@ export default async function QuoteSignaturePage({
   if ((document as unknown as QuoteDocument).quote.status !== "envoye")
     redirect(quoteHref as Route);
   const model = quoteDocumentModel(data);
-  // Par moment de paiement (F-146) : sans acompte, la première tranche est celle de la réception.
-  const deposit = data.schedule.find((s) => s.trigger === "signature");
-  const balance = data.schedule.find((s) => s.trigger === "reception");
+  // Échéancier accepté à la signature, tranche par tranche (F-146 : sans acompte, démarrage).
+  const parts = t.scheduleParts;
+  const hasDeposit = data.schedule.some((s) => s.trigger === "signature" && s.amountCents > 0);
+  const schedule = [
+    ...data.schedule.map((s) => parts[s.trigger](euros.format(s.amountCents / 100))),
+    ...(hasDeposit ? [] : [parts.noDeposit]),
+  ].join(", ");
 
   // Refonte « Nette » (ADR 0256) : le devis à gauche, les cases et la signature à droite.
   return (
@@ -51,18 +55,16 @@ export default async function QuoteSignaturePage({
           label={t.signature.tabs.label}
           steps={[
             { label: t.signature.tabs.sign, state: "current" },
-            { label: t.signature.tabs.deposit, state: "todo" },
+            ...(hasDeposit ? [{ label: t.signature.tabs.deposit, state: "todo" as const }] : []),
           ]}
         />
       }
       aside={
         <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
-          <QuoteSignatureForm
-            quoteId={id}
-            deposit={euros.format((deposit?.amountCents ?? 0) / 100)}
-            balance={euros.format((balance?.amountCents ?? 0) / 100)}
-          />
-          <p className="text-center text-xs text-muted-foreground">{t.signature.depositNext}</p>
+          <QuoteSignatureForm quoteId={id} schedule={schedule} />
+          <p className="text-center text-xs text-muted-foreground">
+            {hasDeposit ? t.signature.depositNext : t.noDeposit.next}
+          </p>
         </section>
       }
     >

@@ -25,7 +25,8 @@ LES CHANTIERS
 LES DEVIS
 - On crée le devis depuis la fiche du chantier (« Envoyer un devis ») une fois le rendez-vous passé. Les devis se retrouvent aussi dans Argent, onglet Devis.
 - Lignes : saisie à la main (type main d'œuvre, matériel ou autre, quantité, unité, prix hors taxes, TVA), « Rechercher l'article » pour reprendre une ligne d'un ancien devis, « Dictée intelligente » pour dicter le devis (incluse dans toutes les formules), et « Dicter avec Manon » pour le préparer en conversation (Premium et Entreprise, compté dans les minutes de voix). Les lignes proposées par l'IA sont marquées « À vérifier ».
-- « Enregistrer » garde le brouillon. « Générer le devis » montre l'aperçu, puis l'envoi : échéancier (acompte à la signature, par défaut 30 %, réglable), date de début et durée estimée. Le client signe en ligne.
+- « Enregistrer » garde le brouillon. « Générer le devis » montre l'aperçu, puis l'envoi : échéancier, date de début et durée estimée. Le client signe en ligne.
+- Échéancier de paiement : acompte à la signature (30 % par défaut, 0 % possible : devis sans acompte), paiement facultatif au démarrage des travaux, et solde calculé à la réception (exemple : 30 / 40 / 30). L'échéancier par défaut se règle dans Argent, bouton « Mes paiements » ; il reste modifiable devis par devis à l'envoi (« Échéancier personnalisé »). Sans acompte, la date des travaux se fixe dès la signature. Le paiement au démarrage est demandé au client le jour où le chantier commence ; il a sa facture d'acompte et se relance depuis « À encaisser ».
 - Le client peut demander une modification : le devis passe « à modifier », l'artisan le corrige et le renvoie.
 - En franchise en base de TVA, les devis portent la mention prévue et aucune TVA.
 

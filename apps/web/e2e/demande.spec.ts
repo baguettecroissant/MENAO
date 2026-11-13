@@ -259,7 +259,9 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   const sending = proPage.getByRole("main");
   await expect(sending.getByRole("button", { name: "Envoyer le devis" })).toBeDisabled();
   await sending.getByRole("radio", { name: /Mon échéancier par défaut/ }).check();
-  await expect(sending.getByText(/30 % à la signature du devis, soit 27,55/)).toBeVisible();
+  // Lot 40 (F-146) : résumé de l'échéancier par défaut, montants à droite.
+  await expect(sending.getByText("30 % à la signature · 70 % à la réception")).toBeVisible();
+  await expect(sending.getByText(/27,55\s€/).first()).toBeVisible();
   await sending.getByLabel("Date de début prévisionnelle").fill(day(10));
   await sending.getByLabel("Durée estimée (en jours)").fill("2");
   await sending.getByRole("button", { name: "Envoyer le devis" }).click();

@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
           : kind === "solde"
             ? `${origin}/mon-espace/chantiers/${chantierId}/solde`
             : kind === "demarrage"
-              ? `${origin}/mon-espace/chantiers/${chantierId}`
+              ? `${origin}/mon-espace/chantiers/${chantierId}/demarrage`
               : `${origin}/mon-espace/devis/${quoteId}/acompte`,
       },
       { stripeAccount },

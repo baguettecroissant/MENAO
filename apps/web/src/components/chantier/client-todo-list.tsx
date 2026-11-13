@@ -44,7 +44,7 @@ function hrefOf(todo: ClientTodo<ClientTodoRow>): string {
     case "payer_solde":
       return `/mon-espace/chantiers/${id}/solde`;
     case "payer_demarrage":
-      return `/mon-espace/chantiers/${id}`;
+      return `/mon-espace/chantiers/${id}/demarrage`;
     case "valider_reception":
       return `/mon-espace/chantiers/${id}/reception`;
     case "donner_avis":

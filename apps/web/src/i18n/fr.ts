@@ -2829,6 +2829,11 @@ export const fr = {
       payTitle: "Vous avez un paiement à effectuer",
       payText: "Effectuez le paiement pour démarrer le chantier",
       payBalanceText: "Réglez le solde pour clôturer votre chantier",
+      // Paiement au démarrage (F-146, lot 40).
+      startChip: "Travaux commencés",
+      startTitle: "Paiement au démarrage",
+      startText: (percent: number) =>
+        `Votre artisan a prévu ${percent} % au démarrage des travaux.`,
       payNow: "À payer maintenant",
       total: "Total du chantier",
       pay: "Payer maintenant",
@@ -2931,6 +2936,35 @@ export const fr = {
     submitting: "Ouverture du paiement…",
     unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
     inProgress: "Votre paiement du solde est en cours de confirmation.",
+  },
+  /** Paiement au démarrage des travaux (F-146, maquette lot 40). */
+  startPayment: {
+    title: "Paiement au démarrage",
+    back: "Retour au chantier",
+    intro:
+      "Les travaux ont commencé : réglez la part prévue au démarrage. Le paiement est fait directement à l'entreprise de l'artisan, par Stripe.",
+    chip: "Travaux commencés",
+    started: (date: string | null, percent: number) =>
+      `${date ? `Les travaux ont commencé le ${date}.` : "Les travaux ont commencé."} Votre artisan a prévu ${percent} % au démarrage.`,
+    scheduleTitle: "Échéancier",
+    steps: {
+      signature: "Signature",
+      demarrage: "Démarrage des travaux",
+      reception: "Réception",
+    },
+    depositPaid: (amount: string) => `Acompte payé · ${amount}`,
+    depositDue: (amount: string) => `Acompte · ${amount}`,
+    noDeposit: "Sans acompte",
+    startNow: (amount: string) => `À payer aujourd'hui · ${amount}`,
+    balance: (amount: string) => `Solde · ${amount}`,
+    today: "Montant à payer aujourd'hui",
+    beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+    secure:
+      "Paiement sécurisé par Stripe, versé directement à l'entreprise. MENAO ne prend aucune commission.",
+    submit: (amount: string) => `Payer ${amount}`,
+    submitting: "Ouverture du paiement…",
+    unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
+    inProgress: "Votre paiement au démarrage est en cours de confirmation.",
   },
   /** Maquette « Mes chantiers - Modale » : fenêtre de l'application mobile (QR code). */
   appDownload: {
@@ -3239,7 +3273,22 @@ export const fr = {
     totalTva: "TVA",
     toPay: "À payer",
     trancheSignature: (percent: number) => `Acompte à la signature · ${percent} %`,
+    trancheDemarrage: (percent: number) => `Au démarrage des travaux · ${percent} %`,
     trancheReception: "Solde à la réception",
+    // Devis sans acompte (F-146, maquette lot 40).
+    noDeposit: {
+      chip: "Sans acompte",
+      title: "Rien à payer à la signature",
+      text: (amount: string) => `Vous payez tout à la réception des travaux : ${amount}.`,
+      next: "Après la signature, votre artisan fixe tout de suite la date des travaux.",
+    },
+    // Échéancier accepté à la signature (case « échéancier »), tranche par tranche.
+    scheduleParts: {
+      signature: (amount: string) => `acompte de ${amount} à la signature`,
+      demarrage: (amount: string) => `${amount} au démarrage des travaux`,
+      reception: (amount: string) => `solde de ${amount} à la réception des travaux`,
+      noDeposit: "sans acompte",
+    },
     document: "Contenu du devis",
     viewPdf: "Voir le PDF",
     newTab: "(nouvel onglet)",
@@ -3297,8 +3346,7 @@ export const fr = {
           "J'accepte les conditions d'utilisation de DocuSeal, prestataire de signature électronique.",
         cgu_menao:
           "J'accepte les conditions générales d'utilisation et la politique de confidentialité de MENAO.",
-        echeancier: (deposit: string, balance: string) =>
-          `J'accepte l'échéancier : acompte de ${deposit} à la signature, solde de ${balance} à la réception des travaux.`,
+        echeancier: (schedule: string) => `J'accepte l'échéancier : ${schedule}.`,
       },
       links: {
         provider: "Conditions DocuSeal",
@@ -3677,6 +3725,8 @@ export const fr = {
         suivi: "Suivi",
       },
       moneyIntro: "Vos devis, factures, dépenses et vos prix, au même endroit.",
+      // Lot 40 (F-146) : réglage de l'échéancier par défaut, depuis l'en-tête d'Argent.
+      moneyAction: { label: "Mes paiements", slug: "paiements" },
       storefrontTabs: { profil: "Ma fiche", avis: "Avis", grade: "Mon grade" },
       storefrontIntro: "Ce que voient les particuliers quand ils vous cherchent.",
     },
@@ -4756,11 +4806,20 @@ export const fr = {
       next: "Suivant",
       send: {
         title: "Envoi du devis",
-        scheduleTitle: "Échéancier de paiement à appliquer",
+        scheduleTitle: "Échéancier de paiement",
         defaultSchedule: "Mon échéancier par défaut",
         customSchedule: "Échéancier personnalisé",
-        customHint: "Configurez un échéancier sur-mesure",
+        customHint: "Acompte, démarrage et solde, pour ce devis",
         deposit: "Acompte à la signature (%)",
+        // Lot 40 (F-146) : trois tranches, barre et montants en direct.
+        customRows: {
+          signature: { title: "Acompte à la signature", hint: "0\u00a0% : sans acompte" },
+          demarrage: { title: "Au démarrage des travaux", hint: "0\u00a0% : aucun" },
+          reception: { title: "Solde à la réception", hint: "Calculé" },
+        },
+        defaultsLink: "Régler mon échéancier par défaut",
+        short: (percent: number, trigger: "signature" | "demarrage" | "reception") =>
+          `${percent} % ${trigger === "signature" ? "à la signature" : trigger === "demarrage" ? "au démarrage" : "à la réception"}`,
         tranche: (
           percent: number,
           trigger: "signature" | "demarrage" | "reception",
@@ -4772,7 +4831,7 @@ export const fr = {
         startDate: "Date de début prévisionnelle",
         duration: "Durée estimée (en jours)",
         datesHint:
-          "Indiquées sur le devis. Vous confirmerez la date de démarrage après le paiement de l'acompte.",
+          "Indiquées sur le devis. Vous confirmerez la date de démarrage après le paiement de l'acompte (dès la signature pour un devis sans acompte).",
         validity: (days: number) => `Le devis sera valable ${days} jours à compter de son envoi.`,
         attachTitle: "Ce devis sera rattaché au chantier suivant",
         client: "Client",
@@ -4969,6 +5028,50 @@ export const fr = {
     },
     // Envoi au comptable (F-63, ADR 0187) : factures et dépenses de la période, par un lien sécurisé.
     // Suivi de l'argent, agent comptable avancé (F-87, ADR 0237).
+    /** « Mes paiements » (F-146, maquette lot 40) : échéancier par défaut de l'artisan. */
+    payments: {
+      title: "Mes paiements",
+      metaTitle: "Mes paiements — MENAO",
+      scheduleTitle: "Mon échéancier par défaut",
+      scheduleHint: "Proposé à chaque devis, modifiable devis par devis",
+      templatesLabel: "Modèles d'échéancier",
+      templates: [
+        { deposit: 30, start: 0, label: "30 / 70", hint: "Acompte et solde" },
+        { deposit: 30, start: 40, label: "30 / 40 / 30", hint: "Avec le démarrage" },
+        { deposit: 0, start: 0, label: "0 / 100", hint: "Sans acompte" },
+        { deposit: 50, start: 0, label: "50 / 50", hint: "Moitié-moitié" },
+      ],
+      rows: {
+        signature: {
+          title: "Acompte à la signature",
+          hint: "Payé en ligne dès que le client signe. 0\u00a0% : sans acompte.",
+        },
+        demarrage: {
+          title: "Au démarrage des travaux",
+          hint: "Demandé au client le jour où le chantier commence. 0\u00a0% : aucun.",
+        },
+        reception: {
+          title: "Solde à la réception",
+          hint: "Le reste, calculé : payé à la fin des travaux, après la réception.",
+        },
+      },
+      percentLabel: (title: string) => `${title}, en pourcentage`,
+      total: "Total : 100 %. Le solde est toujours calculé.",
+      save: "Enregistrer",
+      saving: "Enregistrement…",
+      saved: "Échéancier par défaut enregistré.",
+      exampleTotalCents: 480_000,
+      exampleTitle: (total: string) => `Sur un devis de ${total} TTC`,
+      exampleLines: {
+        signature: "À la signature",
+        demarrage: "Au démarrage",
+        reception: "À la réception",
+      },
+      exampleNote:
+        "Chaque paiement a sa facture, et le client reçoit un rappel le jour où il est dû.",
+      tipTitle: "Bon à savoir",
+      tip: "Avec un paiement au démarrage, vos chantiers longs sont mieux financés. Sans acompte, le client signe plus facilement les petits travaux : la date se fixe dès la signature.",
+    },
     moneyOverview: {
       title: "Suivi",
       monthTitle: (month: string) => `${month.charAt(0).toUpperCase()}${month.slice(1)} en bref`,
@@ -6123,6 +6226,9 @@ export const fr = {
       balance: "Solde",
       balancePaid: "Solde reçu",
       balanceHint: "à la réception des travaux",
+      startPayment: "Au démarrage",
+      startPaid: "Démarrage reçu",
+      startHint: "dû le jour où les travaux commencent",
       seeQuote: "Voir le devis",
       planning: "Planning",
       appointment: "Rendez-vous",
@@ -7149,7 +7255,7 @@ export const fr = {
             },
             {
               q: "Comment fixer l'acompte demandé au client ?",
-              a: "À l'envoi du devis, vous choisissez le pourcentage payé à la signature ; le reste est demandé à la réception du chantier. MENAO propose 30 % par défaut, et vous pouvez enregistrer votre propre échéancier par défaut. Au-delà de 30 %, MENAO conseille au client de ne pas verser plus de 30 % avant le début des travaux, sans rien bloquer.",
+              a: "Dans Argent, le bouton « Mes paiements » règle votre échéancier par défaut : acompte à la signature (0 % pour un devis sans acompte), paiement facultatif au démarrage des travaux, et solde calculé à la réception. À l'envoi de chaque devis, vous gardez cet échéancier ou vous le personnalisez. MENAO propose 30 % d'acompte par défaut. Au-delà de 30 %, MENAO conseille au client de ne pas verser plus de 30 % avant le début des travaux, sans rien bloquer.",
             },
             {
               q: "Comment mon client signe-t-il le devis, et combien de temps est-il valable ?",
@@ -7175,7 +7281,7 @@ export const fr = {
             },
             {
               q: "Quand l'acompte et le solde sont-ils payés ?",
-              a: "Votre client règle l'acompte en ligne après avoir signé le devis, puis le solde après la réception des travaux, une fois les éventuelles réserves levées. Chaque paiement arrive sur votre compte Stripe, puis il est viré sur votre compte bancaire selon le calendrier de vos virements Stripe.",
+              a: "Votre client règle l'acompte en ligne après avoir signé le devis, le paiement au démarrage (s'il est prévu) le jour où les travaux commencent, puis le solde après la réception des travaux, une fois les éventuelles réserves levées. Chaque paiement arrive sur votre compte Stripe, puis il est viré sur votre compte bancaire selon le calendrier de vos virements Stripe.",
             },
             {
               q: "Où suivre mon argent, les frais Stripe et les remboursements ?",

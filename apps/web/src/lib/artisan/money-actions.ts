@@ -1,6 +1,7 @@
 "use server";
 
 import { PAYMENT_KINDS } from "@menao/core";
+import { paymentDefaultsSchema } from "@menao/validation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
@@ -47,4 +48,30 @@ export async function setAutoReminders(_prev: FormState, formData: FormData): Pr
   if (error) return { error: error.code === "42501" ? error.message : fr.errors.generic };
   revalidatePath(PATH);
   return { success: enabled ? t.autoOn : t.autoOff };
+}
+
+/** « Mes paiements » (F-146) : échéancier par défaut, proposé à chaque devis. */
+export async function savePaymentDefaults(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = {
+    depositPercent: text(formData, "depositPercent") ?? "",
+    startPercent: text(formData, "startPercent") ?? "",
+  };
+  const parsed = paymentDefaultsSchema.safeParse(values);
+  if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_payment_defaults", {
+    p_deposit_percent: parsed.data.depositPercent,
+    p_start_percent: parsed.data.startPercent,
+  });
+  if (error) {
+    return {
+      error: error.code === "22023" || error.code === "42501" ? error.message : fr.errors.generic,
+      values,
+    };
+  }
+  revalidatePath("/pro/paiements");
+  return { success: fr.pro.payments.saved, values };
 }

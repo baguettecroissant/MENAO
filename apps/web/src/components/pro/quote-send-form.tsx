@@ -1,14 +1,16 @@
 "use client";
 
-import { QUOTE_VALIDITY_DAYS, isValidDepositPercent, paymentSchedule } from "@menao/core";
+import { QUOTE_VALIDITY_DAYS, paymentSchedule, paymentScheduleError } from "@menao/core";
+import { messages } from "@menao/validation";
 import { Send, TriangleAlert } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useActionState, useRef, useState, type ReactNode } from "react";
-import { Alert, Button, Field, FieldError, Hint, inputClasses } from "@/components/ui";
+import { Alert, Button, Field, FieldError, Hint } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { sendQuote } from "@/lib/artisan/quote-actions";
 import { initialFormState } from "@/lib/auth/form";
+import { ScheduleBar, ScheduleLines, TrancheRow, percentOf } from "./payment-schedule";
 
 const t = fr.pro.quote.send;
 const l = fr.pro.quote.library;
@@ -23,14 +25,16 @@ const optionClasses = (selected: boolean) =>
   }`;
 
 /**
- * « Envoi du devis » (F-21, maquettes « Envoi du devis ») : échéancier par défaut ou
- * personnalisé (acompte à la signature, solde à la réception, montants de @menao/core), dates
- * des travaux (F-20), puis envoi. Le rattachement au chantier est passé en `children`.
+ * « Envoi du devis » (F-21, maquettes « Envoi du devis » et lot 40) : échéancier par défaut ou
+ * personnalisé (acompte à la signature, 0 % possible, paiement facultatif au démarrage, solde
+ * calculé à la réception ; montants de @menao/core, barre en direct), dates des travaux (F-20),
+ * puis envoi. Le rattachement au chantier est passé en `children`.
  */
 export function QuoteSendForm({
   quoteId,
   totalTtcCents,
   defaultDeposit,
+  defaultStart = 0,
   minStartDate,
   margin = null,
   children,
@@ -43,6 +47,8 @@ export function QuoteSendForm({
   quoteId: string;
   totalTtcCents: number;
   defaultDeposit: number;
+  /** Part par défaut payée au démarrage des travaux (F-146). */
+  defaultStart?: number;
   /** Lendemain (heure de Paris), au format AAAA-MM-JJ. */
   minStartDate: string;
   children: ReactNode;
@@ -53,12 +59,21 @@ export function QuoteSendForm({
   );
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [deposit, setDeposit] = useState(String(defaultDeposit));
+  const [start, setStart] = useState(String(defaultStart));
   const errors = state.fieldErrors ?? {};
-  const tranches = (percent: number) =>
-    paymentSchedule(totalTtcCents, percent).map((tranche) =>
-      t.tranche(tranche.percent, tranche.trigger, euros.format(tranche.amountCents / 100)),
-    );
-  const custom = Number(deposit);
+  const d = percentOf(deposit);
+  const st = percentOf(start);
+  const customInvalid = deposit === "" || start === "" || paymentScheduleError(d, st) !== null;
+  const defaults = paymentSchedule(totalTtcCents, defaultDeposit, defaultStart);
+  const custom = paymentSchedule(totalTtcCents, customInvalid ? 0 : d, customInvalid ? 0 : st);
+  // Récapitulatif à droite : l'échéancier choisi (par défaut tant que rien n'est choisi).
+  const shown = schedule === "personnalise" ? custom : defaults;
+  const amountOf = (trigger: "signature" | "demarrage" | "reception") =>
+    euros.format((custom.find((x) => x.trigger === trigger)?.amountCents ?? 0) / 100);
+  const percentIn = (trigger: "signature" | "demarrage" | "reception") =>
+    custom.find((x) => x.trigger === trigger)?.percent ?? 0;
+  const balanceError =
+    schedule === "personnalise" && customInvalid && d + st > 99 ? messages.scheduleNoBalance : null;
   const formRef = useRef<HTMLFormElement>(null);
   const confirmed = useRef(false);
   const [asking, setAsking] = useState(false);
@@ -147,60 +162,91 @@ export function QuoteSendForm({
               />
               <span className="flex flex-col gap-1">
                 <span className="font-medium">{t.defaultSchedule}</span>
-                <span className="flex flex-col text-sm text-muted-foreground">
-                  {tranches(defaultDeposit).map((line) => (
-                    <span key={line}>• {line}</span>
-                  ))}
+                <span className="text-sm text-muted-foreground">
+                  {defaults.map((tranche) => t.short(tranche.percent, tranche.trigger)).join(" · ")}
                 </span>
               </span>
             </label>
-            <label className={optionClasses(schedule === "personnalise")}>
-              <input
-                type="radio"
-                name="schedule"
-                value="personnalise"
-                checked={schedule === "personnalise"}
-                onChange={() => setSchedule("personnalise")}
-                className="mt-0.5 size-4 accent-primary in-[.app-nette]:accent-foreground"
-              />
-              <span className="flex flex-col gap-1">
-                <span className="font-medium">{t.customSchedule}</span>
-                <span className="text-sm text-muted-foreground">{t.customHint}</span>
-              </span>
-            </label>
-            {schedule === "defaut" && (
-              <input type="hidden" name="depositPercent" value={defaultDeposit} />
-            )}
-            {schedule === "personnalise" && (
-              <div className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="deposit" className="text-sm font-medium">
-                    {t.deposit}
-                  </label>
-                  <input
-                    id="deposit"
-                    name="depositPercent"
-                    inputMode="numeric"
-                    value={deposit}
-                    onChange={(event) => setDeposit(event.target.value)}
-                    aria-invalid={errors.depositPercent ? true : undefined}
-                    className={`${inputClasses} max-w-32`}
+            <div className="flex flex-col">
+              <label
+                className={`${optionClasses(schedule === "personnalise")} ${schedule === "personnalise" ? "rounded-b-none" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="schedule"
+                  value="personnalise"
+                  checked={schedule === "personnalise"}
+                  onChange={() => setSchedule("personnalise")}
+                  className="mt-0.5 size-4 accent-primary in-[.app-nette]:accent-foreground"
+                />
+                <span className="flex flex-col gap-1">
+                  <span className="font-medium">{t.customSchedule}</span>
+                  <span className="text-sm text-muted-foreground">{t.customHint}</span>
+                </span>
+              </label>
+              {schedule === "personnalise" && (
+                <div className="flex flex-col gap-1 rounded-b-card border border-t-0 border-primary bg-surface px-4 pt-1 pb-3 in-[.app-nette]:border-foreground in-[.app-nette]:shadow-[inset_0_0_0_1px_var(--color-foreground)]">
+                  <TrancheRow
+                    trigger="signature"
+                    title={t.customRows.signature.title}
+                    hint={t.customRows.signature.hint}
+                    percent={d}
+                    amount={amountOf("signature")}
+                    input={{
+                      id: "envoi-acompte",
+                      name: "depositPercent",
+                      value: deposit,
+                      label: t.deposit,
+                      onChange: setDeposit,
+                      invalid: Boolean(errors.depositPercent),
+                    }}
                   />
-                  {errors.depositPercent && <FieldError>{errors.depositPercent[0]}</FieldError>}
+                  <TrancheRow
+                    trigger="demarrage"
+                    title={t.customRows.demarrage.title}
+                    hint={t.customRows.demarrage.hint}
+                    percent={st}
+                    amount={amountOf("demarrage")}
+                    input={{
+                      id: "envoi-demarrage",
+                      name: "startPercent",
+                      value: start,
+                      label: fr.pro.payments.percentLabel(t.customRows.demarrage.title),
+                      onChange: setStart,
+                      invalid: Boolean(errors.startPercent) || balanceError !== null,
+                    }}
+                  />
+                  <TrancheRow
+                    trigger="reception"
+                    title={t.customRows.reception.title}
+                    hint={t.customRows.reception.hint}
+                    percent={customInvalid ? Math.max(0, 100 - d - st) : percentIn("reception")}
+                    amount={amountOf("reception")}
+                  />
+                  {(balanceError ?? errors.depositPercent?.[0] ?? errors.startPercent?.[0]) && (
+                    <FieldError>
+                      {balanceError ?? errors.depositPercent?.[0] ?? errors.startPercent?.[0]}
+                    </FieldError>
+                  )}
+                  <label className="flex items-center gap-2.5 pt-1.5 text-sm">
+                    <input type="checkbox" name="saveDefault" className="size-4 accent-primary" />
+                    {t.saveDefault}
+                  </label>
                 </div>
-                {isValidDepositPercent(custom) && (
-                  <p className="flex flex-col text-sm text-muted-foreground">
-                    {tranches(custom).map((line) => (
-                      <span key={line}>• {line}</span>
-                    ))}
-                  </p>
-                )}
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="saveDefault" className="size-4 accent-primary" />
-                  {t.saveDefault}
-                </label>
-              </div>
+              )}
+            </div>
+            {schedule === "defaut" && (
+              <>
+                <input type="hidden" name="depositPercent" value={defaultDeposit} />
+                <input type="hidden" name="startPercent" value={defaultStart} />
+              </>
             )}
+            <Link
+              href={"/pro/paiements" as Route}
+              className="self-start text-[0.84rem] font-semibold text-primary-strong hover:underline"
+            >
+              {t.defaultsLink}
+            </Link>
           </fieldset>
 
           <fieldset className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
@@ -230,11 +276,21 @@ export function QuoteSendForm({
         </div>
 
         <div className="flex flex-col gap-4 lg:[grid-area:side]">
-          <div className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
-            <span className="text-sm font-semibold text-label">{fr.pro.quote.totalTtc}</span>
-            <span className="font-display text-[2.5rem] leading-none font-bold tracking-tight">
-              {euros.format(totalTtcCents / 100)}
-            </span>
+          <div className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold text-label">{fr.pro.quote.totalTtc}</span>
+              <span className="font-display text-[2.5rem] leading-none font-bold tracking-tight">
+                {euros.format(totalTtcCents / 100)}
+              </span>
+            </div>
+            <ScheduleBar tranches={shown} height="h-3" />
+            <ScheduleLines
+              lines={shown.map((tranche) => ({
+                trigger: tranche.trigger,
+                label: t.short(tranche.percent, tranche.trigger),
+                amount: euros.format(tranche.amountCents / 100),
+              }))}
+            />
           </div>
           <section aria-label={t.attachTitle} className="flex flex-col gap-3">
             <h2 className="text-[0.9375rem] font-semibold text-label">{t.attachTitle}</h2>
@@ -243,7 +299,13 @@ export function QuoteSendForm({
         </div>
 
         <div className="sticky bottom-0 z-20 -mx-4 flex flex-col gap-1 border-t border-border bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:rounded-card lg:border lg:bg-surface lg:p-5 lg:shadow-card lg:[grid-area:send]">
-          <Button type="submit" size="lg" disabled={schedule === null || pending}>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={
+              schedule === null || pending || (schedule === "personnalise" && customInvalid)
+            }
+          >
             {pending ? t.sending : t.submit}
           </Button>
           <p className="text-center text-xs text-muted-foreground">{t.footer}</p>

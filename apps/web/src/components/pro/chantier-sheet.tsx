@@ -162,6 +162,7 @@ export function ChantierMoneyCard({
   signed,
   paidCents,
   deposit,
+  start = null,
   balance,
   quoteHref,
   links,
@@ -170,6 +171,8 @@ export function ChantierMoneyCard({
   signed: boolean;
   paidCents: number;
   deposit: { amountCents: number; paidAt: string | null } | null;
+  /** Paiement au démarrage des travaux (F-146) : dû une fois le chantier commencé. */
+  start?: { amountCents: number; paidAt: string | null; due: boolean } | null;
   balance: { amountCents: number; paid: boolean } | null;
   quoteHref: string | null;
   /** Factures et autres documents (PDF). */
@@ -216,7 +219,7 @@ export function ChantierMoneyCard({
           />
         </span>
       )}
-      {(deposit || balance) && (
+      {(deposit || start || balance) && (
         <dl className="flex flex-col">
           {deposit && (
             <MoneyLine
@@ -228,6 +231,20 @@ export function ChantierMoneyCard({
                   : st.depositPending
               }
               amount={euro(deposit.amountCents)}
+            />
+          )}
+          {start && (
+            <MoneyLine
+              done={start.paidAt !== null}
+              label={start.paidAt ? st.startPaid : st.startPayment}
+              detail={
+                start.paidAt
+                  ? st.depositPaidOn(formatDayInline(start.paidAt))
+                  : start.due
+                    ? st.depositPending
+                    : st.startHint
+              }
+              amount={euro(start.amountCents)}
             />
           )}
           {balance && (

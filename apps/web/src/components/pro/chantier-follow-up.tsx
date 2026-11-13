@@ -79,6 +79,8 @@ export type FollowUpData = {
     "quote_id" | "kind" | "status" | "amount_cents" | "paid_at"
   >[];
   invoices: Pick<Tables["invoices"]["Row"], "id" | "numero" | "kind" | "issued_on">[];
+  /** Paiement au démarrage prévu par le devis signé (F-146). */
+  startTrancheCents?: number;
   updates: Pick<
     Tables["chantier_updates"]["Row"],
     "id" | "kind" | "message" | "storage_path" | "created_at"
@@ -192,6 +194,10 @@ export function ArtisanFollowUpView({
   const address = c.adresse ?? ([c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null);
 
   const deposit = payments.find((p) => p.kind === "acompte" && p.quote_id === quote?.id) ?? null;
+  const startPayment =
+    payments.find(
+      (p) => p.kind === "demarrage" && p.quote_id === quote?.id && p.status === "paye",
+    ) ?? null;
   const st = fr.pro.sheet;
   // Carte « Prochaine étape » (ADR 0246) : ce qu'il faut faire maintenant, avec le bouton qui le fait.
   const nextStep =
@@ -434,6 +440,17 @@ export function ArtisanFollowUpView({
                   paidCents={progress.paidCents}
                   deposit={
                     deposit ? { amountCents: deposit.amount_cents, paidAt: deposit.paid_at } : null
+                  }
+                  start={
+                    (data.startTrancheCents ?? 0) > 0
+                      ? {
+                          amountCents: data.startTrancheCents ?? 0,
+                          paidAt: startPayment?.paid_at ?? null,
+                          due: ["en_cours", "travaux_termines", "reserves_a_lever"].includes(
+                            status,
+                          ),
+                        }
+                      : null
                   }
                   balance={{
                     amountCents: balancePayment?.amount_cents ?? progress.remainingCents,

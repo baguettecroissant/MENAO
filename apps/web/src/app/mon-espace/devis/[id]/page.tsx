@@ -4,6 +4,7 @@ import { Eye } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { QuoteResponse } from "@/components/project/quote-response";
+import { ScheduleBar } from "@/components/pro/payment-schedule";
 import { QuotePaper } from "@/components/pro/quote-paper";
 import { SheetChip, SheetHeader, SheetPage, SheetRow, sheetCard } from "@/components/pro/sheet";
 import { Alert, ButtonLink, TextLink, buttonClasses } from "@/components/ui";
@@ -81,6 +82,7 @@ export default async function ClientQuotePage({
 
   // Conseil au client (ADR 0158) : acompte de plus de 30 %.
   const advisedDeposit = depositAboveAdvice(data.schedule);
+  const hasDeposit = trancheAmount(data.schedule, "signature") > 0;
   const actions = (
     <>
       {quote.status === "signe" &&
@@ -171,6 +173,18 @@ export default async function ClientQuotePage({
                 deposit?.status !== "en_cours")) && (
               <Alert tone="info">{t.depositAdvice(advisedDeposit)}</Alert>
             )}
+          {quote.status === "envoye" && data.schedule.length > 0 && !hasDeposit && (
+            <section className="flex flex-col gap-2 rounded-card bg-success-soft p-4 sm:p-5">
+              <span className="self-start rounded-pill bg-success px-2.5 py-1 text-xs font-semibold text-surface">
+                {t.noDeposit.chip}
+              </span>
+              <h2 className="text-lg font-bold">{t.noDeposit.title}</h2>
+              <p className="text-sm text-label">
+                {t.noDeposit.text(euros.format(data.totals.totalTtcCents / 100))}
+              </p>
+              <p className="text-[0.8125rem] text-muted-foreground">{t.noDeposit.next}</p>
+            </section>
+          )}
           <QuotePaper
             model={quoteDocumentModel(data)}
             label={t.document}
@@ -209,6 +223,7 @@ export default async function ClientQuotePage({
                 <span className="text-[0.8125rem] font-bold tracking-[0.04em] text-muted-foreground uppercase">
                   {t.toPay}
                 </span>
+                <ScheduleBar tranches={data.schedule} height="h-2.5" />
                 {data.schedule.map((tranche) => (
                   <div
                     key={`${tranche.trigger}-${tranche.percent}`}
@@ -217,7 +232,9 @@ export default async function ClientQuotePage({
                     <span className="text-label">
                       {tranche.trigger === "signature"
                         ? t.trancheSignature(tranche.percent)
-                        : t.trancheReception}
+                        : tranche.trigger === "demarrage"
+                          ? t.trancheDemarrage(tranche.percent)
+                          : t.trancheReception}
                     </span>
                     <span className="font-semibold tabular-nums">
                       {euros.format(tranche.amountCents / 100)}

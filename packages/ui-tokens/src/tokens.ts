@@ -30,6 +30,9 @@ export const colors = {
   example: "#c2410c",
   "example-soft": "#ffedd5",
   "example-strong": "#9a3412",
+  // Paiement au démarrage des travaux (F-146, lot 40) : violet de l'échéancier.
+  violet: "#7c3aed",
+  "violet-soft": "#f3efff",
 } as const;
 
 export type ColorToken = keyof typeof colors;
