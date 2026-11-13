@@ -69,11 +69,13 @@ export default async function CommercialCardsPage() {
               <div className="h-[calc(55mm*1.25)] w-[calc(85mm*1.25)] max-w-full">
                 <div className="w-[85mm] origin-top-left scale-125 overflow-hidden rounded-[2mm] shadow-raised">
                   <BusinessCard
-                    model="nuit"
+                    model="signature"
                     card={card}
                     qr={qr}
                     qrAlt={fr.commercialSpace.code.qrAlt}
                     scan={t.scan}
+                    scanHint={null}
+                    uid="apercu"
                   />
                 </div>
               </div>
