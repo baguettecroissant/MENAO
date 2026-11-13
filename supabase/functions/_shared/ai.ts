@@ -161,7 +161,8 @@ export type AiRun = {
     | "voice-assistant"
     | "artisan-assistant"
     | "read-dpgf"
-    | "read-plan";
+    | "read-plan"
+    | "read-catalog";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;

@@ -5423,10 +5423,12 @@ export const fr = {
         margin: "Marge",
         origin: "Origine",
       },
-      origin: { compose: "Composé", devis: "Repris de vos devis", manuel: "Saisi" } as Record<
-        string,
-        string
-      >,
+      origin: {
+        compose: "Composé",
+        devis: "Repris de vos devis",
+        manuel: "Saisi",
+        import: "Importé",
+      } as Record<string, string>,
       costMissing: "Coût à ajouter",
       // Bibliothèque MENAO par défaut (F-147, ADR 0306-0307) : premier passage, liste, ouvrage.
       menao: {

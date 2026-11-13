@@ -23,7 +23,7 @@ export type AppWork = {
   unit: string;
   detailed: boolean;
   composed: boolean;
-  source: "devis" | "manuel" | "menao";
+  source: "devis" | "manuel" | "menao" | "import";
   /** Métier de l'ouvrage MENAO d'origine (F-147). */
   tradeCode: string | null;
   pricing: WorkPricing;

@@ -7048,6 +7048,10 @@ export type Database = {
         Returns: string;
       };
       artisan_grade: { Args: Record<PropertyKey, never>; Returns: Json };
+      artisan_import_library: {
+        Args: { p_kind: string; p_rows: Json; p_update: boolean };
+        Returns: Json;
+      };
       artisan_import_plan_lines: { Args: { p_lines: Json; p_tender_id: string }; Returns: number };
       artisan_import_plan_reading: {
         Args: { p_counts: Json; p_rooms: Json; p_scale?: string; p_tender_id: string };

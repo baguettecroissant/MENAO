@@ -3192,6 +3192,7 @@ export const fr = {
     composed: "composé",
     fromQuotes: "repris de vos devis",
     manual: "saisi",
+    imported: "importé",
     editOnComputer:
       "Les ouvrages, fournitures et réglages de chiffrage se modifient sur ordinateur, dans Argent › Bibliothèque.",
     failed: "La bibliothèque n'a pas pu être chargée. Réessayez.",
