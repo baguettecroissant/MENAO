@@ -24,7 +24,7 @@ insert into public.artisans (id, user_id, status, siret, raison_sociale, forme_j
    'PEINTURE P', '1000', '4 RUE DE LA PAIX', '75002', 'PARIS', 'communes', true, true, true),
   ('e1444000-0000-4000-8000-000000000002', 'e1442000-0000-4000-8000-000000000002', 'valide', '00000001800010',
    'ARTISAN S', '5710', '8 RUE DU PORT', '06300', 'NICE', 'communes', true, true, false),
-  ('e1444000-0000-4000-8000-000000000003', 'e1442000-0000-4000-8000-000000000003', 'valide', '00000003400017',
+  ('e1444000-0000-4000-8000-000000000003', 'e1442000-0000-4000-8000-000000000003', 'valide', '00000009144007',
    'ARTISAN T', '5710', '2 RUE DU LAC', '06000', 'NICE', 'communes', true, true, false);
 insert into public.artisan_documents (artisan_id, type, storage_path, mime_type, size_bytes, date_fin, numero, assureur, couverture, status) values
   ('e1444000-0000-4000-8000-000000000002', 'decennale', 'e1444000/decennale-s.pdf', 'application/pdf', 1000,
