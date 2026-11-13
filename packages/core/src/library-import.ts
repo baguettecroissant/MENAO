@@ -263,7 +263,8 @@ export function recognizeColumns(
       const texts = sample
         .map((row) => row[i])
         .filter((c) => typeof c === "string" && parseImportPrice(c) === undefined);
-      const avg = texts.reduce<number>((s, c) => s + cellText(c).length, 0) / Math.max(1, sample.length);
+      const avg =
+        texts.reduce<number>((s, c) => s + cellText(c).length, 0) / Math.max(1, sample.length);
       if (avg > bestLength && avg >= 6) {
         best = i;
         bestLength = avg;

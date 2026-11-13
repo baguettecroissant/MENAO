@@ -133,7 +133,13 @@ describe("import du catalogue : colonnes", () => {
 
 describe("import du catalogue : lignes", () => {
   it("lignes valides, lignes vides ignorées, lignes à corriger avec leur raison", () => {
-    const { rows, issues } = buildImportRows(GRID, 0, ["designation", "unit", "price", "vat", "ignore"]);
+    const { rows, issues } = buildImportRows(GRID, 0, [
+      "designation",
+      "unit",
+      "price",
+      "vat",
+      "ignore",
+    ]);
     expect(rows.map((r) => [r.line, r.designation, r.unit, r.priceCents, r.vatRateBp])).toEqual([
       [2, "Cloison placo 72/48 isolée", "m2", 3850, 1000],
       [3, "Doublage collé PSE 10+80", "m2", 4200, 1000],

@@ -140,7 +140,10 @@ async function aiColumns(
     run.latency_ms = Date.now() - started;
     run.outcome = error instanceof SyntaxError ? "invalide" : "erreur";
     const status = (error as { status?: unknown })?.status;
-    console.error("library-import : appel du modèle en échec", typeof status === "number" ? status : "");
+    console.error(
+      "library-import : appel du modèle en échec",
+      typeof status === "number" ? status : "",
+    );
     return null;
   } finally {
     await logAiRuns(admin, [run]);
@@ -203,7 +206,7 @@ Deno.serve(async (req) => {
         aiUsed = true;
       }
     }
-    const header = headerRow >= 0 ? grid[headerRow] ?? [] : [];
+    const header = headerRow >= 0 ? (grid[headerRow] ?? []) : [];
     const data = grid.slice(headerRow + 1).filter((row) => row.some((c) => c !== null && c !== ""));
     return json({
       status: "ok",
@@ -225,14 +228,20 @@ Deno.serve(async (req) => {
   // « check » et « import » : colonnes choisies par l'artisan (étape 2).
   const width = grid.slice(0, 50).reduce((w, row) => Math.max(w, row.length), 0);
   const headerRow =
-    typeof body?.headerRow === "number" && Number.isInteger(body.headerRow) &&
-      body.headerRow >= -1 && body.headerRow < 10
+    typeof body?.headerRow === "number" &&
+    Number.isInteger(body.headerRow) &&
+    body.headerRow >= -1 &&
+    body.headerRow < 10
       ? body.headerRow
       : null;
-  const roles = Array.isArray(body?.roles) && body.roles.length <= Math.min(width, MAX_IMPORT_COLUMNS) &&
-      body.roles.every((r) => typeof r === "string" && (IMPORT_ROLES as readonly string[]).includes(r))
-    ? (body.roles as ImportRole[])
-    : null;
+  const roles =
+    Array.isArray(body?.roles) &&
+    body.roles.length <= Math.min(width, MAX_IMPORT_COLUMNS) &&
+    body.roles.every(
+      (r) => typeof r === "string" && (IMPORT_ROLES as readonly string[]).includes(r),
+    )
+      ? (body.roles as ImportRole[])
+      : null;
   if (headerRow === null || !roles || !roles.includes("designation") || !roles.includes("price")) {
     return json({ status: "invalid" }, 400);
   }
@@ -277,7 +286,10 @@ Deno.serve(async (req) => {
   });
   if (error) {
     console.error("library-import : import refusé", error.code);
-    return json({ status: error.code === "42501" ? "forbidden" : "invalid" }, error.code === "42501" ? 403 : 400);
+    return json(
+      { status: error.code === "42501" ? "forbidden" : "invalid" },
+      error.code === "42501" ? 403 : 400,
+    );
   }
   await supabase.storage.from("library-imports").remove([path]);
   const counts = result as { added?: number; updated?: number } | null;
