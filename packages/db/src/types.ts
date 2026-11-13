@@ -3279,6 +3279,57 @@ export type Database = {
           },
         ];
       };
+      library_price_raises: {
+        Row: {
+          artisan_id: string;
+          created_at: string;
+          id: string;
+          on_supplies: boolean;
+          on_works: boolean;
+          previous: NonNullable<Json>;
+          rate_bp: number;
+          rounding: string;
+          supplies_count: number;
+          undone_at: string | null;
+          works_count: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          created_at?: string;
+          id?: string;
+          on_supplies: boolean;
+          on_works: boolean;
+          previous?: NonNullable<Json>;
+          rate_bp: number;
+          rounding: string;
+          supplies_count?: number;
+          undone_at?: string | null;
+          works_count?: number;
+        };
+        Update: {
+          artisan_id?: string;
+          created_at?: string;
+          id?: string;
+          on_supplies?: boolean;
+          on_works?: boolean;
+          previous?: NonNullable<Json>;
+          rate_bp?: number;
+          rounding?: string;
+          supplies_count?: number;
+          undone_at?: string | null;
+          works_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "library_price_raises_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       menao_supplies: {
         Row: {
           code: string;
@@ -7172,6 +7223,10 @@ export type Database = {
           version: number;
         }[];
       };
+      artisan_raise_prices: {
+        Args: { p_rate_bp: number; p_rounding: string; p_supplies: boolean; p_works: boolean };
+        Returns: Json;
+      };
       artisan_rate_client: {
         Args: {
           p_chantier_id: string;
@@ -7275,6 +7330,7 @@ export type Database = {
         Args: { p_chantier_id: string; p_message: string };
         Returns: undefined;
       };
+      artisan_undo_price_raise: { Args: { p_raise_id: string }; Returns: number };
       artisan_update_tender: {
         Args: {
           p_client_name?: string;

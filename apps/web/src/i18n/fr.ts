@@ -5618,6 +5618,64 @@ export const fr = {
             .join(", ") + (updated + added > 0 ? "." : "Factures passées en revue."),
         invalid: "La mise à jour n'a pas pu être faite. Rechargez la page et réessayez.",
       },
+      // Augmenter ses prix en un geste (F-149, ADR 0312, maquette lot 43).
+      raise: {
+        button: "Augmenter mes prix",
+        title: "Augmenter mes prix",
+        rate: "Hausse",
+        rateHint: "De 0,1 à 30 %.",
+        presets: [200, 300, 500],
+        scope: "Sur quoi ?",
+        works: "Mes ouvrages à prix fixé",
+        worksHint: (n: number) =>
+          `${n} ouvrage${n > 1 ? "s" : ""} dont vous avez fixé le prix à la main.`,
+        supplies: "Mes prix d'achat",
+        suppliesHint: (n: number) =>
+          `${n} fourniture${n > 1 ? "s" : ""}. Les ouvrages composés suivent.`,
+        rounding: "Arrondi",
+        roundings: {
+          centime: "Au centime",
+          dix: "Aux 10 centimes",
+          euro: "À l'euro",
+        } as Record<string, string>,
+        note: "Les ouvrages composés suivent déjà vos réglages : pour eux, augmentez plutôt le prix de l'heure ou le coefficient.",
+        preview: "Aperçu",
+        previewCount: (shown: number, total: number) => `${shown} sur ${total}`,
+        columns: {
+          work: "Ouvrage",
+          supply: "Fourniture",
+          item: "Article",
+          before: "Avant",
+          after: "Après",
+        },
+        perUnit: (price: string, unit: string) => (unit ? `${price} / ${unit}` : price),
+        nothing: "Aucun prix ne change avec ces réglages.",
+        summary: (rate: string, works: number, supplies: number) =>
+          `${rate} sur ${[
+            works > 0 ? `${works} ouvrage${works > 1 ? "s" : ""}` : null,
+            supplies > 0 ? `${supplies} prix d'achat` : null,
+          ]
+            .filter(Boolean)
+            .join(" et ")}`,
+        summaryEmpty: "Choisissez une hausse",
+        summaryText:
+          "Vos devis déjà envoyés ne changent pas. Les brouillons gardent leurs prix : la bibliothèque propose les nouveaux.",
+        apply: "Appliquer la hausse",
+        undoNote: "Annulable pendant 24 h, depuis la bibliothèque.",
+        invalid: "Indiquez une hausse de 0,1 à 30 %, sur les ouvrages ou les prix d'achat.",
+        failed: "La hausse n'a pas pu être appliquée. Réessayez dans un instant.",
+        done: (rate: string, works: number, supplies: number) =>
+          `Hausse de ${rate.replace("+ ", "")} appliquée : ${[
+            works > 0 ? `${works} ouvrage${works > 1 ? "s" : ""}` : null,
+            supplies > 0 ? `${supplies} prix d'achat` : null,
+          ]
+            .filter(Boolean)
+            .join(" et ")}.`,
+        undoUntil: (time: string) => `Annulable jusqu'à ${time}.`,
+        undo: "Annuler la hausse",
+        undone: (n: number) => `Hausse annulée : ${n} prix rétabli${n > 1 ? "s" : ""}.`,
+        undoFailed: "Cette hausse ne peut plus être annulée.",
+      },
       // Bibliothèque MENAO par défaut (F-147, ADR 0306-0307) : premier passage, liste, ouvrage.
       menao: {
         chip: "MENAO",
