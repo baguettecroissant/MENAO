@@ -128,7 +128,7 @@ export async function renderReceptionPdf(
     c.text(value, right - 126, c.y, 9, { bold: last, align: "right", width: 120 });
   });
   c.y -= 10;
-  c.paragraph(m.insuranceLine, 8, { color: COLOR.muted });
+  if (m.insuranceLine) c.paragraph(m.insuranceLine, 8, { color: COLOR.muted });
 
   // Lieu, date et signature du maître de l'ouvrage.
   c.ensure(110);

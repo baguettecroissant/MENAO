@@ -172,6 +172,13 @@ describe("contenu du devis (F-20)", () => {
     expect(m.insuranceLine).toBe("Assurance décennale : informations à compléter");
   });
 
+  it("activité non soumise à la décennale : aucune ligne d'assurance (audit du 31/10)", async () => {
+    const exempt = { ...base, issuer: { ...base.issuer, insurance: null, insuranceExempt: true } };
+    expect(quoteDocumentModel(exempt).insuranceLine).toBe("");
+    const bytes = await renderQuotePdf(exempt);
+    expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
+  });
+
   it("caractères hors police standard remplacés, espaces fines rendues insécables", () => {
     expect(winAnsi("Prise 🔌 œuvre – « ok » 中")).toBe("Prise ? œuvre – « ok » ?");
     expect(money(123456)).toBe(`1${NBSP}234,56${NBSP}€`);

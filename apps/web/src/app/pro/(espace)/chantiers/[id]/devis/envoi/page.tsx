@@ -58,7 +58,10 @@ export default async function QuoteSendPage({
   if (!draft || !quote || quote.lines.length === 0) redirect(editorHref as Route);
   // Mêmes exigences que l'envoi en base (F-20) : assureur, numéro, couverture, non échue.
   const insurance = quote.issuer.insurance;
-  const insured = Boolean(insurance?.insurer && insurance.policy && insurance.coverage);
+  // Activité non soumise à la décennale (audit du 31/10/2026) : rien à exiger.
+  const insured =
+    quote.issuer.insuranceExempt === true ||
+    Boolean(insurance?.insurer && insurance.policy && insurance.coverage);
   // Alerte avant l'envoi (ADR 0294) : seulement si l'artisan a fixé un seuil ; l'envoi reste libre.
   const [margin, alertBp] = await Promise.all([
     savedQuoteMargin(supabase, draft.id),

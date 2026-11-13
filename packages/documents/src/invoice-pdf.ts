@@ -85,7 +85,7 @@ export async function renderInvoicePdf(
   c.y -= boxHeight + 6;
 
   c.paragraph(m.subjectLine, 10, { bold: true });
-  c.paragraph(m.insuranceLine, 8, { color: COLOR.muted });
+  if (m.insuranceLine) c.paragraph(m.insuranceLine, 8, { color: COLOR.muted });
   c.y -= 4;
 
   // Désignation et montant hors taxe.
