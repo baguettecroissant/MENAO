@@ -45,18 +45,26 @@ export function PartnerWidget({ trades }: { trades: { code: string; label: strin
         method="get"
         target="_blank"
         rel="noopener"
-        className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5 shadow-card"
+        className="flex flex-col gap-4 rounded-[1.25rem] border border-border bg-surface p-5 shadow-raised sm:p-6"
       >
         {partnerCode && <input type="hidden" name="p" value={partnerCode} />}
-        <div className="flex flex-col gap-1.5">
+        {/* Maquette du lot 38 : logo et « Lien partenaire » en tête. */}
+        <div className="flex items-center justify-between gap-3">
           <Logo className="origin-left scale-75" />
-          <h1 className="text-xl leading-tight font-medium tracking-tight text-balance">
+          {partnerCode && (
+            <span className="rounded-chip bg-border/70 px-2 py-0.5 text-xs font-bold text-label">
+              {t.partner}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[1.375rem] leading-tight font-bold tracking-[-0.02em] text-balance">
             {frenchSpacing(t.title)}
           </h1>
           <p className="text-sm text-muted-foreground">{frenchSpacing(t.lead)}</p>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="widget-metier" className="text-sm font-medium">
+          <label htmlFor="widget-metier" className="text-sm font-semibold">
             {t.trade}
           </label>
           <Select id="widget-metier" name="metier" defaultValue={initialTrade}>
@@ -69,7 +77,7 @@ export function PartnerWidget({ trades }: { trades: { code: string; label: strin
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="widget-projet" className="text-sm font-medium">
+          <label htmlFor="widget-projet" className="text-sm font-semibold">
             {t.description}
           </label>
           <textarea
@@ -84,10 +92,10 @@ export function PartnerWidget({ trades }: { trades: { code: string; label: strin
         </div>
         <button
           type="submit"
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-pill bg-primary px-6 font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none"
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-pill bg-primary px-6 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:ring-4 focus-visible:ring-primary/25 focus-visible:outline-none"
         >
-          {t.submit}
           <ArrowUpRight aria-hidden="true" className="size-4" />
+          {t.submit}
           <span className="sr-only">{t.opensNewTab}</span>
         </button>
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1">
@@ -98,10 +106,6 @@ export function PartnerWidget({ trades }: { trades: { code: string; label: strin
             </li>
           ))}
         </ul>
-        <p className="text-center text-[0.6875rem] text-subtle-foreground">
-          {t.poweredBy}
-          {partnerCode && ` · ${t.partner}`}
-        </p>
       </form>
     </div>
   );
