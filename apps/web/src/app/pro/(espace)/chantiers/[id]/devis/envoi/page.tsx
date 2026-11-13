@@ -45,7 +45,11 @@ export default async function QuoteSendPage({
       .eq("chantier_id", id)
       .eq("status", "brouillon")
       .maybeSingle(),
-    supabase.from("artisans").select("default_deposit_percent").eq("id", artisanId).single(),
+    supabase
+      .from("artisans")
+      .select("default_deposit_percent, default_start_percent")
+      .eq("id", artisanId)
+      .single(),
   ]);
   const { data: document } = draft
     ? await supabase.rpc("quote_document", { p_quote_id: draft.id })
@@ -89,6 +93,7 @@ export default async function QuoteSendPage({
         quoteId={draft.id}
         totalTtcCents={draft.total_ttc_cents}
         defaultDeposit={artisan?.default_deposit_percent ?? DEFAULT_DEPOSIT_PERCENT}
+        defaultStart={artisan?.default_start_percent ?? 0}
         minStartDate={nextDay(parisToday())}
         margin={
           lowMargin && margin.markupBp !== null && alertBp !== null

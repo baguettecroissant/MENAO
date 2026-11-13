@@ -12,12 +12,11 @@ const linkClasses = "font-medium text-primary-strong underline-offset-2 hover:un
 /** Cases à cocher avant la signature (F-13), puis redirection vers le prestataire. */
 export function QuoteSignatureForm({
   quoteId,
-  deposit,
-  balance,
+  schedule,
 }: {
   quoteId: string;
-  deposit: string;
-  balance: string;
+  /** Échéancier en toutes lettres (« acompte de …, … au démarrage des travaux, solde de … »). */
+  schedule: string;
 }) {
   const [state, formAction, pending] = useActionState(
     startSignature.bind(null, quoteId),
@@ -39,7 +38,7 @@ export function QuoteSignatureForm({
         { href: "/confidentialite", label: t.links.privacy, external: false },
       ],
     },
-    { name: "echeancier", label: t.consents.echeancier(deposit, balance), links: [] },
+    { name: "echeancier", label: t.consents.echeancier(schedule), links: [] },
   ];
 
   return (

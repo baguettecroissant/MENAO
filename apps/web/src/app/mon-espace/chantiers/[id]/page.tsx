@@ -182,6 +182,8 @@ export default async function ClientChantierPage({
     depositStatus: c.deposit_status,
     balanceCents: c.balance_cents,
     balanceStatus: c.balance_status,
+    startCents: c.start_payment_cents,
+    startStatus: c.start_payment_status,
   });
   const next = nextIntervention({ status, appointmentAt: c.appointment_at, startAt: c.start_at });
   const started = STARTED.includes(status);
@@ -230,6 +232,11 @@ export default async function ClientChantierPage({
           action={action}
           totalTtcCents={c.quote_total_ttc_cents}
           chantierId={id}
+          startPercent={
+            c.quote_total_ttc_cents && c.start_payment_cents
+              ? Math.round((c.start_payment_cents * 100) / c.quote_total_ttc_cents)
+              : null
+          }
         />
       )}
       {(status === "en_litige" || openTicket) && (

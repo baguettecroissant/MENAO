@@ -1,4 +1,4 @@
-import { journalSummary, parisToday, type ChantierRights } from "@menao/core";
+import { journalSummary, parisToday, trancheAmount, type ChantierRights } from "@menao/core";
 import type { ReactNode } from "react";
 import { ArtisanFollowUpView, type FollowUpData } from "@/components/pro/chantier-follow-up";
 import { appointmentAgenda } from "@/lib/artisan/agenda";
@@ -30,7 +30,9 @@ async function loadFollowUp(supabase: Client, c: ChantierDetail): Promise<Follow
   ] = await Promise.all([
     supabase
       .from("quotes")
-      .select("id, status, numero, sent_at, signed_at, total_ttc_cents, start_date")
+      .select(
+        "id, status, numero, sent_at, signed_at, total_ttc_cents, start_date, payment_schedule",
+      )
       .eq("chantier_id", id)
       .neq("status", "brouillon")
       .order("version", { ascending: false })
@@ -118,6 +120,11 @@ async function loadFollowUp(supabase: Client, c: ChantierDetail): Promise<Follow
   ]);
   return {
     quote,
+    // Paiement au démarrage prévu par le devis (F-146), 0 s'il n'y en a pas.
+    startTrancheCents: trancheAmount(
+      (quote?.payment_schedule ?? []) as { trigger: string; amount_cents: number }[],
+      "demarrage",
+    ),
     payments: payments ?? [],
     invoices: invoices ?? [],
     updates: updates ?? [],

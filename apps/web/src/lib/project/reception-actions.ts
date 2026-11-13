@@ -102,3 +102,21 @@ export async function payBalance(chantierId: string): Promise<FormState> {
   }
   redirect(data.url as Route);
 }
+
+/** « Payer au démarrage » (F-146) : paiement Stripe sur le compte de l'artisan, travaux commencés. */
+export async function payStart(chantierId: string): Promise<FormState> {
+  if (!z.uuid().safeParse(chantierId).success) return { error: fr.errors.generic };
+  const supabase = await createClient();
+  const { data, error } = await supabase.functions.invoke<{ status: string; url?: string }>(
+    "deposit-checkout",
+    { body: { chantierId, kind: "demarrage", origin: env.NEXT_PUBLIC_SITE_URL } },
+  );
+  if (error || !data?.url) {
+    const body =
+      error instanceof FunctionsHttpError && error.context.status === 409
+        ? ((await error.context.json().catch(() => null)) as { message?: string } | null)
+        : null;
+    return { error: body?.message ?? fr.startPayment.unavailable };
+  }
+  redirect(data.url as Route);
+}

@@ -4,14 +4,25 @@ import { useActionState } from "react";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
-import { payBalance } from "@/lib/project/reception-actions";
+import { payBalance, payStart } from "@/lib/project/reception-actions";
 
 const t = fr.balance;
 
-/** « Payer le solde » (F-32) : redirection vers le paiement Stripe du compte de l'artisan. */
-export function BalancePayButton({ chantierId, amount }: { chantierId: string; amount: string }) {
+/**
+ * « Payer le solde » (F-32), ou le paiement au démarrage (F-146) : redirection vers le paiement
+ * Stripe du compte de l'artisan.
+ */
+export function BalancePayButton({
+  chantierId,
+  amount,
+  kind = "solde",
+}: {
+  chantierId: string;
+  amount: string;
+  kind?: "solde" | "demarrage";
+}) {
   const [state, formAction, pending] = useActionState(
-    payBalance.bind(null, chantierId),
+    (kind === "demarrage" ? payStart : payBalance).bind(null, chantierId),
     initialFormState,
   );
   return (
