@@ -59,7 +59,7 @@ export type WorkRow = {
   vat_rate_bp: number;
   detailed: boolean;
   manual_price_cents: number | null;
-  source: "devis" | "manuel" | "menao";
+  source: "devis" | "manuel" | "menao" | "import";
   /** Prix courant enregistré (appels d'offres, ADR 0294). */
   price_cents?: number | null;
   /** Prix retenu dans la fourchette indicative (F-147). */

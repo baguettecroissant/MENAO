@@ -140,7 +140,13 @@ export function LibraryScreen({ switcher }: { switcher: ReactNode }) {
                 />
               );
             }
-            const origin = w.composed ? t.composed : w.source === "devis" ? t.fromQuotes : t.manual;
+            const origin = w.composed
+              ? t.composed
+              : w.source === "devis"
+                ? t.fromQuotes
+                : w.source === "import"
+                  ? t.imported
+                  : t.manual;
             return (
               <ListRow
                 key={w.id}
