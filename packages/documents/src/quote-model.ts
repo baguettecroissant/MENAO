@@ -28,6 +28,8 @@ export type QuotePdfData = {
     email: string | null;
     phone: string | null;
     insurance: { insurer: string | null; policy: string | null; coverage: string | null } | null;
+    /** Activité non soumise à l'assurance décennale obligatoire (déclarée par l'artisan). */
+    insuranceExempt?: boolean;
   };
   client: { name: string; addressLines: string[] };
   site: { title: string; addressLines: string[] };
@@ -164,7 +166,12 @@ export function issuerLines(issuer: Issuer): string[] {
 }
 
 /** Assurance décennale (obligatoire sur les devis et les factures du bâtiment). */
+/**
+ * Ligne de l'assurance décennale ; vide pour une activité non soumise (audit du 31/10/2026).
+ * TODO(legal) : confirmer qu'aucune autre mention n'est due dans ce cas (RC Pro).
+ */
 export function insuranceLine(issuer: Issuer): string {
+  if (issuer.insuranceExempt && !issuer.insurance) return "";
   const ins = issuer.insurance;
   return winAnsi(
     ins?.insurer && ins.policy && ins.coverage

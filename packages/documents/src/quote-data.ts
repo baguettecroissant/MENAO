@@ -53,6 +53,8 @@ export type QuoteDocument = {
     phone: string | null;
     /** Logo des documents (bucket privé artisan-logos), figé à l'envoi ; absent des anciens devis. */
     logo_path?: string | null;
+    /** Activité non soumise à l'assurance décennale obligatoire ; absent des anciens devis. */
+    decennale_non_soumis?: boolean;
     decennale: {
       assureur: string | null;
       numero: string | null;
@@ -116,6 +118,7 @@ export function issuerData(
     insurance: insured
       ? { insurer: decennale.assureur, policy: decennale.numero, coverage: decennale.couverture }
       : null,
+    ...(issuer.decennale_non_soumis ? { insuranceExempt: true } : {}),
   };
 }
 

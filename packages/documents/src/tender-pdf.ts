@@ -85,7 +85,7 @@ export async function renderTenderPdf(
     });
   });
   c.y = Math.min(left, top - 34 - data.headLines.length * 12) - 12;
-  c.paragraph(data.insuranceLine, 8, { color: COLOR.muted });
+  if (data.insuranceLine) c.paragraph(data.insuranceLine, 8, { color: COLOR.muted });
   c.y -= 4;
 
   // Tableau paginé (en-tête répété) : titres de lot sur fond clair, postes en dessous.

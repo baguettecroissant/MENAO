@@ -334,7 +334,10 @@ export async function loadQuoteSendContext(chantierId: string): Promise<QuoteSen
     defaultStart: artisan.default_start_percent,
     data,
     model: quoteDocumentModel(data),
-    insured: Boolean(insurance?.insurer && insurance.policy && insurance.coverage),
+    // Activité non soumise à la décennale (audit du 31/10/2026) : rien à exiger.
+    insured:
+      data.issuer.insuranceExempt === true ||
+      Boolean(insurance?.insurer && insurance.policy && insurance.coverage),
     client: {
       firstName: c.client.first_name,
       name: [c.client.first_name, c.client.last_name].filter(Boolean).join(" "),
