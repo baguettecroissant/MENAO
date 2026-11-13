@@ -22,6 +22,19 @@ updates:
       # Les types Node suivent la version de Node du projet (.nvmrc : 22).
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
+      # Application : versions fixées par le SDK Expo (celles qu'embarque Expo Go). Elles se mettent
+      # à jour avec `npx expo install --fix` dans apps/mobile, jamais par Dependabot (PR #404).
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native/*"
+      - dependency-name: "@react-native-community/*"
+      - dependency-name: "@stripe/stripe-react-native"
+      # React suit la version attendue par Expo (partagée avec le site).
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
 
   - package-ecosystem: github-actions
     directory: /
