@@ -3195,6 +3195,39 @@ export const fr = {
     editOnComputer:
       "Les ouvrages, fournitures et réglages de chiffrage se modifient sur ordinateur, dans Argent › Bibliothèque.",
     failed: "La bibliothèque n'a pas pu être chargée. Réessayez.",
+    // Bibliothèque MENAO (F-147, ADR 0306-0307) : liste, filtre par métier, fourchettes.
+    chip: "MENAO",
+    filtersLabel: "Filtrer par métier",
+    all: "Tous",
+    mine: "Les miens",
+    rangeTo: (high: string) => `à ${high}`,
+    sourceFooter: (date: string) =>
+      `Prix indicatifs HT : vos réglages et prix publics des fournitures au ${date}`,
+    added: (n: number) =>
+      `${n} ouvrage${n > 1 ? "s" : ""} MENAO ajouté${n > 1 ? "s" : ""}. Ajustez les temps de pose et vos prix d'achat sur ordinateur : la fourchette devient votre prix.`,
+    start: {
+      title: "Remplir ma bibliothèque",
+      menaoTitle: "Bibliothèque MENAO",
+      menaoText: (n: number, trades: number) =>
+        `${n} ouvrage${n > 1 ? "s" : ""} pour ${trades > 1 ? `vos ${trades} métiers` : trades === 1 ? "votre métier" : "vos métiers"}, prêts à chiffrer.`,
+      tradesLabel: "Vos métiers, repris de votre fiche",
+      importTitle: "Importer mon catalogue",
+      importText: "Plus simple depuis un ordinateur, sur menao.fr.",
+      importSoon: "Bientôt",
+      devisTitle: "Partir de mes devis",
+      devisText: (n: number) =>
+        n > 0
+          ? `${n} ouvrage${n > 1 ? "s" : ""} déjà repris.`
+          : "Les ouvrages de vos prochains devis.",
+      settingsTitle: "Pour chiffrer",
+      hourPrice: "Prix de vente de l'heure",
+      coef: "Coefficient fournitures",
+      create: "Créer ma bibliothèque",
+      noTrade: "Choisissez au moins un métier.",
+      invalid: "Vérifiez le prix de l'heure et le coefficient (0,5 à 10).",
+      hourRequired: "Indiquez votre prix de vente de l'heure.",
+      error: "La bibliothèque n'a pas pu être créée. Réessayez.",
+    },
   },
   proExpenses: {
     title: "Dépenses",
