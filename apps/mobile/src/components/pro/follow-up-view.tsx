@@ -342,6 +342,11 @@ export function FollowUpView({
                   ? { paidAt: f.balancePaidAt, cents: f.balanceCents }
                   : null
               }
+              start={
+                (f.startCents ?? 0) > 0
+                  ? { cents: f.startCents ?? 0, paidAt: f.startPaidAt ?? null }
+                  : null
+              }
               example={example}
             />
           ) : null}

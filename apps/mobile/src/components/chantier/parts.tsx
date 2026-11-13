@@ -308,6 +308,7 @@ export function ActionCard({
   const balance = action.kind === "payer_solde";
   function open() {
     if (balance) router.push(`/chantier/${chantierId}/solde`);
+    else if (action.kind === "payer_demarrage") router.push(`/chantier/${chantierId}/demarrage`);
     else if (sign) router.push(`/devis/${action.quoteId}`);
     else router.push(`/devis/${action.quoteId}/acompte`);
   }
@@ -326,7 +327,9 @@ export function ActionCard({
           ? t.action.signText
           : action.kind === "payer_solde"
             ? t.action.payBalanceText
-            : t.action.payText}
+            : action.kind === "payer_demarrage"
+              ? t.action.payStartText
+              : t.action.payText}
       </Text>
       {/* Maquette « Mes chantiers » : à payer maintenant, puis total du chantier. */}
       {!sign ? (

@@ -73,6 +73,8 @@ export function MyChantiersScreen() {
       depositStatus: c.deposit_status,
       balanceCents: c.balance_cents,
       balanceStatus: c.balance_status,
+      startCents: c.start_payment_cents,
+      startStatus: c.start_payment_status,
     })),
   );
   const photoOf = (path: string | null) => (path ? (data?.photoByPath.get(path) ?? null) : null);

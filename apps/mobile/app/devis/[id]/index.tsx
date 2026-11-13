@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { QuotePaper } from "@/components/documents/quote-paper";
 import { ActionSubmit, SectionLabel, TipNote } from "@/components/pro/action-kit";
 import { PageHead } from "@/components/pro/dossier-kit";
+import { ScheduleBar } from "@/components/pro/payment-schedule";
 import { FicheButton, FicheScreen, FicheSkeleton, FicheTag } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { formatCents, formatDay } from "@/lib/format";
@@ -16,7 +17,7 @@ import { celebrate, LinkText, Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.quote;
-const { colors, font, spacing } = theme;
+const { colors, font, radius, spacing } = theme;
 const TONE = {
   brouillon: "neutral",
   envoye: "primary",
@@ -84,6 +85,7 @@ export default function QuoteScreen() {
   const deposit = quote.data.schedule.find((s) => s.trigger === "signature");
   // Conseil au client (ADR 0158) : acompte de plus de 30 %.
   const advisedDeposit = depositAboveAdvice(quote.data.schedule);
+  const hasDeposit = trancheAmount(quote.data.schedule, "signature") > 0;
   const name = quote.data.numero ?? "devis";
   const footer =
     quote.status === "envoye" ? (
@@ -157,6 +159,16 @@ export default function QuoteScreen() {
         </View>
       ) : null}
 
+      {quote.status === "envoye" && !hasDeposit ? (
+        <View style={styles.noDeposit}>
+          <Text style={styles.noDepositChip}>{t.noDeposit.chip}</Text>
+          <Text style={styles.noDepositTitle}>{t.noDeposit.title}</Text>
+          <Text style={styles.noDepositText}>
+            {t.noDeposit.text(formatCents(quote.data.totals.totalTtcCents))}
+          </Text>
+          <ScheduleBar tranches={quote.data.schedule} />
+        </View>
+      ) : null}
       <View style={styles.paper}>
         <SectionLabel text={t.document} />
         <QuotePaper model={quote.model} logoUrl={quote.logoUrl} />
@@ -171,7 +183,9 @@ export default function QuoteScreen() {
       />
       {quote.status === "envoye" ? (
         <View style={styles.responses}>
-          <Text style={styles.small}>{t.signature.depositNext}</Text>
+          <Text style={styles.small}>
+            {hasDeposit ? t.signature.depositNext : t.noDeposit.next}
+          </Text>
           <FicheButton
             label={t.requestChange}
             variant="secondary"
@@ -191,6 +205,30 @@ export default function QuoteScreen() {
 }
 
 const styles = StyleSheet.create({
+  noDeposit: {
+    gap: spacing(2),
+    padding: spacing(4),
+    borderRadius: radius.card,
+    backgroundColor: colors["success-soft"],
+  },
+  noDepositChip: {
+    alignSelf: "flex-start",
+    overflow: "hidden",
+    borderRadius: 999,
+    backgroundColor: colors.success,
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(1),
+    fontFamily: font.semibold,
+    fontSize: 12,
+    color: "#ffffff",
+  },
+  noDepositTitle: {
+    fontFamily: font.display,
+    fontSize: 20,
+    lineHeight: 26,
+    color: colors.foreground,
+  },
+  noDepositText: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
   head: { gap: spacing(2.5) },
   status: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(3) },
   validity: { fontFamily: font.regular, fontSize: 13, color: colors["muted-foreground"] },

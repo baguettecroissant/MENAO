@@ -62,6 +62,8 @@ function openTodo(todo: Todo) {
       return router.push(`/devis/${todo.quoteId}/acompte`);
     case "payer_solde":
       return router.push(`/chantier/${id}/solde`);
+    case "payer_demarrage":
+      return router.push(`/chantier/${id}/demarrage`);
     case "donner_avis":
       return router.push(`/chantier/${id}/avis`);
     default:
