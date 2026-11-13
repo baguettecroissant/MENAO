@@ -3245,6 +3245,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      library_invoice_reviews: {
+        Row: {
+          artisan_id: string;
+          expense_line_id: string;
+          reviewed_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          expense_line_id: string;
+          reviewed_at?: string;
+        };
+        Update: {
+          artisan_id?: string;
+          expense_line_id?: string;
+          reviewed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "library_invoice_reviews_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "library_invoice_reviews_expense_line_id_fkey";
+            columns: ["expense_line_id"];
+            isOneToOne: true;
+            referencedRelation: "expense_lines";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       menao_supplies: {
         Row: {
           code: string;
@@ -6956,6 +6990,10 @@ export type Database = {
         Returns: string;
       };
       artisan_adopt_menao_library: { Args: { p_trade_codes: string[] }; Returns: number };
+      artisan_apply_invoice_prices: {
+        Args: { p_add: string[]; p_seen: string[]; p_updates: Json };
+        Returns: Json;
+      };
       artisan_calendar_events: {
         Args: { p_token: string };
         Returns: {
