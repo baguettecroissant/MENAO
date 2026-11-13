@@ -84,6 +84,15 @@ function supplyCost(unitCents: number, wasteBp: number, quantityMilli: number): 
 /** Fourchette d'un prix de vente HT (F-147) : bas, haut, et le milieu retenu par défaut. */
 export type PriceRange = { lowCents: number; highCents: number; midCents: number };
 
+/** Prix retenu dans une fourchette indicative (F-147) : le bas, le milieu (par défaut) ou le haut. */
+export const PRICE_PICKS = ["bas", "milieu", "haut"] as const;
+export type PricePick = (typeof PRICE_PICKS)[number];
+
+/** Montant de la fourchette correspondant au choix de l'artisan. */
+export function pickInRange(range: PriceRange, pick: PricePick): number {
+  return pick === "bas" ? range.lowCents : pick === "haut" ? range.highCents : range.midCents;
+}
+
 /**
  * Prix indicatif d'un ouvrage (F-147) : pose × prix de vente de l'heure, plus fournitures et frais ×
  * coefficient. Chaque fourniture compte à son prix d'achat s'il est connu, sinon à la fourchette de
@@ -141,8 +150,9 @@ export type WorkPricing = {
   /** Prix calculé par la composition ; null si un élément n'a pas de prix de vente. */
   computedPriceCents: number | null;
   /**
-   * Prix retenu : fixé à la main, sinon calculé, sinon le milieu de la fourchette indicative
-   * (F-147 : fourniture MENAO sans prix d'achat, mais avec des prix publics).
+   * Prix retenu : fixé à la main, sinon calculé, sinon le bas, le milieu ou le haut de la fourchette
+   * indicative selon le choix de l'artisan (F-147 : fourniture MENAO sans prix d'achat, mais avec des
+   * prix publics).
    */
   priceCents: number | null;
   /** Fourchette indicative (prix d'achat ou prix publics) ; null si une donnée manque. */
@@ -164,6 +174,7 @@ export function workPricing(
   components: readonly WorkComponent[],
   settings: LibrarySettings,
   supplies: ReadonlyMap<string, LibrarySupply>,
+  pick: PricePick = "milieu",
 ): WorkPricing {
   const amounts = components.map((c) => ({ c, a: componentAmounts(c, settings, supplies) }));
   const group = (kind: ComponentKind): ComponentAmounts => {
@@ -180,7 +191,8 @@ export function workPricing(
   const costCents = empty ? null : sum(amounts.map((x) => x.a.costCents));
   const computedPriceCents = empty ? null : sum(amounts.map((x) => x.a.saleCents));
   const range = empty ? null : workPriceRange(components, settings, supplies);
-  const priceCents = manualPriceCents ?? computedPriceCents ?? range?.midCents ?? null;
+  const priceCents =
+    manualPriceCents ?? computedPriceCents ?? (range ? pickInRange(range, pick) : null);
   const marginCents = priceCents !== null && costCents !== null ? priceCents - costCents : null;
   return {
     costCents,

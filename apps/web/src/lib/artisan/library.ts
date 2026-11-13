@@ -6,6 +6,7 @@ import {
   type ComponentKind,
   type LibrarySettings,
   type LibrarySupply,
+  type PricePick,
   type QuoteUnit,
   type WorkComponent,
   type WorkPricing,
@@ -25,6 +26,18 @@ export type SupplyRow = {
   purchase_price_cents: number | null;
   price_on: string | null;
   waste_bp: number;
+  /** Fourniture copiée de la bibliothèque MENAO (F-147). */
+  menao_supply_id?: string | null;
+  /** Prix publics HT de la fourniture MENAO liée, quand une source est branchée (F-147). */
+  public_range?: PublicRange | null;
+};
+
+/** Fourchette de prix publics d'une fourniture MENAO : HT, source et date du relevé. */
+export type PublicRange = {
+  minCents: number;
+  maxCents: number;
+  source: string | null;
+  on: string | null;
 };
 
 export type ComponentRow = {
@@ -46,15 +59,21 @@ export type WorkRow = {
   vat_rate_bp: number;
   detailed: boolean;
   manual_price_cents: number | null;
-  source: "devis" | "manuel";
+  source: "devis" | "manuel" | "menao";
   /** Prix courant enregistré (appels d'offres, ADR 0294). */
   price_cents?: number | null;
+  /** Prix retenu dans la fourchette indicative (F-147). */
+  price_pick?: PricePick;
+  /** Métier de l'ouvrage MENAO d'origine (F-147). */
+  trade_code?: string | null;
 };
 
 export type LibraryWork = WorkRow & { components: ComponentRow[]; pricing: WorkPricing };
 
 export type Library = {
   settings: LibrarySettings;
+  /** Premier passage fait : bibliothèque MENAO adoptée ou autre choix (F-147). */
+  onboarded: boolean;
   seededCount: number | null;
   supplies: SupplyRow[];
   works: LibraryWork[];
@@ -71,10 +90,24 @@ export function supplyMap(supplies: readonly SupplyRow[]): Map<string, LibrarySu
   return new Map(
     supplies.map((s) => [
       s.id,
-      { id: s.id, purchasePriceCents: s.purchase_price_cents, wasteBp: s.waste_bp },
+      {
+        id: s.id,
+        purchasePriceCents: s.purchase_price_cents,
+        wasteBp: s.waste_bp,
+        publicRange: s.public_range
+          ? { minCents: s.public_range.minCents, maxCents: s.public_range.maxCents }
+          : null,
+      },
     ]),
   );
 }
+
+type MenaoSupplyJoin = {
+  price_min_cents: number | null;
+  price_max_cents: number | null;
+  price_source: string | null;
+  price_on: string | null;
+} | null;
 
 /**
  * Bibliothèque de l'entreprise (lecture : RLS, patron et chef d'équipe). Remplie une seule fois
@@ -91,20 +124,20 @@ export async function loadLibrary(
       supabase
         .from("artisan_pricing_settings")
         .select(
-          "hour_cost_cents, hour_price_cents, supply_coef_bp, margin_alert_bp, price_max_age_months",
+          "hour_cost_cents, hour_price_cents, supply_coef_bp, margin_alert_bp, price_max_age_months, library_onboarded_at",
         )
         .maybeSingle(),
       supabase
         .from("artisan_supplies")
         .select(
-          "id, designation, reference, supplier, unit, purchase_price_cents, price_on, waste_bp",
+          "id, designation, reference, supplier, unit, purchase_price_cents, price_on, waste_bp, menao_supply_id, menao_supplies(price_min_cents, price_max_cents, price_source, price_on)",
         )
         .order("designation")
         .limit(2000),
       supabase
         .from("artisan_works")
         .select(
-          "id, designation, description, unit, line_type, vat_rate_bp, detailed, manual_price_cents, source, price_cents",
+          "id, designation, description, unit, line_type, vat_rate_bp, detailed, manual_price_cents, source, price_cents, price_pick, menao_works(trade_code)",
         )
         .order("designation")
         .limit(2000),
@@ -123,7 +156,22 @@ export async function loadLibrary(
         priceMaxAgeMonths: settings.price_max_age_months,
       }
     : DEFAULT_LIBRARY_SETTINGS;
-  const supplyRows = (supplies ?? []) as SupplyRow[];
+  const supplyRows: SupplyRow[] = (supplies ?? []).map(({ menao_supplies, ...s }) => {
+    const m = menao_supplies as MenaoSupplyJoin;
+    return {
+      ...s,
+      unit: s.unit as QuoteUnit,
+      public_range:
+        m && m.price_min_cents !== null && m.price_max_cents !== null
+          ? {
+              minCents: m.price_min_cents,
+              maxCents: m.price_max_cents,
+              source: m.price_source,
+              on: m.price_on,
+            }
+          : null,
+    };
+  });
   const bySupply = supplyMap(supplyRows);
   const byWork = new Map<string, ComponentRow[]>();
   for (const c of (components ?? []) as ComponentRow[]) {
@@ -131,14 +179,25 @@ export async function loadLibrary(
   }
   return {
     settings: libSettings,
+    onboarded: Boolean(settings?.library_onboarded_at),
     seededCount: typeof seeded === "number" && seeded > 0 ? seeded : null,
     supplies: supplyRows,
-    works: ((works ?? []) as WorkRow[]).map((w) => {
+    works: (works ?? []).map(({ menao_works, ...row }) => {
+      const w = {
+        ...row,
+        trade_code: (menao_works as { trade_code: string } | null)?.trade_code ?? null,
+      } as WorkRow;
       const parts = byWork.get(w.id) ?? [];
       return {
         ...w,
         components: parts,
-        pricing: workPricing(w.manual_price_cents, parts.map(toComponent), libSettings, bySupply),
+        pricing: workPricing(
+          w.manual_price_cents,
+          parts.map(toComponent),
+          libSettings,
+          bySupply,
+          w.price_pick ?? "milieu",
+        ),
       };
     }),
   };
@@ -194,4 +253,35 @@ export async function savedQuoteMargin(supabase: Client, quoteId: string) {
       costCents: lineCostCents(costs.get(l.position)?.unitCostCents ?? null, l.quantity_milli),
     })),
   );
+}
+
+/** Libellés des métiers (table publique des métiers actifs), dans l'ordre d'affichage. */
+export async function tradeLabels(supabase: Client): Promise<{ code: string; label: string }[]> {
+  const { data } = await supabase
+    .from("trades")
+    .select("code, label")
+    .eq("active", true)
+    .order("sort_order");
+  return data ?? [];
+}
+
+/**
+ * Métiers du catalogue MENAO pour le premier passage (F-147) : nombre d'ouvrages par métier, et
+ * ceux de la fiche de l'entreprise cochés d'avance.
+ */
+export async function loadMenaoTrades(
+  supabase: Client,
+  artisanId: string,
+): Promise<{ code: string; label: string; count: number; mine: boolean }[]> {
+  const [{ data: works }, { data: mine }, labels] = await Promise.all([
+    supabase.from("menao_works").select("trade_code").eq("active", true).limit(5000),
+    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisanId),
+    tradeLabels(supabase),
+  ]);
+  const counts = new Map<string, number>();
+  for (const w of works ?? []) counts.set(w.trade_code, (counts.get(w.trade_code) ?? 0) + 1);
+  const own = new Set((mine ?? []).map((m) => m.trade_code));
+  return labels
+    .filter((l) => counts.has(l.code))
+    .map((l) => ({ ...l, count: counts.get(l.code) ?? 0, mine: own.has(l.code) }));
 }

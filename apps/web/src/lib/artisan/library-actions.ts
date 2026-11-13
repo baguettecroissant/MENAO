@@ -2,6 +2,8 @@
 
 import {
   COMPONENT_KINDS,
+  PRICE_PICKS,
+  parisToday,
   parseCoefficient,
   parseEuros,
   parseRatePercent,
@@ -57,6 +59,52 @@ export async function saveLibrarySettings(
   await refreshWorkPrices(supabase);
   revalidatePath(BASE);
   return { success: t.settings.saved };
+}
+
+/**
+ * Premier passage (F-147, ADR 0307) : prix de l'heure et coefficient, puis bibliothèque MENAO des
+ * métiers choisis (copie dans la bibliothèque de l'entreprise) ou départ depuis les devis.
+ */
+export async function startLibrary(_prev: FormState, formData: FormData): Promise<FormState> {
+  const m = t.menao;
+  const choice = text(formData, "choice") === "devis" ? "devis" : "menao";
+  const trades = [
+    ...new Set(
+      formData
+        .getAll("trade")
+        .map(String)
+        .filter((c) => /^[a-z0-9-]{1,60}$/.test(c)),
+    ),
+  ].slice(0, 20);
+  const hourPrice = euros(text(formData, "hourPrice"));
+  const coefText = text(formData, "coef")?.trim() ?? "";
+  const coef = coefText ? parseCoefficient(coefText) : 10_000;
+  if (hourPrice === undefined || coef === null) return { error: m.invalid };
+  if (choice === "menao" && hourPrice === null) return { error: m.hourRequired };
+  if (choice === "menao" && trades.length === 0) return { error: m.noTrade };
+  const { supabase, artisanId } = await requireTeamPermission("money");
+  const { error: settingsError } = await supabase.from("artisan_pricing_settings").upsert({
+    artisan_id: artisanId,
+    supply_coef_bp: coef,
+    ...(hourPrice === null ? {} : { hour_price_cents: hourPrice }),
+  });
+  if (settingsError) return { error: m.error };
+  let added = 0;
+  if (choice === "menao") {
+    const { data, error } = await supabase.rpc("artisan_adopt_menao_library", {
+      p_trade_codes: trades,
+    });
+    if (error) return { error: error.code === "22023" ? error.message : m.error };
+    added = data ?? 0;
+  } else {
+    const { error } = await supabase.rpc("artisan_dismiss_menao_library");
+    if (error) return { error: m.error };
+  }
+  await refreshWorkPrices(supabase);
+  revalidatePath(BASE);
+  redirect(
+    (choice === "menao" ? `${BASE}?menao=${added}&metiers=${trades.length}` : BASE) as Route,
+  );
 }
 
 const supplySchema = z.object({
@@ -145,12 +193,18 @@ const workSchema = z.object({
   vatRateBp: z.union([z.literal(0), z.literal(550), z.literal(1000), z.literal(2000)]),
   detailed: z.boolean(),
   manualPriceCents: z.number().int().min(0).max(100_000_000).nullable(),
+  pricePick: z.enum(PRICE_PICKS).optional(),
 });
+
+/** Prix d'achat saisis dans la composition (fournitures sans prix, F-147). */
+const supplyPricesSchema = z
+  .array(z.object({ supplyId: z.uuid(), priceCents: z.number().int().min(0).max(100_000_000) }))
+  .max(100);
 
 /** Ouvrage et sa composition, enregistrés d'un bloc (artisan_save_work). */
 export async function saveWork(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = text(formData, "id") || null;
-  let raw: { work?: unknown; components?: unknown } = {};
+  let raw: { work?: unknown; components?: unknown; supplyPrices?: unknown } = {};
   try {
     raw = JSON.parse(text(formData, "payload") ?? "{}") as typeof raw;
   } catch {
@@ -158,10 +212,24 @@ export async function saveWork(_prev: FormState, formData: FormData): Promise<Fo
   }
   const work = workSchema.safeParse(raw.work);
   const components = z.array(componentSchema).max(100).safeParse(raw.components);
-  if ((id && !z.uuid().safeParse(id).success) || !work.success || !components.success) {
+  const supplyPrices = supplyPricesSchema.safeParse(raw.supplyPrices ?? []);
+  if (
+    (id && !z.uuid().safeParse(id).success) ||
+    !work.success ||
+    !components.success ||
+    !supplyPrices.success
+  ) {
     return { error: t.work.invalid };
   }
   const { supabase } = await requireTeamPermission("money");
+  // Prix d'achat saisis en ligne : RLS, fournitures de l'entreprise seulement.
+  for (const p of supplyPrices.data) {
+    const { error } = await supabase
+      .from("artisan_supplies")
+      .update({ purchase_price_cents: p.priceCents, price_on: parisToday() })
+      .eq("id", p.supplyId);
+    if (error) return { error: t.work.error };
+  }
   const { data: savedId, error } = await supabase.rpc("artisan_save_work", {
     p_work_id: id ?? undefined,
     p_work: work.data,

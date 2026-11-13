@@ -5428,6 +5428,62 @@ export const fr = {
         string
       >,
       costMissing: "Coût à ajouter",
+      // Bibliothèque MENAO par défaut (F-147, ADR 0306-0307) : premier passage, liste, ouvrage.
+      menao: {
+        chip: "MENAO",
+        startTitle: "Comment voulez-vous remplir votre bibliothèque ?",
+        startLead: "Vous pourrez combiner les trois plus tard.",
+        choiceLabel: "Point de départ de la bibliothèque",
+        menaoTitle: "Démarrer avec la bibliothèque MENAO",
+        menaoText:
+          "Des ouvrages prêts à chiffrer pour vos métiers : désignation, unité, TVA, temps de pose et fournitures.",
+        tradesLabel: "Vos métiers, repris de votre fiche",
+        tradesHint: (n: number) =>
+          `${n} ouvrage${n > 1 ? "s" : ""} copié${n > 1 ? "s" : ""} dans votre bibliothèque, modifiables. Temps de pose et quantités sont des repères MENAO.`,
+        importTitle: "Importer mon catalogue",
+        importText:
+          "Un fichier Excel ou CSV : désignation, unité, prix. Nous reconnaissons les colonnes.",
+        importSoon: "Bientôt",
+        devisTitle: "Partir de mes devis",
+        devisText: (n: number) =>
+          n > 0
+            ? `Vos ${n} ouvrage${n > 1 ? "s" : ""} déjà repris de vos devis, et ceux que vous ajouterez à la main.`
+            : "Les ouvrages de vos prochains devis, et ceux que vous ajouterez à la main.",
+        settingsTitle: "Pour chiffrer vos ouvrages",
+        settingsLead:
+          "Deux réglages suffisent : chaque prix de la bibliothèque en découle. Personne d'autre ne les voit.",
+        settingsNote:
+          "Prix d'achat × coefficient = prix de vente des fournitures. Le coût de l'heure, pour la marge, peut attendre.",
+        create: "Créer ma bibliothèque",
+        exampleTitle: "Exemple : cloison BA13, au m²",
+        examplePose: (price: string) => `Pose : 0,35 h × ${price}`,
+        exampleSupplies: (coef: string) => `Fournitures : vos prix d'achat × ${coef}`,
+        exampleSuppliesValue: "selon vos prix",
+        noTrade: "Choisissez au moins un métier.",
+        invalid: "Vérifiez le prix de l'heure et le coefficient (0,5 à 10).",
+        hourRequired: "Indiquez votre prix de vente de l'heure.",
+        error: "La bibliothèque n'a pas pu être créée. Réessayez.",
+        added: (n: number, trades: number) =>
+          `${n} ouvrage${n > 1 ? "s" : ""} MENAO ajouté${n > 1 ? "s" : ""}${trades > 0 ? ` pour vos ${trades} métier${trades > 1 ? "s" : ""}` : ""}.`,
+        addedNext:
+          "Ajustez les temps de pose et mettez vos prix d'achat : la fourchette devient votre prix.",
+        filtersLabel: "Filtrer par métier",
+        all: (n: number) => `Tous (${n})`,
+        mine: (n: number) => `Les miens (${n})`,
+        pose: "Pose",
+        indicative: "Votre prix indicatif HT",
+        sourceFooter: (date: string) =>
+          `Fourchettes : vos réglages + prix publics des fournitures au ${date}`,
+        whereTitle: "D'où viennent ces prix ?",
+        wherePose: "Pose",
+        wherePoseText: " : repère MENAO de temps par unité × votre prix de l'heure.",
+        whereSupplies: "Fournitures",
+        whereSuppliesText:
+          " : votre prix d'achat × votre coefficient. Tant qu'il manque, la fourchette des prix publics constatés en ligne, quand elle est disponible.",
+        whereOwn:
+          "Un artisan achète souvent moins cher : remplacez une fourniture par votre prix d'achat, et la fourchette laisse place à votre prix.",
+        whereNote: "Ce sont des repères, pas des prix conseillés : vous fixez vos prix.",
+      },
       count: (shown: number, total: number, withCost: number) =>
         `${shown} ouvrage${shown > 1 ? "s" : ""} sur ${total} · coût renseigné pour ${withCost}`,
       settings: {
@@ -5504,6 +5560,23 @@ export const fr = {
         noSupplies: "Ajoutez d'abord vos fournitures dans l'onglet Fournitures.",
         otherLabel: "Libellé du frais",
         hourCost: "Votre coût horaire",
+        // Ouvrage MENAO (F-147) : repère de pose, prix publics, prix d'achat en ligne, prix retenu.
+        poseTitle: "Temps de pose",
+        poseHint: "Repère MENAO : ajustez-le à votre rythme",
+        myPurchase: "Mon prix d'achat",
+        publicPrices: (low: string, high: string) => `Prix publics ${low} – ${high}`,
+        publicSource: (source: string | null, date: string | null) =>
+          [source, date].filter(Boolean).join(" · "),
+        publicNote: "Prix publics TTC des enseignes, convertis en HT.",
+        indicativeTitle: "Votre prix indicatif",
+        suppliesRange: (coef: string) => `Fournitures × ${coef}`,
+        pickTitle: "Prix retenu sur vos devis",
+        picks: { bas: "Bas", milieu: "Milieu", haut: "Haut", main: "À la main" } as Record<
+          string,
+          string
+        >,
+        pickValue: (pick: string, price: string, unit: string) => `${pick} : ${price} HT / ${unit}`,
+        rangeNote: "Mettez vos prix d'achat : la fourchette se resserre jusqu'à votre prix exact.",
         removeComponent: (name: string) => `Retirer ${name}`,
         removeColumn: "Retirer",
         fieldOf: (label: string, name: string) => `${label} : ${name}`,
