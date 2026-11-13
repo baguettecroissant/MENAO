@@ -887,7 +887,8 @@ begin
         'motif', new.details ->> 'motif',
         'message', new.details ->> 'message',
         'montant_ttc', new.details -> 'montant_ttc',
-        'sans_acompte', coalesce((new.details ->> 'sans_acompte')::boolean, false)
+        -- Seulement pour un devis sans acompte (les clés nulles ne sont pas gardées).
+        'sans_acompte', case when (new.details ->> 'sans_acompte')::boolean then true end
       ))
     from public.artisans a
     left join public.profiles cp on cp.user_id = c.particulier_id
