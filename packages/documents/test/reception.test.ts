@@ -115,10 +115,22 @@ describe("procès-verbal de réception (F-25, F-26)", () => {
     );
     expect(m.financial.map(([label]) => label)).toEqual([
       "Montant total TTC",
-      "Acompte versé",
+      "Déjà versé",
       "Solde restant à payer",
     ]);
     expect(m.financial.at(-1)?.[1]).toBe(money(0));
+  });
+
+  it("acompte et paiement au démarrage versés : « Déjà versé », sans pourcentage (F-146)", () => {
+    const total = doc.quote.total_ttc_cents;
+    const percent = doc.quote.deposit_percent ?? 30;
+    const paid = Math.floor((total * percent) / 100) + Math.floor((total * 40) / 100);
+    const m = receptionDocumentModel(receptionPdfData({ ...doc, paid_cents: paid }));
+    expect(m.financial).toEqual([
+      ["Montant total TTC", money(total)],
+      ["Déjà versé", money(paid)],
+      ["Solde restant à payer", money(total - paid)],
+    ]);
   });
 
   it("PDF : une page, métadonnées du PV, aperçu sans balises de signature", async () => {

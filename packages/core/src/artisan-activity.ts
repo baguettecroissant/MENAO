@@ -7,6 +7,7 @@
 
 import { chantierStepIndex } from "./chantier-progress";
 import type { ChantierStatus } from "./chantier-state";
+import type { PaymentKind } from "./payment";
 
 const parisMonth = new Intl.DateTimeFormat("fr-CA", {
   timeZone: "Europe/Paris",
@@ -30,7 +31,7 @@ export const SIGN_RATE_DAYS = 180;
 export type ActivityPayment = {
   chantierId: string;
   quoteId: string;
-  kind: "acompte" | "solde";
+  kind: PaymentKind;
   status: string;
   amountCents: number;
   paidAt: string | null;
@@ -229,7 +230,7 @@ export function activityInputFromRows(rows: {
   payments: readonly {
     chantier_id: string;
     quote_id: string;
-    kind: "acompte" | "solde";
+    kind: PaymentKind;
     status: string;
     amount_cents: number;
     paid_at: string | null;

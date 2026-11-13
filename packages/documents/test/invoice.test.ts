@@ -115,6 +115,62 @@ describe("facture d'acompte (F-35)", () => {
     expect(await drawnImages(await renderInvoicePdf(invoicePdfData(doc)))).toEqual([]);
   });
 
+  it("paiement au démarrage : facture d'acompte de la tranche, déduite du solde (F-146)", () => {
+    const start: InvoiceDocument = {
+      ...doc,
+      invoice: {
+        ...doc.invoice,
+        numero: "FAC-2026-0002",
+        kind: "demarrage",
+        total_ht_cents: 12000,
+        total_tva_cents: 1200,
+        total_ttc_cents: 13200,
+        vat_breakdown: [{ rateBp: 1000, baseHtCents: 12000, tvaCents: 1200 }],
+      },
+      quote: { ...doc.quote, tranche_percent: 40 },
+    };
+    const m = invoiceDocumentModel(invoicePdfData(start));
+    expect(m.title).toBe("FACTURE D'ACOMPTE");
+    expect(m.rows).toEqual([
+      {
+        designation: `Acompte de 40 % au démarrage des travaux, sur le devis n° DEVIS-2026-0001 (montant total TTC : ${money(33000)})`,
+        total: money(12000),
+      },
+    ]);
+    expect(m.mentions).toContain("Le montant de cet acompte sera déduit de la facture de solde.");
+    const solde = invoiceDocumentModel(
+      invoicePdfData({
+        ...doc,
+        invoice: { ...doc.invoice, numero: "FAC-2026-0003", kind: "solde" },
+        lines: [],
+        quote_totals: {
+          total_ht_cents: 30000,
+          total_tva_cents: 3000,
+          total_ttc_cents: 33000,
+          vat_breakdown: [{ rateBp: 1000, baseHtCents: 30000, tvaCents: 3000 }],
+        },
+        deposits: [
+          {
+            numero: "FAC-2026-0001",
+            kind: "acompte",
+            paid_on: "2026-10-10",
+            total_ttc_cents: 9900,
+          },
+          {
+            numero: "FAC-2026-0002",
+            kind: "demarrage",
+            paid_on: "2026-10-20",
+            total_ttc_cents: 13200,
+          },
+        ],
+      }),
+    );
+    expect(solde.totals.map(([label]) => label)).toContain(
+      "Acompte versé au démarrage (facture FAC-2026-0002)",
+    );
+    expect(solde.totals.map(([label]) => label)).toContain("Acompte versé (facture FAC-2026-0001)");
+  });
+
   it("facture de solde : lignes du devis, totaux des travaux, acompte déduit, solde", async () => {
     const solde: InvoiceDocument = {
       ...doc,

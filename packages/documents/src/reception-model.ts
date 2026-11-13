@@ -76,6 +76,8 @@ export const RECEPTION_TEXTS = {
   financialTitle: "Récapitulatif financier",
   total: "Montant total TTC",
   deposit: (percent: number | null) => `Acompte versé${percent ? ` (${percent} %)` : ""}`,
+  // Plusieurs versements (acompte et démarrage) ou sans acompte : montant déjà réglé (F-146).
+  paid: "Déjà versé",
   balance: (percent: number | null) =>
     `Solde restant à payer${percent ? ` (${100 - percent} %)` : ""}`,
   place: (city: string | null, date: string) =>
@@ -89,6 +91,12 @@ const T = RECEPTION_TEXTS;
 /** Contenu du PV (textes et montants mis en forme), indépendant du dessin. */
 export function receptionDocumentModel(d: ReceptionPdfData): ReceptionDocumentModel {
   const balance = Math.max(0, d.quote.totalTtcCents - d.paidCents);
+  // Pourcentages affichés seulement si l'acompte est le seul versement (sinon « Déjà versé »).
+  const percent = d.quote.depositPercent;
+  const depositOnly =
+    percent !== null &&
+    percent > 0 &&
+    d.paidCents === Math.floor((d.quote.totalTtcCents * percent) / 100);
   const reserves = d.withReserves ? (d.reserves ?? "").trim() : "";
   return {
     title: winAnsi(T.title),
@@ -125,8 +133,8 @@ export function receptionDocumentModel(d: ReceptionPdfData): ReceptionDocumentMo
     financialTitle: winAnsi(T.financialTitle),
     financial: [
       [winAnsi(T.total), money(d.quote.totalTtcCents)],
-      [winAnsi(T.deposit(d.quote.depositPercent)), money(d.paidCents)],
-      [winAnsi(T.balance(d.quote.depositPercent)), money(balance)],
+      [winAnsi(depositOnly ? T.deposit(d.quote.depositPercent) : T.paid), money(d.paidCents)],
+      [winAnsi(T.balance(depositOnly ? d.quote.depositPercent : null)), money(balance)],
     ],
     placeLine: winAnsi(T.place(d.site.city, dateLong(d.issuedOn))),
     signatureLabel: winAnsi(T.signature),

@@ -1,4 +1,4 @@
-import { depositAboveAdvice } from "@menao/core";
+import { depositAboveAdvice, trancheAmount } from "@menao/core";
 import { quoteDocumentModel, quotePdfData, type QuoteDocument } from "@menao/documents";
 import { Eye } from "lucide-react";
 import type { Metadata, Route } from "next";
@@ -83,11 +83,14 @@ export default async function ClientQuotePage({
   const advisedDeposit = depositAboveAdvice(data.schedule);
   const actions = (
     <>
-      {quote.status === "signe" && deposit?.status !== "paye" && deposit?.status !== "en_cours" && (
-        <ButtonLink href={`/mon-espace/devis/${id}/acompte` as Route} size="lg" block>
-          {t.payDeposit(euros.format((data.schedule[0]?.amountCents ?? 0) / 100))}
-        </ButtonLink>
-      )}
+      {quote.status === "signe" &&
+        trancheAmount(data.schedule, "signature") > 0 &&
+        deposit?.status !== "paye" &&
+        deposit?.status !== "en_cours" && (
+          <ButtonLink href={`/mon-espace/devis/${id}/acompte` as Route} size="lg" block>
+            {t.payDeposit(euros.format(trancheAmount(data.schedule, "signature") / 100))}
+          </ButtonLink>
+        )}
       {quote.status === "envoye" && (
         <div className="flex flex-col gap-3">
           <ButtonLink href={`/mon-espace/devis/${id}/signature` as Route} size="lg" block>

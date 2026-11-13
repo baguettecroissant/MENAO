@@ -13,6 +13,7 @@ import { reviewInvited } from "./review";
 export const CLIENT_TODO_KINDS = [
   "signer_devis",
   "payer_acompte",
+  "payer_demarrage",
   "valider_reception",
   "confirmer_levee",
   "payer_solde",
@@ -22,7 +23,12 @@ export type ClientTodoKind = (typeof CLIENT_TODO_KINDS)[number];
 
 export type ClientTodo<T> =
   | { kind: "signer_devis"; quoteId: string; row: T }
-  | { kind: "payer_acompte" | "payer_solde"; quoteId: string; amountCents: number; row: T }
+  | {
+      kind: "payer_acompte" | "payer_demarrage" | "payer_solde";
+      quoteId: string;
+      amountCents: number;
+      row: T;
+    }
   | { kind: "valider_reception" | "confirmer_levee" | "donner_avis"; row: T };
 
 export type ClientTodoChantier = {
@@ -33,6 +39,9 @@ export type ClientTodoChantier = {
   depositStatus: PaymentStatus | null;
   balanceCents: number | null;
   balanceStatus: PaymentStatus | null;
+  /** Paiement au démarrage des travaux (F-146). */
+  startCents?: number | null;
+  startStatus?: PaymentStatus | null;
   /** Levée des réserves signalée par l'artisan, pas encore confirmée (F-26). */
   liftSignaled: boolean;
   /** Avis déjà laissé sur ce chantier (F-28). */

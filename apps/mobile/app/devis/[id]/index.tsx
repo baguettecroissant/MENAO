@@ -1,4 +1,4 @@
-import { depositAboveAdvice } from "@menao/core";
+import { depositAboveAdvice, trancheAmount } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, FilePen, X } from "lucide-react-native";
@@ -26,9 +26,12 @@ const TONE = {
   remplace: "neutral",
 } as const;
 
-/** Paiement de l'acompte encore à faire : rien de payé ni d'en cours de confirmation. */
+/** Paiement de l'acompte encore à faire : prévu (pas de devis sans acompte), rien de payé ni en cours. */
 const depositDue = (q: ClientQuote) =>
-  q.status === "signe" && q.deposit?.status !== "paye" && q.deposit?.status !== "en_cours";
+  q.status === "signe" &&
+  trancheAmount(q.data.schedule, "signature") > 0 &&
+  q.deposit?.status !== "paye" &&
+  q.deposit?.status !== "en_cours";
 
 /**
  * Devis reçu par le client (F-21), comme sur le site : contenu figé à l'envoi, PDF, signature,
@@ -78,7 +81,7 @@ export default function QuoteScreen() {
     );
   }
 
-  const deposit = quote.data.schedule[0];
+  const deposit = quote.data.schedule.find((s) => s.trigger === "signature");
   // Conseil au client (ADR 0158) : acompte de plus de 30 %.
   const advisedDeposit = depositAboveAdvice(quote.data.schedule);
   const name = quote.data.numero ?? "devis";

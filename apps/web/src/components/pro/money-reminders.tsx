@@ -1,5 +1,6 @@
 "use client";
 
+import type { PaymentKind } from "@menao/core";
 import { Send } from "lucide-react";
 import { useActionState } from "react";
 import { focusRing } from "@/components/ui";
@@ -16,7 +17,7 @@ export function RemindButton({
   allowed,
 }: {
   chantierId: string;
-  kind: "acompte" | "solde";
+  kind: PaymentKind;
   allowed: boolean;
 }) {
   const [state, action, pending] = useActionState(sendPaymentReminder, initialFormState);

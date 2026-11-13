@@ -7,6 +7,7 @@ import {
   parisToday,
   quoteStartDateError,
   type MoneyOverview,
+  type PaymentKind,
   type VoiceLine,
 } from "@menao/core";
 import {
@@ -344,6 +345,8 @@ export async function loadQuoteSendContext(chantierId: string): Promise<QuoteSen
 
 export type SendQuoteInput = {
   depositPercent: number;
+  /** Paiement au démarrage des travaux (F-146), 0 : aucun. */
+  startPercent?: number;
   saveDefault: boolean;
   startDate: string;
   durationDays: number;
@@ -375,6 +378,7 @@ export async function sendQuote(
     p_start_date: input.startDate,
     p_duration_days: input.durationDays,
     p_save_default: input.saveDefault,
+    p_start_percent: input.startPercent ?? 0,
   });
   if (error) return { error: sqlError(error) };
   await supabase.functions.invoke("generate-pdf", { body: { quoteId } });
@@ -394,7 +398,7 @@ export async function loadMoneyOverview(): Promise<MoneyOverview | null> {
 /** « Relancer le client » (ADR 0238) : message d'erreur, ou null si la relance est partie. */
 export async function sendPaymentReminder(
   chantierId: string,
-  kind: "acompte" | "solde",
+  kind: PaymentKind,
 ): Promise<string | null> {
   const { error } = await supabase.rpc("artisan_send_payment_reminder", {
     p_chantier_id: chantierId,

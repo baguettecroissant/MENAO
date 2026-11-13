@@ -2,7 +2,7 @@ import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { money, winAnsi } from "../src/format.ts";
 import { LOGO_BOX, fitLogo } from "../src/pdf-layout.ts";
-import { quoteDocumentModel, type QuotePdfData } from "../src/quote-model.ts";
+import { QUOTE_TEXTS, quoteDocumentModel, type QuotePdfData } from "../src/quote-model.ts";
 import { SIGNATURE_TAGS, renderQuotePdf } from "../src/quote-pdf.ts";
 import { JPEG_LOGO, PNG_LOGO, drawnImages } from "./logo-fixtures.ts";
 
@@ -120,6 +120,10 @@ describe("contenu du devis (F-20)", () => {
       `70 % à la réception des travaux, soit 231,00${NBSP}€`,
     ]);
     expect(m.scheduleNote).toBeNull();
+    // Paiement au démarrage (F-146).
+    expect(QUOTE_TEXTS.tranche(40, "demarrage", "132,00 €")).toBe(
+      "40 % au démarrage des travaux, soit 132,00 €",
+    );
     expect(m.mentions).toContain("Devis reçu avant l'exécution des travaux.");
     expect(m.mentions.some((x) => x.startsWith("Taux réduit de TVA"))).toBe(true);
     // Devis envoyé (ADR 0157) : mention confidentielle au nom du client.

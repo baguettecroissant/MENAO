@@ -42,7 +42,7 @@ async function myArtisanId(): Promise<string | null> {
 export type ArtisanInvoice = {
   id: string;
   numero: string;
-  kind: "acompte" | "solde";
+  kind: Database["public"]["Enums"]["payment_kind"];
   issuedOn: string;
   totalTtcCents: number;
   client: string;

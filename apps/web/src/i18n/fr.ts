@@ -2615,6 +2615,7 @@ export const fr = {
     todo: {
       signer_devis: "Signer le devis",
       payer_acompte: "Payer l'acompte",
+      payer_demarrage: "Payer au démarrage",
       valider_reception: "Réceptionner les travaux",
       confirmer_levee: "Confirmer la levée des réserves",
       payer_solde: "Payer le solde",
@@ -2805,7 +2806,11 @@ export const fr = {
       documents: "Documents liés",
       quote: "Devis",
       signedQuote: "Devis signé",
-      invoice: { acompte: "Facture d'acompte", solde: "Facture de solde" },
+      invoice: {
+        acompte: "Facture d'acompte",
+        demarrage: "Facture d'acompte (démarrage)",
+        solde: "Facture de solde",
+      },
       meta: (numero: string, date: string) => `${numero} · ${date}`,
       openPdf: "PDF, nouvel onglet",
       // Refonte « Nette » (ADR 0256) : Mes documents.
@@ -4756,8 +4761,12 @@ export const fr = {
         customSchedule: "Échéancier personnalisé",
         customHint: "Configurez un échéancier sur-mesure",
         deposit: "Acompte à la signature (%)",
-        tranche: (percent: number, trigger: "signature" | "reception", amount: string | null) =>
-          `${percent} % ${trigger === "signature" ? "à la signature du devis" : "à la réception du chantier"}${amount ? `, soit ${amount}` : ""}`,
+        tranche: (
+          percent: number,
+          trigger: "signature" | "demarrage" | "reception",
+          amount: string | null,
+        ) =>
+          `${percent} % ${trigger === "signature" ? "à la signature du devis" : trigger === "demarrage" ? "au démarrage des travaux" : "à la réception du chantier"}${amount ? `, soit ${amount}` : ""}`,
         saveDefault: "En faire mon échéancier par défaut",
         datesTitle: "Dates des travaux",
         startDate: "Date de début prévisionnelle",
@@ -4933,7 +4942,7 @@ export const fr = {
       link: "Mes factures",
       empty: "Aucune facture pour le moment : elles sont émises à chaque paiement reçu.",
       export: "Exporter pour le comptable (CSV)",
-      kinds: { acompte: "Acompte", solde: "Solde" },
+      kinds: { acompte: "Acompte", demarrage: "Acompte au démarrage", solde: "Solde" },
       line: (kind: string, date: string, client: string | null) =>
         [kind, date, client].filter(Boolean).join(" · "),
       view: (numero: string) => `Voir la facture ${numero} (PDF)`,
@@ -4973,7 +4982,10 @@ export const fr = {
       previous: (month: string, value: string) => `${month} : ${value}`,
       openTitle: "À encaisser",
       openEmpty: "Rien à encaisser : tous vos paiements sont à jour.",
-      kinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+      kinds: { acompte: "Acompte", demarrage: "Démarrage", solde: "Solde" } as Record<
+        string,
+        string
+      >,
       dueSince: (days: number) =>
         days === 0
           ? "Dû depuis aujourd'hui"
@@ -9338,7 +9350,10 @@ export const fr = {
         pdf: (label: string) => `PDF : ${label}`,
         payments: "Paiements",
         noPayments: "Aucun paiement pour le moment.",
-        paymentKinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+        paymentKinds: { acompte: "Acompte", demarrage: "Démarrage", solde: "Solde" } as Record<
+          string,
+          string
+        >,
         paymentStatus: {
           en_attente: "En attente",
           en_cours: "En cours",
@@ -9399,7 +9414,10 @@ export const fr = {
         amount: "Montant",
         status: "Statut",
       },
-      kinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+      kinds: { acompte: "Acompte", demarrage: "Démarrage", solde: "Solde" } as Record<
+        string,
+        string
+      >,
       statuses: {
         en_attente: "Commencé",
         en_cours: "En cours",

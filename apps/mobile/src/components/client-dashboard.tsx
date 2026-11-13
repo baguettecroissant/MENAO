@@ -45,6 +45,7 @@ type Todo = ClientHome["todos"][number];
 const TODO_ICONS: Record<Todo["kind"], { icon: LucideIcon; tone: FicheTone }> = {
   signer_devis: { icon: FilePen, tone: "primary" },
   payer_acompte: { icon: CreditCard, tone: "primary" },
+  payer_demarrage: { icon: CreditCard, tone: "primary" },
   valider_reception: { icon: ClipboardCheck, tone: "success" },
   confirmer_levee: { icon: ShieldCheck, tone: "warning" },
   payer_solde: { icon: CreditCard, tone: "primary" },
@@ -71,7 +72,12 @@ function openTodo(todo: Todo) {
 
 /** Montant affiché : total TTC du devis à signer, acompte ou solde à payer. */
 function todoAmount(todo: Todo): number | null {
-  if (todo.kind === "payer_acompte" || todo.kind === "payer_solde") return todo.amountCents;
+  if (
+    todo.kind === "payer_acompte" ||
+    todo.kind === "payer_demarrage" ||
+    todo.kind === "payer_solde"
+  )
+    return todo.amountCents;
   if (todo.kind === "signer_devis") return todo.row.c.quote_total_ttc_cents ?? null;
   return null;
 }

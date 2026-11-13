@@ -165,7 +165,7 @@ async function savePayment(
   if (
     session.mode !== "payment" ||
     !quoteId ||
-    (kind !== "acompte" && kind !== "solde") ||
+    (kind !== "acompte" && kind !== "solde" && kind !== "demarrage") ||
     !status
   ) {
     return;

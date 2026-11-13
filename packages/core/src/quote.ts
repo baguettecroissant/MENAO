@@ -48,7 +48,8 @@ export const QUOTE_VALIDITY_DAYS = 30;
 // (artisan_send_quote).
 // ---------------------------------------------------------------------------
 
-export const PAYMENT_TRIGGERS = ["signature", "reception"] as const;
+/** Moments de paiement : signature (acompte), démarrage des travaux (facultatif), réception (solde). */
+export const PAYMENT_TRIGGERS = ["signature", "demarrage", "reception"] as const;
 export type PaymentTrigger = (typeof PAYMENT_TRIGGERS)[number];
 export type PaymentTranche = { percent: number; trigger: PaymentTrigger; amountCents: number };
 
@@ -64,25 +65,67 @@ export const QUOTE_REVISION_MESSAGE_LIMITS = { min: 10, max: 1000 } as const;
 
 /** « Mon échéancier par défaut » proposé (maquette : 30 % à la signature, 70 % à la réception). */
 export const DEFAULT_DEPOSIT_PERCENT = 30;
+/** Part payée au démarrage des travaux par défaut : aucune (F-146). */
+export const DEFAULT_START_PERCENT = 0;
 export const QUOTE_START_MAX_DAYS = 365;
 export const QUOTE_DURATION_MAX_DAYS = 365;
 
+/** Part d'une tranche (acompte ou démarrage) : entier de 0 à 99 % ; 0 % = pas de tranche (F-146). */
 export const isValidDepositPercent = (value: number) =>
-  Number.isInteger(value) && value >= 1 && value <= 99;
+  Number.isInteger(value) && value >= 0 && value <= 99;
+export const isValidStartPercent = isValidDepositPercent;
+
+/**
+ * Échéancier choisi par l'artisan : acompte et démarrage entre 0 et 99 %, au moins 1 % pour le
+ * solde à la réception. Mêmes règles en base (app.check_payment_schedule).
+ */
+export function paymentScheduleError(
+  depositPercent: number,
+  startPercent: number,
+): "acompte" | "demarrage" | "solde" | null {
+  if (!isValidDepositPercent(depositPercent)) return "acompte";
+  if (!isValidStartPercent(startPercent)) return "demarrage";
+  if (depositPercent + startPercent > 99) return "solde";
+  return null;
+}
 
 export const isValidDurationDays = (value: number) =>
   Number.isInteger(value) && value >= 1 && value <= QUOTE_DURATION_MAX_DAYS;
 
 /**
- * Acompte à la signature (arrondi au centime inférieur), solde à la réception = TTC − acompte :
- * le solde est toujours calculé (CLAUDE.md règle 5).
+ * Acompte à la signature et paiement au démarrage (chacun arrondi au centime inférieur, absents à
+ * 0 %), solde à la réception = TTC − tranches précédentes : le solde est toujours calculé
+ * (CLAUDE.md règle 5). Mêmes tranches en base (app.build_payment_schedule).
  */
-export function paymentSchedule(totalTtcCents: number, depositPercent: number): PaymentTranche[] {
+export function paymentSchedule(
+  totalTtcCents: number,
+  depositPercent: number,
+  startPercent = 0,
+): PaymentTranche[] {
   const deposit = Math.floor((totalTtcCents * depositPercent) / 100);
-  return [
-    { percent: depositPercent, trigger: "signature", amountCents: deposit },
-    { percent: 100 - depositPercent, trigger: "reception", amountCents: totalTtcCents - deposit },
-  ];
+  const start = Math.floor((totalTtcCents * startPercent) / 100);
+  const tranches: PaymentTranche[] = [];
+  if (depositPercent > 0) {
+    tranches.push({ percent: depositPercent, trigger: "signature", amountCents: deposit });
+  }
+  if (startPercent > 0) {
+    tranches.push({ percent: startPercent, trigger: "demarrage", amountCents: start });
+  }
+  tranches.push({
+    percent: 100 - depositPercent - startPercent,
+    trigger: "reception",
+    amountCents: totalTtcCents - deposit - start,
+  });
+  return tranches;
+}
+
+/** Montant d'une tranche de l'échéancier (0 si elle n'existe pas : sans acompte, par exemple). */
+export function trancheAmount(
+  schedule: readonly { trigger: string; amountCents?: number; amount_cents?: number }[],
+  trigger: PaymentTrigger,
+): number {
+  const tranche = schedule.find((t) => t.trigger === trigger);
+  return tranche ? (tranche.amountCents ?? tranche.amount_cents ?? 0) : 0;
 }
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;

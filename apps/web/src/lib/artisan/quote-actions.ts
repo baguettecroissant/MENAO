@@ -261,6 +261,7 @@ export async function sendQuote(
   };
   const parsed = sendQuoteSchema.safeParse({
     ...values,
+    startPercent: text(formData, "startPercent") ?? undefined,
     saveDefault: checkbox(formData, "saveDefault"),
   });
   if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values };
@@ -274,6 +275,7 @@ export async function sendQuote(
     p_start_date: parsed.data.startDate,
     p_duration_days: parsed.data.durationDays,
     p_save_default: parsed.data.saveDefault,
+    p_start_percent: parsed.data.startPercent,
   });
   if (error) {
     return { error: error.code === "22023" ? error.message : fr.errors.generic, values };

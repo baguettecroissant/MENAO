@@ -35,7 +35,9 @@ export default async function QuoteSignaturePage({
   if ((document as unknown as QuoteDocument).quote.status !== "envoye")
     redirect(quoteHref as Route);
   const model = quoteDocumentModel(data);
-  const [deposit, balance] = data.schedule;
+  // Par moment de paiement (F-146) : sans acompte, la première tranche est celle de la réception.
+  const deposit = data.schedule.find((s) => s.trigger === "signature");
+  const balance = data.schedule.find((s) => s.trigger === "reception");
 
   // Refonte « Nette » (ADR 0256) : le devis à gauche, les cases et la signature à droite.
   return (

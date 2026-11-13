@@ -123,16 +123,34 @@ const integerField = (min: number, max: number, error: string) =>
     .transform(Number)
     .pipe(z.number().int().min(min, { error }).max(max, { error }));
 
+/** Au moins 1 % reste à payer à la réception (F-146), comme en base. */
+const keepsBalance = (v: { depositPercent: number; startPercent: number }) =>
+  v.depositPercent + v.startPercent <= 99;
+
 /**
- * F-21 « Envoyer le devis » : acompte (le solde va à la réception), date de début (AAAA-MM-JJ,
- * à venir : contrôlée par @menao/core) et durée estimée en jours.
+ * F-21 « Envoyer le devis » : acompte (0 % : sans acompte), paiement facultatif au démarrage des
+ * travaux (F-146), le solde va à la réception ; date de début (AAAA-MM-JJ, à venir : contrôlée
+ * par @menao/core) et durée estimée en jours.
  */
-export const sendQuoteSchema = z.object({
-  depositPercent: integerField(1, 99, messages.depositInvalid),
-  saveDefault: z.boolean(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: messages.startDateRequired }),
-  durationDays: integerField(1, QUOTE_DURATION_MAX_DAYS, messages.durationInvalid),
-});
+export const sendQuoteSchema = z
+  .object({
+    depositPercent: integerField(0, 99, messages.depositInvalid),
+    startPercent: integerField(0, 99, messages.startPercentInvalid)
+      .optional()
+      .transform((v) => v ?? 0),
+    saveDefault: z.boolean(),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: messages.startDateRequired }),
+    durationDays: integerField(1, QUOTE_DURATION_MAX_DAYS, messages.durationInvalid),
+  })
+  .refine(keepsBalance, { error: messages.scheduleNoBalance, path: ["startPercent"] });
+
+/** F-146 « Mes paiements » : échéancier par défaut de l'artisan. */
+export const paymentDefaultsSchema = z
+  .object({
+    depositPercent: integerField(0, 99, messages.depositInvalid),
+    startPercent: integerField(0, 99, messages.startPercentInvalid),
+  })
+  .refine(keepsBalance, { error: messages.scheduleNoBalance, path: ["startPercent"] });
 
 /** F-21 : refus du devis par le client, avec un commentaire facultatif pour l'artisan. */
 export const refuseQuoteSchema = z.object({

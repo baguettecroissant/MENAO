@@ -48,7 +48,9 @@ export default function QuoteSignatureScreen() {
   // Devis déjà signé, refusé ou remplacé : retour à son écran.
   if (quote.status !== "envoye") return <Redirect href={`/devis/${id}`} />;
 
-  const [deposit, balance] = quote.data.schedule;
+  // Par moment de paiement (F-146) : sans acompte, la première tranche est celle de la réception.
+  const deposit = quote.data.schedule.find((s) => s.trigger === "signature");
+  const balance = quote.data.schedule.find((s) => s.trigger === "reception");
   const items: ConsentItem[] = [
     { name: "document", label: t.signature.consents.document, links: [] },
     {

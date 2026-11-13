@@ -16,9 +16,11 @@ import {
   parseEuros,
   parseQuantity,
   paymentSchedule,
+  paymentScheduleError,
   quoteFromVoiceJsonSchema,
   quoteStartDateError,
   quoteTotals,
+  trancheAmount,
   type RawVoiceLine,
 } from "../src/quote";
 
@@ -255,11 +257,48 @@ describe("envoi du devis : échéancier et dates (F-20, F-21)", () => {
     expect((deposit?.amountCents ?? 0) + (balance?.amountCents ?? 0)).toBe(123_456_789);
   });
 
-  it("pourcentage d'acompte entier entre 1 et 99", () => {
-    expect(isValidDepositPercent(1)).toBe(true);
+  it("pourcentage d'acompte entier entre 0 (sans acompte) et 99", () => {
+    expect(isValidDepositPercent(0)).toBe(true);
     expect(isValidDepositPercent(99)).toBe(true);
-    for (const value of [0, 100, 30.5, Number.NaN])
+    for (const value of [-1, 100, 30.5, Number.NaN])
       expect(isValidDepositPercent(value)).toBe(false);
+  });
+
+  it("échéancier en trois tranches : démarrage facultatif, solde calculé (F-146)", () => {
+    expect(paymentSchedule(480_000, 30, 40)).toEqual([
+      { percent: 30, trigger: "signature", amountCents: 144_000 },
+      { percent: 40, trigger: "demarrage", amountCents: 192_000 },
+      { percent: 30, trigger: "reception", amountCents: 144_000 },
+    ]);
+    // Sans acompte : tout à la réception.
+    expect(paymentSchedule(124_000, 0)).toEqual([
+      { percent: 100, trigger: "reception", amountCents: 124_000 },
+    ]);
+    // Démarrage sans acompte.
+    expect(paymentSchedule(33000, 0, 40)).toEqual([
+      { percent: 40, trigger: "demarrage", amountCents: 13200 },
+      { percent: 60, trigger: "reception", amountCents: 19800 },
+    ]);
+    // Arrondis : les centimes restent au solde, comme en base.
+    expect(paymentSchedule(1001, 33, 33)).toEqual([
+      { percent: 33, trigger: "signature", amountCents: 330 },
+      { percent: 33, trigger: "demarrage", amountCents: 330 },
+      { percent: 34, trigger: "reception", amountCents: 341 },
+    ]);
+    const tranches = paymentSchedule(123_456_789, 17, 41);
+    expect(tranches.reduce((sum, t) => sum + t.amountCents, 0)).toBe(123_456_789);
+    expect(trancheAmount(paymentSchedule(33000, 0), "signature")).toBe(0);
+    expect(trancheAmount([{ trigger: "demarrage", amount_cents: 13200 }], "demarrage")).toBe(13200);
+  });
+
+  it("échéancier valide : chaque part de 0 à 99 %, au moins 1 % au solde", () => {
+    expect(paymentScheduleError(30, 40)).toBeNull();
+    expect(paymentScheduleError(0, 0)).toBeNull();
+    expect(paymentScheduleError(50, 49)).toBeNull();
+    expect(paymentScheduleError(50, 50)).toBe("solde");
+    expect(paymentScheduleError(100, 0)).toBe("acompte");
+    expect(paymentScheduleError(30, -1)).toBe("demarrage");
+    expect(paymentScheduleError(30, 12.5)).toBe("demarrage");
   });
 
   it("date de début : après aujourd'hui (heure de Paris), dans l'année", () => {

@@ -65,6 +65,7 @@ describe("accueil du client connecté : ce qui l'attend (ADR 0082)", () => {
     expect(CLIENT_TODO_KINDS).toEqual([
       "signer_devis",
       "payer_acompte",
+      "payer_demarrage",
       "valider_reception",
       "confirmer_levee",
       "payer_solde",
