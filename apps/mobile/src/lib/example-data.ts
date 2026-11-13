@@ -382,6 +382,7 @@ export function exampleProfileHub(
     city: profile.zone.city,
     gradeLevel: facts.level,
     avatarUrl: account.avatarUrl,
+    logoUrl: null,
     email: account.email,
     status: "valide",
     verified: true,

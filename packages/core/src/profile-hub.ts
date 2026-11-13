@@ -16,6 +16,7 @@ export type ProfileHubRow =
   | "reviews"
   | "grade"
   | "company"
+  | "logo"
   | "trades"
   | "zone"
   | "availability"
@@ -38,7 +39,9 @@ export type ProfileHubStatus = { tone: ProfileHubTone } & (
         | "signed"
         | "toSign"
         | "active"
-        | "toActivate";
+        | "toActivate"
+        | "logoAdded"
+        | "logoToAdd";
     }
   | {
       code:
@@ -71,6 +74,8 @@ export type ProfileHubFacts = {
   hasRge: boolean;
   paused: boolean;
   availableFrom: string | null;
+  /** Logo des documents déposé (ADR 0038) ; absent : rubrique sans état. */
+  hasLogo?: boolean;
   /** Date du jour à Paris (AAAA-MM-JJ). */
   today: string;
 };
@@ -99,6 +104,13 @@ export function profileHubStatuses(
       s.siretVerified && s.sireneActive
         ? { code: "verifiedCompany", tone: "success" }
         : { code: "toVerify", tone: "warning" },
+    // Logo des devis, factures et DPGF (ADR 0300) : facultatif, rappelé tant qu'il manque.
+    logo:
+      f.hasLogo === undefined
+        ? null
+        : f.hasLogo
+          ? { code: "logoAdded", tone: "success" }
+          : { code: "logoToAdd", tone: "warning" },
     trades:
       s.tradeCount === 0
         ? { code: "toComplete", tone: "warning" }

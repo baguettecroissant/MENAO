@@ -19,6 +19,7 @@ import {
   Eye,
   FolderCheck,
   IdCard,
+  Image as ImageIcon,
   Images,
   LifeBuoy,
   MapPin,
@@ -67,6 +68,7 @@ const ROW_PERMISSION: Partial<Record<RowKey, TeamPermission>> = {
   grade: "storefront",
   businessCards: "storefront",
   company: "storefront",
+  logo: "storefront",
   trades: "storefront",
   zone: "storefront",
   availability: "agenda",
@@ -96,6 +98,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
     key: "company",
     rows: [
       { key: "company", icon: Building2, href: "/pro/onboarding/entreprise" },
+      // Logo des devis, factures et DPGF (ADR 0300), déposé au même endroit que l'entreprise.
+      { key: "logo", icon: ImageIcon, href: "/pro/onboarding/entreprise#logo" },
       { key: "trades", icon: Wrench, href: "/pro/onboarding/metiers" },
       { key: "zone", icon: MapPin, href: "/pro/onboarding/zone" },
       { key: "availability", icon: CalendarClock, href: "/pro/agenda/disponibilites" },

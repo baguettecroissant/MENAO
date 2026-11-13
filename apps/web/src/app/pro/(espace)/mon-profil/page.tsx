@@ -95,6 +95,8 @@ export default async function MyProfilePage({
     hasRge: profile.rge.length > 0,
     paused: space.paused,
     availableFrom: space.availableFrom,
+    // Logo des documents (ADR 0300) : rappelé tant qu'il manque.
+    hasLogo: Boolean(ctx.artisan.logo_path),
     today: space.today,
   });
 

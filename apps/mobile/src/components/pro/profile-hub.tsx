@@ -114,6 +114,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
     key: "company",
     rows: [
       { key: "company", icon: Building2, tone: "success", href: "/pro-entreprise" },
+      // Logo des devis, factures et DPGF (ADR 0300), déposé dans « Entreprise ».
+      { key: "logo", icon: ImageIcon, tone: "neutral", href: "/pro-entreprise" },
       { key: "trades", icon: Wrench, tone: "success", href: "/pro-metiers" },
       { key: "zone", icon: MapPin, tone: "success", href: "/pro-zone" },
       { key: "availability", icon: CalendarClock, tone: "success", href: "/pro-disponibilites" },

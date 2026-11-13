@@ -58,6 +58,7 @@ describe("états de « Mon profil », communs au site et à l'application (ADR 0
       reviews: { code: "reviews", n: 23, tone: "neutral" },
       grade: { code: "level", n: 3, tone: "neutral" },
       company: { code: "verifiedCompany", tone: "success" },
+      logo: null,
       trades: { code: "trades", n: 2, rge: true, tone: "neutral" },
       zone: { code: "radius", km: 30, tone: "neutral" },
       availability: { code: "available", tone: "success" },
@@ -89,5 +90,19 @@ describe("états de « Mon profil », communs au site et à l'application (ADR 0
     expect(s.documents).toEqual({ code: "toRenew", n: 1, tone: "warning" });
     expect(s.reviews).toEqual({ code: "toAnswer", n: 2, tone: "danger" });
     expect(s.availability).toEqual({ code: "from", date: "2026-11-12", tone: "neutral" });
+  });
+});
+
+describe("logo des documents dans « Mon profil » (ADR 0300)", () => {
+  it("rappelle le logo tant qu'il manque, sans état si l'information n'est pas fournie", () => {
+    expect(profileHubStatuses({ ...facts, hasLogo: false }).logo).toEqual({
+      code: "logoToAdd",
+      tone: "warning",
+    });
+    expect(profileHubStatuses({ ...facts, hasLogo: true }).logo).toEqual({
+      code: "logoAdded",
+      tone: "success",
+    });
+    expect(profileHubStatuses(facts).logo).toBeNull();
   });
 });

@@ -44,6 +44,8 @@ export type ProfileHub = {
   /** Niveau du grade MENAO (F-24), s'il a pu être lu. */
   gradeLevel: number | null;
   avatarUrl: string | null;
+  /** Logo des documents (URL signée), sur la carte de visite (ADR 0300). */
+  logoUrl: string | null;
   email: string | null;
   status: Dossier["status"];
   verified: boolean;
@@ -127,7 +129,7 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
     supabase.rpc("my_referrals"),
     supabase
       .from("artisans")
-      .select("slug")
+      .select("slug, logo_path")
       .eq("id", await myArtisanKey())
       .maybeSingle(),
     teamSummary(),
@@ -135,6 +137,12 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
   ]);
   const profile = parseArtisanProfile(page);
   if (!dossier || !profile) return null;
+  // Logo des documents (ADR 0038, bucket privé) : sur la carte de visite et dans « Mon profil ».
+  const logoPath = artisan?.logo_path ?? null;
+  const logoUrl = logoPath
+    ? ((await supabase.storage.from("artisan-logos").createSignedUrl(logoPath, 3600)).data
+        ?.signedUrl ?? null)
+    : null;
 
   const first = account.data?.first_name?.trim() ?? "";
   const last = account.data?.last_name?.trim() ?? "";
@@ -178,8 +186,10 @@ export async function loadProfileHub(): Promise<ProfileHub | null> {
       hasRge: profile.rge.length > 0,
       paused: profile.paused,
       availableFrom: profile.available_from,
+      hasLogo: logoPath !== null,
       today: parisToday(),
     }),
+    logoUrl,
     // Même règle que les cartes de visite du site : fiche publique d'un artisan validé.
     pageUrl:
       dossier.status === "valide" && artisan?.slug
