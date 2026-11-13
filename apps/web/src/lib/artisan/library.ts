@@ -21,7 +21,8 @@ export type SupplyRow = {
   reference: string | null;
   supplier: string | null;
   unit: QuoteUnit;
-  purchase_price_cents: number;
+  /** Null : fourniture copiée de la bibliothèque MENAO, prix d'achat à renseigner (F-147). */
+  purchase_price_cents: number | null;
   price_on: string | null;
   waste_bp: number;
 };

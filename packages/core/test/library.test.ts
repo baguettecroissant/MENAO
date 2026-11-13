@@ -220,3 +220,97 @@ describe("lignes de devis d'un ouvrage", () => {
     expect(lineCostCents(null, 1000)).toBeNull();
   });
 });
+
+describe("bibliothèque MENAO : prix d'achat inconnu et fourchette indicative (F-147)", () => {
+  // Cloison : 0,35 h de pose, 1,05 m² de plaque, 2,2 m de montant (exemple de la maquette).
+  const cloison: WorkComponent[] = [
+    { kind: "heures", supplyId: null, quantityMilli: 350, costCents: null },
+    { kind: "fourniture", supplyId: "plaque", quantityMilli: 1050, costCents: null },
+    { kind: "fourniture", supplyId: "montant", quantityMilli: 2200, costCents: null },
+  ];
+  const sansPrix = new Map<string, LibrarySupply>([
+    ["plaque", { id: "plaque", purchasePriceCents: null, wasteBp: 0 }],
+    ["montant", { id: "montant", purchasePriceCents: null, wasteBp: 0 }],
+  ]);
+
+  it("fourniture sans prix d'achat ni prix publics : coût et fourchette inconnus, rien d'inventé", () => {
+    const p = workPricing(null, cloison, SETTINGS, sansPrix);
+    expect(p.costCents).toBeNull();
+    expect(p.priceCents).toBeNull();
+    expect(p.range).toBeNull();
+    expect(
+      componentAmounts(
+        { kind: "fourniture", supplyId: "plaque", quantityMilli: 1050, costCents: null },
+        SETTINGS,
+        sansPrix,
+      ),
+    ).toEqual({
+      costCents: null,
+      saleCents: null,
+    });
+  });
+
+  it("prix publics : fourchette avec les réglages de l'artisan, milieu retenu, marge inconnue", () => {
+    const publics = new Map<string, LibrarySupply>([
+      [
+        "plaque",
+        {
+          id: "plaque",
+          purchasePriceCents: null,
+          wasteBp: 0,
+          publicRange: { minCents: 290, maxCents: 360 },
+        },
+      ],
+      [
+        "montant",
+        {
+          id: "montant",
+          purchasePriceCents: null,
+          wasteBp: 0,
+          publicRange: { minCents: 100, maxCents: 135 },
+        },
+      ],
+    ]);
+    const p = workPricing(null, cloison, SETTINGS, publics);
+    // Pose 0,35 × 55 € = 19,25 € ; plaque 3,05–3,78 € et montant 2,20–2,97 € × 1,30.
+    expect(p.range).toEqual({
+      lowCents: 1925 + 397 + 286,
+      highCents: 1925 + 491 + 386,
+      midCents: 2705,
+    });
+    expect(p.priceCents).toBe(2705);
+    expect(p.costCents).toBeNull();
+    expect(p.marginCents).toBeNull();
+  });
+
+  it("le prix d'achat de l'artisan remplace la fourchette ; sans prix de l'heure, pas de fourchette", () => {
+    const mixte = new Map<string, LibrarySupply>([
+      [
+        "plaque",
+        {
+          id: "plaque",
+          purchasePriceCents: 300,
+          wasteBp: 0,
+          publicRange: { minCents: 290, maxCents: 360 },
+        },
+      ],
+      [
+        "montant",
+        {
+          id: "montant",
+          purchasePriceCents: null,
+          wasteBp: 0,
+          publicRange: { minCents: 100, maxCents: 135 },
+        },
+      ],
+    ]);
+    const p = workPricing(null, cloison, SETTINGS, mixte);
+    expect(p.range?.lowCents).toBe(1925 + 410 + 286);
+    expect(p.range?.highCents).toBe(1925 + 410 + 386);
+    expect(
+      workPricing(null, cloison, { ...SETTINGS, hourPriceCents: null }, mixte).range,
+    ).toBeNull();
+    // Un prix fixé à la main reste prioritaire.
+    expect(workPricing(3000, cloison, SETTINGS, mixte).priceCents).toBe(3000);
+  });
+});

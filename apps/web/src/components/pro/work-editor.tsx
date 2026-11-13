@@ -417,7 +417,13 @@ export function WorkEditor({
                               money(settings.hourCostCents)
                             )
                           ) : supply ? (
-                            money(supply.purchase_price_cents)
+                            supply.purchase_price_cents === null ? (
+                              <span className="text-muted-foreground">
+                                {fr.pro.library.supplies.missing}
+                              </span>
+                            ) : (
+                              money(supply.purchase_price_cents)
+                            )
                           ) : (
                             "—"
                           )}
