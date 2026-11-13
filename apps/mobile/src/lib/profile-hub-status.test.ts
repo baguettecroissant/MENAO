@@ -61,6 +61,7 @@ describe("états des rubriques de « Mon profil » (ADR 0129)", () => {
       reviews: { text: "23 avis", tone: "neutral" },
       grade: { text: "Niveau 3", tone: "neutral" },
       company: { text: "Vérifiée", tone: "success" },
+      logo: null,
       trades: { text: "2 métiers · RGE", tone: "neutral" },
       zone: { text: "30 km", tone: "neutral" },
       availability: { text: "Disponible", tone: "success" },
