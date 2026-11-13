@@ -26,8 +26,8 @@
     "@react-email/preview": "0.0.14",
     "@react-email/section": "0.0.17",
     "@react-email/text": "0.1.6",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@menao/config": "workspace:^",
