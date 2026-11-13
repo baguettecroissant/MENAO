@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 
 // Bibliothèque d'ouvrages et marge (F-141, ADR 0293) : la carreleuse du seed règle son chiffrage,
 // ajoute une fourniture, compose un ouvrage (fourniture + heures) et voit son prix et sa marge ;
-// une fourniture utilisée ne peut pas être supprimée. Données fictives.
+// une fourniture utilisée ne peut pas être supprimée. Au premier passage, elle part de la
+// bibliothèque MENAO du carrelage (F-147). Données fictives.
 test("bibliothèque : réglages, fourniture, ouvrage composé, prix et marge", async ({ page }) => {
   test.setTimeout(90_000);
   const run = `${test.info().retry}`;
@@ -22,7 +23,27 @@ test("bibliothèque : réglages, fourniture, ouvrage composé, prix et marge", a
     .getByRole("link", { name: "Bibliothèque" })
     .click();
   await expect(page).toHaveURL(/\/pro\/bibliotheque$/);
-  await expect(page.getByRole("heading", { name: "Mes réglages de chiffrage" })).toBeVisible();
+
+  // Premier passage (F-147, ADR 0307) : bibliothèque MENAO pour le carrelage, et les deux réglages.
+  // Fait une seule fois : déjà fait lors d'une nouvelle tentative du test.
+  const start = page.getByRole("heading", {
+    name: "Comment voulez-vous remplir votre bibliothèque ?",
+  });
+  const settings = page.getByRole("heading", { name: "Mes réglages de chiffrage" });
+  await expect(start.or(settings)).toBeVisible();
+  if (await start.isVisible()) {
+    await expect(
+      page.getByRole("radio", { name: /Démarrer avec la bibliothèque MENAO/ }),
+    ).toBeChecked();
+    await page.getByRole("checkbox", { name: /Carrel/ }).check({ force: true });
+    await page.getByLabel("Prix de vente de l'heure").fill("55");
+    await page.getByLabel("Coefficient fournitures").fill("1,30");
+    await page.getByRole("button", { name: "Créer ma bibliothèque" }).click();
+    await expect(page).toHaveURL(/\/pro\/bibliotheque\?menao=\d+/);
+    await expect(page.getByText(/ouvrages? MENAO ajoutés?/)).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Filtrer par métier" })).toBeVisible();
+  }
+  await expect(settings).toBeVisible();
 
   // Réglages : heure à 35 € de coût et 55 € de vente, coefficient 1,30, pas de seuil.
   await page.getByLabel("Coût d'une heure").fill("35");

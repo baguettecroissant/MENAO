@@ -11,20 +11,24 @@ import {
   type LibrarySupply,
   parseEuros,
   parseQuantity,
+  pickInRange,
+  type PricePick,
   QUOTE_UNITS,
   type QuoteUnit,
   type WorkComponent,
   workPricing,
 } from "@menao/core";
 import { EyeOff, Plus, X } from "lucide-react";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 import { Alert, Button, Card, CardTitle, Field, StatusBadge, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { MenaoChip } from "@/components/pro/menao-chip";
 import { saveWork } from "@/lib/artisan/library-actions";
 import type { ComponentRow, SupplyRow, WorkRow } from "@/lib/artisan/library";
 import { initialFormState } from "@/lib/auth/form";
 
 const t = fr.pro.library.work;
+const shortDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR");
 const q = fr.pro.quote;
 const units = q.unitsShort as Record<string, string>;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -80,17 +84,28 @@ export function WorkEditor({
   );
   const [drafts, setDrafts] = useState<Draft[]>(() => components.map(toDraft));
   const [added, setAdded] = useState(0);
-
-  const bySupply = useMemo(
-    () =>
-      new Map<string, LibrarySupply>(
-        supplies.map((s) => [
-          s.id,
-          { id: s.id, purchasePriceCents: s.purchase_price_cents, wasteBp: s.waste_bp },
-        ]),
-      ),
-    [supplies],
+  const [pick, setPick] = useState<PricePick>(work?.price_pick ?? "milieu");
+  // Prix d'achat saisis en ligne pour les fournitures qui n'en ont pas encore (F-147).
+  const [purchases, setPurchases] = useState<Record<string, string>>({});
+  const purchaseCents = Object.fromEntries(
+    Object.entries(purchases)
+      .filter(([, v]) => v.trim())
+      .map(([id, v]) => [id, parseEuros(v)]),
   );
+  const bySupply = new Map<string, LibrarySupply>(
+    supplies.map((s) => [
+      s.id,
+      {
+        id: s.id,
+        purchasePriceCents: s.purchase_price_cents ?? purchaseCents[s.id] ?? null,
+        wasteBp: s.waste_bp,
+        publicRange: s.public_range
+          ? { minCents: s.public_range.minCents, maxCents: s.public_range.maxCents }
+          : null,
+      },
+    ]),
+  );
+  const isMenao = work?.source === "menao";
   const parsed = drafts.map((d) => ({
     d,
     quantityMilli: parseQuantity(d.quantity),
@@ -105,10 +120,18 @@ export function WorkEditor({
       quantityMilli: p.quantityMilli ?? 0,
       costCents: p.costCents,
     }));
-  const pricing = workPricing(manualCents, comps, settings, bySupply);
+  const pricing = workPricing(manualCents, comps, settings, bySupply, pick);
+  // Fourchette indicative : ni prix à la main, ni prix d'achat complets (F-147).
+  const range =
+    pricing.computedPriceCents === null &&
+    pricing.range !== null &&
+    pricing.range.lowCents !== pricing.range.highCents
+      ? pricing.range
+      : null;
   const invalid =
     !designation.trim() ||
     (manual !== null && manualCents === null) ||
+    Object.values(purchaseCents).some((v) => v === null) ||
     parsed.some(
       (p) =>
         p.quantityMilli === null ||
@@ -126,7 +149,11 @@ export function WorkEditor({
       vatRateBp: vat,
       detailed,
       manualPriceCents: manualCents,
+      pricePick: pick,
     },
+    supplyPrices: Object.entries(purchaseCents)
+      .filter(([id, v]) => v !== null && drafts.some((d) => d.supplyId === id))
+      .map(([supplyId, priceCents]) => ({ supplyId, priceCents })),
     components: parsed.map((p) =>
       p.d.kind === "fourniture"
         ? { kind: "fourniture", supplyId: p.d.supplyId, quantityMilli: p.quantityMilli }
@@ -194,7 +221,7 @@ export function WorkEditor({
         <Card className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             <CardTitle title={t.clientTitle} />
-            <StatusBadge tone="primary">{t.clientBadge}</StatusBadge>
+            {isMenao ? <MenaoChip /> : <StatusBadge tone="primary">{t.clientBadge}</StatusBadge>}
           </div>
           <Field
             label={t.designation}
@@ -374,12 +401,21 @@ export function WorkEditor({
                                 className={`${select} w-full font-semibold`}
                               />
                             ) : (
-                              <span className="font-semibold">{t.kinds.heures}</span>
+                              <span className="font-semibold">
+                                {isMenao ? t.poseTitle : t.kinds.heures}
+                              </span>
                             )}
                             <span className="text-xs text-muted-foreground">
                               {d.kind === "heures"
-                                ? t.hourCost
-                                : [t.kinds[d.kind], supply?.supplier].filter(Boolean).join(" · ")}
+                                ? isMenao
+                                  ? t.poseHint
+                                  : t.hourCost
+                                : supply?.public_range
+                                  ? t.publicSource(
+                                      supply.public_range.source,
+                                      supply.public_range.on && shortDate(supply.public_range.on),
+                                    ) || t.kinds[d.kind]
+                                  : [t.kinds[d.kind], supply?.supplier].filter(Boolean).join(" · ")}
                             </span>
                           </div>
                         </td>
@@ -393,7 +429,7 @@ export function WorkEditor({
                                 quantityMilli === null || quantityMilli <= 0 || undefined
                               }
                               onChange={(e) => set(d.key, { quantity: e.target.value })}
-                              className={`${select} !w-16 text-right tabular-nums`}
+                              className={`${select} !w-20 text-right tabular-nums`}
                             />
                             {unitLabel && (
                               <span className="w-6 text-muted-foreground">{unitLabel}</span>
@@ -418,8 +454,26 @@ export function WorkEditor({
                             )
                           ) : supply ? (
                             supply.purchase_price_cents === null ? (
-                              <span className="text-muted-foreground">
-                                {fr.pro.library.supplies.missing}
+                              <span className="flex flex-col items-end gap-1">
+                                <input
+                                  value={purchases[supply.id] ?? ""}
+                                  inputMode="decimal"
+                                  placeholder={t.myPurchase}
+                                  aria-label={t.fieldOf(t.myPurchase, name(d))}
+                                  aria-invalid={purchaseCents[supply.id] === null || undefined}
+                                  onChange={(e) =>
+                                    setPurchases((all) => ({ ...all, [supply.id]: e.target.value }))
+                                  }
+                                  className={`${select} !w-36 border-dashed text-right !text-sm tabular-nums`}
+                                />
+                                {supply.public_range && (
+                                  <span className="text-xs whitespace-nowrap">
+                                    {t.publicPrices(
+                                      money(supply.public_range.minCents),
+                                      money(supply.public_range.maxCents),
+                                    )}
+                                  </span>
+                                )}
                               </span>
                             ) : (
                               money(supply.purchase_price_cents)
@@ -448,6 +502,11 @@ export function WorkEditor({
               </table>
             </div>
           )}
+          {supplies.some((s) => s.public_range && drafts.some((d) => d.supplyId === s.id)) && (
+            <p className="border-t border-border px-5 py-2.5 text-xs text-muted-foreground">
+              {t.publicNote}
+            </p>
+          )}
           <div className="flex flex-wrap gap-4 border-t border-border px-5 py-3 text-sm font-semibold text-primary-strong">
             {(
               [
@@ -472,7 +531,7 @@ export function WorkEditor({
 
       <div className="flex flex-col gap-4 lg:sticky lg:top-6">
         <Card className="flex flex-col gap-3">
-          <CardTitle title={t.pricingTitle} />
+          <CardTitle title={range || isMenao ? t.indicativeTitle : t.pricingTitle} />
           <dl className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-muted-foreground">{t.costLine}</dt>
@@ -513,13 +572,70 @@ export function WorkEditor({
                 </dd>
               </div>
             ) : null}
+            {range && manual === null && pricing.labor.saleCents !== null && (
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">{t.suppliesRange(coef)}</dt>
+                <dd className="font-semibold whitespace-nowrap tabular-nums">
+                  {money(range.lowCents - pricing.labor.saleCents)} –{" "}
+                  {money(range.highCents - pricing.labor.saleCents)}
+                </dd>
+              </div>
+            )}
           </dl>
-          <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
-            <span className="font-semibold">{t.salePrice}</span>
-            <span className="text-2xl font-bold tabular-nums" aria-live="polite">
-              {pricing.priceCents === null ? "—" : money(pricing.priceCents)}
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-border pt-3">
+            <span className="font-semibold whitespace-nowrap">{t.salePrice}</span>
+            <span
+              className={`font-bold whitespace-nowrap tabular-nums ${range && manual === null ? "text-[1.375rem]" : "text-2xl"}`}
+              aria-live="polite"
+            >
+              {range && manual === null
+                ? `${money(range.lowCents)} – ${money(range.highCents)}`
+                : pricing.priceCents === null
+                  ? "—"
+                  : money(pricing.priceCents)}
             </span>
           </div>
+          {range && (
+            <fieldset className="flex flex-col gap-2 rounded-input bg-background px-3.5 py-3">
+              <legend className="float-left mb-2 text-[0.84375rem] font-semibold">
+                {t.pickTitle}
+              </legend>
+              <div className="clear-left flex gap-2">
+                {(["bas", "milieu", "haut", "main"] as const).map((p) => {
+                  const on = p === "main" ? manual !== null : manual === null && pick === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => {
+                        if (p === "main") {
+                          setManual(formatEurosInput(pickInRange(range, pick)));
+                        } else {
+                          setPick(p);
+                          setManual(null);
+                        }
+                      }}
+                      className={`flex-1 rounded-input bg-surface px-1 py-2 text-[0.8125rem] font-semibold whitespace-nowrap ${
+                        on ? "border-2 border-foreground" : "border border-border"
+                      }`}
+                    >
+                      {t.picks[p]}
+                    </button>
+                  );
+                })}
+              </div>
+              {manual === null && (
+                <span className="text-[0.8125rem] text-muted-foreground">
+                  {t.pickValue(
+                    t.picks[pick] ?? "",
+                    money(pickInRange(range, pick)),
+                    units[unit] ?? unit,
+                  )}
+                </span>
+              )}
+            </fieldset>
+          )}
           {pricing.marginCents !== null && pricing.markupBp !== null ? (
             <p
               className={`flex items-center justify-between gap-3 rounded-input px-3 py-2.5 text-sm font-semibold ${
@@ -532,10 +648,15 @@ export function WorkEditor({
               <span>{t.rate(formatRateBp(pricing.markupBp))}</span>
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">{t.unknownCost}</p>
+            !range && <p className="text-sm text-muted-foreground">{t.unknownCost}</p>
           )}
           {hoursMissing && <p className="text-sm text-warning">{t.missingSettings}</p>}
-          {manual === null ? (
+          {range && (
+            <p className="rounded-input bg-background px-3 py-2.5 text-sm text-muted-foreground">
+              {t.rangeNote}
+            </p>
+          )}
+          {manual === null && range ? null : manual === null ? (
             <button
               type="button"
               onClick={() =>
@@ -554,7 +675,7 @@ export function WorkEditor({
                 value={manual}
                 onChange={(e) => setManual(e.target.value)}
               />
-              {comps.length > 0 && (
+              {comps.length > 0 && !range && (
                 <button
                   type="button"
                   onClick={() => setManual(null)}

@@ -1581,6 +1581,7 @@ export type Database = {
           manual_price_cents: number | null;
           menao_work_id: string | null;
           price_cents: number | null;
+          price_pick: string;
           source: string;
           unit: Database["public"]["Enums"]["quote_unit"];
           updated_at: string;
@@ -1598,6 +1599,7 @@ export type Database = {
           manual_price_cents?: number | null;
           menao_work_id?: string | null;
           price_cents?: number | null;
+          price_pick?: string;
           source?: string;
           unit?: Database["public"]["Enums"]["quote_unit"];
           updated_at?: string;
@@ -1614,6 +1616,7 @@ export type Database = {
           manual_price_cents?: number | null;
           menao_work_id?: string | null;
           price_cents?: number | null;
+          price_pick?: string;
           source?: string;
           unit?: Database["public"]["Enums"]["quote_unit"];
           updated_at?: string;

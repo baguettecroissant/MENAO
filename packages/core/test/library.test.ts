@@ -281,6 +281,9 @@ describe("bibliothèque MENAO : prix d'achat inconnu et fourchette indicative (F
     expect(p.priceCents).toBe(2705);
     expect(p.costCents).toBeNull();
     expect(p.marginCents).toBeNull();
+    expect(workPricing(null, cloison, SETTINGS, publics, "bas").priceCents).toBe(1925 + 397 + 286);
+    expect(workPricing(null, cloison, SETTINGS, publics, "haut").priceCents).toBe(1925 + 491 + 386);
+    expect(workPricing(4000, cloison, SETTINGS, publics, "haut").priceCents).toBe(4000);
   });
 
   it("le prix d'achat de l'artisan remplace la fourchette ; sans prix de l'heure, pas de fourchette", () => {

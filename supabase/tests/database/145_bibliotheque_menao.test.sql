@@ -77,6 +77,17 @@ select is(public.artisan_adopt_menao_library(array['plombier']),
   'plomberie ajoutée, sauf le WC suspendu déjà présent');
 select is((select count(*)::int from public.artisan_works where lower(designation) = lower('Pose d''un WC suspendu')), 1,
   'son WC suspendu reste le seul');
+
+-- ---------- Prix retenu dans la fourchette ----------
+select is((select price_pick from public.artisan_works where designation = 'Cloison en plaques de plâtre BA13 sur ossature 72/48'),
+  'milieu', 'ouvrage MENAO : milieu de la fourchette par défaut');
+select lives_ok(format($$ select public.artisan_save_work('{"designation":"Cloison en plaques de plâtre BA13 sur ossature 72/48","unit":"m2","pricePick":"haut"}'::jsonb, '[]'::jsonb, %L) $$,
+  (select id from public.artisan_works where designation = 'Cloison en plaques de plâtre BA13 sur ossature 72/48')),
+  'choix du haut de la fourchette');
+select is((select price_pick from public.artisan_works where designation = 'Cloison en plaques de plâtre BA13 sur ossature 72/48'),
+  'haut', 'haut de la fourchette enregistré');
+select throws_ok($$ select public.artisan_save_work('{"designation":"Essai 145","pricePick":"moyen"}'::jsonb, '[]'::jsonb) $$,
+  '22023', 'Prix retenu invalide.', 'choix inconnu refusé');
 reset role;
 
 -- ---------- Autre entreprise ----------
