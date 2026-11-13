@@ -62,6 +62,7 @@ export function ShareCard({ hub }: { hub: ProfileHub }) {
             pageUrl={pageUrl}
             domain={siteDomain(env.siteUrl)}
             verified={hub.verified}
+            logoUrl={hub.logoUrl}
             onExpand={() => setFull("card")}
           />
           <View style={styles.actions}>

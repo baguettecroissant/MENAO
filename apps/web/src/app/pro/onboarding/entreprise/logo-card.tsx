@@ -20,7 +20,7 @@ export function LogoCard({
   hasLogo: boolean;
 }) {
   return (
-    <Card>
+    <Card id="logo" className="scroll-mt-24">
       <section aria-labelledby="logo-title" className="flex flex-col gap-4">
         <h2 id="logo-title" className="text-lg font-medium">
           {t.title}

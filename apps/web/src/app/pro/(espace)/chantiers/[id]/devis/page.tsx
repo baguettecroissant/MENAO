@@ -2,6 +2,7 @@ import { parseAiAgents } from "@menao/core";
 import { voiceDraftLines, type QuoteLineInput } from "@menao/validation";
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
+import { LogoPrompt } from "@/components/pro/logo-prompt";
 import { QuoteEditor } from "@/components/pro/quote-editor";
 import { QuoteHeader } from "@/components/pro/quote-header";
 import { fr } from "@/i18n/fr";
@@ -18,7 +19,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[id]/devis">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase, artisanId } = await requireTeamPermission("money");
+  const { supabase, artisanId, teamPosition } = await requireTeamPermission("money");
   const c = await getChantierDetail(supabase, id);
   if (!c) notFound();
   if (c.chantier.status !== "rdv_planifie" && c.chantier.status !== "devis_en_revision") {
@@ -41,7 +42,7 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
       .eq("chantier_id", id)
       .eq("status", "brouillon")
       .maybeSingle(),
-    supabase.from("artisans").select("assujetti_tva").eq("id", artisanId).single(),
+    supabase.from("artisans").select("assujetti_tva, logo_path").eq("id", artisanId).single(),
     supabase.from("quote_dictations").select("transcript").eq("chantier_id", id).maybeSingle(),
     // Devis avec Manon (ADR 0234) : inclus dans la formule ? Lignes d'un appel non reprises ?
     supabase.rpc("my_ai_agents"),
@@ -77,6 +78,11 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
     vatRateBp: l.vat_rate_bp,
   }));
   const appointment = c.appointment?.status === "planifie" ? c.appointment : null;
+  // Logo des documents (ADR 0300) : rappelé au patron tant qu'il manque, dépôt sur place.
+  const logoUserId =
+    teamPosition === "patron" && artisan && !artisan.logo_path
+      ? ((await supabase.auth.getClaims()).data?.claims.sub ?? null)
+      : null;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -92,6 +98,11 @@ export default async function QuotePage({ params }: PageProps<"/pro/chantiers/[i
         place={[c.code_postal, c.ville_nom].filter(Boolean).join(" ") || null}
         wide
       />
+      {logoUserId && (
+        <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-10">
+          <LogoPrompt userId={logoUserId} />
+        </div>
+      )}
       <QuoteEditor
         chantierId={id}
         initialLines={lines}

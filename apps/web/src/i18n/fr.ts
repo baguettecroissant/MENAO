@@ -3840,6 +3840,7 @@ export const fr = {
         reviews: "Avis clients",
         grade: "Mon grade",
         company: "Entreprise et SIRET",
+        logo: "Logo sur vos documents",
         trades: "Métiers et certifications",
         zone: "Zone d'intervention",
         availability: "Disponibilités",
@@ -3864,6 +3865,8 @@ export const fr = {
         level: (n: number) => `Niveau ${n}`,
         verifiedCompany: "Vérifiée",
         toVerify: "À vérifier",
+        logoAdded: "Ajouté",
+        logoToAdd: "À ajouter",
         trades: (n: number, rge: boolean) =>
           `${n === 1 ? "1 métier" : `${n} métiers`}${rge ? " · RGE" : ""}`,
         radius: (km: number) => `${km} km`,
@@ -7684,7 +7687,11 @@ export const fr = {
         logo: {
           title: "Logo sur vos documents (facultatif)",
           intro:
-            "Il apparaît en haut de vos devis, factures et procès-verbaux de réception. Les documents déjà envoyés gardent le logo qu'ils avaient.",
+            "Il apparaît en haut de vos devis, factures, procès-verbaux de réception, DPGF et cartes de visite. Les documents déjà envoyés gardent le logo qu'ils avaient.",
+          // Rappel dans l'éditeur de devis tant qu'il n'y a pas de logo (ADR 0300).
+          promptTitle: "Ajoutez le logo de votre entreprise",
+          promptText:
+            "Il apparaîtra en haut de ce devis, de vos factures, de vos DPGF et sur vos cartes de visite.",
           file: "Fichier du logo",
           hint: "PNG, JPEG ou WebP, 10 Mo maximum. Un PNG à fond transparent rend le mieux.",
           send: "Envoyer mon logo",

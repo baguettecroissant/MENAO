@@ -4173,6 +4173,7 @@ export const fr = {
       reviews: "Avis clients",
       grade: "Mon grade",
       company: "Entreprise et SIRET",
+      logo: "Logo sur vos documents",
       trades: "Métiers et certifications",
       zone: "Zone d'intervention",
       availability: "Disponibilités",
@@ -4198,6 +4199,8 @@ export const fr = {
       level: (n: number) => `Niveau ${n}`,
       verifiedCompany: "Vérifiée",
       toVerify: "À vérifier",
+      logoAdded: "Ajouté",
+      logoToAdd: "À ajouter",
       trades: (n: number, rge: boolean) =>
         `${n === 1 ? "1 métier" : `${n} métiers`}${rge ? " · RGE" : ""}`,
       radius: (km: number) => `${km} km`,
