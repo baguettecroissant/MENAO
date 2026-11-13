@@ -1627,6 +1627,13 @@ export type Database = {
             referencedRelation: "artisans";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "artisan_works_menao_work_id_fkey";
+            columns: ["menao_work_id"];
+            isOneToOne: false;
+            referencedRelation: "menao_works";
+            referencedColumns: ["id"];
+          },
         ];
       };
       artisan_zones: {
