@@ -60,7 +60,7 @@ Relève chaque pièce dessinée sur les plans de niveaux, une seule fois :
 - longueur_m, largeur_m : les deux cotes intérieures de la pièce si elles sont écrites et que la pièce est rectangulaire, sinon null.
 - perimetre_m : seulement s'il est écrit, sinon null.
 - hauteur_m : hauteur sous plafond écrite pour cette pièce, sinon null.
-- humide : vrai pour une salle de bains, salle d'eau, WC, buanderie, cuisine fermée.
+- humide : vrai pour une salle de bains, salle d'eau, WC, buanderie, cuisine fermée ; faux pour un cellier, un dressing, un placard ou une pièce de vie ouverte sur la cuisine.
 - habitable : faux pour un garage, local technique, combles non aménagés, terrasse ou balcon.
 - certitude : « incertaine » si le texte est flou, coupé ou ambigu, sinon « sure ».
 hauteurs : hauteurs sous plafond lues sur les coupes ou les cartouches, par niveau (niveau vide si une seule hauteur vaut pour tout) ; liste vide si aucune n'est écrite.

@@ -237,12 +237,19 @@ type Score = {
   incertitudesSignalees: number;
   incertitudesAttendues: number;
   hauteursJustes: number;
+  hauteursNotees: number;
   usagesJustes: number;
+  usagesFaux: string[];
   comptesJustes: number;
   comptesNotes: number;
   comptesFaux: string[];
+  /** Éléments laissés vides par l'IA (« à compléter » à l'écran) : prudents, pas faux. */
+  comptesOmis: string[];
   echelleJuste: boolean | null;
   jetons: [number, number];
+  /** Relevé de l'IA, pour relire un écart sans relancer. */
+  releve?: { niveau: string | null; nom: string; surface: number | null; incertaine: boolean }[];
+  comptes?: PlanReading["counts"];
   erreur?: string;
 };
 
@@ -263,15 +270,25 @@ function score(c: Case, pass: number, r: Read): Score {
     incertitudesAttendues: c.pieces.filter((p) => p.incertaine || p.surface_m2 === "illisible")
       .length,
     hauteursJustes: 0,
+    hauteursNotees: 0,
     usagesJustes: 0,
+    usagesFaux: [],
     comptesJustes: 0,
     comptesNotes: 0,
     comptesFaux: [],
+    comptesOmis: [],
     echelleJuste: null,
     jetons: r.tokens,
   };
   if (r.status === "erreur") return { ...base, erreur: r.message };
   const reading = r.reading;
+  base.releve = reading.rooms.map((room) => ({
+    niveau: room.level,
+    nom: room.name,
+    surface: room.areaCm2 === null ? null : room.areaCm2 / 10000,
+    incertaine: room.uncertain,
+  }));
+  base.comptes = reading.counts;
   const free = [...reading.rooms];
   for (const expected of c.pieces) {
     const i = free.findIndex(
@@ -285,7 +302,7 @@ function score(c: Case, pass: number, r: Read): Score {
     if (expected.surface_m2 === "illisible") {
       // Illisible : la surface ne doit pas être inventée, ou la pièce doit être signalée.
       if (room.uncertain || area === null) base.incertitudesSignalees++;
-      else if (room.uncertain === false) base.surfacesInventees.push(`${expected.nom} : ${area}`);
+      else base.surfacesInventees.push(`${expected.nom} : ${area}`);
     } else if (expected.surface_m2 !== null) {
       base.surfacesNotees++;
       if (area !== null && Math.abs(area - expected.surface_m2) <= 0.01) base.surfacesJustes++;
@@ -301,7 +318,10 @@ function score(c: Case, pass: number, r: Read): Score {
     } else if (area !== null) {
       base.surfacesInventees.push(`${expected.nom} : ${area}`);
     }
-    if (expected.incertaine && room.uncertain) base.incertitudesSignalees++;
+    if (expected.incertaine && expected.surface_m2 !== "illisible" && room.uncertain) {
+      base.incertitudesSignalees++;
+    }
+    if (expected.hauteur_m !== null) base.hauteursNotees++;
     if (
       expected.hauteur_m !== null &&
       room.heightMm !== null &&
@@ -310,12 +330,22 @@ function score(c: Case, pass: number, r: Read): Score {
       base.hauteursJustes++;
     }
     if (room.wet === expected.humide && room.habitable === expected.habitable) base.usagesJustes++;
+    else {
+      base.usagesFaux.push(
+        `${expected.nom} : ${room.wet ? "humide" : "sèche"}, ${room.habitable ? "habitable" : "non habitable"}`,
+      );
+    }
   }
   base.piecesEnTrop = free.map((room) => room.name);
   if (c.comptes) {
     for (const key of PLAN_COUNT_KEYS) {
       const [min, max] = c.comptes[key];
-      const got = reading.counts[key] ?? 0;
+      const got = reading.counts[key];
+      // Laissé vide : l'artisan le complète ; on ne le note ni juste ni faux.
+      if (got === null) {
+        if (max > 0) base.comptesOmis.push(key);
+        continue;
+      }
       base.comptesNotes++;
       if (got >= min && got <= max) base.comptesJustes++;
       else
@@ -343,7 +373,7 @@ for (let pass = 1; pass <= passes; pass++) {
     const s = score(c, pass, r);
     scores.push(s);
     console.log(
-      `${c.id} (passe ${pass}) : ${s.statut}${s.statutJuste ? "" : ` ≠ ${s.statutAttendu}`}, pièces ${s.piecesTrouvees}/${s.piecesAttendues}, surfaces ${s.surfacesJustes}/${s.surfacesNotees}${s.surfacesInventees.length ? `, INVENTÉES ${s.surfacesInventees.join(" ; ")}` : ""}${s.comptesNotes ? `, comptes ${s.comptesJustes}/${s.comptesNotes}` : ""} — ${Math.round((Date.now() - started) / 1000)} s${s.erreur ? ` — ${s.erreur}` : ""}`,
+      `${c.id} (passe ${pass}) : ${s.statut}${s.statutJuste ? "" : ` ≠ ${s.statutAttendu}`}, pièces ${s.piecesTrouvees}/${s.piecesAttendues}, surfaces ${s.surfacesJustes}/${s.surfacesNotees}${s.surfacesInventees.length ? `, INVENTÉES ${s.surfacesInventees.join(" ; ")}` : ""}${s.comptesNotes ? `, comptes ${s.comptesJustes}/${s.comptesNotes}` : ""}${s.comptesOmis.length ? ` (vides : ${s.comptesOmis.join(", ")})` : ""}${s.comptesFaux.length ? ` FAUX ${s.comptesFaux.join(" ; ")}` : ""}${s.usagesFaux.length ? ` — usages : ${s.usagesFaux.join(" ; ")}` : ""} — ${Math.round((Date.now() - started) / 1000)} s${s.erreur ? ` — ${s.erreur}` : ""}`,
     );
   }
 }
@@ -375,7 +405,7 @@ const report = {
   ),
   hauteurs_justes: pct(
     sum((s) => s.hauteursJustes),
-    sum((s) => s.piecesTrouvees),
+    sum((s) => s.hauteursNotees),
   ),
   usages_justes: pct(
     sum((s) => s.usagesJustes),
@@ -385,6 +415,8 @@ const report = {
     sum((s) => s.comptesJustes),
     sum((s) => s.comptesNotes),
   ),
+  comptes_faux: sum((s) => s.comptesFaux.length),
+  comptes_omis: sum((s) => s.comptesOmis.length),
   echelles_justes: pct(
     sum((s) => (s.echelleJuste ? 1 : 0)),
     scores.filter((s) => s.echelleJuste !== null).length,
