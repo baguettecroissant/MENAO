@@ -3214,7 +3214,6 @@ export const fr = {
       tradesLabel: "Vos métiers, repris de votre fiche",
       importTitle: "Importer mon catalogue",
       importText: "Plus simple depuis un ordinateur, sur menao.fr.",
-      importSoon: "Bientôt",
       devisTitle: "Partir de mes devis",
       devisText: (n: number) =>
         n > 0

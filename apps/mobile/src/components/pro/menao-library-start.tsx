@@ -104,14 +104,7 @@ export function MenaoLibraryStart({
             ))}
           </View>
         </Option>
-        <Option
-          icon={Upload}
-          title={t.importTitle}
-          text={t.importText}
-          badge={t.importSoon}
-          selected={false}
-          disabled
-        />
+        <Option icon={Upload} title={t.importTitle} text={t.importText} selected={false} disabled />
         <Option
           icon={FileText}
           title={t.devisTitle}

@@ -32,7 +32,7 @@ export function MenaoLibraryStart({
   coef: string;
 }) {
   const [state, formAction, pending] = useActionState(startLibrary, initialFormState);
-  const [choice, setChoice] = useState<"menao" | "devis">("menao");
+  const [choice, setChoice] = useState<"menao" | "import" | "devis">("menao");
   const [picked, setPicked] = useState<Set<string>>(() => {
     const mine = trades.filter((tr) => tr.mine).map((tr) => tr.code);
     return new Set(mine.length ? mine : []);
@@ -104,9 +104,8 @@ export function MenaoLibraryStart({
             title={t.importTitle}
             text={t.importText}
             value="import"
-            checked={false}
-            disabled
-            badge={t.importSoon}
+            checked={choice === "import"}
+            onChange={() => setChoice("import")}
           />
           <Choice
             icon={<FileText aria-hidden="true" className="size-[1.1875rem]" />}

@@ -1,5 +1,5 @@
 import { formatCoefficient, formatRateBp, parisToday } from "@menao/core";
-import { BookOpen, Plus, Search } from "lucide-react";
+import { BookOpen, Plus, Search, Upload } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { LibrarySettingsForm } from "@/components/pro/library-settings-form";
@@ -37,7 +37,7 @@ const plain = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").to
  * anciens devis à la première ouverture. Patron et chef d'équipe seulement.
  */
 export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibliotheque">) {
-  const { vue, q, metier, menao, metiers } = await searchParams;
+  const { vue, q, metier, menao, metiers, importe, maj } = await searchParams;
   const view = vue === "fournitures" ? "fournitures" : "ouvrages";
   const query = typeof q === "string" ? q.slice(0, 100) : "";
   const { supabase, artisanId } = await requireTeamPermission("money");
@@ -74,6 +74,13 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
   );
   const withCost = library.works.filter((w) => w.pricing.costCents !== null).length;
   const added = typeof menao === "string" && /^\d{1,4}$/.test(menao) ? Number(menao) : null;
+  const imported =
+    typeof importe === "string" && /^\d{1,5}$/.test(importe)
+      ? {
+          added: Number(importe),
+          updated: typeof maj === "string" && /^\d{1,5}$/.test(maj) ? Number(maj) : 0,
+        }
+      : null;
   const addedTrades =
     typeof metiers === "string" && /^\d{1,2}$/.test(metiers) ? Number(metiers) : 0;
   // Date du relevé de prix publics le plus récent utilisé par une fourchette affichée.
@@ -105,6 +112,15 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
             <span>
               <b>{m.added(added, addedTrades)}</b> {m.addedNext}
             </span>
+          </p>
+        )}
+        {imported && (
+          <p
+            role="status"
+            className="flex items-start gap-3 rounded-input bg-success-soft px-4 py-3 text-sm text-success"
+          >
+            <Upload aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{t.importer.done(imported.added, imported.updated, view)}</span>
           </p>
         )}
         {library.seededCount !== null && (
@@ -156,11 +172,29 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
                       className={`${inputClasses} !min-h-10 !w-56 pl-9`}
                     />
                   </form>
+                  <ButtonLink
+                    href={"/pro/bibliotheque/importer" as Route}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    <Upload aria-hidden="true" className="size-4" />
+                    {t.importer.button}
+                  </ButtonLink>
                   <ButtonLink href={"/pro/bibliotheque/nouveau" as Route} size="sm">
                     <Plus aria-hidden="true" className="size-4" />
                     {t.newWork}
                   </ButtonLink>
                 </div>
+              )}
+              {view === "fournitures" && (
+                <ButtonLink
+                  href={"/pro/bibliotheque/importer?type=fournitures" as Route}
+                  size="sm"
+                  variant="secondary"
+                >
+                  <Upload aria-hidden="true" className="size-4" />
+                  {t.importer.button}
+                </ButtonLink>
               )}
             </div>
 

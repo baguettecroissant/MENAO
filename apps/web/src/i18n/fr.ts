@@ -5430,6 +5430,132 @@ export const fr = {
         import: "Importé",
       } as Record<string, string>,
       costMissing: "Coût à ajouter",
+      // Import du catalogue (F-148, ADR 0309-0310, maquette lot 42).
+      importer: {
+        button: "Importer",
+        title: "Importer mon catalogue",
+        steps: ["Fichier", "Colonnes", "Vérification"],
+        stepsLabel: "Étapes de l'import",
+        kindTitle: "Que contient votre fichier ?",
+        kinds: {
+          ouvrages: "Des ouvrages (prix de vente)",
+          fournitures: "Des fournitures (prix d'achat)",
+        } as Record<string, string>,
+        drop: "Déposez votre fichier ici",
+        dropHint: "Excel (.xlsx) ou CSV, 5 000 lignes au plus",
+        choose: "Choisir un fichier",
+        fileLabel: "Fichier du catalogue",
+        dropNote:
+          "Une ligne par article, une colonne par information. Pas besoin de modèle : gardez votre fichier tel qu'il est, nous reconnaissons les colonnes.",
+        reading: "Lecture du fichier…",
+        knownTitle: "Colonnes reconnues",
+        knownLead:
+          "Par leurs titres, même écrits autrement : « Libellé », « PU HT », « Px vente »…",
+        known: [
+          ["Désignation", "obligatoire"],
+          ["Unité", "u, m², ml, h, forfait…"],
+          ["Prix HT", "12,50 ou 12,50 €"],
+          ["TVA", "facultative, 10 % par défaut"],
+          ["Description", "facultative"],
+          ["Référence, fournisseur", "fournitures"],
+        ] as [string, string][],
+        recognizedBanner: (n: number, total: number) =>
+          `${n} colonne${n > 1 ? "s" : ""} reconnue${n > 1 ? "s" : ""} sur ${total}.`,
+        recognizedNext: "Vérifiez-les, changez-en une si besoin, puis continuez.",
+        fileSummary: (name: string, rows: number) =>
+          `${name} · ${rows} ligne${rows > 1 ? "s" : ""}`,
+        sheetInfo: (sheet: string | null, headerRow: number) =>
+          [
+            sheet ? `Feuille « ${sheet} »` : null,
+            headerRow >= 0 ? `titres en ligne ${headerRow + 1}` : "sans ligne de titres",
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        tooLong: "Seules les 5 000 premières lignes seront importées.",
+        column: (letter: string, title: string) =>
+          title ? `Colonne ${letter} · « ${title} »` : `Colonne ${letter}`,
+        recognized: "Reconnue",
+        unused: "Non utilisée",
+        roleOf: (letter: string) => `Rôle de la colonne ${letter}`,
+        roles: {
+          designation: "Désignation",
+          unit: "Unité",
+          price_ouvrages: "Prix de vente HT",
+          price_fournitures: "Prix d'achat HT",
+          vat: "TVA",
+          description: "Description",
+          reference: "Référence",
+          supplier: "Fournisseur",
+          ignore: "Ignorer",
+        } as Record<string, string>,
+        previewCount: (shown: number, total: number) =>
+          `Les ${shown} premières lignes sur ${total}`,
+        needColumns: "Choisissez au moins la colonne Désignation et la colonne Prix.",
+        changeFile: "Changer de fichier",
+        next: "Continuer",
+        back: "Colonnes",
+        figures: {
+          fresh: (kind: string) =>
+            kind === "ouvrages" ? "nouveaux ouvrages à ajouter" : "nouvelles fournitures à ajouter",
+          existing: "déjà dans votre bibliothèque",
+          issues: "lignes à corriger",
+        },
+        existingTitle: (n: number, kind: string) =>
+          `${kind === "ouvrages" ? (n > 1 ? "Les" : "L'") : n > 1 ? "Les" : "La"} ${n} ${
+            kind === "ouvrages"
+              ? `ouvrage${n > 1 ? "s" : ""} déjà présent${n > 1 ? "s" : ""}`
+              : `fourniture${n > 1 ? "s" : ""} déjà présente${n > 1 ? "s" : ""}`
+          }`,
+        existingLead: "Même désignation et même unité qu'un article de votre bibliothèque.",
+        update: "Mettre à jour leur prix",
+        updateHint: (kind: string) =>
+          kind === "ouvrages"
+            ? "Le prix du fichier remplace l'ancien. Leur composition ne change pas."
+            : "Le prix d'achat du fichier remplace l'ancien, daté d'aujourd'hui.",
+        keep: "Les laisser tels quels",
+        keepHint: "Seuls les nouveaux articles sont ajoutés.",
+        issuesTitle: (n: number) =>
+          `${n} ligne${n > 1 ? "s" : ""} ne ser${n > 1 ? "ont" : "a"} pas importée${n > 1 ? "s" : ""}`,
+        issuesLead:
+          "Corrigez-les dans votre fichier et importez-le de nouveau, ou ajoutez-les à la main ensuite.",
+        issuesMore: (n: number) => `Et ${n} autre${n > 1 ? "s" : ""}.`,
+        line: (n: number) => `Ligne ${n}`,
+        reasons: {
+          designation: () => "Désignation vide",
+          too_long: () => "Désignation trop longue (200 caractères au plus)",
+          price: (v: string) => `Prix illisible : « ${v} »`,
+          missing_price: () => "Prix manquant",
+          unit: (v: string) => `Unité inconnue : « ${v} »`,
+          vat: (v: string) => `TVA inconnue : « ${v} »`,
+        } as Record<string, (value: string) => string>,
+        summaryTitle: "Ce qui sera importé",
+        summaryMore: (n: number) => (n > 0 ? `Et ${n} autre${n > 1 ? "s" : ""}.` : ""),
+        vatNote: "TVA du fichier, 10 % quand elle manque.",
+        importButton: (n: number, kind: string) =>
+          `Importer ${n} ${kind === "ouvrages" ? `ouvrage${n > 1 ? "s" : ""}` : `fourniture${n > 1 ? "s" : ""}`}`,
+        updateButton: (n: number) => `Mettre à jour ${n} prix`,
+        updateNote: (n: number) =>
+          `${n > 1 ? `Les ${n} prix déjà présents seront mis à jour` : "Le prix déjà présent sera mis à jour"}.`,
+        nothing: "Rien à importer : aucune ligne valide dans ce fichier.",
+        done: (added: number, updated: number, kind: string) =>
+          [
+            added > 0
+              ? `${added} ${kind === "fournitures" ? `fourniture${added > 1 ? "s" : ""} importée${added > 1 ? "s" : ""}` : `ouvrage${added > 1 ? "s" : ""} importé${added > 1 ? "s" : ""}`}`
+              : null,
+            updated > 0 ? `${updated} prix mis à jour` : null,
+          ]
+            .filter(Boolean)
+            .join(", ") + ".",
+        errors: {
+          type: "Choisissez un fichier Excel (.xlsx) ou CSV. Un ancien fichier .xls : enregistrez-le en .xlsx.",
+          size: "Fichier trop lourd : 5 Mo au plus.",
+          upload: "Le fichier n'a pas pu être envoyé. Réessayez.",
+          unreadable: "Fichier illisible : enregistrez-le en .xlsx ou en .csv, puis réessayez.",
+          rate_limited: "Trop d'essais en une heure. Réessayez un peu plus tard.",
+          forbidden: "Réservé au patron ou au chef d'équipe.",
+          generic: "Le fichier n'a pas pu être lu. Réessayez dans un instant.",
+        } as Record<string, string>,
+      },
       // Bibliothèque MENAO par défaut (F-147, ADR 0306-0307) : premier passage, liste, ouvrage.
       menao: {
         chip: "MENAO",
@@ -5445,7 +5571,6 @@ export const fr = {
         importTitle: "Importer mon catalogue",
         importText:
           "Un fichier Excel ou CSV : désignation, unité, prix. Nous reconnaissons les colonnes.",
-        importSoon: "Bientôt",
         devisTitle: "Partir de mes devis",
         devisText: (n: number) =>
           n > 0
