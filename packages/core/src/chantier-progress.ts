@@ -59,6 +59,7 @@ export function isChantierFinished(status: ChantierStatus): boolean {
 export type ClientChantierAction =
   | { kind: "signer_devis"; quoteId: string }
   | { kind: "payer_acompte"; quoteId: string; amountCents: number }
+  | { kind: "payer_demarrage"; quoteId: string; amountCents: number }
   | { kind: "payer_solde"; quoteId: string; amountCents: number };
 
 /** Paiement à faire : ni payé, ni en cours de confirmation (paiement différé). */
@@ -67,7 +68,8 @@ const payable = (status: PaymentStatus | null | undefined) =>
 
 /**
  * Action attendue du client (maquettes « Voir et signer le devis », « Payer maintenant ») :
- * devis envoyé à signer, acompte à payer une fois le devis signé, puis solde une fois le chantier
+ * devis envoyé à signer, acompte à payer une fois le devis signé (sauf devis sans acompte),
+ * paiement au démarrage pendant les travaux s'il est prévu (F-146), puis solde une fois le chantier
  * réceptionné (F-32). Aucune action pendant la confirmation d'un paiement différé.
  */
 export function clientChantierAction(input: {
@@ -78,6 +80,8 @@ export function clientChantierAction(input: {
   depositStatus: PaymentStatus | null;
   balanceCents?: number | null;
   balanceStatus?: PaymentStatus | null;
+  startCents?: number | null;
+  startStatus?: PaymentStatus | null;
 }): ClientChantierAction | null {
   const { status, quoteId, quoteStatus, depositCents, depositStatus } = input;
   if (!quoteId) return null;
@@ -92,6 +96,17 @@ export function clientChantierAction(input: {
     payable(depositStatus)
   ) {
     return { kind: "payer_acompte", quoteId, amountCents: depositCents };
+  }
+  // Au démarrage : proposé pendant les travaux ; une fois terminés, la réception passe d'abord
+  // (le paiement reste possible depuis le chantier, sinon il est compris dans le solde).
+  if (
+    status === "en_cours" &&
+    quoteStatus === "signe" &&
+    input.startCents != null &&
+    input.startCents > 0 &&
+    payable(input.startStatus)
+  ) {
+    return { kind: "payer_demarrage", quoteId, amountCents: input.startCents };
   }
   if (
     status === "receptionne" &&

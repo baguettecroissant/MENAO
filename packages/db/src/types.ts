@@ -1675,6 +1675,7 @@ export type Database = {
           date_creation_entreprise: string | null;
           decennale_non_soumis: boolean;
           default_deposit_percent: number;
+          default_start_percent: number;
           diplome_metier: Database["public"]["Enums"]["diplome_metier"] | null;
           examples_hidden_at: string | null;
           experience_years: number | null;
@@ -1741,6 +1742,7 @@ export type Database = {
           date_creation_entreprise?: string | null;
           decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
+          default_start_percent?: number;
           diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
           examples_hidden_at?: string | null;
           experience_years?: number | null;
@@ -1806,6 +1808,7 @@ export type Database = {
           date_creation_entreprise?: string | null;
           decennale_non_soumis?: boolean;
           default_deposit_percent?: number;
+          default_start_percent?: number;
           diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
           examples_hidden_at?: string | null;
           experience_years?: number | null;
@@ -7047,6 +7050,7 @@ export type Database = {
           p_quote_id: string;
           p_save_default?: boolean;
           p_start_date: string;
+          p_start_percent?: number;
         };
         Returns: string;
       };
@@ -7506,6 +7510,8 @@ export type Database = {
           quote_total_ttc_cents: number;
           received_at: string;
           start_at: string;
+          start_payment_cents: number;
+          start_payment_status: Database["public"]["Enums"]["payment_status"];
           status: Database["public"]["Enums"]["chantier_status"];
           title: string;
           trade_label: string;
@@ -7567,6 +7573,7 @@ export type Database = {
         }[];
       };
       particulier_start_balance: { Args: { p_chantier_id: string }; Returns: Json };
+      particulier_start_demarrage: { Args: { p_chantier_id: string }; Returns: Json };
       particulier_start_deposit: { Args: { p_quote_id: string }; Returns: Json };
       particulier_start_reception: {
         Args: { p_chantier_id: string; p_consents: Json; p_reserves: string };
@@ -7842,6 +7849,10 @@ export type Database = {
       };
       set_notification_preferences: {
         Args: { p_activite: boolean; p_rappels: boolean };
+        Returns: undefined;
+      };
+      set_payment_defaults: {
+        Args: { p_deposit_percent: number; p_start_percent: number };
         Returns: undefined;
       };
       set_payment_reminders_auto: { Args: { p_enabled: boolean }; Returns: undefined };
@@ -8166,11 +8177,13 @@ export type Database = {
         | "secretaire_message"
         | "synthese_mois"
         | "paiement_relance"
-        | "chantier_attribue";
+        | "chantier_attribue"
+        | "demarrage_du"
+        | "demarrage_paye";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
-      payment_kind: "acompte" | "solde";
+      payment_kind: "acompte" | "solde" | "demarrage";
       payment_status: "en_attente" | "en_cours" | "paye" | "echoue" | "annule";
       project_budget: "moins_1000" | "1000_5000" | "5000_15000" | "15000_50000" | "plus_50000";
       project_date_mode: "des_que_possible" | "date" | "inconnue";
@@ -8510,11 +8523,13 @@ export const Constants = {
         "synthese_mois",
         "paiement_relance",
         "chantier_attribue",
+        "demarrage_du",
+        "demarrage_paye",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
       partner_status: ["actif", "suspendu"],
-      payment_kind: ["acompte", "solde"],
+      payment_kind: ["acompte", "solde", "demarrage"],
       payment_status: ["en_attente", "en_cours", "paye", "echoue", "annule"],
       project_budget: ["moins_1000", "1000_5000", "5000_15000", "15000_50000", "plus_50000"],
       project_date_mode: ["des_que_possible", "date", "inconnue"],

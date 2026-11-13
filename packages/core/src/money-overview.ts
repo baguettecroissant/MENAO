@@ -5,6 +5,8 @@
  * (CLAUDE.md règle 5).
  */
 
+import type { PaymentKind } from "./payment";
+
 export type MoneyMonth = {
   /** « 2026-11 ». */
   month: string;
@@ -18,9 +20,9 @@ export type MoneyMonth = {
 export type MoneyOpenItem = {
   chantierId: string;
   chantier: string;
-  kind: "acompte" | "solde";
+  kind: PaymentKind;
   amountCents: number;
-  /** Échéance : signature du devis (acompte) ou réception des travaux (solde). */
+  /** Échéance : signature du devis (acompte), démarrage des travaux ou réception (solde). */
   since: string | null;
   /** Le dernier paiement de cette tranche a échoué. */
   failed: boolean;
@@ -32,7 +34,7 @@ export type MoneyOpenItem = {
 export type MoneyPaidItem = {
   chantierId: string;
   chantier: string;
-  kind: "acompte" | "solde";
+  kind: PaymentKind;
   amountCents: number;
   paidAt: string | null;
 };
@@ -55,7 +57,8 @@ const record = (value: unknown): Record<string, unknown> =>
 const cents = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
 const str = (value: unknown) => (typeof value === "string" ? value : "");
-const kindOf = (value: unknown): "acompte" | "solde" => (value === "solde" ? "solde" : "acompte");
+const kindOf = (value: unknown): PaymentKind =>
+  value === "solde" || value === "demarrage" ? value : "acompte";
 
 function month(raw: unknown): MoneyMonth {
   const m = record(raw);

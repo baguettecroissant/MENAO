@@ -123,6 +123,41 @@ describe("avancement du chantier (F-12)", () => {
     ).toBeNull();
   });
 
+  it("paiement au démarrage : pendant les travaux, s'il est prévu et pas encore payé (F-146)", () => {
+    const base = {
+      quoteId: "q1",
+      quoteStatus: "signe",
+      depositCents: 9900,
+      depositStatus: "paye" as const,
+      startCents: 13200,
+    };
+    expect(clientChantierAction({ ...base, status: "en_cours", startStatus: null })).toEqual({
+      kind: "payer_demarrage",
+      quoteId: "q1",
+      amountCents: 13200,
+    });
+    expect(clientChantierAction({ ...base, status: "en_cours", startStatus: "paye" })).toBeNull();
+    expect(
+      clientChantierAction({ ...base, status: "en_cours", startStatus: "en_cours" }),
+    ).toBeNull();
+    expect(clientChantierAction({ ...base, status: "planifie", startStatus: null })).toBeNull();
+    expect(
+      clientChantierAction({ ...base, status: "en_cours", startCents: null, startStatus: null }),
+    ).toBeNull();
+  });
+
+  it("devis sans acompte : rien à payer à la signature", () => {
+    expect(
+      clientChantierAction({
+        status: "devis_signe",
+        quoteId: "q1",
+        quoteStatus: "signe",
+        depositCents: null,
+        depositStatus: null,
+      }),
+    ).toBeNull();
+  });
+
   it("échéancier : déjà payé et restant à payer, toujours calculés", () => {
     expect(paymentProgress(33000, [{ status: "paye", amountCents: 9900 }])).toEqual({
       paidCents: 9900,

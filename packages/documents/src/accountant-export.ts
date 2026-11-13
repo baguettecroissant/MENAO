@@ -21,7 +21,11 @@ export const ACCOUNTANT_EXPORT_TEXTS = {
     "TVA",
     "Total TTC",
   ],
-  invoiceKinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+  invoiceKinds: {
+    acompte: "Acompte",
+    demarrage: "Acompte au démarrage",
+    solde: "Solde",
+  } as Record<string, string>,
   expenseHeaders: [
     "Date",
     "Fournisseur",

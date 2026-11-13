@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { messages } from "../src/messages";
 import {
+  paymentDefaultsSchema,
   quoteLineFormSchema,
   quoteLineSchema,
   quoteLinesSchema,
@@ -76,7 +77,13 @@ describe("envoi du devis et réponse du client (F-21)", () => {
         startDate: "2026-10-20",
         durationDays: "2",
       }),
-    ).toEqual({ depositPercent: 30, saveDefault: false, startDate: "2026-10-20", durationDays: 2 });
+    ).toEqual({
+      depositPercent: 30,
+      startPercent: 0,
+      saveDefault: false,
+      startDate: "2026-10-20",
+      durationDays: 2,
+    });
     const r = sendQuoteSchema.safeParse({
       depositPercent: "100",
       saveDefault: true,
@@ -86,10 +93,32 @@ describe("envoi du devis et réponse du client (F-21)", () => {
     expect(r.success).toBe(false);
     if (!r.success) {
       const errors = z.flattenError(r.error).fieldErrors;
-      expect(errors.depositPercent).toEqual(["Indiquez un acompte entier entre 1 et 99 %."]);
+      expect(errors.depositPercent).toEqual(["Indiquez un acompte entier entre 0 et 99 %."]);
       expect(errors.startDate).toEqual(["Choisissez la date de début prévisionnelle."]);
       expect(errors.durationDays).toEqual(["Indiquez une durée entière entre 1 et 365 jours."]);
     }
+  });
+
+  it("échéancier : sans acompte, démarrage, au moins 1 % à la réception (F-146)", () => {
+    const base = { saveDefault: false, startDate: "2026-10-20", durationDays: "2" };
+    expect(sendQuoteSchema.parse({ ...base, depositPercent: "0" }).depositPercent).toBe(0);
+    expect(
+      sendQuoteSchema.parse({ ...base, depositPercent: "30", startPercent: "40" }).startPercent,
+    ).toBe(40);
+    const r = sendQuoteSchema.safeParse({ ...base, depositPercent: "60", startPercent: "40" });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(z.flattenError(r.error).fieldErrors.startPercent).toEqual([
+        "Gardez au moins 1 % à payer à la réception des travaux.",
+      ]);
+    }
+    expect(paymentDefaultsSchema.parse({ depositPercent: "30", startPercent: "40" })).toEqual({
+      depositPercent: 30,
+      startPercent: 40,
+    });
+    expect(
+      paymentDefaultsSchema.safeParse({ depositPercent: "30", startPercent: "x" }).success,
+    ).toBe(false);
   });
 
   it("refus : motif de la liste, commentaire de 500 caractères au plus", () => {

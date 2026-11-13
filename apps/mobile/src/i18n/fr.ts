@@ -761,7 +761,7 @@ export const fr = {
     previous: (month: string, value: string) => `${month} : ${value}`,
     openTitle: "À encaisser",
     openEmpty: "Rien à encaisser : tous vos paiements sont à jour.",
-    kinds: { acompte: "Acompte", solde: "Solde" } as Record<string, string>,
+    kinds: { acompte: "Acompte", demarrage: "Démarrage", solde: "Solde" } as Record<string, string>,
     dueSince: (days: number) =>
       days === 0 ? "Dû aujourd'hui" : days === 1 ? "Dû depuis 1 jour" : `Dû depuis ${days} jours`,
     failed: "Dernier paiement échoué",
@@ -885,6 +885,7 @@ export const fr = {
       todo: {
         signer_devis: "Signer le devis",
         payer_acompte: "Payer l'acompte",
+        payer_demarrage: "Payer au démarrage",
         valider_reception: "R\u00e9ceptionner les travaux",
         confirmer_levee: "Confirmer la lev\u00e9e des r\u00e9serves",
         payer_solde: "Payer le solde",
@@ -1618,7 +1619,11 @@ export const fr = {
       documents: "Documents liés",
       quote: "Devis",
       signedQuote: "Devis signé",
-      invoice: { acompte: "Facture d'acompte", solde: "Facture de solde" },
+      invoice: {
+        acompte: "Facture d'acompte",
+        demarrage: "Facture d'acompte (démarrage)",
+        solde: "Facture de solde",
+      },
       meta: (numero: string, date: string) => `${numero} · ${date}`,
       noDocuments: "Les documents du chantier (devis, factures) apparaîtront ici.",
       total: "Total du chantier",
@@ -2619,8 +2624,12 @@ export const fr = {
       customSchedule: "Échéancier personnalisé",
       customHint: "Configurez un échéancier sur-mesure",
       deposit: "Acompte à la signature (%)",
-      tranche: (percent: number, trigger: "signature" | "reception", amount: string) =>
-        `${percent} % ${trigger === "signature" ? "à la signature du devis" : "à la réception du chantier"}, soit ${amount}`,
+      tranche: (
+        percent: number,
+        trigger: "signature" | "demarrage" | "reception",
+        amount: string,
+      ) =>
+        `${percent} % ${trigger === "signature" ? "à la signature du devis" : trigger === "demarrage" ? "au démarrage des travaux" : "à la réception du chantier"}, soit ${amount}`,
       saveDefault: "En faire mon échéancier par défaut",
       chooseSchedule: "Choisissez l'échéancier à appliquer.",
       datesTitle: "Dates des travaux",
@@ -3034,7 +3043,7 @@ export const fr = {
     empty: "Aucune facture pour le moment : elles sont émises à chaque paiement reçu.",
     export: "Exporter pour le comptable (CSV)",
     exportFailed: "L'export n'a pas pu être préparé. Réessayez dans un instant.",
-    kinds: { acompte: "Acompte", solde: "Solde" },
+    kinds: { acompte: "Acompte", demarrage: "Acompte au démarrage", solde: "Solde" },
     view: (numero: string) => `Partager la facture ${numero} (PDF)`,
     /** Chiffres clés de l'onglet (refonte « Nette », lot 2), comme sur le site. */
     figures: {

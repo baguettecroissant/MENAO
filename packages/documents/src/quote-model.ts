@@ -33,7 +33,11 @@ export type QuotePdfData = {
   site: { title: string; addressLines: string[] };
   startDate: string | null;
   duration: string | null;
-  schedule: { percent: number; trigger: "signature" | "reception"; amountCents: number }[];
+  schedule: {
+    percent: number;
+    trigger: "signature" | "demarrage" | "reception";
+    amountCents: number;
+  }[];
   lines: {
     type: QuoteLineType;
     designation: string;
@@ -121,10 +125,12 @@ export const QUOTE_TEXTS = {
   totalNet: "Total net à payer",
   scheduleTitle: "Échéancier de paiement",
   schedulePending: "Précisé à l'envoi du devis.",
-  tranche: (percent: number, trigger: "signature" | "reception", amount: string) =>
+  tranche: (percent: number, trigger: "signature" | "demarrage" | "reception", amount: string) =>
     trigger === "signature"
       ? `${percent} % à la signature du devis, soit ${amount}`
-      : `${percent} % à la réception des travaux, soit ${amount}`,
+      : trigger === "demarrage"
+        ? `${percent} % au démarrage des travaux, soit ${amount}`
+        : `${percent} % à la réception des travaux, soit ${amount}`,
   payment:
     "Règlement en ligne via MENAO, par paiement sécurisé Stripe versé directement à l'entreprise, selon l'échéancier ci-dessus.",
   received: "Devis reçu avant l'exécution des travaux.",

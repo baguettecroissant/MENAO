@@ -145,7 +145,9 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
   // Taux proposé : celui de la dernière ligne, sinon le taux normal (ou 0 % en franchise).
   const defaultVat = plain.at(-1)?.vatRateBp ?? rates.at(-1) ?? 0;
   // Acompte prévu : échéancier par défaut de l'artisan (modifiable à l'étape « Envoi »).
-  const deposit = paymentSchedule(totals.totalTtcCents, draft.defaultDeposit)[0];
+  const deposit = paymentSchedule(totals.totalTtcCents, draft.defaultDeposit).find(
+    (tranche) => tranche.trigger === "signature",
+  );
   // Exemple (ADR 0184) : le devis se lit, rien ne se modifie ni ne s'envoie.
   const example = isExampleId(chantierId);
   const conversation = draft.conversation && Platform.OS !== "web";

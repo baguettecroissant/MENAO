@@ -121,9 +121,14 @@ export function smsContent(
         return `${company} (via MENAO) : votre chantier ${t} démarre demain. Suivez-le sur ${space}`;
       case "acompte_relance":
       case "paiement_relance": {
-        const solde = data.tranche === "solde";
+        const what =
+          data.tranche === "solde"
+            ? "le solde"
+            : data.tranche === "demarrage"
+              ? "le paiement au démarrage"
+              : "l'acompte";
         const amount = euros(data.montant);
-        return `${company} (via MENAO) : ${solde ? "le solde" : "l'acompte"}${amount ? ` de ${amount}` : ""} pour ${t} reste à régler. Paiement en ligne : ${space}`;
+        return `${company} (via MENAO) : ${what}${amount ? ` de ${amount}` : ""} pour ${t} reste à régler. Paiement en ligne : ${space}`;
       }
       case "avis_relance":
         return `${company} (via MENAO) : votre avis compte ! Notez votre chantier ${t} sur ${space}. Merci !`;

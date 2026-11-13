@@ -1,9 +1,9 @@
-// Edge Function deposit-checkout (F-31, F-32) : paiement de l'acompte, ou du solde une fois le
-// chantier réceptionné, avec Stripe Checkout créé directement sur le compte Stripe de l'artisan
-// (charge directe, ADR 0011). Aucune commission ni application_fee : MENAO ne prend jamais
-// d'argent sur les chantiers (CLAUDE.md règle 12). particulier_start_deposit et
-// particulier_start_balance, appelées au nom du client, décident de l'accès et du montant
-// (échéancier figé, solde calculé). Depuis l'application (`app: true`), la fin du paiement passe
+// Edge Function deposit-checkout (F-31, F-32, F-146) : paiement de l'acompte, du paiement prévu au
+// démarrage des travaux, ou du solde une fois le chantier réceptionné, avec Stripe Checkout créé
+// directement sur le compte Stripe de l'artisan (charge directe, ADR 0011). Aucune commission ni
+// application_fee : MENAO ne prend jamais d'argent sur les chantiers (CLAUDE.md règle 12).
+// particulier_start_deposit, particulier_start_demarrage et particulier_start_balance, appelées au
+// nom du client, décident de l'accès et du montant (échéancier figé, solde calculé). Depuis l'application (`app: true`), la fin du paiement passe
 // par la page de retour du site, qui rouvre l'application (ADR 0060). Aucune donnée personnelle
 // journalisée. ADR 0023, 0029.
 import { createClient } from "@supabase/supabase-js";
@@ -12,6 +12,7 @@ import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
 
+const LABELS = { acompte: "Acompte", demarrage: "Paiement au démarrage", solde: "Solde" } as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 type Started = {
@@ -32,14 +33,20 @@ Deno.serve(async (req) => {
   const body = (await req.json().catch(() => null)) as {
     quoteId?: unknown;
     chantierId?: unknown;
+    kind?: unknown;
     origin?: unknown;
     app?: unknown;
   } | null;
-  // Acompte : devis signé ; solde : chantier réceptionné.
+  // Acompte : devis signé ; démarrage : travaux commencés ; solde : chantier réceptionné.
   const chantierId = typeof body?.chantierId === "string" ? body.chantierId : "";
-  const balance = UUID.test(chantierId);
+  const onChantier = UUID.test(chantierId);
+  const kind: "acompte" | "demarrage" | "solde" = onChantier
+    ? body?.kind === "demarrage"
+      ? "demarrage"
+      : "solde"
+    : "acompte";
   const requestedQuote = typeof body?.quoteId === "string" ? body.quoteId : "";
-  if (!balance && !UUID.test(requestedQuote)) return json({ status: "invalid" }, 400);
+  if (!onChantier && !UUID.test(requestedQuote)) return json({ status: "invalid" }, 400);
 
   // Client au nom de l'utilisateur : auth.uid() et ses droits s'appliquent en base.
   const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
@@ -56,9 +63,12 @@ Deno.serve(async (req) => {
   });
   if (allowed !== true) return json({ status: "rate_limited" }, 429);
 
-  const { data: start, error } = balance
-    ? await supabase.rpc("particulier_start_balance", { p_chantier_id: chantierId })
-    : await supabase.rpc("particulier_start_deposit", { p_quote_id: requestedQuote });
+  const { data: start, error } =
+    kind === "solde"
+      ? await supabase.rpc("particulier_start_balance", { p_chantier_id: chantierId })
+      : kind === "demarrage"
+        ? await supabase.rpc("particulier_start_demarrage", { p_chantier_id: chantierId })
+        : await supabase.rpc("particulier_start_deposit", { p_quote_id: requestedQuote });
   if (error) {
     return error.code === "22023"
       ? json({ status: "refused", message: error.message }, 409)
@@ -80,12 +90,12 @@ Deno.serve(async (req) => {
     // Application : retour par la page du site qui rouvre l'écran d'origine (paiement ou abandon).
     const appTarget: Omit<AppReturn, "state"> | null =
       body?.app === true
-        ? balance
+        ? onChantier
           ? { screen: "chantier", id: chantierId }
           : { screen: "devis", id: quoteId }
         : null;
-    const label = `${balance ? "Solde" : "Acompte"} du devis ${started.numero}`;
-    const metadata = { menao_quote_id: quoteId, menao_kind: balance ? "solde" : "acompte" };
+    const label = `${LABELS[kind]} du devis ${started.numero}`;
+    const metadata = { menao_quote_id: quoteId, menao_kind: kind };
     const session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
@@ -105,14 +115,16 @@ Deno.serve(async (req) => {
         payment_intent_data: { description: label, metadata },
         success_url: appTarget
           ? appReturnUrl(origin, { ...appTarget, state: "paiement" })
-          : balance
+          : onChantier
             ? `${origin}/mon-espace/chantiers/${chantierId}?paiement=termine`
             : `${origin}/mon-espace/devis/${quoteId}?paiement=termine`,
         cancel_url: appTarget
           ? appReturnUrl(origin, { ...appTarget, state: "annule" })
-          : balance
+          : kind === "solde"
             ? `${origin}/mon-espace/chantiers/${chantierId}/solde`
-            : `${origin}/mon-espace/devis/${quoteId}/acompte`,
+            : kind === "demarrage"
+              ? `${origin}/mon-espace/chantiers/${chantierId}`
+              : `${origin}/mon-espace/devis/${quoteId}/acompte`,
       },
       { stripeAccount },
     );

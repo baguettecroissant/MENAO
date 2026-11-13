@@ -53,8 +53,10 @@ select set_config('test.v1', public.artisan_save_quote_draft(current_setting('te
   {"type":"autre","designation":"Forfait déplacement","quantityMilli":1000,"unit":"forfait","unitPriceHtCents":4500,"vatRateBp":1000}
 ]$$::jsonb)::text, true);
 
-select throws_ok(format('select public.artisan_send_quote(%L, 0, %L, 2)', current_setting('test.v1'), current_date + 10),
-  '22023', 'L''acompte doit être compris entre 1 et 99 %', 'acompte de 0 % refusé');
+select throws_ok(format('select public.artisan_send_quote(%L, 100, %L, 2)', current_setting('test.v1'), current_date + 10),
+  '22023', 'L''acompte doit être compris entre 0 et 99 %', 'acompte de 100 % refusé');
+select throws_ok(format('select public.artisan_send_quote(%L, 60, %L, 2, false, 40)', current_setting('test.v1'), current_date + 10),
+  '22023', 'Il doit rester au moins 1 % à payer à la réception', 'acompte et démarrage sans solde refusés (F-146)');
 select throws_ok(format('select public.artisan_send_quote(%L, 30, %L, 2)', current_setting('test.v1'), current_setting('test.aujourdhui')),
   '22023', 'Choisissez une date de début à venir, dans l''année', 'début le jour même refusé');
 select throws_ok(format('select public.artisan_send_quote(%L, 30, %L, 0)', current_setting('test.v1'), current_date + 10),

@@ -1291,6 +1291,69 @@ describe("relance d'un paiement dû (ADR 0238)", () => {
   });
 });
 
+describe("échéancier réglable (F-146)", () => {
+  const ctx = { siteUrl: "https://menao.example", firstName: "Claire" };
+  const eur = (cents: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
+  const chantierId = "55555555-5555-4555-8555-555555555555";
+  const data = {
+    chantier_id: chantierId,
+    titre: "Cuisine",
+    artisan: "Plâtrerie Paul",
+    montant: 192000,
+  };
+
+  it("travaux commencés : paiement prévu au démarrage, lien vers le chantier du client", () => {
+    const c = notificationContent("demarrage_du", data, ctx);
+    expect(c.subject).toBe("Travaux commencés : paiement prévu au démarrage");
+    expect(c.paragraphs[1]).toBe(
+      `Plâtrerie Paul a commencé les travaux de «\u00a0Cuisine\u00a0». Comme prévu dans votre devis, ${eur(192000)} sont à régler au démarrage.`,
+    );
+    expect(c.cta).toEqual({
+      label: "Payer maintenant",
+      url: `https://menao.example/mon-espace/chantiers/${chantierId}`,
+    });
+  });
+
+  it("paiement au démarrage reçu : artisan et client", () => {
+    const pro = notificationContent(
+      "demarrage_paye",
+      { ...data, destinataire: "artisan", client: "Camille" },
+      ctx,
+    );
+    expect(pro.subject).toBe("Paiement au démarrage reçu pour «\u00a0Cuisine\u00a0»");
+    expect(pro.cta.url).toBe(`https://menao.example/pro/chantiers/${chantierId}`);
+    const client = notificationContent("demarrage_paye", { ...data, destinataire: "client" }, ctx);
+    expect(client.title).toBe("Paiement reçu");
+    expect(client.paragraphs[1]).toContain(eur(192000));
+  });
+
+  it("relance du paiement au démarrage", () => {
+    const c = notificationContent("paiement_relance", { ...data, tranche: "demarrage" }, ctx);
+    expect(c.title).toBe("Paiement au démarrage à régler");
+    expect(c.cta.label).toBe("Régler le paiement");
+    expect(c.subject).toBe(
+      "Rappel : le paiement prévu au démarrage de votre chantier «\u00a0Cuisine\u00a0»",
+    );
+  });
+
+  it("devis signé sans acompte : l'artisan fixe la date tout de suite", () => {
+    const c = notificationContent(
+      "devis_signe",
+      { chantier_id: chantierId, titre: "Cuisine", client: "Camille", sans_acompte: true },
+      ctx,
+    );
+    expect(c.cta.label).toBe("Confirmer la date de démarrage");
+    expect(c.paragraphs.some((p) => p.includes("ne prévoit pas d'acompte"))).toBe(true);
+    const avec = notificationContent(
+      "devis_signe",
+      { chantier_id: chantierId, titre: "Cuisine", client: "Camille" },
+      ctx,
+    );
+    expect(avec.cta.label).toBe("Voir le chantier");
+  });
+});
+
 describe("chantier attribué à un membre de l'équipe (ADR 0243)", () => {
   it("nom de l'entreprise, titre du chantier, lien vers le chantier", () => {
     const chantierId = "44444444-4444-4444-8444-444444444444";

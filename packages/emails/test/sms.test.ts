@@ -42,6 +42,13 @@ describe("SMS des rappels au client (ADR 0239)", () => {
         "menao.fr",
       ),
     ).toContain("le solde pour");
+    expect(
+      smsContent(
+        "paiement_relance",
+        { entreprise: "X", titre: "Cuisine", tranche: "demarrage" },
+        "menao.fr",
+      ),
+    ).toContain("le paiement au démarrage pour");
   });
 
   it("titre trop long : raccourci pour tenir en un SMS", () => {

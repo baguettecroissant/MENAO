@@ -1,14 +1,15 @@
 /**
  * Contenu des factures (F-35), au nom de l'artisan (MENAO est l'outil), testé à part du dessin.
  * Mentions de F-20, plus le devis de référence, la date de paiement et le montant déjà réglé.
- * Facture de solde : lignes du devis, totaux des travaux, acomptes déduits, puis le solde.
+ * Facture de solde : lignes du devis, totaux des travaux, acomptes déduits, puis le solde. Le
+ * paiement au démarrage des travaux (F-146) est une facture d'acompte.
  * TODO(legal) : mentions obligatoires (dont celles de la réforme de la facturation électronique)
  * à faire valider par l'expert-comptable.
  */
 import { dateLong, money, vatRate, winAnsi } from "./format.ts";
 import { QUOTE_TEXTS, insuranceLine, issuerLines, type Issuer } from "./quote-model.ts";
 
-export type InvoiceKind = "acompte" | "solde";
+export type InvoiceKind = "acompte" | "solde" | "demarrage";
 
 export type InvoicePdfData = {
   kind: InvoiceKind;
@@ -16,7 +17,13 @@ export type InvoicePdfData = {
   /** Dates AAAA-MM-JJ. */
   issuedOn: string;
   paidOn: string | null;
-  quote: { numero: string | null; totalTtcCents: number; depositPercent: number | null };
+  quote: {
+    numero: string | null;
+    totalTtcCents: number;
+    depositPercent: number | null;
+    /** Part de l'échéancier réglée par cette facture d'acompte (acompte ou démarrage). */
+    tranchePercent?: number | null;
+  };
   issuer: Issuer;
   client: { name: string; addressLines: string[] };
   site: { title: string; addressLines: string[] };
@@ -30,7 +37,12 @@ export type InvoicePdfData = {
     totalTtcCents: number;
     vat: { rateBp: number; baseHtCents: number; tvaCents: number }[];
   };
-  deposits?: { numero: string; paidOn: string | null; totalTtcCents: number }[];
+  deposits?: {
+    numero: string;
+    kind?: InvoiceKind;
+    paidOn: string | null;
+    totalTtcCents: number;
+  }[];
 };
 
 export type InvoiceDocumentModel = {
@@ -52,16 +64,19 @@ export type InvoiceDocumentModel = {
 };
 
 export const INVOICE_TEXTS = {
-  title: { acompte: "FACTURE D'ACOMPTE", solde: "FACTURE DE SOLDE" } satisfies Record<
-    InvoiceKind,
-    string
-  >,
+  title: {
+    acompte: "FACTURE D'ACOMPTE",
+    demarrage: "FACTURE D'ACOMPTE",
+    solde: "FACTURE DE SOLDE",
+  } satisfies Record<InvoiceKind, string>,
   number: (n: string) => `N° ${n}`,
   date: (d: string) => `Date : ${d}`,
   quote: (n: string) => `Devis n° ${n}`,
   columns: { designation: "Désignation", total: "Total HT" },
   depositLine: (percent: number | null, quote: string | null, total: string) =>
     `Acompte${percent ? ` de ${percent} %` : ""} sur le devis${quote ? ` n° ${quote}` : ""} (montant total TTC : ${total})`,
+  startLine: (percent: number | null, quote: string | null, total: string) =>
+    `Acompte${percent ? ` de ${percent} %` : ""} au démarrage des travaux, sur le devis${quote ? ` n° ${quote}` : ""} (montant total TTC : ${total})`,
   totalHt: "Total HT",
   vatLine: (rate: string) => `TVA ${rate}`,
   totalTtc: "Total TTC",
@@ -70,6 +85,7 @@ export const INVOICE_TEXTS = {
   worksTtc: "Total TTC des travaux",
   worksNet: "Total des travaux",
   depositDeducted: (numero: string) => `Acompte versé (facture ${numero})`,
+  startDeducted: (numero: string) => `Acompte versé au démarrage (facture ${numero})`,
   balanceHt: "Solde HT",
   balanceVat: (rate: string) => `TVA ${rate} sur le solde`,
   balanceTtc: "Solde TTC",
@@ -109,7 +125,11 @@ export function invoiceDocumentModel(d: InvoicePdfData): InvoiceDocumentModel {
       : [
           {
             designation: winAnsi(
-              T.depositLine(d.quote.depositPercent, d.quote.numero, money(d.quote.totalTtcCents)),
+              (d.kind === "demarrage" ? T.startLine : T.depositLine)(
+                d.quote.tranchePercent ?? (d.kind === "acompte" ? d.quote.depositPercent : null),
+                d.quote.numero,
+                money(d.quote.totalTtcCents),
+              ),
             ),
             total: money(d.totals.totalHtCents),
           },
@@ -131,7 +151,7 @@ export function invoiceDocumentModel(d: InvoicePdfData): InvoiceDocumentModel {
     paymentLine: d.paidOn ? winAnsi(T.paid(dateLong(d.paidOn))) : null,
     mentions: [
       T.nature,
-      ...(d.kind === "acompte" ? [T.depositNote] : [T.balanceNote]),
+      ...(d.kind === "solde" ? [T.balanceNote] : [T.depositNote]),
       ...(exempt ? [QUOTE_TEXTS.vatExempt] : []),
     ].map(winAnsi),
     footer: winAnsi(T.footer(d.issuer.name, d.issuer.siret)),
@@ -144,10 +164,10 @@ function balanceTotals(d: InvoicePdfData, exempt: boolean): [string, string][] {
   if (!works) return [];
   const deposits = (d.deposits ?? []).map(
     (dep) =>
-      [winAnsi(T.depositDeducted(dep.numero)), winAnsi(T.deducted(money(dep.totalTtcCents)))] as [
-        string,
-        string,
-      ],
+      [
+        winAnsi((dep.kind === "demarrage" ? T.startDeducted : T.depositDeducted)(dep.numero)),
+        winAnsi(T.deducted(money(dep.totalTtcCents))),
+      ] as [string, string],
   );
   if (exempt) {
     return [

@@ -18,6 +18,9 @@ export type ClientHomeFigureRow = {
   deposit_status: PaymentStatus | null;
   balance_cents: number | null;
   balance_status: PaymentStatus | null;
+  /** Paiement au démarrage des travaux (F-146), absent des anciennes lignes. */
+  start_payment_cents?: number | null;
+  start_payment_status?: PaymentStatus | null;
 };
 
 export type ClientHomeFigures = {
@@ -27,7 +30,8 @@ export type ClientHomeFigures = {
   toSign: number;
   /** Prochaine visite ou prochain démarrage à venir, sur un chantier en cours. */
   next: { kind: AgendaKind; at: string; artisan: string } | null;
-  /** Acomptes et soldes payés, en centimes entiers (règle 5), versés directement aux artisans. */
+  /** Acomptes, paiements au démarrage et soldes payés, en centimes entiers (règle 5), versés
+   * directement aux artisans. */
   paidCents: number;
 };
 
@@ -56,7 +60,10 @@ export function clientHomeFigures(
     next: first ? { kind: first.kind, at: first.at, artisan: first.row.artisan } : null,
     paidCents: rows.reduce(
       (sum, r) =>
-        sum + paid(r.deposit_cents, r.deposit_status) + paid(r.balance_cents, r.balance_status),
+        sum +
+        paid(r.deposit_cents, r.deposit_status) +
+        paid(r.start_payment_cents ?? null, r.start_payment_status ?? null) +
+        paid(r.balance_cents, r.balance_status),
       0,
     ),
   };

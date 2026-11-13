@@ -41,7 +41,9 @@ export default async function DepositPage({ params }: PageProps<"/mon-espace/dev
   const doc = document as unknown as QuoteDocument;
   if (doc.quote.status !== "signe" || payment?.status === "paye") redirect(quoteHref as Route);
   const data = quotePdfData(doc);
-  const [deposit, balance] = data.schedule;
+  // Par moment de paiement (F-146) : sans acompte, la première tranche est celle de la réception.
+  const deposit = data.schedule.find((s) => s.trigger === "signature");
+  const balance = data.schedule.find((s) => s.trigger === "reception");
   const depositAmount = euros.format((deposit?.amountCents ?? 0) / 100);
 
   // Refonte « Nette » (ADR 0256) : l'échéancier à gauche, le paiement à droite.

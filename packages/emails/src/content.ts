@@ -87,6 +87,9 @@ export const NOTIFICATION_TYPES = [
   "paiement_relance",
   // Chantier attribué à un membre de l'équipe de l'artisan (ADR 0243).
   "chantier_attribue",
+  // Échéancier réglable (F-146, ADR 0301) : paiement au démarrage dû (client), puis reçu.
+  "demarrage_du",
+  "demarrage_paye",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -677,6 +680,8 @@ export function notificationContent(
       const client = text(data, "client") ?? "Le client";
       const numero = text(data, "numero");
       const montant = amount(data, "montant_ttc");
+      // Devis sans acompte (F-146) : la date se fixe dès la signature.
+      const sansAcompte = data.sans_acompte === true;
       return {
         subject: `${client} a signé votre devis`,
         preview: `Votre devis pour ${quoted(titre)} est signé.`,
@@ -684,11 +689,16 @@ export function notificationContent(
         paragraphs: [
           hello(ctx.firstName),
           `${client} a signé votre devis${numero ? ` n° ${numero}` : ""} pour ${quoted(titre)}${montant ? `, d'un montant de ${montant} TTC` : ""}.`,
+          ...(sansAcompte
+            ? [
+                "Votre devis ne prévoit pas d'acompte : confirmez dès maintenant la date et l'heure de démarrage des travaux, votre client en sera informé.",
+              ]
+            : []),
           "Le devis signé est disponible depuis le chantier, dans votre espace pro.",
         ],
         quote: null,
         cta: {
-          label: "Voir le chantier",
+          label: sansAcompte ? "Confirmer la date de démarrage" : "Voir le chantier",
           url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
         },
       };
@@ -1117,13 +1127,19 @@ export function notificationContent(
       // l'artisan (d'un toucher ou à J+7, J+15, J+30). Ton neutre, sans pénalité ; le paiement
       // va directement à l'artisan (règle 12).
       // TODO(legal) : contenu et fréquence des relances à un particulier, à faire valider.
-      const solde = text(data, "tranche") === "solde";
-      const what = solde ? "le solde" : "l'acompte";
+      const tranche = text(data, "tranche");
+      const solde = tranche === "solde";
+      const demarrage = tranche === "demarrage";
+      const what = solde ? "le solde" : demarrage ? "le paiement prévu au démarrage" : "l'acompte";
       const montant = amount(data, "montant");
       return {
         subject: `Rappel : ${what} de votre chantier ${quoted(titre)}`,
         preview: `${artisan} vous rappelle ${what}${montant ? ` de ${montant}` : ""} à régler.`,
-        title: solde ? "Solde à régler" : "Acompte à régler",
+        title: solde
+          ? "Solde à régler"
+          : demarrage
+            ? "Paiement au démarrage à régler"
+            : "Acompte à régler",
         paragraphs: [
           hello(ctx.firstName),
           `${artisan} vous rappelle que ${what}${montant ? ` de ${montant}` : ""} pour ${quoted(titre)} reste à régler.`,
@@ -1131,7 +1147,60 @@ export function notificationContent(
           "Si vous avez déjà réglé, merci de ne pas tenir compte de ce message.",
         ],
         quote: null,
-        cta: myChantier(solde ? "Régler le solde" : "Régler l'acompte"),
+        cta: myChantier(
+          solde ? "Régler le solde" : demarrage ? "Régler le paiement" : "Régler l'acompte",
+        ),
+      };
+    }
+    case "demarrage_du": {
+      // F-146 : les travaux ont commencé, le devis prévoit un paiement au démarrage. Il va
+      // directement à l'artisan (règle 12).
+      const montant = amount(data, "montant");
+      return {
+        subject: "Travaux commencés : paiement prévu au démarrage",
+        preview: `${artisan} a commencé les travaux de ${quoted(titre)}.`,
+        title: "Paiement au démarrage",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${artisan} a commencé les travaux de ${quoted(titre)}. Comme prévu dans votre devis, ${montant ? `${montant} sont` : "une partie du montant est"} à régler au démarrage.`,
+          `Le paiement se fait en ligne, de façon sécurisée, directement sur le compte de ${artisan}.`,
+        ],
+        quote: null,
+        cta: myChantier("Payer maintenant"),
+      };
+    }
+    case "demarrage_paye": {
+      // F-146 : paiement au démarrage reçu (artisan et client) ; le chantier continue.
+      const montant = amount(data, "montant");
+      if (text(data, "destinataire") === "artisan") {
+        const client = text(data, "client") ?? "Votre client";
+        return {
+          subject: `Paiement au démarrage reçu pour ${quoted(titre)}`,
+          preview: `${client} a payé${montant ? ` ${montant}` : ""} au démarrage des travaux.`,
+          title: "Paiement au démarrage reçu",
+          paragraphs: [
+            hello(ctx.firstName),
+            `${client} a payé${montant ? ` ${montant}` : " le paiement prévu"} au démarrage des travaux de ${quoted(titre)}, directement sur votre compte Stripe.`,
+            "La facture d'acompte est disponible dans le dossier du chantier.",
+          ],
+          quote: null,
+          cta: {
+            label: "Voir le chantier",
+            url: link(chantierId ? `/pro/chantiers/${chantierId}` : "/pro/chantiers"),
+          },
+        };
+      }
+      return {
+        subject: "Votre paiement au démarrage est bien reçu",
+        preview: `Paiement reçu pour ${quoted(titre)}.`,
+        title: "Paiement reçu",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre paiement${montant ? ` de ${montant}` : ""} au démarrage des travaux de ${quoted(titre)} a bien été payé à ${artisan}.`,
+          "La facture d'acompte est disponible dans le dossier du chantier. Le reste se règle à la réception des travaux.",
+        ],
+        quote: null,
+        cta: myChantier("Voir mon chantier"),
       };
     }
     case "chantier_attribue": {

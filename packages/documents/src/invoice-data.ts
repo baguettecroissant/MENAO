@@ -20,7 +20,13 @@ export type InvoiceDocument = {
     total_ttc_cents: number;
     vat_breakdown: VatPart[];
   };
-  quote: { numero: string | null; total_ttc_cents: number; deposit_percent: number | null };
+  quote: {
+    numero: string | null;
+    total_ttc_cents: number;
+    deposit_percent: number | null;
+    /** Part réglée par cette facture d'acompte (factures émises depuis F-146). */
+    tranche_percent?: number | null;
+  };
   issuer: QuoteDocument["issuer"];
   client: QuoteDocument["client"];
   chantier: QuoteDocument["chantier"];
@@ -32,7 +38,12 @@ export type InvoiceDocument = {
     total_ttc_cents: number;
     vat_breakdown: VatPart[];
   };
-  deposits?: { numero: string; paid_on: string | null; total_ttc_cents: number }[];
+  deposits?: {
+    numero: string;
+    kind?: InvoiceKind;
+    paid_on: string | null;
+    total_ttc_cents: number;
+  }[];
   /** PDF conservé tel qu'émis, s'il a déjà été produit. */
   pdf_path?: string | null;
 };
@@ -48,6 +59,7 @@ export function invoicePdfData(doc: InvoiceDocument): InvoicePdfData {
       numero: quote.numero,
       totalTtcCents: quote.total_ttc_cents,
       depositPercent: quote.deposit_percent,
+      tranchePercent: quote.tranche_percent ?? null,
     },
     issuer: issuerData(doc.issuer, invoice.issued_on),
     ...partiesData(doc.client, doc.chantier),
@@ -72,6 +84,7 @@ export function invoicePdfData(doc: InvoiceDocument): InvoicePdfData {
           },
           deposits: (doc.deposits ?? []).map((dep) => ({
             numero: dep.numero,
+            ...(dep.kind ? { kind: dep.kind } : {}),
             paidOn: dep.paid_on,
             totalTtcCents: dep.total_ttc_cents,
           })),

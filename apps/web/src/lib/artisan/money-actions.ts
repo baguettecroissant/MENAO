@@ -1,5 +1,6 @@
 "use server";
 
+import { PAYMENT_KINDS } from "@menao/core";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
@@ -11,7 +12,7 @@ const PATH = "/pro/suivi";
 
 const reminderSchema = z.object({
   chantierId: z.uuid(),
-  kind: z.enum(["acompte", "solde"]),
+  kind: z.enum(PAYMENT_KINDS),
 });
 
 /** « Relancer » (ADR 0238) : rappel au client d'un acompte ou d'un solde dû, au nom de l'artisan. */

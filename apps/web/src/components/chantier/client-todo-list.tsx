@@ -26,6 +26,7 @@ export type ClientTodoRow = {
 const ICONS: Record<ClientTodoKind, LucideIcon> = {
   signer_devis: FilePen,
   payer_acompte: CreditCard,
+  payer_demarrage: CreditCard,
   valider_reception: ClipboardCheck,
   confirmer_levee: ShieldCheck,
   payer_solde: CreditCard,
@@ -42,6 +43,8 @@ function hrefOf(todo: ClientTodo<ClientTodoRow>): string {
       return `/mon-espace/devis/${todo.quoteId}/acompte`;
     case "payer_solde":
       return `/mon-espace/chantiers/${id}/solde`;
+    case "payer_demarrage":
+      return `/mon-espace/chantiers/${id}`;
     case "valider_reception":
       return `/mon-espace/chantiers/${id}/reception`;
     case "donner_avis":
@@ -53,7 +56,12 @@ function hrefOf(todo: ClientTodo<ClientTodoRow>): string {
 
 /** Montant affiché : total TTC du devis à signer, acompte ou solde à payer. */
 function amountOf(todo: ClientTodo<ClientTodoRow>): number | null {
-  if (todo.kind === "payer_acompte" || todo.kind === "payer_solde") return todo.amountCents;
+  if (
+    todo.kind === "payer_acompte" ||
+    todo.kind === "payer_demarrage" ||
+    todo.kind === "payer_solde"
+  )
+    return todo.amountCents;
   if (todo.kind === "signer_devis") return todo.row.quote_total_ttc_cents;
   return null;
 }

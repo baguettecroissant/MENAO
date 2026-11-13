@@ -3,7 +3,8 @@
  * commission (ADR 0011, CLAUDE.md règle 12). Logique pure, aussi chargée par Deno.
  */
 
-export const PAYMENT_KINDS = ["acompte", "solde"] as const;
+/** Acompte (signature), solde (réception), paiement au démarrage des travaux (F-146). */
+export const PAYMENT_KINDS = ["acompte", "solde", "demarrage"] as const;
 export type PaymentKind = (typeof PAYMENT_KINDS)[number];
 
 export const PAYMENT_STATUSES = ["en_attente", "en_cours", "paye", "echoue", "annule"] as const;
@@ -91,7 +92,7 @@ export function revenueTrend(currentCents: number, previousCents: number): Reven
 export const DEPOSIT_ADVICE_MAX_PERCENT = 30;
 
 export function depositAboveAdvice(
-  schedule: readonly { percent: number; trigger: "signature" | "reception" }[],
+  schedule: readonly { percent: number; trigger: "signature" | "demarrage" | "reception" }[],
 ): number | null {
   const deposit = schedule.find((s) => s.trigger === "signature")?.percent ?? 0;
   return deposit > DEPOSIT_ADVICE_MAX_PERCENT ? deposit : null;
