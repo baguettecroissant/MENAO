@@ -67,7 +67,8 @@ export async function saveLibrarySettings(
  */
 export async function startLibrary(_prev: FormState, formData: FormData): Promise<FormState> {
   const m = t.menao;
-  const choice = text(formData, "choice") === "devis" ? "devis" : "menao";
+  const picked = text(formData, "choice");
+  const choice = picked === "devis" || picked === "import" ? picked : "menao";
   const trades = [
     ...new Set(
       formData
@@ -103,7 +104,11 @@ export async function startLibrary(_prev: FormState, formData: FormData): Promis
   await refreshWorkPrices(supabase);
   revalidatePath(BASE);
   redirect(
-    (choice === "menao" ? `${BASE}?menao=${added}&metiers=${trades.length}` : BASE) as Route,
+    (choice === "menao"
+      ? `${BASE}?menao=${added}&metiers=${trades.length}`
+      : choice === "import"
+        ? `${BASE}/importer`
+        : BASE) as Route,
   );
 }
 
