@@ -67,6 +67,8 @@ export async function loadClientHome(): Promise<ClientHome | null> {
     depositStatus: c.deposit_status,
     balanceCents: c.balance_cents as number | null,
     balanceStatus: c.balance_status,
+    startCents: c.start_payment_cents as number | null,
+    startStatus: c.start_payment_status,
     appointmentAt: c.appointment_at as string | null,
     startAt: c.start_at as string | null,
     liftSignaled: liftSignaled.has(c.chantier_id),

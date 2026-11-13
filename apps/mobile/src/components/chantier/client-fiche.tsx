@@ -24,7 +24,7 @@ import { Body } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const t = fr.chantier;
-const { colors, font, spacing } = theme;
+const { colors, font, radius, spacing } = theme;
 
 /**
  * Briques de la fiche d'un chantier côté particulier, refonte « Nette » (lot 6, maquette
@@ -113,6 +113,28 @@ export function ClientNextStep({
   artisan: string;
   calendar: { title: string; location: string | null };
 }) {
+  if (action?.kind === "payer_demarrage") {
+    // Lot 40 (F-146) : carte violette « Travaux commencés » et paiement au démarrage.
+    const percent =
+      totalTtcCents && totalTtcCents > 0
+        ? Math.round((action.amountCents * 100) / totalTtcCents)
+        : null;
+    return (
+      <View style={styles.start}>
+        <Text style={styles.startChip}>{fr.startPayment.chip}</Text>
+        <Text style={styles.startTitle}>{fr.startPayment.title}</Text>
+        {percent !== null ? (
+          <Text style={styles.startText}>{fr.startPayment.action(percent)}</Text>
+        ) : null}
+        <Text style={styles.startAmount}>{formatCents(action.amountCents)}</Text>
+        <FicheButton
+          tall
+          label={fr.startPayment.submit(formatCents(action.amountCents))}
+          onPress={() => router.push(`/chantier/${chantierId}/demarrage`)}
+        />
+      </View>
+    );
+  }
   if (action) {
     const sign = action.kind === "signer_devis";
     const open = () => {
@@ -273,6 +295,32 @@ export function ClientMoneyCard({
 }
 
 const styles = StyleSheet.create({
+  start: {
+    gap: spacing(2),
+    padding: spacing(4),
+    borderRadius: radius.card,
+    backgroundColor: colors["violet-soft"],
+  },
+  startChip: {
+    alignSelf: "flex-start",
+    overflow: "hidden",
+    borderRadius: 999,
+    backgroundColor: colors.violet,
+    paddingHorizontal: spacing(2.5),
+    paddingVertical: spacing(1),
+    fontFamily: font.semibold,
+    fontSize: 12,
+    color: "#ffffff",
+  },
+  startTitle: { fontFamily: font.display, fontSize: 19, lineHeight: 24, color: colors.foreground },
+  startText: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
+  startAmount: {
+    fontFamily: font.display,
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+    color: colors.foreground,
+  },
   stepper: { flexDirection: "row", alignItems: "flex-start" },
   step: { flex: 1, minWidth: 0, alignItems: "center", gap: spacing(1.5) },
   dot: {

@@ -1636,6 +1636,7 @@ export const fr = {
       payTitle: "Vous avez un paiement à effectuer",
       payText: "Effectuez le paiement pour démarrer le chantier",
       payBalanceText: "Réglez le solde pour clôturer votre chantier",
+      payStartText: "Les travaux ont commencé : réglez la part prévue au démarrage",
       pay: "Payer maintenant",
       dueNow: "À payer maintenant",
     },
@@ -1880,6 +1881,31 @@ export const fr = {
     unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
     inProgress: "Votre paiement du solde est en cours de confirmation.",
   },
+  /** Paiement au démarrage des travaux (F-146, maquette lot 40) : mêmes textes que le site. */
+  startPayment: {
+    title: "Paiement au démarrage",
+    chip: "Travaux commencés",
+    started: (date: string | null, percent: number) =>
+      `${date ? `Les travaux ont commencé le ${date}.` : "Les travaux ont commencé."} Votre artisan a prévu ${percent}\u00a0% au démarrage.`,
+    steps: {
+      signature: "Signature",
+      demarrage: "Démarrage des travaux",
+      reception: "Réception",
+    },
+    depositPaid: (amount: string) => `Acompte payé · ${amount}`,
+    depositDue: (amount: string) => `Acompte · ${amount}`,
+    noDeposit: "Sans acompte",
+    startNow: (amount: string) => `À payer aujourd'hui · ${amount}`,
+    balance: (amount: string) => `Solde · ${amount}`,
+    beneficiary: (name: string) => `Bénéficiaire : ${name}`,
+    secure:
+      "Paiement sécurisé par Stripe, versé directement à l'entreprise. MENAO ne prend aucune commission.",
+    submit: (amount: string) => `Payer ${amount}`,
+    unavailable: "Le paiement est momentanément indisponible. Réessayez dans un instant.",
+    inProgress: "Votre paiement au démarrage est en cours de confirmation.",
+    action: (percent: number) =>
+      `Votre artisan a prévu ${percent}\u00a0% au démarrage des travaux.`,
+  },
   /** Devis reçu (F-21), signature (F-13) et acompte (F-31) : mêmes textes que le site. */
   quote: {
     title: (artisan: string) => `Devis de ${artisan}`,
@@ -1938,8 +1964,14 @@ export const fr = {
           "J'accepte les conditions d'utilisation de DocuSeal, prestataire de signature électronique.",
         cgu_menao:
           "J'accepte les conditions générales d'utilisation et la politique de confidentialité de MENAO.",
-        echeancier: (deposit: string, balance: string) =>
-          `J'accepte l'échéancier : acompte de ${deposit} à la signature, solde de ${balance} à la réception des travaux.`,
+        echeancier: (schedule: string) => `J'accepte l'échéancier : ${schedule}.`,
+      },
+      // Échéancier accepté, tranche par tranche (F-146), comme sur le site.
+      scheduleParts: {
+        signature: (amount: string) => `acompte de ${amount} à la signature`,
+        demarrage: (amount: string) => `${amount} au démarrage des travaux`,
+        reception: (amount: string) => `solde de ${amount} à la réception des travaux`,
+        noDeposit: "sans acompte",
       },
       links: {
         provider: "Conditions DocuSeal",
@@ -1951,6 +1983,13 @@ export const fr = {
       unavailable:
         "La signature électronique est momentanément indisponible. Réessayez dans un instant.",
       depositNext: "Le paiement de l'acompte vous sera proposé après la signature.",
+    },
+    // Devis sans acompte (F-146, maquette lot 40).
+    noDeposit: {
+      chip: "Sans acompte",
+      title: "Rien à payer à la signature",
+      text: (amount: string) => `Vous payez tout à la réception des travaux : ${amount}.`,
+      next: "Après la signature, votre artisan fixe tout de suite la date des travaux.",
     },
     deposit: {
       title: "Paiement de l'acompte",
@@ -2619,11 +2658,19 @@ export const fr = {
     },
     send: {
       title: "Envoi du devis",
-      scheduleTitle: "Échéancier de paiement à appliquer",
+      scheduleTitle: "Échéancier de paiement",
       defaultSchedule: "Mon échéancier par défaut",
       customSchedule: "Échéancier personnalisé",
-      customHint: "Configurez un échéancier sur-mesure",
+      customHint: "Acompte, démarrage et solde, pour ce devis",
       deposit: "Acompte à la signature (%)",
+      // Lot 40 (F-146) : trois tranches réglables, barre en direct.
+      rows: {
+        signature: { title: "Acompte", hint: "À la signature" },
+        demarrage: { title: "Démarrage", hint: "Début des travaux" },
+        reception: { title: "Solde", hint: "À la réception" },
+      },
+      percentLabel: (title: string) => `${title}, en pourcentage`,
+      zeroHint: "0\u00a0% : sans acompte, ou sans paiement au démarrage.",
       tranche: (
         percent: number,
         trigger: "signature" | "demarrage" | "reception",
@@ -2745,6 +2792,9 @@ export const fr = {
       balance: "Solde",
       balanceReceived: "Solde reçu",
       balanceWhen: "à la réception des travaux",
+      start: "Au démarrage",
+      startReceived: "Démarrage reçu",
+      startWhen: "le jour où les travaux commencent",
       depositInvoice: "Facture d'acompte",
     },
     planning: {

@@ -49,8 +49,14 @@ export default function QuoteSignatureScreen() {
   if (quote.status !== "envoye") return <Redirect href={`/devis/${id}`} />;
 
   // Par moment de paiement (F-146) : sans acompte, la première tranche est celle de la réception.
-  const deposit = quote.data.schedule.find((s) => s.trigger === "signature");
-  const balance = quote.data.schedule.find((s) => s.trigger === "reception");
+  const parts = t.signature.scheduleParts;
+  const hasDeposit = quote.data.schedule.some(
+    (s) => s.trigger === "signature" && s.amountCents > 0,
+  );
+  const schedule = [
+    ...quote.data.schedule.map((s) => parts[s.trigger](formatCents(s.amountCents))),
+    ...(hasDeposit ? [] : [parts.noDeposit]),
+  ].join(", ");
   const items: ConsentItem[] = [
     { name: "document", label: t.signature.consents.document, links: [] },
     {
@@ -68,10 +74,7 @@ export default function QuoteSignatureScreen() {
     },
     {
       name: "echeancier",
-      label: t.signature.consents.echeancier(
-        formatCents(deposit?.amountCents ?? 0),
-        formatCents(balance?.amountCents ?? 0),
-      ),
+      label: t.signature.consents.echeancier(schedule),
       links: [],
     },
   ];
@@ -108,7 +111,13 @@ export default function QuoteSignatureScreen() {
   return (
     <ActionScreen
       bar={t.signature.title}
-      steps={<JourneySteps label={t.steps.label} steps={STEPS} current={0} />}
+      steps={
+        <JourneySteps
+          label={t.steps.label}
+          steps={hasDeposit ? STEPS : [t.steps.sign]}
+          current={0}
+        />
+      }
       title={t.signature.title}
       lead={t.signature.intro}
       meta={site}
@@ -161,7 +170,9 @@ export default function QuoteSignatureScreen() {
       />
       {failure ? <Notice tone="error">{failure}</Notice> : null}
       <Text style={styles.small}>{t.signature.otp}</Text>
-      <Text style={[styles.small, styles.center]}>{t.signature.depositNext}</Text>
+      <Text style={[styles.small, styles.center]}>
+        {hasDeposit ? t.signature.depositNext : t.noDeposit.next}
+      </Text>
     </ActionScreen>
   );
 }

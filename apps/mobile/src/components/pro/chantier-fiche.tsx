@@ -116,6 +116,7 @@ export function MoneyCard({
   depositInvoiceId,
   quoteId,
   balance,
+  start = null,
   example,
 }: {
   totalCents: number;
@@ -125,6 +126,8 @@ export function MoneyCard({
   quoteId: string | null;
   /** Solde reçu (chantier clôturé). */
   balance: { paidAt: string; cents: number } | null;
+  /** Paiement au démarrage des travaux (F-146), s'il est prévu. */
+  start?: { cents: number; paidAt: string | null } | null;
   example: boolean;
 }) {
   const paid = progress?.paidCents ?? 0;
@@ -166,6 +169,14 @@ export function MoneyCard({
           />
         ) : progress ? (
           <MoneyLine done label={t.money.alreadyPaid} detail={null} amount={progress.paidCents} />
+        ) : null}
+        {start ? (
+          <MoneyLine
+            done={start.paidAt !== null}
+            label={start.paidAt ? t.money.startReceived : t.money.start}
+            detail={start.paidAt ? t.money.on(formatDayMonth(start.paidAt)) : t.money.startWhen}
+            amount={start.cents}
+          />
         ) : null}
         {balance ? (
           <MoneyLine

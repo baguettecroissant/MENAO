@@ -2,6 +2,7 @@ import {
   LEGAL_DOCUMENT_VERSIONS,
   parisToday,
   paymentProgress,
+  trancheAmount,
   type SignatureConsent,
 } from "@menao/core";
 import { receptionPreviewData, type QuoteDocument, type ReceptionPdfData } from "@menao/documents";
@@ -172,5 +173,79 @@ export async function startBalancePayment(chantierId: string): Promise<Opened> {
     { body: { chantierId, origin: env.siteUrl, app: true } },
   );
   if (error || !data?.url) return { error: await functionError(error, fr.balance.unavailable) };
+  return { url: data.url };
+}
+
+export type StartPaymentData =
+  | { ready: false }
+  | {
+      ready: true;
+      title: string;
+      address: string | null;
+      /** Part prévue au démarrage (pourcentage et montant figés dans le devis signé). */
+      percent: number;
+      amountCents: number;
+      startAt: string | null;
+      /** Acompte prévu (0 : devis sans acompte) et payé ou non. */
+      depositCents: number;
+      depositPaid: boolean;
+      receptionCents: number;
+      company: string;
+      inProgress: boolean;
+    };
+
+/**
+ * Paiement au démarrage des travaux (F-146, maquette lot 40), comme sur le site : travaux
+ * commencés, part prévue au démarrage pas encore payée.
+ */
+export async function loadStartPayment(chantierId: string): Promise<StartPaymentData | null> {
+  const { data: rows } = await supabase.rpc("particulier_chantiers", {
+    p_chantier_id: chantierId,
+  });
+  const c = rows?.[0];
+  if (!c) return null;
+  const started =
+    c.status === "en_cours" || c.status === "travaux_termines" || c.status === "reserves_a_lever";
+  if (
+    !started ||
+    !c.quote_id ||
+    !(c.start_payment_cents > 0) ||
+    c.start_payment_status === "paye"
+  ) {
+    return { ready: false };
+  }
+  const [{ data: quote }, { data: document }] = await Promise.all([
+    supabase.from("quotes").select("payment_schedule").eq("id", c.quote_id).single(),
+    supabase.rpc("quote_document", { p_quote_id: c.quote_id }),
+  ]);
+  const schedule = (quote?.payment_schedule ?? []) as {
+    trigger: string;
+    percent: number;
+    amount_cents: number;
+  }[];
+  const issuer = (document as unknown as QuoteDocument | null)?.issuer;
+  return {
+    ready: true,
+    title: c.title,
+    address: chantierAddress(c),
+    percent: schedule.find((s) => s.trigger === "demarrage")?.percent ?? 0,
+    amountCents: c.start_payment_cents,
+    startAt: c.start_at,
+    depositCents: trancheAmount(schedule, "signature"),
+    depositPaid: c.deposit_status === "paye",
+    receptionCents: trancheAmount(schedule, "reception"),
+    company: issuer?.raison_sociale ?? c.artisan_name,
+    inProgress: c.start_payment_status === "en_cours",
+  };
+}
+
+/** F-146 « Payer au démarrage » : Stripe Checkout sur le compte de l'artisan (règle 12). */
+export async function startStartPayment(chantierId: string): Promise<Opened> {
+  const { data, error } = await supabase.functions.invoke<{ status: string; url?: string }>(
+    "deposit-checkout",
+    { body: { chantierId, kind: "demarrage", origin: env.siteUrl, app: true } },
+  );
+  if (error || !data?.url)
+    return { error: await functionError(error, fr.startPayment.unavailable) };
   return { url: data.url };
 }

@@ -42,7 +42,7 @@ async function artisanRow() {
   if (!userId) return null;
   const { data } = await supabase
     .from("artisans")
-    .select("id, assujetti_tva, default_deposit_percent")
+    .select("id, assujetti_tva, default_deposit_percent, default_start_percent")
     .eq("id", await myArtisanKey())
     .maybeSingle();
   return data;
@@ -271,6 +271,8 @@ export type QuoteSendContext = {
   quoteId: string;
   totalTtcCents: number;
   defaultDeposit: number;
+  /** Part par défaut payée au démarrage des travaux (F-146). */
+  defaultStart: number;
   data: QuotePdfData;
   model: QuoteDocumentModel;
   /** Assurance décennale complète et non échue : exigée par la base à l'envoi (F-20). */
@@ -329,6 +331,7 @@ export async function loadQuoteSendContext(chantierId: string): Promise<QuoteSen
     lowMargin,
     totalTtcCents: draft.total_ttc_cents,
     defaultDeposit: artisan.default_deposit_percent,
+    defaultStart: artisan.default_start_percent,
     data,
     model: quoteDocumentModel(data),
     insured: Boolean(insurance?.insurer && insurance.policy && insurance.coverage),

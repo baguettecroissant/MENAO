@@ -1,18 +1,18 @@
 import {
   QUOTE_VALIDITY_DAYS,
   formatRateBp,
-  isValidDepositPercent,
   parisToday,
   paymentSchedule,
+  paymentScheduleError,
 } from "@menao/core";
-import { sendQuoteSchema } from "@menao/validation";
+import { messages, sendQuoteSchema } from "@menao/validation";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
-import { RadioCards } from "@/components/pro/action-kit";
 import { PageHead } from "@/components/pro/dossier-kit";
+import { ScheduleBar, TrancheRow } from "@/components/pro/payment-schedule";
 import {
   CardHeading,
   FicheButton,
@@ -33,25 +33,25 @@ import { withTeamPermission } from "@/components/team-gate";
 const t = fr.proQuote;
 const s = t.send;
 const { colors, font, radius, spacing } = theme;
-type Schedule = "defaut" | "personnalise";
-type Field = "depositPercent" | "startDate" | "durationDays";
+type Field = "depositPercent" | "startPercent" | "startDate" | "durationDays";
 
 /** Lendemain d'une date AAAA-MM-JJ : premier jour de début possible. */
 const nextDay = (date: string) =>
   new Date(Date.parse(`${date}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 
 /**
- * « Envoi du devis » (F-21), comme sur le site : échéancier par défaut ou personnalisé (acompte à
- * la signature, solde à la réception, montants de @menao/core), dates des travaux (F-20), puis
- * envoi : la base attribue le numéro et fige le devis. Écran d'action « Nette » (lot 10) : cartes
- * Échéancier, Dates et récapitulatif (total TTC, client, chantier), bouton collé en bas.
+ * « Envoi du devis » (F-21) : échéancier (maquette lot 40 : total, barre, acompte et démarrage
+ * réglables à partir de l'échéancier par défaut, 0 % possible, solde calculé ; montants de
+ * @menao/core), dates des travaux (F-20), puis envoi : la base attribue le numéro et fige le
+ * devis. Écran d'action « Nette » (lot 10) : cartes Échéancier, Dates et récapitulatif (client,
+ * chantier), bouton collé en bas.
  */
 function QuoteSendScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadQuoteSendContext(id), [id]);
   const [context] = useFocusData(load);
-  const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [deposit, setDeposit] = useState<string | null>(null);
+  const [start, setStart] = useState<string | null>(null);
   const [saveDefault, setSaveDefault] = useState(false);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [duration, setDuration] = useState("");
@@ -63,18 +63,19 @@ function QuoteSendScreen() {
   if (context === null) return <Redirect href={`/pro-chantier/${id}/devis`} />;
 
   const ctx = context;
-  const customDeposit = deposit ?? String(ctx.defaultDeposit);
-  const tranches = (percent: number) =>
-    paymentSchedule(ctx.totalTtcCents, percent).map((tranche) =>
-      s.tranche(tranche.percent, tranche.trigger, formatCents(tranche.amountCents)),
-    );
-  const custom = Number(customDeposit);
+  const depositValue = deposit ?? String(ctx.defaultDeposit);
+  const startValue = start ?? String(ctx.defaultStart);
+  const d = Number(depositValue) || 0;
+  const st = Number(startValue) || 0;
+  const invalid = depositValue === "" || startValue === "" || paymentScheduleError(d, st) !== null;
+  const tranches = paymentSchedule(ctx.totalTtcCents, invalid ? 0 : d, invalid ? 0 : st);
+  const balanceError = invalid && d + st > 99 ? messages.scheduleNoBalance : null;
 
   async function submit() {
-    if (!schedule) return setFailure(s.chooseSchedule);
     const parsed = sendQuoteSchema.safeParse({
-      depositPercent: schedule === "defaut" ? String(ctx.defaultDeposit) : customDeposit,
-      saveDefault: schedule === "personnalise" && saveDefault,
+      depositPercent: depositValue,
+      startPercent: startValue,
+      saveDefault,
       startDate: startDate ?? "",
       durationDays: duration,
     });
@@ -82,6 +83,7 @@ function QuoteSendScreen() {
       const fields = z.flattenError(parsed.error).fieldErrors;
       setErrors({
         depositPercent: fields.depositPercent?.[0],
+        startPercent: fields.startPercent?.[0],
         startDate: fields.startDate?.[0],
         durationDays: fields.durationDays?.[0],
       });
@@ -103,13 +105,7 @@ function QuoteSendScreen() {
     <FicheScreen
       title={t.barTitle}
       footer={
-        <FicheButton
-          label={s.submit}
-          tall
-          onPress={submit}
-          loading={pending}
-          disabled={schedule === null}
-        />
+        <FicheButton label={s.submit} tall onPress={submit} loading={pending} disabled={invalid} />
       }
     >
       <QuoteSteps current="send" />
@@ -126,47 +122,62 @@ function QuoteSendScreen() {
       {failure ? <Notice tone="error">{failure}</Notice> : null}
 
       <FicheCard padding={4}>
-        <CardHeading title={s.scheduleTitle} size={17} />
-        <RadioCards
-          legend={s.scheduleTitle}
-          hideLegend
-          options={[
-            {
-              value: "defaut" as const,
-              label: s.defaultSchedule,
-              detail: tranches(ctx.defaultDeposit).join("\n"),
-            },
-            { value: "personnalise" as const, label: s.customSchedule, detail: s.customHint },
-          ]}
-          value={schedule}
-          onChange={(value) => {
-            setSchedule(value);
-            setFailure(null);
-          }}
-        />
-        {schedule === "personnalise" ? (
-          <View style={styles.custom}>
-            <ToolField
-              label={s.deposit}
-              value={customDeposit}
-              onChangeText={(value) => {
-                setDeposit(value);
-                setErrors((prev) => ({ ...prev, depositPercent: undefined }));
-              }}
-              keyboardType="number-pad"
-              maxLength={2}
-              error={errors.depositPercent}
-            />
-            {isValidDepositPercent(custom)
-              ? tranches(custom).map((line) => (
-                  <Text key={line} style={styles.small}>
-                    {line}
-                  </Text>
-                ))
-              : null}
-            <CheckRow label={s.saveDefault} checked={saveDefault} onChange={setSaveDefault} />
-          </View>
+        <View style={styles.total}>
+          <Text style={styles.totalLabel}>{t.totalTtc}</Text>
+          <Text style={styles.totalValue}>{formatCents(ctx.totalTtcCents)}</Text>
+        </View>
+        <ScheduleBar tranches={tranches} />
+        <View>
+          <TrancheRow
+            first
+            trigger="signature"
+            title={s.rows.signature.title}
+            hint={s.rows.signature.hint}
+            percent={d}
+            value={depositValue}
+            label={s.percentLabel(s.rows.signature.title)}
+            invalid={Boolean(errors.depositPercent)}
+            onChange={(value) => {
+              setDeposit(value);
+              setErrors((prev) => ({ ...prev, depositPercent: undefined }));
+            }}
+          />
+          <TrancheRow
+            trigger="demarrage"
+            title={s.rows.demarrage.title}
+            hint={s.rows.demarrage.hint}
+            percent={st}
+            value={startValue}
+            label={s.percentLabel(s.rows.demarrage.title)}
+            invalid={Boolean(errors.startPercent) || balanceError !== null}
+            onChange={(value) => {
+              setStart(value);
+              setErrors((prev) => ({ ...prev, startPercent: undefined }));
+            }}
+          />
+          <TrancheRow
+            trigger="reception"
+            title={s.rows.reception.title}
+            hint={s.rows.reception.hint}
+            percent={
+              invalid
+                ? Math.max(0, 100 - d - st)
+                : (tranches.find((x) => x.trigger === "reception")?.percent ?? 0)
+            }
+          />
+        </View>
+        {balanceError || errors.depositPercent || errors.startPercent ? (
+          <Text style={styles.error}>
+            {balanceError ?? errors.depositPercent ?? errors.startPercent}
+          </Text>
         ) : null}
+        {tranches.map((tranche) => (
+          <Text key={tranche.trigger} style={styles.small}>
+            {s.tranche(tranche.percent, tranche.trigger, formatCents(tranche.amountCents))}
+          </Text>
+        ))}
+        <Text style={styles.small}>{s.zeroHint}</Text>
+        <CheckRow label={s.saveDefault} checked={saveDefault} onChange={setSaveDefault} />
       </FicheCard>
 
       <FicheCard padding={4}>
@@ -197,10 +208,6 @@ function QuoteSendScreen() {
       </FicheCard>
 
       <FicheCard padding={4}>
-        <View style={styles.total}>
-          <Text style={styles.totalLabel}>{t.totalTtc}</Text>
-          <Text style={styles.totalValue}>{formatCents(ctx.totalTtcCents)}</Text>
-        </View>
         <CardHeading title={s.attachTitle} size={16} />
         <View style={styles.block}>
           <Text style={styles.eyebrow}>{s.client}</Text>
@@ -220,7 +227,7 @@ function QuoteSendScreen() {
 }
 
 const styles = StyleSheet.create({
-  custom: { gap: spacing(2) },
+  error: { fontFamily: font.medium, fontSize: 13, lineHeight: 18, color: colors.danger },
   total: { gap: spacing(1) },
   totalLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
   totalValue: {

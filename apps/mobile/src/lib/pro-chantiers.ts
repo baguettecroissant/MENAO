@@ -4,6 +4,7 @@ import {
   journalSummary,
   journalTimeline,
   paymentProgress,
+  trancheAmount,
   type ArtisanCancelReason,
   type ChantierStatus,
   type JournalDay,
@@ -194,6 +195,9 @@ export type ArtisanFollowUp = {
   receivedAt: string | null;
   balancePaidAt: string | null;
   balanceCents: number | null;
+  /** Paiement au démarrage prévu (F-146) : montant (0 : aucun) et date de paiement. */
+  startCents?: number;
+  startPaidAt?: string | null;
   reception: { reserves: string | null; liftSignaledAt: string | null } | null;
   /** Avis du client sur ce chantier (F-28), publié ou masqué par l'équipe. */
   review: ArtisanReview | null;
@@ -234,7 +238,9 @@ export async function loadArtisanFollowUp(
   ] = await Promise.all([
     supabase
       .from("quotes")
-      .select("id, status, numero, sent_at, signed_at, created_at, total_ttc_cents, start_date")
+      .select(
+        "id, status, numero, sent_at, signed_at, created_at, total_ttc_cents, start_date, payment_schedule",
+      )
       .eq("chantier_id", chantierId)
       .neq("status", "brouillon")
       .order("version", { ascending: false })
@@ -359,6 +365,14 @@ export async function loadArtisanFollowUp(
     receivedAt: received?.created_at ?? null,
     balancePaidAt: balance?.paid_at ?? null,
     balanceCents: balance?.amount_cents ?? null,
+    startCents: signed
+      ? trancheAmount(
+          (signed.payment_schedule ?? []) as { trigger: string; amount_cents: number }[],
+          "demarrage",
+        )
+      : 0,
+    startPaidAt:
+      (payments ?? []).find((p) => p.kind === "demarrage" && p.status === "paye")?.paid_at ?? null,
     reception: reception
       ? { reserves: reception.reserves, liftSignaledAt: reception.lift_signaled_at }
       : null,

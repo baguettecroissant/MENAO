@@ -45,6 +45,8 @@ export const actionOf = (c: ClientChantier) =>
     depositStatus: c.deposit_status,
     balanceCents: c.balance_cents,
     balanceStatus: c.balance_status,
+    startCents: c.start_payment_cents,
+    startStatus: c.start_payment_status,
   });
 
 const open = (c: ClientChantier) =>
