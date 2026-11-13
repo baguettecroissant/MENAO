@@ -1,7 +1,10 @@
-// Accès aux modèles d'IA (ADR 0012). Clés directes en priorité (production), sinon OpenRouter
-// (tests et staging). Les noms de modèles diffèrent selon la passerelle.
+// Accès aux modèles d'IA (ADR 0012). Clé Anthropic directe en priorité, sinon OpenRouter. Avec
+// les deux clés, un appel refusé par Anthropic pour une raison qui ne tient pas à la requête
+// (crédits épuisés, clé refusée, débit, panne) est rejoué une fois via OpenRouter (ADR 0304).
+// Les noms de modèles diffèrent selon la passerelle.
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { openRouterModelName, shouldUseBackup } from "../../../packages/core/src/ai-fallback.ts";
 import { env } from "./env.ts";
 
 const OPENROUTER_DEFAULT = "https://openrouter.ai/api";
@@ -12,26 +15,62 @@ export function openRouterBaseUrl(): string {
 
 export type LlmConfig = { client: Anthropic; primary: string; fallback: string };
 
+/** Client du point d'accès compatible Anthropic d'OpenRouter (jeton Bearer). */
+function openRouterClient(key: string, options: { timeout: number; maxRetries: number }) {
+  return new Anthropic({ baseURL: openRouterBaseUrl(), apiKey: null, authToken: key, ...options });
+}
+
+/** Échec d'un appel direct, lu sur l'erreur du SDK (statut, message, coupure réseau). */
+function failureOf(error: unknown) {
+  return {
+    status: error instanceof Anthropic.APIError ? (error.status ?? null) : null,
+    message: error instanceof Error ? error.message : null,
+    connection: error instanceof Anthropic.APIConnectionError,
+    timeout: error instanceof Anthropic.APIConnectionTimeoutError,
+  };
+}
+
+/**
+ * Client direct dont `messages.create` rejoue l'appel via OpenRouter (même requête, nom de modèle
+ * d'OpenRouter) quand Anthropic refuse sans que la requête soit en cause. Seuls le statut et le
+ * modèle sont journalisés, jamais le contenu.
+ */
+function withBackup(direct: Anthropic, backup: Anthropic): Anthropic {
+  const create = direct.messages.create.bind(direct.messages);
+  const replay = backup.messages.create.bind(backup.messages);
+  direct.messages.create = (async (
+    params: Anthropic.MessageCreateParams,
+    options?: Anthropic.RequestOptions,
+  ) => {
+    try {
+      return await create(params, options);
+    } catch (error) {
+      const failure = failureOf(error);
+      if (!shouldUseBackup(failure)) throw error;
+      console.warn(
+        `ia : repli OpenRouter (${failure.connection ? "réseau" : (failure.status ?? "?")}, ${params.model})`,
+      );
+      return await replay({ ...params, model: openRouterModelName(params.model) }, options);
+    }
+  }) as unknown as typeof direct.messages.create;
+  return direct;
+}
+
 export function llmConfig(): LlmConfig | null {
   const anthropicKey = env("ANTHROPIC_API_KEY");
   const openRouterKey = env("OPENROUTER_API_KEY");
   const options = { timeout: 25_000, maxRetries: 1 };
   if (anthropicKey) {
+    const direct = new Anthropic({ apiKey: anthropicKey, ...options });
     return {
-      client: new Anthropic({ apiKey: anthropicKey, ...options }),
+      client: openRouterKey ? withBackup(direct, openRouterClient(openRouterKey, options)) : direct,
       primary: env("AI_ANALYZE_MODEL") || "claude-haiku-5-5",
       fallback: env("AI_ANALYZE_FALLBACK_MODEL") || "claude-sonnet-5-5",
     };
   }
   if (openRouterKey) {
     return {
-      // Point d'accès compatible Anthropic d'OpenRouter (jeton Bearer).
-      client: new Anthropic({
-        baseURL: openRouterBaseUrl(),
-        apiKey: null,
-        authToken: openRouterKey,
-        ...options,
-      }),
+      client: openRouterClient(openRouterKey, options),
       primary: env("AI_ANALYZE_MODEL") || "anthropic/claude-haiku-5.5",
       fallback: env("AI_ANALYZE_FALLBACK_MODEL") || "anthropic/claude-sonnet-5.5",
     };
