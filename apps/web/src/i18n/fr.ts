@@ -155,6 +155,8 @@ export const fr = {
       codeLine: (code: string) => `Code : ${code}`,
       scan: "Inscription des artisans",
       unavailable: "Vos cartes seront disponibles quand votre accès sera actif.",
+      previewLabel: "Aperçu de votre carte",
+      format: "Format carte de visite : 85 × 55 mm.",
     },
   },
   /** Suivi des prospects des commerciaux (F-65, lot 2, ADR 0206). */
@@ -690,6 +692,11 @@ export const fr = {
       "Créateur de contenu ? Signalez le partenariat avec la mention « Publicité » ou « Collaboration commerciale » (loi du 9 juin 2023).",
     privateLink:
       "Ce lien est personnel : ne le partagez pas. L'équipe MENAO peut le renouveler à tout moment.",
+    // Maquette du lot 38 : primes en étapes, kit en onglets avec son aperçu.
+    kitTabs: "Formats du kit",
+    preview: "Aperçu",
+    code: "Code à coller",
+    previewNote: "Le widget s'affiche ici tel que vos visiteurs le verront.",
   },
   /** Page co-marquée d'un partenaire (ADR 0142). */
   partnerPage: {
@@ -718,6 +725,8 @@ export const fr = {
     size: (width: number, height: number) => `${width} × ${height}`,
     preview: (width: number, height: number) => `Aperçu de la bannière ${width} × ${height}`,
     download: "Télécharger l'image",
+    copyCode: "Copier le code",
+    code: (width: number, height: number) => `Code de la bannière ${width} × ${height}`,
   },
   /** Widget intégré chez les partenaires (ADR 0138). */
   widget: {
@@ -732,7 +741,6 @@ export const fr = {
     submit: "Décrire mon projet sur MENAO",
     opensNewTab: "(ouvre MENAO dans un nouvel onglet)",
     reassurance: ["Gratuit pour vous", "Artisans vérifiés", "Sans engagement"],
-    poweredBy: "Service proposé par MENAO",
     partner: "Lien partenaire",
   },
   llms: {
@@ -10660,6 +10668,16 @@ export const fr = {
         file: "Ouvrir le document",
         read: "Lu",
         count: (n: number) => (n === 1 ? "1 message" : `${n} messages`),
+        // Maquette du lot 38 : en-tête du chantier, jours, repères à droite.
+        readOnly: "Lecture seule",
+        between: (artisan: string) => `avec ${artisan}`,
+        legendTitle: "Repères",
+        legend: {
+          client: "Client, à gauche",
+          artisan: "Artisan, à droite",
+          reported: "Message signalé",
+          hidden: "Message masqué, avec son motif",
+        },
       },
       reportedMessage: {
         title: "Message concerné",

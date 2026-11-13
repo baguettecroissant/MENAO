@@ -108,7 +108,9 @@ test("partenaires : création, liens sans traceur, demande attribuée, réglages
   await expect(results.getByRole("definition").first()).toHaveText("1");
   // Intl sépare le montant et « € » par une espace fine insécable.
   await expect(space.getByText(/^10,00\s€ par demande qualifiée$/)).toBeVisible();
-  await expect(space.getByLabel("Lien texte")).toHaveValue(/\/p\/agence-e2e"/);
+  // Kit en onglets (lot 38) : l'onglet choisi montre son aperçu et son code.
+  await space.getByRole("tab", { name: "Lien texte" }).click();
+  await expect(space.getByRole("tabpanel").locator("pre")).toContainText(/\/p\/agence-e2e"/);
   // Bannières du kit (ADR 0141) : aperçus, code relié au lien partenaire, image servie par MENAO.
   await expect(space.getByRole("img", { name: "Aperçu de la bannière 160 × 600" })).toBeVisible();
   await expect(space.locator("#banniere-particuliers-728x90")).toHaveValue(
