@@ -15,9 +15,9 @@ import {
 } from "@menao/core";
 import { ArrowLeft, ClipboardCheck, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Bubble, Composer, Typing } from "@/components/assistant/assistant-ui";
-import { Alert, Button, Card, focusRing } from "@/components/ui";
+import { Alert, Button, Card, StatusBadge, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { invokeFunction } from "@/lib/project/client";
 import { createClient } from "@/lib/supabase/client";
@@ -49,41 +49,90 @@ async function invokeTraining(body: Record<string, unknown>) {
  * par écrit (12 messages au plus), puis le coach note l'échange sur 20 avec 3 conseils. L'échange
  * reste dans la page ; seule la note est gardée.
  */
-export function TrainingSimulator() {
+export function TrainingSimulator({ aside = null }: { aside?: ReactNode }) {
   const [persona, setPersona] = useState<TrainingPersona | null>(null);
   const [session, setSession] = useState(0);
 
-  if (!persona) {
-    return (
-      <section aria-labelledby="training-choose" className="flex flex-col gap-3">
-        <h2 id="training-choose" className="text-base font-medium">
-          {t.choose}
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {TRAINING_PERSONAS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPersona(p)}
-              className={`flex flex-col gap-1 rounded-card border border-border bg-surface p-4 text-left shadow-card transition-colors hover:border-primary/50 ${focusRing}`}
-            >
-              <span className="font-medium">{t.personas[p]?.label}</span>
-              <span className="text-sm text-muted-foreground">{t.personas[p]?.description}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
+  // Refonte « Nette » (lot 51, maquette ComEntrainementNette) : l'échange à gauche, les artisans
+  // à choisir à droite (changer d'artisan recommence l'échange).
   return (
-    <Session
-      key={session}
-      persona={persona}
-      onRestart={() => setSession((s) => s + 1)}
-      onChange={() => setPersona(null)}
-    />
+    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="order-2 min-w-0 lg:order-1">
+        {persona ? (
+          <Session
+            key={`${persona}-${session}`}
+            persona={persona}
+            onRestart={() => setSession((s) => s + 1)}
+            onChange={() => setPersona(null)}
+          />
+        ) : (
+          <p className="rounded-card border border-dashed border-border-strong bg-surface px-6 py-12 text-center text-sm text-muted-foreground">
+            {t.idle}
+          </p>
+        )}
+      </div>
+      <div className="order-1 flex flex-col gap-4 lg:order-2">
+        <section
+          aria-labelledby="training-choose"
+          className="flex flex-col gap-1 rounded-card border border-border bg-surface p-5 shadow-card"
+        >
+          <h2 id="training-choose" className="pb-2 text-[1.0625rem] font-bold tracking-tight">
+            {t.choose}
+          </h2>
+          <ul className="flex flex-col">
+            {TRAINING_PERSONAS.map((p, i) => {
+              const label = t.personas[p]?.label ?? p;
+              const tone = AVATAR_TONES[i % AVATAR_TONES.length];
+              return (
+                <li key={p} className="border-t border-border">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPersona(p);
+                      setSession((s) => s + 1);
+                    }}
+                    aria-pressed={persona === p}
+                    className={`flex w-full items-center gap-3 rounded-sm py-3 text-left ${focusRing}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${tone}`}
+                    >
+                      {initials(label)}
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-sm font-semibold">{label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t.personas[p]?.description}
+                      </span>
+                    </span>
+                    {persona === p && <StatusBadge tone="primary">{t.current}</StatusBadge>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+        {aside}
+      </div>
+    </div>
   );
+}
+
+const AVATAR_TONES = [
+  "bg-warning-soft text-warning",
+  "bg-primary-soft text-primary-strong",
+  "bg-success-soft text-success",
+];
+
+/** « Le méfiant » → « LM ». */
+function initials(label: string) {
+  return label
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function Session({

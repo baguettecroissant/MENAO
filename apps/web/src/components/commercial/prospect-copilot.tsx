@@ -35,8 +35,6 @@ import { DictationButton } from "@/components/project/dictation-button";
 import {
   Alert,
   Button,
-  Card,
-  CardTitle,
   Field,
   Hint,
   SelectField,
@@ -103,16 +101,21 @@ export function ProspectCopilot({
   const baseId = useId();
 
   return (
-    <Card className="flex flex-col gap-4">
-      <CardTitle
-        icon={<Sparkles aria-hidden="true" className="size-5" />}
-        title={c.title}
-        description={c.subtitle}
-      />
+    // Refonte « Nette » (lot 51, maquette ComProspectNette) : en-tête à icône, onglets soulignés.
+    <section className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-input bg-primary-soft text-primary-strong">
+          <Sparkles aria-hidden="true" className="size-5" />
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <h2 className="text-[0.9375rem] font-bold">{c.title}</h2>
+          <span className="text-[0.8125rem] text-muted-foreground">{c.subtitle}</span>
+        </span>
+      </div>
       <div
         role="tablist"
         aria-label={c.tabsLabel}
-        className="grid grid-cols-3 gap-1 rounded-input bg-background p-1"
+        className="flex gap-5 overflow-x-auto border-b border-border px-5"
       >
         {TABS.map((key) => (
           <button
@@ -123,33 +126,37 @@ export function ProspectCopilot({
             aria-selected={tab === key}
             aria-controls={`${baseId}-${key}-panel`}
             onClick={() => setTab(key)}
-            className={`flex min-h-11 items-center justify-center rounded-[calc(var(--radius-input)-4px)] border border-transparent px-2 text-center text-xs leading-tight text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:bg-surface aria-selected:font-medium aria-selected:text-primary-strong sm:text-sm ${focusRing}`}
+            className={`-mb-px flex min-h-11 shrink-0 items-center border-b-2 border-transparent text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground aria-selected:border-foreground aria-selected:font-semibold aria-selected:text-foreground ${focusRing}`}
           >
             {c.tabs[key]}
           </button>
         ))}
       </div>
-      {TABS.map((key) => (
-        <div
-          key={key}
-          role="tabpanel"
-          id={`${baseId}-${key}-panel`}
-          aria-labelledby={`${baseId}-${key}-tab`}
-          hidden={tab !== key}
-        >
-          {key === "brief" && (
-            <BriefPanel
-              prospectId={prospectId}
-              initial={brief}
-              initialAt={briefAt}
-              tradeLabels={tradeLabels}
-            />
-          )}
-          {key === "message" && <MessagePanel prospectId={prospectId} phone={phone} link={link} />}
-          {key === "report" && <ReportPanel prospectId={prospectId} phone={phone} link={link} />}
-        </div>
-      ))}
-    </Card>
+      <div className="px-5 py-4">
+        {TABS.map((key) => (
+          <div
+            key={key}
+            role="tabpanel"
+            id={`${baseId}-${key}-panel`}
+            aria-labelledby={`${baseId}-${key}-tab`}
+            hidden={tab !== key}
+          >
+            {key === "brief" && (
+              <BriefPanel
+                prospectId={prospectId}
+                initial={brief}
+                initialAt={briefAt}
+                tradeLabels={tradeLabels}
+              />
+            )}
+            {key === "message" && (
+              <MessagePanel prospectId={prospectId} phone={phone} link={link} />
+            )}
+            {key === "report" && <ReportPanel prospectId={prospectId} phone={phone} link={link} />}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -165,7 +172,9 @@ function Pending({ label }: { label: string }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2 border-t border-border pt-3 first:border-t-0 first:pt-0">
-      <h3 className="text-sm font-medium">{title}</h3>
+      <h3 className="text-[0.8125rem] font-bold tracking-wide text-muted-foreground uppercase">
+        {title}
+      </h3>
       {children}
     </section>
   );
