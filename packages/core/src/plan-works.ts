@@ -2,8 +2,10 @@
 // nombres d'un plan de masse, d'une coupe de terrain ou d'un plan de réseaux, pour les métiers qui
 // ne travaillent pas pièce par pièce (terrassier, paysagiste…). Le modèle de langage relève ce qui
 // est écrit ; un volume absent n'est calculé ici qu'avec une surface et une épaisseur (ou deux
-// altitudes) lues sur les plans, et le calcul est gardé. Rien n'est deviné : une quantité qui
-// n'est pas écrite reste vide (« à compléter »).
+// altitudes) lues sur les plans, et le calcul est gardé. Façades et toiture (PR 2, ADR 0323) : une
+// surface absente n'est calculée qu'avec deux cotes écrites (longueur × hauteur d'une façade), ou
+// avec la surface au sol et la pente écrites (surface d'un versant). Rien n'est deviné : une
+// quantité qui n'est pas écrite reste vide (« à compléter »).
 // Aucun import : ce fichier est aussi lu par Deno (tender-sheet).
 
 /** Type d'une page de plan, reconnu par le modèle. */
@@ -75,6 +77,12 @@ export type PlanWorksRaw = {
         epaisseur_m: number | null;
         altitude_haute_m: number | null;
         altitude_basse_m: number | null;
+        /** Deux cotes écrites d'une surface (façade, versant) ; absentes des anciennes réponses. */
+        longueur_m?: number | null;
+        largeur_m?: number | null;
+        /** Pente écrite d'un versant et son unité (« pourcent », « degres », vide si absente). */
+        pente?: number | null;
+        pente_unite?: string;
         metier: string;
         certitude: "sure" | "incertaine";
       }[]
@@ -130,6 +138,10 @@ export function planWorksJsonSchema(): {
             "epaisseur_m",
             "altitude_haute_m",
             "altitude_basse_m",
+            "longueur_m",
+            "largeur_m",
+            "pente",
+            "pente_unite",
             "metier",
             "certitude",
           ],
@@ -144,6 +156,10 @@ export function planWorksJsonSchema(): {
             epaisseur_m: nullable("number"),
             altitude_haute_m: nullable("number"),
             altitude_basse_m: nullable("number"),
+            longueur_m: nullable("number"),
+            largeur_m: nullable("number"),
+            pente: nullable("number"),
+            pente_unite: { type: "string", enum: ["", "pourcent", "degres"] },
             metier: { type: "string" },
             certitude: { type: "string", enum: ["sure", "incertaine"] },
           },
@@ -176,6 +192,32 @@ const two = new Intl.NumberFormat("fr-FR", {
 });
 /** Millièmes en texte à deux décimales : 186 000 → « 186,00 ». */
 export const formatPlanMeasure = (milli: number) => two.format(milli / 1000);
+
+const three = new Intl.NumberFormat("fr-FR", {
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+  useGrouping: false,
+});
+const plainNumber = new Intl.NumberFormat("fr-FR", {
+  maximumFractionDigits: 1,
+  useGrouping: false,
+});
+
+/**
+ * Coefficient de pente d'un versant, en millièmes (surface du versant ÷ surface au sol) :
+ * √(1 + p²) pour une pente en pourcentage, 1 ÷ cos(angle) pour une pente en degrés. Null hors
+ * bornes (pente nulle, plus de 300 % ou de 75°).
+ */
+export function slopeFactorMilli(slope: unknown, unit: unknown): number | null {
+  if (typeof slope !== "number" || !Number.isFinite(slope) || slope <= 0) return null;
+  if (unit === "pourcent" && slope <= 300) {
+    return Math.round(Math.sqrt(1 + (slope / 100) ** 2) * 1000);
+  }
+  if (unit === "degres" && slope <= 75) {
+    return Math.round(1000 / Math.cos((slope * Math.PI) / 180));
+  }
+  return null;
+}
 
 /** Quantité la plus grande acceptée, en millièmes (10 000 000 m², ml ou m³). */
 export const MAX_WORK_MILLI = 10_000_000_000;
@@ -239,6 +281,31 @@ export function normalizePlanWorks(
       const written = within(o.quantite, 0, MAX_WORK_MILLI / 1000);
       if (written !== null) {
         quantityMilli = Math.round(written * 1000) || null;
+      } else if (kind === "surface") {
+        // Surface non écrite : deux cotes écrites, ou surface au sol écrite × coefficient de pente.
+        const length = within(o.longueur_m, 0, 1000);
+        const width = within(o.largeur_m, 0, 1000);
+        const ground = within(o.surface_m2, 0, 1_000_000);
+        const factor = slopeFactorMilli(o.pente, o.pente_unite);
+        if (length !== null && width !== null) {
+          const lengthMm = Math.round(length * 1000);
+          const widthMm = Math.round(width * 1000);
+          const area = Math.round((lengthMm * widthMm) / 1000);
+          if (area > 0 && area <= MAX_WORK_MILLI) {
+            quantityMilli = area;
+            source = "calcul";
+            detail = `${formatPlanMeasure(lengthMm)} m × ${formatPlanMeasure(widthMm)} m`;
+          }
+        } else if (ground !== null && factor !== null) {
+          const groundMilli = Math.round(ground * 1000);
+          const area = Math.round((groundMilli * factor) / 1000);
+          if (area > 0 && area <= MAX_WORK_MILLI) {
+            quantityMilli = area;
+            source = "calcul";
+            const slope = `${plainNumber.format(o.pente as number)}${o.pente_unite === "degres" ? "°" : " %"}`;
+            detail = `${formatPlanMeasure(groundMilli)} m² × ${three.format(factor / 1000)} (pente ${slope})`;
+          }
+        }
       } else if (kind === "volume") {
         // Volume non écrit : surface lue × épaisseur lue, ou × différence de deux altitudes lues.
         const area = within(o.surface_m2, 0, 1_000_000);
