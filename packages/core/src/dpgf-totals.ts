@@ -49,15 +49,19 @@ export function tenderTotals(lines: readonly TenderLineAmounts[], vatRateBp: num
  */
 export function tenderGaps(lines: readonly TenderLineAmounts[]): {
   changed: number;
+  /** Postes dont la quantité retenue dépasse celle de l'architecte. */
+  underestimated: number;
   underestimatedHtCents: number;
 } {
   let changed = 0;
+  let underestimated = 0;
   let underestimatedHtCents = 0;
   for (const l of lines) {
     if (l.kind !== "poste" || l.quantityMilli === null || l.architectQuantityMilli === null)
       continue;
     if (l.quantityMilli === l.architectQuantityMilli) continue;
     changed++;
+    if (l.quantityMilli > l.architectQuantityMilli) underestimated++;
     if (l.quantityMilli > l.architectQuantityMilli && l.unitPriceHtCents !== null) {
       underestimatedHtCents += lineTotalHtCents(
         l.quantityMilli - l.architectQuantityMilli,
@@ -65,7 +69,7 @@ export function tenderGaps(lines: readonly TenderLineAmounts[]): {
       );
     }
   }
-  return { changed, underestimatedHtCents };
+  return { changed, underestimated, underestimatedHtCents };
 }
 
 // ---------------------------------------------------------------------------------------------

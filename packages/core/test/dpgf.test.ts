@@ -244,6 +244,7 @@ describe("totaux et écarts", () => {
   it("liste les quantités modifiées et le montant des travaux absents du DPGF", () => {
     expect(tenderGaps(lines)).toEqual({
       changed: 1,
+      underestimated: 1,
       underestimatedHtCents: 113_960,
     });
   });
