@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PLAN_COUNT_KEYS,
   type PlanReadingRaw,
+  chainSum,
   normalizePlanCounts,
   normalizePlanReading,
   planReadingFigures,
@@ -251,5 +252,48 @@ describe("planReadingJsonSchema", () => {
   it("accepte encore les comptes en objet (ancienne forme)", () => {
     const { counts } = normalizePlanReading(raw({ comptes: { portes: 4, wc: null } }), 1);
     expect(counts).toMatchObject({ portes: 4, wc: null, fenetres: null });
+  });
+});
+
+describe("chaînes de cotes (F-159)", () => {
+  const read = (over: Partial<RawRoom>) =>
+    normalizePlanReading(
+      raw({ pieces: [room({ surface_m2: null, perimetre_m: null, ...over })] }),
+      1,
+    ).rooms[0];
+
+  it("additionne les cotes lues le long de chaque mur et calcule surface et périmètre", () => {
+    // 148 + 90 + 180 = 4,18 m ; 247 + 105 = 3,52 m ; 4,18 × 3,52 = 14,7136 m².
+    expect(read({ cotes_longueur: "148+90+180", cotes_largeur: "247 + 105" })).toMatchObject({
+      areaCm2: 147_136,
+      perimeterMm: 15_400,
+      source: "cotes",
+    });
+    // Une cote seule en centimètres, comme « 359 » et « 317 » écrits dans la pièce.
+    expect(read({ cotes_longueur: "359", cotes_largeur: "317" })).toMatchObject({
+      areaCm2: 113_803,
+    });
+  });
+
+  it("préfère une cote écrite en mètres, et la surface écrite à tout calcul", () => {
+    expect(read({ longueur_m: 4.2, cotes_longueur: "100+100", largeur_m: 3 })).toMatchObject({
+      areaCm2: 126_000,
+    });
+    expect(read({ surface_m2: 15, cotes_longueur: "148+90", cotes_largeur: "247" })).toMatchObject({
+      areaCm2: 150_000,
+      source: "plan",
+    });
+  });
+
+  it("ne calcule rien avec une chaîne vide, incomplète ou douteuse", () => {
+    expect(read({ cotes_longueur: "148+90", cotes_largeur: "" })?.areaCm2).toBeNull();
+    expect(read({ cotes_longueur: "148+-1", cotes_largeur: "200" })?.areaCm2).toBeNull();
+    expect(read({ cotes_longueur: "148+env. 90", cotes_largeur: "200" })?.areaCm2).toBeNull();
+    expect(read({})?.areaCm2).toBeNull();
+    expect(chainSum(Array.from({ length: 13 }, () => "100").join("+"))).toBeNull();
+    expect(chainSum("15000+15000")).toBeNull();
+    expect(chainSum([148, 90])).toBeNull();
+    expect(chainSum("359")).toBe(3.59);
+    expect(chainSum("12,5+100")).toBe(1.125);
   });
 });

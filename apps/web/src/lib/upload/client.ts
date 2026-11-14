@@ -1,4 +1,11 @@
-import { MAX_UPLOAD_BYTES } from "@menao/core";
+import {
+  MAX_UPLOAD_BYTES,
+  PLAN_SOURCE_SIDE,
+  PLAN_VIEW_SIDE,
+  planScale,
+  planTileGrid,
+  type PlanTile,
+} from "@menao/core";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -81,6 +88,50 @@ export async function resizeImage(
       quality,
     ),
   );
+}
+
+export type PlanView = { blob: Blob; tile: Pick<PlanTile, "col" | "row" | "cols" | "rows"> | null };
+
+/**
+ * Photo d'un plan préparée pour la lecture haute définition (F-159, ADR 0325) : la vue d'ensemble
+ * (2 400 px au plus), puis les zones agrandies qui se chevauchent quand la photo est plus grande
+ * que ce que le modèle lit en une image. La grille vient de packages/core ; rien n'est agrandi.
+ */
+export async function planViews(file: File, quality = 0.85): Promise<PlanView[]> {
+  const bitmap = await createImageBitmap(file);
+  const encode = (sx: number, sy: number, sw: number, sh: number, maxSide: number) => {
+    const scale = planScale(sw, sh, maxSide);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(sw * scale));
+    canvas.height = Math.max(1, Math.round(sh * scale));
+    const context = canvas.getContext("2d");
+    if (context) {
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(bitmap, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    }
+    return new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Encodage impossible"))),
+        "image/jpeg",
+        quality,
+      ),
+    );
+  };
+  const { width, height } = bitmap;
+  // Grille calculée sur la photo ramenée à 6 400 px au plus, appliquée à ses pixels d'origine.
+  const kept = planScale(width, height, PLAN_SOURCE_SIDE);
+  const views: PlanView[] = [
+    { blob: await encode(0, 0, width, height, PLAN_VIEW_SIDE), tile: null },
+  ];
+  for (const t of planTileGrid(Math.round(width * kept), Math.round(height * kept))) {
+    views.push({
+      blob: await encode(t.x / kept, t.y / kept, t.w / kept, t.h / kept, PLAN_VIEW_SIDE),
+      tile: { col: t.col, row: t.row, cols: t.cols, rows: t.rows },
+    });
+  }
+  bitmap.close();
+  return views;
 }
 
 /**

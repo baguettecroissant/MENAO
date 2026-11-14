@@ -748,6 +748,133 @@ CAS.push(
   },
 );
 
+// ------------------------------------------------------------------ plan d'exécution dense (F-159)
+// Photo d'un plan d'exécution : noms des pièces et chaînes de cotes en très petit, aucune surface
+// écrite. Lue en vue d'ensemble seule, puis avec ses zones agrandies (ADR 0325).
+const { planTileGrid } = await import(
+  pathToFileURL(join(process.cwd(), "packages/core/src/plan-tiles.ts")).href
+);
+const cm = (m) => String(Math.round(m * 100));
+/** Chaîne de cotes d'un côté de `total` mètres : deux ou trois cotes entières en centimètres. */
+const chaine = (total) => {
+  if (total <= 2) return [total];
+  if (total <= 4) {
+    const a = Math.round(total * 55) / 100;
+    return [a, Math.round((total - a) * 100) / 100];
+  }
+  const a = Math.round(total * 38) / 100;
+  const b = Math.round(total * 24) / 100;
+  return [a, b, Math.round((total - a - b) * 100) / 100];
+};
+// Taille des écritures, en pixels du dessin : 3,3 px dans la vue d'ensemble, 9 px dans une zone.
+// À 4 px du dessin (6 px dans la vue d'ensemble), le modèle lisait déjà tout sans les zones.
+const PETIT = 2.2;
+function execution(plan) {
+  const t = (x, y, texte, o = {}) =>
+    `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${o.s ?? PETIT}" font-weight="${o.b ? 700 : 400}" text-anchor="middle"${o.r ? ` transform="rotate(-90 ${x} ${y})"` : ""} fill="#111">${texte}</text>`;
+  const cotes = plan.pieces
+    .map((p) => {
+      const x = p.x * M;
+      const y = p.y * M;
+      const out = [t(x + (p.w * M) / 2, y + (p.h * M) / 2, p.nom, { s: PETIT + 1, b: true })];
+      // Chaîne horizontale, à l'intérieur, sous le mur du haut.
+      const ly = y + 12;
+      out.push(
+        `<line x1="${x}" y1="${ly}" x2="${x + p.w * M}" y2="${ly}" stroke="#111" stroke-width="0.4"/>`,
+      );
+      let cx = x;
+      for (const c of chaine(p.w)) {
+        out.push(
+          `<line x1="${cx}" y1="${ly - 3}" x2="${cx}" y2="${ly + 3}" stroke="#111" stroke-width="0.4"/>`,
+        );
+        out.push(t(cx + (c * M) / 2, ly - 2, cm(c)));
+        cx += c * M;
+      }
+      out.push(
+        `<line x1="${cx}" y1="${ly - 3}" x2="${cx}" y2="${ly + 3}" stroke="#111" stroke-width="0.4"/>`,
+      );
+      // Chaîne verticale, à l'intérieur, le long du mur de gauche.
+      const lx = x + 12;
+      out.push(
+        `<line x1="${lx}" y1="${y}" x2="${lx}" y2="${y + p.h * M}" stroke="#111" stroke-width="0.4"/>`,
+      );
+      let cy = y;
+      for (const c of chaine(p.h)) {
+        out.push(
+          `<line x1="${lx - 3}" y1="${cy}" x2="${lx + 3}" y2="${cy}" stroke="#111" stroke-width="0.4"/>`,
+        );
+        out.push(t(lx - 2, cy + (c * M) / 2, cm(c), { r: true }));
+        cy += c * M;
+      }
+      out.push(
+        `<line x1="${lx - 3}" y1="${cy}" x2="${lx + 3}" y2="${cy}" stroke="#111" stroke-width="0.4"/>`,
+      );
+      return out.join("");
+    })
+    .join("");
+  // Chaîne extérieure avec les épaisseurs de murs : à ne pas reprendre pour les pièces.
+  const largeur = Math.max(...plan.pieces.map((p) => p.x + p.w));
+  const exterieur = `<line x1="-18" y1="-26" x2="${largeur * M + 18}" y2="-26" stroke="#111" stroke-width="0.4"/>${t(-9, -28, "20")}${t((largeur * M) / 2, -28, cm(largeur))}${t(largeur * M + 9, -28, "20")}`;
+  const notes = plan.pieces
+    .map((p) =>
+      t(p.x * M + (p.w * M) / 2, p.y * M + (p.h * M) / 2 + 8, "faux plafond BA13, peinture mate"),
+    )
+    .join("");
+  return {
+    dessin:
+      plan.pieces.map(piece).join("") +
+      plan.symboles.map(glyph).join("") +
+      cotes +
+      exterieur +
+      notes,
+  };
+}
+const EXECUTION = {
+  pieces: MAISON_RDC.pieces.map((p) => ({ ...p, surfaceEcrite: false, cotes: true })),
+  symboles: MAISON_RDC.symboles,
+};
+const executionCas = (id, note, zones) => ({
+  id,
+  note,
+  fichiers: [
+    {
+      nom: "execution.jpg",
+      grande: true,
+      pages: [
+        {
+          plan: execution(EXECUTION),
+          cartouche: cartouche("Plan d'exécution du RDC", "2,50").map((l) =>
+            l.replace("APPARTEMENT", "MAISON"),
+          ),
+        },
+      ],
+    },
+  ],
+  zones,
+  statut: "ok",
+  echelle: "1/50",
+  pieces: attendu([{ niveau: "RDC", plan: EXECUTION, hsp: 2.5 }]),
+  comptes: null,
+});
+// Photo d'origine : la page A3 rendue à 4 pixels par pixel du dessin (6 348 × 4 492).
+const GRANDE = 4;
+const ZONES = planTileGrid(1587 * GRANDE, 1123 * GRANDE).map((z, i) => ({
+  fichier: `execution-zone-${i + 1}.jpg`,
+  ...z,
+}));
+CAS.push(
+  executionCas(
+    "execution-vue-seule",
+    "Plan d'exécution dense en photo, vue d'ensemble seule (lecture d'avant F-159)",
+    [],
+  ),
+  executionCas(
+    "execution-zones",
+    "Le même plan avec ses zones agrandies : chaînes de cotes à additionner par le cœur",
+    ZONES.map(({ fichier, col, row, cols, rows }) => ({ fichier, col, row, cols, rows })),
+  ),
+);
+
 const TABLEAU = `<html><body style="font-family: Arial; padding: 40px;"><h2>LOT 05 — CARRELAGE, FAÏENCE</h2><p>Décomposition du prix global et forfaitaire</p>
 <table border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; width: 100%; font-size: 13px;"><tr><th>N°</th><th>Désignation</th><th>U</th><th>Qté</th><th>PU HT</th><th>Total HT</th></tr>
 ${[
@@ -779,6 +906,34 @@ for (const cas of CAS) {
       continue;
     }
     const svgs = f.pages.map((p) => page({ ...p.plan, cartouche: p.cartouche, note: p.note }));
+    if (f.grande) {
+      // Vue d'ensemble à 2 400 px, puis les zones aux pixels de la photo d'origine.
+      const html = `<html><body style="margin: 0; background: #fff; width: 1587px; height: 1123px; overflow: hidden;">${svgs[0]}</body></html>`;
+      const vue = await browser.newContext({
+        viewport: { width: 1587, height: 1123 },
+        deviceScaleFactor: 2400 / 1587,
+      });
+      const pageVue = await vue.newPage();
+      await pageVue.setContent(html);
+      await pageVue.screenshot({ path: chemin, type: "jpeg", quality: 85 });
+      await vue.close();
+      const grand = await browser.newContext({
+        viewport: { width: 1587, height: 1123 },
+        deviceScaleFactor: GRANDE,
+      });
+      const pageGrande = await grand.newPage();
+      await pageGrande.setContent(html);
+      for (const z of ZONES) {
+        await pageGrande.screenshot({
+          path: join(SORTIE, z.fichier),
+          type: "jpeg",
+          quality: 85,
+          clip: { x: z.x / GRANDE, y: z.y / GRANDE, width: z.w / GRANDE, height: z.h / GRANDE },
+        });
+      }
+      await grand.close();
+      continue;
+    }
     if (f.photo) {
       const { flou, rotation, coupe } = f.photo;
       await tab.setContent(`<html><body style="margin: 0; background: #8a8478; display: flex; align-items: center; justify-content: center; width: 1587px; height: 1123px; overflow: hidden;">
