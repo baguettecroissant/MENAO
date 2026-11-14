@@ -321,12 +321,17 @@ function PublicProfileBody({
         {/* Avis en un seul bloc : Score MENAO, note des clients, avis, note Google. */}
         <Section title={t.clientReviews}>
           {profile.menao_score && (
-            <div className="flex flex-col gap-3 rounded-2xl bg-background p-4">
+            // Zones nommées comme sur l'ancienne fiche du parcours (lot 48) : « Score MENAO »,
+            // « Derniers avis clients ».
+            <section
+              aria-label={t.score}
+              className="flex flex-col gap-3 rounded-2xl bg-background p-4"
+            >
               <MenaoScore score={profile.menao_score} />
               <TextLink href={"/criteres-de-classement" as Route} className="self-start text-sm">
                 {t.scoreHow}
               </TextLink>
-            </div>
+            </section>
           )}
           {profile.score ? (
             <ScoreBreakdown score={profile.score} />
@@ -337,11 +342,13 @@ function PublicProfileBody({
             </p>
           )}
           {reviews.length > 0 && (
-            <ReviewList
-              reviews={reviews}
-              artisanName={profile.display_name}
-              canReport={canReport}
-            />
+            <section aria-label={t.reviews}>
+              <ReviewList
+                reviews={reviews}
+                artisanName={profile.display_name}
+                canReport={canReport}
+              />
+            </section>
           )}
           {profile.google && (
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3 text-sm">
