@@ -185,6 +185,7 @@ export function PlanReleve({
     if (!r) return null;
     if (r.area_cm2 === null) return <StatusBadge tone="warning">{t.source.missing}</StatusBadge>;
     if (r.source === "estime") return <StatusBadge tone="warning">{t.source.estime}</StatusBadge>;
+    if (r.source === "trace") return <StatusBadge tone="neutral">{t.source.trace}</StatusBadge>;
     if (r.source === "photo") return <StatusBadge tone="warning">{t.source.photo}</StatusBadge>;
     if (r.uncertain) return <StatusBadge tone="warning">{t.source.uncertain}</StatusBadge>;
     if (r.source === "cotes") return <StatusBadge tone="primary">{t.source.cotes}</StatusBadge>;

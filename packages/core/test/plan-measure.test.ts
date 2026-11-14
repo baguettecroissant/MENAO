@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  contourText,
+  measureMark,
+  polylineLengthPx,
+  scaleFromCalibration,
   buildPlanTrace,
   estimatesFromTraces,
   jpegSize,
@@ -181,5 +185,37 @@ describe("jpegSize", () => {
     expect(jpegSize(new Uint8Array([...header, ...sof]))).toEqual({ width: 2000, height: 1500 });
     expect(jpegSize(new Uint8Array([0x89, 0x50, 0x4e, 0x47]))).toBeNull();
     expect(jpegSize(new Uint8Array(header))).toBeNull();
+  });
+});
+
+describe("métré à la main", () => {
+  const square = rect(100, 100, 300, 200);
+  it("cale l'échelle sur deux points et une valeur saisie", () => {
+    expect(scaleFromCalibration({ x: 0, y: 0 }, { x: 359, y: 0 }, 3590)).toBe(10);
+    expect(scaleFromCalibration({ x: 0, y: 0 }, { x: 5, y: 0 }, 3590)).toBeNull();
+  });
+  it("mesure une surface, une longueur et un comptage", () => {
+    expect(measureMark("surface", square, 10)).toEqual({
+      kind: "surface",
+      areaCm2: 60_000,
+      perimeterMm: 10_000,
+    });
+    expect(polylineLengthPx(square)).toBe(800);
+    expect(measureMark("longueur", square, 10)).toEqual({ kind: "longueur", lengthMm: 8000 });
+    expect(measureMark("comptage", square, null)).toEqual({ kind: "comptage", count: 4 });
+  });
+  it("ne mesure rien sans échelle ou avec un tracé trop court", () => {
+    expect(measureMark("surface", square, null)).toBeNull();
+    expect(measureMark("surface", square.slice(0, 2), 10)).toBeNull();
+    expect(measureMark("longueur", square.slice(0, 1), 10)).toBeNull();
+    expect(measureMark("comptage", [], null)).toBeNull();
+  });
+  it("écrit un tracé en pixels entiers", () => {
+    expect(
+      contourText([
+        { x: 10.4, y: 20.6 },
+        { x: 30, y: 40 },
+      ]),
+    ).toBe("10,21 30,40");
   });
 });

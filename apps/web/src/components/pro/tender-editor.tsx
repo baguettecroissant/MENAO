@@ -27,6 +27,8 @@ const QUANTITY_TONES = {
   saisi: "neutral",
   // Mesurée à l'échelle sur un contour tracé (F-159, lot 2) : une estimation, à vérifier.
   estime: "warning",
+  // Tracée à la main par l'artisan sur le plan (lot 3).
+  trace: "neutral",
 } as const;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const money = (cents: number) => euros.format(cents / 100);

@@ -35,7 +35,7 @@ export type TakeoffRoom = {
 };
 
 /** Origine d'une quantité du DPGF (« saisi » : valeur de l'artisan, dans le relevé ou ensuite). */
-export type TakeoffSource = "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime";
+export type TakeoffSource = "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace";
 
 /** Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. */
 export type TakeoffWork = Pick<
@@ -119,6 +119,8 @@ function roomsSource(rooms: readonly TakeoffRoom[], derived: boolean): TakeoffSo
   // Une seule pièce estimée à l'échelle suffit : la quantité entière est une estimation.
   if (rooms.some((r) => r.source === "estime")) return "estime";
   if (rooms.some((r) => r.source === "photo" || r.uncertain)) return "photo";
+  // Toutes les pièces tracées à la main par l'artisan : la quantité est la sienne.
+  if (rooms.length > 0 && rooms.every((r) => r.source === "trace")) return "trace";
   if (derived || rooms.some((r) => r.source === "cotes")) return "calcul";
   return "plan";
 }
@@ -307,6 +309,12 @@ function workSpec(w: TakeoffWork): Spec {
   let post: Post;
   if (w.quantityMilli === null) {
     post = toComplete("quantité non écrite sur le plan.");
+  } else if (w.source === "trace") {
+    post = {
+      quantityMilli: w.quantityMilli,
+      source: "trace",
+      detail: "Tracé à la main sur le plan.",
+    };
   } else if (w.source === "saisi") {
     post = {
       quantityMilli: w.quantityMilli,
