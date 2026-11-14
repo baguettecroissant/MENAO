@@ -46,6 +46,7 @@ export function CompanyForm(props: {
       />
       <RadioGroup
         legend={t.tva}
+        grid={2}
         name="assujettiTva"
         value={tva}
         onChange={setTva}
@@ -61,7 +62,7 @@ export function CompanyForm(props: {
           <span className="font-medium">{props.vatNumber}</span>
         </p>
       )}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="!min-h-12 !rounded-pill">
         {fr.pro.onboarding.saveAndContinue}
       </Button>
     </form>

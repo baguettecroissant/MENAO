@@ -85,7 +85,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
 
   // Les étapes restent modifiables : certification et spécialité, puis zone en communes.
   await page.goto("/pro/onboarding/entreprise");
-  await expect(page.getByRole("heading", { level: 1, name: "Entreprise" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Votre entreprise" })).toBeVisible();
   await expect(page.getByText(/^FR\d{11}$/)).toBeVisible();
   await page.goto("/pro/onboarding/metiers");
   // RGE lu dans l'annuaire de l'ADEME (faux serveur) avec la vérification du SIRET, puis

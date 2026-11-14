@@ -8098,6 +8098,25 @@ export const fr = {
         paiements: "Paiements",
         formule: "Formule",
       },
+      // Titre et chapeau des étapes refaites (lot 47, ADR 0316 ; paiements : lot 9).
+      stepPages: {
+        entreprise: {
+          title: "Votre entreprise",
+          lead: "Vérifiée auprès de l'INSEE avec votre SIRET : vos clients savent à qui ils ont affaire.",
+        },
+        metiers: {
+          title: "Vos métiers et certifications",
+          lead: "Ils décident des demandes que vous recevez et s'affichent sur votre fiche.",
+        },
+        zone: {
+          title: "Votre zone d'intervention",
+          lead: "Vous recevrez les demandes des clients situés dans cette zone.",
+        },
+        paiements: {
+          title: "Recevoir les paiements de vos clients",
+          lead: "Un compte Stripe à votre nom. Vous pouvez le préparer dès maintenant, pendant la vérification.",
+        },
+      } as Record<string, { title: string; lead: string }>,
       saveAndContinue: "Enregistrer et continuer",
       saved: "Enregistré.",
       /** Charte qualité (ADR 0104) : commandes autour du texte de la charte, en tutoiement comme elle. */
@@ -8203,6 +8222,9 @@ export const fr = {
         tvaNo: "Non (franchise en base, art. 293 B du CGI)",
         tvaNumber: "Numéro de TVA intracommunautaire",
         verifyFirst: "Vérifiez d'abord votre SIRET pour continuer.",
+        verifyTitle: "Vérification de l'entreprise",
+        detailsTitle: "Votre entreprise",
+        lockTitle: "Après l'envoi en vérification",
         logo: {
           title: "Logo sur vos documents (facultatif)",
           intro:
@@ -8264,6 +8286,10 @@ export const fr = {
         certDelete: "Supprimer",
         certValidUntil: (date: string) => `valable jusqu'au ${date}`,
         noCertification: "Aucune certification ajoutée.",
+        rge: "RGE",
+        certVerified: "Vérifiée",
+        certPending: "En vérification",
+        experienceDiploma: "Expérience et diplôme",
       },
       connect: {
         intro:
@@ -8307,6 +8333,7 @@ export const fr = {
         },
         // Formulaire Stripe affiché dans MENAO (ADR 0215).
         embedded: {
+          title: "Votre compte de paiement Stripe",
           lead: "Stripe vous demande d'abord de vous connecter ou de créer votre accès Stripe (code reçu par SMS), puis de vérifier vos informations.",
           website:
             "Pas de site web ? Stripe accepte l'adresse complète de votre page Facebook ou Instagram.",
@@ -8858,6 +8885,18 @@ export const fr = {
         remove: (nom: string) => `Retirer ${nom}`,
         noResults: "Aucun résultat.",
         searching: "Recherche…",
+        modeHints: {
+          rayon: "Jusqu'à la distance choisie",
+          communes: "Une liste précise",
+          departements: "Par exemple 06, 83",
+          regions: "Pour les grands chantiers",
+          france: "Partout",
+        } as Record<string, string>,
+        howTitle: "Comment ça marche",
+        howText:
+          "Vous recevez les demandes des clients situés dans votre zone. Plus elle est précise, plus les demandes vous correspondent.",
+        tipTitle: "Bon à savoir",
+        tipMore: "Vous pouvez changer de zone à tout moment.",
       },
     },
   },
