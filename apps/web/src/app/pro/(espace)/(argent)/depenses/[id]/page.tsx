@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ExpenseDetailView } from "@/components/pro/expense-detail";
 import { fr } from "@/i18n/fr";
 import { expenseDocumentUrl, loadExpense } from "@/lib/artisan/expenses";
+import { loadExpensePriceChanges } from "@/lib/artisan/library-invoices";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -21,15 +22,18 @@ export default async function ExpensePage({
   const { supabase } = await requireTeamPermission("money");
   const expense = await loadExpense(supabase, id);
   if (!expense) notFound();
-  const documentUrl = expense.document_path
-    ? await expenseDocumentUrl(supabase, expense.document_path)
-    : null;
+  const [documentUrl, priceChanges] = await Promise.all([
+    expense.document_path ? expenseDocumentUrl(supabase, expense.document_path) : null,
+    // Prix d'achat que cette facture permet de mettre à jour (F-149, lot 44).
+    expense.lines.length > 0 ? loadExpensePriceChanges(supabase, id, expense.issued_on) : null,
+  ]);
   return (
     <ExpenseDetailView
       expense={expense}
       documentUrl={documentUrl}
       today={parisToday()}
       documentFailed={piece === "echec"}
+      priceChanges={priceChanges}
     />
   );
 }

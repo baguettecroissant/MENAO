@@ -6,11 +6,12 @@ import {
   type QuoteUnit,
   type SupplyDependentWork,
   addDays,
+  invoiceChangesFor,
   invoicePriceProposals,
   parisToday,
 } from "@menao/core";
 import type { createClient } from "@/lib/supabase/server";
-import type { Library } from "./library";
+import { type Library, loadLibrary } from "./library";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
@@ -83,5 +84,40 @@ export async function loadInvoicePrices(
       manualPriceCents: w.manual_price_cents,
       supplyIds: w.components.flatMap((c) => (c.supply_id ? [c.supply_id] : [])),
     })),
+  };
+}
+
+export type ExpensePriceChanges = {
+  count: number;
+  names: string[];
+  trend: "hausse" | "baisse" | "mixte";
+};
+
+/**
+ * Prix d'achat qu'une facture lue dans Dépenses permet de mettre à jour (lot 44) : carte de la
+ * fiche de la dépense. Rien hors de la fenêtre de 90 jours ou sans ligne.
+ */
+export async function loadExpensePriceChanges(
+  supabase: Client,
+  expenseId: string,
+  issuedOn: string,
+): Promise<ExpensePriceChanges | null> {
+  if (issuedOn < addDays(parisToday(), -INVOICE_WINDOW_DAYS)) return null;
+  const { data: lines } = await supabase
+    .from("expense_lines")
+    .select("id")
+    .eq("expense_id", expenseId)
+    .not("unit_price_ht_cents", "is", null);
+  if (!lines?.length) return null;
+  const library = await loadLibrary(supabase, { seed: false });
+  if (library.supplies.length === 0) return null;
+  const prices = await loadInvoicePrices(supabase, library);
+  const { changes, trend } = invoiceChangesFor(prices.changes, new Set(lines.map((l) => l.id)));
+  if (!trend) return null;
+  const supplies = new Map(library.supplies.map((s) => [s.id, s.designation]));
+  return {
+    count: changes.length,
+    names: changes.map((c) => supplies.get(c.supplyId) ?? "").filter(Boolean),
+    trend,
   };
 }

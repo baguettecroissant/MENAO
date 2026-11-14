@@ -1,11 +1,12 @@
 import { expenseStatus, formatQuantity } from "@menao/core";
 import { unit as unitLabel } from "@menao/documents";
-import { Check, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Check, ExternalLink, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import type { Route } from "next";
 import { Alert, Button, ButtonLink, StatusBadge, TextLink, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { deleteExpense, setExpensePaid } from "@/lib/artisan/expense-actions";
 import type { ExpenseDetail } from "@/lib/artisan/expenses";
+import type { ExpensePriceChanges } from "@/lib/artisan/library-invoices";
 import { formatDay } from "@/lib/format";
 import { EXPENSE_STATUS_TONE } from "./expense-list";
 import { SheetChip, SheetHeader, SheetPage, SheetRow, sheetCard } from "./sheet";
@@ -20,6 +21,7 @@ const CHIP_TONE: Record<string, "neutral" | "primary" | "success" | "warning" | 
 
 const t = fr.pro.expenses;
 const d = t.detail;
+const pc = fr.pro.library.invoices.expense;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
 /**
@@ -31,11 +33,14 @@ export function ExpenseDetailView({
   documentUrl,
   today,
   documentFailed,
+  priceChanges = null,
 }: {
   expense: ExpenseDetail;
   documentUrl: string | null;
   today: string;
   documentFailed: boolean;
+  /** Prix d'achat que cette facture permet de mettre à jour (F-149, lot 44). */
+  priceChanges?: ExpensePriceChanges | null;
 }) {
   const status = expenseStatus(expense, today);
   const isImage = expense.document_mime?.startsWith("image/") ?? false;
@@ -94,6 +99,33 @@ export function ExpenseDetailView({
       />
       <div className="grid items-start gap-6 pb-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="flex min-w-0 flex-col gap-6">
+          {priceChanges && (
+            <section
+              aria-labelledby="prix-changes"
+              className="flex flex-col gap-2.5 rounded-card bg-primary-soft p-4 sm:flex-row sm:items-center sm:gap-4"
+            >
+              <div className="flex flex-1 flex-col gap-1">
+                <h2
+                  id="prix-changes"
+                  className="flex items-center gap-2.5 text-[0.9375rem] font-bold text-primary-strong"
+                >
+                  <ReceiptText aria-hidden="true" className="size-[1.1875rem] shrink-0" />
+                  {pc.title(priceChanges.count)}
+                </h2>
+                <p className="text-[0.84375rem] leading-[1.45] text-label">
+                  {pc.text(priceChanges.names, priceChanges.count, priceChanges.trend)}
+                </p>
+              </div>
+              <ButtonLink
+                href={"/pro/bibliotheque/prix-factures" as Route}
+                size="sm"
+                block={false}
+                className="self-start sm:self-center"
+              >
+                {pc.button}
+              </ButtonLink>
+            </section>
+          )}
           <section aria-labelledby="piece" className={sheetCard}>
             <div className="flex items-baseline justify-between gap-3">
               <h2 id="piece" className="text-lg">

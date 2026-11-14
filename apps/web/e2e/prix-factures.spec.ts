@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// Prix d'achat repérés dans les factures (F-149, ADR 0311) : la facture fictive du seed, déjà lue
+// Prix d'achat repérés dans les factures (F-149, ADR 0311, lot 44) : la facture fictive du seed, déjà lue
 // dans Dépenses, reprend une fourniture de la plombière (même référence, +10 %) et un article
 // inconnu. Le prix est mis à jour, l'article ajouté ; plus rien n'est proposé ensuite.
 test("prix des factures : fourniture reconnue mise à jour, article inconnu ajouté", async ({
@@ -13,7 +13,16 @@ test("prix des factures : fourniture reconnue mise à jour, article inconnu ajou
   await page.getByRole("button", { name: "Me connecter" }).click();
   await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
 
-  await page.goto("/pro/bibliotheque/prix-factures");
+  // Fiche de la facture (lot 44) : la carte annonce le prix changé et mène à la vérification.
+  await page.goto("/pro/depenses/c1490000-0000-4000-8000-000000000002");
+  await expect(page.getByRole("heading", { name: "1 prix d'achat a changé" })).toBeVisible();
+  await expect(
+    page.getByText(
+      "Le prix de Flexible inox fictif 50 cm a augmenté par rapport à vos fournitures.",
+    ),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Vérifier mes prix" }).click();
+  await expect(page).toHaveURL(/\/pro\/bibliotheque\/prix-factures$/);
   await expect(page.getByRole("heading", { name: "Mes prix d'achat à jour" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "1 prix d'achat a changé" })).toBeVisible();
   await expect(page.getByText("Reconnue : Réf. FLX-50")).toBeVisible();
