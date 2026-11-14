@@ -10109,6 +10109,18 @@ export const fr = {
     },
     // Tableaux de lancement (F-66, ADR 0208) : l'équipe et le planning de chacun.
     launch: {
+      // Refonte « Nette » (lot 51, maquette AdminLancementNette).
+      summaryLabel: "Chiffres de l'équipe",
+      summary: {
+        progress: "Avancement de l'équipe",
+        week: "Cette semaine",
+        weekHint: "tâches à faire",
+        late: "En retard",
+        lateHint: "dans l'équipe",
+      },
+      myWeek: "Mon planning",
+      myWeekEmpty: "Rien d'autre à faire cette semaine.",
+      myAll: "Voir tout mon planning",
       title: "Lancement",
       intro:
         "L'équipe de lancement et le planning de chacun : tâches datées, dates clés et rendez-vous réguliers. Chaque commercial voit ses tâches dans son espace, avec celles partagées avec toute l'équipe.",

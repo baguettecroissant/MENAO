@@ -49,8 +49,10 @@ export default async function AdminLaunchCodePage({
         <ArrowLeft aria-hidden="true" className="size-4" />
         {c.back}
       </TextLink>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium tracking-tight break-all">{c.editTitle(code.code)}</h1>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem] break-all">
+          {c.editTitle(code.code)}
+        </h1>
         <p className="text-sm text-muted-foreground">{c.editLead}</p>
       </div>
       <Card className="flex flex-col gap-4 lg:max-w-3xl">
