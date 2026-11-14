@@ -47,21 +47,23 @@ export default async function CommercialTrainingPage() {
         ) : !space.active ? (
           <Alert tone="error">{fr.commercialSpace.suspended}</Alert>
         ) : (
-          // Refonte « Nette » (ADR 0260) : l'échange à gauche, les séances passées à droite.
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <TrainingSimulator />
-            {sessions && sessions.length > 0 && (
-              <ListPanel label={t.history.title}>
-                {sessions.map((s) => (
-                  <ListRow
-                    key={s.id}
-                    title={t.history.row(t.personas[s.persona]?.label ?? s.persona, s.score)}
-                    detail={formatDayTime(s.created_at)}
-                  />
-                ))}
-              </ListPanel>
-            )}
-          </div>
+          // Refonte « Nette » (lot 51) : l'échange à gauche ; les artisans et les séances passées
+          // à droite.
+          <TrainingSimulator
+            aside={
+              sessions && sessions.length > 0 ? (
+                <ListPanel label={t.history.title}>
+                  {sessions.map((s) => (
+                    <ListRow
+                      key={s.id}
+                      title={t.history.row(t.personas[s.persona]?.label ?? s.persona, s.score)}
+                      detail={formatDayTime(s.created_at)}
+                    />
+                  ))}
+                </ListPanel>
+              ) : null
+            }
+          />
         )}
       </div>
     </main>

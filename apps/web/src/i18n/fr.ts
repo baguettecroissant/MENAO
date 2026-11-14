@@ -432,6 +432,8 @@ export const fr = {
     intro:
       "Face à un artisan joué par l'IA, entraînez-vous à l'accroche, aux objections et à la conclusion. Un coach note ensuite l'échange sur 20, avec 3 conseils.",
     choose: "Choisissez votre artisan",
+    idle: "Choisissez un artisan pour commencer l'échange.",
+    current: "En cours",
     personas: {
       mefiant: {
         label: "Le méfiant",
