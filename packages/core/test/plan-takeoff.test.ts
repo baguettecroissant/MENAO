@@ -124,13 +124,30 @@ describe("planTakeoff", () => {
     expect(cotes?.source).toBe("calcul");
   });
 
-  it("une mesure absente laisse le poste à compléter, avec la pièce en cause", () => {
-    const [ragreage] = posts("carreleur", "Carreleur", [
-      room("Entrée", null, 11),
+  it("une pièce sans mesure ne bloque pas le total : il est partiel, la pièce est nommée", () => {
+    const [ragreage, , plinthes] = posts("carreleur", "Carreleur", [
+      room("Entrée", null, null),
       room("Séjour", 20, 18),
     ]);
+    expect(ragreage).toMatchObject({ quantityMilli: 20_000, source: "partiel" });
+    expect(ragreage?.detail).toBe("Séjour 20 = 20 m² · sans Entrée : la surface à compléter.");
+    // 18 − 0,83 = 17,17 ml, sur la seule pièce dont le périmètre est connu.
+    expect(plinthes).toMatchObject({ quantityMilli: 17_170, source: "partiel" });
+    expect(plinthes?.detail).toContain("sans Entrée : le périmètre à compléter.");
+  });
+
+  it("sans aucune pièce mesurée, le poste reste à compléter", () => {
+    const [ragreage] = posts("carreleur", "Carreleur", [room("Entrée", null, 11)]);
     expect(ragreage).toMatchObject({ quantityMilli: null, source: "manque" });
     expect(ragreage?.detail).toBe("À compléter : la surface de Entrée.");
+  });
+
+  it("un nombre déduit d'une règle par pièce n'est ni lu ni estimé", () => {
+    const [points] = posts("electricien", "Électricien", [
+      room("Salon", 17, 16, { source: "estime" }),
+      room("WC", 1.5, 5, { source: "photo" }),
+    ]);
+    expect(points).toMatchObject({ quantityMilli: 2000, source: "calcul" });
   });
 
   it("peinture des murs : périmètre × hauteur, moins faïence, portes et fenêtres", () => {
@@ -152,8 +169,9 @@ describe("planTakeoff", () => {
       ["Lavabos et vasques", 3000, "plan"],
       ["Douches", 1000, "plan"],
       ["Éviers", null, "manque"],
-      ["Production d'eau chaude", null, "manque"],
-      ["Alimentations et évacuations", null, "manque"],
+      // Ce ne sont pas des mesures : une unité ou un ensemble, à choisir ou à chiffrer.
+      ["Production d'eau chaude", 1000, "calcul"],
+      ["Alimentations et évacuations", 1000, "calcul"],
     ]);
   });
 
@@ -205,9 +223,11 @@ describe("takeoffFigures", () => {
     expect(takeoffFigures(lines)).toEqual({
       lots: 2,
       posts: 12,
-      missing: 3,
+      // Seule l'étanchéité sous douche reste vide : les deux postes forfaitaires sont renseignés.
+      missing: 1,
       photo: 3,
       estimated: 0,
+      partial: 0,
     });
   });
 });

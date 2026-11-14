@@ -42,7 +42,8 @@ export type TenderLine = {
   price_source: "devis" | "manuel" | "bibliotheque" | null;
   price_reference: string | null;
   /** DPGF créé depuis les plans (ADR 0292) : origine et calcul de la quantité. */
-  quantity_source?: "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | null;
+  quantity_source?:
+    "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | "partiel" | null;
   quantity_detail?: string | null;
 };
 
