@@ -330,6 +330,8 @@ type RadioGroupProps = {
   /** Contenu affiché sous l'option sélectionnée (ex. sélecteur de date). */
   renderSelected?: (value: string) => ReactNode;
   hideLegend?: boolean;
+  /** Options en cartes sur plusieurs colonnes (dossier, lot 47) ; 2 : deux colonnes au plus. */
+  grid?: boolean | 2;
 };
 
 /** Choix unique présenté en options bordées (maquettes « Date de début souhaitée »). */
@@ -343,6 +345,7 @@ export function RadioGroup({
   errors,
   renderSelected,
   hideLegend = false,
+  grid = false,
 }: RadioGroupProps) {
   const errorId = errors?.length ? `${name}-error` : undefined;
   return (
@@ -356,37 +359,47 @@ export function RadioGroup({
       >
         {legend}
       </legend>
-      {options.map((option) => {
-        const checked = value !== undefined ? value === option.value : undefined;
-        const extra = checked && renderSelected ? renderSelected(option.value) : null;
-        return (
-          <div
-            key={option.value}
-            className={`rounded-input border bg-surface transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-softer in-[.app-nette]:has-[:checked]:border-foreground in-[.app-nette]:has-[:checked]:bg-surface in-[.app-nette]:has-[:checked]:shadow-[inset_0_0_0_1px_var(--color-foreground)] ${
-              extra ? "border-primary in-[.app-nette]:border-foreground" : "border-border"
-            }`}
-          >
-            <label className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-[0.9375rem] in-[.app-nette]:min-h-13 in-[.app-nette]:font-semibold">
-              <input
-                type="radio"
-                name={name}
-                value={option.value}
-                className="size-[1.125rem] shrink-0 accent-primary in-[.app-nette]:accent-foreground"
-                {...(value !== undefined
-                  ? { checked: value === option.value, onChange: () => onChange?.(option.value) }
-                  : { defaultChecked: defaultValue === option.value })}
-              />
-              <span className="flex flex-col">
-                <span>{option.label}</span>
-                {option.description && (
-                  <span className="text-xs text-muted-foreground">{option.description}</span>
-                )}
-              </span>
-            </label>
-            {extra && <div className="px-4 pb-4">{extra}</div>}
-          </div>
-        );
-      })}
+      <div
+        className={
+          grid === 2
+            ? "grid gap-2.5 sm:grid-cols-2"
+            : grid
+              ? "grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+              : "contents"
+        }
+      >
+        {options.map((option) => {
+          const checked = value !== undefined ? value === option.value : undefined;
+          const extra = checked && renderSelected ? renderSelected(option.value) : null;
+          return (
+            <div
+              key={option.value}
+              className={`rounded-input border bg-surface transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-softer in-[.app-nette]:has-[:checked]:border-foreground in-[.app-nette]:has-[:checked]:bg-surface in-[.app-nette]:has-[:checked]:shadow-[inset_0_0_0_1px_var(--color-foreground)] ${
+                extra ? "border-primary in-[.app-nette]:border-foreground" : "border-border"
+              }`}
+            >
+              <label className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-[0.9375rem] in-[.app-nette]:min-h-13 in-[.app-nette]:font-semibold">
+                <input
+                  type="radio"
+                  name={name}
+                  value={option.value}
+                  className="size-[1.125rem] shrink-0 accent-primary in-[.app-nette]:accent-foreground"
+                  {...(value !== undefined
+                    ? { checked: value === option.value, onChange: () => onChange?.(option.value) }
+                    : { defaultChecked: defaultValue === option.value })}
+                />
+                <span className="flex flex-col">
+                  <span>{option.label}</span>
+                  {option.description && (
+                    <span className="text-xs text-muted-foreground">{option.description}</span>
+                  )}
+                </span>
+              </label>
+              {extra && <div className="px-4 pb-4">{extra}</div>}
+            </div>
+          );
+        })}
+      </div>
       {errorId && <FieldError id={errorId}>{errors?.[0]}</FieldError>}
     </fieldset>
   );

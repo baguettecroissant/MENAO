@@ -6,8 +6,6 @@ import {
   connectRequirementGroups,
   parisToday,
 } from "@menao/core";
-import { Wallet } from "lucide-react";
-import { sheetCard } from "@/components/pro/sheet";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { loadConnectPrefill } from "@/lib/artisan/actions";
@@ -15,6 +13,7 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { formatDay } from "@/lib/format";
 import { ConnectOverviewPanel } from "./connect-overview";
 import { ConnectStatusPanel } from "./connect-status";
+import { PaymentHow } from "./payment-how";
 
 const t = fr.pro.onboarding.connect;
 
@@ -107,24 +106,7 @@ export default async function PaymentsStepPage({
           </Card>
         )}
       </div>
-      <aside aria-labelledby="comment-paye" className={sheetCard}>
-        <span className="flex size-10 items-center justify-center rounded-input bg-success-soft text-success">
-          <Wallet aria-hidden="true" className="size-5" />
-        </span>
-        <h2 id="comment-paye" className="text-[1.0625rem]">
-          {t.how.title}
-        </h2>
-        <ol className="flex flex-col divide-y divide-border">
-          {t.how.steps.map((step, index) => (
-            <li key={step} className="flex gap-3 py-2.5 text-sm leading-relaxed text-label">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
-                {index + 1}
-              </span>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </aside>
+      <PaymentHow />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { BUDGET_MINIMUM_OPTIONS, DIPLOMES_METIER } from "@menao/core";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Alert, Button, CheckboxField, Field, SelectField } from "@/components/ui";
@@ -41,13 +42,13 @@ export function TradesForm(props: {
   }
 
   return (
-    <form action={action} className="flex flex-col gap-6" noValidate>
+    <form action={action} className="flex flex-col gap-5" noValidate>
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <fieldset
         className="flex flex-col gap-3"
         aria-describedby={errors.tradeCodes ? "trades-error" : undefined}
       >
-        <legend className="text-lg font-medium">{t.legend}</legend>
+        <legend className="text-[1.0625rem] font-bold tracking-tight">{t.legend}</legend>
         <p className="text-sm text-muted-foreground">{t.hint}</p>
         {props.maxTrades !== null && (
           <p className="text-sm text-label" role="note">
@@ -60,47 +61,72 @@ export function TradesForm(props: {
             </Link>
           </p>
         )}
-        <div className="grid gap-3 sm:grid-cols-2">
-          {props.trades.map((trade) => (
-            <div key={trade.code} className="rounded-input border border-border p-3">
-              <CheckboxField
-                name="trade"
-                id={`trade-${trade.code}`}
-                value={trade.code}
-                checked={selected.has(trade.code)}
-                disabled={full && !selected.has(trade.code) && !original.has(trade.code)}
-                onChange={(e) => toggle(trade.code, e.target.checked)}
+        {/* Refonte « Nette » (lot 47, ADR 0316) : métiers en pastilles, spécialités dessous. */}
+        <div className="flex flex-wrap gap-2">
+          {props.trades.map((trade) => {
+            const disabled = full && !selected.has(trade.code) && !original.has(trade.code);
+            return (
+              <label
+                key={trade.code}
+                className={`inline-flex min-h-10 items-center gap-1.5 rounded-pill border px-3.5 text-[0.90625rem] font-semibold transition-colors has-[:checked]:border-foreground has-[:checked]:bg-foreground has-[:checked]:text-surface has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary ${
+                  disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                } border-border-strong bg-surface`}
               >
-                <span className="font-medium">{trade.label}</span>
-              </CheckboxField>
-              {selected.has(trade.code) && trade.workTypes.length > 0 && (
-                <fieldset className="mt-2 ml-8 flex flex-col gap-1">
-                  <legend className="sr-only">
-                    {t.specialties} — {trade.label}
-                  </legend>
-                  {trade.workTypes.map((w) => (
-                    <CheckboxField
-                      key={w.code}
-                      name="workType"
-                      id={`work-${w.code}`}
-                      value={w.code}
-                      defaultChecked={props.selectedWorkTypes.includes(w.code)}
-                    >
-                      {w.label}
-                    </CheckboxField>
-                  ))}
-                </fieldset>
-              )}
-            </div>
-          ))}
+                <input
+                  type="checkbox"
+                  name="trade"
+                  id={`trade-${trade.code}`}
+                  value={trade.code}
+                  checked={selected.has(trade.code)}
+                  disabled={disabled}
+                  onChange={(e) => toggle(trade.code, e.target.checked)}
+                  className="peer sr-only"
+                />
+                <Check
+                  aria-hidden="true"
+                  className="hidden size-3.5 peer-checked:block"
+                  strokeWidth={2.6}
+                />
+                {trade.label}
+              </label>
+            );
+          })}
         </div>
+        {props.trades
+          .filter((trade) => selected.has(trade.code) && trade.workTypes.length > 0)
+          .map((trade) => (
+            <fieldset
+              key={trade.code}
+              className="flex flex-col gap-2.5 rounded-input bg-background p-3.5"
+            >
+              <legend className="sr-only">
+                {t.specialties} — {trade.label}
+              </legend>
+              <p aria-hidden="true" className="text-[0.90625rem] font-semibold">
+                {trade.label} · {t.specialties.toLowerCase()}
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {trade.workTypes.map((w) => (
+                  <CheckboxField
+                    key={w.code}
+                    name="workType"
+                    id={`work-${w.code}`}
+                    value={w.code}
+                    defaultChecked={props.selectedWorkTypes.includes(w.code)}
+                  >
+                    {w.label}
+                  </CheckboxField>
+                ))}
+              </div>
+            </fieldset>
+          ))}
         {errors.tradeCodes && (
           <p id="trades-error" className="text-sm text-danger">
             {errors.tradeCodes[0]}
           </p>
         )}
       </fieldset>
-      <div className="max-w-48">
+      <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
         <Field
           label={t.experience}
           name="experienceYears"
@@ -112,8 +138,6 @@ export function TradesForm(props: {
           defaultValue={props.experienceYears ?? ""}
           errors={errors.experienceYears}
         />
-      </div>
-      <div className="max-w-sm">
         <SelectField
           label={t.diploma}
           name="diploma"
@@ -129,7 +153,7 @@ export function TradesForm(props: {
           ))}
         </SelectField>
       </div>
-      <div className="max-w-sm">
+      <div>
         <SelectField
           label={t.budgetMinimum}
           name="budgetMinimum"
@@ -145,7 +169,7 @@ export function TradesForm(props: {
           ))}
         </SelectField>
       </div>
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="!min-h-12 !rounded-pill">
         {fr.pro.onboarding.saveAndContinue}
       </Button>
     </form>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { PaymentHow } from "../payment-how";
 import { ConnectEmbedded } from "./connect-embedded";
 
 const t = fr.pro.onboarding.connect;
@@ -28,16 +29,23 @@ export default async function ConnectStripePage() {
   )
     redirect("/pro/onboarding/paiements");
 
+  // Refonte « Nette » (lot 47, ADR 0316) : le formulaire de Stripe à gauche, comment l'argent
+  // arrive à droite, comme l'étape Paiements.
   return (
-    <Card>
-      <section aria-labelledby="stripe" className="flex flex-col gap-4">
-        <h2 id="stripe" className="text-lg font-medium">
-          {fr.pro.onboarding.steps.paiements}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t.embedded.lead}</p>
-        <p className="text-sm text-muted-foreground">{t.embedded.website}</p>
-        <ConnectEmbedded />
-      </section>
-    </Card>
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      <Card>
+        <section aria-labelledby="stripe" className="flex flex-col gap-3.5">
+          <h2 id="stripe" className="text-[1.0625rem] font-bold tracking-tight">
+            {t.embedded.title}
+          </h2>
+          <p className="text-[0.90625rem] leading-[1.45] text-label">{t.embedded.lead}</p>
+          <div className="rounded-[0.875rem] border border-border p-4 sm:p-5">
+            <ConnectEmbedded />
+          </div>
+          <p className="text-[0.8125rem] text-muted-foreground">{t.embedded.website}</p>
+        </section>
+      </Card>
+      <PaymentHow />
+    </div>
   );
 }

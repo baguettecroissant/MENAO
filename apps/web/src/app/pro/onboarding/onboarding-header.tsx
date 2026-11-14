@@ -24,8 +24,10 @@ export function OnboardingHeader({
 }) {
   const pathname = usePathname();
   const step = ONBOARDING_STEPS.find((s) => pathname.startsWith(`/pro/onboarding/${s.key}`))?.key;
+  // Étapes refaites (lot 47) : titre complet et chapeau, comme les maquettes.
+  const page = step ? t.stepPages[step] : undefined;
   const title = step
-    ? t.steps[step as OnboardingStep]
+    ? (page?.title ?? t.steps[step as OnboardingStep])
     : inProSpace
       ? fr.pro.space.file
       : t.dossier.title;
@@ -47,6 +49,7 @@ export function OnboardingHeader({
         {actions}
       </div>
       <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{title}</h1>
+      {page && <p className="text-base text-label">{page.lead}</p>}
     </div>
   );
 }

@@ -69,12 +69,17 @@ export function ZoneForm({
         name="mode"
         value={mode}
         onChange={(v) => chooseMode(v as ZoneMode)}
+        grid
         options={[
-          { value: "rayon", label: t.modeRayon },
-          { value: "communes", label: t.modeCommunes },
-          { value: "departements", label: t.modeDepartements },
-          { value: "regions", label: t.modeRegions },
-          { value: "france", label: t.modeFrance },
+          { value: "rayon", label: t.modeRayon, description: t.modeHints.rayon },
+          { value: "communes", label: t.modeCommunes, description: t.modeHints.communes },
+          {
+            value: "departements",
+            label: t.modeDepartements,
+            description: t.modeHints.departements,
+          },
+          { value: "regions", label: t.modeRegions, description: t.modeHints.regions },
+          { value: "france", label: t.modeFrance, description: t.modeHints.france },
         ]}
       />
 
@@ -181,7 +186,7 @@ export function ZoneForm({
         </div>
       )}
 
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="!min-h-12 !rounded-pill">
         {fr.pro.onboarding.saveAndContinue}
       </Button>
     </form>
