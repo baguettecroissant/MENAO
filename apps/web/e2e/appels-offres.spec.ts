@@ -9,6 +9,8 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:5
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const ARTISAN = "b0000000-0000-4000-8000-000000000017";
 const DPGF = fileURLToPath(new URL("./fixtures/dpgf-exemple.xlsx", import.meta.url));
+/** Plans fictifs de deux pages (le RDC et l'étage de la maison de l'évaluation). */
+const PLANS = fileURLToPath(new URL("./fixtures/plans-exemple.pdf", import.meta.url));
 
 async function setPlan(plan: "base" | "entreprise") {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/subscriptions?artisan_id=eq.${ARTISAN}`, {
@@ -342,4 +344,38 @@ test("appels d'offres : pièce tracée à la main sur le plan, ajoutée au relev
   await expect(
     page.getByRole("table", { name: "Pièces relevées" }).getByText("Tracé à la main"),
   ).toBeVisible();
+});
+
+// Pages de PDF (F-159 lot 4, ADR 0328) : le navigateur rend chaque page en image ; la page de
+// niveau est tracée, affichée avec ses contours, et mesurable à la main comme une photo.
+test("appels d'offres : PDF de plans, page tracée et mesurable comme une photo", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
+  await page.getByLabel("Nom du projet").fill(`PDF de plans E2E ${test.info().retry}`);
+  await page.getByLabel("Plans de l'architecte").setInputFiles(PLANS);
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 40_000,
+  });
+
+  // La page 2, reconnue comme plan de niveau, est tracée : contours et contrôle de l'estimation.
+  await expect(page.getByRole("img", { name: "Contours des pièces sur le plan" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Page 2" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("link", { name: "Ouvrir le PDF" })).toBeVisible();
+  const control = page.locator("section", { hasText: "Contrôle de l'estimation" }).last();
+  await expect(control.getByText("8,22 → 8,22 m²")).toBeVisible();
+
+  // Les deux pages se mesurent à la main.
+  await page.getByRole("link", { name: "Mesurer sur le plan" }).click();
+  await expect(page.getByRole("button", { name: /plans-exemple\.pdf · Page 2/ })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Plan à mesurer" })).toBeVisible();
 });
