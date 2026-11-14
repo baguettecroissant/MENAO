@@ -6202,7 +6202,7 @@ export const fr = {
           "Vous rendez le DPGF dans le fichier de l'architecte, avec un PDF, et vous passez en devis.",
         ],
         plans: [
-          "MENAO relève ce qui est écrit sur les plans : pièces, surfaces, hauteur sous plafond, portes, fenêtres, appareils.",
+          "MENAO relève ce qui est écrit sur les plans : pièces, surfaces, hauteur sous plafond, portes, fenêtres, appareils ; sur un plan de terrain, les surfaces, linéaires et altitudes.",
           "Vous corrigez le relevé et choisissez les revêtements de chaque pièce.",
           "MENAO calcule les quantités de vos lots et montre chaque calcul.",
           "Vous vérifiez, puis vous chiffrez avec vos prix comme un DPGF reçu.",
@@ -6243,7 +6243,7 @@ export const fr = {
           `Plans lus : ${rooms} pièce${rooms > 1 ? "s" : ""} relevée${rooms > 1 ? "s" : ""}. Vérifiez chaque mesure avant de continuer.`,
         status: {
           not_plan:
-            "Ces fichiers ne ressemblent pas à des plans de bâtiment. Déposez les plans de niveaux de l'architecte.",
+            "Ces fichiers ne ressemblent pas à des plans. Déposez les plans de l'architecte ou du géomètre : niveaux, coupes, plan de masse, plan de terrain.",
           unreadable:
             "Ces plans n'ont pas pu être lus (fichier abîmé, ou photo trop floue). Déposez le PDF de l'architecte de préférence.",
           too_large:
@@ -6315,6 +6315,92 @@ export const fr = {
         } as Record<string, string>,
         save: "Enregistrer le relevé",
         saved: "Relevé enregistré.",
+        // Relevé d'un plan de terrain : ouvrages mesurés (F-158, maquette du lot 52).
+        works: {
+          readOk: (works: number, rooms: number) =>
+            `Plans lus : ${works} ouvrage${works > 1 ? "s" : ""} relevé${works > 1 ? "s" : ""}${
+              rooms > 0 ? ` et ${rooms} pièce${rooms > 1 ? "s" : ""}` : ""
+            }. Vérifiez chaque quantité avant de continuer.`,
+          title: (n: number) => `${n} ouvrage${n > 1 ? "s" : ""} relevé${n > 1 ? "s" : ""}`,
+          label: "Ouvrages relevés",
+          add: "Ajouter un ouvrage",
+          edit: (name: string) => `Modifier ${name || "l'ouvrage"}`,
+          done: (name: string) => `Terminer ${name || "l'ouvrage"}`,
+          remove: (name: string) => `Retirer ${name || "l'ouvrage"}`,
+          columns: {
+            name: "Ouvrage",
+            kind: "Mesure",
+            quantity: "Quantité",
+            unit: "U.",
+            source: "Origine",
+            trade: "Lot",
+          },
+          kinds: {
+            surface: "Surface",
+            lineaire: "Linéaire",
+            volume: "Volume",
+            nombre: "Nombre",
+          } as Record<string, string>,
+          units: { surface: "m²", lineaire: "ml", volume: "m³", nombre: "u" } as Record<
+            string,
+            string
+          >,
+          noTrade: "Aucun lot",
+          source: {
+            plan: "Plan",
+            calcul: "Calculé",
+            compte: "Compté",
+            saisi: "Saisi",
+            check: "À vérifier",
+            missing: "À compléter",
+          },
+          detail: {
+            page: (page: number) => `p. ${page}`,
+            counted: (page: number | null) => (page ? `symboles, p. ${page}` : "symboles"),
+            photo: (page: number | null) => (page ? `photo, p. ${page}` : "photo"),
+            missing: "non écrit sur le plan",
+          },
+          note: "Un volume n'est calculé qu'avec une surface et des hauteurs lues sur les plans ; le calcul est affiché. Un ouvrage sans lot sert de repère et ne va dans aucun lot.",
+          lotsTitle: "Lots préparés",
+          lotCount: (n: number) => `${n} ouvrage${n > 1 ? "s" : ""}`,
+          lotsNote:
+            "Chaque ouvrage va dans le lot du métier concerné. Vous pouvez le changer de lot.",
+          okText:
+            "Corrigez une valeur d'un clic : elle passe en « Saisi ». Un ouvrage sans quantité reste à compléter dans le DPGF.",
+          toDpgf: "Préparer le DPGF",
+          redoDpgf: "Recréer le DPGF",
+          preparing: "Préparation du DPGF…",
+          save: "Enregistrer les ouvrages",
+          saved: "Ouvrages enregistrés.",
+          invalid:
+            "Vérifiez les ouvrages : un nom pour chacun, une quantité positive (un nombre entier pour les unités).",
+          viewerHint: "Cliquez un ouvrage du tableau pour afficher la page où il a été lu.",
+          pageType: (type: string) => `Type de page reconnu : ${type}`,
+          pageTypes: {
+            niveau: "plan de niveau",
+            coupe: "coupe",
+            facade: "façade",
+            toiture: "plan de toiture",
+            masse: "plan de masse",
+            coupe_terrain: "coupe du terrain",
+            reseaux: "réseaux",
+            autre: "autre page",
+          } as Record<string, string>,
+          summary: {
+            pages: (n: number, types: string) => `${n} page${n > 1 ? "s" : ""} : ${types}`,
+            written: (n: number) =>
+              `${n} quantité${n > 1 ? "s" : ""} écrite${n > 1 ? "s" : ""} sur le plan, reprise${n > 1 ? "s" : ""} telle${n > 1 ? "s" : ""} quelle${n > 1 ? "s" : ""}`,
+            levels: (levels: string) => `Altitudes lues : ${levels}`,
+            computed: (n: number) =>
+              `${n} volume${n > 1 ? "s" : ""} calculé${n > 1 ? "s" : ""} avec des valeurs lues (surface × hauteur)`,
+            counted: (n: number) =>
+              `${n} nombre${n > 1 ? "s" : ""} compté${n > 1 ? "s" : ""} sur les symboles du plan`,
+            toCheck: (n: number) =>
+              `${n} ouvrage${n > 1 ? "s" : ""} à vérifier (photo ou lecture incertaine)`,
+            missing: (n: number) =>
+              `${n} quantité${n > 1 ? "s" : ""} non écrite${n > 1 ? "s" : ""} sur le plan : à compléter`,
+          },
+        },
         // Écran du relevé (maquette du lot 35, écran 2).
         viewerLabel: "Plans déposés",
         viewerTitle: (name: string) => `Plan : ${name}`,

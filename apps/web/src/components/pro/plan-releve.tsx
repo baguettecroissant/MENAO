@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { Alert, Button, StatusBadge, buttonClasses, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { PlanViewer, type PlanFileLink, type PlanView } from "@/components/pro/plan-viewer";
 import { savePlanRooms } from "@/lib/artisan/tender-actions";
 import type { TenderRoom } from "@/lib/artisan/tenders";
 import { initialFormState } from "@/lib/auth/form";
@@ -24,9 +25,6 @@ type Draft = {
   wet: boolean;
   habitable: boolean;
 };
-
-/** Plans déposés : lien signé (1 h) pour les afficher et les ouvrir. */
-export type PlanFileLink = { name: string; kind: "pdf" | "jpg" | "png"; url: string | null };
 
 const metres = (milli: number | null) => (milli === null ? "" : formatQuantity(milli));
 
@@ -115,7 +113,7 @@ export function PlanReleve({
   const [dirty, setDirty] = useState(false);
   const [added, setAdded] = useState(0);
   const [selected, setSelected] = useState<string | null>(rooms[0]?.id ?? null);
-  const [view, setView] = useState<{ file: number; page: number }>(() => ({
+  const [view, setView] = useState<PlanView>(() => ({
     file: Math.max(0, (rooms[0]?.file_index ?? 1) - 1),
     page: rooms[0]?.page ?? 1,
   }));
@@ -174,7 +172,6 @@ export function PlanReleve({
     return <StatusBadge tone="success">{t.source.plan(r.page)}</StatusBadge>;
   }
 
-  const file = files[view.file];
   const cell = "px-2 py-2 align-middle";
   const numberInput = `${inputClasses} !min-h-10 !w-24 px-2.5 text-right tabular-nums`;
   const side = "flex w-full flex-col gap-4 lg:w-[22rem] lg:shrink-0";
@@ -185,55 +182,7 @@ export function PlanReleve({
       {state.success && !dirty && <Alert tone="success">{state.success}</Alert>}
 
       <div className="flex flex-col items-start gap-5 lg:flex-row">
-        {/* Le plan, fichier par fichier (lien signé). */}
-        <section
-          aria-label={t.viewerLabel}
-          className="flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card"
-        >
-          <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-3">
-            <div className="flex max-w-full gap-1 overflow-x-auto rounded-pill border border-border bg-surface p-1">
-              {files.map((f, i) => (
-                <button
-                  key={`${i}-${f.name}`}
-                  type="button"
-                  aria-pressed={view.file === i}
-                  onClick={() => setView({ file: i, page: 1 })}
-                  className="max-w-56 truncate rounded-pill px-3.5 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-background aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-surface"
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
-            {file?.kind === "pdf" && (
-              <span className="ml-auto text-sm text-muted-foreground">
-                {t.viewerPage(view.page)}
-              </span>
-            )}
-          </div>
-          <div className="bg-background">
-            {!file?.url ? (
-              <p className="p-6 text-sm text-muted-foreground">{t.viewerMissing}</p>
-            ) : file.kind === "pdf" ? (
-              <iframe
-                key={`${view.file}-${view.page}`}
-                src={`${file.url}#page=${view.page}`}
-                title={t.viewerTitle(file.name)}
-                className="h-[34rem] w-full border-0"
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element -- lien signé du stockage privé.
-              <img
-                src={file.url}
-                alt={t.viewerTitle(file.name)}
-                className="max-h-[34rem] w-full object-contain"
-              />
-            )}
-          </div>
-          <p className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm text-muted-foreground">
-            <HelpCircle aria-hidden="true" className="size-4 shrink-0" />
-            {t.viewerHint}
-          </p>
-        </section>
+        <PlanViewer files={files} view={view} onView={setView} hint={t.viewerHint} />
 
         <div className={side}>
           {summary}

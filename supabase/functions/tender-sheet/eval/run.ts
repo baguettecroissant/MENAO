@@ -20,12 +20,12 @@ import {
 import { llmConfig, openRouterBaseUrl, quoteModel, reasoningFor } from "../../_shared/ai.ts";
 import {
   PLAN_SYSTEM,
+  planOutputSchema,
   planRawSchema,
   planUserContent,
   READ_TIMEOUT_MS,
   type PlanFile,
 } from "../plan.ts";
-import { planReadingJsonSchema } from "../../../../packages/core/src/plan-reading.ts";
 
 type ExpectedRoom = {
   niveau: string;
@@ -174,7 +174,7 @@ async function read(files: PlanFile[]): Promise<Read> {
         messages: [{ role: "user", content: planUserContent(files) }],
         output_config: {
           ...(reasoning.effort ? { effort: reasoning.effort } : {}),
-          format: { type: "json_schema", schema: planReadingJsonSchema() },
+          format: { type: "json_schema", schema: planOutputSchema() },
         },
       },
       { timeout: READ_TIMEOUT_MS, maxRetries: 0 },

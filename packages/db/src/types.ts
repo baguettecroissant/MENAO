@@ -5789,6 +5789,67 @@ export type Database = {
           },
         ];
       };
+      tender_works: {
+        Row: {
+          detail: string | null;
+          file_index: number | null;
+          id: string;
+          kind: string;
+          name: string;
+          page: number | null;
+          position: number;
+          quantity_milli: number | null;
+          source: string;
+          tender_id: string;
+          trade_code: string | null;
+          uncertain: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          detail?: string | null;
+          file_index?: number | null;
+          id?: string;
+          kind: string;
+          name: string;
+          page?: number | null;
+          position: number;
+          quantity_milli?: number | null;
+          source: string;
+          tender_id: string;
+          trade_code?: string | null;
+          uncertain?: boolean;
+        };
+        Update: {
+          detail?: string | null;
+          file_index?: number | null;
+          id?: string;
+          kind?: string;
+          name?: string;
+          page?: number | null;
+          position?: number;
+          quantity_milli?: number | null;
+          source?: string;
+          tender_id?: string;
+          trade_code?: string | null;
+          uncertain?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tender_works_tender_id_fkey";
+            columns: ["tender_id"];
+            isOneToOne: false;
+            referencedRelation: "tenders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tender_works_trade_code_fkey";
+            columns: ["trade_code"];
+            isOneToOne: false;
+            referencedRelation: "trades";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       tenders: {
         Row: {
           artisan_id: string;
@@ -5800,6 +5861,8 @@ export type Database = {
           name: string;
           plan_counts: NonNullable<Json>;
           plan_files: NonNullable<Json>;
+          plan_levels: NonNullable<Json>;
+          plan_pages: NonNullable<Json>;
           plan_scale: string | null;
           plan_trades: string[];
           quantities_checked_at: string | null;
@@ -5822,6 +5885,8 @@ export type Database = {
           name: string;
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
+          plan_levels?: NonNullable<Json>;
+          plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
           plan_trades?: string[];
           quantities_checked_at?: string | null;
@@ -5843,6 +5908,8 @@ export type Database = {
           name?: string;
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
+          plan_levels?: NonNullable<Json>;
+          plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
           plan_trades?: string[];
           quantities_checked_at?: string | null;
@@ -7143,7 +7210,15 @@ export type Database = {
       };
       artisan_import_plan_lines: { Args: { p_lines: Json; p_tender_id: string }; Returns: number };
       artisan_import_plan_reading: {
-        Args: { p_counts: Json; p_rooms: Json; p_scale?: string; p_tender_id: string };
+        Args: {
+          p_counts: Json;
+          p_levels?: Json;
+          p_pages?: Json;
+          p_rooms: Json;
+          p_scale?: string;
+          p_tender_id: string;
+          p_works?: Json;
+        };
         Returns: number;
       };
       artisan_import_tender_lines: {
@@ -7295,6 +7370,7 @@ export type Database = {
         Args: { p_counts: Json; p_rooms: Json; p_tender_id: string };
         Returns: undefined;
       };
+      artisan_save_plan_works: { Args: { p_tender_id: string; p_works: Json }; Returns: undefined };
       artisan_save_quote_costs: { Args: { p_costs: Json; p_quote_id: string }; Returns: undefined };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };
       artisan_save_tender: {

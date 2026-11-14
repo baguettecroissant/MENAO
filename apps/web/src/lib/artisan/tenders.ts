@@ -66,6 +66,20 @@ export type TenderRoom = {
   tile_height_mm: number | null;
 };
 
+/** Ouvrage mesuré relevé sur les plans (F-158, ADR 0322) : quantité en millièmes de l'unité. */
+export type TenderWork = {
+  id: string;
+  name: string;
+  kind: "surface" | "lineaire" | "volume" | "nombre";
+  quantity_milli: number | null;
+  source: "plan" | "calcul" | "compte" | "photo" | "saisi";
+  detail: string | null;
+  trade_code: string | null;
+  file_index: number | null;
+  page: number | null;
+  uncertain: boolean;
+};
+
 export type PlanFileEntry = { path: string; name: string; kind: "pdf" | "jpg" | "png" };
 
 /** Plans déposés, tels qu'enregistrés (tenders.plan_files). */
@@ -99,12 +113,24 @@ export async function getTenderRooms(supabase: Client, id: string): Promise<Tend
   return (data ?? []) as TenderRoom[];
 }
 
+/** Ouvrages mesurés d'un appel d'offres créé depuis les plans (lecture : RLS). */
+export async function getTenderWorks(supabase: Client, id: string): Promise<TenderWork[]> {
+  const { data } = await supabase
+    .from("tender_works")
+    .select(
+      "id, name, kind, quantity_milli, source, detail, trade_code, file_index, page, uncertain",
+    )
+    .eq("tender_id", id)
+    .order("position");
+  return (data ?? []) as TenderWork[];
+}
+
 export async function getTender(supabase: Client, id: string) {
   const [{ data: tender }, { data: lines }] = await Promise.all([
     supabase
       .from("tenders")
       .select(
-        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale, quantities_checked_at",
+        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale, plan_pages, plan_levels, quantities_checked_at",
       )
       .eq("id", id)
       .maybeSingle(),

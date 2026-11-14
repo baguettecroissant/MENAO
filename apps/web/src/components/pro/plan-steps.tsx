@@ -11,13 +11,15 @@ const ORDER = ["plans", "releve", "revetements", "dpgf", "chiffrage"] as const;
 
 /**
  * Étapes d'un appel d'offres créé depuis les plans (maquette du lot 35) : Plans · Relevé ·
- * Revêtements · DPGF · Chiffrage. Les étapes déjà ouvertes se rouvrent d'un clic.
+ * Revêtements · DPGF · Chiffrage. Les étapes déjà ouvertes se rouvrent d'un clic. Un plan de
+ * terrain n'a aucune pièce : sans revêtements à choisir, l'étape n'est pas affichée (lot 52).
  */
 export function PlanSteps({
   tenderId,
   current,
   reachable,
   checked,
+  withFinishes = true,
 }: {
   tenderId: string;
   current: PlanStep;
@@ -25,14 +27,19 @@ export function PlanSteps({
   reachable: readonly PlanStep[];
   /** Quantités vérifiées : l'étape « Chiffrage » est en cours. */
   checked: boolean;
+  /** Faux pour un relevé sans pièces (plan de terrain) : pas d'étape « Revêtements ». */
+  withFinishes?: boolean;
 }) {
-  const index = checked && current === "dpgf" ? 4 : ORDER.indexOf(current);
+  const steps: readonly (typeof ORDER)[number][] = withFinishes
+    ? ORDER
+    : ORDER.filter((s) => s !== "revetements");
+  const index = checked && current === "dpgf" ? steps.length - 1 : steps.indexOf(current);
   return (
     <nav
       aria-label={t.label}
       className="flex items-center gap-2 overflow-x-auto rounded-card border border-border bg-surface px-4 py-3 shadow-card"
     >
-      {ORDER.map((step, i) => {
+      {steps.map((step, i) => {
         const done = i < index;
         const active = i === index;
         const target = step === "chiffrage" ? "dpgf" : step;

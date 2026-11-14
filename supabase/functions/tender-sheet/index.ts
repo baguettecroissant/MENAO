@@ -85,7 +85,9 @@ Deno.serve(async (req) => {
   });
   const { data: tender } = await supabase
     .from("tenders")
-    .select("id, name, source_path, source_kind, sheet, plan_files, quantities_checked_at")
+    .select(
+      "id, name, source_path, source_kind, sheet, plan_files, plan_trades, quantities_checked_at",
+    )
     .eq("id", tenderId)
     .maybeSingle();
   if (!tender) return json({ status: "not_found" }, 404);
@@ -265,7 +267,7 @@ async function readTenderPlans(
   admin: SupabaseClient,
   supabase: SupabaseClient,
   userId: string,
-  tender: { id: string; source_kind: string | null; plan_files: unknown },
+  tender: { id: string; source_kind: string | null; plan_files: unknown; plan_trades: unknown },
 ): Promise<Response> {
   const entries = Array.isArray(tender.plan_files)
     ? (tender.plan_files as { path?: unknown; kind?: unknown }[])
@@ -300,7 +302,13 @@ async function readTenderPlans(
     files.push({ kind, bytes });
   }
 
-  const reading = await readPlans(admin, files);
+  // Métiers de l'appel d'offres (codes de la table des métiers) : lots où ranger les ouvrages.
+  const trades = Array.isArray(tender.plan_trades)
+    ? tender.plan_trades.filter(
+        (c): c is string => typeof c === "string" && /^[a-z0-9-]{1,60}$/.test(c),
+      )
+    : [];
+  const reading = await readPlans(admin, files, trades);
   if (reading.status !== "ok") {
     return json({ status: reading.status }, reading.status === "unavailable" ? 503 : 422);
   }
@@ -309,6 +317,9 @@ async function readTenderPlans(
     p_rooms: reading.rooms,
     p_counts: reading.counts,
     p_scale: reading.scale,
+    p_works: reading.works,
+    p_pages: reading.pages,
+    p_levels: reading.levels,
   });
   if (error) {
     console.error("tender-sheet : relevé refusé", error.code);
@@ -317,5 +328,10 @@ async function readTenderPlans(
       error.code === "42501" ? 403 : 500,
     );
   }
-  return json({ status: "ok", rooms: reading.rooms.length, warnings: reading.warnings });
+  return json({
+    status: "ok",
+    rooms: reading.rooms.length,
+    works: reading.works.length,
+    warnings: reading.warnings,
+  });
 }

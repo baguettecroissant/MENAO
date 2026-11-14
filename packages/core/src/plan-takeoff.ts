@@ -4,6 +4,7 @@
 // Rien n'est deviné : une mesure absente laisse le poste « à compléter ».
 import type { DpgfUnit } from "./dpgf";
 import type { PlanCountKey, PlanCounts, PlanRoomSource } from "./plan-reading";
+import { formatPlanMeasure, PLAN_WORK_UNITS, type PlanWork } from "./plan-works";
 
 export const FLOOR_FINISHES = ["carrelage", "parquet", "sol_souple", "aucun"] as const;
 export const WALL_FINISHES = ["peinture", "faience", "aucun"] as const;
@@ -33,8 +34,14 @@ export type TakeoffRoom = {
   finishes: RoomFinishes;
 };
 
-/** Origine d'une quantité du DPGF (« saisi » : corrigée ensuite par l'artisan). */
-export type TakeoffSource = "plan" | "calcul" | "photo" | "manque";
+/** Origine d'une quantité du DPGF (« saisi » : valeur de l'artisan, dans le relevé ou ensuite). */
+export type TakeoffSource = "plan" | "calcul" | "photo" | "manque" | "saisi";
+
+/** Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. */
+export type TakeoffWork = Pick<
+  PlanWork,
+  "name" | "kind" | "quantityMilli" | "source" | "detail" | "trade" | "page" | "uncertain"
+>;
 
 export type TakeoffLine = {
   kind: "titre" | "poste";
@@ -278,6 +285,54 @@ function socketsFor(r: TakeoffRoom): number {
 type Spec = { designation: string; unit: DpgfUnit; unitLabel: string; post: Post | null };
 type Ctx = { rooms: readonly TakeoffRoom[]; counts: PlanCounts };
 
+/**
+ * Métiers chiffrés sur des ouvrages mesurés (terrain, toiture, façades) : leur règle n'est qu'un
+ * poste d'attente, remplacé par les ouvrages du relevé dès qu'il y en a.
+ */
+const MEASURED_TRADES = new Set([
+  "charpentier",
+  "couvreur",
+  "facadier",
+  "serrurier",
+  "terrassier",
+  "paysagiste",
+]);
+
+/** Poste d'un ouvrage mesuré : la quantité du relevé, son origine et son calcul. */
+function workSpec(w: TakeoffWork): Spec {
+  const unit = PLAN_WORK_UNITS[w.kind];
+  const label = { m2: "m²", ml: "ml", m3: "m³", u: "u" }[unit];
+  let post: Post;
+  if (w.quantityMilli === null) {
+    post = toComplete("quantité non écrite sur le plan.");
+  } else if (w.source === "saisi") {
+    post = {
+      quantityMilli: w.quantityMilli,
+      source: "saisi",
+      detail: "Valeur saisie dans le relevé.",
+    };
+  } else if (w.source === "calcul") {
+    post = {
+      quantityMilli: w.quantityMilli,
+      source: w.uncertain ? "photo" : "calcul",
+      detail: `${w.detail ?? "Calculé avec des valeurs lues"} = ${formatPlanMeasure(w.quantityMilli)} ${label}`,
+    };
+  } else {
+    const where = w.page ? `, page ${w.page}` : "";
+    post = {
+      quantityMilli: w.quantityMilli,
+      source: w.source === "photo" || w.uncertain ? "photo" : "plan",
+      detail:
+        w.source === "compte"
+          ? `Compté sur le plan : ${fmt(w.quantityMilli)}`
+          : w.source === "photo"
+            ? `Lu sur une photo${where}.`
+            : `Écrit sur le plan${where}.`,
+    };
+  }
+  return spec(w.name, unit, post);
+}
+
 const spec = (designation: string, unit: DpgfUnit, post: Post | null): Spec => ({
   designation,
   unit,
@@ -430,13 +485,15 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
 };
 
 /**
- * Lots et postes du DPGF, un lot par métier choisi (dans l'ordre donné). Un métier sans règle,
+ * Lots et postes du DPGF, un lot par métier choisi (dans l'ordre donné) : postes calculés avec les
+ * pièces, puis ouvrages mesurés du relevé rangés dans ce métier. Un métier sans règle ni ouvrage,
  * ou dont aucun poste ne s'applique, garde un poste « à compléter ».
  */
 export function planTakeoff(
   rooms: readonly TakeoffRoom[],
   counts: PlanCounts,
   trades: readonly { code: string; label: string }[],
+  works: readonly TakeoffWork[] = [],
 ): TakeoffLine[] {
   const lines: TakeoffLine[] = [];
   trades.forEach((trade, i) => {
@@ -455,7 +512,12 @@ export function planTakeoff(
       source: null,
       detail: null,
     });
-    const specs = (RULES[trade.code]?.({ rooms, counts }) ?? []).filter((s) => s.post !== null);
+    const measured = works.filter((w) => w.trade === trade.code).map(workSpec);
+    const ruled =
+      measured.length && MEASURED_TRADES.has(trade.code)
+        ? []
+        : (RULES[trade.code]?.({ rooms, counts }) ?? []).filter((s) => s.post !== null);
+    const specs = [...ruled, ...measured];
     const posts = specs.length
       ? specs
       : [
