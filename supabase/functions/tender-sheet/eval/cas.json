@@ -691,5 +691,481 @@
       "escaliers": [0, 0]
     },
     "fichiers": ["t3-flou.pdf"]
+  },
+  {
+    "id": "terrain",
+    "note": "Plan de masse, coupe du terrain et réseaux : quantités écrites, deux volumes à calculer",
+    "statut": "ok",
+    "echelle": null,
+    "pieces": [],
+    "comptes": null,
+    "metiers": ["terrassier", "paysagiste"],
+    "pages": ["masse", "coupe_terrain", "reseaux"],
+    "altitudes": [102.4, 101.2],
+    "ouvrages": [
+      {
+        "nom": "Terrain",
+        "mots": ["terrain"],
+        "mesure": "surface",
+        "quantite": 812,
+        "origine": "ecrit",
+        "metier": ""
+      },
+      {
+        "nom": "Emprise de la maison",
+        "mots": ["maison"],
+        "mesure": "surface",
+        "quantite": 124.5,
+        "origine": "ecrit",
+        "metier": ""
+      },
+      {
+        "nom": "Plateforme",
+        "mots": ["plateforme"],
+        "mesure": "surface",
+        "quantite": 186,
+        "origine": "ecrit",
+        "metier": "terrassier"
+      },
+      {
+        "nom": "Allée carrossable",
+        "mots": ["allee"],
+        "mesure": "surface",
+        "quantite": 62,
+        "origine": "ecrit",
+        "metier": "terrassier"
+      },
+      {
+        "nom": "Terrasse",
+        "mots": ["terrasse"],
+        "mesure": "surface",
+        "quantite": 38,
+        "origine": "ecrit",
+        "metier": null
+      },
+      {
+        "nom": "Pelouse",
+        "mots": ["pelouse"],
+        "mesure": "surface",
+        "quantite": 310,
+        "origine": "ecrit",
+        "metier": "paysagiste"
+      },
+      {
+        "nom": "Clôture",
+        "mots": ["cloture"],
+        "mesure": "lineaire",
+        "quantite": 96,
+        "origine": "ecrit",
+        "metier": null
+      },
+      {
+        "nom": "Arbres à planter",
+        "mots": ["arbre"],
+        "mesure": "nombre",
+        "quantite": 6,
+        "origine": "compte",
+        "metier": "paysagiste",
+        "fourchette": [6, 6]
+      },
+      {
+        "nom": "Haie à planter",
+        "mots": ["haie"],
+        "mesure": "lineaire",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "paysagiste"
+      },
+      {
+        "nom": "Décapage de la terre végétale",
+        "mots": ["decapage"],
+        "mesure": "volume",
+        "quantite": 55.8,
+        "origine": "calcul",
+        "metier": "terrassier"
+      },
+      {
+        "nom": "Déblais de la plateforme",
+        "mots": ["deblai"],
+        "mesure": "volume",
+        "quantite": 223.2,
+        "origine": "calcul",
+        "metier": "terrassier"
+      },
+      {
+        "nom": "Tranchée des réseaux",
+        "mots": ["tranchee"],
+        "mesure": "lineaire",
+        "quantite": 42,
+        "origine": "ecrit",
+        "metier": "terrassier"
+      }
+    ],
+    "fichiers": ["terrain.pdf"]
+  },
+  {
+    "id": "terrain-sans-quantites",
+    "note": "Plan de masse sans aucune quantité écrite : rien ne doit être mesuré ni inventé",
+    "statut": "ok",
+    "echelle": "1/200",
+    "pieces": [],
+    "comptes": null,
+    "metiers": ["terrassier", "paysagiste"],
+    "pages": ["masse"],
+    "altitudes": [],
+    "ouvrages": [
+      {
+        "nom": "Terrain",
+        "mots": ["terrain"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": ""
+      },
+      {
+        "nom": "Emprise de la maison",
+        "mots": ["maison"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": ""
+      },
+      {
+        "nom": "Plateforme",
+        "mots": ["plateforme"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "terrassier"
+      },
+      {
+        "nom": "Allée carrossable",
+        "mots": ["allee"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "terrassier"
+      },
+      {
+        "nom": "Terrasse",
+        "mots": ["terrasse"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": null
+      },
+      {
+        "nom": "Pelouse",
+        "mots": ["pelouse"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "paysagiste"
+      },
+      {
+        "nom": "Clôture",
+        "mots": ["cloture"],
+        "mesure": "lineaire",
+        "quantite": null,
+        "origine": "absent",
+        "metier": null
+      },
+      {
+        "nom": "Arbres à planter",
+        "mots": ["arbre"],
+        "mesure": "nombre",
+        "quantite": 6,
+        "origine": "compte",
+        "metier": "paysagiste",
+        "fourchette": [6, 6]
+      },
+      {
+        "nom": "Haie à planter",
+        "mots": ["haie"],
+        "mesure": "lineaire",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "paysagiste"
+      }
+    ],
+    "fichiers": ["terrain-sans-quantites.pdf"]
+  },
+  {
+    "id": "facades",
+    "note": "Façades : une surface à calculer avec deux cotes, une écrite, un pignon non rectangulaire",
+    "statut": "ok",
+    "echelle": "1/50",
+    "pieces": [],
+    "comptes": null,
+    "metiers": ["facadier", "serrurier"],
+    "pages": ["facade", "facade", "facade"],
+    "altitudes": [],
+    "ouvrages": [
+      {
+        "nom": "Façade sud",
+        "mots": ["sud"],
+        "mesure": "surface",
+        "quantite": 76.88,
+        "origine": "calcul",
+        "metier": "facadier"
+      },
+      {
+        "nom": "Façade nord",
+        "mots": ["nord"],
+        "mesure": "surface",
+        "quantite": 76.88,
+        "origine": "ecrit",
+        "metier": "facadier"
+      },
+      {
+        "nom": "Pignon est",
+        "mots": ["pignon"],
+        "mesure": "surface",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "facadier"
+      },
+      {
+        "nom": "Garde-corps du balcon",
+        "mots": ["garde"],
+        "mesure": "lineaire",
+        "quantite": 4.5,
+        "origine": "ecrit",
+        "metier": "serrurier"
+      }
+    ],
+    "fichiers": ["facades.pdf"]
+  },
+  {
+    "id": "toiture",
+    "note": "Plan de toiture : versants à calculer avec la surface au sol et la pente",
+    "statut": "ok",
+    "echelle": "1/50",
+    "pieces": [],
+    "comptes": null,
+    "metiers": ["couvreur", "charpentier"],
+    "pages": ["toiture"],
+    "altitudes": [],
+    "ouvrages": [
+      {
+        "nom": "Versant nord",
+        "mots": ["versant", "nord"],
+        "mesure": "surface",
+        "quantite": 52.503,
+        "origine": "calcul",
+        "metier": null
+      },
+      {
+        "nom": "Versant sud",
+        "mots": ["versant", "sud"],
+        "mesure": "surface",
+        "quantite": 52.503,
+        "origine": "calcul",
+        "metier": null
+      },
+      {
+        "nom": "Faîtage",
+        "mots": ["faitage"],
+        "mesure": "lineaire",
+        "quantite": 12.4,
+        "origine": "ecrit",
+        "metier": null
+      },
+      {
+        "nom": "Gouttières",
+        "mots": ["gouttiere"],
+        "mesure": "lineaire",
+        "quantite": 24.8,
+        "origine": "ecrit",
+        "metier": "couvreur"
+      },
+      {
+        "nom": "Fenêtres de toit",
+        "mots": ["fenetre"],
+        "mesure": "nombre",
+        "quantite": 2,
+        "origine": "compte",
+        "metier": "couvreur",
+        "fourchette": [2, 2]
+      }
+    ],
+    "fichiers": ["toiture.pdf"]
+  },
+  {
+    "id": "logement-et-masse",
+    "note": "Plan du logement puis plan de masse : pièces et ouvrages, sans doublon",
+    "statut": "ok",
+    "echelle": null,
+    "pieces": [
+      {
+        "niveau": "",
+        "nom": "Séjour-cuisine",
+        "surface_m2": 28.52,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "Chambre 1",
+        "surface_m2": 13.68,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "Chambre 2",
+        "surface_m2": 16.72,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "Salle de bains",
+        "surface_m2": 5.28,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": true,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "WC",
+        "surface_m2": 1.68,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": true,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "Dégagement",
+        "surface_m2": 3.64,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "Entrée",
+        "surface_m2": 7.6,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "",
+        "nom": "Cellier",
+        "surface_m2": 2.88,
+        "cotes_m": null,
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      }
+    ],
+    "comptes": {
+      "portes": [5, 7],
+      "fenetres": [5, 5],
+      "wc": [1, 1],
+      "lavabos": [1, 1],
+      "douches": [0, 0],
+      "baignoires": [1, 1],
+      "eviers": [1, 1],
+      "escaliers": [0, 0]
+    },
+    "metiers": ["carreleur", "paysagiste"],
+    "pages": ["niveau", "masse"],
+    "altitudes": [],
+    "ouvrages": [
+      {
+        "nom": "Terrain",
+        "mots": ["terrain"],
+        "mesure": "surface",
+        "quantite": 812,
+        "origine": "ecrit",
+        "metier": ""
+      },
+      {
+        "nom": "Emprise de la maison",
+        "mots": ["maison"],
+        "mesure": "surface",
+        "quantite": 124.5,
+        "origine": "ecrit",
+        "metier": ""
+      },
+      {
+        "nom": "Plateforme",
+        "mots": ["plateforme"],
+        "mesure": "surface",
+        "quantite": 186,
+        "origine": "ecrit",
+        "metier": ""
+      },
+      {
+        "nom": "Allée carrossable",
+        "mots": ["allee"],
+        "mesure": "surface",
+        "quantite": 62,
+        "origine": "ecrit",
+        "metier": ""
+      },
+      {
+        "nom": "Terrasse",
+        "mots": ["terrasse"],
+        "mesure": "surface",
+        "quantite": 38,
+        "origine": "ecrit",
+        "metier": null
+      },
+      {
+        "nom": "Pelouse",
+        "mots": ["pelouse"],
+        "mesure": "surface",
+        "quantite": 310,
+        "origine": "ecrit",
+        "metier": "paysagiste"
+      },
+      {
+        "nom": "Clôture",
+        "mots": ["cloture"],
+        "mesure": "lineaire",
+        "quantite": 96,
+        "origine": "ecrit",
+        "metier": null
+      },
+      {
+        "nom": "Arbres à planter",
+        "mots": ["arbre"],
+        "mesure": "nombre",
+        "quantite": 6,
+        "origine": "compte",
+        "metier": "paysagiste",
+        "fourchette": [6, 6]
+      },
+      {
+        "nom": "Haie à planter",
+        "mots": ["haie"],
+        "mesure": "lineaire",
+        "quantite": null,
+        "origine": "absent",
+        "metier": "paysagiste"
+      }
+    ],
+    "fichiers": ["logement-et-masse.pdf"]
   }
 ]

@@ -1,8 +1,11 @@
 // Fabrique les plans fictifs de l'évaluation (PDF vectoriels A3, photos JPG) et leur vérité
 // terrain (cas.json), à partir des mêmes données : ce qui est dessiné est ce qui est attendu.
 // Aucun appel payant. Depuis la racine du dépôt (Chrome et playwright-core installés) :
-//   node supabase/functions/tender-sheet/eval/fabriquer-plans.mjs
-import { readdirSync, writeFileSync } from "node:fs";
+//   node supabase/functions/tender-sheet/eval/fabriquer-plans.mjs [--tout]
+// Sans `--tout`, un plan déjà présent n'est pas refait (son fichier ne change pas dans Git).
+// Plans de terrain, façades et toiture (F-158, ADR 0324) : dessins libres (`dessin`) et ouvrages
+// attendus (`ouvrages`), avec les métiers de l'appel d'offres (`metiers`).
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -105,7 +108,7 @@ function page(niveau) {
 <defs><filter id="flou"><feGaussianBlur stdDeviation="3.2"/></filter></defs>
 <rect width="100%" height="100%" fill="#fff"/>
 <rect x="20" y="20" width="${largeur - 40}" height="${hauteur - 40}" fill="none" stroke="#111" stroke-width="1.5"/>
-<g transform="translate(110 110)">${niveau.pieces.map(piece).join("")}${niveau.symboles.map(glyph).join("")}${niveau.pieces.map(etiquette).join("")}</g>
+<g transform="translate(110 110)">${niveau.dessin ?? niveau.pieces.map(piece).join("") + niveau.symboles.map(glyph).join("") + niveau.pieces.map(etiquette).join("")}</g>
 <rect x="${largeur - 490}" y="${hauteur - 200}" width="460" height="170" fill="#fff" stroke="#111" stroke-width="1.5"/>${cart}${note}
 <g transform="translate(${largeur - 110} 90)"><circle r="26" fill="none" stroke="#111"/><path d="M0 -22 L8 10 L0 4 L-8 10 Z" fill="#111"/><text y="-32" text-anchor="middle" font-family="Arial" font-size="13">N</text></g>
 </svg>`;
@@ -465,6 +468,286 @@ const CAS = [
   },
 ];
 
+// ------------------------------------------------------------------ terrain, façades, toiture
+const txt = (x, y, t, o = {}) =>
+  `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${o.s ?? 14}" font-weight="${o.b ? 700 : 400}" text-anchor="${o.a ?? "start"}" fill="${o.c ?? "#111"}">${t}</text>`;
+const box = (x, y, w, h, o = {}) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${o.f ?? "none"}" stroke="${o.c ?? "#111"}" stroke-width="${o.w ?? 2}"${o.d ? ` stroke-dasharray="${o.d}"` : ""}/>`;
+const arbre = (x, y) =>
+  `<circle cx="${x}" cy="${y}" r="16" fill="#fff" stroke="#111" stroke-width="1.5"/><path d="M${x - 9} ${y} h18 M${x} ${y - 9} v18" stroke="#111" stroke-width="1"/>`;
+const cartoucheLibre = (titre, echelle, extra = []) => [
+  "MAISON EXEMPLE — " + titre,
+  `Échelle : ${echelle}`,
+  ...extra,
+  "Indice A — Atelier Exemple Architecture",
+];
+
+// Plan de masse au 1/200 : `ecrit` faux → les mêmes ouvrages, sans aucune quantité écrite.
+const masse = (ecrit = true) => {
+  const q = (t) => (ecrit ? t : "");
+  return {
+    dessin: [
+      box(0, 0, 1280, 760, { d: "10 6", w: 1.5 }),
+      txt(1270, 750, `Terrain${q(" 812,00 m²")}`, { a: "end" }),
+      txt(14, 750, q("TN 102,40")),
+      txt(1270, 24, `Clôture${q(" 96,00 ml")}`, { a: "end" }),
+      box(430, 170, 540, 360, { f: "#eef1f8", c: "#555", w: 1.5 }),
+      txt(444, 192, `Plateforme${q(" 186,00 m² — niveau 101,20")}`, { b: true, s: 13 }),
+      box(500, 220, 400, 260, { f: "#fff", w: 3 }),
+      txt(700, 340, "Maison", { a: "middle", b: true, s: 16 }),
+      txt(700, 362, q("Emprise 124,50 m²"), { a: "middle", s: 13 }),
+      box(500, 480, 300, 100, { f: "#f1ece2", c: "#555", w: 1.5 }),
+      txt(650, 536, `Terrasse${q(" 38,00 m²")}`, { a: "middle", s: 13 }),
+      `<path d="M940 480 H1080 V760 H940 Z" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>`,
+      txt(1010, 630, "Allée carrossable", { a: "middle", s: 13 }),
+      txt(1010, 650, q("62,00 m²"), { a: "middle", s: 13 }),
+      txt(210, 400, `Pelouse${q(" 310,00 m²")}`, { a: "middle" }),
+      `<path d="M40 110 H400" stroke="#111" stroke-width="5" stroke-dasharray="2 7"/>`,
+      txt(40, 96, "Haie à planter", { s: 13 }),
+      [
+        [120, 200],
+        [220, 200],
+        [320, 200],
+        [1160, 130],
+        [1200, 260],
+        [130, 640],
+      ]
+        .map(([x, y]) => arbre(x, y))
+        .join(""),
+      txt(120, 240, "Arbres à planter", { s: 13 }),
+    ].join(""),
+  };
+};
+const COUPE_TERRAIN = {
+  dessin: [
+    `<path d="M0 300 L1280 240" stroke="#111" stroke-width="2" stroke-dasharray="12 6" fill="none"/>`,
+    txt(20, 280, "Terrain naturel (TN) 102,40", { b: true }),
+    `<path d="M0 300 L300 290 L340 420 L940 420 L980 256 L1280 240" stroke="#111" stroke-width="3" fill="none"/>`,
+    txt(640, 446, "Plateforme 101,20", { a: "middle", b: true }),
+    box(420, 250, 440, 170, { f: "#fff", w: 2.5 }),
+    txt(640, 340, "Maison", { a: "middle", s: 16 }),
+    `<path d="M1040 262 v-70 M1034 200 l6 -10 l6 10 M1034 254 l6 10 l6 -10" stroke="#111" stroke-width="1.2" fill="none"/>`,
+    txt(1052, 216, "Décapage de la terre végétale : 0,30 m", { s: 13 }),
+    txt(
+      20,
+      560,
+      "Déblais de la plateforme : du terrain naturel (102,40) au niveau de la plateforme (101,20).",
+      { s: 13 },
+    ),
+    txt(20, 584, "Surface de la plateforme : 186,00 m² (voir plan de masse).", { s: 13 }),
+  ].join(""),
+};
+const RESEAUX = {
+  dessin: [
+    box(0, 0, 1280, 760, { d: "10 6", w: 1.5 }),
+    box(500, 220, 400, 260, { f: "#fff", w: 3 }),
+    txt(700, 350, "Maison", { a: "middle", b: true, s: 16 }),
+    `<path d="M80 600 H500 V480" stroke="#111" stroke-width="2.5" stroke-dasharray="6 5" fill="none"/>`,
+    txt(90, 624, "Tranchée des réseaux (eau, électricité, télécom) : 42,00 ml", { s: 13 }),
+    box(60, 580, 40, 40, { f: "#fff" }),
+    txt(60, 570, "Coffret", { s: 12 }),
+  ].join(""),
+};
+const FACADES = [
+  {
+    dessin: [
+      txt(0, 40, "FAÇADE SUD", { b: true, s: 18 }),
+      box(100, 140, 992, 496, { f: "#fff", w: 3 }),
+      box(220, 380, 140, 256, { f: "#f4f4f4" }),
+      box(480, 300, 200, 160, { f: "#f4f4f4" }),
+      box(800, 300, 200, 160, { f: "#f4f4f4" }),
+      `<path d="M100 670 H1092 M100 662 v16 M1092 662 v16" stroke="#111" stroke-width="1.2"/>`,
+      txt(596, 694, "12,40", { a: "middle" }),
+      `<path d="M1130 140 V636 M1122 140 h16 M1122 636 h16" stroke="#111" stroke-width="1.2"/>`,
+      txt(1146, 392, "6,20"),
+      `<path d="M470 470 H690" stroke="#111" stroke-width="5"/>`,
+      txt(480, 492, "Garde-corps du balcon : 4,50 ml", { s: 13 }),
+    ].join(""),
+  },
+  {
+    dessin: [
+      txt(0, 40, "FAÇADE NORD", { b: true, s: 18 }),
+      box(100, 140, 992, 496, { f: "#fff", w: 3 }),
+      box(300, 300, 160, 140, { f: "#f4f4f4" }),
+      box(700, 300, 160, 140, { f: "#f4f4f4" }),
+      txt(596, 560, "Surface de la façade : 76,88 m²", { a: "middle", b: true }),
+    ].join(""),
+  },
+  {
+    dessin: [
+      txt(0, 40, "PIGNON EST", { b: true, s: 18 }),
+      `<path d="M300 636 V300 L620 120 L940 300 V636 Z" fill="#fff" stroke="#111" stroke-width="3"/>`,
+      `<path d="M300 670 H940 M300 662 v16 M940 662 v16" stroke="#111" stroke-width="1.2"/>`,
+      txt(620, 694, "8,00", { a: "middle" }),
+      `<path d="M980 120 V636 M972 120 h16 M972 636 h16" stroke="#111" stroke-width="1.2"/>`,
+      txt(996, 380, "8,45"),
+    ].join(""),
+  },
+];
+const TOITURE = {
+  dessin: [
+    txt(0, 40, "PLAN DE TOITURE", { b: true, s: 18 }),
+    box(100, 120, 992, 560, { f: "#fff", w: 3 }),
+    `<path d="M100 400 H1092" stroke="#111" stroke-width="2.5"/>`,
+    txt(596, 392, "Faîtage : 12,40 ml", { a: "middle", s: 13 }),
+    txt(596, 250, "Versant nord", { a: "middle", b: true, s: 16 }),
+    txt(596, 274, "Surface au sol : 43,00 m² — pente 35°", { a: "middle" }),
+    txt(596, 540, "Versant sud", { a: "middle", b: true, s: 16 }),
+    txt(596, 564, "Surface au sol : 43,00 m² — pente 35°", { a: "middle" }),
+    box(260, 470, 70, 90, { f: "#f4f4f4" }),
+    box(820, 470, 70, 90, { f: "#f4f4f4" }),
+    txt(260, 460, "Fenêtre de toit", { s: 12 }),
+    txt(820, 460, "Fenêtre de toit", { s: 12 }),
+    txt(100, 708, "Gouttières : 24,80 ml (deux rives basses)", { s: 13 }),
+  ].join(""),
+};
+
+/** Ouvrage attendu : `mots` retrouvent la ligne de l'IA ; origine « absent » : rien à inventer. */
+const ouv = (nom, mots, mesure, quantite, origine, metier, compte = null) => ({
+  nom,
+  mots,
+  mesure,
+  quantite,
+  origine,
+  metier,
+  ...(compte ? { fourchette: compte } : {}),
+});
+const OUVRAGES_MASSE = (ecrit, t, p) => {
+  const q = (v) => (ecrit ? v : null);
+  const o = ecrit ? "ecrit" : "absent";
+  return [
+    ouv("Terrain", ["terrain"], "surface", q(812), o, ""),
+    ouv("Emprise de la maison", ["maison"], "surface", q(124.5), o, ""),
+    ouv("Plateforme", ["plateforme"], "surface", q(186), o, t),
+    ouv("Allée carrossable", ["allee"], "surface", q(62), o, t),
+    ouv("Terrasse", ["terrasse"], "surface", q(38), o, null),
+    ouv("Pelouse", ["pelouse"], "surface", q(310), o, p),
+    ouv("Clôture", ["cloture"], "lineaire", q(96), o, null),
+    ouv("Arbres à planter", ["arbre"], "nombre", 6, "compte", p, [6, 6]),
+    ouv("Haie à planter", ["haie"], "lineaire", null, "absent", p),
+  ];
+};
+
+CAS.push(
+  {
+    id: "terrain",
+    note: "Plan de masse, coupe du terrain et réseaux : quantités écrites, deux volumes à calculer",
+    fichiers: [
+      {
+        nom: "terrain.pdf",
+        pages: [
+          { plan: masse(), cartouche: cartoucheLibre("Plan de masse", "1/200") },
+          { plan: COUPE_TERRAIN, cartouche: cartoucheLibre("Coupe du terrain", "1/100") },
+          { plan: RESEAUX, cartouche: cartoucheLibre("Plan des réseaux", "1/200") },
+        ],
+      },
+    ],
+    statut: "ok",
+    echelle: null,
+    pieces: [],
+    comptes: null,
+    metiers: ["terrassier", "paysagiste"],
+    pages: ["masse", "coupe_terrain", "reseaux"],
+    altitudes: [102.4, 101.2],
+    ouvrages: [
+      ...OUVRAGES_MASSE(true, "terrassier", "paysagiste"),
+      ouv("Décapage de la terre végétale", ["decapage"], "volume", 55.8, "calcul", "terrassier"),
+      ouv("Déblais de la plateforme", ["deblai"], "volume", 223.2, "calcul", "terrassier"),
+      ouv("Tranchée des réseaux", ["tranchee"], "lineaire", 42, "ecrit", "terrassier"),
+    ],
+  },
+  {
+    id: "terrain-sans-quantites",
+    note: "Plan de masse sans aucune quantité écrite : rien ne doit être mesuré ni inventé",
+    fichiers: [
+      {
+        nom: "terrain-sans-quantites.pdf",
+        pages: [{ plan: masse(false), cartouche: cartoucheLibre("Plan de masse", "1/200") }],
+      },
+    ],
+    statut: "ok",
+    echelle: "1/200",
+    pieces: [],
+    comptes: null,
+    metiers: ["terrassier", "paysagiste"],
+    pages: ["masse"],
+    altitudes: [],
+    ouvrages: OUVRAGES_MASSE(false, "terrassier", "paysagiste"),
+  },
+  {
+    id: "facades",
+    note: "Façades : une surface à calculer avec deux cotes, une écrite, un pignon non rectangulaire",
+    fichiers: [
+      {
+        nom: "facades.pdf",
+        pages: FACADES.map((plan, i) => ({
+          plan,
+          cartouche: cartoucheLibre(["Façade sud", "Façade nord", "Pignon est"][i], "1/50"),
+        })),
+      },
+    ],
+    statut: "ok",
+    echelle: "1/50",
+    pieces: [],
+    comptes: null,
+    metiers: ["facadier", "serrurier"],
+    pages: ["facade", "facade", "facade"],
+    altitudes: [],
+    ouvrages: [
+      ouv("Façade sud", ["sud"], "surface", 76.88, "calcul", "facadier"),
+      ouv("Façade nord", ["nord"], "surface", 76.88, "ecrit", "facadier"),
+      ouv("Pignon est", ["pignon"], "surface", null, "absent", "facadier"),
+      ouv("Garde-corps du balcon", ["garde"], "lineaire", 4.5, "ecrit", "serrurier"),
+    ],
+  },
+  {
+    id: "toiture",
+    note: "Plan de toiture : versants à calculer avec la surface au sol et la pente",
+    fichiers: [
+      {
+        nom: "toiture.pdf",
+        pages: [{ plan: TOITURE, cartouche: cartoucheLibre("Plan de toiture", "1/50") }],
+      },
+    ],
+    statut: "ok",
+    echelle: "1/50",
+    pieces: [],
+    comptes: null,
+    metiers: ["couvreur", "charpentier"],
+    pages: ["toiture"],
+    altitudes: [],
+    ouvrages: [
+      ouv("Versant nord", ["versant", "nord"], "surface", 52.503, "calcul", null),
+      ouv("Versant sud", ["versant", "sud"], "surface", 52.503, "calcul", null),
+      ouv("Faîtage", ["faitage"], "lineaire", 12.4, "ecrit", null),
+      ouv("Gouttières", ["gouttiere"], "lineaire", 24.8, "ecrit", "couvreur"),
+      ouv("Fenêtres de toit", ["fenetre"], "nombre", 2, "compte", "couvreur", [2, 2]),
+    ],
+  },
+  {
+    id: "logement-et-masse",
+    note: "Plan du logement puis plan de masse : pièces et ouvrages, sans doublon",
+    fichiers: [
+      {
+        nom: "logement-et-masse.pdf",
+        pages: [
+          { plan: T3, cartouche: cartouche("Plan du logement", "2,50") },
+          { plan: masse(), cartouche: cartoucheLibre("Plan de masse", "1/200") },
+        ],
+      },
+    ],
+    statut: "ok",
+    echelle: null,
+    pieces: attendu([{ niveau: "", plan: T3, hsp: 2.5 }]),
+    comptes: T3_COMPTES,
+    metiers: ["carreleur", "paysagiste"],
+    pages: ["niveau", "masse"],
+    altitudes: [],
+    // Le terrassier n'est pas dans l'appel d'offres : ses ouvrages restent sans lot.
+    ouvrages: OUVRAGES_MASSE(true, "", "paysagiste"),
+  },
+);
+
 const TABLEAU = `<html><body style="font-family: Arial; padding: 40px;"><h2>LOT 05 — CARRELAGE, FAÏENCE</h2><p>Décomposition du prix global et forfaitaire</p>
 <table border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; width: 100%; font-size: 13px;"><tr><th>N°</th><th>Désignation</th><th>U</th><th>Qté</th><th>PU HT</th><th>Total HT</th></tr>
 ${[
@@ -489,6 +772,7 @@ const tab = await context.newPage();
 for (const cas of CAS) {
   for (const f of cas.fichiers) {
     const chemin = join(SORTIE, f.nom);
+    if (!process.argv.includes("--tout") && existsSync(chemin)) continue;
     if (f.tableau) {
       await tab.setContent(TABLEAU);
       await tab.pdf({ path: chemin, format: "A4" });

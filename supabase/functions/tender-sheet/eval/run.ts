@@ -8,6 +8,10 @@
 //   deno run --allow-net --allow-env --allow-read --allow-write eval/run.ts --estimation
 //   deno run --allow-net --allow-env --allow-read --allow-write eval/run.ts --passes=2
 //     [--plafond=1.5] [--cas=t3-pdf,maison-r1] [--sortie=rapport.json] [--vrais=/dossier]
+//     [--modele=claude-opus-5-5]
+// `--modele` : compare un autre modèle avec la même consigne (F-158, ADR 0324) ; par défaut, celui
+// de l'Edge Function. Les cas de terrain, de façades et de toiture notent aussi les ouvrages
+// mesurés : quantités écrites, quantités calculées par le cœur, quantités inventées, lots, pages.
 // `--vrais` : dossier de vrais plans (jamais versionnés) avec un verite.json au même format que
 // cas.json (champ `fichiers` relatif au dossier) ; sans vérité, seules les lectures sont montrées.
 // Variable : OPENROUTER_API_KEY (ou ANTHROPIC_API_KEY ; la dépense réelle n'est lue qu'avec OpenRouter).
@@ -17,7 +21,11 @@ import {
   type PlanCountKey,
   type PlanReading,
 } from "../../../../packages/core/src/plan-reading.ts";
-import { llmConfig, openRouterBaseUrl, quoteModel, reasoningFor } from "../../_shared/ai.ts";
+import {
+  normalizePlanWorks,
+  type PlanWorksReading,
+} from "../../../../packages/core/src/plan-works.ts";
+import { llmConfig, openRouterBaseUrl, planModel, reasoningFor } from "../../_shared/ai.ts";
 import {
   PLAN_SYSTEM,
   planOutputSchema,
@@ -48,6 +56,25 @@ type Case = {
   pieces: ExpectedRoom[];
   /** Fourchette acceptée par élément ; null : comptes non notés. */
   comptes: Record<PlanCountKey, [number, number]> | null;
+  /** Métiers de l'appel d'offres (lots possibles des ouvrages). */
+  metiers?: string[];
+  /** Type attendu de chaque page, dans l'ordre des fichiers. */
+  pages?: string[];
+  /** Altitudes écrites à retrouver, en mètres. */
+  altitudes?: number[];
+  ouvrages?: ExpectedWork[];
+};
+type ExpectedWork = {
+  nom: string;
+  /** Mots (sans accents) qui retrouvent la ligne dans le relevé de l'IA. */
+  mots: string[];
+  mesure: "surface" | "lineaire" | "volume" | "nombre";
+  /** null : pas écrite ni calculable, ne doit pas être inventée. */
+  quantite: number | null;
+  origine: "ecrit" | "calcul" | "compte" | "absent";
+  /** Lot attendu ; chaîne vide : aucun lot ; null : non noté (plusieurs métiers défendables). */
+  metier: string | null;
+  fourchette?: [number, number];
 };
 
 const args = new Map(
@@ -88,20 +115,23 @@ async function loadFiles(c: { dossier: string; fichiers: string[] }): Promise<Pl
   );
 }
 
+/** « anthropic/claude-opus-5.5 » et « claude-opus-5-5 » désignent le même modèle. */
+const modelKey = (id: string) => id.replace(/^anthropic\//, "").replaceAll(".", "-");
+
 /** Pages d'un PDF (objets /Type /Page), pour l'estimation. */
 function pdfPages(bytes: Uint8Array): number {
   const text = new TextDecoder("latin1").decode(bytes);
   return Math.max(1, (text.match(/\/Type\s*\/Page(?!s)/g) ?? []).length);
 }
 
-const model = quoteModel();
+const model = args.get("modele") ?? planModel();
 
 // ------------------------------------------------------------------ estimation (gratuite)
 /** Jetons d'entrée par page de PDF (texte + image de la page) et par photo, en ordre de grandeur. */
 const TOKENS_PDF_PAGE = 3000;
 const TOKENS_PHOTO = 1700;
-const TOKENS_SYSTEM = 1800;
-const TOKENS_OUTPUT = 3500;
+const TOKENS_SYSTEM = 3400;
+const TOKENS_OUTPUT = 4500;
 
 if (estimation) {
   let input = 0;
@@ -119,7 +149,8 @@ if (estimation) {
   const prices = await fetch(`${openRouterBaseUrl()}/v1/models`).then((r) => r.json());
   const price = (
     prices.data as { id: string; pricing: { prompt: string; completion: string } }[]
-  ).find((m) => m.id === model || `anthropic/${m.id}` === model)?.pricing;
+  ).find((m) => modelKey(m.id) === modelKey(model))?.pricing;
+  if (!price) console.error(`Prix de ${model} introuvable : tarif par défaut utilisé.`);
   const usdIn = price ? Number(price.prompt) : 2e-6;
   const usdOut = price ? Number(price.completion) : 10e-6;
   const perPass = input * usdIn + output * usdOut;
@@ -159,10 +190,15 @@ async function spentUsd(): Promise<number | null> {
 }
 
 type Read =
-  | { status: "ok" | "illisible" | "pas_un_plan"; reading: PlanReading; tokens: [number, number] }
+  | {
+      status: "ok" | "illisible" | "pas_un_plan";
+      reading: PlanReading;
+      measured: PlanWorksReading;
+      tokens: [number, number];
+    }
   | { status: "erreur"; message: string; tokens: [number, number] };
 
-async function read(files: PlanFile[]): Promise<Read> {
+async function read(files: PlanFile[], trades: string[]): Promise<Read> {
   const reasoning = reasoningFor(model);
   try {
     const response = await llm!.client.messages.create(
@@ -171,7 +207,7 @@ async function read(files: PlanFile[]): Promise<Read> {
         max_tokens: 16000,
         thinking: reasoning.thinking,
         system: [{ type: "text", text: PLAN_SYSTEM, cache_control: { type: "ephemeral" } }],
-        messages: [{ role: "user", content: planUserContent(files) }],
+        messages: [{ role: "user", content: planUserContent(files, trades) }],
         output_config: {
           ...(reasoning.effort ? { effort: reasoning.effort } : {}),
           format: { type: "json_schema", schema: planOutputSchema() },
@@ -196,12 +232,14 @@ async function read(files: PlanFile[]): Promise<Read> {
       photos,
     );
     // Même décision que l'Edge Function (readPlans).
+    const measured = normalizePlanWorks(parsed.data, files.length, photos, trades);
     const status = reading.warnings.includes("illisible")
       ? "illisible"
-      : reading.warnings.includes("pas_un_plan") || reading.rooms.length === 0
+      : reading.warnings.includes("pas_un_plan") ||
+          (reading.rooms.length === 0 && measured.works.length === 0)
         ? "pas_un_plan"
         : "ok";
-    return { status, reading, tokens };
+    return { status, reading, measured, tokens };
   } catch (error) {
     return {
       status: "erreur",
@@ -246,6 +284,30 @@ type Score = {
   /** Éléments laissés vides par l'IA (« à compléter » à l'écran) : prudents, pas faux. */
   comptesOmis: string[];
   echelleJuste: boolean | null;
+  // Ouvrages mesurés (F-158).
+  ouvragesAttendus: number;
+  ouvragesTrouves: number;
+  ouvragesManquants: string[];
+  /** Quantités attendues (écrites, calculées, comptées) justes, avec la bonne origine. */
+  quantitesJustes: number;
+  quantitesNotees: number;
+  quantitesFausses: string[];
+  /** Quantité donnée alors que rien n'est écrit ni calculable : la faute grave. */
+  quantitesInventees: string[];
+  lotsJustes: number;
+  lotsNotes: number;
+  lotsFaux: string[];
+  pagesJustes: number;
+  pagesNotees: number;
+  altitudesJustes: number;
+  altitudesNotees: number;
+  ouvrages?: {
+    nom: string;
+    mesure: string;
+    quantite: number | null;
+    origine: string;
+    lot: string | null;
+  }[];
   jetons: [number, number];
   /** Relevé de l'IA, pour relire un écart sans relancer. */
   releve?: { niveau: string | null; nom: string; surface: number | null; incertaine: boolean }[];
@@ -278,6 +340,20 @@ function score(c: Case, pass: number, r: Read): Score {
     comptesFaux: [],
     comptesOmis: [],
     echelleJuste: null,
+    ouvragesAttendus: c.ouvrages?.length ?? 0,
+    ouvragesTrouves: 0,
+    ouvragesManquants: [],
+    quantitesJustes: 0,
+    quantitesNotees: 0,
+    quantitesFausses: [],
+    quantitesInventees: [],
+    lotsJustes: 0,
+    lotsNotes: 0,
+    lotsFaux: [],
+    pagesJustes: 0,
+    pagesNotees: c.pages?.length ?? 0,
+    altitudesJustes: 0,
+    altitudesNotees: c.altitudes?.length ?? 0,
     jetons: r.tokens,
   };
   if (r.status === "erreur") return { ...base, erreur: r.message };
@@ -353,7 +429,83 @@ function score(c: Case, pass: number, r: Read): Score {
     }
   }
   if (c.echelle) base.echelleJuste = plain(reading.scale ?? "") === plain(c.echelle);
+  scoreWorks(c, r.measured, base);
   return base;
+}
+
+/** Ouvrages mesurés : retrouvés par leurs mots, puis quantité, origine et lot comparés. */
+function scoreWorks(c: Case, measured: PlanWorksReading, base: Score) {
+  base.ouvrages = measured.works.map((w) => ({
+    nom: w.name,
+    mesure: w.kind,
+    quantite: w.quantityMilli === null ? null : w.quantityMilli / 1000,
+    origine: w.source,
+    lot: w.trade,
+  }));
+  const free = [...measured.works];
+  for (const expected of c.ouvrages ?? []) {
+    const i = free.findIndex(
+      (w) => w.kind === expected.mesure && expected.mots.every((m) => plain(w.name).includes(m)),
+    );
+    if (i < 0) {
+      base.ouvragesManquants.push(expected.nom);
+      // Un ouvrage attendu avec une quantité et absent du relevé compte comme une quantité fausse.
+      if (expected.quantite !== null) {
+        base.quantitesNotees++;
+        base.quantitesFausses.push(`${expected.nom} : absent`);
+      }
+      continue;
+    }
+    const [w] = free.splice(i, 1);
+    if (!w) continue;
+    base.ouvragesTrouves++;
+    const got = w.quantityMilli === null ? null : w.quantityMilli / 1000;
+    if (expected.quantite === null) {
+      if (got !== null) base.quantitesInventees.push(`${expected.nom} : ${got} (${w.source})`);
+    } else {
+      base.quantitesNotees++;
+      const [min, max] = expected.fourchette ?? [
+        expected.quantite - 0.01,
+        expected.quantite + 0.01,
+      ];
+      const origin =
+        expected.origine === "calcul"
+          ? w.source === "calcul"
+          : expected.origine === "compte"
+            ? w.source === "compte" || w.source === "plan"
+            : w.source === "plan" || w.source === "photo";
+      if (got !== null && got >= min && got <= max && origin) base.quantitesJustes++;
+      // Un nombre laissé vide est prudent (« à compléter ») ; toute autre erreur est une faute.
+      else if (!(expected.origine === "compte" && got === null)) {
+        base.quantitesFausses.push(`${expected.nom} : ${got ?? "vide"} (${w.source})`);
+      } else base.quantitesNotees--;
+    }
+    if (expected.metier !== null) {
+      base.lotsNotes++;
+      if ((w.trade ?? "") === expected.metier) base.lotsJustes++;
+      else base.lotsFaux.push(`${expected.nom} : ${w.trade ?? "aucun"}`);
+    }
+  }
+  // Ouvrages en plus : acceptés s'ils sont sans quantité ou écrits ; un calcul en plus est signalé.
+  for (const w of free) {
+    if (!c.ouvrages) {
+      // Cas sans ouvrage attendu (plans de niveaux) : rien ne doit être calculé ici.
+      if (w.source === "calcul") base.quantitesInventees.push(`${w.name} : calcul inattendu`);
+    } else if (w.source === "calcul") {
+      base.quantitesInventees.push(`${w.name} : ${(w.quantityMilli ?? 0) / 1000} (calcul en trop)`);
+    }
+  }
+  (c.pages ?? []).forEach((type, index) => {
+    // Pages numérotées dans l'ordre des fichiers ; les cas notés n'ont qu'un fichier.
+    if (measured.pages.find((p) => p.file === 1 && p.page === index + 1)?.type === type) {
+      base.pagesJustes++;
+    }
+  });
+  for (const altitude of c.altitudes ?? []) {
+    if (measured.levels.some((l) => Math.abs(l.altitudeMm - altitude * 1000) <= 5)) {
+      base.altitudesJustes++;
+    }
+  }
 }
 
 // ------------------------------------------------------------------ passes
@@ -369,11 +521,11 @@ for (let pass = 1; pass <= passes; pass++) {
     }
     const files = await loadFiles(c);
     const started = Date.now();
-    const r = await read(files);
+    const r = await read(files, c.metiers ?? []);
     const s = score(c, pass, r);
     scores.push(s);
     console.log(
-      `${c.id} (passe ${pass}) : ${s.statut}${s.statutJuste ? "" : ` ≠ ${s.statutAttendu}`}, pièces ${s.piecesTrouvees}/${s.piecesAttendues}, surfaces ${s.surfacesJustes}/${s.surfacesNotees}${s.surfacesInventees.length ? `, INVENTÉES ${s.surfacesInventees.join(" ; ")}` : ""}${s.comptesNotes ? `, comptes ${s.comptesJustes}/${s.comptesNotes}` : ""}${s.comptesOmis.length ? ` (vides : ${s.comptesOmis.join(", ")})` : ""}${s.comptesFaux.length ? ` FAUX ${s.comptesFaux.join(" ; ")}` : ""}${s.usagesFaux.length ? ` — usages : ${s.usagesFaux.join(" ; ")}` : ""} — ${Math.round((Date.now() - started) / 1000)} s${s.erreur ? ` — ${s.erreur}` : ""}`,
+      `${c.id} (passe ${pass}) : ${s.statut}${s.statutJuste ? "" : ` ≠ ${s.statutAttendu}`}, pièces ${s.piecesTrouvees}/${s.piecesAttendues}, surfaces ${s.surfacesJustes}/${s.surfacesNotees}${s.surfacesInventees.length ? `, INVENTÉES ${s.surfacesInventees.join(" ; ")}` : ""}${s.comptesNotes ? `, comptes ${s.comptesJustes}/${s.comptesNotes}` : ""}${s.comptesOmis.length ? ` (vides : ${s.comptesOmis.join(", ")})` : ""}${s.comptesFaux.length ? ` FAUX ${s.comptesFaux.join(" ; ")}` : ""}${s.usagesFaux.length ? ` — usages : ${s.usagesFaux.join(" ; ")}` : ""}${s.ouvragesAttendus ? `, ouvrages ${s.ouvragesTrouves}/${s.ouvragesAttendus}, quantités ${s.quantitesJustes}/${s.quantitesNotees}, lots ${s.lotsJustes}/${s.lotsNotes}` : ""}${s.quantitesFausses.length ? ` FAUSSES ${s.quantitesFausses.join(" ; ")}` : ""}${s.quantitesInventees.length ? ` INVENTÉES ${s.quantitesInventees.join(" ; ")}` : ""} — ${Math.round((Date.now() - started) / 1000)} s${s.erreur ? ` — ${s.erreur}` : ""}`,
     );
   }
 }
@@ -420,6 +572,28 @@ const report = {
   echelles_justes: pct(
     sum((s) => (s.echelleJuste ? 1 : 0)),
     scores.filter((s) => s.echelleJuste !== null).length,
+  ),
+  ouvrages_trouves: pct(
+    sum((s) => s.ouvragesTrouves),
+    sum((s) => s.ouvragesAttendus),
+  ),
+  quantites_justes: pct(
+    sum((s) => s.quantitesJustes),
+    sum((s) => s.quantitesNotees),
+  ),
+  quantites_fausses: sum((s) => s.quantitesFausses.length),
+  quantites_inventees: sum((s) => s.quantitesInventees.length),
+  lots_justes: pct(
+    sum((s) => s.lotsJustes),
+    sum((s) => s.lotsNotes),
+  ),
+  pages_justes: pct(
+    sum((s) => s.pagesJustes),
+    sum((s) => s.pagesNotees),
+  ),
+  altitudes_justes: pct(
+    sum((s) => s.altitudesJustes),
+    sum((s) => s.altitudesNotees),
   ),
   erreurs: scores.filter((s) => s.erreur).length,
   jetons: [sum((s) => s.jetons[0]), sum((s) => s.jetons[1])],
