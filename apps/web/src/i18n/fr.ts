@@ -5617,6 +5617,29 @@ export const fr = {
             .filter(Boolean)
             .join(", ") + (updated + added > 0 ? "." : "Factures passées en revue."),
         invalid: "La mise à jour n'a pas pu être faite. Rechargez la page et réessayez.",
+        // Carte de la fiche d'une dépense (lot 44).
+        expense: {
+          title: (n: number) => `${n} prix d'achat ${n > 1 ? "ont" : "a"} changé`,
+          text: (names: string[], total: number, trend: string) => {
+            const shown = names.slice(0, 2);
+            const more = total - shown.length;
+            const list =
+              more > 0
+                ? `${shown.join(", ")} et ${more} autre${more > 1 ? "s" : ""}`
+                : shown.join(" et ");
+            if (total === 1) {
+              return trend === "baisse"
+                ? `Le prix de ${list} a baissé par rapport à vos fournitures.`
+                : `Le prix de ${list} a augmenté par rapport à vos fournitures.`;
+            }
+            return trend === "hausse"
+              ? `${list} sont plus chers que dans vos fournitures.`
+              : trend === "baisse"
+                ? `${list} sont moins chers que dans vos fournitures.`
+                : `${list} n'ont plus le même prix que dans vos fournitures.`;
+          },
+          button: "Vérifier mes prix",
+        },
       },
       // Augmenter ses prix en un geste (F-149, ADR 0312, maquette lot 43).
       raise: {

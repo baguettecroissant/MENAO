@@ -200,3 +200,21 @@ export function worksRecalculated(
     (w) => w.manualPriceCents === null && w.supplyIds.some((id) => supplyIds.has(id)),
   ).length;
 }
+
+/** Sens des prix changés par une facture : tous en hausse, tous en baisse, ou les deux. */
+export type InvoiceChangeTrend = "hausse" | "baisse" | "mixte";
+
+/**
+ * Prix d'achat qu'une facture précise permet de mettre à jour (carte de la fiche d'une dépense,
+ * lot 44) : les propositions dont la ligne appartient à cette facture, et leur sens.
+ */
+export function invoiceChangesFor(
+  changes: readonly InvoicePriceChange[],
+  lineIds: ReadonlySet<string>,
+): { changes: InvoicePriceChange[]; trend: InvoiceChangeTrend | null } {
+  const mine = changes.filter((c) => lineIds.has(c.lineId));
+  if (mine.length === 0) return { changes: [], trend: null };
+  const up = mine.every((c) => c.oldCents === null || c.newCents > c.oldCents);
+  const down = mine.every((c) => c.oldCents !== null && c.newCents < c.oldCents);
+  return { changes: mine, trend: up ? "hausse" : down ? "baisse" : "mixte" };
+}

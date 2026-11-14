@@ -42,3 +42,11 @@ dans « Dépenses » (désignation, référence, unité, prix unitaire HT : ADR 
   diffère encore.
 - PR 2 : « Augmenter mes prix » en un geste, annulable 24 h (deuxième écran du lot 43).
 - L'application pourra reprendre l'écran plus tard ; la maquette est pour l'ordinateur.
+
+## Complément du 14/11/2026 (maquette lot 44 validée)
+
+- Fiche d'une dépense : carte « N prix d'achat ont changé » quand la facture (90 derniers jours)
+  porte des propositions de mise à jour, avec les fournitures concernées et le sens (« sont plus
+  chers », « moins chers » ou « n'ont plus le même prix ») ; « Vérifier mes prix » mène à la page
+  des prix. Calcul par `invoiceChangesFor` (packages/core) sur les propositions existantes.
+- L'application reprend la carte et les deux écrans dans la PR suivante.

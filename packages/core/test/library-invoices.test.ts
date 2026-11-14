@@ -3,6 +3,7 @@ import {
   type InvoiceLine,
   type InvoiceSupply,
   designationKey,
+  invoiceChangesFor,
   invoicePriceProposals,
   priceDeltaBp,
   referenceKey,
@@ -225,5 +226,33 @@ describe("worksRecalculated", () => {
     ];
     expect(worksRecalculated(works, new Set(["ba13", "rail"]))).toBe(2);
     expect(worksRecalculated(works, new Set())).toBe(0);
+  });
+});
+
+describe("invoiceChangesFor", () => {
+  const change = (lineId: string, oldCents: number | null, newCents: number) => ({
+    supplyId: `s-${lineId}`,
+    lineId,
+    matchedBy: "designation" as const,
+    oldCents,
+    newCents,
+    deltaBp: null,
+    issuedOn: "2026-11-07",
+    supplier: null,
+    checked: true,
+  });
+  const all = [change("a", 250, 272), change("b", 110, 118), change("c", 190, 184)];
+  it("garde les lignes de la facture et donne le sens", () => {
+    expect(invoiceChangesFor(all, new Set(["a", "b"])).trend).toBe("hausse");
+    expect(invoiceChangesFor(all, new Set(["c"])).trend).toBe("baisse");
+    expect(invoiceChangesFor(all, new Set(["a", "c"])).trend).toBe("mixte");
+    expect(invoiceChangesFor(all, new Set(["a", "c"])).changes.map((c) => c.lineId)).toEqual([
+      "a",
+      "c",
+    ]);
+  });
+  it("prix à renseigner compté en hausse ; rien pour une autre facture", () => {
+    expect(invoiceChangesFor([change("d", null, 500)], new Set(["d"])).trend).toBe("hausse");
+    expect(invoiceChangesFor(all, new Set(["z"]))).toEqual({ changes: [], trend: null });
   });
 });
