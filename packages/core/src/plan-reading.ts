@@ -4,8 +4,11 @@
 // reste vide (« à compléter »). Aucun import : ce fichier est aussi lu par Deno (tender-sheet).
 
 /** Origine d'une mesure : écrite sur le plan, calculée avec les cotes, lue sur une photo, saisie. */
-/** « estime » : mesurée à l'échelle sur son contour tracé (F-159, lot 2), ni lue ni saisie. */
-export type PlanRoomSource = "plan" | "cotes" | "photo" | "saisi" | "estime";
+/**
+ * « estime » : mesurée à l'échelle sur son contour tracé par MENAO (F-159, lot 2) ; « trace » :
+ * tracée à la main par l'artisan sur le plan (lot 3).
+ */
+export type PlanRoomSource = "plan" | "cotes" | "photo" | "saisi" | "estime" | "trace";
 
 export type PlanRoom = {
   level: string | null;

@@ -303,3 +303,60 @@ export function jpegSize(bytes: Uint8Array): { width: number; height: number } |
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Métré à la main (F-159, lot 3, ADR 0327) : mesures tracées par l'artisan sur l'image
+// ---------------------------------------------------------------------------------------------
+
+export const PLAN_MARK_KINDS = ["surface", "longueur", "comptage"] as const;
+export type PlanMarkKind = (typeof PLAN_MARK_KINDS)[number];
+export const MAX_PLAN_MARKS = 100;
+export const MAX_MARK_POINTS = 200;
+
+/** Longueur d'une ligne brisée ouverte, en pixels. */
+export function polylineLengthPx(points: readonly PlanPoint[]): number {
+  let total = 0;
+  points.forEach((p, i) => {
+    const q = points[i + 1];
+    if (q) total += Math.hypot(q.x - p.x, q.y - p.y);
+  });
+  return total;
+}
+
+/** Échelle d'une cote désignée à la main : deux points et la valeur saisie, en mm par pixel. */
+export function scaleFromCalibration(a: PlanPoint, b: PlanPoint, mm: number): number | null {
+  const scale = planScaleFromAnchors([{ a, b, mm }]);
+  return scale ? scale.mmPerPx : null;
+}
+
+export type PlanMarkMeasure =
+  | { kind: "surface"; areaCm2: number; perimeterMm: number }
+  | { kind: "longueur"; lengthMm: number }
+  | { kind: "comptage"; count: number };
+
+/**
+ * Mesure d'un tracé à la main : surface et périmètre d'un polygone fermé (3 points au moins),
+ * longueur d'une ligne brisée (2 points au moins), nombre de points d'un comptage. Une surface ou
+ * une longueur demande une échelle ; null si le tracé est trop court ou sans échelle.
+ */
+export function measureMark(
+  kind: PlanMarkKind,
+  points: readonly PlanPoint[],
+  mmPerPx: number | null,
+): PlanMarkMeasure | null {
+  if (points.length === 0 || points.length > MAX_MARK_POINTS) return null;
+  if (kind === "comptage") return { kind, count: points.length };
+  if (mmPerPx === null || !(mmPerPx > 0)) return null;
+  if (kind === "surface") {
+    const measured = measureContour(points, { mmPerPx });
+    return measured ? { kind, ...measured } : null;
+  }
+  if (points.length < 2) return null;
+  const lengthMm = Math.round(polylineLengthPx(points) * mmPerPx);
+  return lengthMm > 0 ? { kind, lengthMm } : null;
+}
+
+/** Points d'un tracé écrits « x,y x,y … » en pixels entiers, pour l'enregistrer. */
+export function contourText(points: readonly PlanPoint[]): string {
+  return points.map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(" ");
+}

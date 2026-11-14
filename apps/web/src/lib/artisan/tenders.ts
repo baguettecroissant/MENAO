@@ -42,7 +42,7 @@ export type TenderLine = {
   price_source: "devis" | "manuel" | "bibliotheque" | null;
   price_reference: string | null;
   /** DPGF créé depuis les plans (ADR 0292) : origine et calcul de la quantité. */
-  quantity_source?: "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | null;
+  quantity_source?: "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | null;
   quantity_detail?: string | null;
 };
 
@@ -56,7 +56,7 @@ export type TenderRoom = {
   height_mm: number | null;
   wet: boolean;
   habitable: boolean;
-  source: "plan" | "cotes" | "photo" | "saisi" | "estime";
+  source: "plan" | "cotes" | "photo" | "saisi" | "estime" | "trace";
   file_index: number | null;
   page: number | null;
   uncertain: boolean;
@@ -72,7 +72,7 @@ export type TenderWork = {
   name: string;
   kind: "surface" | "lineaire" | "volume" | "nombre";
   quantity_milli: number | null;
-  source: "plan" | "calcul" | "compte" | "photo" | "saisi";
+  source: "plan" | "calcul" | "compte" | "photo" | "saisi" | "trace";
   detail: string | null;
   trade_code: string | null;
   file_index: number | null;
@@ -130,7 +130,7 @@ export async function getTender(supabase: Client, id: string) {
     supabase
       .from("tenders")
       .select(
-        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale, plan_pages, plan_levels, plan_traces, quantities_checked_at",
+        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale, plan_pages, plan_levels, plan_traces, plan_marks, quantities_checked_at",
       )
       .eq("id", id)
       .maybeSingle(),

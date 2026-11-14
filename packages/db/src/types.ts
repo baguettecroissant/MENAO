@@ -5862,6 +5862,7 @@ export type Database = {
           plan_counts: NonNullable<Json>;
           plan_files: NonNullable<Json>;
           plan_levels: NonNullable<Json>;
+          plan_marks: NonNullable<Json>;
           plan_pages: NonNullable<Json>;
           plan_scale: string | null;
           plan_traces: NonNullable<Json>;
@@ -5887,6 +5888,7 @@ export type Database = {
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
           plan_levels?: NonNullable<Json>;
+          plan_marks?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
           plan_traces?: NonNullable<Json>;
@@ -5911,6 +5913,7 @@ export type Database = {
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
           plan_levels?: NonNullable<Json>;
+          plan_marks?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
           plan_traces?: NonNullable<Json>;
@@ -7109,6 +7112,10 @@ export type Database = {
       artisan_add_chantier_message: {
         Args: { p_chantier_id: string; p_message: string };
         Returns: string;
+      };
+      artisan_add_plan_measures: {
+        Args: { p_measures: Json; p_tender_id: string };
+        Returns: number;
       };
       artisan_adopt_menao_library: { Args: { p_trade_codes: string[] }; Returns: number };
       artisan_apply_invoice_prices: {

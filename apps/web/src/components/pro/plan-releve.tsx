@@ -7,7 +7,7 @@ import {
   planNameKey,
   type PlanTrace,
 } from "@menao/core";
-import { HelpCircle, Plus, X } from "lucide-react";
+import { HelpCircle, Plus, Ruler, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
@@ -114,6 +114,7 @@ export function PlanReleve({
   files,
   summary,
   traces = [],
+  canMeasure = false,
 }: {
   tenderId: string;
   rooms: TenderRoom[];
@@ -123,6 +124,8 @@ export function PlanReleve({
   summary: ReactNode;
   /** Contours tracés sur les photos (mesure à l'échelle, F-159 lot 2). */
   traces?: PlanTrace[];
+  /** Une photo de plan est déposée : le métré à la main est proposé (lot 3). */
+  canMeasure?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(savePlanRooms, initialFormState);
   const [drafts, setDrafts] = useState<Draft[]>(() => rooms.map(toDraft));
@@ -185,6 +188,7 @@ export function PlanReleve({
     if (!r) return null;
     if (r.area_cm2 === null) return <StatusBadge tone="warning">{t.source.missing}</StatusBadge>;
     if (r.source === "estime") return <StatusBadge tone="warning">{t.source.estime}</StatusBadge>;
+    if (r.source === "trace") return <StatusBadge tone="neutral">{t.source.trace}</StatusBadge>;
     if (r.source === "photo") return <StatusBadge tone="warning">{t.source.photo}</StatusBadge>;
     if (r.uncertain) return <StatusBadge tone="warning">{t.source.uncertain}</StatusBadge>;
     if (r.source === "cotes") return <StatusBadge tone="primary">{t.source.cotes}</StatusBadge>;
@@ -453,6 +457,15 @@ export function PlanReleve({
                 className={buttonClasses()}
               >
                 {t.toFinishes}
+              </Link>
+            )}
+            {canMeasure && (
+              <Link
+                href={`/pro/demandes/appels-offres/${tenderId}?etape=mesure` as Route}
+                className={buttonClasses({ variant: "secondary" })}
+              >
+                <Ruler aria-hidden="true" className="size-4" />
+                {t.measure.open}
               </Link>
             )}
           </section>

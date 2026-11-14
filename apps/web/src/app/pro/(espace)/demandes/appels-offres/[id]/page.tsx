@@ -15,6 +15,7 @@ import { CheckCircle2, Layers, Ruler, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
 import { PlanDpgfEditor } from "@/components/pro/plan-dpgf-editor";
 import { PlanFinishes } from "@/components/pro/plan-finishes";
+import { PlanMeasure } from "@/components/pro/plan-measure";
 import { PlanReleve } from "@/components/pro/plan-releve";
 import type { PlanFileLink } from "@/components/pro/plan-viewer";
 import { PlanWorks } from "@/components/pro/plan-works";
@@ -79,6 +80,8 @@ export default async function TenderPage({
       : asked === "releve" || lines.length === 0
         ? "releve"
         : "dpgf";
+  // Métré à la main (F-159 lot 3) : un écran du relevé, sur les photos de plans.
+  const measuring = !!plan && asked === "mesure";
   const reachable: PlanStep[] = [
     "releve",
     ...(plan && plan.rooms.length > 0 ? (["revetements"] as const) : []),
@@ -155,6 +158,9 @@ export default async function TenderPage({
           </Alert>
         )}
         {query.export === "verifier" && <Alert tone="error">{t.plan.exportBlocked}</Alert>}
+        {Number(query.mesures ?? 0) > 0 && (
+          <Alert tone="success">{t.plan.measure.saved(Number(query.mesures))}</Alert>
+        )}
         {reading === "ok" ? (
           <Alert tone="success">
             {!isPlan
@@ -179,7 +185,16 @@ export default async function TenderPage({
           </Alert>
         ))}
 
-        {plan && step === "releve" && (
+        {plan && measuring && (
+          <PlanMeasure
+            tenderId={tender.id}
+            files={plan.files}
+            traces={plan.traces}
+            rooms={plan.rooms.map((r) => ({ id: r.id, name: r.name }))}
+            trades={plan.trades}
+          />
+        )}
+        {plan && step === "releve" && !measuring && (
           <>
             <Alert tone="info">{t.plan.responsibility}</Alert>
             {plan.rooms.length > 0 ? (
@@ -189,6 +204,7 @@ export default async function TenderPage({
                 counts={plan.counts}
                 files={plan.files}
                 traces={plan.traces}
+                canMeasure={plan.files.some((f) => f.kind !== "pdf" && f.url)}
                 summary={
                   <>
                     {summaryCard}

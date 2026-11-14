@@ -145,6 +145,9 @@ export function PlanWorks({
     if (quantity === null || quantity === undefined) {
       return item("warning", w.source.missing, work && !changed(d) ? w.detail.missing : null);
     }
+    if (work && !changed(d) && work.source === "trace") {
+      return item("neutral", t.source.trace);
+    }
     if (!work || changed(d) || work.source === "saisi") return item("neutral", w.source.saisi);
     if (work.source === "photo") return item("warning", w.source.check, w.detail.photo(work.page));
     if (work.source === "calcul") {

@@ -10,6 +10,7 @@ import { text, type FormState } from "@/lib/auth/form";
 import {
   CEILING_FINISHES,
   FLOOR_FINISHES,
+  MAX_PLAN_MARKS,
   MAX_WORK_MILLI,
   normalizePlanCounts,
   PLAN_COUNT_KEYS,
@@ -369,6 +370,76 @@ export async function savePlanWorks(_prev: FormState, formData: FormData): Promi
   revalidatePath(`${BASE}/${id.data}`);
   if (text(formData, "next") === "dpgf") return buildPlanDpgf(supabase, id.data);
   return { success: t.plan.works.saved };
+}
+
+const points = z
+  .string()
+  .max(4000)
+  .regex(/^-?\d{1,5},-?\d{1,5}( -?\d{1,5},-?\d{1,5})*$/);
+const markBase = {
+  name: z.string().trim().min(1).max(120),
+  file: z.number().int().min(1).max(10),
+  points,
+};
+const planMeasure = z.discriminatedUnion("kind", [
+  z.object({
+    ...markBase,
+    kind: z.literal("surface"),
+    roomId: z.uuid().nullable(),
+    areaCm2: z.number().int().min(1).max(99_999_999),
+    perimeterMm: z.number().int().min(1).max(999_999),
+  }),
+  z.object({
+    ...markBase,
+    kind: z.literal("longueur"),
+    quantityMilli: z.number().int().min(1).max(9_999_999_999),
+    trade: z
+      .string()
+      .regex(/^[a-z0-9-]{1,60}$/)
+      .nullable(),
+  }),
+  z.object({
+    ...markBase,
+    kind: z.literal("comptage"),
+    quantityMilli: z.number().int().min(1000).max(99_999_000).multipleOf(1000),
+    trade: z
+      .string()
+      .regex(/^[a-z0-9-]{1,60}$/)
+      .nullable(),
+  }),
+]);
+
+/**
+ * Mesures tracées à la main sur le plan (F-159 lot 3, ADR 0327) : calculées par packages/core dans
+ * le navigateur, vérifiées puis rangées par la base (pièces et ouvrages « tracés à la main »).
+ */
+export async function addPlanMeasures(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(text(formData, "measures") ?? "[]");
+  } catch {
+    raw = null;
+  }
+  const measures = z.array(planMeasure).min(1).max(MAX_PLAN_MARKS).safeParse(raw);
+  if (!id.success || !measures.success) return { error: t.plan.measure.invalid };
+  const { supabase } = await requireTeamPermission("money");
+  const { data: count, error } = await supabase.rpc("artisan_add_plan_measures", {
+    p_tender_id: id.data,
+    p_measures: measures.data,
+  });
+  if (error) {
+    return {
+      error:
+        error.code === "42501"
+          ? t.errors.forbidden
+          : error.code === "22023"
+            ? error.message
+            : t.plan.measure.invalid,
+    };
+  }
+  revalidatePath(`${BASE}/${id.data}`);
+  redirect(`${BASE}/${id.data}?etape=releve&mesures=${count ?? measures.data.length}` as Route);
 }
 
 const finish = z.object({

@@ -6296,6 +6296,7 @@ export const fr = {
           photo: "Photo : à vérifier",
           saisi: "Saisi",
           estime: "Estimé",
+          trace: "Tracé à la main",
           uncertain: "À vérifier",
           missing: "À compléter",
         },
@@ -6422,6 +6423,77 @@ export const fr = {
           legendAnchor: "Cote qui cale l'échelle",
           overlayLabel: "Contours des pièces sur le plan",
           note: "« Estimé » : mesuré à l'échelle sur le contour tracé, jamais présenté comme une cote de l'architecte.",
+          // Métré à la main (F-159, lot 3, maquette du lot 53, planche 2).
+          open: "Mesurer sur le plan",
+          back: "Retour au relevé",
+          boardLabel: "Plan à mesurer",
+          tools: {
+            echelle: "Caler l'échelle",
+            surface: "Surface",
+            longueur: "Longueur",
+            comptage: "Compter",
+            contour: "Corriger un contour",
+          } as Record<string, string>,
+          toolsLabel: "Outils de mesure",
+          scaleSet: (cm: string) => `Échelle calée : ${cm} cm`,
+          scaleFromTrace: "Échelle calée sur les cotes lues",
+          scaleMissing: "Échelle à caler",
+          undo: "Annuler le dernier point",
+          cancel: "Abandonner le tracé",
+          finish: "Terminer le tracé",
+          zoomIn: "Agrandir le plan",
+          zoomOut: "Réduire le plan",
+          hints: {
+            echelle:
+              "Cliquez les deux bouts d'une cote écrite sur le plan, puis saisissez sa valeur.",
+            surface:
+              "Cliquez chaque angle de la pièce, puis revenez sur le premier point pour fermer.",
+            longueur: "Cliquez le début, chaque changement de direction, puis terminez le tracé.",
+            comptage: "Cliquez chaque élément à compter, puis terminez.",
+            contour: "Cliquez une pièce tracée, déplacez ses points, puis terminez.",
+          } as Record<string, string>,
+          needScale: "Calez d'abord l'échelle pour mesurer une surface ou une longueur.",
+          noImage:
+            "Le métré sur le plan fonctionne sur les photos de plans (JPG, PNG). Les PDF arrivent ensuite.",
+          calibrateTitle: "Caler l'échelle",
+          calibrateText:
+            "Saisissez la valeur de la cote que vous venez de désigner, en centimètres.",
+          calibrateValue: "Valeur de la cote (cm)",
+          calibrateApply: "Caler",
+          calibrateInvalid: "Saisissez une valeur en centimètres, sur une cote assez longue.",
+          pendingTitle: "Nommer la mesure",
+          name: "Nom",
+          room: "Pièce",
+          newRoom: "Nouvelle pièce",
+          trade: "Lot",
+          noTrade: "Aucun lot",
+          add: "Ajouter",
+          listTitle: "Mesures prises",
+          listEmpty: "Aucune mesure pour l'instant. Choisissez un outil et tracez sur le plan.",
+          listNote:
+            "Une surface devient une pièce, une longueur ou un comptage devient un ouvrage dans le lot choisi.",
+          kinds: { surface: "Surface", longueur: "Longueur", comptage: "Comptage" } as Record<
+            string,
+            string
+          >,
+          remove: (name: string) => `Retirer ${name || "la mesure"}`,
+          doneTitle: "Terminé ?",
+          doneText:
+            "Les mesures tracées à la main sont marquées « Tracé à la main » dans le relevé et le DPGF.",
+          submit: "Ajouter au relevé",
+          submitting: "Enregistrement…",
+          saved: (n: number) =>
+            `${n} mesure${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""} au relevé.`,
+          invalid: "Ces mesures n'ont pas pu être enregistrées. Retracez-les.",
+          defaults: { surface: "Pièce", longueur: "Longueur", comptage: "Éléments" } as Record<
+            string,
+            string
+          >,
+          live: {
+            surface: (m2: string, ml: string) => `${m2} m² · périmètre ${ml} ml`,
+            longueur: (ml: string) => `${ml} ml`,
+            comptage: (n: number) => `${n} u`,
+          },
         },
         // Écran du relevé (maquette du lot 35, écran 2).
         viewerLabel: "Plans déposés",
@@ -6528,6 +6600,7 @@ export const fr = {
           manque: "À compléter",
           saisi: "Saisi",
           estime: "Estimé",
+          trace: "Tracé à la main",
         } as Record<string, string>,
         detail: "Calcul",
         origin: "Origine",

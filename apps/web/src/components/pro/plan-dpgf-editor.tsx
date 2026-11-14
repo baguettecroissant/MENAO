@@ -28,6 +28,8 @@ const TONES = {
   saisi: "neutral",
   // Mesurée à l'échelle sur un contour tracé (F-159, lot 2) : une estimation, à vérifier.
   estime: "warning",
+  // Tracée à la main par l'artisan sur le plan (lot 3).
+  trace: "neutral",
 } as const;
 
 type Draft = { quantity: string; price: string };
