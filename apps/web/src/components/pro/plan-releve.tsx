@@ -197,7 +197,9 @@ export function PlanReleve({
   }
 
   // Contours du plan affiché : en ambre les pièces estimées, en bleu celles mesurées par ailleurs.
-  const trace = traces.find((x) => x.file === view.file + 1 && (x.page ?? 1) === view.page);
+  // Une photo n'a qu'une page ; un PDF affiche la page choisie.
+  const shownPage = files[view.file]?.kind === "pdf" ? view.page : 1;
+  const trace = traces.find((x) => x.file === view.file + 1 && (x.page ?? 1) === shownPage);
   const overlay: PlanOverlay | null = trace
     ? {
         width: trace.width,
