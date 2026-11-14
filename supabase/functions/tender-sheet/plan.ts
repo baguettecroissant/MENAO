@@ -14,6 +14,7 @@ import {
   normalizePlanReading,
   planReadingJsonSchema,
 } from "../../../packages/core/src/plan-reading.ts";
+import { planTileLabel, type PlanTile } from "../../../packages/core/src/plan-tiles.ts";
 import {
   PLAN_PAGE_TYPES,
   PLAN_WORK_KINDS,
@@ -45,6 +46,9 @@ export const planRawSchema = z.object({
         largeur_m: nullableNumber,
         perimetre_m: nullableNumber,
         hauteur_m: nullableNumber,
+        // Absentes des anciennes réponses (faux modèle des tests) : liste vide.
+        cotes_longueur_m: z.array(z.number()).max(40).default([]),
+        cotes_largeur_m: z.array(z.number()).max(40).default([]),
         humide: z.boolean(),
         habitable: z.boolean(),
         certitude: z.enum(["sure", "incertaine"]),
@@ -100,13 +104,15 @@ export function planOutputSchema(): Record<string, unknown> {
 export const PLAN_SYSTEM = `Tu lis les plans d'un architecte ou d'un géomètre (plans de niveaux, coupes, façades, toiture, plan de masse, coupe de terrain, plan de réseaux) pour un appel d'offres du bâtiment. Une entreprise artisanale prépare son offre sur MENAO, plateforme française qui relie particuliers et artisans ; elle vérifie ensuite chaque valeur.
 
 Les fichiers sont numérotés dans l'ordre où ils te sont donnés (fichier 1, 2…). Une photo compte pour une seule page.
+Une photo peut être suivie de ses zones agrandies : ce sont des morceaux de la même photo, découpés en grille avec un recouvrement, et non d'autres plans. Sers-toi de la vue d'ensemble pour situer les pièces et de chaque zone pour lire les petites écritures (noms, surfaces, cotes, niveaux). Une pièce ou une cote visible dans deux zones voisines ne compte qu'une fois ; le fichier et la page restent ceux de la photo.
 
 Relève chaque pièce dessinée sur les plans de niveaux, une seule fois :
 - fichier, page : où tu l'as lue (numéro du fichier et page de ce fichier, à partir de 1).
 - niveau : tel qu'écrit sur le plan ou dans son cartouche (« RDC », « R+1 », « Sous-sol »), chaîne vide s'il n'est pas indiqué.
 - nom : le nom de la pièce tel qu'écrit (« Séjour-cuisine », « SdB », « Chambre 2 »).
 - surface_m2 : la surface écrite sur le plan pour cette pièce (« 45,14 m² » vaut 45.14), null si elle n'est pas écrite. Ne la calcule jamais toi-même.
-- longueur_m, largeur_m : les deux cotes intérieures de la pièce si elles sont écrites et que la pièce est rectangulaire, sinon null.
+- longueur_m, largeur_m : les deux cotes intérieures de la pièce si elles sont écrites d'un seul tenant et que la pièce est rectangulaire, sinon null.
+- cotes_longueur_m, cotes_largeur_m : quand la longueur ou la largeur intérieure d'une pièce rectangulaire n'est pas écrite d'un seul tenant mais par une chaîne de cotes le long de ce mur, donne ici les cotes écrites de cette chaîne, dans l'ordre, converties en mètres (« 148 » en centimètres vaut 1.48), sans les additionner : l'addition est faite ensuite. Ne prends que des cotes qui mesurent l'intérieur de cette pièce, d'un nu de mur à l'autre ; laisse de côté les épaisseurs de murs et de cloisons, et les cotes des pièces voisines. Si tu n'es pas sûr qu'une chaîne couvre exactement ce côté de la pièce, ou si la pièce n'est pas rectangulaire, laisse la liste vide. Liste vide aussi quand longueur_m ou largeur_m est donnée, ou quand la surface est écrite.
 - perimetre_m : seulement s'il est écrit, sinon null.
 - hauteur_m : hauteur sous plafond écrite pour cette pièce, sinon null.
 - humide : vrai pour une salle de bains, salle d'eau, WC, buanderie, cuisine fermée ; faux pour un cellier, un dressing, un placard ou une pièce de vie ouverte sur la cuisine.
@@ -147,7 +153,18 @@ function base64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-export type PlanFile = { kind: "pdf" | "jpg" | "png"; bytes: Uint8Array };
+/** Zone agrandie d'une photo (F-159, ADR 0325) : sa place dans la grille et son image. */
+export type PlanFileTile = Pick<PlanTile, "col" | "row" | "cols" | "rows"> & {
+  bytes: Uint8Array;
+};
+export type PlanFile = {
+  kind: "pdf" | "jpg" | "png";
+  bytes: Uint8Array;
+  tiles?: PlanFileTile[];
+};
+
+/** Raisonnement de la lecture des plans : plus poussé que le réglage par défaut des autres usages. */
+export const PLAN_EFFORT = "medium" as const;
 
 export type PlanFileReading =
   | ({ status: "ok" } & PlanReading & PlanWorksReading)
@@ -162,7 +179,13 @@ export function planUserContent(
   files.forEach((file, i) => {
     content.push({
       type: "text",
-      text: `Fichier ${i + 1} : ${file.kind === "pdf" ? "PDF" : "photo d'un plan"}.`,
+      text: `Fichier ${i + 1} : ${
+        file.kind === "pdf"
+          ? "PDF"
+          : file.tiles?.length
+            ? `photo d'un plan, vue d'ensemble suivie de ses ${file.tiles.length} zones agrandies`
+            : "photo d'un plan"
+      }.`,
     });
     content.push(
       file.kind === "pdf"
@@ -179,6 +202,14 @@ export function planUserContent(
             },
           },
     );
+    // Zones agrandies de la photo, lues à la pleine résolution du modèle.
+    for (const tile of file.tiles ?? []) {
+      content.push({ type: "text", text: `Fichier ${i + 1}, ${planTileLabel(tile)}, agrandie.` });
+      content.push({
+        type: "image",
+        source: { type: "base64", media_type: "image/jpeg", data: base64(tile.bytes) },
+      });
+    }
   });
   content.push({ type: "text", text: "<plan>Plans à relever pour un appel d'offres.</plan>" });
   // Codes des métiers de l'appel d'offres (table des métiers, lettres et tirets) : lots possibles.
@@ -214,7 +245,7 @@ export async function readPlans(
         system: [{ type: "text", text: PLAN_SYSTEM, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content }],
         output_config: {
-          ...(reasoning.effort ? { effort: reasoning.effort } : {}),
+          ...(reasoning.effort ? { effort: PLAN_EFFORT } : {}),
           format: { type: "json_schema", schema: planOutputSchema() },
         },
       },

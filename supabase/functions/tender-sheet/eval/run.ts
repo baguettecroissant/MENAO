@@ -27,6 +27,7 @@ import {
 } from "../../../../packages/core/src/plan-works.ts";
 import { llmConfig, openRouterBaseUrl, planModel, reasoningFor } from "../../_shared/ai.ts";
 import {
+  PLAN_EFFORT,
   PLAN_SYSTEM,
   planOutputSchema,
   planRawSchema,
@@ -63,6 +64,8 @@ type Case = {
   /** Altitudes écrites à retrouver, en mètres. */
   altitudes?: number[];
   ouvrages?: ExpectedWork[];
+  /** Zones agrandies du premier fichier (photo lue en haute définition, F-159). */
+  zones?: { fichier: string; col: number; row: number; cols: number; rows: number }[];
 };
 type ExpectedWork = {
   nom: string;
@@ -106,11 +109,24 @@ const cases = [
 const kindOf = (name: string): PlanFile["kind"] =>
   name.toLowerCase().endsWith(".pdf") ? "pdf" : name.toLowerCase().endsWith(".png") ? "png" : "jpg";
 
-async function loadFiles(c: { dossier: string; fichiers: string[] }): Promise<PlanFile[]> {
+async function loadFiles(c: {
+  dossier: string;
+  fichiers: string[];
+  zones?: Case["zones"];
+}): Promise<PlanFile[]> {
   return await Promise.all(
-    c.fichiers.map(async (f) => ({
+    c.fichiers.map(async (f, i) => ({
       kind: kindOf(f),
       bytes: await Deno.readFile(`${c.dossier}/${f}`),
+      tiles:
+        i === 0
+          ? await Promise.all(
+              (c.zones ?? []).map(async ({ fichier, ...place }) => ({
+                ...place,
+                bytes: await Deno.readFile(`${c.dossier}/${fichier}`),
+              })),
+            )
+          : [],
     })),
   );
 }
@@ -125,11 +141,15 @@ function pdfPages(bytes: Uint8Array): number {
 }
 
 const model = args.get("modele") ?? planModel();
+/** Raisonnement : celui de l'Edge Function par défaut ; `--effort=low` pour comparer. */
+const effort = (args.get("effort") ?? PLAN_EFFORT) as "low" | "medium" | "high";
 
 // ------------------------------------------------------------------ estimation (gratuite)
 /** Jetons d'entrée par page de PDF (texte + image de la page) et par photo, en ordre de grandeur. */
 const TOKENS_PDF_PAGE = 3000;
-const TOKENS_PHOTO = 1700;
+const TOKENS_PHOTO = 4800;
+/** Zone agrandie : une image à la pleine résolution du modèle. */
+const TOKENS_TILE = 4800;
 const TOKENS_SYSTEM = 3400;
 const TOKENS_OUTPUT = 4500;
 
@@ -143,6 +163,7 @@ if (estimation) {
       const n = f.kind === "pdf" ? pdfPages(f.bytes) : 1;
       pages += n;
       input += f.kind === "pdf" ? n * TOKENS_PDF_PAGE : TOKENS_PHOTO;
+      input += (f.tiles?.length ?? 0) * TOKENS_TILE;
     }
   }
   const output = cases.length * TOKENS_OUTPUT;
@@ -209,7 +230,7 @@ async function read(files: PlanFile[], trades: string[]): Promise<Read> {
         system: [{ type: "text", text: PLAN_SYSTEM, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: planUserContent(files, trades) }],
         output_config: {
-          ...(reasoning.effort ? { effort: reasoning.effort } : {}),
+          ...(reasoning.effort ? { effort } : {}),
           format: { type: "json_schema", schema: planOutputSchema() },
         },
       },

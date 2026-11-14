@@ -189,9 +189,23 @@ export async function tenderLinesForQuote(
 // DPGF depuis les plans (F-140, ADR 0291)
 // ---------------------------------------------------------------------------------------------
 
+const grid = z.number().int().min(1).max(3);
 const planFile = z.object({
   path: z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(pdf|jpg|png)$/),
   name: z.string().max(200),
+  // Zones agrandies d'une photo, lues en haute définition (F-159, ADR 0325).
+  tiles: z
+    .array(
+      z.object({
+        path: z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/),
+        col: grid,
+        row: grid,
+        cols: grid,
+        rows: grid,
+      }),
+    )
+    .max(6)
+    .default([]),
 });
 
 /** Lecture des plans par l'Edge Function tender-sheet, puis retour sur l'appel d'offres. */

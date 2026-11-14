@@ -11,6 +11,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { MAX_TILES_PER_READING } from "@menao/core";
 import { startTransition, useActionState, useId, useState, type ReactNode } from "react";
 import { ReadingScreen } from "@/components/pro/reading-screen";
 import { Alert, Button, Field, FieldError } from "@/components/ui";
@@ -18,7 +19,7 @@ import { fr } from "@/i18n/fr";
 import { createPlanTender, createTender } from "@/lib/artisan/tender-actions";
 import { type FormState, initialFormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/client";
-import { resizeImage } from "@/lib/upload/client";
+import { planViews } from "@/lib/upload/client";
 
 const t = fr.pro.tenders;
 const TYPES = {
@@ -28,7 +29,6 @@ const TYPES = {
 const MAX_BYTES = 15 * 1024 * 1024;
 const MAX_PLANS = 10;
 /** Photo d'un plan : réduite et réencodée en JPEG avant l'envoi (5 Mo au plus pour le modèle). */
-const PHOTO_SIDE = 2400;
 
 export type TradeOption = { code: string; label: string };
 type Mode = "dpgf" | "plans";
@@ -417,26 +417,56 @@ function PlanTenderForm({
     }
     setUploading(true);
     const supabase = createClient();
-    const uploaded: { path: string; name: string }[] = [];
-    for (const file of files) {
-      const kind = planKind(file);
-      if (!kind) continue;
-      const body = kind === "pdf" ? file : await resizeImage(file, PHOTO_SIDE, { quality: 0.9 });
+    type Tile = { path: string; col: number; row: number; cols: number; rows: number };
+    const uploaded: { path: string; name: string; tiles: Tile[] }[] = [];
+    const sent: string[] = [];
+    // Fichiers déjà envoyés retirés : rien ne reste sans appel d'offres.
+    const abort = async () => {
+      if (sent.length) await supabase.storage.from("tender-files").remove(sent);
+      setUploading(false);
+      setFileError(t.errors.upload ?? null);
+    };
+    const send = async (kind: "pdf" | "jpg", body: Blob) => {
       const path = `${artisanId}/${crypto.randomUUID()}.${kind}`;
       const { error } = await supabase.storage.from("tender-files").upload(path, body, {
         contentType: kind === "pdf" ? "application/pdf" : "image/jpeg",
         upsert: false,
       });
-      if (error) {
-        // Fichiers déjà envoyés retirés : rien ne reste sans appel d'offres.
-        if (uploaded.length) {
-          await supabase.storage.from("tender-files").remove(uploaded.map((u) => u.path));
-        }
-        setUploading(false);
-        setFileError(t.errors.upload ?? null);
-        return;
+      if (error) return null;
+      sent.push(path);
+      return path;
+    };
+    let tileBudget = MAX_TILES_PER_READING;
+    for (const file of files) {
+      const kind = planKind(file);
+      if (!kind) continue;
+      if (kind === "pdf") {
+        const path = await send("pdf", file);
+        if (!path) return abort();
+        uploaded.push({ path, name: file.name.slice(0, 200), tiles: [] });
+        continue;
       }
-      uploaded.push({ path, name: file.name.slice(0, 200) });
+      // Photo : vue d'ensemble, puis zones agrandies lues en haute définition (ADR 0325).
+      let views;
+      try {
+        views = await planViews(file);
+      } catch {
+        return abort();
+      }
+      const [overview, ...zones] = views;
+      const path = overview ? await send("jpg", overview.blob) : null;
+      if (!path) return abort();
+      const tiles: Tile[] = [];
+      // Zones au plus par lecture : au-delà, les plans suivants gardent leur vue d'ensemble.
+      if (zones.length <= tileBudget) {
+        for (const zone of zones) {
+          const tilePath = zone.tile ? await send("jpg", zone.blob) : null;
+          if (!tilePath || !zone.tile) return abort();
+          tiles.push({ path: tilePath, ...zone.tile });
+        }
+        tileBudget -= zones.length;
+      }
+      uploaded.push({ path, name: file.name.slice(0, 200), tiles });
     }
     setUploading(false);
     formData.set("files", JSON.stringify(uploaded));

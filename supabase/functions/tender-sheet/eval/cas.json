@@ -1167,5 +1167,210 @@
       }
     ],
     "fichiers": ["logement-et-masse.pdf"]
+  },
+  {
+    "id": "execution-vue-seule",
+    "note": "Plan d'exécution dense en photo, vue d'ensemble seule (lecture d'avant F-159)",
+    "zones": [],
+    "statut": "ok",
+    "echelle": "1/50",
+    "pieces": [
+      {
+        "niveau": "RDC",
+        "nom": "Séjour",
+        "surface_m2": null,
+        "cotes_m": [6.5, 5],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Cuisine",
+        "surface_m2": null,
+        "cotes_m": [4.5, 3.6],
+        "hauteur_m": 2.5,
+        "humide": true,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Entrée",
+        "surface_m2": null,
+        "cotes_m": [2.5, 2.4],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "WC",
+        "surface_m2": null,
+        "cotes_m": [2, 1.2],
+        "hauteur_m": 2.5,
+        "humide": true,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Cellier",
+        "surface_m2": null,
+        "cotes_m": [2, 1.2],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Dégagement",
+        "surface_m2": null,
+        "cotes_m": [4.5, 2],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Garage",
+        "surface_m2": null,
+        "cotes_m": [6.5, 3],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": false,
+        "incertaine": false
+      }
+    ],
+    "comptes": null,
+    "fichiers": ["execution.jpg"]
+  },
+  {
+    "id": "execution-zones",
+    "note": "Le même plan avec ses zones agrandies : chaînes de cotes à additionner par le cœur",
+    "zones": [
+      {
+        "fichier": "execution-zone-1.jpg",
+        "col": 1,
+        "row": 1,
+        "cols": 3,
+        "rows": 2
+      },
+      {
+        "fichier": "execution-zone-2.jpg",
+        "col": 2,
+        "row": 1,
+        "cols": 3,
+        "rows": 2
+      },
+      {
+        "fichier": "execution-zone-3.jpg",
+        "col": 3,
+        "row": 1,
+        "cols": 3,
+        "rows": 2
+      },
+      {
+        "fichier": "execution-zone-4.jpg",
+        "col": 1,
+        "row": 2,
+        "cols": 3,
+        "rows": 2
+      },
+      {
+        "fichier": "execution-zone-5.jpg",
+        "col": 2,
+        "row": 2,
+        "cols": 3,
+        "rows": 2
+      },
+      {
+        "fichier": "execution-zone-6.jpg",
+        "col": 3,
+        "row": 2,
+        "cols": 3,
+        "rows": 2
+      }
+    ],
+    "statut": "ok",
+    "echelle": "1/50",
+    "pieces": [
+      {
+        "niveau": "RDC",
+        "nom": "Séjour",
+        "surface_m2": null,
+        "cotes_m": [6.5, 5],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Cuisine",
+        "surface_m2": null,
+        "cotes_m": [4.5, 3.6],
+        "hauteur_m": 2.5,
+        "humide": true,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Entrée",
+        "surface_m2": null,
+        "cotes_m": [2.5, 2.4],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "WC",
+        "surface_m2": null,
+        "cotes_m": [2, 1.2],
+        "hauteur_m": 2.5,
+        "humide": true,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Cellier",
+        "surface_m2": null,
+        "cotes_m": [2, 1.2],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Dégagement",
+        "surface_m2": null,
+        "cotes_m": [4.5, 2],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": true,
+        "incertaine": false
+      },
+      {
+        "niveau": "RDC",
+        "nom": "Garage",
+        "surface_m2": null,
+        "cotes_m": [6.5, 3],
+        "hauteur_m": 2.5,
+        "humide": false,
+        "habitable": false,
+        "incertaine": false
+      }
+    ],
+    "comptes": null,
+    "fichiers": ["execution.jpg"]
   }
 ]

@@ -24,7 +24,8 @@ import {
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { readDpgfPdf } from "./pdf.ts";
-import { type PlanFile, readPlans } from "./plan.ts";
+import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts";
+import { type PlanFile, type PlanFileTile, readPlans } from "./plan.ts";
 import {
   applyTenderPrices,
   bestSheet,
@@ -270,7 +271,7 @@ async function readTenderPlans(
   tender: { id: string; source_kind: string | null; plan_files: unknown; plan_trades: unknown },
 ): Promise<Response> {
   const entries = Array.isArray(tender.plan_files)
-    ? (tender.plan_files as { path?: unknown; kind?: unknown }[])
+    ? (tender.plan_files as { path?: unknown; kind?: unknown; tiles?: unknown }[])
     : [];
   if (tender.source_kind !== "plan" || entries.length === 0) {
     return json({ status: "no_sheet" }, 422);
@@ -284,6 +285,7 @@ async function readTenderPlans(
 
   const files: PlanFile[] = [];
   let total = 0;
+  let zoneCount = 0;
   for (const entry of entries) {
     const kind =
       entry.kind === "pdf" || entry.kind === "jpg" || entry.kind === "png" ? entry.kind : null;
@@ -299,7 +301,26 @@ async function readTenderPlans(
     if (!MAGIC[kind].every((byte, i) => bytes[i] === byte)) {
       return json({ status: "unreadable" }, 422);
     }
-    files.push({ kind, bytes });
+    // Zones agrandies d'une photo (ADR 0325) : lues tant que la requête garde sa taille ; une zone
+    // manquante ou abîmée est laissée de côté, la vue d'ensemble suffit à lire le plan.
+    const tiles: PlanFileTile[] = [];
+    const zones = kind !== "pdf" && Array.isArray(entry.tiles) ? entry.tiles.slice(0, 6) : [];
+    for (const zone of zones as Record<string, unknown>[]) {
+      const [col, row, cols, rows] = [zone.col, zone.row, zone.cols, zone.rows].map((n) =>
+        typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= 3 ? n : null,
+      );
+      if (typeof zone.path !== "string" || !col || !row || !cols || !rows) continue;
+      if (zoneCount >= MAX_TILES_PER_READING) break;
+      const { data: tileBlob } = await admin.storage.from("tender-files").download(zone.path);
+      if (!tileBlob || tileBlob.size > MAX_PHOTO_BYTES) continue;
+      if (total + tileBlob.size > MAX_PLAN_BYTES) break;
+      const tileBytes = new Uint8Array(await tileBlob.arrayBuffer());
+      if (!MAGIC.jpg.every((byte, i) => tileBytes[i] === byte)) continue;
+      total += tileBlob.size;
+      zoneCount++;
+      tiles.push({ col, row, cols, rows, bytes: tileBytes });
+    }
+    files.push({ kind, bytes, tiles });
   }
 
   // Métiers de l'appel d'offres (codes de la table des métiers) : lots où ranger les ouvrages.

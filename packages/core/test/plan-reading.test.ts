@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PLAN_COUNT_KEYS,
   type PlanReadingRaw,
+  chainSum,
   normalizePlanCounts,
   normalizePlanReading,
   planReadingFigures,
@@ -251,5 +252,38 @@ describe("planReadingJsonSchema", () => {
   it("accepte encore les comptes en objet (ancienne forme)", () => {
     const { counts } = normalizePlanReading(raw({ comptes: { portes: 4, wc: null } }), 1);
     expect(counts).toMatchObject({ portes: 4, wc: null, fenetres: null });
+  });
+});
+
+describe("chaînes de cotes (F-159)", () => {
+  const read = (over: Partial<RawRoom>) =>
+    normalizePlanReading(
+      raw({ pieces: [room({ surface_m2: null, perimetre_m: null, ...over })] }),
+      1,
+    ).rooms[0];
+
+  it("additionne les cotes lues le long de chaque mur et calcule surface et périmètre", () => {
+    // 1,48 + 0,90 + 1,80 = 4,18 m ; 2,47 + 1,05 = 3,52 m ; 4,18 × 3,52 = 14,7136 m².
+    expect(
+      read({ cotes_longueur_m: [1.48, 0.9, 1.8], cotes_largeur_m: [2.47, 1.05] }),
+    ).toMatchObject({ areaCm2: 147_136, perimeterMm: 15_400, source: "cotes" });
+  });
+
+  it("préfère une cote écrite d'un seul tenant, et la surface écrite à tout calcul", () => {
+    expect(read({ longueur_m: 4.2, cotes_longueur_m: [1, 1], largeur_m: 3 })).toMatchObject({
+      areaCm2: 126_000,
+    });
+    expect(
+      read({ surface_m2: 15, cotes_longueur_m: [1.48, 0.9], cotes_largeur_m: [2.47] }),
+    ).toMatchObject({ areaCm2: 150_000, source: "plan" });
+  });
+
+  it("ne calcule rien avec une chaîne vide, incomplète ou douteuse", () => {
+    expect(read({ cotes_longueur_m: [1.48, 0.9], cotes_largeur_m: [] })?.areaCm2).toBeNull();
+    expect(read({ cotes_longueur_m: [1.48, -1], cotes_largeur_m: [2] })?.areaCm2).toBeNull();
+    expect(read({})?.areaCm2).toBeNull();
+    expect(chainSum(Array.from({ length: 13 }, () => 1))).toBeNull();
+    expect(chainSum([150, 150])).toBeNull();
+    expect(chainSum("4,18")).toBeNull();
   });
 });
