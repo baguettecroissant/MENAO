@@ -1,7 +1,8 @@
-import { formatRateBp } from "@menao/core";
-import { BookOpen } from "lucide-react-native";
+import { formatRaise, formatRateBp } from "@menao/core";
+import { router } from "expo-router";
+import { BookOpen, ReceiptText, TrendingUp } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ListFilters, ListGroup, ListRow, ListSearch } from "@/components/list-kit";
 import { MenaoLibraryStart } from "@/components/pro/menao-library-start";
 import { ListRowsSkeleton } from "@/components/skeletons";
@@ -16,8 +17,14 @@ import {
   loadMenaoTrades,
   type StartTrade,
 } from "@/lib/library";
+import {
+  loadInvoiceCounts,
+  loadUndoableRaise,
+  undoRaise,
+  type UndoableRaise,
+} from "@/lib/library-prices";
 import { useFocusData } from "@/lib/use-focus-data";
-import { Body, Notice, Screen } from "@/ui";
+import { Body, Notice, Screen, toast } from "@/ui";
 import { theme } from "@/ui/theme";
 
 const { colors, font } = theme;
@@ -25,12 +32,41 @@ const t = fr.proLibrary;
 const units = fr.proQuote.unitsShort as Record<string, string>;
 const shortDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR");
 
-/** Bibliothèque, et pour le premier passage les métiers du catalogue MENAO (F-147). */
-const load = async (): Promise<{ library: AppLibrary; trades: StartTrade[] } | null> => {
+type LibraryData = {
+  library: AppLibrary;
+  trades: StartTrade[];
+  /** Dernière hausse encore annulable (F-149, lot 44). */
+  raise: UndoableRaise | null;
+  /** Prix d'achat repérés dans les factures (F-149, lot 44). */
+  invoices: { changed: number; fresh: number };
+};
+
+/**
+ * Bibliothèque, et pour le premier passage les métiers du catalogue MENAO (F-147) ; ensuite la
+ * hausse annulable et les prix repérés dans les factures (F-149).
+ */
+const load = async (): Promise<LibraryData | null> => {
   const library = await loadLibrary({ seed: true });
   if (!library) return null;
-  return { library, trades: library.onboarded ? [] : await loadMenaoTrades() };
+  if (!library.onboarded) {
+    return {
+      library,
+      trades: await loadMenaoTrades(),
+      raise: null,
+      invoices: { changed: 0, fresh: 0 },
+    };
+  }
+  const [raise, invoices] = await Promise.all([loadUndoableRaise(), loadInvoiceCounts()]);
+  return { library, trades: [], raise, invoices };
 };
+
+const until = (iso: string) =>
+  new Date(iso).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 /**
  * Bibliothèque d'ouvrages dans l'onglet Argent (F-141, ADR 0293, 0294), comme sur le site : chaque
@@ -88,8 +124,51 @@ export function LibraryScreen({ switcher }: { switcher: ReactNode }) {
       {header}
       {added !== null ? <Notice tone="info">{t.added(added)}</Notice> : null}
       {library.seeded !== null ? <Notice tone="info">{t.seeded(library.seeded)}</Notice> : null}
+      {data.raise && !examples ? (
+        <PriceBanner
+          tone="primary"
+          icon={TrendingUp}
+          text={t.raise.done(
+            formatRaise(data.raise.rateBp),
+            data.raise.works,
+            data.raise.supplies,
+            until(data.raise.until),
+          )}
+          link={t.raise.undo}
+          onPress={async () => {
+            const restored = await undoRaise(data.raise!.id);
+            if (restored === null) toast.error(t.raise.undoFailed);
+            else toast.success(t.raise.undone(restored));
+            await reload();
+          }}
+        />
+      ) : null}
+      {!examples && (data.invoices.changed > 0 || data.invoices.fresh > 0) ? (
+        <PriceBanner
+          tone="neutral"
+          icon={ReceiptText}
+          text={t.invoices.banner(data.invoices.changed, data.invoices.fresh)}
+          link={t.invoices.bannerLink}
+          onPress={() => router.push("/pro-prix-factures")}
+        />
+      ) : null}
       {library.works.length > 0 ? (
-        <ListSearch value={query} onChangeText={setQuery} placeholder={t.search} />
+        <View style={styles.searchRow}>
+          <View style={styles.searchGrow}>
+            <ListSearch value={query} onChangeText={setQuery} placeholder={t.search} />
+          </View>
+          {!examples ? (
+            <Pressable
+              role="button"
+              aria-label={t.raise.title}
+              onPress={() => router.push("/pro-hausse")}
+              style={({ pressed }) => [styles.raiseButton, pressed && styles.pressed]}
+            >
+              <TrendingUp size={16} color={colors.foreground} />
+              <Text style={styles.raiseLabel}>{t.raise.button}</Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
       {menaoCount > 0 ? (
         <ListFilters
@@ -171,6 +250,39 @@ export function LibraryScreen({ switcher }: { switcher: ReactNode }) {
   );
 }
 
+/** Bandeau de la bibliothèque (lot 44) : hausse annulable, ou prix à vérifier. */
+function PriceBanner({
+  tone,
+  icon: Icon,
+  text,
+  link,
+  onPress,
+}: {
+  tone: "primary" | "neutral";
+  icon: typeof TrendingUp;
+  text: string;
+  link: string;
+  onPress: () => void;
+}) {
+  const fg = tone === "primary" ? colors["primary-strong"] : colors.foreground;
+  return (
+    <Pressable
+      role="button"
+      aria-label={`${text} ${link}`}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.banner,
+        tone === "primary" ? styles.bannerPrimary : styles.bannerNeutral,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Icon size={17} color={fg} />
+      <Text style={[styles.bannerText, { color: fg }]}>{text}</Text>
+      <Text style={[styles.bannerLink, { color: fg }]}>{link}</Text>
+    </Pressable>
+  );
+}
+
 /** Pastille « MENAO » suivie du métier et de l'unité (lot 41, écran 4). */
 export function MenaoChip({ detail }: { detail: string }) {
   return (
@@ -187,6 +299,33 @@ export function MenaoChip({ detail }: { detail: string }) {
 }
 
 const styles = StyleSheet.create({
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  searchGrow: { flex: 1 },
+  raiseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: theme.touchTarget,
+    paddingHorizontal: 12,
+    borderRadius: theme.radius.input,
+    borderWidth: 1,
+    borderColor: colors["border-strong"],
+    backgroundColor: colors.surface,
+  },
+  raiseLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.foreground },
+  pressed: { opacity: 0.7 },
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  bannerPrimary: { backgroundColor: colors["primary-soft"] },
+  bannerNeutral: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  bannerText: { flex: 1, fontFamily: font.regular, fontSize: 13.5, lineHeight: 19 },
+  bannerLink: { fontFamily: font.bold, fontSize: 13.5 },
   chipRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 },
   chip: {
     flexDirection: "row",

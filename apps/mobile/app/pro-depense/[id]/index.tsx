@@ -1,7 +1,7 @@
 import { expenseStatus, isExampleId, parisToday, type ExpenseStatus } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { Check, ExternalLink, Pencil, RotateCcw } from "lucide-react-native";
+import { Check, ExternalLink, Pencil, ReceiptText, RotateCcw } from "lucide-react-native";
 import { useCallback, useState, type ReactNode } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { ExampleBadge, ExampleLock } from "@/components/examples";
@@ -27,6 +27,7 @@ import {
   setExpensePaid,
   unhideExpense,
 } from "@/lib/pro-expenses";
+import { loadExpensePriceChanges } from "@/lib/library-prices";
 import { invalidateScreen, readScreenPreview } from "@/lib/screen-cache";
 import { runUndoable } from "@/lib/undo";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -36,6 +37,7 @@ import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proExpenses;
 const d = t.detail;
+const pc = fr.proLibrary.invoices;
 const { colors, font, spacing } = theme;
 
 const STATUS_TONE: Record<ExpenseStatus, FicheTone> = {
@@ -66,6 +68,9 @@ function ExpenseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const load = useCallback(() => loadExpenseView(id), [id]);
   const [expense, reload] = useFocusData(load, undefined, expenseScreenKey(id));
+  // Prix d'achat que cette facture permet de mettre à jour (F-149, lot 44).
+  const loadChanges = useCallback(() => loadExpensePriceChanges(id), [id]);
+  const [priceChanges] = useFocusData(loadChanges);
   // Payée ou non : affiché tout de suite, avant la réponse du serveur (ADR 0195).
   const [paidOverride, setPaidOverride] = useState<boolean | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -172,6 +177,21 @@ function ExpenseScreen() {
         </View>
       </ExampleLock>
 
+      {priceChanges ? (
+        <View style={styles.prices}>
+          <View style={styles.pricesHead}>
+            <ReceiptText size={19} color={colors["primary-strong"]} />
+            <Text role="heading" style={styles.pricesTitle}>
+              {pc.expenseTitle(priceChanges.count)}
+            </Text>
+          </View>
+          <Text style={styles.pricesText}>
+            {pc.expenseText(priceChanges.names, priceChanges.count, priceChanges.trend)}
+          </Text>
+          <FicheButton label={pc.expenseButton} onPress={() => router.push("/pro-prix-factures")} />
+        </View>
+      ) : null}
+
       <FicheCard padding={5.5} gap={3}>
         <Text style={styles.totalLabel}>{d.totals.ttc}</Text>
         <Text
@@ -271,6 +291,16 @@ function ExpenseScreen() {
 }
 
 const styles = StyleSheet.create({
+  prices: {
+    gap: spacing(2.5),
+    padding: spacing(3.5),
+    borderRadius: 14,
+    backgroundColor: colors["primary-soft"],
+  },
+  pricesHead: { flexDirection: "row", alignItems: "center", gap: spacing(2.5) },
+  pricesTitle: { fontFamily: font.bold, fontSize: 15, color: colors["primary-strong"] },
+  pricesText: { fontFamily: font.regular, fontSize: 13.5, lineHeight: 19, color: colors.label },
+
   actions: { flexDirection: "row", gap: spacing(2.5) },
   totalLabel: { fontFamily: font.semibold, fontSize: 14, color: colors.label },
   total: {
