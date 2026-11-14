@@ -87,6 +87,18 @@ export function quoteModel(): string {
 }
 
 /**
+ * Modèle de la lecture des plans (F-158, ADR 0324) : Opus 5.5, retenu après évaluation (aucune
+ * quantité inventée, lots mieux rangés, plus d'ouvrages relevés sur de vrais plans, pour environ
+ * 2 centimes de plus par lecture). `AI_PLAN_MODEL` le change sans code.
+ */
+export function planModel(): string {
+  return (
+    env("AI_PLAN_MODEL") ||
+    (env("ANTHROPIC_API_KEY") ? "claude-opus-5-5" : "anthropic/claude-opus-5.5")
+  );
+}
+
+/**
  * Raisonnement selon le modèle. Haiku 5.5 l'accepte désactivé (réponse la plus rapide) ;
  * Sonnet 5.5 l'impose (« disabled » renvoie une 400 « Reasoning is mandatory ») : raisonnement
  * adaptatif à effort bas, suffisant pour une extraction en sortie structurée.

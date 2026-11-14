@@ -65,3 +65,7 @@ lecture. Un modèle plus cher n'est retenu que s'il invente moins ou trouve nett
 Les deux modèles n'inventent rien. Opus 5.5 range mieux les lots, remplit les éléments comptés et
 relève plus d'ouvrages sur les vrais plans, pour environ 2 centimes de plus par lecture. Le modèle
 se règle sans code par `AI_PLAN_MODEL` ; la décision revient au responsable.
+
+**Décision du 14/11/2026 : Opus 5.5** pour la lecture des plans (`planModel()` dans
+`_shared/ai.ts`). Les autres usages (devis, DPGF en PDF, analyse des demandes) gardent leur
+modèle.

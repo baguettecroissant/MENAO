@@ -25,7 +25,7 @@ import {
   normalizePlanWorks,
   type PlanWorksReading,
 } from "../../../../packages/core/src/plan-works.ts";
-import { llmConfig, openRouterBaseUrl, quoteModel, reasoningFor } from "../../_shared/ai.ts";
+import { llmConfig, openRouterBaseUrl, planModel, reasoningFor } from "../../_shared/ai.ts";
 import {
   PLAN_SYSTEM,
   planOutputSchema,
@@ -124,7 +124,7 @@ function pdfPages(bytes: Uint8Array): number {
   return Math.max(1, (text.match(/\/Type\s*\/Page(?!s)/g) ?? []).length);
 }
 
-const model = args.get("modele") ?? quoteModel();
+const model = args.get("modele") ?? planModel();
 
 // ------------------------------------------------------------------ estimation (gratuite)
 /** Jetons d'entrée par page de PDF (texte + image de la page) et par photo, en ordre de grandeur. */

@@ -21,8 +21,7 @@ import {
   normalizePlanWorks,
   planWorksJsonSchema,
 } from "../../../packages/core/src/plan-works.ts";
-import { llmConfig, logAiRuns, quoteModel, reasoningFor, type AiRun } from "../_shared/ai.ts";
-import { env } from "../_shared/env.ts";
+import { llmConfig, logAiRuns, planModel, reasoningFor, type AiRun } from "../_shared/ai.ts";
 
 const nullableNumber = z.number().nullable();
 /** Délai d'une lecture de plans : sous la durée maximale d'une Edge Function (150 s). */
@@ -198,8 +197,8 @@ export async function readPlans(
     console.error("tender-sheet : aucune clé de modèle configurée");
     return { status: "unavailable" };
   }
-  // Lecture visuelle fine (petites écritures des plans) : le modèle des devis par défaut.
-  const model = env("AI_PLAN_MODEL") || quoteModel();
+  // Lecture visuelle fine (petites écritures des plans) : modèle retenu par l'évaluation.
+  const model = planModel();
   const run: AiRun = { function_name: "read-plan", model, outcome: "erreur", latency_ms: 0 };
   const started = Date.now();
   try {
