@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -35,7 +35,11 @@ export default async function ArtisanProfilePage({
   if (!UUID.test(id) || !UUID.test(artisanId)) notFound();
   const supabase = await createClient();
   const [{ data: project }, profile, reviewRows, { data: auth }] = await Promise.all([
-    supabase.from("projects").select("id, trade_code").eq("id", id).maybeSingle(),
+    supabase
+      .from("projects")
+      .select("id, trade_code, ville_nom, trades(label)")
+      .eq("id", id)
+      .maybeSingle(),
     getArtisanProfile(supabase, artisanId),
     getArtisanReviews(supabase, artisanId),
     supabase.auth.getClaims(),
@@ -56,7 +60,32 @@ export default async function ArtisanProfilePage({
   const avatar = profile.avatar_path ? publicUrl(supabase, "avatars", profile.avatar_path) : null;
   const title = t.title(profile.display_name, profileTrade(profile, project.trade_code));
   const requestHref = sendPagePath(id, [profile.id]) as Route;
+  // « Sélectionner cet artisan » (maquette FicheParcoursNette, lot 48) : retour aux artisans
+  // trouvés avec cet artisan déjà coché.
+  const selectHref = `/recherche/${id}/artisans?choisi=${profile.id}` as Route;
+  const projectLine = [(project.trades as { label: string } | null)?.label, project.ville_nom]
+    .filter(Boolean)
+    .join(" · ");
 
+  const selectCard = (
+    <div className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
+      <h2 className="text-base font-bold tracking-tight">{t.projectTitle}</h2>
+      {projectLine && <p className="text-sm text-label">{projectLine}</p>}
+      <ButtonLink href={selectHref} variant="dark" className="!min-h-12 !rounded-pill">
+        <Check aria-hidden="true" className="size-4" />
+        {t.select}
+      </ButtonLink>
+      <p className="text-center text-[0.8125rem] text-muted-foreground">{t.selectHint}</p>
+      <p className="border-t border-border pt-3 text-center text-sm">
+        <Link href={requestHref} className="font-semibold text-primary-strong hover:underline">
+          {t.requestOnly}
+        </Link>
+      </p>
+    </div>
+  );
+
+  // Refonte « Nette » (lot 48, ADR 0317) : retour aux artisans trouvés, en-tête de la fiche, puis
+  // la fiche à gauche et « Votre projet » fixe à droite, comme la maquette FicheParcoursNette.
   return (
     <main className="bg-background">
       <StickyProfileBar
@@ -76,60 +105,42 @@ export default async function ArtisanProfilePage({
                 </div>
               </div>
             </div>
-            <ButtonLink href={requestHref} size="sm">
-              {t.request}
+            <ButtonLink href={selectHref} size="sm" variant="dark" block={false}>
+              {t.select}
             </ButtonLink>
           </div>
         }
       >
         <div className="border-b border-border bg-surface">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-            <nav aria-label={t.breadcrumb.label} className="text-xs text-muted-foreground">
-              <ol className="flex flex-wrap items-center gap-1.5">
-                <li className="inline-flex items-center gap-1.5">
-                  <Link href={`/recherche/${id}` as Route} className="hover:text-foreground">
-                    {t.breadcrumb.criteria}
-                  </Link>
-                  <ChevronRight aria-hidden="true" className="size-3.5" />
-                </li>
-                <li className="inline-flex items-center gap-1.5">
-                  <Link
-                    href={`/recherche/${id}/artisans` as Route}
-                    className="hover:text-foreground"
-                  >
-                    {t.breadcrumb.selection}
-                  </Link>
-                  <ChevronRight aria-hidden="true" className="size-3.5" />
-                </li>
-                <li aria-current="page" className="text-foreground">
-                  {title}
-                </li>
-              </ol>
-            </nav>
-            <ProfileHeader
-              profile={profile}
-              avatar={avatar}
-              title={title}
-              actions={
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  {/* Libellé sur une ligne, même à côté du menu latéral (maquette « Fiche artisan »). */}
-                  <ButtonLink
-                    href={requestHref}
-                    size="lg"
-                    className="shrink-0 whitespace-nowrap sm:w-auto"
-                  >
-                    {t.request}
-                  </ButtonLink>
-                  <p className="rounded-input bg-primary-softer px-3 py-2 text-xs text-primary-strong">
-                    {t.requestHint}
-                  </p>
-                </div>
-              }
-            />
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
+            <Link
+              href={`/recherche/${id}/artisans` as Route}
+              className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft aria-hidden="true" className="size-4" />
+              {t.backToResults}
+            </Link>
+            <ProfileHeader profile={profile} avatar={avatar} title={title} actions={null} />
           </div>
         </div>
       </StickyProfileBar>
-      <ProfileBody profile={profile} photos={photos} reviews={reviews} canReport={canReport} />
+      <ProfileBody
+        profile={profile}
+        photos={photos}
+        reviews={reviews}
+        canReport={canReport}
+        layout="public"
+        aside={<div className="hidden lg:block">{selectCard}</div>}
+      />
+      {/* Téléphone : la sélection toujours à portée de pouce. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-1 border-t border-border bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        <ButtonLink href={selectHref} variant="dark" size="lg" block>
+          <Check aria-hidden="true" className="size-4" />
+          {t.select}
+        </ButtonLink>
+        <p className="text-center text-xs text-muted-foreground">{t.selectHint}</p>
+      </div>
+      <div className="h-28 lg:hidden" aria-hidden="true" />
     </main>
   );
 }

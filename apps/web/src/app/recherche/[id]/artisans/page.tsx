@@ -33,9 +33,13 @@ export const metadata: Metadata = { title: t.title, robots: { index: false } };
 /** Sélection d'artisan (F-09), maquettes « Résultat de recherche – Cartes alignées ». */
 export default async function ProjectResultsPage({
   params,
+  searchParams,
 }: PageProps<"/recherche/[id]/artisans">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
+  // Artisan sélectionné depuis sa fiche (lot 48) : arrive coché.
+  const { choisi } = await searchParams;
+  const chosenId = typeof choisi === "string" && UUID.test(choisi) ? choisi : null;
   const supabase = await createClient();
   const { data: project } = await supabase
     .from("projects")
@@ -195,7 +199,7 @@ export default async function ProjectResultsPage({
         moreSpecialties={specs.more}
         selection={done ? "sent" : open ? "selectable" : "none"}
         known={!lot && a.artisan_id === preferredId && pastChantier !== null}
-        preselected={!lot && a.artisan_id === preferredId}
+        preselected={!lot && (a.artisan_id === preferredId || a.artisan_id === chosenId)}
         outsideZone={outsideZone}
         lotId={lot?.id}
         recommendedBy={recommendedBy}
