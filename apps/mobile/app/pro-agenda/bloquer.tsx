@@ -1,11 +1,13 @@
 import { AGENDA_LABEL_MAX_LENGTH, parisToday } from "@menao/core";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
+import { StyleSheet, Text } from "react-native";
 import { DateTimeFields, TimeField } from "@/components/date-time-fields";
-import { TopBar } from "@/components/top-bar";
+import { FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
 import { fr } from "@/i18n/fr";
 import { addBlockedSlot, type BlockedSlotErrors } from "@/lib/pro-agenda";
-import { Body, Button, Notice, Screen, TextField, Title } from "@/ui";
+import { Notice, TextField } from "@/ui";
+import { theme } from "@/ui/theme";
 import { syncPhoneCalendar } from "@/lib/phone-calendar";
 import { withTeamPermission } from "@/components/team-gate";
 
@@ -59,52 +61,65 @@ function BlockSlotScreen() {
   }
 
   return (
-    <Screen
-      header={<TopBar />}
-      footer={<Button label={t.submit} onPress={submit} loading={pending} />}
+    // Refonte « Nette » (lot 49, ADR 0318) : titre dans la barre, champs dans une carte, bouton
+    // en bas d'écran.
+    <FicheScreen
+      title={t.title}
+      keyboard
+      footer={<FicheButton label={t.submit} onPress={() => void submit()} loading={pending} tall />}
     >
-      <Title>{t.title}</Title>
-      <Body muted>{t.intro}</Body>
+      <Text style={styles.intro}>{t.intro}</Text>
       {failure ? <Notice tone="error">{failure}</Notice> : null}
-      <DateTimeFields
-        date={date}
-        minDate={today}
-        dateLabel={t.date}
-        onDate={(value) => {
-          setDate(value);
-          setErrors({});
-        }}
-        error={errors.date}
-      />
-      <TimeField
-        label={t.start}
-        time={start}
-        onTime={(value) => {
-          setStart(value);
-          setErrors({});
-        }}
-        error={errors.start}
-      />
-      <TimeField
-        label={t.end}
-        time={end}
-        onTime={(value) => {
-          setEnd(value);
-          setErrors({});
-        }}
-        error={errors.end}
-      />
-      <TextField
-        label={t.label}
-        value={label}
-        onChangeText={setLabel}
-        placeholder={t.labelPlaceholder}
-        maxLength={AGENDA_LABEL_MAX_LENGTH}
-        error={errors.label}
-      />
-    </Screen>
+      <FicheCard padding={4} gap={3}>
+        <DateTimeFields
+          date={date}
+          minDate={today}
+          dateLabel={t.date}
+          onDate={(value) => {
+            setDate(value);
+            setErrors({});
+          }}
+          error={errors.date}
+        />
+        <TimeField
+          label={t.start}
+          time={start}
+          onTime={(value) => {
+            setStart(value);
+            setErrors({});
+          }}
+          error={errors.start}
+        />
+        <TimeField
+          label={t.end}
+          time={end}
+          onTime={(value) => {
+            setEnd(value);
+            setErrors({});
+          }}
+          error={errors.end}
+        />
+        <TextField
+          label={t.label}
+          value={label}
+          onChangeText={setLabel}
+          placeholder={t.labelPlaceholder}
+          maxLength={AGENDA_LABEL_MAX_LENGTH}
+          error={errors.label}
+        />
+      </FicheCard>
+    </FicheScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  intro: {
+    fontFamily: theme.font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.label,
+  },
+});
 
 // Réservé selon la place dans l'entreprise (ADR 0241).
 export default withTeamPermission("agenda", BlockSlotScreen);

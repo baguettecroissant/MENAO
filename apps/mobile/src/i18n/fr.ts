@@ -4038,6 +4038,7 @@ export const fr = {
     signedPdf: "Télécharger le devis signé",
     open: (title: string, meta: string) => `${title}, ${meta} : ouvrir l'aperçu`,
     notFound: "Ce document est introuvable.",
+    signedTag: "Signé",
   },
   ago: {
     now: "à l'instant",
@@ -4630,6 +4631,7 @@ export const fr = {
     },
   },
   notFound: {
+    eyebrow: "ERREUR 404",
     title: "Page introuvable",
     text: "Cette page n'existe pas ou a été déplacée.",
     home: "Revenir à l'accueil",
