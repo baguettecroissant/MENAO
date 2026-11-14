@@ -201,7 +201,17 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
   await expect(leads.getByText("Objectif enregistré.")).toBeVisible();
   await expect(leads.getByText(/^Modifié le /)).toBeVisible();
   await leads.getByLabel("Demandes par mois").fill("4");
+  // L'URL et le message de confirmation sont déjà ceux du premier enregistrement : on attend
+  // la réponse de l'action serveur (objectif écrit en base) avant de quitter la page.
+  const secondSave = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/admin/reglages",
+  );
   await leads.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await secondSave;
+  await expect(page).toHaveURL(/\/admin\/reglages\?fait=objectif#demandes$/);
+  await expect(leads.getByText("Objectif enregistré.")).toBeVisible();
   await page.goto("/admin/objectifs");
   await expect(page.getByText("Objectif par défaut : 4 demandes par mois")).toBeVisible();
 
