@@ -499,22 +499,25 @@ export function WorkerDashboardView({
 }) {
   return (
     <main className={`flex-1 ${appTheme}`}>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-7 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-1.5">
           <p className="text-sm font-semibold text-muted-foreground">{formatToday(new Date())}</p>
           <h1 className="text-[2rem] leading-[1.05] sm:text-[2.5rem]">{t.greeting(firstName)}</h1>
           <p className="text-base text-label">{t.worker.subtitle(company)}</p>
         </div>
-        <UpcomingSection appointments={appointments} base="/pro" agendaHref="/pro/agenda" />
-        <Section title={t.worker.chantiers}>
-          {chantiers.length === 0 ? (
-            <p className="rounded-card border border-border bg-surface px-6 py-10 text-center text-sm text-muted-foreground shadow-card">
-              {t.worker.empty}
-            </p>
-          ) : (
-            <ChantierList rows={chantiers} />
-          )}
-        </Section>
+        {/* Refonte « Nette » (lot 46, ADR 0315) : chantiers à gauche, rendez-vous à droite. */}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_23.75rem]">
+          <Section title={t.worker.chantiers}>
+            {chantiers.length === 0 ? (
+              <p className="rounded-card border border-border bg-surface px-6 py-10 text-center text-sm text-muted-foreground shadow-card">
+                {t.worker.empty}
+              </p>
+            ) : (
+              <ChantierList rows={chantiers} />
+            )}
+          </Section>
+          <UpcomingSection appointments={appointments} base="/pro" agendaHref="/pro/agenda" />
+        </div>
       </div>
     </main>
   );

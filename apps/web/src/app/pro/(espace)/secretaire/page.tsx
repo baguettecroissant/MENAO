@@ -1,9 +1,8 @@
 import { parisMonthStart, parseAiAgents, voiceGauge } from "@menao/core";
-import { Headset } from "lucide-react";
+import { CalendarDays, CircleCheck, Phone, Send } from "lucide-react";
 import type { Metadata } from "next";
-import { ListHeader } from "@/components/list-kit";
 import { SecretaryView, type SecretaryViewName } from "@/components/pro/secretary-view";
-import { ButtonLink, Card } from "@/components/ui";
+import { ButtonLink, Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
@@ -31,24 +30,82 @@ export default async function SecretaryPage({ searchParams }: PageProps<"/pro/se
   const patron = space.teamPosition === "patron";
 
   if (!agents.agents.secretary) {
+    const n = t.notIncluded;
+    const icons = [Phone, CalendarDays, Send];
+    // Refonte « Nette » (lot 46, ADR 0315) : ce qu'elle fait à gauche, un exemple d'appel à droite.
     return (
       <main className="flex-1">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 pt-5 pb-10 sm:px-6">
-          <ListHeader title={t.title} />
-          <Card className="flex flex-col items-start gap-3">
-            <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary-strong">
-              <Headset aria-hidden="true" className="size-5" />
-            </span>
-            <h2 className="text-lg font-medium">{t.notIncluded.title}</h2>
-            <p className="text-sm text-muted-foreground">{t.notIncluded.text}</p>
-            {patron ? (
-              <ButtonLink href="/pro/onboarding/formule" className="sm:w-auto sm:px-6">
-                {t.notIncluded.cta}
-              </ButtonLink>
-            ) : (
-              <p className="text-sm">{t.notIncluded.askPatron}</p>
-            )}
-          </Card>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
+          <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2rem]">{t.title}</h1>
+          <div className="grid items-stretch gap-6 lg:grid-cols-[1.15fr_1fr]">
+            <Card className="flex flex-col items-start gap-4 sm:p-7">
+              <StatusBadge tone="primary">{n.badge}</StatusBadge>
+              <h2 className="font-display text-[1.625rem] leading-[1.15] font-bold tracking-tight">
+                {n.title}
+              </h2>
+              <p className="text-[0.9375rem] leading-normal text-label">{n.lead}</p>
+              <ul className="flex flex-col gap-3">
+                {n.points.map(([title, text], i) => {
+                  const Icon = icons[i] ?? Phone;
+                  return (
+                    <li key={title} className="flex items-start gap-3">
+                      <span className="flex size-[2.125rem] shrink-0 items-center justify-center rounded-[0.625rem] bg-primary-soft text-primary-strong">
+                        <Icon aria-hidden="true" className="size-[1.0625rem]" />
+                      </span>
+                      <span className="flex flex-col gap-0.5">
+                        <b className="text-[0.9375rem] font-semibold">{title}</b>
+                        <span className="text-[0.84375rem] leading-[1.4] text-muted-foreground">
+                          {text}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              {patron ? (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-1">
+                  <ButtonLink href="/pro/onboarding/formule" block={false}>
+                    {n.cta}
+                  </ButtonLink>
+                  <span className="text-[0.8125rem] text-muted-foreground">{n.included}</span>
+                </div>
+              ) : (
+                <p className="text-sm font-semibold">{n.askPatron}</p>
+              )}
+            </Card>
+            <Card className="flex flex-col gap-3" role="region" aria-label={n.example.label}>
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 items-center justify-center rounded-full bg-success-soft text-success">
+                  <Phone aria-hidden="true" className="size-[1.0625rem]" />
+                </span>
+                <span className="flex flex-col">
+                  <b className="text-[0.90625rem] font-semibold">{n.example.incoming}</b>
+                  <span className="text-[0.78125rem] text-muted-foreground">{n.example.busy}</span>
+                </span>
+              </div>
+              <div className="flex flex-col gap-2 rounded-[0.875rem] bg-background p-3">
+                {n.example.lines.map(([who, text]) => (
+                  <p
+                    key={text}
+                    className={`max-w-[80%] rounded-[0.875rem] border border-border px-3 py-2.5 text-[0.84375rem] leading-[1.4] ${
+                      who === "client" ? "self-end bg-primary-soft" : "self-start bg-surface"
+                    }`}
+                  >
+                    <b className="block text-xs font-semibold text-muted-foreground">
+                      {who === "client" ? n.example.client : n.example.secretary}
+                    </b>
+                    {text}
+                  </p>
+                ))}
+              </div>
+              <p className="flex items-center gap-2.5 rounded-xl bg-success-soft px-3 py-2.5 text-[0.84375rem]">
+                <CircleCheck aria-hidden="true" className="size-4 shrink-0 text-success" />
+                <span>
+                  <b>{n.example.booked}</b> {n.example.bookedDetail}
+                </span>
+              </p>
+            </Card>
+          </div>
         </div>
       </main>
     );

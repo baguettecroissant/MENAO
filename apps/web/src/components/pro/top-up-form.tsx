@@ -24,15 +24,13 @@ export function TopUpForm({
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <Button
         type="submit"
-        variant={primary ? "primary" : "outline"}
-        size="sm"
-        block={false}
+        variant={primary ? "primary" : "secondary"}
         disabled={pending}
-        className="self-start"
+        className="!rounded-pill"
       >
         {t.topUp(offer.minutes, euros.format(offer.priceCents / 100))}
       </Button>
-      <p className="text-xs text-muted-foreground">{t.topUpHint(offer.months)}</p>
+      <p className="text-center text-xs text-muted-foreground">{t.topUpHint(offer.months)}</p>
     </form>
   );
 }
