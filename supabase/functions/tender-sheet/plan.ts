@@ -161,6 +161,8 @@ export type PlanFile = {
   kind: "pdf" | "jpg" | "png";
   bytes: Uint8Array;
   tiles?: PlanFileTile[];
+  /** Pages d'un PDF rendues en images par le navigateur (ADR 0328) : tracées, pas relues. */
+  pageImages?: { page: number; bytes: Uint8Array }[];
 };
 
 /** Raisonnement de la lecture des plans : plus poussé que le réglage par défaut des autres usages. */

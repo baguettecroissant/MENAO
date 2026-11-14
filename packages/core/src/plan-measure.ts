@@ -148,6 +148,8 @@ export type TracedRoom = {
 export type PlanTrace = {
   /** Fichier déposé (à partir de 1) et dimensions de son image, en pixels. */
   file: number;
+  /** Page du fichier (à partir de 1) : 1 pour une photo, la page rendue en image pour un PDF. */
+  page: number;
   width: number;
   height: number;
   /** Échelle en micromètres par pixel (entier : 7 824 = 7,824 mm par pixel). */
@@ -172,6 +174,7 @@ export function buildPlanTrace(
   file: number,
   width: number,
   height: number,
+  page = 1,
 ): PlanTrace | null {
   if (!traceable(width, height)) return null;
   const anchors: PlanAnchor[] = [];
@@ -203,6 +206,7 @@ export function buildPlanTrace(
   if (rooms.length === 0) return null;
   return {
     file,
+    page,
     width,
     height,
     umPerPx: Math.round(scale.mmPerPx * 1000),
@@ -233,16 +237,17 @@ const nameKey = (name: string) =>
 /** Pièce tracée qui correspond à une pièce du relevé : même nom, de préférence sur son plan. */
 export function traceForRoom(
   traces: readonly PlanTrace[],
-  room: { name: string; file: number | null },
-): (TracedRoom & { file: number }) | null {
+  room: { name: string; file: number | null; page?: number | null },
+): (TracedRoom & { file: number; page: number }) | null {
   const key = nameKey(room.name);
   if (!key) return null;
-  const ordered = [...traces].sort(
-    (a, b) => Number(b.file === room.file) - Number(a.file === room.file),
-  );
+  // D'abord la page où la pièce a été lue, puis le même fichier, puis les autres plans.
+  const rank = (x: PlanTrace) =>
+    x.file === room.file ? ((x.page ?? 1) === (room.page ?? 1) ? 2 : 1) : 0;
+  const ordered = [...traces].sort((a, b) => rank(b) - rank(a));
   for (const trace of ordered) {
     const found = trace.rooms.find((r) => nameKey(r.name) === key);
-    if (found) return { ...found, file: trace.file };
+    if (found) return { ...found, file: trace.file, page: trace.page ?? 1 };
   }
   return null;
 }
@@ -252,7 +257,12 @@ export function traceForRoom(
  * surface et le périmètre estimés. Une pièce qui a déjà une surface n'est jamais remplacée.
  */
 export function estimatesFromTraces(
-  rooms: readonly { name: string; file: number | null; areaCm2: number | null }[],
+  rooms: readonly {
+    name: string;
+    file: number | null;
+    page?: number | null;
+    areaCm2: number | null;
+  }[],
   traces: readonly PlanTrace[],
 ): { position: number; areaCm2: number; perimeterMm: number }[] {
   return rooms.flatMap((room, i) => {
@@ -266,7 +276,13 @@ export function estimatesFromTraces(
 
 /** Contrôle : pièces mesurées par leurs cotes et aussi tracées, avec l'écart entre les deux. */
 export function traceControl(
-  rooms: readonly { name: string; file: number | null; areaCm2: number | null; source: string }[],
+  rooms: readonly {
+    name: string;
+    file: number | null;
+    page?: number | null;
+    areaCm2: number | null;
+    source: string;
+  }[],
   traces: readonly PlanTrace[],
 ): { name: string; areaCm2: number; tracedCm2: number; gapBp: number }[] {
   return rooms.flatMap((room) => {
@@ -277,6 +293,23 @@ export function traceControl(
       ? [{ name: room.name, areaCm2: room.areaCm2, tracedCm2: traced.areaCm2, gapBp }]
       : [];
   });
+}
+
+/** Pages d'un PDF rendues en images à l'envoi, au plus (F-159 lot 4, ADR 0328). */
+export const MAX_PDF_PAGE_IMAGES = 12;
+
+/**
+ * Images à tracer : celles des pages reconnues comme plans de niveau par la lecture ; si la
+ * lecture n'en désigne aucune parmi les images, les premières images. Quatre au plus.
+ */
+export function traceTargets<T extends { file: number; page: number }>(
+  images: readonly T[],
+  pages: readonly { file: number; page: number; type: string }[],
+): T[] {
+  const levels = images.filter((image) =>
+    pages.some((p) => p.type === "niveau" && p.file === image.file && p.page === image.page),
+  );
+  return (levels.length ? levels : [...images]).slice(0, MAX_TRACED_FILES);
 }
 
 /** Dimensions d'une image JPEG lues dans son en-tête (marqueur SOF), sinon null. */

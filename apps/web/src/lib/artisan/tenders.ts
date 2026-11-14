@@ -80,13 +80,19 @@ export type TenderWork = {
   uncertain: boolean;
 };
 
-export type PlanFileEntry = { path: string; name: string; kind: "pdf" | "jpg" | "png" };
+export type PlanFileEntry = {
+  path: string;
+  name: string;
+  kind: "pdf" | "jpg" | "png";
+  /** Pages d'un PDF rendues en images à l'envoi (F-159 lot 4, ADR 0328). */
+  pages: { path: string; page: number }[];
+};
 
 /** Plans déposés, tels qu'enregistrés (tenders.plan_files). */
 export function planFiles(value: unknown): PlanFileEntry[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((f: unknown) => {
-    const entry = f as Partial<PlanFileEntry> | null;
+    const entry = f as (Partial<Omit<PlanFileEntry, "pages">> & { pages?: unknown }) | null;
     return entry &&
       typeof entry.path === "string" &&
       (entry.kind === "pdf" || entry.kind === "jpg" || entry.kind === "png")
@@ -95,6 +101,12 @@ export function planFiles(value: unknown): PlanFileEntry[] {
             path: entry.path,
             name: typeof entry.name === "string" ? entry.name : "Plan",
             kind: entry.kind,
+            pages: (Array.isArray(entry.pages) ? entry.pages : []).flatMap((p: unknown) => {
+              const item = p as { path?: unknown; page?: unknown } | null;
+              return item && typeof item.path === "string" && typeof item.page === "number"
+                ? [{ path: item.path, page: item.page }]
+                : [];
+            }),
           },
         ]
       : [];

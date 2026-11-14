@@ -4,6 +4,7 @@ import {
   measureMark,
   polylineLengthPx,
   scaleFromCalibration,
+  traceTargets,
   buildPlanTrace,
   estimatesFromTraces,
   jpegSize,
@@ -217,5 +218,39 @@ describe("métré à la main", () => {
         { x: 30, y: 40 },
       ]),
     ).toBe("10,21 30,40");
+  });
+});
+
+describe("pages de PDF (F-159, lot 4)", () => {
+  it("trace les pages reconnues comme plans de niveau, quatre au plus", () => {
+    const images = [1, 2, 3, 4, 5, 6].map((page) => ({ file: 1, page }));
+    const pages = [
+      { file: 1, page: 1, type: "masse" },
+      { file: 1, page: 2, type: "niveau" },
+      { file: 1, page: 3, type: "niveau" },
+      { file: 1, page: 4, type: "coupe" },
+    ];
+    expect(traceTargets(images, pages).map((x) => x.page)).toEqual([2, 3]);
+    // Aucune page de niveau parmi les images : les premières images.
+    expect(traceTargets(images, []).map((x) => x.page)).toEqual([1, 2, 3, 4]);
+    expect(traceTargets([], pages)).toEqual([]);
+  });
+  it("garde la page d'un tracé et préfère celle où la pièce a été lue", () => {
+    const raw = {
+      cotes: [{ x1: 40, y1: 40, x2: 399, y2: 40, valeur_cm: 359 }],
+      pieces: [{ nom: "Séjour", contour: "40,40 399,40 399,357 40,357" }],
+    };
+    const p2 = buildPlanTrace(raw, 1, 2000, 1500, 2);
+    const p3 = buildPlanTrace(
+      { ...raw, pieces: [{ nom: "Séjour", contour: "40,40 299,40 299,357 40,357" }] },
+      1,
+      2000,
+      1500,
+      3,
+    );
+    if (!p2 || !p3) throw new Error("tracés attendus");
+    expect(p2.page).toBe(2);
+    expect(traceForRoom([p2, p3], { name: "séjour", file: 1, page: 3 })?.page).toBe(3);
+    expect(traceForRoom([p3, p2], { name: "séjour", file: 1, page: 2 })?.page).toBe(2);
   });
 });

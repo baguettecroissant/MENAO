@@ -1,4 +1,5 @@
 import {
+  MAX_PDF_PAGE_IMAGES,
   MAX_UPLOAD_BYTES,
   PLAN_SOURCE_SIDE,
   PLAN_VIEW_SIDE,
@@ -135,6 +136,51 @@ export async function planViews(file: File, quality = 0.85): Promise<PlanView[]>
   }
   bitmap.close();
   return views;
+}
+
+/**
+ * Pages d'un PDF de plans rendues en images dans le navigateur (F-159 lot 4, ADR 0328) : une page
+ * peut alors être tracée, affichée avec ses contours et mesurée à la main, comme une photo. Chaque
+ * image tient dans ce que le modèle lit sans la réduire. pdf.js n'est chargé qu'ici, au dépôt. Un
+ * PDF illisible ou protégé rend une liste vide : le PDF reste lu normalement.
+ */
+export async function pdfPageViews(
+  file: File,
+  quality = 0.85,
+): Promise<{ page: number; blob: Blob }[]> {
+  try {
+    const pdfjs = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
+    const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
+    const document_ = await task.promise;
+    const views: { page: number; blob: Blob }[] = [];
+    const count = Math.min(document_.numPages, MAX_PDF_PAGE_IMAGES);
+    for (let number = 1; number <= count; number++) {
+      const page = await document_.getPage(number);
+      const base = page.getViewport({ scale: 1 });
+      const scale = Math.min(
+        PLAN_VIEW_SIDE / Math.max(base.width, base.height),
+        Math.sqrt(TRACE_MAX_PIXELS / (base.width * base.height)),
+      );
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.floor(viewport.width));
+      canvas.height = Math.max(1, Math.floor(viewport.height));
+      await page.render({ canvas, viewport }).promise;
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", quality),
+      );
+      if (blob) views.push({ page: number, blob });
+      page.cleanup();
+    }
+    await task.destroy();
+    return views;
+  } catch {
+    return [];
+  }
 }
 
 /**

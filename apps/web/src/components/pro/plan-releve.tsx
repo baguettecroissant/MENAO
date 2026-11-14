@@ -197,24 +197,25 @@ export function PlanReleve({
   }
 
   // Contours du plan affiché : en ambre les pièces estimées, en bleu celles mesurées par ailleurs.
-  const trace = traces.find((x) => x.file === view.file + 1);
-  const overlay: PlanOverlay | null =
-    trace && files[view.file]?.kind !== "pdf"
-      ? {
-          width: trace.width,
-          height: trace.height,
-          anchors: trace.anchors,
-          shapes: trace.rooms.map((traced, i) => {
-            const draft = drafts.find((d) => planNameKey(d.name) === planNameKey(traced.name));
-            return {
-              key: `${i}-${traced.name}`,
-              points: traced.contour,
-              tone: draft?.room?.source === "estime" && !changed(draft) ? "estimated" : "measured",
-              selected: !!draft && draft.key === selected,
-            };
-          }),
-        }
-      : null;
+  // Une photo n'a qu'une page ; un PDF affiche la page choisie.
+  const shownPage = files[view.file]?.kind === "pdf" ? view.page : 1;
+  const trace = traces.find((x) => x.file === view.file + 1 && (x.page ?? 1) === shownPage);
+  const overlay: PlanOverlay | null = trace
+    ? {
+        width: trace.width,
+        height: trace.height,
+        anchors: trace.anchors,
+        shapes: trace.rooms.map((traced, i) => {
+          const draft = drafts.find((d) => planNameKey(d.name) === planNameKey(traced.name));
+          return {
+            key: `${i}-${traced.name}`,
+            points: traced.contour,
+            tone: draft?.room?.source === "estime" && !changed(draft) ? "estimated" : "measured",
+            selected: !!draft && draft.key === selected,
+          };
+        }),
+      }
+    : null;
   const cell = "px-2 py-2 align-middle";
   const numberInput = `${inputClasses} !min-h-10 !w-24 px-2.5 text-right tabular-nums`;
   const side = "flex w-full flex-col gap-4 lg:w-[22rem] lg:shrink-0";

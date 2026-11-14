@@ -12,7 +12,7 @@ import {
 } from "../../../packages/core/src/plan-measure.ts";
 import { llmConfig, logAiRuns, planModel, reasoningFor, type AiRun } from "../_shared/ai.ts";
 
-/** Délai d'un tracé : il tourne en même temps que la lecture, sous la durée de la fonction. */
+/** Délai le plus long d'un tracé ; il est réduit au temps que la lecture a laissé à la fonction. */
 export const TRACE_TIMEOUT_MS = 120_000;
 
 /** Consigne du tracé ; aussi utilisée par l'essai de précision (eval/contours.ts). */
@@ -97,7 +97,8 @@ export function contourUserContent(bytes: Uint8Array, width: number, height: num
 }
 
 /**
- * Trace les pièces d'une photo (fichier `file`, à partir de 1). Null si l'image ne peut pas être
+ * Trace les pièces d'une image : une photo, ou la page `page` d'un PDF rendue en image (fichier
+ * `file`, à partir de 1). Null si l'image ne peut pas être
  * tracée (pas un JPEG, trop grande : le modèle la réduirait et ses coordonnées ne seraient plus
  * celles des pixels), si l'appel échoue, ou si l'échelle n'est pas sûre : rien n'est alors estimé.
  */
@@ -105,6 +106,8 @@ export async function tracePlan(
   admin: SupabaseClient,
   bytes: Uint8Array,
   file: number,
+  page = 1,
+  timeoutMs = TRACE_TIMEOUT_MS,
 ): Promise<PlanTrace | null> {
   const size = jpegSize(bytes);
   if (!size || !traceable(size.width, size.height)) return null;
@@ -127,7 +130,7 @@ export async function tracePlan(
           format: { type: "json_schema", schema: CONTOUR_SCHEMA },
         },
       },
-      { timeout: TRACE_TIMEOUT_MS, maxRetries: 0 },
+      { timeout: timeoutMs, maxRetries: 0 },
     );
     run.latency_ms = Date.now() - started;
     run.input_tokens = response.usage?.input_tokens ?? null;
@@ -142,7 +145,7 @@ export async function tracePlan(
       run.outcome = "invalide";
       return null;
     }
-    const trace = buildPlanTrace(parsed.data, file, size.width, size.height);
+    const trace = buildPlanTrace(parsed.data, file, size.width, size.height, page);
     run.outcome = trace ? "ok" : "peu_sur";
     return trace;
   } catch (error) {

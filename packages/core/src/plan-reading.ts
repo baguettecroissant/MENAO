@@ -282,7 +282,8 @@ export function normalizePlanReading(
       habitable: p.habitable !== false,
       source: fromPhoto ? "photo" : surface === null && sides ? "cotes" : "plan",
       file,
-      page: intIn(p.page, 1, 999),
+      // Une photo n'a qu'une page, quoi que le modèle en dise : son tracé est celui de la page 1.
+      page: fromPhoto ? 1 : intIn(p.page, 1, 999),
       uncertain: p.certitude === "incertaine",
     });
   }

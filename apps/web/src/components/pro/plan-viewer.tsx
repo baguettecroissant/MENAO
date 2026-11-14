@@ -5,7 +5,13 @@ import { fr } from "@/i18n/fr";
 const t = fr.pro.tenders.plan;
 
 /** Plans déposés : lien signé (1 h) pour les afficher et les ouvrir. */
-export type PlanFileLink = { name: string; kind: "pdf" | "jpg" | "png"; url: string | null };
+export type PlanFileLink = {
+  name: string;
+  kind: "pdf" | "jpg" | "png";
+  url: string | null;
+  /** Pages d'un PDF rendues en images à l'envoi (ADR 0328) : affichées avec leurs contours. */
+  pages?: { page: number; url: string | null }[];
+};
 
 export type PlanView = { file: number; page: number };
 
@@ -39,6 +45,10 @@ export function PlanViewer({
   overlay?: PlanOverlay | null;
 }) {
   const file = files[view.file];
+  // PDF dont les pages ont été rendues en images : la page s'affiche comme une photo.
+  const rendered = file?.kind === "pdf" ? (file.pages ?? []).filter((p) => p.url) : [];
+  const pageImage = rendered.find((p) => p.page === view.page) ?? null;
+  const image = file?.kind === "pdf" ? (pageImage?.url ?? null) : (file?.url ?? null);
   return (
     <section
       aria-label={t.viewerLabel}
@@ -58,14 +68,40 @@ export function PlanViewer({
             </button>
           ))}
         </div>
-        {file?.kind === "pdf" && (
+        {file?.kind === "pdf" && rendered.length === 0 && (
           <span className="ml-auto text-sm text-muted-foreground">{t.viewerPage(view.page)}</span>
+        )}
+        {file?.kind === "pdf" && rendered.length > 0 && (
+          <span className="ml-auto flex flex-wrap items-center gap-1 text-sm">
+            {rendered.map((p) => (
+              <button
+                key={p.page}
+                type="button"
+                aria-pressed={p.page === view.page}
+                aria-label={t.viewerPage(p.page)}
+                onClick={() => onView({ file: view.file, page: p.page })}
+                className="min-w-8 rounded-pill px-2 py-1 font-medium text-muted-foreground hover:bg-background aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-surface"
+              >
+                {p.page}
+              </button>
+            ))}
+            {file.url && (
+              <a
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-2 font-semibold text-primary-strong"
+              >
+                {t.viewerOpenPdf}
+              </a>
+            )}
+          </span>
         )}
       </div>
       <div className="bg-background">
         {!file?.url ? (
           <p className="p-6 text-sm text-muted-foreground">{t.viewerMissing}</p>
-        ) : file.kind === "pdf" ? (
+        ) : file.kind === "pdf" && !image ? (
           <iframe
             key={`${view.file}-${view.page}`}
             src={`${file.url}#page=${view.page}`}
@@ -83,7 +119,7 @@ export function PlanViewer({
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- lien signé du stockage privé. */}
             <img
-              src={file.url}
+              src={image ?? file.url}
               alt={t.viewerTitle(file.name)}
               className="absolute inset-0 size-full"
             />
@@ -124,7 +160,7 @@ export function PlanViewer({
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- lien signé du stockage privé.
           <img
-            src={file.url}
+            src={image ?? file.url}
             alt={t.viewerTitle(file.name)}
             className="max-h-[34rem] w-full object-contain"
           />

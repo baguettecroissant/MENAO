@@ -26,11 +26,11 @@ import { env } from "../_shared/env.ts";
 import { readDpgfPdf } from "./pdf.ts";
 import {
   estimatesFromTraces,
-  MAX_TRACED_FILES,
   type PlanTrace,
+  traceTargets,
 } from "../../../packages/core/src/plan-measure.ts";
 import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts";
-import { tracePlan } from "./contours.ts";
+import { TRACE_TIMEOUT_MS, tracePlan } from "./contours.ts";
 import { type PlanFile, type PlanFileTile, readPlans } from "./plan.ts";
 import {
   applyTenderPrices,
@@ -263,6 +263,11 @@ function xlsxResponse(output: ArrayBuffer, filename: string): Response {
   });
 }
 
+/** Durée laissée à la lecture puis aux tracés, sous la limite d'une Edge Function (150 s). */
+const FUNCTION_BUDGET_MS = 140_000;
+/** En dessous, il ne reste pas le temps de tracer : le relevé est rendu sans estimation. */
+const MIN_TRACE_MS = 35_000;
+
 const MAGIC: Record<PlanFile["kind"], number[]> = {
   pdf: [0x25, 0x50, 0x44, 0x46, 0x2d],
   jpg: [0xff, 0xd8, 0xff],
@@ -277,7 +282,7 @@ async function readTenderPlans(
   tender: { id: string; source_kind: string | null; plan_files: unknown; plan_trades: unknown },
 ): Promise<Response> {
   const entries = Array.isArray(tender.plan_files)
-    ? (tender.plan_files as { path?: unknown; kind?: unknown; tiles?: unknown }[])
+    ? (tender.plan_files as { path?: unknown; kind?: unknown; tiles?: unknown; pages?: unknown }[])
     : [];
   if (tender.source_kind !== "plan" || entries.length === 0) {
     return json({ status: "no_sheet" }, 422);
@@ -326,7 +331,22 @@ async function readTenderPlans(
       zoneCount++;
       tiles.push({ col, row, cols, rows, bytes: tileBytes });
     }
-    files.push({ kind, bytes, tiles });
+    // Pages d'un PDF rendues en images (ADR 0328) : gardées pour le tracé ; une page manquante ou
+    // abîmée est laissée de côté.
+    const pageImages: { page: number; bytes: Uint8Array }[] = [];
+    const rendered = kind === "pdf" && Array.isArray(entry.pages) ? entry.pages.slice(0, 12) : [];
+    for (const item of rendered as Record<string, unknown>[]) {
+      const page = item.page;
+      if (typeof item.path !== "string" || typeof page !== "number" || !Number.isInteger(page)) {
+        continue;
+      }
+      const { data: pageBlob } = await admin.storage.from("tender-files").download(item.path);
+      if (!pageBlob || pageBlob.size > MAX_PHOTO_BYTES) continue;
+      const pageBytes = new Uint8Array(await pageBlob.arrayBuffer());
+      if (!MAGIC.jpg.every((byte, i) => pageBytes[i] === byte)) continue;
+      pageImages.push({ page, bytes: pageBytes });
+    }
+    files.push({ kind, bytes, tiles, pageImages });
   }
 
   // Métiers de l'appel d'offres (codes de la table des métiers) : lots où ranger les ouvrages.
@@ -335,17 +355,8 @@ async function readTenderPlans(
         (c): c is string => typeof c === "string" && /^[a-z0-9-]{1,60}$/.test(c),
       )
     : [];
-  // Mesure à l'échelle (ADR 0326) : les premières photos sont tracées en même temps que la
-  // lecture ; un tracé en échec ou sans échelle sûre n'estime rien et ne bloque pas le relevé.
-  const photos = files
-    .map((file, i) => ({ file, index: i + 1 }))
-    .filter(({ file }) => file.kind !== "pdf")
-    .slice(0, MAX_TRACED_FILES);
-  const [reading, ...traced] = await Promise.all([
-    readPlans(admin, files, trades),
-    ...photos.map(({ file, index }) => tracePlan(admin, file.bytes, index).catch(() => null)),
-  ]);
-  const traces = traced.filter((trace): trace is PlanTrace => trace !== null);
+  const started = Date.now();
+  const reading = await readPlans(admin, files, trades);
   if (reading.status !== "ok") {
     return json({ status: reading.status }, reading.status === "unavailable" ? 503 : 422);
   }
@@ -365,9 +376,33 @@ async function readTenderPlans(
       error.code === "42501" ? 403 : 500,
     );
   }
+  // Mesure à l'échelle (ADR 0326, 0328) : photos et pages de PDF rendues en images. Les pages que
+  // la lecture a reconnues comme plans de niveau sont tracées, dans le temps que la lecture a
+  // laissé à la fonction ; un tracé en échec ou sans échelle sûre n'estime rien.
+  const images = files.flatMap((file, i) =>
+    file.kind === "pdf"
+      ? (file.pageImages ?? []).map((p) => ({ file: i + 1, page: p.page, bytes: p.bytes }))
+      : [{ file: i + 1, page: 1, bytes: file.bytes }],
+  );
+  const budget = FUNCTION_BUDGET_MS - (Date.now() - started);
+  const traced =
+    budget < MIN_TRACE_MS
+      ? []
+      : await Promise.all(
+          traceTargets(images, reading.pages).map((image) =>
+            tracePlan(
+              admin,
+              image.bytes,
+              image.file,
+              image.page,
+              Math.min(TRACE_TIMEOUT_MS, budget - 5_000),
+            ).catch(() => null),
+          ),
+        );
+  const traces = traced.filter((trace): trace is PlanTrace => trace !== null);
   // Tracés gardés et pièces sans surface estimées ; toujours appelé, pour effacer d'anciens tracés.
   const estimates = estimatesFromTraces(
-    reading.rooms.map((r) => ({ name: r.name, file: r.file, areaCm2: r.areaCm2 })),
+    reading.rooms.map((r) => ({ name: r.name, file: r.file, page: r.page, areaCm2: r.areaCm2 })),
     traces,
   );
   const { data: estimated, error: traceError } = await supabase.rpc("artisan_import_plan_traces", {

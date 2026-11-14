@@ -19,7 +19,7 @@ import { fr } from "@/i18n/fr";
 import { createPlanTender, createTender } from "@/lib/artisan/tender-actions";
 import { type FormState, initialFormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/client";
-import { planViews } from "@/lib/upload/client";
+import { pdfPageViews, planViews } from "@/lib/upload/client";
 
 const t = fr.pro.tenders;
 const TYPES = {
@@ -418,7 +418,8 @@ function PlanTenderForm({
     setUploading(true);
     const supabase = createClient();
     type Tile = { path: string; col: number; row: number; cols: number; rows: number };
-    const uploaded: { path: string; name: string; tiles: Tile[] }[] = [];
+    type PdfPage = { path: string; page: number };
+    const uploaded: { path: string; name: string; tiles: Tile[]; pages: PdfPage[] }[] = [];
     const sent: string[] = [];
     // Fichiers déjà envoyés retirés : rien ne reste sans appel d'offres.
     const abort = async () => {
@@ -443,7 +444,14 @@ function PlanTenderForm({
       if (kind === "pdf") {
         const path = await send("pdf", file);
         if (!path) return abort();
-        uploaded.push({ path, name: file.name.slice(0, 200), tiles: [] });
+        // Pages rendues en images (ADR 0328) : tracées et mesurées comme une photo.
+        const pages: PdfPage[] = [];
+        for (const view of await pdfPageViews(file)) {
+          const pagePath = await send("jpg", view.blob);
+          if (!pagePath) return abort();
+          pages.push({ path: pagePath, page: view.page });
+        }
+        uploaded.push({ path, name: file.name.slice(0, 200), tiles: [], pages });
         continue;
       }
       // Photo : vue d'ensemble, puis zones agrandies lues en haute définition (ADR 0325).
@@ -466,7 +474,7 @@ function PlanTenderForm({
         }
         tileBudget -= zones.length;
       }
-      uploaded.push({ path, name: file.name.slice(0, 200), tiles });
+      uploaded.push({ path, name: file.name.slice(0, 200), tiles, pages: [] });
     }
     setUploading(false);
     formData.set("files", JSON.stringify(uploaded));
