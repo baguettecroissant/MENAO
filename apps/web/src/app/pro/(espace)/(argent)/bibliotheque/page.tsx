@@ -1,15 +1,17 @@
-import { formatCoefficient, formatRateBp, parisToday } from "@menao/core";
-import { BookOpen, Plus, ReceiptText, Search, Upload } from "lucide-react";
+import { formatCoefficient, formatRaise, formatRateBp, parisToday } from "@menao/core";
+import { BookOpen, Plus, ReceiptText, Search, TrendingUp, Upload } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { LibrarySettingsForm } from "@/components/pro/library-settings-form";
 import { LibrarySupplies } from "@/components/pro/library-supplies";
 import { MenaoChip } from "@/components/pro/menao-chip";
 import { MenaoLibraryStart } from "@/components/pro/menao-library-start";
+import { RaiseUndo } from "@/components/pro/raise-undo";
 import { ButtonLink, Card, CardTitle, StatusBadge, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { type LibraryWork, loadLibrary, loadMenaoTrades, tradeLabels } from "@/lib/artisan/library";
 import { loadInvoicePrices } from "@/lib/artisan/library-invoices";
+import { loadUndoableRaise } from "@/lib/artisan/library-raise";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.library;
@@ -38,7 +40,8 @@ const plain = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").to
  * anciens devis à la première ouverture. Patron et chef d'équipe seulement.
  */
 export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibliotheque">) {
-  const { vue, q, metier, menao, metiers, importe, maj, factures, ajouts } = await searchParams;
+  const { vue, q, metier, menao, metiers, importe, maj, factures, ajouts, annule } =
+    await searchParams;
   const view = vue === "fournitures" ? "fournitures" : "ouvrages";
   const query = typeof q === "string" ? q.slice(0, 100) : "";
   const { supabase, artisanId } = await requireTeamPermission("money");
@@ -71,6 +74,9 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
           added: typeof ajouts === "string" && /^\d{1,3}$/.test(ajouts) ? Number(ajouts) : 0,
         }
       : null;
+  // Hausse en un geste encore annulable (F-149), ou annulation faite.
+  const raise = await loadUndoableRaise(supabase);
+  const undone = typeof annule === "string" && /^\d{1,5}$/.test(annule) ? Number(annule) : null;
   const labels = menaoWorks.length ? await tradeLabels(supabase) : [];
   const tradeOf = new Map(labels.map((l) => [l.code, l.label]));
   const tradeFilters = labels.filter((l) => menaoWorks.some((w) => w.trade_code === l.code));
@@ -132,6 +138,22 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
             <Upload aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             <span>{t.importer.done(imported.added, imported.updated, view)}</span>
           </p>
+        )}
+        {undone !== null && (
+          <p
+            role="status"
+            className="flex items-start gap-3 rounded-input bg-success-soft px-4 py-3 text-sm text-success"
+          >
+            <TrendingUp aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{t.raise.undone(undone)}</span>
+          </p>
+        )}
+        {raise && (
+          <RaiseUndo
+            raiseId={raise.id}
+            text={t.raise.done(formatRaise(raise.rateBp), raise.works, raise.supplies)}
+            until={raise.until}
+          />
         )}
         {invoiceDone && (
           <p
@@ -213,6 +235,14 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
                     <Upload aria-hidden="true" className="size-4" />
                     {t.importer.button}
                   </ButtonLink>
+                  <ButtonLink
+                    href={"/pro/bibliotheque/augmenter" as Route}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    <TrendingUp aria-hidden="true" className="size-4" />
+                    {t.raise.button}
+                  </ButtonLink>
                   <ButtonLink href={"/pro/bibliotheque/nouveau" as Route} size="sm">
                     <Plus aria-hidden="true" className="size-4" />
                     {t.newWork}
@@ -220,14 +250,24 @@ export default async function LibraryPage({ searchParams }: PageProps<"/pro/bibl
                 </div>
               )}
               {view === "fournitures" && (
-                <ButtonLink
-                  href={"/pro/bibliotheque/importer?type=fournitures" as Route}
-                  size="sm"
-                  variant="secondary"
-                >
-                  <Upload aria-hidden="true" className="size-4" />
-                  {t.importer.button}
-                </ButtonLink>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ButtonLink
+                    href={"/pro/bibliotheque/importer?type=fournitures" as Route}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    <Upload aria-hidden="true" className="size-4" />
+                    {t.importer.button}
+                  </ButtonLink>
+                  <ButtonLink
+                    href={"/pro/bibliotheque/augmenter" as Route}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    <TrendingUp aria-hidden="true" className="size-4" />
+                    {t.raise.button}
+                  </ButtonLink>
+                </div>
               )}
             </div>
 

@@ -285,3 +285,11 @@ insert into public.expense_lines (expense_id, position, designation, reference, 
   unit_price_ht_cents, total_ht_cents) values
   ('c1490000-0000-4000-8000-000000000002', 1, 'Flexible inox 50cm', 'flx 50', 2000, 'u', 715, 1430),
   ('c1490000-0000-4000-8000-000000000002', 2, 'Joint fibre fictif 15x21', null, 10000, 'u', 78, 780);
+
+-- Augmenter ses prix en un geste (F-149, ADR 0312) : bibliothèque déjà en place du plombier de
+-- Nice (premier passage fait, sans remplissage par les devis) et un ouvrage à prix fixé. Fictif.
+insert into public.artisan_pricing_settings (artisan_id, seeded_at, library_onboarded_at) values
+  ('b0000000-0000-4000-8000-000000000011', now(), now());
+insert into public.artisan_works (id, artisan_id, designation, unit, manual_price_cents, source) values
+  ('c1490000-0000-4000-8000-000000000011', 'b0000000-0000-4000-8000-000000000011',
+   'Remplacement mitigeur fictif', 'u', 16500, 'manuel');
