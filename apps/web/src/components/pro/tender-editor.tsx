@@ -9,7 +9,7 @@ import {
   tenderGaps,
   tenderTotals,
 } from "@menao/core";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, TriangleAlert } from "lucide-react";
 import { type ReactNode, useActionState, useMemo, useState } from "react";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import { Alert, Button, Card, CardTitle, StatusBadge, inputClasses } from "@/components/ui";
@@ -121,6 +121,21 @@ export function TenderEditor({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Refonte « Nette » (lot 51, maquette DpgfTableau) : le risque d'un forfait sous-estimé. */}
+      {!fromPlan && gaps.underestimatedHtCents > 0 && (
+        <p
+          role="status"
+          className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-card bg-warning-soft px-5 py-4 text-[0.90625rem]"
+        >
+          <TriangleAlert aria-hidden="true" className="size-5 shrink-0 text-warning" />
+          <span className="min-w-0 flex-1">
+            <b>{t.riskTitle(gaps.underestimated)}</b> {t.riskText}
+          </span>
+          <b className="text-warning tabular-nums">
+            {t.riskAmount(money(gaps.underestimatedHtCents))}
+          </b>
+        </p>
+      )}
       <MoneyFigures
         label={t.figuresLabel}
         cells={[

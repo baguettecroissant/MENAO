@@ -6119,6 +6119,13 @@ export const fr = {
       tabTenders: "Appels d'offres",
       title: "Appels d'offres",
       subtitle: "Les demandes des particuliers, et les appels d'offres des architectes.",
+      // Refonte « Nette » (lot 51, maquette DpgfTableau) : risque d'un forfait sous-estimé.
+      riskTitle: (n: number) =>
+        n > 1
+          ? `${n} postes sous-estimés au DPGF de l'architecte.`
+          : "1 poste sous-estimé au DPGF de l'architecte.",
+      riskText: "Au forfait, ces travaux seraient à votre charge si vous gardiez ses quantités.",
+      riskAmount: (amount: string) => `+${amount} HT`,
       // Écran d'attente pendant la lecture par l'IA : étapes au fil du temps, dernière en cours.
       waiting: {
         duration: "Environ une minute",
