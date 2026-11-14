@@ -947,6 +947,38 @@ for (const cas of CAS) {
     await tab.pdf({ path: chemin, width: "420mm", height: "297mm", printBackground: true });
   }
 }
+// Image de l'essai de mesure à l'échelle (F-159, lot 2, eval/contours.ts) : le plan de plain-pied
+// sans aucune surface, deux pièces cotées pour caler l'échelle, à 2 400 px (une image lue sans
+// réduction : les coordonnées rendues par le modèle sont celles de ses pixels).
+{
+  const chemin = join(SORTIE, "contours.jpg");
+  if (process.argv.includes("--tout") || !existsSync(chemin)) {
+    const plan = {
+      ...PLAIN_PIED,
+      pieces: PLAIN_PIED.pieces.map((p) => ({
+        ...p,
+        surfaceEcrite: false,
+        cotes: ["Chambre", "Salle de bains"].includes(p.nom),
+      })),
+    };
+    const svg = page({
+      ...plan,
+      cartouche: cartouche("Plan de plain-pied", "2,50").map((l) =>
+        l.replace("APPARTEMENT", "MAISON"),
+      ),
+    });
+    const vue = await browser.newContext({
+      viewport: { width: 1587, height: 1123 },
+      deviceScaleFactor: 2400 / 1587,
+    });
+    const tabVue = await vue.newPage();
+    await tabVue.setContent(
+      `<html><body style="margin: 0; background: #fff; width: 1587px; height: 1123px; overflow: hidden;">${svg}</body></html>`,
+    );
+    await tabVue.screenshot({ path: chemin, type: "jpeg", quality: 88 });
+    await vue.close();
+  }
+}
 await browser.close();
 
 // Après génération : `pnpm exec prettier --write` sur cas.json (format du dépôt).
