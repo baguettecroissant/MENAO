@@ -407,7 +407,12 @@ function score(c: Case, pass: number, r: Read): Score {
       // Cotes seules : surface calculée par le cœur à partir des cotes, jamais par l'IA.
       base.surfacesNotees++;
       const fromSides = expected.cotes_m[0] * expected.cotes_m[1];
-      if (room.source === "cotes" && area !== null && Math.abs(area - fromSides) <= 0.01) {
+      // Sur une photo, la pièce garde l'origine « photo » (à vérifier) : la surface calculée compte.
+      if (
+        (room.source === "cotes" || room.source === "photo") &&
+        area !== null &&
+        Math.abs(area - fromSides) <= 0.01
+      ) {
         base.surfacesJustes++;
       } else if (room.source === "plan" && area !== null) {
         base.surfacesInventees.push(`${expected.nom} : ${area} (surface donnée par l'IA)`);

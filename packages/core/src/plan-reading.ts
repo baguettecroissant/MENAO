@@ -62,12 +62,14 @@ export type PlanReadingRaw = {
     perimetre_m: number | null;
     hauteur_m: number | null;
     /**
-     * Chaînes de cotes (F-159) : les cotes intérieures écrites dont la somme fait la longueur, puis
-     * la largeur, d'une pièce rectangulaire. Le cœur les additionne ; absentes des anciennes
+     * Chaînes de cotes (F-159) : les cotes intérieures écrites, en centimètres, dont la somme fait
+     * la longueur, puis la largeur, d'une pièce rectangulaire (« 247+156+247 »). Le cœur les
+     * additionne. En texte : deux listes de nombres de plus rendaient le schéma trop lourd pour la
+     * sortie structurée (erreur 400 « compiled grammar is too large »). Absentes des anciennes
      * réponses.
      */
-    cotes_longueur_m?: number[] | null;
-    cotes_largeur_m?: number[] | null;
+    cotes_longueur?: string | null;
+    cotes_largeur?: string | null;
     humide: boolean;
     habitable: boolean;
     certitude: "sure" | "incertaine";
@@ -121,8 +123,8 @@ export function planReadingJsonSchema(): Record<string, unknown> {
             "largeur_m",
             "perimetre_m",
             "hauteur_m",
-            "cotes_longueur_m",
-            "cotes_largeur_m",
+            "cotes_longueur",
+            "cotes_largeur",
             "humide",
             "habitable",
             "certitude",
@@ -137,8 +139,8 @@ export function planReadingJsonSchema(): Record<string, unknown> {
             largeur_m: nullable("number"),
             perimetre_m: nullable("number"),
             hauteur_m: nullable("number"),
-            cotes_longueur_m: { type: "array", items: { type: "number" } },
-            cotes_largeur_m: { type: "array", items: { type: "number" } },
+            cotes_longueur: { type: "string" },
+            cotes_largeur: { type: "string" },
             humide: { type: "boolean" },
             habitable: { type: "boolean" },
             certitude: { type: "string", enum: ["sure", "incertaine"] },
@@ -180,16 +182,20 @@ function intIn(value: unknown, min: number, max: number): number | null {
 }
 
 /**
- * Somme d'une chaîne de cotes en mètres (12 cotes au plus, chacune dans ]0, 200]) ; null si la
- * chaîne est vide ou porte une valeur hors bornes : une chaîne douteuse n'est pas additionnée.
+ * Somme, en mètres, d'une chaîne de cotes écrite en centimètres (« 247+156+247 », 12 cotes au
+ * plus, décimales admises) ; null si la chaîne est vide, mal écrite ou hors bornes : une chaîne
+ * douteuse n'est pas additionnée.
  */
-export function chainSum(values: unknown): number | null {
-  if (!Array.isArray(values) || values.length === 0 || values.length > 12) return null;
+export function chainSum(chain: unknown): number | null {
+  if (typeof chain !== "string") return null;
+  const parts = chain.replace(/\s+/g, "").replace(/,/g, ".").split("+");
+  if (parts.length > 12) return null;
   let totalMm = 0;
-  for (const v of values) {
-    const m = inRange(v, 0, 200);
-    if (m === null) return null;
-    totalMm += Math.round(m * 1000);
+  for (const part of parts) {
+    if (!/^\d{1,5}(\.\d)?$/.test(part)) return null;
+    const mm = Math.round(Number(part) * 10);
+    if (mm <= 0) return null;
+    totalMm += mm;
   }
   return totalMm > 0 && totalMm <= 200_000 ? totalMm / 1000 : null;
 }
@@ -240,8 +246,8 @@ export function normalizePlanReading(
     }
     const surface = inRange(p.surface_m2, 0, 10000);
     // Une cote écrite d'un seul tenant, sinon la somme de la chaîne de cotes lue le long du mur.
-    const length = inRange(p.longueur_m, 0, 200) ?? chainSum(p.cotes_longueur_m);
-    const width = inRange(p.largeur_m, 0, 200) ?? chainSum(p.cotes_largeur_m);
+    const length = inRange(p.longueur_m, 0, 200) ?? chainSum(p.cotes_longueur);
+    const width = inRange(p.largeur_m, 0, 200) ?? chainSum(p.cotes_largeur);
     const sides = length !== null && width !== null;
     const lengthMm = length === null ? 0 : Math.round(length * 1000);
     const widthMm = width === null ? 0 : Math.round(width * 1000);

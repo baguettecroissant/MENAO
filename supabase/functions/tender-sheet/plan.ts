@@ -47,8 +47,8 @@ export const planRawSchema = z.object({
         perimetre_m: nullableNumber,
         hauteur_m: nullableNumber,
         // Absentes des anciennes réponses (faux modèle des tests) : liste vide.
-        cotes_longueur_m: z.array(z.number()).max(40).default([]),
-        cotes_largeur_m: z.array(z.number()).max(40).default([]),
+        cotes_longueur: z.string().max(200).default(""),
+        cotes_largeur: z.string().max(200).default(""),
         humide: z.boolean(),
         habitable: z.boolean(),
         certitude: z.enum(["sure", "incertaine"]),
@@ -112,7 +112,7 @@ Relève chaque pièce dessinée sur les plans de niveaux, une seule fois :
 - nom : le nom de la pièce tel qu'écrit (« Séjour-cuisine », « SdB », « Chambre 2 »).
 - surface_m2 : la surface écrite sur le plan pour cette pièce (« 45,14 m² » vaut 45.14), null si elle n'est pas écrite. Ne la calcule jamais toi-même.
 - longueur_m, largeur_m : les deux cotes intérieures de la pièce si elles sont écrites d'un seul tenant et que la pièce est rectangulaire, sinon null.
-- cotes_longueur_m, cotes_largeur_m : quand la longueur ou la largeur intérieure d'une pièce rectangulaire n'est pas écrite d'un seul tenant mais par une chaîne de cotes le long de ce mur, donne ici les cotes écrites de cette chaîne, dans l'ordre, converties en mètres (« 148 » en centimètres vaut 1.48), sans les additionner : l'addition est faite ensuite. Ne prends que des cotes qui mesurent l'intérieur de cette pièce, d'un nu de mur à l'autre ; laisse de côté les épaisseurs de murs et de cloisons, et les cotes des pièces voisines. Si tu n'es pas sûr qu'une chaîne couvre exactement ce côté de la pièce, ou si la pièce n'est pas rectangulaire, laisse la liste vide. Liste vide aussi quand longueur_m ou largeur_m est donnée, ou quand la surface est écrite.
+- cotes_longueur, cotes_largeur : quand la longueur ou la largeur intérieure d'une pièce rectangulaire est écrite en centimètres, d'un seul tenant (« 359 ») ou par une chaîne de cotes le long de ce mur, recopie ici ces cotes en centimètres, dans l'ordre, séparées par « + » (« 247+156+247 », ou « 359 » pour une cote seule), sans les additionner ni les convertir : l'addition est faite ensuite. Ne prends que des cotes qui mesurent l'intérieur de cette pièce, d'un nu de mur à l'autre ; laisse de côté les épaisseurs de murs et de cloisons, et les cotes des pièces voisines. Si tu n'es pas sûr qu'une chaîne couvre exactement ce côté de la pièce, ou si la pièce n'est pas rectangulaire, laisse une chaîne vide. Chaîne vide aussi quand longueur_m ou largeur_m est donnée, ou quand la surface est écrite.
 - perimetre_m : seulement s'il est écrit, sinon null.
 - hauteur_m : hauteur sous plafond écrite pour cette pièce, sinon null.
 - humide : vrai pour une salle de bains, salle d'eau, WC, buanderie, cuisine fermée ; faux pour un cellier, un dressing, un placard ou une pièce de vie ouverte sur la cuisine.

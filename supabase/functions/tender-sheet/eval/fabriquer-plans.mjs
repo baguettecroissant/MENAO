@@ -766,7 +766,9 @@ const chaine = (total) => {
   const b = Math.round(total * 24) / 100;
   return [a, b, Math.round((total - a - b) * 100) / 100];
 };
-const PETIT = 4; // taille des écritures, en pixels du dessin : illisible dans la vue d'ensemble
+// Taille des écritures, en pixels du dessin : 3,3 px dans la vue d'ensemble, 9 px dans une zone.
+// À 4 px du dessin (6 px dans la vue d'ensemble), le modèle lisait déjà tout sans les zones.
+const PETIT = 2.2;
 function execution(plan) {
   const t = (x, y, texte, o = {}) =>
     `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${o.s ?? PETIT}" font-weight="${o.b ? 700 : 400}" text-anchor="middle"${o.r ? ` transform="rotate(-90 ${x} ${y})"` : ""} fill="#111">${texte}</text>`;
