@@ -6589,7 +6589,7 @@ export const fr = {
             "Quantités lues et calculées sur les plans : à vérifier.",
             missing ? `${missing} poste${missing > 1 ? "s" : ""} à compléter.` : null,
             partial
-              ? `${partial} total${partial > 1 ? "aux" : ""} partiel${partial > 1 ? "s" : ""} : une pièce reste à mesurer.`
+              ? `${partial} ${partial > 1 ? "totaux partiels" : "total partiel"} : une pièce reste à mesurer.`
               : null,
             photo
               ? `${photo} quantité${photo > 1 ? "s" : ""} tirée${photo > 1 ? "s" : ""} d'une photo.`
@@ -6623,7 +6623,7 @@ export const fr = {
         checkMissing: (n: number, total: number) =>
           `${n} poste${n > 1 ? "s" : ""} à compléter sur ${total}`,
         checkPartial: (n: number) =>
-          `${n} total${n > 1 ? "aux" : ""} partiel${n > 1 ? "s" : ""} : une pièce reste à mesurer`,
+          `${n} ${n > 1 ? "totaux partiels" : "total partiel"} : une pièce reste à mesurer`,
         checkPhoto: (n: number) =>
           `${n} quantité${n > 1 ? "s" : ""} tirée${n > 1 ? "s" : ""} d'une photo`,
         totalTtc: "Total TTC",

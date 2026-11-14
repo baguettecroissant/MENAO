@@ -111,7 +111,6 @@ export function PlanDpgfEditor({
   );
   const missing = posts.filter((l) => value(l).quantityMilli === null).length;
   const photo = posts.filter((l) => l.quantity_source === "photo").length;
-  const partial = posts.filter((l) => sourceOf(l) === "partiel").length;
   const invalid = posts.some((l) => {
     const d = drafts[l.id];
     const v = value(l);
@@ -138,6 +137,8 @@ export function PlanDpgfEditor({
     const v = value(l);
     return v.quantityMilli !== l.quantity_milli ? "saisi" : (l.quantity_source ?? "manque");
   };
+  // Compté après `sourceOf` : un total partiel corrigé par l'artisan devient « Saisi ».
+  const partial = posts.filter((l) => sourceOf(l) === "partiel").length;
   const locked = dirty || exportLocked;
 
   return (
