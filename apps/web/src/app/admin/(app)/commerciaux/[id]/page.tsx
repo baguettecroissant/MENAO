@@ -138,13 +138,16 @@ export default async function AdminCommercialPage({
         <ArrowLeft aria-hidden="true" className="size-4" />
         {d.back}
       </TextLink>
-      <div className="flex flex-col gap-1">
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-medium tracking-tight">
-          {m.nom}
+      {/* Refonte « Nette » (lot 51) : en-tête comme la fiche d'un chantier du back-office. */}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
+            {m.nom}
+          </h1>
           <StatusBadge tone={m.status === "actif" ? "success" : "neutral"}>
             {t.status[m.status]}
           </StatusBadge>
-        </h1>
+        </div>
         <p className="text-sm break-all text-muted-foreground">
           <span className="font-mono">{m.code}</span>
           {m.email && ` · ${m.email}`}

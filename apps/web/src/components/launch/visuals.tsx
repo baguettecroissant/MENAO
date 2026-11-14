@@ -111,11 +111,14 @@ export function MilestoneCountdowns({
   label,
   headingLevel = "h3",
   empty,
+  stacked = false,
 }: {
   milestones: readonly { id: string; titre: string; echeance: string; daysLeft: number }[];
   label: string;
   headingLevel?: "h2" | "h3";
   empty?: string;
+  /** Une date par ligne (colonne de droite du lancement, lot 51). */
+  stacked?: boolean;
 }) {
   if (milestones.length === 0 && !empty) return null;
   const Heading = headingLevel;
@@ -128,7 +131,7 @@ export function MilestoneCountdowns({
       {milestones.length === 0 ? (
         <p className="text-sm text-muted-foreground">{empty}</p>
       ) : (
-        <ol className="grid gap-2 sm:grid-cols-3">
+        <ol className={stacked ? "grid gap-2" : "grid gap-2 sm:grid-cols-3"}>
           {milestones.map((m) => (
             <li
               key={m.id}
