@@ -30,6 +30,8 @@ const TONES = {
   estime: "warning",
   // Tracée à la main par l'artisan sur le plan (lot 3).
   trace: "neutral",
+  // Total des pièces mesurées, une pièce restant à compléter (ADR 0329).
+  partiel: "warning",
 } as const;
 
 type Draft = { quantity: string; price: string };
@@ -109,6 +111,7 @@ export function PlanDpgfEditor({
   );
   const missing = posts.filter((l) => value(l).quantityMilli === null).length;
   const photo = posts.filter((l) => l.quantity_source === "photo").length;
+  const partial = posts.filter((l) => sourceOf(l) === "partiel").length;
   const invalid = posts.some((l) => {
     const d = drafts[l.id];
     const v = value(l);
@@ -387,7 +390,7 @@ export function PlanDpgfEditor({
           )}
           <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
             <h2 className="text-lg font-semibold">{p.check.title}</h2>
-            {(missing > 0 || photo > 0) && (
+            {(missing > 0 || photo > 0 || partial > 0) && (
               <ul className="flex flex-col gap-1.5 text-sm">
                 {missing > 0 && (
                   <li className="flex items-start gap-2">
@@ -396,6 +399,15 @@ export function PlanDpgfEditor({
                       className="mt-0.5 size-4 shrink-0 text-warning"
                     />
                     {p.checkMissing(missing, posts.length)}
+                  </li>
+                )}
+                {partial > 0 && (
+                  <li className="flex items-start gap-2">
+                    <TriangleAlert
+                      aria-hidden="true"
+                      className="mt-0.5 size-4 shrink-0 text-warning"
+                    />
+                    {p.checkPartial(partial)}
                   </li>
                 )}
                 {photo > 0 && (

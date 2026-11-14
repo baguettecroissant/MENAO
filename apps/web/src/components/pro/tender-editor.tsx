@@ -29,6 +29,8 @@ const QUANTITY_TONES = {
   estime: "warning",
   // Tracée à la main par l'artisan sur le plan (lot 3).
   trace: "neutral",
+  // Total des pièces mesurées, une pièce restant à compléter (ADR 0329).
+  partiel: "warning",
 } as const;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const money = (cents: number) => euros.format(cents / 100);

@@ -35,7 +35,9 @@ export type TakeoffRoom = {
 };
 
 /** Origine d'une quantité du DPGF (« saisi » : valeur de l'artisan, dans le relevé ou ensuite). */
-export type TakeoffSource = "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace";
+/** « partiel » : total des pièces mesurées, une ou plusieurs pièces restant à compléter. */
+export type TakeoffSource =
+  "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | "partiel";
 
 /** Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. */
 export type TakeoffWork = Pick<
@@ -133,6 +135,33 @@ function missing(rooms: readonly TakeoffRoom[], what: string): Post {
   };
 }
 
+/**
+ * Total sur les pièces dont la mesure est connue. Une pièce sans mesure ne bloque plus le poste :
+ * le total des autres est donné, marqué « partiel », et la pièce manquante est nommée. Sans aucune
+ * pièce mesurée, le poste reste à compléter.
+ */
+function onKnown(
+  rooms: readonly TakeoffRoom[],
+  has: (r: TakeoffRoom) => boolean,
+  what: string,
+  compute: (known: readonly TakeoffRoom[]) => Post,
+): Post | null {
+  if (rooms.length === 0) return null;
+  const known = rooms.filter(has);
+  const absent = rooms.filter((r) => !has(r));
+  if (known.length === 0) return missing(absent, what);
+  const post = compute(known);
+  if (absent.length === 0) return post;
+  return {
+    ...post,
+    source: "partiel",
+    detail: `${post.detail} · sans ${absent.map((r) => r.name).join(", ")} : ${what} à compléter.`,
+  };
+}
+
+/** Poste qui n'est pas une mesure : une unité ou un ensemble, à choisir ou à chiffrer. */
+const single = (detail: string): Post => ({ quantityMilli: 1000, source: "calcul", detail });
+
 function join(terms: readonly string[]): string {
   const shown = terms.slice(0, 12);
   return (
@@ -143,30 +172,38 @@ function join(terms: readonly string[]): string {
 
 /** Somme des surfaces au sol (ou de plafond) des pièces. */
 function areaPost(rooms: readonly TakeoffRoom[]): Post | null {
-  if (rooms.length === 0) return null;
-  const absent = rooms.filter((r) => r.areaCm2 === null);
-  if (absent.length) return missing(absent, "la surface");
-  const total = rooms.reduce((s, r) => s + m2(r.areaCm2 ?? 0), 0);
-  return {
-    quantityMilli: total,
-    source: roomsSource(rooms, false),
-    detail: `${join(rooms.map((r) => `${r.name} ${fmt(m2(r.areaCm2 ?? 0))}`))} = ${fmt(total)} m²`,
-  };
+  return onKnown(
+    rooms,
+    (r) => r.areaCm2 !== null,
+    "la surface",
+    (known) => {
+      const total = known.reduce((s, r) => s + m2(r.areaCm2 ?? 0), 0);
+      return {
+        quantityMilli: total,
+        source: roomsSource(known, false),
+        detail: `${join(known.map((r) => `${r.name} ${fmt(m2(r.areaCm2 ?? 0))}`))} = ${fmt(total)} m²`,
+      };
+    },
+  );
 }
 
 /** Linéaire de plinthes : périmètre des pièces moins une porte par pièce. */
 function skirtingPost(rooms: readonly TakeoffRoom[]): Post | null {
-  if (rooms.length === 0) return null;
-  const absent = rooms.filter((r) => r.perimeterMm === null);
-  if (absent.length) return missing(absent, "le périmètre");
-  const sum = rooms.reduce((s, r) => s + (r.perimeterMm ?? 0), 0);
-  const doors = rooms.length * TAKEOFF_RULES.doorWidthMm;
-  const total = Math.max(0, sum - doors);
-  return {
-    quantityMilli: total,
-    source: roomsSource(rooms, true),
-    detail: `${join(rooms.map((r) => `${r.name} ${fmt(r.perimeterMm ?? 0)}`))} − ${rooms.length} porte${rooms.length > 1 ? "s" : ""} × ${fmt(TAKEOFF_RULES.doorWidthMm)} = ${fmt(total)} ml`,
-  };
+  return onKnown(
+    rooms,
+    (r) => r.perimeterMm !== null,
+    "le périmètre",
+    (known) => {
+      const sum = known.reduce((s, r) => s + (r.perimeterMm ?? 0), 0);
+      const doors = known.length * TAKEOFF_RULES.doorWidthMm;
+      const total = Math.max(0, sum - doors);
+      return {
+        quantityMilli: total,
+        source: roomsSource(known, true),
+        detail: `${join(known.map((r) => `${r.name} ${fmt(r.perimeterMm ?? 0)}`))} − ${known.length} porte${known.length > 1 ? "s" : ""} × ${fmt(TAKEOFF_RULES.doorWidthMm)} = ${fmt(total)} ml`,
+      };
+    },
+  );
 }
 
 /** Faïence (mm²) d'une pièce : périmètre × hauteur, moins la porte sur cette hauteur. */
@@ -176,10 +213,11 @@ function tileMm2(r: TakeoffRoom): number {
   return Math.max(0, (r.perimeterMm ?? 0) * height - door);
 }
 
-function tilePost(rooms: readonly TakeoffRoom[]): Post | null {
-  if (rooms.length === 0) return null;
-  const absent = rooms.filter((r) => r.perimeterMm === null);
-  if (absent.length) return missing(absent, "le périmètre");
+function tilePost(all: readonly TakeoffRoom[]): Post | null {
+  return onKnown(all, (r) => r.perimeterMm !== null, "le périmètre", tileKnown);
+}
+
+function tileKnown(rooms: readonly TakeoffRoom[]): Post {
   const total = rooms.reduce((s, r) => s + Math.round(tileMm2(r) / 1000), 0);
   const terms = rooms.map(
     (r) =>
@@ -193,10 +231,16 @@ function tilePost(rooms: readonly TakeoffRoom[]): Post | null {
 }
 
 /** Murs peints : périmètre × hauteur, moins faïence et une porte par pièce, moins les fenêtres. */
-function wallPaintPost(rooms: readonly TakeoffRoom[], windows: number | null): Post | null {
-  if (rooms.length === 0) return null;
-  const absent = rooms.filter((r) => r.perimeterMm === null || r.heightMm === null);
-  if (absent.length) return missing(absent, "le périmètre ou la hauteur");
+function wallPaintPost(all: readonly TakeoffRoom[], windows: number | null): Post | null {
+  return onKnown(
+    all,
+    (r) => r.perimeterMm !== null && r.heightMm !== null,
+    "le périmètre ou la hauteur",
+    (known) => wallPaintKnown(known, windows),
+  );
+}
+
+function wallPaintKnown(rooms: readonly TakeoffRoom[], windows: number | null): Post {
   // Faïence : toute sa hauteur est déduite ; la porte, seulement au-dessus de la faïence.
   let gross = 0;
   let tiles = 0;
@@ -252,12 +296,10 @@ function perRoomPost(
   const terms = rooms.map((r) => [r, per(r)] as const).filter(([, n]) => n > 0);
   if (terms.length === 0) return null;
   const total = terms.reduce((s, [, n]) => s + n, 0);
+  // Une règle par pièce : le nombre ne dépend pas des mesures, il n'est ni lu ni estimé.
   return {
     quantityMilli: total * 1000,
-    source: roomsSource(
-      terms.map(([r]) => r),
-      true,
-    ),
+    source: "calcul",
     detail: `${rule} : ${join(terms.map(([r, n]) => `${r.name} ${n}`))} = ${total}`,
   };
 }
@@ -423,11 +465,11 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
     spec("Douches", "u", countPost(counts, "douches", "douches")),
     spec("Baignoires", "u", countPost(counts, "baignoires", "baignoires")),
     spec("Éviers", "u", countPost(counts, "eviers", "éviers")),
-    spec("Production d'eau chaude", "u", toComplete("appareil à choisir.")),
+    spec("Production d'eau chaude", "u", single("Un appareil par logement, à choisir.")),
     spec(
       "Alimentations et évacuations",
       "forfait",
-      toComplete("réseaux à chiffrer selon les plans."),
+      single("Forfait : un ensemble, à chiffrer selon les plans."),
     ),
   ],
   electricien: ({ rooms }) => {
@@ -443,7 +485,7 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         "u",
         perRoomPost(rooms, socketsFor, "Minimum NF C 15-100 par pièce, à vérifier"),
       ),
-      spec("Tableau électrique", "u", toComplete("tableau à dimensionner.")),
+      spec("Tableau électrique", "u", single("Un tableau par logement, à dimensionner.")),
     ];
   },
   chauffagiste: ({ rooms }) => {
@@ -459,7 +501,7 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
           "Un émetteur par pièce de vie et salle d'eau",
         ),
       ),
-      spec("Générateur de chaleur", "u", toComplete("appareil à choisir.")),
+      spec("Générateur de chaleur", "u", single("Un générateur par logement, à choisir.")),
     ];
   },
   climaticien: ({ rooms }) => {
@@ -473,7 +515,7 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         "u",
         perRoomPost(cooled, () => 1, "Une unité par séjour et chambre"),
       ),
-      spec("Groupe extérieur", "u", toComplete("puissance à calculer.")),
+      spec("Groupe extérieur", "u", single("Un groupe par logement, puissance à calculer.")),
     ];
   },
   macon: ({ rooms }) => [
@@ -563,5 +605,6 @@ export function takeoffFigures(lines: readonly Pick<TakeoffLine, "kind" | "sourc
     missing: posts.filter((l) => l.source === "manque").length,
     photo: posts.filter((l) => l.source === "photo").length,
     estimated: posts.filter((l) => l.source === "estime").length,
+    partial: posts.filter((l) => l.source === "partiel").length,
   };
 }

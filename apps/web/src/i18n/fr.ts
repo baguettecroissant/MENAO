@@ -6584,10 +6584,13 @@ export const fr = {
         },
         created: (lots: number, posts: number, missing: number) =>
           `DPGF créé : ${lots} lot${lots > 1 ? "s" : ""}, ${posts} poste${posts > 1 ? "s" : ""}${missing ? `, dont ${missing} à compléter` : ""}. Vérifiez chaque quantité.`,
-        toVerify: (missing: number, photo: number) =>
+        toVerify: (missing: number, photo: number, partial = 0) =>
           [
             "Quantités lues et calculées sur les plans : à vérifier.",
             missing ? `${missing} poste${missing > 1 ? "s" : ""} à compléter.` : null,
+            partial
+              ? `${partial} total${partial > 1 ? "aux" : ""} partiel${partial > 1 ? "s" : ""} : une pièce reste à mesurer.`
+              : null,
             photo
               ? `${photo} quantité${photo > 1 ? "s" : ""} tirée${photo > 1 ? "s" : ""} d'une photo.`
               : null,
@@ -6602,6 +6605,7 @@ export const fr = {
           saisi: "Saisi",
           estime: "Estimé",
           trace: "Tracé à la main",
+          partiel: "Partiel",
         } as Record<string, string>,
         detail: "Calcul",
         origin: "Origine",
@@ -6618,6 +6622,8 @@ export const fr = {
         noDetail: "Quantité saisie : pas de calcul.",
         checkMissing: (n: number, total: number) =>
           `${n} poste${n > 1 ? "s" : ""} à compléter sur ${total}`,
+        checkPartial: (n: number) =>
+          `${n} total${n > 1 ? "aux" : ""} partiel${n > 1 ? "s" : ""} : une pièce reste à mesurer`,
         checkPhoto: (n: number) =>
           `${n} quantité${n > 1 ? "s" : ""} tirée${n > 1 ? "s" : ""} d'une photo`,
         totalTtc: "Total TTC",

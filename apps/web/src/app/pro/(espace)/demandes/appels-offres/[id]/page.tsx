@@ -272,7 +272,7 @@ export default async function TenderPage({
             className="flex items-start gap-2.5 rounded-input border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning"
           >
             <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <span>{t.plan.toVerify(plan.missing, plan.photo)}</span>
+            <span>{t.plan.toVerify(plan.missing, plan.photo, plan.partial)}</span>
           </p>
         )}
 
@@ -570,5 +570,6 @@ function linesToVerify(
   return {
     missing: posts.filter((l) => l.quantity_milli === null).length,
     photo: posts.filter((l) => l.quantity_source === "photo").length,
+    partial: posts.filter((l) => l.quantity_source === "partiel").length,
   };
 }
