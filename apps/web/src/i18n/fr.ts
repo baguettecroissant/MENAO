@@ -6295,6 +6295,7 @@ export const fr = {
           cotes: "Calculé (cotes)",
           photo: "Photo : à vérifier",
           saisi: "Saisi",
+          estime: "Estimé",
           uncertain: "À vérifier",
           missing: "À compléter",
         },
@@ -6401,6 +6402,27 @@ export const fr = {
               `${n} quantité${n > 1 ? "s" : ""} non écrite${n > 1 ? "s" : ""} sur le plan : à compléter`,
           },
         },
+        // Mesure à l'échelle (F-159, lot 2, maquette du lot 53).
+        measure: {
+          summaryEstimated: (n: number) =>
+            `${n} pièce${n > 1 ? "s" : ""} estimée${n > 1 ? "s" : ""} à l'échelle : ${n > 1 ? "leur" : "son"} contour est tracé sur le plan`,
+          summaryScale: (anchors: number, spread: string) =>
+            anchors > 1
+              ? `Échelle calée sur ${anchors} cotes lues : elles concordent à ${spread} % près`
+              : "Échelle calée sur une cote lue",
+          controlTitle: "Contrôle de l'estimation",
+          controlLead: (n: number) =>
+            `${n > 1 ? `Les ${n} pièces mesurées` : "La pièce mesurée"} avec ${n > 1 ? "leurs" : "ses"} cotes ${n > 1 ? "ont" : "a"} aussi été tracée${n > 1 ? "s" : ""} à l'échelle. Écart entre les deux mesures :`,
+          controlRow: (measured: string, traced: string) => `${measured} → ${traced} m²`,
+          controlMean: "Écart moyen sur ce plan",
+          controlNote:
+            "Une quantité estimée a la même marge. Elle reste à vérifier : c'est un forfait, vous restez responsable de vos quantités.",
+          legendMeasured: "Mesurée avec ses cotes",
+          legendEstimated: "Estimée : contour tracé par MENAO",
+          legendAnchor: "Cote qui cale l'échelle",
+          overlayLabel: "Contours des pièces sur le plan",
+          note: "« Estimé » : mesuré à l'échelle sur le contour tracé, jamais présenté comme une cote de l'architecte.",
+        },
         // Écran du relevé (maquette du lot 35, écran 2).
         viewerLabel: "Plans déposés",
         viewerTitle: (name: string) => `Plan : ${name}`,
@@ -6505,6 +6527,7 @@ export const fr = {
           photo: "Photo : à vérifier",
           manque: "À compléter",
           saisi: "Saisi",
+          estime: "Estimé",
         } as Record<string, string>,
         detail: "Calcul",
         origin: "Origine",

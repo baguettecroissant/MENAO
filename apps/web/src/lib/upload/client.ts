@@ -5,6 +5,7 @@ import {
   planScale,
   planTileGrid,
   type PlanTile,
+  TRACE_MAX_PIXELS,
 } from "@menao/core";
 import { createClient } from "@/lib/supabase/client";
 
@@ -100,7 +101,9 @@ export type PlanView = { blob: Blob; tile: Pick<PlanTile, "col" | "row" | "cols"
 export async function planViews(file: File, quality = 0.85): Promise<PlanView[]> {
   const bitmap = await createImageBitmap(file);
   const encode = (sx: number, sy: number, sw: number, sh: number, maxSide: number) => {
-    const scale = planScale(sw, sh, maxSide);
+    // Jamais plus de pixels que le modèle n'en lit sans réduire l'image : les contours qu'il trace
+    // sont alors exprimés dans les pixels de ce fichier (ADR 0326).
+    const scale = Math.min(planScale(sw, sh, maxSide), Math.sqrt(TRACE_MAX_PIXELS / (sw * sh)));
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(sw * scale));
     canvas.height = Math.max(1, Math.round(sh * scale));

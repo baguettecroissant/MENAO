@@ -7,7 +7,9 @@ import {
   planPageTypes,
   planReadingFigures,
   planWorksFigures,
+  traceControl,
   type PlanPage,
+  type PlanTrace,
 } from "@menao/core";
 import { CheckCircle2, Layers, Ruler, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
@@ -186,7 +188,45 @@ export default async function TenderPage({
                 rooms={plan.rooms}
                 counts={plan.counts}
                 files={plan.files}
-                summary={summaryCard}
+                traces={plan.traces}
+                summary={
+                  <>
+                    {summaryCard}
+                    {plan.control.length > 0 && (
+                      <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
+                        <h2 className="text-lg font-semibold">{t.plan.measure.controlTitle}</h2>
+                        <p className="text-sm text-muted-foreground">
+                          {t.plan.measure.controlLead(plan.control.length)}
+                        </p>
+                        <ul className="flex flex-col">
+                          {plan.control.map((row) => (
+                            <li
+                              key={row.name}
+                              className="flex items-center justify-between gap-3 border-t border-border py-1.5 text-sm"
+                            >
+                              <span className="min-w-0 flex-1 truncate">{row.name}</span>
+                              <span className="text-muted-foreground tabular-nums">
+                                {t.plan.measure.controlRow(row.measured, row.traced)}
+                              </span>
+                              <b
+                                className={`w-14 text-right tabular-nums ${row.wide ? "text-warning" : "text-success"}`}
+                              >
+                                {row.gap}
+                              </b>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="flex items-center justify-between border-t border-border pt-2 text-sm font-semibold">
+                          <span>{t.plan.measure.controlMean}</span>
+                          <span className="tabular-nums">{plan.controlMean}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {t.plan.measure.controlNote}
+                        </p>
+                      </section>
+                    )}
+                  </>
+                }
               />
             ) : plan.works.length === 0 ? (
               <div className="max-w-xl">{summaryCard}</div>
@@ -352,6 +392,7 @@ async function planData(
     plan_scale: string | null;
     plan_pages: unknown;
     plan_levels: unknown;
+    plan_traces: unknown;
   },
 ) {
   const entries = planFiles(tender.plan_files);
@@ -394,6 +435,32 @@ async function planData(
     })),
   );
   const tw = t.plan.works;
+  // Mesure à l'échelle (F-159, lot 2) : tracés, pièces estimées, écart avec les pièces cotées.
+  const traces = (Array.isArray(tender.plan_traces) ? tender.plan_traces : []) as PlanTrace[];
+  const percent = new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+    signDisplay: "exceptZero",
+  });
+  const m2 = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const tenth = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+  const gaps = traceControl(
+    rooms.map((r) => ({ name: r.name, file: r.file_index, areaCm2: r.area_cm2, source: r.source })),
+    traces,
+  );
+  const control = gaps.map((g) => ({
+    name: g.name,
+    measured: m2.format(g.areaCm2 / 10_000),
+    traced: m2.format(g.tracedCm2 / 10_000),
+    gap: `${percent.format(g.gapBp / 100)} %`,
+    // Au-delà de 5 %, l'écart est signalé : le contour ou la cote est à regarder.
+    wide: Math.abs(g.gapBp) > 500,
+  }));
+  const controlMean = gaps.length
+    ? `${tenth.format(gaps.reduce((sum, g) => sum + Math.abs(g.gapBp), 0) / gaps.length / 100)} %`
+    : "";
+  const widest = traces.reduce((max, x) => Math.max(max, x.spreadBp), 0);
+  const anchorCount = traces.reduce((sum, x) => sum + x.anchors.length, 0);
   const ok = { icon: CheckCircle2, tone: "text-success" };
   const warn = { icon: TriangleAlert, tone: "text-warning" };
   const ruler = { icon: Ruler, tone: "text-primary-strong" };
@@ -433,6 +500,19 @@ async function planData(
           text: t.plan.summary.computed(figures.computed),
         }
       : null,
+    traces.length
+      ? {
+          ...ok,
+          text: t.plan.measure.summaryScale(anchorCount, tenth.format(widest / 100)),
+        }
+      : null,
+    figures.estimated
+      ? {
+          icon: Ruler,
+          tone: "text-warning",
+          text: t.plan.measure.summaryEstimated(figures.estimated),
+        }
+      : null,
     figures.toCheck ? { ...warn, text: t.plan.summary.toCheck(figures.toCheck) } : null,
     figures.missing ? { ...warn, text: t.plan.summary.missing(figures.missing) } : null,
   ].filter((x): x is { icon: typeof CheckCircle2; tone: string; text: string } => x !== null);
@@ -444,6 +524,9 @@ async function planData(
   return {
     rooms,
     works,
+    traces,
+    control,
+    controlMean,
     pages,
     files,
     counts,

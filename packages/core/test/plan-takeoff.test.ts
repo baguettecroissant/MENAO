@@ -202,6 +202,29 @@ describe("takeoffFigures", () => {
       { code: "carreleur", label: "Carreleur" },
       { code: "plombier", label: "Plombier" },
     ]);
-    expect(takeoffFigures(lines)).toEqual({ lots: 2, posts: 12, missing: 3, photo: 3 });
+    expect(takeoffFigures(lines)).toEqual({
+      lots: 2,
+      posts: 12,
+      missing: 3,
+      photo: 3,
+      estimated: 0,
+    });
+  });
+});
+
+describe("pièce estimée à l'échelle (F-159, lot 2)", () => {
+  it("marque « estime » toute quantité qui s'appuie sur une pièce estimée", () => {
+    const rooms = [
+      room("Chambre 1", 11.38, 13.52),
+      room("Salon", 17.26, 16.63, { source: "estime" }),
+    ];
+    const lines = posts("peintre", "Peintre", rooms).filter((l) => l.quantityMilli !== null);
+    expect(lines.find((l) => l.designation === "Peinture des plafonds")).toMatchObject({
+      quantityMilli: 28_640,
+      source: "estime",
+    });
+    expect(
+      takeoffFigures(planTakeoff(rooms, COUNTS, [{ code: "peintre", label: "Peintre" }])).estimated,
+    ).toBeGreaterThan(0);
   });
 });

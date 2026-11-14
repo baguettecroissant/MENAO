@@ -1,0 +1,16 @@
+[
+  {
+    "id": "plain-pied",
+    "note": "Plan fictif : séjour en L, deux pièces cotées, aucune surface écrite",
+    "fichier": "contours.jpg",
+    "largeur": 2400,
+    "hauteur": 1698,
+    "pieces": [
+      { "nom": "Séjour", "surface_m2": 36.75 },
+      { "nom": "Chambre", "surface_m2": 12.25 },
+      { "nom": "Salle de bains", "surface_m2": 8.75 },
+      { "nom": "Local technique", "surface_m2": 3.2 },
+      { "nom": "Terrasse", "surface_m2": 17.99 }
+    ]
+  }
+]

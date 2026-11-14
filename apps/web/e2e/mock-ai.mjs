@@ -273,6 +273,22 @@ function terrainReading() {
   });
 }
 
+// Tracé d'une photo de plan de 800 × 600 (mesure à l'échelle, ADR 0326) : deux cotes qui donnent
+// 10 mm par pixel ; le dégagement tracé fait 6,85 × 1,20 m, comme ses cotes ; la salle d'eau n'est
+// pas dans le relevé simulé.
+function contourReading() {
+  return JSON.stringify({
+    cotes: [
+      { x1: 100, y1: 100, x2: 500, y2: 100, valeur_cm: 400 },
+      { x1: 100, y1: 100, x2: 100, y2: 400, valeur_cm: 300 },
+    ],
+    pieces: [
+      { nom: "Dégagement", contour: "100,100 785,100 785,220 100,220" },
+      { nom: "Salle d'eau", contour: "100,250 400,250 400,400 250,400 250,550 100,550" },
+    ],
+  });
+}
+
 function dpgfReading() {
   return JSON.stringify({
     lisible: true,
@@ -396,17 +412,19 @@ createServer(async (req, res) => {
             ? photoDescription()
             : text.includes("<dpgf>")
               ? dpgfReading()
-              : text.includes("<plan>")
-                ? /<metiers>[^<]*terrassier/.test(text)
-                  ? terrainReading()
-                  : planReading()
-                : document
-                  ? documentReading(content)
-                  : text.includes("<saisie>")
-                    ? needSuggestion(text)
-                    : text.includes("<dictee>")
-                      ? quoteLines()
-                      : analysis(text, body?.model ?? ""),
+              : text.includes("Trace les pièces")
+                ? contourReading()
+                : text.includes("<plan>")
+                  ? /<metiers>[^<]*terrassier/.test(text)
+                    ? terrainReading()
+                    : planReading()
+                  : document
+                    ? documentReading(content)
+                    : text.includes("<saisie>")
+                      ? needSuggestion(text)
+                      : text.includes("<dictee>")
+                        ? quoteLines()
+                        : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",

@@ -35,7 +35,7 @@ export type TakeoffRoom = {
 };
 
 /** Origine d'une quantité du DPGF (« saisi » : valeur de l'artisan, dans le relevé ou ensuite). */
-export type TakeoffSource = "plan" | "calcul" | "photo" | "manque" | "saisi";
+export type TakeoffSource = "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime";
 
 /** Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. */
 export type TakeoffWork = Pick<
@@ -116,6 +116,8 @@ const m2 = (cm2: number) => Math.round(cm2 / 10);
 type Post = { quantityMilli: number | null; source: TakeoffSource; detail: string };
 
 function roomsSource(rooms: readonly TakeoffRoom[], derived: boolean): TakeoffSource {
+  // Une seule pièce estimée à l'échelle suffit : la quantité entière est une estimation.
+  if (rooms.some((r) => r.source === "estime")) return "estime";
   if (rooms.some((r) => r.source === "photo" || r.uncertain)) return "photo";
   if (derived || rooms.some((r) => r.source === "cotes")) return "calcul";
   return "plan";
@@ -552,5 +554,6 @@ export function takeoffFigures(lines: readonly Pick<TakeoffLine, "kind" | "sourc
     posts: posts.length,
     missing: posts.filter((l) => l.source === "manque").length,
     photo: posts.filter((l) => l.source === "photo").length,
+    estimated: posts.filter((l) => l.source === "estime").length,
   };
 }

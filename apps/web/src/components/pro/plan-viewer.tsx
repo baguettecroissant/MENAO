@@ -9,6 +9,14 @@ export type PlanFileLink = { name: string; kind: "pdf" | "jpg" | "png"; url: str
 
 export type PlanView = { file: number; page: number };
 
+/** Contours à poser sur une image de plan (F-159, lot 2) : pixels de l'image d'origine. */
+export type PlanOverlay = {
+  width: number;
+  height: number;
+  shapes: { key: string; points: string; tone: "measured" | "estimated"; selected: boolean }[];
+  anchors: { x1: number; y1: number; x2: number; y2: number }[];
+};
+
 /**
  * Les plans déposés, un onglet par fichier (lien signé), ouverts à la page demandée : visionneuse
  * du relevé des pièces (lot 35) et du relevé des ouvrages (lot 52).
@@ -19,6 +27,7 @@ export function PlanViewer({
   onView,
   hint,
   note,
+  overlay,
 }: {
   files: PlanFileLink[];
   view: PlanView;
@@ -26,6 +35,8 @@ export function PlanViewer({
   hint: string;
   /** Complément du pied de la visionneuse (type de page reconnu). */
   note?: ReactNode;
+  /** Contours tracés sur l'image affichée (photo seulement). */
+  overlay?: PlanOverlay | null;
 }) {
   const file = files[view.file];
   return (
@@ -61,6 +72,55 @@ export function PlanViewer({
             title={t.viewerTitle(file.name)}
             className="h-[34rem] w-full border-0"
           />
+        ) : overlay ? (
+          // Image et contours dans le même cadre, au format de l'image : les pixels coïncident.
+          <div
+            className="relative mx-auto w-full"
+            style={{
+              aspectRatio: `${overlay.width} / ${overlay.height}`,
+              maxWidth: `calc(34rem * ${overlay.width / overlay.height})`,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- lien signé du stockage privé. */}
+            <img
+              src={file.url}
+              alt={t.viewerTitle(file.name)}
+              className="absolute inset-0 size-full"
+            />
+            <svg
+              viewBox={`0 0 ${overlay.width} ${overlay.height}`}
+              className="absolute inset-0 size-full"
+              role="img"
+              aria-label={t.measure.overlayLabel}
+            >
+              {overlay.shapes.map((shape) => (
+                <polygon
+                  key={shape.key}
+                  points={shape.points}
+                  vectorEffect="non-scaling-stroke"
+                  className={
+                    shape.tone === "estimated"
+                      ? `stroke-warning ${shape.selected ? "fill-warning-soft/80" : "fill-warning-soft/50"}`
+                      : `stroke-primary ${shape.selected ? "fill-primary-soft/80" : "fill-primary-soft/40"}`
+                  }
+                  strokeWidth={shape.selected ? 3 : 2}
+                  strokeDasharray={shape.tone === "estimated" ? "7 4" : undefined}
+                />
+              ))}
+              {overlay.anchors.map((k, i) => (
+                <line
+                  key={i}
+                  x1={k.x1}
+                  y1={k.y1}
+                  x2={k.x2}
+                  y2={k.y2}
+                  vectorEffect="non-scaling-stroke"
+                  className="stroke-success"
+                  strokeWidth={3}
+                />
+              ))}
+            </svg>
+          </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- lien signé du stockage privé.
           <img

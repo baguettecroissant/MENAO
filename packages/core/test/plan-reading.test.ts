@@ -214,6 +214,7 @@ describe("planReadingFigures", () => {
       read: 1,
       computed: 1,
       toCheck: 1,
+      estimated: 0,
       missing: 1,
     });
   });

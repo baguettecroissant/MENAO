@@ -4,7 +4,8 @@
 // reste vide (« à compléter »). Aucun import : ce fichier est aussi lu par Deno (tender-sheet).
 
 /** Origine d'une mesure : écrite sur le plan, calculée avec les cotes, lue sur une photo, saisie. */
-export type PlanRoomSource = "plan" | "cotes" | "photo" | "saisi";
+/** « estime » : mesurée à l'échelle sur son contour tracé (F-159, lot 2), ni lue ni saisie. */
+export type PlanRoomSource = "plan" | "cotes" | "photo" | "saisi" | "estime";
 
 export type PlanRoom = {
   level: string | null;
@@ -305,6 +306,7 @@ export function planReadingFigures(
     read: rooms.filter((r) => r.source === "plan" && r.areaCm2 !== null).length,
     computed: rooms.filter((r) => r.source === "cotes").length,
     toCheck: rooms.filter((r) => r.source === "photo" || r.uncertain).length,
+    estimated: rooms.filter((r) => r.source === "estime").length,
     missing: rooms.filter(
       (r) => r.areaCm2 === null || r.perimeterMm === null || r.heightMm === null,
     ).length,
