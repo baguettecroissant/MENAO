@@ -3228,6 +3228,106 @@ export const fr = {
       hourRequired: "Indiquez votre prix de vente de l'heure.",
       error: "La bibliothèque n'a pas pu être créée. Réessayez.",
     },
+    // Prix d'achat repérés dans les factures (F-149, lot 44, ADR 0313).
+    invoices: {
+      title: "Mes prix d'achat à jour",
+      changedTitle: (n: number) => `${n} prix d'achat ${n > 1 ? "ont" : "a"} changé`,
+      since: (date: string) => `Factures lues depuis le ${date}`,
+      matchedReference: (ref: string) => `Réf. ${ref}`,
+      matchedDesignation: "même désignation",
+      noPrice: "à renseigner",
+      select: (name: string) => `Mettre à jour le prix de ${name}`,
+      jump: "Plus de 30 % : décochée, à vérifier.",
+      freshTitle: (n: number) => `${n} article${n > 1 ? "s" : ""} pas encore dans vos fournitures`,
+      add: (name: string) => `Ajouter ${name} à mes fournitures`,
+      summary: (updated: number, works: number) =>
+        `${updated} prix · ${works} ouvrage${works > 1 ? "s" : ""} recalculé${works > 1 ? "s" : ""} · devis envoyés inchangés`,
+      button: (updated: number, added: number) =>
+        updated > 0
+          ? `Mettre à jour ${updated} prix${added > 0 ? `, ajouter ${added}` : ""}`
+          : added > 0
+            ? `Ajouter ${added} fourniture${added > 1 ? "s" : ""}`
+            : "Laisser ces prix tels quels",
+      empty:
+        "Aucun prix d'achat n'a changé dans vos factures des 90 derniers jours. Les nouvelles factures lues dans Dépenses apparaîtront ici.",
+      failed: "Les factures n'ont pas pu être lues. Réessayez.",
+      invalid: "La mise à jour n'a pas pu être faite. Réessayez.",
+      done: (updated: number, added: number) =>
+        [
+          updated > 0 ? `${updated} prix d'achat mis à jour` : null,
+          added > 0
+            ? `${added} fourniture${added > 1 ? "s" : ""} ajoutée${added > 1 ? "s" : ""}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(", ") + (updated + added > 0 ? "." : "Factures passées en revue."),
+      banner: (changed: number, fresh: number) =>
+        changed > 0
+          ? `${changed} prix d'achat ${changed > 1 ? "ont" : "a"} changé dans vos factures.`
+          : `${fresh} article${fresh > 1 ? "s" : ""} de vos factures ${fresh > 1 ? "ne sont" : "n'est"} pas encore dans vos fournitures.`,
+      bannerLink: "Vérifier ›",
+      expenseTitle: (n: number) => `${n} prix d'achat ${n > 1 ? "ont" : "a"} changé`,
+      expenseText: (names: string[], total: number, trend: string) => {
+        const shown = names.slice(0, 2);
+        const more = total - shown.length;
+        const list =
+          more > 0
+            ? `${shown.join(", ")} et ${more} autre${more > 1 ? "s" : ""}`
+            : shown.join(" et ");
+        if (total === 1) {
+          return trend === "baisse"
+            ? `Le prix de ${list} a baissé par rapport à vos fournitures.`
+            : `Le prix de ${list} a augmenté par rapport à vos fournitures.`;
+        }
+        return trend === "hausse"
+          ? `${list} sont plus chers que dans vos fournitures.`
+          : trend === "baisse"
+            ? `${list} sont moins chers que dans vos fournitures.`
+            : `${list} n'ont plus le même prix que dans vos fournitures.`;
+      },
+      expenseButton: "Vérifier mes prix",
+    },
+    // Augmenter ses prix en un geste (F-149, lot 44, ADR 0313).
+    raise: {
+      button: "Augmenter",
+      title: "Augmenter mes prix",
+      rate: "Hausse",
+      rateHint: "De 0,1 à 30 %.",
+      presets: [200, 300, 500],
+      scope: "Sur quoi ?",
+      works: "Mes ouvrages à prix fixé",
+      worksHint: (n: number) => `${n} ouvrage${n > 1 ? "s" : ""} au prix fixé à la main.`,
+      supplies: "Mes prix d'achat",
+      suppliesHint: (n: number) =>
+        `${n} fourniture${n > 1 ? "s" : ""}. Les ouvrages composés suivent.`,
+      rounding: "Arrondi",
+      roundings: { centime: "Au centime", dix: "10 centimes", euro: "À l'euro" } as Record<
+        string,
+        string
+      >,
+      preview: "Aperçu",
+      previewCount: (shown: number, total: number) => `${shown} sur ${total}`,
+      nothing: "Aucun prix ne change avec ces réglages.",
+      summary: (rate: string, works: number, supplies: number) =>
+        `${rate} sur ${[
+          works > 0 ? `${works} ouvrage${works > 1 ? "s" : ""}` : null,
+          supplies > 0 ? `${supplies} prix d'achat` : null,
+        ]
+          .filter(Boolean)
+          .join(" et ")} · annulable pendant 24 h`,
+      apply: "Appliquer la hausse",
+      failed: "La hausse n'a pas pu être appliquée. Réessayez.",
+      done: (rate: string, works: number, supplies: number, until: string) =>
+        `Hausse de ${rate.replace("+ ", "")} appliquée : ${[
+          works > 0 ? `${works} ouvrage${works > 1 ? "s" : ""}` : null,
+          supplies > 0 ? `${supplies} prix d'achat` : null,
+        ]
+          .filter(Boolean)
+          .join(" et ")}. Annulable jusqu'à ${until}.`,
+      undo: "Annuler",
+      undone: (n: number) => `Hausse annulée : ${n} prix rétabli${n > 1 ? "s" : ""}.`,
+      undoFailed: "Cette hausse ne peut plus être annulée.",
+    },
   },
   proExpenses: {
     title: "Dépenses",
