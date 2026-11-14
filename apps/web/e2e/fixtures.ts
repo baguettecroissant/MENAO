@@ -1,4 +1,28 @@
+import { crc32, deflateSync } from "node:zlib";
 import { test, type Page } from "@playwright/test";
+
+/** PNG blanc de `width` × `height` pixels, assez grand pour être tracé (mesure à l'échelle). */
+function whitePng(width: number, height: number): Buffer {
+  const chunk = (type: string, data: Buffer) => {
+    const body = Buffer.concat([Buffer.from(type, "ascii"), data]);
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(data.length);
+    const sum = Buffer.alloc(4);
+    sum.writeUInt32BE(crc32(body));
+    return Buffer.concat([length, body, sum]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.set([8, 2, 0, 0, 0], 8); // 8 bits, RVB
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width * 3, 0xff)]);
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk("IHDR", header),
+    chunk("IDAT", deflateSync(Buffer.concat(Array.from({ length: height }, () => row)))),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+}
 
 /** Captures des écrans (ordinateur et mobile 390 px), publiées par la CI pour la revue du design. */
 export async function capture(page: Page, name: string) {
@@ -166,6 +190,8 @@ export const files = {
       "base64",
     ),
   },
+  /** Photo d'un plan, 800 × 600 : assez grande pour la mesure à l'échelle (ADR 0326). */
+  planPhoto: { name: "plan-rdc.png", mimeType: "image/png", buffer: whitePng(800, 600) },
   /** Logo PNG 60 × 24 à fond transparent (logo des documents, ADR 0038). */
   logo: {
     name: "logo.png",

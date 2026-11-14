@@ -5864,6 +5864,7 @@ export type Database = {
           plan_levels: NonNullable<Json>;
           plan_pages: NonNullable<Json>;
           plan_scale: string | null;
+          plan_traces: NonNullable<Json>;
           plan_trades: string[];
           quantities_checked_at: string | null;
           sheet: NonNullable<Json>;
@@ -5888,6 +5889,7 @@ export type Database = {
           plan_levels?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
+          plan_traces?: NonNullable<Json>;
           plan_trades?: string[];
           quantities_checked_at?: string | null;
           sheet?: NonNullable<Json>;
@@ -5911,6 +5913,7 @@ export type Database = {
           plan_levels?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
+          plan_traces?: NonNullable<Json>;
           plan_trades?: string[];
           quantities_checked_at?: string | null;
           sheet?: NonNullable<Json>;
@@ -7219,6 +7222,10 @@ export type Database = {
           p_tender_id: string;
           p_works?: Json;
         };
+        Returns: number;
+      };
+      artisan_import_plan_traces: {
+        Args: { p_estimates?: Json; p_tender_id: string; p_traces: Json };
         Returns: number;
       };
       artisan_import_tender_lines: {

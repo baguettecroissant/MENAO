@@ -24,7 +24,13 @@ import {
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { readDpgfPdf } from "./pdf.ts";
+import {
+  estimatesFromTraces,
+  MAX_TRACED_FILES,
+  type PlanTrace,
+} from "../../../packages/core/src/plan-measure.ts";
 import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts";
+import { tracePlan } from "./contours.ts";
 import { type PlanFile, type PlanFileTile, readPlans } from "./plan.ts";
 import {
   applyTenderPrices,
@@ -329,7 +335,17 @@ async function readTenderPlans(
         (c): c is string => typeof c === "string" && /^[a-z0-9-]{1,60}$/.test(c),
       )
     : [];
-  const reading = await readPlans(admin, files, trades);
+  // Mesure à l'échelle (ADR 0326) : les premières photos sont tracées en même temps que la
+  // lecture ; un tracé en échec ou sans échelle sûre n'estime rien et ne bloque pas le relevé.
+  const photos = files
+    .map((file, i) => ({ file, index: i + 1 }))
+    .filter(({ file }) => file.kind !== "pdf")
+    .slice(0, MAX_TRACED_FILES);
+  const [reading, ...traced] = await Promise.all([
+    readPlans(admin, files, trades),
+    ...photos.map(({ file, index }) => tracePlan(admin, file.bytes, index).catch(() => null)),
+  ]);
+  const traces = traced.filter((trace): trace is PlanTrace => trace !== null);
   if (reading.status !== "ok") {
     return json({ status: reading.status }, reading.status === "unavailable" ? 503 : 422);
   }
@@ -349,8 +365,20 @@ async function readTenderPlans(
       error.code === "42501" ? 403 : 500,
     );
   }
+  // Tracés gardés et pièces sans surface estimées ; toujours appelé, pour effacer d'anciens tracés.
+  const estimates = estimatesFromTraces(
+    reading.rooms.map((r) => ({ name: r.name, file: r.file, areaCm2: r.areaCm2 })),
+    traces,
+  );
+  const { data: estimated, error: traceError } = await supabase.rpc("artisan_import_plan_traces", {
+    p_tender_id: tender.id,
+    p_traces: traces,
+    p_estimates: estimates,
+  });
+  if (traceError) console.error("tender-sheet : tracés refusés", traceError.code);
   return json({
     status: "ok",
+    estimated: typeof estimated === "number" ? estimated : 0,
     rooms: reading.rooms.length,
     works: reading.works.length,
     warnings: reading.warnings,

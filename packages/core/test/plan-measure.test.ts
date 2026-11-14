@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildPlanTrace,
+  estimatesFromTraces,
+  jpegSize,
+  traceable,
+  traceControl,
+  traceForRoom,
   measureContour,
   measureGapBp,
   parseContour,
@@ -85,5 +91,95 @@ describe("measureContour", () => {
   it("chiffre l'écart avec une mesure de référence", () => {
     expect(measureGapBp(115_200, 113_800)).toBe(123);
     expect(measureGapBp(100, 0)).toBeNull();
+  });
+});
+
+describe("tracé d'un plan", () => {
+  // 1 px = 10 mm : chambre de 359 × 317 px, pièce en L, cotes de 359 et 317 cm.
+  const raw = {
+    cotes: [
+      { x1: 40, y1: 40, x2: 399, y2: 40, valeur_cm: 359 },
+      { x1: 40, y1: 40, x2: 40, y2: 357, valeur_cm: 317 },
+      { x1: 0, y1: 0, x2: 5, y2: 0, valeur_cm: 400 },
+    ],
+    pieces: [
+      { nom: "Chambre 1", contour: "40,40 399,40 399,357 40,357" },
+      { nom: "Salle d'eau", contour: "420,40 650,40 650,200 570,200 570,340 420,340" },
+      { nom: "Trait", contour: "0,0 10,10" },
+      { nom: "Poussière", contour: "0,0 3,0 3,3 0,3" },
+    ],
+  };
+  const built = buildPlanTrace(raw, 3, 2000, 1500);
+  if (!built) throw new Error("tracé attendu");
+  const trace = built;
+  const [first] = trace.rooms;
+  if (!first) throw new Error("pièce attendue");
+  const [long, short] = raw.cotes;
+
+  it("cale l'échelle, mesure chaque contour et écarte ce qui est douteux", () => {
+    expect(trace).toMatchObject({
+      file: 3,
+      width: 2000,
+      height: 1500,
+      umPerPx: 10_000,
+      spreadBp: 0,
+    });
+    expect(trace.anchors).toHaveLength(2);
+    expect(trace.rooms.map((r) => [r.name, r.areaCm2, r.perimeterMm])).toEqual([
+      ["Chambre 1", 113_803, 13_520],
+      ["Salle d'eau", 57_800, 10_600],
+    ]);
+  });
+
+  it("n'estime rien sans échelle sûre, sans contour, ou sur une image que le modèle réduirait", () => {
+    expect(buildPlanTrace({ ...raw, cotes: [] }, 1, 2000, 1500)).toBeNull();
+    expect(
+      buildPlanTrace(
+        {
+          ...raw,
+          cotes: [
+            ...(long ? [long] : []),
+            { ...short, x1: 40, y1: 40, x2: 40, y2: 357, valeur_cm: 400 },
+          ],
+        },
+        1,
+        2000,
+        1500,
+      ),
+    ).toBeNull();
+    expect(buildPlanTrace({ ...raw, pieces: [] }, 1, 2000, 1500)).toBeNull();
+    expect(buildPlanTrace(raw, 1, 2400, 1800)).toBeNull();
+    expect(traceable(2000, 1500)).toBe(true);
+    expect(traceable(2400, 1800)).toBe(false);
+    expect(traceable(3000, 1000)).toBe(false);
+  });
+
+  const rooms = [
+    { name: "chambre 1", file: 3, areaCm2: 113_800, source: "cotes" },
+    { name: "Salle d’eau", file: 2, areaCm2: null, source: "photo" },
+    { name: "Salon", file: 3, areaCm2: null, source: "photo" },
+  ];
+  it("retrouve une pièce par son nom, de préférence sur son propre plan", () => {
+    const other = { ...trace, file: 2, rooms: [{ ...first, areaCm2: 1 }] };
+    expect(traceForRoom([other, trace], { name: "chambre 1", file: 3 })?.areaCm2).toBe(113_803);
+    expect(traceForRoom([trace], { name: "Salon", file: 3 })).toBeNull();
+  });
+  it("n'estime que les pièces sans surface et contrôle les autres", () => {
+    expect(estimatesFromTraces(rooms, [trace])).toEqual([
+      { position: 2, areaCm2: 57_800, perimeterMm: 10_600 },
+    ]);
+    expect(traceControl(rooms, [trace])).toEqual([
+      { name: "chambre 1", areaCm2: 113_800, tracedCm2: 113_803, gapBp: 0 },
+    ]);
+  });
+});
+
+describe("jpegSize", () => {
+  it("lit les dimensions dans l'en-tête", () => {
+    const header = [0xff, 0xd8, 0xff, 0xe0, 0x00, 0x04, 0x00, 0x00];
+    const sof = [0xff, 0xc0, 0x00, 0x11, 0x08, 0x05, 0xdc, 0x07, 0xd0, 0x03, 0, 0, 0];
+    expect(jpegSize(new Uint8Array([...header, ...sof]))).toEqual({ width: 2000, height: 1500 });
+    expect(jpegSize(new Uint8Array([0x89, 0x50, 0x4e, 0x47]))).toBeNull();
+    expect(jpegSize(new Uint8Array(header))).toBeNull();
   });
 });

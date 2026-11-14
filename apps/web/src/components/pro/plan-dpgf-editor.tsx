@@ -26,6 +26,8 @@ const TONES = {
   photo: "warning",
   manque: "warning",
   saisi: "neutral",
+  // Mesurée à l'échelle sur un contour tracé (F-159, lot 2) : une estimation, à vérifier.
+  estime: "warning",
 } as const;
 
 type Draft = { quantity: string; price: string };

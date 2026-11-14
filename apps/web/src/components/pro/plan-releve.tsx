@@ -1,13 +1,24 @@
 "use client";
 
-import { formatQuantity, PLAN_COUNT_KEYS, parseQuantity } from "@menao/core";
+import {
+  formatQuantity,
+  PLAN_COUNT_KEYS,
+  parseQuantity,
+  planNameKey,
+  type PlanTrace,
+} from "@menao/core";
 import { HelpCircle, Plus, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { Alert, Button, StatusBadge, buttonClasses, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { PlanViewer, type PlanFileLink, type PlanView } from "@/components/pro/plan-viewer";
+import {
+  PlanViewer,
+  type PlanFileLink,
+  type PlanOverlay,
+  type PlanView,
+} from "@/components/pro/plan-viewer";
 import { savePlanRooms } from "@/lib/artisan/tender-actions";
 import type { TenderRoom } from "@/lib/artisan/tenders";
 import { initialFormState } from "@/lib/auth/form";
@@ -62,7 +73,12 @@ function parse(d: Draft) {
     id: d.room?.id ?? null,
     level: d.level.trim() || null,
     name: d.name.trim(),
-    areaCm2: measure(d.area, 10, 1, 100_000_000),
+    // Surface non retouchée : la valeur enregistrée, au cm² près. L'écran n'en montre que trois
+    // décimales ; la relire ferait passer en « Saisi » une surface calculée ou estimée (113 803 cm²).
+    areaCm2:
+      d.room && d.area === toDraft(d.room).area
+        ? d.room.area_cm2
+        : measure(d.area, 10, 1, 100_000_000),
     perimeterMm: measure(d.perimeter, 1, 1, 2_000_000),
     heightMm: measure(d.height, 1, 1500, 10_000),
     wet: d.wet,
@@ -97,6 +113,7 @@ export function PlanReleve({
   counts,
   files,
   summary,
+  traces = [],
 }: {
   tenderId: string;
   rooms: TenderRoom[];
@@ -104,6 +121,8 @@ export function PlanReleve({
   files: PlanFileLink[];
   /** « MENAO a lu vos plans » (rendu par la page). */
   summary: ReactNode;
+  /** Contours tracés sur les photos (mesure à l'échelle, F-159 lot 2). */
+  traces?: PlanTrace[];
 }) {
   const [state, formAction, pending] = useActionState(savePlanRooms, initialFormState);
   const [drafts, setDrafts] = useState<Draft[]>(() => rooms.map(toDraft));
@@ -165,6 +184,7 @@ export function PlanReleve({
     const r = d.room;
     if (!r) return null;
     if (r.area_cm2 === null) return <StatusBadge tone="warning">{t.source.missing}</StatusBadge>;
+    if (r.source === "estime") return <StatusBadge tone="warning">{t.source.estime}</StatusBadge>;
     if (r.source === "photo") return <StatusBadge tone="warning">{t.source.photo}</StatusBadge>;
     if (r.uncertain) return <StatusBadge tone="warning">{t.source.uncertain}</StatusBadge>;
     if (r.source === "cotes") return <StatusBadge tone="primary">{t.source.cotes}</StatusBadge>;
@@ -172,6 +192,25 @@ export function PlanReleve({
     return <StatusBadge tone="success">{t.source.plan(r.page)}</StatusBadge>;
   }
 
+  // Contours du plan affiché : en ambre les pièces estimées, en bleu celles mesurées par ailleurs.
+  const trace = traces.find((x) => x.file === view.file + 1);
+  const overlay: PlanOverlay | null =
+    trace && files[view.file]?.kind !== "pdf"
+      ? {
+          width: trace.width,
+          height: trace.height,
+          anchors: trace.anchors,
+          shapes: trace.rooms.map((traced, i) => {
+            const draft = drafts.find((d) => planNameKey(d.name) === planNameKey(traced.name));
+            return {
+              key: `${i}-${traced.name}`,
+              points: traced.contour,
+              tone: draft?.room?.source === "estime" && !changed(draft) ? "estimated" : "measured",
+              selected: !!draft && draft.key === selected,
+            };
+          }),
+        }
+      : null;
   const cell = "px-2 py-2 align-middle";
   const numberInput = `${inputClasses} !min-h-10 !w-24 px-2.5 text-right tabular-nums`;
   const side = "flex w-full flex-col gap-4 lg:w-[22rem] lg:shrink-0";
@@ -182,7 +221,31 @@ export function PlanReleve({
       {state.success && !dirty && <Alert tone="success">{state.success}</Alert>}
 
       <div className="flex flex-col items-start gap-5 lg:flex-row">
-        <PlanViewer files={files} view={view} onView={setView} hint={t.viewerHint} />
+        <PlanViewer
+          files={files}
+          view={view}
+          onView={setView}
+          hint={t.viewerHint}
+          overlay={overlay}
+          note={
+            overlay && (
+              <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                {(
+                  [
+                    ["border-primary bg-primary-soft", t.measure.legendMeasured],
+                    ["border-dashed border-warning bg-warning-soft", t.measure.legendEstimated],
+                    ["border-success bg-surface", t.measure.legendAnchor],
+                  ] as const
+                ).map(([style, label]) => (
+                  <span key={label} className="inline-flex items-center gap-1.5">
+                    <span aria-hidden="true" className={`size-3.5 rounded-sm border-2 ${style}`} />
+                    {label}
+                  </span>
+                ))}
+              </span>
+            )
+          }
+        />
 
         <div className={side}>
           {summary}
@@ -366,6 +429,7 @@ export function PlanReleve({
           </div>
           <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
             {t.roomsNote}
+            {traces.length > 0 && ` ${t.measure.note}`}
           </p>
         </section>
 

@@ -261,3 +261,34 @@ test("appels d'offres : plan de terrain, ouvrages relevés, DPGF du terrassier e
   await page.getByRole("tab", { name: /Paysagiste/ }).click();
   await expect(page.getByLabel("Votre quantité : Haie à planter")).toHaveValue("48,5");
 });
+
+// Mesure à l'échelle (F-159 lot 2, ADR 0326) : une photo de plan est aussi tracée ; les contours
+// s'affichent sur le plan et l'écart avec la pièce mesurée par ses cotes est contrôlé.
+test("appels d'offres : photo de plan tracée, contours et contrôle de l'estimation", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
+  await page.getByLabel("Nom du projet").fill(`Photo de plan E2E ${test.info().retry}`);
+  await page.getByLabel("Plans de l'architecte").setInputFiles(files.planPhoto);
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+  await expect(page.getByText(/^Plans lus : 3 pièces relevées/)).toBeVisible();
+
+  // Échelle calée sur les deux cotes désignées, contours posés sur la photo.
+  await expect(
+    page.getByText("Échelle calée sur 2 cotes lues : elles concordent à 0 % près"),
+  ).toBeVisible();
+  await expect(page.getByRole("img", { name: "Contours des pièces sur le plan" })).toBeVisible();
+  // Le dégagement, mesuré par ses cotes (8,22 m²), est aussi tracé : écart nul.
+  const control = page.locator("section", { hasText: "Contrôle de l'estimation" }).last();
+  await expect(control.getByText("8,22 → 8,22 m²")).toBeVisible();
+  // Rien n'est remplacé : les trois pièces gardent leur surface lue ou calculée.
+  await expect(page.getByLabel("Surface (m²) : Dégagement")).toHaveValue("8,22");
+});
