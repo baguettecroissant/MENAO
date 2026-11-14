@@ -72,6 +72,10 @@ export const planRawSchema = z.object({
         epaisseur_m: nullableNumber,
         altitude_haute_m: nullableNumber,
         altitude_basse_m: nullableNumber,
+        longueur_m: nullableNumber,
+        largeur_m: nullableNumber,
+        pente: nullableNumber,
+        pente_unite: z.enum(["", "pourcent", "degres"]),
         metier: z.string(),
         certitude: z.enum(["sure", "incertaine"]),
       }),
@@ -121,13 +125,14 @@ pages : le type de chaque page de chaque fichier, une entrée par page :
 
 altitudes : les altitudes ou cotes de niveau écrites sur les plans de terrain et les coupes de terrain, avec leur nom tel qu'écrit ou tel que la légende le donne (« Terrain naturel », « TN », « Plateforme », « Fond de fouille », « Terrain fini ») et leur valeur en mètres (« TN 102,40 » vaut 102.4). Liste vide s'il n'y en a pas.
 
-ouvrages : chaque ouvrage ou surface mesurable des plans de masse, coupes de terrain, plans de réseaux, façades et toiture, une seule fois (terrain, emprise du bâtiment, plateforme, déblais, remblais, décapage, tranchée, allée, voirie, terrasse, pelouse, massif, haie, clôture, mur de soutènement, enrochement, arbres, regards, cuve…). Ne reprends pas ici les pièces d'un plan de niveau ni les éléments de « comptes ».
+ouvrages : chaque ouvrage ou surface mesurable des plans de masse, coupes de terrain, plans de réseaux, façades et toiture, une seule fois (terrain, emprise du bâtiment, plateforme, déblais, remblais, décapage, tranchée, allée, voirie, terrasse, pelouse, massif, haie, clôture, mur de soutènement, enrochement, arbres, regards, cuve ; façade, pignon, soubassement, bardage, garde-corps, appuis ; versant de toiture, couverture, charpente, faîtage, rives, noues, gouttières, descentes d'eaux pluviales, fenêtres de toit, souches…). Une façade ou un versant par ligne, avec son nom tel qu'écrit (« Façade sud », « Versant nord »). Ne reprends pas ici les pièces d'un plan de niveau ni les éléments de « comptes ».
 - fichier, page : où tu l'as lu.
 - nom : le nom de l'ouvrage, tel qu'écrit sur le plan quand il l'est (« Plateforme », « Tranchée réseaux »), sinon un nom court et clair (« Arbres à planter »).
 - mesure : surface (m²), lineaire (mètres), volume (m³) ou nombre (unités).
 - quantite : la quantité écrite sur le plan pour cet ouvrage, dans l'unité de sa mesure (« 186,00 m² » vaut 186, « 42 ml » vaut 42, « 55 m³ » vaut 55). null si elle n'est pas écrite. Ne mesure rien à l'échelle, ne calcule rien, n'estime rien.
 - compte : vrai seulement pour un nombre que tu as compté toi-même sur des symboles nets (arbres, regards), sans doute possible ; faux quand la quantité est écrite. Si le compte n'est pas certain, laisse quantite à null.
-- Pour un volume qui n'est pas écrit, donne seulement les valeurs écrites sur les plans qui permettent de le calculer, sans faire le calcul : surface_m2 (la surface écrite de la zone concernée), et soit epaisseur_m (épaisseur, profondeur ou hauteur écrite, par exemple « décapage 0,30 m »), soit altitude_haute_m et altitude_basse_m (les deux altitudes écrites entre lesquelles on terrasse, par exemple terrain naturel et plateforme). Chacune reste null si elle n'est pas écrite. Pour une surface, un linéaire ou un nombre, ces quatre valeurs sont null.
+- Pour un volume qui n'est pas écrit, donne seulement les valeurs écrites sur les plans qui permettent de le calculer, sans faire le calcul : surface_m2 (la surface écrite de la zone concernée), et soit epaisseur_m (épaisseur, profondeur ou hauteur écrite, par exemple « décapage 0,30 m »), soit altitude_haute_m et altitude_basse_m (les deux altitudes écrites entre lesquelles on terrasse, par exemple terrain naturel et plateforme). Chacune reste null si elle n'est pas écrite. Pour un linéaire ou un nombre, ces valeurs sont null.
+- Pour une surface qui n'est pas écrite (façade, pignon, versant), donne seulement les valeurs écrites qui permettent de la calculer, sans faire le calcul : soit longueur_m et largeur_m, les deux cotes écrites de cette surface elle-même (longueur et hauteur d'une façade rectangulaire ; longueur et rampant d'un versant) ; soit, pour un versant de toiture, surface_m2 (sa surface au sol, en plan, si elle est écrite) avec pente et pente_unite (la pente écrite du versant : « 35° » donne pente 35 et pente_unite « degres », « 40 % » donne pente 40 et pente_unite « pourcent »). Ne déduis pas les ouvertures. Une cote lue sur une autre surface, une pente supposée ou une forme non rectangulaire ne comptent pas : les valeurs restent null. pente_unite est une chaîne vide quand pente est null ; longueur_m, largeur_m et pente sont null pour un volume, un linéaire ou un nombre.
 - metier : le code du métier qui réalise cet ouvrage, choisi uniquement parmi les codes donnés dans la balise <metiers> ; chaîne vide si aucun de ces métiers ne le réalise, ou si la ligne n'est qu'un repère (surface du terrain, emprise du bâtiment existant).
 - certitude : « incertaine » si le texte est flou, coupé ou ambigu, sinon « sure ».
 Si les plans ne portent aucun ouvrage de ce genre, ouvrages est une liste vide.

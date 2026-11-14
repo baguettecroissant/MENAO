@@ -6360,7 +6360,7 @@ export const fr = {
             photo: (page: number | null) => (page ? `photo, p. ${page}` : "photo"),
             missing: "non écrit sur le plan",
           },
-          note: "Un volume n'est calculé qu'avec une surface et des hauteurs lues sur les plans ; le calcul est affiché. Un ouvrage sans lot sert de repère et ne va dans aucun lot.",
+          note: "Une quantité n'est calculée qu'avec des valeurs lues sur les plans (surface et hauteur d'un volume, cotes d'une façade, surface au sol et pente d'un versant) ; le calcul est affiché. Un ouvrage sans lot sert de repère et ne va dans aucun lot.",
           lotsTitle: "Lots préparés",
           lotCount: (n: number) => `${n} ouvrage${n > 1 ? "s" : ""}`,
           lotsNote:
@@ -6392,7 +6392,7 @@ export const fr = {
               `${n} quantité${n > 1 ? "s" : ""} écrite${n > 1 ? "s" : ""} sur le plan, reprise${n > 1 ? "s" : ""} telle${n > 1 ? "s" : ""} quelle${n > 1 ? "s" : ""}`,
             levels: (levels: string) => `Altitudes lues : ${levels}`,
             computed: (n: number) =>
-              `${n} volume${n > 1 ? "s" : ""} calculé${n > 1 ? "s" : ""} avec des valeurs lues (surface × hauteur)`,
+              `${n} quantité${n > 1 ? "s" : ""} calculée${n > 1 ? "s" : ""} avec des valeurs lues sur les plans`,
             counted: (n: number) =>
               `${n} nombre${n > 1 ? "s" : ""} compté${n > 1 ? "s" : ""} sur les symboles du plan`,
             toCheck: (n: number) =>
