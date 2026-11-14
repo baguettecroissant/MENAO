@@ -256,6 +256,8 @@ test("appels d'offres : plan de terrain, ouvrages relevés, DPGF du terrassier e
   await expect(page.getByLabel("Votre quantité : Décapage de la terre végétale")).toHaveValue(
     "55,8",
   );
-  await expect(page.getByLabel("Votre quantité : Haie à planter")).toHaveValue("48,5");
   await expect(page.getByLabel("Votre quantité : Terrain")).toHaveCount(0);
+  // Le DPGF affiche un lot à la fois : la haie est dans celui du paysagiste.
+  await page.getByRole("tab", { name: /Paysagiste/ }).click();
+  await expect(page.getByLabel("Votre quantité : Haie à planter")).toHaveValue("48,5");
 });
