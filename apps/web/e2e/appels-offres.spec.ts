@@ -202,3 +202,60 @@ test("appels d'offres : plans lus, relevé corrigé, DPGF créé puis exporté a
   ]);
   expect(sheet.suggestedFilename()).toBe(`DPGF-Maison-depuis-plans-E2E-${test.info().retry}.xlsx`);
 });
+
+// Plan de terrain (F-158, ADR 0322) : aucune pièce, des ouvrages mesurés avec leur origine ; un
+// volume calculé avec des valeurs lues, une quantité complétée, puis le DPGF sans revêtements.
+test("appels d'offres : plan de terrain, ouvrages relevés, DPGF du terrassier et du paysagiste", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const project = `Terrain depuis plans E2E ${test.info().retry}`;
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
+  await page.getByLabel("Nom du projet").fill(project);
+  await page.getByLabel("Plans de l'architecte").setInputFiles({ ...files.pdf, name: "masse.pdf" });
+  await page.getByRole("checkbox", { name: "Carreleur" }).click();
+  await page.getByRole("button", { name: "Un autre métier" }).click();
+  await page.getByRole("checkbox", { name: "Terrassier" }).click();
+  await page.getByRole("checkbox", { name: "Paysagiste" }).click();
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+  await expect(page.getByText(/^Plans lus : 5 ouvrages relevés\./)).toBeVisible();
+  await expect(page.getByText("2 pages : plan de masse, coupe du terrain")).toBeVisible();
+  await expect(
+    page.getByText("Altitudes lues : terrain naturel 102,40, plateforme 101,20"),
+  ).toBeVisible();
+  // Pas de pièces : pas d'étape « Revêtements ».
+  const steps = page.getByRole("navigation", { name: "Étapes de l'appel d'offres" });
+  await expect(steps.getByText("Relevé")).toBeVisible();
+  await expect(steps.getByText("Revêtements")).toHaveCount(0);
+
+  const table = page.getByRole("table", { name: "Ouvrages relevés" });
+  await expect(table.getByText("186,00 m² × 0,30 m")).toBeVisible();
+  await expect(table.getByText("55,80")).toBeVisible();
+  await expect(table.getByText("À compléter", { exact: true })).toHaveCount(1);
+  await expect(table.getByText("non écrit sur le plan")).toBeVisible();
+
+  // La haie n'est pas cotée : l'artisan la complète, elle passe en « Saisi ».
+  await page.getByRole("button", { name: "Modifier Haie à planter" }).click();
+  await page.getByLabel("Quantité : Haie à planter").fill("48,5");
+  await page.getByRole("button", { name: "Enregistrer les ouvrages" }).click();
+  await expect(page.getByText("Ouvrages enregistrés.")).toBeVisible();
+  await page.reload();
+  await expect(table.getByText("48,50")).toBeVisible();
+  await expect(table.getByText("Saisi", { exact: true })).toHaveCount(1);
+
+  // DPGF : un lot par métier, le repère « Terrain » dans aucun lot.
+  await page.getByRole("button", { name: "Préparer le DPGF" }).click();
+  await expect(page.getByText(/^DPGF créé : 2 lots, 4 postes\./)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByLabel("Votre quantité : Décapage de la terre végétale")).toHaveValue(
+    "55,8",
+  );
+  await expect(page.getByLabel("Votre quantité : Haie à planter")).toHaveValue("48,5");
+  await expect(page.getByLabel("Votre quantité : Terrain")).toHaveCount(0);
+});

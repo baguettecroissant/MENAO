@@ -10,8 +10,10 @@ import { text, type FormState } from "@/lib/auth/form";
 import {
   CEILING_FINISHES,
   FLOOR_FINISHES,
+  MAX_WORK_MILLI,
   normalizePlanCounts,
   PLAN_COUNT_KEYS,
+  PLAN_WORK_KINDS,
   planTakeoff,
   type PriceHistoryLine,
   suggestTenderPrice,
@@ -20,7 +22,7 @@ import {
   type TenderQuoteLine,
   WALL_FINISHES,
 } from "@menao/core";
-import { getTenderRooms } from "./tenders";
+import { getTenderRooms, getTenderWorks } from "./tenders";
 import { requireTeamPermission } from "./space";
 
 const t = fr.pro.tenders;
@@ -200,6 +202,7 @@ async function readPlansAndRedirect(
   const { data, error: readError } = await supabase.functions.invoke<{
     status: string;
     rooms?: number;
+    works?: number;
     warnings?: string[];
   }>("tender-sheet", { method: "POST", body: { action: "plan", tenderId: id } });
   let status = data?.status ?? "error";
@@ -211,6 +214,7 @@ async function readPlansAndRedirect(
   const query = new URLSearchParams({ lecture: status });
   if (status === "ok") {
     query.set("pieces", String(data?.rooms ?? 0));
+    if (data?.works) query.set("ouvrages", String(data.works));
     if (data?.warnings?.length) query.set("alertes", data.warnings.join(","));
   }
   redirect(`${BASE}/${id}?${query}` as Route);
@@ -313,6 +317,46 @@ export async function savePlanRooms(_prev: FormState, formData: FormData): Promi
   return { success: t.plan.saved };
 }
 
+const savedWork = z
+  .object({
+    id: z.uuid().nullable(),
+    name: z.string().trim().min(1).max(120),
+    kind: z.enum(PLAN_WORK_KINDS),
+    quantityMilli: z.number().int().min(1).max(MAX_WORK_MILLI).nullable(),
+    trade: z
+      .string()
+      .regex(/^[a-z0-9-]{1,60}$/)
+      .nullable(),
+  })
+  .refine((w) => w.kind !== "nombre" || w.quantityMilli === null || w.quantityMilli % 1000 === 0);
+
+/**
+ * Ouvrages mesurés corrigés par l'artisan (F-158) ; un ouvrage ajouté ou dont la quantité change
+ * passe en « saisi » (base). « Préparer le DPGF » : enregistrés, puis lots et postes calculés.
+ */
+export async function savePlanWorks(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(text(formData, "works") ?? "[]");
+  } catch {
+    raw = null;
+  }
+  const works = z.array(savedWork).max(200).safeParse(raw);
+  if (!id.success || !works.success) return { error: t.plan.works.invalid };
+  const { supabase } = await requireTeamPermission("money");
+  const { error } = await supabase.rpc("artisan_save_plan_works", {
+    p_tender_id: id.data,
+    p_works: works.data,
+  });
+  if (error) {
+    return { error: error.code === "42501" ? t.errors.forbidden : t.errors.generic };
+  }
+  revalidatePath(`${BASE}/${id.data}`);
+  if (text(formData, "next") === "dpgf") return buildPlanDpgf(supabase, id.data);
+  return { success: t.plan.works.saved };
+}
+
 const finish = z.object({
   id: z.uuid(),
   floor: z.enum(FLOOR_FINISHES),
@@ -344,10 +388,22 @@ export async function createPlanDpgf(_prev: FormState, formData: FormData): Prom
   if (finishError) {
     return { error: finishError.code === "42501" ? t.errors.forbidden : t.errors.generic };
   }
+  return buildPlanDpgf(supabase, id.data);
+}
 
-  const [{ data: tender }, rooms, { data: history }] = await Promise.all([
+/**
+ * Lots et postes du DPGF calculés avec le relevé enregistré (pièces, éléments comptés, ouvrages
+ * mesurés), puis page du DPGF. Rend une erreur si la base refuse.
+ */
+async function buildPlanDpgf(
+  supabase: Awaited<ReturnType<typeof requireTeamPermission>>["supabase"],
+  tenderId: string,
+): Promise<FormState> {
+  const id = { data: tenderId };
+  const [{ data: tender }, rooms, works, { data: history }] = await Promise.all([
     supabase.from("tenders").select("plan_trades, plan_counts").eq("id", id.data).maybeSingle(),
     getTenderRooms(supabase, id.data),
+    getTenderWorks(supabase, id.data),
     supabase.rpc("artisan_price_history"),
   ]);
   if (!tender) return { error: t.errors.generic };
@@ -376,6 +432,16 @@ export async function createPlanDpgf(_prev: FormState, formData: FormData): Prom
     })),
     normalizePlanCounts(tender.plan_counts),
     trades ?? [],
+    works.map((w) => ({
+      name: w.name,
+      kind: w.kind,
+      quantityMilli: w.quantity_milli,
+      source: w.source,
+      detail: w.detail,
+      trade: w.trade_code,
+      page: w.page,
+      uncertain: w.uncertain,
+    })),
   );
   const prices: PriceHistoryLine[] = (history ?? []).map((h) => ({
     designation: h.designation,

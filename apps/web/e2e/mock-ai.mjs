@@ -211,6 +211,61 @@ function planReading() {
       { element: "eviers", nombre: 1 },
       { element: "escaliers", nombre: 1 },
     ],
+    pages: [
+      { fichier: 1, page: 2, type: "niveau" },
+      { fichier: 1, page: 3, type: "niveau" },
+    ],
+    altitudes: [],
+    ouvrages: [],
+  });
+}
+
+// Plan de terrain (F-158, ADR 0322), rendu quand l'appel d'offres compte le lot du terrassier :
+// aucune pièce, des ouvrages mesurés ; un volume à calculer avec des valeurs lues, une quantité
+// qui n'est pas écrite.
+function terrainReading() {
+  const ouvrage = (nom, mesure, over) => ({
+    fichier: 1,
+    page: 1,
+    nom,
+    mesure,
+    quantite: null,
+    compte: false,
+    surface_m2: null,
+    epaisseur_m: null,
+    altitude_haute_m: null,
+    altitude_basse_m: null,
+    metier: "",
+    certitude: "sure",
+    ...over,
+  });
+  return JSON.stringify({
+    lisible: true,
+    est_un_plan: true,
+    echelle: "1/200",
+    hauteurs: [],
+    pieces: [],
+    comptes: [],
+    pages: [
+      { fichier: 1, page: 1, type: "masse" },
+      { fichier: 1, page: 2, type: "coupe_terrain" },
+    ],
+    altitudes: [
+      { nom: "Terrain naturel", altitude_m: 102.4 },
+      { nom: "Plateforme", altitude_m: 101.2 },
+    ],
+    ouvrages: [
+      ouvrage("Terrain", "surface", { quantite: 812 }),
+      ouvrage("Plateforme à terrasser", "surface", { quantite: 186, metier: "terrassier" }),
+      ouvrage("Décapage de la terre végétale", "volume", {
+        page: 2,
+        surface_m2: 186,
+        epaisseur_m: 0.3,
+        metier: "terrassier",
+      }),
+      ouvrage("Pelouse", "surface", { quantite: 310, metier: "paysagiste" }),
+      ouvrage("Haie à planter", "lineaire", { metier: "paysagiste" }),
+    ],
   });
 }
 
@@ -338,7 +393,9 @@ createServer(async (req, res) => {
             : text.includes("<dpgf>")
               ? dpgfReading()
               : text.includes("<plan>")
-                ? planReading()
+                ? /<metiers>[^<]*terrassier/.test(text)
+                  ? terrainReading()
+                  : planReading()
                 : document
                   ? documentReading(content)
                   : text.includes("<saisie>")

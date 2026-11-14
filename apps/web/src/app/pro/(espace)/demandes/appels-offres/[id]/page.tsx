@@ -1,12 +1,21 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { artisanPageUrl, planReadingFigures } from "@menao/core";
+import {
+  artisanPageUrl,
+  formatPlanMeasure,
+  planPageTypes,
+  planReadingFigures,
+  planWorksFigures,
+  type PlanPage,
+} from "@menao/core";
 import { CheckCircle2, Layers, Ruler, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
 import { PlanDpgfEditor } from "@/components/pro/plan-dpgf-editor";
 import { PlanFinishes } from "@/components/pro/plan-finishes";
-import { PlanReleve, type PlanFileLink } from "@/components/pro/plan-releve";
+import { PlanReleve } from "@/components/pro/plan-releve";
+import type { PlanFileLink } from "@/components/pro/plan-viewer";
+import { PlanWorks } from "@/components/pro/plan-works";
 import { PlanSteps, type PlanStep } from "@/components/pro/plan-steps";
 import { QuantitiesCheck } from "@/components/pro/quantities-check";
 import { RereadPlansForm } from "@/components/pro/reread-plans-form";
@@ -16,7 +25,7 @@ import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
 import { deleteTender, updateTender } from "@/lib/artisan/tender-actions";
-import { getTender, getTenderRooms, planFiles } from "@/lib/artisan/tenders";
+import { getTender, getTenderRooms, getTenderWorks, planFiles } from "@/lib/artisan/tenders";
 import { formatDay } from "@/lib/format";
 
 const t = fr.pro.tenders;
@@ -59,6 +68,7 @@ export default async function TenderPage({
   const plan = isPlan ? { ...(await planData(supabase, tender)), ...linesToVerify(lines) } : null;
 
   // Étapes (maquette du lot 35) : relevé, revêtements, DPGF ; par défaut, la plus avancée.
+  // Plan de terrain (lot 52) : des ouvrages mesurés sans pièces, donc sans revêtements.
   const asked = query.etape;
   const step: PlanStep | null = !plan
     ? null
@@ -82,16 +92,18 @@ export default async function TenderPage({
             <span>{text}</span>
           </li>
         ))}
-        {plan.trades.length > 0 && (
+        {plan.trades.length > 0 && (plan.rooms.length > 0 || plan.works.length === 0) && (
           <li className="flex items-start gap-2.5">
             <Layers aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary-strong" />
             <span>
-              {t.plan.tradesTitle} : {plan.trades.join(", ")}
+              {t.plan.tradesTitle} : {plan.trades.map((tr) => tr.label).join(", ")}
             </span>
           </li>
         )}
       </ul>
-      {plan.rooms.length === 0 && <RereadPlansForm tenderId={tender.id} label={t.plan.retry} />}
+      {plan.rooms.length === 0 && plan.works.length === 0 && (
+        <RereadPlansForm tenderId={tender.id} label={t.plan.retry} />
+      )}
     </section>
   );
 
@@ -127,6 +139,7 @@ export default async function TenderPage({
             current={step}
             reachable={reachable}
             checked={!!tender.quantities_checked_at}
+            withFinishes={plan.rooms.length > 0 || plan.works.length === 0}
           />
         )}
 
@@ -142,9 +155,11 @@ export default async function TenderPage({
         {query.export === "verifier" && <Alert tone="error">{t.plan.exportBlocked}</Alert>}
         {reading === "ok" ? (
           <Alert tone="success">
-            {isPlan
-              ? t.plan.readOk(Number(query.pieces ?? 0))
-              : t.importOk(Number(query.postes ?? 0), Number(query.prix ?? 0))}
+            {!isPlan
+              ? t.importOk(Number(query.postes ?? 0), Number(query.prix ?? 0))
+              : Number(query.ouvrages ?? 0) > 0
+                ? t.plan.works.readOk(Number(query.ouvrages), Number(query.pieces ?? 0))
+                : t.plan.readOk(Number(query.pieces ?? 0))}
           </Alert>
         ) : reading ? (
           <Alert tone="error">
@@ -173,8 +188,20 @@ export default async function TenderPage({
                 files={plan.files}
                 summary={summaryCard}
               />
-            ) : (
+            ) : plan.works.length === 0 ? (
               <div className="max-w-xl">{summaryCard}</div>
+            ) : null}
+            {plan.works.length > 0 && (
+              <PlanWorks
+                tenderId={tender.id}
+                works={plan.works}
+                trades={plan.trades}
+                files={plan.files}
+                pages={plan.pages}
+                summary={summaryCard}
+                withViewer={plan.rooms.length === 0}
+                hasDpgf={lines.length > 0}
+              />
             )}
           </>
         )}
@@ -323,11 +350,14 @@ async function planData(
     plan_trades: string[];
     plan_counts: unknown;
     plan_scale: string | null;
+    plan_pages: unknown;
+    plan_levels: unknown;
   },
 ) {
   const entries = planFiles(tender.plan_files);
-  const [rooms, { data: signed }, { data: trades }] = await Promise.all([
+  const [rooms, works, { data: signed }, { data: trades }] = await Promise.all([
     getTenderRooms(supabase, tender.id),
+    getTenderWorks(supabase, tender.id),
     entries.length
       ? supabase.storage.from("tender-files").createSignedUrls(
           entries.map((f) => f.path),
@@ -350,10 +380,51 @@ async function planData(
       uncertain: r.uncertain,
     })),
   );
+  // Ouvrages mesurés (F-158) : types de pages reconnus, altitudes lues, origine des quantités.
+  const pages = (Array.isArray(tender.plan_pages) ? tender.plan_pages : []) as PlanPage[];
+  const levels = (Array.isArray(tender.plan_levels) ? tender.plan_levels : []) as {
+    name: string;
+    altitudeMm: number;
+  }[];
+  const measured = planWorksFigures(
+    works.map((x) => ({
+      quantityMilli: x.quantity_milli,
+      source: x.source,
+      uncertain: x.uncertain,
+    })),
+  );
+  const tw = t.plan.works;
   const ok = { icon: CheckCircle2, tone: "text-success" };
   const warn = { icon: TriangleAlert, tone: "text-warning" };
+  const ruler = { icon: Ruler, tone: "text-primary-strong" };
   const summary = [
+    works.length && pages.length
+      ? {
+          ...ok,
+          text: tw.summary.pages(
+            pages.length,
+            planPageTypes(pages)
+              .map((type) => tw.pageTypes[type] ?? type)
+              .join(", "),
+          ),
+        }
+      : null,
     tender.plan_scale ? { ...ok, text: t.plan.summary.scale(tender.plan_scale) } : null,
+    measured.written ? { ...ok, text: tw.summary.written(measured.written) } : null,
+    works.length && levels.length
+      ? {
+          ...ok,
+          text: tw.summary.levels(
+            levels
+              .map((l) => `${l.name.toLowerCase()} ${formatPlanMeasure(l.altitudeMm)}`)
+              .join(", "),
+          ),
+        }
+      : null,
+    measured.computed ? { ...ruler, text: tw.summary.computed(measured.computed) } : null,
+    measured.counted ? { ...ok, text: tw.summary.counted(measured.counted) } : null,
+    measured.toCheck ? { ...warn, text: tw.summary.toCheck(measured.toCheck) } : null,
+    measured.missing ? { ...warn, text: tw.summary.missing(measured.missing) } : null,
     figures.read ? { ...ok, text: t.plan.summary.read(figures.read) } : null,
     figures.computed
       ? {
@@ -372,10 +443,12 @@ async function planData(
   const labels = new Map((trades ?? []).map((tr) => [tr.code, tr.label]));
   return {
     rooms,
+    works,
+    pages,
     files,
     counts,
     summary,
-    trades: tender.plan_trades.map((code) => labels.get(code) ?? code),
+    trades: tender.plan_trades.map((code) => ({ code, label: labels.get(code) ?? code })),
   };
 }
 
