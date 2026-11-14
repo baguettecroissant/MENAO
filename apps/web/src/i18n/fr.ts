@@ -4880,6 +4880,13 @@ export const fr = {
         viewPdf: "Voir le PDF",
         newTab: "(nouvel onglet)",
         savedNote: "Votre devis est enregistré dans l'onglet « Devis ».",
+        toSend: "Continuer vers l'envoi",
+        recap: {
+          client: "Client",
+          lines: "Lignes",
+          totalHt: "Total HT",
+          totalTtc: "Total TTC",
+        },
       },
       dictation: {
         open: "Dictée intelligente",
@@ -5192,6 +5199,35 @@ export const fr = {
         text: "Elle décroche quand vous êtes sur un chantier, prend un rendez-vous dans votre agenda ou un message, et vous le transmet tout de suite. Incluse dans les formules Premium et Entreprise.",
         cta: "Voir les formules",
         askPatron: "Votre patron peut l'activer depuis sa formule.",
+        // Refonte « Nette » (lot 46, ADR 0315).
+        badge: "Premium et Entreprise",
+        lead: "Elle décroche quand vous êtes sur un chantier, prend un rendez-vous dans votre agenda ou un message, et vous le transmet tout de suite.",
+        points: [
+          [
+            "Elle décroche à votre place",
+            "Au nom de votre entreprise, quand vous ne pouvez pas répondre.",
+          ],
+          ["Elle prend les rendez-vous", "Sur vos créneaux libres, directement dans votre agenda."],
+          [
+            "Elle vous transmet tout",
+            "Le message arrive tout de suite, avec le numéro à rappeler.",
+          ],
+        ] as [string, string][],
+        included: "Incluse dans les formules Premium et Entreprise.",
+        example: {
+          label: "Exemple d'appel",
+          incoming: "Appel entrant · 10:42",
+          busy: "Vous êtes sur un chantier",
+          secretary: "Secrétaire",
+          client: "Client",
+          lines: [
+            ["secretary", "Plomberie Martin, bonjour ! Que puis-je faire pour vous ?"],
+            ["client", "Mon chauffe-eau fuit, est-ce que quelqu'un peut passer ?"],
+            ["secretary", "Je peux vous proposer mardi à 10 h. Cela vous convient ?"],
+          ] as [string, string][],
+          booked: "Rendez-vous pris",
+          bookedDetail: "mardi à 10 h · ajouté à votre agenda",
+        },
       },
       moved: {
         title: "Votre secrétaire",
@@ -8529,6 +8565,7 @@ export const fr = {
           } as Record<string, string>,
           minutesTitle: "Minutes de voix ce mois-ci",
           minutesUsed: (used: number, included: number) => `${used} / ${included} minutes`,
+          minutesOf: (included: number) => `/ ${included} minutes`,
           minutesLeft: (left: number, topUp: number) =>
             topUp > 0
               ? `Il vous reste ${left} minute${left > 1 ? "s" : ""}, dont ${topUp} rechargée${topUp > 1 ? "s" : ""}.`
@@ -8579,6 +8616,19 @@ export const fr = {
           `Paiement à l'année : engagement jusqu'au ${date}, puis renouvellement pour un an, sauf résiliation depuis le portail avant cette date.`,
         soon: "Bientôt disponible",
         current: "Votre abonnement",
+        // Refonte « Nette » (lot 46, ADR 0315).
+        statusShort: {
+          trialing: "Essai gratuit",
+          active: "Actif",
+          canceled: "Résilié",
+          past_due: "Paiement en échec",
+          unpaid: "Impayé",
+          other: "À régulariser",
+        } as Record<string, string>,
+        statusRow: "Statut",
+        paymentRow: "Paiement",
+        paymentMonthly: (euros: string) => `Mensuel · ${euros} € HT`,
+        paymentYearly: (euros: string) => `À l'année · ${euros} € HT`,
         manage: "Gérer mon abonnement",
         manageHint:
           "Changer de moyen de paiement, télécharger vos factures ou résilier (fin de période).",

@@ -1,6 +1,7 @@
 "use client";
 
 import { ANNUAL_FREE_MONTHS } from "@menao/core";
+import { CreditCard } from "lucide-react";
 import { useActionState } from "react";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -44,7 +45,8 @@ export function ManageSubscription() {
   return (
     <form action={action} className="flex flex-col gap-2">
       {state.error && <Alert tone="error">{state.error}</Alert>}
-      <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
+      <Button type="submit" variant="secondary" block={false} disabled={pending}>
+        <CreditCard aria-hidden="true" className="size-4" />
         {t.manage}
       </Button>
     </form>

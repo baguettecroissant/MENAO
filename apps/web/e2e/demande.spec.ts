@@ -254,7 +254,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
 
   // « Envoi du devis » (F-21) : échéancier par défaut, dates des travaux, numéro attribué.
   await proPage.goto(previewUrl);
-  await proPage.getByRole("link", { name: "Suivant" }).click();
+  await proPage.getByRole("link", { name: "Continuer vers l'envoi" }).click();
   await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis/envoi$`));
   const sending = proPage.getByRole("main");
   await expect(sending.getByRole("button", { name: "Envoyer le devis" })).toBeDisabled();
@@ -309,7 +309,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   // L'artisan envoie la nouvelle version : numéro d'origine suivi de l'indice.
   await proPage.getByRole("button", { name: "Générer le devis" }).click();
   await expect(proPage).toHaveURL(new RegExp(`/pro/chantiers/${UUID}/devis/apercu$`));
-  await proPage.getByRole("link", { name: "Suivant" }).click();
+  await proPage.getByRole("link", { name: "Continuer vers l'envoi" }).click();
   const sendingV2 = proPage.getByRole("main");
   await sendingV2.getByRole("radio", { name: /Mon échéancier par défaut/ }).check();
   await sendingV2.getByLabel("Date de début prévisionnelle").fill(day(12));
