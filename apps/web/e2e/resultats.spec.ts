@@ -52,7 +52,7 @@ test("résultats classés, fiche artisan sans coordonnées, critères de classem
   const body = await page.getByRole("main").innerText();
   expect(body).not.toMatch(/@|\+33|\b0[1-9](\s?\d{2}){4}\b|Rue de l'Exemple|SIRET/i);
 
-  await page.getByRole("link", { name: "Sélection d'artisan" }).click();
+  await page.getByRole("link", { name: "Artisans trouvés" }).click();
   await page.getByRole("link", { name: "Comment les artisans sont-ils classés ?" }).click();
   await expect(
     page.getByRole("heading", { name: "Critères de classement des artisans" }),

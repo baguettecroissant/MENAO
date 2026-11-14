@@ -2371,6 +2371,12 @@ export const fr = {
       title: (name: string, trade: string) => (trade ? `${name} - ${trade}` : name),
       request: "Envoyer une demande",
       requestHint: "Vous pourrez encore modifier votre besoin et ajouter un message personnalisé.",
+      // Refonte « Nette » (lot 48, ADR 0317).
+      backToResults: "Artisans trouvés",
+      projectTitle: "Votre projet",
+      select: "Sélectionner cet artisan",
+      selectHint: "Jusqu'à 3 artisans par demande.",
+      requestOnly: "Lui envoyer une demande à lui seul",
       experience: "Expérience",
       experienceValue: (years: number) => (years <= 1 ? `${years} an` : `${years} ans`),
       zone: "Zone d'intervention",
@@ -2642,6 +2648,18 @@ export const fr = {
     newRequest: {
       intro:
         "Décrivez vos travaux, avec vos mots ou à la voix : nous vous proposons des artisans vérifiés près de chez vous.",
+      // Refonte « Nette » (lot 48, ADR 0317).
+      howTitle: "Comment ça marche",
+      howSteps: [
+        ["Décrivez vos travaux", "Avec vos mots, à la voix ou en photo."],
+        ["Choisissez vos artisans", "Jusqu'à 3 artisans vérifiés près de chez vous."],
+        ["Recevez vos devis", "Ils vous répondent sous 72 h."],
+      ] as [string, string][],
+      guaranteesTitle: "Vos garanties",
+      verifiedTitle: "Artisans vérifiés",
+      verifiedText: "Assurés, déclarés et à jour de leurs documents.",
+      freeTitle: "100 % gratuit",
+      freeText: "Aucun frais pour vous, sans engagement.",
     },
   },
   warranties: {
