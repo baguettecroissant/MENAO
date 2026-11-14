@@ -6454,7 +6454,7 @@ export const fr = {
           } as Record<string, string>,
           needScale: "Calez d'abord l'échelle pour mesurer une surface ou une longueur.",
           noImage:
-            "Le métré sur le plan fonctionne sur les photos de plans (JPG, PNG). Les PDF arrivent ensuite.",
+            "Le métré sur le plan fonctionne sur les photos de plans et sur les pages des PDF déposés depuis le 15 novembre 2026. Pour un appel d'offres plus ancien, redéposez les plans.",
           calibrateTitle: "Caler l'échelle",
           calibrateText:
             "Saisissez la valeur de la cote que vous venez de désigner, en centimètres.",
@@ -6500,6 +6500,7 @@ export const fr = {
         viewerTitle: (name: string) => `Plan : ${name}`,
         viewerPage: (page: number) => `Page ${page}`,
         viewerMissing: "Ce plan n'a pas pu être affiché.",
+        viewerOpenPdf: "Ouvrir le PDF",
         viewerHint: "Cliquez une pièce du tableau pour afficher la page où elle a été lue.",
         roomsNote:
           "Surfaces en m², périmètres en ml, hauteur sous plafond en m. Une valeur corrigée passe en « Saisi ».",

@@ -49,8 +49,10 @@ type Measure = {
   key: string;
   kind: PlanMarkKind;
   name: string;
-  /** Fichier déposé, à partir de 1. */
+  /** Image mesurée (fichier × 1 000 + page), puis fichier déposé et page, à partir de 1. */
+  image: number;
   file: number;
+  page: number;
   points: PlanPoint[];
   roomId: string | null;
   trade: string;
@@ -91,8 +93,26 @@ export function PlanMeasure({
   trades: { code: string; label: string }[];
 }) {
   const [state, formAction, pending] = useActionState(addPlanMeasures, initialFormState);
+  // Images mesurables : les photos, et les pages de PDF rendues en images (ADR 0328). `index`
+  // les distingue (fichier × 1 000 + page).
   const images = files.flatMap((f, i) =>
-    f.kind !== "pdf" && f.url ? [{ ...f, index: i + 1 }] : [],
+    f.kind !== "pdf"
+      ? f.url
+        ? [{ name: f.name, url: f.url, file: i + 1, page: 1, index: (i + 1) * 1000 + 1 }]
+        : []
+      : (f.pages ?? []).flatMap((p) =>
+          p.url
+            ? [
+                {
+                  name: `${f.name} · ${fr.pro.tenders.plan.viewerPage(p.page)}`,
+                  url: p.url,
+                  file: i + 1,
+                  page: p.page,
+                  index: (i + 1) * 1000 + p.page,
+                },
+              ]
+            : [],
+        ),
   );
   const [current, setCurrent] = useState(images[0]?.index ?? 0);
   const [sizes, setSizes] = useState<Record<number, { width: number; height: number }>>({});
@@ -115,7 +135,7 @@ export function PlanMeasure({
   const svg = useRef<SVGSVGElement>(null);
 
   const file = images.find((f) => f.index === current);
-  const trace = traces.find((x) => x.file === current);
+  const trace = traces.find((x) => x.file === file?.file && (x.page ?? 1) === file.page);
   const size = trace ? { width: trace.width, height: trace.height } : sizes[current];
   const mmPerPx = calibrated[current]?.mmPerPx ?? (trace ? trace.umPerPx / 1000 : null);
   const kind: PlanMarkKind | null =
@@ -205,7 +225,9 @@ export function PlanMeasure({
         key: `mesure-${count}`,
         kind: draft.kind,
         name,
-        file: current,
+        image: current,
+        file: file?.file ?? 1,
+        page: file?.page ?? 1,
         points: draft.points,
         roomId: room?.id ?? null,
         trade: draft.trade,
@@ -225,6 +247,7 @@ export function PlanMeasure({
           kind: m.kind,
           name: m.name,
           file: m.file,
+          page: m.page,
           points: contourText(m.points),
           ...(m.measure.kind === "surface"
             ? { roomId: m.roomId, areaCm2: m.measure.areaCm2, perimeterMm: m.measure.perimeterMm }
@@ -252,7 +275,7 @@ export function PlanMeasure({
   }
 
   const path = (list: readonly PlanPoint[]) => list.map((p) => `${p.x},${p.y}`).join(" ");
-  const drawn = measures.filter((m) => m.file === current);
+  const drawn = measures.filter((m) => m.image === current);
   const side = "flex w-full flex-col gap-4 lg:w-[22rem] lg:shrink-0";
   const card = "flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card";
   const field = `${inputClasses} !min-h-10 w-full px-2.5 text-sm`;

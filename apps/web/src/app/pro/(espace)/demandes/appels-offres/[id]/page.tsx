@@ -204,7 +204,9 @@ export default async function TenderPage({
                 counts={plan.counts}
                 files={plan.files}
                 traces={plan.traces}
-                canMeasure={plan.files.some((f) => f.kind !== "pdf" && f.url)}
+                canMeasure={plan.files.some((f) =>
+                  f.kind === "pdf" ? (f.pages ?? []).some((p) => p.url) : !!f.url,
+                )}
                 summary={
                   <>
                     {summaryCard}
@@ -417,16 +419,19 @@ async function planData(
     getTenderWorks(supabase, tender.id),
     entries.length
       ? supabase.storage.from("tender-files").createSignedUrls(
-          entries.map((f) => f.path),
+          // Plans, puis pages de PDF rendues en images, dans le même appel.
+          [...entries.map((f) => f.path), ...entries.flatMap((f) => f.pages.map((p) => p.path))],
           3600,
         )
       : Promise.resolve({ data: [] as { signedUrl: string | null }[] }),
     supabase.from("trades").select("code, label").in("code", tender.plan_trades),
   ]);
+  let next = entries.length;
   const files: PlanFileLink[] = entries.map((f, i) => ({
     name: f.name,
     kind: f.kind,
     url: signed?.[i]?.signedUrl ?? null,
+    pages: f.pages.map((p) => ({ page: p.page, url: signed?.[next++]?.signedUrl ?? null })),
   }));
   const figures = planReadingFigures(
     rooms.map((r) => ({
@@ -461,7 +466,13 @@ async function planData(
   const m2 = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const tenth = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
   const gaps = traceControl(
-    rooms.map((r) => ({ name: r.name, file: r.file_index, areaCm2: r.area_cm2, source: r.source })),
+    rooms.map((r) => ({
+      name: r.name,
+      file: r.file_index,
+      page: r.page,
+      areaCm2: r.area_cm2,
+      source: r.source,
+    })),
     traces,
   );
   const control = gaps.map((g) => ({

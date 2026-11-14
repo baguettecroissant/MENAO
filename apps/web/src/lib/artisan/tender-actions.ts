@@ -207,6 +207,16 @@ const planFile = z.object({
     )
     .max(6)
     .default([]),
+  // Pages d'un PDF rendues en images par le navigateur (F-159 lot 4, ADR 0328).
+  pages: z
+    .array(
+      z.object({
+        path: z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/),
+        page: z.number().int().min(1).max(999),
+      }),
+    )
+    .max(12)
+    .default([]),
 });
 
 /** Lecture des plans par l'Edge Function tender-sheet, puis retour sur l'appel d'offres. */
@@ -379,6 +389,8 @@ const points = z
 const markBase = {
   name: z.string().trim().min(1).max(120),
   file: z.number().int().min(1).max(10),
+  // Page mesurée : 1 pour une photo, la page rendue en image pour un PDF.
+  page: z.number().int().min(1).max(999).default(1),
   points,
 };
 const planMeasure = z.discriminatedUnion("kind", [
