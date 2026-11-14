@@ -292,3 +292,54 @@ test("appels d'offres : photo de plan tracée, contours et contrôle de l'estima
   // Rien n'est remplacé : les trois pièces gardent leur surface lue ou calculée.
   await expect(page.getByLabel("Surface (m²) : Dégagement")).toHaveValue("8,22");
 });
+
+// Métré à la main (F-159 lot 3, ADR 0327) : une pièce tracée sur la photo du plan rejoint le
+// relevé avec l'origine « Tracé à la main ».
+test("appels d'offres : pièce tracée à la main sur le plan, ajoutée au relevé", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
+  await page.getByLabel("Nom du projet").fill(`Métré à la main E2E ${test.info().retry}`);
+  await page.getByLabel("Plans de l'architecte").setInputFiles(files.planPhoto);
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+
+  await page.getByRole("link", { name: "Mesurer sur le plan" }).click();
+  await expect(page).toHaveURL(/etape=mesure/);
+  // L'échelle vient du tracé de MENAO (10 mm par pixel sur la photo simulée de 800 × 600).
+  await expect(page.getByText("Échelle calée sur les cotes lues")).toBeVisible();
+  const board = page.getByRole("img", { name: "Plan à mesurer" });
+  await board.scrollIntoViewIfNeeded();
+  const box = await board.boundingBox();
+  if (!box) throw new Error("plan introuvable");
+  // Un rectangle de 3,20 × 2,40 m, fermé en revenant sur le premier point.
+  for (const [x, y] of [
+    [0.2, 0.2],
+    [0.6, 0.2],
+    [0.6, 0.6],
+    [0.2, 0.6],
+    [0.2, 0.2],
+  ] as const) {
+    await page.mouse.click(box.x + x * box.width, box.y + y * box.height);
+  }
+  await expect(page.getByRole("heading", { name: "Nommer la mesure" })).toBeVisible();
+  await expect(page.getByText(/^7,6\d m² · périmètre 11,[12]\d ml$/)).toBeVisible();
+  await page.getByLabel("Nom", { exact: true }).fill("Cellier");
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: "Cellier" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Ajouter au relevé" }).click();
+  await expect(page).toHaveURL(/etape=releve&mesures=1/, { timeout: 20_000 });
+  await expect(page.getByText("1 mesure ajoutée au relevé.")).toBeVisible();
+  await expect(page.getByLabel("Pièce : Cellier")).toHaveValue("Cellier");
+  await expect(
+    page.getByRole("table", { name: "Pièces relevées" }).getByText("Tracé à la main"),
+  ).toBeVisible();
+});
