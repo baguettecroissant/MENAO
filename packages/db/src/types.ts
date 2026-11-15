@@ -7264,7 +7264,7 @@ export type Database = {
         Returns: number;
       };
       artisan_import_plan_symbols: {
-        Args: { p_legend?: Json; p_symbols: Json; p_tender_id: string };
+        Args: { p_counts?: Json; p_legend?: Json; p_symbols: Json; p_tender_id: string };
         Returns: number;
       };
       artisan_import_plan_traces: {

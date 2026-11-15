@@ -25,7 +25,8 @@ Types :
 - interrupteur : commande d'éclairage (petit symbole au mur d'où part le trait vers les points lumineux), y compris va-et-vient et poussoir.
 - detecteur, commande_volet, prise_rj45_tv, tableau, vmc, radiateur : selon ce que le plan dessine.
 - wc, lavabo, douche, baignoire, evier : appareils sanitaires dessinés.
-- porte, fenetre : chaque porte ou fenêtre dessinée (un battant de porte, une fenêtre dans un mur).
+- porte : chaque porte intérieure dessinée (un battant de porte, un bloc-porte, une porte coulissante entre deux pièces).
+- fenetre : chaque menuiserie d'un mur extérieur : fenêtre, porte-fenêtre, baie, porte d'entrée, porte de garage.
 
 Repère d'abord la convention de dessin du plan (légende si elle existe, sinon la répétition des formes), puis parcours l'image zone par zone. legende : les correspondances que tu as reconnues (« demi-cercle rouge = prise »), en quelques lignes.
 

@@ -46,6 +46,7 @@ import { readPlanSymbols, SYMBOLS_TIMEOUT_MS } from "./symbols.ts";
 import {
   ELECTRICAL_SYMBOLS,
   electricalPages,
+  fixtureCounts,
   type FoundSymbol,
   imageSize,
   MAX_SYMBOLS,
@@ -628,6 +629,9 @@ async function readTenderPlans(
     p_tender_id: tender.id,
     p_symbols: symbols,
     p_legend: legend,
+    // Portes, menuiseries et appareils sanitaires (ADR 0339) : compte du plan le plus complet,
+    // repris là où le relevé n'a rien.
+    p_counts: fixtureCounts(read),
   });
   if (symbolsError) console.error("tender-sheet : symboles refusés", symbolsError.code);
   const noteWorks = planNoteWorks(

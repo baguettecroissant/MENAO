@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ELECTRICAL_SYMBOLS,
+  fixtureCounts,
   imageSize,
   mergeSymbolReadings,
   normalizeSymbols,
@@ -182,5 +183,36 @@ describe("zones agrandies", () => {
     expect(1100 * scale * 825 * scale).toBeLessThanOrEqual(3_600_000);
     expect(scale).toBeCloseTo(2, 1);
     expect(symbolZoneScale(200, 150)).toBe(3);
+  });
+});
+
+describe("fixtureCounts", () => {
+  const at = (type: string, x: number, y: number) => ({ type, x, y, room: null }) as never;
+  it("garde le compte du plan le plus complet, jamais la somme, et rien de nul", () => {
+    expect(
+      fixtureCounts([
+        {
+          width: 2000,
+          height: 1500,
+          found: [
+            at("porte", 100, 100),
+            at("porte", 400, 100),
+            at("wc", 900, 400),
+            at("prise", 5, 5),
+          ],
+        },
+        {
+          width: 2000,
+          height: 1500,
+          found: [
+            at("porte", 100, 102),
+            at("porte", 400, 100),
+            at("porte", 800, 600),
+            at("porte", 802, 601),
+            at("douche", 940, 590),
+          ],
+        },
+      ]),
+    ).toEqual({ portes: 3, wc: 1, douches: 1 });
   });
 });

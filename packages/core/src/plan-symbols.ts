@@ -365,3 +365,37 @@ export function symbolZoneScale(w: number, h: number): number {
     Math.sqrt(SYMBOL_ZONE_MAX_PIXELS / (w * h)),
   );
 }
+
+// ---------------------------------------------------------------------------------------------
+// Portes, menuiseries et appareils sanitaires (ADR 0339)
+// ---------------------------------------------------------------------------------------------
+
+/** Compte du relevé (« Aussi relevé sur les plans ») rempli par chaque type de symbole. */
+export const FIXTURE_COUNTS: readonly [SymbolKind, string][] = [
+  ["porte", "portes"],
+  ["fenetre", "fenetres"],
+  ["wc", "wc"],
+  ["lavabo", "lavabos"],
+  ["douche", "douches"],
+  ["baignoire", "baignoires"],
+  ["evier", "eviers"],
+];
+
+/**
+ * Comptes des portes, menuiseries extérieures et appareils sanitaires : ils se répètent d'un plan à
+ * l'autre (démolition, cloisons, sols…), donc on garde le compte du plan le plus complet, jamais
+ * la somme. Seuls les comptes non nuls sont rendus : un appareil non vu reste à compléter.
+ */
+export function fixtureCounts(
+  pages: readonly { found: readonly FoundSymbol[]; width: number; height: number }[],
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const page of pages) {
+    const kept = mergeSymbolReadings(page.found, [], page.width, page.height);
+    for (const [kind, key] of FIXTURE_COUNTS) {
+      const n = kept.filter((s) => s.type === kind).length;
+      if (n > (out[key] ?? 0)) out[key] = n;
+    }
+  }
+  return out;
+}
