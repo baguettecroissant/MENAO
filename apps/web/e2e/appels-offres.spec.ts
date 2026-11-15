@@ -379,7 +379,8 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   const ceiling = works.getByRole("row", { name: /Faux plafond suspendu BA13/ });
   await expect(ceiling).toContainText("Séjour-cuisine");
   await expect(ceiling).toContainText("45,14 m²");
-  await expect(ceiling).toContainText("Lu sur le plan");
+  // Quantité tirée d'une pièce estimée : estimée elle aussi.
+  await expect(ceiling).toContainText("Estimé par MENAO");
   const partition = works.getByRole("row", { name: /Cloison BA13 de 7 cm/ });
   await expect(partition).toContainText("À compléter");
   await expect(partition.getByRole("link", { name: /^Mesurer Cloison BA13/ })).toBeVisible();
