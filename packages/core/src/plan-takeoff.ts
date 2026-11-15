@@ -353,8 +353,31 @@ function socketsFor(r: TakeoffRoom): number {
 // Règles par métier
 // ---------------------------------------------------------------------------------------------
 
-type Spec = { designation: string; unit: DpgfUnit; unitLabel: string; post: Post | null };
-type Ctx = { rooms: readonly TakeoffRoom[]; counts: PlanCounts };
+type Spec = {
+  designation: string;
+  unit: DpgfUnit;
+  unitLabel: string;
+  post: Post | null;
+  /**
+   * Poste de convention remplacé par les ouvrages écrits sur le plan : retiré dès qu'un ouvrage du
+   * lot correspond (le plan dit ce qui est prévu, MENAO ne l'ajoute pas une seconde fois).
+   */
+  replacedBy?: RegExp;
+};
+/** `written` : ouvrages écrits ou mesurés du lot, hors déposes. */
+type Ctx = { rooms: readonly TakeoffRoom[]; counts: PlanCounts; written: readonly TakeoffWork[] };
+
+/** Nom comparé sans accents, casse ni ponctuation. */
+const nameKey = (text: string) =>
+  plain(text)
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/** Pièces qui ont un ouvrage écrit dont la désignation correspond. */
+const roomsWith = (written: readonly TakeoffWork[], pattern: RegExp) =>
+  new Set(
+    written.flatMap((w) => (w.room && pattern.test(nameKey(w.name)) ? [nameKey(w.room)] : [])),
+  );
 
 /**
  * Métiers chiffrés sur des ouvrages mesurés (terrain, toiture, façades) : leur règle n'est qu'un
@@ -424,11 +447,17 @@ function workSpec(w: TakeoffWork): Spec {
   return spec(designation, unit, post);
 }
 
-const spec = (designation: string, unit: DpgfUnit, post: Post | null): Spec => ({
+const spec = (
+  designation: string,
+  unit: DpgfUnit,
+  post: Post | null,
+  replacedBy?: RegExp,
+): Spec => ({
   designation,
   unit,
   unitLabel: { m2: "m²", ml: "ml", u: "u", m3: "m³", forfait: "ens" }[unit as string] ?? unit,
   post,
+  replacedBy,
 });
 
 const habitable = (rooms: readonly TakeoffRoom[]) => rooms.filter((r) => r.habitable);
@@ -476,21 +505,36 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
       ),
     ),
     spec("Sol souple", "m2", areaPost(floorOf(rooms, "sol_souple"))),
-    spec("Peinture des portes intérieures", "u", countPost(counts, "portes", "portes")),
-  ],
-  plaquiste: ({ rooms }) => [
-    spec(CEILING_POST, "m2", areaPost(rooms.filter((r) => r.finishes.ceiling === "plaque"))),
     spec(
-      "Cloisons de distribution",
-      "m2",
-      toComplete("longueur des cloisons à mesurer sur le plan."),
-    ),
-    spec(
-      "Doublage isolant des murs extérieurs",
-      "m2",
-      toComplete("murs extérieurs à distinguer sur le plan."),
+      "Peinture des portes intérieures",
+      "u",
+      countPost(counts, "portes", "portes"),
+      /\bportes?\b/,
     ),
   ],
+  plaquiste: ({ rooms, written }) => {
+    // Faux plafonds écrits pièce par pièce : le total ne garde que les autres pièces en plaque.
+    const covered = roomsWith(written, /plafond/);
+    return [
+      spec(
+        CEILING_POST,
+        "m2",
+        areaPost(
+          rooms.filter((r) => r.finishes.ceiling === "plaque" && !covered.has(nameKey(r.name))),
+        ),
+      ),
+      spec(
+        "Cloisons de distribution",
+        "m2",
+        toComplete("longueur des cloisons à mesurer sur le plan."),
+      ),
+      spec(
+        "Doublage isolant des murs extérieurs",
+        "m2",
+        toComplete("murs extérieurs à distinguer sur le plan."),
+      ),
+    ];
+  },
   menuisier: ({ rooms, counts }) => {
     const wood = floorOf(rooms, "parquet");
     return [
@@ -501,17 +545,27 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         "m2",
         areaPost(floorOf(rooms, "parquet_poncer")),
       ),
-      spec("Blocs-portes intérieurs", "u", countPost(counts, "portes", "portes")),
-      spec("Fenêtres et portes-fenêtres", "u", countPost(counts, "fenetres", "fenêtres")),
+      spec(
+        "Blocs-portes intérieurs",
+        "u",
+        countPost(counts, "portes", "portes"),
+        /bloc porte|porte (interieure|de distribution|coulissante|a galandage)/,
+      ),
+      spec(
+        "Fenêtres et portes-fenêtres",
+        "u",
+        countPost(counts, "fenetres", "fenêtres"),
+        /fenetre|baie|chassis|velux/,
+      ),
       spec("Escalier", "u", countPost(counts, "escaliers", "escaliers")),
     ];
   },
   plombier: ({ counts }) => [
-    spec("WC", "u", countPost(counts, "wc", "WC")),
-    spec("Lavabos et vasques", "u", countPost(counts, "lavabos", "lavabos")),
-    spec("Douches", "u", countPost(counts, "douches", "douches")),
-    spec("Baignoires", "u", countPost(counts, "baignoires", "baignoires")),
-    spec("Éviers", "u", countPost(counts, "eviers", "éviers")),
+    spec("WC", "u", countPost(counts, "wc", "WC"), /\bwc\b|cuvette|bati support/),
+    spec("Lavabos et vasques", "u", countPost(counts, "lavabos", "lavabos"), /lavabo|vasque/),
+    spec("Douches", "u", countPost(counts, "douches", "douches"), /douche|receveur/),
+    spec("Baignoires", "u", countPost(counts, "baignoires", "baignoires"), /baignoire/),
+    spec("Éviers", "u", countPost(counts, "eviers", "éviers"), /evier/),
     spec("Production d'eau chaude", "u", single("Un appareil par logement, à choisir.")),
     spec(
       "Alimentations et évacuations",
@@ -526,11 +580,13 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         "Points lumineux",
         "u",
         perRoomPost(living, () => 1, "Un point par pièce (minimum NF C 15-100, à vérifier)"),
+        /point lumineux|luminaire|spot|applique|plafonnier/,
       ),
       spec(
         "Prises de courant 16 A",
         "u",
         perRoomPost(rooms, socketsFor, "Minimum NF C 15-100 par pièce, à vérifier"),
+        /\bprises?\b/,
       ),
       spec("Tableau électrique", "u", single("Un tableau par logement, à dimensionner.")),
     ];
@@ -547,6 +603,7 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
           (r) => (WC.test(plain(r.name)) || CIRCULATION.test(plain(r.name)) ? 0 : 1),
           "Un émetteur par pièce de vie et salle d'eau",
         ),
+        /radiateur|emetteur|convecteur|seche serviette|plancher chauffant/,
       ),
       spec("Générateur de chaleur", "u", single("Un générateur par logement, à choisir.")),
     ];
@@ -561,6 +618,7 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         "Unités intérieures",
         "u",
         perRoomPost(cooled, () => 1, "Une unité par séjour et chambre"),
+        /split|unite interieure|climatis|cassette|gainable/,
       ),
       spec("Groupe extérieur", "u", single("Un groupe par logement, puissance à calculer.")),
     ];
@@ -614,18 +672,28 @@ export function planTakeoff(
       return { trade, specs: works.filter((w) => w.removal).map(workSpec), empty: false };
     }
     // Une dépose ne va que dans le lot « Démolition » : sans ce lot, elle n'est pas chiffrée.
-    const own = works.filter((w) => w.trade === trade.code && !w.removal);
+    const written = works.filter((w) => w.trade === trade.code && !w.removal);
+    // Peinture écrite pour les murs ou le plafond d'une pièce déjà peinte par la règle (périmètre ×
+    // hauteur moins les ouvertures, surface du plafond) : la ligne écrite ferait double emploi.
+    const painted = (w: TakeoffWork) => {
+      const text = nameKey(w.name);
+      if (!w.room || w.quantityMilli !== null || !/peind|peinture/.test(text)) return false;
+      const room = rooms.find((r) => nameKey(r.name) === nameKey(w.room ?? ""));
+      if (!room) return false;
+      if (/\bmurs?\b/.test(text)) return room.finishes.walls !== "aucun";
+      if (/plafonds?/.test(text)) return room.finishes.ceiling !== "aucun";
+      return false;
+    };
+    const own = trade.code === "peintre" ? written.filter((w) => !painted(w)) : written;
     const measured = own.map(workSpec);
-    // Faux plafonds déjà écrits pièce par pièce : le total de la règle ferait double emploi.
-    const ceilings = own.some((w) => w.room !== undefined && /plafond/i.test(w.name));
     const ruled =
       measured.length && MEASURED_TRADES.has(trade.code)
         ? []
-        : (RULES[trade.code]?.({ rooms, counts }) ?? []).filter(
+        : (RULES[trade.code]?.({ rooms, counts, written: own }) ?? []).filter(
             (s) =>
               s.post !== null &&
               !(measured.length && s.post.placeholder) &&
-              !(ceilings && s.designation === CEILING_POST),
+              !(s.replacedBy && own.some((w) => s.replacedBy?.test(nameKey(w.name)))),
           );
     return {
       trade,

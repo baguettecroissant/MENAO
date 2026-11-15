@@ -356,5 +356,61 @@ describe("pièce estimée à l'échelle (F-159, lot 2)", () => {
         ["Faux plafond suspendu BA13 — Salon"],
       );
     });
+
+    it("essai réel : ni doublon ni poste de convention quand le plan écrit l'ouvrage", () => {
+      const plaque = { ...base, ceiling: "plaque" as const };
+      const house = [
+        room("salon", 16.98, 16.49, { finishes: plaque }),
+        room("entrée", 7.64, 11.4, { finishes: plaque }),
+        room("sdb 1", 5.91, 10.35, { finishes: plaque, wet: true }),
+      ];
+      const w = (name: string, trade: string, roomName: string | null, over = {}) =>
+        written(name, trade, {
+          room: roomName,
+          kind: "nombre",
+          quantityMilli: 1000,
+          source: "unite",
+          ...over,
+        });
+      const notes = [
+        w("faux plafond suspendu ba13", "plaquiste", "entrée", {
+          kind: "surface",
+          quantityMilli: 7640,
+          source: "calcul",
+        }),
+        w("mur à peindre", "peintre", "entrée", {
+          kind: "surface",
+          quantityMilli: null,
+          source: "plan",
+        }),
+        w("porte à peindre", "peintre", "entrée"),
+        w("receveur de douche 90x80", "plombier", "sdb 1"),
+        w("nouveau radiateur fonte", "chauffagiste", "salon"),
+        w("F-01 · menuiserie pvc fenêtre OF · 167 × 208 cm", "menuisier", null),
+      ];
+      const lines = planTakeoff(
+        house,
+        COUNTS,
+        ["plaquiste", "peintre", "plombier", "chauffagiste", "menuisier"].map((code) => ({
+          code,
+          label: code,
+        })),
+        notes,
+      );
+      const names = lines.filter((l) => l.kind === "poste").map((l) => l.designation);
+      // Le faux plafond du salon et de la salle de bain reste dans le total ; l'entrée est écrite.
+      const ceiling = lines.find((l) => l.designation === "Faux plafond en plaques de plâtre");
+      expect(ceiling?.quantityMilli).toBe(16_980 + 5_910);
+      expect(names).toContain("faux plafond suspendu ba13 — entrée");
+      // Murs de l'entrée déjà peints par la règle : pas de ligne « à compléter » en plus.
+      expect(names).toContain("Peinture des murs");
+      expect(names).not.toContain("mur à peindre — entrée");
+      // Postes de convention remplacés par ce que le plan écrit.
+      expect(names).not.toContain("Peinture des portes intérieures");
+      expect(names).not.toContain("Douches");
+      expect(names).not.toContain("Émetteurs de chauffage");
+      expect(names).not.toContain("Fenêtres et portes-fenêtres");
+      expect(names).toContain("WC");
+    });
   });
 });

@@ -129,8 +129,19 @@ const key = (text: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+/** Texte coupé au dernier mot entier avant `max` caractères, avec « … ». */
+function shorten(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:(–-]+$/, "")}…`;
+}
+
 /** Ouvrages qui se mesurent en longueur, d'un tracé. */
-const LINEAR = /\b(caissons?|plinthes?|corniches?|goulottes?|garde corps|main courante)\b/;
+const LINEAR = /\b(caissons?|caisons?|plinthes?|corniches?|goulottes?|garde corps|main courante)\b/;
+/** Ouvrages de façade : une surface de façade à mesurer (isolation par l'extérieur, enduit…). */
+const FACADE =
+  /\b(ite|isolation (thermique )?(par l )?exterieure?|enduits?|ravalement|bardage|facades?)\b/;
 /** Ouvrages verticaux : leur surface dépend d'une longueur à tracer. */
 const WALL = /\b(cloisons?|contre cloisons?|doublages?|murs?|murets?|faience|credence)\b/;
 /** Ouvrages qui couvrent le sol ou le plafond de la pièce. */
@@ -168,7 +179,7 @@ export function planNoteWorks(
     const notes = Array.isArray(image.raw?.ouvrages) ? image.raw.ouvrages : [];
     for (const note of notes) {
       if (!note || note.action === "conserver") continue;
-      const name = clean(note.designation, 120);
+      const name = shorten(clean(note.designation, 400), 120);
       if (!name) continue;
       const trade = (NOTE_TRADES as readonly string[]).includes(note.metier) ? note.metier : null;
       const removal = note.action === "deposer";
@@ -199,7 +210,7 @@ export function planNoteWorks(
           unit === "nombre" ? Math.round(amount) * 1000 || null : Math.round(amount * 1000) || null;
       } else if (LINEAR.test(text)) {
         kind = "lineaire";
-      } else if (WALL.test(text)) {
+      } else if (FACADE.test(text) || WALL.test(text)) {
         kind = "surface";
       } else if (ROOM_AREA.test(text)) {
         kind = "surface";
@@ -379,4 +390,20 @@ export function finishesFromNotes(notes: RoomNotes): ReadFinishes {
   if (/faux plafond|suspendu|rampant|ba13|plaque/.test(ceilingText)) ceiling = "plaque";
   else if (/peindre|peinture/.test(ceilingText)) ceiling = "peinture";
   return { floor, walls, tileHeightMm, ceiling };
+}
+
+/**
+ * Comment mesurer un ouvrage écrit resté sans quantité : une longueur à tracer, une longueur de
+ * mur à tracer (× la hauteur), une surface de façade, ou une surface à mesurer.
+ */
+export function noteMeasureHint(
+  name: string,
+  kind: string,
+): "length" | "wall" | "facade" | "area" | null {
+  const text = key(name);
+  if (kind === "lineaire") return "length";
+  if (kind !== "surface") return null;
+  if (FACADE.test(text)) return "facade";
+  if (WALL.test(text)) return "wall";
+  return "area";
 }
