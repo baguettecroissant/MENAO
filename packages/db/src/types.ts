@@ -5799,6 +5799,8 @@ export type Database = {
           page: number | null;
           position: number;
           quantity_milli: number | null;
+          removal: boolean;
+          room: string | null;
           source: string;
           tender_id: string;
           trade_code: string | null;
@@ -5814,6 +5816,8 @@ export type Database = {
           page?: number | null;
           position: number;
           quantity_milli?: number | null;
+          removal?: boolean;
+          room?: string | null;
           source: string;
           tender_id: string;
           trade_code?: string | null;
@@ -5828,6 +5832,8 @@ export type Database = {
           page?: number | null;
           position?: number;
           quantity_milli?: number | null;
+          removal?: boolean;
+          room?: string | null;
           source?: string;
           tender_id?: string;
           trade_code?: string | null;
@@ -7231,6 +7237,7 @@ export type Database = {
         };
         Returns: number;
       };
+      artisan_import_plan_notes: { Args: { p_tender_id: string; p_works: Json }; Returns: number };
       artisan_import_plan_traces: {
         Args: { p_estimates?: Json; p_tender_id: string; p_traces: Json };
         Returns: number;
@@ -7414,6 +7421,10 @@ export type Database = {
       artisan_set_expense_paid: {
         Args: { p_expense_id: string; p_paid_on: string };
         Returns: boolean;
+      };
+      artisan_set_plan_trades: {
+        Args: { p_tender_id: string; p_trades: string[] };
+        Returns: undefined;
       };
       artisan_set_work_prices: { Args: { p_prices: Json }; Returns: undefined };
       artisan_signal_reserves_lifted: {

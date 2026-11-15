@@ -4,6 +4,7 @@
 // Rien n'est deviné : une mesure absente laisse le poste « à compléter ».
 import type { DpgfUnit } from "./dpgf";
 import type { PlanCountKey, PlanCounts, PlanRoomSource } from "./plan-reading";
+import { DEMOLITION_LOT } from "./plan-notes";
 import { formatPlanMeasure, PLAN_WORK_UNITS, type PlanWork } from "./plan-works";
 
 export const FLOOR_FINISHES = ["carrelage", "parquet", "sol_souple", "aucun"] as const;
@@ -39,11 +40,14 @@ export type TakeoffRoom = {
 export type TakeoffSource =
   "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | "partiel";
 
-/** Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. */
+/**
+ * Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. Un ouvrage écrit sur le plan
+ * (F-159 lot 6) porte sa pièce ; une dépose va dans le lot « Démolition ».
+ */
 export type TakeoffWork = Pick<
   PlanWork,
   "name" | "kind" | "quantityMilli" | "source" | "detail" | "trade" | "page" | "uncertain"
->;
+> & { room?: string | null; removal?: boolean };
 
 export type TakeoffLine = {
   kind: "titre" | "poste";
@@ -115,7 +119,13 @@ const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
 const fmt = (milli: number) => number.format(milli / 1000);
 const m2 = (cm2: number) => Math.round(cm2 / 10);
 
-type Post = { quantityMilli: number | null; source: TakeoffSource; detail: string };
+type Post = {
+  quantityMilli: number | null;
+  source: TakeoffSource;
+  detail: string;
+  /** Poste d'attente d'une règle : retiré dès que le lot a des ouvrages écrits sur le plan. */
+  placeholder?: boolean;
+};
 
 function roomsSource(rooms: readonly TakeoffRoom[], derived: boolean): TakeoffSource {
   // Une seule pièce estimée à l'échelle suffit : la quantité entière est une estimation.
@@ -308,6 +318,7 @@ const toComplete = (reason: string): Post => ({
   quantityMilli: null,
   source: "manque",
   detail: `À compléter : ${reason}`,
+  placeholder: true,
 });
 
 /** Prises de courant au minimum de la norme NF C 15-100, par pièce (à vérifier). */
@@ -349,8 +360,22 @@ function workSpec(w: TakeoffWork): Spec {
   const unit = PLAN_WORK_UNITS[w.kind];
   const label = { m2: "m²", ml: "ml", m3: "m³", u: "u" }[unit];
   let post: Post;
+  const designation = w.room ? `${w.name} — ${w.room}` : w.name;
   if (w.quantityMilli === null) {
-    post = toComplete("quantité non écrite sur le plan.");
+    post = {
+      ...toComplete(
+        w.room !== undefined && w.room !== null
+          ? "à mesurer d'un tracé sur le plan."
+          : "quantité non écrite sur le plan.",
+      ),
+      placeholder: false,
+    };
+  } else if (w.source === "unite") {
+    post = {
+      quantityMilli: w.quantityMilli,
+      source: "plan",
+      detail: "Écrit sur le plan : un ouvrage par note.",
+    };
   } else if (w.source === "trace") {
     post = {
       quantityMilli: w.quantityMilli,
@@ -382,7 +407,7 @@ function workSpec(w: TakeoffWork): Spec {
             : `Écrit sur le plan${where}.`,
     };
   }
-  return spec(w.name, unit, post);
+  return spec(designation, unit, post);
 }
 
 const spec = (designation: string, unit: DpgfUnit, post: Post | null): Spec => ({
@@ -538,8 +563,11 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
 
 /**
  * Lots et postes du DPGF, un lot par métier choisi (dans l'ordre donné) : postes calculés avec les
- * pièces, puis ouvrages mesurés du relevé rangés dans ce métier. Un métier sans règle ni ouvrage,
- * ou dont aucun poste ne s'applique, garde un poste « à compléter ».
+ * pièces, puis ouvrages mesurés du relevé rangés dans ce métier. Les déposes vont dans le lot
+ * « Démolition », en tête, quand il est demandé (`DEMOLITION_LOT` parmi les métiers). Dès qu'un
+ * lot a des ouvrages écrits, les postes d'attente de sa règle sont retirés. Un lot sans rien sur
+ * les plans (démolition sans dépose, métier chiffré sur ouvrages mesurés sans ouvrage) n'est pas
+ * créé, sauf s'il ne resterait aucun lot : il garde alors un poste « à compléter ».
  */
 export function planTakeoff(
   rooms: readonly TakeoffRoom[],
@@ -547,8 +575,34 @@ export function planTakeoff(
   trades: readonly { code: string; label: string }[],
   works: readonly TakeoffWork[] = [],
 ): TakeoffLine[] {
+  const ordered = [
+    ...trades.filter((t) => t.code === DEMOLITION_LOT),
+    ...trades.filter((t) => t.code !== DEMOLITION_LOT),
+  ];
+  const lots = ordered.map((trade) => {
+    if (trade.code === DEMOLITION_LOT) {
+      return { trade, specs: works.filter((w) => w.removal).map(workSpec), empty: false };
+    }
+    // Une dépose ne va que dans le lot « Démolition » : sans ce lot, elle n'est pas chiffrée.
+    const measured = works.filter((w) => w.trade === trade.code && !w.removal).map(workSpec);
+    const ruled =
+      measured.length && MEASURED_TRADES.has(trade.code)
+        ? []
+        : (RULES[trade.code]?.({ rooms, counts }) ?? []).filter(
+            (s) => s.post !== null && !(measured.length && s.post.placeholder),
+          );
+    return {
+      trade,
+      specs: [...ruled, ...measured],
+      // Rien sur les plans : aucun ouvrage, et la règle du métier n'est qu'un poste d'attente.
+      empty: measured.length === 0 && MEASURED_TRADES.has(trade.code),
+    };
+  });
+  const kept = lots.filter((lot) => lot.specs.length > 0 && !lot.empty);
+  const created = kept.length ? kept : lots.filter((lot) => lot.trade.code !== DEMOLITION_LOT);
+
   const lines: TakeoffLine[] = [];
-  trades.forEach((trade, i) => {
+  created.forEach(({ trade, specs }, i) => {
     const n = i + 1;
     const code = `LOT ${String(n).padStart(2, "0")}`;
     const label = trade.label.toUpperCase();
@@ -564,12 +618,6 @@ export function planTakeoff(
       source: null,
       detail: null,
     });
-    const measured = works.filter((w) => w.trade === trade.code).map(workSpec);
-    const ruled =
-      measured.length && MEASURED_TRADES.has(trade.code)
-        ? []
-        : (RULES[trade.code]?.({ rooms, counts }) ?? []).filter((s) => s.post !== null);
-    const specs = [...ruled, ...measured];
     const posts = specs.length
       ? specs
       : [
@@ -584,7 +632,7 @@ export function planTakeoff(
         kind: "poste",
         lot,
         code: `${n}.${j + 1}`,
-        designation: s.designation,
+        designation: s.designation.slice(0, 500),
         unit: s.unit,
         unitLabel: s.unitLabel,
         quantityMilli: s.post?.quantityMilli ?? null,

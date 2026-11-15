@@ -192,6 +192,8 @@ export const files = {
   },
   /** Photo d'un plan, 800 × 600 : assez grande pour la mesure à l'échelle (ADR 0326). */
   planPhoto: { name: "plan-rdc.png", mimeType: "image/png", buffer: whitePng(800, 600) },
+  /** Photo d'un plan de 640 px de large : la seule qui porte des notes écrites (mock-ai, ADR 0330). */
+  planNotes: { name: "cloisons.png", mimeType: "image/png", buffer: whitePng(640, 480) },
   /** Logo PNG 60 × 24 à fond transparent (logo des documents, ADR 0038). */
   logo: {
     name: "logo.png",

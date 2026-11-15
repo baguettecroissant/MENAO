@@ -260,8 +260,8 @@ describe("façades et toiture", () => {
       "1.3 Fenêtres de toit plan",
       "2.1 Façade sud calcul",
       "3.1 Garde-corps du balcon plan",
-      "4.1 Charpente manque",
     ]);
+    // Le lot charpentier, sans rien sur les plans, n'est pas créé (F-159 lot 6).
     expect(posts[0]?.detail).toBe("86,00 m² × 1,221 (pente 35°) = 105,01 m²");
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PlanCounts } from "../src/plan-reading";
 import {
   type TakeoffRoom,
+  type TakeoffWork,
   defaultFinishes,
   planTakeoff,
   takeoffFigures,
@@ -246,5 +247,86 @@ describe("pièce estimée à l'échelle (F-159, lot 2)", () => {
     expect(
       takeoffFigures(planTakeoff(rooms, COUNTS, [{ code: "peintre", label: "Peintre" }])).estimated,
     ).toBeGreaterThan(0);
+  });
+
+  describe("ouvrages écrits sur le plan (F-159 lot 6)", () => {
+    const written = (name: string, trade: string, over: Partial<TakeoffWork> = {}) => ({
+      name,
+      kind: "surface" as const,
+      quantityMilli: null,
+      source: "plan" as const,
+      detail: null,
+      trade,
+      page: 1,
+      uncertain: false,
+      room: "Salon",
+      removal: false,
+      ...over,
+    });
+    const TRADES = [
+      { code: "plaquiste", label: "Plaquiste" },
+      { code: "couvreur", label: "Couvreur" },
+      { code: "demolition", label: "Démolition, dépose" },
+    ];
+    const works = [
+      written("Faux plafond suspendu BA13", "plaquiste", {
+        quantityMilli: 17_100,
+        source: "calcul",
+        detail: "Surface de la pièce : Salon",
+      }),
+      written("Cloison BA13 de 10 cm", "plaquiste"),
+      written("Baignoire à déposer", "plombier", {
+        kind: "nombre",
+        quantityMilli: 1000,
+        source: "unite",
+        room: "Salle d'eau",
+        removal: true,
+      }),
+    ];
+
+    it("met les déposes dans un lot Démolition en tête, et ne crée pas un lot vide", () => {
+      const lines = planTakeoff(ROOMS, COUNTS, TRADES, works);
+      expect(lines.filter((l) => l.kind === "titre").map((l) => l.lot)).toEqual([
+        "LOT 01 DÉMOLITION, DÉPOSE",
+        "LOT 02 PLAQUISTE",
+      ]);
+      expect(lines.filter((l) => l.kind === "poste")).toMatchObject([
+        {
+          code: "1.1",
+          designation: "Baignoire à déposer — Salle d'eau",
+          unit: "u",
+          quantityMilli: 1000,
+          source: "plan",
+        },
+        {
+          code: "2.1",
+          designation: "Faux plafond suspendu BA13 — Salon",
+          quantityMilli: 17_100,
+          source: "calcul",
+          detail: "Surface de la pièce : Salon = 17,10 m²",
+        },
+        {
+          code: "2.2",
+          designation: "Cloison BA13 de 10 cm — Salon",
+          quantityMilli: null,
+          source: "manque",
+          detail: "À compléter : à mesurer d'un tracé sur le plan.",
+        },
+      ]);
+    });
+
+    it("sans lot Démolition, une dépose n'est pas chiffrée", () => {
+      const lines = planTakeoff(ROOMS, COUNTS, [{ code: "plombier", label: "Plombier" }], works);
+      expect(lines.some((l) => l.designation.includes("Baignoire à déposer"))).toBe(false);
+    });
+
+    it("garde un poste à compléter s'il ne resterait aucun lot", () => {
+      const lines = planTakeoff(ROOMS, COUNTS, TRADES.slice(1), []);
+      expect(lines.map((l) => l.designation)).toEqual([
+        "COUVREUR",
+        "Couverture",
+        "Gouttières et descentes",
+      ]);
+    });
   });
 });

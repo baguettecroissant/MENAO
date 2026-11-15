@@ -5,6 +5,11 @@ import {
   artisanPageUrl,
   formatPlanMeasure,
   planPageTypes,
+  DEMOLITION_LOT,
+  isWrittenWork,
+  joineryParts,
+  noteLots,
+  planNoteFigures,
   planReadingFigures,
   planWorksFigures,
   traceControl,
@@ -191,7 +196,7 @@ export default async function TenderPage({
             files={plan.files}
             traces={plan.traces}
             rooms={plan.rooms.map((r) => ({ id: r.id, name: r.name }))}
-            trades={plan.trades}
+            trades={plan.trades.filter((tr) => tr.code !== DEMOLITION_LOT)}
           />
         )}
         {plan && step === "releve" && !measuring && (
@@ -254,6 +259,9 @@ export default async function TenderPage({
                 tenderId={tender.id}
                 works={plan.works}
                 trades={plan.trades}
+                workTrades={plan.workTrades}
+                lotChoices={plan.lotChoices}
+                measureHref={`/pro/demandes/appels-offres/${tender.id}?etape=mesure`}
                 files={plan.files}
                 pages={plan.pages}
                 summary={summaryCard}
@@ -424,7 +432,8 @@ async function planData(
           3600,
         )
       : Promise.resolve({ data: [] as { signedUrl: string | null }[] }),
-    supabase.from("trades").select("code, label").in("code", tender.plan_trades),
+    // Tous les métiers : un ouvrage écrit peut demander un lot qui n'est pas encore coché.
+    supabase.from("trades").select("code, label").eq("active", true),
   ]);
   let next = entries.length;
   const files: PlanFileLink[] = entries.map((f, i) => ({
@@ -448,12 +457,21 @@ async function planData(
     name: string;
     altitudeMm: number;
   }[];
+  // Ouvrages écrits sur les plans (F-159 lot 6) : comptés à part des ouvrages mesurés.
+  const written = works.filter(isWrittenWork);
+  const noted = planNoteFigures(
+    written.map((x) => ({ quantityMilli: x.quantity_milli, source: x.source, room: x.room })),
+  );
+  const writtenLots = noteLots(written.map((x) => ({ trade: x.trade_code, removal: x.removal })));
+  const joinery = written.filter((x) => joineryParts(x.name) !== null).length;
   const measured = planWorksFigures(
-    works.map((x) => ({
-      quantityMilli: x.quantity_milli,
-      source: x.source,
-      uncertain: x.uncertain,
-    })),
+    works
+      .filter((x) => !isWrittenWork(x))
+      .map((x) => ({
+        quantityMilli: x.quantity_milli,
+        source: x.source,
+        uncertain: x.uncertain,
+      })),
   );
   const tw = t.plan.works;
   // Mesure à l'échelle (F-159, lot 2) : tracés, pièces estimées, écart avec les pièces cotées.
@@ -519,6 +537,12 @@ async function planData(
     measured.counted ? { ...ok, text: tw.summary.counted(measured.counted) } : null,
     measured.toCheck ? { ...warn, text: tw.summary.toCheck(measured.toCheck) } : null,
     measured.missing ? { ...warn, text: tw.summary.missing(measured.missing) } : null,
+    written.length
+      ? { ...ok, text: tw.notes.summary.written(written.length, writtenLots.length) }
+      : null,
+    joinery ? { ...ok, text: tw.notes.summary.joinery(joinery) } : null,
+    noted.fromRooms ? { ...ruler, text: tw.notes.summary.fromRooms(noted.fromRooms) } : null,
+    noted.toMeasure ? { ...warn, text: tw.notes.summary.toMeasure(noted.toMeasure) } : null,
     figures.read ? { ...ok, text: t.plan.summary.read(figures.read) } : null,
     figures.computed
       ? {
@@ -548,6 +572,13 @@ async function planData(
       ? (tender.plan_counts as Record<string, number | null>)
       : {};
   const labels = new Map((trades ?? []).map((tr) => [tr.code, tr.label]));
+  labels.set(DEMOLITION_LOT, tw.notes.demolition);
+  const lot = (code: string) => ({ code, label: labels.get(code) ?? code });
+  // Lots à cocher : ceux de l'appel d'offres, puis ceux que les ouvrages écrits demandent.
+  const lotChoices = [...new Set([...tender.plan_trades, ...writtenLots])].map((code) => ({
+    ...lot(code),
+    checked: tender.plan_trades.includes(code),
+  }));
   return {
     rooms,
     works,
@@ -558,7 +589,10 @@ async function planData(
     files,
     counts,
     summary,
-    trades: tender.plan_trades.map((code) => ({ code, label: labels.get(code) ?? code })),
+    trades: tender.plan_trades.map(lot),
+    // Métiers possibles d'un ouvrage : tous les métiers, sans le lot « Démolition ».
+    workTrades: (trades ?? []).map((tr) => ({ code: tr.code, label: tr.label })),
+    lotChoices,
   };
 }
 

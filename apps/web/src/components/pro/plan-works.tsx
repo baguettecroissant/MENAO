@@ -1,17 +1,30 @@
 "use client";
 
-import { formatPlanMeasure, parseQuantity, PLAN_WORK_KINDS, type PlanWorkKind } from "@menao/core";
-import { Check, Pencil, Plus, X } from "lucide-react";
-import { useActionState, useMemo, useState, type ReactNode } from "react";
+import {
+  DEMOLITION_LOT,
+  formatPlanMeasure,
+  isWrittenWork,
+  joineryParts,
+  parseQuantity,
+  PLAN_WORK_KINDS,
+  type PlanWorkKind,
+} from "@menao/core";
+import { Check, Pencil, Plus, Ruler, X } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+import { useActionState, useMemo, useState, useTransition, type ReactNode } from "react";
 import { PlanViewer, type PlanFileLink, type PlanView } from "@/components/pro/plan-viewer";
 import { Alert, Button, StatusBadge, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { savePlanWorks } from "@/lib/artisan/tender-actions";
+import { savePlanWorks, setPlanLots } from "@/lib/artisan/tender-actions";
 import type { TenderWork } from "@/lib/artisan/tenders";
 import { initialFormState } from "@/lib/auth/form";
 
 const t = fr.pro.tenders.plan;
 const w = t.works;
+const n = w.notes;
+/** Menuiseries affichées avant « Voir les N menuiseries ». */
+const JOINERY_SHOWN = 5;
 
 type Draft = {
   key: string;
@@ -23,6 +36,10 @@ type Draft = {
 };
 
 export type PlanPageInfo = { file: number; page: number; type: string };
+export type PlanLotChoice = { code: string; label: string; checked: boolean };
+
+/** Lot où va un ouvrage : « Démolition » pour une dépose, sinon son métier ("" : hors lot). */
+const lotOf = (d: Draft) => (d.work?.removal ? DEMOLITION_LOT : d.trade);
 
 /** Quantité affichée : un nombre d'unités sans décimales, une mesure à deux décimales. */
 const shown = (kind: PlanWorkKind, milli: number | null) =>
@@ -56,11 +73,17 @@ function changed(d: Draft): boolean {
  * à gauche ; à droite ce que MENAO a lu et les lots préparés ; dessous le tableau des ouvrages
  * (mesure, quantité, unité, origine, lot), modifiables d'un clic, puis « Préparer le DPGF ».
  * `withViewer` faux : le tableau seul, sous le relevé des pièces qui affiche déjà les plans.
+ * Ouvrages écrits sur les plans (F-159 lot 6, ADR 0330), maquette du lot 54 : un onglet par lot,
+ * la pièce de chaque ouvrage et l'origine de sa quantité ; à droite les lots proposés d'après les
+ * plans, à décocher, et les menuiseries à repère.
  */
 export function PlanWorks({
   tenderId,
   works,
   trades,
+  workTrades,
+  lotChoices,
+  measureHref,
   files,
   pages,
   summary,
@@ -71,6 +94,11 @@ export function PlanWorks({
   works: TenderWork[];
   /** Métiers de l'appel d'offres : lots possibles d'un ouvrage. */
   trades: { code: string; label: string }[];
+  /** Métiers possibles d'un ouvrage (tous les métiers, cochés ou non). */
+  workTrades: { code: string; label: string }[];
+  /** Lots de l'appel d'offres et lots demandés par les ouvrages écrits, à cocher. */
+  lotChoices: PlanLotChoice[];
+  measureHref: string;
   files: PlanFileLink[];
   pages: PlanPageInfo[];
   /** « MENAO a lu vos plans » (rendu par la page). */
@@ -96,9 +124,66 @@ export function PlanWorks({
     setEditing(null);
   }
 
+  // Ouvrages écrits sur les plans : onglets par lot, pièce et origine de la quantité.
+  const notes = works.some(isWrittenWork);
+  const [lot, setLot] = useState<string | null>(null);
+  const [allJoinery, setAllJoinery] = useState(false);
+  const [checked, setChecked] = useState(() =>
+    lotChoices.filter((c) => c.checked).map((c) => c.code),
+  );
+  const [lotsError, setLotsError] = useState<string | null>(null);
+  const [savingLots, startLots] = useTransition();
+
   const quantities = useMemo(() => drafts.map(quantityOf), [drafts]);
   const invalid = drafts.some((d, i) => !d.name.trim() || quantities[i] === undefined);
-  const tradeLabels = useMemo(() => new Map(trades.map((x) => [x.code, x.label])), [trades]);
+  const tradeLabels = useMemo(
+    () => new Map([...workTrades, ...trades].map((x) => [x.code, x.label])),
+    [trades, workTrades],
+  );
+  // Onglets : les lots qui ont des ouvrages, la démolition d'abord, « Hors lot » à la fin.
+  const tabs = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const d of drafts) counts.set(lotOf(d), (counts.get(lotOf(d)) ?? 0) + 1);
+    const order = [
+      DEMOLITION_LOT,
+      ...lotChoices.map((c) => c.code),
+      ...workTrades.map((x) => x.code),
+      "",
+    ];
+    return [...new Set(order)]
+      .filter((code) => counts.has(code))
+      .map((code) => ({
+        code,
+        label:
+          code === DEMOLITION_LOT ? n.demolition : code ? (tradeLabels.get(code) ?? code) : n.noLot,
+        count: counts.get(code) ?? 0,
+      }));
+  }, [drafts, lotChoices, workTrades, tradeLabels]);
+  const activeLot = notes ? (tabs.find((x) => x.code === lot) ?? tabs[0] ?? null) : null;
+  const joinery = useMemo(
+    () =>
+      notes
+        ? drafts.flatMap((d) => {
+            const parts = d.work && isWrittenWork(d.work) ? joineryParts(d.name) : null;
+            return parts ? [{ key: d.key, ...parts }] : [];
+          })
+        : [],
+    [drafts, notes],
+  );
+
+  function toggleLot(code: string) {
+    const next = checked.includes(code) ? checked.filter((c) => c !== code) : [...checked, code];
+    if (next.length === 0) {
+      setLotsError(n.lotsError);
+      return;
+    }
+    setChecked(next);
+    setLotsError(null);
+    startLots(async () => {
+      const result = await setPlanLots(tenderId, next);
+      if (result.error) setLotsError(result.error);
+    });
+  }
 
   const update = (key: string, patch: Partial<Draft>) => {
     setDirty(true);
@@ -142,6 +227,23 @@ export function PlanWorks({
       </span>
     );
     const work = d.work;
+    if (work && isWrittenWork(work) && !changed(d)) {
+      // Ouvrage écrit sur le plan : d'où vient sa quantité (maquette du lot 54).
+      if (quantity === null || quantity === undefined) {
+        return item(
+          "warning",
+          n.source.toMeasure,
+          d.kind === "surface" ? n.detail.surface : d.kind === "lineaire" ? n.detail.length : null,
+        );
+      }
+      if (work.source === "calcul") {
+        return work.uncertain
+          ? item("warning", n.source.room, n.detail.estimated)
+          : item("primary", n.source.room);
+      }
+      if (work.source === "unite") return item("neutral", n.source.unit);
+      if (work.source === "plan") return item("success", n.source.written);
+    }
     if (quantity === null || quantity === undefined) {
       return item("warning", w.source.missing, work && !changed(d) ? w.detail.missing : null);
     }
@@ -175,41 +277,62 @@ export function PlanWorks({
   const table = (
     <section className="w-full min-w-0 flex-1 overflow-hidden rounded-card border border-border bg-surface shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <h2 className="text-lg font-semibold">{w.title(drafts.length)}</h2>
-        <button
-          type="button"
-          onClick={() => {
-            const key = `nouveau-${added}`;
-            setAdded((n) => n + 1);
-            setDirty(true);
-            setDrafts((list) => [
-              ...list,
-              { key, work: null, name: "", kind: "surface", quantity: "", trade: "" },
-            ]);
-            setEditing(key);
-            setSelected(key);
-          }}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-strong"
-        >
-          <Plus aria-hidden="true" className="size-4" />
-          {w.add}
-        </button>
+        <h2 className="text-lg font-semibold">
+          {activeLot ? n.title(activeLot.label, activeLot.count) : w.title(drafts.length)}
+        </h2>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {notes && (
+            <Link
+              href={measureHref as Route}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-strong"
+            >
+              <Ruler aria-hidden="true" className="size-4" />
+              {n.measure}
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const key = `nouveau-${added}`;
+              setAdded((n) => n + 1);
+              setDirty(true);
+              setDrafts((list) => [
+                ...list,
+                {
+                  key,
+                  work: null,
+                  name: "",
+                  kind: "surface",
+                  quantity: "",
+                  trade: activeLot && activeLot.code !== DEMOLITION_LOT ? activeLot.code : "",
+                },
+              ]);
+              setEditing(key);
+              setSelected(key);
+            }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-strong"
+          >
+            <Plus aria-hidden="true" className="size-4" />
+            {w.add}
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table aria-label={w.label} className="w-full min-w-[44rem] border-collapse text-sm">
           <thead className="bg-background text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             <tr>
-              <th className="px-5 py-2.5">{w.columns.name}</th>
-              <th className={head}>{w.columns.kind}</th>
+              <th className="px-5 py-2.5">{notes ? n.columns.name : w.columns.name}</th>
+              <th className={head}>{notes ? n.columns.room : w.columns.kind}</th>
               <th className={`${head} text-right`}>{w.columns.quantity}</th>
               <th className={head}>{w.columns.unit}</th>
-              <th className={head}>{w.columns.source}</th>
-              <th className={head}>{w.columns.trade}</th>
+              <th className={head}>{notes ? n.columns.source : w.columns.source}</th>
+              <th className={head}>{notes ? n.columns.plan : w.columns.trade}</th>
               <th className={head} />
             </tr>
           </thead>
           <tbody>
             {drafts.map((d, i) => {
+              if (activeLot && lotOf(d) !== activeLot.code) return null;
               const quantity = quantities[i];
               const name = d.name || w.columns.name;
               if (editing === d.key) {
@@ -268,7 +391,7 @@ export function PlanWorks({
                             className={`${field} text-foreground`}
                           >
                             <option value="">{w.noTrade}</option>
-                            {trades.map((x) => (
+                            {workTrades.map((x) => (
                               <option key={x.code} value={x.code}>
                                 {x.label}
                               </option>
@@ -315,13 +438,20 @@ export function PlanWorks({
                   className={`border-t border-border ${tone}`}
                 >
                   <td className="py-2.5 pr-2 pl-5 align-middle font-semibold">{d.name}</td>
-                  <td className={`${cell} text-muted-foreground`}>{w.kinds[d.kind]}</td>
+                  <td className={`${cell} text-muted-foreground`}>
+                    {notes ? (d.work?.room ?? "—") : w.kinds[d.kind]}
+                  </td>
                   <td className={`${cell} text-right font-bold tabular-nums`}>
                     {quantity ? shown(d.kind, quantity) : "—"}
                   </td>
                   <td className={`${cell} text-muted-foreground`}>{w.units[d.kind]}</td>
                   <td className={cell}>{origin(d, quantity)}</td>
-                  <td className={`${cell} text-label`}>{tradeLabels.get(d.trade) ?? "—"}</td>
+                  <td className={`${cell} text-label`}>
+                    {notes
+                      ? (files[(d.work?.file_index ?? 0) - 1]?.name.replace(/\.[a-z0-9]+$/i, "") ??
+                        "—")
+                      : (tradeLabels.get(d.trade) ?? "—")}
+                  </td>
                   <td className="py-2 pr-4 pl-2 text-right align-middle">
                     <button
                       type="button"
@@ -341,7 +471,100 @@ export function PlanWorks({
           </tbody>
         </table>
       </div>
-      <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">{w.note}</p>
+      <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
+        {notes ? n.note : w.note}
+      </p>
+    </section>
+  );
+
+  // Onglets par lot (maquette du lot 54) : le nom du lot et son nombre d'ouvrages.
+  const lotTabs = notes && (
+    <div role="tablist" aria-label={n.tabs} className="flex flex-wrap gap-2.5">
+      {tabs.map((tab) => {
+        const on = tab.code === activeLot?.code;
+        return (
+          <button
+            key={tab.code}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            onClick={() => {
+              setLot(tab.code);
+              setEditing(null);
+            }}
+            className={`flex flex-col items-start gap-0.5 rounded-input px-3.5 py-2.5 text-left whitespace-nowrap ${
+              on
+                ? "border-2 border-primary bg-primary-softer"
+                : "border border-border bg-surface hover:bg-background"
+            }`}
+          >
+            <span className="text-sm font-bold">{tab.label}</span>
+            <span className="text-xs text-muted-foreground">{w.lotCount(tab.count)}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // Lots proposés d'après les plans : cochés par défaut, décochés par l'artisan.
+  const lotsCard = notes && (
+    <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
+      <h2 className="text-lg font-semibold">{n.lotsTitle}</h2>
+      {lotsError && <p className="text-sm text-danger">{lotsError}</p>}
+      <ul className="flex flex-col">
+        {lotChoices.map((choice) => {
+          const count = tabs.find((x) => x.code === choice.code)?.count ?? 0;
+          const on = checked.includes(choice.code);
+          return (
+            <li key={choice.code} className="border-t border-border">
+              <label className="flex cursor-pointer items-center gap-2.5 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={on}
+                  disabled={savingLots}
+                  aria-label={n.lotOf(choice.label)}
+                  onChange={() => toggleLot(choice.code)}
+                  className="size-4 accent-primary"
+                />
+                <span className={`flex-1 font-semibold ${on ? "" : "text-muted-foreground"}`}>
+                  {choice.label}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {count ? w.lotCount(count) : n.lotEmpty}
+                </span>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-sm text-muted-foreground">{n.lotsNote}</p>
+    </section>
+  );
+
+  const joineryCard = joinery.length > 0 && (
+    <section className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-5 shadow-card">
+      <h2 className="text-lg font-semibold">{n.joineryTitle(joinery.length)}</h2>
+      <ul className="flex flex-col">
+        {(allJoinery ? joinery : joinery.slice(0, JOINERY_SHOWN)).map((item) => (
+          <li
+            key={item.key}
+            className="flex items-baseline gap-2.5 border-t border-border py-1.5 text-sm"
+          >
+            <b className="w-12 shrink-0">{item.mark}</b>
+            <span className="flex-1 text-label">{item.label}</span>
+            <b className="whitespace-nowrap tabular-nums">{item.size}</b>
+          </li>
+        ))}
+      </ul>
+      {!allJoinery && joinery.length > JOINERY_SHOWN && (
+        <button
+          type="button"
+          onClick={() => setAllJoinery(true)}
+          className="self-start text-sm font-semibold text-primary-strong"
+        >
+          {n.joineryAll(joinery.length)}
+        </button>
+      )}
     </section>
   );
 
@@ -381,8 +604,17 @@ export function PlanWorks({
       )}
 
       <div className="flex flex-col items-start gap-5 lg:flex-row">
-        {table}
+        {notes ? (
+          <div className="flex w-full min-w-0 flex-1 flex-col gap-4">
+            {lotTabs}
+            {table}
+          </div>
+        ) : (
+          table
+        )}
         <aside className={side}>
+          {lotsCard}
+          {joineryCard}
           <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
             {withViewer ? (
               <>
@@ -401,8 +633,8 @@ export function PlanWorks({
               </>
             ) : (
               <>
-                <h2 className="text-lg font-semibold">{w.lotsTitle}</h2>
-                <p className="text-sm text-muted-foreground">{w.lotsNote}</p>
+                <h2 className="text-lg font-semibold">{notes ? n.okTitle : w.lotsTitle}</h2>
+                <p className="text-sm text-muted-foreground">{notes ? n.okText : w.lotsNote}</p>
                 {invalid && <p className="text-sm text-danger">{w.invalid}</p>}
                 <Button type="submit" variant="secondary" disabled={pending || invalid || !dirty}>
                   {w.save}

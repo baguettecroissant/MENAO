@@ -289,6 +289,55 @@ function contourReading() {
   });
 }
 
+// Ouvrages écrits sur un plan (F-159 lot 6, ADR 0330) : une lecture par image. Seule la photo de
+// 640 px de large (fixtures.planNotes) porte des notes, pour ne pas changer les autres parcours.
+function jpegWidth(base64) {
+  const bytes = Buffer.from(String(base64).slice(0, 8192), "base64");
+  for (let i = 2; i + 9 < bytes.length;) {
+    if (bytes[i] !== 0xff) return null;
+    const marker = bytes[i + 1];
+    if (marker >= 0xc0 && marker <= 0xc3) return bytes.readUInt16BE(i + 7);
+    i += 2 + bytes.readUInt16BE(i + 2);
+  }
+  return null;
+}
+
+function notesReading(content) {
+  const image = Array.isArray(content) ? content.find((block) => block?.type === "image") : null;
+  const written = jpegWidth(image?.source?.data) === 640;
+  const ouvrage = (metier, action, designation, piece) => ({
+    metier,
+    action,
+    designation,
+    piece,
+    quantite: null,
+    unite: "",
+  });
+  return JSON.stringify({
+    type_plan: written ? "cloisons et menuiseries" : "plan de niveau",
+    pieces: [],
+    menuiseries: written
+      ? [
+          {
+            repere: "F-01",
+            designation: "Fenêtre OF, 2 vantaux",
+            largeur_cm: 167,
+            hauteur_cm: 208,
+            details: "volet bois",
+          },
+        ]
+      : [],
+    ouvrages: written
+      ? [
+          ouvrage("plaquiste", "creer", "Faux plafond suspendu BA13", "Séjour-cuisine"),
+          ouvrage("plaquiste", "creer", "Cloison BA13 de 7 cm", "WC"),
+          ouvrage("plombier", "deposer", "Baignoire à déposer", "WC"),
+          ouvrage("chauffagiste", "conserver", "Radiateur existant", "WC"),
+        ]
+      : [],
+  });
+}
+
 function dpgfReading() {
   return JSON.stringify({
     lisible: true,
@@ -414,17 +463,19 @@ createServer(async (req, res) => {
               ? dpgfReading()
               : text.includes("Trace les pièces")
                 ? contourReading()
-                : text.includes("<plan>")
-                  ? /<metiers>[^<]*terrassier/.test(text)
-                    ? terrainReading()
-                    : planReading()
-                  : document
-                    ? documentReading(content)
-                    : text.includes("<saisie>")
-                      ? needSuggestion(text)
-                      : text.includes("<dictee>")
-                        ? quoteLines()
-                        : analysis(text, body?.model ?? ""),
+                : text.includes("Relève ce qui est écrit")
+                  ? notesReading(content)
+                  : text.includes("<plan>")
+                    ? /<metiers>[^<]*terrassier/.test(text)
+                      ? terrainReading()
+                      : planReading()
+                    : document
+                      ? documentReading(content)
+                      : text.includes("<saisie>")
+                        ? needSuggestion(text)
+                        : text.includes("<dictee>")
+                          ? quoteLines()
+                          : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",
