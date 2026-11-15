@@ -349,6 +349,20 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   // DPGF : le lot Démolition en tête, la dépose avec sa pièce.
   await page.getByRole("link", { name: "Choisir les revêtements" }).click();
   await expect(page).toHaveURL(/etape=revetements/);
+  // Revêtements lus sur le plan (ADR 0331) : sols existants conservés, note citée, pièce proposée.
+  await expect(page.getByText("2 pièces lues sur le plan · 1 proposée")).toBeVisible();
+  await expect(page.getByLabel("Sol : Séjour-cuisine")).toHaveValue("parquet_poncer");
+  await expect(page.getByLabel("Sol : WC")).toHaveValue("existant_nettoyer");
+  await expect(page.getByLabel("Murs : WC")).toHaveValue("faience");
+  await expect(page.getByLabel("Faïence (m) : WC")).toHaveValue("1,2");
+  await expect(
+    page.getByText("« tomette existante à nettoyer » · « faïence ht 120 cm »"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("table", { name: "Revêtements par pièce" })
+      .getByText("Proposé par MENAO", { exact: true }),
+  ).toHaveCount(1);
   await page.getByRole("button", { name: "Créer le DPGF" }).click();
   await expect(page.getByText(/^DPGF créé : 4 lots/)).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("DÉMOLITION, DÉPOSE").first()).toBeVisible();

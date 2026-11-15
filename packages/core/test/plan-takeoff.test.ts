@@ -328,5 +328,33 @@ describe("pièce estimée à l'échelle (F-159, lot 2)", () => {
         "Gouttières et descentes",
       ]);
     });
+
+    const base = defaultFinishes({ name: "x", wet: false, habitable: true });
+
+    it("sols existants conservés : remise en état, sans carrelage ni chape", () => {
+      const kept = [
+        room("WC", 1.48, 5, { finishes: { ...base, floor: "existant_nettoyer" } }),
+        room("Salon", 17.1, 17, { finishes: { ...base, floor: "parquet_poncer" } }),
+      ];
+      const lines = planTakeoff(kept, COUNTS, [
+        { code: "carreleur", label: "Carreleur" },
+        { code: "menuisier", label: "Menuisier" },
+        { code: "macon", label: "Maçon" },
+      ]);
+      const of = (name: string) => lines.find((l) => l.designation === name)?.quantityMilli;
+      expect(of("Nettoyage et remise en état du sol existant")).toBe(1480);
+      expect(of("Ponçage et finition du parquet existant")).toBe(17_100);
+      expect(of("Carrelage de sol")).toBeUndefined();
+      expect(of("Parquet")).toBeUndefined();
+      expect(of("Chape")).toBeUndefined();
+    });
+
+    it("ne compte pas deux fois un faux plafond écrit pièce par pièce", () => {
+      const plaque = [room("Salon", 17.1, 17, { finishes: { ...base, ceiling: "plaque" } })];
+      const lines = planTakeoff(plaque, COUNTS, TRADES.slice(0, 1), works);
+      expect(lines.filter((l) => /plafond/i.test(l.designation)).map((l) => l.designation)).toEqual(
+        ["Faux plafond suspendu BA13 — Salon"],
+      );
+    });
   });
 });

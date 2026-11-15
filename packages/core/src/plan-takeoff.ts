@@ -7,12 +7,26 @@ import type { PlanCountKey, PlanCounts, PlanRoomSource } from "./plan-reading";
 import { DEMOLITION_LOT } from "./plan-notes";
 import { formatPlanMeasure, PLAN_WORK_UNITS, type PlanWork } from "./plan-works";
 
-export const FLOOR_FINISHES = ["carrelage", "parquet", "sol_souple", "aucun"] as const;
+/**
+ * « existant_nettoyer » et « parquet_poncer » : sol existant conservé (tomette à nettoyer, parquet
+ * à poncer), sans fourniture de revêtement neuf : un poste de remise en état (ADR 0331).
+ */
+export const FLOOR_FINISHES = [
+  "carrelage",
+  "parquet",
+  "sol_souple",
+  "existant_nettoyer",
+  "parquet_poncer",
+  "aucun",
+] as const;
 export const WALL_FINISHES = ["peinture", "faience", "aucun"] as const;
 export const CEILING_FINISHES = ["peinture", "plaque", "aucun"] as const;
 export type FloorFinish = (typeof FLOOR_FINISHES)[number];
 export type WallFinish = (typeof WALL_FINISHES)[number];
 export type CeilingFinish = (typeof CEILING_FINISHES)[number];
+
+/** Sols existants conservés : ni chape ni revêtement neuf. */
+const KEPT_FLOORS: readonly FloorFinish[] = ["existant_nettoyer", "parquet_poncer"];
 
 export type RoomFinishes = {
   floor: FloorFinish;
@@ -421,6 +435,8 @@ const habitable = (rooms: readonly TakeoffRoom[]) => rooms.filter((r) => r.habit
 const floorOf = (rooms: readonly TakeoffRoom[], floor: FloorFinish) =>
   rooms.filter((r) => r.finishes.floor === floor);
 
+const CEILING_POST = "Faux plafond en plaques de plâtre";
+
 const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
   carreleur: ({ rooms, counts }) => {
     const tiled = floorOf(rooms, "carrelage");
@@ -433,6 +449,11 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         skirtingPost(tiled.filter((r) => r.finishes.walls !== "faience")),
       ),
       spec("Faïence murale", "m2", tilePost(rooms.filter((r) => r.finishes.walls === "faience"))),
+      spec(
+        "Nettoyage et remise en état du sol existant",
+        "m2",
+        areaPost(floorOf(rooms, "existant_nettoyer")),
+      ),
       spec(
         "Étanchéité (SPEC) sous douche",
         "m2",
@@ -458,11 +479,7 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
     spec("Peinture des portes intérieures", "u", countPost(counts, "portes", "portes")),
   ],
   plaquiste: ({ rooms }) => [
-    spec(
-      "Faux plafond en plaques de plâtre",
-      "m2",
-      areaPost(rooms.filter((r) => r.finishes.ceiling === "plaque")),
-    ),
+    spec(CEILING_POST, "m2", areaPost(rooms.filter((r) => r.finishes.ceiling === "plaque"))),
     spec(
       "Cloisons de distribution",
       "m2",
@@ -479,6 +496,11 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
     return [
       spec("Parquet", "m2", areaPost(wood)),
       spec("Plinthes bois", "ml", skirtingPost(wood)),
+      spec(
+        "Ponçage et finition du parquet existant",
+        "m2",
+        areaPost(floorOf(rooms, "parquet_poncer")),
+      ),
       spec("Blocs-portes intérieurs", "u", countPost(counts, "portes", "portes")),
       spec("Fenêtres et portes-fenêtres", "u", countPost(counts, "fenetres", "fenêtres")),
       spec("Escalier", "u", countPost(counts, "escaliers", "escaliers")),
@@ -544,7 +566,15 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
     ];
   },
   macon: ({ rooms }) => [
-    spec("Chape", "m2", areaPost(rooms.filter((r) => r.finishes.floor !== "aucun"))),
+    spec(
+      "Chape",
+      "m2",
+      areaPost(
+        rooms.filter(
+          (r) => r.finishes.floor !== "aucun" && !KEPT_FLOORS.includes(r.finishes.floor),
+        ),
+      ),
+    ),
     spec("Dallage et fondations", "m2", toComplete("emprise du bâtiment à mesurer.")),
     spec("Murs en maçonnerie", "m2", toComplete("murs à mesurer sur les plans et façades.")),
   ],
@@ -584,12 +614,18 @@ export function planTakeoff(
       return { trade, specs: works.filter((w) => w.removal).map(workSpec), empty: false };
     }
     // Une dépose ne va que dans le lot « Démolition » : sans ce lot, elle n'est pas chiffrée.
-    const measured = works.filter((w) => w.trade === trade.code && !w.removal).map(workSpec);
+    const own = works.filter((w) => w.trade === trade.code && !w.removal);
+    const measured = own.map(workSpec);
+    // Faux plafonds déjà écrits pièce par pièce : le total de la règle ferait double emploi.
+    const ceilings = own.some((w) => w.room !== undefined && /plafond/i.test(w.name));
     const ruled =
       measured.length && MEASURED_TRADES.has(trade.code)
         ? []
         : (RULES[trade.code]?.({ rooms, counts }) ?? []).filter(
-            (s) => s.post !== null && !(measured.length && s.post.placeholder),
+            (s) =>
+              s.post !== null &&
+              !(measured.length && s.post.placeholder) &&
+              !(ceilings && s.designation === CEILING_POST),
           );
     return {
       trade,

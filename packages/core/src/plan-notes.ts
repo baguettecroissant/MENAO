@@ -292,3 +292,91 @@ export function planNoteFigures(
 /** Ouvrage relevé dans les notes de l'architecte, et non mesuré sur un plan de terrain. */
 export const isWrittenWork = (w: { room: string | null; removal: boolean; source: string }) =>
   w.room !== null || w.removal || w.source === "unite";
+
+// ---------------------------------------------------------------------------------------------
+// Revêtements écrits par pièce (PR B, ADR 0331)
+// ---------------------------------------------------------------------------------------------
+
+/** Ce que les plans écrivent pour le sol, les murs et le plafond d'une pièce ("" : rien). */
+export type RoomNotes = { floor: string; walls: string; ceiling: string };
+
+/**
+ * Notes de revêtement de chaque pièce du relevé, dans l'ordre des pièces ; null si aucun plan
+ * n'écrit rien pour elle. Sur plusieurs plans, la première note non vide de chaque partie compte.
+ */
+export function planRoomNotes(
+  images: readonly PlanNoteImage[],
+  rooms: readonly { name: string }[],
+): (RoomNotes | null)[] {
+  const found = new Map<string, RoomNotes>();
+  for (const image of images) {
+    const pieces = Array.isArray(image.raw?.pieces) ? image.raw.pieces : [];
+    for (const p of pieces) {
+      if (!p) continue;
+      const id = key(clean(p.nom, 80));
+      if (!id) continue;
+      const notes = found.get(id) ?? { floor: "", walls: "", ceiling: "" };
+      notes.floor ||= clean(p.sol, 200);
+      notes.walls ||= clean(p.murs, 200);
+      notes.ceiling ||= clean(p.plafond, 200);
+      found.set(id, notes);
+    }
+  }
+  return rooms.map((room) => {
+    const notes = found.get(key(room.name));
+    return notes && (notes.floor || notes.walls || notes.ceiling) ? notes : null;
+  });
+}
+
+/** Revêtements reconnus dans les notes d'une pièce ; null : la note ne le dit pas. */
+export type ReadFinishes = {
+  floor: "carrelage" | "parquet" | "sol_souple" | "existant_nettoyer" | "parquet_poncer" | null;
+  walls: "peinture" | "faience" | null;
+  ceiling: "peinture" | "plaque" | null;
+  /** Hauteur de faïence écrite, en mm. */
+  tileHeightMm: number | null;
+};
+
+export function finishesFromNotes(notes: RoomNotes): ReadFinishes {
+  const floorText = key(notes.floor);
+  const wallText = key(notes.walls);
+  const ceilingText = key(notes.ceiling);
+  let floor: ReadFinishes["floor"] = null;
+  if (/parquet|plancher/.test(floorText) && /ponc|huil|vitrif|existant/.test(floorText)) {
+    floor = "parquet_poncer";
+  } else if (/nettoy|existant/.test(floorText)) {
+    floor = "existant_nettoyer";
+  } else if (/souple|pvc|lino|vinyl|moquette/.test(floorText)) {
+    floor = "sol_souple";
+  } else if (/parquet|stratifie/.test(floorText)) {
+    floor = "parquet";
+  } else if (/carrel|gres|tomette/.test(floorText)) {
+    floor = "carrelage";
+  }
+
+  let walls: ReadFinishes["walls"] = null;
+  let tileHeightMm: number | null = null;
+  if (/faience/.test(wallText)) {
+    walls = "faience";
+    // Hauteur écrite après « faïence » : « ht 220 cm », « h. 2,10 m ».
+    const after = notes.walls
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    const height = /\b(?:ht|h|hauteur)\b[ .:]*(\d+(?:[.,]\d+)?) ?(cm|m)\b/.exec(
+      after.slice(after.indexOf("faience")),
+    );
+    if (height) {
+      const value = Number((height[1] ?? "").replace(",", "."));
+      const mm = Math.round(value * (height[2] === "cm" ? 10 : 1000));
+      if (mm >= 100 && mm <= 4000) tileHeightMm = mm;
+    }
+  } else if (/peindre|peinture/.test(wallText)) {
+    walls = "peinture";
+  }
+
+  let ceiling: ReadFinishes["ceiling"] = null;
+  if (/faux plafond|suspendu|rampant|ba13|plaque/.test(ceilingText)) ceiling = "plaque";
+  else if (/peindre|peinture/.test(ceilingText)) ceiling = "peinture";
+  return { floor, walls, tileHeightMm, ceiling };
+}
