@@ -31,6 +31,9 @@ const QUANTITY_TONES = {
   trace: "neutral",
   // Total des pièces mesurées, une pièce restant à compléter (ADR 0329).
   partiel: "warning",
+  // Nombre de symboles comptés sur le plan (ADR 0336).
+  compte: "success",
+  compte_verif: "warning",
 } as const;
 const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 const money = (cents: number) => euros.format(cents / 100);

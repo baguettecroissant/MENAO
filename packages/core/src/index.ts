@@ -101,6 +101,7 @@ export * from "./dpgf-totals";
 export * from "./plan-reading";
 export * from "./plan-works";
 export * from "./plan-notes";
+export * from "./plan-symbols";
 export * from "./plan-tiles";
 export * from "./plan-measure";
 export * from "./plan-takeoff";

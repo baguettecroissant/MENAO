@@ -42,6 +42,18 @@ import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts"
 import { MAX_PLAN_WORKS } from "../../../packages/core/src/plan-works.ts";
 import { TRACE_TIMEOUT_MS, tracePlan } from "./contours.ts";
 import { NOTES_TIMEOUT_MS, readPlanNotes } from "./notes.ts";
+import { readPlanSymbols, SYMBOLS_TIMEOUT_MS } from "./symbols.ts";
+import {
+  ELECTRICAL_SYMBOLS,
+  electricalPages,
+  type FoundSymbol,
+  imageSize,
+  MAX_SYMBOLS,
+  mergeSymbolReadings,
+  normalizeSymbols,
+  type PlanSymbol,
+  symbolsInRooms,
+} from "../../../packages/core/src/plan-symbols.ts";
 import { type PlanFile, type PlanFileTile, readPlans } from "./plan.ts";
 import {
   applyTenderPrices,
@@ -403,6 +415,33 @@ async function readTenderPlans(
         .catch(() => null),
     ),
   );
+  // Symboles (ADR 0336) : une lecture du plan entier par image, en même temps que le reste.
+  const symbolsPending = Promise.all(
+    images.slice(0, MAX_NOTE_IMAGES).map(async (image) => {
+      const size = imageSize(image.bytes);
+      if (!size) return null;
+      const raw = await readPlanSymbols(
+        admin,
+        image.bytes,
+        image.mediaType,
+        size.width,
+        size.height,
+        Math.min(SYMBOLS_TIMEOUT_MS, FUNCTION_BUDGET_MS - 25_000),
+      ).catch(() => null);
+      if (!raw) return null;
+      return {
+        file: image.file,
+        page: image.page,
+        ...size,
+        found: normalizeSymbols(raw, size.width, size.height),
+        legend: (Array.isArray(raw.legende) ? raw.legende : [])
+          .filter((l): l is string => typeof l === "string")
+          .map((l) => l.trim().slice(0, 160))
+          .filter(Boolean)
+          .slice(0, 12),
+      };
+    }),
+  );
   const reading = await readPlans(admin, files, trades);
   if (reading.status !== "ok") {
     return json({ status: reading.status }, reading.status === "unavailable" ? 503 : 422);
@@ -464,6 +503,49 @@ async function readTenderPlans(
 
   // Ouvrages écrits : quantités tirées des pièces du relevé, estimations comprises.
   const noted = (await notesPending).filter((n): n is PlanNoteImage => n !== null);
+  // Symboles des plans d'électricité, rattachés aux pièces tracées ; toujours enregistrés, pour
+  // effacer ceux d'une lecture précédente.
+  const read = (await symbolsPending).filter((r) => r !== null);
+  const electrical = (found: readonly FoundSymbol[]) =>
+    found.filter((f) => ELECTRICAL_SYMBOLS.includes(f.type));
+  const kept = electricalPages(
+    read.map((r) => ({
+      file: r.file,
+      page: r.page,
+      planType: String(
+        noted.find((n) => n.file === r.file && n.page === r.page)?.raw.type_plan ?? "",
+      ),
+      electrical: electrical(r.found).length,
+    })),
+  );
+  const symbols: PlanSymbol[] = symbolsInRooms(
+    read
+      .filter((r) => kept.some((k) => k.file === r.file && k.page === r.page))
+      .flatMap((r) =>
+        mergeSymbolReadings(electrical(r.found), [], r.width, r.height).map((s) => ({
+          ...s,
+          file: r.file,
+          page: r.page,
+        })),
+      ),
+    traces,
+  ).slice(0, MAX_SYMBOLS);
+  // Pages comptées : taille de l'image (pour poser les symboles à l'écran) et convention lue.
+  const legend = read
+    .filter((r) => kept.some((k) => k.file === r.file && k.page === r.page))
+    .map((r) => ({
+      file: r.file,
+      page: r.page,
+      width: r.width,
+      height: r.height,
+      lines: r.legend,
+    }));
+  const { error: symbolsError } = await supabase.rpc("artisan_import_plan_symbols", {
+    p_tender_id: tender.id,
+    p_symbols: symbols,
+    p_legend: legend,
+  });
+  if (symbolsError) console.error("tender-sheet : symboles refusés", symbolsError.code);
   const noteWorks = planNoteWorks(
     noted,
     reading.rooms.map((room, i) => {
@@ -486,6 +568,7 @@ async function readTenderPlans(
         trades,
         noteWorks,
         noted.map((n) => (typeof n.raw.type_plan === "string" ? n.raw.type_plan : "")),
+        symbols.length ? ["electricien"] : [],
       ),
     });
     if (notesError) console.error("tender-sheet : ouvrages écrits refusés", notesError.code);
@@ -517,6 +600,7 @@ async function readTenderPlans(
     estimated: typeof estimated === "number" ? estimated : 0,
     rooms: reading.rooms.length,
     works: reading.works.length + written,
+    symbols: symbolsError ? 0 : symbols.length,
     warnings: reading.warnings,
   });
 }

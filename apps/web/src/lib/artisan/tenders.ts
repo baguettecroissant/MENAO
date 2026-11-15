@@ -1,5 +1,5 @@
 import "server-only";
-import { parseAiAgents } from "@menao/core";
+import { parseAiAgents, SYMBOL_KINDS, type PlanSymbol } from "@menao/core";
 import type { createClient } from "@/lib/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -43,7 +43,17 @@ export type TenderLine = {
   price_reference: string | null;
   /** DPGF créé depuis les plans (ADR 0292) : origine et calcul de la quantité. */
   quantity_source?:
-    "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | "partiel" | null;
+    | "plan"
+    | "calcul"
+    | "photo"
+    | "manque"
+    | "saisi"
+    | "estime"
+    | "trace"
+    | "partiel"
+    | "compte"
+    | "compte_verif"
+    | null;
   quantity_detail?: string | null;
 };
 
@@ -103,6 +113,38 @@ export type PlanFileEntry = {
   pages: { path: string; page: number }[];
 };
 
+/**
+ * Symboles comptés sur les plans, tels qu'enregistrés (tenders.plan_symbols, ADR 0336) : la base
+ * les a déjà vérifiés ; un élément mal formé est ignoré.
+ */
+export function planSymbols(value: unknown): PlanSymbol[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((v) => {
+    const s = v as Partial<PlanSymbol> | null;
+    if (
+      !s ||
+      typeof s.file !== "number" ||
+      typeof s.page !== "number" ||
+      typeof s.x !== "number" ||
+      typeof s.y !== "number" ||
+      !(SYMBOL_KINDS as readonly string[]).includes(String(s.type))
+    ) {
+      return [];
+    }
+    return [
+      {
+        file: s.file,
+        page: s.page,
+        type: s.type as PlanSymbol["type"],
+        x: s.x,
+        y: s.y,
+        room: typeof s.room === "string" ? s.room : null,
+        doubt: s.doubt === true,
+      },
+    ];
+  });
+}
+
 /** Plans déposés, tels qu'enregistrés (tenders.plan_files). */
 export function planFiles(value: unknown): PlanFileEntry[] {
   if (!Array.isArray(value)) return [];
@@ -157,7 +199,7 @@ export async function getTender(supabase: Client, id: string) {
     supabase
       .from("tenders")
       .select(
-        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_lots_idle, plan_counts, plan_scale, plan_pages, plan_levels, plan_traces, plan_marks, quantities_checked_at",
+        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_lots_idle, plan_symbols, plan_symbol_legend, plan_counts, plan_scale, plan_pages, plan_levels, plan_traces, plan_marks, quantities_checked_at",
       )
       .eq("id", id)
       .maybeSingle(),

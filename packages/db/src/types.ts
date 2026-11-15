@@ -5881,6 +5881,8 @@ export type Database = {
           plan_marks: NonNullable<Json>;
           plan_pages: NonNullable<Json>;
           plan_scale: string | null;
+          plan_symbol_legend: NonNullable<Json>;
+          plan_symbols: NonNullable<Json>;
           plan_traces: NonNullable<Json>;
           plan_trades: string[];
           quantities_checked_at: string | null;
@@ -5908,6 +5910,8 @@ export type Database = {
           plan_marks?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
+          plan_symbol_legend?: NonNullable<Json>;
+          plan_symbols?: NonNullable<Json>;
           plan_traces?: NonNullable<Json>;
           plan_trades?: string[];
           quantities_checked_at?: string | null;
@@ -5934,6 +5938,8 @@ export type Database = {
           plan_marks?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
+          plan_symbol_legend?: NonNullable<Json>;
+          plan_symbols?: NonNullable<Json>;
           plan_traces?: NonNullable<Json>;
           plan_trades?: string[];
           quantities_checked_at?: string | null;
@@ -7255,6 +7261,10 @@ export type Database = {
           p_tender_id: string;
           p_works?: Json;
         };
+        Returns: number;
+      };
+      artisan_import_plan_symbols: {
+        Args: { p_legend?: Json; p_symbols: Json; p_tender_id: string };
         Returns: number;
       };
       artisan_import_plan_traces: {

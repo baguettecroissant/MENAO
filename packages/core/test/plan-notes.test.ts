@@ -320,5 +320,9 @@ describe("idleLots", () => {
     ]);
     expect(idleLots(["electricien", "climaticien"], [], [])).toEqual([]);
     expect(idleLots(["climaticien"], works, [])).toEqual([]);
+    // Symboles électriques comptés sur un plan : le lot de l'électricien reste coché.
+    expect(idleLots(["electricien", "climaticien"], works, [], ["electricien"])).toEqual([
+      "climaticien",
+    ]);
   });
 });

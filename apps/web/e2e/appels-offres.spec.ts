@@ -310,11 +310,16 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await page.getByLabel("Nom du projet").fill(`Ouvrages écrits E2E ${test.info().retry}`);
   await page.getByLabel("Plans de l'architecte").setInputFiles(files.planNotes);
   await expect(page.getByRole("checkbox", { name: "Carreleur" })).toBeChecked();
+  await page.getByRole("button", { name: "Un autre métier" }).click();
+  await page.getByRole("checkbox", { name: "Électricien" }).click();
+  await expect(page.getByRole("checkbox", { name: "Électricien" })).toBeChecked();
   await page.getByRole("button", { name: "Lire les plans" }).click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
     timeout: 30_000,
   });
   await expect(page.getByText("4 ouvrages écrits, rangés dans 3 lots")).toBeVisible();
+  // Symboles comptés sur le plan (ADR 0336) : le lot de l'électricien reste coché.
+  await expect(page.getByText("Compté sur le plan : 2 points lumineux, 4 prises")).toBeVisible();
   await expect(page.getByText("1 menuiserie avec son repère et ses dimensions")).toBeVisible();
   await expect(page.getByText("1 quantité tirée des pièces mesurées")).toBeVisible();
 
@@ -364,10 +369,16 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
       .getByText("Proposé par MENAO", { exact: true }),
   ).toHaveCount(1);
   await page.getByRole("button", { name: "Créer le DPGF" }).click();
-  await expect(page.getByText(/^DPGF créé : 4 lots/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/^DPGF créé : 5 lots/)).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("DÉMOLITION, DÉPOSE").first()).toBeVisible();
   await expect(page.getByLabel("Votre quantité : Baignoire à déposer — WC")).toHaveValue(
     /^1(,0+)?$/,
+  );
+  // Postes de l'électricien remplis avec le nombre dessiné, à la place des minimums de la norme.
+  await page.getByRole("tab", { name: /Électricien/ }).click();
+  await expect(page.getByLabel("Votre quantité : Prises de courant 16 A")).toHaveValue("4");
+  await expect(page.getByLabel("Votre quantité : Points lumineux en plafond (DCL)")).toHaveValue(
+    "2",
   );
 });
 
