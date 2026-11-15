@@ -145,6 +145,33 @@ export function planSymbols(value: unknown): PlanSymbol[] {
   });
 }
 
+/** Page de plan comptée (tenders.plan_symbol_legend) : taille de l'image et convention lue. */
+export type PlanSymbolPage = {
+  file: number;
+  page: number;
+  width: number;
+  height: number;
+  lines: string[];
+};
+
+export function planSymbolPages(value: unknown): PlanSymbolPage[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((v) => {
+    const p = v as Partial<PlanSymbolPage> | null;
+    if (
+      !p ||
+      typeof p.file !== "number" ||
+      typeof p.page !== "number" ||
+      typeof p.width !== "number" ||
+      typeof p.height !== "number"
+    ) {
+      return [];
+    }
+    const lines = Array.isArray(p.lines) ? p.lines.filter((l) => typeof l === "string") : [];
+    return [{ file: p.file, page: p.page, width: p.width, height: p.height, lines }];
+  });
+}
+
 /** Plans déposés, tels qu'enregistrés (tenders.plan_files). */
 export function planFiles(value: unknown): PlanFileEntry[] {
   if (!Array.isArray(value)) return [];

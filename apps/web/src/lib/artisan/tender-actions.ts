@@ -20,6 +20,7 @@ import {
   planTakeoff,
   type PriceHistoryLine,
   suggestTenderPrice,
+  SYMBOL_KINDS,
   symbolCounts,
   takeoffFigures,
   tenderQuoteLines,
@@ -383,6 +384,47 @@ export async function savePlanWorks(_prev: FormState, formData: FormData): Promi
   revalidatePath(`${BASE}/${id.data}`);
   if (text(formData, "next") === "dpgf") return buildPlanDpgf(supabase, id.data);
   return { success: t.plan.works.saved };
+}
+
+const savedSymbol = z.object({
+  type: z.enum(SYMBOL_KINDS),
+  x: z.number().int().min(0).max(99_999),
+  y: z.number().int().min(0).max(99_999),
+  room: z.string().trim().max(80).nullable(),
+  doubt: z.boolean(),
+});
+
+/**
+ * Symboles d'une page de plan corrigés par l'artisan (F-159 lot 7, ADR 0337) : ajoutés, retirés,
+ * changés de type, groupe « à vérifier » tranché. Les autres pages restent ; la vérification des
+ * quantités du DPGF est à refaire.
+ */
+export async function savePlanSymbols(_prev: FormState, formData: FormData): Promise<FormState> {
+  const id = z.uuid().safeParse(text(formData, "tenderId"));
+  const file = z.coerce.number().int().min(1).max(10).safeParse(text(formData, "file"));
+  const page = z.coerce.number().int().min(1).max(999).safeParse(text(formData, "page"));
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(text(formData, "symbols") ?? "[]");
+  } catch {
+    raw = null;
+  }
+  const symbols = z.array(savedSymbol).max(600).safeParse(raw);
+  if (!id.success || !file.success || !page.success || !symbols.success) {
+    return { error: t.plan.works.symbols.invalid };
+  }
+  const { supabase } = await requireTeamPermission("money");
+  const { error } = await supabase.rpc("artisan_save_plan_symbols", {
+    p_tender_id: id.data,
+    p_file: file.data,
+    p_page: page.data,
+    p_symbols: symbols.data,
+  });
+  if (error) {
+    return { error: error.code === "42501" ? t.errors.forbidden : t.plan.works.symbols.invalid };
+  }
+  revalidatePath(`${BASE}/${id.data}`);
+  return { success: t.plan.works.symbols.saved };
 }
 
 /** Lots de l'appel d'offres cochés par l'artisan (F-159 lot 6) : métiers, et « Démolition ». */

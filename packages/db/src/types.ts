@@ -7420,6 +7420,10 @@ export type Database = {
         Args: { p_counts: Json; p_rooms: Json; p_tender_id: string };
         Returns: undefined;
       };
+      artisan_save_plan_symbols: {
+        Args: { p_file: number; p_page: number; p_symbols: Json; p_tender_id: string };
+        Returns: number;
+      };
       artisan_save_plan_works: { Args: { p_tender_id: string; p_works: Json }; Returns: undefined };
       artisan_save_quote_costs: { Args: { p_costs: Json; p_quote_id: string }; Returns: undefined };
       artisan_save_quote_draft: { Args: { p_chantier_id: string; p_lines: Json }; Returns: string };

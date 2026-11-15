@@ -25,6 +25,7 @@ import { PlanFinishes } from "@/components/pro/plan-finishes";
 import { PlanMeasure } from "@/components/pro/plan-measure";
 import { PlanReleve } from "@/components/pro/plan-releve";
 import type { PlanFileLink } from "@/components/pro/plan-viewer";
+import { PlanSymbols } from "@/components/pro/plan-symbols";
 import { PlanWorks } from "@/components/pro/plan-works";
 import { PlanSteps, type PlanStep } from "@/components/pro/plan-steps";
 import { QuantitiesCheck } from "@/components/pro/quantities-check";
@@ -40,6 +41,7 @@ import {
   getTenderRooms,
   getTenderWorks,
   planFiles,
+  planSymbolPages,
   planSymbols,
 } from "@/lib/artisan/tenders";
 import { formatDay } from "@/lib/format";
@@ -277,6 +279,16 @@ export default async function TenderPage({
                 hasDpgf={lines.length > 0}
               />
             )}
+            {plan.symbolPages.length > 0 && plan.symbols.length > 0 && (
+              <PlanSymbols
+                tenderId={tender.id}
+                symbols={plan.symbols}
+                pages={plan.symbolPages}
+                files={plan.files}
+                traces={plan.traces}
+                hasDpgf={lines.length > 0}
+              />
+            )}
           </>
         )}
         {plan && step === "revetements" && (
@@ -424,6 +436,7 @@ async function planData(
     plan_trades: string[];
     plan_lots_idle: string[];
     plan_symbols: unknown;
+    plan_symbol_legend: unknown;
     plan_counts: unknown;
     plan_scale: string | null;
     plan_pages: unknown;
@@ -617,6 +630,9 @@ async function planData(
     counts,
     summary,
     trades: tender.plan_trades.map(lot),
+    // Symboles électriques comptés et pages comptées (ADR 0336).
+    symbols: planSymbols(tender.plan_symbols).filter((x) => ELECTRICAL_SYMBOLS.includes(x.type)),
+    symbolPages: planSymbolPages(tender.plan_symbol_legend),
     // Métiers possibles d'un ouvrage : tous les métiers, sans le lot « Démolition ».
     workTrades: (trades ?? []).map((tr) => ({ code: tr.code, label: tr.label })),
     lotChoices,
