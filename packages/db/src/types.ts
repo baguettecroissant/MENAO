@@ -7225,6 +7225,7 @@ export type Database = {
         Returns: Json;
       };
       artisan_import_plan_lines: { Args: { p_lines: Json; p_tender_id: string }; Returns: number };
+      artisan_import_plan_notes: { Args: { p_tender_id: string; p_works: Json }; Returns: number };
       artisan_import_plan_reading: {
         Args: {
           p_counts: Json;
@@ -7237,7 +7238,6 @@ export type Database = {
         };
         Returns: number;
       };
-      artisan_import_plan_notes: { Args: { p_tender_id: string; p_works: Json }; Returns: number };
       artisan_import_plan_traces: {
         Args: { p_estimates?: Json; p_tender_id: string; p_traces: Json };
         Returns: number;
