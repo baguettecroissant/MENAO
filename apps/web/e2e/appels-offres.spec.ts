@@ -310,7 +310,9 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await page.getByLabel("Nom du projet").fill(`Ouvrages écrits E2E ${test.info().retry}`);
   await page.getByLabel("Plans de l'architecte").setInputFiles(files.planNotes);
   await expect(page.getByRole("checkbox", { name: "Carreleur" })).toBeChecked();
-  await page.getByRole("checkbox", { name: "Électricien" }).check();
+  await page.getByRole("button", { name: "Un autre métier" }).click();
+  await page.getByRole("checkbox", { name: "Électricien" }).click();
+  await expect(page.getByRole("checkbox", { name: "Électricien" })).toBeChecked();
   await page.getByRole("button", { name: "Lire les plans" }).click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
     timeout: 30_000,
