@@ -179,9 +179,9 @@ test("appels d'offres : plans lus, relevé corrigé, DPGF créé puis exporté a
   await page.reload();
   await expect(rooms.getByText("Votre valeur")).toHaveCount(2);
   await rooms.getByRole("button", { name: "Corriger WC" }).click();
-  await expect(page.getByLabel("Surface (m²) : WC")).toHaveValue("1,8");
+  await expect(page.getByLabel("Surface (m²) : WC")).toHaveValue("1,80");
   await rooms.getByRole("button", { name: "Corriger Palier" }).click();
-  await expect(page.getByLabel("Surface (m²) : Palier")).toHaveValue("4,6");
+  await expect(page.getByLabel("Surface (m²) : Palier")).toHaveValue("4,60");
   await page.getByText("Aussi relevé sur les plans").click();
   await expect(page.getByLabel("Portes intérieures")).toHaveValue("10");
 
