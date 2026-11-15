@@ -206,6 +206,9 @@ export function PlanReleve({
       ),
     );
     setDirty(false);
+    // L'éditeur se ferme ici et non au clic : retiré du DOM pendant le clic, le bouton
+    // « Terminé » n'enverrait plus le formulaire.
+    setOpen(null);
     formAction(formData);
   }
 
@@ -398,12 +401,7 @@ export function PlanReleve({
                             <X aria-hidden="true" className="size-4" />
                             {t.removeRoom(d.name)}
                           </button>
-                          <Button
-                            type="submit"
-                            block={false}
-                            disabled={pending || invalid}
-                            onClick={() => setOpen(null)}
-                          >
+                          <Button type="submit" block={false} disabled={pending || invalid}>
                             <Check aria-hidden="true" className="size-4" />
                             {g.doneRoom}
                           </Button>
