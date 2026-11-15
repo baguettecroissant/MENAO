@@ -31,9 +31,11 @@ import {
 } from "../../../packages/core/src/plan-measure.ts";
 import {
   DEMOLITION_LOT,
+  finishesFromNotes,
   MAX_NOTE_IMAGES,
   type PlanNoteImage,
   planNoteWorks,
+  planRoomNotes,
 } from "../../../packages/core/src/plan-notes.ts";
 import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts";
 import { MAX_PLAN_WORKS } from "../../../packages/core/src/plan-works.ts";
@@ -473,6 +475,27 @@ async function readTenderPlans(
     });
     if (notesError) console.error("tender-sheet : ouvrages écrits refusés", notesError.code);
     else written = typeof added === "number" ? added : 0;
+  }
+  // Revêtements écrits par pièce (ADR 0331) : notes gardées, étape « Revêtements » pré-remplie.
+  const finishes = planRoomNotes(noted, reading.rooms).flatMap((notes, i) =>
+    notes
+      ? [
+          {
+            position: i + 1,
+            floorNote: notes.floor,
+            wallsNote: notes.walls,
+            ceilingNote: notes.ceiling,
+            ...finishesFromNotes(notes),
+          },
+        ]
+      : [],
+  );
+  if (finishes.length > 0) {
+    const { error: finishError } = await supabase.rpc("artisan_import_plan_finishes", {
+      p_tender_id: tender.id,
+      p_finishes: finishes,
+    });
+    if (finishError) console.error("tender-sheet : revêtements lus refusés", finishError.code);
   }
   return json({
     status: "ok",

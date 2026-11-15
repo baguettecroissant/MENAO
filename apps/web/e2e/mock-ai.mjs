@@ -315,7 +315,23 @@ function notesReading(content) {
   });
   return JSON.stringify({
     type_plan: written ? "cloisons et menuiseries" : "plan de niveau",
-    pieces: [],
+    // Revêtements écrits par pièce (ADR 0331) : deux sols existants conservés, une faïence.
+    pieces: written
+      ? [
+          {
+            nom: "Séjour-cuisine",
+            sol: "parquet existant à poncer et huiler",
+            murs: "mur à peindre",
+            plafond: "",
+          },
+          {
+            nom: "WC",
+            sol: "tomette existante à nettoyer",
+            murs: "faïence ht 120 cm",
+            plafond: "",
+          },
+        ]
+      : [],
     menuiseries: written
       ? [
           {

@@ -6580,10 +6580,43 @@ export const fr = {
           walls: "Murs",
           ceiling: "Plafond",
           tileHeight: "Faïence (m)",
+          // Revêtements lus sur le plan (F-159 lot 6, PR B, maquette du lot 54).
+          read: {
+            counts: (read: number, toChoose: number, proposed: number) =>
+              [
+                `${read} pièce${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} sur le plan`,
+                toChoose ? `${toChoose} à compléter` : "",
+                proposed ? `${proposed} proposée${proposed > 1 ? "s" : ""}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · "),
+            onPlan: "Lu sur le plan",
+            floorToChoose: "Sol à choisir",
+            proposed: "Proposé par MENAO",
+            nothing: "Rien d'écrit pour cette pièce",
+            quote: (note: string) => `« ${note} »`,
+            legendTitle: "D'où viennent ces choix",
+            legend: [
+              [
+                "Lu sur le plan",
+                "Le choix reprend la note de l'architecte, citée sous la pastille.",
+              ],
+              [
+                "Proposé par MENAO",
+                "Rien n'est écrit pour cette pièce : MENAO propose un choix, à confirmer.",
+              ],
+              [
+                "Existant conservé",
+                "Sol à nettoyer, parquet à poncer : pas de revêtement neuf, un poste de remise en état.",
+              ],
+            ] as [string, string][],
+          },
           floorOptions: {
             carrelage: "Carrelage",
             parquet: "Parquet",
             sol_souple: "Sol souple",
+            existant_nettoyer: "Sol existant à nettoyer",
+            parquet_poncer: "Parquet à poncer",
             aucun: "Aucun",
           } as Record<string, string>,
           wallOptions: {

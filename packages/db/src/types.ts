@@ -5721,8 +5721,10 @@ export type Database = {
         Row: {
           area_cm2: number | null;
           ceiling: string | null;
+          ceiling_note: string | null;
           file_index: number | null;
           floor: string | null;
+          floor_note: string | null;
           habitable: boolean;
           height_mm: number | null;
           id: string;
@@ -5736,14 +5738,17 @@ export type Database = {
           tile_height_mm: number | null;
           uncertain: boolean;
           walls: string | null;
+          walls_note: string | null;
           wet: boolean;
         };
         ComputedFields: never;
         Insert: {
           area_cm2?: number | null;
           ceiling?: string | null;
+          ceiling_note?: string | null;
           file_index?: number | null;
           floor?: string | null;
+          floor_note?: string | null;
           habitable?: boolean;
           height_mm?: number | null;
           id?: string;
@@ -5757,13 +5762,16 @@ export type Database = {
           tile_height_mm?: number | null;
           uncertain?: boolean;
           walls?: string | null;
+          walls_note?: string | null;
           wet?: boolean;
         };
         Update: {
           area_cm2?: number | null;
           ceiling?: string | null;
+          ceiling_note?: string | null;
           file_index?: number | null;
           floor?: string | null;
+          floor_note?: string | null;
           habitable?: boolean;
           height_mm?: number | null;
           id?: string;
@@ -5777,6 +5785,7 @@ export type Database = {
           tile_height_mm?: number | null;
           uncertain?: boolean;
           walls?: string | null;
+          walls_note?: string | null;
           wet?: boolean;
         };
         Relationships: [
@@ -7223,6 +7232,10 @@ export type Database = {
       artisan_import_library: {
         Args: { p_kind: string; p_rows: Json; p_update: boolean };
         Returns: Json;
+      };
+      artisan_import_plan_finishes: {
+        Args: { p_finishes: Json; p_tender_id: string };
+        Returns: number;
       };
       artisan_import_plan_lines: { Args: { p_lines: Json; p_tender_id: string }; Returns: number };
       artisan_import_plan_notes: { Args: { p_tender_id: string; p_works: Json }; Returns: number };

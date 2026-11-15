@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   DEMOLITION_LOT,
+  finishesFromNotes,
   joineryParts,
   noteLots,
   planNoteWorks,
+  planRoomNotes,
   type PlanNotesRaw,
 } from "../src/plan-notes";
 
@@ -191,5 +193,73 @@ describe("noteLots", () => {
         { trade: "plaquiste", removal: false },
       ]),
     ).toEqual([DEMOLITION_LOT, "plaquiste"]);
+  });
+});
+
+describe("revêtements lus sur le plan (lot 6, PR B)", () => {
+  const piece = (nom: string, sol = "", murs = "", plafond = "") => ({ nom, sol, murs, plafond });
+
+  it("rattache à chaque pièce du relevé ce que les plans écrivent pour elle", () => {
+    const notes = planRoomNotes(
+      [
+        {
+          file: 1,
+          page: 1,
+          raw: raw({ pieces: [piece("SALON", "parquet existant à poncer et huiler")] }),
+        },
+        {
+          file: 2,
+          page: 1,
+          raw: raw({
+            pieces: [piece("Salon", "autre note", "mur à peindre"), piece("Cave", "terre battue")],
+          }),
+        },
+      ],
+      rooms,
+    );
+    expect(notes).toEqual([
+      { floor: "parquet existant à poncer et huiler", walls: "mur à peindre", ceiling: "" },
+      null,
+      null,
+    ]);
+  });
+
+  it("reconnaît les sols neufs et les sols existants conservés", () => {
+    const floor = (sol: string) => finishesFromNotes({ floor: sol, walls: "", ceiling: "" }).floor;
+    expect(floor("ragréage sur dalle BA créée, revêtement de sol souple")).toBe("sol_souple");
+    expect(floor("tomette existante à nettoyer")).toBe("existant_nettoyer");
+    expect(floor("parquet existant à poncer et huiler")).toBe("parquet_poncer");
+    expect(floor("parquet chêne massif")).toBe("parquet");
+    expect(floor("carrelage grès cérame 60 × 60")).toBe("carrelage");
+    expect(floor("voir détail")).toBeNull();
+    expect(floor("")).toBeNull();
+  });
+
+  it("lit la faïence et sa hauteur, la peinture, le faux plafond", () => {
+    expect(
+      finishesFromNotes({
+        floor: "",
+        walls: "faïence ht 220 cm, crédence carrelée ht 20 cm",
+        ceiling: "faux plafond suspendu BA13, plénum 10 cm",
+      }),
+    ).toEqual({ floor: null, walls: "faience", tileHeightMm: 2200, ceiling: "plaque" });
+    expect(
+      finishesFromNotes({
+        floor: "",
+        walls: "Faïence toute hauteur",
+        ceiling: "plafond à peindre",
+      }),
+    ).toEqual({ floor: null, walls: "faience", tileHeightMm: null, ceiling: "peinture" });
+    expect(
+      finishesFromNotes({ floor: "", walls: "faïence h. 2,10 m", ceiling: "" }).tileHeightMm,
+    ).toBe(2100);
+    expect(finishesFromNotes({ floor: "", walls: "mur à peindre", ceiling: "" })).toMatchObject({
+      walls: "peinture",
+      ceiling: null,
+    });
+    // Une crédence seule ne dit pas le revêtement des murs.
+    expect(
+      finishesFromNotes({ floor: "", walls: "crédence carrelée ht 40 cm", ceiling: "" }).walls,
+    ).toBeNull();
   });
 });

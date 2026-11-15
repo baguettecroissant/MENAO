@@ -61,10 +61,21 @@ export type TenderRoom = {
   file_index: number | null;
   page: number | null;
   uncertain: boolean;
-  floor: "carrelage" | "parquet" | "sol_souple" | "aucun" | null;
+  floor:
+    | "carrelage"
+    | "parquet"
+    | "sol_souple"
+    | "existant_nettoyer"
+    | "parquet_poncer"
+    | "aucun"
+    | null;
   walls: "peinture" | "faience" | "aucun" | null;
   ceiling: "peinture" | "plaque" | "aucun" | null;
   tile_height_mm: number | null;
+  /** Ce que le plan écrit pour le sol, les murs et le plafond de la pièce (F-159 lot 6, PR B). */
+  floor_note: string | null;
+  walls_note: string | null;
+  ceiling_note: string | null;
 };
 
 /** Ouvrage mesuré relevé sur les plans (F-158, ADR 0322) : quantité en millièmes de l'unité. */
@@ -122,7 +133,7 @@ export async function getTenderRooms(supabase: Client, id: string): Promise<Tend
   const { data } = await supabase
     .from("tender_rooms")
     .select(
-      "id, level, name, area_cm2, perimeter_mm, height_mm, wet, habitable, source, file_index, page, uncertain, floor, walls, ceiling, tile_height_mm",
+      "id, level, name, area_cm2, perimeter_mm, height_mm, wet, habitable, source, file_index, page, uncertain, floor, walls, ceiling, tile_height_mm, floor_note, walls_note, ceiling_note",
     )
     .eq("tender_id", id)
     .order("position");

@@ -13,7 +13,7 @@ import {
 } from "@menao/core";
 import { useActionState, useMemo, useState } from "react";
 import { HelpCircle, Sparkles } from "lucide-react";
-import { Alert, Button, inputClasses } from "@/components/ui";
+import { Alert, Button, StatusBadge, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createPlanDpgf } from "@/lib/artisan/tender-actions";
 import type { TenderRoom } from "@/lib/artisan/tenders";
@@ -23,13 +23,22 @@ const t = fr.pro.tenders.plan.finishes;
 
 type Draft = { floor: FloorFinish; walls: WallFinish; ceiling: CeilingFinish; tile: string };
 
+/** Notes que le plan écrit pour la pièce (sol, murs, plafond), sans les vides. */
+const notesOf = (room: TenderRoom) =>
+  [room.floor_note, room.walls_note, room.ceiling_note].filter((n): n is string => !!n);
+
 function initial(room: TenderRoom): Draft {
   const proposed = defaultFinishes(room);
   const tile = room.tile_height_mm ?? proposed.tileHeightMm;
+  // Le plan parle de la pièce : aucun sol ni aucune faïence ne sont proposés d'office, les murs et
+  // le plafond non décrits restent en peinture.
+  const noted = notesOf(room).length > 0;
+  const painted = <T extends string>(value: T) =>
+    noted && value !== "aucun" ? ("peinture" as const) : value;
   return {
-    floor: room.floor ?? proposed.floor,
-    walls: room.walls ?? proposed.walls,
-    ceiling: room.ceiling ?? proposed.ceiling,
+    floor: room.floor ?? (noted ? "aucun" : proposed.floor),
+    walls: room.walls ?? painted(proposed.walls),
+    ceiling: room.ceiling ?? painted(proposed.ceiling),
     tile: tile === null ? formatQuantity(2100) : formatQuantity(tile),
   };
 }
@@ -37,6 +46,8 @@ function initial(room: TenderRoom): Draft {
 /**
  * Revêtements de chaque pièce relevée (F-140, ADR 0292), proposés selon le type de pièce, puis
  * « Créer le DPGF » : les lots et postes de chaque métier sont calculés par MENAO.
+ * Revêtements lus sur le plan (F-159 lot 6, ADR 0331, maquette du lot 54) : sous chaque pièce, la
+ * pastille dit si le choix est lu sur le plan (note citée) ou proposé par MENAO.
  */
 export function PlanFinishes({
   tenderId,
@@ -80,6 +91,15 @@ export function PlanFinishes({
   const set = (id: string, patch: Partial<Draft>) =>
     setDrafts((all) => ({ ...all, [id]: { ...(all[id] as Draft), ...patch } }));
   const select = `${inputClasses} !min-h-10 !w-auto px-2.5`;
+  // Pastilles « Lu sur le plan » : seulement quand au moins une pièce porte une note.
+  const withNotes = rooms.some((r) => notesOf(r).length > 0);
+  const stateOf = (room: TenderRoom) => {
+    const d = drafts[room.id] ?? initial(room);
+    if (notesOf(room).length === 0) return "proposed" as const;
+    return !room.floor_note && d.floor === "aucun" ? ("toChoose" as const) : ("read" as const);
+  };
+  const states = rooms.map(stateOf);
+  const count = (state: (typeof states)[number]) => states.filter((x) => x === state).length;
 
   return (
     <form
@@ -95,7 +115,11 @@ export function PlanFinishes({
         <section className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
           <div className="flex flex-col gap-1 px-5 py-4">
             <h2 className="text-lg font-semibold">{t.title}</h2>
-            <p className="text-sm text-muted-foreground">{t.lead}</p>
+            <p className="text-sm text-muted-foreground">
+              {withNotes
+                ? t.read.counts(count("read"), count("toChoose"), count("proposed"))
+                : t.lead}
+            </p>
           </div>
           <div className="overflow-x-auto">
             <table aria-label={t.label} className="w-full min-w-[44rem] border-collapse text-sm">
@@ -112,8 +136,10 @@ export function PlanFinishes({
                 {rooms.map((room) => {
                   const d = drafts[room.id] ?? initial(room);
                   const of = (label: string) => fr.pro.tenders.plan.fieldOf(label, room.name);
-                  return (
-                    <tr key={room.id} className="border-t border-border">
+                  const state = stateOf(room);
+                  const tone = withNotes && state !== "read" ? "bg-warning-soft/50" : "";
+                  return [
+                    <tr key={room.id} className={`border-t border-border ${tone}`}>
                       <td className="px-3 py-2">
                         <span className="flex flex-col">
                           <span className="font-semibold">{room.name}</span>
@@ -184,8 +210,28 @@ export function PlanFinishes({
                           ))}
                         </select>
                       </td>
-                    </tr>
-                  );
+                    </tr>,
+                    withNotes && (
+                      <tr key={`${room.id}-notes`} className={tone}>
+                        <td />
+                        <td colSpan={4} className="px-2 pt-0.5 pb-3">
+                          <span className="inline-flex flex-wrap items-center gap-2">
+                            {state === "proposed" ? (
+                              <StatusBadge tone="neutral">{t.read.proposed}</StatusBadge>
+                            ) : (
+                              <StatusBadge tone="success">{t.read.onPlan}</StatusBadge>
+                            )}
+                            {state === "toChoose" && (
+                              <StatusBadge tone="warning">{t.read.floorToChoose}</StatusBadge>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {notesOf(room).map(t.read.quote).join(" · ") || t.read.nothing}
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                    ),
+                  ];
                 })}
               </tbody>
             </table>
@@ -201,6 +247,20 @@ export function PlanFinishes({
         </div>
       </div>
       <aside className="flex w-full flex-col gap-4 lg:w-[20rem] lg:shrink-0">
+        {withNotes && (
+          <section className="flex flex-col gap-1 rounded-card border border-border bg-surface p-5 shadow-card">
+            <h2 className="mb-2 text-lg font-semibold">{t.read.legendTitle}</h2>
+            {t.read.legend.map(([name, text]) => (
+              <div
+                key={name}
+                className="flex flex-col gap-0.5 border-t border-border py-2.5 text-sm"
+              >
+                <span className="font-semibold">{name}</span>
+                <span className="text-muted-foreground">{text}</span>
+              </div>
+            ))}
+          </section>
+        )}
         <section className="flex flex-col gap-1 rounded-card border border-border bg-surface p-5 shadow-card">
           <h2 className="mb-2 text-lg font-semibold">{t.rulesTitle}</h2>
           {t.rulesByTrade.map(([trade, rule]) => (
