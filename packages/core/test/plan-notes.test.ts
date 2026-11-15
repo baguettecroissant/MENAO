@@ -4,6 +4,7 @@ import {
   finishesFromNotes,
   joineryParts,
   noteLots,
+  noteMeasureHint,
   planNoteWorks,
   planRoomNotes,
   type PlanNotesRaw,
@@ -261,5 +262,38 @@ describe("revêtements lus sur le plan (lot 6, PR B)", () => {
     expect(
       finishesFromNotes({ floor: "", walls: "crédence carrelée ht 40 cm", ceiling: "" }).walls,
     ).toBeNull();
+  });
+});
+
+describe("corrections de l'essai réel (15/11/2026)", () => {
+  const read = (...ouvrages: ReturnType<typeof work>[]) =>
+    planNoteWorks([{ file: 1, page: 1, raw: raw({ ouvrages }) }], rooms);
+
+  it("mesure un caisson mal orthographié en longueur, une ITE en surface de façade", () => {
+    const [caisson, ite, seuil, dalle] = read(
+      work("caison ba13 ht:40cm", "WC"),
+      work(
+        "ite composé de: panneau en fibre de bois, couche de base, enduit de finition",
+        "",
+        "facadier",
+      ),
+      work("barre de seuil en bois massif", "Salon", "menuisier"),
+      work("dalle à démolir et évacuer", "garage", "macon", "deposer"),
+    );
+    expect(caisson).toMatchObject({ kind: "lineaire", quantityMilli: null });
+    expect(ite).toMatchObject({ kind: "surface", quantityMilli: null });
+    expect(seuil).toMatchObject({ kind: "nombre", quantityMilli: 1000 });
+    expect(noteMeasureHint(caisson?.name ?? "", "lineaire")).toBe("length");
+    expect(noteMeasureHint(ite?.name ?? "", "surface")).toBe("facade");
+    expect(noteMeasureHint("cloison ba13 de 10 cm", "surface")).toBe("wall");
+    expect(noteMeasureHint(dalle?.name ?? "", "surface")).toBe("area");
+  });
+
+  it("coupe une longue note au dernier mot entier", () => {
+    const long = `ite composé de: ${"panneau en fibre de bois, couche de base, ".repeat(4)}enduit (façade nord)`;
+    const [w] = read(work(long, "", "facadier"));
+    expect(w?.name.length).toBeLessThanOrEqual(120);
+    expect(w?.name.endsWith("…")).toBe(true);
+    expect(w?.name).not.toMatch(/,…$/);
   });
 });

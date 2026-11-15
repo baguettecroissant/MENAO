@@ -5,6 +5,7 @@ import {
   formatPlanMeasure,
   isWrittenWork,
   joineryParts,
+  noteMeasureHint,
   parseQuantity,
   PLAN_WORK_KINDS,
   type PlanWorkKind,
@@ -54,8 +55,15 @@ const toDraft = (work: TenderWork): Draft => ({
   trade: work.trade_code ?? "",
 });
 
-/** Quantité saisie en millièmes ; null si vide, undefined si invalide. */
+/**
+ * Quantité saisie en millièmes ; null si vide, undefined si invalide. Texte inchangé : la valeur
+ * enregistrée est gardée telle quelle (une surface à trois décimales s'affiche arrondie à deux et
+ * ne doit pas passer pour « Saisi », ni être réécrite à l'enregistrement).
+ */
 function quantityOf(d: Draft): number | null | undefined {
+  if (d.work && d.kind === d.work.kind && d.quantity === shown(d.kind, d.work.quantity_milli)) {
+    return d.work.quantity_milli;
+  }
   if (!d.quantity.trim()) return null;
   const milli = parseQuantity(d.quantity);
   if (milli === null || milli > 10_000_000_000) return undefined;
@@ -230,11 +238,8 @@ export function PlanWorks({
     if (work && isWrittenWork(work) && !changed(d)) {
       // Ouvrage écrit sur le plan : d'où vient sa quantité (maquette du lot 54).
       if (quantity === null || quantity === undefined) {
-        return item(
-          "warning",
-          n.source.toMeasure,
-          d.kind === "surface" ? n.detail.surface : d.kind === "lineaire" ? n.detail.length : null,
-        );
+        const hint = noteMeasureHint(d.name, d.kind);
+        return item("warning", n.source.toMeasure, hint ? n.detail[hint] : null);
       }
       if (work.source === "calcul") {
         return work.uncertain

@@ -87,7 +87,7 @@ describe("measureContour", () => {
   it("donne la surface en cm² et le périmètre en mm à l'échelle calée", () => {
     // 1 px = 10 mm : un rectangle de 359 × 317 px fait 3,59 × 3,17 m.
     expect(measureContour(rect(40, 40, 359, 317), { mmPerPx: 10 })).toEqual({
-      areaCm2: 113_803,
+      areaCm2: 113_800,
       perimeterMm: 13_520,
     });
     expect(measureContour(rect(0, 0, 0, 0), { mmPerPx: 10 })).toBeNull();
@@ -131,7 +131,7 @@ describe("tracé d'un plan", () => {
     });
     expect(trace.anchors).toHaveLength(2);
     expect(trace.rooms.map((r) => [r.name, r.areaCm2, r.perimeterMm])).toEqual([
-      ["Chambre 1", 113_803, 13_520],
+      ["Chambre 1", 113_800, 13_520],
       ["Salle d'eau", 57_800, 10_600],
     ]);
   });
@@ -166,7 +166,7 @@ describe("tracé d'un plan", () => {
   ];
   it("retrouve une pièce par son nom, de préférence sur son propre plan", () => {
     const other = { ...trace, file: 2, rooms: [{ ...first, areaCm2: 1 }] };
-    expect(traceForRoom([other, trace], { name: "chambre 1", file: 3 })?.areaCm2).toBe(113_803);
+    expect(traceForRoom([other, trace], { name: "chambre 1", file: 3 })?.areaCm2).toBe(113_800);
     expect(traceForRoom([trace], { name: "Salon", file: 3 })).toBeNull();
   });
   it("n'estime que les pièces sans surface et contrôle les autres", () => {
@@ -174,7 +174,7 @@ describe("tracé d'un plan", () => {
       { position: 2, areaCm2: 57_800, perimeterMm: 10_600 },
     ]);
     expect(traceControl(rooms, [trace])).toEqual([
-      { name: "chambre 1", areaCm2: 113_800, tracedCm2: 113_803, gapBp: 0 },
+      { name: "chambre 1", areaCm2: 113_800, tracedCm2: 113_800, gapBp: 0 },
     ]);
   });
 });

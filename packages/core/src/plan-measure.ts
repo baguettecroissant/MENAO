@@ -100,8 +100,11 @@ export function measureContour(
   scale: Pick<PlanScale, "mmPerPx">,
 ): { areaCm2: number; perimeterMm: number } | null {
   if (points.length < 3) return null;
-  const areaCm2 = Math.round((polygonAreaPx(points) * scale.mmPerPx * scale.mmPerPx) / 100);
-  const perimeterMm = Math.round(polygonPerimeterPx(points) * scale.mmPerPx);
+  // Arrondi au centième de m² et au centimètre : une mesure à l'échelle n'est pas plus précise, et
+  // l'écran affiche deux décimales (une valeur à trois décimales passait pour « Saisi »).
+  const areaCm2 =
+    Math.round((polygonAreaPx(points) * scale.mmPerPx * scale.mmPerPx) / 10_000) * 100;
+  const perimeterMm = Math.round((polygonPerimeterPx(points) * scale.mmPerPx) / 10) * 10;
   return areaCm2 > 0 && perimeterMm > 0 ? { areaCm2, perimeterMm } : null;
 }
 

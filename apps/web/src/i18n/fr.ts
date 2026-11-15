@@ -6410,8 +6410,10 @@ export const fr = {
             },
             detail: {
               estimated: "pièce estimée, à vérifier",
-              surface: "longueur à tracer × hauteur",
+              wall: "longueur à tracer × hauteur",
               length: "longueur à tracer",
+              facade: "surface de façade à mesurer",
+              area: "surface à mesurer sur le plan",
             },
             note: "La désignation recopie la note de l'architecte. La quantité vient de la surface de la pièce quand l'ouvrage la couvre ; une cloison ou un doublage se mesure d'un tracé sur le plan.",
             okTitle: "Ces ouvrages vous conviennent ?",
