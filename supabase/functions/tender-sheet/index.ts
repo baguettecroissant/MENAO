@@ -36,7 +36,9 @@ import {
   MAX_NOTE_IMAGES,
   type PlanNoteImage,
   planNoteWorks,
+  planPageRole,
   planRoomNotes,
+  projectPages,
 } from "../../../packages/core/src/plan-notes.ts";
 import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts";
 import { MAX_PLAN_WORKS } from "../../../packages/core/src/plan-works.ts";
@@ -545,12 +547,21 @@ async function readTenderPlans(
   // Mesure à l'échelle (ADR 0326, 0328) : photos et pages de PDF rendues en images. Les pages que
   // la lecture a reconnues comme plans de niveau sont tracées, dans le temps que la lecture a
   // laissé à la fonction ; un tracé en échec ou sans échelle sûre n'estime rien.
+  // Existant et projet (ADR 0340) : le type de chaque plan vient de la lecture des notes, attendue
+  // au plus 10 s de plus ; un plan de l'existant (démolition) ne sert ni aux tracés ni aux comptes.
+  const notesEarly = await Promise.race([
+    notesPending,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 10_000)),
+  ]);
+  const roles = (notesEarly ?? [])
+    .filter((n): n is PlanNoteImage => n !== null)
+    .map((n) => ({ file: n.file, page: n.page, role: planPageRole(n.raw.type_plan) }));
   const budget = FUNCTION_BUDGET_MS - (Date.now() - started);
   const traced =
     budget < MIN_TRACE_MS
       ? []
       : await Promise.all(
-          traceTargets(images, reading.pages).map((image) =>
+          traceTargets(projectPages(images, roles), reading.pages).map((image) =>
             tracePlan(
               admin,
               image.bytes,
@@ -583,13 +594,19 @@ async function readTenderPlans(
 
   // Ouvrages écrits : quantités tirées des pièces du relevé, estimations comprises.
   const noted = (await notesPending).filter((n): n is PlanNoteImage => n !== null);
+  const allRoles = noted.map((n) => ({
+    file: n.file,
+    page: n.page,
+    role: planPageRole(n.raw.type_plan),
+  }));
   // Symboles des plans d'électricité, rattachés aux pièces tracées ; toujours enregistrés, pour
   // effacer ceux d'une lecture précédente.
   const read = (await symbolsPending).filter((r) => r !== null);
   const electrical = (found: readonly FoundSymbol[]) =>
     found.filter((f) => ELECTRICAL_SYMBOLS.includes(f.type));
+  const projectRead = projectPages(read, allRoles);
   const kept = electricalPages(
-    read.map((r) => ({
+    projectRead.map((r) => ({
       file: r.file,
       page: r.page,
       planType: String(
@@ -631,7 +648,14 @@ async function readTenderPlans(
     p_legend: legend,
     // Portes, menuiseries et appareils sanitaires (ADR 0339) : compte du plan le plus complet,
     // repris là où le relevé n'a rien.
-    p_counts: fixtureCounts(read),
+    p_counts: fixtureCounts(projectRead),
+    // Type de chaque plan lu et son rôle, pour le résumé « MENAO a lu vos plans ».
+    p_page_labels: noted.map((n) => ({
+      file: n.file,
+      page: n.page,
+      label: typeof n.raw.type_plan === "string" ? n.raw.type_plan : "",
+      role: planPageRole(n.raw.type_plan),
+    })),
   });
   if (symbolsError) console.error("tender-sheet : symboles refusés", symbolsError.code);
   const noteWorks = planNoteWorks(

@@ -437,6 +437,7 @@ async function planData(
     plan_lots_idle: string[];
     plan_symbols: unknown;
     plan_symbol_legend: unknown;
+    plan_page_labels: unknown;
     plan_counts: unknown;
     plan_scale: string | null;
     plan_pages: unknown;
@@ -487,6 +488,13 @@ async function planData(
   );
   const writtenLots = noteLots(written.map((x) => ({ trade: x.trade_code, removal: x.removal })));
   const joinery = written.filter((x) => joineryParts(x.name) !== null).length;
+  // Type de chaque plan lu et son rôle, existant ou projet (ADR 0340).
+  const pageLabels = (Array.isArray(tender.plan_page_labels) ? tender.plan_page_labels : [])
+    .filter(
+      (p): p is { label: string; role: string } =>
+        !!p && typeof p.label === "string" && p.label !== "" && typeof p.role === "string",
+    )
+    .filter((p, i, all) => all.findIndex((x) => x.label === p.label) === i);
   // Symboles électriques comptés sur les plans (ADR 0336).
   const symbolTotals = symbolCounts(
     planSymbols(tender.plan_symbols).filter((x) => ELECTRICAL_SYMBOLS.includes(x.type)),
@@ -566,6 +574,19 @@ async function planData(
     measured.counted ? { ...ok, text: tw.summary.counted(measured.counted) } : null,
     measured.toCheck ? { ...warn, text: tw.summary.toCheck(measured.toCheck) } : null,
     measured.missing ? { ...warn, text: tw.summary.missing(measured.missing) } : null,
+    pageLabels.length
+      ? {
+          ...ok,
+          text: tw.roles.summary(
+            pageLabels
+              .map((p) => (p.role === "existant" ? tw.roles.existing(p.label) : p.label))
+              .join(", "),
+          ),
+        }
+      : null,
+    pageLabels.some((p) => p.role === "existant") && pageLabels.some((p) => p.role === "projet")
+      ? { ...ok, text: tw.roles.kept }
+      : null,
     written.length
       ? { ...ok, text: tw.notes.summary.written(written.length, writtenLots.length) }
       : null,
