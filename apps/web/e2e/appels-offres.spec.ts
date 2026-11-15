@@ -295,6 +295,68 @@ test("appels d'offres : photo de plan tracée, contours et contrôle de l'estima
   await expect(page.getByLabel("Surface (m²) : Dégagement")).toHaveValue("8,22");
 });
 
+// Ouvrages écrits sur les plans (F-159 lot 6, ADR 0330) : les notes de l'architecte deviennent des
+// ouvrages rangés par lot, la surface de la pièce donne la quantité d'un faux plafond, les déposes
+// vont dans un lot « Démolition » et les lots demandés par les plans sont proposés.
+test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démolition à part", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
+  await page.getByLabel("Nom du projet").fill(`Ouvrages écrits E2E ${test.info().retry}`);
+  await page.getByLabel("Plans de l'architecte").setInputFiles(files.planNotes);
+  await expect(page.getByRole("checkbox", { name: "Carreleur" })).toBeChecked();
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+  await expect(page.getByText("4 ouvrages écrits, rangés dans 3 lots")).toBeVisible();
+  await expect(page.getByText("1 menuiserie avec son repère et ses dimensions")).toBeVisible();
+  await expect(page.getByText("1 quantité tirée des pièces mesurées")).toBeVisible();
+
+  // Un onglet par lot ; la démolition en tête, ouverte.
+  const tabs = page.getByRole("tablist", { name: "Lots des ouvrages écrits" });
+  await expect(tabs.getByRole("tab")).toHaveText([
+    /Démolition, dépose1 ouvrage/,
+    /Menuisier1 ouvrage/,
+    /Plaquiste2 ouvrages/,
+  ]);
+  const works = page.getByRole("table", { name: "Ouvrages relevés" });
+  await expect(works.getByRole("row", { name: /Baignoire à déposer/ })).toContainText("À l'unité");
+  await tabs.getByRole("tab", { name: /Plaquiste/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Lot Plaquiste · 2 ouvrages écrits sur vos plans" }),
+  ).toBeVisible();
+  const ceiling = works.getByRole("row", { name: /Faux plafond suspendu BA13/ });
+  await expect(ceiling).toContainText("Séjour-cuisine");
+  await expect(ceiling).toContainText("45,14");
+  await expect(ceiling).toContainText("Surface de la pièce");
+  await expect(works.getByRole("row", { name: /Cloison BA13 de 7 cm/ })).toContainText("À mesurer");
+  // L'ouvrage existant conservé n'est pas repris.
+  await expect(page.getByText("Radiateur existant")).toHaveCount(0);
+
+  // Menuiserie à repère, et lots proposés d'après le plan, cochés.
+  const joinery = page.locator("section", { hasText: "Menuiseries · 1 repère" }).last();
+  await expect(joinery).toContainText("F-01");
+  await expect(joinery).toContainText("167 × 208");
+  await expect(page.getByRole("checkbox", { name: "Lot Démolition, dépose" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Lot Plaquiste" })).toBeChecked();
+
+  // DPGF : le lot Démolition en tête, la dépose avec sa pièce.
+  await page.getByRole("link", { name: "Choisir les revêtements" }).click();
+  await expect(page).toHaveURL(/etape=revetements/);
+  await page.getByRole("button", { name: "Créer le DPGF" }).click();
+  await expect(page.getByText(/^DPGF créé : 4 lots/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("DÉMOLITION, DÉPOSE").first()).toBeVisible();
+  await expect(page.getByLabel("Votre quantité : Baignoire à déposer — WC")).toHaveValue(
+    /^1(,0+)?$/,
+  );
+});
+
 // Métré à la main (F-159 lot 3, ADR 0327) : une pièce tracée sur la photo du plan rejoint le
 // relevé avec l'origine « Tracé à la main ».
 test("appels d'offres : pièce tracée à la main sur le plan, ajoutée au relevé", async ({

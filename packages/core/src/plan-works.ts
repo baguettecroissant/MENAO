@@ -35,9 +35,9 @@ export const PLAN_WORK_UNITS = {
 
 /**
  * Origine d'une quantité : écrite sur le plan, calculée avec des valeurs lues, comptée (symboles),
- * lue sur une photo, ou saisie par l'artisan.
+ * lue sur une photo, saisie par l'artisan, ou « unite » : une unité par note écrite (F-159).
  */
-export type PlanWorkSource = "plan" | "calcul" | "compte" | "photo" | "saisi" | "trace";
+export type PlanWorkSource = "plan" | "calcul" | "compte" | "photo" | "saisi" | "trace" | "unite";
 
 export type PlanWork = {
   name: string;

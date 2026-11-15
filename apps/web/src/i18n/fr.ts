@@ -6388,6 +6388,54 @@ export const fr = {
             reseaux: "réseaux",
             autre: "autre page",
           } as Record<string, string>,
+          // Ouvrages écrits sur les plans (F-159 lot 6, maquette du lot 54).
+          notes: {
+            demolition: "Démolition, dépose",
+            noLot: "Hors lot",
+            tabs: "Lots des ouvrages écrits",
+            title: (lot: string, n: number) =>
+              `Lot ${lot} · ${n} ouvrage${n > 1 ? "s" : ""} écrit${n > 1 ? "s" : ""} sur vos plans`,
+            measure: "Mesurer sur le plan",
+            columns: {
+              name: "Ce que le plan écrit",
+              room: "Pièce",
+              source: "D'où vient la quantité",
+              plan: "Plan",
+            },
+            source: {
+              room: "Surface de la pièce",
+              written: "Écrit sur le plan",
+              toMeasure: "À mesurer",
+              unit: "À l'unité",
+            },
+            detail: {
+              estimated: "pièce estimée, à vérifier",
+              surface: "longueur à tracer × hauteur",
+              length: "longueur à tracer",
+            },
+            note: "La désignation recopie la note de l'architecte. La quantité vient de la surface de la pièce quand l'ouvrage la couvre ; une cloison ou un doublage se mesure d'un tracé sur le plan.",
+            okTitle: "Ces ouvrages vous conviennent ?",
+            okText:
+              "Corrigez une désignation ou une quantité d'un clic, changez un ouvrage de lot, retirez ce que vous ne faites pas.",
+            lotsTitle: "Lots proposés d'après vos plans",
+            lotsNote:
+              "Décochez un lot que vous ne faites pas. Un lot sans rien sur les plans n'est pas créé.",
+            lotEmpty: "rien d'écrit sur vos plans",
+            lotOf: (lot: string) => `Lot ${lot}`,
+            lotsError: "Les lots n'ont pas pu être enregistrés. Gardez au moins un lot.",
+            joineryTitle: (n: number) => `Menuiseries · ${n} repère${n > 1 ? "s" : ""}`,
+            joineryAll: (n: number) => `Voir les ${n} menuiseries`,
+            summary: {
+              written: (works: number, lots: number) =>
+                `${works} ouvrage${works > 1 ? "s" : ""} écrit${works > 1 ? "s" : ""}, rangé${works > 1 ? "s" : ""} dans ${lots} lot${lots > 1 ? "s" : ""}`,
+              joinery: (n: number) =>
+                `${n} menuiserie${n > 1 ? "s" : ""} avec ${n > 1 ? "leur repère et leurs dimensions" : "son repère et ses dimensions"}`,
+              fromRooms: (n: number) =>
+                `${n} quantité${n > 1 ? "s" : ""} tirée${n > 1 ? "s" : ""} des pièces mesurées`,
+              toMeasure: (n: number) =>
+                `${n} ouvrage${n > 1 ? "s" : ""} à mesurer d'un tracé (cloisons, doublages)`,
+            },
+          },
           summary: {
             pages: (n: number, types: string) => `${n} page${n > 1 ? "s" : ""} : ${types}`,
             written: (n: number) =>

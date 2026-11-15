@@ -29,8 +29,16 @@ import {
   type PlanTrace,
   traceTargets,
 } from "../../../packages/core/src/plan-measure.ts";
+import {
+  DEMOLITION_LOT,
+  MAX_NOTE_IMAGES,
+  type PlanNoteImage,
+  planNoteWorks,
+} from "../../../packages/core/src/plan-notes.ts";
 import { MAX_TILES_PER_READING } from "../../../packages/core/src/plan-tiles.ts";
+import { MAX_PLAN_WORKS } from "../../../packages/core/src/plan-works.ts";
 import { TRACE_TIMEOUT_MS, tracePlan } from "./contours.ts";
+import { NOTES_TIMEOUT_MS, readPlanNotes } from "./notes.ts";
 import { type PlanFile, type PlanFileTile, readPlans } from "./plan.ts";
 import {
   applyTenderPrices,
@@ -352,10 +360,46 @@ async function readTenderPlans(
   // Métiers de l'appel d'offres (codes de la table des métiers) : lots où ranger les ouvrages.
   const trades = Array.isArray(tender.plan_trades)
     ? tender.plan_trades.filter(
-        (c): c is string => typeof c === "string" && /^[a-z0-9-]{1,60}$/.test(c),
+        // Le lot « Démolition » n'est pas un métier : il n'est pas proposé à la lecture.
+        (c): c is string =>
+          typeof c === "string" && /^[a-z0-9-]{1,60}$/.test(c) && c !== DEMOLITION_LOT,
       )
     : [];
   const started = Date.now();
+  // Images des plans : photos, et pages de PDF rendues en images (ADR 0328).
+  const images = files.flatMap((file, i) =>
+    file.kind === "pdf"
+      ? (file.pageImages ?? []).map((p) => ({
+          file: i + 1,
+          page: p.page,
+          bytes: p.bytes,
+          mediaType: "image/jpeg" as const,
+        }))
+      : [
+          {
+            file: i + 1,
+            page: 1,
+            bytes: file.bytes,
+            mediaType: file.kind === "png" ? ("image/png" as const) : ("image/jpeg" as const),
+          },
+        ],
+  );
+  // Ouvrages écrits (ADR 0330) : une lecture par image, lancée en même temps que la lecture des
+  // plans pour tenir dans le temps de la fonction. Une lecture en échec ne retire que ses notes.
+  const notesPending = Promise.all(
+    images.slice(0, MAX_NOTE_IMAGES).map((image) =>
+      readPlanNotes(
+        admin,
+        image.bytes,
+        image.mediaType,
+        Math.min(NOTES_TIMEOUT_MS, FUNCTION_BUDGET_MS - 25_000),
+      )
+        .then((raw): PlanNoteImage | null =>
+          raw ? { file: image.file, page: image.page, raw } : null,
+        )
+        .catch(() => null),
+    ),
+  );
   const reading = await readPlans(admin, files, trades);
   if (reading.status !== "ok") {
     return json({ status: reading.status }, reading.status === "unavailable" ? 503 : 422);
@@ -379,11 +423,6 @@ async function readTenderPlans(
   // Mesure à l'échelle (ADR 0326, 0328) : photos et pages de PDF rendues en images. Les pages que
   // la lecture a reconnues comme plans de niveau sont tracées, dans le temps que la lecture a
   // laissé à la fonction ; un tracé en échec ou sans échelle sûre n'estime rien.
-  const images = files.flatMap((file, i) =>
-    file.kind === "pdf"
-      ? (file.pageImages ?? []).map((p) => ({ file: i + 1, page: p.page, bytes: p.bytes }))
-      : [{ file: i + 1, page: 1, bytes: file.bytes }],
-  );
   const budget = FUNCTION_BUDGET_MS - (Date.now() - started);
   const traced =
     budget < MIN_TRACE_MS
@@ -411,11 +450,35 @@ async function readTenderPlans(
     p_estimates: estimates,
   });
   if (traceError) console.error("tender-sheet : tracés refusés", traceError.code);
+
+  // Ouvrages écrits : quantités tirées des pièces du relevé, estimations comprises.
+  const noted = (await notesPending).filter((n): n is PlanNoteImage => n !== null);
+  const noteWorks = planNoteWorks(
+    noted,
+    reading.rooms.map((room, i) => {
+      const estimate = estimates.find((e) => e.position === i + 1);
+      return {
+        name: room.name,
+        areaCm2: room.areaCm2 ?? estimate?.areaCm2 ?? null,
+        estimated: room.areaCm2 === null || room.source === "photo" || room.uncertain,
+      };
+    }),
+    MAX_PLAN_WORKS - reading.works.length,
+  );
+  let written = 0;
+  if (noteWorks.length > 0) {
+    const { data: added, error: notesError } = await supabase.rpc("artisan_import_plan_notes", {
+      p_tender_id: tender.id,
+      p_works: noteWorks,
+    });
+    if (notesError) console.error("tender-sheet : ouvrages écrits refusés", notesError.code);
+    else written = typeof added === "number" ? added : 0;
+  }
   return json({
     status: "ok",
     estimated: typeof estimated === "number" ? estimated : 0,
     rooms: reading.rooms.length,
-    works: reading.works.length,
+    works: reading.works.length + written,
     warnings: reading.warnings,
   });
 }

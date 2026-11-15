@@ -9,6 +9,7 @@ import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import {
   CEILING_FINISHES,
+  DEMOLITION_LOT,
   FLOOR_FINISHES,
   MAX_PLAN_MARKS,
   MAX_WORK_MILLI,
@@ -382,6 +383,29 @@ export async function savePlanWorks(_prev: FormState, formData: FormData): Promi
   return { success: t.plan.works.saved };
 }
 
+/** Lots de l'appel d'offres cochés par l'artisan (F-159 lot 6) : métiers, et « Démolition ». */
+export async function setPlanLots(tenderId: string, lots: string[]): Promise<FormState> {
+  const id = z.uuid().safeParse(tenderId);
+  const codes = z
+    .array(z.string().regex(/^[a-z0-9-]{1,60}$/))
+    .min(1)
+    .max(20)
+    .safeParse(lots);
+  if (!id.success || !codes.success) return { error: t.plan.works.notes.lotsError };
+  const { supabase } = await requireTeamPermission("money");
+  const { error } = await supabase.rpc("artisan_set_plan_trades", {
+    p_tender_id: id.data,
+    p_trades: codes.data,
+  });
+  if (error) {
+    return {
+      error: error.code === "42501" ? t.errors.forbidden : t.plan.works.notes.lotsError,
+    };
+  }
+  revalidatePath(`${BASE}/${id.data}`);
+  return {};
+}
+
 const points = z
   .string()
   .max(4000)
@@ -509,6 +533,13 @@ async function buildPlanDpgf(
     .select("code, label")
     .in("code", tender.plan_trades)
     .order("sort_order");
+  // Le lot « Démolition » n'est pas un métier de la table : son libellé vient des textes.
+  const lots = [
+    ...(tender.plan_trades.includes(DEMOLITION_LOT)
+      ? [{ code: DEMOLITION_LOT, label: t.plan.works.notes.demolition }]
+      : []),
+    ...(trades ?? []),
+  ];
   const lines = planTakeoff(
     rooms.map((r) => ({
       name: r.name,
@@ -528,7 +559,7 @@ async function buildPlanDpgf(
       },
     })),
     normalizePlanCounts(tender.plan_counts),
-    trades ?? [],
+    lots,
     works.map((w) => ({
       name: w.name,
       kind: w.kind,
@@ -538,6 +569,8 @@ async function buildPlanDpgf(
       trade: w.trade_code,
       page: w.page,
       uncertain: w.uncertain,
+      room: w.room,
+      removal: w.removal,
     })),
   );
   const prices: PriceHistoryLine[] = (history ?? []).map((h) => ({

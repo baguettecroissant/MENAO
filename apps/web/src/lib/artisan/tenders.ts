@@ -73,12 +73,15 @@ export type TenderWork = {
   name: string;
   kind: "surface" | "lineaire" | "volume" | "nombre";
   quantity_milli: number | null;
-  source: "plan" | "calcul" | "compte" | "photo" | "saisi" | "trace";
+  source: "plan" | "calcul" | "compte" | "photo" | "saisi" | "trace" | "unite";
   detail: string | null;
   trade_code: string | null;
   file_index: number | null;
   page: number | null;
   uncertain: boolean;
+  /** Ouvrage écrit sur le plan (F-159 lot 6) : la pièce où il se trouve, et s'il s'agit d'une dépose. */
+  room: string | null;
+  removal: boolean;
 };
 
 export type PlanFileEntry = {
@@ -131,7 +134,7 @@ export async function getTenderWorks(supabase: Client, id: string): Promise<Tend
   const { data } = await supabase
     .from("tender_works")
     .select(
-      "id, name, kind, quantity_milli, source, detail, trade_code, file_index, page, uncertain",
+      "id, name, kind, quantity_milli, source, detail, trade_code, file_index, page, uncertain, room, removal",
     )
     .eq("tender_id", id)
     .order("position");
