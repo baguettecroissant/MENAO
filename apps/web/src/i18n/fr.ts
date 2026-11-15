@@ -6390,6 +6390,72 @@ export const fr = {
           } as Record<string, string>,
           // Symboles comptés sur les plans (F-159 lot 7, maquette du lot 55).
           symbols: {
+            label: "Symboles comptés sur le plan",
+            pageName: (file: string, page: number, pdf: boolean) =>
+              pdf
+                ? `${file.replace(/\.[a-z0-9]+$/i, "")} · page ${page}`
+                : file.replace(/\.[a-z0-9]+$/i, ""),
+            familiesLabel: "Types de symboles",
+            families: {
+              point_lumineux: "Points lumineux",
+              spot: "Spots encastrés",
+              prise: "Prises de courant",
+              prise_specialisee: "Prises spécialisées",
+              interrupteur: "Interrupteurs",
+              autre: "Tableau, RJ45/TV, détecteur",
+            } as Record<string, string>,
+            add: (family: string) => `Ajouter : ${family.toLowerCase()}`,
+            remove: "Retirer un symbole",
+            changeType: "Type du symbole",
+            hint: "Touchez un symbole du plan pour le changer de type",
+            hintAdd: "Cliquez sur le plan à l'endroit du symbole",
+            hintRemove: "Touchez le symbole à retirer",
+            planAlt: (name: string) => `Plan ${name}`,
+            overlayLabel: "Symboles comptés sur le plan",
+            noImage: "Image du plan indisponible.",
+            note: "Le type choisi est numéroté sur le plan ; les autres restent en points pâles. Chaque symbole est rattaché à la pièce dont il est dans le contour.",
+            countedTitle: "MENAO a compté sur le plan",
+            countedNote:
+              "MENAO a lu chaque symbole du plan. Vérifiez les comptes : vous restez responsable de vos quantités.",
+            doubtTitle: (n: number) => `${n} symbole${n > 1 ? "s" : ""} à vérifier`,
+            doubtText:
+              "Deux lectures du plan ne comptent pas pareil un groupe de symboles serrés, entouré en orange. Corrigez-le si besoin.",
+            doubtDone: "C'est vérifié",
+            legendTitle: "Convention du plan reconnue",
+            legendNote:
+              "Le plan n'a pas toujours de légende : MENAO la déduit de la répétition des formes.",
+            byRoomTitle: "Par pièce",
+            byRoomOrigin: "Origine : compté sur le plan",
+            room: "Pièce",
+            noRoom: "Pièce non repérée",
+            total: "Total",
+            short: {
+              point_lumineux: "Points",
+              spot: "Spots",
+              prise: "Prises",
+              prise_specialisee: "Prises spé.",
+              interrupteur: "Interrupteurs",
+            } as Record<string, string>,
+            names: {
+              point_lumineux: "Point lumineux",
+              spot: "Spot",
+              applique: "Applique",
+              prise: "Prise",
+              prise_specialisee: "Prise spécialisée",
+              interrupteur: "Interrupteur",
+              detecteur: "Détecteur",
+              commande_volet: "Commande de volet",
+              prise_rj45_tv: "Prise RJ45 / TV",
+              tableau: "Tableau électrique",
+            } as Record<string, string>,
+            okTitle: "Les comptes vous conviennent ?",
+            okText:
+              "Ils remplissent les postes de l'électricien dans le DPGF : points lumineux, spots, prises et interrupteurs.",
+            recreate: "Recréez le DPGF pour reprendre les comptes corrigés.",
+            save: "Enregistrer les symboles",
+            saving: "Enregistrement…",
+            saved: "Symboles enregistrés.",
+            invalid: "Les symboles n'ont pas pu être enregistrés.",
             summary: (list: string, doubt: boolean) =>
               `Compté sur le plan : ${list}${doubt ? " (un groupe à vérifier)" : ""}`,
             kinds: {

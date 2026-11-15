@@ -320,6 +320,16 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await expect(page.getByText("4 ouvrages écrits, rangés dans 3 lots")).toBeVisible();
   // Symboles comptés sur le plan (ADR 0336) : le lot de l'électricien reste coché.
   await expect(page.getByText("Compté sur le plan : 2 points lumineux, 4 prises")).toBeVisible();
+  // Écran des symboles (ADR 0337) : une prise retirée sur le plan, enregistrée.
+  const symbols = page.getByRole("form", { name: "Symboles comptés sur le plan" });
+  await expect(symbols.getByRole("button", { name: "Prises de courant · 4" })).toBeVisible();
+  await symbols.getByRole("button", { name: "Retirer un symbole" }).click();
+  await symbols.getByRole("button", { name: "Prise 1", exact: true }).click();
+  await expect(symbols.getByRole("button", { name: "Prises de courant · 3" })).toBeVisible();
+  await symbols.getByRole("button", { name: "Enregistrer les symboles" }).click();
+  await expect(page.getByText("Symboles enregistrés.")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Compté sur le plan : 2 points lumineux, 3 prises")).toBeVisible();
   await expect(page.getByText("1 menuiserie avec son repère et ses dimensions")).toBeVisible();
   await expect(page.getByText("1 quantité tirée des pièces mesurées")).toBeVisible();
 
@@ -376,7 +386,7 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   );
   // Postes de l'électricien remplis avec le nombre dessiné, à la place des minimums de la norme.
   await page.getByRole("tab", { name: /Électricien/ }).click();
-  await expect(page.getByLabel("Votre quantité : Prises de courant 16 A")).toHaveValue("4");
+  await expect(page.getByLabel("Votre quantité : Prises de courant 16 A")).toHaveValue("3");
   await expect(page.getByLabel("Votre quantité : Points lumineux en plafond (DCL)")).toHaveValue(
     "2",
   );
