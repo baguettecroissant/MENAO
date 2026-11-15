@@ -318,6 +318,8 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
     timeout: 30_000,
   });
   await expect(page.getByText("4 ouvrages écrits, rangés dans 3 lots")).toBeVisible();
+  // Type de chaque plan lu (ADR 0340).
+  await expect(page.getByText("Plans lus : cloisons et menuiseries")).toBeVisible();
   // Symboles comptés sur le plan (ADR 0336) : le lot de l'électricien reste coché.
   await expect(page.getByText("Compté sur le plan : 2 points lumineux, 4 prises")).toBeVisible();
   // Écran des symboles (ADR 0337) : une prise retirée sur le plan, enregistrée.

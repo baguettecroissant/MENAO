@@ -6388,6 +6388,12 @@ export const fr = {
             reseaux: "réseaux",
             autre: "autre page",
           } as Record<string, string>,
+          // Existant et projet (ADR 0340).
+          roles: {
+            summary: (list: string) => `Plans lus : ${list}`,
+            existing: (label: string) => `${label} (existant)`,
+            kept: "Le plan de l'existant sert aux déposes ; surfaces, tracés et comptes viennent des plans du projet",
+          },
           // Symboles comptés sur les plans (F-159 lot 7, maquette du lot 55).
           symbols: {
             label: "Symboles comptés sur le plan",

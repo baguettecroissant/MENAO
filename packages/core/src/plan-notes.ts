@@ -448,3 +448,33 @@ export function idleLots(
   // Au moins un lot reste coché.
   return idle.length < chosen.length ? idle : [];
 }
+
+// ---------------------------------------------------------------------------------------------
+// Existant et projet (ADR 0340)
+// ---------------------------------------------------------------------------------------------
+
+/** Rôle d'une page de plan : état existant (démolition), projet, ou inconnu. */
+export type PlanPageRole = "existant" | "projet" | "inconnu";
+
+/** Rôle d'une page d'après le type que la lecture des notes lui donne. */
+export function planPageRole(typePlan: unknown): PlanPageRole {
+  const text = key(typeof typePlan === "string" ? typePlan : "");
+  if (!text) return "inconnu";
+  return /demoli|existant|etat actuel|etat des lieux|avant travaux|depose/.test(text)
+    ? "existant"
+    : "projet";
+}
+
+/**
+ * Pages qui comptent pour les surfaces, les tracés et les comptes : celles du projet. Un plan de
+ * l'existant (démolition) sert aux déposes ; il n'est écarté que s'il y a au moins un plan de
+ * projet, sinon toutes les pages restent.
+ */
+export function projectPages<T extends { file: number; page: number }>(
+  items: readonly T[],
+  roles: readonly { file: number; page: number; role: PlanPageRole }[],
+): T[] {
+  const role = (i: T) => roles.find((r) => r.file === i.file && r.page === i.page)?.role;
+  if (!items.some((i) => role(i) === "projet")) return [...items];
+  return items.filter((i) => role(i) !== "existant");
+}

@@ -6,6 +6,8 @@ import {
   joineryParts,
   noteLots,
   noteMeasureHint,
+  planPageRole,
+  projectPages,
   planNoteWorks,
   planRoomNotes,
   type PlanNotesRaw,
@@ -324,5 +326,34 @@ describe("idleLots", () => {
     expect(idleLots(["electricien", "climaticien"], works, [], ["electricien"])).toEqual([
       "climaticien",
     ]);
+  });
+});
+
+describe("existant et projet", () => {
+  it("reconnaît un plan de l'existant à son type", () => {
+    expect(planPageRole("démolition")).toBe("existant");
+    expect(planPageRole("Plan de l'existant, état actuel")).toBe("existant");
+    expect(planPageRole("cloisons et menuiseries")).toBe("projet");
+    expect(planPageRole("")).toBe("inconnu");
+    expect(planPageRole(null)).toBe("inconnu");
+  });
+
+  it("écarte l'existant seulement quand un plan de projet est là", () => {
+    const pages = [
+      { file: 1, page: 1 },
+      { file: 2, page: 1 },
+      { file: 3, page: 1 },
+    ];
+    const roles = [
+      { file: 1, page: 1, role: "existant" as const },
+      { file: 2, page: 1, role: "projet" as const },
+    ];
+    expect(projectPages(pages, roles)).toEqual([
+      { file: 2, page: 1 },
+      { file: 3, page: 1 },
+    ]);
+    expect(
+      projectPages(pages, [roles[0] ?? { file: 0, page: 0, role: "inconnu" as const }]),
+    ).toEqual(pages);
   });
 });
