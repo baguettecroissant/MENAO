@@ -5,6 +5,7 @@
 import type { DpgfUnit } from "./dpgf";
 import type { PlanCountKey, PlanCounts, PlanRoomSource } from "./plan-reading";
 import { DEMOLITION_LOT } from "./plan-notes";
+import type { SymbolCount, SymbolKind } from "./plan-symbols";
 import { formatPlanMeasure, PLAN_WORK_UNITS, type PlanWork } from "./plan-works";
 
 /**
@@ -80,8 +81,21 @@ export function withPlanHeight(rooms: readonly TakeoffRoom[]): TakeoffRoom[] {
 
 /** Origine d'une quantité du DPGF (« saisi » : valeur de l'artisan, dans le relevé ou ensuite). */
 /** « partiel » : total des pièces mesurées, une ou plusieurs pièces restant à compléter. */
+/** « compte » : nombre de symboles comptés sur le plan ; « compte_verif » : un groupe à vérifier. */
 export type TakeoffSource =
-  "plan" | "calcul" | "photo" | "manque" | "saisi" | "estime" | "trace" | "partiel";
+  | "plan"
+  | "calcul"
+  | "photo"
+  | "manque"
+  | "saisi"
+  | "estime"
+  | "trace"
+  | "partiel"
+  | "compte"
+  | "compte_verif";
+
+/** Symboles comptés sur les plans, par type (ADR 0336). */
+export type TakeoffSymbols = Partial<Record<SymbolKind, SymbolCount>>;
 
 /**
  * Ouvrage mesuré du relevé (F-158) : va dans le lot de son métier. Un ouvrage écrit sur le plan
@@ -399,7 +413,38 @@ type Spec = {
   replacedBy?: RegExp;
 };
 /** `written` : ouvrages écrits ou mesurés du lot, hors déposes. */
-type Ctx = { rooms: readonly TakeoffRoom[]; counts: PlanCounts; written: readonly TakeoffWork[] };
+type Ctx = {
+  rooms: readonly TakeoffRoom[];
+  counts: PlanCounts;
+  written: readonly TakeoffWork[];
+  symbols: TakeoffSymbols;
+};
+
+/** Postes de l'électricien remplis par les symboles comptés, dans l'ordre du DPGF. */
+const COUNTED_POSTS: readonly [SymbolKind, string][] = [
+  ["point_lumineux", "Points lumineux en plafond (DCL)"],
+  ["spot", "Spots encastrés"],
+  ["applique", "Appliques"],
+  ["prise", "Prises de courant 16 A"],
+  ["prise_specialisee", "Prises spécialisées (four, plaque, lave-linge…)"],
+  ["interrupteur", "Interrupteurs et poussoirs"],
+  ["commande_volet", "Commandes de volets roulants"],
+  ["prise_rj45_tv", "Prises RJ45 / TV"],
+  ["detecteur", "Détecteurs"],
+  ["tableau", "Tableau électrique"],
+];
+
+/** Poste d'un type de symbole compté : le total, son détail par pièce, et le doute éventuel. */
+function countedPost(c: SymbolCount): Post {
+  const rooms = Object.entries(c.rooms)
+    .sort(([a], [b]) => (a === "" ? 1 : b === "" ? -1 : 0))
+    .map(([room, n]) => `${room || "pièce non repérée"} ${n}`);
+  return {
+    quantityMilli: c.total * 1000,
+    source: c.doubt ? "compte_verif" : "compte",
+    detail: `Compté sur le plan : ${rooms.join(" · ")}${c.doubt ? " · un groupe à vérifier sur le plan" : ""}`,
+  };
+}
 
 /** Nom comparé sans accents, casse ni ponctuation. */
 const nameKey = (text: string) =>
@@ -609,7 +654,21 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
       single("Forfait : un ensemble, à chiffrer selon les plans."),
     ),
   ],
-  electricien: ({ rooms }) => {
+  electricien: ({ rooms, symbols }) => {
+    // Plan d'électricité lu : le nombre dessiné remplace les minimums de la norme (ADR 0336).
+    const counted = COUNTED_POSTS.filter(([kind]) => (symbols[kind]?.total ?? 0) > 0);
+    if (counted.length > 0) {
+      const posts = counted.map(([kind, label]) => {
+        const c = symbols[kind];
+        return spec(label, "u", c ? countedPost(c) : null);
+      });
+      return symbols.tableau?.total
+        ? posts
+        : [
+            ...posts,
+            spec("Tableau électrique", "u", single("Un tableau par logement, à dimensionner.")),
+          ];
+    }
     const living = habitable(rooms);
     return [
       spec(
@@ -698,6 +757,7 @@ export function planTakeoff(
   counts: PlanCounts,
   trades: readonly { code: string; label: string }[],
   works: readonly TakeoffWork[] = [],
+  symbols: TakeoffSymbols = {},
 ): TakeoffLine[] {
   rooms = withPlanHeight(rooms);
   const ordered = [
@@ -726,7 +786,7 @@ export function planTakeoff(
     const ruled =
       measured.length && MEASURED_TRADES.has(trade.code)
         ? []
-        : (RULES[trade.code]?.({ rooms, counts, written: own }) ?? []).filter(
+        : (RULES[trade.code]?.({ rooms, counts, written: own, symbols }) ?? []).filter(
             (s) =>
               s.post !== null &&
               !(measured.length && s.post.placeholder) &&
@@ -795,5 +855,6 @@ export function takeoffFigures(lines: readonly Pick<TakeoffLine, "kind" | "sourc
     photo: posts.filter((l) => l.source === "photo").length,
     estimated: posts.filter((l) => l.source === "estime").length,
     partial: posts.filter((l) => l.source === "partiel").length,
+    counted: posts.filter((l) => l.source === "compte" || l.source === "compte_verif").length,
   };
 }

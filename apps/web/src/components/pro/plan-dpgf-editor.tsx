@@ -32,6 +32,9 @@ const TONES = {
   trace: "neutral",
   // Total des pièces mesurées, une pièce restant à compléter (ADR 0329).
   partiel: "warning",
+  // Nombre de symboles comptés sur le plan (ADR 0336), avec un groupe à vérifier ou non.
+  compte: "success",
+  compte_verif: "warning",
 } as const;
 
 type Draft = { quantity: string; price: string };

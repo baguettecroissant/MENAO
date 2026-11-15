@@ -6388,6 +6388,25 @@ export const fr = {
             reseaux: "réseaux",
             autre: "autre page",
           } as Record<string, string>,
+          // Symboles comptés sur les plans (F-159 lot 7, maquette du lot 55).
+          symbols: {
+            summary: (list: string, doubt: boolean) =>
+              `Compté sur le plan : ${list}${doubt ? " (un groupe à vérifier)" : ""}`,
+            kinds: {
+              point_lumineux: (n: number) => `${n} point${n > 1 ? "s" : ""} lumineux`,
+              spot: (n: number) => `${n} spot${n > 1 ? "s" : ""}`,
+              applique: (n: number) => `${n} applique${n > 1 ? "s" : ""}`,
+              prise: (n: number) => `${n} prise${n > 1 ? "s" : ""}`,
+              prise_specialisee: (n: number) =>
+                `${n} prise${n > 1 ? "s" : ""} spécialisée${n > 1 ? "s" : ""}`,
+              interrupteur: (n: number) => `${n} interrupteur${n > 1 ? "s" : ""}`,
+              detecteur: (n: number) => `${n} détecteur${n > 1 ? "s" : ""}`,
+              commande_volet: (n: number) => `${n} commande${n > 1 ? "s" : ""} de volet`,
+              prise_rj45_tv: (n: number) => `${n} prise${n > 1 ? "s" : ""} RJ45 / TV`,
+              tableau: (n: number) =>
+                `${n} tableau${n > 1 ? "x" : ""} électrique${n > 1 ? "s" : ""}`,
+            } as Record<string, (n: number) => string>,
+          },
           // Ouvrages écrits sur les plans (F-159 lot 6, maquette du lot 54).
           notes: {
             demolition: "Démolition, dépose",
@@ -6689,6 +6708,8 @@ export const fr = {
           estime: "Estimé",
           trace: "Tracé à la main",
           partiel: "Partiel",
+          compte: "Compté sur le plan",
+          compte_verif: "Compté · à vérifier",
         } as Record<string, string>,
         detail: "Calcul",
         origin: "Origine",

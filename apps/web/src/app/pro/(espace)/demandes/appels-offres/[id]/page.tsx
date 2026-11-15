@@ -6,12 +6,14 @@ import {
   formatPlanMeasure,
   planPageTypes,
   DEMOLITION_LOT,
+  ELECTRICAL_SYMBOLS,
   isWrittenWork,
   joineryParts,
   noteLots,
   planNoteFigures,
   planReadingFigures,
   planWorksFigures,
+  symbolCounts,
   traceControl,
   type PlanPage,
   type PlanTrace,
@@ -33,7 +35,13 @@ import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
 import { deleteTender, updateTender } from "@/lib/artisan/tender-actions";
-import { getTender, getTenderRooms, getTenderWorks, planFiles } from "@/lib/artisan/tenders";
+import {
+  getTender,
+  getTenderRooms,
+  getTenderWorks,
+  planFiles,
+  planSymbols,
+} from "@/lib/artisan/tenders";
 import { formatDay } from "@/lib/format";
 
 const t = fr.pro.tenders;
@@ -415,6 +423,7 @@ async function planData(
     plan_files: unknown;
     plan_trades: string[];
     plan_lots_idle: string[];
+    plan_symbols: unknown;
     plan_counts: unknown;
     plan_scale: string | null;
     plan_pages: unknown;
@@ -465,6 +474,12 @@ async function planData(
   );
   const writtenLots = noteLots(written.map((x) => ({ trade: x.trade_code, removal: x.removal })));
   const joinery = written.filter((x) => joineryParts(x.name) !== null).length;
+  // Symboles électriques comptés sur les plans (ADR 0336).
+  const symbolTotals = symbolCounts(
+    planSymbols(tender.plan_symbols).filter((x) => ELECTRICAL_SYMBOLS.includes(x.type)),
+  );
+  const counted = Object.entries(symbolTotals).map(([kind, c]) => [kind, c?.total ?? 0] as const);
+  const symbolDoubt = Object.values(symbolTotals).some((c) => c?.doubt);
   const measured = planWorksFigures(
     works
       .filter((x) => !isWrittenWork(x))
@@ -544,6 +559,15 @@ async function planData(
     joinery ? { ...ok, text: tw.notes.summary.joinery(joinery) } : null,
     noted.fromRooms ? { ...ruler, text: tw.notes.summary.fromRooms(noted.fromRooms) } : null,
     noted.toMeasure ? { ...warn, text: tw.notes.summary.toMeasure(noted.toMeasure) } : null,
+    counted.length
+      ? {
+          ...(symbolDoubt ? warn : ok),
+          text: tw.symbols.summary(
+            counted.map(([kind, n]) => tw.symbols.kinds[kind]?.(n) ?? `${n} ${kind}`).join(", "),
+            symbolDoubt,
+          ),
+        }
+      : null,
     figures.read ? { ...ok, text: t.plan.summary.read(figures.read) } : null,
     figures.computed
       ? {

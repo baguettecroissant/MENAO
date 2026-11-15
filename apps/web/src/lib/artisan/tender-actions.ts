@@ -10,6 +10,7 @@ import { text, type FormState } from "@/lib/auth/form";
 import {
   CEILING_FINISHES,
   DEMOLITION_LOT,
+  ELECTRICAL_SYMBOLS,
   FLOOR_FINISHES,
   MAX_PLAN_MARKS,
   MAX_WORK_MILLI,
@@ -19,12 +20,13 @@ import {
   planTakeoff,
   type PriceHistoryLine,
   suggestTenderPrice,
+  symbolCounts,
   takeoffFigures,
   tenderQuoteLines,
   type TenderQuoteLine,
   WALL_FINISHES,
 } from "@menao/core";
-import { getTenderRooms, getTenderWorks } from "./tenders";
+import { getTenderRooms, getTenderWorks, planSymbols } from "./tenders";
 import { requireTeamPermission } from "./space";
 
 const t = fr.pro.tenders;
@@ -522,7 +524,11 @@ async function buildPlanDpgf(
 ): Promise<FormState> {
   const id = { data: tenderId };
   const [{ data: tender }, rooms, works, { data: history }] = await Promise.all([
-    supabase.from("tenders").select("plan_trades, plan_counts").eq("id", id.data).maybeSingle(),
+    supabase
+      .from("tenders")
+      .select("plan_trades, plan_counts, plan_symbols")
+      .eq("id", id.data)
+      .maybeSingle(),
     getTenderRooms(supabase, id.data),
     getTenderWorks(supabase, id.data),
     supabase.rpc("artisan_price_history"),
@@ -573,6 +579,10 @@ async function buildPlanDpgf(
       room: w.room,
       removal: w.removal,
     })),
+    // Symboles électriques comptés sur les plans (ADR 0336) : comptes par type et par pièce.
+    symbolCounts(
+      planSymbols(tender.plan_symbols).filter((x) => ELECTRICAL_SYMBOLS.includes(x.type)),
+    ),
   );
   const prices: PriceHistoryLine[] = (history ?? []).map((h) => ({
     designation: h.designation,

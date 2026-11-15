@@ -432,6 +432,8 @@ export function idleLots(
   chosen: readonly string[],
   works: readonly { trade: string | null; removal: boolean }[],
   planTypes: readonly string[],
+  /** Lots que les plans montrent autrement (symboles électriques comptés, ADR 0336). */
+  shown: readonly string[] = [],
 ): string[] {
   if (works.length === 0) return [];
   const types = planTypes.map(key);
@@ -439,6 +441,7 @@ export function idleLots(
     (code) =>
       code !== DEMOLITION_LOT &&
       !RELEVE_TRADES.includes(code) &&
+      !shown.includes(code) &&
       !works.some((w) => !w.removal && w.trade === code) &&
       !types.some((t) => PLAN_TYPE_WORDS[code]?.test(t)),
   );

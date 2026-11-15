@@ -230,6 +230,7 @@ describe("takeoffFigures", () => {
       photo: 3,
       estimated: 0,
       partial: 0,
+      counted: 0,
     });
   });
 });
@@ -479,5 +480,38 @@ describe("ragréage sous sol souple", () => {
     ).map((l) => l.designation);
     expect(names).not.toContain("Ragréage sous sol souple");
     expect(names).toContain("ragréage sur dalle BA créée — chambre 1");
+  });
+});
+
+describe("symboles comptés sur le plan (F-159 lot 7)", () => {
+  const symbols = {
+    point_lumineux: { total: 7, doubt: false, rooms: { Salon: 2, Cuisine: 1, "": 4 } },
+    prise: { total: 28, doubt: false, rooms: { Salon: 5, Cuisine: 23 } },
+    interrupteur: { total: 14, doubt: true, rooms: { Salon: 14 } },
+  };
+  const lines = planTakeoff(
+    ROOMS,
+    COUNTS,
+    [{ code: "electricien", label: "Électricien" }],
+    [],
+    symbols,
+  );
+  const posts = lines.filter((l) => l.kind === "poste");
+
+  it("remplit les postes de l'électricien avec le nombre dessiné, à la place de la norme", () => {
+    expect(posts.map((l) => [l.designation, l.quantityMilli, l.source])).toEqual([
+      ["Points lumineux en plafond (DCL)", 7000, "compte"],
+      ["Prises de courant 16 A", 28_000, "compte"],
+      ["Interrupteurs et poussoirs", 14_000, "compte_verif"],
+      ["Tableau électrique", 1000, "calcul"],
+    ]);
+    expect(posts[0]?.detail).toBe("Compté sur le plan : Salon 2 · Cuisine 1 · pièce non repérée 4");
+    expect(posts[2]?.detail).toContain("un groupe à vérifier sur le plan");
+    expect(takeoffFigures(lines).counted).toBe(3);
+  });
+
+  it("sans symbole compté, garde les minimums de la norme", () => {
+    const norm = planTakeoff(ROOMS, COUNTS, [{ code: "electricien", label: "Électricien" }]);
+    expect(norm.some((l) => l.designation === "Points lumineux")).toBe(true);
   });
 });

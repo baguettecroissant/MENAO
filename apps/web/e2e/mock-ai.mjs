@@ -302,6 +302,27 @@ function jpegWidth(base64) {
   return null;
 }
 
+// Symboles d'un plan (F-159 lot 7, ADR 0336) : seule la photo de 640 px (fixtures.planNotes) en
+// porte, 2 points lumineux et 4 prises, pour ne pas changer les autres parcours.
+function symbolsReading(content) {
+  const image = Array.isArray(content) ? content.find((block) => block?.type === "image") : null;
+  const drawn = jpegWidth(image?.source?.data) === 640;
+  const symbole = (type, x, y, piece) => ({ type, x, y, piece });
+  return JSON.stringify({
+    legende: drawn ? ["grand cercle barré = point lumineux", "demi-cercle = prise"] : [],
+    symboles: drawn
+      ? [
+          symbole("point_lumineux", 120, 100, "Séjour-cuisine"),
+          symbole("point_lumineux", 400, 100, "Séjour-cuisine"),
+          symbole("prise", 20, 50, "Séjour-cuisine"),
+          symbole("prise", 20, 300, "Séjour-cuisine"),
+          symbole("prise", 600, 50, "WC"),
+          symbole("prise", 600, 300, "WC"),
+        ]
+      : [],
+  });
+}
+
 function notesReading(content) {
   const image = Array.isArray(content) ? content.find((block) => block?.type === "image") : null;
   const written = jpegWidth(image?.source?.data) === 640;
@@ -481,17 +502,19 @@ createServer(async (req, res) => {
                 ? contourReading()
                 : text.includes("Relève ce qui est écrit")
                   ? notesReading(content)
-                  : text.includes("<plan>")
-                    ? /<metiers>[^<]*terrassier/.test(text)
-                      ? terrainReading()
-                      : planReading()
-                    : document
-                      ? documentReading(content)
-                      : text.includes("<saisie>")
-                        ? needSuggestion(text)
-                        : text.includes("<dictee>")
-                          ? quoteLines()
-                          : analysis(text, body?.model ?? ""),
+                  : text.includes("Liste chaque symbole")
+                    ? symbolsReading(content)
+                    : text.includes("<plan>")
+                      ? /<metiers>[^<]*terrassier/.test(text)
+                        ? terrainReading()
+                        : planReading()
+                      : document
+                        ? documentReading(content)
+                        : text.includes("<saisie>")
+                          ? needSuggestion(text)
+                          : text.includes("<dictee>")
+                            ? quoteLines()
+                            : analysis(text, body?.model ?? ""),
         },
       ],
       stop_reason: "end_turn",
