@@ -5,6 +5,7 @@ import {
   type TakeoffWork,
   defaultFinishes,
   planTakeoff,
+  withPlanHeight,
   takeoffFigures,
 } from "../src/plan-takeoff";
 
@@ -412,5 +413,31 @@ describe("pièce estimée à l'échelle (F-159, lot 2)", () => {
       expect(names).not.toContain("Fenêtres et portes-fenêtres");
       expect(names).toContain("WC");
     });
+  });
+});
+
+describe("withPlanHeight", () => {
+  it("reprend la hauteur la plus fréquente pour une pièce sans hauteur, sauf sous rampant", () => {
+    const rooms = [
+      room("salon", 17, 16.5, { heightMm: 2700 }),
+      room("entrée", 7.6, 11.4, { heightMm: 2700 }),
+      room("wc", 1.5, 5.3, { heightMm: 2500 }),
+      room("cuisine", 9.9, 12.8, { heightMm: null }),
+      room("chambre 1", 11.4, 13.5, { heightMm: null, sloped: true }),
+    ];
+    const filled = withPlanHeight(rooms);
+    expect(filled.map((r) => [r.name, r.heightMm, r.heightEstimated ?? false])).toEqual([
+      ["salon", 2700, false],
+      ["entrée", 2700, false],
+      ["wc", 2500, false],
+      ["cuisine", 2700, true],
+      ["chambre 1", null, false],
+    ]);
+    const paint = planTakeoff(rooms, COUNTS, [{ code: "peintre", label: "Peintre" }]).find(
+      (l) => l.designation === "Peinture des murs",
+    );
+    // Partiel (chambre sous rampant) l'emporte ; la hauteur reprise est dite dans le détail.
+    expect(paint?.source).toBe("partiel");
+    expect(paint?.detail).toContain("hauteur 2,7 m reprise des autres pièces pour cuisine");
   });
 });

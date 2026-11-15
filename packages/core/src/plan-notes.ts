@@ -407,3 +407,41 @@ export function noteMeasureHint(
   if (WALL.test(text)) return "wall";
   return "area";
 }
+
+/** Lots chiffrés avec le relevé et les revêtements : gardés même sans ouvrage écrit. */
+const RELEVE_TRADES = ["carreleur", "peintre", "plaquiste", "menuisier", "macon"];
+/** Mots du type de plan qui montrent qu'un plan est consacré au métier (plan d'électricité…). */
+const PLAN_TYPE_WORDS: Record<string, RegExp> = {
+  electricien: /electri/,
+  plombier: /plomberie|sanitaire|eau/,
+  chauffagiste: /chauffage/,
+  climaticien: /climatisation|clim\b/,
+  couvreur: /toiture|couverture/,
+  charpentier: /charpente|toiture/,
+  facadier: /facade/,
+  terrassier: /terrassement|masse|reseaux/,
+  paysagiste: /amenagement|espaces? verts?|masse/,
+};
+
+/**
+ * Lots choisis par l'artisan que les plans ne mentionnent pas, à décocher par défaut (ADR 0333) :
+ * seulement quand les plans portent des ouvrages écrits. Un lot chiffré avec le relevé et les
+ * revêtements, un lot qui a un ouvrage écrit, ou dont un plan est consacré au métier, est gardé.
+ */
+export function idleLots(
+  chosen: readonly string[],
+  works: readonly { trade: string | null; removal: boolean }[],
+  planTypes: readonly string[],
+): string[] {
+  if (works.length === 0) return [];
+  const types = planTypes.map(key);
+  const idle = chosen.filter(
+    (code) =>
+      code !== DEMOLITION_LOT &&
+      !RELEVE_TRADES.includes(code) &&
+      !works.some((w) => !w.removal && w.trade === code) &&
+      !types.some((t) => PLAN_TYPE_WORDS[code]?.test(t)),
+  );
+  // Au moins un lot reste coché.
+  return idle.length < chosen.length ? idle : [];
+}

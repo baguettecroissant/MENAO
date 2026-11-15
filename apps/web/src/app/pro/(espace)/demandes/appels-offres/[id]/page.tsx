@@ -414,6 +414,7 @@ async function planData(
     id: string;
     plan_files: unknown;
     plan_trades: string[];
+    plan_lots_idle: string[];
     plan_counts: unknown;
     plan_scale: string | null;
     plan_pages: unknown;
@@ -575,7 +576,9 @@ async function planData(
   labels.set(DEMOLITION_LOT, tw.notes.demolition);
   const lot = (code: string) => ({ code, label: labels.get(code) ?? code });
   // Lots à cocher : ceux de l'appel d'offres, puis ceux que les ouvrages écrits demandent.
-  const lotChoices = [...new Set([...tender.plan_trades, ...writtenLots])].map((code) => ({
+  const lotChoices = [
+    ...new Set([...tender.plan_trades, ...writtenLots, ...tender.plan_lots_idle]),
+  ].map((code) => ({
     ...lot(code),
     checked: tender.plan_trades.includes(code),
   }));

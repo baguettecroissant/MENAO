@@ -47,7 +47,36 @@ export type TakeoffRoom = {
   source: PlanRoomSource;
   uncertain: boolean;
   finishes: RoomFinishes;
+  /** Plafond rampant écrit sur le plan : la hauteur des autres pièces ne vaut pas pour elle. */
+  sloped?: boolean;
+  /** Hauteur reprise des autres pièces du plan (aucune lue pour celle-ci) : quantité estimée. */
+  heightEstimated?: boolean;
 };
+
+/**
+ * Pièces sans hauteur : la hauteur la plus fréquente des autres pièces du relevé leur est donnée,
+ * marquée « estimée » (ADR 0333). Une pièce sous rampant, ou un relevé sans aucune hauteur, reste
+ * à compléter.
+ */
+export function withPlanHeight(rooms: readonly TakeoffRoom[]): TakeoffRoom[] {
+  const counted = new Map<number, number>();
+  for (const r of rooms) {
+    if (r.heightMm !== null) counted.set(r.heightMm, (counted.get(r.heightMm) ?? 0) + 1);
+  }
+  let usual: number | null = null;
+  let best = 0;
+  for (const [height, n] of counted) {
+    if (n > best || (n === best && usual !== null && height < usual)) {
+      usual = height;
+      best = n;
+    }
+  }
+  return rooms.map((r) =>
+    r.heightMm === null && usual !== null && !r.sloped
+      ? { ...r, heightMm: usual, heightEstimated: true }
+      : r,
+  );
+}
 
 /** Origine d'une quantité du DPGF (« saisi » : valeur de l'artisan, dans le relevé ou ensuite). */
 /** « partiel » : total des pièces mesurées, une ou plusieurs pièces restant à compléter. */
@@ -290,10 +319,15 @@ function wallPaintKnown(rooms: readonly TakeoffRoom[], windows: number | null): 
       ? `${windows} fenêtre${windows > 1 ? "s" : ""} × 1,5 m² ${fmt(Math.round(windowsMm2 / 1000))}`
       : null,
   ].filter(Boolean);
+  const borrowed = rooms.filter((r) => r.heightEstimated);
   return {
     quantityMilli: total,
-    source: roomsSource(rooms, true),
-    detail: `${parts.join(" − ")} = ${fmt(total)} m²`,
+    source: borrowed.length ? "estime" : roomsSource(rooms, true),
+    detail: `${parts.join(" − ")} = ${fmt(total)} m²${
+      borrowed.length
+        ? ` · hauteur ${fmt(borrowed[0]?.heightMm ?? 0)} m reprise des autres pièces pour ${borrowed.map((r) => r.name).join(", ")}`
+        : ""
+    }`,
   };
 }
 
@@ -663,6 +697,7 @@ export function planTakeoff(
   trades: readonly { code: string; label: string }[],
   works: readonly TakeoffWork[] = [],
 ): TakeoffLine[] {
+  rooms = withPlanHeight(rooms);
   const ordered = [
     ...trades.filter((t) => t.code === DEMOLITION_LOT),
     ...trades.filter((t) => t.code !== DEMOLITION_LOT),
