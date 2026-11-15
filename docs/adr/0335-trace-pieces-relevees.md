@@ -25,7 +25,7 @@ les pièces relevées par la lecture : il traçait ce qu'il voyait, et une pièc
 | Pièces tracées, plan des sols | 9 puis 7 sur 9 | 9 et 9 sur 9 |
 | Pièces tracées, plan des cloisons | 7 (dont une fusion) puis 3 sur 9 | 9 et 9 sur 9 |
 | Dgt tracé | 1 fois sur 4 | 4 fois sur 4 (1,56 à 2,25 m²) |
-| Écart moyen, plan des sols (5 pièces cotées) | ~1,5 % | ~1,4 % |
+| Écart moyen, plan des sols (5 pièces cotées) | 1,6 % et 1,5 % | 1,1 % et 1,4 % |
 
 Le plan des cloisons reste moins précis (salle à manger +13 %, salon −9 %, WC −34 %) avec ou
 sans la liste : c'est la densité du plan, pas la liste. Le contrôle de l'estimation (ADR 0326)
