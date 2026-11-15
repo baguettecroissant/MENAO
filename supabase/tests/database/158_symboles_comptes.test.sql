@@ -33,15 +33,16 @@ select is(public.artisan_import_plan_symbols(pg_temp.ao(),
     {"file":1,"page":1,"type":"licorne","x":1,"y":1},
     {"file":11,"page":1,"type":"spot","x":1,"y":1},
     {"file":1,"page":1,"type":"spot","x":-5,"y":1}]'::jsonb,
-  '[{"file":1,"page":1,"lines":["demi-cercle rouge = prise",""," petit cercle orange = spot "]}]'::jsonb),
+  '[{"file":1,"page":1,"width":2000,"height":1500,"lines":["demi-cercle rouge = prise",""," petit cercle orange = spot "]},
+    {"file":1,"page":2,"lines":["sans taille"]}]'::jsonb),
   2, 'symboles valides gardés');
 select is((select plan_symbols from public.tenders where id = pg_temp.ao()),
   '[{"file":1,"page":1,"type":"prise","x":120,"y":300,"room":"Salon","doubt":false},
     {"file":1,"page":1,"type":"interrupteur","x":730,"y":940,"room":null,"doubt":true}]'::jsonb,
   'position entière, pièce nettoyée, doute gardé');
 select is((select plan_symbol_legend from public.tenders where id = pg_temp.ao()),
-  '[{"file":1,"page":1,"lines":["demi-cercle rouge = prise","petit cercle orange = spot"]}]'::jsonb,
-  'convention gardée sans ligne vide');
+  '[{"file":1,"page":1,"width":2000,"height":1500,"lines":["demi-cercle rouge = prise","petit cercle orange = spot"]}]'::jsonb,
+  'page gardée avec sa taille, convention sans ligne vide ; page sans taille écartée');
 
 select is(public.artisan_import_plan_symbols(pg_temp.ao(), '[]'::jsonb), 0, 'nouvelle lecture sans symbole');
 select is((select jsonb_array_length(plan_symbols) from public.tenders where id = pg_temp.ao()), 0,

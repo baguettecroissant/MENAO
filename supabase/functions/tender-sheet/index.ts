@@ -530,9 +530,16 @@ async function readTenderPlans(
       ),
     traces,
   ).slice(0, MAX_SYMBOLS);
+  // Pages comptées : taille de l'image (pour poser les symboles à l'écran) et convention lue.
   const legend = read
-    .filter((r) => kept.some((k) => k.file === r.file && k.page === r.page) && r.legend.length)
-    .map((r) => ({ file: r.file, page: r.page, lines: r.legend }));
+    .filter((r) => kept.some((k) => k.file === r.file && k.page === r.page))
+    .map((r) => ({
+      file: r.file,
+      page: r.page,
+      width: r.width,
+      height: r.height,
+      lines: r.legend,
+    }));
   const { error: symbolsError } = await supabase.rpc("artisan_import_plan_symbols", {
     p_tender_id: tender.id,
     p_symbols: symbols,

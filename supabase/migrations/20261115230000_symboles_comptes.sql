@@ -8,7 +8,8 @@ alter table public.tenders
   -- [{ file, page, type, x, y, room, doubt }], 3 000 au plus.
   add column plan_symbols jsonb not null default '[]'::jsonb
     check (jsonb_typeof(plan_symbols) = 'array' and jsonb_array_length(plan_symbols) <= 3000),
-  -- Convention de dessin reconnue par page : [{ file, page, lines }].
+  -- Pages comptées : taille de l'image et convention de dessin reconnue,
+  -- [{ file, page, width, height, lines }].
   add column plan_symbol_legend jsonb not null default '[]'::jsonb
     check (jsonb_typeof(plan_symbol_legend) = 'array'
       and jsonb_array_length(plan_symbol_legend) <= 50);
@@ -49,7 +50,8 @@ as $$
     and coalesce(s.v ->> 'doubt', 'false') in ('true', 'false')
 $$;
 
--- Convention de dessin par page remise en forme : 12 lignes de 160 caractères au plus.
+-- Pages comptées remises en forme : taille de l'image en pixels, convention de dessin en
+-- 12 lignes de 160 caractères au plus.
 create function app.plan_symbol_legend(p_legend jsonb)
 returns jsonb
 language sql
@@ -59,6 +61,8 @@ as $$
   select coalesce(jsonb_agg(jsonb_build_object(
       'file', (l.v ->> 'file')::integer,
       'page', (l.v ->> 'page')::integer,
+      'width', (l.v ->> 'width')::integer,
+      'height', (l.v ->> 'height')::integer,
       'lines', (
         select coalesce(jsonb_agg(left(btrim(x.t), 160) order by x.n), '[]'::jsonb)
         from jsonb_array_elements_text(
@@ -73,6 +77,8 @@ as $$
   where l.ord <= 50
     and coalesce(l.v ->> 'file', '') ~ '^(10|[1-9])$'
     and coalesce(l.v ->> 'page', '') ~ '^[1-9]\d{0,2}$'
+    and coalesce(l.v ->> 'width', '') ~ '^[1-9]\d{0,4}$'
+    and coalesce(l.v ->> 'height', '') ~ '^[1-9]\d{0,4}$'
 $$;
 
 -- Symboles d'une lecture des plans : remplacent ceux d'une lecture précédente.

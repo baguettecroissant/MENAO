@@ -27,8 +27,8 @@ groupes serrés et les poussoirs échappent). Quatre zones agrandies × 2 sépar
    pièce dont le contour tracé le contient (sinon à la pièce lue) et compte par type et par pièce.
 3. **Plans retenus** : ceux dont le type dit « électricité », sinon ceux qui portent au moins
    5 symboles électriques (les autres plans répètent portes et fenêtres, pas l'électricité).
-4. **Base** : `tenders.plan_symbols` (3 000 au plus) et `plan_symbol_legend` (convention de
-   dessin reconnue), remplacés à chaque lecture ; origines du DPGF « compte » et « compte_verif ».
+4. **Base** : `tenders.plan_symbols` (3 000 au plus) et `plan_symbol_legend` (pages comptées :
+   taille de l'image et convention de dessin reconnue), remplacés à chaque lecture ; origines du DPGF « compte » et « compte_verif ».
 5. **DPGF** : le lot de l'électricien prend les nombres comptés (points lumineux, spots,
    appliques, prises, prises spécialisées, interrupteurs, commandes de volets, RJ45/TV,
    détecteurs, tableau), avec le détail par pièce. Sans symbole compté, les minimums de la norme
