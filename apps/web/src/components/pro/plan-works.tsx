@@ -14,8 +14,9 @@ import { Check, Pencil, Plus, Ruler, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useActionState, useMemo, useState, useTransition, type ReactNode } from "react";
+import { GuideBar, GuideState, type GuideStateKind } from "@/components/pro/plan-guide";
 import { PlanViewer, type PlanFileLink, type PlanView } from "@/components/pro/plan-viewer";
-import { Alert, Button, StatusBadge, inputClasses } from "@/components/ui";
+import { Alert, Button, StatusBadge, buttonClasses, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { savePlanWorks, setPlanLots } from "@/lib/artisan/tender-actions";
 import type { TenderWork } from "@/lib/artisan/tenders";
@@ -84,7 +85,11 @@ function changed(d: Draft): boolean {
  * Ouvrages écrits sur les plans (F-159 lot 6, ADR 0330), maquette du lot 54 : un onglet par lot,
  * la pièce de chaque ouvrage et l'origine de sa quantité ; à droite les lots proposés d'après les
  * plans, à décocher, et les menuiseries à repère.
+ * Parcours guidé (lot 56) : étape « Ce qu'il y a à faire » — un lot à la fois, l'électricité est
+ * un lot comme les autres (`electricity`), trois états, « Mesurer » sur la ligne, une ligne
+ * terminée s'enregistre, et la barre du bas porte un seul « Continuer ».
  */
+const ELECTRICITY = "__electricite";
 export function PlanWorks({
   tenderId,
   works,
@@ -92,6 +97,9 @@ export function PlanWorks({
   workTrades,
   lotChoices,
   symbolCounts = {},
+  electricity,
+  backHref,
+  nextHref,
   measureHref,
   files,
   pages,
@@ -109,6 +117,11 @@ export function PlanWorks({
   lotChoices: PlanLotChoice[];
   /** Symboles électriques comptés par type (ADR 0336) : le lot de l'électricien n'est pas vide. */
   symbolCounts?: Record<string, number>;
+  /** Symboles comptés (écran du lot 55), affichés comme un lot « Électricité ». */
+  electricity?: { count: number; doubt: boolean; node: ReactNode } | null;
+  /** Parcours guidé : retour à « Mes pièces » et étape suivante (revêtements). */
+  backHref?: string;
+  nextHref?: string;
   measureHref: string;
   files: PlanFileLink[];
   pages: PlanPageInfo[];
@@ -162,16 +175,36 @@ export function PlanWorks({
       ...workTrades.map((x) => x.code),
       "",
     ];
-    return [...new Set(order)]
+    const todo = new Map<string, number>();
+    drafts.forEach((d, i) => {
+      if (quantities[i] === null) todo.set(lotOf(d), (todo.get(lotOf(d)) ?? 0) + 1);
+    });
+    const list = [...new Set(order)]
       .filter((code) => counts.has(code))
       .map((code) => ({
         code,
         label:
           code === DEMOLITION_LOT ? n.demolition : code ? (tradeLabels.get(code) ?? code) : n.noLot,
         count: counts.get(code) ?? 0,
+        todo: todo.get(code) ?? 0,
       }));
-  }, [drafts, lotChoices, workTrades, tradeLabels]);
-  const activeLot = notes ? (tabs.find((x) => x.code === lot) ?? tabs[0] ?? null) : null;
+    // Électricité : un lot comme les autres, juste après la démolition.
+    if (electricity) {
+      const at = list[0]?.code === DEMOLITION_LOT ? 1 : 0;
+      list.splice(at, 0, {
+        code: ELECTRICITY,
+        label: n.electricity,
+        count: electricity.count,
+        todo: electricity.doubt ? 1 : 0,
+      });
+    }
+    return list;
+  }, [drafts, quantities, lotChoices, workTrades, tradeLabels, electricity]);
+  const activeLot =
+    notes || electricity ? (tabs.find((x) => x.code === lot) ?? tabs[0] ?? null) : null;
+  const guided = !withViewer && !!nextHref;
+  const simple = guided && notes;
+  const missingCount = quantities.filter((q) => q === null).length;
   const joinery = useMemo(
     () =>
       notes
@@ -224,6 +257,22 @@ export function PlanWorks({
     setDirty(false);
     setEditing(null);
     formAction(formData);
+  }
+
+  /** État d'un ouvrage écrit (parcours guidé) : trois états, le détail au survol. */
+  function stateOf(d: Draft, quantity: number | null | undefined): GuideStateKind {
+    const work = d.work;
+    if (quantity === null || quantity === undefined) return "todo";
+    if (!work || changed(d) || work.source === "saisi" || work.source === "trace") return "mine";
+    if (work.uncertain || work.source === "photo") return "est";
+    return "ok";
+  }
+  function stateTitle(d: Draft): string | undefined {
+    const work = d.work;
+    if (!work || changed(d)) return undefined;
+    if (work.source === "calcul") return work.detail ?? n.source.room;
+    if (work.source === "unite") return n.source.unit;
+    return undefined;
   }
 
   /** Origine d'une quantité : pastille, puis page ou calcul. */
@@ -287,7 +336,7 @@ export function PlanWorks({
     <section className="w-full min-w-0 flex-1 overflow-hidden rounded-card border border-border bg-surface shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <h2 className="text-lg font-semibold">
-          {activeLot ? n.title(activeLot.label, activeLot.count) : w.title(drafts.length)}
+          {activeLot ? n.lotTitle(activeLot.label, activeLot.count) : w.title(drafts.length)}
         </h2>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {notes && (
@@ -333,9 +382,11 @@ export function PlanWorks({
               <th className="px-5 py-2.5">{notes ? n.columns.name : w.columns.name}</th>
               <th className={head}>{notes ? n.columns.room : w.columns.kind}</th>
               <th className={`${head} text-right`}>{w.columns.quantity}</th>
-              <th className={head}>{w.columns.unit}</th>
-              <th className={head}>{notes ? n.columns.source : w.columns.source}</th>
-              <th className={head}>{notes ? n.columns.plan : w.columns.trade}</th>
+              {!simple && <th className={head}>{w.columns.unit}</th>}
+              <th className={head}>
+                {simple ? n.columns.state : notes ? n.columns.source : w.columns.source}
+              </th>
+              {!simple && <th className={head}>{notes ? n.columns.plan : w.columns.trade}</th>}
               <th className={head} />
             </tr>
           </thead>
@@ -409,9 +460,11 @@ export function PlanWorks({
                         </label>
                         <div className="flex items-center gap-1 pb-1">
                           <button
-                            type="button"
+                            type={guided ? "submit" : "button"}
                             aria-label={w.done(d.name)}
-                            onClick={() => setEditing(null)}
+                            onClick={() => {
+                              if (!guided) setEditing(null);
+                            }}
                             className="rounded-full p-2 text-primary-strong hover:bg-surface"
                           >
                             <Check aria-hidden="true" className="size-4" />
@@ -450,29 +503,54 @@ export function PlanWorks({
                   <td className={`${cell} text-muted-foreground`}>
                     {notes ? (d.work?.room ?? "—") : w.kinds[d.kind]}
                   </td>
-                  <td className={`${cell} text-right font-bold tabular-nums`}>
-                    {quantity ? shown(d.kind, quantity) : "—"}
+                  <td className={`${cell} text-right font-bold whitespace-nowrap tabular-nums`}>
+                    {quantity
+                      ? `${shown(d.kind, quantity)}${simple ? ` ${w.units[d.kind]}` : ""}`
+                      : "—"}
                   </td>
-                  <td className={`${cell} text-muted-foreground`}>{w.units[d.kind]}</td>
-                  <td className={cell}>{origin(d, quantity)}</td>
-                  <td className={`${cell} text-label`}>
-                    {notes
-                      ? (files[(d.work?.file_index ?? 0) - 1]?.name.replace(/\.[a-z0-9]+$/i, "") ??
-                        "—")
-                      : (tradeLabels.get(d.trade) ?? "—")}
+                  {!simple && (
+                    <td className={`${cell} text-muted-foreground`}>{w.units[d.kind]}</td>
+                  )}
+                  <td className={cell}>
+                    {simple ? (
+                      <GuideState kind={stateOf(d, quantity)} title={stateTitle(d)} />
+                    ) : (
+                      origin(d, quantity)
+                    )}
                   </td>
+                  {!simple && (
+                    <td className={`${cell} text-label`}>
+                      {notes
+                        ? (files[(d.work?.file_index ?? 0) - 1]?.name.replace(
+                            /\.[a-z0-9]+$/i,
+                            "",
+                          ) ?? "—")
+                        : (tradeLabels.get(d.trade) ?? "—")}
+                    </td>
+                  )}
                   <td className="py-2 pr-4 pl-2 text-right align-middle">
-                    <button
-                      type="button"
-                      aria-label={w.edit(d.name)}
-                      onClick={() => {
-                        select(d);
-                        setEditing(d.key);
-                      }}
-                      className="rounded-full p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-                    >
-                      <Pencil aria-hidden="true" className="size-3.5" />
-                    </button>
+                    {simple && (quantity === null || quantity === undefined) ? (
+                      <Link
+                        href={measureHref as Route}
+                        aria-label={n.measureWork(d.name)}
+                        className={`${buttonClasses({ variant: "secondary", size: "sm", block: false })} !min-h-8 whitespace-nowrap`}
+                      >
+                        <Ruler aria-hidden="true" className="size-3.5" />
+                        {n.measureShort}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={w.edit(d.name)}
+                        onClick={() => {
+                          select(d);
+                          setEditing(d.key);
+                        }}
+                        className="rounded-full p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
+                      >
+                        <Pencil aria-hidden="true" className="size-3.5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -486,8 +564,9 @@ export function PlanWorks({
     </section>
   );
 
-  // Onglets par lot (maquette du lot 54) : le nom du lot et son nombre d'ouvrages.
-  const lotTabs = notes && (
+  // Onglets par lot (maquettes des lots 54 et 56) : le nom du lot, son nombre d'ouvrages et ce
+  // qui reste à vérifier.
+  const lotTabs = (notes || electricity) && (
     <div role="tablist" aria-label={n.tabs} className="flex flex-wrap gap-2.5">
       {tabs.map((tab) => {
         const on = tab.code === activeLot?.code;
@@ -501,14 +580,24 @@ export function PlanWorks({
               setLot(tab.code);
               setEditing(null);
             }}
-            className={`flex flex-col items-start gap-0.5 rounded-input px-3.5 py-2.5 text-left whitespace-nowrap ${
+            className={`inline-flex items-center gap-2 rounded-input px-3.5 py-2.5 text-left whitespace-nowrap ${
               on
                 ? "border-2 border-primary bg-primary-softer"
                 : "border border-border bg-surface hover:bg-background"
             }`}
           >
             <span className="text-sm font-bold">{tab.label}</span>
-            <span className="text-xs text-muted-foreground">{w.lotCount(tab.count)}</span>
+            <span className="text-xs text-muted-foreground">
+              {tab.code === ELECTRICITY ? n.symbolCount(tab.count) : w.lotCount(tab.count)}
+            </span>
+            {tab.todo > 0 && (
+              <span
+                aria-label={n.toCheck(tab.todo)}
+                className="inline-flex min-w-5 items-center justify-center rounded-pill bg-warning px-1.5 text-[0.6875rem] font-bold text-white"
+              >
+                {tab.todo}
+              </span>
+            )}
           </button>
         );
       })}
@@ -516,17 +605,24 @@ export function PlanWorks({
   );
 
   // Lots proposés d'après les plans : cochés par défaut, décochés par l'artisan.
-  const lotsCard = notes && (
-    <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
-      <h2 className="text-lg font-semibold">{n.lotsTitle}</h2>
-      {lotsError && <p className="text-sm text-danger">{lotsError}</p>}
-      <ul className="flex flex-col">
-        {lotChoices.map((choice) => {
-          const count = tabs.find((x) => x.code === choice.code)?.count ?? 0;
-          const on = checked.includes(choice.code);
-          return (
-            <li key={choice.code} className="border-t border-border">
-              <label className="flex cursor-pointer items-center gap-2.5 py-2 text-sm">
+  const lotsCard =
+    notes && guided ? (
+      <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
+        <h2 className="text-lg font-semibold">{n.myLots}</h2>
+        <p className="text-sm text-muted-foreground">{n.myLotsNote}</p>
+        {lotsError && <p className="text-sm text-danger">{lotsError}</p>}
+        <div className="flex flex-wrap gap-2">
+          {lotChoices.map((choice) => {
+            const on = checked.includes(choice.code);
+            return (
+              <label
+                key={choice.code}
+                className={`inline-flex cursor-pointer items-center gap-2 rounded-pill border px-3 py-1.5 text-[0.8125rem] font-semibold ${
+                  on
+                    ? "border-primary/30 bg-primary-soft"
+                    : "border-border bg-surface text-muted-foreground"
+                }`}
+              >
                 <input
                   type="checkbox"
                   checked={on}
@@ -535,24 +631,51 @@ export function PlanWorks({
                   onChange={() => toggleLot(choice.code)}
                   className="size-4 accent-primary"
                 />
-                <span className={`flex-1 font-semibold ${on ? "" : "text-muted-foreground"}`}>
-                  {choice.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {count
-                    ? w.lotCount(count)
-                    : choice.code === "electricien" && electricalCount
-                      ? n.symbolsCounted(electricalCount)
-                      : n.lotEmpty}
-                </span>
+                {choice.label}
               </label>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-sm text-muted-foreground">{n.lotsNote}</p>
-    </section>
-  );
+            );
+          })}
+        </div>
+      </section>
+    ) : (
+      notes && (
+        <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
+          <h2 className="text-lg font-semibold">{n.lotsTitle}</h2>
+          {lotsError && <p className="text-sm text-danger">{lotsError}</p>}
+          <ul className="flex flex-col">
+            {lotChoices.map((choice) => {
+              const count = tabs.find((x) => x.code === choice.code)?.count ?? 0;
+              const on = checked.includes(choice.code);
+              return (
+                <li key={choice.code} className="border-t border-border">
+                  <label className="flex cursor-pointer items-center gap-2.5 py-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={savingLots}
+                      aria-label={n.lotOf(choice.label)}
+                      onChange={() => toggleLot(choice.code)}
+                      className="size-4 accent-primary"
+                    />
+                    <span className={`flex-1 font-semibold ${on ? "" : "text-muted-foreground"}`}>
+                      {choice.label}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {count
+                        ? w.lotCount(count)
+                        : choice.code === "electricien" && electricalCount
+                          ? n.symbolsCounted(electricalCount)
+                          : n.lotEmpty}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="text-sm text-muted-foreground">{n.lotsNote}</p>
+        </section>
+      )
+    );
 
   const joineryCard = joinery.length > 0 && (
     <section className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-5 shadow-card">
@@ -617,10 +740,13 @@ export function PlanWorks({
       )}
 
       <div className="flex flex-col items-start gap-5 lg:flex-row">
-        {notes ? (
+        {notes || electricity ? (
           <div className="flex w-full min-w-0 flex-1 flex-col gap-4">
             {lotTabs}
-            {table}
+            {/* Symboles gardés montés : leur enregistrement automatique survit au changement
+                d'onglet. */}
+            {electricity && <div hidden={activeLot?.code !== ELECTRICITY}>{electricity.node}</div>}
+            {activeLot?.code !== ELECTRICITY && table}
           </div>
         ) : (
           table
@@ -628,35 +754,69 @@ export function PlanWorks({
         <aside className={side}>
           {lotsCard}
           {joineryCard}
-          <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
-            {withViewer ? (
-              <>
-                <h2 className="text-lg font-semibold">{t.okTitle}</h2>
-                <p className="text-sm text-muted-foreground">{w.okText}</p>
-                {invalid && <p className="text-sm text-danger">{w.invalid}</p>}
-                {hasDpgf && <p className="text-sm text-warning">{t.finishes.recreateWarning}</p>}
-                <Button type="submit" name="next" value="dpgf" disabled={pending || invalid}>
-                  {pending ? w.preparing : hasDpgf ? w.redoDpgf : w.toDpgf}
-                </Button>
-                {dirty && (
-                  <Button type="submit" variant="secondary" disabled={pending || invalid}>
+          {!guided && (
+            <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
+              {withViewer ? (
+                <>
+                  <h2 className="text-lg font-semibold">{t.okTitle}</h2>
+                  <p className="text-sm text-muted-foreground">{w.okText}</p>
+                  {invalid && <p className="text-sm text-danger">{w.invalid}</p>}
+                  {hasDpgf && <p className="text-sm text-warning">{t.finishes.recreateWarning}</p>}
+                  <Button type="submit" name="next" value="dpgf" disabled={pending || invalid}>
+                    {pending ? w.preparing : hasDpgf ? w.redoDpgf : w.toDpgf}
+                  </Button>
+                  {dirty && (
+                    <Button type="submit" variant="secondary" disabled={pending || invalid}>
+                      {w.save}
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2 className="text-lg font-semibold">{notes ? n.okTitle : w.lotsTitle}</h2>
+                  <p className="text-sm text-muted-foreground">{notes ? n.okText : w.lotsNote}</p>
+                  {invalid && <p className="text-sm text-danger">{w.invalid}</p>}
+                  <Button type="submit" variant="secondary" disabled={pending || invalid || !dirty}>
                     {w.save}
                   </Button>
-                )}
-              </>
-            ) : (
-              <>
-                <h2 className="text-lg font-semibold">{notes ? n.okTitle : w.lotsTitle}</h2>
-                <p className="text-sm text-muted-foreground">{notes ? n.okText : w.lotsNote}</p>
-                {invalid && <p className="text-sm text-danger">{w.invalid}</p>}
-                <Button type="submit" variant="secondary" disabled={pending || invalid || !dirty}>
-                  {w.save}
-                </Button>
-              </>
-            )}
-          </section>
+                </>
+              )}
+            </section>
+          )}
+          {guided && invalid && <p className="text-sm text-danger">{w.invalid}</p>}
         </aside>
       </div>
+      {guided && (
+        <GuideBar
+          back={
+            backHref && (
+              <Link
+                href={backHref as Route}
+                className={buttonClasses({ variant: "secondary", block: false })}
+              >
+                {t.guide.backRooms}
+              </Link>
+            )
+          }
+          text={missingCount ? t.guide.worksToCheck(missingCount) : undefined}
+        >
+          {dirty ? (
+            <Button
+              type="submit"
+              name="next"
+              value="revetements"
+              block={false}
+              disabled={pending || invalid}
+            >
+              {t.guide.toFinishes}
+            </Button>
+          ) : (
+            <Link href={nextHref as Route} className={buttonClasses({ block: false })}>
+              {t.guide.toFinishes}
+            </Link>
+          )}
+        </GuideBar>
+      )}
     </form>
   );
 }
