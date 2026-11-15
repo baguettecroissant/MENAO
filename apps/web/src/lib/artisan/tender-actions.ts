@@ -221,6 +221,21 @@ const planFile = z.object({
     )
     .max(12)
     .default([]),
+  // Zones agrandies d'une image de plan, seconde lecture des symboles (F-159 lot 7, ADR 0338) :
+  // rectangle en pixels de l'image du plan (vue d'ensemble ou page rendue).
+  symbolZones: z
+    .array(
+      z.object({
+        path: z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/),
+        page: z.number().int().min(1).max(999),
+        x: z.number().int().min(0).max(99_999),
+        y: z.number().int().min(0).max(99_999),
+        w: z.number().int().min(1).max(99_999),
+        h: z.number().int().min(1).max(99_999),
+      }),
+    )
+    .max(48)
+    .default([]),
 });
 
 /** Lecture des plans par l'Edge Function tender-sheet, puis retour sur l'appel d'offres. */

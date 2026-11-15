@@ -327,3 +327,41 @@ export function imageSize(bytes: Uint8Array): { width: number; height: number } 
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Zones agrandies pour la seconde lecture (PR A2, ADR 0338)
+// ---------------------------------------------------------------------------------------------
+
+/** Plus grand côté et nombre de pixels d'une zone envoyée au modèle (il ne la réduit pas). */
+export const SYMBOL_ZONE_SIDE = 2200;
+export const SYMBOL_ZONE_MAX_PIXELS = 3_600_000;
+/** Agrandissement le plus fort d'une zone : au-delà, l'image n'apporte plus rien. */
+export const MAX_SYMBOL_ZONE_UPSCALE = 3;
+/** Images de plan découpées en zones au plus par appel d'offres (coût du dépôt). */
+export const MAX_SYMBOL_ZONE_IMAGES = 6;
+
+/** Rectangle d'une zone, en pixels de l'image du plan (vue d'ensemble ou page rendue). */
+export type SymbolZone = { x: number; y: number; w: number; h: number };
+
+/** Quatre zones qui se chevauchent de 10 % (2 × 2) ; aucune pour une image trop petite. */
+export function symbolZoneGrid(width: number, height: number): SymbolZone[] {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 200 || height < 200) {
+    return [];
+  }
+  const w = Math.round(width * 0.55);
+  const h = Math.round(height * 0.55);
+  const xs = [0, width - w];
+  const ys = [0, height - h];
+  return ys.flatMap((y) => xs.map((x) => ({ x, y, w, h })));
+}
+
+/** Agrandissement d'une zone de `w` × `h` pixels pour la lecture : borné par le côté, les pixels
+ * et `MAX_SYMBOL_ZONE_UPSCALE`. */
+export function symbolZoneScale(w: number, h: number): number {
+  if (w <= 0 || h <= 0) return 1;
+  return Math.min(
+    MAX_SYMBOL_ZONE_UPSCALE,
+    SYMBOL_ZONE_SIDE / Math.max(w, h),
+    Math.sqrt(SYMBOL_ZONE_MAX_PIXELS / (w * h)),
+  );
+}
