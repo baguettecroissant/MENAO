@@ -6461,6 +6461,8 @@ export const fr = {
             save: "Enregistrer les symboles",
             saving: "Enregistrement…",
             saved: "Symboles enregistrés.",
+            unsaved: "Enregistrement dans un instant…",
+            autosave: "Vos corrections s'enregistrent automatiquement.",
             invalid: "Les symboles n'ont pas pu être enregistrés.",
             summary: (list: string, doubt: boolean) =>
               `Compté sur le plan : ${list}${doubt ? " (un groupe à vérifier)" : ""}`,
@@ -6492,6 +6494,7 @@ export const fr = {
               room: "Pièce",
               source: "D'où vient la quantité",
               plan: "Plan",
+              state: "État",
             },
             source: {
               room: "Surface de la pièce",
@@ -6514,6 +6517,14 @@ export const fr = {
             lotsNote:
               "Décochez un lot que vous ne faites pas. Un lot sans rien sur les plans n'est pas créé.",
             lotEmpty: "rien d'écrit sur vos plans",
+            electricity: "Électricité",
+            symbolCount: (n: number) => `${n} symbole${n > 1 ? "s" : ""}`,
+            lotTitle: (lot: string, n: number) => `${lot} · ${n} ouvrage${n > 1 ? "s" : ""}`,
+            toCheck: (n: number) => `${n} à vérifier`,
+            measureShort: "Mesurer",
+            measureWork: (name: string) => `Mesurer ${name || "l'ouvrage"} sur le plan`,
+            myLots: "Lots de mon offre",
+            myLotsNote: "Proposés d'après vos plans. Décochez ce que vous ne faites pas.",
             symbolsCounted: (n: number) =>
               `${n} symbole${n > 1 ? "s" : ""} compté${n > 1 ? "s" : ""}`,
             lotOf: (lot: string) => `Lot ${lot}`,

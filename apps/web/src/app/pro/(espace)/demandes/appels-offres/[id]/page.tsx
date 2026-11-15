@@ -147,6 +147,26 @@ export default async function TenderPage({
     </section>
   );
 
+  // Symboles comptés (lot 55), affichés comme un lot « Électricité » de l'étape « Ce qu'il y a à
+  // faire » (lot 56).
+  const electricity =
+    plan && plan.symbolPages.length > 0 && plan.symbols.length > 0
+      ? {
+          count: plan.symbols.length,
+          doubt: plan.symbols.some((x) => x.doubt),
+          node: (
+            <PlanSymbols
+              tenderId={tender.id}
+              symbols={plan.symbols}
+              pages={plan.symbolPages}
+              files={plan.files}
+              traces={plan.traces}
+              hasDpgf={lines.length > 0}
+            />
+          ),
+        }
+      : null;
+
   return (
     <main className="flex-1">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -312,6 +332,15 @@ export default async function TenderPage({
                 workTrades={plan.workTrades}
                 lotChoices={plan.lotChoices}
                 symbolCounts={plan.symbolTotals}
+                electricity={electricity}
+                backHref={
+                  withRooms ? `/pro/demandes/appels-offres/${tender.id}?etape=releve` : undefined
+                }
+                nextHref={
+                  withRooms
+                    ? `/pro/demandes/appels-offres/${tender.id}?etape=revetements`
+                    : undefined
+                }
                 measureHref={`/pro/demandes/appels-offres/${tender.id}?etape=mesure`}
                 files={plan.files}
                 pages={plan.pages}
@@ -320,17 +349,8 @@ export default async function TenderPage({
                 hasDpgf={lines.length > 0}
               />
             )}
-            {plan.symbolPages.length > 0 && plan.symbols.length > 0 && (
-              <PlanSymbols
-                tenderId={tender.id}
-                symbols={plan.symbols}
-                pages={plan.symbolPages}
-                files={plan.files}
-                traces={plan.traces}
-                hasDpgf={lines.length > 0}
-              />
-            )}
-            {withRooms && (
+            {plan.works.length === 0 && electricity?.node}
+            {withRooms && plan.works.length === 0 && (
               <GuideBar
                 back={
                   <Link
@@ -340,7 +360,6 @@ export default async function TenderPage({
                     {t.plan.guide.backRooms}
                   </Link>
                 }
-                text={plan.worksMissing ? t.plan.guide.worksToCheck(plan.worksMissing) : undefined}
               >
                 <Link
                   href={`/pro/demandes/appels-offres/${tender.id}?etape=revetements` as Route}

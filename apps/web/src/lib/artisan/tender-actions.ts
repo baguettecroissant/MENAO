@@ -399,6 +399,10 @@ export async function savePlanWorks(_prev: FormState, formData: FormData): Promi
   }
   revalidatePath(`${BASE}/${id.data}`);
   if (text(formData, "next") === "dpgf") return buildPlanDpgf(supabase, id.data);
+  // Parcours guidé : « Continuer » enregistre, puis passe aux revêtements.
+  if (text(formData, "next") === "revetements") {
+    redirect(`${BASE}/${id.data}?etape=revetements` as Route);
+  }
   return { success: t.plan.works.saved };
 }
 

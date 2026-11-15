@@ -346,38 +346,44 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await expect(page.getByText("Compté sur le plan : 2 points lumineux, 4 prises")).toBeVisible();
   await expect(page.getByText("1 menuiserie avec son repère et ses dimensions")).toBeVisible();
   await expect(page.getByText("1 quantité tirée des pièces mesurées")).toBeVisible();
-  // Étape « Ce qu'il y a à faire » : ouvrages par lot et symboles.
+  // Étape « Ce qu'il y a à faire » (lot 56) : un onglet par lot, la démolition en tête, ouverte,
+  // l'électricité juste après ; le reste à mesurer signalé sur l'onglet.
   await page.getByRole("link", { name: "Continuer : ce qu'il y a à faire" }).click();
   await expect(page).toHaveURL(/etape=ouvrages/);
-  // Écran des symboles (ADR 0337) : une prise retirée sur le plan, enregistrée.
+  const tabs = page.getByRole("tablist", { name: "Lots des ouvrages écrits" });
+  await expect(tabs.getByRole("tab")).toHaveText([
+    /Démolition, dépose1 ouvrage/,
+    /Électricité6 symboles/,
+    /Menuisier1 ouvrage/,
+    /Plaquiste2 ouvrages1/,
+  ]);
+  const works = page.getByRole("table", { name: "Ouvrages relevés" });
+  await expect(works.getByRole("row", { name: /Baignoire à déposer/ })).toContainText(
+    "Lu sur le plan",
+  );
+
+  // Électricité (ADR 0337) : une prise retirée sur le plan, enregistrée toute seule.
+  await tabs.getByRole("tab", { name: /Électricité/ }).click();
   const symbols = page.getByRole("form", { name: "Symboles comptés sur le plan" });
   await expect(symbols.getByRole("button", { name: "Prises de courant · 4" })).toBeVisible();
   await symbols.getByRole("button", { name: "Retirer un symbole" }).click();
   await symbols.getByRole("button", { name: "Prise 1", exact: true }).click();
   await expect(symbols.getByRole("button", { name: "Prises de courant · 3" })).toBeVisible();
-  await symbols.getByRole("button", { name: "Enregistrer les symboles" }).click();
-  await expect(page.getByText("Symboles enregistrés.")).toBeVisible();
+  await expect(symbols.getByText("Symboles enregistrés.")).toBeVisible({ timeout: 10_000 });
   await page.reload();
-  await expect(page.getByText("5 symboles", { exact: true })).toBeVisible();
+  await expect(page.getByText("5 symboles", { exact: true }).first()).toBeVisible();
 
-  // Un onglet par lot ; la démolition en tête, ouverte.
-  const tabs = page.getByRole("tablist", { name: "Lots des ouvrages écrits" });
-  await expect(tabs.getByRole("tab")).toHaveText([
-    /Démolition, dépose1 ouvrage/,
-    /Menuisier1 ouvrage/,
-    /Plaquiste2 ouvrages/,
-  ]);
-  const works = page.getByRole("table", { name: "Ouvrages relevés" });
-  await expect(works.getByRole("row", { name: /Baignoire à déposer/ })).toContainText("À l'unité");
+  // Trois états seulement ; « Mesurer » pour ce qui manque.
   await tabs.getByRole("tab", { name: /Plaquiste/ }).click();
-  await expect(
-    page.getByRole("heading", { name: "Lot Plaquiste · 2 ouvrages écrits sur vos plans" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Plaquiste · 2 ouvrages" })).toBeVisible();
   const ceiling = works.getByRole("row", { name: /Faux plafond suspendu BA13/ });
   await expect(ceiling).toContainText("Séjour-cuisine");
-  await expect(ceiling).toContainText("45,14");
-  await expect(ceiling).toContainText("Surface de la pièce");
-  await expect(works.getByRole("row", { name: /Cloison BA13 de 7 cm/ })).toContainText("À mesurer");
+  await expect(ceiling).toContainText("45,14 m²");
+  // Quantité tirée d'une pièce estimée : estimée elle aussi.
+  await expect(ceiling).toContainText("Estimé par MENAO");
+  const partition = works.getByRole("row", { name: /Cloison BA13 de 7 cm/ });
+  await expect(partition).toContainText("À compléter");
+  await expect(partition.getByRole("link", { name: /^Mesurer Cloison BA13/ })).toBeVisible();
   // L'ouvrage existant conservé n'est pas repris.
   await expect(page.getByText("Radiateur existant")).toHaveCount(0);
 

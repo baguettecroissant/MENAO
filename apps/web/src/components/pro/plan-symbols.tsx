@@ -8,9 +8,16 @@ import {
   type SymbolKind,
 } from "@menao/core";
 import { CheckCircle2, HelpCircle, Plus, TriangleAlert, X } from "lucide-react";
-import { useActionState, useMemo, useState, type MouseEvent } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent,
+} from "react";
 import type { PlanFileLink } from "@/components/pro/plan-viewer";
-import { Alert, Button } from "@/components/ui";
+import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { savePlanSymbols } from "@/lib/artisan/tender-actions";
 import type { PlanSymbolPage } from "@/lib/artisan/tenders";
@@ -77,7 +84,8 @@ export function PlanSymbols({
   const [family, setFamily] = useState("prise");
   const [mode, setMode] = useState<"voir" | "ajouter" | "retirer">("voir");
   const [selected, setSelected] = useState<string | null>(null);
-  const [dirty, setDirty] = useState(false);
+  // Page corrigée et pas encore enregistrée (clé de la page), sinon null.
+  const [dirty, setDirty] = useState<string | null>(null);
   const [added, setAdded] = useState(0);
   const initial = useMemo(() => {
     const byPage: Record<string, Draft[]> = {};
@@ -98,10 +106,34 @@ export function PlanSymbols({
   if (symbols !== base) {
     setBase(symbols);
     setDrafts(initial);
-    setDirty(false);
+    setDirty(null);
   }
 
-  const page = pages.find((p) => pageKey(p) === current) ?? pages[0];
+  const savedPage = pages.find((p) => pageKey(p) === current) ?? pages[0];
+  // Enregistrement automatique (parcours guidé, lot 56) : une correction s'enregistre seule, un
+  // court instant après la dernière, pour la page corrigée même si une autre est affichée.
+  useEffect(() => {
+    const dirtyPage = dirty ? pages.find((p) => pageKey(p) === dirty) : undefined;
+    if (!dirty || !dirtyPage) return;
+    const savedItems = drafts[dirty] ?? [];
+    const timer = setTimeout(() => {
+      const formData = new FormData();
+      formData.set("tenderId", tenderId);
+      formData.set("file", String(dirtyPage.file));
+      formData.set("page", String(dirtyPage.page));
+      formData.set(
+        "symbols",
+        JSON.stringify(
+          savedItems.map(({ type, x, y, room, doubt }) => ({ type, x, y, room, doubt })),
+        ),
+      );
+      setDirty(null);
+      startTransition(() => formAction(formData));
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [dirty, drafts, pages, tenderId, formAction]);
+
+  const page = savedPage;
   if (!page) return null;
   const items = drafts[pageKey(page)] ?? [];
   const link = files[page.file - 1];
@@ -129,7 +161,7 @@ export function PlanSymbols({
   const selectedItem = items.find((s) => s.key === selected) ?? null;
 
   const change = (next: Draft[]) => {
-    setDirty(true);
+    setDirty(pageKey(page));
     setDrafts((all) => ({ ...all, [pageKey(page)]: next }));
   };
 
@@ -168,22 +200,11 @@ export function PlanSymbols({
     }`;
 
   return (
-    <form
-      action={(formData) => {
-        formData.set("tenderId", tenderId);
-        formData.set("file", String(page.file));
-        formData.set("page", String(page.page));
-        formData.set(
-          "symbols",
-          JSON.stringify(items.map(({ type, x, y, room, doubt }) => ({ type, x, y, room, doubt }))),
-        );
-        formAction(formData);
-      }}
-      className="flex flex-col gap-5"
-      aria-label={t.label}
-    >
+    <div role="form" className="flex flex-col gap-5" aria-label={t.label}>
       {state.error && <Alert tone="error">{state.error}</Alert>}
-      {state.success && !dirty && <Alert tone="success">{state.success}</Alert>}
+      <p role="status" className="self-end text-xs text-muted-foreground">
+        {pending ? t.saving : dirty ? t.unsaved : state.success ? t.saved : t.autosave}
+      </p>
       <div className="flex flex-col items-start gap-5 lg:flex-row">
         <section className="flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card">
           <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-3">
@@ -482,17 +503,14 @@ export function PlanSymbols({
             </table>
           </div>
         </section>
-        <aside className="flex w-full flex-col gap-4 lg:w-[22rem] lg:shrink-0">
-          <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
-            <h2 className="text-lg font-semibold">{t.okTitle}</h2>
-            <p className="text-sm text-muted-foreground">{t.okText}</p>
-            {hasDpgf && dirty && <p className="text-sm text-warning">{t.recreate}</p>}
-            <Button type="submit" variant="secondary" disabled={pending || !dirty}>
-              {pending ? t.saving : t.save}
-            </Button>
-          </section>
-        </aside>
+        {hasDpgf && (
+          <aside className="flex w-full flex-col gap-4 lg:w-[22rem] lg:shrink-0">
+            <p className="rounded-card border border-border bg-surface p-5 text-sm text-warning shadow-card">
+              {t.recreate}
+            </p>
+          </aside>
+        )}
       </div>
-    </form>
+    </div>
   );
 }
