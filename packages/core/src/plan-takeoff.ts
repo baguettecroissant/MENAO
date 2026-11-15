@@ -538,6 +538,8 @@ const RULES: Record<string, (ctx: Ctx) => Spec[]> = {
         counts.fenetres,
       ),
     ),
+    // Un sol souple se pose sur un support ragréé : même surface (ADR 0334).
+    spec("Ragréage sous sol souple", "m2", areaPost(floorOf(rooms, "sol_souple")), /ragreage/),
     spec("Sol souple", "m2", areaPost(floorOf(rooms, "sol_souple"))),
     spec(
       "Peinture des portes intérieures",

@@ -441,3 +441,43 @@ describe("withPlanHeight", () => {
     expect(paint?.detail).toContain("hauteur 2,7 m reprise des autres pièces pour cuisine");
   });
 });
+
+describe("ragréage sous sol souple", () => {
+  const base = defaultFinishes({ name: "x", wet: false, habitable: true });
+  const soft = [
+    room("chambre 1", 11.38, 13.5, { finishes: { ...base, floor: "sol_souple" } }),
+    room("cuisine", 9.92, 12.8, { finishes: { ...base, floor: "sol_souple" } }),
+    room("salon", 17, 16.5),
+  ];
+  it("ajoute le ragréage, sur la surface des pièces en sol souple, avant le sol souple", () => {
+    const lines = posts("peintre", "Peintre", soft);
+    const names = lines.map((l) => l.designation);
+    expect(names.indexOf("Ragréage sous sol souple")).toBe(names.indexOf("Sol souple") - 1);
+    expect(lines.find((l) => l.designation === "Ragréage sous sol souple")?.quantityMilli).toBe(
+      21_300,
+    );
+  });
+  it("cède la place à un ragréage écrit sur le plan", () => {
+    const names = planTakeoff(
+      soft,
+      COUNTS,
+      [{ code: "peintre", label: "Peintre" }],
+      [
+        {
+          name: "ragréage sur dalle BA créée",
+          kind: "surface",
+          quantityMilli: 11_380,
+          source: "calcul",
+          detail: "Surface de la pièce : chambre 1",
+          trade: "peintre",
+          page: 1,
+          uncertain: false,
+          room: "chambre 1",
+          removal: false,
+        },
+      ],
+    ).map((l) => l.designation);
+    expect(names).not.toContain("Ragréage sous sol souple");
+    expect(names).toContain("ragréage sur dalle BA créée — chambre 1");
+  });
+});
