@@ -551,6 +551,7 @@ async function buildPlanDpgf(
       habitable: r.habitable,
       source: r.source,
       uncertain: r.uncertain,
+      sloped: /rampant/i.test(r.ceiling_note ?? ""),
       finishes: {
         floor: r.floor ?? "aucun",
         walls: r.walls ?? "aucun",

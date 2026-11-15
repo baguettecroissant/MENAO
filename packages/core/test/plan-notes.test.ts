@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEMOLITION_LOT,
   finishesFromNotes,
+  idleLots,
   joineryParts,
   noteLots,
   noteMeasureHint,
@@ -295,5 +296,29 @@ describe("corrections de l'essai réel (15/11/2026)", () => {
     expect(w?.name.length).toBeLessThanOrEqual(120);
     expect(w?.name.endsWith("…")).toBe(true);
     expect(w?.name).not.toMatch(/,…$/);
+  });
+});
+
+describe("idleLots", () => {
+  const works = [
+    { trade: "plaquiste", removal: false },
+    { trade: "plombier", removal: false },
+    { trade: "chauffagiste", removal: true },
+  ];
+  it("décoche les lots choisis que les plans ne mentionnent pas", () => {
+    expect(
+      idleLots(
+        ["carreleur", "climaticien", "electricien", "plombier", "chauffagiste", "couvreur"],
+        works,
+        ["démolition", "cloisons et menuiseries", "sols et peintures"],
+      ),
+    ).toEqual(["climaticien", "electricien", "chauffagiste", "couvreur"]);
+  });
+  it("garde le lot d'un plan consacré au métier, et ne décoche rien sans ouvrage écrit", () => {
+    expect(idleLots(["electricien", "climaticien"], works, ["Électricité"])).toEqual([
+      "climaticien",
+    ]);
+    expect(idleLots(["electricien", "climaticien"], [], [])).toEqual([]);
+    expect(idleLots(["climaticien"], works, [])).toEqual([]);
   });
 });

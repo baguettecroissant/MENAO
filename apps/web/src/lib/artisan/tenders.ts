@@ -157,7 +157,7 @@ export async function getTender(supabase: Client, id: string) {
     supabase
       .from("tenders")
       .select(
-        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_counts, plan_scale, plan_pages, plan_levels, plan_traces, plan_marks, quantities_checked_at",
+        "id, name, client_name, due_on, status, source_kind, source_name, vat_rate_bp, imported_at, sheet, plan_files, plan_trades, plan_lots_idle, plan_counts, plan_scale, plan_pages, plan_levels, plan_traces, plan_marks, quantities_checked_at",
       )
       .eq("id", id)
       .maybeSingle(),

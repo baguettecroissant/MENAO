@@ -5877,6 +5877,7 @@ export type Database = {
           plan_counts: NonNullable<Json>;
           plan_files: NonNullable<Json>;
           plan_levels: NonNullable<Json>;
+          plan_lots_idle: string[];
           plan_marks: NonNullable<Json>;
           plan_pages: NonNullable<Json>;
           plan_scale: string | null;
@@ -5903,6 +5904,7 @@ export type Database = {
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
           plan_levels?: NonNullable<Json>;
+          plan_lots_idle?: string[];
           plan_marks?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
@@ -5928,6 +5930,7 @@ export type Database = {
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
           plan_levels?: NonNullable<Json>;
+          plan_lots_idle?: string[];
           plan_marks?: NonNullable<Json>;
           plan_pages?: NonNullable<Json>;
           plan_scale?: string | null;
@@ -7238,7 +7241,10 @@ export type Database = {
         Returns: number;
       };
       artisan_import_plan_lines: { Args: { p_lines: Json; p_tender_id: string }; Returns: number };
-      artisan_import_plan_notes: { Args: { p_tender_id: string; p_works: Json }; Returns: number };
+      artisan_import_plan_notes: {
+        Args: { p_idle?: string[]; p_tender_id: string; p_works: Json };
+        Returns: number;
+      };
       artisan_import_plan_reading: {
         Args: {
           p_counts: Json;

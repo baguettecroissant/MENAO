@@ -32,6 +32,7 @@ import {
 import {
   DEMOLITION_LOT,
   finishesFromNotes,
+  idleLots,
   MAX_NOTE_IMAGES,
   type PlanNoteImage,
   planNoteWorks,
@@ -472,6 +473,12 @@ async function readTenderPlans(
     const { data: added, error: notesError } = await supabase.rpc("artisan_import_plan_notes", {
       p_tender_id: tender.id,
       p_works: noteWorks,
+      // Lots choisis que les plans ne mentionnent pas : décochés par défaut (ADR 0333).
+      p_idle: idleLots(
+        trades,
+        noteWorks,
+        noted.map((n) => (typeof n.raw.type_plan === "string" ? n.raw.type_plan : "")),
+      ),
     });
     if (notesError) console.error("tender-sheet : ouvrages écrits refusés", notesError.code);
     else written = typeof added === "number" ? added : 0;
