@@ -6,6 +6,9 @@ import {
   planScale,
   planTileGrid,
   type PlanTile,
+  type SymbolZone,
+  symbolZoneGrid,
+  symbolZoneScale,
   TRACE_MAX_PIXELS,
 } from "@menao/core";
 import { createClient } from "@/lib/supabase/client";
@@ -138,6 +141,80 @@ export async function planViews(file: File, quality = 0.85): Promise<PlanView[]>
   return views;
 }
 
+/** Zone agrandie d'une image de plan, pour la seconde lecture des symboles (ADR 0338). */
+export type SymbolZoneView = { zone: SymbolZone; blob: Blob };
+
+const jpeg = (canvas: HTMLCanvasElement, quality: number) =>
+  new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+
+/**
+ * Zones agrandies d'une image : `source` (photo d'origine ou page rendue plus nette) de
+ * `sourceWidth` pixels de large, découpée selon la grille calculée sur l'image du plan
+ * (`viewWidth` × `viewHeight`, celle que lisent le modèle et les tracés). Chaque zone garde son
+ * rectangle en pixels de l'image du plan : les symboles lus y sont ramenés.
+ */
+async function zonesOf(
+  source: CanvasImageSource,
+  sourceWidth: number,
+  viewWidth: number,
+  viewHeight: number,
+  quality: number,
+): Promise<SymbolZoneView[]> {
+  const ratio = sourceWidth / viewWidth;
+  const out: SymbolZoneView[] = [];
+  for (const zone of symbolZoneGrid(viewWidth, viewHeight)) {
+    const scale = symbolZoneScale(zone.w, zone.h);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(zone.w * scale));
+    canvas.height = Math.max(1, Math.round(zone.h * scale));
+    const context = canvas.getContext("2d");
+    if (!context) continue;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.imageSmoothingQuality = "high";
+    context.drawImage(
+      source,
+      zone.x * ratio,
+      zone.y * ratio,
+      zone.w * ratio,
+      zone.h * ratio,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+    const blob = await jpeg(canvas, quality);
+    if (blob) out.push({ zone, blob });
+  }
+  return out;
+}
+
+/**
+ * Zones agrandies d'une photo de plan (ADR 0338), calées sur sa vue d'ensemble (même calcul que
+ * `planViews`). Liste vide si la photo est illisible.
+ */
+export async function photoSymbolZones(file: File, quality = 0.85): Promise<SymbolZoneView[]> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const { width, height } = bitmap;
+    const scale = Math.min(
+      planScale(width, height, PLAN_VIEW_SIDE),
+      Math.sqrt(TRACE_MAX_PIXELS / (width * height)),
+    );
+    const zones = await zonesOf(
+      bitmap,
+      width,
+      Math.max(1, Math.round(width * scale)),
+      Math.max(1, Math.round(height * scale)),
+      quality,
+    );
+    bitmap.close();
+    return zones;
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Pages d'un PDF de plans rendues en images dans le navigateur (F-159 lot 4, ADR 0328) : une page
  * peut alors être tracée, affichée avec ses contours et mesurée à la main, comme une photo. Chaque
@@ -147,7 +224,9 @@ export async function planViews(file: File, quality = 0.85): Promise<PlanView[]>
 export async function pdfPageViews(
   file: File,
   quality = 0.85,
-): Promise<{ page: number; blob: Blob }[]> {
+  /** Pages découpées aussi en zones agrandies (seconde lecture des symboles, ADR 0338). */
+  zonePages = 0,
+): Promise<{ page: number; blob: Blob; zones: SymbolZoneView[] }[]> {
   try {
     const pdfjs = await import("pdfjs-dist");
     pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -156,7 +235,7 @@ export async function pdfPageViews(
     ).toString();
     const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
     const document_ = await task.promise;
-    const views: { page: number; blob: Blob }[] = [];
+    const views: { page: number; blob: Blob; zones: SymbolZoneView[] }[] = [];
     const count = Math.min(document_.numPages, MAX_PDF_PAGE_IMAGES);
     for (let number = 1; number <= count; number++) {
       const page = await document_.getPage(number);
@@ -170,10 +249,19 @@ export async function pdfPageViews(
       canvas.width = Math.max(1, Math.floor(viewport.width));
       canvas.height = Math.max(1, Math.floor(viewport.height));
       await page.render({ canvas, viewport }).promise;
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/jpeg", quality),
-      );
-      if (blob) views.push({ page: number, blob });
+      const blob = await jpeg(canvas, quality);
+      // Zones : la page rendue plus nette (le PDF est vectoriel), découpée selon la grille.
+      let zones: SymbolZoneView[] = [];
+      if (number <= zonePages) {
+        const sharper = Math.min(3, Math.sqrt(20_000_000 / (canvas.width * canvas.height)));
+        const hiViewport = page.getViewport({ scale: scale * sharper });
+        const hi = document.createElement("canvas");
+        hi.width = Math.max(1, Math.floor(hiViewport.width));
+        hi.height = Math.max(1, Math.floor(hiViewport.height));
+        await page.render({ canvas: hi, viewport: hiViewport }).promise;
+        zones = await zonesOf(hi, hi.width, canvas.width, canvas.height, quality);
+      }
+      if (blob) views.push({ page: number, blob, zones });
       page.cleanup();
     }
     await task.destroy();

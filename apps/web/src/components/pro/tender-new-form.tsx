@@ -11,7 +11,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { MAX_TILES_PER_READING } from "@menao/core";
+import { MAX_SYMBOL_ZONE_IMAGES, MAX_TILES_PER_READING } from "@menao/core";
 import { startTransition, useActionState, useId, useState, type ReactNode } from "react";
 import { ReadingScreen } from "@/components/pro/reading-screen";
 import { Alert, Button, Field, FieldError } from "@/components/ui";
@@ -19,7 +19,7 @@ import { fr } from "@/i18n/fr";
 import { createPlanTender, createTender } from "@/lib/artisan/tender-actions";
 import { type FormState, initialFormState } from "@/lib/auth/form";
 import { createClient } from "@/lib/supabase/client";
-import { pdfPageViews, planViews } from "@/lib/upload/client";
+import { pdfPageViews, photoSymbolZones, planViews } from "@/lib/upload/client";
 
 const t = fr.pro.tenders;
 const TYPES = {
@@ -419,7 +419,16 @@ function PlanTenderForm({
     const supabase = createClient();
     type Tile = { path: string; col: number; row: number; cols: number; rows: number };
     type PdfPage = { path: string; page: number };
-    const uploaded: { path: string; name: string; tiles: Tile[]; pages: PdfPage[] }[] = [];
+    type Zone = { path: string; page: number; x: number; y: number; w: number; h: number };
+    const uploaded: {
+      path: string;
+      name: string;
+      tiles: Tile[];
+      pages: PdfPage[];
+      symbolZones: Zone[];
+    }[] = [];
+    // Images de plan découpées en zones agrandies pour la seconde lecture des symboles (ADR 0338).
+    let zoneImages = MAX_SYMBOL_ZONE_IMAGES;
     const sent: string[] = [];
     // Fichiers déjà envoyés retirés : rien ne reste sans appel d'offres.
     const abort = async () => {
@@ -437,6 +446,18 @@ function PlanTenderForm({
       sent.push(path);
       return path;
     };
+    const sendZones = async (
+      page: number,
+      zones: { zone: { x: number; y: number; w: number; h: number }; blob: Blob }[],
+    ) => {
+      const out: Zone[] = [];
+      for (const z of zones) {
+        const zonePath = await send("jpg", z.blob);
+        if (!zonePath) return null;
+        out.push({ path: zonePath, page, ...z.zone });
+      }
+      return out;
+    };
     let tileBudget = MAX_TILES_PER_READING;
     for (const file of files) {
       const kind = planKind(file);
@@ -446,12 +467,18 @@ function PlanTenderForm({
         if (!path) return abort();
         // Pages rendues en images (ADR 0328) : tracées et mesurées comme une photo.
         const pages: PdfPage[] = [];
-        for (const view of await pdfPageViews(file)) {
+        const symbolZones: Zone[] = [];
+        const rendered = await pdfPageViews(file, 0.85, zoneImages);
+        zoneImages -= rendered.filter((v) => v.zones.length).length;
+        for (const view of rendered) {
           const pagePath = await send("jpg", view.blob);
           if (!pagePath) return abort();
           pages.push({ path: pagePath, page: view.page });
+          const zones = await sendZones(view.page, view.zones);
+          if (!zones) return abort();
+          symbolZones.push(...zones);
         }
-        uploaded.push({ path, name: file.name.slice(0, 200), tiles: [], pages });
+        uploaded.push({ path, name: file.name.slice(0, 200), tiles: [], pages, symbolZones });
         continue;
       }
       // Photo : vue d'ensemble, puis zones agrandies lues en haute définition (ADR 0325).
@@ -474,7 +501,14 @@ function PlanTenderForm({
         }
         tileBudget -= zones.length;
       }
-      uploaded.push({ path, name: file.name.slice(0, 200), tiles, pages: [] });
+      let symbolZones: Zone[] = [];
+      if (zoneImages > 0) {
+        const zones = await sendZones(1, await photoSymbolZones(file));
+        if (!zones) return abort();
+        if (zones.length) zoneImages--;
+        symbolZones = zones;
+      }
+      uploaded.push({ path, name: file.name.slice(0, 200), tiles, pages: [], symbolZones });
     }
     setUploading(false);
     formData.set("files", JSON.stringify(uploaded));

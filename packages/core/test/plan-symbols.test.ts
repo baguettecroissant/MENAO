@@ -7,6 +7,8 @@ import {
   symbolCounts,
   symbolsInRooms,
   symbolsJsonSchema,
+  symbolZoneGrid,
+  symbolZoneScale,
   type PlanSymbol,
 } from "../src/plan-symbols";
 
@@ -159,5 +161,26 @@ describe("outils", () => {
     expect(JSON.stringify(symbolsJsonSchema()).match(/"null"/g)).toBeNull();
     expect(ELECTRICAL_SYMBOLS).toContain("interrupteur");
     expect(ELECTRICAL_SYMBOLS).not.toContain("porte");
+  });
+});
+
+describe("zones agrandies", () => {
+  it("découpe le plan en 2 × 2 zones qui se chevauchent et couvrent tout", () => {
+    const zones = symbolZoneGrid(2000, 1500);
+    expect(zones).toEqual([
+      { x: 0, y: 0, w: 1100, h: 825 },
+      { x: 900, y: 0, w: 1100, h: 825 },
+      { x: 0, y: 675, w: 1100, h: 825 },
+      { x: 900, y: 675, w: 1100, h: 825 },
+    ]);
+    expect(symbolZoneGrid(150, 900)).toEqual([]);
+  });
+
+  it("agrandit une zone sans dépasser ce que le modèle lit sans réduire", () => {
+    const scale = symbolZoneScale(1100, 825);
+    expect(1100 * scale).toBeLessThanOrEqual(2200);
+    expect(1100 * scale * 825 * scale).toBeLessThanOrEqual(3_600_000);
+    expect(scale).toBeCloseTo(2, 1);
+    expect(symbolZoneScale(200, 150)).toBe(3);
   });
 });

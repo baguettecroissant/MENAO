@@ -288,6 +288,8 @@ function xlsxResponse(output: ArrayBuffer, filename: string): Response {
 
 /** Durée laissée à la lecture puis aux tracés, sous la limite d'une Edge Function (150 s). */
 const FUNCTION_BUDGET_MS = 140_000;
+/** En dessous, la seconde lecture des symboles sur les zones agrandies n'est pas lancée. */
+const MIN_ZONE_MS = 45_000;
 /** En dessous, il ne reste pas le temps de tracer : le relevé est rendu sans estimation. */
 const MIN_TRACE_MS = 35_000;
 
@@ -305,7 +307,13 @@ async function readTenderPlans(
   tender: { id: string; source_kind: string | null; plan_files: unknown; plan_trades: unknown },
 ): Promise<Response> {
   const entries = Array.isArray(tender.plan_files)
-    ? (tender.plan_files as { path?: unknown; kind?: unknown; tiles?: unknown; pages?: unknown }[])
+    ? (tender.plan_files as {
+        path?: unknown;
+        kind?: unknown;
+        tiles?: unknown;
+        pages?: unknown;
+        symbolZones?: unknown;
+      }[])
     : [];
   if (tender.source_kind !== "plan" || entries.length === 0) {
     return json({ status: "no_sheet" }, 422);
@@ -318,6 +326,38 @@ async function readTenderPlans(
   if (allowed !== true) return json({ status: "rate_limited" }, 429);
 
   const files: PlanFile[] = [];
+  // Zones agrandies des symboles (ADR 0338) : lues seulement sur les plans d'électricité.
+  const symbolZones: {
+    file: number;
+    page: number;
+    path: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }[] = [];
+  entries.forEach((entry, i) => {
+    const list = Array.isArray(entry.symbolZones) ? entry.symbolZones.slice(0, 48) : [];
+    for (const z of list as Record<string, unknown>[]) {
+      const [page, x, y, w, h] = [z.page, z.x, z.y, z.w, z.h];
+      if (
+        typeof z.path === "string" &&
+        [page, x, y, w, h].every((n) => typeof n === "number" && Number.isInteger(n) && n >= 0) &&
+        (w as number) > 0 &&
+        (h as number) > 0
+      ) {
+        symbolZones.push({
+          file: i + 1,
+          page: page as number,
+          path: z.path,
+          x: x as number,
+          y: y as number,
+          w: w as number,
+          h: h as number,
+        });
+      }
+    }
+  });
   let total = 0;
   let zoneCount = 0;
   for (const entry of entries) {
@@ -429,11 +469,50 @@ async function readTenderPlans(
         Math.min(SYMBOLS_TIMEOUT_MS, FUNCTION_BUDGET_MS - 25_000),
       ).catch(() => null);
       if (!raw) return null;
+      const found = normalizeSymbols(raw, size.width, size.height);
+      // Seconde lecture sur les zones agrandies (ADR 0338) : seulement pour un plan qui porte des
+      // symboles électriques, et s'il reste le temps de la faire.
+      const zones = symbolZones.filter((z) => z.file === image.file && z.page === image.page);
+      const left = FUNCTION_BUDGET_MS - (Date.now() - started) - 10_000;
+      let zoneFound: FoundSymbol[] | null = null;
+      if (
+        zones.length > 0 &&
+        left >= MIN_ZONE_MS &&
+        found.filter((f) => ELECTRICAL_SYMBOLS.includes(f.type)).length >= 5
+      ) {
+        const read = await Promise.all(
+          zones.map(async (z) => {
+            const { data: blob } = await admin.storage.from("tender-files").download(z.path);
+            if (!blob || blob.size > MAX_PHOTO_BYTES) return null;
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            const zoneSize = imageSize(bytes);
+            if (!zoneSize) return null;
+            const zoneRaw = await readPlanSymbols(
+              admin,
+              bytes,
+              "image/jpeg",
+              zoneSize.width,
+              zoneSize.height,
+              Math.min(SYMBOLS_TIMEOUT_MS, left),
+            ).catch(() => null);
+            return zoneRaw
+              ? normalizeSymbols(zoneRaw, zoneSize.width, zoneSize.height, {
+                  x: z.x,
+                  y: z.y,
+                  scale: zoneSize.width / z.w,
+                })
+              : null;
+          }),
+        );
+        // Une zone manquante fausserait la fusion : la seconde lecture ne compte que complète.
+        if (read.every((r) => r !== null)) zoneFound = read.flat() as FoundSymbol[];
+      }
       return {
         file: image.file,
         page: image.page,
         ...size,
-        found: normalizeSymbols(raw, size.width, size.height),
+        found,
+        zoneFound,
         legend: (Array.isArray(raw.legende) ? raw.legende : [])
           .filter((l): l is string => typeof l === "string")
           .map((l) => l.trim().slice(0, 160))
@@ -522,7 +601,12 @@ async function readTenderPlans(
     read
       .filter((r) => kept.some((k) => k.file === r.file && k.page === r.page))
       .flatMap((r) =>
-        mergeSymbolReadings(electrical(r.found), [], r.width, r.height).map((s) => ({
+        mergeSymbolReadings(
+          electrical(r.found),
+          electrical(r.zoneFound ?? []),
+          r.width,
+          r.height,
+        ).map((s) => ({
           ...s,
           file: r.file,
           page: r.page,
