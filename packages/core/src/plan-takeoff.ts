@@ -350,10 +350,13 @@ function countPost(counts: PlanCounts, key: PlanCountKey, label: string): Post |
   const n = counts[key];
   if (n === 0) return null;
   if (n === null) {
+    // Poste d'attente : retiré quand le lot a des ouvrages écrits (une baignoire déposée sans
+    // baignoire neuve ne laisse plus « Baignoires : à compléter »).
     return {
       quantityMilli: null,
       source: "manque",
       detail: `À compléter : ${label} non comptés sur le plan.`,
+      placeholder: true,
     };
   }
   return { quantityMilli: n * 1000, source: "plan", detail: `Compté sur le plan : ${n}` };

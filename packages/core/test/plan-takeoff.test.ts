@@ -515,3 +515,32 @@ describe("symboles comptés sur le plan (F-159 lot 7)", () => {
     expect(norm.some((l) => l.designation === "Points lumineux")).toBe(true);
   });
 });
+
+describe("poste compté vide d'un lot qui a des ouvrages écrits", () => {
+  it("disparaît : une baignoire déposée ne laisse pas « Baignoires : à compléter »", () => {
+    const counts = { ...COUNTS, baignoires: null };
+    const receveur = {
+      name: "receveur de douche 90x80",
+      kind: "nombre" as const,
+      quantityMilli: 1000,
+      source: "unite" as const,
+      detail: null,
+      trade: "plombier",
+      page: 1,
+      uncertain: false,
+      room: "sdb 1",
+      removal: false,
+    };
+    const names = planTakeoff(
+      ROOMS,
+      counts,
+      [{ code: "plombier", label: "Plombier" }],
+      [receveur],
+    ).map((l) => l.designation);
+    expect(names).not.toContain("Baignoires");
+    const alone = planTakeoff(ROOMS, counts, [{ code: "plombier", label: "Plombier" }]).map(
+      (l) => l.designation,
+    );
+    expect(alone).toContain("Baignoires");
+  });
+});

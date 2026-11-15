@@ -354,9 +354,10 @@ export async function savePlanRooms(_prev: FormState, formData: FormData): Promi
     return { error: error.code === "42501" ? t.errors.forbidden : t.errors.generic };
   }
   revalidatePath(`${BASE}/${id.data}`);
-  // « Choisir les revêtements » avec des modifications : enregistrées, puis l'étape suivante.
-  if (text(formData, "next") === "revetements") {
-    redirect(`${BASE}/${id.data}?etape=revetements` as Route);
+  // « Continuer » avec des modifications : enregistrées, puis l'étape suivante.
+  const next = text(formData, "next");
+  if (next === "revetements" || next === "ouvrages") {
+    redirect(`${BASE}/${id.data}?etape=${next}` as Route);
   }
   return { success: t.plan.saved };
 }
